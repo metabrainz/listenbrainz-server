@@ -5,9 +5,9 @@ if [ $# -eq 1 ]
 else
     echo "Application directory is not specified. Using current directory!"
 fi
-echo "source venv-acousticbrainz/bin/activate" > ~/.bashrc
-virtualenv ../venv-acousticbrainz
-source ../venv-acousticbrainz/bin/activate
+echo "source venv-messybrainz/bin/activate" > ~/.bashrc
+virtualenv ../venv-messybrainz
+source ../venv-messybrainz/bin/activate
 pip install -r requirements.txt
 python manage.py init_db
 python manage.py init_test_db

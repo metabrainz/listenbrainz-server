@@ -1,11 +1,11 @@
 server {
      root        /usr/share/nginx/www;
-     server_name acousticbrainz.org;
-     access_log  /var/log/nginx/acousticbrainz-combined.log combined;
-     error_log   /var/log/nginx/acousticbrainz-error.log notice;
+     server_name messybrainz.org;
+     access_log  /var/log/nginx/messybrainz-combined.log combined;
+     error_log   /var/log/nginx/messybrainz-error.log notice;
 
      location /static {
-          root /home/acousticbrainz/acousticbrainz-server;
+          root /home/messybrainz/messybrainz-server;
           gzip on;
           gzip_http_version 1.0;
           gzip_comp_level 6;
@@ -16,11 +16,11 @@ server {
      }
 
      location    / {
-	  try_files $uri @ab;
+	  try_files $uri @myb;
      }
-     location @ab {
+     location @myb {
           include uwsgi_params;
-          uwsgi_pass unix:/tmp/acousticbrainz.uwsgi.sock;
+          uwsgi_pass unix:/tmp/messybrainz.uwsgi.sock;
           gzip on;
           gzip_http_version 1.0;
           gzip_comp_level 6;

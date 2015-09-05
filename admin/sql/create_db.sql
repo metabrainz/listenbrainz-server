@@ -2,5 +2,5 @@
 
 -- Create the user and the database. Must run as user postgres.
 
-CREATE USER acousticbrainz NOCREATEDB NOCREATEUSER;
-CREATE DATABASE acousticbrainz WITH OWNER = acousticbrainz TEMPLATE template0 ENCODING = 'UNICODE';
+CREATE USER messybrainz NOCREATEDB NOCREATEUSER;
+CREATE DATABASE messybrainz WITH OWNER = messybrainz TEMPLATE template0 ENCODING = 'UNICODE';
