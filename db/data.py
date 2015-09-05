@@ -57,3 +57,12 @@ def load_scribble(messybrainz_id):
         recording_id = row["musicbrainz_recording_id"]
         data["musicbrainz_recording_id"] = recording_id
         return data
+
+def link_scribble_to_recording_id(scribble_id, recording_id):
+    with db.create_cursor() as cursor:
+        cursor.execute("""INSERT INTO scribble_cluster (cluster_id, gid)
+                               VALUES (%s, %s)""", (scribble_id, scribble_id))
+        cursor.execute("""INSERT INTO redirect (cluster_id, musicbrainz_recording_id)
+                               VALUES (%s, %s)""", (scribble_id, recording_id))
+
+        db.commit()
