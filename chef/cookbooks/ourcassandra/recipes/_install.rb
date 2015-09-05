@@ -6,7 +6,7 @@ apt_repository "datastax" do
   action :add
 end
 
-ver = "2.0.15"
+ver = "2.1.9"
 
 apt_preference "cassandra" do
   pin "version #{ver}"
@@ -17,7 +17,7 @@ package "python-cql" do
   action :install
 end
 
-package "dsc20" do
+package "dsc21" do
   version "#{ver}-1"
   action :install
   options '-o Dpkg::Options::="--force-confold"'
