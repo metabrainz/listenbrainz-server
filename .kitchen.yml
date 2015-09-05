@@ -20,7 +20,7 @@ suites:
     driver:
       vm_hostname: listenbrainz
       network:
-        - ["private_network", {ip: "10.1.1.1"}]
+        - ["private_network", {ip: "10.1.2.3"}]
       synced_folders:
         - [".", "/home/vagrant/listenbrainz"]
       customize:
