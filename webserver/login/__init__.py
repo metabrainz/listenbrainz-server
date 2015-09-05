@@ -1,7 +1,7 @@
 from flask import redirect, url_for
 from flask_login import LoginManager, UserMixin, current_user
 from functools import wraps
-import db.user
+#import db.user
 
 login_manager = LoginManager()
 login_manager.login_view = 'login.index'
@@ -16,7 +16,8 @@ class User(UserMixin):
 
 @login_manager.user_loader
 def load_user(user_id):
-    user = db.user.get(user_id)
+    # TODO: Fix this up when auth gets going
+    user = None #db.user.get(user_id)
     if user:
         return User(
             id=user['id'],

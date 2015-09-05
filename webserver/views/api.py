@@ -5,12 +5,12 @@ import json
 from kafka import SimpleProducer
 from kconn import _kafka
 
-listen_bp = Blueprint('listen', __name__)
+api_bp = Blueprint('listen', __name__)
 
 #def validate_listen(listen):
 
 # TODO: ensure that we're logged in when we get to the oauth bit
-@listen_bp.route("/listen/user/<user_id>", methods=["POST"])
+@api_bp.route("/listen/user/<user_id>", methods=["POST"])
 def submit_listen(user_id):
     """Endpoint for submitting a listen to ListenBrainz."""
 
