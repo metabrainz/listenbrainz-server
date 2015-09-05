@@ -1,4 +1,5 @@
 from flask import Flask
+from kafka import KafkaClient
 import sys
 import os
 
@@ -15,8 +16,7 @@ def create_app():
     init_loggers(app)
 
     # Database connection
-    from kafka import init_kafka_connection
-    init_db_connection(app.config['KAFKA_CONNECT'])
+    kafka = KafkaClient(app.config['KAFKA_CONNECT'])
 
     # Memcached
     if 'MEMCACHED_SERVERS' in app.config:

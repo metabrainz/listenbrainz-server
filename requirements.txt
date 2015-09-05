@@ -12,3 +12,4 @@ rauth == 0.7.1
 Fabric == 1.10.2
 raven[flask] == 5.5.0
 python-memcached == 1.57
+kafka-python
