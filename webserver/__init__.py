@@ -41,4 +41,10 @@ def create_app():
     app.jinja_env.filters['date'] = utils.reformat_date
     app.jinja_env.filters['datetime'] = utils.reformat_datetime
 
+    # Blueprints
+    from webserver.views.api import api_bp
+    from webserver.views.api import index_bp
+    app.register_blueprint(api_bp)
+    app.register_blueprint(index_bp)
+
     return app
