@@ -2,6 +2,8 @@ if not node['cassandra']
   raise "Cassandra cluster not configured for this node"
 end
 
+node.set['cassandra']['config']['rpc_address'] = '127.0.0.1'
+
 cluster_config = data_bag_item("cassandra", "vagrant").to_hash
 
 if node['cassandra']['listen_addr']
