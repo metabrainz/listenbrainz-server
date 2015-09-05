@@ -16,7 +16,6 @@ setup(
     description='python interface to listen data stored in cassandra',
     install_requires=[
         "cassandra-driver == 2.1.3",
-        "pika == 0.9.8",  # 0.9.9 has a bug in blockingconnection
         "setproctitle == 1.1.8"
     ],
     zip_safe=False
