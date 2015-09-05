@@ -1,7 +1,5 @@
 from db import run_sql_script, create_cursor, commit, init_db_connection
-from db.data import submit_low_level_data
 import unittest
-import json
 import os
 
 # Configuration
@@ -24,7 +22,6 @@ class DatabaseTestCase(unittest.TestCase):
 
     def reset_db(self):
         self.drop_tables()
-        self.drop_types()
         self.init_db()
 
     def init_db(self):
@@ -36,20 +33,7 @@ class DatabaseTestCase(unittest.TestCase):
     def drop_tables(self):
         with create_cursor() as cursor:
             # TODO(roman): See if there's a better way to drop all tables.
-            cursor.execute('DROP TABLE IF EXISTS highlevel_json       CASCADE;')
-            cursor.execute('DROP TABLE IF EXISTS highlevel            CASCADE;')
-            cursor.execute('DROP TABLE IF EXISTS lowlevel             CASCADE;')
-            cursor.execute('DROP TABLE IF EXISTS statistics           CASCADE;')
-            cursor.execute('DROP TABLE IF EXISTS incremental_dumps    CASCADE;')
-            cursor.execute('DROP TABLE IF EXISTS dataset_eval_jobs    CASCADE;')
-            cursor.execute('DROP TABLE IF EXISTS dataset_class_member CASCADE;')
-            cursor.execute('DROP TABLE IF EXISTS dataset_class        CASCADE;')
-            cursor.execute('DROP TABLE IF EXISTS dataset              CASCADE;')
-            cursor.execute('DROP TABLE IF EXISTS "user"               CASCADE;')
+            # FIXME: Need to drop all tables that we have there.
+            #cursor.execute('DROP TABLE IF EXISTS i_am_a_table CASCADE;')
+            pass
         commit()
-
-    def drop_types(self):
-        with create_cursor() as cursor:
-            cursor.execute('DROP TYPE IF EXISTS eval_job_status CASCADE;')
-        commit()
-

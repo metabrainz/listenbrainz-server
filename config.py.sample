@@ -19,7 +19,7 @@ PG_SUPER_USER = "postgres"
 
 # MUSICBRAINZ
 
-MUSICBRAINZ_USERAGENT = "acousticbrainz-server"
+MUSICBRAINZ_USERAGENT = "messybrainz-server"
 MUSICBRAINZ_HOSTNAME = None
 
 # CACHE
