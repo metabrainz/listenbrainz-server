@@ -5,7 +5,7 @@ import argparse
 application = create_app()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="AcousticBrainz Server")
+    parser = argparse.ArgumentParser(description="MessyBrainz Server")
     parser.add_argument("-d", "--debug", action="store_true",
                         help="Turn on debugging mode to see stack traces on "
                              "the error pages. This overrides 'DEBUG' value "

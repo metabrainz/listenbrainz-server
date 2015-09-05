@@ -12,7 +12,6 @@
 
 ### How to report bugs and request new features
 
-Create ticket in [the bug tracker](http://tickets.musicbrainz.org/browse/AB). Try to provide a good description.
-
-If you want to discuss something, go to [#musicbrainz-devel](irc://irc.freenode.net/musicbrainz-devel)
-IRC channel on irc.freenode.net. More info is available at https://wiki.musicbrainz.org/Communication.
+Go to [#musicbrainz-devel](irc://irc.freenode.net/musicbrainz-devel)
+IRC channel on irc.freenode.net. More info is available at
+https://wiki.musicbrainz.org/Communication.
