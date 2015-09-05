@@ -9,6 +9,8 @@ DEPENDENCIES
     git: https://github.com/mthssdrbrg/kafka-cookbook.git
     revision: ec6ee17bc1cc582e02696a875dd2077e8e2cde97
   ntp (= 1.3.2)
+  ourcassandra
+    path: chef/cookbooks/ourcassandra
   ourjava
     path: chef/cookbooks/ourjava
   ourkafka
@@ -53,6 +55,8 @@ GRAPH
   kafka (0.8.0)
   logrotate (1.9.2)
   ntp (1.3.2)
+  ourcassandra (0.2.19)
+    apt (>= 0.0.0)
   ourjava (0.1.0)
     java (>= 0.0.0)
   ourkafka (0.1.0)

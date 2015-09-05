@@ -5,7 +5,7 @@ driver:
 provisioner:
   name: chef_zero
   roles_path: ./chef/roles
-  data_bags_path: ./chef/cookbooks
+  data_bags_path: ./chef/data_bags
   environments_path: ./chef/environments
   client_rb:
     environment: vagrant
@@ -32,6 +32,7 @@ suites:
     run_list:
       - recipe[basebox]
       - recipe[ourkafka]
+      - recipe[ourcassandra]
     attributes: {
         "foo": 123
     }
