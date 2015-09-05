@@ -1,0 +1,5 @@
+site :opscode
+
+metadata
+cookbook 'irccloud-afw', path: '../irccloud-afw'
+cookbook 'afw', git: 'https://github.com/irccloud/afw.git'

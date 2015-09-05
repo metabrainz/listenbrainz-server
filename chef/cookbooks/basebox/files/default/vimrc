@@ -1,0 +1,16 @@
+syntax on
+set nocompatible
+set autoindent
+set smartindent
+set tabstop=4
+set shiftwidth=4
+set expandtab
+set number
+set showmatch
+set showcmd
+set showmode
+set hlsearch
+set ignorecase
+set smartcase
+set wrap
+set cursorline

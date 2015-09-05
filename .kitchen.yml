@@ -1,0 +1,37 @@
+---
+driver:
+  name: vagrant
+
+provisioner:
+  name: chef_zero
+  roles_path: ./chef/roles
+  data_bags_path: ./chef/cookbooks
+  environments_path: ./chef/environments
+  client_rb:
+    environment: vagrant
+
+platforms:
+  - name: ubuntu-14.04
+    driver:
+      box: bento/ubuntu-14.04
+
+suites:
+  - name: development
+    driver:
+      vm_hostname: listenbrainz
+      network:
+        - ["private_network", {ip: "10.1.1.1"}]
+      synced_folders:
+        - [".", "/home/vagrant/listenbrainz"]
+      customize:
+        memory: <%= ENV['VBOX_MEMORY'] || '1500' %>
+        cpus: 2
+        ioapic: "on"
+        natdnsproxy1: "off"
+        natdnshostresolver1: "on"
+    run_list:
+      - recipe[basebox]
+      - recipe[ourkafka]
+    attributes: {
+        "foo": 123
+    }
