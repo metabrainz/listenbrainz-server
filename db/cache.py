@@ -21,7 +21,7 @@ _mc = None
 _glob_namespace = "AB"
 
 
-def init(servers, namespace="AB", debug=0):
+def init(servers, namespace="MESSY", debug=0):
     """Initializes memcached client. Needs to be called before use.
 
     Args:
