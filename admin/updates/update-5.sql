@@ -1,0 +1,9 @@
+BEGIN;
+
+ALTER TABLE dataset ADD COLUMN public BOOLEAN;
+UPDATE dataset SET public = TRUE;
+ALTER TABLE dataset ALTER COLUMN public SET NOT NULL;
+
+ALTER TABLE dataset ALTER COLUMN author SET NOT NULL;
+
+COMMIT;

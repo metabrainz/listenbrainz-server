@@ -1,0 +1,13 @@
+[uwsgi]
+debug = true
+vhost = true
+uid = acousticbrainz
+gid = www-data
+socket = /tmp/acousticbrainz.uwsgi.sock
+module = server
+callable = application
+chdir = /home/acousticbrainz/acousticbrainz-server
+virtualenv = /home/acousticbrainz/ve
+pythonpath = /home/acousticbrainz/ve/lib/python2.7/site-packages
+enable-threads = true
+processes = 20
