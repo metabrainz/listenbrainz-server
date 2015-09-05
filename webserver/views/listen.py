@@ -36,8 +36,9 @@ def submit_listen(user_id):
 #            raise BadRequest("payload index %d error: " + err)
 
     data['user_id'] = user_id
+    print json.dumps(data, indent = 4)
     # Catch exception here
     producer = SimpleProducer(_kafka)
-    producer.send_messages('listens', json.dumps(raw_data))
+    producer.send_messages(b'listens', json.dumps(data).encode('utf-8'))
 
     return ""
