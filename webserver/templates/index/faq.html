@@ -1,0 +1,36 @@
+{%- extends 'base.html' -%}
+{%- block title -%}FAQ - AcousticBrainz{%- endblock -%}
+{%- block content -%}
+  <h2 class="page-title">Frequently Asked Questions</h2>
+
+  <p>
+    <strong>Q:</strong> Does the AcousticBrainz client upload my audio files? Do you store audio files?<br/>
+    <strong>A:</strong> No to both. The AcousticBrainz client analyzes your files and calculates the audio
+    features from it, but it does not alter your files in any way. These audio features are then uploaded to
+    the server. No actual audio files are uploaded or stored on the server. Never ever.<br />
+    We invite you to examine the <a href="https://github.com/metabrainz/acousticbrainz-server/">code that
+    runs the server</a>. There is only one API end-point that allows submission of anything and it has to be
+    a JSON document of a certain format. Audio files are rejected by the server.
+  </p>
+
+  <p>
+    <strong>Q:</strong> Why does AcousticBrainz prefer that people use the provided static extractor builds,
+    rather than letting others build their own versions?<br/>
+    <strong>A:</strong> Besides building your own version being a major pain, it is possible for different
+    combinations of libraries and compilers (gcc vs clang, libffmpeg vs libav) to produce slightly different
+    outputs. We're aiming to reduce the variances of output between the extractors in an effort to create the
+    most consistent and stable dataset. We're going to build a test suite in the future that can evaluate the
+    performance of a compiled extractor, but we're not quite there yet. So, for the time being, if it is
+    possible in any way for you to use one of our static builds, we would greatly appreciate that.
+  </p>
+
+  <p>
+    <strong>Q:</strong> What is the difference between AcousticBrainz and <a href="http://acoustid.org">AcoustID</a>?<br/>
+    <strong>A:</strong> AcousticBrainz does a deep analysis of music in an effort to discover as many acoustic
+    qualities of the music as possible. The generated data is then made available for other people to use this
+    data in their own projects or companies. AcoustID, however, does a much lighter music analysis with one
+    single goal of identifying a recording of music. AcoustID is also designed to be as fast as possible, so
+    it only does the necessary analysis on the recordings. While on the surface the two projects look similar,
+    they have very different goals.
+  </p>
+{%- endblock -%}

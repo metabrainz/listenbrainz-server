@@ -1,0 +1,94 @@
+{%- extends 'base.html' -%}
+{%- block content -%}
+  <div id="homepage" class="row">
+
+    <div class="col-md-7 col-lg-8">
+      <img src="{{ url_for('static', filename='img/logo_big.svg') }}" id="big-logo" />
+      <h2 class="page-title">Welcome to AcousticBrainz!</h2>
+      <p>
+        The AcousticBrainz project aims to crowd source acoustic information for all music in the world and to make it
+        available to the public. This acoustic information describes the acoustic characteristics of music and includes
+        low-level spectral information and information for genres, moods, keys, scales and much more. The goal of
+        AcousticBrainz is to provide music technology researchers and open source hackers with a massive database of
+        information about music. We hope that this database will spur the development of new music technology research
+        and allow music hackers to create new and interesting recommendation engines.
+      </p>
+      <p>
+        AcousticBrainz is a joint effort between <a href="http://www.mtg.upf.edu/">Music Technology Group</a> at
+        <a href="http://www.upf.edu/">Universitat Pompeu Fabra</a> in Barcelona and the
+        <a href="http://musicbrainz.org">MusicBrainz</a> project. AcousticBrainz was originally envisioned by
+        Xavier Serra, the founder and head of the MTG. At the heart of this project lies the
+        <a href="http://essentia.upf.edu/">Essentia toolkit</a> from the MTG &ndash; this open source toolkit enables
+        the automatic analysis of music. The output from Essentia is collected by the AcousticBrainz project and
+        made available to the public.
+      </p>
+      <p>
+        AcousticBrainz organizes the data on a recording basis, indexed by the
+        <a href="https://musicbrainz.org/doc/MusicBrainz_Identifier">MusicBrainz ID</a>
+        for <a href="https://musicbrainz.org/doc/Recording">recordings</a>. If you know
+        the MBID for a recording, you can easily fetch from AcousticBrainz. For details
+        on how to do this, visit our <a href="{{ url_for('data.api') }}">API documentation</a>.
+      </p>
+      <p>
+        All of the data contained in AcousticBrainz is licensed under the
+        <a href="http://creativecommons.org/publicdomain/zero/1.0/">CC0 license</a> (public domain).
+      </p>
+      {%- if last_submitted_data -%}
+        <h4>Examples</h4>
+        <p>
+          If you're wondering what this collected data actually looks like,
+          have a look at the last 5 recordings that have been submitted:
+        </p>
+        <ol>
+           {% for mbid, artist, recording in last_submitted_data %}
+               <li>
+                 <a href="{{ url_for('data.summary', mbid=mbid) }}">
+                   <strong>{{ artist }} / {{ recording }}</strong>
+                 </a>
+               </li>
+           {% endfor %}
+        </ol>
+      {%- endif -%}
+    </div>
+
+    <div class="col-md-5 col-lg-4">
+      <div id="stats" class="panel panel-default">
+        <div class="panel-heading"><strong>Data Statistics</strong></div>
+        <div class="panel-body">
+          <table class="table table-collapsed">
+            <thead><tr>
+              <th></th>
+              <th>Lossy</th>
+              <th>Lossless</th>
+              <th>Total</th>
+            </tr></thead>
+            <tbody>
+            <tr>
+              <th>Unique</th>
+              <td>{{ "{:,}".format(stats['lowlevel-lossy-unique']) }}</td>
+              <td>{{ "{:,}".format(stats['lowlevel-lossless-unique']) }}</td>
+              <td><strong>{{ "{:,}".format(stats['lowlevel-lossy-unique'] + stats['lowlevel-lossless-unique']) }}</strong></td>
+            </tr>
+            <tr>
+              <th>All</th>
+              <td>{{ "{:,}".format(stats['lowlevel-lossy']) }}</td>
+              <td>{{ "{:,}".format(stats['lowlevel-lossless']) }}</td>
+              <td><strong>{{ "{:,}".format(stats['lowlevel-lossy'] + stats['lowlevel-lossless']) }}</strong></td>
+            </tr>
+            </tbody>
+          </table>
+          <p style="text-align: center">
+            <small>updated every 10 minutes</small><br />
+            <small>last updated: {{ last_collected.strftime("%Y-%m-%d %H:%M") }}</small><br />
+            <small><a href="{{ url_for('stats.graph') }}">more on the detailed statistics page</a></small>
+          </p>
+        </div>
+      </div>
+
+      <div id="twitter-block">
+        <a class="twitter-timeline" data-dnt="true" data-lang="en" href="https://twitter.com/AcousticBrainz" data-widget-id="535534957591281664">Tweets by @AcousticBrainz</a>
+        <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+      </div>
+    </div>
+  </div>
+{%- endblock -%}

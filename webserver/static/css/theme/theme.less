@@ -1,0 +1,48 @@
+@import "boostrap/boostrap.less";
+@import "variables.less";
+@import "links.less";
+@import "buttons.less";
+@import "navbars.less";
+
+// Fonts
+@import url(https://fonts.googleapis.com/css?family=Roboto:100,400,300,700|Sintony:200,400,700&subset=latin,latin-ext,cyrillic,cyrillic-ext);
+@font-family-sans-serif: 'Sintony', sans-serif;
+@headings-font-family: 'Roboto', sans-serif;
+@headings-font-weight: 300;
+@headings-line-height: 1.3;
+
+// Headings
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  color: @headings-font-color;
+  small {
+    font-size: 0.65em;
+    font-weight: @headings-small-font-weight;
+  }
+}
+
+.panel {
+  color: @text-color;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  border-bottom-color: @panel-inner-border;
+  .panel-heading {
+    font-family: @headings-font-family;
+    font-weight: 200;
+    line-height: @headings-line-height;
+    outline: 1px solid @panel-inner-border;
+    border-bottom-width: 1px;
+  }
+}
+
+ul.hexagonBullet li:before, .hexagonBullet:not(ul):before {
+  content: "\2B22";
+  margin-right: 0.5em;
+  font-size: 0.5em;
+  opacity: 0.42;
+  vertical-align: middle;
+}
+
+ul.hexagonBullet {
+  list-style: none;
+}

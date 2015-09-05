@@ -1,0 +1,102 @@
+{%- extends 'base.html' -%}
+{%- block title -%}Downloads - AcousticBrainz{%- endblock -%}
+{%- block content -%}
+  <h2 class="page-title">Downloads</h2>
+
+  <div class="row">
+
+    <div class="col-lg-6">
+      <h3>Client Downloads</h3>
+      <p>
+        We have two clients (graphical and command-line) available for people to
+        use to submit audio features to the AcousticBrainz database. These clients
+        calculate a JSON file containing data about the audio and upload it to
+        AcousticBrainz. We do not upload your audio.
+      </p>
+      <p>
+        All of these downloads are self-contained and include a static binary to
+        perform the audio analysis. See our <a href="{{ url_for('index.faq') }}">FAQ</a>
+        for more information on why we use static binaries.
+      </p>
+      <p>
+        To submit audio to AcousticBrainz, files must be tagged with
+        <a href="https://musicbrainz.org/doc/MusicBrainz_Identifier">MusicBrainz Identifiers</a>.
+        If they are not tagged, we recommend <a href="https://picard.musicbrainz.org/">Picard</a>.
+      </p>
+
+      <h4>Windows</h4>
+      <ul>
+        <li><a href="/static/download/acousticbrainz-gui-0.1-win.zip">acousticbrainz-gui-0.1-win.zip</a> for Windows (32 bit and 64 bit)</li>
+      </ul>
+
+      <h4>OSX</h4>
+      <ul>
+        <li><a href="/static/download/acousticbrainz-gui-osx-0.1.dmg">acousticbrainz-gui-osx-0.1.dmg</a> for OSX 10.7 and higher (64 bit only)</li>
+        <li><a href="/static/download/abzsubmit-0.1-osx-x86_64.tar.gz">abzsubmit-0.1-osx-x86_64.tar.gz</a> for OSX 10.7 and higher (64 bit only)</li>
+      </ul>
+
+      <h4>Linux</h4>
+      <ul>
+        <li><a href="/static/download/abzsubmit-0.1-linux-i686.tar.gz">abzsubmit-0.1-linux-i686.tar.gz</a> for linux (32 bit)</li>
+        <li><a href="/static/download/abzsubmit-0.1-linux-x86_64.tar.gz">abzsubmit-0.1-linux-x86_64.tar.gz</a> for linux (64 bit)</li>
+      </ul>
+
+      <h4>Do it yourself install</h4>
+      <p>
+        You can build your own version of the submission tools. Download one of the
+        following clients and follow the instructions in the README file:
+      </p>
+      <ul>
+        <li><a href="https://github.com/MTG/acousticbrainz-client">acousticbrainz-client</a></li>
+        <li><a href="https://github.com/MTG/acousticbrainz-gui">acousticbrainz-gui</a></li>
+      </ul>
+      <p>
+        Part of the source installation requires an extractor binary.
+        You should use one of these static builds for Linux, Mac & Windows
+        (see our <a href="{{ url_for('index.faq') }}">FAQ</a> why):
+      </p>
+      <ul>
+         <li><a href="/static/download/essentia-extractor-v2.1_beta2-linux-i686.tar.gz">linux i386 extractor static binary</a></li>
+         <li><a href="/static/download/essentia-extractor-v2.1_beta2-linux-x86_64.tar.gz">linux x86_64 extractor static binary</a></li>
+         <li><a href="/static/download/essentia-extractor-v2.1_beta2-2-gbb40004-osx.tar.gz">mac 64 bit extractor static binary for 10.7 and higher</a></li>
+         <li><a href="/static/download/essentia-extractor-v2.1_beta2-1-ge3940c0-win-i686.zip">win 32 bit extractor static binary</a></li>
+      </ul>
+      <p><a href="/static/download/sha1sum">SHA1 sums</a></p>
+    </div>
+
+    <div class="col-lg-6">
+      <h3>Data Downloads</h3>
+      <p>
+        We provide regular dumps of the data in the AcousticBrainz database.
+        The dumps are separated into low-level and high-level archives. See
+        <a href="{{ url_for('data.data') }}#sample-data">sample data</a> for
+        more information about the two data types.
+      </p>
+      <p>
+        Files in each archive are named according to the following structure:
+        <div class="well"><code>type/m/mb/mbid-n.json</code></div>
+        Where <code>type</code> is one of <i>lowlevel</i> or <i>highlevel</i>,
+        <code>mbid</code> is a uuid of a MusicBrainz Identifier, <code>m</code>
+        and <code>mb</code> are the first and second characters of the MusicBrainz
+        Identifier, and <code>n</code> indicates the ordinal number of duplicate
+        data files present for the same MusicBrainz Identifier. There will always
+        be a file with number <i>0</i>.
+      </p>
+
+      <h4>Data dumps</h4>
+      <p><em>Released on January 30, 2015</em></p>
+      <ul>
+        <li>
+          Low-level: <a href="/static/download/acousticbrainz-lowlevel-json-20150129.tar.bz2">acousticbrainz-lowlevel-json-20150129.tar.bz2</a> 34G
+        </li>
+        <li>
+          High-level: <a href="/static/download/acousticbrainz-highlevel-json-20150130.tar.bz2">acousticbrainz-highlevel-json-20150130.tar.bz2</a> 2.5G
+        </li>
+        <li>
+          Full DB Dump: <a href="/static/download/acousticbrainz-dump-20150129-180408.tar.xz">acousticbrainz-dump-20150129-180408.tar.xz</a> 32G
+        </li>
+      </ul>
+    </div>
+
+  </div>
+{%- endblock -%}

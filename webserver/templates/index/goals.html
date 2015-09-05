@@ -1,0 +1,47 @@
+{%- extends 'base.html' -%}
+{%- block title -%}Goals - AcousticBrainz{%- endblock -%}
+{%- block content -%}
+  <h2 class="page-title">Goals</h2>
+
+  <p>We've set out the follow goals for this project:</p>
+  <ol>
+    <li>
+      We are dedicated to keeping this project, data, code and community open in an effort to
+      make all aspects of the project better.
+    </li>
+    <li>
+      We need your help to make this project work. We are encouraging open collaboration on this
+      project to produce a useful database.
+    </li>
+    <li>
+      AcousticBrainz, Essentia and the community around both create a feedback loop. This feedback
+      loop is designed to expose the data and algorithms to more people in a collaborative effort to
+      improve the algorithms and training data. With better input, Essentia and AcousticBrainz will
+      create better data over time. This process will take many iterations over a long time period.
+    </li>
+    <li>
+      Essentia is continually being improved with feedback from both the AcousticBrainz community
+      and the wider research community. We value input to improve the quality and accuracy of data
+      that we add to AcousticBrainz.
+    </li>
+    <li>
+      The AcousticBrainz database is a living document. While we believe the low-level data is relatively
+      stable we are still soliciting improvements to this data and also to the high-level data. We will
+      work with the community to update the data as soon as possible.
+    </li>
+    <li>
+      We are not going to hide problems with our data. We’re interested to hear about the problems you
+      find in the data. When we can identify problems, we can work to solve them.
+    </li>
+    <li>
+      We challenge ourselves and everyone around us to think differently about these problems. We would
+      like to avoid falling into the common pitfalls and we would like to encourage everyone to find new
+      and novel approaches to solve our problems.
+    </li>
+  </ol>
+
+  <p>
+    Please consider <a href="{{ url_for('index.downloads') }}">downloading</a> our client and submitting
+    your music collection!
+  </p>
+{%- endblock -%}

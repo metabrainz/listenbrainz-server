@@ -1,2 +1,5 @@
 .kitchen
 .vagrant
+.DS_Store
+*.pyc
+config.py

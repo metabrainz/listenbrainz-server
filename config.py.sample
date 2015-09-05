@@ -1,0 +1,32 @@
+DEBUG = False  # set to False in production mode
+
+SECRET_KEY = "CHANGE_ME"
+
+# KAFKA
+
+
+# OAuth
+MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
+MUSICBRAINZ_CLIENT_SECRET = "CLIENT_SECRET"
+
+# CACHE
+
+MEMCACHED_SERVERS = ["127.0.0.1:11211"]
+MEMCACHED_NAMESPACE = "LB"
+
+# LOGGING
+
+#LOG_FILE_ENABLED = True
+#LOG_FILE = "./listenbrainz.log"
+
+#LOG_EMAIL_ENABLED = True
+#LOG_EMAIL_TOPIC = "ListenBrainz Webserver Failure"
+#LOG_EMAIL_RECIPIENTS = []  # List of email addresses (strings)
+
+#LOG_SENTRY_ENABLED = True
+#SENTRY_DSN = ""
+
+# MISCELLANEOUS
+
+# Set to True if Less should be compiled in browser. Set to False if styling is pre-compiled.
+COMPILE_LESS = True

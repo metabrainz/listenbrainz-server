@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}User "{{ user.musicbrainz_id }}" - AcousticBrainz{% endblock %}
+
+{% block content %}
+  <h2 class="page-title">{{ user.musicbrainz_id }}</h2>
+  {% if current_user.is_authenticated() and current_user == user %}
+     <p class="text-muted"><em>This is you!</em></p>
+  {% endif %}
+
+  <h3>Datasets</h3>
+  {% if current_user.is_authenticated() and current_user == user %}
+    <div class="alert alert-warning" role="alert">
+      <strong>This is an experimental feature!</strong> You can report issues and suggest
+      improvements at the <a href="http://tickets.musicbrainz.org/browse/AB">bug tracker</a>.
+    </div>
+    <p>
+      <a class="btn btn-success btn-sm" href="{{ url_for('datasets.create') }}" role="button">
+        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+        Create new dataset
+      </a>
+      <a class="btn btn-default btn-sm" href="{{ url_for('datasets.import_csv') }}" role="button">
+        <span class="glyphicon glyphicon-save" aria-hidden="true"></span>
+        Import from CSV
+      </a>
+    </p>
+  {% endif %}
+  {% if datasets %}
+    <table class="table table-hover">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Creation time</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for dataset in datasets %}
+        <tr>
+          <td><a href="{{ url_for('datasets.view', id=dataset['id']) }}">{{ dataset['name'] }}</a></td>
+          <td>{{ dataset['created']|datetime }}</td>
+          <td>
+            {% if current_user.is_authenticated() and current_user == user %}
+              <a class="btn btn-primary btn-xs"
+                 href="{{ url_for('datasets.edit', dataset_id=dataset['id']) }}">Edit</a>
+              <a class="btn btn-danger btn-xs"
+                 href="{{ url_for('datasets.delete', dataset_id=dataset['id']) }}">Delete</a>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="text-muted"><em>No datasets.</em></p>
+  {% endif %}
+{% endblock %}

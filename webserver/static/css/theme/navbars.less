@@ -1,0 +1,173 @@
+@logo-height: 30px; // Unfortunately necessary for accurate logo padding
+
+.navbar-variant(@color; @logo-width:150px; @active-color:@white) {
+  @active-bg: @color;
+  @disabled-color: desaturate(@color, 42%);
+  @disabled-bg: @disabled-color;
+  @link-color: @color;
+
+  background: none;
+  border: none;
+
+  .navbar-nav {
+    > li > a {
+      color: @link-color;
+      font-size: 1.1em;
+      font-family: @headings-font-family;
+      @media (min-width: @grid-float-breakpoint) {
+        padding-top: @padding-large-vertical;
+        padding-bottom: @padding-large-vertical;
+      }
+      &:hover,
+      &:focus {
+        color: @active-color;
+        background-color: @active-bg;
+      }
+    }
+    > .active > a {
+      &,
+      &:hover,
+      &:focus {
+        color: @navbar-default-link-active-color;
+        background-color: @active-bg;
+      }
+    }
+    > .disabled > a {
+      &,
+      &:hover,
+      &:focus {
+        color: @disabled-color;
+        background-color: @disabled-bg;
+      }
+    }
+
+    // Dropdowns
+    > .open > a {
+      &,
+      &:hover,
+      &:focus {
+        background-color: @active-bg;
+        color: @active-color;
+      }
+    }
+    > .dropdown > a:hover .caret {
+      border-top-color: @active-color;
+      border-bottom-color: @active-color;
+    }
+    > .dropdown > a .caret {
+      border-top-color: @link-color;
+      border-bottom-color: @link-color;
+    }
+    > .open > a {
+      &,
+      &:hover,
+      &:focus {
+        .caret {
+          border-top-color: @active-color;
+          border-bottom-color: @active-color;
+        }
+      }
+    }
+
+    @media (max-width: @screen-xs-max) {
+      // Dropdowns get custom display
+      .open .dropdown-menu {
+        > .dropdown-header {
+          border-color: @color;
+        }
+        > li > a {
+          color: @color;
+          &:hover,
+          &:focus {
+            color: @active-color;
+            background-color: @active-bg;
+          }
+        }
+        > .active > a {
+          &,
+          &:hover,
+          &:focus {
+            color: @active-color;
+            background-color: @active-bg;
+          }
+        }
+        > .disabled > a {
+          &,
+          &:hover,
+          &:focus {
+            color: @disabled-color;
+            background-color: @disabled-bg;
+          }
+        }
+      }
+    }
+  }
+
+  .navbar-collapse {
+    border-color: @color;
+    border-bottom: 2px solid @color;
+
+    @media (min-width: @grid-float-breakpoint) {
+      padding: 14px 0 0; // Figure out why 14px
+      width: 75%; //Fallback overriden by magic just below:
+      width: ~"calc(100% - @{logo-width} - @{navbar-padding-horizontal})";
+      float: right;
+
+      // Resets first and last children spacing
+      .navbar-nav.navbar-left:first-child {
+        margin-left: 0;
+      }
+      .navbar-nav.navbar-right:last-child {
+        margin-right: 0;
+      }
+    }
+  }
+  .navbar-brand {
+    color: @color;
+    &.logo {
+      padding-top: ((@navbar-height - @logo-height) / 2);
+      padding-bottom: ((@navbar-height - @logo-height) / 2);
+    }
+    &:hover,
+    &:focus {
+      color: @active-color;
+    }
+    &:visited {
+      color: @color;
+    }
+
+    img {
+      height: 26px;
+      margin-top: 3px;
+    }
+  }
+
+  .navbar-text {
+    color: @color;
+  }
+  // Links in navbars
+  // Add a class to ensure links outside the navbar nav are colored correctly.
+  .navbar-link {
+    color: @link-color;
+    &:hover {
+      color: @active-color;
+    }
+  }
+  .navbar-form {
+    margin: 0;
+  }
+  .support-link > a {
+    color: @active-color !important;
+    background-color: @color;
+    font-weight: bold !important;
+  }
+}
+
+.navbar-default {
+  .navbar-variant(@orange);
+}
+
+
+.navbar-form {
+  padding-top: 4px;
+}
