@@ -14,16 +14,12 @@ node.set[:ntp] = {
     ]
 }
 
-if node['fqdn'] =~ /lotus\.irccloud\.com$/
-  node.set[:ntp][:servers] = ["ntp.la2.blacklotus.net"]
-else
-  node.set[:ntp][:servers] = [
-        "0.north-america.pool.ntp.org",
-        "1.north-america.pool.ntp.org",
-        "2.north-america.pool.ntp.org",
-        "3.north-america.pool.ntp.org"
-    ]
-end
+node.set[:ntp][:servers] = [
+      "0.north-america.pool.ntp.org",
+      "1.north-america.pool.ntp.org",
+      "2.north-america.pool.ntp.org",
+      "3.north-america.pool.ntp.org"
+  ]
 
 include_recipe "ntp"
 

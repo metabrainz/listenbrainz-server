@@ -1,0 +1,6 @@
+{
+    "id": "test",
+    "name": "Test Cluster",
+    "seed_nodes": ["10.53.0.1", "10.53.0.2"],
+    "snitch": "SimpleSnitch"
+}
