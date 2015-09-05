@@ -1,18 +1,15 @@
 from __future__ import absolute_import
 from flask import Blueprint, request, Response, jsonify
-from db.data import load_low_level, load_high_level, submit_low_level_data, count_lowlevel
-from db.exceptions import NoDataFoundException, BadDataException
-from webserver.decorators import crossdomain
 from werkzeug.exceptions import BadRequest, NotFound
 import json
 
 api_bp = Blueprint('api', __name__)
 
-def validate_listen(listen):
+#def validate_listen(listen):
 
-
+# TODO: ensure that we're logged in when we get to the oauth bit
 @api_bp.route("/post/listen/<userid>", methods=["POST"])
-def submit_listen(mbid):
+def submit_listen(user_id):
     """Endpoint for submitting a listen to ListenBrainz."""
 
     raw_data = request.get_data()
@@ -30,13 +27,16 @@ def submit_listen(mbid):
         raise BadRequest("JSON document contains more than listen for a single/playing_now. "
                          "It should contain only one. ")
 
-    for i, listen in enumerate(payload):
-        err = validate_listen(listen):
-        if not err:
-            raise BadRequest("payload index %d error: " + err)
+#    for i, listen in enumerate(payload):
+#        err = validate_listen(listen):
+#        if not err:
+#            raise BadRequest("payload index %d error: " + err)
 
+    data['user_id'] = user_id
     try:
-        print data
+        producer = SimpleProducer(app.kafka)
+        producer.send_messages('listens', json.dumps(raw_data))
     except BadDataException as e:
         raise BadRequest(e)
+
     return ""
