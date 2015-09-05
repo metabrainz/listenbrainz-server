@@ -25,20 +25,24 @@
 </head>
 
 <body>
-  {%- include 'navbar.html' -%}
-
   <div class="container">
 
+    <div class="header">
+      <img src="{{ url_for('static', filename='img/navbar_logo.svg') }}" alt="MessyBrainz" />
+    </div>
+
     {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-            {{ print_message(message, category) }}
-        {% endfor %}
+      {% for category, message in messages %}
+        {{ print_message(message, category) }}
+      {% endfor %}
     {% endwith %}
 
     {%- block wrapper -%}
+      <div class="content">
         {%- block content -%}
           <!-- Page content -->
         {%- endblock -%}
+      </div>
     {%- endblock -%}
     <div class="clearfix"></div>
 
@@ -46,19 +50,14 @@
       <hr />
       <div class="footer clearfix">
         <ul class="list-inline pull-left">
-          <!--<li><a href="http://blog.musicbrainz.org/category/acousticbrainz/">Blog</a></li>-->
-          <li><a href="http://github.com/metabrainz/messybrainz-server/">GitHub</a></li>
+          <li><a href="https://github.com/metabrainz/messybrainz-server/">GitHub</a></li>
         </ul>
         <ul class="list-inline pull-right">
           <li><a href="https://musicbrainz.org" title="MusicBrainz"><img src="{{ url_for('static', filename='img/musicbrainz.svg') }}" /></a></li>
         </ul>
       </div>
     {%- endblock -%}
-  </div>
 
-  {%- block scripts -%}
-    <script src="{{ url_for('static', filename='js/lib/jquery-2.1.0.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/lib/bootstrap.min.js') }}"></script>
-  {%- endblock -%}
+  </div>
 </body>
 </html>

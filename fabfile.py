@@ -3,21 +3,23 @@ from fabric.api import local
 from fabric.colors import green, yellow, red
 from db import cache
 import config
-
 import os
 
+
 def vpsql():
-    """Connect to the acousticbrainz database running on vagrant."""
-    local("psql -h localhost -p 15432 -U postgres acousticbrainz")
+    """Connect to the messybrainz database running on vagrant."""
+    local("psql -h localhost -p 15432 -U postgres messybrainz")
+
 
 def vssh():
     """SSH to a running vagrant host."""
     curdir = os.path.dirname(os.path.abspath(__file__))
     configfile = os.path.join(curdir, '.vagrant', 'ssh_config')
     if not os.path.exists(configfile):
-        local('vagrant ssh-config acousticbrainz > .vagrant/ssh_config')
+        local('vagrant ssh-config messybrainz > .vagrant/ssh_config')
 
-    local("ssh -F .vagrant/ssh_config -o 'ControlMaster auto' -o 'ControlPath ~/.ssh/ab_vagrant_control' -o 'ControlPersist 4h' acousticbrainz")
+    local("ssh -F .vagrant/ssh_config -o 'ControlMaster auto' -o 'ControlPath ~/.ssh/myb_vagrant_control' -o 'ControlPersist 4h' messybrainz")
+
 
 def git_pull():
     local("git pull origin")
@@ -63,7 +65,7 @@ def test(coverage=True):
     """
     if coverage:
         local("nosetests --exe --with-coverage --cover-erase --cover-html "
-              "--cover-package=db,webserver,hl_extractor,dataset_eval")
+              "--cover-package=db,webserver")
         print(yellow("Coverage report can be found in cover/index.html file.", bold=True))
     else:
         local("nosetests --exe")

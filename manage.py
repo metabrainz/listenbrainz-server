@@ -24,20 +24,13 @@ def runserver(host, port, debug):
 
 @cli.command()
 @click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
-@click.argument("archive", type=click.Path(exists=True), required=False)
-def init_db(archive, force):
-    """Initializes database and imports data if needed.
+def init_db(force):
+    """Initializes database.
 
     This process involves several steps:
     1. Table structure is created.
-    2. Data is imported from the archive if it is specified.
-    3. Primary keys and foreign keys are created.
-    4. Indexes are created.
-
-    Data dump needs to be a .tar.xz archive produced by export command.
-
-    More information about populating a PostgreSQL database efficiently can be
-    found at http://www.postgresql.org/docs/current/static/populate.html.
+    2. Primary keys and foreign keys are created.
+    3. Indexes are created.
     """
     if force:
         exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER + ' < ' +
@@ -78,8 +71,7 @@ def init_db(archive, force):
 @cli.command()
 @click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
 def init_test_db(force=False):
-    """Same as `init_db` command, but creates a database that will be used to
-    run tests and doesn't import data (no need to do that).
+    """Same as `init_db` command, but creates a database that will be used to run tests.
 
     `PG_CONNECT_TEST` variable must be defined in the config file.
     """
