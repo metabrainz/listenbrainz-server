@@ -3,6 +3,8 @@ from kafka import KafkaClient
 import sys
 import os
 
+_kafka = None
+
 def create_app():
     app = Flask(__name__)
 
@@ -17,7 +19,7 @@ def create_app():
 
     # Database connection
     kafka = KafkaClient(app.config['KAFKA_CONNECT'])
-    app.kafka = kafka
+    _kafka = kafka
 
     # Memcached
 #    if 'MEMCACHED_SERVERS' in app.config:
@@ -43,9 +45,9 @@ def create_app():
     app.jinja_env.filters['datetime'] = utils.reformat_datetime
 
     # Blueprints
-    from webserver.views.api import api_bp
     from webserver.views.index import index_bp
-    app.register_blueprint(api_bp)
+    from webserver.views.listen import listen_bp
     app.register_blueprint(index_bp)
+    app.register_blueprint(listen_bp)
 
     return app

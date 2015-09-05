@@ -1,19 +1,22 @@
 from __future__ import absolute_import
-from flask import Blueprint, request, Response, jsonify
+from flask import Blueprint, request, Response, jsonify, app
 from werkzeug.exceptions import BadRequest, NotFound
 import json
+from kafka import SimpleProducer
 
-api_bp = Blueprint('api', __name__)
+
+listen_bp = Blueprint('listen', __name__)
 
 #def validate_listen(listen):
 
 # TODO: ensure that we're logged in when we get to the oauth bit
-@api_bp.route("/listen/user/<user_id>", methods=["POST"])
+@listen_bp.route("/listen/user/<user_id>", methods=["POST"])
 def submit_listen(user_id):
     """Endpoint for submitting a listen to ListenBrainz."""
+    global _kafka
 
     raw_data = request.get_data()
-    print "raw data: ", raw_data
+    print "data: '%s'" % raw_data
     try:
         data = json.loads(raw_data.decode("utf-8"))
     except ValueError as e:
@@ -34,10 +37,8 @@ def submit_listen(user_id):
 #            raise BadRequest("payload index %d error: " + err)
 
     data['user_id'] = user_id
-    try:
-        producer = SimpleProducer(app.kafka)
-        producer.send_messages('listens', json.dumps(raw_data))
-    except BadDataException as e:
-        raise BadRequest(e)
+    # Catch exception here
+    producer = SimpleProducer(_kafka)
+    producer.send_messages('listens', json.dumps(raw_data))
 
     return ""
