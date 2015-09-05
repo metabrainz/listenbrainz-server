@@ -1,5 +1,6 @@
 # coding=utf-8
-from __future__ import division, absolute_import, print_function, unicode_literals
+from __future__ import division, absolute_import
+from __future__ import print_function, unicode_literals
 import logging
 import calendar
 import json
@@ -11,8 +12,10 @@ from cassandra.query import SimpleStatement, BatchStatement
 
 MIN_ID = 1033430400  # approx when audioscrobbler was created
 
+
 def id_to_key(id):
     return id // 10000000
+
 
 def key_to_id(key):
     return key * 10000000
@@ -21,7 +24,7 @@ def key_to_id(key):
 class ListenStore(object):
     MAX_FETCH = 5000
 
-    def __init__(self, host = "127.0.0.1"):
+    def __init__(self, host="127.0.0.1"):
         self.log = logging.getLogger(__name__)
         self.replication_factor = 1
         self.keyspace = "listenbrainz"
@@ -31,7 +34,7 @@ class ListenStore(object):
         try:
             self.session = self.cluster.connect(self.keyspace)
         except InvalidRequest:
-            self.log.info('Creating Cassandra schema in keyspace %s...', self.keyspace)
+            self.log.info('Creating schema in keyspace %s...', self.keyspace)
             self.session = self.cluster.connect()
             self.create_schema()
 
@@ -65,20 +68,13 @@ class ListenStore(object):
 
     def insert_batch(self, items):
         """ Insert a batch of items, using asynchronous queries.
-            Batches should probably be no more than 500-1000 items until this function supports
-            limiting the number of queries in flight.
+            Batches should probably be no more than 500-1000 items until this
+            function supports limiting the number of queries in flight.
         """
         queries = []
         for item in items:
             queries.append(self.insert_async(item))
         [query.result() for query in queries]
-
-    def get_one(self, uid, tid):
-        query = 'SELECT id,json FROM listens WHERE uid=%(uid)s AND idkey=%(idkey)s AND id=%(tid)s'
-        result = self.execute(query, {'uid': uid, 'idkey': id_to_key(tid), 'tid': tid})
-        if len(result) == 0:
-            raise LookupError("not found")
-        return result[0]
 
     def keyrange(self, minid, maxid):
         minv = id_to_key(minid)
