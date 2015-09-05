@@ -3,6 +3,7 @@ from flask import Blueprint, request, Response, jsonify, app
 from werkzeug.exceptions import BadRequest, NotFound
 import json
 from kafka import SimpleProducer
+from kconn import _kafka
 
 listen_bp = Blueprint('listen', __name__)
 
@@ -12,7 +13,6 @@ listen_bp = Blueprint('listen', __name__)
 @listen_bp.route("/listen/user/<user_id>", methods=["POST"])
 def submit_listen(user_id):
     """Endpoint for submitting a listen to ListenBrainz."""
-    global _kafka
 
     raw_data = request.get_data()
     print "data: '%s'" % raw_data
