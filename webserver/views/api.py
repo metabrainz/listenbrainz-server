@@ -15,7 +15,6 @@ def submit_listen(user_id):
     """Endpoint for submitting a listen to ListenBrainz."""
 
     raw_data = request.get_data()
-    print "data: '%s'" % raw_data
     try:
         data = json.loads(raw_data.decode("utf-8"))
     except ValueError as e:
@@ -30,15 +29,14 @@ def submit_listen(user_id):
         raise BadRequest("JSON document contains more than listen for a single/playing_now. "
                          "It should contain only one. ")
 
-#    for i, listen in enumerate(payload):
+    for i, listen in enumerate(payload):
 #        err = validate_listen(listen):
 #        if not err:
 #            raise BadRequest("payload index %d error: " + err)
 
-    data['user_id'] = user_id
-    print json.dumps(data, indent = 4)
-    # Catch exception here
-    producer = SimpleProducer(_kafka)
-    producer.send_messages(b'listens', json.dumps(data).encode('utf-8'))
+        listen['user_id'] = user_id
+        # Catch exception here
+        producer = SimpleProducer(_kafka)
+        producer.send_messages(b'listens', json.dumps(listen).encode('utf-8'))
 
     return ""

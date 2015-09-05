@@ -6,6 +6,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 from kafka import KafkaClient, SimpleConsumer
 from cassandra.cluster import Cluster
+from cassandra import InvalidRequest
 
 LOG_FILE_MAX_SIZE = 512 * 1024
 LOG_FILE_BACKUP_COUNT = 100
@@ -30,18 +31,22 @@ client = KafkaClient(config.KAFKA_CONNECT)
 cluster = Cluster()
 session = cluster.connect(config.CASSANDRA_CLUSTER)
 
+log.info("your mom")
+
 consumer = SimpleConsumer(client, b"listen-group", b"listens")
 for message in consumer:
-    data =  message.message.value
+    json_data =  message.message.value
     try:
-        data = json.loads(data)
+        data = json.loads(json_data)
     except ValueError:
         log.error("Cannot parse JSON: '%s'" % message)
 
     uid = data['user_id']
-    id_key = data['listened_at']
-    id = id_key[0:3]
+    id = data['listened_at']
+    idkey = int(("%d" % id)[0:3])
 
-    session.execute("""INSERT INTO listens (uid, id_key, id, json) VALUES 
-                       (%s, %s, %s, %s)""", (uid, id_key, id, data))
-
+#    try:
+    session.execute("""INSERT INTO listens (uid, idkey, id, json) VALUES 
+                           (%s, %s, %s, %s)""", (uid, idkey, id, json_data))
+#    except InvalidRequest as e:
+#        log.error("Invalid cassandra insert: ")
