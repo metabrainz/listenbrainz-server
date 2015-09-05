@@ -10,7 +10,7 @@ from cassandra.cluster import Cluster
 from cassandra import InvalidRequest
 from cassandra.query import SimpleStatement, BatchStatement
 
-MIN_ID = 1033430400  # approx when audioscrobbler was created
+MIN_ID = 1033430400     # approx when audioscrobbler was created
 
 
 def id_to_key(id):
@@ -22,10 +22,12 @@ def key_to_id(key):
 
 
 class ListenStore(object):
-    MAX_FETCH = 5000
+    MAX_FETCH = 5000          # max batch size to fetch from cassandra
+    MAX_FUTURE_SECONDS = 600  # 10 mins in future - max fwd clock skew
 
     def __init__(self, host="127.0.0.1"):
         self.log = logging.getLogger(__name__)
+        # TODO: configured via config file, different in dev/prod
         self.replication_factor = 1
         self.keyspace = "listenbrainz"
         self.log.info('Connecting to cassandra: %s', host)
@@ -49,6 +51,9 @@ class ListenStore(object):
         for query in CREATE_SCHEMA_QUERIES:
             self.execute(query % opts)
 
+    def max_id(self):
+        return int(self.MAX_FUTURE_SECONDS + calendar.timegm(time.gmtime()))
+
     def insert_async(self, item):
         batch = BatchStatement()
         tid = item['listened_at']
@@ -59,7 +64,7 @@ class ListenStore(object):
         values = {'uid': item['user_id'],
                   'id': tid,
                   'idkey': idkey,
-                  'json': json.dumps(item['body'])}
+                  'json': json.dumps(item)}
         batch.add(SimpleStatement(query), values)
         return self.session.execute_async(batch)
 
@@ -88,7 +93,7 @@ class ListenStore(object):
         if from_id is None:
             from_id = MIN_ID
         if to_id is None:
-            to_id = int(calendar.timegm(time.gmtime()))
+            to_id = self.max_id()
 
         idkeyrange = self.keyrange(from_id, to_id)
         if order == 'asc':
@@ -153,21 +158,29 @@ class ListenStore(object):
             else:
                 return
 
-    def get_last_n(self, uid, limit, minid, maxid):
+    def get_last_n(self, uid, limit=10, minid=None, maxid=None):
+        if minid is None:
+            minid = MIN_ID
+        if maxid is None:
+            maxid = self.max_id()
         # Not an error, some can have no listens, just early return
         if minid == 0 or maxid == 0:
             return
         else:
             return self.fetch_listens(uid, minid, maxid, limit)
 
-    def get_since(self, uid, sinceid, maxid, limit):
+    def get_since(self, uid, sinceid, maxid=None, limit=10):
         if sinceid < MIN_ID:
             # This should never happen, and it's inefficient when it does.
             sinceid = MIN_ID
+
+        if maxid is None:
+            maxid = self.max_id()
+
         if sinceid > maxid:
             return []
         else:
-            return self.fetch_listens(uid, sinceid, maxid, limit)
+            return self.fetch_listens(uid, from_id=sinceid, to_id=maxid, limit=limit)
 
     def get_previous_n(self, uid, id, limit):  # TODO need minid from buffers table
         return self.fetch_listens(uid, None, id, limit)
