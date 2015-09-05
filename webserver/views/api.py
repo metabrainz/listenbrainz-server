@@ -8,11 +8,12 @@ api_bp = Blueprint('api', __name__)
 #def validate_listen(listen):
 
 # TODO: ensure that we're logged in when we get to the oauth bit
-@api_bp.route("/post/listen/<userid>", methods=["POST"])
+@api_bp.route("/listen/user/<user_id>", methods=["POST"])
 def submit_listen(user_id):
     """Endpoint for submitting a listen to ListenBrainz."""
 
     raw_data = request.get_data()
+    print "raw data: ", raw_data
     try:
         data = json.loads(raw_data.decode("utf-8"))
     except ValueError as e:

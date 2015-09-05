@@ -33,8 +33,8 @@ def create_app():
 #                  app.config['MUSICBRAINZ_CLIENT_SECRET'])
 
     # Error handling
-    from webserver.errors import init_error_handlers
-    init_error_handlers(app)
+#    from webserver.errors import init_error_handlers
+#    init_error_handlers(app)
 
     # Template utilities
     app.jinja_env.add_extension('jinja2.ext.do')
