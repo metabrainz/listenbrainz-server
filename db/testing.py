@@ -28,7 +28,6 @@ class DatabaseTestCase(unittest.TestCase):
         self.init_db()
 
     def init_db(self):
-        run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_types.sql'))
         run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
         run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_primary_keys.sql'))
         run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_foreign_keys.sql'))

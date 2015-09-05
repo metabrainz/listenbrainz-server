@@ -1,7 +1,5 @@
 from __future__ import print_function
 import db
-import db.dump
-import db.dump_manage
 from webserver import create_app
 import subprocess
 import os
@@ -56,7 +54,7 @@ def init_db(archive, force):
         raise Exception('Failed to create new database and user! Exit code: %i' % exit_code)
 
     print('Creating database extensions...')
-    exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER + ' -d acousticbrainz < ' +
+    exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER + ' -d messybrainz < ' +
                                 os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'),
                                 shell=True)
     if exit_code != 0:
@@ -64,17 +62,8 @@ def init_db(archive, force):
 
     db.init_db_connection(config.PG_CONNECT)
 
-    print('Creating types...')
-    db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_types.sql'))
-
     print('Creating tables...')
     db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
-
-    if archive:
-        print('Importing data...')
-        db.dump.import_db_dump(archive)
-    else:
-        print('Skipping data importing.')
 
     print('Creating primary and foreign keys...')
     db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_primary_keys.sql'))
@@ -108,7 +97,7 @@ def init_test_db(force=False):
     if exit_code != 0:
         raise Exception('Failed to create new database and user! Exit code: %i' % exit_code)
 
-    exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER + ' -d ab_test < ' +
+    exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER + ' -d myb_test < ' +
                                 os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'),
                                 shell=True)
     if exit_code != 0:
@@ -116,25 +105,12 @@ def init_test_db(force=False):
 
     db.init_db_connection(config.PG_CONNECT_TEST)
 
-    db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_types.sql'))
     db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
     db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_primary_keys.sql'))
     db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
     db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
 
     print("Done!")
-
-
-@cli.command()
-@click.argument("archive", type=click.Path(exists=True))
-def import_data(archive):
-    """Imports data dump into the database."""
-    db.init_db_connection(config.PG_CONNECT)
-    print('Importing data...')
-    db.dump.import_db_dump(archive)
-
-
-cli.add_command(db.dump_manage.cli, name="dump")
 
 
 if __name__ == '__main__':
