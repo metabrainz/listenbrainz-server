@@ -4,7 +4,6 @@ from werkzeug.exceptions import BadRequest, NotFound
 import json
 from kafka import SimpleProducer
 
-
 listen_bp = Blueprint('listen', __name__)
 
 #def validate_listen(listen):
