@@ -2,7 +2,6 @@ if not node['cassandra']
   raise "Cassandra cluster not configured for this node"
 end
 
-node.set['cassandra']['config']['rpc_address'] = '127.0.0.1'
 
 cluster_config = data_bag_item("cassandra", "vagrant").to_hash
 
@@ -12,7 +11,8 @@ else
   cluster_config['listen_addr'] = ''
 end
 
-cluster_config['rpc_addr'] = '0.0.0.0'
+cluster_config['rpc_addr'] = '127.0.0.1'
+cluster_config['listen_addr'] = '127.0.0.1'
 
 directory "/etc/cassandra"
 
