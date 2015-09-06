@@ -118,6 +118,21 @@ function getLastFMPage(page, callback) {
 var page = 1;
 var numberOfPages = parseInt(document.getElementsByClassName("pages")[0].innerHTML.trim().split(" ")[3]);
 
+var toReport = [];
+var numCompleted = 0;
+
+function dispatch() {
+    for (var i = 0; i < toReport.length; ++i) {
+        reportScrobbles(toReport[i]);
+    }
+    toReport = [];
+}
+
+function enqueueReport(struct) {
+    toReport.push(struct);
+    dispatch();
+}
+
 function reportScrobbles(struct) {
     //must have a trailing slash
     var reportingURL = "{{ base_url }}";
@@ -127,7 +142,16 @@ function reportScrobbles(struct) {
     xhr.setRequestHeader("Authorization", "Token {{ user_token }}");
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xhr.onload = function(content) {
+        numCompleted++;
         console.log("successfully reported page");
+    };
+    xhr.onabort = function(context) {
+        console.log("abort, req'ing");
+        enqueueReport(struct);
+    };
+    xhr.onerror = function(context) {
+        console.log("error, req'ing");
+        enqueueReport(struct);
     };
     xhr.send(JSON.stringify(struct));
 }
@@ -136,11 +160,11 @@ function reportPage(response) {
     var elem = document.createElement("div");
     elem.innerHTML = response;
     var struct = encodeScrobbles(elem);
-    reportScrobbles(struct);
+    enqueueReport(struct);
 }
 
 function reportPageAndGetNext(response) {
-  document.getElementById("listen-progress-container").innerHTML = "<img src='https://i.imgur.com/7g0M2fW.jpg' height='75'><br><br><i class='fa fa-cog fa-spin'></i> Sending page " + page + " of " + numberOfPages + " to ListenBrainz<br><span style='font-size:8pt'>Please don't navigate while this is running</span><br>";
+  document.getElementById("listen-progress-container").innerHTML = "<img src='https://i.imgur.com/7g0M2fW.jpg' height='75'><br><br><i class='fa fa-cog fa-spin'></i> Sending page " + page + " of " + numberOfPages + " to ListenBrainz<br> [completed: "+numCompleted+"]<span style='font-size:8pt'>Please don't navigate while this is running</span><br>";
     reportPage(response);
     page += 1;
 
