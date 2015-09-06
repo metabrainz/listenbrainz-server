@@ -7,8 +7,8 @@ from flask import Blueprint, request, Response, jsonify, current_app
 from werkzeug.exceptions import BadRequest, NotFound, InternalServerError, Unauthorized
 from kafka import SimpleProducer
 from webserver.kafka_connection import _kafka
-from webserver.cassandra_connection import _cassandra
 from webserver.decorators import crossdomain
+import webserver
 import db.user
 
 api_bp = Blueprint('listen', __name__)
@@ -178,7 +178,8 @@ def get_listens(user_id):
     count = max(request.args.get('count') or DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET)
     max_ts = request.args.get('max_ts') or None
 
-    listens = _cassandra.fetch_listens(user_id, from_id=max_ts, limit=count)
+    cassandra = webserver.create_cassandra()
+    listens = cassandra.fetch_listens(user_id, from_id=max_ts, limit=count)
     listen_data = []
     for listen in listens:
         temp = json.loads(listen.json)

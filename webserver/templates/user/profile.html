@@ -4,19 +4,17 @@
 
 {% block content %}
   <h2 class="page-title">Most recent listens for {{ user.musicbrainz_id }}</h2>
-  {% if current_user.is_authenticated() and current_user == user %}
   <table id="listens" class="table table-striped table-bordered">
     <tr><th>track</th><th>artist</th><th>time</th></tr>
     <tr id="placeholder"><td>Loading your listens...</td></tr>
   </table>
-  {% endif %}
 
 {% endblock %}
 {% block scripts %}
 {{ super() }}
 <script src="{{ url_for('static', filename='js/lib/jquery.timeago.js') }}"></script>
 <script type="text/javascript">
-$(document).ready(function() 
+$(document).ready(function()
 {
     jQuery("abbr.timeago").timeago();
     load_listens();
