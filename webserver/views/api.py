@@ -61,7 +61,7 @@ def submit_listen(user_id):
             raise BadRequest("JSON document is too large. In aggregate, listens may not be larger than %d characters." % MAX_LISTEN_SIZE)
 
         if data['listen_type'] not in ('playing_now', 'single', 'import'):
-            raise BadRequest("JSON document required a valid listen_type key")
+            raise BadRequest("JSON document requires a valid listen_type key")
 
         if (data['listen_type'] == "single" or data['listen_type'] == 'playing_now') and len(payload) > 1:
             raise BadRequest("JSON document contains more than listen for a single/playing_now. "
@@ -69,13 +69,16 @@ def submit_listen(user_id):
     except KeyError:
         raise BadRequest("Invalid JSON document submitted.")
 
-
     for i, listen in enumerate(payload):
         validate_listen(listen)
 
         listen['user_id'] = user_id
         # TODO: Catch exception here
         producer = SimpleProducer(_kafka)
-        producer.send_messages(b'listens', json.dumps(listen).encode('utf-8'))
+
+        if data['listen_type'] == 'playing_now':
+            producer.send_messages(b'playing_now', json.dumps(listen).encode('utf-8'))
+        else:
+            producer.send_messages(b'listens', json.dumps(listen).encode('utf-8'))
 
     return ""
