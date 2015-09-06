@@ -1,0 +1,6 @@
+\set ON_ERROR_STOP 1
+
+-- Create the user and the database. Must run as user postgres.
+
+CREATE USER lb_test NOCREATEDB NOCREATEUSER;
+CREATE DATABASE lb_test WITH OWNER = lb_test TEMPLATE template0 ENCODING = 'UNICODE';
