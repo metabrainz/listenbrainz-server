@@ -1,14 +1,19 @@
 #!/usr/bin/env python
-import time
-import calendar
-import listenstore
+from listenstore.cli import Command
 
-l = listenstore.ListenStore()
 
-unixtime = int(calendar.timegm(time.gmtime()))
-item = {'user_id':'rj','listened_at':unixtime,'body':{'foo':'bar','now':time.strftime("%c")}}
-l.insert(item)
+class ListenPrinter(Command):
+    desc = "Print listens fetched from cassandra"
 
-res = l.fetch_listens(uid='rj')
+    def run(self):
+        self.log.info("ListenPrinter starting..")
+        #unixtime = int(calendar.timegm(time.gmtime()))
+        #item = {'user_id':'rj','listened_at':unixtime,'body':{'foo':'bar','now':time.strftime("%c")}}
+        #self.listenStore.insert(item)
 
-print list(res)
+        res = self.listenStore.fetch_listens(uid='rj')
+        for r in res:
+            print repr(r)
+
+if __name__ == '__main__':
+    ListenPrinter().start()
