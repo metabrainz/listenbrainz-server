@@ -11,6 +11,7 @@ def create_app():
 
     # Configuration
     sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
+    sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../listenstore"))
     import config
     app.config.from_object(config)
 
@@ -21,6 +22,10 @@ def create_app():
     # Kafka connection
     from kafka_connection import init_kafka_connection
     init_kafka_connection(app.config['KAFKA_CONNECT'])
+
+    # Cassandra connection
+    from cassandra_connection import init_cassandra_connection
+    init_cassandra_connection(app.config['CASSANDRA_SERVER'], app.config['CASSANDRA_KEYSPACE'])
 
     # Memcached
 #    if 'MEMCACHED_SERVERS' in app.config:

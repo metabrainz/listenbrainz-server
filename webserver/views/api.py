@@ -4,6 +4,7 @@ from flask import Blueprint, request, Response, jsonify, current_app
 from werkzeug.exceptions import BadRequest, NotFound, InternalServerError
 from kafka import SimpleProducer
 from webserver.kafka_connection import _kafka
+from webserver.cassandra_connection import _cassandra
 
 api_bp = Blueprint('listen', __name__)
 
