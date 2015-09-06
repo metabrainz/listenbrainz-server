@@ -4,7 +4,7 @@ from kafka import KafkaClient, SimpleConsumer
 
 
 class KafkaConsumer(object):
-    def __init__(self, conf, callback, group_name, topic_name):
+    def __init__(self, conf):
         self.log = logging.getLogger(__name__)
         self.client = KafkaClient(conf["kafka_server"])
 
@@ -17,6 +17,7 @@ class KafkaConsumer(object):
         self.callback = callback
         self.group_name = group_name
         self.topic_name = topic_name
+        self.log.info("KafkaConsumer subscribed to %s -> %s" % (group_name, topic_name))
         self.consumer = SimpleConsumer(self.client, self.group_name, self.topic_name)
 
         for message in self.consumer:
