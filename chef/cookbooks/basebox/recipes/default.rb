@@ -38,5 +38,4 @@ include_recipe "fail2ban"
 
 include_recipe "basebox::packages"
 include_recipe "basebox::default-configs"
-include_recipe "basebox::users"
 

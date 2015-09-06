@@ -33,6 +33,7 @@ suites:
       - recipe[basebox]
       - recipe[ourkafka]
       - recipe[ourcassandra]
+      - recipe[ourpostgres]
     attributes: {
         "foo": 123
     }
