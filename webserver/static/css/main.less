@@ -32,8 +32,8 @@ body {
 // Navbar
 @grid-float-breakpoint: @screen-md-min; // Point at which the navbar becomes uncollapsed
 .navbar {
-  @logo-width: 199px + 15px;
-  .navbar-variant(@blue, @logo-width);
+  @logo-width: 166px + 15px;
+  .navbar-variant(#353070, @logo-width);
   .import-link {
     > a {
       color: white !important;
@@ -66,6 +66,7 @@ h2.page-title { @media (max-width: @grid-float-breakpoint) { margin-top: 0px; } 
     .visible-lg;
     height: 128px;
     margin-top: 27px;
+    margin-bottom: 6px;
     margin-right: 26px;
   }
   #stats {
