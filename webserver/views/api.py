@@ -3,15 +3,15 @@ import json
 from flask import Blueprint, request, Response, jsonify, current_app
 from werkzeug.exceptions import BadRequest, NotFound, InternalServerError
 from kafka import SimpleProducer
-from kconn import _kafka
-
-# TODO: Write to logs, not stdout
+from webserver.kafka_connection import _kafka
 
 api_bp = Blueprint('listen', __name__)
 
 MAX_LISTEN_SIZE = 10240    # overall listen size, to prevent egregious spamming
 MAX_TAGS_PER_LISTEN = 50
 MAX_TAG_SIZE = 64
+
+MAX_ITEMS_PER_GET = 100
 
 def validate_listen(listen):
     """ Make sure that required keys are present, filled out and not too large."""
@@ -42,7 +42,6 @@ def validate_listen(listen):
             if len(tag) > MAX_TAG_SIZE:
                 raise BadRequest("JSON document may not contain track_metadata.additional_info.tags longer than %d characters." % MAX_TAG_SIZE)
 
-# TODO: ensure that we're logged in when we get to the oauth bit
 @api_bp.route("/listen/user/<user_id>", methods=["POST"])
 def submit_listen(user_id):
     """Endpoint for submitting a listen to ListenBrainz. Sanity check listen and then pass on to Kafka."""
@@ -88,5 +87,14 @@ def submit_listen(user_id):
             except:
                 current_app.logger.error("Kafka listens write error: " + str(sys.exc_info()[0]))
                 raise InternalServerError("Cannot record listen at this time.")
+
+    return ""
+
+@api_bp.route("/listen/user/<user_id>", methods=["GET"])
+def get_listens(user_id):
+    count = request.args.get('count') or MAX_ITEMS_PER_GET
+    offset = request.args.get('offset') or 0
+
+
 
     return ""

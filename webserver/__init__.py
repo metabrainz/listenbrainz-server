@@ -19,7 +19,7 @@ def create_app():
     init_loggers(app)
 
     # Kafka connection
-    from kconn import init_kafka_connection
+    from kafka_connection import init_kafka_connection
     init_kafka_connection(app.config['KAFKA_CONNECT'])
 
     # Memcached
