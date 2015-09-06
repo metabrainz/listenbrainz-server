@@ -3,19 +3,10 @@
 {% block title %}User "{{ user.musicbrainz_id }}" - ListenBrainz{% endblock %}
 
 {% block content %}
-  <h2 class="page-title">{{ user.musicbrainz_id }}</h2>
+  <h2 class="page-title">Most recent listens for {{ user.musicbrainz_id }}</h2>
   {% if current_user.is_authenticated() and current_user == user %}
-     <p class="text-muted"><em>This is you!</em></p>
-     <p>Your token is {{ user.auth_token }}</p>
-     {% if loader %}
-        Drag this to your bookmarks toolbar: <input type="text" value="{{loader}}" length="100" />
-        <p>Then, go <a href="http://last.fm/user/{{lastfm_username}}/library">to your lastfm profile page</a> and click the bookmark</a>
-     {% else %}
-     <form action="" method="GET">
-         <input type="text" name="lastfm_username" placeholder="last.fm user id">
-         <input type="submit">
-     </form>
-     {% endif %}
+  <table class="table table-striped">
+    <tr><td>Loading your listens...</td></tr>
+  </table>
   {% endif %}
-
 {% endblock %}
