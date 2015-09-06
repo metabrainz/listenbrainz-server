@@ -1,6 +1,6 @@
 from __future__ import absolute_import
-from flask import Blueprint, request, Response, jsonify
-from webserver.decorators import crossdomain
+from flask import Blueprint, request, jsonify
+from webserver.decorators import crossdomain, ip_filter
 from werkzeug.exceptions import BadRequest, NotFound
 import db.data
 import db.exceptions
@@ -11,6 +11,7 @@ api_bp = Blueprint('api', __name__)
 
 @api_bp.route("/submit", methods=["POST"])
 @crossdomain()
+@ip_filter
 def submit():
     raw_data = request.get_data()
     try:
@@ -51,6 +52,7 @@ def get(messybrainz_id):
         return jsonify(response)
     except db.exceptions.NoDataFoundException:
         raise NotFound
+
 
 @api_bp.route("/<uuid:messybrainz_id>/aka")
 @crossdomain()

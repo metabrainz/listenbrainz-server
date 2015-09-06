@@ -17,10 +17,12 @@ PG_CONNECT_TEST = "dbname=msb_test user=msb_test password= host=localhost port=5
 # be able to connect to the database with this user.
 PG_SUPER_USER = "postgres"
 
+
 # MUSICBRAINZ
 
 MUSICBRAINZ_USERAGENT = "messybrainz-server"
 MUSICBRAINZ_HOSTNAME = None
+
 
 # CACHE
 
@@ -42,6 +44,14 @@ MEMCACHED_NAMESPACE = "MSB"
 
 
 # MISCELLANEOUS
+
+#BEHIND_GATEWAY = True
+#REMOTE_ADDR_HEADER = "X-MB-Remote-Addr"
+
+IP_FILTER_ON = False
+IP_WHITELIST = [
+    #'127.0.0.1',
+]
 
 # Mail server
 # These variables need to be defined if you enabled log emails.
