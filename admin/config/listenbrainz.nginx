@@ -5,7 +5,7 @@ server {
      error_log   /var/log/nginx/listenbrainz-error.log notice;
 
      location /static {
-          root /home/listenbrainz/listenbrainz-server;
+          root /home/listenbrainz/listenbrainz-server/webserver;
           gzip on;
           gzip_http_version 1.0;
           gzip_comp_level 6;
