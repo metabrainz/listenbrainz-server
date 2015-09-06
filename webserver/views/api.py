@@ -20,34 +20,44 @@ MAX_TAG_SIZE = 64
 MAX_ITEMS_PER_GET = 100
 DEFAULT_ITEMS_PER_GET = 25
 
+def log_and_raise_bad_request(err, data):
+    """Helper function to not make the code even uglier."""
+
+    if type(data) == dict:
+        data = json.dumps(data)
+
+    current_app.logger.debug("BadRequest: %s\nJSON: %s" % (err, data))
+    raise BadRequest
+
+
 def validate_listen(listen):
     """ Make sure that required keys are present, filled out and not too large."""
 
     #current_app.logger.info(json.dumps(listen, indent=4))
 
     if 'listened_at' in listen and 'track_metadata' in listen and len(listen) > 2:
-        raise BadRequest("JSON document may only contain listened_at and track_metadata top level keys.")
+        log_and_raise_bad_request("JSON document may only contain listened_at and track_metadata top level keys.", listen)
 
     # Validate basic metadata
     try:
         if not listen['track_metadata']['track_name']:
-            raise BadRequest("JSON document does not contain required track_metadata.track_name")
+            log_and_raise_bad_request("JSON document does not contain required track_metadata.track_name", listen)
 
         if not listen['track_metadata']['artist_name']:
-            raise BadRequest("JSON document does not contain required track_metadata.artist_name")
+            log_and_raise_bad_request("JSON document does not contain required track_metadata.artist_name", listen)
 
     except KeyError:
-        raise BadRequest("JSON document does not contain a valid metadata.track_name and/or track_metadata.artist_name")
+        log_and_raise_bad_request("JSON document does not contain a valid metadata.track_name and/or track_metadata.artist_name", listen)
 
     # Validate tags
     if 'additional_info' in listen['track_metadata']:
         tags = listen['track_metadata']['additional_info']['tags']
         if len(tags) > MAX_TAGS_PER_LISTEN:
-            raise BadRequest("JSON document may not contain more than %d items in track_metadata.additional_info.tags" % MAX_TAGS_PER_LISTEN)
+            log_and_raise_bad_request("JSON document may not contain more than %d items in track_metadata.additional_info.tags" % MAX_TAGS_PER_LISTEN, listen)
 
         for tag in tags:
             if len(tag) > MAX_TAG_SIZE:
-                raise BadRequest("JSON document may not contain track_metadata.additional_info.tags longer than %d characters." % MAX_TAG_SIZE)
+                log_and_raise_bad_request("JSON document may not contain track_metadata.additional_info.tags longer than %d characters." % MAX_TAG_SIZE, listen)
 
 @api_bp.route("/listen/user/<user_id>", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
@@ -74,25 +84,25 @@ def submit_listen(user_id):
     try:
         data = json.loads(raw_data.decode("utf-8"))
     except ValueError as e:
-        raise BadRequest("Cannot parse JSON document: %s" % e)
+        log_and_raise_bad_request("Cannot parse JSON document: %s" % e, raw_data)
 
     # Sanity check the submission
     try:
         payload = data['payload']
         if len(payload) == 0:
-            raise BadRequest("JSON document does not contain any listens.")
+            log_and_raise_bad_request("JSON document does not contain any listens.", payload)
 
         if len(raw_data) > len(payload) * MAX_LISTEN_SIZE:
-            raise BadRequest("JSON document is too large. In aggregate, listens may not be larger than %d characters." % MAX_LISTEN_SIZE)
+            log_and_raise_bad_request("JSON document is too large. In aggregate, listens may not be larger than %d characters." % MAX_LISTEN_SIZE, payload)
 
         if data['listen_type'] not in ('playing_now', 'single', 'import'):
-            raise BadRequest("JSON document requires a valid listen_type key")
+            log_and_raise_bad_request("JSON document requires a valid listen_type key", payload)
 
         if (data['listen_type'] == "single" or data['listen_type'] == 'playing_now') and len(payload) > 1:
-            raise BadRequest("JSON document contains more than listen for a single/playing_now. "
-                             "It should contain only one. ")
+            log_and_raise_bad_request("JSON document contains more than listen for a single/playing_now. "
+                             "It should contain only one. ", payload)
     except KeyError:
-        raise BadRequest("Invalid JSON document submitted.")
+        log_and_raise_bad_request("Invalid JSON document submitted.", raw_data)
 
     producer = SimpleProducer(_kafka)
     for i, listen in enumerate(payload):
