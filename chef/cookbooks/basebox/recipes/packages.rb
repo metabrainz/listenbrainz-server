@@ -14,11 +14,15 @@ pkgs = [
         "manpages-dev",
         "build-essential",
         "pkg-config",
+        "python-dev",
+        "python-pip",
         "libtool",
         "autoconf"
 ]
 
-pkgs.each do |pkg|
-    apt_package pkg
-end
+apt_package pkgs
+
+#pkgs.each do |pkg|
+#    apt_package pkg
+#end
 
