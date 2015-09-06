@@ -25,17 +25,17 @@ def submit_scribble(data):
     data_json = json.dumps(data, sort_keys=True, separators=(',', ':'))
     data_sha256 = sha256(data_json.encode("utf-8")).hexdigest()
 
-    with db.create_cursor() as cursor:
-        cursor.execute("""INSERT INTO scribble_json (data, data_sha256)
-                            VALUES (%s, %s)
-                         RETURNING id""", (data_json, data_sha256))
-        id = cursor.fetchone()["id"]
-        gid = str(uuid.uuid4())
-        cursor.execute("""INSERT INTO scribble (gid, data, submitted)
-                            VALUES (%s, %s, now())""", (gid, id))
+    with db._connection:
+        with db.create_cursor() as cursor:
+            cursor.execute("""INSERT INTO scribble_json (data, data_sha256)
+                                VALUES (%s, %s)
+                             RETURNING id""", (data_json, data_sha256))
+            id = cursor.fetchone()["id"]
+            gid = str(uuid.uuid4())
+            cursor.execute("""INSERT INTO scribble (gid, data, submitted)
+                                VALUES (%s, %s, now())""", (gid, id))
 
-        db.commit()
-        return gid
+    return gid
 
 def load_scribble(messybrainz_id):
     with db.create_cursor() as cursor:
