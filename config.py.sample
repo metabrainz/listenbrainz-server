@@ -6,6 +6,7 @@ SECRET_KEY = "CHANGE_ME"
 KAFKA_CONNECT = "localhost:9092"
 
 # CASSANDRA
+CASSANDRA_HOST = "localhost"     
 CASSANDRA_CLUSTER = "listenbrainz"
 
 # OAuth

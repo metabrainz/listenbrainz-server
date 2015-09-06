@@ -12,6 +12,7 @@ MAX_TAGS_PER_LISTEN = 50
 MAX_TAG_SIZE = 64
 
 MAX_ITEMS_PER_GET = 100
+DEFAULT_ITEMS_PER_GET = 25
 
 def validate_listen(listen):
     """ Make sure that required keys are present, filled out and not too large."""
@@ -92,9 +93,9 @@ def submit_listen(user_id):
 
 @api_bp.route("/listen/user/<user_id>", methods=["GET"])
 def get_listens(user_id):
-    count = request.args.get('count') or MAX_ITEMS_PER_GET
-    offset = request.args.get('offset') or 0
+    count = max(request.args.get('count') or DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET)
+    max_ts = request.args.get('max_ts') or None
 
-
-
+    listens = _cassandra.fetch_listens(user_id, from_id=max_ts, limit=count)
+    print listens
     return ""
