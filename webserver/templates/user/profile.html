@@ -7,6 +7,14 @@
   {% if current_user.is_authenticated() and current_user == user %}
      <p class="text-muted"><em>This is you!</em></p>
      <p>Your token is {{ user.auth_token }}</p>
+     {% if loader %}
+        <input type="text" value="{{loader}}" length="100" />
+     {% else %}
+     <form action="" method="GET">
+         <input type="text" name="lastfm_username" value='{{lastfm_username}}' placeholder="last.fm user id">
+         <input type="submit">
+     </form>
+     {% endif %}
   {% endif %}
 
 {% endblock %}
