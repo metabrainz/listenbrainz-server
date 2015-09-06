@@ -9,8 +9,8 @@ def get_id_from_scribble(data):
     data_json = json.dumps(data, sort_keys=True, separators=(',', ':'))
     data_sha256 = sha256(data_json.encode("utf-8")).hexdigest()
 
-    with db._connection:
-        with db.create_cursor() as cursor:
+    with db.new_connection() as conn:
+        with conn.cursor() as cursor:
             cursor.execute("""SELECT s.gid
                               FROM scribble s
                          LEFT JOIN scribble_json sj
@@ -26,8 +26,8 @@ def submit_scribble(data):
     data_json = json.dumps(data, sort_keys=True, separators=(',', ':'))
     data_sha256 = sha256(data_json.encode("utf-8")).hexdigest()
 
-    with db._connection:
-        with db.create_cursor() as cursor:
+    with db.new_connection() as conn:
+        with conn.cursor() as cursor:
             cursor.execute("""INSERT INTO scribble_json (data, data_sha256)
                                 VALUES (%s, %s)
                              RETURNING id""", (data_json, data_sha256))
@@ -39,8 +39,8 @@ def submit_scribble(data):
     return gid
 
 def load_scribble(messybrainz_id):
-    with db._connection:
-        with db.create_cursor() as cursor:
+    with db.new_connection() as conn:
+        with conn.cursor() as cursor:
             query = """SELECT sj.data
                             , r.musicbrainz_recording_id
                          FROM scribble_json sj
@@ -61,8 +61,8 @@ def load_scribble(messybrainz_id):
             return data
 
 def link_scribble_to_recording_id(scribble_id, recording_id):
-    with db._connection:
-        with db.create_cursor() as cursor:
+    with db.new_connection() as conn:
+        with conn.cursor() as cursor:
             cursor.execute("""INSERT INTO scribble_cluster (cluster_id, gid)
                                    VALUES (%s, %s)""", (scribble_id, scribble_id))
             cursor.execute("""INSERT INTO redirect (cluster_id, musicbrainz_recording_id)

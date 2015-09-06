@@ -14,15 +14,20 @@ SCHEMA_VERSION = 1
 # called! In general helper functions like `create_cursor` or `commit` should
 # be used. Feel free to add new ones if some functionality is missing.
 _connection = None
+_dsn = None
 
 
 def init_db_connection(dsn):
     global _connection
+    global _dsn
+    _dsn = dsn
     try:
         _connection = psycopg2.connect(dsn, cursor_factory=psycopg2.extras.DictCursor)
     except psycopg2.OperationalError as e:
         logging.error("Failed to initialize database connection: %s" % str(e))
 
+def new_connection():
+    return psycopg2.connect(_dsn, cursor_factory=psycopg2.extras.DictCursor)
 
 def create_cursor():
     """Creates a new psycopg `cursor` object.
