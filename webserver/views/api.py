@@ -1,6 +1,6 @@
 import sys
 import json
-from flask import Blueprint, request, Response, jsonify, app
+from flask import Blueprint, request, Response, jsonify, current_app as app
 from werkzeug.exceptions import BadRequest, NotFound, InternalServerError
 from kafka import SimpleProducer
 from kconn import _kafka
@@ -16,7 +16,7 @@ MAX_TAG_SIZE = 64
 def validate_listen(listen):
     """ Make sure that required keys are present, filled out and not too large."""
 
-    print json.dumps(listen, indent=4)
+    #app.logger.info(json.dumps(listen, indent=4))
 
     if 'listened_at' in listen and 'track_metadata' in listen and len(listen) > 2:
         raise BadRequest("JSON document may only contain listened_at and track_metadata top level keys.")
@@ -80,13 +80,13 @@ def submit_listen(user_id):
             try:
                 producer.send_messages(b'playing_now', json.dumps(listen).encode('utf-8'))
             except:
-                print("Kafka playing_now write error: " + str(sys.exc_info()[0]))
+                app.logger.error("Kafka playing_now write error: " + str(sys.exc_info()[0]))
                 raise InternalServerError("Cannot record playing_now at this time.")
         else:
             try:
                 producer.send_messages(b'listens', json.dumps(listen).encode('utf-8'))
             except:
-                print("Kafka listens write error: " + str(sys.exc_info()[0]))
+                app.logger.error("Kafka listens write error: " + str(sys.exc_info()[0]))
                 raise InternalServerError("Cannot record listen at this time.")
 
     return ""
