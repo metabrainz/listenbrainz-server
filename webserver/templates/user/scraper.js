@@ -41,8 +41,6 @@ var Scrobble = (function() {
         }
 
         this.artistName = function() {
-            console.log(rootScrobbleElement);
-            console.log(rootScrobbleElement.getElementsByClassName("chartlist-artists"));
             var artistElement = rootScrobbleElement.getElementsByClassName("chartlist-artists")[0];
             var artistName = artistElement.children[0].innerHTML;
             return artistName;
@@ -110,7 +108,7 @@ function encodeScrobbles(root) {
 
 function getLastFMPage(page, callback) {
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", encodeURI("http://www.last.fm/user/zebrasohmygod/library?page=" + page + "&_pjax=%23content"));
+    xhr.open("GET", encodeURI("http://www.last.fm/user/{{ lastfm_username }}/library?page=" + page + "&_pjax=%23content"));
     xhr.onload = function(content) {
         callback(xhr.response);
     };
@@ -122,7 +120,7 @@ var numberOfPages = parseInt(document.getElementsByClassName("pages")[0].innerHT
 
 function reportScrobbles(struct) {
     //must have a trailing slash
-    var reportingURL = "{{ base_url }}{{ user_id }}";
+    var reportingURL = "{{ base_url }}";
 
     var xhr = new XMLHttpRequest();
     xhr.open("POST", encodeURI(reportingURL));
