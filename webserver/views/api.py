@@ -149,5 +149,16 @@ def get_listens(user_id):
     max_ts = request.args.get('max_ts') or None
 
     listens = _cassandra.fetch_listens(user_id, from_id=max_ts, limit=count)
-    print listens
-    return ""
+    listen_data = []
+    for listen in listens:
+        temp = json.loads(listen.json)
+        del temp['user_id']
+        listen_data.append(temp)
+
+    payload = {}
+    payload['user_id'] = user_id
+    payload['count'] = count
+    payload['total'] = 0 # TODO: Fix this
+    payload['listens'] = listen_data
+
+    return json.dumps({ 'payload' : payload }, indent=4)
