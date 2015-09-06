@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, current_app
 import sys
 import os
 
@@ -6,7 +6,7 @@ _kafka = None
 
 def create_cassandra():
     from cassandra_connection import init_cassandra_connection
-    return init_cassandra_connection(app.config['CASSANDRA_SERVER'], app.config['CASSANDRA_KEYSPACE'])
+    return init_cassandra_connection(current_app.config['CASSANDRA_SERVER'], current_app.config['CASSANDRA_KEYSPACE'])
 
 def create_app():
     global _kafka
