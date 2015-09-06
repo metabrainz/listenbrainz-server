@@ -8,10 +8,11 @@
      <p class="text-muted"><em>This is you!</em></p>
      <p>Your token is {{ user.auth_token }}</p>
      {% if loader %}
-        <input type="text" value="{{loader}}" length="100" />
+        Drag this to your bookmarks toolbar: <input type="text" value="{{loader}}" length="100" />
+        <p>Then, go <a href="http://last.fm/user/{{lastfm_username}}/library">to your lastfm profile page</a> and click the bookmark</a>
      {% else %}
      <form action="" method="GET">
-         <input type="text" name="lastfm_username" value='{{lastfm_username}}' placeholder="last.fm user id">
+         <input type="text" name="lastfm_username" placeholder="last.fm user id">
          <input type="submit">
      </form>
      {% endif %}

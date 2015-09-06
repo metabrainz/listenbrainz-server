@@ -43,4 +43,4 @@ def profile(musicbrainz_id):
     else:
         loader = None
 
-    return render_template("user/profile.html", user=user, loader=loader)
+    return render_template("user/profile.html", user=user, loader=loader, lastfm_username=lastfm_username)
