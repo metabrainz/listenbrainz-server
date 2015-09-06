@@ -1,13 +1,15 @@
-from __future__ import absolute_import
-from flask import Blueprint, request, Response, jsonify, app
-from werkzeug.exceptions import BadRequest, NotFound
+import sys
 import json
+from flask import Blueprint, request, Response, jsonify, app
+from werkzeug.exceptions import BadRequest, NotFound, InternalServerError
 from kafka import SimpleProducer
 from kconn import _kafka
 
+# TODO: Write to logs, not stdout
+
 api_bp = Blueprint('listen', __name__)
 
-MAX_LISTEN_SIZE = 10240    # overall listen size, to prevent egrigrious spamming
+MAX_LISTEN_SIZE = 10240    # overall listen size, to prevent egregious spamming
 MAX_TAGS_PER_LISTEN = 50
 MAX_TAG_SIZE = 64
 
@@ -71,14 +73,20 @@ def submit_listen(user_id):
 
     for i, listen in enumerate(payload):
         validate_listen(listen)
-
         listen['user_id'] = user_id
-        # TODO: Catch exception here
-        producer = SimpleProducer(_kafka)
 
+        producer = SimpleProducer(_kafka)
         if data['listen_type'] == 'playing_now':
-            producer.send_messages(b'playing_now', json.dumps(listen).encode('utf-8'))
+            try:
+                producer.send_messages(b'playing_now', json.dumps(listen).encode('utf-8'))
+            except:
+                print("Kafka playing_now write error: " + str(sys.exc_info()[0]))
+                raise InternalServerError("Cannot record playing_now at this time.")
         else:
-            producer.send_messages(b'listens', json.dumps(listen).encode('utf-8'))
+            try:
+                producer.send_messages(b'listens', json.dumps(listen).encode('utf-8'))
+            except:
+                print("Kafka listens write error: " + str(sys.exc_info()[0]))
+                raise InternalServerError("Cannot record listen at this time.")
 
     return ""
