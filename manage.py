@@ -88,7 +88,7 @@ def init_test_db(force=False):
     if exit_code != 0:
         raise Exception('Failed to create new database and user! Exit code: %i' % exit_code)
 
-    exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER + ' -d myb_test < ' +
+    exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER + ' -d msb_test < ' +
                                 os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'),
                                 shell=True)
     if exit_code != 0:

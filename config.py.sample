@@ -11,7 +11,7 @@ SECRET_KEY = "CHANGE_ME"
 PG_CONNECT = "dbname=messybrainz user=messybrainz password= host=localhost port=5432"
 
 # This connection string will be used for testing
-PG_CONNECT_TEST = "dbname=myb_test user=myb_test password= host=localhost port=5432"
+PG_CONNECT_TEST = "dbname=msb_test user=msb_test password= host=localhost port=5432"
 
 # The name of a postgres user who has superuser privileges. Your local user should
 # be able to connect to the database with this user.
@@ -25,7 +25,7 @@ MUSICBRAINZ_HOSTNAME = None
 # CACHE
 
 MEMCACHED_SERVERS = ["127.0.0.1:11211"]
-MEMCACHED_NAMESPACE = "MYB"
+MEMCACHED_NAMESPACE = "MSB"
 
 
 # LOGGING

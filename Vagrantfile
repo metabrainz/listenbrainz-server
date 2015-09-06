@@ -3,9 +3,9 @@
 
 VAGRANTFILE_API_VERSION = "2"
 
-NCPUS = ENV['MYB_NCPUS'] || '1'
-MEM = ENV['MYB_MEM'] || '1024'
-MIRROR = ENV['MYB_MIRROR'] || 'archive.ubuntu.com'
+NCPUS = ENV['MSB_NCPUS'] || '1'
+MEM = ENV['MSB_MEM'] || '1024'
+MIRROR = ENV['MSB_MIRROR'] || 'archive.ubuntu.com'
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "ubuntu/trusty64"
