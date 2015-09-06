@@ -41,8 +41,6 @@ var Scrobble = (function() {
         }
 
         this.artistName = function() {
-            console.log(rootScrobbleElement);
-            console.log(rootScrobbleElement.getElementsByClassName("chartlist-artists"));
             var artistElement = rootScrobbleElement.getElementsByClassName("chartlist-artists")[0];
             var artistName = artistElement.children[0].innerHTML;
             return artistName;
