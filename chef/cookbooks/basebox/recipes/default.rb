@@ -17,15 +17,6 @@ include_recipe "basebox::ssh"
 include_recipe "basebox::time"
 include_recipe "basebox::sysctl"
 
-## Disable slow MOTD crap by removing +x bit
-%w(00-header 10-help-text 50-landscape-sysinfo 51-cloudguest 90-updates-available
-   91-release-upgrade 98-fsck-at-reboot 98-reboot-required).each do |name|
-  file "/etc/update-motd.d/#{name}" do
-    owner "root"
-    mode "0444"
-  end
-end
-
 ## Silence that annoying missing file warning
 chef_gem "chef-rewind"
 require 'chef/rewind'
