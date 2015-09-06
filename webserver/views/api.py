@@ -8,6 +8,7 @@ from kafka import SimpleProducer
 from webserver.kafka_connection import _kafka
 from webserver.cassandra_connection import _cassandra
 from webserver.decorators import crossdomain
+import socket
 
 api_bp = Blueprint('listen', __name__)
 
@@ -102,22 +103,22 @@ def submit_listen(user_id):
 
             try:
                 messy_response = json.loads(response)
-            except ValueError, e:
-                current_app.logging.error("MessyBrainz parse error: " + str(e))
+            except ValueError as e:
+                current_app.logger.error("MessyBrainz parse error: " + str(e))
 
             try:
                 messybrainz_id = messy_response['messybrainz_id']
             except KeyError:
-                current_app.logging.error("MessyBrainz did not return a proper id")
+                current_app.logger.error("MessyBrainz did not return a proper id")
 
             if 'recording_id' in messy_response:
                 recording_id = messy_response['recording_id']
 
-        except urllib2.URLError, e:
-            current_app.logging.error("Error calling MessyBrainz:" + str(e))
+        except urllib2.URLError as e:
+            current_app.logger.error("Error calling MessyBrainz:" + str(e))
 
-        except socket.timeout, e:
-            current_app.logging.error("Timeout calling MessyBrainz.")
+        except socket.timeout as e:
+            current_app.logger.error("Timeout calling MessyBrainz.")
 
         if not 'additional_info' in listen['track_metadata']:
             listen['track_metadata']['additional_info'] = {}
