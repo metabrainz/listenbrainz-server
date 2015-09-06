@@ -25,11 +25,12 @@ class ListenStore(object):
     MAX_FETCH = 5000          # max batch size to fetch from cassandra
     MAX_FUTURE_SECONDS = 600  # 10 mins in future - max fwd clock skew
 
-    def __init__(self, host="127.0.0.1"):
+    def __init__(self, conf):
+        host = conf["cassandra_server"]
         self.log = logging.getLogger(__name__)
         # TODO: configured via config file, different in dev/prod
         self.replication_factor = 1
-        self.keyspace = "listenbrainz"
+        self.keyspace = conf["cassandra_keyspace"]
         self.log.info('Connecting to cassandra: %s', host)
         self.cluster = Cluster([host])
 
@@ -69,6 +70,11 @@ class ListenStore(object):
         return self.session.execute_async(batch)
 
     def insert(self, item):
+        if not "user_id" in item:
+            raise ValueError("user_id field missing")
+        if not "listened_at" in item:
+            raise ValueError("listened_at field missing")
+
         self.insert_async(item).result()
 
     def insert_batch(self, items):
