@@ -48,7 +48,7 @@ def validate_listen(listen):
                 raise BadRequest("JSON document may not contain track_metadata.additional_info.tags longer than %d characters." % MAX_TAG_SIZE)
 
 @api_bp.route("/listen/user/<user_id>", methods=["POST", "OPTIONS"])
-@crossdomain()
+@crossdomain(headers="Authorization, Content-Type")
 def submit_listen(user_id):
     """Endpoint for submitting a listen to ListenBrainz. Sanity check listen and then pass on to Kafka."""
 
