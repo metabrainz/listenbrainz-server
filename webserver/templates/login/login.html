@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 
-{% block title %}Sign in - AcousticBrainz{% endblock %}
+{% block title %}Sign in - ListenBrainz{% endblock %}
 
 {% block content %}
   <h2 class="page-title">Sign in</h2>
-  <p>To sign in, use your MusicBrainz account, and authorize AcousticBrainz to access your profile data.</p>
+  <p>To sign in, use your MusicBrainz account, and authorize ListenBrainz to access your profile data.</p>
   <hr />
   <div class="well" style="max-width: 600px; margin: 0 auto;">
     <a href="{{ url_for('login.musicbrainz', next=request.args.get('next')) }}"
