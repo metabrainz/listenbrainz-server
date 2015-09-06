@@ -1,5 +1,7 @@
 import sys
+import urllib2
 import json
+import config
 from flask import Blueprint, request, Response, jsonify, current_app
 from werkzeug.exceptions import BadRequest, NotFound, InternalServerError
 from kafka import SimpleProducer
@@ -72,11 +74,60 @@ def submit_listen(user_id):
     except KeyError:
         raise BadRequest("Invalid JSON document submitted.")
 
+    producer = SimpleProducer(_kafka)
     for i, listen in enumerate(payload):
         validate_listen(listen)
         listen['user_id'] = user_id
 
-        producer = SimpleProducer(_kafka)
+        messybrainz_dict = {
+            'artist' : listen['track_metadata']['artist_name'],
+            'track' : listen['track_metadata']['track_name']
+        }
+
+        if 'release_name' in listen['track_metadata']:
+            messybrainz_dict['release'] = listen['track_metadata']['release_name']
+
+        messy_data = json.dumps(messybrainz_dict)
+        req = urllib2.Request(current_app.config['MESSYBRAINZ_SUBMIT_URL'], messy_data, 
+            {'Content-Type': 'application/json', 'Content-Length': len(messy_data)})
+
+        messybrainz_id = None
+        recording_id = None
+        try:
+            f = urllib2.urlopen(req, timeout = current_app.config['MESSYBRAINZ_TIMEOUT'])
+            response = f.read()
+            f.close()
+
+            try:
+                messy_response = json.loads(response)
+            except ValueError, e:
+                current_app.logging.error("MessyBrainz parse error: " + str(e))
+
+            try:
+                messybrainz_id = messy_response['messybrainz_id']
+            except KeyError:
+                current_app.logging.error("MessyBrainz did not return a proper id")
+
+            if 'recording_id' in messy_response:
+                recording_id = messy_response['recording_id']
+
+        except urllib2.URLError, e:
+            current_app.logging.error("Error calling MessyBrainz:" + str(e))
+
+        except socket.timeout, e:
+            current_app.logging.error("Timeout calling MessyBrainz.")
+
+        if not 'additional_info' in listen['track_metadata']:
+            listen['track_metadata']['additional_info'] = {}
+            
+        if recording_id:
+            listen['track_metadata']['additional_info']['recording_id'] = recording_id
+            
+        if messybrainz_id:
+            listen['track_metadata']['additional_info']['messybrainz_id'] = messybrainz_id
+
+        #print json.dumps(listen, indent=4)
+
         if data['listen_type'] == 'playing_now':
             try:
                 producer.send_messages(b'playing_now', json.dumps(listen).encode('utf-8'))
