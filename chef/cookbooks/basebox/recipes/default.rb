@@ -39,3 +39,6 @@ include_recipe "fail2ban"
 include_recipe "basebox::packages"
 include_recipe "basebox::default-configs"
 
+group "sysadmin" do
+    gid "2300"
+end
