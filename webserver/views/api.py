@@ -7,6 +7,7 @@ from werkzeug.exceptions import BadRequest, NotFound, InternalServerError
 from kafka import SimpleProducer
 from webserver.kafka_connection import _kafka
 from webserver.cassandra_connection import _cassandra
+from webserver.decorators import crossdomain
 
 api_bp = Blueprint('listen', __name__)
 
@@ -46,7 +47,8 @@ def validate_listen(listen):
             if len(tag) > MAX_TAG_SIZE:
                 raise BadRequest("JSON document may not contain track_metadata.additional_info.tags longer than %d characters." % MAX_TAG_SIZE)
 
-@api_bp.route("/listen/user/<user_id>", methods=["POST"])
+@api_bp.route("/listen/user/<user_id>", methods=["POST", "OPTIONS"])
+@crossdomain()
 def submit_listen(user_id):
     """Endpoint for submitting a listen to ListenBrainz. Sanity check listen and then pass on to Kafka."""
 
@@ -88,7 +90,7 @@ def submit_listen(user_id):
             messybrainz_dict['release'] = listen['track_metadata']['release_name']
 
         messy_data = json.dumps(messybrainz_dict)
-        req = urllib2.Request(current_app.config['MESSYBRAINZ_SUBMIT_URL'], messy_data, 
+        req = urllib2.Request(current_app.config['MESSYBRAINZ_SUBMIT_URL'], messy_data,
             {'Content-Type': 'application/json', 'Content-Length': len(messy_data)})
 
         messybrainz_id = None
@@ -119,10 +121,10 @@ def submit_listen(user_id):
 
         if not 'additional_info' in listen['track_metadata']:
             listen['track_metadata']['additional_info'] = {}
-            
+
         if recording_id:
             listen['track_metadata']['additional_info']['recording_id'] = recording_id
-            
+
         if messybrainz_id:
             listen['track_metadata']['additional_info']['messybrainz_id'] = messybrainz_id
 
