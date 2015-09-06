@@ -5,15 +5,17 @@
 {% block content %}
   <h2 class="page-title">{{ user.musicbrainz_id }}</h2>
   {% if current_user.is_authenticated() and current_user == user %}
-     <p class="text-muted"><em>This is you!</em></p>
-     <p>Your token is {{ user.auth_token }}</p>
+  <p>Your token is <code>{{ user.auth_token }}</code>. You'll need this if you want to send data to us from an external program</p>
+
+  <h4>Import from Last.fm</h4>
      {% if loader %}
-        Drag this to your bookmarks toolbar: <input type="text" value="{{loader}}" length="100" />
+     Drag this to your bookmarks toolbar: <span class="label label-warning"><a href="{{loader}}">Import Last.fm to ListenBrainz</a></span>
         <p>Then, go <a href="http://last.fm/user/{{lastfm_username}}/library">to your lastfm profile page</a> and click the bookmark</a>
      {% else %}
+     To start with, we need to know your Last.fm username:
      <form action="" method="GET">
          <input type="text" name="lastfm_username" placeholder="last.fm user id">
-         <input type="submit">
+         <input type="submit" value="ok!">
      </form>
      {% endif %}
   {% endif %}

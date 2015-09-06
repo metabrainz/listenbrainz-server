@@ -34,6 +34,16 @@ body {
 .navbar {
   @logo-width: 199px + 15px;
   .navbar-variant(@blue, @logo-width);
+  .import-link {
+    > a {
+      color: white !important;
+      font-size: 1.5em !important;
+      background-color: @orange !important;
+      &:hover, &:focus {
+        background-color: darken(@orange, 6.5%) !important;
+      }
+    }
+  }
   .navbar-form {
     padding-right: 0px;
     .btn {
