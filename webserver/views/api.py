@@ -3,10 +3,11 @@ import urllib2
 import json
 import config
 from flask import Blueprint, request, Response, jsonify, current_app
-from werkzeug.exceptions import BadRequest, NotFound, InternalServerError
+from werkzeug.exceptions import BadRequest, NotFound, InternalServerError, Unauthorized
 from kafka import SimpleProducer
 from webserver.kafka_connection import _kafka
 from webserver.cassandra_connection import _cassandra
+import db.user
 
 api_bp = Blueprint('listen', __name__)
 
@@ -49,6 +50,22 @@ def validate_listen(listen):
 @api_bp.route("/listen/user/<user_id>", methods=["POST"])
 def submit_listen(user_id):
     """Endpoint for submitting a listen to ListenBrainz. Sanity check listen and then pass on to Kafka."""
+
+    token = request.headers.get('Authorization')
+    if not token:
+        raise Unauthorized("You need to provide an Authorization header.")
+
+    try:
+        token = token.split(" ")[1]
+    except IndexError:
+        raise Unauthorized("Invalid Authorization header provided.")
+
+    user = db.user.get_by_mb_id(user_id)
+    if user is None:
+        raise Unauthorized("User %s is not known to MusicBrainz." % user_id)
+
+    if token != user['auth_token']:
+        raise Unauthorized("Invalid authorization token.")
 
     raw_data = request.get_data()
     try:
@@ -101,21 +118,21 @@ def submit_listen(user_id):
             try:
                 messy_response = json.loads(response)
             except ValueError, e:
-                current_app.logging.error("MessyBrainz parse error: " + str(e))
+                current_app.logger.error("MessyBrainz parse error: " + str(e))
 
             try:
                 messybrainz_id = messy_response['messybrainz_id']
             except KeyError:
-                current_app.logging.error("MessyBrainz did not return a proper id")
+                current_app.logger.error("MessyBrainz did not return a proper id")
 
             if 'recording_id' in messy_response:
                 recording_id = messy_response['recording_id']
 
         except urllib2.URLError, e:
-            current_app.logging.error("Error calling MessyBrainz:" + str(e))
+            current_app.logger.error("Error calling MessyBrainz:" + str(e))
 
         except socket.timeout, e:
-            current_app.logging.error("Timeout calling MessyBrainz.")
+            current_app.logger.error("Timeout calling MessyBrainz.")
 
         if not 'additional_info' in listen['track_metadata']:
             listen['track_metadata']['additional_info'] = {}
