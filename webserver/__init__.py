@@ -4,6 +4,7 @@ import os
 
 _kafka = None
 
+
 def create_app():
     global _kafka
 
@@ -27,6 +28,10 @@ def create_app():
     from cassandra_connection import init_cassandra_connection
     init_cassandra_connection(app.config['CASSANDRA_SERVER'], app.config['CASSANDRA_KEYSPACE'])
 
+    # Database connection
+    from db import init_db_connection
+    init_db_connection(app.config['PG_CONNECT'])
+
     # Memcached
 #    if 'MEMCACHED_SERVERS' in app.config:
 #        from db import cache
@@ -35,10 +40,10 @@ def create_app():
 #                   debug=1 if app.debug else 0)
 
     # OAuth
-#    from webserver.login import login_manager, provider
-#    login_manager.init_app(app)
-#    provider.init(app.config['MUSICBRAINZ_CLIENT_ID'],
-#                  app.config['MUSICBRAINZ_CLIENT_SECRET'])
+    from webserver.login import login_manager, provider
+    login_manager.init_app(app)
+    provider.init(app.config['MUSICBRAINZ_CLIENT_ID'],
+                  app.config['MUSICBRAINZ_CLIENT_SECRET'])
 
     # Error handling
 #    from webserver.errors import init_error_handlers
@@ -54,8 +59,10 @@ def create_app():
     from webserver.views.index import index_bp
     from webserver.views.login import login_bp
     from webserver.views.api import api_bp
+    from webserver.views.user import user_bp
     app.register_blueprint(index_bp)
-    app.register_blueprint(login_bp)
+    app.register_blueprint(login_bp, url_prefix='/login')
+    app.register_blueprint(user_bp, url_prefix='/user')
     app.register_blueprint(api_bp)
 
     return app

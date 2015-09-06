@@ -70,9 +70,9 @@ class ListenStore(object):
         return self.session.execute_async(batch)
 
     def insert(self, item):
-        if not "user_id" in item:
+        if "user_id" not in item:
             raise ValueError("user_id field missing")
-        if not "listened_at" in item:
+        if "listened_at" not in item:
             raise ValueError("listened_at field missing")
 
         self.insert_async(item).result()

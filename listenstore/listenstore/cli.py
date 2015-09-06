@@ -4,6 +4,7 @@ import logging
 
 from .utils import argparse_factory, parse_args_and_config
 from .listenstore import ListenStore
+from .kafkaconsumer import KafkaConsumer
 
 
 class Command(object):
@@ -18,6 +19,7 @@ class Command(object):
             You have no logger, databases, or config in __init__. """
         self.opt_parser = argparse_factory(self.desc)
         self._listenStore = None
+        self._kafkaConsumer = None
 
 
     # NB: only sets level after our Command starts running
@@ -63,6 +65,12 @@ class Command(object):
         if self._listenStore is None:
             self._listenStore = ListenStore(self.config)
         return self._listenStore
+
+    @property
+    def kafkaConsumer(self):
+        if self._kafkaConsumer is None:
+            self._kafkaConsumer = KafkaConsumer(self.config)
+        return self._kafkaConsumer
 
     def renice(self, increment):
         os.nice(increment)
