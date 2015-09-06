@@ -1,7 +1,8 @@
-from functools import update_wrapper
+from functools import update_wrapper, wraps
 from datetime import timedelta
 from flask import request, current_app, make_response
 from six import string_types
+from werkzeug.exceptions import Forbidden
 
 
 def crossdomain(origin='*', methods=None, headers=None,
@@ -45,3 +46,18 @@ def crossdomain(origin='*', methods=None, headers=None,
         f.provide_automatic_options = False
         return update_wrapper(wrapped_function, f)
     return decorator
+
+
+def ip_filter(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if current_app.config['IP_FILTER_ON']:
+            if 'BEHIND_GATEWAY' in current_app.config and current_app.config['BEHIND_GATEWAY']:
+                ip_addr = request.headers.get(current_app.config['REMOTE_ADDR_HEADER'])
+            else:
+                ip_addr = request.remote_addr
+            if ip_addr not in current_app.config['IP_WHITELIST']:
+                raise Forbidden
+        return f(*args, **kwargs)
+
+    return decorated
