@@ -41,14 +41,14 @@ function load_listens()
 function load_table(payload)
 {
     $("#listens tr").remove();
-    $("#listens").append("<tr><th>track</th><th>artist</th><th>time</th></tr>");
+    $("#listens").append("<tr><th>artist</th><th>track</th><th>time</th></tr>");
 
     listens = payload.payload.listens;
     for(i = 0; i < listens.length; i++)
     {
         var s = new Date(listens[i]['listened_at'] * 1000).toISOString();
-        $('#listens').append("<tr><td>" + listens[i]['track_metadata']['track_name'] + "</td>"
-                             + "<td>" + listens[i]['track_metadata']['artist_name'] + "</td>" 
+        $('#listens').append("<tr><td>" + listens[i]['track_metadata']['artist_name'] + "</td>"
+                             + "<td>" + listens[i]['track_metadata']['track_name'] + "</td>" 
                              + '<td><abbr class="timeago" title="' + s + '"></abbr></td></tr>') 
     }
     jQuery("abbr.timeago").timeago();
