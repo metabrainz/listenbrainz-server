@@ -158,7 +158,6 @@ def get_listens(user_id):
     payload = {}
     payload['user_id'] = user_id
     payload['count'] = count
-    payload['total'] = 0 # TODO: Fix this
     payload['listens'] = listen_data
 
     return json.dumps({ 'payload' : payload }, indent=4)
