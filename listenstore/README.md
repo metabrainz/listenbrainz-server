@@ -5,9 +5,14 @@
 
 ## Pip, eggs, etc
 
-    $ make dist
+    $ RELEASE_VERSION=0.1.0 make dist
 
-then install the egg
+then install the egg:
+
+    $ easy_install ./dist/listenbrainz_store-0.1.0-py2.7.egg
+
+bin scripts get installed to `/usr/local/bin`.
+
 
 ## Schema
 

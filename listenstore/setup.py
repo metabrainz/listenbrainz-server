@@ -11,7 +11,7 @@ setup(
     author_email='foo@example.com',
     packages=['listenstore'],
     scripts=[x for x in glob.glob('bin/*.py') if x != 'bin/__init__.py'],
-    package_data={'': ['logging.conf']},
+#    package_data={'': ['logging.conf']},
     license='LICENSE.txt',
     description='python interface to listen data stored in cassandra',
     install_requires=[
