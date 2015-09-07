@@ -91,10 +91,11 @@ class ListenStore(object):
     MAX_FETCH = 5000          # max batch size to fetch from cassandra
     MAX_FUTURE_SECONDS = 600  # 10 mins in future - max fwd clock skew
 
-    def __init__(self, host, replication_factor, keyspace):
+    def __init__(self, conf):
         self.log = logging.getLogger(__name__)
-        self.replication_factor = replication_factor
-        self.keyspace = keyspace
+        self.replication_factor = conf.get("replication_factor", 1)
+        self.keyspace = conf.get("cassandra_keyspace", "listenbrainz")
+        host = conf.get("cassandra_server", "localhost:9092")
         self.log.info('Connecting to cassandra: %s', host)
         self.cluster = Cluster([host])
 

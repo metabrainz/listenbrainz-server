@@ -10,7 +10,10 @@ class TestListenStore(unittest2.TestCase):
     @classmethod
     def setUpClass(self):
         self.log = logging.getLogger(__name__)
-        self.logstore = ListenStore('127.0.0.1', 1, 'listenbrainz_integration_test')
+        conf = {"replication_factor": 1,
+                "cassandra_keyspace": "listenbrainz_integration_test",
+                "cassandra_server": "localhost:9092"}
+        self.logstore = ListenStore(conf)
         self._create_test_data()
 
     @classmethod
