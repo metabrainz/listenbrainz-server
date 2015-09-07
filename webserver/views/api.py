@@ -123,6 +123,8 @@ def submit_listen(user_id):
 
         messybrainz_id = None
         recording_id = None
+        artist_id = None
+        release_id = None
         try:
             f = urllib2.urlopen(req, timeout = current_app.config['MESSYBRAINZ_TIMEOUT'])
             response = f.read()
@@ -138,6 +140,12 @@ def submit_listen(user_id):
             except KeyError:
                 current_app.logger.error("MessyBrainz did not return a proper id")
 
+            if 'artist_id' in messy_response:
+                artist_id = messy_response['artist_id']
+
+            if 'release_id' in messy_response:
+                release_id = messy_response['release_id']
+
             if 'recording_id' in messy_response:
                 recording_id = messy_response['recording_id']
 
@@ -147,11 +155,25 @@ def submit_listen(user_id):
         except socket.timeout as e:
             current_app.logger.error("Timeout calling MessyBrainz.")
 
+        listen['listen_id'] = {}
+        if recording_id:
+            listen['listen_id']['id_type'] = "musicbrainz"
+            listen['listen_id']['id'] = recording_id
+        else:
+            listen['listen_id']['id_type'] = "messybrainz"
+            listen['listen_id']['id'] = messybrainz_id
+
         if not 'additional_info' in listen['track_metadata']:
             listen['track_metadata']['additional_info'] = {}
 
-        if recording_id:
-            listen['track_metadata']['additional_info']['recording_id'] = recording_id
+        if not 'artist_id' in listen['track_metadata']['additional_info'] and \
+            not 'release_id' in listen['track_metadata']['additional_info'] and \
+            not 'recording_id' in listen['track_metadata']['additional_info']: 
+
+            if artist_id and release_id and recording_id:
+                listen['track_metadata']['additional_info']['artist_id'] = artist_id
+                listen['track_metadata']['additional_info']['release'] = release_id
+                listen['track_metadata']['additional_info']['recording_id'] = recording_id
 
         if messybrainz_id:
             listen['track_metadata']['additional_info']['messybrainz_id'] = messybrainz_id
