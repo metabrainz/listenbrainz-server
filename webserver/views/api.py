@@ -1,10 +1,9 @@
 import sys
 import urllib2
 import json
-import config
 import socket
-from flask import Blueprint, request, Response, jsonify, current_app
-from werkzeug.exceptions import BadRequest, NotFound, InternalServerError, Unauthorized
+from flask import Blueprint, request, current_app
+from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized
 from kafka import SimpleProducer
 from webserver.kafka_connection import _kafka
 from webserver.decorators import crossdomain

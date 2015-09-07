@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 from flask import Blueprint, render_template, current_app, redirect, url_for
-from flask_login import login_required
 from flask_login import current_user
 
 index_bp = Blueprint('index', __name__)
