@@ -32,13 +32,6 @@ def create_app():
     from db import init_db_connection
     init_db_connection(app.config['PG_CONNECT'])
 
-    # Memcached
-#    if 'MEMCACHED_SERVERS' in app.config:
-#        from db import cache
-#        cache.init(app.config['MEMCACHED_SERVERS'],
-#                   app.config['MEMCACHED_NAMESPACE'],
-#                   debug=1 if app.debug else 0)
-
     # OAuth
     from webserver.login import login_manager, provider
     login_manager.init_app(app)
