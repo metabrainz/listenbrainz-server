@@ -51,6 +51,7 @@ MESSYBRAINZ_TIMEOUT    = 5 # seconds
 #CASSANDRA_CONSUMER_LOG_FILE_ENABLED = True
 #CASSANDRA_CONSUMER_LOG_FILE = "./cassandra_consumer.log"
 
+
 # MISCELLANEOUS
 
 # Set to True if Less should be compiled in browser. Set to False if styling is pre-compiled.

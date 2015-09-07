@@ -4,9 +4,11 @@ import os
 
 _kafka = None
 
+
 def create_cassandra():
     from cassandra_connection import init_cassandra_connection
     return init_cassandra_connection(current_app.config['CASSANDRA_SERVER'], current_app.config['CASSANDRA_KEYSPACE'])
+
 
 def create_app():
     global _kafka
@@ -26,7 +28,6 @@ def create_app():
     # Kafka connection
     from kafka_connection import init_kafka_connection
     init_kafka_connection(app.config['KAFKA_CONNECT'])
-
 
     # Database connection
     from db import init_db_connection
