@@ -42,7 +42,17 @@ def submit_listen(user_id):
         _validate_listen(listen)
         listen['user_id'] = user_id
 
-        messybrainz_id, recording_id, artist_id, release_id = get_messybrainz_data(listen)
+        messybrainz_resp = get_messybrainz_data(listen)
+
+        try:
+            messybrainz_id = messybrainz_resp['messybrainz_id']
+        except KeyError:
+            current_app.logger.error("MessyBrainz did not return a proper id")
+            raise InternalServerError
+
+        recording_id = messybrainz_resp.get('recording_id', None)
+        artist_id = messybrainz_resp.get('artist_id', None)
+        release_id = messybrainz_resp.get('release_id', None)
 
         listen['listen_id'] = {}
         if recording_id:
@@ -170,17 +180,7 @@ def get_messybrainz_data(listen):
         current_app.logger.error("MessyBrainz parse error: " + str(e))
         raise InternalServerError
 
-    try:
-        messybrainz_id = messy_response['messybrainz_id']
-    except KeyError:
-        current_app.logger.error("MessyBrainz did not return a proper id")
-        raise InternalServerError
-
-    recording_id = messy_response.get('recording_id', None)
-    artist_id = messy_response.get('artist_id', None)
-    release_id = messy_response.get('release_id', None)
-
-    return messybrainz_id, recording_id, artist_id, release_id
+    return messy_response
 
 
 def _validate_listen(listen):
