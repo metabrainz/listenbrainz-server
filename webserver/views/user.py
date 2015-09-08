@@ -15,11 +15,12 @@ def lastfmscraper(user_id):
     lastfm_username = request.args.get("lastfm_username")
     if user_token is None or lastfm_username is None:
         raise NotFound
-    scraper = render_template("user/scraper.js", **{
-        "base_url": url_for("listen.submit_listen", user_id=user_id, _external=True),
-        "user_token": user_token,
-        "lastfm_username": lastfm_username,
-    })
+    scraper = render_template(
+        "user/scraper.js",
+        base_url=url_for("listen.submit_listen", user_id=user_id, _external=True),
+        user_token=user_token,
+        lastfm_username=lastfm_username,
+    )
     return Response(scraper, content_type="text/javascript")
 
 
@@ -34,11 +35,12 @@ def import_data(user_id):
     lastfm_username = request.args.get("lastfm_username")
 
     if lastfm_username:
-        loader = render_template("user/loader.js", **{
-            "base_url": url_for("user.lastfmscraper", user_id=user_id, _external=True),
-            "user_token": user.auth_token,
-            "lastfm_username": lastfm_username,
-        })
+        loader = render_template(
+            "user/loader.js",
+            base_url=url_for("user.lastfmscraper", user_id=user_id, _external=True),
+            user_token=user.auth_token,
+            lastfm_username=lastfm_username,
+        )
         loader = "javascript:%s" % loader
     else:
         loader = None
