@@ -35,7 +35,23 @@ def submit_listen(user_id):
     except ValueError as e:
         _log_raise_400("Cannot parse JSON document: %s" % e, raw_data)
 
-    payload = _get_listen_payload(data, raw_data)
+    try:
+        payload = data['payload']
+        if len(payload) == 0:
+            _log_raise_400("JSON document does not contain any listens.", payload)
+
+        if len(raw_data) > len(payload) * MAX_LISTEN_SIZE:
+            _log_raise_400("JSON document is too large. In aggregate, listens may not "
+                           "be larger than %d characters." % MAX_LISTEN_SIZE, payload)
+
+        if data['listen_type'] not in ('playing_now', 'single', 'import'):
+            _log_raise_400("JSON document requires a valid listen_type key.", payload)
+
+        if (data['listen_type'] == "single" or data['listen_type'] == 'playing_now') and len(payload) > 1:
+            _log_raise_400("JSON document contains more than listen for a single/playing_now. "
+                           "It should contain only one.", payload)
+    except KeyError:
+        _log_raise_400("Invalid JSON document submitted.", raw_data)
 
     producer = SimpleProducer(_kafka)
     for i, listen in enumerate(payload):
@@ -127,28 +143,6 @@ def _validate_auth_header(user_id):
         raise Unauthorized("User %s is not known to MusicBrainz." % user_id)
     if auth_token != user['auth_token']:
         raise Unauthorized("Invalid authorization token.")
-
-
-def _get_listen_payload(data, raw_data):
-    try:
-        payload = data['payload']
-        if len(payload) == 0:
-            _log_raise_400("JSON document does not contain any listens.", payload)
-
-        if len(raw_data) > len(payload) * MAX_LISTEN_SIZE:
-            _log_raise_400("JSON document is too large. In aggregate, listens may not "
-                           "be larger than %d characters." % MAX_LISTEN_SIZE, payload)
-
-        if data['listen_type'] not in ('playing_now', 'single', 'import'):
-            _log_raise_400("JSON document requires a valid listen_type key.", payload)
-
-        if (data['listen_type'] == "single" or data['listen_type'] == 'playing_now') and len(payload) > 1:
-            _log_raise_400("JSON document contains more than listen for a single/playing_now. "
-                           "It should contain only one.", payload)
-    except KeyError:
-        _log_raise_400("Invalid JSON document submitted.", raw_data)
-
-    return payload
 
 
 def get_messybrainz_data(listen):
