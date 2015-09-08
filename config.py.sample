@@ -2,22 +2,23 @@ DEBUG = False  # set to False in production mode
 
 SECRET_KEY = "CHANGE_ME"
 
+
 # DATABASES
 
-# PostgreSQL connection string
-# See http://www.postgresql.org/docs/current/static/libpq-connect.html#LIBPQ-CONNSTRING
-# Note: To have no password, use "password=" in the string below.
-PG_CONNECT = "dbname=listenbrainz user=listenbrainz password= host=localhost port=5432"
+# Primary database
+SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz@/listenbrainz"
 
-# This connection string will be used for testing
-PG_CONNECT_TEST = "dbname=lb_test user=lb_test password= host=localhost port=5432"
+# Database for testing
+TEST_SQLALCHEMY_DATABASE_URI = "postgresql://lb_test:lb_test@localhost:5432/lb_test"
 
 # The name of a postgres user who has superuser privileges. Your local user should
 # be able to connect to the database with this user.
 PG_SUPER_USER = "postgres"
 
+
 # KAFKA
 KAFKA_CONNECT = "localhost:9092"
+
 
 # CASSANDRA
 CASSANDRA_SERVER = "localhost"     
