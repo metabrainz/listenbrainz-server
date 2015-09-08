@@ -1,13 +1,14 @@
 from __future__ import absolute_import
 from flask import Blueprint, render_template, current_app, redirect, url_for
-from flask_login import login_required
 from flask_login import current_user
 
 index_bp = Blueprint('index', __name__)
 
+
 @index_bp.route("/")
 def index():
     return render_template("index/index.html")
+
 
 @index_bp.route("/import")
 def import_data():
@@ -15,6 +16,7 @@ def import_data():
         return redirect(url_for("user.import_data", user_id=current_user.musicbrainz_id))
     else:
         return current_app.login_manager.unauthorized()
+
 
 @index_bp.route("/download")
 def downloads():

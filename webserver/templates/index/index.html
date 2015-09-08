@@ -3,7 +3,7 @@
   <div id="homepage" class="row">
 
     <div class="col-md-7 col-lg-8">
-        {# TODO: Replace that with SVG image. #}
+      {# TODO: Replace that with SVG image. #}
       <img src="{{ url_for('static', filename='img/logo_big.png') }}" id="big-logo" />
       <h2 class="page-title">Welcome to ListenBrainz!</h2>
           <p>
@@ -40,7 +40,7 @@
         </ol>
         <p>
           For more information about this project and it's goals, please take a look at our
-          <a href="/goals">goals page</a>.
+          <a href="{{ url_for('index.goals') }}">goals page</a>.
         </p>
 
         <p>

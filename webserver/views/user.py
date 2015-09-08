@@ -7,6 +7,7 @@ import db.user
 
 user_bp = Blueprint("user", __name__)
 
+
 @user_bp.route("/lastfmscraper/<user_id>.js")
 @crossdomain()
 def lastfmscraper(user_id):
@@ -14,43 +15,46 @@ def lastfmscraper(user_id):
     lastfm_username = request.args.get("lastfm_username")
     if user_token is None or lastfm_username is None:
         raise NotFound
-    params = {"base_url": url_for("listen.submit_listen", user_id=user_id, _external=True),
-            "user_token": user_token,
-            "lastfm_username": lastfm_username}
-    scraper = render_template("user/scraper.js", **params)
+    scraper = render_template(
+        "user/scraper.js",
+        base_url=url_for("listen.submit_listen", user_id=user_id, _external=True),
+        user_token=user_token,
+        lastfm_username=lastfm_username,
+    )
     return Response(scraper, content_type="text/javascript")
 
 
 @user_bp.route("/<user_id>")
 def profile(user_id):
-    if current_user.is_authenticated() and \
-       current_user.musicbrainz_id == user_id:
-        user = current_user
-    else:
-        user = db.user.get_by_mb_id(user_id)
-        if user is None:
-            raise NotFound("Can't find this user.")
-    return render_template("user/profile.html", user=user)
+    return render_template("user/profile.html", user=_get_user(user_id))
+
 
 @user_bp.route("/<user_id>/import")
 def import_data(user_id):
-
+    user = _get_user(user_id)
     lastfm_username = request.args.get("lastfm_username")
-    if current_user.is_authenticated() and \
-       current_user.musicbrainz_id == user_id:
-        user = current_user
-    else:
-        user = db.user.get_by_mb_id(user_id)
-        if user is None:
-            raise NotFound("Can't find this user.")
 
     if lastfm_username:
-        params = {"base_url": url_for("user.lastfmscraper", user_id=user_id, _external=True),
-                "user_token": user.auth_token,
-                "lastfm_username": lastfm_username}
-        loader = render_template("user/loader.js", **params)
+        loader = render_template(
+            "user/loader.js",
+            base_url=url_for("user.lastfmscraper", user_id=user_id, _external=True),
+            user_token=user.auth_token,
+            lastfm_username=lastfm_username,
+        )
         loader = "javascript:%s" % loader
     else:
         loader = None
 
-    return render_template("user/import.html", user=user, loader=loader, lastfm_username=lastfm_username)
+    return render_template("user/import.html", user=user, loader=loader,
+                           lastfm_username=lastfm_username)
+
+
+def _get_user(user_id):
+    if current_user.is_authenticated() and \
+       current_user.musicbrainz_id == user_id:
+        return current_user
+    else:
+        user = db.user.get_by_mb_id(user_id)
+        if user is None:
+            raise NotFound("Can't find this user.")
+        return user
