@@ -2,7 +2,7 @@ import sys
 import urllib2
 import json
 import socket
-from flask import Blueprint, request, current_app
+from flask import Blueprint, request, current_app, jsonify
 from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized
 from kafka import SimpleProducer
 from webserver.kafka_connection import _kafka
@@ -106,11 +106,11 @@ def get_listens(user_id):
         del temp['user_id']
         listen_data.append(temp)
 
-    return json.dumps({'payload': {
+    return jsonify({'payload': {
         'user_id': user_id,
         'count': count,
         'listens': listen_data,
-    }}, indent=4)
+    }})
 
 
 def _validate_auth_header(user_id):
