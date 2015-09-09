@@ -9,7 +9,7 @@ SECRET_KEY = "CHANGE_ME"
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz@/listenbrainz"
 
 # Database for testing
-TEST_SQLALCHEMY_DATABASE_URI = "postgresql://lb_test:lb_test@localhost:5432/lb_test"
+TEST_SQLALCHEMY_DATABASE_URI = "postgresql://lb_test@/lb_test"
 
 # The name of a postgres user who has superuser privileges. Your local user should
 # be able to connect to the database with this user.
