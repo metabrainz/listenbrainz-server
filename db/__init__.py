@@ -16,7 +16,6 @@ def init_db_connection(app):
     https://pythonhosted.org/Flask-SQLAlchemy/config.html#configuration-keys
     for more info.
     """
-    global db
     db.init_app(app)
 
 
