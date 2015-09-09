@@ -21,6 +21,5 @@ def init_db_connection(app):
 
 
 def run_sql_script(sql_file_path):
-    global db
     with open(sql_file_path) as sql:
         db.session.connection().execute(sql.read())
