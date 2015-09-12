@@ -31,7 +31,7 @@ def create_app():
 
     # Database connection
     from db import init_db_connection
-    init_db_connection(app.config['PG_CONNECT'])
+    init_db_connection(app)
 
     # OAuth
     from webserver.login import login_manager, provider
