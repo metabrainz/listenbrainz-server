@@ -59,39 +59,39 @@ def submit_listen(user_id):
         listen['user_id'] = user_id
 
         messybrainz_resp = get_messybrainz_data(listen)
+        if messybrainz_resp:
+            try:
+                messybrainz_id = messybrainz_resp['messybrainz_id']
+            except KeyError:
+                current_app.logger.error("MessyBrainz did not return a proper id")
+                raise InternalServerError
 
-        try:
-            messybrainz_id = messybrainz_resp['messybrainz_id']
-        except KeyError:
-            current_app.logger.error("MessyBrainz did not return a proper id")
-            raise InternalServerError
+            recording_id = messybrainz_resp.get('recording_id', None)
+            artist_id = messybrainz_resp.get('artist_id', None)
+            release_id = messybrainz_resp.get('release_id', None)
 
-        recording_id = messybrainz_resp.get('recording_id', None)
-        artist_id = messybrainz_resp.get('artist_id', None)
-        release_id = messybrainz_resp.get('release_id', None)
+            listen['listen_id'] = {}
+            if recording_id:
+                listen['listen_id']['id_type'] = "musicbrainz"
+                listen['listen_id']['id'] = recording_id
+            else:
+                listen['listen_id']['id_type'] = "messybrainz"
+                listen['listen_id']['id'] = messybrainz_id
 
-        listen['listen_id'] = {}
-        if recording_id:
-            listen['listen_id']['id_type'] = "musicbrainz"
-            listen['listen_id']['id'] = recording_id
-        else:
-            listen['listen_id']['id_type'] = "messybrainz"
-            listen['listen_id']['id'] = messybrainz_id
+            if 'additional_info' not in listen['track_metadata']:
+                listen['track_metadata']['additional_info'] = {}
 
-        if 'additional_info' not in listen['track_metadata']:
-            listen['track_metadata']['additional_info'] = {}
+            if 'artist_id'    not in listen['track_metadata']['additional_info'] and \
+               'release_id'   not in listen['track_metadata']['additional_info'] and \
+               'recording_id' not in listen['track_metadata']['additional_info']:
 
-        if 'artist_id'    not in listen['track_metadata']['additional_info'] and \
-           'release_id'   not in listen['track_metadata']['additional_info'] and \
-           'recording_id' not in listen['track_metadata']['additional_info']:
+                if artist_id and release_id and recording_id:
+                    listen['track_metadata']['additional_info']['artist_id'] = artist_id
+                    listen['track_metadata']['additional_info']['release'] = release_id
+                    listen['track_metadata']['additional_info']['recording_id'] = recording_id
 
-            if artist_id and release_id and recording_id:
-                listen['track_metadata']['additional_info']['artist_id'] = artist_id
-                listen['track_metadata']['additional_info']['release'] = release_id
-                listen['track_metadata']['additional_info']['recording_id'] = recording_id
-
-        if messybrainz_id:
-            listen['track_metadata']['additional_info']['messybrainz_id'] = messybrainz_id
+            if messybrainz_id:
+                listen['track_metadata']['additional_info']['messybrainz_id'] = messybrainz_id
 
         if data['listen_type'] == 'playing_now':
             try:
@@ -165,8 +165,10 @@ def get_messybrainz_data(listen):
         f.close()
     except urllib2.URLError as e:
         current_app.logger.error("Error calling MessyBrainz:" + str(e))
+        return None
     except socket.timeout:
         current_app.logger.error("Timeout calling MessyBrainz.")
+        return None
 
     try:
         messy_response = json.loads(response)
