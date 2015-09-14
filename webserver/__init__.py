@@ -17,7 +17,7 @@ def create_app():
 
     # Database connection
     from db import init_db_connection
-    init_db_connection(app.config['PG_CONNECT'])
+    init_db_connection(app)
 
     # Memcached
     if 'MEMCACHED_SERVERS' in app.config:
