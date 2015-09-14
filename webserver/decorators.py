@@ -51,8 +51,8 @@ def crossdomain(origin='*', methods=None, headers=None,
 def ip_filter(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if current_app.config['IP_FILTER_ON']:
-            if 'BEHIND_GATEWAY' in current_app.config and current_app.config['BEHIND_GATEWAY']:
+        if current_app.config.get('IP_FILTER_ON', False):
+            if current_app.config.get('BEHIND_GATEWAY', False):
                 ip_addr = request.headers.get(current_app.config['REMOTE_ADDR_HEADER'])
             else:
                 ip_addr = request.remote_addr
