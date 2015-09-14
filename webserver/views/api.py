@@ -124,7 +124,7 @@ def get_listens(user_id):
 
     return jsonify({'payload': {
         'user_id': user_id,
-        'count': count,
+        'count': len(listen_data),
         'listens': listen_data,
     }})
 
