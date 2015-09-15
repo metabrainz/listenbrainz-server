@@ -133,7 +133,7 @@ def load_recording(messybrainz_id):
     result["payload"] = row["data"]
     result["ids"] = {"recording_mbid": "", "artist_mbids": [], "release_mbid": ""}
     result["ids"]["artist_msid"] = str(row["artist"])
-    result["ids"]["release_msid"] = str(row["release"])
+    result["ids"]["release_msid"] = str(row["release"]) if row["release"] else None
     result["ids"]["recording_msid"] = str(row["gid"])
     return result
 
