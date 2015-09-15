@@ -64,7 +64,7 @@ var ListensViewer = React.createClass({
             if (items.length > 0) {
                 return (
                     <div>
-                        <table className="recordings table table-condensed table-hover">
+                        <table className="table table-condensed table-striped">
                             <thead>
                             <tr>
                                 <th>artist</th>
