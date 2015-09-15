@@ -31,10 +31,15 @@ var ListensViewer = React.createClass({
     },
     handlePreviousPage: function (maxTimestamp) {
         this.setState({listens: null});
-        $.get("/listen/user/" + container.dataset.userId + "?max_ts=" + maxTimestamp,
+        // Since we don't how the ID of the listen that will be first on the previous page we have to
+        // fetch listens backwards: reverse the order and set max_ts instead of min_ts. After we get
+        // the items, we need to reverse again.
+        $.get("/listen/user/" + container.dataset.userId + "?max_ts=" + maxTimestamp + "&order=asc",
             function(data) {
+                var listens = data.payload.listens;
+                listens.reverse();
                 this.setState({
-                    listens: data.payload.listens,
+                    listens: listens,
                     page: this.state.page - 1
                 });
             }.bind(this)
