@@ -67,8 +67,8 @@ var ListensViewer = React.createClass({
                         <table className="recordings table table-condensed table-hover">
                             <thead>
                             <tr>
-                                <th>track</th>
                                 <th>artist</th>
+                                <th>track</th>
                                 <th>time</th>
                             </tr>
                             </thead>
@@ -109,8 +109,8 @@ var Listen = React.createClass({
         var timestamp = new Date(this.props.timestamp * 1000).toISOString();
         return (
             <tr>
-                <td>{this.props.metadata.track_name}</td>
                 <td>{this.props.metadata.artist_name}</td>
+                <td>{this.props.metadata.track_name}</td>
                 <td><abbr className="timeago" title={timestamp}></abbr></td>
             </tr>
         );
