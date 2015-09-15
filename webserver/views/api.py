@@ -19,23 +19,16 @@ def submit():
     except ValueError as e:
         raise BadRequest("Cannot parse JSON document: %s" % e)
 
+    keys = data.keys()
+    if "artist" not in keys or "title" not in keys:
+        raise BadRequest("Require artist and title keys in submission")
+
     try:
-        gid = db.data.get_id_from_scribble(data)
-        if gid:
-            status = "known"
-            data = db.data.load_scribble(gid)
-            musicbrainz_recording_id = data["musicbrainz_recording_id"]
-            if musicbrainz_recording_id:
-                status = "matched"
-        else:
-            status = "new"
-            musicbrainz_recording_id = None
-            gid = db.data.submit_scribble(data)
-        response = {"status": status,
-                    "musicbrainz_recording_id": musicbrainz_recording_id,
-                    "messybrainz_id": gid
-                   }
-        return jsonify(response)
+        gid = db.data.get_id_from_recording(data)
+        if not gid:
+            gid = db.data.submit_recording(data)
+        data = db.data.load_recording(gid)
+        return jsonify(data)
     except db.exceptions.BadDataException as e:
         raise BadRequest(e)
 
@@ -44,12 +37,8 @@ def submit():
 @crossdomain()
 def get(messybrainz_id):
     try:
-        data = db.data.load_scribble(messybrainz_id)
-        status = "unmatched"
-        if data["musicbrainz_recording_id"]:
-            status = "matched"
-        response = {"status": status, "payload": data}
-        return jsonify(response)
+        data = db.data.load_recording(messybrainz_id)
+        return jsonify(data)
     except db.exceptions.NoDataFoundException:
         raise NotFound
 
@@ -57,7 +46,7 @@ def get(messybrainz_id):
 @api_bp.route("/<uuid:messybrainz_id>/aka")
 @crossdomain()
 def get_aka(messybrainz_id):
-    """Returns all other MessyBrainz scribbles that are known to be equivalent
+    """Returns all other MessyBrainz recordings that are known to be equivalent
     (as specified in the clusters table).
     """
     raise NotImplementedError

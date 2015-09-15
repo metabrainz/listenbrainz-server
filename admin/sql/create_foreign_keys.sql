@@ -1,13 +1,13 @@
 BEGIN;
 
-ALTER TABLE scribble
-  ADD CONSTRAINT scribble_fk_scribble_json
+ALTER TABLE recording
+  ADD CONSTRAINT recording_fk_recording_json
   FOREIGN KEY (data)
-  REFERENCES scribble_json (id);
+  REFERENCES recording_json (id);
 
-ALTER TABLE scribble_cluster
-  ADD CONSTRAINT scribble_cluster_fk_scribble
-  FOREIGN KEY (gid)
-    REFERENCES scribble (gid);
+ALTER TABLE recording_cluster
+  ADD CONSTRAINT recording_cluster_fk_recording
+  FOREIGN KEY (recording_gid)
+    REFERENCES recording (gid);
 
 COMMIT;
