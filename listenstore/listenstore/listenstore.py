@@ -143,8 +143,8 @@ class ListenStore(object):
         return self.session.execute_async(batch)
 
     def insert(self, listen):
-        if not listen.validate():
-            raise ValueError("Invalid listen: %s" % listen)
+#        if not listen.validate():
+#            raise ValueError("Invalid listen: %s" % listen)
         self.insert_async(listen).result()
 
     def insert_batch(self, listens):

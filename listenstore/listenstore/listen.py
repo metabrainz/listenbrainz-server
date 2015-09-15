@@ -1,5 +1,6 @@
 # coding=utf-8
 from __future__ import division, absolute_import, print_function, unicode_literals
+import datetime
 
 
 class Listen(object):
@@ -30,7 +31,7 @@ class Listen(object):
 
     @property
     def date(self):
-        return self.timestamp.date()
+        return datetime.datetime.fromtimestamp(self.timestamp)
 
     def __repr__(self):
         return "<Listen: uid: %s, time: %s, artist_msid: %s, album_msid: %s, track_msid: %s>" % \
