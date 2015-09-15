@@ -21,13 +21,13 @@ CREATE TABLE recording_json (
 -- artist_redirect table.
 CREATE TABLE artist_credit (
   gid  UUID NOT NULL,
-  name TEXT NOT NULL
+  name TEXT NOT NULL,
   submitted  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE TABLE release (
   gid   UUID NOT NULL,
-  title TEXT NOT NULL
+  title TEXT NOT NULL,
   submitted  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
