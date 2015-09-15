@@ -36,3 +36,8 @@ def goals():
 @index_bp.route("/faq")
 def faq():
     return render_template("index/faq.html")
+
+
+@index_bp.route("/roadmap")
+def roadmap():
+    return render_template("index/roadmap.html")
