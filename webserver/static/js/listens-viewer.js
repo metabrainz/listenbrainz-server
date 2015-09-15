@@ -14,7 +14,7 @@ var ListensViewer = React.createClass({
     componentDidMount: function() {
         if (!container.dataset.userId) {
             console.error("ID of existing user needs to be specified" +
-                "in the data-user-id property.");
+                          "in the data-user-id property.");
             return;
         }
         $.get("/listen/user/" + container.dataset.userId, function(data) {
@@ -30,7 +30,7 @@ var ListensViewer = React.createClass({
         jQuery("abbr.timeago").timeago();
     },
     handlePreviousPage: function (maxTimestamp) {
-       this.setState({listens: null});
+        this.setState({listens: null});
         $.get("/listen/user/" + container.dataset.userId + "?max_ts=" + maxTimestamp,
             function(data) {
                 this.setState({
@@ -41,7 +41,7 @@ var ListensViewer = React.createClass({
         );
     },
     handleNextPage: function (minTimestamp) {
-       this.setState({listens: null});
+        this.setState({listens: null});
         $.get("/listen/user/" + container.dataset.userId + "?min_ts=" + minTimestamp,
             function(data) {
                 this.setState({
@@ -129,7 +129,6 @@ var PreviousPageButton = React.createClass({
         };
     },
     componentDidMount: function() {
-        console.log("CHECKING IF PREV");
         $.get("/listen/user/" + container.dataset.userId +
               "?max_ts=" + this.props.maxTimestamp,
             function(data) {
@@ -162,7 +161,6 @@ var NextPageButton = React.createClass({
         };
     },
     componentDidMount: function() {
-        console.log("CHECKING IF NEXT");
         $.get("/listen/user/" + container.dataset.userId +
               "?min_ts=" + this.props.minTimestamp,
             function(data) {
@@ -176,8 +174,7 @@ var NextPageButton = React.createClass({
         if (this.state.enabled) {
             return <li className="next">
                 <a href="#" onClick={this.switchPage}>Next &rarr;</a>
-            </li>
-           ;
+            </li>;
         } else {
             return <li style={{display: 'none'}}></li>;
         }
