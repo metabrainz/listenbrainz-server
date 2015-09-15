@@ -8,6 +8,7 @@ var ListensViewer = React.createClass({
         return {
             userId: null,
             listens: null,
+            ignorePopState: false,
             page: 0
         };
     },
@@ -17,17 +18,41 @@ var ListensViewer = React.createClass({
                           "in the data-user-id property.");
             return;
         }
-        $.get("/listen/user/" + container.dataset.userId, function(data) {
-            if (this.isMounted()) {
-                this.setState({
-                    userId: container.dataset.userId,
-                    listens: data.payload.listens
-                });
-            }
-        }.bind(this));
+        window.addEventListener('popstate', this.handleLoadData);
+        this.handleLoadData();
     },
     componentDidUpdate: function() {
         jQuery("abbr.timeago").timeago();
+    },
+    handleLoadData: function () {
+        if (this.state.ignorePopState) { return; }
+
+        function getUrlParameter(sParam) {
+            var sPageURL = decodeURIComponent(window.location.search.substring(1));
+            var sURLVariables = sPageURL.split('&');
+            for (var i = 0; i < sURLVariables.length; i++) {
+                var sParameterName = sURLVariables[i].split('=');
+                if (sParameterName[0] === sParam) {
+                    return sParameterName[1] === undefined ? true : sParameterName[1];
+                }
+            }
+        }
+
+        var data_url = "/listen/user/" + container.dataset.userId;
+        var minTimestamp = getUrlParameter("min-ts");
+        if (minTimestamp) {
+            data_url +=  "?min_ts=" + minTimestamp;
+        }
+        $.get(data_url,
+            function(data) {
+                if (this.isMounted()) {
+                    this.setState({
+                        userId: container.dataset.userId,
+                        listens: data.payload.listens
+                    });
+                }
+            }.bind(this)
+        );
     },
     handlePreviousPage: function (maxTimestamp) {
         this.setState({listens: null});
@@ -44,6 +69,9 @@ var ListensViewer = React.createClass({
                 });
             }.bind(this)
         );
+        this.setState({ ignorePopState: true });
+        history.pushState(null, null, this.state.userId + "?min-ts=" + (this.state.listens[0].listened_at + 1));
+        this.setState({ ignorePopState: false });
     },
     handleNextPage: function (minTimestamp) {
         this.setState({listens: null});
@@ -55,6 +83,9 @@ var ListensViewer = React.createClass({
                 });
             }.bind(this)
         );
+        this.setState({ ignorePopState: true });
+        history.pushState(null, null, this.state.userId + "?min-ts=" + (this.state.listens[0].listened_at + 1));
+        this.setState({ ignorePopState: false });
     },
     render: function () {
         if (this.state.listens) {
