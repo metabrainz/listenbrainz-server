@@ -52,17 +52,17 @@ def init_db(force):
     if exit_code != 0:
         raise Exception('Failed to create database extensions! Exit code: %i' % exit_code)
 
-    db.init_db_connection(config.PG_CONNECT)
+    app = create_app()
+    with app.app_context():
+        print('Creating tables...')
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
 
-    print('Creating tables...')
-    db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
+        print('Creating primary and foreign keys...')
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_primary_keys.sql'))
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
 
-    print('Creating primary and foreign keys...')
-    db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_primary_keys.sql'))
-    db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
-
-    print('Creating indexes...')
-    db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
+        print('Creating indexes...')
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
 
     print("Done!")
 
