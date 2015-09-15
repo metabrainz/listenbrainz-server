@@ -165,8 +165,10 @@ def get_messybrainz_data(listen):
         f.close()
     except urllib2.URLError as e:
         current_app.logger.error("Error calling MessyBrainz:" + str(e))
+        raise InternalServerError
     except socket.timeout:
         current_app.logger.error("Timeout calling MessyBrainz.")
+        raise InternalServerError
 
     try:
         messy_response = json.loads(response)
