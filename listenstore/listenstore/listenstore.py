@@ -126,25 +126,25 @@ class ListenStore(object):
     def insert_async(self, listen):
         batch = BatchStatement()
         query = """INSERT INTO listens
-                    (uid, year, month, day, id, artist_msid, album_msid, track_msid, json)
+                    (uid, year, month, day, id, artist_msid, album_msid, recording_msid, json)
                     VALUES (%(uid)s, %(year)s, %(month)s, %(day)s, %(id)s, %(artist_msid)s,
-                            %(album_msid)s, %(track_msid)s, %(json)s)"""
+                            %(album_msid)s, %(recording_msid)s, %(json)s)"""
         date = listen.date
         values = {'uid': listen.uid,
                   'year': date.year,
                   'month': date.month,
                   'day': date.day,
-                  'id': int((listen.timestamp - datetime(1970, 1, 1)).total_seconds()),
+                  'id': listen.timestamp,
                   'artist_msid': uuid.UUID(listen.artist_msid),
                   'album_msid': uuid.UUID(listen.album_msid) if listen.album_msid is not None else None,
-                  'track_msid': uuid.UUID(listen.track_msid),
+                  'recording_msid': uuid.UUID(listen.recording_msid),
                   'json': json.dumps(listen.data)}
         batch.add(SimpleStatement(query), values)
         return self.session.execute_async(batch)
 
     def insert(self, listen):
-#        if not listen.validate():
-#            raise ValueError("Invalid listen: %s" % listen)
+        if not listen.validate():
+            raise ValueError("Invalid listen: %s" % listen)
         self.insert_async(listen).result()
 
     def insert_batch(self, listens):
@@ -188,7 +188,7 @@ class ListenStore(object):
 
     def convert_row(self, row):
         return Listen(uid=row.uid, timestamp=datetime.fromtimestamp(row.id), album_msid=row.album_msid,
-                      artist_msid=row.artist_msid, track_msid=row.track_msid, data=json.loads(row.json))
+                      artist_msid=row.artist_msid, recording_msid=row.recording_msid, data=json.loads(row.json))
 
     def fetch_listens_for_range(self, uid, date_range, from_id, to_id, limit=None, order='desc'):
         """ Fetch listens for a specified uid within a single date range.
@@ -253,7 +253,7 @@ CREATE_SCHEMA_QUERIES = [
         id INT,
         artist_msid UUID,
         album_msid UUID,
-        track_msid UUID,
+        recording_msid UUID,
         json TEXT,
         PRIMARY KEY ((uid, year, month), id)
     ) WITH CLUSTERING ORDER BY (id DESC) AND

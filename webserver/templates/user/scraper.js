@@ -77,7 +77,9 @@ var Scrobble = (function() {
                 "track_metadata": {
                     "track_name": this.trackName(),
                     "artist_name": this.artistName(),
-                    "spotify_id": this.optionalSpotifyID()
+                    "additional_info" : {
+                         "spotify_id": this.optionalSpotifyID()
+                    },
                 },
                 "listened_at": this.scrobbledAt()
 
