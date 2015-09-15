@@ -111,7 +111,11 @@ def submit_listen(user_id):
 
 @api_bp.route("/listen/user/<user_id>")
 def get_listens(user_id):
-    count = min(request.args.get('count') or DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET)
+    try:
+        count = int(request.args.get('count'))
+    except ValueError:
+        raise BadRequest("Invalid count argument.")
+    count = min(count or DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET)
     max_ts = request.args.get('max_ts') or None
 
     cassandra = webserver.create_cassandra()
