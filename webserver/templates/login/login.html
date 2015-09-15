@@ -4,8 +4,18 @@
 
 {% block content %}
   <h2 class="page-title">Sign in</h2>
+
   <p>To sign in, use your MusicBrainz account, and authorize ListenBrainz to access your profile data.</p>
-  <hr />
+
+  <div class="well bg-danger" style="max-width: 600px; margin: 0 auto;">
+      <p class="text-danger">Important!</p>
+      <p>
+        By creating a ListenBrainz account, you acknowledge that your listen data will be made available to the public
+        and that the public may download the entirety of the ListenBrainz data under the <a 
+        href="http://creativecommons.org/publicdomain/zero/1.0/">CC0 license</a>.
+      </p>
+  </div>
+  <br/>
   <div class="well" style="max-width: 600px; margin: 0 auto;">
     <a href="{{ url_for('login.musicbrainz', next=request.args.get('next')) }}"
        class="btn btn-primary btn-lg btn-block">Sign in with MusicBrainz</a>
