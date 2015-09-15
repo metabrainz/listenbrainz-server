@@ -111,15 +111,13 @@ def submit_listen(user_id):
 
 @api_bp.route("/listen/user/<user_id>")
 def get_listens(user_id):
-    try:
-        count = int(request.args.get('count') or DEFAULT_ITEMS_PER_GET)
-    except ValueError:
-        raise BadRequest("Invalid count argument.")
-    count = min(count, MAX_ITEMS_PER_GET)
-    max_ts = request.args.get('max_ts') or None
-
     cassandra = webserver.create_cassandra()
-    listens = cassandra.fetch_listens(user_id, from_id=max_ts, limit=count)
+    listens = cassandra.fetch_listens(
+        user_id,
+        limit=min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET),
+        from_id=_parse_int_arg("max_ts"),
+        to_id=_parse_int_arg("min_ts"),
+    )
     listen_data = []
     for listen in listens:
         temp = json.loads(listen.json)
@@ -131,6 +129,17 @@ def get_listens(user_id):
         'count': len(listen_data),
         'listens': listen_data,
     }})
+
+
+def _parse_int_arg(name, default=None):
+        value = request.args.get(name)
+        if value:
+            try:
+                return int(value)
+            except ValueError:
+                raise BadRequest("Invalid %s argument." % name)
+        else:
+            return default
 
 
 def _validate_auth_header(user_id):
