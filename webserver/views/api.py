@@ -117,6 +117,7 @@ def get_listens(user_id):
         limit=min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET),
         from_id=_parse_int_arg("max_ts"),
         to_id=_parse_int_arg("min_ts"),
+        order=request.args.get("order", "desc"),
     )
     listen_data = []
     for listen in listens:
