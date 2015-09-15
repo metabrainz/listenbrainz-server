@@ -132,14 +132,14 @@ def get_listens(user_id):
 
 
 def _parse_int_arg(name, default=None):
-        value = request.args.get(name)
-        if value:
-            try:
-                return int(value)
-            except ValueError:
-                raise BadRequest("Invalid %s argument." % name)
-        else:
-            return default
+    value = request.args.get(name)
+    if value:
+        try:
+            return int(value)
+        except ValueError:
+            raise BadRequest("Invalid %s argument: %s" % (name, value))
+    else:
+        return default
 
 
 def _validate_auth_header(user_id):
