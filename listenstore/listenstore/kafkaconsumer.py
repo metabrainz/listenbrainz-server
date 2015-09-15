@@ -27,6 +27,10 @@ class KafkaConsumer(object):
             json_data =  message.message.value
             try:
                 data = json.loads(json_data)
+            except ValueError as e:
+                self.log.error("Cannot parse JSON: %s\n'%s'" % (str(e), json_data))
+
+            try:
                 self.callback(data)
-            except ValueError:
-                log.error("Cannot parse JSON: '%s'" % message)
+            except ValueError as e:
+                self.log.error("Cannot insert listen: %s" % str(e))
