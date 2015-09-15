@@ -5,19 +5,59 @@
 {% block content %}
   <h2 class="page-title">{{ user.musicbrainz_id }}</h2>
   {% if current_user.is_authenticated() and current_user == user %}
-  <p>Your token is <code>{{ user.auth_token }}</code>. You'll need this if you want to send data to us from an external program</p>
 
-  <h4>Import from Last.fm</h4>
+     <h3>Import from Last.fm</h3>
      {% if loader %}
-     Drag this to your bookmarks toolbar: <span class="label label-warning"><a href="{{loader}}">Import Last.fm to ListenBrainz</a></span>
-        <p>Then, go <a href="http://last.fm/user/{{lastfm_username}}/library">to your lastfm profile page</a> and click the bookmark</a>
+        <p>
+          <strong>Step 2</strong>
+        </p>
+        <div class="well">
+          <p>
+             Drag this bookmarklet to your bookmarks toolbar:
+          </p>
+          <p>
+             <span class="btn btn-warning btn-lg"><a href="{{loader}}" style="color: white;">Import Last.fm to ListenBrainz</a></span>
+          </p>
+        </div>
+        <p>
+          <strong>Step 3</strong>
+        </p>
+        <div class="well">
+          <p>
+             Go <a href="http://last.fm/user/{{lastfm_username}}/library">to your Last.fm profile page</a> 
+             and click the bookmarklet you just added to your toolbar.</a>
+          </p>
+          <p>
+             This starts the import of your listens. Please leave the page open and don't navigate away
+             from it until the import process is complete.
+          </p>
+          <p>
+             After that, you're done. Thanks!
+          </p>
+        </div>
      {% else %}
-     To start with, we need to know your Last.fm username:
-     <form action="" method="GET">
-         <input type="text" name="lastfm_username" placeholder="last.fm user id">
-         <input type="submit" value="ok!">
-     </form>
+     <p>
+        <strong>Step 1</strong>
+     </p>
+     We need to know your Last.fm username:
+     <div class="well">
+         <form action="" method="GET">
+             <input type="text" name="lastfm_username" size="30" placeholder="last.fm user id">
+             <input type="submit" value="proceed to step 2">
+         </form>
+     </div>
      {% endif %}
+
+     <h3>User token</h3>
+     <p>
+        If you would like to use an external program to import into Listenbrainz you will need the following
+        user token:
+     </p>
+
+     <div class="well">
+        {{ user.auth_token }}
+     </div>
+
   {% endif %}
 
 {% endblock %}
