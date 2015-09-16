@@ -42,13 +42,14 @@ var Scrobble = (function() {
 
         this.artistName = function() {
             var artistElement = rootScrobbleElement.getElementsByClassName("chartlist-artists")[0];
-            var artistName = artistElement.children[0].innerHTML;
+            artistElement = artistElement.children[0];
+            var artistName = artistElement.textContent || artistElement.innerText;
             return artistName;
         }
 
         this.trackName = function() {
             var trackElement = rootScrobbleElement.getElementsByClassName("link-block-target")[0];
-            return trackElement.innerHTML;
+            return trackElement.textContent || trackElement.innerText;
         }
 
         this.scrobbledAt = function() {
