@@ -31,9 +31,8 @@ suites:
         natdnshostresolver1: "on"
     run_list:
       - recipe[basebox]
+      - recipe[ourpostgres]
       - recipe[ourkafka]
       - recipe[ourcassandra]
-      - recipe[ourpostgres]
     attributes: {
-        "foo": 123
     }
