@@ -19,7 +19,6 @@ MAX_TAG_SIZE = 64
 MAX_ITEMS_PER_GET = 100
 DEFAULT_ITEMS_PER_GET = 25
 
-
 @api_bp.route("/listen/user/<user_id>", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 def submit_listen(user_id):
@@ -58,40 +57,41 @@ def submit_listen(user_id):
         _validate_listen(listen)
         listen['user_id'] = user_id
 
-        messybrainz_resp = get_messybrainz_data(listen)
-
         try:
-            messybrainz_id = messybrainz_resp['messybrainz_id']
-        except KeyError:
-            current_app.logger.error("MessyBrainz did not return a proper id")
-            raise InternalServerError
+            messybrainz_resp = get_messybrainz_data(listen)
+        except MessyBrainzException:
+            messybrainz_resp = None
 
-        recording_id = messybrainz_resp.get('recording_id', None)
-        artist_id = messybrainz_resp.get('artist_id', None)
-        release_id = messybrainz_resp.get('release_id', None)
+        if messybrainz_resp:
+            messybrainz_resp = messybrainz_resp['ids']
 
-        listen['listen_id'] = {}
-        if recording_id:
-            listen['listen_id']['id_type'] = "musicbrainz"
-            listen['listen_id']['id'] = recording_id
-        else:
-            listen['listen_id']['id_type'] = "messybrainz"
-            listen['listen_id']['id'] = messybrainz_id
+            if 'additional_info' not in listen['track_metadata']:
+                listen['track_metadata']['additional_info'] = {}
 
-        if 'additional_info' not in listen['track_metadata']:
-            listen['track_metadata']['additional_info'] = {}
+            try:
+                listen['recording_msid'] = messybrainz_resp['recording_msid']
+                listen['track_metadata']['additional_info']['artist_msid'] = messybrainz_resp['artist_msid']
+            except KeyError:
+                current_app.logger.error("MessyBrainz did not return a proper set of ids")
+                raise InternalServerError
 
-        if 'artist_id'    not in listen['track_metadata']['additional_info'] and \
-           'release_id'   not in listen['track_metadata']['additional_info'] and \
-           'recording_id' not in listen['track_metadata']['additional_info']:
+            try:
+                listen['track_metadata']['additional_info']['release_msid'] = messybrainz_resp['release_msid']
+            except KeyError:
+                pass
 
-            if artist_id and release_id and recording_id:
-                listen['track_metadata']['additional_info']['artist_id'] = artist_id
-                listen['track_metadata']['additional_info']['release'] = release_id
-                listen['track_metadata']['additional_info']['recording_id'] = recording_id
+            artist_mbids = messybrainz_resp.get('artist_mbids', [])
+            release_mbid = messybrainz_resp.get('release_mbid', None)
+            recording_mbid = messybrainz_resp.get('recording_mbid', None)
 
-        if messybrainz_id:
-            listen['track_metadata']['additional_info']['messybrainz_id'] = messybrainz_id
+            if 'artist_mbids'    not in listen['track_metadata']['additional_info'] and \
+               'release_mbid'   not in listen['track_metadata']['additional_info'] and \
+               'recording_mbid' not in listen['track_metadata']['additional_info']:
+
+                if len(artist_mbids) > 0 and release_mbid and recording_mbid:
+                    listen['track_metadata']['additional_info']['artist_id'] = artist_mbid
+                    listen['track_metadata']['additional_info']['release_mbid'] = release_mbid
+                    listen['track_metadata']['additional_info']['recording_mbid'] = recording_mbid
 
         if data['listen_type'] == 'playing_now':
             try:
@@ -121,9 +121,7 @@ def get_listens(user_id):
     )
     listen_data = []
     for listen in listens:
-        temp = json.loads(listen.json)
-        del temp['user_id']
-        listen_data.append(temp)
+        listen_data.append(listen.data)
 
     return jsonify({'payload': {
         'user_id': user_id,
@@ -162,10 +160,23 @@ def _validate_auth_header(user_id):
 def get_messybrainz_data(listen):
     messy_dict = {
         'artist': listen['track_metadata']['artist_name'],
-        'track': listen['track_metadata']['track_name'],
+        'title': listen['track_metadata']['track_name'],
     }
     if 'release_name' in listen['track_metadata']:
         messy_dict['release'] = listen['track_metadata']['release_name']
+
+    if 'additional_info' in listen['track_metadata']:
+        ai = listen['track_metadata']['additional_info']
+        if 'artist_mbids' in ai and type(ai['artist_mbids']) == list:
+            messy_dict['artist_mbids'] = ai['artist_mbids'] 
+        if 'release_mbid' in ai:
+            messy_dict['release_mbid'] = ai['release_mbid'] 
+        if 'recording_mbid' in ai:
+            messy_dict['recording_mbid'] = ai['recording_mbid'] 
+        if 'track_number' in ai:
+            messy_dict['track_number'] = ai['track_number'] 
+        if 'spotify_id' in ai:
+            messy_dict['spotify_id'] = ai['spotify_id'] 
 
     messy_data = json.dumps(messy_dict)
     req = urllib2.Request(current_app.config['MESSYBRAINZ_SUBMIT_URL'], messy_data, {
@@ -179,8 +190,10 @@ def get_messybrainz_data(listen):
         f.close()
     except urllib2.URLError as e:
         current_app.logger.error("Error calling MessyBrainz:" + str(e))
+        raise MessyBrainzException
     except socket.timeout:
         current_app.logger.error("Timeout calling MessyBrainz.")
+        raise MessyBrainzException
 
     try:
         messy_response = json.loads(response)
@@ -211,14 +224,15 @@ def _validate_listen(listen):
 
     # Tags
     if 'additional_info' in listen['track_metadata']:
-        tags = listen['track_metadata']['additional_info']['tags']
-        if len(tags) > MAX_TAGS_PER_LISTEN:
-            _log_raise_400("JSON document may not contain more than %d items in "
-                           "track_metadata.additional_info.tags." % MAX_TAGS_PER_LISTEN, listen)
-        for tag in tags:
-            if len(tag) > MAX_TAG_SIZE:
-                _log_raise_400("JSON document may not contain track_metadata.additional_info.tags "
-                               "longer than %d characters." % MAX_TAG_SIZE, listen)
+        if 'tags' in listen['track_metadata']['additional_info']:
+            tags = listen['track_metadata']['additional_info']['tags']
+            if len(tags) > MAX_TAGS_PER_LISTEN:
+                _log_raise_400("JSON document may not contain more than %d items in "
+                               "track_metadata.additional_info.tags." % MAX_TAGS_PER_LISTEN, listen)
+            for tag in tags:
+                if len(tag) > MAX_TAG_SIZE:
+                    _log_raise_400("JSON document may not contain track_metadata.additional_info.tags "
+                                   "longer than %d characters." % MAX_TAG_SIZE, listen)
 
 
 def _log_raise_400(msg, data):
@@ -233,3 +247,6 @@ def _log_raise_400(msg, data):
 
     current_app.logger.debug("BadRequest: %s\nJSON: %s" % (msg, data))
     raise BadRequest(msg)
+
+class MessyBrainzException(Exception):
+    pass

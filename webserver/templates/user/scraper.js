@@ -77,7 +77,9 @@ var Scrobble = (function() {
                 "track_metadata": {
                     "track_name": this.trackName(),
                     "artist_name": this.artistName(),
-                    "spotify_id": this.optionalSpotifyID()
+                    "additional_info" : {
+                         "spotify_id": this.optionalSpotifyID()
+                    },
                 },
                 "listened_at": this.scrobbledAt()
 
@@ -173,7 +175,6 @@ function reportPageAndGetNext(response) {
     }
 }
 
-document.body.innerHTML = "<style>body { padding:0px; margin:0px}</style><iframe src='http://isburning.me/starfield.html' style='width:100%;height:100vh;border:0px;'></iframe>";
 document.body.insertAdjacentHTML( 'afterbegin', '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">');
-document.body.insertAdjacentHTML( 'afterbegin', '<div style="position:absolute; top:200px; z-index: 200000000000000; width:500px; margin-left:-250px; left:50%; background-color:#fff; box-shadow: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22); text-align:center; padding:50px;" id="listen-progress-container"><img src="https://i.imgur.com/7g0M2fW.jpg" height="75"></div>');
+document.body.insertAdjacentHTML( 'afterbegin', '<div style="position:absolute; top:200px; z-index: 200000000000000; width:500px; margin-left:-250px; left:50%; background-color:#fff; box-shadow: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22); text-align:center; padding:50px;" id="listen-progress-container"><img src="{{ url_for('static', filename='img/listenbrainz-logo.svg', _external=True) }}" height="75"></div>');
 getLastFMPage(page, reportPageAndGetNext);

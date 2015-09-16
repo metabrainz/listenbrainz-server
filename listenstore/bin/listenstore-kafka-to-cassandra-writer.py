@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import logging
 from listenstore.cli import Command
 
 
@@ -7,6 +8,7 @@ class KafkaToCassandra(Command):
 
     def __init__(self):
         super(KafkaToCassandra, self).__init__()
+        self.log = logging.getLogger(__name__)
         self.inserts = 0
 
     def received_listen(self, listen):

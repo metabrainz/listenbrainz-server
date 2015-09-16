@@ -4,6 +4,7 @@
     "run_list": [
         "recipe[basebox]",
 	"recipe[ourkafka]",
-	"recipe[ourcassandra]"
+	"recipe[ourcassandra]",
+	"recipe[ourpostgres]"
     ]
 }

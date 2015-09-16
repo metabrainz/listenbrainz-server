@@ -1,6 +1,7 @@
 import json
 import logging
 from kafka import KafkaClient, SimpleConsumer
+from .listen import Listen
 
 
 class KafkaConsumer(object):
@@ -10,7 +11,9 @@ class KafkaConsumer(object):
 
 
     def start_listens(self, callback):
-        return self.start(callback, b"listen-group", b"listens")
+        # convert json dicts to Listen() for callback
+        listenifyCallback = lambda x: callback(Listen.from_json(x))
+        return self.start(listenifyCallback, b"listen-group", b"listens")
 
 
     def start(self, callback, group_name, topic_name):
@@ -24,6 +27,10 @@ class KafkaConsumer(object):
             json_data =  message.message.value
             try:
                 data = json.loads(json_data)
+            except ValueError as e:
+                self.log.error("Cannot parse JSON: %s\n'%s'" % (str(e), json_data))
+
+            try:
                 self.callback(data)
-            except ValueError:
-                log.error("Cannot parse JSON: '%s'" % message)
+            except ValueError as e:
+                self.log.error("Cannot insert listen: %s" % str(e))
