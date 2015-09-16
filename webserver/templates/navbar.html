@@ -18,20 +18,16 @@
     <div class="collapse navbar-collapse" id="lb-navbar-collapse">
       <ul class="nav navbar-nav">
         <li><a href="{{ url_for('index.contribute') }}">Contribute</a></li>
-        <li><a href="{{ url_for('index.downloads') }}">Downloads</a></li>
-        <li><a href="{{ url_for('index.goals') }}">Goals</a></li>
         <li><a href="{{ url_for('index.roadmap') }}">Roadmap</a></li>
+        <li><a href="{{ url_for('index.goals') }}">Goals</a></li>
         <li><a href="{{ url_for('index.faq') }}">FAQ</a></li>
+        <li><a href="{{ url_for('index.downloads') }}">Downloads</a></li>
       </ul>
 
       {# Not showing user stuff on error pages. If attempt to load user info fails there, page will not render. #}
       {% if not error %}
         <ul class="nav navbar-nav navbar-right">
-          {% if not current_user or current_user.is_anonymous() %}
           <li class="import-link"><a href="{{ url_for('index.import_data') }}">Import!</a></li>
-          {% else %}
-          <li class="import-link"><a href="{{ url_for('user.import_data', user_id=current_user.musicbrainz_id) }}">Import!</a></li>
-          {% endif %}
           {% if not current_user or current_user.is_anonymous() %}
             <li><a href="{{ url_for('login.index') }}">Sign in</a></li>
           {% else %}
@@ -41,7 +37,7 @@
               </a>
               <ul class="dropdown-menu" role="menu">
                 <li><a href="{{ url_for('user.profile', user_id=current_user.musicbrainz_id) }}">Your listens</a></li>
-                <li><a href="{{ url_for('user.import_data', user_id=current_user.musicbrainz_id) }}">Import listens</a></li>
+                <li><a href="{{ url_for('user.import_data') }}">Import listens</a></li>
                 <li><a href="{{ url_for('login.logout') }}">Sign out</a></li>
               </ul>
             </li>
