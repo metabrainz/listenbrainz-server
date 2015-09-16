@@ -30,13 +30,6 @@ def create_app():
     from flask_uuid import FlaskUUID
     FlaskUUID(app)
 
-    # MusicBrainz
-    import musicbrainzngs
-    from db import SCHEMA_VERSION
-    musicbrainzngs.set_useragent(app.config['MUSICBRAINZ_USERAGENT'], SCHEMA_VERSION)
-    if app.config['MUSICBRAINZ_HOSTNAME']:
-        musicbrainzngs.set_hostname(app.config['MUSICBRAINZ_HOSTNAME'])
-
     # Error handling
     from webserver.errors import init_error_handlers
     init_error_handlers(app)
