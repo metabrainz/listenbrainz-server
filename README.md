@@ -14,23 +14,6 @@ First, install [ChefDK](https://downloads.chef.io/chef-dk/), then:
     $ kitchen converge  # provisions/installs from chef cookbooks
     $ kitchen login     # ssh in to vm
 
-### Database installation
-
-Since chef doesn't install PostgreSQL and initialize database yet, this has to
-be done manually. First, after you are logged into the virtual machine, install
-`postgresql-9.4` package:
-
-    $ sudo apt-get install postgresql-9.4
-
-After PostgreSQL is installed, add this line at the beginning of
-*/etc/postgresql/9.4/main/pg_hba.conf* file:
-
-    local all all trust
-   
-and restart PostgreSQL:
-
-    $ sudo service postgresql restart
-
 ### Python dependencies
     
 Database should be ready. Before running any Python scripts, you need to
