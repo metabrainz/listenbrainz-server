@@ -52,14 +52,18 @@ def next_daterange(dat, precision):
         return (d.year, d.month, d.day)
 
 
-def dateranges(min_id, max_id, precision):
+def dateranges(min_id, max_id, precision, order):
+    if order == 'asc':
+        step = -1
+    else:
+        step = 1
     min_date, max_date = id_to_date(min_id), id_to_date(max_id)
     if precision == 'day':
-        delta = relativedelta(days=1)
+        delta = relativedelta(days=step)
     elif precision == 'month':
-        delta = relativedelta(months=1)
+        delta = relativedelta(months=step)
     elif precision == 'year':
-        delta = relativedelta(years=1)
+        delta = relativedelta(years=step)
 
     current = max_date
 
@@ -166,10 +170,7 @@ class ListenStore(object):
         if to_id is None:
             to_id = self.max_id()
 
-        ranges = dateranges(from_id, to_id, precision)
-        if order == 'asc':
-            ranges = reversed(ranges)
-
+        ranges = dateranges(from_id, to_id, precision, order)
         fetched_rows = 0
         for daterange in ranges:
             current_from_id = max(datetuple_to_id(daterange) - 1, from_id)
