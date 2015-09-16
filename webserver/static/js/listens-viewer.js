@@ -100,7 +100,7 @@ var ListensViewer = React.createClass({
             }
 
         } else {
-            return <div>Loading your listens...</div>;
+            return <div>Loading listens...</div>;
         }
     }
 });
