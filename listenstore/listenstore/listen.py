@@ -17,13 +17,15 @@ class Listen(object):
     @classmethod
     def from_json(cls, j):
         """Factory to make Listen() objects from a dict"""
-        return cls(  uid=j['user_id']
+        woo =  cls(  uid=j['user_id']
                    , timestamp=j['listened_at']
                    , artist_msid=j['track_metadata']['additional_info'].get('artist_msid')
                    , album_msid=j['track_metadata']['additional_info'].get('album_msid')
                    , recording_msid=j.get('recording_msid')
-                   , data=j['track_metadata']
                    )
+        # Uhm, if I pass data as the call above, the data vanishes. Setting it seperately is ok.
+        woo.data = j['track_metadata']
+        return woo
 
     def validate(self):
         return (self.uid is not None and self.timestamp is not None and self.artist_msid is not None

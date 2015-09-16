@@ -118,9 +118,7 @@ def get_listens(user_id):
     listens = cassandra.fetch_listens(user_id, from_id=max_ts, limit=count)
     listen_data = []
     for listen in listens:
-        temp = json.loads(listen.json)
-        del temp['user_id']
-        listen_data.append(temp)
+        listen_data.append(listen.data)
 
     return jsonify({'payload': {
         'user_id': user_id,

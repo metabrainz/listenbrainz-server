@@ -187,8 +187,11 @@ class ListenStore(object):
                     return
 
     def convert_row(self, row):
-        return Listen(uid=row.uid, timestamp=datetime.fromtimestamp(row.id), album_msid=row.album_msid,
-                      artist_msid=row.artist_msid, recording_msid=row.recording_msid, data=json.loads(row.json))
+        # WTF? Too tired to figure this out. :(
+        woo = Listen(uid=row.uid, timestamp=datetime.fromtimestamp(row.id), album_msid=row.album_msid,
+                      artist_msid=row.artist_msid, recording_msid=row.recording_msid)
+        woo.data = json.loads(row.json)
+        return woo
 
     def fetch_listens_for_range(self, uid, date_range, from_id, to_id, limit=None, order='desc'):
         """ Fetch listens for a specified uid within a single date range.
