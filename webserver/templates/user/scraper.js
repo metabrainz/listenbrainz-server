@@ -140,7 +140,7 @@ function reportScrobbles(struct) {
     var reportingURL = "{{ base_url }}";
 
     var xhr = new XMLHttpRequest();
-    xhr.open("POST", encodeURI(reportingURL));
+    xhr.open("POST", reportingURL);
     xhr.setRequestHeader("Authorization", "Token {{ user_token }}");
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xhr.onload = function(content) {
