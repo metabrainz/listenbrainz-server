@@ -106,4 +106,4 @@ Finally, create a `listens` topic in Kafka:
     $ sudo /opt/kafka/bin/kafka-topics.sh --create --zookeeper localhost:2181 --topic "listens" --partitions 1 --replication-factor 1
 
 This should fix the issue. See this page for more info about described method:
-http://stackoverflow.com/a/24028480.
+https://stackoverflow.com/a/24028480
