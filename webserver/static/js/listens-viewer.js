@@ -17,7 +17,7 @@ var ListensViewer = React.createClass({
                           "in the data-user-id property.");
             return;
         }
-        $.get("/listen/user/" + container.dataset.userId, function(data) {
+        $.get("/1/user/" + container.dataset.userId + "/listens", function(data) {
             if (this.isMounted()) {
                 this.setState({
                     userId: container.dataset.userId,
@@ -34,7 +34,7 @@ var ListensViewer = React.createClass({
         // Since we don't how the ID of the listen that will be first on the previous page we have to
         // fetch listens backwards: reverse the order and set max_ts instead of min_ts. After we get
         // the items, we need to reverse again.
-        $.get("/listen/user/" + container.dataset.userId + "?max_ts=" + maxTimestamp + "&order=asc",
+        $.get("/1/user/" + container.dataset.userId + "/listens?max_ts=" + maxTimestamp + "&order=asc",
             function(data) {
                 var listens = data.payload.listens;
                 listens.reverse();
@@ -47,7 +47,7 @@ var ListensViewer = React.createClass({
     },
     handleNextPage: function (minTimestamp) {
         this.setState({listens: null});
-        $.get("/listen/user/" + container.dataset.userId + "?min_ts=" + minTimestamp,
+        $.get("/1/user/" + container.dataset.userId + "/listens?min_ts=" + minTimestamp,
             function(data) {
                 this.setState({
                     listens: data.payload.listens,
@@ -134,8 +134,8 @@ var PreviousPageButton = React.createClass({
         };
     },
     componentDidMount: function() {
-        $.get("/listen/user/" + container.dataset.userId +
-              "?max_ts=" + this.props.maxTimestamp,
+        $.get("/1/user/" + container.dataset.userId +
+              "/listens?max_ts=" + this.props.maxTimestamp,
             function(data) {
                 this.setState({enabled: data.payload.count > 0});
             }.bind(this));
@@ -166,8 +166,8 @@ var NextPageButton = React.createClass({
         };
     },
     componentDidMount: function() {
-        $.get("/listen/user/" + container.dataset.userId +
-              "?min_ts=" + this.props.minTimestamp,
+        $.get("/1/user/" + container.dataset.userId +
+              "/listens?min_ts=" + this.props.minTimestamp,
             function(data) {
                 this.setState({enabled: data.payload.count > 0});
             }.bind(this));

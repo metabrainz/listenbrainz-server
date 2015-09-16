@@ -8,7 +8,7 @@ import db.user
 user_bp = Blueprint("user", __name__)
 
 
-@user_bp.route("/lastfmscraper/<user_id>.js")
+@user_bp.route("/<user_id>/scraper.js")
 @crossdomain()
 def lastfmscraper(user_id):
     user_token = request.args.get("user_token")
@@ -17,7 +17,7 @@ def lastfmscraper(user_id):
         raise NotFound
     scraper = render_template(
         "user/scraper.js",
-        base_url=url_for("listen.submit_listen", user_id=user_id, _external=True),
+        base_url=url_for("1.submit_listen", user_id=user_id, _external=True),
         user_token=user_token,
         lastfm_username=lastfm_username,
     )
