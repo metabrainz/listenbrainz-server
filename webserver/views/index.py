@@ -13,7 +13,7 @@ def index():
 @index_bp.route("/import")
 def import_data():
     if current_user.is_authenticated():
-        return redirect(url_for("user.import_data", user_id=current_user.musicbrainz_id))
+        return redirect(url_for("user.import_data"))
     else:
         return current_app.login_manager.unauthorized()
 
