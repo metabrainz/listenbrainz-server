@@ -188,7 +188,7 @@ class ListenStore(object):
 
     def convert_row(self, row):
         # WTF? Too tired to figure this out. :(
-        woo = Listen(uid=row.uid, timestamp=datetime.fromtimestamp(row.id), album_msid=row.album_msid,
+        woo = Listen(uid=row.uid, timestamp=row.id, album_msid=row.album_msid,
                       artist_msid=row.artist_msid, recording_msid=row.recording_msid)
         woo.data = json.loads(row.json)
         return woo
