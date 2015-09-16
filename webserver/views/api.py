@@ -10,7 +10,7 @@ from webserver.decorators import crossdomain
 import webserver
 import db.user
 
-api_bp = Blueprint('1', __name__)
+api_bp = Blueprint('api_v1', __name__)
 
 MAX_LISTEN_SIZE = 10240    # overall listen size, to prevent egregious spamming
 MAX_TAGS_PER_LISTEN = 50

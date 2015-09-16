@@ -17,7 +17,7 @@ def lastfmscraper(user_id):
         raise NotFound
     scraper = render_template(
         "user/scraper.js",
-        base_url=url_for("1.submit_listen", user_id=user_id, _external=True),
+        base_url=url_for("api_v1.submit_listen", user_id=user_id, _external=True),
         user_token=user_token,
         lastfm_username=lastfm_username,
     )
