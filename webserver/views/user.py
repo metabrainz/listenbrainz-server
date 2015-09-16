@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from flask import Blueprint, render_template, request, url_for, Response
-from flask_login import current_user
+from flask_login import current_user, login_required
 from werkzeug.exceptions import NotFound
 from webserver.decorators import crossdomain
 import db.user
@@ -29,23 +29,23 @@ def profile(user_id):
     return render_template("user/profile.html", user=_get_user(user_id))
 
 
-@user_bp.route("/<user_id>/import")
-def import_data(user_id):
-    user = _get_user(user_id)
+@user_bp.route("/import")
+@login_required
+def import_data():
     lastfm_username = request.args.get("lastfm_username")
-
     if lastfm_username:
         loader = render_template(
             "user/loader.js",
-            base_url=url_for("user.lastfmscraper", user_id=user_id, _external=True),
-            user_token=user.auth_token,
+            base_url=url_for("user.lastfmscraper",
+                             user_id=current_user.musicbrainz_id,
+                             _external=True),
+            user_token=current_user.auth_token,
             lastfm_username=lastfm_username,
         )
         loader = "javascript:%s" % loader
     else:
         loader = None
-
-    return render_template("user/import.html", user=user, loader=loader,
+    return render_template("user/import.html", user=current_user, loader=loader,
                            lastfm_username=lastfm_username)
 
 
