@@ -8,7 +8,7 @@ var ListensViewer = React.createClass({
         return {
             userId: null,
             listens: null,
-            ignorePopState: false,
+            hah: false,
             page: 0
         };
     },
@@ -18,14 +18,23 @@ var ListensViewer = React.createClass({
                           "in the data-user-id property.");
             return;
         }
+        this.initialLoad = true;
+        console.log("MOUNT");
         window.addEventListener('popstate', this.handleLoadData);
         this.handleLoadData();
     },
     componentDidUpdate: function() {
         jQuery("abbr.timeago").timeago();
     },
-    handleLoadData: function () {
-        if (this.state.ignorePopState) { return; }
+    handleLoadData: function (event) {
+        console.log("POPSTATE EVENT", event);
+        console.log("HISTORY STATE:", history.state);
+        console.log("LOAD -- INITIAL:", this.initialLoad);
+
+        if (!history.state && !this.initialLoad) {
+            console.log("IGNORE LOAD");
+            return; }
+        this.initialLoad = false;
 
         function getUrlParameter(sParam) {
             var sPageURL = decodeURIComponent(window.location.search.substring(1));
@@ -53,6 +62,9 @@ var ListensViewer = React.createClass({
                 }
             }.bind(this)
         );
+        this.setState({
+                       hah: true
+                    });
     },
     handlePreviousPage: function (maxTimestamp) {
         this.setState({listens: null});
@@ -67,11 +79,9 @@ var ListensViewer = React.createClass({
                     listens: listens,
                     page: this.state.page - 1
                 });
+        history.pushState({hello: "hi"}, null, this.state.userId + "?min-ts=" + (data.payload.listens[0].listened_at + 1));
             }.bind(this)
         );
-        this.setState({ ignorePopState: true });
-        history.pushState(null, null, this.state.userId + "?min-ts=" + (this.state.listens[0].listened_at + 1));
-        this.setState({ ignorePopState: false });
     },
     handleNextPage: function (minTimestamp) {
         this.setState({listens: null});
@@ -81,11 +91,10 @@ var ListensViewer = React.createClass({
                     listens: data.payload.listens,
                     page: this.state.page + 1
                 });
+                    var minTimestamp = this.state.listens[0].listened_at + 1;
+        history.pushState({hello: "hi"}, null, this.state.userId + "?min-ts=" + minTimestamp);
             }.bind(this)
         );
-        this.setState({ ignorePopState: true });
-        history.pushState(null, null, this.state.userId + "?min-ts=" + (this.state.listens[0].listened_at + 1));
-        this.setState({ ignorePopState: false });
     },
     render: function () {
         if (this.state.listens) {
