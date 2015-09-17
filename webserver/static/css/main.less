@@ -37,6 +37,10 @@ body {
 // Navbar
 @grid-float-breakpoint: @screen-md-min; // Point at which the navbar becomes uncollapsed
 .navbar {
+  .alpha {
+    .pull-right;
+    color: @red;
+  }
   @logo-width: 166px + 15px;
   .navbar-variant(#353070, @logo-width);
   .import-link {
