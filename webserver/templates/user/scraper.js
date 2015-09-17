@@ -62,7 +62,7 @@ var Scrobble = (function() {
             //we have to do this because javascript's date parse method doesn't
             //directly accept lastfm's new date format but it does if we add the
             //space before am or pm
-            var manipulatedDateString = dateString.replace("am", " am").replace("pm", " pm");
+            var manipulatedDateString = dateString.replace("am", " am").replace("pm", " pm") + " UTC";
             return Math.round(Date.parse(manipulatedDateString)/1000);
         }
 
