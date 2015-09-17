@@ -170,7 +170,7 @@ function reportPage(response) {
 }
 
 function reportPageAndGetNext(response) {
-  document.getElementById("listen-progress-container").innerHTML = "<img src='{{ url_for('static', filename='img/listenbrainz-logo.svg', _external=True) }}' height='75'><br><br><i class='fa fa-cog fa-spin'></i> Sending page " + page + " of " + numberOfPages + " to ListenBrainz<br> [completed: " + numCompleted + "]<br><span style='font-size:8pt'>Please don't navigate while this is running</span><br>";
+  document.getElementById("listen-progress-container").innerHTML = "<img src='{{ url_for('static', filename='img/listenbrainz-logo.svg', _external=True) }}' height='75'><br><br><i class='fa fa-cog fa-spin'></i> Sending page " + (numCompleted+1) + " of " + numberOfPages + " to ListenBrainz<br><span style='font-size:8pt'>Please don't navigate while this is running</span><br>";
     reportPage(response);
     page += 1;
 
