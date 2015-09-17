@@ -7,9 +7,7 @@ var ListensViewer = React.createClass({
     getInitialState: function () {
         return {
             userId: null,
-            listens: null,
-            hah: false,
-            page: 0
+            listens: null
         };
     },
     componentDidMount: function() {
@@ -18,23 +16,6 @@ var ListensViewer = React.createClass({
                           "in the data-user-id property.");
             return;
         }
-        this.initialLoad = true;
-        console.log("MOUNT");
-        window.addEventListener('popstate', this.handleLoadData);
-        this.handleLoadData();
-    },
-    componentDidUpdate: function() {
-        jQuery("abbr.timeago").timeago();
-    },
-    handleLoadData: function (event) {
-        console.log("POPSTATE EVENT", event);
-        console.log("HISTORY STATE:", history.state);
-        console.log("LOAD -- INITIAL:", this.initialLoad);
-
-        if (!history.state && !this.initialLoad) {
-            console.log("IGNORE LOAD");
-            return; }
-        this.initialLoad = false;
 
         function getUrlParameter(sParam) {
             var sPageURL = decodeURIComponent(window.location.search.substring(1));
@@ -62,39 +43,9 @@ var ListensViewer = React.createClass({
                 }
             }.bind(this)
         );
-        this.setState({
-                       hah: true
-                    });
     },
-    handlePreviousPage: function (maxTimestamp) {
-        this.setState({listens: null});
-        // Since we don't how the ID of the listen that will be first on the previous page we have to
-        // fetch listens backwards: reverse the order and set max_ts instead of min_ts. After we get
-        // the items, we need to reverse again.
-        $.get("/listen/user/" + container.dataset.userId + "?max_ts=" + maxTimestamp + "&order=asc",
-            function(data) {
-                var listens = data.payload.listens;
-                listens.reverse();
-                this.setState({
-                    listens: listens,
-                    page: this.state.page - 1
-                });
-        history.pushState({hello: "hi"}, null, this.state.userId + "?min-ts=" + (data.payload.listens[0].listened_at + 1));
-            }.bind(this)
-        );
-    },
-    handleNextPage: function (minTimestamp) {
-        this.setState({listens: null});
-        $.get("/listen/user/" + container.dataset.userId + "?min_ts=" + minTimestamp,
-            function(data) {
-                this.setState({
-                    listens: data.payload.listens,
-                    page: this.state.page + 1
-                });
-                    var minTimestamp = this.state.listens[0].listened_at + 1;
-        history.pushState({hello: "hi"}, null, this.state.userId + "?min-ts=" + minTimestamp);
-            }.bind(this)
-        );
+    componentDidUpdate: function() {
+        jQuery("abbr.timeago").timeago();
     },
     render: function () {
         if (this.state.listens) {
@@ -121,16 +72,12 @@ var ListensViewer = React.createClass({
                         </table>
                         <ul className="pager">
                             <PreviousPageButton
-                                key={"previous" + this.state.page}
                                 userId={this.state.userId}
                                 maxTimestamp={this.state.listens[0].listened_at + 1}
-                                onSwitch={this.handlePreviousPage}
                                 />
                             <NextPageButton
-                                key={"next" + this.state.page}
                                 userId={this.state.userId}
                                 minTimestamp={this.state.listens[this.state.listens.length-1].listened_at - 1}
-                                onSwitch={this.handleNextPage}
                                 />
                         </ul>
                     </div>
@@ -170,18 +117,25 @@ var PreviousPageButton = React.createClass({
     },
     getInitialState: function () {
         return {
-            enabled: false
+            enabled: false,
+            minTimestamp: null
         };
     },
     componentDidMount: function() {
         $.get("/listen/user/" + container.dataset.userId +
               "?max_ts=" + this.props.maxTimestamp,
             function(data) {
-                this.setState({enabled: data.payload.count > 0});
-            }.bind(this));
+                if (data.payload.count > 0) {
+                    this.setState({
+                        enabled: true,
+                        minTimestamp: data.payload.listens[data.payload.listens.length - 1].listened_at - 1
+                    });
+                }
+            }.bind(this)
+        );
     },
     switchPage: function() {
-        this.props.onSwitch(this.props.maxTimestamp);
+        window.location.replace("/user/" + this.props.userId + "?min-ts=" + this.state.minTimestamp);
     },
     render: function () {
         if (this.state.enabled) {
@@ -213,7 +167,7 @@ var NextPageButton = React.createClass({
             }.bind(this));
     },
     switchPage: function() {
-        this.props.onSwitch(this.props.minTimestamp);
+        window.location.replace("/user/" + this.props.userId + "?min-ts=" + this.props.minTimestamp);
     },
     render: function () {
         if (this.state.enabled) {
