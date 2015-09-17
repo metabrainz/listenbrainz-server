@@ -1,8 +1,9 @@
 from __future__ import absolute_import
 from flask import Blueprint, render_template, request, url_for, Response
 from flask_login import current_user, login_required
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import NotFound, BadRequest
 from webserver.decorators import crossdomain
+import webserver
 import db.user
 
 user_bp = Blueprint("user", __name__)
@@ -26,7 +27,45 @@ def lastfmscraper(user_id):
 
 @user_bp.route("/<user_id>")
 def profile(user_id):
-    return render_template("user/profile.html", user=_get_user(user_id))
+    cassandra = webserver.create_cassandra()
+
+    # Getting data for current page
+    min_ts = request.args.get("min_ts")
+    if min_ts is not None:
+        try:
+            min_ts = int(min_ts)
+        except ValueError:
+            raise BadRequest("Incorrect timestamp argument min-ts:" %
+                             request.args.get("min_ts"))
+    listens = []
+    for listen in cassandra.fetch_listens(user_id, limit=25, to_id=min_ts):
+        listens.append({
+            "track_metadata": listen.data,
+            "listened_at": listen.timestamp,
+        })
+
+    # Checking if there is a "previous" page
+    previous_listens = list(cassandra.fetch_listens(user_id, limit=25, from_id=listens[0]["listened_at"] + 1, order="asc"))
+    print(listens[0]["listened_at"] + 1)
+    if previous_listens:
+        previous_listen_ts = previous_listens[-1].timestamp
+    else:
+        previous_listen_ts = None
+
+    # Checking if there is a "next" page
+    next_listens = list(cassandra.fetch_listens(user_id, limit=1, to_id=listens[-1]["listened_at"] - 1))
+    if next_listens:
+        next_listen_ts = listens[-1]["listened_at"] - 1
+    else:
+        next_listen_ts = None
+
+    return render_template(
+        "user/profile.html",
+        user=_get_user(user_id),
+        listens=listens,
+        previous_listen_ts=previous_listen_ts,
+        next_listen_ts=next_listen_ts,
+    )
 
 
 @user_bp.route("/import")

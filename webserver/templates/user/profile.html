@@ -5,16 +5,37 @@
 {% block content %}
   <div id="user-profile">
     <h2 class="page-title">Most recent listens for {{ user.musicbrainz_id }}</h2>
-    <div id="listens-viewer-container" data-user-id="{{ user.musicbrainz_id }}">
-      <span class="loading-placeholder">Loading listens...</span>
-    </div>
-  </div>
-{% endblock %}
+     {% if not listens %}
+    <p class="lead" style="text-align: center;">No listens. :(</p>
+  {% else %}
+    <table class="table table-condensed table-striped">
+      <thead>
+      <tr>
+        <th>artist</th>
+        <th>track</th>
+        <th>time</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for listen in listens %}
+        <tr>
+          <td>{{ listen.track_metadata.artist_name }}</td>
+          <td>{{ listen.track_metadata.track_name }}</td>
+          <td>{{ listen.listened_at }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
 
-{% block scripts %}
-  {{ super() }}
-  <script src="{{ url_for('static', filename='js/lib/react.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/lib/JSXTransformer.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/lib/jquery.timeago.js') }}"></script>
-  <script type="text/jsx" src="{{ url_for('static', filename='js/listens-viewer.js') }}"></script>
+      <ul class="pager">
+      {% if previous_listen_ts %}
+          <li class="previous"><a href="{{ url_for("user.profile", user_id=user.musicbrainz_id, min_ts=previous_listen_ts) }}">&larr; Previous</a></li>
+          {% endif %}
+      {% if next_listen_ts %}
+          <li class="next"><a href="{{ url_for("user.profile", user_id=user.musicbrainz_id, min_ts=next_listen_ts) }}">Next &rarr;</a></li>
+          {% endif %}
+      </ul>
+  {% endif %}
+  </div>
+
 {% endblock %}
