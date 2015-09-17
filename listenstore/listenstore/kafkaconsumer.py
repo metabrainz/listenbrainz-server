@@ -33,4 +33,4 @@ class KafkaConsumer(object):
             try:
                 self.callback(data)
             except ValueError as e:
-                self.log.error("Cannot insert listen: %s" % str(e))
+                self.log.error("Cannot insert listen: %s" % unicode(e))

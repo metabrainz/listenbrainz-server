@@ -36,5 +36,8 @@ class Listen(object):
         return datetime.datetime.fromtimestamp(self.timestamp)
 
     def __repr__(self):
-        return "<Listen: uid: %s, time: %s, artist_msid: %s, album_msid: %s, recording_msid: %s>" % \
+        return unicode(self).encode("utf-8")
+
+    def __unicode__(self):
+        return u"<Listen: uid: %s, time: %s, artist_msid: %s, album_msid: %s, recording_msid: %s>" % \
                (self.uid, self.timestamp, self.artist_msid, self.album_msid, self.recording_msid)
