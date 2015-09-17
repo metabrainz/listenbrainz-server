@@ -6,6 +6,7 @@ import calendar
 import json
 import time
 import uuid
+import six
 from datetime import date, datetime
 from .listen import Listen
 from dateutil.relativedelta import relativedelta
@@ -143,6 +144,8 @@ class ListenStore(object):
                   'album_msid': uuid.UUID(listen.album_msid) if listen.album_msid is not None else None,
                   'recording_msid': uuid.UUID(listen.recording_msid),
                   'json': json.dumps(listen.data)}
+        if six.PY2 and isinstance(query, six.text_type):
+            query = query.encode('utf-8')
         batch.add(SimpleStatement(query), values)
         return self.session.execute_async(batch)
 
