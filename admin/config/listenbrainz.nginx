@@ -1,6 +1,6 @@
 server {
      root        /usr/share/nginx/www;
-     server_name listenbrainz.org;
+     server_name listenbrainz.org api.listenbrainz.org;
      access_log  /var/log/nginx/listenbrainz-combined.log combined;
      error_log   /var/log/nginx/listenbrainz-error.log notice;
 
