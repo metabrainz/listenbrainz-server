@@ -32,6 +32,16 @@ def get_by_mb_id(musicbrainz_id):
     return dict(row) if row else None
 
 
+def get_by_token(token):
+    """Get user from an auth token"""
+    result = db.session.execute("""SELECT id, created, musicbrainz_id
+                                     FROM "user"
+                                    WHERE auth_token = :auth_token""",
+                                {"auth_token": token})
+    row = result.fetchone()
+    return dict(row) if row else None
+
+
 def get_or_create(musicbrainz_id):
     user = get_by_mb_id(musicbrainz_id)
     if not user:

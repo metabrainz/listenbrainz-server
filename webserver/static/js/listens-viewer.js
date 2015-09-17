@@ -28,7 +28,7 @@ var ListensViewer = React.createClass({
             }
         }
 
-        var data_url = "/listen/user/" + container.dataset.userId;
+        var data_url = "/1/user/" + container.dataset.userId + "/listens";
         var minTimestamp = getUrlParameter("min-ts");
         if (minTimestamp) {
             data_url +=  "?min_ts=" + minTimestamp;
@@ -122,8 +122,8 @@ var PreviousPageButton = React.createClass({
         };
     },
     componentDidMount: function() {
-        $.get("/listen/user/" + container.dataset.userId +
-              "?max_ts=" + this.props.maxTimestamp,
+        $.get("/1/user/" + container.dataset.userId +
+              "/listens?max_ts=" + this.props.maxTimestamp,
             function(data) {
                 if (data.payload.count > 0) {
                     this.setState({
@@ -160,8 +160,8 @@ var NextPageButton = React.createClass({
         };
     },
     componentDidMount: function() {
-        $.get("/listen/user/" + container.dataset.userId +
-              "?min_ts=" + this.props.minTimestamp,
+        $.get("/1/user/" + container.dataset.userId +
+              "/listens?min_ts=" + this.props.minTimestamp,
             function(data) {
                 this.setState({enabled: data.payload.count > 0});
             }.bind(this));

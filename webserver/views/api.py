@@ -10,7 +10,7 @@ from webserver.decorators import crossdomain
 import webserver
 import db.user
 
-api_bp = Blueprint('listen', __name__)
+api_bp = Blueprint('api_v1', __name__)
 
 MAX_LISTEN_SIZE = 10240    # overall listen size, to prevent egregious spamming
 MAX_TAGS_PER_LISTEN = 50
@@ -19,14 +19,14 @@ MAX_TAG_SIZE = 64
 MAX_ITEMS_PER_GET = 100
 DEFAULT_ITEMS_PER_GET = 25
 
-@api_bp.route("/listen/user/<user_id>", methods=["POST", "OPTIONS"])
+@api_bp.route("/1/submit-listens", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
-def submit_listen(user_id):
+def submit_listen():
     """Endpoint for submitting a listen to ListenBrainz.
 
     Sanity check listen and then pass on to Kafka.
     """
-    _validate_auth_header(user_id)
+    user_id = _validate_auth_header()
 
     raw_data = request.get_data()
     try:
@@ -109,7 +109,7 @@ def submit_listen(user_id):
     return "success"
 
 
-@api_bp.route("/listen/user/<user_id>")
+@api_bp.route("/1/user/<user_id>/listens")
 def get_listens(user_id):
     cassandra = webserver.create_cassandra()
     listens = cassandra.fetch_listens(
@@ -141,7 +141,7 @@ def _parse_int_arg(name, default=None):
         return default
 
 
-def _validate_auth_header(user_id):
+def _validate_auth_header():
     auth_token = request.headers.get('Authorization')
     if not auth_token:
         raise Unauthorized("You need to provide an Authorization header.")
@@ -150,12 +150,11 @@ def _validate_auth_header(user_id):
     except IndexError:
         raise Unauthorized("Provided Authorization header is invalid.")
 
-    user = db.user.get_by_mb_id(user_id)
+    user = db.user.get_by_token(auth_token)
     if user is None:
-        raise Unauthorized("User %s is not known to MusicBrainz." % user_id)
-    if auth_token != user['auth_token']:
         raise Unauthorized("Invalid authorization token.")
 
+    return user['musicbrainz_id']
 
 def get_messybrainz_data(listen):
     messy_dict = {
