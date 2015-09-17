@@ -17,9 +17,14 @@ body {
    width: auto !important;
 }
 
-.nav {
-  > li {
-    > a { color: @blue; }
+.navbar {
+  .nav {
+    > li {
+      > a { color: @blue; }
+    }
+  }
+  ul.nav li.dropdown:hover ul.dropdown-menu {
+    display: block;
   }
 }
 
