@@ -54,8 +54,9 @@ var Scrobble = (function() {
 
         this.scrobbledAt = function() {
             var dateContainer = rootScrobbleElement.getElementsByClassName("chartlist-timestamp")[0]
-            if (!dateContainer)
+            if (!dateContainer) {
                 return 0;
+            }
             var dateElement = dateContainer.getElementsByTagName("span")[0];
             var dateString = dateElement.getAttribute("title");
             //we have to do this because javascript's date parse method doesn't
