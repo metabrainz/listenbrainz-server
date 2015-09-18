@@ -10,4 +10,4 @@ chdir = /home/messybrainz/messybrainz-server
 virtualenv = /home/messybrainz/ve
 pythonpath = /home/messybrainz/ve/lib/python2.7/site-packages
 enable-threads = true
-processes = 20
+processes = 100
