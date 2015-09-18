@@ -1,4 +1,4 @@
-import json
+import ujson
 import logging
 from kafka import KafkaClient, SimpleConsumer
 from .listen import Listen
@@ -26,7 +26,7 @@ class KafkaConsumer(object):
         for message in self.consumer:
             json_data =  message.message.value
             try:
-                data = json.loads(json_data)
+                data = ujson.loads(json_data)
             except ValueError as e:
                 self.log.error("Cannot parse JSON: %s\n'%s'" % (str(e), json_data))
 
