@@ -205,6 +205,13 @@ def get_messybrainz_data(listen):
 
 def _validate_listen(listen):
     """Make sure that required keys are present, filled out and not too large."""
+
+    if not 'listened_at' in listen:
+        _log_raise_400("JSON document must contain the key listened_at at the top level.", listen)
+        
+    if type(listen['listened_at']) != int:
+        _log_raise_400("JSON document must contain an int value for listened_at.", listen)
+
     if 'listened_at' in listen and 'track_metadata' in listen and len(listen) > 2:
         _log_raise_400("JSON document may only contain listened_at and "
                        "track_metadata top level keys", listen)
