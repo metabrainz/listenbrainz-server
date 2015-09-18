@@ -208,8 +208,10 @@ def _validate_listen(listen):
 
     if not 'listened_at' in listen:
         _log_raise_400("JSON document must contain the key listened_at at the top level.", listen)
-        
-    if type(listen['listened_at']) != int:
+    
+    try:
+        listen['listened_at'] = int(listen['listened_at'])
+    except ValueError:
         _log_raise_400("JSON document must contain an int value for listened_at.", listen)
 
     if 'listened_at' in listen and 'track_metadata' in listen and len(listen) > 2:
