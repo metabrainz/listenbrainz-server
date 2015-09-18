@@ -28,3 +28,18 @@ node.set[:postgresql][:contrib][:packages] = ["postgresql-contrib-#{node['postgr
 include_recipe "postgresql"
 include_recipe "postgresql::server"
 include_recipe "postgresql::contrib"
+
+package "pgbouncer"
+
+cookbook_file "/etc/default/pgbouncer" do
+  source "pgbouncer-default"
+end
+
+template "/etc/pgbouncer/pgbouncer.ini" do
+  notifies :reload, "service[pgbouncer]"
+end
+
+service "pgbouncer" do
+  supports :status => true, :restart => true, :truereload => true
+  action [ :enable, :start ]
+end
