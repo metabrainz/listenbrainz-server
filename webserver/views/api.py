@@ -37,7 +37,7 @@ def submit_listen():
     try:
         payload = data['payload']
         if len(payload) == 0:
-            _log_raise_400("JSON document does not contain any listens.", payload)
+            return "success"
 
         if len(raw_data) > len(payload) * MAX_LISTEN_SIZE:
             _log_raise_400("JSON document is too large. In aggregate, listens may not "
