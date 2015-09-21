@@ -14,3 +14,4 @@ python-memcached == 1.57
 raven[flask] == 5.5.0
 setproctitle == 1.1.9
 six == 1.9.0
+ujson==1.33
