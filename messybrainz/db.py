@@ -5,7 +5,7 @@ SCHEMA_VERSION = 1
 
 engine = None
 
-def init_db_connection(connect_str):
+def init_db_engine(connect_str):
     global engine
     engine = create_engine(connect_str)
 
