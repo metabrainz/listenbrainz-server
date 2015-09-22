@@ -24,7 +24,9 @@ body {
     }
   }
   ul.nav li.dropdown:hover ul.dropdown-menu {
-    display: block;
+    @media (min-width: @grid-float-breakpoint) {
+      display: block;
+    }
   }
 }
 
