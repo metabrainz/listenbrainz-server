@@ -179,7 +179,7 @@ function reportPage(response) {
 
 function reportPageAndGetNext(response) {
     if (page == 1) {
-      updateMessage("<i class='fa fa-cog fa-spin'></i> working<br><span style='font-size:8pt'>Please don't navigate while this is running</span>");
+      updateMessage("<i class='fa fa-cog fa-spin'></i> working<br><span style='font-size:8pt'>Please don't navigate away from this page while the process is running</span>");
     }
     reportPage(response);
     page += 1;

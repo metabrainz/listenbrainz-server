@@ -1,6 +1,6 @@
 import sys
 import urllib2
-import json
+import ujson
 import socket
 from flask import Blueprint, request, current_app, jsonify
 from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized
@@ -30,7 +30,7 @@ def submit_listen():
 
     raw_data = request.get_data()
     try:
-        data = json.loads(raw_data.decode("utf-8"))
+        data = ujson.loads(raw_data.decode("utf-8"))
     except ValueError as e:
         _log_raise_400("Cannot parse JSON document: %s" % e, raw_data)
 
@@ -95,13 +95,13 @@ def submit_listen():
 
         if data['listen_type'] == 'playing_now':
             try:
-                producer.send_messages(b'playing_now', json.dumps(listen).encode('utf-8'))
+                producer.send_messages(b'playing_now', ujson.dumps(listen).encode('utf-8'))
             except:
                 current_app.logger.error("Kafka playing_now write error: " + str(sys.exc_info()[0]))
                 raise InternalServerError("Cannot record playing_now at this time.")
         else:
             try:
-                producer.send_messages(b'listens', json.dumps(listen).encode('utf-8'))
+                producer.send_messages(b'listens', ujson.dumps(listen).encode('utf-8'))
             except:
                 current_app.logger.error("Kafka listens write error: " + str(sys.exc_info()[0]))
                 raise InternalServerError("Cannot record listen at this time.")
@@ -177,7 +177,7 @@ def get_messybrainz_data(listen):
         if 'spotify_id' in ai:
             messy_dict['spotify_id'] = ai['spotify_id'] 
 
-    messy_data = json.dumps(messy_dict)
+    messy_data = ujson.dumps(messy_dict)
     req = urllib2.Request(current_app.config['MESSYBRAINZ_SUBMIT_URL'], messy_data, {
         'Content-Type': 'application/json',
         'Content-Length': len(messy_data),
@@ -195,7 +195,7 @@ def get_messybrainz_data(listen):
         raise MessyBrainzException
 
     try:
-        messy_response = json.loads(response)
+        messy_response = ujson.loads(response)
     except ValueError as e:
         current_app.logger.error("MessyBrainz parse error: " + str(e))
         raise InternalServerError
@@ -205,6 +205,15 @@ def get_messybrainz_data(listen):
 
 def _validate_listen(listen):
     """Make sure that required keys are present, filled out and not too large."""
+
+    if not 'listened_at' in listen:
+        _log_raise_400("JSON document must contain the key listened_at at the top level.", listen)
+    
+    try:
+        listen['listened_at'] = int(listen['listened_at'])
+    except ValueError:
+        _log_raise_400("JSON document must contain an int value for listened_at.", listen)
+
     if 'listened_at' in listen and 'track_metadata' in listen and len(listen) > 2:
         _log_raise_400("JSON document may only contain listened_at and "
                        "track_metadata top level keys", listen)
@@ -242,7 +251,7 @@ def _log_raise_400(msg, data):
     """
 
     if type(data) == dict:
-        data = json.dumps(data)
+        data = ujson.dumps(data)
 
     current_app.logger.debug("BadRequest: %s\nJSON: %s" % (msg, data))
     raise BadRequest(msg)
