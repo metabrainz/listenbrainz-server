@@ -8,6 +8,8 @@ SECRET_KEY = "CHANGE_ME"
 # Primary database
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz@/listenbrainz"
 
+MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz@/messybrainz"
+
 # Database for testing
 TEST_SQLALCHEMY_DATABASE_URI = "postgresql://lb_test@/lb_test"
 
@@ -21,7 +23,7 @@ KAFKA_CONNECT = "localhost:9092"
 
 
 # CASSANDRA
-CASSANDRA_SERVER = "localhost"     
+CASSANDRA_SERVER = "localhost"
 CASSANDRA_KEYSPACE = "listenbrainz"
 
 
