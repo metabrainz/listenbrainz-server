@@ -7,8 +7,7 @@ engine = None
 
 def init_db_connection(connect_str):
     global engine
-    engine = create_engine(connect_str, echo=True)
-
+    engine = create_engine(connect_str)
 
 def run_sql_script(sql_file_path):
     with open(sql_file_path) as sql:
