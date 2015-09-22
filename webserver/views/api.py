@@ -183,6 +183,7 @@ def get_messybrainz_data(listen):
         'Content-Length': len(messy_data),
     })
 
+    f = None
     try:
         f = urllib2.urlopen(req, timeout=current_app.config['MESSYBRAINZ_TIMEOUT'])
         response = f.read()
@@ -193,7 +194,8 @@ def get_messybrainz_data(listen):
         current_app.logger.error("Timeout calling MessyBrainz.")
         raise MessyBrainzException
     finally:
-        f.close()
+        if f:
+            f.close()
 
     try:
         messy_response = ujson.loads(response)
