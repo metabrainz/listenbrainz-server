@@ -65,7 +65,7 @@ def submit_listen():
             augmented_listens.extend(_messybrainz_lookup(msb_listens))
             msg_listens = []
 
-    if len(msb_listens):
+    if msb_listens:
         augmented_listens.extend(_messybrainz_lookup(msb_listens))
 
     _send_listens_to_kafka(data['listen_type'], augmented_listens)
@@ -165,7 +165,6 @@ def _messybrainz_lookup(listens):
                 messy_dict['spotify_id'] = ai['spotify_id'] 
         msb_listens.append(messy_dict)
 
-    print msb_listens
     try:
         msb_responses = messybrainz.submit_listens_and_sing_me_a_sweet_song(msb_listens)
     except messybrainz.exceptions.BadDataException as e:
@@ -176,7 +175,6 @@ def _messybrainz_lookup(listens):
         raise ServiceUnavailable(str(e)) 
 
     augmented_listens = []
-    print msb_responses
     for listen, messybrainz_resp in zip(listens, msb_responses['payload']):
         messybrainz_resp = messybrainz_resp['ids']
 
