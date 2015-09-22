@@ -121,6 +121,7 @@ function getLastFMPage(page, callback) {
     xhr.send();
 }
 
+var version = "1.1";
 var page = 1;
 var numberOfPages = parseInt(document.getElementsByClassName("pages")[0].innerHTML.trim().split(" ")[3]);
 
@@ -135,8 +136,10 @@ function dispatch() {
 }
 
 function enqueueReport(struct) {
-    toReport.push(struct);
-    dispatch();
+    if (struct.payload.length > 0) {
+        toReport.push(struct);
+        dispatch();
+    }
 }
 
 function reportScrobbles(struct) {
@@ -149,6 +152,11 @@ function reportScrobbles(struct) {
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xhr.onload = function(content) {
         numCompleted++;
+        if (numCompleted >= numberOfPages) {
+            updateMessage("<i class='fa fa-check'></i> Import finished<br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
+        } else {
+            updateMessage("<i class='fa fa-cog fa-spin'></i> Sending page " + numCompleted + " of " + numberOfPages + " to ListenBrainz<br><span style='font-size:8pt'>Please don't navigate while this is running</span>");
+        }
         console.log("successfully reported page");
     };
     xhr.onabort = function(context) {
@@ -170,7 +178,9 @@ function reportPage(response) {
 }
 
 function reportPageAndGetNext(response) {
-  document.getElementById("listen-progress-container").innerHTML = "<img src='{{ url_for('static', filename='img/listenbrainz-logo.svg', _external=True) }}' height='75'><br><br><i class='fa fa-cog fa-spin'></i> Sending page " + (numCompleted+1) + " of " + numberOfPages + " to ListenBrainz<br><span style='font-size:8pt'>Please don't navigate while this is running</span><br>";
+    if (page == 1) {
+      updateMessage("<i class='fa fa-cog fa-spin'></i> working<br><span style='font-size:8pt'>Please don't navigate away from this page while the process is running</span>");
+    }
     reportPage(response);
     page += 1;
 
@@ -179,6 +189,14 @@ function reportPageAndGetNext(response) {
     }
 }
 
+function updateMessage(message) {
+    document.getElementById("listen-progress-container").innerHTML =  "" +
+        "<img src='{{ url_for('static', filename='img/listenbrainz-logo.svg', _external=True) }}' height='75'><br><br>" +
+        message +
+        "<br><span style='font-size:6pt; position:absolute; bottom:1px; right: 3px'>v"+version+"</span>";
+}
+
 document.body.insertAdjacentHTML( 'afterbegin', '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">');
-document.body.insertAdjacentHTML( 'afterbegin', '<div style="position:absolute; top:200px; z-index: 200000000000000; width:500px; margin-left:-250px; left:50%; background-color:#fff; box-shadow: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22); text-align:center; padding:50px;" id="listen-progress-container"><img src="{{ url_for('static', filename='img/listenbrainz-logo.svg', _external=True) }}" height="75"></div>');
+document.body.insertAdjacentHTML( 'afterbegin', '<div style="position:absolute; top:200px; z-index: 200000000000000; width:500px; margin-left:-250px; left:50%; background-color:#fff; box-shadow: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22); text-align:center; padding:50px;" id="listen-progress-container"></div>');
+updateMessage("");
 getLastFMPage(page, reportPageAndGetNext);
