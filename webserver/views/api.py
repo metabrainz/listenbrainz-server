@@ -186,7 +186,6 @@ def get_messybrainz_data(listen):
     try:
         f = urllib2.urlopen(req, timeout=current_app.config['MESSYBRAINZ_TIMEOUT'])
         response = f.read()
-        f.close()
     except urllib2.URLError as e:
         current_app.logger.error("Error calling MessyBrainz:" + str(e))
         raise MessyBrainzException
