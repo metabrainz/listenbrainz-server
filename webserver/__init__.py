@@ -1,4 +1,5 @@
-from flask import Flask
+from flask import Flask, g
+from messybrainz import db
 import sys
 import os
 
@@ -14,17 +15,6 @@ def create_app():
     # Logging
     from webserver.loggers import init_loggers
     init_loggers(app)
-
-    # Database connection
-    from db import init_db_connection
-    init_db_connection(app)
-
-    # Memcached
-    if 'MEMCACHED_SERVERS' in app.config:
-        from db import cache
-        cache.init(app.config['MEMCACHED_SERVERS'],
-                   app.config['MEMCACHED_NAMESPACE'],
-                   debug=1 if app.debug else 0)
 
     # Extensions
     from flask_uuid import FlaskUUID
@@ -45,5 +35,13 @@ def create_app():
     from webserver.views.api import api_bp
     app.register_blueprint(index_bp)
     app.register_blueprint(api_bp)
+
+    @app.before_request
+    def before_request():
+        db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
+
+    @app.teardown_request
+    def teardown_request(exception):
+        pass
 
     return app

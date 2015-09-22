@@ -1,5 +1,4 @@
 from __future__ import print_function
-import db
 from webserver import create_app
 import subprocess
 import os
