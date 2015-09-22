@@ -152,20 +152,27 @@ function reportScrobbles(struct) {
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xhr.onload = function(content) {
         numCompleted++;
-        if (numCompleted >= numberOfPages) {
-            updateMessage("<i class='fa fa-check'></i> Import finished<br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
+        if (this.status >= 200 && this.status < 300) {
+            console.log("successfully reported page");
         } else {
-            updateMessage("<i class='fa fa-cog fa-spin'></i> Sending page " + numCompleted + " of " + numberOfPages + " to ListenBrainz<br><span style='font-size:8pt'>Please don't navigate while this is running</span>");
+            console.log("received http error " + this.status + " but continuing");
         }
-        console.log("successfully reported page");
     };
+    // TODO: Error cases to catch: 400, 500, 401, timeout
+    // On 400, 401 we don't retru
+    // on timeout retry
+    // on 50x???
     xhr.onabort = function(context) {
         console.log("abort, req'ing");
-        enqueueReport(struct);
+        console.debug(context);
+        console.debug(context.target.status);
+        //enqueueReport(struct);
     };
     xhr.onerror = function(context) {
         console.log("error, req'ing");
-        enqueueReport(struct);
+        console.debug(context);
+        console.debug(context.target.status);
+        //enqueueReport(struct);
     };
     xhr.send(JSON.stringify(struct));
 }
