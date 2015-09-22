@@ -32,7 +32,7 @@ def submit():
 
     try:
         result = messybrainz.submit_listens_and_sing_me_a_sweet_song(data)
-        return ujsonify({"payload": result})
+        return ujsonify(result)
     except messybrainz.exceptions.BadDataException as e:
         raise BadRequest(e)
 

@@ -24,7 +24,7 @@ def submit_listens_and_sing_me_a_sweet_song(recordings):
         attempts += 1
 
     if success:
-        return data
+        return {"payload": data}
     else:
         raise exceptions.ErrorAddingException("Failed to add data")
 
