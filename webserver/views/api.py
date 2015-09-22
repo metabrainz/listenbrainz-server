@@ -163,10 +163,11 @@ def _messybrainz_lookup(listens):
                 messy_dict['track_number'] = ai['track_number'] 
             if 'spotify_id' in ai:
                 messy_dict['spotify_id'] = ai['spotify_id'] 
-            msb_listens.append(messy_dict)
+        msb_listens.append(messy_dict)
 
+    print msb_listens
     try:
-        msb_responses = messybrainz.submit_recordings(msb_listens)
+        msb_responses = messybrainz.submit_listens_and_sing_me_a_sweet_song(msb_listens)
     except messybrainz.exceptions.BadDataException as e:
         _log_and_raise_400(str(e))
     except messybrainz.exceptions.NoDataFoundException:
@@ -174,8 +175,9 @@ def _messybrainz_lookup(listens):
     except messybrainz.exceptions.ErrorAddingException as e:
         raise ServiceUnavailable(str(e)) 
 
-    augemented_listens = []
-    for listen, msb_response in zip(listens, msb_responses['payload']):
+    augmented_listens = []
+    print msb_responses
+    for listen, messybrainz_resp in zip(listens, msb_responses['payload']):
         messybrainz_resp = messybrainz_resp['ids']
 
         if 'additional_info' not in listen['track_metadata']:
