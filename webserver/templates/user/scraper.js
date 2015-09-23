@@ -200,7 +200,6 @@ function reportPageAndGetNext(response) {
       updateMessage("<i class='fa fa-cog fa-spin'></i> working<br><span style='font-size:8pt'>Please don't navigate away from this page while the process is running</span>");
     }
     reportPage(response);
-    page += 1;
 
     getNextPageIfSlots();
 }
@@ -208,6 +207,7 @@ function reportPageAndGetNext(response) {
 function getNextPageIfSlots() {
     // Get a new lastfm page and queue it only if there are more pages to download and we have
     // less than 10 pages waiting to submit
+    page += 1;
     if (page <= numberOfPages && activeSubmissions < 10) {
         setTimeout(function() { getLastFMPage(page, reportPageAndGetNext) }, 0 + Math.random()*100);
     }
