@@ -40,7 +40,7 @@ class KafkaConsumer(object):
                     data = ujson.loads(message.message.value)
                     listens.append(Listen.from_json(data))
                 except ValueError as e:
-                    self.log.error("Cannot parse JSON: %s\n'%s'" % (str(e), json_data))
+                    self.log.error("Cannot parse JSON: %s\n'%s'" % (str(e), message.message.value))
                     continue
 
             if len(listens):
