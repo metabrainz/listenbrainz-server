@@ -156,6 +156,11 @@ function reportScrobbles(struct) {
     xhr.onload = function(content) {
         if (this.status >= 200 && this.status < 300) {
             numCompleted++;
+            if (numCompleted >= numberOfPages) {
+                updateMessage("<i class='fa fa-check'></i> Import finished<br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
+            } else {
+                updateMessage("<i class='fa fa-cog fa-spin'></i> Sending page " + numCompleted + " of " + numberOfPages + " to ListenBrainz<br><span style='font-size:8pt'>Please don't navigate while this is running</span>");
+            }
             console.log("successfully reported page");
         } else if (this.status >= 400 && this.status < 500) {
             console.log("4xx error, skipping");
