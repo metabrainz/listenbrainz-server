@@ -129,7 +129,15 @@ var toReport = [];
 var numCompleted = 0;
 var activeSubmissions = 0;
 
+var timesDispatch = 0;
+var timesReportScrobbles = 0;
+var timesEnqueueReport = 0;
+var timesGetPage = 0;
+var times4Error = 0;
+var times5Error = 0;
+
 function dispatch() {
+    timesDispatch++;
     for (var i = 0; i < toReport.length; ++i) {
         reportScrobbles(toReport[i]);
     }
@@ -137,6 +145,7 @@ function dispatch() {
 }
 
 function enqueueReport(struct) {
+    timesEnqueueReport++;
     if (struct.payload.length > 0) {
         toReport.push(struct);
         dispatch();
@@ -144,6 +153,7 @@ function enqueueReport(struct) {
 }
 
 function reportScrobbles(struct) {
+    timesReportScrobbles++;
     //must have a trailing slash
     var reportingURL = "{{ base_url }}";
     activeSubmissions++;
@@ -154,16 +164,19 @@ function reportScrobbles(struct) {
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xhr.timeout = 10 * 1000; // 10 seconds
     xhr.onload = function(content) {
+console.debug("dispatched " + timesDispatch + ", reportedScrobbles " + timesReportScrobbles + ", enqueueReport " + timesEnqueueReport + ", getPage " + timesGetPage);
         if (this.status >= 200 && this.status < 300) {
             numCompleted++;
             console.log("successfully reported page");
         } else if (this.status >= 400 && this.status < 500) {
+            times4Error++;
             // We mark 4xx errors as completed because we don't
             // retry them
             numCompleted++;
             console.log("4xx error, skipping");
         } else if (this.status >= 500) {
             console.log("received http error " + this.status + " req'ing");
+            times5Error++;
             enqueueReport(struct);
         }
         if (numCompleted >= numberOfPages) {
@@ -199,6 +212,7 @@ function reportPage(response) {
 }
 
 function reportPageAndGetNext(response) {
+    timesGetPage++;
     if (page == 1) {
       updateMessage("<i class='fa fa-cog fa-spin'></i> working<br><span style='font-size:8pt'>Please don't navigate away from this page while the process is running</span>");
     }
@@ -219,7 +233,12 @@ function getNextPageIfSlots() {
 function updateMessage(message) {
     document.getElementById("listen-progress-container").innerHTML =  "" +
         "<img src='{{ url_for('static', filename='img/listenbrainz-logo.svg', _external=True) }}' height='75'><br><br>" +
-        message +
+        message + "<br>" +
+        "<span style='display:none'>" +
+        "dispatched " + timesDispatch + ", reportedScrobbles " +
+        timesReportScrobbles + ", enqueueReport " + timesEnqueueReport +
+        ", getPage " + timesGetPage + ", number4xx " + times4Error +
+        ", number5xx " + times5Error + ", page " + page + "</span>" +
         "<br><span style='font-size:6pt; position:absolute; bottom:1px; right: 3px'>v"+version+"</span>";
 }
 
