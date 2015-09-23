@@ -121,18 +121,19 @@ function getLastFMPage(page, callback) {
     xhr.send();
 }
 
-var version = "1.1";
+var version = "1.2";
 var page = 1;
 var numberOfPages = parseInt(document.getElementsByClassName("pages")[0].innerHTML.trim().split(" ")[3]);
 
 var toReport = [];
 var numCompleted = 0;
+var activeSubmissions = 0;
 
 function dispatch() {
-    for (var i = 0; i < toReport.length; ++i) {
+    for (var i = 0; i < toReport.length; i++) {
         reportScrobbles(toReport[i]);
     }
-    toReport = [];
+    toReport = []
 }
 
 function enqueueReport(struct) {
@@ -145,6 +146,7 @@ function enqueueReport(struct) {
 function reportScrobbles(struct) {
     //must have a trailing slash
     var reportingURL = "{{ base_url }}";
+    activeSubmissions++;
 
     var xhr = new XMLHttpRequest();
     xhr.open("POST", reportingURL);
@@ -157,6 +159,8 @@ function reportScrobbles(struct) {
         } else {
             console.log("received http error " + this.status + " but continuing");
         }
+        getNextPageIfSlots();
+        console.log("successfully reported page");
     };
     // TODO: Error cases to catch: 400, 500, 401, timeout
     // On 400, 401 we don't retru
@@ -174,6 +178,9 @@ function reportScrobbles(struct) {
         console.debug(context.target.status);
         //enqueueReport(struct);
     };
+    xhr.onloadend = function(context) {
+        activeSubmissions--;
+    }
     xhr.send(JSON.stringify(struct));
 }
 
@@ -191,7 +198,13 @@ function reportPageAndGetNext(response) {
     reportPage(response);
     page += 1;
 
-    if (page <= numberOfPages) {
+    getNextPageIfSlots();
+}
+
+function getNextPageIfSlots() {
+    // Get a new lastfm page and queue it only if there are more pages to download and we have
+    // less than 10 pages waiting to submit
+    if (page <= numberOfPages && activeSubmissions < 10) {
         setTimeout(function() { getLastFMPage(page, reportPageAndGetNext) }, 0 + Math.random()*100);
     }
 }
