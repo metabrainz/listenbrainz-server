@@ -164,7 +164,6 @@ function reportScrobbles(struct) {
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xhr.timeout = 10 * 1000; // 10 seconds
     xhr.onload = function(content) {
-console.debug("dispatched " + timesDispatch + ", reportedScrobbles " + timesReportScrobbles + ", enqueueReport " + timesEnqueueReport + ", getPage " + timesGetPage);
         if (this.status >= 200 && this.status < 300) {
             numCompleted++;
             console.log("successfully reported page");
@@ -224,8 +223,8 @@ function reportPageAndGetNext(response) {
 function getNextPageIfSlots() {
     // Get a new lastfm page and queue it only if there are more pages to download and we have
     // less than 10 pages waiting to submit
-    page += 1;
     if (page <= numberOfPages && activeSubmissions < 10) {
+        page += 1;
         setTimeout(function() { getLastFMPage(page, reportPageAndGetNext) }, 0 + Math.random()*100);
     }
 }
