@@ -48,17 +48,17 @@ class KafkaConsumer(object):
                 last_offset = message.offset
 
             if listens:
-                while True:
+                broken = True
+                while broken:
                     try:
                         self.listenstore.insert_batch(listens)
-                        break
+                        broken = False
                     except ValueError as e:
                         self.log.error("Cannot insert listens: %s" % unicode(e))
-                        break
+                        broken = False
                     except NoHostAvailable as e:
                         self.log.error("Cannot insert listens: %s. Sleeping, trying again." % unicode(e))
                         sleep(5)
-                        continue
 
 
             self.inserts += len(messages)
