@@ -2,7 +2,8 @@ import ujson
 import logging
 from kafka import KafkaClient, SimpleConsumer
 from .listen import Listen
-from time import time
+from time import time, sleep
+from cassandra.cluster import NoHostAvailable
 
 KAFKA_READ_TIMEOUT = 5
 CASSANDRA_BATCH_SIZE = 1000
@@ -47,10 +48,18 @@ class KafkaConsumer(object):
                 last_offset = message.offset
 
             if listens:
-                try:
-                    self.listenstore.insert_batch(listens)
-                except ValueError as e:
-                    self.log.error("Cannot insert listens: %s" % unicode(e))
+                broken = True
+                while broken:
+                    try:
+                        self.listenstore.insert_batch(listens)
+                        broken = False
+                    except ValueError as e:
+                        self.log.error("Cannot insert listens: %s" % unicode(e))
+                        broken = False
+                    except NoHostAvailable as e:
+                        self.log.error("Cannot insert listens: %s. Sleeping, trying again." % unicode(e))
+                        sleep(5)
+
 
             self.inserts += len(messages)
             if self.inserts >= REPORT_FREQUENCY:
