@@ -154,8 +154,8 @@ function reportScrobbles(struct) {
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xhr.timeout = 10 * 1000; // 10 seconds
     xhr.onload = function(content) {
-        numCompleted++;
         if (this.status >= 200 && this.status < 300) {
+            numCompleted++;
             console.log("successfully reported page");
         } else if (this.status >= 400 && this.status < 500) {
             console.log("4xx error, skipping");
@@ -164,7 +164,6 @@ function reportScrobbles(struct) {
             enqueueReport(struct);
         }
         getNextPageIfSlots();
-        console.log("successfully reported page");
     };
     xhr.ontimeout = function(context) {
         console.log("timeout, req'ing");
