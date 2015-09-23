@@ -43,7 +43,7 @@ class KafkaConsumer(object):
                     self.log.error("Cannot parse JSON: %s\n'%s'" % (str(e), message.message.value))
                     continue
 
-            if len(listens):
+            if listens:
                 try:
                     self.listenstore.insert_batch(listens)
                 except ValueError as e:
