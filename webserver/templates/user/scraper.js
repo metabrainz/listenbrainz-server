@@ -121,12 +121,13 @@ function getLastFMPage(page, callback) {
     xhr.send();
 }
 
-var version = "1.1";
+var version = "1.2";
 var page = 1;
 var numberOfPages = parseInt(document.getElementsByClassName("pages")[0].innerHTML.trim().split(" ")[3]);
 
 var toReport = [];
 var numCompleted = 0;
+var activeSubmissions = 0;
 
 function dispatch() {
     for (var i = 0; i < toReport.length; ++i) {
@@ -145,20 +146,34 @@ function enqueueReport(struct) {
 function reportScrobbles(struct) {
     //must have a trailing slash
     var reportingURL = "{{ base_url }}";
+    activeSubmissions++;
 
     var xhr = new XMLHttpRequest();
     xhr.open("POST", reportingURL);
     xhr.setRequestHeader("Authorization", "Token {{ user_token }}");
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    xhr.timeout = 10 * 1000; // 10 seconds
     xhr.onload = function(content) {
-        numCompleted++;
-        if (numCompleted >= numberOfPages) {
-            updateMessage("<i class='fa fa-check'></i> Import finished<br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
-        } else {
-            updateMessage("<i class='fa fa-cog fa-spin'></i> Sending page " + numCompleted + " of " + numberOfPages + " to ListenBrainz<br><span style='font-size:8pt'>Please don't navigate while this is running</span>");
+        if (this.status >= 200 && this.status < 300) {
+            numCompleted++;
+            if (numCompleted >= numberOfPages) {
+                updateMessage("<i class='fa fa-check'></i> Import finished<br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
+            } else {
+                updateMessage("<i class='fa fa-cog fa-spin'></i> Sending page " + numCompleted + " of " + numberOfPages + " to ListenBrainz<br><span style='font-size:8pt'>Please don't navigate while this is running</span>");
+            }
+            console.log("successfully reported page");
+        } else if (this.status >= 400 && this.status < 500) {
+            console.log("4xx error, skipping");
+        } else if (this.status >= 500) {
+            console.log("received http error " + this.status + " req'ing");
+            enqueueReport(struct);
         }
-        console.log("successfully reported page");
+        getNextPageIfSlots();
     };
+    xhr.ontimeout = function(context) {
+        console.log("timeout, req'ing");
+        enqueueReport(struct);
+    }
     xhr.onabort = function(context) {
         console.log("abort, req'ing");
         enqueueReport(struct);
@@ -167,6 +182,9 @@ function reportScrobbles(struct) {
         console.log("error, req'ing");
         enqueueReport(struct);
     };
+    xhr.onloadend = function(context) {
+        activeSubmissions--;
+    }
     xhr.send(JSON.stringify(struct));
 }
 
@@ -182,9 +200,15 @@ function reportPageAndGetNext(response) {
       updateMessage("<i class='fa fa-cog fa-spin'></i> working<br><span style='font-size:8pt'>Please don't navigate away from this page while the process is running</span>");
     }
     reportPage(response);
-    page += 1;
 
-    if (page <= numberOfPages) {
+    getNextPageIfSlots();
+}
+
+function getNextPageIfSlots() {
+    // Get a new lastfm page and queue it only if there are more pages to download and we have
+    // less than 10 pages waiting to submit
+    page += 1;
+    if (page <= numberOfPages && activeSubmissions < 10) {
         setTimeout(function() { getLastFMPage(page, reportPageAndGetNext) }, 0 + Math.random()*100);
     }
 }
