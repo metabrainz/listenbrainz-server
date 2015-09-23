@@ -1,5 +1,5 @@
 import exceptions
-import psycopg2
+import sqlalchemy.exc
 import data
 
 import db
@@ -16,7 +16,7 @@ def submit_listens_and_sing_me_a_sweet_song(recordings):
         try:
             data = insert_all_in_transaction(recordings)
             success = True
-        except psycopg2.IntegrityError as e:
+        except sqlalchemy.exc.IntegrityError as e:
             # If we get an IntegrityError then our transaction failed.
             # We should try again
             pass
