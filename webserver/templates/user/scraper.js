@@ -133,7 +133,7 @@ function dispatch() {
     for (var i = 0; i < toReport.length; i++) {
         reportScrobbles(toReport[i]);
     }
-    toReport = []
+    toReport = [];
 }
 
 function enqueueReport(struct) {
