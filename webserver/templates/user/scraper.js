@@ -152,31 +152,31 @@ function reportScrobbles(struct) {
     xhr.open("POST", reportingURL);
     xhr.setRequestHeader("Authorization", "Token {{ user_token }}");
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    xhr.timeout = 10 * 1000; // 10 seconds
     xhr.onload = function(content) {
         numCompleted++;
         if (this.status >= 200 && this.status < 300) {
             console.log("successfully reported page");
-        } else {
-            console.log("received http error " + this.status + " but continuing");
+        } else if (this.status >= 400 && this.status < 500) {
+            console.log("4xx error, skipping");
+        } else if (this.status >= 500) {
+            console.log("received http error " + this.status + " req'ing");
+            enqueueReport(struct);
         }
         getNextPageIfSlots();
         console.log("successfully reported page");
     };
-    // TODO: Error cases to catch: 400, 500, 401, timeout
-    // On 400, 401 we don't retru
-    // on timeout retry
-    // on 50x???
+    xhr.ontimeout = function(context) {
+        console.log("timeout, req'ing");
+        enqueueReport(struct);
+    }
     xhr.onabort = function(context) {
         console.log("abort, req'ing");
-        console.debug(context);
-        console.debug(context.target.status);
-        //enqueueReport(struct);
+        enqueueReport(struct);
     };
     xhr.onerror = function(context) {
         console.log("error, req'ing");
-        console.debug(context);
-        console.debug(context.target.status);
-        //enqueueReport(struct);
+        enqueueReport(struct);
     };
     xhr.onloadend = function(context) {
         activeSubmissions--;
