@@ -36,7 +36,6 @@ class KafkaConsumer(object):
 
             messages = self.consumer.get_messages(count=CASSANDRA_BATCH_SIZE, block=True, timeout=KAFKA_READ_TIMEOUT)
             for message in messages:
-                print(message.message.value)
                 try:
                     data = ujson.loads(message.message.value)
                     listens.append(Listen.from_json(data))
