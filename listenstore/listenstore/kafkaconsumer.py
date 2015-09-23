@@ -29,6 +29,7 @@ class KafkaConsumer(object):
         self.consumer = SimpleConsumer(self.client, self.group_name, self.topic_name)
 
         t0 = 0
+        last_offset = -1
         while True:
             listens = []
             if t0 == 0:
@@ -43,6 +44,8 @@ class KafkaConsumer(object):
                     self.log.error("Cannot parse JSON: %s\n'%s'" % (str(e), message.message.value))
                     continue
 
+                last_offset = message.offset
+
             if listens:
                 try:
                     self.listenstore.insert_batch(listens)
@@ -53,6 +56,7 @@ class KafkaConsumer(object):
             if self.inserts >= REPORT_FREQUENCY:
                 t1 = time()
                 self.total_inserts += self.inserts
-                self.log.info("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % (self.inserts, t1 - t0, self.inserts / (t1 - t0), self.total_inserts))
+                self.log.info("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows. last offset: %d" % \
+                    (self.inserts, t1 - t0, self.inserts / (t1 - t0), self.total_inserts, last_offset))
                 self.inserts = 0
                 t0 = 0
