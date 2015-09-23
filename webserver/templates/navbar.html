@@ -32,7 +32,7 @@
             <li><a href="{{ url_for('login.index') }}">Sign in</a></li>
           {% else %}
             <li class="dropdown">
-              <a href="{{ url_for('user.profile', user_id=current_user.musicbrainz_id) }}">
+              <a class="dropdown-toggle" data-toggle="dropdown" href="#">
                 {{ current_user.musicbrainz_id }} <span class="caret"></span>
               </a>
               <ul class="dropdown-menu" role="menu">
