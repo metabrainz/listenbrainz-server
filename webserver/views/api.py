@@ -63,7 +63,7 @@ def submit_listen():
         msb_listens.append(listen)
         if len(msb_listens) >= MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP:
             augmented_listens.extend(_messybrainz_lookup(msb_listens))
-            msg_listens = []
+            msb_listens = []
 
     if msb_listens:
         augmented_listens.extend(_messybrainz_lookup(msb_listens))
