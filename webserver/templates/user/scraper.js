@@ -130,7 +130,7 @@ var numCompleted = 0;
 var activeSubmissions = 0;
 
 function dispatch() {
-    for (var i = 0; i < toReport.length; i++) {
+    for (var i = 0; i < toReport.length; ++i) {
         reportScrobbles(toReport[i]);
     }
     toReport = [];
