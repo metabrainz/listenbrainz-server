@@ -32,70 +32,70 @@ function isSpotifyURI(uri) {
     return !!(/open.spotify/.exec(uri));
 }
 
-var Scrobble = (function() {
-    return function(rootScrobbleElement) {
-        this.lastfmID = function() {
-            var loveButtonForm = rootScrobbleElement.getElementsByTagName("form")[0];
-            var loveButtonURL = loveButtonForm.getAttribute("action");
-            return extractlastFMIDFromLoveButtonURL(loveButtonURL);
-        }
+function Scrobble(rootScrobbleElement) {
+    this.rootScrobbleElement = rootScrobbleElement;
+}
 
-        this.artistName = function() {
-            var artistElement = rootScrobbleElement.getElementsByClassName("chartlist-artists")[0];
-            artistElement = artistElement.children[0];
-            var artistName = artistElement.textContent || artistElement.innerText;
-            return artistName;
-        }
+Scrobble.prototype.lastfmID = function () {
+    var loveButtonForm = this.rootScrobbleElement.getElementsByTagName("form")[0];
+    var loveButtonURL = loveButtonForm.getAttribute("action");
+    return extractlastFMIDFromLoveButtonURL(loveButtonURL);
+};
 
-        this.trackName = function() {
-            var trackElement = rootScrobbleElement.getElementsByClassName("link-block-target")[0];
-            return trackElement.textContent || trackElement.innerText;
-        }
+Scrobble.prototype.artistName = function () {
+    var artistElement = this.rootScrobbleElement.getElementsByClassName("chartlist-artists")[0];
+    artistElement = artistElement.children[0];
+    var artistName = artistElement.textContent || artistElement.innerText;
+    return artistName;
+};
 
-        this.scrobbledAt = function() {
-            var dateContainer = rootScrobbleElement.getElementsByClassName("chartlist-timestamp")[0]
-            if (!dateContainer) {
-                return 0;
-            }
-            var dateElement = dateContainer.getElementsByTagName("span")[0];
-            var dateString = dateElement.getAttribute("title");
-            //we have to do this because javascript's date parse method doesn't
-            //directly accept lastfm's new date format but it does if we add the
-            //space before am or pm
-            var manipulatedDateString = dateString.replace("am", " am").replace("pm", " pm") + " UTC";
-            return Math.round(Date.parse(manipulatedDateString)/1000);
-        }
+Scrobble.prototype.trackName = function () {
+    var trackElement = this.rootScrobbleElement.getElementsByClassName("link-block-target")[0];
+    return trackElement.textContent || trackElement.innerText;
+};
 
-        this.optionalSpotifyID = function() {
-            return select(
-                    isSpotifyURI,
-                    map(
-                        function(elem) { return elem.getAttribute("href") },
-                        rootScrobbleElement.getElementsByTagName("a")
-                       )
-                    )[0];
-        }
-
-        this.asJSONSerializable = function() {
-            return {
-                "track_metadata": {
-                    "track_name": this.trackName(),
-                    "artist_name": this.artistName(),
-                    "additional_info" : {
-                         "spotify_id": this.optionalSpotifyID()
-                    },
-                },
-                "listened_at": this.scrobbledAt()
-
-            }
-        }
-
-        function extractlastFMIDFromLoveButtonURL(loveButtonURL) {
-            var parts = loveButtonURL.split("/");
-            return parts.slice(0, parts.length-1).join("/");
-        }
+Scrobble.prototype.scrobbledAt = function () {
+    var dateContainer = this.rootScrobbleElement.getElementsByClassName("chartlist-timestamp")[0]
+    if (!dateContainer) {
+        return 0;
     }
-}());
+    var dateElement = dateContainer.getElementsByTagName("span")[0];
+    var dateString = dateElement.getAttribute("title");
+    //we have to do this because javascript's date parse method doesn't
+    //directly accept lastfm's new date format but it does if we add the
+    //space before am or pm
+    var manipulatedDateString = dateString.replace("am", " am").replace("pm", " pm") + " UTC";
+    return Math.round(Date.parse(manipulatedDateString)/1000);
+};
+
+Scrobble.prototype.optionalSpotifyID = function () {
+    return select(
+            isSpotifyURI,
+            map(
+                function(elem) { return elem.getAttribute("href") },
+                this.rootScrobbleElement.getElementsByTagName("a")
+               )
+            )[0];
+};
+
+Scrobble.prototype.asJSONSerializable = function () {
+    return {
+        "track_metadata": {
+            "track_name": this.trackName(),
+            "artist_name": this.artistName(),
+            "additional_info" : {
+                 "spotify_id": this.optionalSpotifyID()
+            },
+        },
+        "listened_at": this.scrobbledAt()
+
+    }
+};
+
+function extractlastFMIDFromLoveButtonURL(loveButtonURL) {
+    var parts = loveButtonURL.split("/");
+    return parts.slice(0, parts.length-1).join("/");
+}
 
 function encodeScrobbles(root) {
     var scrobbles = root.getElementsByClassName("js-link-block");
