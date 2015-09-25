@@ -1,9 +1,13 @@
 from __future__ import absolute_import
 from flask import Blueprint, render_template, current_app, redirect, url_for
 from flask_login import current_user
+import os
+import config
+import subprocess
+import locale
 
 index_bp = Blueprint('index', __name__)
-
+locale.setlocale(locale.LC_ALL, '')
 
 @index_bp.route("/")
 def index():
@@ -41,3 +45,33 @@ def faq():
 @index_bp.route("/roadmap")
 def roadmap():
     return render_template("index/roadmap.html")
+
+
+# listen-group    listens                        0   282202115       282202115       0               none
+@index_bp.route("/current-status")
+def current_status():
+
+    load = "%.2f %.2f %.2f" % os.getloadavg()
+
+    process = subprocess.Popen([config.KAFKA_RUN_CLASS_BINARY, "kafka.tools.ConsumerOffsetChecker",
+        '--topic', 'listens', '--group', 'listen-group'], stdout=subprocess.PIPE)
+    out, err = process.communicate()
+
+    print out
+
+    lines = out.split("\n")
+    data = []
+    for line in lines:
+        if line.startswith("listen-group"):
+            data = line.split()
+
+    if len(data) >= 6:
+        kafka_stats = { 
+                        'offset' : locale.format("%d", int(data[3]), grouping=True),
+                        'size' : locale.format("%d", int(data[4]), grouping=True),
+                        'lag' : locale.format("%d", int(data[5]), grouping=True) 
+                      } 
+    else:
+        kafka_stats = { 'offset' : "(unknown/empty)", 'size' : "-", 'lag' : "-" } 
+
+    return render_template("index/current-status.html", load=load, kstats=kafka_stats)

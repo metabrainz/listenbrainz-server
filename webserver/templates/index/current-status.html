@@ -1,0 +1,60 @@
+{%- extends 'base.html' -%}
+{%- block title -%}Status - ListenBrainz{%- endblock -%}
+{%- block content -%}
+
+  <h2 class="page-title">Current status</h2>
+
+  <div class="row">
+
+    <div class="col-md-7 col-lg-8">
+      <h3>Incoming listens</h3>
+
+      <p>
+        Stats for our kafka listens stream: 
+      </p>
+
+      <table class="table table-bordered table-striped">
+          <tr>
+              <td>offset</td>
+              <td>{{ kstats.offset }}</td>
+          </tr>
+          <tr>
+              <td>size</td>
+              <td>{{ kstats.size }}</td>
+          </tr>
+          <tr>
+              <td>lag</td>
+              <td>{{ kstats.lag }}</td>
+          </tr>
+      </table>
+
+      <h3>load average</h3>
+
+      <p>
+        Current server load average
+      </p>
+      <div class="well"> 
+         {{ load }}
+      </div>
+
+    </div>
+
+    <div class="col-md-5 col-lg-4">
+
+      <p style="text-align: center">
+         <img style="border-radius: 15px;" 
+              src="https://upload.wikimedia.org/wikipedia/commons/4/4e/Macaca_nigra_self-portrait_large.jpg" 
+              width="250"></img>
+      </p>
+
+      <p style="text-align: center">
+         Our server doesn't have a selfie. :(</br>
+         Have a monkey selfie instead!
+         </p>
+      </p>
+
+    </div>
+
+  </div>
+
+{%- endblock -%}
