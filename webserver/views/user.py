@@ -44,19 +44,18 @@ def profile(user_id):
             "listened_at": listen.timestamp,
         })
 
-    # Checking if there is a "previous" page
+    # Checking if there is a "previous" page...
     previous_listens = list(cassandra.fetch_listens(user_id, limit=25, from_id=listens[0]["listened_at"] + 1, order="asc"))
-    print(listens[0]["listened_at"] + 1)
     if previous_listens:
         previous_listen_ts = previous_listens[-1].timestamp
     else:
         previous_listen_ts = None
 
-    # Checking if there is a "next" page
-    next_listens = list(cassandra.fetch_listens(user_id, limit=1, to_id=listens[-1]["listened_at"] - 1))
-    if next_listens:
-        next_listen_ts = listens[-1]["listened_at"] - 1
-    else:
+    # Checking if there is a "next" page...
+    # It should start from the timestamp of last item in current list + 1.
+    next_listen_ts = listens[-1]["listened_at"] - 1
+    next_listens = list(cassandra.fetch_listens(user_id, limit=1, to_id=next_listen_ts))
+    if not next_listens:
         next_listen_ts = None
 
     return render_template(
