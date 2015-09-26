@@ -47,7 +47,6 @@ def roadmap():
     return render_template("index/roadmap.html")
 
 
-# listen-group    listens                        0   282202115       282202115       0               none
 @index_bp.route("/current-status")
 def current_status():
 
