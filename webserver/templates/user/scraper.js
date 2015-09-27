@@ -129,30 +129,16 @@ var toReport = [];
 var numCompleted = 0;
 var activeSubmissions = 0;
 
-var timesDispatch = 0;
 var timesReportScrobbles = 0;
-var timesEnqueueReport = 0;
 var timesGetPage = 0;
 var times4Error = 0;
 var times5Error = 0;
 
-function dispatch() {
-    timesDispatch++;
-    for (var i = 0; i < toReport.length; ++i) {
-        reportScrobbles(toReport[i]);
-    }
-    toReport = [];
-}
-
-function enqueueReport(struct) {
-    timesEnqueueReport++;
-    if (struct.payload.length > 0) {
-        toReport.push(struct);
-        dispatch();
-    }
-}
-
 function reportScrobbles(struct) {
+    if (!struct.payload.length) {
+        return;
+    }
+
     timesReportScrobbles++;
     //must have a trailing slash
     var reportingURL = "{{ base_url }}";
@@ -176,7 +162,7 @@ function reportScrobbles(struct) {
         } else if (this.status >= 500) {
             console.log("received http error " + this.status + " req'ing");
             times5Error++;
-            enqueueReport(struct);
+            reportScrobbles(struct);
         }
         if (numCompleted >= numberOfPages) {
             updateMessage("<i class='fa fa-check'></i> Import finished<br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
@@ -187,15 +173,15 @@ function reportScrobbles(struct) {
     };
     xhr.ontimeout = function(context) {
         console.log("timeout, req'ing");
-        enqueueReport(struct);
+        reportScrobbles(struct);
     }
     xhr.onabort = function(context) {
         console.log("abort, req'ing");
-        enqueueReport(struct);
+        reportScrobbles(struct);
     };
     xhr.onerror = function(context) {
         console.log("error, req'ing");
-        enqueueReport(struct);
+        reportScrobbles(struct);
     };
     xhr.onloadend = function(context) {
         activeSubmissions--;
@@ -207,7 +193,7 @@ function reportPage(response) {
     var elem = document.createElement("div");
     elem.innerHTML = response;
     var struct = encodeScrobbles(elem);
-    enqueueReport(struct);
+    reportScrobbles(struct);
 }
 
 function reportPageAndGetNext(response) {
@@ -234,8 +220,7 @@ function updateMessage(message) {
         "<img src='{{ url_for('static', filename='img/listenbrainz-logo.svg', _external=True) }}' height='75'><br><br>" +
         message + "<br>" +
         "<span style='display:none'>" +
-        "dispatched " + timesDispatch + ", reportedScrobbles " +
-        timesReportScrobbles + ", enqueueReport " + timesEnqueueReport +
+        "reportedScrobbles " + timesReportScrobbles +
         ", getPage " + timesGetPage + ", number4xx " + times4Error +
         ", number5xx " + times5Error + ", page " + page + "</span>" +
         "<br><span style='font-size:6pt; position:absolute; bottom:1px; right: 3px'>v"+version+"</span>";
