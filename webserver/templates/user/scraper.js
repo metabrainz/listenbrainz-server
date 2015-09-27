@@ -112,11 +112,36 @@ function encodeScrobbles(root) {
     return structure;
 }
 
-function getLastFMPage(page, callback) {
+function getLastFMPage(page) {
+    function retry(reason) {
+        console.warn(reason + ' fetching last.fm page=' + page + ', retrying in 3s');
+        setTimeout(function () {
+            getLastFMPage(page);
+        }, 3000);
+    }
+
     var xhr = new XMLHttpRequest();
+    xhr.timeout = 10 * 1000; // 10 seconds
     xhr.open("GET", encodeURI("http://www.last.fm/user/{{ lastfm_username }}/library?page=" + page + "&_pjax=%23content"));
-    xhr.onload = function(content) {
-        callback(xhr.response);
+    xhr.onload = function () {
+        if (/^2/.test(this.status)) {
+            reportPageAndGetNext(this.response);
+        } else if (/^5/.test(this.status)) {
+            retry('got ' + this.status);
+        } else {
+            // ignore 40x
+            pageDone();
+        }
+    };
+    xhr.ontimeout = function () {
+        retry('timeout');
+    };
+    xhr.onabort = function () {
+        // this should never happen
+        pageDone();
+    };
+    xhr.onerror = function () {
+        retry('error');
     };
     xhr.send();
 }
@@ -136,14 +161,13 @@ var times5Error = 0;
 
 function reportScrobbles(struct) {
     if (!struct.payload.length) {
+        pageDone();
         return;
     }
 
     timesReportScrobbles++;
     //must have a trailing slash
     var reportingURL = "{{ base_url }}";
-    activeSubmissions++;
-
     var xhr = new XMLHttpRequest();
     xhr.open("POST", reportingURL);
     xhr.setRequestHeader("Authorization", "Token {{ user_token }}");
@@ -151,25 +175,27 @@ function reportScrobbles(struct) {
     xhr.timeout = 10 * 1000; // 10 seconds
     xhr.onload = function(content) {
         if (this.status >= 200 && this.status < 300) {
-            numCompleted++;
             console.log("successfully reported page");
+            pageDone();
         } else if (this.status >= 400 && this.status < 500) {
             times4Error++;
             // We mark 4xx errors as completed because we don't
             // retry them
-            numCompleted++;
             console.log("4xx error, skipping");
+            pageDone();
         } else if (this.status >= 500) {
             console.log("received http error " + this.status + " req'ing");
             times5Error++;
             reportScrobbles(struct);
+        } else {
+            console.log("received http status " + this.status + ", skipping");
+            pageDone();
         }
         if (numCompleted >= numberOfPages) {
             updateMessage("<i class='fa fa-check'></i> Import finished<br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
         } else {
             updateMessage("<i class='fa fa-cog fa-spin'></i> Sending page " + numCompleted + " of " + numberOfPages + " to ListenBrainz<br><span style='font-size:8pt'>Please don't navigate while this is running</span>");
         }
-        getNextPageIfSlots();
     };
     xhr.ontimeout = function(context) {
         console.log("timeout, req'ing");
@@ -183,36 +209,34 @@ function reportScrobbles(struct) {
         console.log("error, req'ing");
         reportScrobbles(struct);
     };
-    xhr.onloadend = function(context) {
-        activeSubmissions--;
-    }
     xhr.send(JSON.stringify(struct));
 }
 
-function reportPage(response) {
+function reportPageAndGetNext(response) {
+    timesGetPage++;
+    if (page == 1) {
+        updateMessage("<i class='fa fa-cog fa-spin'></i> working<br><span style='font-size:8pt'>Please don't navigate away from this page while the process is running</span>");
+    }
     var elem = document.createElement("div");
     elem.innerHTML = response;
     var struct = encodeScrobbles(elem);
     reportScrobbles(struct);
 }
 
-function reportPageAndGetNext(response) {
-    timesGetPage++;
-    if (page == 1) {
-      updateMessage("<i class='fa fa-cog fa-spin'></i> working<br><span style='font-size:8pt'>Please don't navigate away from this page while the process is running</span>");
-    }
-    reportPage(response);
-
-    getNextPageIfSlots();
-}
-
-function getNextPageIfSlots() {
+function getNextPagesIfSlots() {
     // Get a new lastfm page and queue it only if there are more pages to download and we have
     // less than 10 pages waiting to submit
-    if (page <= numberOfPages && activeSubmissions < 10) {
+    while (page <= numberOfPages && activeSubmissions < 10) {
         page += 1;
-        setTimeout(function() { getLastFMPage(page, reportPageAndGetNext) }, 0 + Math.random()*100);
+        activeSubmissions++;
+        getLastFMPage(page);
     }
+}
+
+function pageDone() {
+    activeSubmissions--;
+    numCompleted++;
+    getNextPagesIfSlots();
 }
 
 function updateMessage(message) {
@@ -229,4 +253,4 @@ function updateMessage(message) {
 document.body.insertAdjacentHTML( 'afterbegin', '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">');
 document.body.insertAdjacentHTML( 'afterbegin', '<div style="position:absolute; top:200px; z-index: 200000000000000; width:500px; margin-left:-250px; left:50%; background-color:#fff; box-shadow: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22); text-align:center; padding:50px;" id="listen-progress-container"></div>');
 updateMessage("");
-getLastFMPage(page, reportPageAndGetNext);
+getNextPagesIfSlots();
