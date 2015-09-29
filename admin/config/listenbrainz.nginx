@@ -4,31 +4,7 @@ server {
      access_log  /var/log/nginx/listenbrainz-combined.log combined;
      error_log   /var/log/nginx/listenbrainz-error.log notice;
 
-     location /static {
-          root /home/listenbrainz/listenbrainz-server/webserver;
-          gzip on;
-          gzip_http_version 1.0;
-          gzip_comp_level 6;
-          gzip_proxied any;
-          gzip_types text/plain text/css application/json application/x-javascript text/javascript;
-          gzip_buffers 16 8k;
-          gzip_vary on;
-     }
-
-     location    / {
-	  try_files $uri @lb;
-     }
-     location @lb {
-          include uwsgi_params;
-          uwsgi_pass unix:/tmp/listenbrainz.uwsgi.sock;
-          gzip on;
-          gzip_http_version 1.0;
-          gzip_comp_level 6;
-          gzip_proxied any;
-          gzip_types text/plain application/json application/x-javascript text/javascript;
-          gzip_buffers 16 8k;
-          gzip_vary on;
-     }
+     rewrite ^ https://listenbrainz.org$request_uri? permanent;
 }
 server {
      listen      178.63.74.66:443;
