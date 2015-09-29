@@ -85,7 +85,11 @@ def get_listens(user_id):
     )
     listen_data = []
     for listen in listens:
-        listen_data.append({ "track_metadata" : listen.data, "listened_at" : listen.timestamp })
+        listen_data.append({ 
+                             "track_metadata" : listen.data, 
+                             "listened_at" : listen.timestamp,
+                             "recording_msid" : listen.recording_msid,
+                           })
 
     return jsonify({'payload': {
         'user_id': user_id,
