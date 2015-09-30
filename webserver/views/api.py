@@ -11,9 +11,12 @@ from webserver.decorators import crossdomain
 import webserver
 import db.user
 
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-if not on_rtd:
+try:
     import messybrainz
+except ImportError:
+    on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+    if not on_rtd:
+        raise
 
 api_bp = Blueprint('api_v1', __name__)
 
