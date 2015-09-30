@@ -1,4 +1,5 @@
 import sys
+import os
 import urllib2
 import ujson
 import socket
@@ -9,7 +10,10 @@ from webserver.kafka_connection import _kafka
 from webserver.decorators import crossdomain
 import webserver
 import db.user
-import messybrainz
+
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+if not on_rtd:
+    import messybrainz
 
 api_bp = Blueprint('api_v1', __name__)
 
