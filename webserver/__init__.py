@@ -11,6 +11,9 @@ def create_cassandra():
 def create_app():
     app = Flask(__name__)
 
+    # Read the Docs builder doesn't have any of our databases or special
+    # packages (like MessyBrainz), so we have to ignore these initialization
+    # steps. Only blueprints/views are needed to render documentation.
     on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
     if not on_rtd:
 
