@@ -24,9 +24,17 @@ MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
 @api_bp.route("/1/submit-listens", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 def submit_listen():
-    """Endpoint for submitting a listen to ListenBrainz.
+    """
+    Submit listens to the server. A user token (found on https://listenbrainz.org/user/import ) must 
+    be provided in the Authorization header!
 
-    Sanity check listen and then pass on to Kafka.
+    For complete details on the format of the JSON to be POSTed to this endpoint, see :doc:`json`.
+
+    :reqheader Authorization: token <user token>
+    :statuscode 200: listen(s) accepted.
+    :statuscode 400: invalid JSON sent, see error message for details.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
     """
     user_id = _validate_auth_header()
 
@@ -75,6 +83,20 @@ def submit_listen():
 
 @api_bp.route("/1/user/<user_id>/listens")
 def get_listens(user_id):
+    """
+    Get listens for a user. 
+
+    The format for the JSON returned is defined in our JSON documentation.
+
+    :param from_id:
+    :param to_id:
+    :param limit:
+    :param order:
+    :statuscode 200: Yay, you have data! 
+    :statuscode 400: invalid JSON sent, see error message for details.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
+    """
     cassandra = webserver.create_cassandra()
     listens = cassandra.fetch_listens(
         user_id,
