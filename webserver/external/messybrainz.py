@@ -1,6 +1,15 @@
 from __future__ import absolute_import
-import messybrainz
-from messybrainz import exceptions
+import os
+
+try:
+    # Should be able to continue if messybrainz package is unavailable during
+    # documentation generation (we don't need it in this case).
+    import messybrainz
+    from messybrainz import exceptions
+except ImportError:
+    on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+    if not on_rtd:
+        raise
 
 
 def init_db_connection(uri):
