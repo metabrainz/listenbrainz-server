@@ -32,10 +32,10 @@ def create_app():
         init_kafka_connection(app.config['KAFKA_CONNECT'])
 
         # Database connection
-        from db import init_db_connection
-        init_db_connection(app)
-        import messybrainz.db
-        messybrainz.db.init_db_engine(app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
+        import db
+        db.init_db_connection(app)
+        from webserver.external import messybrainz
+        messybrainz.init_db_connection(app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
 
         # OAuth
         from webserver.login import login_manager, provider

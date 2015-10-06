@@ -8,15 +8,9 @@ from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized
 from kafka import SimpleProducer
 from webserver.kafka_connection import _kafka
 from webserver.decorators import crossdomain
+from webserver.external import messybrainz
 import webserver
 import db.user
-
-try:
-    import messybrainz
-except ImportError:
-    on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-    if not on_rtd:
-        raise
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -195,7 +189,7 @@ def _messybrainz_lookup(listens):
         msb_listens.append(messy_dict)
 
     try:
-        msb_responses = messybrainz.submit_listens_and_sing_me_a_sweet_song(msb_listens)
+        msb_responses = messybrainz.submit_listens(msb_listens)
     except messybrainz.exceptions.BadDataException as e:
         _log_and_raise_400(str(e))
     except messybrainz.exceptions.NoDataFoundException:
