@@ -15,7 +15,7 @@ Reference
 API
 ^^^
 
-.. autoflask:: webserver:create_app()
+.. autoflask:: webserver:create_app_rtfd()
    :blueprints: api_v1
    :include-empty-docstring:
    :undoc-static:
