@@ -15,42 +15,76 @@ can submit one of three types JSON documents:
   document may not exceed 10,240 bytes in size.
 
 These different types of submissions are defined by the ``listen_type`` element at the top-most level of the submitted 
-JSON document. 
-
-Sample listen submit JSON::
+JSON document. The only other element required at the top level is the payload element that provides an array of
+listens -- the payload may be one or more listens (as designated by the listen_type)::
 
     {
-        "listen_type": "single",
-        "payload": [
-            {
-                "listened_at": 1443524987,
-                "track_metadata": {
-                    "additional_info": {
-                        "album": "Sexwitch",
-                        "artist": "SEXWITCH",
-                        "date": "2015",
-                        "musicbrainz_albumid": 
-                            "177d02ac-3b54-49f5-8757-3632a27786bf",
-                        "musicbrainz_artistid": 
-                            "2f0a5dae-f331-485a-b467-b3c9d41f490d",
-                        "musicbrainz_releasegroupid": 
-                            "323d699e-83b0-4baf-8c2a-49be22ed42fe",
-                        "musicbrainz_trackid": 
-                            "79570db5-350c-470d-afe7-be5ff03f3e5b",
-                        "releasetype": "Album",
-                        "title": "Ha Howa Ha Howa",
-                        "totaltracks": "6",
-                        "tracknumber": "1"
-                    },
-                    "artist_name": "SEXWITCH",
-                    "release_name": "Sexwitch",
-                    "track_name": "Ha Howa Ha Howa"
-                }
-            }
-        ]
+      "listen_type": "single",
+      "payload": [
+          --- listen data here ---
+      ]
     }
 
-payload JSON
-------------
+A sample listen payload may look like::
 
-More about payloads
+    {
+      "listened_at": 1443521965,
+      "track_metadata": {
+        "additional_info": {
+          "release_mbid": "bf9e91ea-8029-4a04-a26a-224e00a83266",
+          "artist_mbids": [
+            "db92a151-1ac2-438b-bc43-b82e149ddd50"
+          ],
+          "recording_mbid": "98255a8c-017a-4bc7-8dd6-1fa36124572b",
+          "tags": [ "you", "just", "got", "rick rolled!"]
+        },
+        "artist_name": "Rick Astley",
+        "track_name": "Never Gonna Give You Up",
+        "release_name": "Whenever you need somebody"
+      }
+    }
+
+A complete submit listen JSON document may look like::
+
+    {
+      "listen_type": "single",
+      "payload": [
+        {
+          "listened_at": 1443521965,
+          "track_metadata": {
+            "additional_info": {
+              "release_mbid": "bf9e91ea-8029-4a04-a26a-224e00a83266",
+              "artist_mbids": [
+                "db92a151-1ac2-438b-bc43-b82e149ddd50"
+              ],
+              "recording_mbid": "98255a8c-017a-4bc7-8dd6-1fa36124572b",
+              "tags": [ "you", "just", "got", "rick rolled!"]
+            },
+            "artist_name": "Rick Astley",
+            "track_name": "Never Gonna Give You Up",
+            "release_name": "Whenever you need somebody"
+          }
+        }
+      ]
+    }
+
+
+fetching listen JSON
+--------------------
+
+The JSON documents returned from our API look like the following::
+
+    {
+      "count": 25,
+      "payload": [
+          --- listen data here ---
+      ]
+    }
+
+The top level count element indicates how many listens are returned in this document. The other element is the payload element, which contains
+listen JSON elements as described above.
+
+payload JSON details
+--------------------
+
+More about payloads -- TBC.

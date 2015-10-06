@@ -85,14 +85,20 @@ def submit_listen():
 @api_bp.route("/1/user/<user_id>/listens")
 def get_listens(user_id):
     """
-    Get listens for a user. 
+    Get listens for user ``user_id``. The format for the JSON returned is defined in our :doc:`JSON documentation <dev/json>`.
 
-    The format for the JSON returned is defined in our JSON documentation.
+    If none of the optional arguments are given, this endpoint will return the 25 most recent listens.
+    The optional ``max_ts`` and ``min_ts`` arguments control the range of listens returned by specifying
+    UNIX epoch timestamps for the uppwer and lower bounds of the range.
 
-    :param from_id:
-    :param to_id:
-    :param limit:
-    :param order:
+    ``max_ts`` specifies the maximum (newest) timestamp of listens to fetch. This will fetch listens will a timestamp
+    less than ``max_ts``, but not listens with an exact timestamp of ``max_ts``.
+    ``min_ts`` specifies the minimum (oldest) timestamp of listens to fetch. 
+
+    :param max_ts: Optional, upper end of the range of timestamps
+    :param min_ts: Optional, lower end of the range of timestamps; not including that timestamp.
+    :param limit: Optional, number of listens to return. Default: 25. Max: 100
+    :param order: Optional, either the string 'asc' or 'desc'. Return the data in ascending or descending order. 
     :statuscode 200: Yay, you have data! 
     :statuscode 400: invalid JSON sent, see error message for details.
     :statuscode 401: invalid authorization. See error message for details.
