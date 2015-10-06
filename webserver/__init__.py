@@ -1,10 +1,6 @@
 from flask import Flask, current_app
 import sys
 import os
-import messybrainz
-import messybrainz.db
-
-_kafka = None
 
 
 def create_cassandra():
@@ -13,8 +9,6 @@ def create_cassandra():
 
 
 def create_app():
-    global _kafka
-
     app = Flask(__name__)
 
     # Configuration
@@ -32,9 +26,10 @@ def create_app():
     init_kafka_connection(app.config['KAFKA_CONNECT'])
 
     # Database connection
-    from db import init_db_connection
-    init_db_connection(app)
-    messybrainz.db.init_db_engine(app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
+    import db
+    db.init_db_connection(app)
+    from webserver.external import messybrainz
+    messybrainz.init_db_connection(app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
 
     # OAuth
     from webserver.login import login_manager, provider
@@ -52,7 +47,24 @@ def create_app():
     app.jinja_env.filters['date'] = utils.reformat_date
     app.jinja_env.filters['datetime'] = utils.reformat_datetime
 
-    # Blueprints
+    _register_blueprints(app)
+
+    return app
+
+
+def create_app_rtfd():
+    """Creates application for generating the documentation.
+
+    Read the Docs builder doesn't have any of our databases or special
+    packages (like MessyBrainz), so we have to ignore these initialization
+    steps. Only blueprints/views are needed to render documentation.
+    """
+    app = Flask(__name__)
+    _register_blueprints(app)
+    return app
+
+
+def _register_blueprints(app):
     from webserver.views.index import index_bp
     from webserver.views.login import login_bp
     from webserver.views.api import api_bp
@@ -61,5 +73,3 @@ def create_app():
     app.register_blueprint(login_bp, url_prefix='/login')
     app.register_blueprint(user_bp, url_prefix='/user')
     app.register_blueprint(api_bp)
-
-    return app

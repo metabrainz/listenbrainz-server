@@ -2,7 +2,6 @@ from __future__ import absolute_import
 from flask import Blueprint, render_template, current_app, redirect, url_for
 from flask_login import current_user
 import os
-import config
 import subprocess
 import locale
 
@@ -52,7 +51,7 @@ def current_status():
 
     load = "%.2f %.2f %.2f" % os.getloadavg()
 
-    process = subprocess.Popen([config.KAFKA_RUN_CLASS_BINARY, "kafka.tools.ConsumerOffsetChecker",
+    process = subprocess.Popen([current_app.config['KAFKA_RUN_CLASS_BINARY'], "kafka.tools.ConsumerOffsetChecker",
         '--topic', 'listens', '--group', 'listen-group'], stdout=subprocess.PIPE)
     out, err = process.communicate()
 
