@@ -5,7 +5,7 @@ The ListenBrainz server supports the following end-points for submitting and fet
 
 All endpoints have this root URL:
 
-**Root URL**: ``https://api.listenbrainz.org/1``
+**Root URL**: ``https://api.listenbrainz.org``
 
 NOTE: All of ListenBrainz services are available on **HTTPS** only!
 
