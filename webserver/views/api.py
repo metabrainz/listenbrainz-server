@@ -14,12 +14,20 @@ import db.user
 
 api_bp = Blueprint('api_v1', __name__)
 
-MAX_LISTEN_SIZE = 10240    # overall listen size, to prevent egregious spamming
+#: Maximum overall listen size, to prevent egregious spamming.
+MAX_LISTEN_SIZE = 10240
+
+#: The maximum number of tags per listen.
 MAX_TAGS_PER_LISTEN = 50
+
 MAX_TAG_SIZE = 64
 
+#: The maximum number of listens returned in a single GET request.
 MAX_ITEMS_PER_GET = 100
+
+#: The default number of listens returned in a single GET request.
 DEFAULT_ITEMS_PER_GET = 25
+
 MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
 
 @api_bp.route("/1/submit-listens", methods=["POST", "OPTIONS"])
@@ -87,7 +95,7 @@ def get_listens(user_id):
     """
     Get listens for user ``user_id``. The format for the JSON returned is defined in our :doc:`JSON documentation <dev/json>`.
 
-    If none of the optional arguments are given, this endpoint will return the 25 most recent listens.
+    If none of the optional arguments are given, this endpoint will return the :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` most recent listens.
     The optional ``max_ts`` and ``min_ts`` arguments control the range of listens returned by specifying
     UNIX epoch timestamps for the uppwer and lower bounds of the range.
 
@@ -97,7 +105,7 @@ def get_listens(user_id):
 
     :param max_ts: Optional, upper end of the range of timestamps
     :param min_ts: Optional, lower end of the range of timestamps; not including that timestamp.
-    :param limit: Optional, number of listens to return. Default: 25. Max: 100
+    :param limit: Optional, number of listens to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
     :param order: Optional, either the string 'asc' or 'desc'. Return the data in ascending or descending order. 
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*

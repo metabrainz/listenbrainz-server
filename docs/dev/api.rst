@@ -15,6 +15,10 @@ Reference
 API
 ^^^
 
+.. autodata:: webserver.views.api.MAX_LISTEN_SIZE
+.. autodata:: webserver.views.api.MAX_ITEMS_PER_GET
+.. autodata:: webserver.views.api.DEFAULT_ITEMS_PER_GET
+
 .. autoflask:: webserver:create_app_rtfd()
    :blueprints: api_v1
    :include-empty-docstring:
