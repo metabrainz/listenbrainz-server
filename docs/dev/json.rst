@@ -12,7 +12,7 @@ can submit one of three types JSON documents:
 * ``playing_now`` - submit a playing_now notification; This indicates that the user just began listening to this 
   track. The ``payload`` may contain only one track and submitting ``playing_now`` documents is optional.
 * ``import`` - submit previously saved listens; the ``payload`` may contain more than one listen, but the complete
-  document may not exceed 10,240 bytes in size.
+  document may not exceed :data:`~webserver.views.api.MAX_LISTEN_SIZE` bytes in size.
 
 These different types of submissions are defined by the ``listen_type`` element at the top-most level of the submitted 
 JSON document. The only other element required at the top level is the payload element that provides an array of
