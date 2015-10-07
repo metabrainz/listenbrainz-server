@@ -100,7 +100,6 @@ def get_listens(user_id):
     :param limit: Optional, number of listens to return. Default: 25. Max: 100
     :param order: Optional, either the string 'asc' or 'desc'. Return the data in ascending or descending order. 
     :statuscode 200: Yay, you have data! 
-    :statuscode 400: invalid JSON sent, see error message for details.
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
