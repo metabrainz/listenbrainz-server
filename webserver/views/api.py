@@ -97,7 +97,7 @@ def get_listens(user_id):
 
     If none of the optional arguments are given, this endpoint will return the :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` most recent listens.
     The optional ``max_ts`` and ``min_ts`` arguments control the range of listens returned by specifying
-    UNIX epoch timestamps for the uppwer and lower bounds of the range.
+    UNIX epoch timestamps for the upper and lower bounds of the range.
 
     ``max_ts`` specifies the maximum (newest) timestamp of listens to fetch. This will fetch listens will a timestamp
     less than ``max_ts``, but not listens with an exact timestamp of ``max_ts``.
