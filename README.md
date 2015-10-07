@@ -54,6 +54,15 @@ It should be accessible at **http://10.1.2.3:8080/**.
 file.*
 
 
+## Documentation
+
+Documentation for the ListenBrainz API is available at https://listenbrainz.rtfd.org.
+You can build the documentation yourself:
+
+    $ cd docs
+    $ make clean html
+
+
 ## Fixing problems
 
 ### `LeaderNotAvailableError`

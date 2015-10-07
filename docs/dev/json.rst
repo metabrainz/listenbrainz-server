@@ -3,7 +3,7 @@
 JSON Documentation
 ==================
 
-submission JSON
+Submission JSON
 ---------------
 
 To submit a listen via our :doc:`api` you'll need to POST a JSON document to the ``submit-listens`` endpoint. You
@@ -71,7 +71,7 @@ A complete submit listen JSON document may look like::
     }
 
 
-fetching listen JSON
+Fetching listen JSON
 --------------------
 
 The JSON documents returned from our API look like the following::
@@ -86,7 +86,7 @@ The JSON documents returned from our API look like the following::
 The top level count element indicates how many listens are returned in this document. The other element is the payload element, which contains
 listen JSON elements as described above.
 
-payload JSON details
+Payload JSON details
 --------------------
 
 A minimal payload must include the ``listened_at``, ``track_metadata/artist_name`` and ``track_metadata/track_name``
