@@ -1,3 +1,5 @@
+.. _json-doc:
+
 JSON Documentation
 ==================
 

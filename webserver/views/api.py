@@ -37,7 +37,7 @@ def submit_listen():
     Submit listens to the server. A user token (found on https://listenbrainz.org/user/import ) must 
     be provided in the Authorization header!
 
-    For complete details on the format of the JSON to be POSTed to this endpoint, see :doc:`json`.
+    For complete details on the format of the JSON to be POSTed to this endpoint, see :ref:`json-doc`.
 
     :reqheader Authorization: token <user token>
     :statuscode 200: listen(s) accepted.
@@ -93,7 +93,7 @@ def submit_listen():
 @api_bp.route("/1/user/<user_id>/listens")
 def get_listens(user_id):
     """
-    Get listens for user ``user_id``. The format for the JSON returned is defined in our :doc:`JSON documentation <dev/json>`.
+    Get listens for user ``user_id``. The format for the JSON returned is defined in our :ref:`json-doc`.
 
     If none of the optional arguments are given, this endpoint will return the :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` most recent listens.
     The optional ``max_ts`` and ``min_ts`` arguments control the range of listens returned by specifying
