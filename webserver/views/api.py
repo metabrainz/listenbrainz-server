@@ -99,8 +99,7 @@ def get_listens(user_id):
     :param min_ts: Optional, lower end of the range of timestamps; not including that timestamp.
     :param limit: Optional, number of listens to return. Default: 25. Max: 100
     :param order: Optional, either the string 'asc' or 'desc'. Return the data in ascending or descending order. 
-    :statuscode 200: Yay, you have data! 
-    :statuscode 401: invalid authorization. See error message for details.
+    :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
     """
     cassandra = webserver.create_cassandra()
