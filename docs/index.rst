@@ -1,12 +1,7 @@
-.. ListenBrainz documentation master file, created by
-   sphinx-quickstart on Tue Sep 29 12:53:20 2015.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+ListenBrainz' API docs
+======================
 
-Welcome to ListenBrainz' API documentation!
-===========================================
-
-:doc:`Information for developers <dev/api>` who want to use our API to submit and fetch listens. We suggest taking
+This documentation is aimed at developers who want to :doc:`use our API <dev/api>` to submit and fetch listens. We suggest taking
 a look the the :doc:`json <dev/json>` documentation, since most of the complexity in using the API comes from constructing/reading
 the ListenBrainz JSON documents.
 

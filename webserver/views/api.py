@@ -17,6 +17,7 @@ MAX_LISTEN_SIZE = 10240
 #: The maximum number of tags per listen.
 MAX_TAGS_PER_LISTEN = 50
 
+#: The maximum length of a tag
 MAX_TAG_SIZE = 64
 
 #: The maximum number of listens returned in a single GET request.
