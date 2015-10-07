@@ -14,7 +14,7 @@ import db.user
 
 api_bp = Blueprint('api_v1', __name__)
 
-#: Maximum overall listen size, to prevent egregious spamming.
+#: Maximum overall listen size in bytes, to prevent egregious spamming.
 MAX_LISTEN_SIZE = 10240
 
 #: The maximum number of tags per listen.
