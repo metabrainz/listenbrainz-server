@@ -130,7 +130,7 @@ element                 description
 ======================= ===========================================================================================================================================================================================================================================================================================================================================================================================================
 
 At this point, we are not scrubbing any superflous elements that may be submitted via the ``additional_info`` element. We're
-open to see how people will make use of these unspecified fields and may decdide to formally specify or scrub elements in
+open to see how people will make use of these unspecified fields and may decide to formally specify or scrub elements in
 the future. 
 
 **Please do not submit copyrighted information in these fields!!**
