@@ -1,8 +1,5 @@
 import sys
-import os
-import urllib2
 import ujson
-import socket
 from flask import Blueprint, request, current_app, jsonify
 from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized
 from kafka import SimpleProducer
