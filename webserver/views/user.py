@@ -64,6 +64,7 @@ def profile(user_id):
         listens=listens,
         previous_listen_ts=previous_listen_ts,
         next_listen_ts=next_listen_ts,
+        spotify_uri=_get_spotify_uri_for_listens(listens)
     )
 
 
@@ -96,3 +97,21 @@ def _get_user(user_id):
         if user is None:
             raise NotFound("Can't find this user.")
         return user
+
+
+def _get_spotify_uri_for_listens(listens):
+
+    def get_track_id_from_listen(listen):
+        additional_info = listen["track_metadata"]["additional_info"]
+        if "spotify_id" in additional_info:
+            return additional_info["spotify_id"].rsplit('/', 1)[-1]
+        else:
+            return None
+
+    track_ids = [get_track_id_from_listen(l) for l in listens]
+    track_ids = [t_id for t_id in track_ids if t_id]
+
+    if track_ids:
+        return "spotify:trackset:Recent listens:" + ",".join(track_ids)
+    else:
+        return None
