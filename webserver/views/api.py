@@ -1,7 +1,7 @@
 import sys
 import ujson
 from flask import Blueprint, request, current_app, jsonify
-from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized
+from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized, ServiceUnavailable
 from kafka import SimpleProducer
 from webserver.kafka_connection import _kafka
 from webserver.decorators import crossdomain
@@ -118,7 +118,11 @@ def get_listens(user_id):
     )
     listen_data = []
     for listen in listens:
-        listen_data.append({ "track_metadata" : listen.data, "listened_at" : listen.timestamp })
+        listen_data.append({
+                             "track_metadata" : listen.data,
+                             "listened_at" : listen.timestamp,
+                             "recording_msid" : listen.recording_msid,
+                           })
 
     return jsonify({'payload': {
         'user_id': user_id,
@@ -187,15 +191,15 @@ def _messybrainz_lookup(listens):
         if 'additional_info' in listen['track_metadata']:
             ai = listen['track_metadata']['additional_info']
             if 'artist_mbids' in ai and type(ai['artist_mbids']) == list:
-                messy_dict['artist_mbids'] = ai['artist_mbids'] 
+                messy_dict['artist_mbids'] = ai['artist_mbids']
             if 'release_mbid' in ai:
-                messy_dict['release_mbid'] = ai['release_mbid'] 
+                messy_dict['release_mbid'] = ai['release_mbid']
             if 'recording_mbid' in ai:
-                messy_dict['recording_mbid'] = ai['recording_mbid'] 
+                messy_dict['recording_mbid'] = ai['recording_mbid']
             if 'track_number' in ai:
-                messy_dict['track_number'] = ai['track_number'] 
+                messy_dict['track_number'] = ai['track_number']
             if 'spotify_id' in ai:
-                messy_dict['spotify_id'] = ai['spotify_id'] 
+                messy_dict['spotify_id'] = ai['spotify_id']
         msb_listens.append(messy_dict)
 
     try:
@@ -205,7 +209,7 @@ def _messybrainz_lookup(listens):
     except messybrainz.exceptions.NoDataFoundException:
         return []
     except messybrainz.exceptions.ErrorAddingException as e:
-        raise ServiceUnavailable(str(e)) 
+        raise ServiceUnavailable(str(e))
 
     augmented_listens = []
     for listen, messybrainz_resp in zip(listens, msb_responses['payload']):
@@ -249,7 +253,7 @@ def _validate_listen(listen):
 
     if not 'listened_at' in listen:
         _log_raise_400("JSON document must contain the key listened_at at the top level.", listen)
-    
+
     try:
         listen['listened_at'] = int(listen['listened_at'])
     except ValueError:
