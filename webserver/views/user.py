@@ -58,10 +58,10 @@ def profile(user_id):
 
         # Checking if there is a "next" page...
         next_listens = list(cassandra.fetch_listens(user_id, limit=1, to_id=listens[-1]["listened_at"]))
-        if not next_listens:
-            next_listen_ts = None
-        else:
+        if next_listens:
             next_listen_ts = listens[-1]["listened_at"]
+        else:
+            next_listen_ts = None
 
     else:
         previous_listen_ts = None
