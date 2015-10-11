@@ -94,17 +94,12 @@ def get_listens(user_id):
     Get listens for user ``user_id``. The format for the JSON returned is defined in our :ref:`json-doc`.
 
     If none of the optional arguments are given, this endpoint will return the :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` most recent listens.
-    The optional ``max_ts`` and ``min_ts`` arguments control the range of listens returned by specifying
-    UNIX epoch timestamps for the upper and lower bounds of the range.
+    The optional ``max_ts`` and ``min_ts`` UNIX epoch timestamps control at which point in time to start returning listens. You may specify max_ts or 
+    min_ts, but not both in one call.
 
-    ``max_ts`` specifies the maximum (newest) timestamp of listens to fetch. This will fetch listens will a timestamp
-    less than ``max_ts``, but not listens with an exact timestamp of ``max_ts``.
-    ``min_ts`` specifies the minimum (oldest) timestamp of listens to fetch. 
-
-    :param max_ts: Optional, upper end of the range of timestamps
-    :param min_ts: Optional, lower end of the range of timestamps; not including that timestamp.
+    :param max_ts: If you specify a ``max_ts timestamp``, listens with listened_at less than (but not including) this value will be returned in descending order.
+    :param min_ts: If you specify a ``min_ts timestamp``, listens with listened_at greter than (but not including) this value will be returned in ascending order.
     :param limit: Optional, number of listens to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
-    :param order: Optional, either the string 'asc' or 'desc'. Return the data in ascending or descending order. 
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
     """
