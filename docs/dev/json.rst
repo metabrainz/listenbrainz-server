@@ -125,6 +125,7 @@ element                 description
 ``track_mbid``          A MusicBrainz Track ID associated with the recording that was played.
 ``work_mbids``          A list of MusicBrainz Work IDs that may be associated with this recording.
 ``tracknumber``         The tracknumber of the recording. This first recording on a release is tracknumber 1.
+``isrc``                The ISRC code associated with the recording.
 ``spotify_id``          The Spotify track URL associated with this recording.  e.g.: http://open.spotify.com/track/1rrgWMXGCGHru5bIRxGFV0
 ``tags``                A list of user defined tags to be associated with this recording. These tags are similar to last.fm tags. For example, you have apply tags such as ``punk``, ``see-live``, ``smelly``. You may submit up to :data:`~webserver.views.api.MAX_TAGS_PER_LISTEN` tags and each tag may be up to :data:`~webserver.views.api.MAX_TAG_SIZE` characters large.
 ======================= ===========================================================================================================================================================================================================================================================================================================================================================================================================
