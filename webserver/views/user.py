@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, request, url_for, Response
 from flask_login import current_user, login_required
 from werkzeug.exceptions import NotFound, BadRequest
 from webserver.decorators import crossdomain
+from datetime import datetime
 import webserver
 import db.user
 
@@ -42,6 +43,7 @@ def profile(user_id):
         listens.append({
             "track_metadata": listen.data,
             "listened_at": listen.timestamp,
+            "listened_at_iso": datetime.fromtimestamp(int(listen.timestamp)).isoformat(),
         })
 
     if listens:
@@ -51,7 +53,7 @@ def profile(user_id):
             previous_listen_ts = previous_listens[-1].timestamp + 1
         else:
             previous_listen_ts = None
-            
+
         # Checking if there is a "next" page...
         next_listens = list(cassandra.fetch_listens(user_id, limit=1, to_id=listens[-1]["listened_at"]))
         if not next_listens:

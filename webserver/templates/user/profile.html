@@ -29,7 +29,7 @@
               <tr>
                 <td>{{ listen.track_metadata.artist_name }}</td>
                 <td>{{ listen.track_metadata.track_name }}</td>
-                <td><abbr class="timeago" title="{{ listen.listened_at }}">{{ listen.listened_at }}</abbr></td>
+                <td><abbr class="timeago" title="{{ listen.listened_at_iso }}">{{ listen.listened_at_iso }}</abbr></td>
               </tr>
             {% endfor %}
             </tbody>
@@ -64,9 +64,6 @@
   <script type="text/javascript">
     $(document).ready(function() {
       var times = $("abbr.timeago");
-      times.each(function(i, obj) {
-        $(this).prop("title", new Date(parseInt(obj.title) * 1000).toISOString());
-      });
       times.timeago();
     });
   </script>
