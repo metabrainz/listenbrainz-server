@@ -95,10 +95,10 @@ def get_listens(user_id):
 
     If none of the optional arguments are given, this endpoint will return the :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` most recent listens.
     The optional ``max_ts`` and ``min_ts`` UNIX epoch timestamps control at which point in time to start returning listens. You may specify max_ts or 
-    min_ts, but not both in one call. Listens are always returned in descending order.
+    min_ts, but not both in one call. Listens are always returned in descending timestamp order.
 
-    :param max_ts: If you specify a ``max_ts timestamp``, listens with listened_at less than (but not including) this value will be returned.
-    :param min_ts: If you specify a ``min_ts timestamp``, listens with listened_at greter than (but not including) this value will be returned.
+    :param max_ts: If you specify a ``max_ts`` timestamp, listens with listened_at less than (but not including) this value will be returned.
+    :param min_ts: If you specify a ``min_ts`` timestamp, listens with listened_at greter than (but not including) this value will be returned.
     :param limit: Optional, number of listens to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
