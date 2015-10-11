@@ -4,17 +4,67 @@
 
 {% block content %}
   <div id="user-profile">
-    <h2 class="page-title">Most recent listens for {{ user.musicbrainz_id }}</h2>
-    <div id="listens-viewer-container" data-user-id="{{ user.musicbrainz_id }}">
-      <span class="loading-placeholder">Loading listens...</span>
-    </div>
+    <h2 class="page-title">{{ user.musicbrainz_id }}</h2>
+
+    <h3>Recent listens</h3>
+
+    {% if not listens %}
+      <p class="lead" style="text-align: center;">No listens. :(</p>
+      {# TODO(roman): Maybe add some info about importing listens if user
+                      is viewing their own page. #}
+    {% else %}
+
+      <div class="row">
+        <div class="col-md-8">
+          <table class="table table-condensed table-striped">
+            <thead>
+            <tr>
+              <th>artist</th>
+              <th>track</th>
+              <th>time</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for listen in listens %}
+              <tr>
+                <td>{{ listen.track_metadata.artist_name }}</td>
+                <td>{{ listen.track_metadata.track_name }}</td>
+                <td><abbr class="timeago" title="{{ listen.listened_at_iso }}">{{ listen.listened_at_iso }}</abbr></td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+
+          <ul class="pager">
+            {% if previous_listen_ts %}
+              <li class="previous"><a href="{{ url_for("user.profile", user_id=user.musicbrainz_id, max_ts=previous_listen_ts) }}">&larr; Previous</a></li>
+            {% endif %}
+            {% if next_listen_ts %}
+              <li class="next"><a href="{{ url_for("user.profile", user_id=user.musicbrainz_id, max_ts=next_listen_ts) }}">Next &rarr;</a></li>
+            {% endif %}
+          </ul>
+        </div>
+
+        {% if spotify_uri %}
+          <div class="col-md-4 text-right">
+            <iframe id="player" frameborder="0" allowtransparency="true"
+                    src="https://embed.spotify.com/?uri={{ spotify_uri }}&theme=white"></iframe>
+          </div>
+        {% endif %}
+      </div>
+
+    {% endif %}
+
   </div>
 {% endblock %}
 
 {% block scripts %}
   {{ super() }}
-  <script src="{{ url_for('static', filename='js/lib/react.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/lib/JSXTransformer.js') }}"></script>
   <script src="{{ url_for('static', filename='js/lib/jquery.timeago.js') }}"></script>
-  <script type="text/jsx" src="{{ url_for('static', filename='js/listens-viewer.js') }}"></script>
+  <script type="text/javascript">
+    $(document).ready(function() {
+      var times = $("abbr.timeago");
+      times.timeago();
+    });
+  </script>
 {% endblock %}

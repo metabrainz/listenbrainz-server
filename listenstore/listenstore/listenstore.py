@@ -56,11 +56,7 @@ def next_daterange(dat, precision):
 
 
 def dateranges(min_id, max_id, precision, order):
-    if order == ORDER_ASC:
-        step = -1
-    else:
-        step = 1
-    min_date, max_date = id_to_date(min_id), id_to_date(max_id)
+    step = 1
     if precision == 'day':
         delta = relativedelta(days=step)
     elif precision == 'month':
@@ -68,11 +64,19 @@ def dateranges(min_id, max_id, precision, order):
     elif precision == 'year':
         delta = relativedelta(years=step)
 
-    current = max_date
+    min_date, max_date = id_to_date(min_id), id_to_date(max_id)
 
-    while current >= min_date:
-        yield daterange(current, precision)
-        current -= delta
+    if order == ORDER_ASC:
+        current = min_date
+        while current <= max_date:
+            yield daterange(current, precision)
+            current += delta
+
+    else:
+        current = max_date
+        while current >= min_date:
+            yield daterange(current, precision)
+            current -= delta
 
 
 def range_keys(precision):
@@ -189,6 +193,7 @@ class ListenStore(object):
         for daterange in ranges:
             current_from_id = max(datetuple_to_id(daterange) - 1, from_id)
             current_to_id = min(datetuple_to_id(next_daterange(daterange, precision)), to_id)
+
             if limit is not None:
                 current_limit = limit - fetched_rows
             else:
@@ -200,10 +205,6 @@ class ListenStore(object):
                 fetched_rows += 1
                 if limit is not None and fetched_rows == limit:
                     return
-
-            if current_to_id >= self.max_id():
-                return
-
 
     def convert_row(self, row):
         return Listen(data=ujson.loads(row.json), uid=row.uid, timestamp=row.id, album_msid=row.album_msid,
