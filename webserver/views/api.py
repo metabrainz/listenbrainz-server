@@ -95,21 +95,27 @@ def get_listens(user_id):
 
     If none of the optional arguments are given, this endpoint will return the :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` most recent listens.
     The optional ``max_ts`` and ``min_ts`` UNIX epoch timestamps control at which point in time to start returning listens. You may specify max_ts or 
-    min_ts, but not both in one call.
+    min_ts, but not both in one call. Listens are always returned in descending order.
 
-    :param max_ts: If you specify a ``max_ts timestamp``, listens with listened_at less than (but not including) this value will be returned in descending order.
-    :param min_ts: If you specify a ``min_ts timestamp``, listens with listened_at greter than (but not including) this value will be returned in ascending order.
+    :param max_ts: If you specify a ``max_ts timestamp``, listens with listened_at less than (but not including) this value will be returned.
+    :param min_ts: If you specify a ``min_ts timestamp``, listens with listened_at greter than (but not including) this value will be returned.
     :param limit: Optional, number of listens to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
     """
+
+    max_ts = _parse_int_arg("max_ts")
+    min_ts = _parse_int_arg("min_ts")
+
+    if max_ts and min_ts:
+        _log_and_raise_400("You may only specify max_ts or min_ts, not both.")
+
     cassandra = webserver.create_cassandra()
     listens = cassandra.fetch_listens(
         user_id,
         limit=min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET),
-        from_id=_parse_int_arg("max_ts"),
-        to_id=_parse_int_arg("min_ts"),
-        order=request.args.get("order", "desc"),
+        from_id=min_ts,
+        to_id=max_ts,
     )
     listen_data = []
     for listen in listens:
@@ -118,6 +124,9 @@ def get_listens(user_id):
                              "listened_at" : listen.timestamp,
                              "recording_msid" : listen.recording_msid,
                            })
+
+    if min_ts:
+        listen_data = listen_data[::-1]
 
     return jsonify({'payload': {
         'user_id': user_id,
