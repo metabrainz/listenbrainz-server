@@ -171,7 +171,7 @@ class ListenStore(object):
         """
 
         if from_id and to_id:
-            raise ValueError("You cannot specifcy from_id and to_id at the same time.")
+            raise ValueError("You cannot specify from_id and to_id at the same time.")
 
         if from_id:
             order = ORDER_ASC
@@ -195,7 +195,7 @@ class ListenStore(object):
                 current_limit = None
 
             for listen in self.fetch_listens_for_range(uid, daterange, current_from_id, current_to_id,
-                                                       current_limit, order):
+                                                       order, current_limit):
                 yield listen
                 fetched_rows += 1
                 if limit is not None and fetched_rows == limit:
@@ -206,13 +206,10 @@ class ListenStore(object):
 
 
     def convert_row(self, row):
-        # WTF? Too tired to figure this out. :(
-        woo = Listen(uid=row.uid, timestamp=row.id, album_msid=row.album_msid,
+        return Listen(data=ujson.loads(row.json), uid=row.uid, timestamp=row.id, album_msid=row.album_msid,
                       artist_msid=row.artist_msid, recording_msid=row.recording_msid)
-        woo.data = ujson.loads(row.json)
-        return woo
 
-    def fetch_listens_for_range(self, uid, date_range, from_id, to_id, limit=None, order=ORDER_DESC):
+    def fetch_listens_for_range(self, uid, date_range, from_id, to_id, order, limit=None):
         """ Fetch listens for a specified uid within a single date range.
 
             date_range can be a 1-, 2-, or 3-tuple (year, month, day).
@@ -236,7 +233,7 @@ class ListenStore(object):
 
             params = {'uid': uid,
                       'from_id': from_id, 'to_id': to_id,
-                      'limit': this_limit}
+                      'limit': this_limit }
 
             params.update(range_params(date_range))
 
