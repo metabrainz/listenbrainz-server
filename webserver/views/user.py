@@ -34,7 +34,7 @@ def profile(user_id):
     max_ts = request.args.get("max_ts")
     if max_ts is not None:
         try:
-            to_id = int(max_ts)
+            max_ts = int(max_ts)
         except ValueError:
             raise BadRequest("Incorrect timestamp argument to_id:" %
                              request.args.get("to_id"))

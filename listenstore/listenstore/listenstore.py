@@ -206,10 +206,6 @@ class ListenStore(object):
                 if limit is not None and fetched_rows == limit:
                     return
 
-            if current_to_id > self.max_id():
-                return
-
-
     def convert_row(self, row):
         return Listen(data=ujson.loads(row.json), uid=row.uid, timestamp=row.id, album_msid=row.album_msid,
                       artist_msid=row.artist_msid, recording_msid=row.recording_msid)
