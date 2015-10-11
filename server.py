@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 from webserver import create_app
 import argparse
+from werkzeug.contrib.profiler import ProfilerMiddleware
 
 application = create_app()
+#application.config['PROFILE'] = True
+#application.wsgi_app = ProfilerMiddleware(application.wsgi_app, restrictions=[30])
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ListenBrainz Server")

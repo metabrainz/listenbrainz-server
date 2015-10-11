@@ -18,6 +18,8 @@ def _add_file_handler(app, filename, max_bytes=512 * 1024, backup_count=100,
     file_handler = RotatingFileHandler(filename, maxBytes=max_bytes,
                                        backupCount=backup_count)
     file_handler.setLevel(level)
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
     app.logger.addHandler(file_handler)
 
 
@@ -44,7 +46,7 @@ def _add_email_handler(app, level=logging.NOTSET):
 
 def _add_sentry(app, level=logging.NOTSET):
     """Adds support for error logging and aggregation using Sentry platform.
-    
+
     See https://docs.getsentry.com for more information about it.
     """
     Sentry(app, logging=True, level=level)

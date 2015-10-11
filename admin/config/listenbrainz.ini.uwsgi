@@ -11,3 +11,4 @@ virtualenv = /home/listenbrainz/ve
 pythonpath = /home/listenbrainz/ve/lib/python2.7/site-packages
 enable-threads = true
 processes = 20
+stats = :5050

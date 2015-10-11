@@ -8,6 +8,8 @@ SECRET_KEY = "CHANGE_ME"
 # Primary database
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz@/listenbrainz"
 
+MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz@/messybrainz"
+
 # Database for testing
 TEST_SQLALCHEMY_DATABASE_URI = "postgresql://lb_test@/lb_test"
 
@@ -18,21 +20,17 @@ PG_SUPER_USER = "postgres"
 
 # KAFKA
 KAFKA_CONNECT = "localhost:9092"
+KAFKA_RUN_CLASS_BINARY = "/opt/kafka/bin/kafka-run-class.sh"
 
 
 # CASSANDRA
-CASSANDRA_SERVER = "localhost"     
+CASSANDRA_SERVER = "localhost"
 CASSANDRA_KEYSPACE = "listenbrainz"
 
 
 # MusicBrainz OAuth
 MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
 MUSICBRAINZ_CLIENT_SECRET = "CLIENT_SECRET"
-
-
-# MESSYBRAINZ
-MESSYBRAINZ_SUBMIT_URL = "http://messybrainz.org/submit"
-MESSYBRAINZ_TIMEOUT    = 5 # seconds
 
 
 # LOGGING

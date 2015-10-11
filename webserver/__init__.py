@@ -1,6 +1,8 @@
 from flask import Flask, current_app
 import sys
 import os
+import messybrainz
+import messybrainz.db
 
 _kafka = None
 
@@ -32,6 +34,7 @@ def create_app():
     # Database connection
     from db import init_db_connection
     init_db_connection(app)
+    messybrainz.db.init_db_engine(app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
 
     # OAuth
     from webserver.login import login_manager, provider

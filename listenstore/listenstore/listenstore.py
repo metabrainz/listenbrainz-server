@@ -3,9 +3,10 @@ from __future__ import division, absolute_import
 from __future__ import print_function, unicode_literals
 import logging
 import calendar
-import json
+import ujson
 import time
 import uuid
+import six
 from datetime import date, datetime
 from .listen import Listen
 from dateutil.relativedelta import relativedelta
@@ -142,7 +143,9 @@ class ListenStore(object):
                   'artist_msid': uuid.UUID(listen.artist_msid),
                   'album_msid': uuid.UUID(listen.album_msid) if listen.album_msid is not None else None,
                   'recording_msid': uuid.UUID(listen.recording_msid),
-                  'json': json.dumps(listen.data)}
+                  'json': ujson.dumps(listen.data)}
+        if six.PY2 and isinstance(query, six.text_type):
+            query = query.encode('utf-8')
         batch.add(SimpleStatement(query), values)
         return self.session.execute_async(batch)
 
@@ -191,7 +194,7 @@ class ListenStore(object):
         # WTF? Too tired to figure this out. :(
         woo = Listen(uid=row.uid, timestamp=row.id, album_msid=row.album_msid,
                       artist_msid=row.artist_msid, recording_msid=row.recording_msid)
-        woo.data = json.loads(row.json)
+        woo.data = ujson.loads(row.json)
         return woo
 
     def fetch_listens_for_range(self, uid, date_range, from_id, to_id, limit=None, order='desc'):
