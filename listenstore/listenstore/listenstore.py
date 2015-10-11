@@ -233,7 +233,7 @@ class ListenStore(object):
 
             params = {'uid': uid,
                       'from_id': from_id, 'to_id': to_id,
-                      'limit': this_limit }
+                      'limit': this_limit}
 
             params.update(range_params(date_range))
 
