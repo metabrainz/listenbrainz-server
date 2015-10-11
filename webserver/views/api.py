@@ -2,6 +2,7 @@ import sys
 import urllib2
 import ujson
 import socket
+import uuid
 from flask import Blueprint, request, current_app, jsonify
 from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized, ServiceUnavailable
 from kafka import SimpleProducer
@@ -75,13 +76,19 @@ def submit_listen():
 
 @api_bp.route("/1/user/<user_id>/listens")
 def get_listens(user_id):
+
+    max_ts = _parse_int_arg("max_ts")
+    min_ts = _parse_int_arg("min_ts")
+
+    if max_ts and min_ts:
+        _log_and_raise_400("You may only specify max_ts or min_ts, not both.")
+
     cassandra = webserver.create_cassandra()
     listens = cassandra.fetch_listens(
         user_id,
         limit=min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET),
-        from_id=_parse_int_arg("max_ts"),
-        to_id=_parse_int_arg("min_ts"),
-        order=request.args.get("order", "desc"),
+        from_id=min_ts,
+        to_id=max_ts,
     )
     listen_data = []
     for listen in listens:
@@ -242,8 +249,8 @@ def _validate_listen(listen):
         _log_raise_400("JSON document does not contain a valid metadata.track_name "
                        "and/or track_metadata.artist_name.", listen)
 
-    # Tags
     if 'additional_info' in listen['track_metadata']:
+        # Tags
         if 'tags' in listen['track_metadata']['additional_info']:
             tags = listen['track_metadata']['additional_info']['tags']
             if len(tags) > MAX_TAGS_PER_LISTEN:
@@ -253,7 +260,19 @@ def _validate_listen(listen):
                 if len(tag) > MAX_TAG_SIZE:
                     _log_raise_400("JSON document may not contain track_metadata.additional_info.tags "
                                    "longer than %d characters." % MAX_TAG_SIZE, listen)
-
+        # MBIDs
+        if 'release_mbid' in listen['track_metadata']['additional_info']:
+            lmbid = listen['track_metadata']['additional_info']['release_mbid']
+            if not is_valid_uuid(lmbid):
+                _log_raise_400("Release MBID format invalid.")
+        if 'recording_mbid' in listen['track_metadata']['additional_info']:
+            cmbid = listen['track_metadata']['additional_info']['recording_mbid']
+            if not is_valid_uuid(cmbid):
+                _log_raise_400("Recording MBID format invalid.")
+        ambids = listen['track_metadata']['additional_info'].get('artist_mbids', [])
+        for ambid in ambids:
+            if not is_valid_uuid(ambid):
+                _log_raise_400("Artist MBID format invalid.")
 
 def _log_raise_400(msg, data):
     """Helper function for logging issues with request data and showing error page.
@@ -267,3 +286,11 @@ def _log_raise_400(msg, data):
 
     current_app.logger.debug("BadRequest: %s\nJSON: %s" % (msg, data))
     raise BadRequest(msg)
+
+# lifted from AcousticBrainz
+def is_valid_uuid(u):
+    try:
+        u = uuid.UUID(u)
+        return True
+    except ValueError:
+        return False
