@@ -16,7 +16,9 @@ from cassandra import InvalidRequest
 from cassandra.query import SimpleStatement, BatchStatement
 
 MIN_ID = 1033430400     # approx when audioscrobbler was created
-
+ORDER_DESC = 0
+ORDER_ASC = 1
+ORDER_TEXT = [ "DESC", "ASC" ]
 
 def id_to_date(id):
     return date.fromtimestamp(id)
@@ -54,7 +56,7 @@ def next_daterange(dat, precision):
 
 
 def dateranges(min_id, max_id, precision, order):
-    if order == 'asc':
+    if order == ORDER_ASC:
         step = -1
     else:
         step = 1
@@ -164,9 +166,18 @@ class ListenStore(object):
             queries.append(self.insert_async(listen))
         [query.result() for query in queries]
 
-    def fetch_listens(self, uid, from_id=None, to_id=None, limit=None, order='desc'):
+    def fetch_listens(self, uid, from_id=None, to_id=None, limit=None):
         """ Fetch a range of listens, for a user
         """
+
+        if from_id and to_id:
+            raise ValueError("You cannot specify from_id and to_id at the same time.")
+
+        if from_id:
+            order = ORDER_ASC
+        else:
+            order = ORDER_DESC
+
         precision = 'month'
         if from_id is None:
             from_id = MIN_ID
@@ -184,20 +195,21 @@ class ListenStore(object):
                 current_limit = None
 
             for listen in self.fetch_listens_for_range(uid, daterange, current_from_id, current_to_id,
-                                                       current_limit, order):
+                                                       order, current_limit):
                 yield listen
                 fetched_rows += 1
                 if limit is not None and fetched_rows == limit:
                     return
 
-    def convert_row(self, row):
-        # WTF? Too tired to figure this out. :(
-        woo = Listen(uid=row.uid, timestamp=row.id, album_msid=row.album_msid,
-                      artist_msid=row.artist_msid, recording_msid=row.recording_msid)
-        woo.data = ujson.loads(row.json)
-        return woo
+            if current_to_id >= self.max_id():
+                return
 
-    def fetch_listens_for_range(self, uid, date_range, from_id, to_id, limit=None, order='desc'):
+
+    def convert_row(self, row):
+        return Listen(data=ujson.loads(row.json), uid=row.uid, timestamp=row.id, album_msid=row.album_msid,
+                      artist_msid=row.artist_msid, recording_msid=row.recording_msid)
+
+    def fetch_listens_for_range(self, uid, date_range, from_id, to_id, order, limit=None):
         """ Fetch listens for a specified uid within a single date range.
 
             date_range can be a 1-, 2-, or 3-tuple (year, month, day).
@@ -207,8 +219,8 @@ class ListenStore(object):
         """
         query = """SELECT * FROM listens WHERE uid = %(uid)s AND """ + \
                 range_keys(len(date_range)) + \
-                """ AND id >= %(from_id)s AND id <= %(to_id)s
-                   ORDER BY id """ + order.upper() + """ LIMIT %(limit)s"""
+                """ AND id > %(from_id)s AND id < %(to_id)s
+                   ORDER BY id """ + ORDER_TEXT[order] + """ LIMIT %(limit)s"""
 
         fetched_rows = 0  # Total number of rows fetched for this range
 
@@ -238,7 +250,7 @@ class ListenStore(object):
 
             if this_batch == self.MAX_FETCH:
                 # We hit the maximum number of rows, so we need to fetch another batch. Move the id range:
-                if order == 'asc':
+                if order == ORDER_ASC:
                     from_id = row[0] + 1
                 else:
                     to_id = row[0] - 1

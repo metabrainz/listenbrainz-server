@@ -76,13 +76,19 @@ def submit_listen():
 
 @api_bp.route("/1/user/<user_id>/listens")
 def get_listens(user_id):
+
+    max_ts = _parse_int_arg("max_ts")
+    min_ts = _parse_int_arg("min_ts")
+
+    if max_ts and min_ts:
+        _log_and_raise_400("You may only specify max_ts or min_ts, not both.")
+
     cassandra = webserver.create_cassandra()
     listens = cassandra.fetch_listens(
         user_id,
         limit=min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET),
-        from_id=_parse_int_arg("max_ts"),
-        to_id=_parse_int_arg("min_ts"),
-        order=request.args.get("order", "desc"),
+        from_id=min_ts,
+        to_id=max_ts,
     )
     listen_data = []
     for listen in listens:
