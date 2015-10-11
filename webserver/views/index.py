@@ -41,6 +41,11 @@ def faq():
     return render_template("index/faq.html")
 
 
+@index_bp.route("/api-docs")
+def api_docs():
+    return render_template("index/api-docs.html")
+
+
 @index_bp.route("/roadmap")
 def roadmap():
     return render_template("index/roadmap.html")
