@@ -30,32 +30,37 @@ def profile(user_id):
     cassandra = webserver.create_cassandra()
 
     # Getting data for current page
-    min_ts = request.args.get("min_ts")
-    if min_ts is not None:
+    to_id = request.args.get("to_id")
+    if to_id is not None:
         try:
-            min_ts = int(min_ts)
+            to_id = int(to_id)
         except ValueError:
-            raise BadRequest("Incorrect timestamp argument min-ts:" %
-                             request.args.get("min_ts"))
+            raise BadRequest("Incorrect timestamp argument to_id:" %
+                             request.args.get("to_id"))
     listens = []
-    for listen in cassandra.fetch_listens(user_id, limit=25, to_id=min_ts):
+    for listen in cassandra.fetch_listens(user_id, limit=25, to_id=to_id):
         listens.append({
             "track_metadata": listen.data,
             "listened_at": listen.timestamp,
         })
 
-    # Checking if there is a "previous" page...
-    previous_listens = list(cassandra.fetch_listens(user_id, limit=25, from_id=listens[0]["listened_at"] + 1, order="asc"))
-    if previous_listens:
-        previous_listen_ts = previous_listens[-1].timestamp
+    if listens:
+        # Checking if there is a "previous" page...
+        previous_listens = list(cassandra.fetch_listens(user_id, limit=25, from_id=listens[0]["listened_at"]))
+        if previous_listens:
+            previous_listen_ts = previous_listens[-1].timestamp + 1
+        else:
+            previous_listen_ts = None
+            
+        # Checking if there is a "next" page...
+        next_listens = list(cassandra.fetch_listens(user_id, limit=1, to_id=listens[-1]["listened_at"]))
+        if not next_listens:
+            next_listen_ts = None
+        else:
+            next_listen_ts = listens[-1]["listened_at"]
+
     else:
         previous_listen_ts = None
-
-    # Checking if there is a "next" page...
-    # It should start from the timestamp of last item in current list + 1.
-    next_listen_ts = listens[-1]["listened_at"] - 1
-    next_listens = list(cassandra.fetch_listens(user_id, limit=1, to_id=next_listen_ts))
-    if not next_listens:
         next_listen_ts = None
 
     return render_template(
