@@ -50,6 +50,8 @@ def profile(user_id):
         # Checking if there is a "previous" page...
         previous_listens = list(cassandra.fetch_listens(user_id, limit=25, from_id=listens[0]["listened_at"]))
         if previous_listens:
+            # Getting from the last item because `fetch_listens` returns in ascending
+            # order when `from_id` is used.
             previous_listen_ts = previous_listens[-1].timestamp + 1
         else:
             previous_listen_ts = None
