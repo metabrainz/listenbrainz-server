@@ -98,6 +98,9 @@ def get_listens(user_id):
                              "recording_msid" : listen.recording_msid,
                            })
 
+    if min_ts:
+        listen_data = listen_data[::-1]
+
     return jsonify({'payload': {
         'user_id': user_id,
         'count': len(listen_data),
