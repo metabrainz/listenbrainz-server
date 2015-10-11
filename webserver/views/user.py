@@ -31,15 +31,15 @@ def profile(user_id):
     cassandra = webserver.create_cassandra()
 
     # Getting data for current page
-    to_id = request.args.get("to_id")
-    if to_id is not None:
+    max_ts = request.args.get("max_ts")
+    if max_ts is not None:
         try:
-            to_id = int(to_id)
+            to_id = int(max_ts)
         except ValueError:
             raise BadRequest("Incorrect timestamp argument to_id:" %
                              request.args.get("to_id"))
     listens = []
-    for listen in cassandra.fetch_listens(user_id, limit=25, to_id=to_id):
+    for listen in cassandra.fetch_listens(user_id, limit=25, to_id=max_ts):
         listens.append({
             "track_metadata": listen.data,
             "listened_at": listen.timestamp,
