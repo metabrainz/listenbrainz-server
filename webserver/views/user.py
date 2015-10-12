@@ -43,7 +43,7 @@ def profile(user_id):
         listens.append({
             "track_metadata": listen.data,
             "listened_at": listen.timestamp,
-            "listened_at_iso": datetime.fromtimestamp(int(listen.timestamp)).isoformat(),
+            "listened_at_iso": datetime.fromtimestamp(int(listen.timestamp)).isoformat() + "Z",
         })
 
     if listens:
