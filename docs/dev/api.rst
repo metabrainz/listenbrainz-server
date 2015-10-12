@@ -10,7 +10,6 @@ NOTE: All of ListenBrainz services are available on **HTTPS** only!
 Reference
 ---------
 
-
 API Calls
 ^^^^^^^^^
 
@@ -18,6 +17,12 @@ API Calls
    :blueprints: api_v1
    :include-empty-docstring:
    :undoc-static:
+
+Timestamps
+^^^^^^^^^^
+
+All timestamps used in this project are UNIX epoch timestamps in UTC. When submitting timestamps to us,
+please ensure that you have no timezone adjustments on your timestamps.
 
 Constants
 ^^^^^^^^^
