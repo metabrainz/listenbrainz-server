@@ -3,9 +3,11 @@ import urllib2
 import ujson
 import socket
 import uuid
-from flask import Blueprint, request, current_app, jsonify, g
+from flask import Blueprint, request, current_app, jsonify
 from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized, ServiceUnavailable
 from kafka import SimpleProducer
+from webserver import kafka_connection
+from webserver import listenstore_connection
 from webserver.decorators import crossdomain
 import webserver
 import db.user
@@ -76,13 +78,15 @@ def submit_listen():
 @api_bp.route("/1/user/<user_id>/listens")
 def get_listens(user_id):
 
+    listenstore = listenstore_connection.get_listenstore()
+
     max_ts = _parse_int_arg("max_ts")
     min_ts = _parse_int_arg("min_ts")
 
     if max_ts and min_ts:
         _log_and_raise_400("You may only specify max_ts or min_ts, not both.")
 
-    listens = g.listenstore.fetch_listens(
+    listens = listenstore.fetch_listens(
         user_id,
         limit=min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET),
         from_id=min_ts,
@@ -135,7 +139,7 @@ def _validate_auth_header():
 
 def _send_listens_to_kafka(listen_type, listens):
 
-    producer = SimpleProducer(g.kafka)
+    producer = SimpleProducer(kafka_connection.get_kafka_client())
 
     for listen in listens:
         if listen_type == 'playing_now':

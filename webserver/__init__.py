@@ -25,13 +25,6 @@ def create_app():
     init_db_connection(app)
     messybrainz.db.init_db_engine(app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
 
-    # Connections to external servers
-    @app.before_request
-    def before_reqeust():
-        g.kafka = kafka_connection.init_kafka_connection(app.config['KAFKA_CONNECT'])
-        g.listenstore = listenstore_connection.init_listenstore(current_app.config['CASSANDRA_SERVER'], current_app.config['CASSANDRA_KEYSPACE'])
-
-
     # OAuth
     from webserver.login import login_manager, provider
     login_manager.init_app(app)
