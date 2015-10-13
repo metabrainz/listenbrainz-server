@@ -4,10 +4,10 @@ import ujson
 import socket
 import uuid
 from flask import Blueprint, request, current_app, jsonify
-from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized, ServiceUnavailable
 from kafka import SimpleProducer
 from webserver.kafka_connection import _kafka
 from webserver.decorators import crossdomain
+from webserver.exceptions import APIBadRequest, APIInternalServerError, APIUnauthorized, APIServiceUnavailable
 import webserver
 import db.user
 import messybrainz
@@ -114,7 +114,7 @@ def _parse_int_arg(name, default=None):
         try:
             return int(value)
         except ValueError:
-            raise BadRequest("Invalid %s argument: %s" % (name, value))
+            raise APIBadRequest("Invalid %s argument: %s" % (name, value))
     else:
         return default
 
@@ -122,15 +122,15 @@ def _parse_int_arg(name, default=None):
 def _validate_auth_header():
     auth_token = request.headers.get('Authorization')
     if not auth_token:
-        raise Unauthorized("You need to provide an Authorization header.")
+        raise APIUnauthorized("You need to provide an Authorization header.")
     try:
         auth_token = auth_token.split(" ")[1]
     except IndexError:
-        raise Unauthorized("Provided Authorization header is invalid.")
+        raise APIUnauthorized("Provided Authorization header is invalid.")
 
     user = db.user.get_by_token(auth_token)
     if user is None:
-        raise Unauthorized("Invalid authorization token.")
+        raise APIUnauthorized("Invalid authorization token.")
 
     return user['musicbrainz_id']
 
@@ -145,13 +145,13 @@ def _send_listens_to_kafka(listen_type, listens):
                 producer.send_messages(b'playing_now', ujson.dumps(listen).encode('utf-8'))
             except:
                 current_app.logger.error("Kafka playing_now write error: " + str(sys.exc_info()[0]))
-                raise InternalServerError("Cannot record playing_now at this time.")
+                raise APIInternalServerError("Cannot record playing_now at this time.")
         else:
             try:
                 producer.send_messages(b'listens', ujson.dumps(listen).encode('utf-8'))
             except:
                 current_app.logger.error("Kafka listens write error: " + str(sys.exc_info()[0]))
-                raise InternalServerError("Cannot record listen at this time.")
+                raise APIInternalServerError("Cannot record listen at this time.")
 
 
 def _messybrainz_lookup(listens):
@@ -186,7 +186,7 @@ def _messybrainz_lookup(listens):
     except messybrainz.exceptions.NoDataFoundException:
         return []
     except messybrainz.exceptions.ErrorAddingException as e:
-        raise ServiceUnavailable(str(e))
+        raise APIServiceUnavailable(str(e))
 
     augmented_listens = []
     for listen, messybrainz_resp in zip(listens, msb_responses['payload']):
@@ -200,7 +200,7 @@ def _messybrainz_lookup(listens):
             listen['track_metadata']['additional_info']['artist_msid'] = messybrainz_resp['artist_msid']
         except KeyError:
             current_app.logger.error("MessyBrainz did not return a proper set of ids")
-            raise InternalServerError
+            raise APIInternalServerError
 
         try:
             listen['track_metadata']['additional_info']['release_msid'] = messybrainz_resp['release_msid']
@@ -288,7 +288,7 @@ def _log_raise_400(msg, data):
         data = ujson.dumps(data)
 
     current_app.logger.debug("BadRequest: %s\nJSON: %s" % (msg, data))
-    raise BadRequest(msg)
+    raise APIBadRequest(msg)
 
 # lifted from AcousticBrainz
 def is_valid_uuid(u):

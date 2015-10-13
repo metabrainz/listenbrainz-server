@@ -1,4 +1,5 @@
-from flask import render_template, make_response
+from flask import render_template, make_response, jsonify
+import webserver.exceptions
 
 
 def init_error_handlers(app):
@@ -7,6 +8,12 @@ def init_error_handlers(app):
         resp = make_response(render_template(template, error=error))
         resp.headers['Access-Control-Allow-Origin'] = '*'
         return resp, code
+
+    @app.errorhandler(webserver.exceptions.APIError)
+    def api_error(error):
+        response = jsonify(error.to_dict())
+        response.status_code = error.status_code
+        return response
 
     @app.errorhandler(400)
     def bad_request(error):
