@@ -267,15 +267,15 @@ def _validate_listen(listen):
         if 'release_mbid' in listen['track_metadata']['additional_info']:
             lmbid = listen['track_metadata']['additional_info']['release_mbid']
             if not is_valid_uuid(lmbid):
-                _log_raise_400("Release MBID format invalid.")
+                _log_raise_400("Release MBID format invalid.", listen)
         if 'recording_mbid' in listen['track_metadata']['additional_info']:
             cmbid = listen['track_metadata']['additional_info']['recording_mbid']
             if not is_valid_uuid(cmbid):
-                _log_raise_400("Recording MBID format invalid.")
+                _log_raise_400("Recording MBID format invalid.", listen)
         ambids = listen['track_metadata']['additional_info'].get('artist_mbids', [])
         for ambid in ambids:
             if not is_valid_uuid(ambid):
-                _log_raise_400("Artist MBID format invalid.")
+                _log_raise_400("Artist MBID format invalid.", listen)
 
 def _log_raise_400(msg, data):
     """Helper function for logging issues with request data and showing error page.
