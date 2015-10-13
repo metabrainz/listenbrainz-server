@@ -1,20 +1,13 @@
-from flask import Flask, current_app
+from flask import Flask, current_app, g
 import sys
 import os
 import messybrainz
 import messybrainz.db
-
-_kafka = None
-
-
-def create_cassandra():
-    from cassandra_connection import init_cassandra_connection
-    return init_cassandra_connection(current_app.config['CASSANDRA_SERVER'], current_app.config['CASSANDRA_KEYSPACE'])
+import kafka_connection
+import listenstore_connection
 
 
 def create_app():
-    global _kafka
-
     app = Flask(__name__)
 
     # Configuration
@@ -27,14 +20,17 @@ def create_app():
     from webserver.loggers import init_loggers
     init_loggers(app)
 
-    # Kafka connection
-    from kafka_connection import init_kafka_connection
-    init_kafka_connection(app.config['KAFKA_CONNECT'])
-
     # Database connection
     from db import init_db_connection
     init_db_connection(app)
     messybrainz.db.init_db_engine(app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
+
+    # Connections to external servers
+    @app.before_request
+    def before_reqeust():
+        g.kafka = kafka_connection.init_kafka_connection(app.config['KAFKA_CONNECT'])
+        g.listenstore = listenstore_connection.init_listenstore(current_app.config['CASSANDRA_SERVER'], current_app.config['CASSANDRA_KEYSPACE'])
+
 
     # OAuth
     from webserver.login import login_manager, provider

@@ -1,9 +1,5 @@
-from kafka import KafkaClient
-
-_kafka = None
-
+import kafka
 
 def init_kafka_connection(hosts):
     """Create a connection to the Kafka server."""
-    global _kafka
-    _kafka = KafkaClient(hosts)
+    return kafka.KafkaClient(hosts)

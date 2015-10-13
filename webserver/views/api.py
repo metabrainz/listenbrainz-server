@@ -3,10 +3,9 @@ import urllib2
 import ujson
 import socket
 import uuid
-from flask import Blueprint, request, current_app, jsonify
+from flask import Blueprint, request, current_app, jsonify, g
 from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized, ServiceUnavailable
 from kafka import SimpleProducer
-from webserver.kafka_connection import _kafka
 from webserver.decorators import crossdomain
 import webserver
 import db.user
@@ -83,8 +82,7 @@ def get_listens(user_id):
     if max_ts and min_ts:
         _log_and_raise_400("You may only specify max_ts or min_ts, not both.")
 
-    cassandra = webserver.create_cassandra()
-    listens = cassandra.fetch_listens(
+    listens = g.listenstore.fetch_listens(
         user_id,
         limit=min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET),
         from_id=min_ts,
@@ -137,7 +135,7 @@ def _validate_auth_header():
 
 def _send_listens_to_kafka(listen_type, listens):
 
-    producer = SimpleProducer(_kafka)
+    producer = SimpleProducer(g.kafka)
 
     for listen in listens:
         if listen_type == 'playing_now':
