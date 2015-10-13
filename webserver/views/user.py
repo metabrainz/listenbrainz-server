@@ -6,6 +6,7 @@ from webserver.decorators import crossdomain
 from datetime import datetime
 import webserver
 import db.user
+from webserver import listenstore_connection
 
 user_bp = Blueprint("user", __name__)
 
@@ -28,8 +29,7 @@ def lastfmscraper(user_id):
 
 @user_bp.route("/<user_id>")
 def profile(user_id):
-    cassandra = webserver.create_cassandra()
-
+    listenstore = listenstore_connection.get_listenstore()
     # Getting data for current page
     max_ts = request.args.get("max_ts")
     if max_ts is not None:
@@ -39,7 +39,7 @@ def profile(user_id):
             raise BadRequest("Incorrect timestamp argument to_id:" %
                              request.args.get("to_id"))
     listens = []
-    for listen in cassandra.fetch_listens(user_id, limit=25, to_id=max_ts):
+    for listen in listenstore.fetch_listens(user_id, limit=25, to_id=max_ts):
         listens.append({
             "track_metadata": listen.data,
             "listened_at": listen.timestamp,
@@ -48,7 +48,7 @@ def profile(user_id):
 
     if listens:
         # Checking if there is a "previous" page...
-        previous_listens = list(cassandra.fetch_listens(user_id, limit=25, from_id=listens[0]["listened_at"]))
+        previous_listens = list(listenstore.fetch_listens(user_id, limit=25, from_id=listens[0]["listened_at"]))
         if previous_listens:
             # Getting from the last item because `fetch_listens` returns in ascending
             # order when `from_id` is used.
@@ -57,7 +57,7 @@ def profile(user_id):
             previous_listen_ts = None
 
         # Checking if there is a "next" page...
-        next_listens = list(cassandra.fetch_listens(user_id, limit=1, to_id=listens[-1]["listened_at"]))
+        next_listens = list(listenstore.fetch_listens(user_id, limit=1, to_id=listens[-1]["listened_at"]))
         if next_listens:
             next_listen_ts = listens[-1]["listened_at"]
         else:

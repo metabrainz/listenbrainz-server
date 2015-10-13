@@ -1,9 +1,7 @@
-from kafka import KafkaClient
+import kafka
+from flask import current_app
 
-_kafka = None
-
-
-def init_kafka_connection(hosts):
+def get_kafka_client():
     """Create a connection to the Kafka server."""
-    global _kafka
-    _kafka = KafkaClient(hosts)
+    host = current_app.config['KAFKA_CONNECT']
+    return kafka.KafkaClient(host)
