@@ -216,7 +216,7 @@ def _messybrainz_lookup(listens):
            'recording_mbid' not in listen['track_metadata']['additional_info']:
 
             if len(artist_mbids) > 0 and release_mbid and recording_mbid:
-                listen['track_metadata']['additional_info']['artist_id'] = artist_mbid
+                listen['track_metadata']['additional_info']['artist_mbids'] = artist_mbids
                 listen['track_metadata']['additional_info']['release_mbid'] = release_mbid
                 listen['track_metadata']['additional_info']['recording_mbid'] = recording_mbid
 
