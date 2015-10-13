@@ -25,6 +25,10 @@ server {
 
      ssl_session_timeout 5m;
 
+     location /robots.txt {
+          root /home/listenbrainz/listenbrainz-server/webserver/static/;
+     }
+
      location /static {
           root /home/listenbrainz/listenbrainz-server/webserver;
           gzip on;
