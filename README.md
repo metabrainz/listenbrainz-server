@@ -22,14 +22,14 @@ repository, but you must install it so that python can find it.
     $ cd listenstore
     $ python setup.py develop
 
-You can use `setup.py develop` to symlink the listenstore directory into
+You can use `setup.py develop` to symlink the ListenStore directory into
 site-packages (letting you make changes easily), or use `setup.py install`
-to install it. If you make any changes to listenstore you must install
-again.
+to install it.  If you use `setup.py install` and make any changes to
+ListenStore you must run install again.
 
 MessyBrainz is an intermediate database to map unknown metadata to stable
 UUIDs, and then map these intermediate identifiers to MBIDs
-(http://messybrainz.org, https://github.com/metabrainz/messybrainz-server)
+( http://messybrainz.org, https://github.com/metabrainz/messybrainz-server )
 
 For now you must download and install MessyBrainz separately:
 
@@ -37,6 +37,9 @@ For now you must download and install MessyBrainz separately:
     $ cd messybrainz-server
     $ pip install -r requirements.txt
     $ python setup.py develop
+    $ cp config.py.sample config.py
+    $ python manage.py init_db
+
 
 Future updates will map a local copy of MessyBrainz into the Vagrant
 server.
@@ -69,11 +72,6 @@ To initialize the database (create user, tables, etc.) run this command:
     $ python manage.py init_db
 
 After that server should be ready to go.
-
-Initialize the MessyBrainz database by changing to the messybrainz-server
-directory, copying config.py.sample to config.py, and running the same:
-
-    $ python manage.py init_db
 
 
 ## Running
