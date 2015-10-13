@@ -1,10 +1,8 @@
-from flask import Flask, current_app, g
+from flask import Flask, current_app
 import sys
 import os
 import messybrainz
 import messybrainz.db
-import kafka_connection
-import listenstore_connection
 
 
 def create_app():
