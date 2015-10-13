@@ -22,6 +22,7 @@ def lastfmscraper(user_id):
         base_url=url_for("api_v1.submit_listen", user_id=user_id, _external=True),
         user_token=user_token,
         lastfm_username=lastfm_username,
+        user_id=user_id,
     )
     return Response(scraper, content_type="text/javascript")
 
