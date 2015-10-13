@@ -29,7 +29,7 @@ ListenStore you must run install again.
 
 MessyBrainz is an intermediate database to map unknown metadata to stable
 UUIDs, and then map these intermediate identifiers to MBIDs
-( http://messybrainz.org, https://github.com/metabrainz/messybrainz-server )
+( http://messybrainz.org, https://github.com/metabrainz/messybrainz-server ).
 
 For now you must download and install MessyBrainz separately:
 
