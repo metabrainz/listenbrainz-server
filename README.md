@@ -14,32 +14,66 @@ First, install [ChefDK](https://downloads.chef.io/chef-dk/), then:
     $ kitchen converge  # provisions/installs from chef cookbooks
     $ kitchen login     # ssh in to vm
 
+### MessyBrainz and ListenStore
+
+ListenStore is our interface to cassandra. It's bundled as part of this
+repository, but you must install it so that python can find it.
+
+    $ cd listenstore
+    $ python setup.py develop
+
+You can use `setup.py develop` to symlink the listenstore directory into
+site-packages (letting you make changes easily), or use `setup.py install`
+to install it. If you make any changes to listenstore you must install
+again.
+
+MessyBrainz is an intermediate database to map unknown metadata to stable
+UUIDs, and then map these intermediate identifiers to MBIDs
+(http://messybrainz.org, https://github.com/metabrainz/messybrainz-server)
+
+For now you must download and install MessyBrainz separately:
+
+    $ git clone https://github.com/metabrainz/messybrainz-server.git
+    $ cd messybrainz-server
+    $ pip install -r requirements.txt
+    $ python setup.py develop
+
+Future updates will map a local copy of MessyBrainz into the Vagrant
+server.
+
 ### Python dependencies
-    
+
 Database should be ready. Before running any Python scripts, you need to
 install Python dependencies:
 
     $ cd ~/listenbrainz
     $ pip install -r requirements.txt
-    
+
 ### Configuration file
 
 Copy the file `config.py.sample` to `config.py` and edit the postgres
 settings. For now you will need to allow your system user to connect
 as the postgres admin user with no password.
 
-Register for a MusicBrainz application at 
+Register for a MusicBrainz application at
 https://musicbrainz.org/account/applications.
 During registration set the callback url to
 `http://<your_host>/login/musicbrainz/post`.
-    
-### Database initialization    
-    
+If you don't change anything during setup, `your_host`
+will be `10.1.2.3:8080`
+
+### Database initialization
+
 To initialize the database (create user, tables, etc.) run this command:
 
     $ python manage.py init_db
 
 After that server should be ready to go.
+
+Initialize the MessyBrainz database by changing to the messybrainz-server
+directory, copying config.py.sample to config.py, and running the same:
+
+    $ python manage.py init_db
 
 
 ## Running
@@ -62,7 +96,7 @@ After setting up the server and trying to submit your listens to the server,
 this error might appear:
 
     Kafka listens write error: <class 'kafka.common.LeaderNotAvailableError'>
-    
+
 One way to fix it is to delete all data directories created for Kafka and
 Zookeeper.
 
@@ -70,15 +104,15 @@ First, stop both Kafka and Zookeeper services:
 
     $ sudo service kafka stop
     $ sudo service zookeeper stop
-    
+
 Wipe Kafka's data directory:
 
     $ sudo rm /var/lib/kafka/kafka-logs/*
-    
+
 and Zookeeper's:
-    
+
     $ sudo rm /var/lib/zookeeper/*
-    
+
 Start them again:
 
     $ sudo service kafka start
