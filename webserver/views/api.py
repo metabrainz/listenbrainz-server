@@ -11,6 +11,7 @@ from webserver.decorators import crossdomain
 import webserver
 import db.user
 import messybrainz
+from webserver.rate_limiter import ratelimit
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -21,6 +22,11 @@ MAX_TAG_SIZE = 64
 MAX_ITEMS_PER_GET = 100
 DEFAULT_ITEMS_PER_GET = 25
 MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
+
+@api_bp.route("/1/rate-limit-test")
+@ratelimit(limit = 3, per=5)
+def rate_limit_test():
+    return "OK\n"
 
 @api_bp.route("/1/submit-listens", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")

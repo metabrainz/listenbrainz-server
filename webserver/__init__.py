@@ -3,6 +3,8 @@ import sys
 import os
 import messybrainz
 import messybrainz.db
+from redis import Redis
+from rate_limiter import get_view_rate_limit
 
 _kafka = None
 
@@ -31,6 +33,9 @@ def create_app():
     from kafka_connection import init_kafka_connection
     init_kafka_connection(app.config['KAFKA_CONNECT'])
 
+    # Redis connection
+    app.redis = Redis()
+
     # Database connection
     from db import init_db_connection
     init_db_connection(app)
@@ -45,6 +50,17 @@ def create_app():
     # Error handling
     from webserver.errors import init_error_handlers
     init_error_handlers(app)
+
+    # Add rate limit headers to responses
+    @app.after_request
+    def inject_x_rate_headers(response):
+        limit = get_view_rate_limit()
+        if limit and limit.send_x_headers:
+            h = response.headers
+            h.add('X-RateLimit-Remaining', str(limit.remaining))
+            h.add('X-RateLimit-Limit', str(limit.limit))
+            h.add('X-RateLimit-Reset', str(limit.reset))
+        return response
 
     # Template utilities
     app.jinja_env.add_extension('jinja2.ext.do')
