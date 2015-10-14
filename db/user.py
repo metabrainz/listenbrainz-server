@@ -23,6 +23,14 @@ def create(musicbrainz_id):
         })
         return result.fetchone()["id"]
 
+def update_token(user_id):
+
+    result = db.session.execute("""INSERT INTO "user" (musicbrainz_id, auth_token)
+                                        VALUES (:mb_id, :token)
+                                     RETURNING id""",
+                                {"mb_id": musicbrainz_id, "token": str(uuid.uuid4())})
+    db.session.commit()
+
 
 def get(id):
     """Get user with a specified ID.
