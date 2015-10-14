@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Reset token - ListenBrainz{% endblock %}
+
+{% block content %}
+  <h3 class="page-title">Reset token</h3>
+  <p>Are you sure you want to reset your token? If you do, you will need
+  to change it any apps that you have added it to.</p>
+  <form method="post">
+      <input type="submit">
+      <p>
+         <span class="btn btn-warning btn-lg" style="width: 400px"><a href="http://last.fm/user/{{lastfm_username}}/library"
+         style="color: white;">Yes, change it</a></span>
+      <p>
+  </form>
+
+{% endblock %}
