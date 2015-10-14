@@ -7,6 +7,7 @@ from webserver.decorators import crossdomain
 from datetime import datetime
 from time import time
 import webserver
+from webserver import flash
 import db.user
 from flask import make_response
 from webserver.views.api_tools import convert_backup_to_native_format, insert_payload, validate_listen, \
@@ -45,6 +46,16 @@ def lastfmscraper(user_name):
     )
     return Response(scraper, content_type="text/javascript")
 
+@user_bp.route("/<user_id>/resettoken", methods=["GET", "POST"])
+@login_required
+def reset_token(user_id):
+    if request.method == "POST":
+        reset = request.args.get("reset")
+        if reset == "yes":
+            flash.info("Access token reset")
+        return redirect(url_for("user.import_data"))
+    else:
+        return render_template("user/resettoken.html")
 
 @user_bp.route("/<user_name>")
 def profile(user_name):
