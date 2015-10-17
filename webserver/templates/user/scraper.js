@@ -146,7 +146,7 @@ function getLastFMPage(page) {
     xhr.send();
 }
 
-var version = "1.3";
+var version = "1.4";
 var page = 1;
 var numberOfPages = parseInt(document.getElementsByClassName("pages")[0].innerHTML.trim().split(" ")[3]);
 
@@ -192,7 +192,13 @@ function reportScrobbles(struct) {
             pageDone();
         }
         if (numCompleted >= numberOfPages) {
-            updateMessage("<i class='fa fa-check'></i> Import finished<br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
+            updateMessage("<i class='fa fa-check'></i> Import finished<br><span><a href='https://listenbrainz.org/user/{{user_id}}'>Go to your ListenBrainz profile</a> | <a href='' id='close-progress-container'>Close</a></span><br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
+            var close = document.getElementById('close-progress-container');
+            close.addEventListener('click', function(ev) {
+                ev.preventDefault();
+                var el = document.getElementById('listen-progress-container');
+                el.parentNode.removeChild(el);
+            }, false);
         } else {
             updateMessage("<i class='fa fa-cog fa-spin'></i> Sending page " + numCompleted + " of " + numberOfPages + " to ListenBrainz<br><span style='font-size:8pt'>Please don't navigate while this is running</span>");
         }
