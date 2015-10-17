@@ -155,3 +155,16 @@ def _get_listen_type(listen_type):
         'import': LISTEN_TYPE_IMPORT,
         'playing_now': LISTEN_TYPE_PLAYING_NOW
     }.get(listen_type)
+
+
+def _verify_mbid_validity(listen, key):
+    item = listen['track_metadata']['additional_info'].get(key)
+    if item and not is_valid_uuid(item):
+        _log_raise_400('%s MBID format invalid.' % (key, ), listen)
+
+
+def _verify_multi_mbid_validity(listen, key):
+    items = listen['track_metadata']['additional_info'].get(key, [])
+    for i in items:
+        if not is_valid_uuid(i):
+            _log_raise_400('%s MBID format invalid.' % (key, ), listen)
