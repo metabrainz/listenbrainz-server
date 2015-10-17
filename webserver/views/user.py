@@ -31,8 +31,9 @@ def lastfmscraper(user_id):
 @login_required
 def reset_token(user_id):
     if request.method == "POST":
-        reset = request.args.get("reset")
+        reset = request.form.get("reset")
         if reset == "yes":
+            db.user.update_token(current_user.id)
             flash.info("Access token reset")
         return redirect(url_for("user.import_data"))
     else:

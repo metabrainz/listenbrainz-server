@@ -7,10 +7,9 @@
   <p>Are you sure you want to reset your token? If you do, you will need
   to change it any apps that you have added it to.</p>
   <form method="post">
-      <input type="submit">
+      <input type="hidden" name="reset" value="yes">
       <p>
-         <span class="btn btn-warning btn-lg" style="width: 400px"><a href="http://last.fm/user/{{lastfm_username}}/library"
-         style="color: white;">Yes, change it</a></span>
+         <button type="submit" class="btn btn-info btn-lg" style="width: 200px">Yes, change it</button>
       <p>
   </form>
 
