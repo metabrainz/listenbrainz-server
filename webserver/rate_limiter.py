@@ -2,20 +2,39 @@
 #
 # This snippet by Armin Ronacher can be used freely for anything you like. Consider it public domain.
 #
+# http://flask.pocoo.org/snippets/70/
+#
 import time
 from functools import update_wrapper
 from flask import request, g
 from webserver import current_app
+import db.user
 
 #TODO
+# Given two seperate rate limits
 # Add redis support to chef
 # Add rate limit support to scraper
-# Add rate limit support on IP as well as auth token
 
-RATELIMIT_WINDOW = 10
+# Using _ and not - here so I can re-use these keys for use in the g object
+RATELIMIT_PER_TOKEN_KEY = "rate_limit_per_token_limit"
+RATELIMIT_PER_IP_KEY = "rate_limit_per_ip_limit"
+RATELIMIT_WINDOW_KEY = "rate_limit_window"
+
+# Defaults
+RATELIMIT_PER_TOKEN_DEFAULT = 30
+RATELIMIT_PER_IP_DEFAULT = 10
+RATELIMIT_WINDOW_DEFAULT = 10
+
+# g key for the timeout when limits must be refreshed from redis
+RATELIMIT_REFRESH = 60 # in seconds
+RATELIMIT_TIMEOUT = "rate_limits_timeout"
 
 class RateLimit(object):
-    expiration_window = RATELIMIT_WINDOW
+    
+    # From the docs:
+    # We also give the key extra expiration_window seconds time to expire in redis so that badly 
+    # synchronized clocks between the workers and the redis server do not cause problems.
+    expiration_window = 10
 
     def __init__(self, key_prefix, limit, per, send_x_headers):
         self.reset = (int(time.time()) // per) * per + per
@@ -38,14 +57,90 @@ def on_over_limit(limit):
     return 'You have exceeded your rate limit. See the X-RateLimit-* response headers for more ' \
            'information on your current rate limit.\n', 429
 
-def ratelimit(limit, per=300, send_x_headers=True,
-              over_limit=on_over_limit,
-              scope_func=lambda: request.remote_addr,
-              key_func=lambda: request.endpoint):
+def set_rate_limits(per_ip, per_token, window):
+    r = curent_app.redis
+    r.put(RATELIMIT_PER_TOKEN_KEY, per_token)
+    r.put(RATELIMIT_PER_IP_KEY, per_ip)
+    r.put(RATELIMIT_WINDOW_KEY, window)
+
+def check_limit_freshness():
+    limits_timeout = getattr(g, '_' + RATELIMIT_TIMEOUT, 0)
+    if time.time() <= limits_timeout:
+        return
+
+    r = current_app.redis
+
+    value = int(r.get(RATELIMIT_PER_TOKEN_KEY))
+    if not value:
+        print "Set default per token key"
+        r.set(RATELIMIT_PER_TOKEN_KEY, RATELIMIT_PER_TOKEN_DEFAULT)
+        value = RATELIMIT_PER_TOKEN_DEFAULT
+    setattr(g, '_' + RATELIMIT_PER_TOKEN_KEY, value)
+
+    value = int(r.get(RATELIMIT_PER_IP_KEY))
+    if not value:
+        print "Set default per ip key"
+        r.set(RATELIMIT_PER_IP_KEY, RATELIMIT_PER_IP_DEFAULT)
+        value = RATELIMIT_PER_IP_DEFAULT
+    setattr(g, '_' + RATELIMIT_PER_IP_KEY, value)
+
+    value = int(r.get(RATELIMIT_WINDOW_KEY))
+    if not value:
+        print "Set default window"
+        r.set(RATELIMIT_WINDOW_KEY, RATELIMIT_WINDOW_DEFAULT)
+        value = RATELIMIT_WINDOW_DEFAULT
+    setattr(g, '_' + RATELIMIT_WINDOW_KEY, value)
+
+    setattr(g, '_' + RATELIMIT_TIMEOUT, int(time.time()) + RATELIMIT_REFRESH)
+
+def get_per_ip_limits():
+    check_limit_freshness()
+    return {
+            'limit':   getattr(g, '_' + RATELIMIT_PER_IP_KEY), 
+            'window' : getattr(g, '_' + RATELIMIT_WINDOW_KEY),
+           }
+
+def get_per_token_limits():
+    check_limit_freshness()
+    return {
+            'limit':   getattr(g, '_' + RATELIMIT_PER_TOKEN_KEY), 
+            'window' : getattr(g, '_' + RATELIMIT_WINDOW_KEY),
+           }
+
+def get_rate_limit_data(request):
+    '''Fetch key for the given request. If an Authorization header is provided, 
+       the caller will get a better and personalized rate limit. If no header is provided,
+       the caller will be rate limited by IP, which gets an overall lower rate limit.
+       This should encourage callers to always provide the Authorization token
+    '''
+
+    auth_token = request.headers.get('Authorization')
+    if auth_token:
+        auth_token = auth_token[6:]
+        user = db.user.get_by_token(auth_token)
+        if user:
+            values = get_per_token_limits()
+            values['key'] = auth_token
+            return values
+
+    # no valid auth token provided. Look for a remote addr header provided a the proxy
+    # or if that isn't available use the IP address from the header
+    ip = request.headers.get('X-LB-Remote-Addr')
+    if not ip:
+        ip = request.remote_addr
+
+    values = get_per_ip_limits()
+    values['key'] = ip
+    return values
+
+
+def ratelimit(limit, per=300, send_x_headers=True, over_limit=on_over_limit):
     def decorator(f):
         def rate_limited(*args, **kwargs):
-            key = 'rate-limit/%s/%s/' % (key_func(), scope_func())
-            rlimit = RateLimit(key, limit, per, send_x_headers)
+            data = get_rate_limit_data(request)
+            print data
+            key = 'rate-limit/%s/' % data['key']
+            rlimit = RateLimit(key, data['limit'], data['window'], send_x_headers)
             g._view_rate_limit = rlimit
             if over_limit is not None and rlimit.over_limit:
                 return over_limit(rlimit)
