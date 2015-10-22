@@ -76,21 +76,21 @@ def check_limit_freshness():
     if time.time() <= limits_timeout:
         return
 
-    value = int(_redis.get(RATELIMIT_PER_TOKEN_KEY))
+    value = int(_redis.get(RATELIMIT_PER_TOKEN_KEY) or '0')
     if not value:
         print "Set default per token key"
         _redis.set(RATELIMIT_PER_TOKEN_KEY, RATELIMIT_PER_TOKEN_DEFAULT)
         value = RATELIMIT_PER_TOKEN_DEFAULT
     setattr(g, '_' + RATELIMIT_PER_TOKEN_KEY, value)
 
-    value = int(_redis.get(RATELIMIT_PER_IP_KEY))
+    value = int(_redis.get(RATELIMIT_PER_IP_KEY) or '0')
     if not value:
         print "Set default per ip key"
         _redis.set(RATELIMIT_PER_IP_KEY, RATELIMIT_PER_IP_DEFAULT)
         value = RATELIMIT_PER_IP_DEFAULT
     setattr(g, '_' + RATELIMIT_PER_IP_KEY, value)
 
-    value = int(_redis.get(RATELIMIT_WINDOW_KEY))
+    value = int(_redis.get(RATELIMIT_WINDOW_KEY) or '0')
     if not value:
         print "Set default window"
         _redis.set(RATELIMIT_WINDOW_KEY, RATELIMIT_WINDOW_DEFAULT)
