@@ -87,7 +87,7 @@ def get_listens(user_id):
     min_ts = _parse_int_arg("min_ts")
 
     if max_ts and min_ts:
-        _log_and_raise_400("You may only specify max_ts or min_ts, not both.")
+        _log_raise_400("You may only specify max_ts or min_ts, not both.")
 
     cassandra = webserver.create_cassandra()
     listens = cassandra.fetch_listens(
@@ -188,7 +188,7 @@ def _messybrainz_lookup(listens):
     try:
         msb_responses = messybrainz.submit_listens_and_sing_me_a_sweet_song(msb_listens)
     except messybrainz.exceptions.BadDataException as e:
-        _log_and_raise_400(str(e))
+        _log_raise_400(str(e))
     except messybrainz.exceptions.NoDataFoundException:
         return []
     except messybrainz.exceptions.ErrorAddingException as e:
