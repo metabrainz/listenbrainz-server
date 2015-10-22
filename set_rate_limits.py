@@ -48,4 +48,4 @@ if window <= 0:
 r = Redis()
 r.set(RATELIMIT_PER_TOKEN_KEY, per_token)
 r.set(RATELIMIT_PER_IP_KEY, per_ip)
-r.set(RATELIMIT_PER_WINDOW_KEY, window)
+r.set(RATELIMIT_WINDOW_KEY, window)
