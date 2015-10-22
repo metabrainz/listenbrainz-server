@@ -47,17 +47,10 @@ def create_app():
     from webserver.errors import init_error_handlers
     init_error_handlers(app)
 
-    from rate_limiter import get_view_rate_limit
-    # Add rate limit headers to responses
+    from webserver import rate_limiter
     @app.after_request
-    def inject_x_rate_headers(response):
-        limit = get_view_rate_limit()
-        if limit and limit.send_x_headers:
-            h = response.headers
-            h.add('X-RateLimit-Remaining', str(limit.remaining))
-            h.add('X-RateLimit-Limit', str(limit.limit))
-            h.add('X-RateLimit-Reset', str(limit.reset))
-        return response
+    def after_request_callbacks(response):
+        return rate_limiter.inject_x_rate_headers(response)
 
     # Template utilities
     app.jinja_env.add_extension('jinja2.ext.do')
