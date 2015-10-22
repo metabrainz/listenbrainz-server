@@ -28,3 +28,4 @@ cookbook 'timezone-ii',         git: 'https://github.com/irccloud/timezone-ii.gi
 cookbook 'ulimit',              git: 'https://github.com/bmhatfield/chef-ulimit.git',
                                 ref: 'a049579196154ab938951cc1ba92221838d4c55f'
 cookbook 'postgresql',          '= 3.4.20'
+cookbook 'redis',               '~> 3.0.4'
