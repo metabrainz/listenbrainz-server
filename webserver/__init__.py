@@ -3,10 +3,6 @@ import sys
 import os
 import messybrainz
 import messybrainz.db
-from redis import Redis
-from rate_limiter import get_view_rate_limit
-
-_kafka = None
 
 
 def create_cassandra():
@@ -15,7 +11,6 @@ def create_cassandra():
 
 
 def create_app():
-    global _kafka
 
     app = Flask(__name__)
 
@@ -34,7 +29,8 @@ def create_app():
     init_kafka_connection(app.config['KAFKA_CONNECT'])
 
     # Redis connection
-    app.redis = Redis()
+    from redis_connection import init_redis_connection, _redis
+    init_redis_connection()
 
     # Database connection
     from db import init_db_connection
@@ -51,6 +47,7 @@ def create_app():
     from webserver.errors import init_error_handlers
     init_error_handlers(app)
 
+    from rate_limiter import get_view_rate_limit
     # Add rate limit headers to responses
     @app.after_request
     def inject_x_rate_headers(response):

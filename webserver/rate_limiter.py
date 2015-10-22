@@ -7,11 +7,10 @@
 import time
 from functools import update_wrapper
 from flask import request, g
-from webserver import current_app
+from webserver.redis_connection import _redis
 import db.user
 
 #TODO
-# Given two seperate rate limits
 # Add redis support to chef
 # Add rate limit support to scraper
 
@@ -42,7 +41,7 @@ class RateLimit(object):
         self.limit = limit
         self.per = per
         self.send_x_headers = send_x_headers
-        p = current_app.redis.pipeline()
+        p = _redis.pipeline()
         p.incr(self.key)
         p.expireat(self.key, self.reset + self.expiration_window)
         self.current = min(p.execute()[0], limit)
@@ -58,36 +57,33 @@ def on_over_limit(limit):
            'information on your current rate limit.\n', 429
 
 def set_rate_limits(per_ip, per_token, window):
-    r = curent_app.redis
-    r.put(RATELIMIT_PER_TOKEN_KEY, per_token)
-    r.put(RATELIMIT_PER_IP_KEY, per_ip)
-    r.put(RATELIMIT_WINDOW_KEY, window)
+    _redis.put(RATELIMIT_PER_TOKEN_KEY, per_token)
+    _redis.put(RATELIMIT_PER_IP_KEY, per_ip)
+    _redis.put(RATELIMIT_WINDOW_KEY, window)
 
 def check_limit_freshness():
     limits_timeout = getattr(g, '_' + RATELIMIT_TIMEOUT, 0)
     if time.time() <= limits_timeout:
         return
 
-    r = current_app.redis
-
-    value = int(r.get(RATELIMIT_PER_TOKEN_KEY))
+    value = int(_redis.get(RATELIMIT_PER_TOKEN_KEY))
     if not value:
         print "Set default per token key"
-        r.set(RATELIMIT_PER_TOKEN_KEY, RATELIMIT_PER_TOKEN_DEFAULT)
+        _redis.set(RATELIMIT_PER_TOKEN_KEY, RATELIMIT_PER_TOKEN_DEFAULT)
         value = RATELIMIT_PER_TOKEN_DEFAULT
     setattr(g, '_' + RATELIMIT_PER_TOKEN_KEY, value)
 
-    value = int(r.get(RATELIMIT_PER_IP_KEY))
+    value = int(_redis.get(RATELIMIT_PER_IP_KEY))
     if not value:
         print "Set default per ip key"
-        r.set(RATELIMIT_PER_IP_KEY, RATELIMIT_PER_IP_DEFAULT)
+        _redis.set(RATELIMIT_PER_IP_KEY, RATELIMIT_PER_IP_DEFAULT)
         value = RATELIMIT_PER_IP_DEFAULT
     setattr(g, '_' + RATELIMIT_PER_IP_KEY, value)
 
-    value = int(r.get(RATELIMIT_WINDOW_KEY))
+    value = int(_redis.get(RATELIMIT_WINDOW_KEY))
     if not value:
         print "Set default window"
-        r.set(RATELIMIT_WINDOW_KEY, RATELIMIT_WINDOW_DEFAULT)
+        _redis.set(RATELIMIT_WINDOW_KEY, RATELIMIT_WINDOW_DEFAULT)
         value = RATELIMIT_WINDOW_DEFAULT
     setattr(g, '_' + RATELIMIT_WINDOW_KEY, value)
 
