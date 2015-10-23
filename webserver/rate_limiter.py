@@ -32,6 +32,7 @@ def inject_x_rate_headers(response):
     limit = get_view_rate_limit()
     if limit:
         h = response.headers
+        h.add('Access-Control-Expose-Headers', 'X-RateLimit-Remaining,X-RateLimit-Limit,X-RateLimit-Reset')
         h.add('X-RateLimit-Remaining', str(limit.remaining))
         h.add('X-RateLimit-Limit', str(limit.limit))
         h.add('X-RateLimit-Reset', str(limit.reset))

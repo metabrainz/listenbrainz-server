@@ -146,7 +146,7 @@ function getLastFMPage(page) {
     xhr.send();
 }
 
-var version = "1.3";
+var version = "1.4";
 var page = 1;
 var numberOfPages = parseInt(document.getElementsByClassName("pages")[0].innerHTML.trim().split(" ")[3]);
 
@@ -174,28 +174,47 @@ function reportScrobbles(struct) {
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xhr.timeout = 10 * 1000; // 10 seconds
     xhr.onload = function(content) {
-        if (this.status >= 200 && this.status < 300) {
-            console.log("successfully reported page");
-            pageDone();
-        } else if (this.status >= 400 && this.status < 500) {
-            times4Error++;
-            // We mark 4xx errors as completed because we don't
-            // retry them
-            console.log("4xx error, skipping");
-            pageDone();
-        } else if (this.status >= 500) {
-            console.log("received http error " + this.status + " req'ing");
-            times5Error++;
-            reportScrobbles(struct);
-        } else {
-            console.log("received http status " + this.status + ", skipping");
-            pageDone();
-        }
-        if (numCompleted >= numberOfPages) {
-            updateMessage("<i class='fa fa-check'></i> Import finished<br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
-        } else {
-            updateMessage("<i class='fa fa-cog fa-spin'></i> Sending page " + numCompleted + " of " + numberOfPages + " to ListenBrainz<br><span style='font-size:8pt'>Please don't navigate while this is running</span>");
-        }
+        remain = parseInt(xhr.getResponseHeader("X-RateLimit-Remaining"));
+        reset = parseInt(xhr.getResponseHeader("X-RateLimit-Reset"));
+        current = new Date().getTime() / 1000;
+
+        if (remain)
+            rate_limit_delay = Math.max(0, Math.floor((reset - current) * 1000 / remain));
+        else
+            rate_limit_delay = Math.max(0, (reset - current) * 1000);
+
+        console.log("remain: " + remain);
+        console.log("t left: " + (reset - current));
+        console.log("delay " + rate_limit_delay);
+
+        rate_limit_delay = 20000;
+
+        setTimeout(function() {
+            if (this.status >= 200 && this.status < 300) {
+                console.log("successfully reported page");
+                pageDone();
+            } else if (this.status == 429) {
+                console.log("received rate limit http error " + this.status + " req'ing");
+            } else if (this.status >= 400 && this.status < 500) {
+                times4Error++;
+                // We mark 4xx errors as completed because we don't
+                // retry them
+                console.log("4xx error, skipping");
+                pageDone();
+            } else if (this.status >= 500) {
+                console.log("received http error " + this.status + " req'ing");
+                times5Error++;
+                reportScrobbles(struct);
+            } else {
+                console.log("received http status " + this.status + ", skipping");
+                pageDone();
+            }
+            if (numCompleted >= numberOfPages) {
+                updateMessage("<i class='fa fa-check'></i> Import finished<br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
+            } else {
+                updateMessage("<i class='fa fa-cog fa-spin'></i> Sending page " + numCompleted + " of " + numberOfPages + " to ListenBrainz<br><span style='font-size:8pt'>Please don't navigate while this is running</span>");
+            }
+        }, rate_limit_delay);
     };
     xhr.ontimeout = function(context) {
         console.log("timeout, req'ing");
