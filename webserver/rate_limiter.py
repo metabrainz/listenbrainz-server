@@ -30,7 +30,7 @@ RATELIMIT_TIMEOUT = "rate_limits_timeout"
 # Add rate limit headers to responses
 def inject_x_rate_headers(response):
     limit = get_view_rate_limit()
-    if limit and limit.send_x_headers:
+    if limit:
         h = response.headers
         h.add('X-RateLimit-Remaining', str(limit.remaining))
         h.add('X-RateLimit-Limit', str(limit.limit))
@@ -44,12 +44,11 @@ class RateLimit(object):
     # synchronized clocks between the workers and the redis server do not cause problems.
     expiration_window = 10
 
-    def __init__(self, key_prefix, limit, per, send_x_headers):
+    def __init__(self, key_prefix, limit, per):
         self.reset = (int(time.time()) // per) * per + per
         self.key = key_prefix + str(self.reset)
         self.limit = limit
         self.per = per
-        self.send_x_headers = send_x_headers
         p = _redis.pipeline()
         p.incr(self.key)
         p.expireat(self.key, self.reset + self.expiration_window)
@@ -136,15 +135,15 @@ def get_rate_limit_data(request):
     return values
 
 
-def ratelimit(limit, per=300, send_x_headers=True, over_limit=on_over_limit):
+def ratelimit():
     def decorator(f):
         def rate_limited(*args, **kwargs):
             data = get_rate_limit_data(request)
             key = 'rate-limit/%s/' % data['key']
-            rlimit = RateLimit(key, data['limit'], data['window'], send_x_headers)
+            rlimit = RateLimit(key, data['limit'], data['window'])
             g._view_rate_limit = rlimit
-            if over_limit is not None and rlimit.over_limit:
-                return over_limit(rlimit)
+            if rlimit.over_limit:
+                return on_over_limit(rlimit)
             return f(*args, **kwargs)
         return update_wrapper(rate_limited, f)
     return decorator

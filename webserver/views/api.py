@@ -23,13 +23,10 @@ MAX_ITEMS_PER_GET = 100
 DEFAULT_ITEMS_PER_GET = 25
 MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
 
-@api_bp.route("/1/rate-limit-test")
-@ratelimit(limit = 3, per=5)
-def rate_limit_test():
-    return "OK\n"
 
 @api_bp.route("/1/submit-listens", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
 def submit_listen():
     """Endpoint for submitting a listen to ListenBrainz.
 
@@ -81,6 +78,7 @@ def submit_listen():
 
 
 @api_bp.route("/1/user/<user_id>/listens")
+@ratelimit()
 def get_listens(user_id):
 
     max_ts = _parse_int_arg("max_ts")
