@@ -37,7 +37,7 @@ if per_token <= 0:
 
 
 try:
-    window = int(sys.argv[2])
+    window = int(sys.argv[3])
 except ValueError:
     print "Invalid window size. Must be non zero integer."
     sys.exit(-1)

@@ -11,7 +11,6 @@ from webserver.redis_connection import _redis
 import db.user
 
 #TODO
-# Add redis support to chef
 # Add rate limit support to scraper
 
 # Using _ and not - here so I can re-use these keys for use in the g object
@@ -54,10 +53,10 @@ class RateLimit(object):
         p = _redis.pipeline()
         p.incr(self.key)
         p.expireat(self.key, self.reset + self.expiration_window)
-        self.current = min(p.execute()[0], limit)
+        self.current = p.execute()[0]
 
-    remaining = property(lambda x: x.limit - x.current)
-    over_limit = property(lambda x: x.current >= x.limit)
+    remaining = property(lambda x: max(x.limit - x.current, 0))
+    over_limit = property(lambda x: x.current > x.limit)
 
 def get_view_rate_limit():
     return getattr(g, '_view_rate_limit', None)
@@ -78,21 +77,18 @@ def check_limit_freshness():
 
     value = int(_redis.get(RATELIMIT_PER_TOKEN_KEY) or '0')
     if not value:
-        print "Set default per token key"
         _redis.set(RATELIMIT_PER_TOKEN_KEY, RATELIMIT_PER_TOKEN_DEFAULT)
         value = RATELIMIT_PER_TOKEN_DEFAULT
     setattr(g, '_' + RATELIMIT_PER_TOKEN_KEY, value)
 
     value = int(_redis.get(RATELIMIT_PER_IP_KEY) or '0')
     if not value:
-        print "Set default per ip key"
         _redis.set(RATELIMIT_PER_IP_KEY, RATELIMIT_PER_IP_DEFAULT)
         value = RATELIMIT_PER_IP_DEFAULT
     setattr(g, '_' + RATELIMIT_PER_IP_KEY, value)
 
     value = int(_redis.get(RATELIMIT_WINDOW_KEY) or '0')
     if not value:
-        print "Set default window"
         _redis.set(RATELIMIT_WINDOW_KEY, RATELIMIT_WINDOW_DEFAULT)
         value = RATELIMIT_WINDOW_DEFAULT
     setattr(g, '_' + RATELIMIT_WINDOW_KEY, value)
@@ -144,7 +140,6 @@ def ratelimit(limit, per=300, send_x_headers=True, over_limit=on_over_limit):
     def decorator(f):
         def rate_limited(*args, **kwargs):
             data = get_rate_limit_data(request)
-            print data
             key = 'rate-limit/%s/' % data['key']
             rlimit = RateLimit(key, data['limit'], data['window'], send_x_headers)
             g._view_rate_limit = rlimit
