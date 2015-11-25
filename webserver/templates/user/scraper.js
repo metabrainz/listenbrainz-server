@@ -112,7 +112,7 @@ function encodeScrobbles(root) {
     return structure;
 }
 
-function getLastFMPage(page) {
+function getLastFMPage(page, continuation) {
     function retry(reason) {
         console.warn(reason + ' fetching last.fm page=' + page + ', retrying in 3s');
         setTimeout(function () {
@@ -132,6 +132,7 @@ function getLastFMPage(page) {
             // ignore 40x
             pageDone();
         }
+        continuation();
     };
     xhr.ontimeout = function () {
         retry('timeout');
@@ -241,14 +242,32 @@ function reportPageAndGetNext(response) {
 }
 
 function getNextPagesIfSlots() {
-    // Get a new lastfm page and queue it only if there are more pages to download and we have
-    // less than 10 pages waiting to submit
-    while (page <= numberOfPages && activeSubmissions < 10) {
+      function continuation() {
+         page += 1;
+         setTimeout(function() {
+            if (page <= numberOfPages) {
+              getLastFMPage(page, continuation)
+            }
+         }
+      }
+      getLastFMPage(page, continuation);
+    }
+}
+
+function getNextPagesIfSlots() {
+    function continuation() {
         page += 1;
         activeSubmissions++;
         console.log("delaying " + rate_limit_delay);
-        setTimeout(getLastFMPage(page), rate_limit_delay);
+        // Get a new lastfm page and queue it only if there are more pages to download and we have
+        // less than 10 pages waiting to submit
+        setTimeout(function() {
+             if (page <= numberOfPages && activeSubmissions < 10) {
+                getLastFMPage(page, continuation);
+             }
+        }, rate_limit_delay);
     }
+    getLastFMPage(page, continuation);
 }
 
 function pageDone() {
@@ -272,3 +291,4 @@ document.body.insertAdjacentHTML( 'afterbegin', '<link rel="stylesheet" href="ht
 document.body.insertAdjacentHTML( 'afterbegin', '<div style="position:absolute; top:200px; z-index: 200000000000000; width:500px; margin-left:-250px; left:50%; background-color:#fff; box-shadow: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22); text-align:center; padding:50px;" id="listen-progress-container"></div>');
 updateMessage("");
 getNextPagesIfSlots();
+
