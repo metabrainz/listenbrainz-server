@@ -37,7 +37,7 @@
         var elem = document.createElement("div");
         elem.innerHTML = response;
         var struct = encodeScrobbles(elem);
-        queueSubmission(struct);
+        q.push(struct);
         if( page <= numberOfPages ){
             getLastFMPage(page+1);
         }
@@ -45,70 +45,6 @@
             // we've got our lastfm data
             q.done();
         }
-    }
-
-    function ListenBrainzSubmissionQueue(){
-        var self = this;
-        self.remain = 1;
-        self.timeout = 0;
-        self.queue = [];
-        self.processingReq = false;
-        self.count = 0;
-        self.doneSubmissions = false;
-        self.start = true;
-
-        self.push = function(struct){
-            if(self.start){
-              updateMessage("<i class='fa fa-cog fa-spin'></i> Sending page 1 of " + numberOfPages + " to ListenBrainz<br><span style='font-size:8pt'>Please don't navigate while this is running</span>");
-              self.start = false;
-            }
-            self.queue.push(struct);
-            if(!self.processingReq){
-                self.processReq();
-                console.log("processing request");
-            }
-            else{
-                console.log("added item to queue,waiting");
-            }
-        };
-
-        self.done = function(){
-            self.doneSubmissions = true;
-        };
-
-        self.processReq = function(){
-            self.processingReq = true;
-            struct = self.queue.pop();
-            if(struct){
-                self.remain--;
-                setTimeout(function(){
-                    updateMessage("<i class='fa fa-cog fa-spin'></i> Sending page " + (self.count+1) + " of " + numberOfPages + " to ListenBrainz<br><span style='font-size:8pt'>Please don't navigate while this is running</span>");
-                    reportScrobbles(struct,function(remain, reset){
-                        self.processingReq = false;
-                        self.count++;
-                        self.remain = remain;
-                        var current = new Date().getTime() / 1000;
-
-                        if (self.remain)
-                            self.timeout = Math.max(0, Math.ceil((reset - current) * 1000 / self.remain));
-                        else
-                            self.timeout = Math.max(0, Math.ceil((reset - current) * 1000));
-
-                        console.log("remain: " + self.remain);
-                        console.log("t left: " + (reset - current));
-                        console.log("delay " + self.timeout);
-                        console.log("total pagecount " + numberOfPages);
-                        console.log("current page " + self.count);
-                    });
-                    self.processReq();
-                },self.timeout);
-            }
-            else{
-                if(self.doneSubmissions){
-                  updateMessage("<i class='fa fa-check'></i> Import finished<br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
-                }
-            }
-        };
     }
 
     function reportScrobbles(struct,completed) {
@@ -157,11 +93,13 @@
         xhr.send(JSON.stringify(struct));
     }
 
-    function queueSubmission(struct){
-        q.push(struct);
-    }
-
     var q = new ListenBrainzSubmissionQueue();
+    q.on('update',function(count){
+        updateMessage("<i class='fa fa-cog fa-spin'></i> Sending page " + count + " of " + numberOfPages + " to ListenBrainz<br><span style='font-size:8pt'>Please don't navigate while this is running</span>");
+    });
+    q.on('done',function(){
+        updateMessage("<i class='fa fa-check'></i> Import finished<br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
+    });
 
     document.body.insertAdjacentHTML( 'afterbegin', '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">');
     document.body.insertAdjacentHTML( 'afterbegin', '<div style="position:absolute; top:200px; z-index: 200000000000000; width:500px; margin-left:-250px; left:50%; background-color:#fff; box-shadow: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22); text-align:center; padding:50px;" id="listen-progress-container"></div>');
@@ -289,4 +227,70 @@
 
         return structure;
     }
+
+    function ListenBrainzSubmissionQueue(){
+        var self = this;
+        self.remain = 1;
+        self.timeout = 0;
+        self.queue = [];
+        self.processingReq = false;
+        self.count = 0;
+        self.doneSubmissions = false;
+        self.start = true;
+
+        self.eventHandlers = {};
+
+        self.on = function(eventName, eventHandler){
+            self.eventHandlers[eventName] = eventHandler;
+        };
+
+        self.push = function(struct){
+            if(self.start){
+                if (self.eventHandlers.update){
+                    self.eventHandlers.update(1);
+                }
+                self.start = false;
+            }
+            self.queue.push(struct);
+            if(!self.processingReq){
+                self.processReq();
+            }
+        };
+
+        self.done = function(){
+            self.doneSubmissions = true;
+        };
+
+        self.processReq = function(){
+            self.processingReq = true;
+            struct = self.queue.pop();
+            if(struct){
+                self.remain--;
+                setTimeout(function(){
+                    if (self.eventHandlers.update){
+                        self.eventHandlers.update(self.count);
+                    }
+                    reportScrobbles(struct,function(remain, reset){
+                        self.processingReq = false;
+                        self.count++;
+                        self.remain = remain;
+                        var current = new Date().getTime() / 1000;
+
+                        if (self.remain)
+                            self.timeout = Math.max(0, Math.ceil((reset - current) * 1000 / self.remain));
+                        else
+                            self.timeout = Math.max(0, Math.ceil((reset - current) * 1000));
+                    });
+                    self.processReq();
+                },self.timeout);
+            }
+            else{
+                if(self.doneSubmissions){
+                    if (self.eventHandlers.done){
+                        self.eventHandlers.done();
+                    }
+                }
+            }
+        };
+      }
 })();
