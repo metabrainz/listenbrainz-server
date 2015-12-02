@@ -66,13 +66,11 @@
             } else if (xhr.status == 429) {
                 console.log("received rate limit http error " + xhr.status + " req'ing");
             } else if (xhr.status >= 400 && xhr.status < 500) {
-                times4Error++;
                 // We mark 4xx errors as completed because we don't
                 // retry them
                 console.log("4xx error, skipping");
             } else if (xhr.status >= 500) {
                 console.log("received http error " + xhr.status + " req'ing");
-                times5Error++;
                 reportScrobbles(struct);
             } else {
                 console.log("received http status " + xhr.status + ", skipping");
