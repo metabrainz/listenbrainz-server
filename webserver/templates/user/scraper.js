@@ -261,7 +261,7 @@
 
         self.processReq = function(){
             self.processingReq = true;
-            struct = self.queue.pop();
+            var struct = self.queue.pop();
             if(struct){
                 self.remain--;
                 setTimeout(function(){
