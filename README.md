@@ -88,7 +88,7 @@ file.*
 
 ## Documentation
 
-Documentation for the ListenBrainz API is available at https://listenbrainz.rtfd.org.
+Documentation for the ListenBrainz API is available at [https://listenbrainz.readthedocs.org](https://listenbrainz.readthedocs.org).
 You can build the documentation yourself:
 
     $ cd docs
