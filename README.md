@@ -28,7 +28,7 @@ You can start the web server (will be available at http://127.0.0.1:8080/):
 
     $ vagrant ssh
     $ cd messybrainz-server
-    $ python server.py
+    $ python manage.py runserver
 
 There are some shortcuts defined using fabric to perform commonly used
 commands:
