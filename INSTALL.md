@@ -46,6 +46,13 @@ After you tweak configuration file, database needs to be created:
 
 ### Starting the server
 
-After all this, you can run the site/server using `./server.py`.
-Use `./server.py -h` to get a list of command-line switches
-to further suit your local environment (e.g., port, listening address, ...).
+After all this, you can run the site/server using:
+
+    $ python manage.py runserver
+
+Use:
+
+    $ python manage.py runserver --help
+
+to get a list of command-line switches to further suit your local environment
+(e.g., port, listening address, ...).
