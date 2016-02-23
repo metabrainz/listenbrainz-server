@@ -38,7 +38,7 @@ def create_app():
 
     @app.before_request
     def before_request():
-        db.init_db_engine(app.config.SQLALCHEMY_DATABASE_URI)
+        db.init_db_engine(app.config['SQLALCHEMY_DATABASE_URI'])
 
     @app.teardown_request
     def teardown_request(exception):
