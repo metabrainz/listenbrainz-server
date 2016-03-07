@@ -6,6 +6,8 @@ from webserver.decorators import crossdomain
 from datetime import datetime
 import webserver
 import db.user
+import json
+from flask import make_response
 
 user_bp = Blueprint("user", __name__)
 
@@ -19,7 +21,8 @@ def lastfmscraper(user_id):
         raise NotFound
     scraper = render_template(
         "user/scraper.js",
-        base_url=url_for("api_v1.submit_listen", user_id=user_id, _external=True),
+        base_url=url_for("api_v1.submit_listen",
+            user_id=user_id, _external=True),
         user_token=user_token,
         lastfm_username=lastfm_username,
         user_id=user_id,
@@ -29,6 +32,7 @@ def lastfmscraper(user_id):
 
 @user_bp.route("/<user_id>")
 def profile(user_id):
+    """ Displays the main profile page for user """
     cassandra = webserver.create_cassandra()
 
     # Getting data for current page
@@ -49,7 +53,8 @@ def profile(user_id):
 
     if listens:
         # Checking if there is a "previous" page...
-        previous_listens = list(cassandra.fetch_listens(user_id, limit=25, from_id=listens[0]["listened_at"]))
+        previous_listens = list(cassandra.fetch_listens(user_id,
+            limit=25, from_id=listens[0]["listened_at"]))
         if previous_listens:
             # Getting from the last item because `fetch_listens` returns in ascending
             # order when `from_id` is used.
@@ -81,6 +86,7 @@ def profile(user_id):
 @user_bp.route("/import")
 @login_required
 def import_data():
+    """ Import page for listens from lastfm """
     lastfm_username = request.args.get("lastfm_username")
     if lastfm_username:
         loader = render_template(
@@ -98,7 +104,28 @@ def import_data():
                            lastfm_username=lastfm_username)
 
 
+@user_bp.route("/export")
+@login_required
+def export_data():
+    """ Exporting the data to various formats, like, json """
+    filetype = request.args.get("type")
+    if filetype == "json":
+        cassandra = webserver.create_cassandra()
+        filename = current_user.musicbrainz_id + "_lb.json"
+
+        # Fetch output and convert it into dict with keys as indexes
+        output = dict(enumerate(cassandra.fetch_listens(current_user.musicbrainz_id,
+            is_json=True), start=1))
+        response = make_response(json.dumps(output))
+        response.headers["Content-Disposition"] = "attachment; filename=" + filename
+        response.mimetype = "text/json"
+        return response
+    else:
+        return render_template("user/export.html", user=current_user)
+
+
 def _get_user(user_id):
+    """ Get current username """
     if current_user.is_authenticated() and \
        current_user.musicbrainz_id == user_id:
         return current_user

@@ -4,3 +4,4 @@
 *.pyc
 config.py
 *.log
+.*.swp

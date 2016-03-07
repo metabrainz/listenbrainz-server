@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %} Export for "{{ user.musicbrainz_id }}" - ListenBrainz {% endblock %}
+
+{% block content %}
+	{% if current_user.is_authenticated() and current_user == user %}
+		<h3>Export from ListenBrainz</h3>
+		<p>
+			<strong> Notes about the ListenBrainz export process : </strong>
+		</p>
+		<p>
+				Now you can export your listens to a file.
+				Just clink on the download and let ListenBrainz do the hard work of figuring out what to do.
+		</p>
+		<h3>
+			<strong> Export </strong>
+		</h3>
+		<form action="{{ url_for("user.export_data") }}" method="GET">
+			<input type="hidden" name="type" value="json">
+			<input type="submit" value="Download">
+		</form>
+	{% endif %}
+{% endblock %}
