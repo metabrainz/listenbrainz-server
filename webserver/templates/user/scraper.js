@@ -144,6 +144,7 @@ function getLastFMPage(page) {
         retry('error');
     };
     xhr.send();
+		delete(xhr);
 }
 
 var version = "1.4";
