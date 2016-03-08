@@ -7,7 +7,7 @@
   {% if current_user.is_authenticated() and current_user == user %}
 
      <h3>Import from Last.fm</h3>
-     {% if loader %}
+     {% if loader_parse and loader_api %}
         <p>
           <strong>Step 2</strong>
         </p>
@@ -15,14 +15,26 @@
           <p>
              Drag this bookmarklet to your bookmarks toolbar:
           </p>
-          <p>
-             <span class="btn btn-warning btn-lg" style="width: 400px"><a href="{{loader}}" style="color: white;">Import Last.fm to ListenBrainz</a></span>
-          </p>
-        </div>
+					<a href="{{loader_parse}}" style="color: white;">
+						<p>
+							<span class="btn btn-warning btn-lg" style="width: 400px"> Bookmarklet </span>
+						</p>
+					</a>
         <p>
           <span style="color:red">IMPORTANT</span>: If you've saved this bookmarklet before 29 Sept, please delete the old
           bookmarklet and save it again, since we've moved to https.
         </p>
+					<p style="font-weight:bold;"> or </p>
+          <p>
+             Just import NOW !!. This will import your profile now without the need to open lastfm.
+						 (You can skip Step 3 if you choose to import now)
+          </p>
+					<a href="{{loader_api}}" style="color: white;">
+						<p>
+							<span class="btn btn-warning btn-lg" style="width: 400px">Import NOW</span>
+						</p>
+					</a>
+        </div>
         <p>
           <strong>Step 3</strong>
         </p>
@@ -34,10 +46,11 @@
           This will start the import of your listens. Please leave the page open and <b>don't navigate away</b>
           from it until the import process is complete. We recommend that you <b>do not scrobble to Last.fm</b> during this process. After that, you're done. Thanks!
           </p>
-          <p>
-             <span class="btn btn-warning btn-lg" style="width: 400px"><a href="http://last.fm/user/{{lastfm_username}}/library"
-             style="color: white;">Go to my Last.fm library</a></span>
-          <p>
+					<a href="http://last.fm/user/{{lastfm_username}}/library" style="color: white;">
+						<p>
+             <span class="btn btn-warning btn-lg" style="width: 400px"> Go to my Last.fm library </span>
+						<p>
+					</a>
         </div>
      {% else %}
      <p>
