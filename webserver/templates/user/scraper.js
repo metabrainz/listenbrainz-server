@@ -149,7 +149,7 @@ function getLastFMPage(page) {
 var version = "1.4";
 var page = 1;
 var numberOfPages = 1;
-if (document.querySelector('.pages') != null) {
+if (document.getElementsByClassName("pages").length > 0) {
     numberOfPages = parseInt(document.getElementsByClassName("pages")[0].innerHTML.trim().split(" ")[3]);
 }
 
