@@ -170,7 +170,7 @@ class ListenStore(object):
             queries.append(self.insert_async(listen))
         [query.result() for query in queries]
 
-    def fetch_listens(self, uid, from_id=None, to_id=None, limit=None, is_json=False):
+    def fetch_listens(self, uid, from_id=None, to_id=None, limit=None):
         """ Fetch a range of listens, for a user
         """
 
@@ -200,7 +200,7 @@ class ListenStore(object):
                 current_limit = None
 
             for listen in self.fetch_listens_for_range(uid, daterange, current_from_id, current_to_id,
-                                                       order, current_limit, is_json):
+                                                       order, current_limit):
                 yield listen
                 fetched_rows += 1
                 if limit is not None and fetched_rows == limit:
@@ -210,7 +210,7 @@ class ListenStore(object):
         return Listen(data=ujson.loads(row.json), uid=row.uid, timestamp=row.id, album_msid=row.album_msid,
                       artist_msid=row.artist_msid, recording_msid=row.recording_msid)
 
-    def fetch_listens_for_range(self, uid, date_range, from_id, to_id, order, limit=None, is_json=False):
+    def fetch_listens_for_range(self, uid, date_range, from_id, to_id, order, limit=None):
         """ Fetch listens for a specified uid within a single date range.
 
             date_range can be a 1-, 2-, or 3-tuple (year, month, day).
@@ -218,20 +218,12 @@ class ListenStore(object):
             This method will limit the amount of rows it fetches with one query,
             issuing multiple queries if the number of rows exceeds self.MAX_FETCH.
         """
-        if is_json:
-            query = """SELECT JSON * FROM listens WHERE uid = %(uid)s AND """ + \
-                    range_keys(len(date_range)) + \
-                    """ AND id > %(from_id)s AND id < %(to_id)s
-                    ORDER BY id """ + ORDER_TEXT[order] + """ LIMIT %(limit)s"""
-        else:
-            query = """SELECT * FROM listens WHERE uid = %(uid)s AND """ + \
-                    range_keys(len(date_range)) + \
-                    """ AND id > %(from_id)s AND id < %(to_id)s
-                    ORDER BY id """ + ORDER_TEXT[order] + """ LIMIT %(limit)s"""
-
+        query = """SELECT * FROM listens WHERE uid = %(uid)s AND """ + \
+                range_keys(len(date_range)) + \
+                """ AND id > %(from_id)s AND id < %(to_id)s
+                ORDER BY id """ + ORDER_TEXT[order] + """ LIMIT %(limit)s"""
 
         fetched_rows = 0  # Total number of rows fetched for this range
-
         while True:
             if limit is not None:
                 # Only ask for the number of rows we need
@@ -251,10 +243,7 @@ class ListenStore(object):
             results = self.execute(query, params)
             output = []
             for row in results:
-                if is_json:
-                    yield row
-                else:
-                    yield self.convert_row(row)
+                yield self.convert_row(row)
                 fetched_rows += 1
                 this_batch += 1
                 if limit and fetched_rows == limit:

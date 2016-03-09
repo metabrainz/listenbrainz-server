@@ -6,7 +6,7 @@ from webserver.decorators import crossdomain
 from datetime import datetime
 import webserver
 import db.user
-import json
+import ujson
 from flask import make_response
 
 user_bp = Blueprint("user", __name__)
@@ -114,10 +114,17 @@ def export_data():
         filename = current_user.musicbrainz_id + "_lb.json"
 
         # Fetch output and convert it into dict with keys as indexes
-        output = dict(enumerate(cassandra.fetch_listens(current_user.musicbrainz_id,
-            is_json=True), start=1))
-        response = make_response(json.dumps(output))
+        output = {}
+        for index,obj in enumerate(cassandra.fetch_listens(current_user.musicbrainz_id)):
+            output[index] = obj.data
+            output[index]['timestamp'] = obj.timestamp
+            output[index]['album_msid'] = str(obj.album_msid)
+            output[index]['artist_msid'] = str(obj.artist_msid)
+            output[index]['recording_msid'] = str(obj.recording_msid)
+
+        response = make_response(ujson.dumps(output))
         response.headers["Content-Disposition"] = "attachment; filename=" + filename
+        response.headers['Content-Type'] = 'application/json; charset=utf-8'
         response.mimetype = "text/json"
         return response
     else:
