@@ -144,7 +144,7 @@ function getLastFMPage(page) {
         retry('error');
     };
     xhr.send();
-		xhr = null;
+    xhr = null;
 }
 
 var version = "1.4";
@@ -217,7 +217,7 @@ function reportScrobbles(struct) {
         reportScrobbles(struct);
     };
     xhr.send(JSON.stringify(struct));
-		xhr = null;
+    xhr = null;
 }
 
 function reportPageAndGetNext(response) {
