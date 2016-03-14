@@ -8,49 +8,7 @@ Server for the ListenBrainz project.
 *These instructions are meant to get you started quickly with development
 process. Installation process in production environment might be different.*
 
-First, install [ChefDK](https://downloads.chef.io/chef-dk/), then:
-
-    $ kitchen create    # creates vm for first time
-    $ kitchen converge  # provisions/installs from chef cookbooks
-    $ kitchen login     # ssh in to vm
-
-### MessyBrainz and ListenStore
-
-ListenStore is our interface to cassandra. It's bundled as part of this
-repository, but you must install it so that python can find it.
-
-    $ cd listenstore
-    $ python setup.py develop
-
-You can use `setup.py develop` to symlink the ListenStore directory into
-site-packages (letting you make changes easily), or use `setup.py install`
-to install it.  If you use `setup.py install` and make any changes to
-ListenStore you must run install again.
-
-MessyBrainz is an intermediate database to map unknown metadata to stable
-UUIDs, and then map these intermediate identifiers to MBIDs
-( http://messybrainz.org, https://github.com/metabrainz/messybrainz-server ).
-
-For now you must download and install MessyBrainz separately:
-
-    $ git clone https://github.com/metabrainz/messybrainz-server.git
-    $ cd messybrainz-server
-    $ pip install -r requirements.txt
-    $ python setup.py develop
-    $ cp config.py.sample config.py
-    $ python manage.py init_db
-
-
-Future updates will map a local copy of MessyBrainz into the Vagrant
-server.
-
-### Python dependencies
-
-Database should be ready. Before running any Python scripts, you need to
-install Python dependencies:
-
-    $ cd ~/listenbrainz
-    $ pip install -r requirements.txt
+First, install [ChefDK](https://downloads.chef.io/chef-dk/).
 
 ### Configuration file
 
@@ -65,10 +23,57 @@ During registration set the callback url to
 If you don't change anything during setup, `your_host`
 will be `10.1.2.3:8080`
 
+### Virtual machine
+
+Then run:
+
+    $ kitchen create    # creates VM for the first time
+    $ kitchen converge  # provisions/installs from Chef cookbooks
+    $ kitchen login     # SSH into the VM
+
+### MessyBrainz and ListenStore
+
+ListenStore is our interface to cassandra. It's bundled as part of this
+repository, but you must install it so that python can find it.
+
+    $ cd ~/listenbrainz/listenstore
+    $ python setup.py develop
+
+You can use `setup.py develop` to symlink the ListenStore directory into
+site-packages (letting you make changes easily), or use `setup.py install`
+to install it.  If you use `setup.py install` and make any changes to
+ListenStore you must run install again.
+
+MessyBrainz is an intermediate database to map unknown metadata to stable
+UUIDs, and then map these intermediate identifiers to MBIDs
+( http://messybrainz.org, https://github.com/metabrainz/messybrainz-server ).
+
+For now you must download and install MessyBrainz separately:
+
+    $ cd ~
+    $ git clone https://github.com/metabrainz/messybrainz-server.git
+    $ cd messybrainz-server
+    $ pip install -r requirements.txt
+    $ python setup.py develop
+    $ cp config.py.sample config.py
+    $ python manage.py init_db
+
+*Future updates will map a local copy of MessyBrainz into the Vagrant
+server.*
+
+### Python dependencies
+
+Database should be ready. Before running any Python scripts, you need to
+install Python dependencies:
+
+    $ cd ~/listenbrainz
+    $ pip install -r requirements.txt
+
 ### Database initialization
 
 To initialize the database (create user, tables, etc.) run this command:
 
+    $ cd ~/listenbrainz
     $ python manage.py init_db
 
 After that server should be ready to go.
@@ -76,8 +81,11 @@ After that server should be ready to go.
 
 ## Running
 
+### Web server
+
 To run the *webserver* use this command:
 
+    $ cd ~/listenbrainz
     $ python manage.py runserver
 
 It should be accessible at **http://10.1.2.3:8080/**.
@@ -85,13 +93,20 @@ It should be accessible at **http://10.1.2.3:8080/**.
 *For information about running listenstore module see /listenstore/README.md
 file.*
 
+### Cassandra writer
+
+To run Kafka to Cassandra writer run:
+
+    $ cd ~/listenbrainz/listenstore
+    $ listenstore-kafka-to-cassandra-writer.py
+
 
 ## Documentation
 
 Documentation for the ListenBrainz API is available at [https://listenbrainz.readthedocs.org](https://listenbrainz.readthedocs.org).
 You can build the documentation yourself:
 
-    $ cd docs
+    $ cd cd ~/listenbrainz/docs
     $ make clean html
 
 
@@ -130,4 +145,4 @@ Finally, create a `listens` topic in Kafka:
     $ sudo /opt/kafka/bin/kafka-topics.sh --create --zookeeper localhost:2181 --topic "listens" --partitions 1 --replication-factor 1
 
 This should fix the issue. See this page for more info about described method:
-https://stackoverflow.com/a/24028480
+https://stackoverflow.com/a/24028480.
