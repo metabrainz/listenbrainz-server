@@ -53,8 +53,7 @@ def profile(user_id):
 
     if listens:
         # Checking if there is a "previous" page...
-        previous_listens = list(cassandra.fetch_listens(user_id,
-            limit=25, from_id=listens[0]["listened_at"]))
+        previous_listens = list(cassandra.fetch_listens(user_id, limit=25, from_id=listens[0]["listened_at"]))
         if previous_listens:
             # Getting from the last item because `fetch_listens` returns in ascending
             # order when `from_id` is used.
@@ -104,12 +103,11 @@ def import_data():
                            lastfm_username=lastfm_username)
 
 
-@user_bp.route("/export")
+@user_bp.route("/export", methods=["GET","POST"])
 @login_required
 def export_data():
-    """ Exporting the data to various formats, like, json """
-    filetype = request.args.get("type")
-    if filetype == "json":
+    """ Exporting the data to json """
+    if request.method == "POST":
         cassandra = webserver.create_cassandra()
         filename = current_user.musicbrainz_id + "_lb.json"
 
