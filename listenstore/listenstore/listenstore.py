@@ -221,9 +221,10 @@ class ListenStore(object):
         query = """SELECT * FROM listens WHERE uid = %(uid)s AND """ + \
                 range_keys(len(date_range)) + \
                 """ AND id > %(from_id)s AND id < %(to_id)s
-                ORDER BY id """ + ORDER_TEXT[order] + """ LIMIT %(limit)s"""
+                   ORDER BY id """ + ORDER_TEXT[order] + """ LIMIT %(limit)s"""
 
         fetched_rows = 0  # Total number of rows fetched for this range
+
         while True:
             if limit is not None:
                 # Only ask for the number of rows we need
@@ -241,7 +242,6 @@ class ListenStore(object):
 
             self.log.debug("Fetching up to %s rows for date_range: %s, uid: %s", this_limit, date_range, uid)
             results = self.execute(query, params)
-            output = []
             for row in results:
                 yield self.convert_row(row)
                 fetched_rows += 1

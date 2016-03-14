@@ -21,8 +21,7 @@ def lastfmscraper(user_id):
         raise NotFound
     scraper = render_template(
         "user/scraper.js",
-        base_url=url_for("api_v1.submit_listen",
-            user_id=user_id, _external=True),
+        base_url=url_for("api_v1.submit_listen", user_id=user_id, _external=True),
         user_token=user_token,
         lastfm_username=lastfm_username,
         user_id=user_id,
@@ -53,8 +52,7 @@ def profile(user_id):
 
     if listens:
         # Checking if there is a "previous" page...
-        previous_listens = list(cassandra.fetch_listens(user_id,
-            limit=25, from_id=listens[0]["listened_at"]))
+        previous_listens = list(cassandra.fetch_listens(user_id, limit=25, from_id=listens[0]["listened_at"]))
         if previous_listens:
             # Getting from the last item because `fetch_listens` returns in ascending
             # order when `from_id` is used.
