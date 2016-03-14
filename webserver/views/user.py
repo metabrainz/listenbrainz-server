@@ -102,12 +102,11 @@ def import_data():
                            lastfm_username=lastfm_username)
 
 
-@user_bp.route("/export")
+@user_bp.route("/export", methods=["GET","POST"])
 @login_required
 def export_data():
-    """ Exporting the data to various formats, like, json """
-    filetype = request.args.get("type")
-    if filetype == "json":
+    """ Exporting the data to json """
+    if request.method == "POST":
         cassandra = webserver.create_cassandra()
         filename = current_user.musicbrainz_id + "_lb.json"
 

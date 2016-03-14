@@ -11,13 +11,10 @@
         Now you can export your listens to a file. 
         Just click on the download and let ListenBrainz do the hard work of figuring out what to do.
     </p>
-    <h3>
-      <strong> Export </strong>
-    </h3>
     <p>
-      <a href="{{ url_for("user.export_data") }}?type=json" style="color: white;">
-        <span class="btn btn-warning btn-lg" style="width: 400px"> Download  </span>
-      </a>
+      <form action="{{url_for("user.export_data")}}" method='POST'>
+        <button class="btn btn-warning btn-lg" type="submit">Download</button>
+      </form>
     </p>
   {% endif %}
 {% endblock %}
