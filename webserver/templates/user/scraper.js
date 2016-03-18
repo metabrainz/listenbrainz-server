@@ -148,7 +148,11 @@ function getLastFMPage(page) {
 
 var version = "1.4";
 var page = 1;
-var numberOfPages = parseInt(document.getElementsByClassName("pages")[0].innerHTML.trim().split(" ")[3]);
+var numberOfPages = 1;
+var pages = document.getElementsByClassName("pages");
+if (pages.length > 0) {
+    numberOfPages = parseInt(pages[0].innerHTML.trim().split(" ")[3]);
+}
 
 var toReport = [];
 var numCompleted = 0;
