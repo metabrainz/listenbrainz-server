@@ -233,9 +233,9 @@ function getNextPagesIfSlots() {
     // Get a new lastfm page and queue it only if there are more pages to download and we have
     // less than 10 pages waiting to submit
     while (page <= numberOfPages && activeSubmissions < 10) {
-        page += 1;
         activeSubmissions++;
         getLastFMPage(page);
+        page += 1;
     }
 }
 
