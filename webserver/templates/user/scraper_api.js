@@ -1,35 +1,9 @@
-function makeURIObject(lastfmURI, spotifyURI) {
-
-}
-
-function select(selector, collection) {
-    var newCollection = [];
-    for (var i = 0; i < collection.length; i++) {
-        if (selector(collection[i])) {
-            newCollection.push(collection[i]);
-        }
-    }
-
-    return newCollection;
-}
-
 function map(applicable, collection) {
     var newCollection = [];
     for (var i = 0; i < collection.length; i++) {
         newCollection.push(applicable(collection[i]));
     }
-
     return newCollection;
-}
-
-function each(applicable, collection) {
-    for (var i = 0; i < collection.length; i++) {
-        applicable(collection[i]);
-    }
-}
-
-function isSpotifyURI(uri) {
-    return !!(/open.spotify/.exec(uri));
 }
 
 function Scrobble(rootScrobbleElement) {
@@ -37,50 +11,74 @@ function Scrobble(rootScrobbleElement) {
 }
 
 Scrobble.prototype.lastfmID = function () {
-    var loveButtonURL = this.rootScrobbleElement['url'];
-    return extractlastFMIDFromURL(loveButtonURL);
-};
-
-Scrobble.prototype.artistName = function () {
-    var artistName = this.rootScrobbleElement['artist']['#text'];
-    return artistName;
-};
-
-Scrobble.prototype.trackName = function () {
-    var trackData = this.rootScrobbleElement['name'];
-    return trackData;
-};
-
-Scrobble.prototype.scrobbledAt = function () {
-    var date = this.rootScrobbleElement['date']['uts'];
-    return date;
-};
-
-Scrobble.prototype.optionalSpotifyID = function () {
-    return select(
-            isSpotifyURI,
-            map(
-                function(elem) { return elem.getAttribute("href") },
-                this.rootScrobbleElement.getElementsByTagName("a")
-               )
-            )[0];
-};
-
-Scrobble.prototype.asJSONSerializable = function () {
-    return {
-        "track_metadata": {
-            "track_name": this.trackName(),
-            "artist_name": this.artistName(),
-        },
-        "listened_at": this.scrobbledAt()
-
+    // Returns url of type "http://www.last.fm/music/Mot%C3%B6rhead"
+    if ('url' in this.rootScrobbleElement && this.rootScrobbleElement['url'] !== "" ) {
+        var url = this.rootScrobbleElement['url'];
+        url = url.split("/");
+        return url.slice(0, parts.length-2).join("/");
+    } else {
+        return "";
     }
 };
 
-function extractlastFMIDFromURL(loveButtonURL) {
-    var parts = loveButtonURL.split("/");
-    return parts.slice(0, parts.length-2).join("/");
-}
+Scrobble.prototype.artistName = function () {
+    if ('artist' in this.rootScrobbleElement && '#text' in this.rootScrobbleElement['artist']) {
+        return this.rootScrobbleElement['artist']['#text'];
+    } else {
+        return "";
+    }
+};
+
+Scrobble.prototype.trackName = function () {
+    if ('name' in this.rootScrobbleElement) {
+        return this.rootScrobbleElement['name'];
+    } else {
+        return "";
+    }
+};
+
+Scrobble.prototype.scrobbledAt = function () {
+    if ('date' in this.rootScrobbleElement && 'uts' in this.rootScrobbleElement['date']) {
+        return this.rootScrobbleElement['date']['uts'];
+    } else {
+        return "";
+    }
+};
+
+Scrobble.prototype.trackMBID = function () {
+    if ('mbid' in this.rootScrobbleElement) {
+        return this.rootScrobbleElement['mbid'];
+    } else {
+        return "";
+    }
+};
+
+Scrobble.prototype.asJSONSerializable = function () {
+    var trackjson = {
+        "track_metadata": {
+            "track_name": this.trackName(),
+            "artist_name": this.artistName(),
+            "additional_info": {
+                "recording_mbid": this.trackMBID()
+            }
+        },
+        "listened_at": this.scrobbledAt(),
+    };
+
+    // Remove keys with blank values
+    (function filter(obj) {
+        $.each(obj, function(key, value){
+            if (value === "" || value === null){
+                delete obj[key];
+            } else if (Object.prototype.toString.call(value) === '[object Object]') {
+                filter(value);
+            } else if (Array.isArray(value)) {
+                value.forEach(function (el) { filter(el); });
+            }
+        });
+    })(trackjson);
+    return trackjson;
+};
 
 function encodeScrobbles(jsonstr) {
     var scrobbles = JSON.parse(jsonstr);
@@ -91,12 +89,10 @@ function encodeScrobbles(jsonstr) {
         return scrobble.asJSONSerializable();
     }, scrobbles);
 
-
     var structure = {
         "listen_type" : "import",
         "payload"     : parsedScrobbles
     };
-
     return structure;
 }
 
@@ -138,12 +134,9 @@ function getLastFMPage(page) {
     xhr = null;
 }
 
-var version = "1.4";
+var version = "1.0";
 var page = 1;
 var numberOfPages = 1;
-if (document.querySelector('.pages') != null) {
-   numberOfPages = parseInt(document.getElementsByClassName("pages")[0].innerHTML.trim().split(" ")[3]);
-}
 
 var toReport = [];
 var numCompleted = 0;
@@ -161,7 +154,7 @@ function getPageCount() {
             getPageCount();
         }, 3000);
     }
-    var url = "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user={{ lastfm_username }}&api_key={{ lastfm_api_key }}&format=json&page=" + page;
+    var url = "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user={{ lastfm_username }}&api_key={{ lastfm_api_key }}&format=json&page=1";
 
     var xhr = new XMLHttpRequest();
     xhr.timeout = 10 * 1000; // 10 seconds
@@ -169,35 +162,31 @@ function getPageCount() {
     xhr.onload = function () {
         if (/^2/.test(this.status)) {
             var temp = JSON.parse(this.response);
-						if ('error' in temp) {
-								updateMessage("<i class='fa fa-error'></i>" + temp['message'] + "<br><span><a href='https://listenbrainz.org/user/{{ user_id }}>Go to your ListenBrainz profile</a> | <a href='' id='close-progress-container'>Close</a></span><br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
-								completeMessage();
-								return;
-						}
+            if ('error' in temp) {
+                updateMessage("<i class='fa fa-error'></i>" + temp['message'] + "<br><span><a href='https://listenbrainz.org/user/{{ user_id }}>Go to your ListenBrainz profile</a> | <a href='' id='close-progress-container'>Close</a></span><br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
+                completeMessage();
+                return;
+            }
             numberOfPages = temp['recenttracks']['@attr']['totalPages'];
             if (numberOfPages == 0) {
-								updateMessage("<i class='fa fa-check'></i> Import finished<br><span><a href='https://listenbrainz.org/user/{{ user_id }}>Go to your ListenBrainz profile</a> | <a href='' id='close-progress-container'>Close</a></span><br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
+                updateMessage("<i class='fa fa-check'></i> Import finished<br><span><a href='https://listenbrainz.org/user/{{ user_id }}>Go to your ListenBrainz profile</a> | <a href='' id='close-progress-container'>Close</a></span><br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
                 completeMessage();
             }
             else {
                 getNextPagesIfSlots();
             }
         } else if (/^5/.test(this.status)) {
-            getCountAgain('got ' + this.status);
+            getCountAgain('COUNT-got ' + this.status);
         } else {
             // ignore 40x
             getNextPagesIfSlots();
         }
     };
     xhr.ontimeout = function () {
-        retry('timeout');
-    };
-    xhr.onabort = function () {
-        // this should never happen
-        pageDone();
+        getCountAgain('COUNT-timeout');
     };
     xhr.onerror = function () {
-        retry('error');
+        getCountAgain('COUNT-error');
     };
     xhr.send();
     xhr = null;
@@ -210,8 +199,7 @@ function reportScrobbles(struct) {
     }
 
     timesReportScrobbles++;
-    //must have a trailing slash
-    var reportingURL = "{{ base_url }}" + "/";
+    var reportingURL = "{{ base_url }}" + "/";    //must have a trailing slash
     var xhr = new XMLHttpRequest();
     xhr.open("POST", reportingURL);
     xhr.setRequestHeader("Authorization", "Token {{ user_token }}");
@@ -236,7 +224,7 @@ function reportScrobbles(struct) {
             pageDone();
         }
         if (numCompleted >= numberOfPages) {
-						updateMessage("<i class='fa fa-check'></i> Import finished<br><span><a href='https://listenbrainz.org/user/{{ user_id }}>Go to your ListenBrainz profile</a> | <a href='' id='close-progress-container'>Close</a></span><br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
+            updateMessage("<i class='fa fa-check'></i> Import finished<br><span><a href='https://listenbrainz.org/user/{{ user_id }}>Go to your ListenBrainz profile</a> | <a href='' id='close-progress-container'>Close</a></span><br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
             completeMessage();
         } else {
             updateMessage("<i class='fa fa-cog fa-spin'></i> Sending page " + numCompleted + " of " + numberOfPages + " to ListenBrainz<br><span style='font-size:8pt'>Please don't navigate while this is running</span>");
@@ -255,7 +243,7 @@ function reportScrobbles(struct) {
         reportScrobbles(struct);
     };
     xhr.send(JSON.stringify(struct));
-    delete(xhr);
+    xhr = null;
 }
 
 function completeMessage() {
