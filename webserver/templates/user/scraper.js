@@ -13,6 +13,7 @@
         xhr.open("GET", encodeURI("http://www.last.fm/user/{{ lastfm_username }}/library?page=" + page + "&_pjax=%23content"));
         xhr.onload = function () {
             if (/^2/.test(this.status)) {
+                console.log("last.fm call complete " + new Date().getTime() / 1000);
                 reportPageAndGetNext(this.response,page);
             } else if (/^5/.test(this.status)) {
                 retry('got ' + this.status);
@@ -29,6 +30,8 @@
         xhr.onerror = function () {
             retry('error');
         };
+
+        console.log("Call last.fm " + new Date().getTime() / 1000);
         xhr.send();
     }
 
@@ -61,7 +64,7 @@
         xhr.timeout = 10 * 1000; // 10 seconds
         xhr.onload = function(content) {
             if (xhr.status >= 200 && xhr.status < 300) {
-                console.log("successfully reported page");
+                //console.log("successfully reported page");
                 completed(parseInt(xhr.getResponseHeader("X-RateLimit-Remaining")),parseInt(xhr.getResponseHeader("X-RateLimit-Reset")));
             } else if (xhr.status == 429) {
                 console.log("received rate limit http error " + xhr.status + " req'ing");
@@ -88,6 +91,7 @@
             console.log("error, req'ing");
             reportScrobbles(struct);
         };
+        console.log("request at: " + Math.floor(new Date().getTime() / 1000));
         xhr.send(JSON.stringify(struct));
     }
 
@@ -271,13 +275,15 @@
                     reportScrobbles(struct,function(remain, reset){
                         self.processingReq = false;
                         self.count++;
-                        self.remain = remain;
+                        self.remain = remain - 1;
                         var current = new Date().getTime() / 1000;
 
                         if (self.remain)
                             self.timeout = Math.max(0, Math.ceil((reset - current) * 1000 / self.remain));
                         else
                             self.timeout = Math.max(0, Math.ceil((reset - current) * 1000));
+                        console.log(Math.floor(current) + " rem " + remain + " reset " + 
+                                    Math.ceil(reset - current) + " timeout " + self.timeout); 
                     });
                     self.processReq();
                 },self.timeout);
