@@ -218,6 +218,8 @@ class ListenStore(object):
             This method will limit the amount of rows it fetches with one query,
             issuing multiple queries if the number of rows exceeds self.MAX_FETCH.
         """
+        if  limit is not None and limit <= 0:
+            return
         query = """SELECT * FROM listens WHERE uid = %(uid)s AND """ + \
                 range_keys(len(date_range)) + \
                 """ AND id > %(from_id)s AND id < %(to_id)s
