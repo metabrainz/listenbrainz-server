@@ -31,7 +31,6 @@ RATELIMIT_TIMEOUT = "rate_limits_timeout"
 def inject_x_rate_headers(response):
     limit = get_view_rate_limit()
     if limit:
-        print "%d: rem %d, limit %d, reset %d" % (int(time.time()), limit.remaining, limit.limit, limit.reset - int(time.time()))
         h = response.headers
         h.add('Access-Control-Expose-Headers', 'X-RateLimit-Remaining,X-RateLimit-Limit,X-RateLimit-Reset')
         h.add('X-RateLimit-Remaining', str(limit.remaining))
@@ -80,34 +79,18 @@ def check_limit_freshness():
     if not value:
         _redis.set(RATELIMIT_PER_TOKEN_KEY, RATELIMIT_PER_TOKEN_DEFAULT)
         value = RATELIMIT_PER_TOKEN_DEFAULT
-    try:
-        if value != getattr(g, '_' + RATELIMIT_PER_TOKEN_KEY):
-            print "New per token limit: %d" % value
-    except AttributeError:
-        pass
-
     setattr(g, '_' + RATELIMIT_PER_TOKEN_KEY, value)
 
     value = int(_redis.get(RATELIMIT_PER_IP_KEY) or '0')
     if not value:
         _redis.set(RATELIMIT_PER_IP_KEY, RATELIMIT_PER_IP_DEFAULT)
         value = RATELIMIT_PER_IP_DEFAULT
-    try:
-        if value != getattr(g, '_' + RATELIMIT_PER_IP_KEY):
-            print "New per IP limit: %d" % value
-    except AttributeError:
-        pass
     setattr(g, '_' + RATELIMIT_PER_IP_KEY, value)
 
     value = int(_redis.get(RATELIMIT_WINDOW_KEY) or '0')
     if not value:
         _redis.set(RATELIMIT_WINDOW_KEY, RATELIMIT_WINDOW_DEFAULT)
         value = RATELIMIT_WINDOW_DEFAULT
-    try:
-        if value != getattr(g, '_' + RATELIMIT_WINDOW_KEY):
-            print "New ratelimit window: %d" % value
-    except AttributeError:
-        pass
     setattr(g, '_' + RATELIMIT_WINDOW_KEY, value)
 
     setattr(g, '_' + RATELIMIT_TIMEOUT, int(time.time()) + RATELIMIT_REFRESH)
