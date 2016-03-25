@@ -14,17 +14,20 @@ class User(UserMixin):
         self.musicbrainz_id = musicbrainz_id
         self.auth_token = auth_token
 
-
-@login_manager.user_loader
-def load_user(user_id):
-    user = db.user.get(user_id)
-    if user:
-        return User(
+    @classmethod
+    def from_dbrow(cls, user):
+        return cls(
             id=user['id'],
             created=user['created'],
             musicbrainz_id=user['musicbrainz_id'],
             auth_token=user['auth_token'],
         )
+
+@login_manager.user_loader
+def load_user(user_id):
+    user = db.user.get(user_id)
+    if user:
+        return User.from_dbrow(user)
     else:
         return None
 

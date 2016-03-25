@@ -1,5 +1,4 @@
 import sys
-import urllib2
 import ujson
 import socket
 import uuid
@@ -8,19 +7,28 @@ from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized, S
 from kafka import SimpleProducer
 from webserver.kafka_connection import _kafka
 from webserver.decorators import crossdomain
+from webserver.external import messybrainz
 import webserver
 import db.user
-import messybrainz
 from webserver.rate_limiter import ratelimit
 
 api_bp = Blueprint('api_v1', __name__)
 
-MAX_LISTEN_SIZE = 10240    # overall listen size, to prevent egregious spamming
+#: Maximum overall listen size in bytes, to prevent egregious spamming.
+MAX_LISTEN_SIZE = 10240
+
+#: The maximum number of tags per listen.
 MAX_TAGS_PER_LISTEN = 50
+
+#: The maximum length of a tag
 MAX_TAG_SIZE = 64
 
+#: The maximum number of listens returned in a single GET request.
 MAX_ITEMS_PER_GET = 100
+
+#: The default number of listens returned in a single GET request.
 DEFAULT_ITEMS_PER_GET = 25
+
 MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
 
 
@@ -28,9 +36,17 @@ MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def submit_listen():
-    """Endpoint for submitting a listen to ListenBrainz.
+    """
+    Submit listens to the server. A user token (found on https://listenbrainz.org/user/import ) must 
+    be provided in the Authorization header!
 
-    Sanity check listen and then pass on to Kafka.
+    For complete details on the format of the JSON to be POSTed to this endpoint, see :ref:`json-doc`.
+
+    :reqheader Authorization: token <user token>
+    :statuscode 200: listen(s) accepted.
+    :statuscode 400: invalid JSON sent, see error message for details.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
     """
     user_id = _validate_auth_header()
 
@@ -80,6 +96,19 @@ def submit_listen():
 @api_bp.route("/1/user/<user_id>/listens")
 @ratelimit()
 def get_listens(user_id):
+    """
+    Get listens for user ``user_id``. The format for the JSON returned is defined in our :ref:`json-doc`.
+
+    If none of the optional arguments are given, this endpoint will return the :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` most recent listens.
+    The optional ``max_ts`` and ``min_ts`` UNIX epoch timestamps control at which point in time to start returning listens. You may specify max_ts or 
+    min_ts, but not both in one call. Listens are always returned in descending timestamp order.
+
+    :param max_ts: If you specify a ``max_ts`` timestamp, listens with listened_at less than (but not including) this value will be returned.
+    :param min_ts: If you specify a ``min_ts`` timestamp, listens with listened_at greter than (but not including) this value will be returned.
+    :param count: Optional, number of listens to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+    :statuscode 200: Yay, you have data!
+    :resheader Content-Type: *application/json*
+    """
 
     max_ts = _parse_int_arg("max_ts")
     min_ts = _parse_int_arg("min_ts")
@@ -184,7 +213,7 @@ def _messybrainz_lookup(listens):
         msb_listens.append(messy_dict)
 
     try:
-        msb_responses = messybrainz.submit_listens_and_sing_me_a_sweet_song(msb_listens)
+        msb_responses = messybrainz.submit_listens(msb_listens)
     except messybrainz.exceptions.BadDataException as e:
         _log_raise_400(str(e))
     except messybrainz.exceptions.NoDataFoundException:

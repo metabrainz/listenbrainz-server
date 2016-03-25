@@ -3,7 +3,6 @@ import uuid
 
 
 def create(musicbrainz_id):
-    # TODO(roman): Do we need to make sure that musicbrainz_id is case insensitive?
     result = db.session.execute("""INSERT INTO "user" (musicbrainz_id, auth_token)
                                         VALUES (:mb_id, :token)
                                      RETURNING id""",
