@@ -113,9 +113,9 @@ def get_rate_limit_data(request):
        This should encourage callers to always provide the Authorization token
     '''
 
-    auth_token = request.headers.get('Authorization')
-    if auth_token:
-        auth_token = auth_token[6:]
+    auth_header = request.headers.get('Authorization')
+    if auth_header:
+        auth_token = auth_header[6:]
         user = db.user.get_by_token(auth_token)
         if user:
             values = get_per_token_limits()
