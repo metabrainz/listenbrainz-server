@@ -145,7 +145,13 @@ def upload():
         if f:
             augmented_listens = []
             msb_listens = []
-            jsonlist = json.load(f)
+            try:
+                jsonlist = json.load(f)
+                if not isinstance(jsonlist, list):
+                    raise ValueError
+            except ValueError:
+                raise BadRequest("Not a valid lastfmbackup file.")
+
             for listen in jsonlist:
                 dic = _convert_to_native_format(listen)
                 _validate_listen(dic)
