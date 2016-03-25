@@ -10,6 +10,7 @@ from webserver.decorators import crossdomain
 from webserver.external import messybrainz
 import webserver
 import db.user
+from webserver.rate_limiter import ratelimit
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -30,8 +31,10 @@ DEFAULT_ITEMS_PER_GET = 25
 
 MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
 
+
 @api_bp.route("/1/submit-listens", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
 def submit_listen():
     """
     Submit listens to the server. A user token (found on https://listenbrainz.org/user/import ) must 
@@ -91,6 +94,7 @@ def submit_listen():
 
 
 @api_bp.route("/1/user/<user_id>/listens")
+@ratelimit()
 def get_listens(user_id):
     """
     Get listens for user ``user_id``. The format for the JSON returned is defined in our :ref:`json-doc`.
@@ -110,7 +114,7 @@ def get_listens(user_id):
     min_ts = _parse_int_arg("min_ts")
 
     if max_ts and min_ts:
-        _log_and_raise_400("You may only specify max_ts or min_ts, not both.")
+        _log_raise_400("You may only specify max_ts or min_ts, not both.")
 
     cassandra = webserver.create_cassandra()
     listens = cassandra.fetch_listens(
@@ -211,7 +215,7 @@ def _messybrainz_lookup(listens):
     try:
         msb_responses = messybrainz.submit_listens(msb_listens)
     except messybrainz.exceptions.BadDataException as e:
-        _log_and_raise_400(str(e))
+        _log_raise_400(str(e))
     except messybrainz.exceptions.NoDataFoundException:
         return []
     except messybrainz.exceptions.ErrorAddingException as e:

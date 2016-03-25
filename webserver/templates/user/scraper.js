@@ -146,7 +146,7 @@ function getLastFMPage(page) {
     xhr.send();
 }
 
-var version = "1.5";
+var version = "1.6";
 var page = 1;
 var numberOfPages = 1;
 var pages = document.getElementsByClassName("pages");
@@ -154,73 +154,20 @@ if (pages.length > 0) {
     numberOfPages = parseInt(pages[0].innerHTML.trim().split(" ")[3]);
 }
 
-var toReport = [];
 var numCompleted = 0;
-var activeSubmissions = 0;
+var maxActiveFetches = 10;
+var activeFetches = 0;
+
+var submitQueue = [];
+var isSubmitActive = false;
+var rl_remain = -1;
+var rl_reset = -1;
 
 var timesReportScrobbles = 0;
 var timesGetPage = 0;
 var times4Error = 0;
 var times5Error = 0;
 
-function reportScrobbles(struct) {
-    if (!struct.payload.length) {
-        pageDone();
-        return;
-    }
-
-    timesReportScrobbles++;
-    //must have a trailing slash
-    var reportingURL = "{{ base_url }}";
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", reportingURL);
-    xhr.setRequestHeader("Authorization", "Token {{ user_token }}");
-    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-    xhr.timeout = 10 * 1000; // 10 seconds
-    xhr.onload = function(content) {
-        if (this.status >= 200 && this.status < 300) {
-            console.log("successfully reported page");
-            pageDone();
-        } else if (this.status >= 400 && this.status < 500) {
-            times4Error++;
-            // We mark 4xx errors as completed because we don't
-            // retry them
-            console.log("4xx error, skipping");
-            pageDone();
-        } else if (this.status >= 500) {
-            console.log("received http error " + this.status + " req'ing");
-            times5Error++;
-            reportScrobbles(struct);
-        } else {
-            console.log("received http status " + this.status + ", skipping");
-            pageDone();
-        }
-        if (numCompleted >= numberOfPages) {
-            updateMessage("<i class='fa fa-check'></i> Import finished<br><span><a href='https://listenbrainz.org/user/{{user_id}}'>Go to your ListenBrainz profile</a> | <a href='' id='close-progress-container'>Close</a></span><br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
-            var close = document.getElementById('close-progress-container');
-            close.addEventListener('click', function(ev) {
-                ev.preventDefault();
-                var el = document.getElementById('listen-progress-container');
-                el.parentNode.removeChild(el);
-            }, false);
-        } else {
-            updateMessage("<i class='fa fa-cog fa-spin'></i> Sending page " + numCompleted + " of " + numberOfPages + " to ListenBrainz<br><span style='font-size:8pt'>Please don't navigate while this is running</span>");
-        }
-    };
-    xhr.ontimeout = function(context) {
-        console.log("timeout, req'ing");
-        reportScrobbles(struct);
-    }
-    xhr.onabort = function(context) {
-        console.log("abort, req'ing");
-        reportScrobbles(struct);
-    };
-    xhr.onerror = function(context) {
-        console.log("error, req'ing");
-        reportScrobbles(struct);
-    };
-    xhr.send(JSON.stringify(struct));
-}
 
 function reportPageAndGetNext(response) {
     timesGetPage++;
@@ -229,24 +176,122 @@ function reportPageAndGetNext(response) {
     }
     var elem = document.createElement("div");
     elem.innerHTML = response;
+
     var struct = encodeScrobbles(elem);
-    reportScrobbles(struct);
+    submitQueue.push(struct);
+    if (!isSubmitActive)
+    {
+        isSubmitActive = true;
+        submitListens();
+    }
+
+    getNextPagesIfSlots();
 }
 
 function getNextPagesIfSlots() {
     // Get a new lastfm page and queue it only if there are more pages to download and we have
     // less than 10 pages waiting to submit
-    while (page <= numberOfPages && activeSubmissions < 10) {
-        activeSubmissions++;
+    while (page <= numberOfPages && activeFetches < maxActiveFetches) {
+        activeFetches++;
         getLastFMPage(page);
         page += 1;
     }
 }
 
 function pageDone() {
-    activeSubmissions--;
+    activeFetches--;
     numCompleted++;
+
+    // start the next submission
+    if (submitQueue.length)
+        submitListens();
+    else
+        isSubmitActive = false;
+
+    // Check to see if we need to start up more fetches
     getNextPagesIfSlots();
+}
+
+
+function submitListens() {
+
+    struct = submitQueue.shift()
+    if (!struct.payload.length) {
+        pageDone();
+        return;
+    }
+
+    var current = new Date().getTime() / 1000;
+    var delay = -1;
+
+    // If we have no prior reset time or the reset time has passed, delay is 0
+    if (rl_reset < 0 || current > rl_reset)
+        delay = 0;
+    else if (rl_remain > 0)
+        delay = Math.max(0, Math.ceil((rl_reset - current) * 1000 / rl_remain));
+    else
+        delay = Math.max(0, Math.ceil((rl_reset - current) * 1000));
+
+    setTimeout( function () {
+            timesReportScrobbles++;
+            //must have a trailing slash
+            var reportingURL = "{{ base_url }}";
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", reportingURL);
+            xhr.setRequestHeader("Authorization", "Token {{ user_token }}");
+            xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            xhr.timeout = 10 * 1000; // 10 seconds
+            xhr.onload = function(content) {
+                rl_remain = parseInt(xhr.getResponseHeader("X-RateLimit-Remaining"));
+                rl_reset = parseInt(xhr.getResponseHeader("X-RateLimit-Reset"));
+                if (this.status >= 200 && this.status < 300) {
+                    pageDone();
+                } else if (this.status == 429) {
+                    // This should never happen, but if it does, toss it back in and try again.
+                    submitQueue.unshift();
+                    pageDone();
+                } else if (this.status >= 400 && this.status < 500) {
+                    times4Error++;
+                    // We mark 4xx errors as completed because we don't
+                    // retry them
+                    console.log("4xx error, skipping");
+                    pageDone();
+                } else if (this.status >= 500) {
+                    console.log("received http error " + this.status + " req'ing");
+                    times5Error++;
+
+                    // If something causes a 500 error, better not repeat it and just skip it.
+                    pageDone();
+                } else {
+                    console.log("received http status " + this.status + ", skipping");
+                    pageDone();
+                }
+                if (numCompleted >= numberOfPages) {
+                    updateMessage("<i class='fa fa-check'></i> Import finished<br><span><a href='https://listenbrainz.org/user/{{user_id}}'>Go to your ListenBrainz profile</a> | <a href='' id='close-progress-container'>Close</a></span><br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
+                    var close = document.getElementById('close-progress-container');
+                    close.addEventListener('click', function(ev) {
+                        ev.preventDefault();
+                        var el = document.getElementById('listen-progress-container');
+                        el.parentNode.removeChild(el);
+                    }, false);
+                } else {
+                    updateMessage("<i class='fa fa-cog fa-spin'></i> Sending page " + numCompleted + " of " + numberOfPages + " to ListenBrainz<br><span style='font-size:8pt'>Please don't navigate while this is running</span>");
+                }
+            };
+            xhr.ontimeout = function(context) {
+                console.log("timeout, req'ing");
+                submitListens(struct);
+            }
+            xhr.onabort = function(context) {
+                console.log("abort, req'ing");
+                submitListens(struct);
+            };
+            xhr.onerror = function(context) {
+                console.log("error, req'ing");
+                submitListens(struct);
+            };
+            xhr.send(JSON.stringify(struct));
+        }, delay);
 }
 
 function updateMessage(message) {

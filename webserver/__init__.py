@@ -1,6 +1,8 @@
 from flask import Flask, current_app
 import sys
 import os
+import messybrainz
+import messybrainz.db
 
 
 def create_cassandra():
@@ -25,6 +27,10 @@ def create_app():
     from kafka_connection import init_kafka_connection
     init_kafka_connection(app.config['KAFKA_CONNECT'])
 
+    # Redis connection
+    from redis_connection import init_redis_connection
+    init_redis_connection()
+
     # Database connection
     import db
     db.init_db_connection(app)
@@ -40,6 +46,11 @@ def create_app():
     # Error handling
     from webserver.errors import init_error_handlers
     init_error_handlers(app)
+
+    from webserver import rate_limiter
+    @app.after_request
+    def after_request_callbacks(response):
+        return rate_limiter.inject_x_rate_headers(response)
 
     # Template utilities
     app.jinja_env.add_extension('jinja2.ext.do')

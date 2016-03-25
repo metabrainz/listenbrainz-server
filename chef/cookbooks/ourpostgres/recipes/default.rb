@@ -43,3 +43,9 @@ service "pgbouncer" do
   supports :status => true, :restart => true, :truereload => true
   action [ :enable, :start ]
 end
+
+# After spending several hours trying to get this chef setup to use a new recipe or in some 
+# way install redis from a recipe, I'm giving up. There is a better way to do this and
+# a better place to put this. But, I have better things to do than to fight poorly documented
+# skeletons of shit.
+package "redis-server"
