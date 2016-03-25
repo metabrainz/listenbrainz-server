@@ -10,9 +10,6 @@ from flask import request, g
 from webserver.redis_connection import _redis
 import db.user
 
-#TODO
-# Add rate limit support to scraper
-
 # Using _ and not - here so I can re-use these keys for use in the g object
 RATELIMIT_PER_TOKEN_KEY = "rate_limit_per_token_limit"
 RATELIMIT_PER_IP_KEY = "rate_limit_per_ip_limit"
