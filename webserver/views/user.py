@@ -6,12 +6,11 @@ from webserver.decorators import crossdomain
 from datetime import datetime
 import webserver
 import db.user
-import ujson
 from flask import make_response
-
+from webserver.views.api import _validate_listen, _messybrainz_lookup, _send_listens_to_kafka, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
+import json
 
 user_bp = Blueprint("user", __name__)
-
 
 @user_bp.route("/<user_id>/scraper.js")
 @crossdomain()
@@ -136,6 +135,57 @@ def export_data():
         return response
     else:
         return render_template("user/export.html", user=current_user)
+
+
+@user_bp.route("/upload", methods=['POST'])
+@login_required
+def upload():
+    if request.method == 'POST':
+        f = request.files['file']
+        if f:
+            augmented_listens = []
+            msb_listens = []
+            jsonlist = json.load(f)
+            for listen in jsonlist:
+                dic = _convert_to_native_format(listen)
+                _validate_listen(dic)
+                dic['user_id'] = current_user.musicbrainz_id
+                msb_listens.append(dic)
+                if len(msb_listens) >= MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP:
+                    augmented_listens.extend(_messybrainz_lookup(msb_listens))
+                    msb_listens = []
+
+            if msb_listens:
+                augmented_listens.extend(_messybrainz_lookup(msb_listens))
+
+            _send_listens_to_kafka("import", augmented_listens)
+    return render_template('user/import.html', user=current_user)
+
+
+def _convert_to_native_format(data):
+    """
+    Converts the imported listen from the lastfm backup file
+    to the native format.
+    """
+    listen = {}
+    listen['track_metadata'] = {}
+    listen['track_metadata']['additional_info'] = {}
+
+    if 'timestamp' in data and 'unixtimestamp' in data['timestamp']:
+        listen['listened_at'] = data['timestamp']['unixtimestamp']
+
+    if 'track' in data:
+        if 'name' in data['track']:
+            listen['track_metadata']['track_name'] = data['track']['name']
+        if 'mbid' in data['track']:
+            listen['track_metadata']['additional_info']['recording_mbid'] = data['track']['mbid']
+        if 'artist' in data['track']:
+            if 'name' in data['track']['artist']:
+                listen['track_metadata']['artist_name'] = data['track']['artist']['name']
+            if 'mbid' in data['track']['artist']:
+                listen['track_metadata']['additional_info']['artist_mbids'] = [data['track']['artist']['mbid']]
+
+    return listen
 
 
 def _get_user(user_id):
