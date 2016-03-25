@@ -102,7 +102,7 @@ def import_data():
                            lastfm_username=lastfm_username)
 
 
-@user_bp.route("/export", methods=["GET","POST"])
+@user_bp.route("/export", methods=["GET", "POST"])
 @login_required
 def export_data():
     """ Exporting the data to json """
@@ -111,13 +111,14 @@ def export_data():
         filename = current_user.musicbrainz_id + "_lb.json"
 
         # Fetch output and convert it into dict with keys as indexes
-        output = {}
-        for index,obj in enumerate(cassandra.fetch_listens(current_user.musicbrainz_id)):
-            output[index] = obj.data
-            output[index]['timestamp'] = obj.timestamp
-            output[index]['album_msid'] = str(obj.album_msid)
-            output[index]['artist_msid'] = str(obj.artist_msid)
-            output[index]['recording_msid'] = str(obj.recording_msid)
+        output = []
+        for index, obj in enumerate(cassandra.fetch_listens(current_user.musicbrainz_id)):
+            dic = obj.data
+            dic['timestamp'] = obj.timestamp
+            dic['album_msid'] = str(obj.album_msid)
+            dic['artist_msid'] = str(obj.artist_msid)
+            dic['recording_msid'] = str(obj.recording_msid)
+            output.append(dic)
 
         response = make_response(ujson.dumps(output))
         response.headers["Content-Disposition"] = "attachment; filename=" + filename
