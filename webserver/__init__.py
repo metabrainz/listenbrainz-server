@@ -29,7 +29,7 @@ def create_app():
     init_kafka_connection(app.config['KAFKA_CONNECT'])
 
     # Redis connection
-    from redis_connection import init_redis_connection, _redis
+    from redis_connection import init_redis_connection
     init_redis_connection()
 
     # Database connection
