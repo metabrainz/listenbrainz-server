@@ -106,7 +106,7 @@ To run Kafka to Cassandra writer run:
 Documentation for the ListenBrainz API is available at [https://listenbrainz.readthedocs.org](https://listenbrainz.readthedocs.org).
 You can build the documentation yourself:
 
-    $ cd cd ~/listenbrainz/docs
+    $ cd ~/listenbrainz/docs
     $ make clean html
 
 
