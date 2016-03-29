@@ -22,6 +22,8 @@ During registration set the callback url to
 `http://<your_host>/login/musicbrainz/post`.
 If you don't change anything during setup, `your_host`
 will be `10.1.2.3:8080`
+Then set the `MUSICBRAINZ_CLIENT_ID` and `MUSICBRAINZ_CLIENT_SECRET` in
+`config.py` to the OAuth Client ID and OAuth Client Secret of your application.
 
 ### Virtual machine
 
