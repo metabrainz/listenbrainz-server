@@ -108,7 +108,7 @@ def export_data():
     """ Exporting the data to json """
     if request.method == "POST":
         cassandra = webserver.create_cassandra()
-        filename = current_user.musicbrainz_id + "_lb.json"
+        filename = current_user.musicbrainz_id + "_lb-" + datetime.today().strftime('%Y-%m-%d') + ".json"
 
         # Fetch output and convert it into dict with keys as indexes
         output = []
