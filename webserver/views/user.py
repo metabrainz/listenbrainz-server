@@ -115,9 +115,9 @@ def export_data():
         for index, obj in enumerate(cassandra.fetch_listens(current_user.musicbrainz_id)):
             dic = obj.data
             dic['timestamp'] = obj.timestamp
-            dic['album_msid'] = str(obj.album_msid)
-            dic['artist_msid'] = str(obj.artist_msid)
-            dic['recording_msid'] = str(obj.recording_msid)
+            dic['album_msid'] = None if obj.album_msid is None else str(obj.album_msid)
+            dic['artist_msid'] = None if obj.artist_msid is None else str(obj.artist_msid)
+            dic['recording_msid'] = None if obj.recording_msid is None else str(obj.recording_msid)
             output.append(dic)
 
         response = make_response(ujson.dumps(output))
