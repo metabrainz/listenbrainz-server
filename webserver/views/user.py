@@ -138,7 +138,7 @@ def export_data():
         return render_template("user/export.html", user=current_user)
 
 
-@user_bp.route("/upload", methods=['POST'])
+@user_bp.route("/upload", methods=['GET', 'POST'])
 @login_required
 def upload():
     if request.method == 'POST':
