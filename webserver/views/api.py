@@ -1,6 +1,5 @@
 import sys
 import ujson
-import socket
 import uuid
 from flask import Blueprint, request, current_app, jsonify
 from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized, ServiceUnavailable
@@ -73,22 +72,8 @@ def submit_listen():
     except KeyError:
         _log_raise_400("Invalid JSON document submitted.", raw_data)
 
-    augmented_listens = []
-    msb_listens = []
-    for listen in payload:
-        _validate_listen(listen)
-        listen['user_id'] = user_id
-
-        msb_listens.append(listen)
-        if len(msb_listens) >= MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP:
-            augmented_listens.extend(_messybrainz_lookup(msb_listens))
-            msb_listens = []
-
-    if msb_listens:
-        augmented_listens.extend(_messybrainz_lookup(msb_listens))
-
-    _send_listens_to_redis(data['listen_type'], augmented_listens)
-
+    _send_listens_to_redis(data['listen_type'],
+                                _payload_to_augmented_list(payload, user_id))
     return "success"
 
 
@@ -309,6 +294,27 @@ def _validate_listen(listen):
         for ambid in ambids:
             if not is_valid_uuid(ambid):
                 _log_raise_400("Artist MBID format invalid.", listen)
+
+
+def _payload_to_augmented_list(payload, user_id):
+    """ Converts the payload to augmented list after lookup
+        in the MessyBrainz database
+    """
+    augmented_listens = []
+    msb_listens = []
+    for listen in payload:
+        _validate_listen(listen)
+        listen['user_id'] = user_id
+
+        msb_listens.append(listen)
+        if len(msb_listens) >= MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP:
+            augmented_listens.extend(_messybrainz_lookup(msb_listens))
+            msb_listens = []
+
+    if msb_listens:
+        augmented_listens.extend(_messybrainz_lookup(msb_listens))
+    return augmented_listens
+
 
 def _log_raise_400(msg, data):
     """Helper function for logging issues with request data and showing error page.
