@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from flask import Blueprint, render_template, request, url_for, Response, current_app
+from flask import Blueprint, render_template, request, url_for, Response, redirect, flash, current_app
 from flask_login import current_user, login_required
 from werkzeug.exceptions import NotFound, BadRequest
 from webserver.decorators import crossdomain
@@ -165,7 +165,8 @@ def upload():
                 augmented_listens.extend(_messybrainz_lookup(msb_listens))
 
             _send_listens_to_kafka("import", augmented_listens)
-    return render_template('user/import.html', user=current_user)
+            flash('Congratulations !! Your listens have been uploaded successfully.')
+    return redirect(url_for("user.import_data"))
 
 
 def _convert_to_native_format(data):
