@@ -7,7 +7,8 @@ from datetime import datetime
 import webserver
 import db.user
 from flask import make_response
-from webserver.views.api import _validate_listen, _messybrainz_lookup, _send_listens_to_kafka, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
+from webserver.views.api import _validate_listen, _messybrainz_lookup, _send_listens_to_redis,\
+                                _payload_to_augmented_list, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
 import json
 
 user_bp = Blueprint("user", __name__)
@@ -143,8 +144,6 @@ def upload():
     if request.method == 'POST':
         f = request.files['file']
         if f:
-            augmented_listens = []
-            msb_listens = []
             try:
                 jsonlist = json.load(f)
                 if not isinstance(jsonlist, list):
@@ -152,47 +151,41 @@ def upload():
             except ValueError:
                 raise BadRequest("Not a valid lastfmbackup file.")
 
-            for listen in jsonlist:
-                dic = _convert_to_native_format(listen)
-                _validate_listen(dic)
-                dic['user_id'] = current_user.musicbrainz_id
-                msb_listens.append(dic)
-                if len(msb_listens) >= MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP:
-                    augmented_listens.extend(_messybrainz_lookup(msb_listens))
-                    msb_listens = []
+            payload = _convert_to_native_format(jsonlist)
 
-            if msb_listens:
-                augmented_listens.extend(_messybrainz_lookup(msb_listens))
+            _send_listens_to_redis("import",
+                _payload_to_augmented_list(payload, current_user.musicbrainz_id))
 
-            _send_listens_to_kafka("import", augmented_listens)
             flash('Congratulations !! Your listens have been uploaded successfully.')
     return redirect(url_for("user.import_data"))
 
 
 def _convert_to_native_format(data):
     """
-    Converts the imported listen from the lastfm backup file
-    to the native format.
+    Converts the imported listen-payload from the lastfm backup file
+    to the native payload format.
     """
-    listen = {}
-    listen['track_metadata'] = {}
-    listen['track_metadata']['additional_info'] = {}
+    payload = []
+    for native_lis in data:
+        listen = {}
+        listen['track_metadata'] = {}
+        listen['track_metadata']['additional_info'] = {}
 
-    if 'timestamp' in data and 'unixtimestamp' in data['timestamp']:
-        listen['listened_at'] = data['timestamp']['unixtimestamp']
+        if 'timestamp' in native_lis and 'unixtimestamp' in native_lis['timestamp']:
+            listen['listened_at'] = native_lis['timestamp']['unixtimestamp']
 
-    if 'track' in data:
-        if 'name' in data['track']:
-            listen['track_metadata']['track_name'] = data['track']['name']
-        if 'mbid' in data['track']:
-            listen['track_metadata']['additional_info']['recording_mbid'] = data['track']['mbid']
-        if 'artist' in data['track']:
-            if 'name' in data['track']['artist']:
-                listen['track_metadata']['artist_name'] = data['track']['artist']['name']
-            if 'mbid' in data['track']['artist']:
-                listen['track_metadata']['additional_info']['artist_mbids'] = [data['track']['artist']['mbid']]
-
-    return listen
+        if 'track' in native_lis:
+            if 'name' in native_lis['track']:
+                listen['track_metadata']['track_name'] = native_lis['track']['name']
+            if 'mbid' in native_lis['track']:
+                listen['track_metadata']['additional_info']['recording_mbid'] = native_lis['track']['mbid']
+            if 'artist' in native_lis['track']:
+                if 'name' in native_lis['track']['artist']:
+                    listen['track_metadata']['artist_name'] = native_lis['track']['artist']['name']
+                if 'mbid' in native_lis['track']['artist']:
+                    listen['track_metadata']['additional_info']['artist_mbids'] = [native_lis['track']['artist']['mbid']]
+        payload.append(listen)
+    return payload
 
 
 def _get_user(user_id):
