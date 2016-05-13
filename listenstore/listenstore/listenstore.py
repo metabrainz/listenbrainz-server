@@ -14,8 +14,11 @@ from dateutil.relativedelta import relativedelta
 from cassandra.cluster import Cluster
 from cassandra import InvalidRequest
 from cassandra.query import SimpleStatement, BatchStatement
-import psycopg2
-import psycopg2.extras
+
+from sqlalchemy import create_engine, text
+from sqlalchemy.pool import NullPool
+import sqlalchemy.exc
+
 from .timeout import timeout
 
 MIN_ID = 1033430400     # approx when audioscrobbler was created
@@ -166,7 +169,6 @@ class ListenStore(object):
                     return
 
     def convert_row(self, row):
-        print(row)
         return Listen(data=ujson.loads(row[8]), uid=row[0], timestamp=row[4], album_msid=row[6],
                       artist_msid=row[5], recording_msid=row[7])
 
@@ -221,23 +223,21 @@ class ListenStore(object):
 class PostgresListenStore(ListenStore):
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
-        self.postgre_connection = None
-        self.postgre_cursor = None
-        
-        self.postgres_conn = psycopg2.connect("dbname='' user='listenbrainz'")   
-        self.postgres_cur = self.postgres_conn.cursor()
-        self.postgres_cur.execute("SET synchronous_commit TO off;")
-        psycopg2.extras.register_uuid()
+        self.engine = create_engine(conf['SQLALCHEMY_DATABASE_URI'], poolclass=NullPool)
+        self.connection = self.engine.connect()
+        self.connection.execute("SET synchronous_commit TO off;")
     
     def insert_postgresql(self, listen, values):
+        if self.connection.closed:
+            self.connection = self.engine.connect()
         try:
-            self.postgres_cur.execute(
-                """INSERT INTO listens(uid, year, month, day, id, artist_msid, album_msid, recording_msid, json) 
-                    VALUES ( %(uid)s, %(year)s, %(month)s, %(day)s, %(id)s, %(artist_msid)s, %(album_msid)s, %(recording_msid)s,
-                    %(json)s) ON CONFLICT DO NOTHING """, values)
-        except psycopg2.DatabaseError, e:
-            if self.postgres_conn:
-                self.postgres_conn.rollback()
+            res = self.connection.execute(
+            """INSERT INTO listens(uid, year, month, day, id, artist_msid, album_msid, recording_msid, json) 
+                VALUES ( %(uid)s, %(year)s, %(month)s, %(day)s, %(id)s, %(artist_msid)s, %(album_msid)s, %(recording_msid)s,
+                %(json)s) ON CONFLICT DO NOTHING """, values)
+        except sqlalchemy.exc.DataError, e: # Database error
+            if not self.connection.closed:
+                self.connection.close()
             print(e)
 
     @timeout(5)
@@ -247,17 +247,15 @@ class PostgresListenStore(ListenStore):
             function supports limiting the number of queries in flight.
         """
   
-        if self.postgres_conn.closed:
-            self.postgres_conn = psycopg2.connect("dbname='' user='listenbrainz'")   
-            self.postgres_cur = self.postgres_conn.cursor()
+        if self.connection.closed:
+            self.connection = self.engine.connect()
         for listen in listens:
             self.insert_postgresql(listen, self.format_dict(listen))
-        self.postgres_conn.commit()
-        self.postgres_conn.close()
+        self.connection.close()
 
     def execute(self, query, params=None):
-        self.postgres_cur.execute(query, params)
-        return self.postgres_cur.fetchall()
+        res = self.connection.execute(query, params)
+        return res.fetchall()
 
 
 class CassandraListenStore(ListenStore):

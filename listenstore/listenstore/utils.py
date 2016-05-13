@@ -3,26 +3,34 @@ import os.path
 import argparse
 from setproctitle import setproctitle
 import json
+import ConfigParser
+import os
 
+def config(opt_vars):
+    """ Parse config file else return default values """
+    config = ConfigParser.RawConfigParser()
+    config.optionxform = str
+    if len(config.read(os.path.dirname(__file__) + "/" + opt_vars['CONFIG'])) == 0:
+        return {
+            "KAFKA_SERVER": "localhost:9092",
+            "CASSANDRA_SERVER": "localhost",
+            "CASSANDRA_KEYSPACE": "listenbrainz"
+        }
 
-## TODO read config from whereever
-def config():
-    return {
-        "kafka_server": "localhost:9092",
-        "cassandra_server": "localhost",
-        "cassandra_keyspace": "listenbrainz"
-    }
+    values = []
+    for sec in ['DEFAULT'] + config.sections():
+        values +=  [ (key,val.strip("'").strip('"')) for key,val in config.items(sec) ]
+    return dict(values)
 
 
 def argparse_factory(desc):
     opt_parser = argparse.ArgumentParser(description=desc)
-    # TODO not using any config file yet
     opt_parser.add_argument('-c', '--config',
-                            dest='config',
-                            default='./listenstore.conf',
+                            dest='CONFIG',
+                            default='../listenstore.conf',
                             help='/path/to/listenstore.conf for configuration')
     opt_parser.add_argument('-l', '--loglevel',
-                            dest='loglevel',
+                            dest='LOGLEVEL',
                             default='INFO',
                             help='DEBUG | INFO | WARNING | ERROR | CRITICAL')
 #    opt_parser.add_argument('-v',
@@ -35,8 +43,8 @@ def argparse_factory(desc):
 
 def parse_args_and_config(opt_parser):
     opts = opt_parser.parse_args()
-    conf = config()
-    d = dict(conf.items() + dict(vars(opts)).items())
+    conf = config(vars(opts))
+    d = dict(dict(vars(opts)).items() + conf.items()) # Give preference to items in config file
     set_process_title(d)
     return d
 

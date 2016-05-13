@@ -12,7 +12,7 @@ REPORT_FREQUENCY = 10000
 class KafkaConsumer(object):
     def __init__(self, conf):
         self.log = logging.getLogger(__name__)
-        self.client = KafkaClient(conf["kafka_server"])
+        self.client = KafkaClient(conf["KAFKA_SERVER"])
         self.total_inserts = 0
         self.inserts = 0
         self.listenstore = None
@@ -37,7 +37,6 @@ class KafkaConsumer(object):
                 t0 = time()
 
             messages = self.consumer.get_messages(count=CASSANDRA_BATCH_SIZE, block=True, timeout=KAFKA_READ_TIMEOUT)
-            #print 'New batch'
             for message in messages:
                 try:
                     data = ujson.loads(message.message.value)
