@@ -48,6 +48,7 @@ def submit_listen():
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
+    print 'SUBMIT'
     user_id = _validate_auth_header()
 
     raw_data = request.get_data()

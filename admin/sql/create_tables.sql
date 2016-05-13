@@ -8,4 +8,18 @@ CREATE TABLE "user" (
 );
 ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_id_key UNIQUE (musicbrainz_id);
 
+CREATE TABLE listens (
+  uid             VARCHAR NOT NULL,
+  year            INT,
+  month           INT,
+  day             INT,
+  id              INT NOT NULL,
+  artist_msid     UUID,
+  album_msid      UUID,
+  recording_msid  UUID,
+  json            VARCHAR,
+  PRIMARY KEY(uid, id)
+);
+
+
 COMMIT;

@@ -14,6 +14,9 @@ from dateutil.relativedelta import relativedelta
 from cassandra.cluster import Cluster
 from cassandra import InvalidRequest
 from cassandra.query import SimpleStatement, BatchStatement
+import psycopg2
+import psycopg2.extras
+from .timeout import timeout
 
 MIN_ID = 1033430400     # approx when audioscrobbler was created
 ORDER_DESC = 0
@@ -109,6 +112,8 @@ class ListenStore(object):
         host = conf.get("cassandra_server", "localhost:9092")
         self.log.info('Connecting to cassandra: %s', host)
         self.cluster = Cluster([host])
+        self.postgre_connection = None
+        self.postgre_cursor = None
 
         try:
             self.session = self.cluster.connect(self.keyspace)
@@ -116,9 +121,16 @@ class ListenStore(object):
             self.log.info('Creating schema in keyspace %s...', self.keyspace)
             self.session = self.cluster.connect()
             self.create_schema()
+            
+        self.postgres_conn = psycopg2.connect("dbname='' user='listenbrainz'")   
+        self.postgres_cur = self.postgres_conn.cursor()
+        self.postgres_cur.execute("SET synchronous_commit TO off;")
+        psycopg2.extras.register_uuid()
+
 
     def execute(self, query, params=None):
-        return self.session.execute(query.encode(), params)
+        self.postgres_cur.execute(query, params)
+        return self.postgres_cur.fetchall()
 
     def create_schema(self):
         opts = {'repfactor': self.replication_factor, 'keyspace': self.keyspace}
@@ -134,12 +146,7 @@ class ListenStore(object):
     def max_id(self):
         return int(self.MAX_FUTURE_SECONDS + calendar.timegm(time.gmtime()))
 
-    def insert_async(self, listen):
-        batch = BatchStatement()
-        query = """INSERT INTO listens
-                    (uid, year, month, day, id, artist_msid, album_msid, recording_msid, json)
-                    VALUES (%(uid)s, %(year)s, %(month)s, %(day)s, %(id)s, %(artist_msid)s,
-                            %(album_msid)s, %(recording_msid)s, %(json)s)"""
+    def format_dict(self, listen):
         date = listen.date
         values = {'uid': listen.uid,
                   'year': date.year,
@@ -150,25 +157,55 @@ class ListenStore(object):
                   'album_msid': uuid.UUID(listen.album_msid) if listen.album_msid is not None else None,
                   'recording_msid': uuid.UUID(listen.recording_msid),
                   'json': ujson.dumps(listen.data)}
+        return values
+
+    def insert_async_cassandra(self, listen, values):
+        batch = BatchStatement()
+        query = """INSERT INTO listens
+                    (uid, year, month, day, id, artist_msid, album_msid, recording_msid, json)
+                    VALUES (%(uid)s, %(year)s, %(month)s, %(day)s, %(id)s, %(artist_msid)s,
+                            %(album_msid)s, %(recording_msid)s, %(json)s)"""
         if six.PY2 and isinstance(query, six.text_type):
             query = query.encode('utf-8')
         batch.add(SimpleStatement(query), values)
         return self.session.execute_async(batch)
 
+    def insert_async_postgresql(self, listen, values):
+        # create table listens(uid VARCHAR(100), year INT, month INT, day INT, id INT, artist_msid UUID, album_msid UUID, recording_msid UUID, json VARCHAR(400), PRIMARY KEY(uid,id));
+        try:
+            self.postgres_cur.execute(
+                """INSERT INTO listens(uid, year, month, day, id, artist_msid, album_msid, recording_msid, json) 
+                    VALUES ( %(uid)s, %(year)s, %(month)s, %(day)s, %(id)s, %(artist_msid)s, %(album_msid)s, %(recording_msid)s,
+                    %(json)s) ON CONFLICT DO NOTHING """, values)
+        except psycopg2.DatabaseError, e:
+            if self.postgres_conn:
+                self.postgres_conn.rollback()
+            print(e)
+
+
     def insert(self, listen):
         if not listen.validate():
             raise ValueError("Invalid listen: %s" % listen)
-        self.insert_async(listen).result()
+        self.insert_async_cassandra(listen).result()
 
+    @timeout(5)
     def insert_batch(self, listens):
         """ Insert a batch of listens, using asynchronous queries.
             Batches should probably be no more than 500-1000 listens until this
             function supports limiting the number of queries in flight.
         """
-        queries = []
+
         for listen in listens:
-            queries.append(self.insert_async(listen))
-        [query.result() for query in queries]
+            self.insert_async_cassandra(listen, self.format_dict(listen))
+  
+        if self.postgres_conn.closed:
+            self.postgres_conn = psycopg2.connect("dbname='' user='listenbrainz'")   
+            self.postgres_cur = self.postgres_conn.cursor()
+        for listen in listens:
+            self.insert_async_postgresql(listen, self.format_dict(listen))
+        self.postgres_conn.commit()
+        self.postgres_conn.close()
+
 
     def fetch_listens(self, uid, from_id=None, to_id=None, limit=None):
         """ Fetch a range of listens, for a user
@@ -207,8 +244,8 @@ class ListenStore(object):
                     return
 
     def convert_row(self, row):
-        return Listen(data=ujson.loads(row.json), uid=row.uid, timestamp=row.id, album_msid=row.album_msid,
-                      artist_msid=row.artist_msid, recording_msid=row.recording_msid)
+        return Listen(data=ujson.loads(row[8]), uid=row[0], timestamp=row[4], album_msid=row[6],
+                      artist_msid=row[5], recording_msid=row[7])
 
     def fetch_listens_for_range(self, uid, date_range, from_id, to_id, order, limit=None):
         """ Fetch listens for a specified uid within a single date range.
@@ -221,7 +258,7 @@ class ListenStore(object):
         query = """SELECT * FROM listens WHERE uid = %(uid)s AND """ + \
                 range_keys(len(date_range)) + \
                 """ AND id > %(from_id)s AND id < %(to_id)s
-                   ORDER BY id """ + ORDER_TEXT[order] + """ LIMIT %(limit)s"""
+                   ORDER BY id """ + ORDER_TEXT[order] + """ LIMIT %(limit)s;"""
 
         fetched_rows = 0  # Total number of rows fetched for this range
 
