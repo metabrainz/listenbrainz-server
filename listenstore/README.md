@@ -1,6 +1,6 @@
 
 ## Development
-
+    $ cp listenstore.conf.sample listenstore.conf
     $ PYTHONPATH=. bin/listenstore-test.py
 
 ## Pip, eggs, etc
@@ -13,6 +13,9 @@ then install the egg:
 
 bin scripts get installed to `/usr/local/bin`.
 
+## Configuration
+The file `listenstore.conf` stores the configuration used for ListenStore.
+Change them to appropriate values.
 
 ## Schema
 
