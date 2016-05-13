@@ -11,10 +11,12 @@ def config(opt_vars):
     config = ConfigParser.RawConfigParser()
     config.optionxform = str
     if len(config.read(os.path.dirname(__file__) + "/" + opt_vars['CONFIG'])) == 0:
+        # On failure load default configurations
         return {
             "KAFKA_SERVER": "localhost:9092",
             "CASSANDRA_SERVER": "localhost",
-            "CASSANDRA_KEYSPACE": "listenbrainz"
+            "CASSANDRA_KEYSPACE": "listenbrainz",
+            "REPLICATION_FACTOR": "1"
         }
 
     values = []

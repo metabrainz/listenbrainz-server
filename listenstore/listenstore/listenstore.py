@@ -127,11 +127,6 @@ class ListenStore(object):
                   'json': ujson.dumps(listen.data)}
         return values
 
-#    def insert(self, listen):
-#        if not listen.validate():
-#            raise ValueError("Invalid listen: %s" % listen)
-#        self.insert_async_cassandra(listen).result()
-#
     def fetch_listens(self, uid, from_id=None, to_id=None, limit=None):
         """ Fetch a range of listens, for a user
         """
@@ -223,19 +218,22 @@ class ListenStore(object):
 class PostgresListenStore(ListenStore):
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
+        self.log.info('Connecting to postgresql: %s', host)
         self.engine = create_engine(conf['SQLALCHEMY_DATABASE_URI'], poolclass=NullPool)
         self.connection = self.engine.connect()
         self.connection.execute("SET synchronous_commit TO off;")
     
     def insert_postgresql(self, listen, values):
+        if not listen.validate():
+            raise ValueError("Invalid listen: %s" % listen)
         if self.connection.closed:
             self.connection = self.engine.connect()
         try:
             res = self.connection.execute(
             """INSERT INTO listens(uid, year, month, day, id, artist_msid, album_msid, recording_msid, json) 
-                VALUES ( %(uid)s, %(year)s, %(month)s, %(day)s, %(id)s, %(artist_msid)s, %(album_msid)s, %(recording_msid)s,
-                %(json)s) ON CONFLICT DO NOTHING """, values)
-        except sqlalchemy.exc.DataError, e: # Database error
+                VALUES ( %(uid)s, %(year)s, %(month)s, %(day)s, %(id)s, %(artist_msid)s, %(album_msid)s,
+                %(recording_msid)s, %(json)s) ON CONFLICT DO NOTHING """, values)
+        except sqlalchemy.exc.DataError, e:     # Database error
             if not self.connection.closed:
                 self.connection.close()
             print(e)
@@ -261,9 +259,9 @@ class PostgresListenStore(ListenStore):
 class CassandraListenStore(ListenStore):
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
-        self.replication_factor = conf.get("replication_factor", 1)
-        self.keyspace = conf.get("cassandra_keyspace", "listenbrainz")
-        host = conf.get("cassandra_server", "localhost:9092")
+        self.replication_factor = conf['REPLICATION_FACTOR']
+        self.keyspace = conf["CASSANDRA_KEYSPACE"]
+        host = conf["CASSANDRA_SERVER"]
         self.log.info('Connecting to cassandra: %s', host)
         self.cluster = Cluster([host])
         
@@ -286,6 +284,8 @@ class CassandraListenStore(ListenStore):
         self.execute('DROP KEYSPACE %s' % self.keyspace)
 
     def insert_async_cassandra(self, listen, values):
+        if not listen.validate():
+            raise ValueError("Invalid listen: %s" % listen)
         batch = BatchStatement()
         query = """INSERT INTO listens
                     (uid, year, month, day, id, artist_msid, album_msid, recording_msid, json)
