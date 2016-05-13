@@ -3,7 +3,7 @@ import os
 import logging
 
 from .utils import argparse_factory, parse_args_and_config
-from .listenstore import ListenStore
+from .listenstore import PostgresListenStore, CassandraListenStore
 from .kafkaconsumer import KafkaConsumer
 
 
@@ -63,7 +63,8 @@ class Command(object):
     @property
     def listenStore(self):
         if self._listenStore is None:
-            self._listenStore = ListenStore(self.config)
+            #self._listenStore = CassandraListenStore(self.config)
+            self._listenStore = PostgresListenStore(self.config)
         return self._listenStore
 
     @property
