@@ -174,7 +174,7 @@ class ListenStore(object):
         query = """SELECT * FROM listens WHERE uid = %(uid)s AND """ + \
                 range_keys(len(date_range)) + \
                 """ AND id > %(from_id)s AND id < %(to_id)s
-                   ORDER BY id """ + ORDER_TEXT[order] + """ LIMIT %(limit)s;"""
+                   ORDER BY id """ + ORDER_TEXT[order] + """ LIMIT %(limit)s"""
 
         fetched_rows = 0  # Total number of rows fetched for this range
 
