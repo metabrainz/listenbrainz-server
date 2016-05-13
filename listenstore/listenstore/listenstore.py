@@ -115,17 +115,13 @@ class ListenStore(object):
         return int(self.MAX_FUTURE_SECONDS + calendar.timegm(time.gmtime()))
 
     def format_dict(self, listen):
-        date = listen.date
-        values = {'uid': listen.uid,
-                  'year': date.year,
-                  'month': date.month,
-                  'day': date.day,
+        return {'uid': listen.uid,
                   'id': listen.timestamp,
+                  'date': listen.date,
                   'artist_msid': uuid.UUID(listen.artist_msid),
                   'album_msid': uuid.UUID(listen.album_msid) if listen.album_msid is not None else None,
                   'recording_msid': uuid.UUID(listen.recording_msid),
                   'json': ujson.dumps(listen.data)}
-        return values
 
     def fetch_listens(self, uid, from_id=None, to_id=None, limit=None):
         """ Fetch a range of listens, for a user
@@ -218,7 +214,7 @@ class ListenStore(object):
 class PostgresListenStore(ListenStore):
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
-        self.log.info('Connecting to postgresql: %s', host)
+        self.log.info('Connecting to postgresql: %s', conf['SQLALCHEMY_DATABASE_URI'])
         self.engine = create_engine(conf['SQLALCHEMY_DATABASE_URI'], poolclass=NullPool)
         self.connection = self.engine.connect()
         self.connection.execute("SET synchronous_commit TO off;")
@@ -230,8 +226,8 @@ class PostgresListenStore(ListenStore):
             self.connection = self.engine.connect()
         try:
             res = self.connection.execute(
-            """INSERT INTO listens(uid, year, month, day, id, artist_msid, album_msid, recording_msid, json) 
-                VALUES ( %(uid)s, %(year)s, %(month)s, %(day)s, %(id)s, %(artist_msid)s, %(album_msid)s,
+            """INSERT INTO listens(uid, date, timestamp, artist_msid, album_msid, recording_msid, json) 
+                VALUES ( %(uid)s, %(date)s, %(id)s, %(artist_msid)s, %(album_msid)s,
                 %(recording_msid)s, %(json)s) ON CONFLICT DO NOTHING """, values)
         except sqlalchemy.exc.DataError, e:     # Database error
             if not self.connection.closed:
@@ -271,6 +267,14 @@ class CassandraListenStore(ListenStore):
             self.log.info('Creating schema in keyspace %s...', self.keyspace)
             self.session = self.cluster.connect()
             self.create_schema()
+
+    def format_dict(self, listen):
+        values = super(CassandraListenStore, self).format_dict(listen)
+        d = { 'day' : values['date'].day,
+              'month' : values['date'].month,
+              'year' : values['date'].year  }
+        values.pop('date', None)
+        return dict(values.items() + d.items())
 
     def create_schema(self):
         opts = {'repfactor': self.replication_factor, 'keyspace': self.keyspace}
