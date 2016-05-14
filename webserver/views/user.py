@@ -30,8 +30,8 @@ def lastfmscraper(user_id):
 @user_bp.route("/<user_id>")
 def profile(user_id):
     # Which database to use to showing user listens.
-    db_conn = webserver.create_cassandra()
-    #db_conn = webserver.create_postgres()
+    #db_conn = webserver.create_cassandra()
+    db_conn = webserver.create_postgres()
 
     # Getting data for current page
     max_ts = request.args.get("max_ts")
