@@ -9,14 +9,13 @@ import os
 def config(opt_vars):
     """ Parse config file else return default values """
     config = ConfigParser.RawConfigParser()
-    config.optionxform = str
-    if len(config.read(os.path.dirname(__file__) + "/" + opt_vars['CONFIG'])) == 0:
+    if len(config.read(os.path.dirname(__file__) + "/" + opt_vars['config'])) == 0:
         # On failure load default configurations
         return {
-            "KAFKA_SERVER": "localhost:9092",
-            "CASSANDRA_SERVER": "localhost",
-            "CASSANDRA_KEYSPACE": "listenbrainz",
-            "REPLICATION_FACTOR": "1"
+            "kafka_server": "localhost:9092",
+            "cassandra_server": "localhost",
+            "cassandra_keyspace": "listenbrainz",
+            "cassandra_replication_factor": "1"
         }
 
     values = []
@@ -28,11 +27,11 @@ def config(opt_vars):
 def argparse_factory(desc):
     opt_parser = argparse.ArgumentParser(description=desc)
     opt_parser.add_argument('-c', '--config',
-                            dest='CONFIG',
+                            dest='config',
                             default='../listenstore.conf',
                             help='/path/to/listenstore.conf for configuration')
     opt_parser.add_argument('-l', '--loglevel',
-                            dest='LOGLEVEL',
+                            dest='loglevel',
                             default='INFO',
                             help='DEBUG | INFO | WARNING | ERROR | CRITICAL')
 #    opt_parser.add_argument('-v',

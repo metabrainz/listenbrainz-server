@@ -16,5 +16,5 @@ KAFKA_SERVER = "localhost:9092"
 # Cassandra settings
 CASSANDRA_SERVER = "localhost"
 CASSANDRA_KEYSPACE = "listenbrainz"
-REPLICATION_FACTOR = 1
+CASSANDRA_REPLICATION_FACTOR = 1
 

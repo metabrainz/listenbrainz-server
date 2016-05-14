@@ -124,9 +124,8 @@ class ListenStore(object):
                   'json': ujson.dumps(listen.data)}
 
     def fetch_listens(self, uid, from_id=None, to_id=None, limit=None):
-        """ Fetch a range of listens, for a user
+        """ Setup from_id, to_id, and limit for fetching listens
         """
-
         if from_id and to_id:
             raise ValueError("You cannot specify from_id and to_id at the same time.")
 
@@ -140,7 +139,137 @@ class ListenStore(object):
             from_id = MIN_ID
         if to_id is None:
             to_id = self.max_id()
+        return self.fetch_listens_from_database(uid, from_id, to_id, limit, order, precision)
 
+
+class PostgresListenStore(ListenStore):
+    def __init__(self, conf):
+        ListenStore.__init__(self, conf)
+        self.log.info('Connecting to postgresql: %s', conf['sqlalchemy_database_uri'])
+        self.engine = create_engine(conf['sqlalchemy_database_uri'], poolclass=NullPool)
+        self.connection = self.engine.connect()
+        self.connection.execute("SET synchronous_commit TO off;")
+    
+    def convert_row(self, row):
+        return Listen(data=ujson.loads(row[7]), uid=row[1], timestamp=row[3], album_msid=row[5],
+                      artist_msid=row[4], recording_msid=row[6])
+
+    def insert_postgresql(self, listen, values):
+        if not listen.validate():
+            raise ValueError("Invalid listen: %s" % listen)
+        if self.connection.closed:
+            self.connection = self.engine.connect()
+        try:
+            res = self.connection.execute(
+            """INSERT INTO listens(uid, date, timestamp, artist_msid, album_msid, recording_msid, json) 
+                VALUES ( %(uid)s, %(date)s, %(id)s, %(artist_msid)s, %(album_msid)s,
+                %(recording_msid)s, %(json)s) ON CONFLICT DO NOTHING """, values)
+        except sqlalchemy.exc.DataError, e:     # Database error
+            if not self.connection.closed:
+                self.connection.close()
+            print(e)
+
+    @timeout(5)
+    def insert_batch(self, listens):
+        """ Insert a batch of listens, using asynchronous queries.
+            Batches should probably be no more than 500-1000 listens until this
+            function supports limiting the number of queries in flight.
+        """
+  
+        if self.connection.closed:
+            self.connection = self.engine.connect()
+        for listen in listens:
+            self.insert_postgresql(listen, self.format_dict(listen))
+        self.connection.close()
+
+    def execute(self, query, params=None):
+        res = self.connection.execute(query, params)
+        return res.fetchall()
+
+    def fetch_listens_from_database(self, uid, from_id, to_id, limit, order, precision):
+        query = """SELECT * FROM listens WHERE uid = %(uid)s """ + \
+                """ AND timestamp > %(from_id)s AND timestamp < %(to_id)s
+                   ORDER BY timestamp """ + ORDER_TEXT[order] + """ LIMIT %(limit)s"""
+        params = {
+            'uid' : uid,
+            'from_id' : from_id,
+            'to_id' : to_id,
+            'limit' : limit
+        }
+        if self.connection.closed:
+            self.connection = self.engine.connect()
+        results = self.execute(query, params)
+        for row in results:
+            yield self.convert_row(row)
+
+
+class CassandraListenStore(ListenStore):
+    def __init__(self, conf):
+        ListenStore.__init__(self, conf)
+        self.replication_factor = conf['cassandra_replication_factor']
+        self.keyspace = conf["cassandra_keyspace"]
+        host = conf["cassandra_server"]
+        self.log.info('Connecting to cassandra: %s', host)
+        self.cluster = Cluster([host])
+        
+        try:
+            self.session = self.cluster.connect(self.keyspace)
+        except InvalidRequest:
+            self.log.info('Creating schema in keyspace %s...', self.keyspace)
+            self.session = self.cluster.connect()
+            self.create_schema()
+
+    def convert_row(self, row):
+        return Listen(data=ujson.loads(row.json), uid=row.uid, timestamp=row.id, album_msid=row.album_msid,
+                      artist_msid=row.artist_msid, recording_msid=row.recording_msid)
+
+    def format_dict(self, listen):
+        values = super(CassandraListenStore, self).format_dict(listen)
+        d = { 'day' : values['date'].day,
+              'month' : values['date'].month,
+              'year' : values['date'].year  }
+        values.pop('date', None)
+        return dict(values.items() + d.items())
+
+    def create_schema(self):
+        opts = {'repfactor': self.replication_factor, 'keyspace': self.keyspace}
+        for query in CREATE_SCHEMA_QUERIES:
+            self.execute(query % opts)
+
+    def drop_schema(self):
+        if self.keyspace == 'listenbrainz':
+            raise Exception("Attempt to drop the production keyspace, denied.")
+        self.log.info("Dropping keyspace %s...", self.keyspace)
+        self.execute('DROP KEYSPACE %s' % self.keyspace)
+
+    def insert_async_cassandra(self, listen, values):
+        if not listen.validate():
+            raise ValueError("Invalid listen: %s" % listen)
+        batch = BatchStatement()
+        query = """INSERT INTO listens
+                    (uid, year, month, day, id, artist_msid, album_msid, recording_msid, json)
+                    VALUES (%(uid)s, %(year)s, %(month)s, %(day)s, %(id)s, %(artist_msid)s,
+                            %(album_msid)s, %(recording_msid)s, %(json)s)"""
+        if six.PY2 and isinstance(query, six.text_type):
+            query = query.encode('utf-8')
+        batch.add(SimpleStatement(query), values)
+        return self.session.execute_async(batch)
+
+    @timeout(5)
+    def insert_batch(self, listens):
+        """ Insert a batch of listens, using asynchronous queries.
+            Batches should probably be no more than 500-1000 listens until this
+            function supports limiting the number of queries in flight.
+        """
+        for listen in listens:
+            self.insert_async_cassandra(listen, self.format_dict(listen))
+
+    def execute(self, query, params=None):
+        return self.session.execute(query.encode(), params)
+
+    def fetch_listens_from_database(self, uid, from_id, to_id, limit, order, precision):
+        """ Fetch a range of listens, for a user
+        """
         ranges = dateranges(from_id, to_id, precision, order)
         fetched_rows = 0
         for daterange in ranges:
@@ -158,10 +287,6 @@ class ListenStore(object):
                 fetched_rows += 1
                 if limit is not None and fetched_rows == limit:
                     return
-
-    def convert_row(self, row):
-        return Listen(data=ujson.loads(row[8]), uid=row[0], timestamp=row[4], album_msid=row[6],
-                      artist_msid=row[5], recording_msid=row[7])
 
     def fetch_listens_for_range(self, uid, date_range, from_id, to_id, order, limit=None):
         """ Fetch listens for a specified uid within a single date range.
@@ -210,107 +335,6 @@ class ListenStore(object):
                     to_id = row[0] - 1
             else:
                 return
-
-class PostgresListenStore(ListenStore):
-    def __init__(self, conf):
-        ListenStore.__init__(self, conf)
-        self.log.info('Connecting to postgresql: %s', conf['SQLALCHEMY_DATABASE_URI'])
-        self.engine = create_engine(conf['SQLALCHEMY_DATABASE_URI'], poolclass=NullPool)
-        self.connection = self.engine.connect()
-        self.connection.execute("SET synchronous_commit TO off;")
-    
-    def insert_postgresql(self, listen, values):
-        if not listen.validate():
-            raise ValueError("Invalid listen: %s" % listen)
-        if self.connection.closed:
-            self.connection = self.engine.connect()
-        try:
-            res = self.connection.execute(
-            """INSERT INTO listens(uid, date, timestamp, artist_msid, album_msid, recording_msid, json) 
-                VALUES ( %(uid)s, %(date)s, %(id)s, %(artist_msid)s, %(album_msid)s,
-                %(recording_msid)s, %(json)s) ON CONFLICT DO NOTHING """, values)
-        except sqlalchemy.exc.DataError, e:     # Database error
-            if not self.connection.closed:
-                self.connection.close()
-            print(e)
-
-    @timeout(5)
-    def insert_batch(self, listens):
-        """ Insert a batch of listens, using asynchronous queries.
-            Batches should probably be no more than 500-1000 listens until this
-            function supports limiting the number of queries in flight.
-        """
-  
-        if self.connection.closed:
-            self.connection = self.engine.connect()
-        for listen in listens:
-            self.insert_postgresql(listen, self.format_dict(listen))
-        self.connection.close()
-
-    def execute(self, query, params=None):
-        res = self.connection.execute(query, params)
-        return res.fetchall()
-
-
-class CassandraListenStore(ListenStore):
-    def __init__(self, conf):
-        ListenStore.__init__(self, conf)
-        self.replication_factor = conf['REPLICATION_FACTOR']
-        self.keyspace = conf["CASSANDRA_KEYSPACE"]
-        host = conf["CASSANDRA_SERVER"]
-        self.log.info('Connecting to cassandra: %s', host)
-        self.cluster = Cluster([host])
-        
-        try:
-            self.session = self.cluster.connect(self.keyspace)
-        except InvalidRequest:
-            self.log.info('Creating schema in keyspace %s...', self.keyspace)
-            self.session = self.cluster.connect()
-            self.create_schema()
-
-    def format_dict(self, listen):
-        values = super(CassandraListenStore, self).format_dict(listen)
-        d = { 'day' : values['date'].day,
-              'month' : values['date'].month,
-              'year' : values['date'].year  }
-        values.pop('date', None)
-        return dict(values.items() + d.items())
-
-    def create_schema(self):
-        opts = {'repfactor': self.replication_factor, 'keyspace': self.keyspace}
-        for query in CREATE_SCHEMA_QUERIES:
-            self.execute(query % opts)
-
-    def drop_schema(self):
-        if self.keyspace == 'listenbrainz':
-            raise Exception("Attempt to drop the production keyspace, denied.")
-        self.log.info("Dropping keyspace %s...", self.keyspace)
-        self.execute('DROP KEYSPACE %s' % self.keyspace)
-
-    def insert_async_cassandra(self, listen, values):
-        if not listen.validate():
-            raise ValueError("Invalid listen: %s" % listen)
-        batch = BatchStatement()
-        query = """INSERT INTO listens
-                    (uid, year, month, day, id, artist_msid, album_msid, recording_msid, json)
-                    VALUES (%(uid)s, %(year)s, %(month)s, %(day)s, %(id)s, %(artist_msid)s,
-                            %(album_msid)s, %(recording_msid)s, %(json)s)"""
-        if six.PY2 and isinstance(query, six.text_type):
-            query = query.encode('utf-8')
-        batch.add(SimpleStatement(query), values)
-        return self.session.execute_async(batch)
-
-    @timeout(5)
-    def insert_batch(self, listens):
-        """ Insert a batch of listens, using asynchronous queries.
-            Batches should probably be no more than 500-1000 listens until this
-            function supports limiting the number of queries in flight.
-        """
-        for listen in listens:
-            self.insert_async_cassandra(listen, self.format_dict(listen))
-
-    def execute(self, query, params=None):
-        return self.session.execute(query.encode(), params)
         
 
 CREATE_SCHEMA_QUERIES = [
