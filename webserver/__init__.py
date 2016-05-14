@@ -4,6 +4,8 @@ import os
 import messybrainz
 import messybrainz.db
 
+from .scheduler import ScheduledJobs
+
 def create_cassandra():
     from cassandra_connection import init_cassandra_connection
     return init_cassandra_connection(current_app.config['CASSANDRA_SERVER'], current_app.config['CASSANDRA_KEYSPACE'],
@@ -22,6 +24,9 @@ def create_app():
     sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../listenstore"))
     import config
     app.config.from_object(config)
+
+    # Run the scheduled jobs
+    scheduledJobs = ScheduledJobs(app.config)
 
     # Logging
     from webserver.loggers import init_loggers
