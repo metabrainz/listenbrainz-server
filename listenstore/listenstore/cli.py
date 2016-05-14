@@ -24,7 +24,7 @@ class Command(object):
 
     # NB: only sets level after our Command starts running
     def set_log_level(self):
-        l = self.config['LOGLEVEL']
+        l = self.config['loglevel']
         lev = logging.INFO
         if l == "DEBUG":
             lev = logging.DEBUG
@@ -62,10 +62,10 @@ class Command(object):
 
     @property
     def listenStore(self):
-        if self._listenStore is None:
-            #self._listenStore = CassandraListenStore(self.config)
-            self._listenStore = PostgresListenStore(self.config)
-        return self._listenStore
+        """ Override this method in bin scripts to support writing
+            to both Casandra and Postgres
+        """
+        pass
 
     @property
     def kafkaConsumer(self):
