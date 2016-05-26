@@ -12,9 +12,9 @@ CREATE TABLE listens (
   id              SERIAL,
   uid             VARCHAR NOT NULL,
   ts              TIMESTAMP WITH TIME ZONE NOT NULL,
-  artist_msid     UUID,
+  artist_msid     UUID NOT NULL,
   album_msid      UUID,
-  recording_msid  UUID,
+  recording_msid  UUID NOT NULL,
   json            VARCHAR
 );
 
