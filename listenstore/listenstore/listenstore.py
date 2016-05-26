@@ -114,15 +114,6 @@ class ListenStore(object):
     def max_id(self):
         return int(self.MAX_FUTURE_SECONDS + calendar.timegm(time.gmtime()))
 
-    def format_dict(self, listen):
-        return {'uid': listen.uid,
-                  'id': listen.timestamp,
-                  'date': listen.date,
-                  'artist_msid': uuid.UUID(listen.artist_msid),
-                  'album_msid': uuid.UUID(listen.album_msid) if listen.album_msid is not None else None,
-                  'recording_msid': uuid.UUID(listen.recording_msid),
-                  'json': ujson.dumps(listen.data)}
-
     def fetch_listens(self, uid, from_id=None, to_id=None, limit=None):
         """ Setup from_id, to_id, and limit for fetching listens
         """
@@ -147,58 +138,55 @@ class PostgresListenStore(ListenStore):
         ListenStore.__init__(self, conf)
         self.log.info('Connecting to postgresql: %s', conf['sqlalchemy_database_uri'])
         self.engine = create_engine(conf['sqlalchemy_database_uri'], poolclass=NullPool)
-        self.connection = self.engine.connect()
-        self.connection.execute("SET synchronous_commit TO off;")
+        #self.connection.execute("SET synchronous_commit TO off;")
     
     def convert_row(self, row):
-        return Listen(data=ujson.loads(row[7]), uid=row[1], timestamp=row[3], album_msid=row[5],
-                      artist_msid=row[4], recording_msid=row[6])
+        return Listen(uid=row[1], timestamp=row[2], artist_msid=row[3], album_msid=row[4],
+                      recording_msid=row[5], data=ujson.loads(row[6]))
 
-    def insert_postgresql(self, listen, values):
-        if not listen.validate():
-            raise ValueError("Invalid listen: %s" % listen)
-        if self.connection.closed:
-            self.connection = self.engine.connect()
-        try:
-            res = self.connection.execute(
-            """INSERT INTO listens(uid, ts, artist_msid, album_msid, recording_msid, json)
-                VALUES ( %(uid)s, to_timestamp(%(id)s), %(artist_msid)s, %(album_msid)s,
-                %(recording_msid)s, %(json)s) ON CONFLICT DO NOTHING """, values)
-        except sqlalchemy.exc.DataError, e:     # Database error
-            if not self.connection.closed:
-                self.connection.close()
-            print(e)
+    def format_dict(self, listen):
+        return { 'uid': listen.uid,
+                 'id': listen.timestamp,
+                 'artist_msid': uuid.UUID(listen.artist_msid),
+                 'album_msid': uuid.UUID(listen.album_msid) if listen.album_msid is not None else None,
+                 'recording_msid': uuid.UUID(listen.recording_msid),
+                 'json': ujson.dumps(listen.data)}
 
     @timeout(5)
-    def insert_batch(self, listens):
+    def insert_postgresql(self, listens):
         """ Insert a batch of listens, using asynchronous queries.
             Batches should probably be no more than 500-1000 listens until this
             function supports limiting the number of queries in flight.
         """
-  
-        if self.connection.closed:
-            self.connection = self.engine.connect()
-        for listen in listens:
-            self.insert_postgresql(listen, self.format_dict(listen))
-        self.connection.close()
+        with self.engine.connect() as connection:
+            for listen in listens:
+                if not listen.validate():
+                    raise ValueError("Invalid listen: %s" % listen)
+                try:
+                    res = connection.execute(
+                    """INSERT INTO listens(uid, ts, artist_msid, album_msid, recording_msid, json)
+                        VALUES ( %(uid)s, to_timestamp(%(id)s), %(artist_msid)s, %(album_msid)s,
+                        %(recording_msid)s, %(json)s) ON CONFLICT DO NOTHING """, self.format_dict(listen))
+                except sqlalchemy.exc.DataError, e:     # Database error
+                    print(e)
 
-    def execute(self, query, params=None):
-        res = self.connection.execute(query, params)
+    def execute(self, connection, query, params=None):
+        res = connection.execute(query, params)
         return res.fetchall()
 
     def fetch_listens_from_database(self, uid, from_id, to_id, limit, order, precision):
-        query = """SELECT * FROM listens WHERE uid = %(uid)s """ + \
-                """ AND timestamp > %(from_id)s AND timestamp < %(to_id)s
-                   ORDER BY timestamp """ + ORDER_TEXT[order] + """ LIMIT %(limit)s"""
+        query = """ SELECT id, uid, extract(epoch from ts), artist_msid, album_msid, recording_msid, json """ + \
+                """ FROM listens WHERE uid = %(uid)s """ + \
+                """ AND extract(epoch from ts) > %(from_id)s AND extract(epoch from ts) < %(to_id)s  """ + \
+                """ ORDER BY extract(epoch from ts) """ + ORDER_TEXT[order] + """ LIMIT %(limit)s"""
         params = {
             'uid' : uid,
             'from_id' : from_id,
             'to_id' : to_id,
             'limit' : limit
         }
-        if self.connection.closed:
-            self.connection = self.engine.connect()
-        results = self.execute(query, params)
+        with self.engine.connect() as connection:
+            results = self.execute(connection, query, params)
         for row in results:
             yield self.convert_row(row)
 
@@ -224,12 +212,15 @@ class CassandraListenStore(ListenStore):
                       artist_msid=row.artist_msid, recording_msid=row.recording_msid)
 
     def format_dict(self, listen):
-        values = super(CassandraListenStore, self).format_dict(listen)
-        d = { 'day' : values['date'].day,
-              'month' : values['date'].month,
-              'year' : values['date'].year  }
-        values.pop('date', None)
-        return dict(values.items() + d.items())
+        return { 'uid': listen.uid,
+                 'id': listen.timestamp,
+                 'artist_msid': uuid.UUID(listen.artist_msid),
+                 'album_msid': uuid.UUID(listen.album_msid) if listen.album_msid is not None else None,
+                 'recording_msid': uuid.UUID(listen.recording_msid),
+                 'json': ujson.dumps(listen.data),
+                 'day' : values['date'].day,
+                 'month' : values['date'].month,
+                 'year' : values['date'].year }
 
     def create_schema(self):
         opts = {'repfactor': self.replication_factor, 'keyspace': self.keyspace}
