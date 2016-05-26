@@ -161,8 +161,8 @@ class PostgresListenStore(ListenStore):
             self.connection = self.engine.connect()
         try:
             res = self.connection.execute(
-            """INSERT INTO listens(uid, date, timestamp, artist_msid, album_msid, recording_msid, json) 
-                VALUES ( %(uid)s, %(date)s, %(id)s, %(artist_msid)s, %(album_msid)s,
+            """INSERT INTO listens(uid, ts, artist_msid, album_msid, recording_msid, json)
+                VALUES ( %(uid)s, to_timestamp(%(id)s), %(artist_msid)s, %(album_msid)s,
                 %(recording_msid)s, %(json)s) ON CONFLICT DO NOTHING """, values)
         except sqlalchemy.exc.DataError, e:     # Database error
             if not self.connection.closed:
