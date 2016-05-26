@@ -51,7 +51,7 @@ class KafkaConsumer(object):
                 broken = True
                 while broken:
                     try:
-                        self.listenstore.insert_batch(listens)
+                        self.listenstore.insert_postgresql(listens)
                         broken = False
                     except ValueError as e:
                         self.log.error("Cannot insert listens: %s" % unicode(e))
