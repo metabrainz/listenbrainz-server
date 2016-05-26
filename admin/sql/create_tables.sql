@@ -11,8 +11,7 @@ ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_id_key UNIQUE (musicbrainz_id
 CREATE TABLE listens (
   id              SERIAL,
   uid             VARCHAR NOT NULL,
-  date            TIMESTAMP,
-  timestamp       INT NOT NULL,
+  ts              TIMESTAMP WITH TIME ZONE NOT NULL,
   artist_msid     UUID,
   album_msid      UUID,
   recording_msid  UUID,
