@@ -149,7 +149,7 @@ class PostgresListenStore(ListenStore):
 
     def convert_row(self, row):
         return Listen(uid=row[1], timestamp=row[2], artist_msid=row[3], album_msid=row[4],
-                      recording_msid=row[5], data=ujson.loads(row[6]))
+                      recording_msid=row[5], data=row[6])
 
     def format_dict(self, listen):
         return { 'user_id': listen.uid,

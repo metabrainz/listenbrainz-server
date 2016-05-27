@@ -2,7 +2,7 @@ from listenstore.listenstore import CassandraListenStore
 
 def init_cassandra_connection(server, keyspace, rep_factor):
     return CassandraListenStore({
-        'cassandra_server': server,
-        'cassandra_keyspace': keyspace,
-        'cassandra_replication_factor': rep_factor,
+        'CASSANDRA_SERVER': server,
+        'CASSANDRA_KEYSPACE': keyspace,
+        'CASSANDRA_REPLICATION_FACTOR': rep_factor,
     })
