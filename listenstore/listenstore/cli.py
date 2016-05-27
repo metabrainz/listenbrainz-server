@@ -61,14 +61,14 @@ class Command(object):
         raise NotImplementedError()
 
     @property
-    def listenStore(self):
+    def listen_store(self):
         """ Override this method in bin scripts to support writing
             to both Casandra and Postgres
         """
         pass
 
     @property
-    def kafkaConsumer(self):
+    def kafka_consumer(self):
         if self._kafkaConsumer is None:
             self._kafkaConsumer = KafkaConsumer(self.config)
         return self._kafkaConsumer
