@@ -145,8 +145,8 @@ class PostgresListenStore(ListenStore):
                       recording_msid=row[5], data=ujson.loads(row[6]))
 
     def format_dict(self, listen):
-        return { 'uid': listen.uid,
-                 'id': listen.timestamp,
+        return { 'user_id': listen.uid,
+                 'ts': listen.timestamp,
                  'artist_msid': uuid.UUID(listen.artist_msid),
                  'album_msid': uuid.UUID(listen.album_msid) if listen.album_msid is not None else None,
                  'recording_msid': uuid.UUID(listen.recording_msid),
@@ -164,8 +164,8 @@ class PostgresListenStore(ListenStore):
                     raise ValueError("Invalid listen: %s" % listen)
                 try:
                     res = connection.execute(
-                    """INSERT INTO listens(uid, ts, artist_msid, album_msid, recording_msid, raw_data)
-                        VALUES ( %(uid)s, to_timestamp(%(id)s), %(artist_msid)s, %(album_msid)s,
+                    """INSERT INTO listens(user_id, ts, artist_msid, album_msid, recording_msid, raw_data)
+                        VALUES ( %(user_id)s, to_timestamp(%(ts)s), %(artist_msid)s, %(album_msid)s,
                         %(recording_msid)s, %(raw_data)s) ON CONFLICT DO NOTHING """, self.format_dict(listen))
                 except sqlalchemy.exc.DataError, e:     # Database error
                     print(e)
@@ -175,12 +175,12 @@ class PostgresListenStore(ListenStore):
         return res.fetchall()
 
     def fetch_listens_from_database(self, uid, from_id, to_id, limit, order, precision):
-        query = """ SELECT id, uid, extract(epoch from ts), artist_msid, album_msid, recording_msid, raw_data """ + \
-                """ FROM listens WHERE uid = %(uid)s """ + \
+        query = """ SELECT id, user_id, extract(epoch from ts), artist_msid, album_msid, recording_msid, raw_data """ + \
+                """ FROM listens WHERE user_id = %(user_id)s """ + \
                 """ AND extract(epoch from ts) > %(from_id)s AND extract(epoch from ts) < %(to_id)s  """ + \
                 """ ORDER BY extract(epoch from ts) """ + ORDER_TEXT[order] + """ LIMIT %(limit)s"""
         params = {
-            'uid' : uid,
+            'user_id' : uid,
             'from_id' : from_id,
             'to_id' : to_id,
             'limit' : limit
