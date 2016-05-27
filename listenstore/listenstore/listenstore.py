@@ -142,10 +142,10 @@ class ListenStore(object):
 class PostgresListenStore(ListenStore):
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
-        self.log.info('Connecting to postgresql: %s', conf['sqlalchemy_database_uri'])
-        self.engine = create_engine(conf['sqlalchemy_database_uri'], poolclass=NullPool)
+        self.log.info('Connecting to postgresql: %s', conf['SQLALCHEMY_DATABASE_URI'])
+        self.engine = create_engine(conf['SQLALCHEMY_DATABASE_URI'], poolclass=NullPool)
         #self.connection.execute("SET synchronous_commit TO off;")
-    
+
     def convert_row(self, row):
         return Listen(uid=row[1], timestamp=row[2], artist_msid=row[3], album_msid=row[4],
                       recording_msid=row[5], data=ujson.loads(row[6]))
@@ -200,12 +200,12 @@ class PostgresListenStore(ListenStore):
 class CassandraListenStore(ListenStore):
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
-        self.replication_factor = conf['cassandra_replication_factor']
-        self.keyspace = conf["cassandra_keyspace"]
-        host = conf["cassandra_server"]
+        self.replication_factor = conf['CASSANDRA_REPLICATION_FACTOR']
+        self.keyspace = conf["CASSANDRA_KEYSPACE"]
+        host = conf["CASSANDRA_SERVER"]
         self.log.info('Connecting to cassandra: %s', host)
         self.cluster = Cluster([host])
-        
+
         try:
             self.session = self.cluster.connect(self.keyspace)
         except InvalidRequest:
@@ -332,7 +332,7 @@ class CassandraListenStore(ListenStore):
                     to_id = row[0] - 1
             else:
                 return
-        
+
 
 CREATE_SCHEMA_QUERIES = [
     """CREATE KEYSPACE %(keyspace)s WITH replication = {
