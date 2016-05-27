@@ -13,7 +13,7 @@ class KafkaToPostgres(Command):
         self.log = logging.getLogger(__name__)
 
     def run(self):
-        self.kafkaConsumer.start_listens(self.listenStore)
+        self.kafka_consumer.start_listens(self.listen_store)
 
     @property
     def listen_store(self):
