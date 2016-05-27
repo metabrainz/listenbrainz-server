@@ -1,6 +1,5 @@
 
 ## Development
-    $ cp listenstore.conf.sample listenstore.conf
     $ PYTHONPATH=. bin/listenstore-test.py
 
 ## Pip, eggs, etc
@@ -14,14 +13,13 @@ then install the egg:
 bin scripts get installed to `/usr/local/bin`.
 
 ## Configuration
-The file `listenstore.conf` stores the configuration used for ListenStore.
-Change them to appropriate values.
+Listenstore uses same configuration file as used for ListenBrainz. If the
+location of the `config.py` is changed, the change them to appropriate values.
 
 ## Schema
 
-Cassandra table called "listens" stores everything. It is keyed on `(uid,
-idkey)`, where idkey is the first 3 numbers in the unixtimestamp of the
-listen.
+Postgres table called "listens" stores everything. It is keyed on `(user_id,
+ts)`, where ts is the timestamp (with timezone) of the listen.
 
 This effectively shards listens by a user over multiple row keys, since
 very wide rows are inefficient.
