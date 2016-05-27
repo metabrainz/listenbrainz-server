@@ -16,7 +16,7 @@ class KafkaToPostgres(Command):
         self.kafkaConsumer.start_listens(self.listenStore)
 
     @property
-    def listenStore(self):
+    def listen_store(self):
         self._listenStore = PostgresListenStore(self.config)
         return self._listenStore
 
