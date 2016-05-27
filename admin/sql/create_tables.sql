@@ -15,7 +15,7 @@ CREATE TABLE listens (
   artist_msid     UUID NOT NULL,
   album_msid      UUID,
   recording_msid  UUID NOT NULL,
-  json            VARCHAR
+  raw_data        JSONB
 );
 
 COMMIT;
