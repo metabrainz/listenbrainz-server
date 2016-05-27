@@ -1,6 +1,6 @@
 BEGIN;
 
 ALTER TABLE "user" ADD CONSTRAINT user_pkey PRIMARY KEY (id);
-ALTER TABLE listens ADD CONSTRAINT listens_pkey PRIMARY KEY (uid, ts);
+ALTER TABLE listens ADD CONSTRAINT listens_pkey PRIMARY KEY (user_id, ts);
 
 COMMIT;
