@@ -121,7 +121,8 @@ class ListenStore(object):
 
 
     def fetch_listens(self, uid, from_id=None, to_id=None, limit=None):
-        """ Setup from_id, to_id, and limit for fetching listens
+        """ Check from_id, to_id, and limit for fetching listens
+            and set them to default values if not given.
         """
         if from_id and to_id:
             raise ValueError("You cannot specify from_id and to_id at the same time.")
