@@ -24,7 +24,7 @@ class Command(object):
 
     # NB: only sets level after our Command starts running
     def set_log_level(self):
-        l = self.config['loglevel']
+        l = self.config['LOGLEVEL']
         lev = logging.INFO
         if l == "DEBUG":
             lev = logging.DEBUG

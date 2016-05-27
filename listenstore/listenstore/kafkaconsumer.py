@@ -12,7 +12,7 @@ REPORT_FREQUENCY = 10000
 class KafkaConsumer(object):
     def __init__(self, conf):
         self.log = logging.getLogger(__name__)
-        self.client = KafkaClient(conf["kafka_server"])
+        self.client = KafkaClient(conf["KAFKA_CONNECT"])
         self.total_inserts = 0
         self.inserts = 0
         self.listenstore = None

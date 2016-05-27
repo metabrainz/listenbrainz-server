@@ -3,39 +3,46 @@ import os.path
 import argparse
 from setproctitle import setproctitle
 import json
-import ConfigParser
 import os
+from loadconfig import Config
 
-def config(opt_vars):
-    """ Parse config file else return default values """
-    config = ConfigParser.RawConfigParser()
-    if len(config.read(os.path.dirname(__file__) + "/" + opt_vars['config'])) == 0:
-        # On failure load default configurations
-        return {
-            "kafka_server": "localhost:9092",
-            "cassandra_server": "localhost",
-            "cassandra_keyspace": "listenbrainz",
-            "cassandra_replication_factor": "1"
-        }
+def get_config(opt_vars):
+    """ Merge configuration from 'config.py' of ListenBrainz, commandline arguments and \
+        the default values with order of preference
 
-    values = []
-    for sec in ['DEFAULT'] + config.sections():
-        values +=  [ (key,val.strip("'").strip('"')) for key,val in config.items(sec) ]
-    return dict(values)
+        Config_file > Commandline_arguments > Default_config
+    """
+
+    config = {}
+    default_config = {  "KAFKA_CONNECT": "localhost:9092",
+                        "CASSANDRA_SERVER": "localhost",
+                        "CASSANDRA_KEYSPACE": "listenbrainz",
+                        "CASSANDRA_REPLICATION_FACTOR": "1"
+                     }
+    try:
+        custom_config = Config(os.path.dirname(__file__)).from_pyfile(opt_vars['CONFIG'])
+    except:
+        #TODO: Log failure loading config file
+        pass
+
+    config.update(default_config)
+    config.update(opt_vars)
+    config.update(custom_config)
+    return config
 
 
 def argparse_factory(desc):
     opt_parser = argparse.ArgumentParser(description=desc)
     opt_parser.add_argument('-c', '--config',
-                            dest='config',
-                            default='../listenstore.conf',
-                            help='/path/to/listenstore.conf for configuration')
+                            dest='CONFIG',
+                            default=os.path.dirname(__file__) + "/../../config.py",
+                            help='/path/to/config.py for configuration of listenstore')
     opt_parser.add_argument('-l', '--loglevel',
-                            dest='loglevel',
+                            dest='LOGLEVEL',
                             default='INFO',
                             help='DEBUG | INFO | WARNING | ERROR | CRITICAL')
 #    opt_parser.add_argument('-v',
-#                            dest='verbose',
+#                            dest='VERBOSE',
 #                            action='store_true',
 #                            help='Enable logging to stdout',
 #                            default=False)
@@ -43,11 +50,9 @@ def argparse_factory(desc):
 
 
 def parse_args_and_config(opt_parser):
-    opts = opt_parser.parse_args()
-    conf = config(vars(opts))
-    d = dict(dict(vars(opts)).items() + conf.items()) # Give preference to items in config file
-    set_process_title(d)
-    return d
+    conf = get_config(vars(opt_parser.parse_args()))
+    set_process_title(conf)
+    return conf
 
 
 def get_process_name():
