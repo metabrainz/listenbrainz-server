@@ -114,6 +114,12 @@ class ListenStore(object):
     def max_id(self):
         return int(self.MAX_FUTURE_SECONDS + calendar.timegm(time.gmtime()))
 
+
+    def fetch_listens_from_storage():
+        """ Override this method in PostgresListenStore or CassandraListenStore class """
+        raise NotImplementedError()
+
+
     def fetch_listens(self, uid, from_id=None, to_id=None, limit=None):
         """ Setup from_id, to_id, and limit for fetching listens
         """
@@ -130,7 +136,7 @@ class ListenStore(object):
             from_id = MIN_ID
         if to_id is None:
             to_id = self.max_id()
-        return self.fetch_listens_from_database(uid, from_id, to_id, limit, order, precision)
+        return self.fetch_listens_from_storage(uid, from_id, to_id, limit, order, precision)
 
 
 class PostgresListenStore(ListenStore):
@@ -174,7 +180,7 @@ class PostgresListenStore(ListenStore):
         res = connection.execute(query, params)
         return res.fetchall()
 
-    def fetch_listens_from_database(self, uid, from_id, to_id, limit, order, precision):
+    def fetch_listens_from_storage(self, uid, from_id, to_id, limit, order, precision):
         query = """ SELECT id, user_id, extract(epoch from ts), artist_msid, album_msid, recording_msid, raw_data """ + \
                 """ FROM listens WHERE user_id = %(user_id)s """ + \
                 """ AND extract(epoch from ts) > %(from_id)s AND extract(epoch from ts) < %(to_id)s  """ + \
@@ -258,7 +264,7 @@ class CassandraListenStore(ListenStore):
     def execute(self, query, params=None):
         return self.session.execute(query.encode(), params)
 
-    def fetch_listens_from_database(self, uid, from_id, to_id, limit, order, precision):
+    def fetch_listens_from_storage(self, uid, from_id, to_id, limit, order, precision):
         """ Fetch a range of listens, for a user
         """
         ranges = dateranges(from_id, to_id, precision, order)
