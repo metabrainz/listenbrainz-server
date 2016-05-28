@@ -15,6 +15,9 @@ def create_postgres():
     from postgres_connection import init_postgres_connection
     return init_postgres_connection(current_app.config['SQLALCHEMY_DATABASE_URI'])
 
+def schedule_jobs(app):
+    """ Init all the scheduled jobs """
+    app.scheduledJobs = ScheduledJobs(app.config)
 
 def create_app():
     app = Flask(__name__)
@@ -24,9 +27,6 @@ def create_app():
     sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../listenstore"))
     import config
     app.config.from_object(config)
-
-    # Run the scheduled jobs
-    scheduledJobs = ScheduledJobs(app.config)
 
     # Logging
     from webserver.loggers import init_loggers
