@@ -171,11 +171,11 @@ class PostgresListenStore(ListenStore):
                     raise ValueError("Invalid listen: %s" % listen)
                 try:
                     res = connection.execute(
-                    """INSERT INTO listens(user_id, ts, artist_msid, album_msid, recording_msid, raw_data)
+                    """ INSERT INTO listens(user_id, ts, artist_msid, album_msid, recording_msid, raw_data)
                         VALUES ( %(user_id)s, to_timestamp(%(ts)s), %(artist_msid)s, %(album_msid)s,
                         %(recording_msid)s, %(raw_data)s) ON CONFLICT DO NOTHING """, self.format_dict(listen))
-                except sqlalchemy.exc.DataError, e:     # Database error
-                    print(e)
+                except Exception, e:     # Log errors
+                        self.log.error(e)
 
     def execute(self, connection, query, params=None):
         res = connection.execute(query, params)
