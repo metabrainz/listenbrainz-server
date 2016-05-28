@@ -10,7 +10,7 @@ class Config(dict):
 
     def from_pyfile(self, filename, silent=False):
         filename = os.path.join(self.root_path, filename)
-        d = types.ModuleType('listenstore.conf')
+        d = types.ModuleType('config')
         d.__file__ = filename
         try:
             with open(filename) as config_file:
@@ -20,8 +20,7 @@ class Config(dict):
                 return False
             e.strerror = 'Unable to load configuration file (%s)' % e.strerror
             raise
-        self.from_object(d)
-        return self.configuration
+        return self.from_object(d)
 
     def from_object(self, obj):
         if isinstance(obj, string_types):
@@ -29,3 +28,4 @@ class Config(dict):
         for key in dir(obj):
             if key.isupper():
                 self.configuration[key] = getattr(obj, key)
+        return self.configuration
