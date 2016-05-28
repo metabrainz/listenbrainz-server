@@ -4,6 +4,20 @@ from argparse import ArgumentParser
 from setproctitle import setproctitle
 from loadconfig import Config
 import logging
+from timeit import timeit
+
+
+def wrapper(func, *args, **kwargs):
+    """ Wrapper function to convert a function into a function with no arguments """
+    def wrapped():
+        return func(*args, **kwargs)
+    return wrapped
+
+def time_it(func, threshold, log, msg):
+    """ Time a function and log if it exceeds the threshold """
+    T = timeit(func, number=1)*1000
+    if T > threshold:       # in milliseconds
+        log.warn(msg + ': %sms (threshold:%sms)' %(T, threshold))
 
 def get_config(opt_vars):
     """ Merge configuration from 'config.py' of ListenBrainz, commandline arguments and \
