@@ -144,7 +144,10 @@ class PostgresListenStore(ListenStore):
         ListenStore.__init__(self, conf)
         self.log.info('Connecting to postgresql: %s', conf['SQLALCHEMY_DATABASE_URI'])
         self.engine = create_engine(conf['SQLALCHEMY_DATABASE_URI'], poolclass=NullPool)
-        #self.connection.execute("SET synchronous_commit TO off;")
+        if 'PG_ASYNC_LISTEN_COMMIT' in conf and conf['PG_ASYNC_LISTEN_COMMIT'] == "True":
+            self.log.info('Enabling Asynchronous listens commit for Postgresql')
+            with self.engine.connect() as connection:
+                connection.execute("SET synchronous_commit TO off")
 
     def convert_row(self, row):
         return Listen(uid=row[1], timestamp=row[2], artist_msid=row[3], album_msid=row[4],
@@ -298,10 +301,10 @@ class CassandraListenStore(ListenStore):
             This method will limit the amount of rows it fetches with one query,
             issuing multiple queries if the number of rows exceeds self.MAX_FETCH.
         """
-        query = """SELECT * FROM listens WHERE uid = %(uid)s AND """ + \
-                range_keys(len(date_range)) + \
+        query = """ SELECT * FROM listens WHERE uid = %(uid)s AND """ + \
+                    range_keys(len(date_range)) + \
                 """ AND id > %(from_id)s AND id < %(to_id)s
-                   ORDER BY id """ + ORDER_TEXT[order] + """ LIMIT %(limit)s"""
+                    ORDER BY id """ + ORDER_TEXT[order] + """ LIMIT %(limit)s"""
 
         fetched_rows = 0  # Total number of rows fetched for this range
 
