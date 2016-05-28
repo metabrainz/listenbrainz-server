@@ -9,6 +9,8 @@ SECRET_KEY = "CHANGE_ME"
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz@/listenbrainz"
 # Oldest listens which can be stored in the database, in days.
 MAX_POSTGRES_LISTEN_HISTORY = "90"
+# Log Postgres queries if they execeed this time, in milliseconds.
+PG_QUERY_TIMEOUT = "3000"
 
 MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz@/messybrainz"
 

@@ -16,6 +16,7 @@ class KafkaConsumer(object):
         self.total_inserts = 0
         self.inserts = 0
         self.listenstore = None
+        self.conf = conf
 
 
     def start_listens(self, listenstore):
@@ -51,7 +52,7 @@ class KafkaConsumer(object):
                 broken = True
                 while broken:
                     try:
-                        self.listenstore.insert_postgresql(listens)
+                        self.listenstore.insert_postgresql(listens, self.conf)
                         broken = False
                     except ValueError as e:
                         self.log.error("Cannot insert listens: %s" % unicode(e))

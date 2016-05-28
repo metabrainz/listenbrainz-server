@@ -19,7 +19,6 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.pool import NullPool
 import sqlalchemy.exc
 
-from .timeout import timeout
 
 MIN_ID = 1033430400     # approx when audioscrobbler was created
 ORDER_DESC = 0
@@ -159,12 +158,14 @@ class PostgresListenStore(ListenStore):
                  'recording_msid': uuid.UUID(listen.recording_msid),
                  'raw_data': ujson.dumps(listen.data)}
 
-    @timeout(5)
-    def insert_postgresql(self, listens):
+    def insert_postgresql(self, listens, conf):
         """ Insert a batch of listens, using asynchronous queries.
             Batches should probably be no more than 500-1000 listens until this
             function supports limiting the number of queries in flight.
         """
+
+        threshold = int(conf['PG_QUERY_TIMEOUT'])
+        t = datetime.now()
         with self.engine.connect() as connection:
             for listen in listens:
                 if not listen.validate():
@@ -176,6 +177,10 @@ class PostgresListenStore(ListenStore):
                         %(recording_msid)s, %(raw_data)s) ON CONFLICT DO NOTHING """, self.format_dict(listen))
                 except Exception, e:     # Log errors
                         self.log.error(e)
+        t = datetime.now() - t
+        t = t.total_seconds()*1000
+        if t > threshold:
+            self.log.warn('Threshold Postgres_Query_Time exceeded: %sms (threshold:%sms)' %(t, threshold))
 
     def execute(self, connection, query, params=None):
         res = connection.execute(query, params)
@@ -253,7 +258,6 @@ class CassandraListenStore(ListenStore):
         batch.add(SimpleStatement(query), values)
         return self.session.execute_async(batch)
 
-    @timeout(5)
     def insert_batch(self, listens):
         """ Insert a batch of listens, using asynchronous queries.
             Batches should probably be no more than 500-1000 listens until this
