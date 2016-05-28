@@ -7,6 +7,8 @@ SECRET_KEY = "CHANGE_ME"
 
 # Primary database
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz@/listenbrainz"
+# Oldest listens which can be stored in the database, in days.
+MAX_POSTGRES_LISTEN_HISTORY = "90"
 
 MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz@/messybrainz"
 
@@ -26,11 +28,15 @@ KAFKA_RUN_CLASS_BINARY = "/opt/kafka/bin/kafka-run-class.sh"
 # CASSANDRA
 CASSANDRA_SERVER = "localhost"
 CASSANDRA_KEYSPACE = "listenbrainz"
+CASSANDRA_REPLICATION_FACTOR = "1"
 
 
 # MusicBrainz OAuth
 MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
 MUSICBRAINZ_CLIENT_SECRET = "CLIENT_SECRET"
+
+# Last.fm
+LASTFM_API_KEY = "USE_LASTFM_API_KEY"
 
 
 # LOGGING
