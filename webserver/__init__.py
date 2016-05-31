@@ -24,8 +24,9 @@ def create_app():
     init_loggers(app)
 
     # Kafka connection
-    from kafka_connection import init_kafka_connection
-    init_kafka_connection(app.config['KAFKA_CONNECT'])
+    if 'KAFKA_CONNECT' in app.config:
+        from kafka_connection import init_kafka_connection
+        init_kafka_connection(app.config['KAFKA_CONNECT'])
 
     # Redis connection
     from redis_connection import init_redis_connection
