@@ -6,8 +6,11 @@ from datetime import date, datetime
 from .util import generate_data
 from listenstore.listenstore import ListenStore
 
+
 class TestListenStore(unittest2.TestCase):
+
     @classmethod
+    @unittest2.skip("We don't have Cassandra on Jenkins server")
     def setUpClass(self):
         self.log = logging.getLogger(__name__)
         conf = {"replication_factor": 1,
@@ -28,6 +31,7 @@ class TestListenStore(unittest2.TestCase):
         #self.logstore.drop_schema()
         self.logstore = None
 
+    @unittest2.skip("We don't have Cassandra on Jenkins server")
     def test_fetch_listens(self):
         listens = self.logstore.fetch_listens(uid="test", limit=10)
         self.assertEqual(len(list(listens)), 10)
