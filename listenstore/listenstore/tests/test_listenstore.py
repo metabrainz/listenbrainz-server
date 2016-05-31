@@ -21,5 +21,5 @@ class RangeTestCase(unittest.TestCase):
                     (2014, 9), (2014, 8), (2014, 7), (2014, 6)]
 
         self.assertEqual(list(listenstore.dateranges(listenstore.date_to_id(min_date),
-                              listenstore.date_to_id(max_date), 'month')),
+                              listenstore.date_to_id(max_date), 'month', 'asc')),
                          expected)
