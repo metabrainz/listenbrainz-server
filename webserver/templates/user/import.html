@@ -7,7 +7,7 @@
   {% if current_user.is_authenticated() and current_user == user %}
 
      <h3>Import from Last.fm</h3>
-     {% if loader_parse and loader_api %}
+     {% if loader %}
         <p>
           <strong>Step 2</strong>
         </p>
@@ -16,7 +16,7 @@
              Import NOW !!  This will import your profile now without the need to open lastfm.<br/>
              You need to keep this page open for the tool to work, it might take a while to complete. Though, you can continue doing your work. :)
           </p>
-					<a href="{{loader_api}}" style="color: white;">
+					<a href="{{loader}}" style="color: white;">
 						<p>
 							<span class="btn btn-warning btn-lg" style="width: 400px">Import NOW</span>
 						</p>
