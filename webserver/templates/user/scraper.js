@@ -104,11 +104,6 @@ Scrobble.prototype.asJSONSerializable = function () {
     return trackjson;
 };
 
-function extractlastFMIDFromLoveButtonURL(loveButtonURL) {
-    var parts = loveButtonURL.split("/");
-    return parts.slice(0, parts.length-1).join("/");
-}
-
 function encodeScrobbles(jsonstr) {
     var scrobbles = JSON.parse(jsonstr);
     scrobbles = scrobbles['recenttracks']['track'];
