@@ -10,6 +10,19 @@ def create(musicbrainz_id):
     db.session.commit()
     return result.fetchone()["id"]
 
+def update_token(id):
+    """Update a user's token to a new UUID
+       Arguments: id - the row id of the user to update
+    """
+    query = """UPDATE "user"
+                  SET auth_token = :token
+                WHERE id = :id
+            """
+    result = db.session.execute(query,
+            {"token": str(uuid.uuid4()),
+             "id": id})
+    db.session.commit()
+
 
 def get(id):
     """Get user with a specified ID (integer)."""

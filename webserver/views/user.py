@@ -1,10 +1,11 @@
 from __future__ import absolute_import
-from flask import Blueprint, render_template, request, url_for, Response
+from flask import Blueprint, render_template, request, url_for, redirect, Response
 from flask_login import current_user, login_required
 from werkzeug.exceptions import NotFound, BadRequest
 from webserver.decorators import crossdomain
 from datetime import datetime
 import webserver
+from webserver import flash
 import db.user
 
 user_bp = Blueprint("user", __name__)
@@ -26,6 +27,17 @@ def lastfmscraper(user_id):
     )
     return Response(scraper, content_type="text/javascript")
 
+@user_bp.route("/<user_id>/resettoken", methods=["GET", "POST"])
+@login_required
+def reset_token(user_id):
+    if request.method == "POST":
+        reset = request.form.get("reset")
+        if reset == "yes":
+            db.user.update_token(current_user.id)
+            flash.info("Access token reset")
+        return redirect(url_for("user.import_data"))
+    else:
+        return render_template("user/resettoken.html")
 
 @user_bp.route("/<user_id>")
 def profile(user_id):
