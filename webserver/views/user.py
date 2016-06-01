@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from flask import Blueprint, render_template, request, url_for, Response, redirect, flash, current_app
 from flask_login import current_user, login_required
-from werkzeug.exceptions import NotFound, BadRequest
+from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
 from webserver.decorators import crossdomain
 from datetime import datetime
 import webserver
@@ -9,6 +9,7 @@ import db.user
 from flask import make_response
 from webserver.views.api import _validate_listen, _messybrainz_lookup, _send_listens_to_redis,\
                                 _payload_to_augmented_list, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
+from webserver.utils import sizeof_readable
 import json
 
 user_bp = Blueprint("user", __name__)
@@ -142,21 +143,25 @@ def export_data():
 @login_required
 def upload():
     if request.method == 'POST':
-        f = request.files['file']
-        if f:
-            try:
-                jsonlist = json.load(f)
-                if not isinstance(jsonlist, list):
-                    raise ValueError
-            except ValueError:
-                raise BadRequest("Not a valid lastfmbackup file.")
+        try:
+            f = request.files['file']
+        except RequestEntityTooLarge:
+            raise RequestEntityTooLarge('Maximum filesize upload limit exceeded. File must be <=' + \
+                  sizeof_readable(current_app.config['MAX_CONTENT_LENGTH']))
+        except:
+            raise InternalServerError("Something went wrong. Could not upload the file")
 
-            payload = _convert_to_native_format(jsonlist)
+        try:
+            jsonlist = json.load(f)
+            if not isinstance(jsonlist, list):
+                raise ValueError
+        except ValueError:
+            raise BadRequest("Not a valid lastfmbackup file.")
 
-            _send_listens_to_redis("import",
-                _payload_to_augmented_list(payload, current_user.musicbrainz_id))
-
-            flash('Congratulations !! Your listens have been uploaded successfully.')
+        payload = _convert_to_native_format(jsonlist)
+        _send_listens_to_redis("import",
+            _payload_to_augmented_list(payload, current_user.musicbrainz_id))
+        flash('Congratulations! Your listens have been uploaded successfully.')
     return redirect(url_for("user.import_data"))
 
 
