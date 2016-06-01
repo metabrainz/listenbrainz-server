@@ -12,7 +12,7 @@ from webserver.views.api import _validate_listen, _messybrainz_lookup, _send_lis
                                 _payload_to_augmented_list, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
 from webserver.utils import sizeof_readable
 from os import path, makedirs
-import json
+import json, zipfile, re
 
 user_bp = Blueprint("user", __name__)
 
@@ -164,18 +164,37 @@ def upload():
         filename = path.join(upload_path, secure_filename(f.filename))
         f.save(filename)
 
-        try:
-            with open(filename, "r") as fr:
-                jsonlist = json.load(fr)
-            if not isinstance(jsonlist, list):
-                raise ValueError
-        except ValueError:
-            raise BadRequest("Not a valid lastfmbackup file.")
+        if not zipfile.is_zipfile(filename):
+            raise BadRequest('Not a valid zip file.')
 
-        payload = _convert_to_native_format(jsonlist)
-        _send_listens_to_redis("import",
-            _payload_to_augmented_list(payload, current_user.musicbrainz_id))
-        flash('Congratulations! Your listens have been uploaded successfully.')
+        success = 0
+        failure = 0
+        regex = re.compile('json/scrobbles/scrobbles-*')
+        try:
+            zf = zipfile.ZipFile(filename, 'r')
+            files = zf.namelist()
+            for f in files:
+                # Skip if it does not lie in 'json/scrobbles/'
+                if not regex.match(f):
+                    continue
+
+                try:
+                    # Load listens file
+                    jsonlist = json.loads(zf.read(f))
+                    if not isinstance(jsonlist, list):
+                        raise ValueError
+                except ValueError:
+                    failure += 1
+                    continue
+
+                payload = _convert_to_native_format(jsonlist)
+                _send_listens_to_kafka("import",
+                    _payload_to_augmented_list(payload, current_user.musicbrainz_id))
+                success += 1
+        except:
+            raise BadRequest('Not a valid lastfm-backup-file.')
+
+        flash('Congratulations! Your listens from %d  files have been uploaded successfully.' % (success))
     return redirect(url_for("user.import_data"))
 
 
