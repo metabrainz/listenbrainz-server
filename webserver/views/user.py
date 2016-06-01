@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-from flask import Blueprint, render_template, request, url_for, Response
+from flask import Blueprint, render_template, request, url_for, Response, current_app
 from flask_login import current_user, login_required
 from werkzeug.exceptions import NotFound, BadRequest
 from webserver.decorators import crossdomain
@@ -13,7 +13,7 @@ user_bp = Blueprint("user", __name__)
 
 @user_bp.route("/<user_id>/scraper.js")
 @crossdomain()
-def lastfmscraper_parse(user_id):
+def lastfmscraper(user_id):
     """ Fetch the scraper.js with proper variable injecting
     """
     user_token = request.args.get("user_token")
@@ -26,31 +26,7 @@ def lastfmscraper_parse(user_id):
         user_token=user_token,
         lastfm_username=lastfm_username,
         user_id=user_id,
-    )
-    return Response(scraper, content_type="text/javascript")
-
-@user_bp.route("/<user_id>/scraper_api.js")
-@crossdomain()
-def lastfmscraper_api(user_id):
-    """ Fetch the scraper_api.js with proper variable injecting
-    """
-    # Return error if LASTFM_API_KEY is not given in config.py
-    if (('LASTFM_API_KEY' not in webserver.current_app.config.keys()) or 
-            ( webserver.current_app.config['LASTFM_API_KEY'] == "")):
-        return Response('alert("Please specify the LASTFM_API_KEY");',
-                content_type="text/javascript")
-
-    user_token = request.args.get("user_token")
-    lastfm_username = request.args.get("lastfm_username")
-    if user_token is None or lastfm_username is None:
-        raise NotFound
-    scraper = render_template(
-        "user/scraper_api.js",
-        base_url=url_for("api_v1.submit_listen", user_id=user_id, _external=True),
-        user_token=user_token,
-        lastfm_username=lastfm_username,
-        user_id=user_id,
-        lastfm_api_key=webserver.current_app.config['LASTFM_API_KEY'],
+        lastfm_api_key=current_app.config['LASTFM_API_KEY'],
     )
     return Response(scraper, content_type="text/javascript")
 
@@ -110,33 +86,26 @@ def profile(user_id):
 @login_required
 def import_data():
     """ Displays the import page to user, giving various options """
+
+    # Return error if LASTFM_API_KEY is not given in config.py
+    if 'LASTFM_API_KEY' not in current_app.config or current_app.config['LASTFM_API_KEY'] == "":
+        return NotFound("LASTFM_API_KEY not specified.")
+
     lastfm_username = request.args.get("lastfm_username")
     if lastfm_username:
-        loader_parse = render_template(
+        loader = render_template(
             "user/loader.js",
-                base_url=url_for("user.lastfmscraper_parse",
+            base_url=url_for("user.lastfmscraper",
                              user_id=current_user.musicbrainz_id,
                              _external=True),
             user_token=current_user.auth_token,
             lastfm_username=lastfm_username,
         )
-        loader_parse = "javascript:%s" % loader_parse
-
-        loader_api = render_template(
-            "user/loader.js",
-            base_url=url_for("user.lastfmscraper_api",
-                             user_id=current_user.musicbrainz_id,
-                             _external=True),
-            user_token=current_user.auth_token,
-            lastfm_username=lastfm_username,
-        )
-        loader_api = "javascript:%s" % loader_api
+        loader = "javascript:%s" % loader
     else:
-        loader_parse = None
-        loader_api = None
+        loader = None
     return render_template("user/import.html", user=current_user,
-            loader_api=loader_api, loader_parse=loader_parse,
-            lastfm_username=lastfm_username)
+            loader=loader, lastfm_username=lastfm_username)
 
 
 def _get_user(user_id):
