@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from flask import Blueprint, render_template, request, url_for, Response, redirect, flash, current_app
 from flask_login import current_user, login_required
 from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
+from werkzeug.utils import secure_filename
 from webserver.decorators import crossdomain
 from datetime import datetime
 import webserver
@@ -10,6 +11,7 @@ from flask import make_response
 from webserver.views.api import _validate_listen, _messybrainz_lookup, _send_listens_to_redis,\
                                 _payload_to_augmented_list, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
 from webserver.utils import sizeof_readable
+from os import path, makedirs
 import json
 
 user_bp = Blueprint("user", __name__)
@@ -151,8 +153,20 @@ def upload():
         except:
             raise InternalServerError("Something went wrong. Could not upload the file")
 
+        # Check upload folder
+        if not 'UPLOAD_FOLDER' in current_app.config:
+            raise InternalServerError("Could not upload the file. Upload folder not specified")
+        upload_path = path.join(path.abspath(current_app.config['UPLOAD_FOLDER']), current_user.musicbrainz_id)
+        if not path.isdir(upload_path):
+            makedirs(upload_path)
+
+        # Write to a file
+        filename = path.join(upload_path, secure_filename(f.filename))
+        f.save(filename)
+
         try:
-            jsonlist = json.load(f)
+            with open(filename, "r") as fr:
+                jsonlist = json.load(fr)
             if not isinstance(jsonlist, list):
                 raise ValueError
         except ValueError:
