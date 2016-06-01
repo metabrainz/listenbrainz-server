@@ -9,6 +9,16 @@ def generate_string(length):
     ) for _ in range(length)])
 
 
+def sizeof_readable(num, suffix='B'):
+    """ Converts the size in human readable format """
+
+    for unit in ['','K','M','G','T','P','E','Z']:
+        if abs(num) < 1024.0:
+            return "%3.1f %s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f%s%s" % (num, 'Yb', suffix)
+
+
 def reformat_date(value, fmt="%b %d, %Y"):
     return value.strftime(fmt)
 
