@@ -266,7 +266,10 @@ function reportScrobbles(struct) {
                 } else if (this.status >= 500) {
                     console.log("received http error " + this.status + " req'ing");
                     times5Error++;
-                    reportScrobbles(struct);
+                    // In case of Internal Server error, push the listen in the end and try after sometime.
+                    // This will prevent blockage of the submit queue.
+                    submitQueue.push(struct)
+                    reportScrobbles();
                 } else {
                     console.log("received http status " + this.status + ", skipping");
                     pageDone();
