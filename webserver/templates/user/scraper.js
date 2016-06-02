@@ -166,7 +166,6 @@ var isSubmitActive = false;
 var rl_remain = -1;
 var rl_reset = -1;
 
-var toReport = [];
 var numCompleted = 0;
 var activeSubmissions = 0;
 
@@ -217,12 +216,13 @@ function getPageCount() {
         getCountAgain('COUNT-error');
     };
     xhr.send();
-    xhr = null;
 }
 
-function reportScrobbles() {
+function reportScrobbles(struct) {
+    if (!struct) {
+      struct = submitQueue.shift()
+    }
 
-    struct = submitQueue.shift()
     if (!struct.payload.length) {
         pageDone();
         return;
@@ -254,9 +254,9 @@ function reportScrobbles() {
                     console.log("successfully reported page");
                     pageDone();
                 } else if (this.status == 429) {
+                    times4Error++;
                     // This should never happen, but if it does, toss it back in and try again.
-                    submitQueue.unshift();
-                    pageDone();
+                    reportScrobbles(struct);
                 } else if (this.status >= 400 && this.status < 500) {
                     times4Error++;
                     // We mark 4xx errors as completed because we don't
@@ -271,6 +271,7 @@ function reportScrobbles() {
                     console.log("received http status " + this.status + ", skipping");
                     pageDone();
                 }
+
                 if (numCompleted >= numberOfPages) {
                     updateMessage("<i class='fa fa-check'></i> Import finished<br><span><a href='https://listenbrainz.org/user/{{ user_id }}>Go to your ListenBrainz profile</a> | <a href='' id='close-progress-container'>Close</a></span><br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
                     completeMessage();
@@ -306,13 +307,13 @@ function completeMessage() {
 function reportPageAndGetNext(response) {
     timesGetPage++;
     if (page == 1) {
-        updateMessage("<i class='fa fa-cog fa-spin'></i> working<br><span style='font-size:8pt'>Please don't navigate away from this page while the process is running</span>");
+        updateMessage("<i class='fa fa-cog fa-spin'></i> working<br><span style='font-size:8pt'>Please do not close this page while the process is running</span>");
     }
     var struct = encodeScrobbles(response);
     submitQueue.push(struct);
     if (!isSubmitActive) {
         isSubmitActive = true;
-        reportScrobbles(struct);
+        reportScrobbles();
     }
     getNextPagesIfSlots();
 }
