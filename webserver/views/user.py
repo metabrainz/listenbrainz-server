@@ -167,17 +167,13 @@ def upload():
         if not zipfile.is_zipfile(filename):
             raise BadRequest('Not a valid zip file.')
 
-        success = 0
-        failure = 0
+        success = failure = 0
         regex = re.compile('json/scrobbles/scrobbles-*')
         try:
             zf = zipfile.ZipFile(filename, 'r')
             files = zf.namelist()
-            for f in files:
-                # Skip if it does not lie in 'json/scrobbles/'
-                if not regex.match(f):
-                    continue
-
+            # Iterate over file that match the regex
+            for f in [f for f in files if regex.match(f)]:
                 try:
                     # Load listens file
                     jsonlist = json.loads(zf.read(f))
