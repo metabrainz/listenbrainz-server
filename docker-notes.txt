@@ -1,0 +1,9 @@
+Kafka:
+
+docker pull ericdock/docker-kafka
+docker run -d -p 2181:2181 -p 9092:9092 ericdock/docker-kafka
+
+Postgres:
+
+docker pull postgres
+docker run --name listenbrainz -e POSTGRES_PASSWORD=listenbrainz -d postgres
