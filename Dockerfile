@@ -2,12 +2,9 @@ FROM python:2.7.11
 
 MAINTAINER Robert Kaye <rob@metabrainz.org>
 
+# General setup
+RUN apt-get update && apt-get install -y build-essential git
 RUN mkdir /code
-WORKDIR /code
-
-RUN apt-get update && apt-get install -y build-essential
-ADD requirements.txt /code/
-RUN pip install -r requirements.txt
 
 # PostgreSQL client
 RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
@@ -20,4 +17,23 @@ RUN apt-get update \
 # Specifying password so that client doesn't ask scripts for it...
 ENV PGPASSWORD "listenbrainz"
 
-ADD . /code/
+# MessyBrainz
+WORKDIR /code
+RUN git clone https://github.com/metabrainz/messybrainz-server.git
+
+WORKDIR /code/messybrainz-server
+#RUN git checkout docker
+#RUN cp /code/messybrainz-sever/config.py.docker /code/messybrainz/config.py
+ADD messybrainz-config.py.docker /code/messybrainz-server/config.py
+RUN pip install -r requirements.txt
+RUN python setup.py install
+#RUN python manage.py init_db
+
+# ListenBrainz
+RUN mkdir /code/listenbrainz
+WORKDIR /code/listenbrainz
+ADD requirements.txt /code/listenbrainz/
+RUN pip install -r requirements.txt
+ADD config.py.docker /code/listenbrainz/config.py
+#RUN python manage.py init_db
+ADD . /code/listenbrainz/
