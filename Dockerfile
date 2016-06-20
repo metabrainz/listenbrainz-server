@@ -3,8 +3,11 @@ FROM python:2.7.11
 MAINTAINER Robert Kaye <rob@metabrainz.org>
 
 # General setup
-RUN apt-get update && apt-get install -y build-essential git
+RUN apt-get update && apt-get install -y build-essential git wget
 RUN mkdir /code
+ENV DOCKERIZE_VERSION v0.2.0
+RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+            && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
 # PostgreSQL client
 RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
@@ -27,7 +30,6 @@ WORKDIR /code/messybrainz-server
 ADD messybrainz-config.py.docker /code/messybrainz-server/config.py
 RUN pip install -r requirements.txt
 RUN python setup.py install
-#RUN python manage.py init_db
 
 # ListenBrainz
 RUN mkdir /code/listenbrainz
@@ -35,8 +37,4 @@ WORKDIR /code/listenbrainz
 ADD requirements.txt /code/listenbrainz/
 RUN pip install -r requirements.txt
 ADD config.py.docker /code/listenbrainz/config.py
-#RUN python manage.py init_db
 ADD . /code/listenbrainz/
-
-EXPOSE 8080
-CMD ./server.py
