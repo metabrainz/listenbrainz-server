@@ -1,0 +1,17 @@
+version: '2'
+services:
+  redis:
+    image: redis
+  kafka:
+    image: kafka
+  web:
+    build: .
+    command: python manage.py runserver -h 0.0.0.0 -p 8000
+    volumes:
+      - .:/code
+      - ./data/app:/data
+    ports:
+      - "8000:8080"
+    depends_on:
+      - redis
+      - kafka

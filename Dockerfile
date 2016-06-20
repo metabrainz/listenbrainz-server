@@ -37,3 +37,6 @@ RUN pip install -r requirements.txt
 ADD config.py.docker /code/listenbrainz/config.py
 #RUN python manage.py init_db
 ADD . /code/listenbrainz/
+
+EXPOSE 8080
+CMD ./server.py
