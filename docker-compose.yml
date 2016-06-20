@@ -2,16 +2,30 @@ version: '2'
 services:
   redis:
     image: redis
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
   kafka:
-    image: kafka
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: 127.0.0.1
+      KAFKA_CREATE_TOPICS: "test:1:1"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
   web:
     build: .
-    command: python manage.py runserver -h 0.0.0.0 -p 8000
+    command: dockerize -wait tcp:9092 python manage.py runserver -h 0.0.0.0 -p 8000
     volumes:
-      - .:/code
+      - .:/code/listenbrainz-server
       - ./data/app:/data
     ports:
-      - "8000:8080"
+      - "8000:8000"
+      - 9092
     depends_on:
       - redis
+      - zookeeper
       - kafka
