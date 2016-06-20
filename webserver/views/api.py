@@ -5,29 +5,15 @@ from flask import Blueprint, request, current_app, jsonify
 from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized, ServiceUnavailable
 from webserver.redis_connection import _redis
 from webserver.decorators import crossdomain
-from webserver.external import messybrainz
 import webserver
-import db.user
 from webserver.rate_limiter import ratelimit
 
+
+from api_tools import _send_listens_to_kafka, _log_raise_400, \
+    _get_augumented_listens, _parse_int_arg, _validate_auth_header, \
+    MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET
+
 api_bp = Blueprint('api_v1', __name__)
-
-#: Maximum overall listen size in bytes, to prevent egregious spamming.
-MAX_LISTEN_SIZE = 10240
-
-#: The maximum number of tags per listen.
-MAX_TAGS_PER_LISTEN = 50
-
-#: The maximum length of a tag
-MAX_TAG_SIZE = 64
-
-#: The maximum number of listens returned in a single GET request.
-MAX_ITEMS_PER_GET = 100
-
-#: The default number of listens returned in a single GET request.
-DEFAULT_ITEMS_PER_GET = 25
-
-MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
 
 
 @api_bp.route("/1/submit-listens", methods=["POST", "OPTIONS"])
@@ -50,7 +36,7 @@ def submit_listen():
 
     raw_data = request.get_data()
     try:
-        data = ujson.loads(raw_data.decode("utf-8"))
+        data = json.loads(raw_data.decode("utf-8"))
     except ValueError as e:
         _log_raise_400("Cannot parse JSON document: %s" % e, raw_data)
 
@@ -110,10 +96,10 @@ def get_listens(user_id):
     listen_data = []
     for listen in listens:
         listen_data.append({
-                             "track_metadata" : listen.data,
-                             "listened_at" : listen.timestamp,
-                             "recording_msid" : listen.recording_msid,
-                           })
+            "track_metadata": listen.data,
+            "listened_at": listen.timestamp,
+            "recording_msid": listen.recording_msid,
+        })
 
     if min_ts:
         listen_data = listen_data[::-1]

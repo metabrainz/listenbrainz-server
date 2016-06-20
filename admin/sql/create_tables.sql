@@ -18,4 +18,18 @@ CREATE TABLE listen (
   raw_data        JSONB
 );
 
+CREATE TABLE tokens (
+     id               SERIAL,
+     user_id          VARCHAR,
+     token            TEXT NOT NULL,
+     ts               TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE sessions (
+    id        SERIAL,
+    sid       VARCHAR NOT NULL,
+    uid       INTEGER NOT NULL,
+    ts        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 COMMIT;
