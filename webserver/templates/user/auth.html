@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}User "{{ user_id }}" - ListenBrainz{% endblock %}
+
+{% block content %}
+  <div id="user-profile">
+    <h2 class="page-title">{{ user_id }}</h2>
+
+    {% if msg %}
+    <p> {{ msg }} </p>
+
+    {% else %}
+    <h3>Approve this client for account {{ user_id }}?</h3>
+    <form method='POST'>
+        <input type='hidden' name='user' value='{{ user_id }}'/>
+        <input type='hidden' name='token' value='{{ token }}'/>
+        <input type='submit' value='Yes please'/>
+    </form>
+    {% endif %}
+
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ url_for('static', filename='js/lib/jquery.timeago.js') }}"></script>
+  <script type="text/javascript">
+    $(document).ready(function() {
+      var times = $("abbr.timeago");
+      times.timeago();
+    });
+  </script>
+{% endblock %}
