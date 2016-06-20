@@ -4,6 +4,10 @@ MAINTAINER Robert Kaye <rob@metabrainz.org>
 
 # General setup
 RUN apt-get update && apt-get install -y build-essential git wget
+
+# remove me later
+RUN apt-get install -y vim telnet
+
 RUN mkdir /code
 ENV DOCKERIZE_VERSION v0.2.0
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
