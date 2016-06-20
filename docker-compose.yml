@@ -14,17 +14,19 @@ services:
       KAFKA_ADVERTISED_HOST_NAME: 127.0.0.1
       KAFKA_CREATE_TOPICS: "test:1:1"
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_BROKER_ID: 69
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
   web:
     build: .
-    command: dockerize -wait tcp:9092 python manage.py runserver -h 0.0.0.0 -p 8000
+    command: dockerize -wait tcp://kafka:9092 python manage.py runserver -h 0.0.0.0 -p 8000
     volumes:
       - .:/code/listenbrainz-server
       - ./data/app:/data
     ports:
       - "8000:8000"
-      - 9092
+#    links:
+#      - kafka
     depends_on:
       - redis
       - zookeeper
