@@ -1,6 +1,6 @@
 from __future__ import print_function
 import db
-from webserver import create_app
+from webserver import create_app, schedule_jobs
 import subprocess
 import os
 import click
@@ -17,7 +17,9 @@ ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin
               help="Turns debugging mode on or off. If specified, overrides "
                    "'DEBUG' value in the config file.")
 def runserver(host, port, debug):
-    create_app().run(host=host, port=port, debug=debug)
+    app = create_app()
+    schedule_jobs(app)
+    app.run(host=host, port=port, debug=debug)
 
 @cli.command()
 def init_kafka(archive, force):

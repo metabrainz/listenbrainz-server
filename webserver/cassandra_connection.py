@@ -1,8 +1,8 @@
-from listenstore.listenstore import ListenStore
+from listenstore.listenstore import CassandraListenStore
 
-
-def init_cassandra_connection(server, keyspace):
-    return ListenStore({
-        'cassandra_server': server,
-        'cassandra_keyspace': keyspace,
+def init_cassandra_connection(server, keyspace, rep_factor):
+    return CassandraListenStore({
+        'CASSANDRA_SERVER': server,
+        'CASSANDRA_KEYSPACE': keyspace,
+        'CASSANDRA_REPLICATION_FACTOR': rep_factor,
     })

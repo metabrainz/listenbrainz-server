@@ -9,9 +9,9 @@ class ListenPrinter(Command):
         self.log.info("ListenPrinter starting..")
         #unixtime = int(calendar.timegm(time.gmtime()))
         #item = {'user_id':'rj','listened_at':unixtime,'body':{'foo':'bar','now':time.strftime("%c")}}
-        #self.listenStore.insert(item)
+        #self.listen_store.insert(item)
 
-        res = self.listenStore.fetch_listens(uid='rj')
+        res = self.listen_store.fetch_listens(uid='rj')
         for r in res:
             print repr(r)
 
