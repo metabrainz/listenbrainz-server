@@ -28,6 +28,8 @@ PG_SUPER_USER = "postgres"
 KAFKA_CONNECT = "localhost:9092"
 KAFKA_RUN_CLASS_BINARY = "/opt/kafka/bin/kafka-run-class.sh"
 
+# Redis
+REDIS_HOST = "redis"
 
 # CASSANDRA
 CASSANDRA_SERVER = "localhost"
