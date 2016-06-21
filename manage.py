@@ -10,6 +10,7 @@ from urlparse import urlsplit
 cli = click.Group()
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'sql')
+MSB_ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../messybrainz-server', 'admin', 'sql')
 
 @cli.command()
 @click.option("--host", "-h", default="0.0.0.0", show_default=True)
@@ -116,6 +117,67 @@ def init_test_db(force=False):
 
     print("Done!")
 
+def run_script(uri, script):
+    return subprocess.call('psql -U ' + config.PG_SUPER_USER + ' -d messybrainz ' +
+                           '-h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
+                           os.path.join(MSB_ADMIN_SQL_DIR, script),
+                           shell=True)
+
+@cli.command()
+@click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
+@click.option("--skip-create", "-s", is_flag=True, help="Skip creating database and user. Tables/indexes only.")
+def init_msb_db(force, skip_create):
+    """Initializes database.
+
+    This process involves several steps:
+    1. Table structure is created.
+    2. Primary keys and foreign keys are created.
+    3. Indexes are created.
+    """
+
+    uri = urlsplit(create_app().config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
+    if force:
+        exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER + 
+                                    ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
+                                    os.path.join(MSB_ADMIN_SQL_DIR, 'drop_db.sql'),
+                                    shell=True)
+        if exit_code != 0:
+            raise Exception('Failed to drop existing database and user! Exit code: %i' % exit_code)
+
+
+    if not skip_create:
+        print('Creating user and a database...')
+        exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER +
+                                    ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
+                                    os.path.join(MSB_ADMIN_SQL_DIR, 'create_db.sql'),
+                                    shell=True)
+        if exit_code != 0:
+            raise Exception('Failed to create new database and user! Exit code: %i' % exit_code)
+
+    print('Creating database extensions...')
+    exit_code = run_script(uri, 'create_extensions.sql')
+    if exit_code != 0:
+        raise Exception('Failed to create database extensions! Exit code: %i' % exit_code)
+
+    print('Creating tables...')
+    exit_code = run_script(uri, 'create_tables.sql')
+    if exit_code != 0:
+        raise Exception('Failed to create database tables! Exit code: %i' % exit_code)
+
+    print('Creating primary and foreign keys...')
+    exit_code = run_script(uri, 'create_primary_keys.sql')
+    if exit_code != 0:
+        raise Exception('Failed to create primary keys! Exit code: %i' % exit_code)
+    exit_code = run_script(uri, 'create_foreign_keys.sql')
+    if exit_code != 0:
+        raise Exception('Failed to create foreign keys! Exit code: %i' % exit_code)
+
+    print('Creating indexes...')
+    exit_code = run_script(uri, 'create_indexes.sql')
+    if exit_code != 0:
+        raise Exception('Failed to create indexes keys! Exit code: %i' % exit_code)
+
+    print("Done!")
 
 if __name__ == '__main__':
     cli()

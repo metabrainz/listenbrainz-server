@@ -26,7 +26,6 @@ WORKDIR /code
 RUN git clone https://github.com/metabrainz/messybrainz-server.git
 
 WORKDIR /code/messybrainz-server
-ADD messybrainz-config.py.docker /code/messybrainz-server/config.py
 RUN pip install -r requirements.txt
 RUN python setup.py install
 
