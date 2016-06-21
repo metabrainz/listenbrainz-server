@@ -4,8 +4,7 @@ import socket
 import uuid
 from flask import Blueprint, request, current_app, jsonify
 from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized, ServiceUnavailable
-from kafka import SimpleProducer
-from webserver.kafka_connection import _kafka
+from webserver.redis_connection import _redis
 from webserver.decorators import crossdomain
 from webserver.external import messybrainz
 import webserver
@@ -88,7 +87,7 @@ def submit_listen():
     if msb_listens:
         augmented_listens.extend(_messybrainz_lookup(msb_listens))
 
-    _send_listens_to_kafka(data['listen_type'], augmented_listens)
+    _send_listens_to_redis(data['listen_type'], augmented_listens)
 
     return "success"
 
@@ -168,23 +167,24 @@ def _validate_auth_header():
     return user['musicbrainz_id']
 
 
-def _send_listens_to_kafka(listen_type, listens):
+def _send_listens_to_redis(listen_type, listens):
 
-    producer = SimpleProducer(_kafka)
-
+    p = _redis.pipeline()
     for listen in listens:
         if listen_type == 'playing_now':
             try:
-                producer.send_messages(b'playing_now', ujson.dumps(listen).encode('utf-8'))
+                p.rpush('playing_now', ujson.dumps(listen).encode('utf-8'))
             except:
-                current_app.logger.error("Kafka playing_now write error: " + str(sys.exc_info()[0]))
+                current_app.logger.error("Redis rpush playing_now write error: " + str(sys.exc_info()[0]))
                 raise InternalServerError("Cannot record playing_now at this time.")
         else:
             try:
-                producer.send_messages(b'listens', ujson.dumps(listen).encode('utf-8'))
+                p.rpush('listens', ujson.dumps(listen).encode('utf-8'))
             except:
-                current_app.logger.error("Kafka listens write error: " + str(sys.exc_info()[0]))
+                current_app.logger.error("Redis rpush listens write error: " + str(sys.exc_info()[0]))
                 raise InternalServerError("Cannot record listen at this time.")
+
+    p.execute()
 
 
 def _messybrainz_lookup(listens):
