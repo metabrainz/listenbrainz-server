@@ -11,11 +11,10 @@ services:
        POSTGRES_DB: listenbrainz
   redis:
     image: redis
-  kafka:
-    image: spotify/kafka
   web:
     build: .
-    command: dockerize -wait tcp://kafka:9092 python manage.py runserver -h 0.0.0.0 -p 8000
+    command: python manage.py runserver -h 0.0.0.0 -p 8000
+    entrypoint: python redis-consumer.py
     volumes:
       - .:/code/listenbrainz-server
       - ./data/app:/data
@@ -23,10 +22,7 @@ services:
       - "8000:8000"
     links:
       - redis
-      - kafka
       - db
     depends_on:
       - redis
-      - kafka
       - db
-       

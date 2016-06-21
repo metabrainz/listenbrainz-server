@@ -3,7 +3,7 @@ FROM python:2.7.11
 MAINTAINER Robert Kaye <rob@metabrainz.org>
 
 # General setup
-RUN apt-get update && apt-get install -y build-essential git wget
+RUN apt-get update && apt-get install -y build-essential git wget redis-tools
 
 RUN mkdir /code
 ENV DOCKERIZE_VERSION v0.2.0

@@ -18,10 +18,6 @@ TEST_SQLALCHEMY_DATABASE_URI = "postgresql://lb_test@/lb_test"
 PG_SUPER_USER = "postgres"
 
 
-# KAFKA
-KAFKA_CONNECT = "localhost:9092"
-KAFKA_RUN_CLASS_BINARY = "/opt/kafka/bin/kafka-run-class.sh"
-
 # Redis
 REDIS_HOST = "redis"
 
