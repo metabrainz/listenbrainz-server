@@ -1,12 +1,12 @@
 DEBUG = False  # set to False in production mode
 
-SECRET_KEY = "CHANGE_ME"
-
+SECRET_KEY = "docker-secret!!"
 
 # DATABASES
 
 # Primary database
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz@:5432/listenbrainz"
+MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz@:5432/messybrainz"
 
 # Database for testing
 TEST_SQLALCHEMY_DATABASE_URI = "postgresql://lb_test@:5432/lb_test"
