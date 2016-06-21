@@ -3,7 +3,7 @@ import os
 import logging
 
 from .utils import argparse_factory, parse_args_and_config
-from .listenstore import ListenStore
+from .listenstore import PostgresListenStore, CassandraListenStore
 from .kafkaconsumer import KafkaConsumer
 
 
@@ -24,7 +24,7 @@ class Command(object):
 
     # NB: only sets level after our Command starts running
     def set_log_level(self):
-        l = self.config['loglevel']
+        l = self.config['LOGLEVEL']
         lev = logging.INFO
         if l == "DEBUG":
             lev = logging.DEBUG
@@ -61,13 +61,14 @@ class Command(object):
         raise NotImplementedError()
 
     @property
-    def listenStore(self):
-        if self._listenStore is None:
-            self._listenStore = ListenStore(self.config)
-        return self._listenStore
+    def listen_store(self):
+        """ Override this method in bin scripts to support writing
+            to both Casandra and Postgres
+        """
+        pass
 
     @property
-    def kafkaConsumer(self):
+    def kafka_consumer(self):
         if self._kafkaConsumer is None:
             self._kafkaConsumer = KafkaConsumer(self.config)
         return self._kafkaConsumer

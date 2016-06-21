@@ -2,3 +2,4 @@
 build
 listenbrainz_store.egg-info
 dist
+listenstore.conf

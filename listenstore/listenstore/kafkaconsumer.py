@@ -4,6 +4,7 @@ from kafka import KafkaClient, SimpleConsumer
 from .listen import Listen
 from time import time, sleep
 from cassandra.cluster import NoHostAvailable
+from .utils import wrapper, time_it
 
 KAFKA_READ_TIMEOUT = 5
 CASSANDRA_BATCH_SIZE = 1000
@@ -12,10 +13,11 @@ REPORT_FREQUENCY = 10000
 class KafkaConsumer(object):
     def __init__(self, conf):
         self.log = logging.getLogger(__name__)
-        self.client = KafkaClient(conf["kafka_server"])
+        self.client = KafkaClient(conf["KAFKA_CONNECT"])
         self.total_inserts = 0
         self.inserts = 0
         self.listenstore = None
+        self.conf = conf
 
 
     def start_listens(self, listenstore):
@@ -51,7 +53,13 @@ class KafkaConsumer(object):
                 broken = True
                 while broken:
                     try:
-                        self.listenstore.insert_batch(listens)
+                        threshold = 10000       # Default threshold in ms
+                        if 'PG_QUERY_TIMEOUT' in self.conf:
+                            threshold = int(self.conf['PG_QUERY_TIMEOUT'])
+
+                        time_it(wrapper(self.listenstore.insert_postgresql, listens), \
+                                threshold, self.log, 'Threshold Postgres_Query_Time exceeded')
+
                         broken = False
                     except ValueError as e:
                         self.log.error("Cannot insert listens: %s" % unicode(e))
