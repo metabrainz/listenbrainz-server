@@ -5,9 +5,6 @@ MAINTAINER Robert Kaye <rob@metabrainz.org>
 # General setup
 RUN apt-get update && apt-get install -y build-essential git wget
 
-# remove me later
-RUN apt-get install -y vim telnet
-
 RUN mkdir /code
 ENV DOCKERIZE_VERSION v0.2.0
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
@@ -29,8 +26,6 @@ WORKDIR /code
 RUN git clone https://github.com/metabrainz/messybrainz-server.git
 
 WORKDIR /code/messybrainz-server
-#RUN git checkout docker
-#RUN cp /code/messybrainz-sever/config.py.docker /code/messybrainz/config.py
 ADD messybrainz-config.py.docker /code/messybrainz-server/config.py
 RUN pip install -r requirements.txt
 RUN python setup.py install
@@ -40,5 +35,5 @@ RUN mkdir /code/listenbrainz
 WORKDIR /code/listenbrainz
 ADD requirements.txt /code/listenbrainz/
 RUN pip install -r requirements.txt
-ADD config.py.docker /code/listenbrainz/config.py
 ADD . /code/listenbrainz/
+ADD config.py.docker /code/listenbrainz/config.py
