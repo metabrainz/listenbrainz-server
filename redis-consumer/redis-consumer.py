@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../listenstore"))
+
 import ujson
 import logging
 from listenstore.listenstore import Listen
@@ -12,6 +16,7 @@ NO_ITEM_DELAY = .1   # in seconds
 BATCH_TIMEOUT = 1    # in seconds
 
 # TODO: Add support for now playing
+
 
 class KafkaConsumer(object):
     def __init__(self, conf):
