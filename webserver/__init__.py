@@ -39,7 +39,7 @@ def create_app():
 
     # Redis connection
     from redis_connection import init_redis_connection
-    init_redis_connection()
+    init_redis_connection(app.config['REDIS_HOST'])
 
     # Database connection
     import db
