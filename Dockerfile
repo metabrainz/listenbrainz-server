@@ -36,4 +36,4 @@ WORKDIR /code/listenbrainz
 ADD requirements.txt /code/listenbrainz/
 RUN pip install -r requirements.txt
 ADD . /code/listenbrainz/
-ADD config.py.docker /code/listenbrainz/config.py
+ADD config.py /code/listenbrainz
