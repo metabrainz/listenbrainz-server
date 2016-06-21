@@ -10,11 +10,10 @@ services:
        POSTGRES_PASSWD: listenbrainz
        POSTGRES_DB: listenbrainz
   redis:
-    image: redis
+    image: redis:3.2.1
   web:
     build: .
     command: python manage.py runserver -h 0.0.0.0 -p 8000
-    entrypoint: python redis-consumer.py
     volumes:
       - .:/code/listenbrainz-server
       - ./data/app:/data
@@ -25,4 +24,15 @@ services:
       - db
     depends_on:
       - redis
+      - db
+  consumer:
+    build: 
+      dockerfile: redis-consumer/Dockerfile
+      context: .
+    command: python redis-consumer/redis-consumer.py
+    volumes:
+      - .:/code/listenbrainz-server
+    links:
+      - db
+    depends_on:
       - db
