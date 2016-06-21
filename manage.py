@@ -5,6 +5,7 @@ import subprocess
 import os
 import click
 import config
+from urlparse import urlsplit
 
 cli = click.Group()
 
@@ -29,7 +30,8 @@ def init_kafka(archive, force):
 
 @cli.command()
 @click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
-def init_db(force):
+@click.option("--skip-create", "-s", is_flag=True, help="Skip creating database and user. Tables/indexes only.")
+def init_db(force, skip_create):
     """Initializes database.
 
     This process involves several steps:
@@ -37,26 +39,33 @@ def init_db(force):
     2. Primary keys and foreign keys are created.
     3. Indexes are created.
     """
+
+    uri = urlsplit(create_app().config['SQLALCHEMY_DATABASE_URI'])
     if force:
-        exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER + ' < ' +
+        exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER + 
+                                    ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
                                     os.path.join(ADMIN_SQL_DIR, 'drop_db.sql'),
                                     shell=True)
         if exit_code != 0:
             raise Exception('Failed to drop existing database and user! Exit code: %i' % exit_code)
 
-    print('Creating user and a database...')
-    exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER + ' < ' +
-                                os.path.join(ADMIN_SQL_DIR, 'create_db.sql'),
-                                shell=True)
-    if exit_code != 0:
-        raise Exception('Failed to create new database and user! Exit code: %i' % exit_code)
 
-    print('Creating database extensions...')
-    exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER + ' -d listenbrainz < ' +
-                                os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'),
-                                shell=True)
-    if exit_code != 0:
-        raise Exception('Failed to create database extensions! Exit code: %i' % exit_code)
+    if not skip_create:
+        print('Creating user and a database...')
+        exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER +
+                                    ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
+                                    os.path.join(ADMIN_SQL_DIR, 'create_db.sql'),
+                                    shell=True)
+        if exit_code != 0:
+            raise Exception('Failed to create new database and user! Exit code: %i' % exit_code)
+
+        print('Creating database extensions...')
+        exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER + ' -d listenbrainz ' +
+                                    '-h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
+                                    os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'),
+                                    shell=True)
+        if exit_code != 0:
+            raise Exception('Failed to create database extensions! Exit code: %i' % exit_code)
 
     with create_app().app_context():
         print('Creating tables...')
