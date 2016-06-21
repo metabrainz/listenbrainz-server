@@ -1,5 +1,14 @@
 version: '2'
 services:
+  db:
+    image: postgres:9.5.3
+    volumes:
+       - ./pgdata:/pgdata
+    environment:
+       PGDATA: /pgdata
+       POSTGRES_USER: listenbrainz
+       POSTGRES_PASSWD: listenbrainz
+       POSTGRES_DB: listenbrainz
   redis:
     image: redis
   kafka:
@@ -13,7 +22,11 @@ services:
     ports:
       - "8000:8000"
     links:
+      - redis
       - kafka
+      - db
     depends_on:
       - redis
       - kafka
+      - db
+       
