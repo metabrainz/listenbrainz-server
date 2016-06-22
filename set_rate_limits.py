@@ -5,6 +5,7 @@ from redis import Redis
 from webserver.rate_limiter import RATELIMIT_PER_TOKEN_KEY 
 from webserver.rate_limiter import RATELIMIT_PER_IP_KEY
 from webserver.rate_limiter import RATELIMIT_WINDOW_KEY
+import config
 
 # Yes, I could use getoptgetargparsewtfbbw, but then I would spend 20 mimnutes re-learning the stupid syntax. 
 # Or, I could just do it myself in the space of seconds.
@@ -45,7 +46,7 @@ except ValueError:
 if window <= 0:
     print "Invalid window size. Must be non zero integer."
 
-r = Redis()
+r = Redis(config.REDIS_HOST)
 r.set(RATELIMIT_PER_TOKEN_KEY, per_token)
 r.set(RATELIMIT_PER_IP_KEY, per_ip)
 r.set(RATELIMIT_WINDOW_KEY, window)
