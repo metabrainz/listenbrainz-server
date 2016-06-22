@@ -11,6 +11,8 @@ services:
        POSTGRES_DB: listenbrainz
   redis:
     image: redis:3.2.1
+    volumes:
+      - ./data/redis:/data
   web:
     build: .
     command: python manage.py runserver -h 0.0.0.0 -p 8000
@@ -34,5 +36,7 @@ services:
       - .:/code/listenbrainz-server
     links:
       - db
+      - redis
     depends_on:
       - db
+      - redis
