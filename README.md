@@ -95,12 +95,9 @@ It should be accessible at **http://10.1.2.3:8080/**.
 *For information about running listenstore module see /listenstore/README.md
 file.*
 
-### Cassandra writer
+### Redis consumer
 
-To run Kafka to Cassandra writer run:
-
-    $ cd ~/listenbrainz/listenstore
-    $ listenstore-kafka-to-cassandra-writer.py
+# TODO: document how to run redis-consumer
 
 
 ## Documentation

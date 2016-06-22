@@ -115,8 +115,8 @@ def get_listens(user_id):
     if max_ts and min_ts:
         _log_raise_400("You may only specify max_ts or min_ts, not both.")
 
-    cassandra = webserver.create_cassandra()
-    listens = cassandra.fetch_listens(
+    db_conn = webserver.create_postgres()
+    listens = db_conn.fetch_listens(
         user_id,
         limit=min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET),
         from_id=min_ts,
