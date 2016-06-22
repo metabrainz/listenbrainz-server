@@ -12,8 +12,8 @@ process. Installation process in production environment might be different.*
 In order to install ListenBrainz onto your machine or a VM, you will
 need to install:
 
-  Docker engine: https://docs.docker.com/engine/installation/
-  Docker compose: https://docs.docker.com/compose/install/
+* Docker engine: https://docs.docker.com/engine/installation/
+* Docker compose: https://docs.docker.com/compose/install/
 
 
 ### Configuration file
