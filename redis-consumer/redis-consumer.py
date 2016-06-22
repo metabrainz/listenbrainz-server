@@ -44,20 +44,19 @@ class RedisConsumer(object):
                     data = ujson.loads(listen)
                     l = Listen().from_json(data)
                     if l.validate():
-                        listens.append(Listen(listen))
+                        listens.append(l)
                     else:
-                        # TODO: Find why UID is missing periodically
-                        self.log.error("inbound listen: " + str(listen))
                         self.log.error("invalid listen: " + str(l))
+                    t0 = time()
                 else:
                     sleep(NO_ITEM_DELAY)
 
-                if time() - t0 > BATCH_TIMEOUT or len(listens) > BATCH_SIZE:
+                if time() - t0 > BATCH_TIMEOUT or len(listens) >= BATCH_SIZE:
                     break
 
             if not listens:
                 continue
-            self.log.info("got %d listens" % len(listens))
+            self.log.info("read %d listens from redis" % len(listens))
 
             broken = True
             while broken:
@@ -71,7 +70,6 @@ class RedisConsumer(object):
 
             # clear the listens-pending list
             r.ltrim("listens-pending", 1, 0)
-            self.log.info("num items: %d pending %d" % (r.llen("listens"), r.llen('listens-pending')))
 
             self.inserts += len(listens)
             if self.inserts >= REPORT_FREQUENCY:
