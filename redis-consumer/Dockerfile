@@ -3,7 +3,7 @@ FROM python:2.7.11
 MAINTAINER Robert Kaye <rob@metabrainz.org>
 
 # General setup
-RUN apt-get update && apt-get install -y --no-install-recommends python-redis redis-tools
+RUN apt-get update && apt-get install -y --no-install-recommends python-redis redis-tools vim
 
 # PostgreSQL client
 RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8

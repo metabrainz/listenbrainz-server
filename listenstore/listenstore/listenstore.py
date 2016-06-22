@@ -37,7 +37,7 @@ class ListenStore(object):
         raise NotImplementedError()
 
 
-    def fetch_listens(self, uid, from_id=None, to_id=None, limit=None):
+    def fetch_listens(self, user_id, from_id=None, to_id=None, limit=None):
         """ Check from_id, to_id, and limit for fetching listens
             and set them to default values if not given.
         """
@@ -54,7 +54,7 @@ class ListenStore(object):
             from_id = MIN_ID
         if to_id is None:
             to_id = self.max_id()
-        return self.fetch_listens_from_storage(uid, from_id, to_id, limit, order, precision)
+        return self.fetch_listens_from_storage(user_id, from_id, to_id, limit, order, precision)
 
 
 class PostgresListenStore(ListenStore):
@@ -68,11 +68,11 @@ class PostgresListenStore(ListenStore):
                 connection.execute("SET synchronous_commit TO off")
 
     def convert_row(self, row):
-        return Listen(uid=row[1], timestamp=row[2], artist_msid=row[3], album_msid=row[4],
+        return Listen(user_id=row[1], timestamp=row[2], artist_msid=row[3], album_msid=row[4],
                       recording_msid=row[5], data=row[6])
 
     def format_dict(self, listen):
-        return { 'user_id': listen.uid,
+        return { 'user_id': listen.user_id,
                  'ts': listen.timestamp,
                  'artist_msid': uuid.UUID(listen.artist_msid),
                  'album_msid': uuid.UUID(listen.album_msid) if listen.album_msid is not None else None,
@@ -100,13 +100,13 @@ class PostgresListenStore(ListenStore):
         res = connection.execute(query, params)
         return res.fetchall()
 
-    def fetch_listens_from_storage(self, uid, from_id, to_id, limit, order, precision):
+    def fetch_listens_from_storage(self, user_id, from_id, to_id, limit, order, precision):
         query = """ SELECT id, user_id, extract(epoch from ts), artist_msid, album_msid, recording_msid, raw_data """ + \
                 """ FROM listens WHERE user_id = %(user_id)s """ + \
                 """ AND extract(epoch from ts) > %(from_id)s AND extract(epoch from ts) < %(to_id)s  """ + \
                 """ ORDER BY extract(epoch from ts) """ + ORDER_TEXT[order] + """ LIMIT %(limit)s"""
         params = {
-            'user_id' : uid,
+            'user_id' : user_id,
             'from_id' : from_id,
             'to_id' : to_id,
             'limit' : limit

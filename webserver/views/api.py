@@ -169,6 +169,7 @@ def _validate_auth_header():
 
 def _send_listens_to_redis(listen_type, listens):
 
+
     p = _redis.pipeline()
     for listen in listens:
         if listen_type == 'playing_now':
@@ -185,7 +186,6 @@ def _send_listens_to_redis(listen_type, listens):
                 raise InternalServerError("Cannot record listen at this time.")
 
     p.execute()
-
 
 def _messybrainz_lookup(listens):
 
