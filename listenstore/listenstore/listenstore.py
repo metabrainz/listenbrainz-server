@@ -90,7 +90,7 @@ class PostgresListenStore(ListenStore):
                     raise ValueError("Invalid listen: %s" % listen)
                 try:
                     res = connection.execute(
-                    """ INSERT INTO listens(user_id, ts, artist_msid, album_msid, recording_msid, raw_data)
+                    """ INSERT INTO listen(user_id, ts, artist_msid, album_msid, recording_msid, raw_data)
                         VALUES ( %(user_id)s, to_timestamp(%(ts)s), %(artist_msid)s, %(album_msid)s,
                         %(recording_msid)s, %(raw_data)s) ON CONFLICT DO NOTHING """, self.format_dict(listen))
                 except Exception, e:     # Log errors
@@ -102,7 +102,7 @@ class PostgresListenStore(ListenStore):
 
     def fetch_listens_from_storage(self, user_id, from_id, to_id, limit, order, precision):
         query = """ SELECT id, user_id, extract(epoch from ts), artist_msid, album_msid, recording_msid, raw_data """ + \
-                """ FROM listens WHERE user_id = %(user_id)s """ + \
+                """ FROM listen WHERE user_id = %(user_id)s """ + \
                 """ AND extract(epoch from ts) > %(from_id)s AND extract(epoch from ts) < %(to_id)s  """ + \
                 """ ORDER BY extract(epoch from ts) """ + ORDER_TEXT[order] + """ LIMIT %(limit)s"""
         params = {

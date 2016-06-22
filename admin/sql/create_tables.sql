@@ -8,7 +8,7 @@ CREATE TABLE "user" (
 );
 ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_id_key UNIQUE (musicbrainz_id);
 
-CREATE TABLE listens (
+CREATE TABLE listen (
   id              SERIAL,
   user_id         VARCHAR NOT NULL,
   ts              TIMESTAMP WITH TIME ZONE NOT NULL,
