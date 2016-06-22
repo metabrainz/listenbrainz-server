@@ -9,7 +9,6 @@ function select(selector, collection) {
             newCollection.push(collection[i]);
         }
     }
-
     return newCollection;
 }
 
@@ -18,7 +17,6 @@ function map(applicable, collection) {
     for (var i = 0; i < collection.length; i++) {
         newCollection.push(applicable(collection[i]));
     }
-
     return newCollection;
 }
 
@@ -37,68 +35,78 @@ function Scrobble(rootScrobbleElement) {
 }
 
 Scrobble.prototype.lastfmID = function () {
-    var loveButtonForm = this.rootScrobbleElement.getElementsByTagName("form")[0];
-    var loveButtonURL = loveButtonForm.getAttribute("action");
-    return extractlastFMIDFromLoveButtonURL(loveButtonURL);
+    // Returns url of type "http://www.last.fm/music/Mot%C3%B6rhead"
+    if ('url' in this.rootScrobbleElement && this.rootScrobbleElement['url'] !== "" ) {
+        var url = this.rootScrobbleElement['url'];
+        url = url.split("/");
+        return url.slice(0, parts.length-2).join("/");
+    } else {
+        return "";
+    }
 };
 
 Scrobble.prototype.artistName = function () {
-    var artistElement = this.rootScrobbleElement.getElementsByClassName("chartlist-artists")[0];
-    artistElement = artistElement.children[0];
-    var artistName = artistElement.textContent || artistElement.innerText;
-    return artistName;
+    if ('artist' in this.rootScrobbleElement && '#text' in this.rootScrobbleElement['artist']) {
+        return this.rootScrobbleElement['artist']['#text'];
+    } else {
+        return "";
+    }
 };
 
 Scrobble.prototype.trackName = function () {
-    var trackElement = this.rootScrobbleElement.getElementsByClassName("link-block-target")[0];
-    return trackElement.textContent || trackElement.innerText;
+    if ('name' in this.rootScrobbleElement) {
+        return this.rootScrobbleElement['name'];
+    } else {
+        return "";
+    }
 };
 
 Scrobble.prototype.scrobbledAt = function () {
-    var dateContainer = this.rootScrobbleElement.getElementsByClassName("chartlist-timestamp")[0]
-    if (!dateContainer) {
-        return 0;
+    if ('date' in this.rootScrobbleElement && 'uts' in this.rootScrobbleElement['date']) {
+        return this.rootScrobbleElement['date']['uts'];
+    } else {
+        return "";
     }
-    var dateElement = dateContainer.getElementsByTagName("span")[0];
-    var dateString = dateElement.getAttribute("title");
-    //we have to do this because javascript's date parse method doesn't
-    //directly accept lastfm's new date format but it does if we add the
-    //space before am or pm
-    var manipulatedDateString = dateString.replace("am", " am").replace("pm", " pm") + " UTC";
-    return Math.round(Date.parse(manipulatedDateString)/1000);
 };
 
-Scrobble.prototype.optionalSpotifyID = function () {
-    return select(
-            isSpotifyURI,
-            map(
-                function(elem) { return elem.getAttribute("href") },
-                this.rootScrobbleElement.getElementsByTagName("a")
-               )
-            )[0];
+Scrobble.prototype.trackMBID = function () {
+    if ('mbid' in this.rootScrobbleElement) {
+        return this.rootScrobbleElement['mbid'];
+    } else {
+        return "";
+    }
 };
 
 Scrobble.prototype.asJSONSerializable = function () {
-    return {
+    var trackjson = {
         "track_metadata": {
             "track_name": this.trackName(),
             "artist_name": this.artistName(),
-            "additional_info" : {
-                 "spotify_id": this.optionalSpotifyID()
-            },
+            "additional_info": {
+                "recording_mbid": this.trackMBID()
+            }
         },
-        "listened_at": this.scrobbledAt()
+        "listened_at": this.scrobbledAt(),
+    };
 
-    }
+    // Remove keys with blank values
+    (function filter(obj) {
+        $.each(obj, function(key, value){
+            if (value === "" || value === null){
+                delete obj[key];
+            } else if (Object.prototype.toString.call(value) === '[object Object]') {
+                filter(value);
+            } else if (Array.isArray(value)) {
+                value.forEach(function (el) { filter(el); });
+            }
+        });
+    })(trackjson);
+    return trackjson;
 };
 
-function extractlastFMIDFromLoveButtonURL(loveButtonURL) {
-    var parts = loveButtonURL.split("/");
-    return parts.slice(0, parts.length-1).join("/");
-}
-
-function encodeScrobbles(root) {
-    var scrobbles = root.getElementsByClassName("js-link-block");
+function encodeScrobbles(jsonstr) {
+    var scrobbles = JSON.parse(jsonstr);
+    scrobbles = scrobbles['recenttracks']['track'];
     var parsedScrobbles = map(function(rawScrobble) {
         var scrobble = new Scrobble(rawScrobble);
         return scrobble.asJSONSerializable();
@@ -107,8 +115,7 @@ function encodeScrobbles(root) {
     var structure = {
         "listen_type" : "import",
         "payload"     : parsedScrobbles
-    }
-
+    };
     return structure;
 }
 
@@ -120,11 +127,16 @@ function getLastFMPage(page) {
         }, 3000);
     }
 
+    var url = "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user={{ lastfm_username }}&api_key={{ lastfm_api_key }}&format=json&page=" + page;
+
     var xhr = new XMLHttpRequest();
     xhr.timeout = 10 * 1000; // 10 seconds
-    xhr.open("GET", encodeURI("http://www.last.fm/user/{{ lastfm_username }}/library?page=" + page + "&_pjax=%23content"));
+    xhr.open("GET", encodeURI(url));
     xhr.onload = function () {
         if (/^2/.test(this.status)) {
+            if (numberOfPages <= 1) {
+              numberOfPages = JSON.parse(this.response)['recenttracks']['@attr']['totalPages'];
+            }
             reportPageAndGetNext(this.response);
         } else if (/^5/.test(this.status)) {
             retry('got ' + this.status);
@@ -149,10 +161,6 @@ function getLastFMPage(page) {
 var version = "1.6";
 var page = 1;
 var numberOfPages = 1;
-var pages = document.getElementsByClassName("pages");
-if (pages.length > 0) {
-    numberOfPages = parseInt(pages[0].innerHTML.trim().split(" ")[3]);
-}
 
 var numCompleted = 0;
 var maxActiveFetches = 10;
@@ -172,15 +180,11 @@ var times5Error = 0;
 function reportPageAndGetNext(response) {
     timesGetPage++;
     if (page == 1) {
-        updateMessage("<i class='fa fa-cog fa-spin'></i> working<br><span style='font-size:8pt'>Please don't navigate away from this page while the process is running</span>");
+        updateMessage("<i class='fa fa-cog fa-spin'></i> working<br><span style='font-size:8pt'>Please do not close this page while the process is running</span>");
     }
-    var elem = document.createElement("div");
-    elem.innerHTML = response;
-
-    var struct = encodeScrobbles(elem);
+    var struct = encodeScrobbles(response);
     submitQueue.push(struct);
-    if (!isSubmitActive)
-    {
+    if (!isSubmitActive){
         isSubmitActive = true;
         submitListens();
     }
