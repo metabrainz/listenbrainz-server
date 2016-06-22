@@ -13,9 +13,8 @@ setup(
     scripts=[x for x in glob.glob('bin/*.py') if x != 'bin/__init__.py'],
 #    package_data={'': ['logging.conf']},
     license='LICENSE.txt',
-    description='python interface to listen data stored in cassandra',
+    description='python interface to listen data stored in the db',
     install_requires=[
-        "cassandra-driver == 2.1.3",
         "setproctitle == 1.1.8"
     ],
     zip_safe=False
