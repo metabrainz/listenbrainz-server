@@ -120,7 +120,7 @@ def init_test_db(force=False):
     print("Done!")
 
 def run_script(uri, script):
-    return subprocess.call('psql -U ' + config.PG_SUPER_USER + ' -d messybrainz ' +
+    return subprocess.call('psql -U ' + uri.username + ' -d messybrainz ' +
                            '-h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
                            os.path.join(MSB_ADMIN_SQL_DIR, script),
                            shell=True)
