@@ -2,102 +2,67 @@
 
 Server for the ListenBrainz project.
 
-
 ## Installation
 
 *These instructions are meant to get you started quickly with development
 process. Installation process in production environment might be different.*
 
-First, install [ChefDK](https://downloads.chef.io/chef-dk/).
+### Prerequisites
+
+In order to install ListenBrainz onto your machine or a VM, you will
+need to install:
+
+  Docker engine: https://docs.docker.com/engine/installation/
+  Docker compose: https://docs.docker.com/compose/install/
+
 
 ### Configuration file
 
-Copy the file `config.py.sample` to `config.py` and edit the postgres
-settings. For now you will need to allow your system user to connect
-as the postgres admin user with no password.
+Copy the file `config.py.sample` to `config.py`:
 
-Register for a MusicBrainz application at
-https://musicbrainz.org/account/applications.
+    $ cp config.py.sample config.py
+
+Next, register for a MusicBrainz application:
+
+   `https://musicbrainz.org/account/applications`
+
 During registration set the callback url to
-`http://<your_host>/login/musicbrainz/post`.
-If you don't change anything during setup, `your_host`
-will be `10.1.2.3:8080`
+
+   `http://<your_host>/login/musicbrainz/post`
+
+Where <your_host> is the DNS name or IP address of the machine running ListenBrainz.
+
 Then set the `MUSICBRAINZ_CLIENT_ID` and `MUSICBRAINZ_CLIENT_SECRET` in
 `config.py` to the OAuth Client ID and OAuth Client Secret of your application.
 
-### Virtual machine
 
-Then run:
+### Build docker containers
 
-    $ kitchen create    # creates VM for the first time
-    $ kitchen converge  # provisions/installs from Chef cookbooks
-    $ kitchen login     # SSH into the VM
+    $ docker-compose build
 
-### MessyBrainz and ListenStore
+This will automatically download all the needed software and build the necessary
+containers needed to run ListenBrainz.
 
-ListenStore is our interface to cassandra. It's bundled as part of this
-repository, but you must install it so that python can find it.
+To actually start the containers, do
 
-    $ cd ~/listenbrainz/listenstore
-    $ python setup.py develop
+    $ docker-compose up
 
-You can use `setup.py develop` to symlink the ListenStore directory into
-site-packages (letting you make changes easily), or use `setup.py install`
-to install it.  If you use `setup.py install` and make any changes to
-ListenStore you must run install again.
+This should start the containers and allow you to setup the database.
 
-MessyBrainz is an intermediate database to map unknown metadata to stable
-UUIDs, and then map these intermediate identifiers to MBIDs
-( http://messybrainz.org, https://github.com/metabrainz/messybrainz-server ).
-
-For now you must download and install MessyBrainz separately:
-
-    $ cd ~
-    $ git clone https://github.com/metabrainz/messybrainz-server.git
-    $ cd messybrainz-server
-    $ pip install -r requirements.txt
-    $ python setup.py develop
-    $ cp config.py.sample config.py
-    $ python manage.py init_db
-
-*Future updates will map a local copy of MessyBrainz into the Vagrant
-server.*
-
-### Python dependencies
-
-Database should be ready. Before running any Python scripts, you need to
-install Python dependencies:
-
-    $ cd ~/listenbrainz
-    $ pip install -r requirements.txt
 
 ### Database initialization
 
-To initialize the database (create user, tables, etc.) run this command:
+To initialize the database (create user, tables, etc.) run these commands:
 
-    $ cd ~/listenbrainz
-    $ python manage.py init_db
+    $ docker-compose run web python manage.py init_db --skip-create
+    $ docker-compose run web python manage.py init_msb_db 
 
-After that server should be ready to go.
+After that server should be ready to go. Go to http://localhost:8000 and load the 
+ListenBrainz home page.
 
+### Virtual machine
 
-## Running
-
-### Web server
-
-To run the *webserver* use this command:
-
-    $ cd ~/listenbrainz
-    $ python manage.py runserver
-
-It should be accessible at **http://10.1.2.3:8080/**.
-
-*For information about running listenstore module see /listenstore/README.md
-file.*
-
-### Redis consumer
-
-# TODO: document how to run redis-consumer
+There will be an easy to use Vagrant setup once the docker branches are merged.
 
 
 ## Documentation
@@ -108,40 +73,3 @@ You can build the documentation yourself:
     $ cd ~/listenbrainz/docs
     $ make clean html
 
-
-## Fixing problems
-
-### `LeaderNotAvailableError`
-
-After setting up the server and trying to submit your listens to the server,
-this error might appear:
-
-    Kafka listens write error: <class 'kafka.common.LeaderNotAvailableError'>
-
-One way to fix it is to delete all data directories created for Kafka and
-Zookeeper.
-
-First, stop both Kafka and Zookeeper services:
-
-    $ sudo service kafka stop
-    $ sudo service zookeeper stop
-
-Wipe Kafka's data directory:
-
-    $ sudo rm /var/lib/kafka/kafka-logs/*
-
-and Zookeeper's:
-
-    $ sudo rm /var/lib/zookeeper/*
-
-Start them again:
-
-    $ sudo service kafka start
-    $ sudo service zookeeper start
-
-Finally, create a `listens` topic in Kafka:
-
-    $ sudo /opt/kafka/bin/kafka-topics.sh --create --zookeeper localhost:2181 --topic "listens" --partitions 1 --replication-factor 1
-
-This should fix the issue. See this page for more info about described method:
-https://stackoverflow.com/a/24028480.
