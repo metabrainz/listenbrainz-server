@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from flask import Blueprint, render_template, current_app, redirect, url_for
 from flask_login import current_user
+from webserver.redis_connection import _redis
 import os
 import subprocess
 import locale
@@ -55,4 +56,6 @@ def roadmap():
 def current_status():
 
     load = "%.2f %.2f %.2f" % os.getloadavg()
-    return render_template("index/current-status.html", load=load)
+    listens = _redis.llen("listens")
+    listens_pending = _redis.llen("listens_pending")
+    return render_template("index/current-status.html", load=load, listens=listens, listens_pending=listens_pending)
