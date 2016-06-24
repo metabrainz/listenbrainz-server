@@ -90,7 +90,7 @@ class Token(object):
     @staticmethod
     def load(token):
         result = db.session.execute("SELECT * FROM tokens WHERE token=:token",
-                           {'token': token})
+                                    {'token': token})
         db.session.commit()
         row = result.fetchone()
         if row:
@@ -106,7 +106,7 @@ class Token(object):
         db.session.commit()
         return Token.load(token)
 
-    def validate(self, user):
+    def approve(self, user):
         db.session.execute("UPDATE tokens SET user_id = :uid WHERE token=:token",
                            {'uid': user, 'token': self.token})
         db.session.commit()

@@ -39,7 +39,7 @@ def api_auth():
 def api_auth_approve():
     """ Authenticate the user token provided.
     """
-    user = request.form['user']
+    user = User.load_by_name(current_user.musicbrainz_id)
     token = Token.load(request.form['token'])
     if not token:
         return render_template(
@@ -48,7 +48,13 @@ def api_auth_approve():
             msg="Either this token is already used or invalid. Please try again."
         )
 
-    token.validate(User.load_by_name(user).id)
+    if token.api_key != user.api_key:
+        return render_template(
+            "user/auth.html",
+            user_id=current_user.musicbrainz_id,
+            msg="This token does not belong to this account. Please login in the correct account."
+        )
+    token.approve(user.id)
     return render_template(
         "user/auth.html",
         user_id=current_user.musicbrainz_id,
