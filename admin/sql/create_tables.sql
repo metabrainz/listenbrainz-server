@@ -29,9 +29,11 @@ ALTER TABLE tokens ADD CONSTRAINT tokens_api_key_uniq UNIQUE (api_key);
 
 CREATE TABLE sessions (
     id        SERIAL,
+    user_id   VARCHAR NOT NULL,
     sid       VARCHAR NOT NULL,
-    uid       INTEGER NOT NULL,
+    token     VARCHAR NOT NULL,
+    api_key   VARCHAR NOT NULL,
     ts        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
+ALTER TABLE sessions ADD CONSTRAINT sessions_sid_token_apikey_uniq UNIQUE (user_id, token, api_key);
 COMMIT;
