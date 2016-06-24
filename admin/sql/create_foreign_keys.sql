@@ -1,5 +1,3 @@
 BEGIN;
 
-ALTER TABLE sessions ADD FOREIGN KEY(uid) REFERENCES "user"(id);
-
 COMMIT;

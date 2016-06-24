@@ -54,11 +54,17 @@ def api_auth_approve():
             user_id=current_user.musicbrainz_id,
             msg="This token does not belong to this account. Please login in the correct account."
         )
-    token.approve(user.id)
+    if token.user:
+        return render_template(
+            "user/auth.html",
+            user_id=current_user.musicbrainz_id,
+            msg="This token is already approved. Please check the token and try again."
+        )
+    token.approve(user.name)
     return render_template(
         "user/auth.html",
         user_id=current_user.musicbrainz_id,
-        msg="Token %s approved for user %s, press continue in client." % (token.token, user)
+        msg="Token %s approved for user %s, press continue in client." % (token.token, current_user.musicbrainz_id)
     )
 
 
@@ -115,27 +121,25 @@ def get_token(request, data):
                            output_format)
 
 
-# NEEDS MORE WORK !!
-# Validate API Key
 def get_session(request, data):
-    """ Create new session
+    """ Create new session after validating the API_key and token.
     """
     output_format = data.get("format", "xml")
     try:
         api_key = data['api_key']
-        token = Token.load(data['token'])
+        token = Token.load(data['token'], api_key)
     except KeyError:
         raise InvalidAPIUsage(6, output_format=output_format)   # Missing Required Params
 
     if not token:
-        raise InvalidAPIUsage(4, output_format=output_format)   # Invalid token
+        if not Token.is_valid_api_key(api_key):
+            raise InvalidAPIUsage(10, output_format=output_format)  # Invalid API_key
+        raise InvalidAPIUsage(4, output_format=output_format)       # Invalid token
 
     if not token.user:
         raise InvalidAPIUsage(14, output_format=output_format)   # Unauthorized token
 
-    print "GRANTING SESSION for token %s" % token.token
-    token.consume()
-    session = Session.create(token.user)
+    session = Session.create(token)
 
     doc, tag, text = Doc().tagtext()
     with tag('lfm', status="ok"):
@@ -143,7 +147,7 @@ def get_session(request, data):
             with tag('name'):
                 text(session.user.name)
             with tag('key'):
-                text(session.id)
+                text(session.sid)
             with tag('subscriber'):
                 text('0')
 
@@ -209,11 +213,17 @@ def _to_native_api(lookup):
 def scrobble(request, data):
     """ Submit the listen in the lastfm format to be inserted in db.
     """
-    sk = data['sk']
     output_format = data.get('format', "xml")
-    session = Session.load(sk)
+    try:
+        sk, api_key = data['sk'], data['api_key']
+    except KeyError:
+        raise InvalidAPIUsage(6, output_format=output_format)       # Invalid parameters
+
+    session = Session.load(sk, api_key)
     if not session:
-        raise InvalidAPIUsage(9, output_format=output_format)   # Invalid Session
+        if not Token.is_valid_api_key(api_key):
+            raise InvalidAPIUsage(10, output_format=output_format)   # Invalid API_KEY
+        raise InvalidAPIUsage(9, output_format=output_format)        # Invalid Session KEY
 
     lookup = defaultdict(dict)
     for key, value in data.items():
@@ -227,6 +237,7 @@ def scrobble(request, data):
             number = 0
         lookup[number][key] = value
 
+    # Convert to native payload then submit 'em.
     native_payload = _to_native_api(lookup)
     augumented_listens = _get_augumented_listens(native_payload, staticuser)
     _send_listens_to_kafka("listens", augumented_listens)
