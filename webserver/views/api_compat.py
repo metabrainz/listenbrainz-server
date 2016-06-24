@@ -12,7 +12,7 @@ from webserver.rate_limiter import ratelimit
 from webserver.errors import InvalidAPIUsage
 import xmltodict
 
-from api_tools import _send_listens_to_kafka, _validate_api_key, _get_augumented_listens
+from api_tools import _send_listens_to_kafka, _get_augumented_listens
 from db.mockdata import User, Session, Token
 
 staticuser = "armalcolite"
@@ -92,12 +92,14 @@ def get_token(request, data):
     """ Issue a token to user after verying his API_KEY
     """
     output_format = data.get("format", "xml")
-    if not data.get('api_key', None):
+    api_key = data.get('api_key', None)
+
+    if not api_key:
         raise InvalidAPIUsage(6, output_format=output_format)   # Missing required params
-    if not _validate_api_key(data['api_key']):
+    if not Token.is_valid_api_key(api_key):
         raise InvalidAPIUsage(10, output_format=output_format)   # Invalid API_KEY
 
-    token = Token.generate()
+    token = Token.generate(api_key)
 
     doc, tag, text = Doc().tagtext()
     with tag('lfm', status="ok"):

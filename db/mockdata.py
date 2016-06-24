@@ -62,12 +62,30 @@ class Session(object):
 
 class Token(object):
     def __init__(self, row):
-        id, userid, token, timestamp = row
+        id, userid, token, api_key, timestamp = row
         self.token = token
         self.timestamp = timestamp
+        self.api_key = api_key
         self.user = None
         if userid:
             self.user = User.load_by_name(userid)
+
+    @staticmethod
+    def is_valid_api_key(api_key, user_id=None):
+        """ Check if the api_key is valid or not, and return a boolean.
+        """
+        dic = {"api_key": api_key}
+        if user_id:
+            query = 'SELECT * FROM "user" WHERE auth_token=:api_key AND musicbrainz_id=:user_id'
+            dic['user_id'] = user_id
+        else:
+            query = 'SELECT * FROM "user" WHERE auth_token=:api_key'
+
+        result = db.session.execute(query, dic)
+        db.session.commit()
+        if result.fetchone():
+            return True
+        return False
 
     @staticmethod
     def load(token):
@@ -80,10 +98,11 @@ class Token(object):
         return None
 
     @staticmethod
-    def generate():
+    def generate(api_key):
         token = binascii.b2a_hex(os.urandom(20))
-        db.session.execute('INSERT INTO tokens (token) VALUES (:token)',
-                           {'token': token})
+        db.session.execute('INSERT INTO tokens (token, api_key) VALUES (:token, :api_key) \
+                            ON CONFLICT(api_key) DO UPDATE SET token = EXCLUDED.token, ts = EXCLUDED.ts',
+                           {'token': token, 'api_key': api_key})
         db.session.commit()
         return Token.load(token)
 

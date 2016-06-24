@@ -236,7 +236,3 @@ def _messybrainz_lookup(listens):
 
         augmented_listens.append(listen)
     return augmented_listens
-
-
-def _validate_api_key(key):
-    return True

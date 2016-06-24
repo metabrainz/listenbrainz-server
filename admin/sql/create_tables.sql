@@ -22,8 +22,10 @@ CREATE TABLE tokens (
      id               SERIAL,
      user_id          VARCHAR,
      token            TEXT NOT NULL,
+     api_key          VARCHAR NOT NULL,
      ts               TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+ALTER TABLE tokens ADD CONSTRAINT tokens_api_key_uniq UNIQUE (api_key);
 
 CREATE TABLE sessions (
     id        SERIAL,
