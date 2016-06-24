@@ -10,9 +10,8 @@
     <p> {{ msg }} </p>
 
     {% else %}
-    <h3>Approve this client for account {{ user_id }}?</h3>
+    <h3>Approve this client for account <b>{{ user_id }}</b>?</h3>
     <form method='POST'>
-        <input type='hidden' name='user' value='{{ user_id }}'/>
         <input type='hidden' name='token' value='{{ token }}'/>
         <input type='submit' value='Yes please'/>
     </form>
