@@ -8,7 +8,6 @@ from yattag import Doc
 import yattag
 from webserver.kafka_connection import _kafka
 from webserver.external import messybrainz
-# import db.user
 from webserver.rate_limiter import ratelimit
 from webserver.errors import InvalidAPIUsage
 import xmltodict
@@ -24,6 +23,8 @@ api_bp = Blueprint('api_compat', __name__)
 @ratelimit()
 @login_required
 def api_auth():
+    """ Renders the token activation page.
+    """
     token = request.args['token']
     return render_template(
         "user/auth.html",
@@ -36,6 +37,8 @@ def api_auth():
 @ratelimit()
 @login_required
 def api_auth_approve():
+    """ Authenticate the user token provided.
+    """
     user = request.form['user']
     token = Token.load(request.form['token'])
     if not token:
@@ -56,6 +59,8 @@ def api_auth_approve():
 @api_bp.route('/2.0/', methods=['GET'])
 @ratelimit()
 def api_get():
+    """ Receives the GET-API calls and redirects them to appropriate methods.
+    """
     method = request.args['method'].lower()
     return {
         'user.getinfo': user_info,
@@ -67,6 +72,8 @@ def api_get():
 @api_bp.route('/2.0/', methods=['POST'])
 @ratelimit()
 def api_post():
+    """ Receives the POST-API calls and redirects them to appropriate methods.
+    """
     method = request.form['method'].lower()
     return {
         'track.updatenowplaying': now_playing,
@@ -82,8 +89,8 @@ def invalid_method_error(request, data):
 
 
 def get_token(request, data):
-    """ Issue a token to user after verying his API_KEY """
-
+    """ Issue a token to user after verying his API_KEY
+    """
     output_format = data.get("format", "xml")
     if not data.get('api_key', None):
         raise InvalidAPIUsage(6, output_format=output_format)   # Missing required params
@@ -103,8 +110,8 @@ def get_token(request, data):
 # NEEDS MORE WORK !!
 # Validate API Key
 def get_session(request, data):
-    """ Create new session """
-
+    """ Create new session
+    """
     output_format = data.get("format", "xml")
     try:
         api_key = data['api_key']
@@ -163,6 +170,8 @@ def get_session_info(request, data):
 
 
 def _to_native_api(lookup):
+    """ Converts the list of listens to the native API format
+    """
     listens = []
     for ind, data in lookup.iteritems():
         listen = {
@@ -190,8 +199,8 @@ def _to_native_api(lookup):
 
 
 def scrobble(request, data):
-    """ Converts the listens from the lastfm format to native API, the saves 'em """
-
+    """ Submit the listen in the lastfm format to be inserted in db.
+    """
     sk = data['sk']
     output_format = data.get('format', "xml")
     session = Session.load(sk)
@@ -260,6 +269,8 @@ def scrobble(request, data):
 def format_response(data, format="xml"):
     """ Convert the XML response to required format.
         NOTE: The order of attributes may change while converting from XML to other formats.
+        NOTE: The rendering format for the error does not follow these rules and has been managed separately
+              in the error handlers.
         The response is a translation of the XML response format, converted according to the
         following rules:
 
