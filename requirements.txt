@@ -23,7 +23,6 @@ psycopg2==2.6.1
 python-dateutil==2.2
 ujson==1.33
 redis==2.10.3
-<<<<<<< HEAD
 pytest==2.9.1
 pytest-cov==2.2.1
 unittest2==1.1.0
