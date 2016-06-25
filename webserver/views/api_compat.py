@@ -2,20 +2,18 @@ import time
 import json
 import re
 from collections import defaultdict
-from flask import Blueprint, request, render_template
-from flask_login import login_required, current_user
 from yattag import Doc
 import yattag
+from flask import Blueprint, request, render_template
+from flask_login import login_required, current_user
 from webserver.kafka_connection import _kafka
 from webserver.external import messybrainz
 from webserver.rate_limiter import ratelimit
 from webserver.errors import InvalidAPIUsage
 import xmltodict
-
-from api_tools import _send_listens_to_kafka, _get_augumented_listens
+from api_tools import api_tools
 from db.mockdata import User, Session, Token
 
-staticuser = "armalcolite"
 api_bp = Blueprint('api_compat', __name__)
 
 
@@ -74,10 +72,13 @@ def api_get():
     """ Receives the GET-API calls and redirects them to appropriate methods.
     """
     method = request.args['method'].lower()
+
+    def invalid_method_error(*args):
+        raise InvalidAPIUsage(3, output_format=request.args.get('format', "xml"))   # Invalid Method
+
     return {
         'user.getinfo': user_info,
-        'auth.gettoken': get_token,
-        'auth.getsessioninfo': get_session_info
+        'auth.gettoken': get_token
     }.get(method, invalid_method_error)(request, request.args)
 
 
@@ -87,17 +88,16 @@ def api_post():
     """ Receives the POST-API calls and redirects them to appropriate methods.
     """
     method = request.form['method'].lower()
+
+    def invalid_method_error(*args):
+        raise InvalidAPIUsage(3, output_format=request.args.get('format', "xml"))   # Invalid Method
+
     return {
         'track.updatenowplaying': scrobble_listens,
         'track.scrobble': scrobble_listens,
-        'auth.getsession': get_session,
-        'user.getinfo': user_info
+        'auth.getsession': get_session
     }.get(method, invalid_method_error)(request, request.form)
 
-
-def invalid_method_error(request, data):
-    """ Return error for invalid method name """
-    raise InvalidAPIUsage(3, output_format=data.get('format', "xml"))
 
 
 def get_token(request, data):
@@ -150,32 +150,6 @@ def get_session(request, data):
                 text(session.sid)
             with tag('subscriber'):
                 text('0')
-
-    return format_response('<?xml version="1.0" encoding="utf-8"?>\n' + yattag.indent(doc.getvalue()),
-                           data.get('format', "xml"))
-
-
-def get_session_info(request, data):
-    sk = data['sk']
-    session = Session.load(sk)
-    if not session:
-        print "Invalid session"
-        return "NOPE"
-
-    print "SESSION INFO for session %s, user %s" % (session.id, session.user.name)
-
-    doc, tag, text = Doc().tagtext()
-    with tag('lfm', status="ok"):
-        with tag('application'):
-            with tag('session'):
-                with tag('name'):
-                    text(session.user.name)
-                with tag('key'):
-                    text(session.id)
-                with tag('subscriber'):
-                    text('0')
-            with tag('country'):
-                text('US')
 
     return format_response('<?xml version="1.0" encoding="utf-8"?>\n' + yattag.indent(doc.getvalue()),
                            data.get('format', "xml"))
@@ -247,8 +221,8 @@ def scrobble_listens(request, data):
 
     # Convert to native payload then submit 'em.
     listen_type, native_payload = _to_native_api(lookup, data['method'])
-    augumented_listens = _get_augumented_listens(native_payload, staticuser)
-    _send_listens_to_kafka(listen_type, augumented_listens)
+    augumented_listens = api_tools("_get_augumented_listens", native_payload, session.user.name)
+    api_tools("_send_listens_to_kafka", listen_type, augumented_listens)
 
     # With corrections than the original submitted listen.
     doc, tag, text = Doc().tagtext()
@@ -343,25 +317,35 @@ def format_response(data, format="xml"):
 
 
 def user_info(request, data):
-    sk = data['sk']
-    session = Session.load(sk)
-    if not session:
-        print "Invalid session"
-        return "NOPE"
+    """ Gives information about the user specified in the parameters.
+    """
+    try:
+        api_key = data['api_key']
+        output_format = data.get("format", "xml")
+
+        user = User.load_by_apikey(api_key)
+        if not user:
+            raise InvalidAPIUsage(10, output_format=output_format)  # Invalid API key
+        query_user = User.load_by_name(data.get("user", None)) if data.get("user", None) else user
+        if not query_user:
+            raise InvalidAPIUsage(7, output_format=output_format)  # Invalid resource specified
+
+    except KeyError:
+        raise InvalidAPIUsage(6, output_format=output_format)       # Missing required params
 
     doc, tag, text = Doc().tagtext()
     with tag('lfm', status="ok"):
         with tag('user'):
             with tag('name'):
-                text(session.user.name)
+                text(query_user.name)
             with tag('realname'):
-                text(session.user.name)
+                text(query_user.name)
             with tag('url'):
-                text('http://foo.bar/user/' + session.user.name)
+                text('http://listenbrainz.org/user/' + query_user.name)
             with tag('playcount'):
-                text('9001')
-            with tag('registered', unixtime=str(time)):
-                text(session.user.timestamp)
+                text(int(User.get_play_count(query_user.name)[0]))
+            with tag('registered', unixtime=str(query_user.created.strftime("%s"))):
+                text(str(query_user.created))
 
     return format_response('<?xml version="1.0" encoding="utf-8"?>\n' + yattag.indent(doc.getvalue()),
                            data.get('format', "xml"))
