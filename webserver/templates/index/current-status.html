@@ -9,24 +9,14 @@
     <div class="col-md-7 col-lg-8">
       <h3>Incoming listens</h3>
 
-      <p>
-        Stats for our kafka listens stream: 
-      </p>
-
-      <table class="table table-bordered table-striped">
-          <tr>
-              <td>offset</td>
-              <td>{{ kstats.offset }}</td>
-          </tr>
-          <tr>
-              <td>size</td>
-              <td>{{ kstats.size }}</td>
-          </tr>
-          <tr>
-              <td>lag</td>
-              <td>{{ kstats.lag }}</td>
-          </tr>
+      <table>
+        <tr>
+           <td>Number of listens in submission queue:</td><td>{{ listens }}</td></tr>
+           <td>Number of listens currently being inserted:</td><td>{{ listens_pending }}</td></tr>
+        </tr>
       </table>
+      <p>
+      (values close to 0 indicate that everything is well)
 
       <h3>load average</h3>
 

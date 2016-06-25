@@ -3,7 +3,7 @@ import os
 import logging
 
 from .utils import argparse_factory, parse_args_and_config
-from .listenstore import PostgresListenStore, CassandraListenStore
+from .listenstore import PostgresListenStore
 from .kafkaconsumer import KafkaConsumer
 
 

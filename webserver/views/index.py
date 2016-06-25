@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from flask import Blueprint, render_template, current_app, redirect, url_for
 from flask_login import current_user
+from webserver.redis_connection import _redis
 import os
 import subprocess
 import locale
@@ -55,26 +56,6 @@ def roadmap():
 def current_status():
 
     load = "%.2f %.2f %.2f" % os.getloadavg()
-
-    process = subprocess.Popen([current_app.config['KAFKA_RUN_CLASS_BINARY'], "kafka.tools.ConsumerOffsetChecker",
-        '--topic', 'listens', '--group', 'listen-group'], stdout=subprocess.PIPE)
-    out, err = process.communicate()
-
-    print out
-
-    lines = out.split("\n")
-    data = []
-    for line in lines:
-        if line.startswith("listen-group"):
-            data = line.split()
-
-    if len(data) >= 6:
-        kafka_stats = { 
-                        'offset' : locale.format("%d", int(data[3]), grouping=True),
-                        'size' : locale.format("%d", int(data[4]), grouping=True),
-                        'lag' : locale.format("%d", int(data[5]), grouping=True) 
-                      } 
-    else:
-        kafka_stats = { 'offset' : "(unknown/empty)", 'size' : "-", 'lag' : "-" } 
-
-    return render_template("index/current-status.html", load=load, kstats=kafka_stats)
+    listens = _redis.llen("listens")
+    listens_pending = _redis.llen("listens_pending")
+    return render_template("index/current-status.html", load=load, listens=listens, listens_pending=listens_pending)
