@@ -19,4 +19,4 @@ if __name__ == "__main__":
                         help="Which port to listen on. Default: 8080.")
     args = parser.parse_args()
     application.run(debug=True if args.debug else None,
-                    host=args.host, port=args.port)
+                    host=args.host, port=args.port, threaded=True)

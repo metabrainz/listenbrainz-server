@@ -26,10 +26,7 @@ def get_config(opt_vars):
         ConfigFile > CommandlineArguments > DefaultConfig
     """
 
-    config = {  "KAFKA_CONNECT": "localhost:9092",
-                "CASSANDRA_SERVER": "localhost",
-                "CASSANDRA_KEYSPACE": "listenbrainz",
-                "CASSANDRA_REPLICATION_FACTOR": "1",
+    config = {  
                 "SQLALCHEMY_DATABASE_URI": "postgresql://listenbrainz@/listenbrainz"
              }
     config.update(opt_vars)
@@ -55,11 +52,6 @@ def argparse_factory(desc):
                             dest='LOGLEVEL',
                             default='INFO',
                             help='DEBUG | INFO | WARNING | ERROR | CRITICAL')
-#    opt_parser.add_argument('-v',
-#                            dest='VERBOSE',
-#                            action='store_true',
-#                            help='Enable logging to stdout',
-#                            default=False)
     return opt_parser
 
 

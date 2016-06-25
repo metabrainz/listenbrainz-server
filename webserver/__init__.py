@@ -6,11 +6,6 @@ import messybrainz.db
 
 from .scheduler import ScheduledJobs
 
-def create_cassandra():
-    from cassandra_connection import init_cassandra_connection
-    return init_cassandra_connection(current_app.config['CASSANDRA_SERVER'], current_app.config['CASSANDRA_KEYSPACE'],
-        current_app.config['CASSANDRA_REPLICATION_FACTOR'])
-
 def create_postgres():
     from postgres_connection import init_postgres_connection
     return init_postgres_connection(current_app.config['SQLALCHEMY_DATABASE_URI'])
@@ -32,14 +27,9 @@ def create_app():
     from webserver.loggers import init_loggers
     init_loggers(app)
 
-    # Kafka connection
-    if 'KAFKA_CONNECT' in app.config:
-        from kafka_connection import init_kafka_connection
-        init_kafka_connection(app.config['KAFKA_CONNECT'])
-
     # Redis connection
     from redis_connection import init_redis_connection
-    init_redis_connection()
+    init_redis_connection(app.config['REDIS_HOST'])
 
     # Database connection
     import db

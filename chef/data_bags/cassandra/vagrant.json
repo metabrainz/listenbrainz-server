@@ -1,6 +1,0 @@
-{
-    "id": "vagrant",
-    "name": "Vagrant Cluster",
-    "seed_nodes": ["127.0.0.1"],
-    "snitch": "SimpleSnitch"
-}
