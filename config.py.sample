@@ -6,19 +6,19 @@ SECRET_KEY = "CHANGE_ME"
 # DATABASES
 
 # Primary database
-SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz@/listenbrainz"
+SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@db:5432/listenbrainz"
+MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@db:5432/messybrainz"
+
+# Database for testing
+TEST_SQLALCHEMY_DATABASE_URI = "postgresql://lb_test@/lb_test"
+
+# Other postgres configuration options
 # Oldest listens which can be stored in the database, in days.
 MAX_POSTGRES_LISTEN_HISTORY = "90"
 # Log Postgres queries if they execeed this time, in milliseconds.
 PG_QUERY_TIMEOUT = "3000"
 # Disable synchronous_commit to OFF for Postgres. Default: False
 PG_ASYNC_LISTEN_COMMIT = "False"
-
-MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz@/messybrainz"
-
-# Database for testing
-TEST_SQLALCHEMY_DATABASE_URI = "postgresql://lb_test@/lb_test"
-
 # The name of a postgres user who has superuser privileges. Your local user should
 # be able to connect to the database with this user.
 PG_SUPER_USER = "postgres"
