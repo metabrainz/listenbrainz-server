@@ -88,16 +88,12 @@ def profile(user_id):
 @user_bp.route("/import")
 @login_required
 def import_data():
-<<<<<<< HEAD
     """ Displays the import page to user, giving various options """
 
     # Return error if LASTFM_API_KEY is not given in config.py
     if 'LASTFM_API_KEY' not in current_app.config or current_app.config['LASTFM_API_KEY'] == "":
         return NotFound("LASTFM_API_KEY not specified.")
 
-=======
-    """ Import page for listens from lastfm """
->>>>>>> export-listens
     lastfm_username = request.args.get("lastfm_username")
     if lastfm_username:
         loader = render_template(
@@ -120,12 +116,12 @@ def import_data():
 def export_data():
     """ Exporting the data to json """
     if request.method == "POST":
-        cassandra = webserver.create_cassandra()
+        db_conn = webserver.create_postgres()
         filename = current_user.musicbrainz_id + "_lb-" + datetime.today().strftime('%Y-%m-%d') + ".json"
 
         # Fetch output and convert it into dict with keys as indexes
         output = []
-        for index, obj in enumerate(cassandra.fetch_listens(current_user.musicbrainz_id)):
+        for index, obj in enumerate(db_conn.fetch_listens(current_user.musicbrainz_id)):
             dic = obj.data
             dic['timestamp'] = obj.timestamp
             dic['album_msid'] = None if obj.album_msid is None else str(obj.album_msid)
