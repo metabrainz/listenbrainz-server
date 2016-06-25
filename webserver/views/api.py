@@ -1,15 +1,12 @@
 import sys
 import ujson
-import socket
-import uuid
-from flask import Blueprint, request, current_app, jsonify
-from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized, ServiceUnavailable
-from webserver.redis_connection import _redis
+from flask import Blueprint, request, jsonify
+from werkzeug.exceptions import BadRequest, Unauthorized
 from webserver.decorators import crossdomain
-from webserver.external import messybrainz
 import webserver
 import db.user
 from webserver.rate_limiter import ratelimit
+from api_tools import api_tools
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -36,7 +33,7 @@ MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
 @ratelimit()
 def submit_listen():
     """
-    Submit listens to the server. A user token (found on https://listenbrainz.org/user/import ) must 
+    Submit listens to the server. A user token (found on https://listenbrainz.org/user/import ) must
     be provided in the Authorization header!
 
     For complete details on the format of the JSON to be POSTed to this endpoint, see :ref:`json-doc`.
@@ -76,18 +73,18 @@ def submit_listen():
     augmented_listens = []
     msb_listens = []
     for listen in payload:
-        _validate_listen(listen)
+        api_tools("_validate_listen", listen)
         listen['user_id'] = user_id
 
         msb_listens.append(listen)
         if len(msb_listens) >= MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP:
-            augmented_listens.extend(_messybrainz_lookup(msb_listens))
+            augmented_listens.extend(api_tools("_messybrainz_lookup", msb_listens))
             msb_listens = []
 
     if msb_listens:
-        augmented_listens.extend(_messybrainz_lookup(msb_listens))
+        augmented_listens.extend(api_tools("_messybrainz_lookup", msb_listens))
 
-    _send_listens_to_redis(data['listen_type'], augmented_listens)
+    api_tools("_send_listens_to_redis", data['listen_type'], augmented_listens)
 
     return "success"
 
@@ -99,7 +96,7 @@ def get_listens(user_id):
     Get listens for user ``user_id``. The format for the JSON returned is defined in our :ref:`json-doc`.
 
     If none of the optional arguments are given, this endpoint will return the :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` most recent listens.
-    The optional ``max_ts`` and ``min_ts`` UNIX epoch timestamps control at which point in time to start returning listens. You may specify max_ts or 
+    The optional ``max_ts`` and ``min_ts`` UNIX epoch timestamps control at which point in time to start returning listens. You may specify max_ts or
     min_ts, but not both in one call. Listens are always returned in descending timestamp order.
 
     :param max_ts: If you specify a ``max_ts`` timestamp, listens with listened_at less than (but not including) this value will be returned.
@@ -140,17 +137,6 @@ def get_listens(user_id):
     }})
 
 
-def _parse_int_arg(name, default=None):
-    value = request.args.get(name)
-    if value:
-        try:
-            return int(value)
-        except ValueError:
-            raise BadRequest("Invalid %s argument: %s" % (name, value))
-    else:
-        return default
-
-
 def _validate_auth_header():
     auth_token = request.headers.get('Authorization')
     if not auth_token:
@@ -167,148 +153,16 @@ def _validate_auth_header():
     return user['musicbrainz_id']
 
 
-def _send_listens_to_redis(listen_type, listens):
-
-
-    p = _redis.pipeline()
-    for listen in listens:
-        if listen_type == 'playing_now':
-            try:
-                p.rpush('playing_now', ujson.dumps(listen).encode('utf-8'))
-            except:
-                current_app.logger.error("Redis rpush playing_now write error: " + str(sys.exc_info()[0]))
-                raise InternalServerError("Cannot record playing_now at this time.")
-        else:
-            try:
-                p.rpush('listens', ujson.dumps(listen).encode('utf-8'))
-            except:
-                current_app.logger.error("Redis rpush listens write error: " + str(sys.exc_info()[0]))
-                raise InternalServerError("Cannot record listen at this time.")
-
-    p.execute()
-
-def _messybrainz_lookup(listens):
-
-    msb_listens = []
-    for listen in listens:
-        messy_dict = {
-            'artist': listen['track_metadata']['artist_name'],
-            'title': listen['track_metadata']['track_name'],
-        }
-        if 'release_name' in listen['track_metadata']:
-            messy_dict['release'] = listen['track_metadata']['release_name']
-
-        if 'additional_info' in listen['track_metadata']:
-            ai = listen['track_metadata']['additional_info']
-            if 'artist_mbids' in ai and type(ai['artist_mbids']) == list:
-                messy_dict['artist_mbids'] = ai['artist_mbids']
-            if 'release_mbid' in ai:
-                messy_dict['release_mbid'] = ai['release_mbid']
-            if 'recording_mbid' in ai:
-                messy_dict['recording_mbid'] = ai['recording_mbid']
-            if 'track_number' in ai:
-                messy_dict['track_number'] = ai['track_number']
-            if 'spotify_id' in ai:
-                messy_dict['spotify_id'] = ai['spotify_id']
-        msb_listens.append(messy_dict)
-
-    try:
-        msb_responses = messybrainz.submit_listens(msb_listens)
-    except messybrainz.exceptions.BadDataException as e:
-        _log_raise_400(str(e))
-    except messybrainz.exceptions.NoDataFoundException:
-        return []
-    except messybrainz.exceptions.ErrorAddingException as e:
-        raise ServiceUnavailable(str(e))
-
-    augmented_listens = []
-    for listen, messybrainz_resp in zip(listens, msb_responses['payload']):
-        messybrainz_resp = messybrainz_resp['ids']
-
-        if 'additional_info' not in listen['track_metadata']:
-            listen['track_metadata']['additional_info'] = {}
-
+def _parse_int_arg(name, default=None):
+    value = request.args.get(name)
+    if value:
         try:
-            listen['recording_msid'] = messybrainz_resp['recording_msid']
-            listen['track_metadata']['additional_info']['artist_msid'] = messybrainz_resp['artist_msid']
-        except KeyError:
-            current_app.logger.error("MessyBrainz did not return a proper set of ids")
-            raise InternalServerError
+            return int(value)
+        except ValueError:
+            raise BadRequest("Invalid %s argument: %s" % (name, value))
+    else:
+        return default
 
-        try:
-            listen['track_metadata']['additional_info']['release_msid'] = messybrainz_resp['release_msid']
-        except KeyError:
-            pass
-
-        artist_mbids = messybrainz_resp.get('artist_mbids', [])
-        release_mbid = messybrainz_resp.get('release_mbid', None)
-        recording_mbid = messybrainz_resp.get('recording_mbid', None)
-
-        if 'artist_mbids'    not in listen['track_metadata']['additional_info'] and \
-           'release_mbid'   not in listen['track_metadata']['additional_info'] and \
-           'recording_mbid' not in listen['track_metadata']['additional_info']:
-
-            if len(artist_mbids) > 0 and release_mbid and recording_mbid:
-                listen['track_metadata']['additional_info']['artist_mbids'] = artist_mbids
-                listen['track_metadata']['additional_info']['release_mbid'] = release_mbid
-                listen['track_metadata']['additional_info']['recording_mbid'] = recording_mbid
-
-        augmented_listens.append(listen)
-
-    return augmented_listens
-
-
-def _validate_listen(listen):
-    """Make sure that required keys are present, filled out and not too large."""
-
-    if not 'listened_at' in listen:
-        _log_raise_400("JSON document must contain the key listened_at at the top level.", listen)
-
-    try:
-        listen['listened_at'] = int(listen['listened_at'])
-    except ValueError:
-        _log_raise_400("JSON document must contain an int value for listened_at.", listen)
-
-    if 'listened_at' in listen and 'track_metadata' in listen and len(listen) > 2:
-        _log_raise_400("JSON document may only contain listened_at and "
-                       "track_metadata top level keys", listen)
-
-    # Basic metadata
-    try:
-        if not listen['track_metadata']['track_name']:
-            _log_raise_400("JSON document does not contain required "
-                           "track_metadata.track_name.", listen)
-        if not listen['track_metadata']['artist_name']:
-            _log_raise_400("JSON document does not contain required "
-                           "track_metadata.artist_name.", listen)
-    except KeyError:
-        _log_raise_400("JSON document does not contain a valid metadata.track_name "
-                       "and/or track_metadata.artist_name.", listen)
-
-    if 'additional_info' in listen['track_metadata']:
-        # Tags
-        if 'tags' in listen['track_metadata']['additional_info']:
-            tags = listen['track_metadata']['additional_info']['tags']
-            if len(tags) > MAX_TAGS_PER_LISTEN:
-                _log_raise_400("JSON document may not contain more than %d items in "
-                               "track_metadata.additional_info.tags." % MAX_TAGS_PER_LISTEN, listen)
-            for tag in tags:
-                if len(tag) > MAX_TAG_SIZE:
-                    _log_raise_400("JSON document may not contain track_metadata.additional_info.tags "
-                                   "longer than %d characters." % MAX_TAG_SIZE, listen)
-        # MBIDs
-        if 'release_mbid' in listen['track_metadata']['additional_info']:
-            lmbid = listen['track_metadata']['additional_info']['release_mbid']
-            if not is_valid_uuid(lmbid):
-                _log_raise_400("Release MBID format invalid.", listen)
-        if 'recording_mbid' in listen['track_metadata']['additional_info']:
-            cmbid = listen['track_metadata']['additional_info']['recording_mbid']
-            if not is_valid_uuid(cmbid):
-                _log_raise_400("Recording MBID format invalid.", listen)
-        ambids = listen['track_metadata']['additional_info'].get('artist_mbids', [])
-        for ambid in ambids:
-            if not is_valid_uuid(ambid):
-                _log_raise_400("Artist MBID format invalid.", listen)
 
 def _log_raise_400(msg, data):
     """Helper function for logging issues with request data and showing error page.
@@ -322,11 +176,3 @@ def _log_raise_400(msg, data):
 
     current_app.logger.debug("BadRequest: %s\nJSON: %s" % (msg, data))
     raise BadRequest(msg)
-
-# lifted from AcousticBrainz
-def is_valid_uuid(u):
-    try:
-        u = uuid.UUID(u)
-        return True
-    except ValueError:
-        return False
