@@ -88,8 +88,8 @@ def api_post():
     """
     method = request.form['method'].lower()
     return {
-        'track.updatenowplaying': now_playing,
-        'track.scrobble': scrobble,
+        'track.updatenowplaying': scrobble_listens,
+        'track.scrobble': scrobble_listens,
         'auth.getsession': get_session,
         'user.getinfo': user_info
     }.get(method, invalid_method_error)(request, request.form)
@@ -181,9 +181,16 @@ def get_session_info(request, data):
                            data.get('format', "xml"))
 
 
-def _to_native_api(lookup):
+def _to_native_api(lookup, method="track.scrobble"):
     """ Converts the list of listens to the native API format
+        Returns: type_of_listen and listen_payload
     """
+    listen_type = "listens"
+    if method == "track.updateNowPlaying":
+        listen_type = "playing_now"
+        if len(loopkup.keys()) != 1:
+            raise InvalidAPIUsage(6, output_format=output_format)       # Invalid parameters
+
     listens = []
     for ind, data in lookup.iteritems():
         listen = {
@@ -207,11 +214,12 @@ def _to_native_api(lookup):
             # are not supported by the native ListenBrainz API
             pass
         listens.append(listen)
-    return listens
+    return listen_type, listens
 
 
-def scrobble(request, data):
+def scrobble_listens(request, data):
     """ Submit the listen in the lastfm format to be inserted in db.
+        Accepts listens for both track.updateNowPlaying and track.scrobble methods.
     """
     output_format = data.get('format', "xml")
     try:
@@ -238,14 +246,14 @@ def scrobble(request, data):
         lookup[number][key] = value
 
     # Convert to native payload then submit 'em.
-    native_payload = _to_native_api(lookup)
+    listen_type, native_payload = _to_native_api(lookup, data['method'])
     augumented_listens = _get_augumented_listens(native_payload, staticuser)
-    _send_listens_to_kafka("listens", augumented_listens)
+    _send_listens_to_kafka(listen_type, augumented_listens)
 
     # With corrections than the original submitted listen.
     doc, tag, text = Doc().tagtext()
     with tag('lfm', status="ok"):
-        with tag('scrobbles'):
+        with tag("nowplaying" if listen_type == "playing_now" else "scrobbles"):
 
             for origL, augL in zip(lookup.values(), augumented_listens):
                 corr = defaultdict(lambda: "0")
@@ -332,40 +340,6 @@ def format_response(data, format="xml"):
             return data
 
         return json.dumps(remove_attrib_prefix(jsonData), indent=4)
-
-
-# Definately Needs WORK !
-def now_playing(request, data):
-    sk = data['sk']
-    session = Session.load(sk)
-    if not session:
-        print "Invalid session"
-        return "NOPE"
-
-    track = data['track']
-    artist = data['artist']
-    album = data['album']
-    albumArtist = data['albumArtist']
-
-    print "NOW PLAYING- User: %s, Artist: %s, Track: %s, Album: %s"  \
-        % (session.user.name, artist, track, album)
-
-    doc, tag, text = Doc().tagtext()
-    with tag('lfm', status="ok"):
-        with tag('nowplaying'):
-            with tag('track', corrected="0"):
-                text(track)
-            with tag('artist', corrected="0"):
-                text(artist)
-            with tag('album', corrected="0"):
-                text(album)
-            with tag('albumArtist', corrected="0"):
-                text(albumArtist)
-            with tag('ignoredMessage', code="0"):
-                text('')
-
-    return format_response('<?xml version="1.0" encoding="utf-8"?>\n' + yattag.indent(doc.getvalue()),
-                           data.get('format', "xml"))
 
 
 def user_info(request, data):
