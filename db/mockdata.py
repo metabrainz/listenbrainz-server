@@ -12,6 +12,7 @@ class User(object):
         serial, created, name, auth_token = row
         self.id = serial
         self.name = name
+        self.created = created
         self.api_key = auth_token
 
     @staticmethod
@@ -33,6 +34,22 @@ class User(object):
             return User(row)
         return None
 
+    @staticmethod
+    def load_by_apikey(api_key):
+        result = db.session.execute(""" SELECT * FROM "user" WHERE
+                                        auth_token = :auth_token """, {"auth_token": api_key})
+        db.session.commit()
+        row = result.fetchone()
+        if row:
+            return User(row)
+        return None
+
+    @staticmethod
+    def get_play_count(user_id):
+        result = db.session.execute(""" SELECT COUNT(*) FROM listens WHERE
+                                        user_id = :user_id """, {"user_id": user_id})
+        db.session.commit()
+        return result.fetchone()
 
 class Session(object):
     def __init__(self, row):

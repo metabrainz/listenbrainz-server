@@ -1,13 +1,12 @@
+from kafka import SimpleProducer
+from flask import current_app
+from werkzeug.exceptions import InternalServerError, BadRequest, ServiceUnavailable
+from webserver.external import messybrainz
+from webserver.kafka_connection import _kafka
+
 import sys
 import uuid
 import json
-import db.user
-from kafka import SimpleProducer
-from flask import current_app, request
-from werkzeug.exceptions import InternalServerError, Unauthorized, BadRequest, ServiceUnavailable
-
-from webserver.external import messybrainz
-from webserver.kafka_connection import _kafka
 
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
@@ -26,6 +25,20 @@ MAX_ITEMS_PER_GET = 100
 DEFAULT_ITEMS_PER_GET = 25
 
 MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
+
+
+def api_tools(func, *args):
+    """ Provides access to all the private functions here in other modules.
+        INPUT: (function_name, argument1, argument2,...)
+    """
+    def invalid_function(*args):
+        raise BadRequest('The function you are trying to access does not exist')
+
+    return {
+        "_send_listens_to_redis": _send_listens_to_redis,
+        "_messybrainz_lookup": _messybrainz_lookup,
+        "_validate_listen": _validate_listen
+    }.get(func, invalid_function)(*args)
 
 
 def _validate_listen(listen):
@@ -107,48 +120,6 @@ def is_valid_uuid(u):
         return True
     except ValueError:
         return False
-
-
-def _log_raise_400(msg, data):
-    """Helper function for logging issues with request data and showing error page.
-
-    Logs the message and data, raises BadRequest exception which shows 400 Bad
-    Request to the user.
-    """
-
-    if type(data) == dict:
-        data = json.dumps(data)
-
-    current_app.logger.debug("BadRequest: %s\nJSON: %s" % (msg, data))
-    raise BadRequest(msg)
-
-
-def _parse_int_arg(name, default=None):
-    value = request.args.get(name)
-    if value:
-        try:
-            return int(value)
-        except ValueError:
-            raise BadRequest("Invalid %s argument: %s" % (name, value))
-    else:
-        return default
-
-
-def _validate_auth_header():
-    auth_token = request.headers.get('Authorization')
-    if not auth_token:
-        raise Unauthorized("You need to provide an Authorization header.")
-    try:
-        auth_token = auth_token.split(" ")[1]
-    except IndexError:
-        raise Unauthorized("Provided Authorization header is invalid.")
-
-    user = db.user.get_by_token(auth_token)
-    if user is None:
-        raise Unauthorized("Invalid authorization token.")
-
-    return user['musicbrainz_id']
-
 
 
 def _get_augumented_listens(payload, user_id):
