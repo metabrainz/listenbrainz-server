@@ -27,3 +27,4 @@ pytest==2.9.1
 pytest-cov==2.2.1
 unittest2==1.1.0
 apscheduler==3.1.0
+yattag==1.6.0
