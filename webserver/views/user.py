@@ -6,6 +6,8 @@ from webserver.decorators import crossdomain
 from datetime import datetime
 import webserver
 import db.user
+import ujson
+from flask import make_response
 
 
 user_bp = Blueprint("user", __name__)
@@ -86,12 +88,16 @@ def profile(user_id):
 @user_bp.route("/import")
 @login_required
 def import_data():
+<<<<<<< HEAD
     """ Displays the import page to user, giving various options """
 
     # Return error if LASTFM_API_KEY is not given in config.py
     if 'LASTFM_API_KEY' not in current_app.config or current_app.config['LASTFM_API_KEY'] == "":
         return NotFound("LASTFM_API_KEY not specified.")
 
+=======
+    """ Import page for listens from lastfm """
+>>>>>>> export-listens
     lastfm_username = request.args.get("lastfm_username")
     if lastfm_username:
         loader = render_template(
@@ -109,7 +115,35 @@ def import_data():
             loader=loader, lastfm_username=lastfm_username)
 
 
+@user_bp.route("/export", methods=["GET", "POST"])
+@login_required
+def export_data():
+    """ Exporting the data to json """
+    if request.method == "POST":
+        cassandra = webserver.create_cassandra()
+        filename = current_user.musicbrainz_id + "_lb-" + datetime.today().strftime('%Y-%m-%d') + ".json"
+
+        # Fetch output and convert it into dict with keys as indexes
+        output = []
+        for index, obj in enumerate(cassandra.fetch_listens(current_user.musicbrainz_id)):
+            dic = obj.data
+            dic['timestamp'] = obj.timestamp
+            dic['album_msid'] = None if obj.album_msid is None else str(obj.album_msid)
+            dic['artist_msid'] = None if obj.artist_msid is None else str(obj.artist_msid)
+            dic['recording_msid'] = None if obj.recording_msid is None else str(obj.recording_msid)
+            output.append(dic)
+
+        response = make_response(ujson.dumps(output))
+        response.headers["Content-Disposition"] = "attachment; filename=" + filename
+        response.headers['Content-Type'] = 'application/json; charset=utf-8'
+        response.mimetype = "text/json"
+        return response
+    else:
+        return render_template("user/export.html", user=current_user)
+
+
 def _get_user(user_id):
+    """ Get current username """
     if current_user.is_authenticated() and \
        current_user.musicbrainz_id == user_id:
         return current_user
