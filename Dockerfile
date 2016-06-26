@@ -31,5 +31,10 @@ RUN python setup.py install
 # ListenBrainz
 RUN mkdir /code/listenbrainz
 WORKDIR /code/listenbrainz
-COPY . /code/listenbrainz/
+
+# These following steps are redundant, but they prevent the requirements from being installed too many times
+COPY requirements.txt /code/listenbrainz/
 RUN pip install -r requirements.txt
+
+# Now install our code, which may change frequently
+COPY . /code/listenbrainz/
