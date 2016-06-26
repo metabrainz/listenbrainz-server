@@ -10,6 +10,7 @@ import db.user
 from flask import make_response
 from webserver.views.api import _validate_listen, _messybrainz_lookup, _send_listens_to_redis,\
                                 _payload_to_augmented_list, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
+from webserver.views.api import _messybrainz_lookup, insert_json, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
 from webserver.utils import sizeof_readable
 from os import path, makedirs
 import json, zipfile, re
@@ -183,43 +184,13 @@ def upload():
                     failure += 1
                     continue
 
-                payload = _convert_to_native_format(jsonlist)
-                _send_listens_to_kafka("import",
-                    _payload_to_augmented_list(payload, current_user.musicbrainz_id))
+                insert_json(jsonlist, current_user.musicbrainz_id)
                 success += 1
-        except:
+        except Exception, e:
             raise BadRequest('Not a valid lastfm-backup-file.')
 
         flash('Congratulations! Your listens from %d  files have been uploaded successfully.' % (success))
     return redirect(url_for("user.import_data"))
-
-
-def _convert_to_native_format(data):
-    """
-    Converts the imported listen-payload from the lastfm backup file
-    to the native payload format.
-    """
-    payload = []
-    for native_lis in data:
-        listen = {}
-        listen['track_metadata'] = {}
-        listen['track_metadata']['additional_info'] = {}
-
-        if 'timestamp' in native_lis and 'unixtimestamp' in native_lis['timestamp']:
-            listen['listened_at'] = native_lis['timestamp']['unixtimestamp']
-
-        if 'track' in native_lis:
-            if 'name' in native_lis['track']:
-                listen['track_metadata']['track_name'] = native_lis['track']['name']
-            if 'mbid' in native_lis['track']:
-                listen['track_metadata']['additional_info']['recording_mbid'] = native_lis['track']['mbid']
-            if 'artist' in native_lis['track']:
-                if 'name' in native_lis['track']['artist']:
-                    listen['track_metadata']['artist_name'] = native_lis['track']['artist']['name']
-                if 'mbid' in native_lis['track']['artist']:
-                    listen['track_metadata']['additional_info']['artist_mbids'] = [native_lis['track']['artist']['mbid']]
-        payload.append(listen)
-    return payload
 
 
 def _get_user(user_id):
