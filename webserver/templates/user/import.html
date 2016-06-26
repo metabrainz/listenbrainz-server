@@ -55,6 +55,13 @@
         {{ user.auth_token }}
      </div>
 
+     <p><b> or </b></p>
+     <p>Import your listens from a Last.fm backup file (.zip)</p>
+     <div class="well">
+         <form action="upload" method="POST" enctype=multipart/form-data>
+             <input type=file name=file>
+             <input type=submit value=Upload>
+         </form>
+     </div>
   {% endif %}
-
 {% endblock %}

@@ -1,17 +1,21 @@
 from __future__ import absolute_import
-from flask import Blueprint, render_template, request, url_for, Response, current_app
+from flask import Blueprint, render_template, request, url_for, Response, redirect, flash, current_app
 from flask_login import current_user, login_required
-from werkzeug.exceptions import NotFound, BadRequest
+from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
+from werkzeug.utils import secure_filename
 from webserver.decorators import crossdomain
 from datetime import datetime
 import webserver
 import db.user
-import ujson
 from flask import make_response
-
+from webserver.views.api import _validate_listen, _messybrainz_lookup, _send_listens_to_redis,\
+                                _payload_to_augmented_list, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
+from webserver.views.api import _messybrainz_lookup, insert_json, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
+from webserver.utils import sizeof_readable
+from os import path, makedirs
+import json, zipfile, re, os
 
 user_bp = Blueprint("user", __name__)
-
 
 @user_bp.route("/<user_id>/scraper.js")
 @crossdomain()
@@ -136,6 +140,61 @@ def export_data():
         return response
     else:
         return render_template("user/export.html", user=current_user)
+
+
+@user_bp.route("/upload", methods=['GET', 'POST'])
+@login_required
+def upload():
+    if request.method == 'POST':
+        try:
+            f = request.files['file']
+            if f.filename == '':
+                flash('No file selected.')
+                return redirect(request.url)
+        except RequestEntityTooLarge:
+            raise RequestEntityTooLarge('Maximum filesize upload limit exceeded. File must be <=' + \
+                  sizeof_readable(current_app.config['MAX_CONTENT_LENGTH']))
+        except:
+            raise InternalServerError("Something went wrong. Could not upload the file")
+
+        # Check upload folder
+        if not 'UPLOAD_FOLDER' in current_app.config:
+            raise InternalServerError("Could not upload the file. Upload folder not specified")
+        upload_path = path.join(path.abspath(current_app.config['UPLOAD_FOLDER']), current_user.musicbrainz_id)
+        if not path.isdir(upload_path):
+            makedirs(upload_path)
+
+        # Write to a file
+        filename = path.join(upload_path, secure_filename(f.filename))
+        f.save(filename)
+
+        if not zipfile.is_zipfile(filename):
+            raise BadRequest('Not a valid zip file.')
+
+        success = failure = 0
+        regex = re.compile('json/scrobbles/scrobbles-*')
+        try:
+            zf = zipfile.ZipFile(filename, 'r')
+            files = zf.namelist()
+            # Iterate over file that match the regex
+            for f in [f for f in files if regex.match(f)]:
+                try:
+                    # Load listens file
+                    jsonlist = json.loads(zf.read(f))
+                    if not isinstance(jsonlist, list):
+                        raise ValueError
+                except ValueError:
+                    failure += 1
+                    continue
+
+                insert_json(jsonlist, current_user.musicbrainz_id)
+                success += 1
+        except Exception, e:
+            raise BadRequest('Not a valid lastfm-backup-file.')
+        finally:
+            os.remove(filename)
+        flash('Congratulations! Your listens from %d  files have been uploaded successfully.' % (success))
+    return redirect(url_for("user.import_data"))
 
 
 def _get_user(user_id):
