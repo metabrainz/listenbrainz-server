@@ -8,12 +8,13 @@ from datetime import datetime
 import webserver
 import db.user
 from flask import make_response
-from webserver.views.api import _validate_listen, _messybrainz_lookup, _send_listens_to_redis,\
-                                _payload_to_augmented_list, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
-from webserver.views.api import _messybrainz_lookup, insert_json, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
+from webserver.views.api_tools import _messybrainz_lookup, insert_json, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
 from webserver.utils import sizeof_readable
 from os import path, makedirs
-import json, zipfile, re, os
+import json
+import zipfile
+import re
+import os
 
 user_bp = Blueprint("user", __name__)
 
@@ -133,7 +134,7 @@ def export_data():
             dic['recording_msid'] = None if obj.recording_msid is None else str(obj.recording_msid)
             output.append(dic)
 
-        response = make_response(ujson.dumps(output))
+        response = make_response(json.dumps(output))
         response.headers["Content-Disposition"] = "attachment; filename=" + filename
         response.headers['Content-Type'] = 'application/json; charset=utf-8'
         response.mimetype = "text/json"

@@ -1,11 +1,11 @@
 import sys
-import ujson
+import json
 import uuid
 from flask import Blueprint, request, current_app, jsonify
 from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized, ServiceUnavailable
-from webserver.redis_connection import _redis
 from webserver.decorators import crossdomain
 import webserver
+import db
 from webserver.rate_limiter import ratelimit
 from werkzeug.exceptions import BadRequest, Unauthorized
 from api_tools import api_tools
@@ -56,7 +56,10 @@ def submit_listen():
     except KeyError:
         _log_raise_400("Invalid JSON document submitted.", raw_data)
 
-    api_tools("_send_listens_to_kafka", data['listen_type'], api_tools("_get_augumented_listens", payload, user_id))
+    try:
+        api_tools("_send_listens_to_redis", data['listen_type'], api_tools("_get_augmented_listens", payload, user_id))
+    except Exception, e:
+        raise InternalServerError("Something went wrong. Please try again.")
 
     return "success"
 

@@ -3,6 +3,7 @@ from flask import current_app
 from werkzeug.exceptions import InternalServerError, BadRequest, ServiceUnavailable
 from webserver.external import messybrainz
 from webserver.kafka_connection import _kafka
+from webserver.redis_connection import _redis
 
 import sys
 import uuid
@@ -27,6 +28,11 @@ DEFAULT_ITEMS_PER_GET = 25
 MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
 
 
+def insert_json(jsonlist, user):
+    payload = _convert_to_native_format(jsonlist)
+    _send_listens_to_redis("import", _get_augmented_listens(payload, user))
+
+
 def api_tools(func, *args):
     """ Provides access to all the private functions here in other modules.
         INPUT: (function_name, argument1, argument2,...)
@@ -37,7 +43,8 @@ def api_tools(func, *args):
     return {
         "_send_listens_to_redis": _send_listens_to_redis,
         "_messybrainz_lookup": _messybrainz_lookup,
-        "_validate_listen": _validate_listen
+        "_validate_listen": _validate_listen,
+        "_get_augmented_listens": _get_augmented_listens
     }.get(func, invalid_function)(*args)
 
 
@@ -94,23 +101,25 @@ def _validate_listen(listen):
                 _log_raise_400("Artist MBID format invalid.", listen)
 
 
-def _send_listens_to_kafka(listen_type, listens):
-
-    producer = SimpleProducer(_kafka)
-
+def _send_listens_to_redis(listen_type, listens):
+    p = _redis.pipeline()
     for listen in listens:
         if listen_type == 'playing_now':
             try:
-                producer.send_messages(b'playing_now', json.dumps(listen).encode('utf-8'))
-            except:
-                current_app.logger.error("Kafka playing_now write error: " + str(sys.exc_info()[0]))
+                p.rpush('playing_now', json.dumps(listen).encode('utf-8'))
+            except Exception,e:
+                print(e)
+                current_app.logger.error("Redis rpush playing_now write error: " + str(sys.exc_info()[0]))
                 raise InternalServerError("Cannot record playing_now at this time.")
         else:
             try:
-                producer.send_messages(b'listens', json.dumps(listen).encode('utf-8'))
-            except:
-                current_app.logger.error("Kafka listens write error: " + str(sys.exc_info()[0]))
+                p.rpush('listens', json.dumps(listen).encode('utf-8'))
+            except Exception, e:
+                print(e)
+                current_app.logger.error("Redis rpush listens write error: " + str(sys.exc_info()[0]))
                 raise InternalServerError("Cannot record listen at this time.")
+
+    p.execute()
 
 
 # lifted from AcousticBrainz
@@ -122,7 +131,10 @@ def is_valid_uuid(u):
         return False
 
 
-def _get_augumented_listens(payload, user_id):
+def _get_augmented_listens(payload, user_id):
+    """ Converts the payload to augmented list after lookup
+        in the MessyBrainz database
+    """
     augmented_listens = []
     msb_listens = []
     for listen in payload:
@@ -207,3 +219,31 @@ def _messybrainz_lookup(listens):
 
         augmented_listens.append(listen)
     return augmented_listens
+
+
+def _convert_to_native_format(data):
+    """
+    Converts the imported listen-payload from the lastfm backup file
+    to the native payload format.
+    """
+    payload = []
+    for native_lis in data:
+        listen = {}
+        listen['track_metadata'] = {}
+        listen['track_metadata']['additional_info'] = {}
+
+        if 'timestamp' in native_lis and 'unixtimestamp' in native_lis['timestamp']:
+            listen['listened_at'] = native_lis['timestamp']['unixtimestamp']
+
+        if 'track' in native_lis:
+            if 'name' in native_lis['track']:
+                listen['track_metadata']['track_name'] = native_lis['track']['name']
+            if 'mbid' in native_lis['track']:
+                listen['track_metadata']['additional_info']['recording_mbid'] = native_lis['track']['mbid']
+            if 'artist' in native_lis['track']:
+                if 'name' in native_lis['track']['artist']:
+                    listen['track_metadata']['artist_name'] = native_lis['track']['artist']['name']
+                if 'mbid' in native_lis['track']['artist']:
+                    listen['track_metadata']['additional_info']['artist_mbids'] = [native_lis['track']['artist']['mbid']]
+        payload.append(listen)
+    return payload
