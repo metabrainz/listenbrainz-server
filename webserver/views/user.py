@@ -13,7 +13,7 @@ from webserver.views.api import _validate_listen, _messybrainz_lookup, _send_lis
 from webserver.views.api import _messybrainz_lookup, insert_json, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
 from webserver.utils import sizeof_readable
 from os import path, makedirs
-import json, zipfile, re
+import json, zipfile, re, os
 
 user_bp = Blueprint("user", __name__)
 
@@ -188,7 +188,8 @@ def upload():
                 success += 1
         except Exception, e:
             raise BadRequest('Not a valid lastfm-backup-file.')
-
+        finally:
+            os.remove(filename)
         flash('Congratulations! Your listens from %d  files have been uploaded successfully.' % (success))
     return redirect(url_for("user.import_data"))
 

@@ -60,4 +60,4 @@ MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
 
 # Specify the upload folder where all the lastfm-backup will be stored
 # The path must be absolute path
-UPLOAD_FOLDER = "METABRAINZ/listenbrainz-server/lastfm-backup-upload"
+UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
