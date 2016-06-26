@@ -127,7 +127,7 @@ def get_listens(user_id):
 
 def insert_json(jsonlist, user):
     payload = _convert_to_native_format(jsonlist)
-    _send_listens_to_kafka("import", _payload_to_augmented_list(payload, user))
+    _send_listens_to_redis("import", _payload_to_augmented_list(payload, user))
 
 
 def _parse_int_arg(name, default=None):
