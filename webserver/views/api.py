@@ -1,6 +1,5 @@
 import sys
 import ujson
-import socket
 import uuid
 from flask import Blueprint, request, current_app, jsonify
 from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized, ServiceUnavailable
@@ -36,7 +35,7 @@ MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
 @ratelimit()
 def submit_listen():
     """
-    Submit listens to the server. A user token (found on https://listenbrainz.org/user/import ) must 
+    Submit listens to the server. A user token (found on https://listenbrainz.org/user/import ) must
     be provided in the Authorization header!
 
     For complete details on the format of the JSON to be POSTed to this endpoint, see :ref:`json-doc`.
@@ -73,22 +72,8 @@ def submit_listen():
     except KeyError:
         _log_raise_400("Invalid JSON document submitted.", raw_data)
 
-    augmented_listens = []
-    msb_listens = []
-    for listen in payload:
-        _validate_listen(listen)
-        listen['user_id'] = user_id
-
-        msb_listens.append(listen)
-        if len(msb_listens) >= MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP:
-            augmented_listens.extend(_messybrainz_lookup(msb_listens))
-            msb_listens = []
-
-    if msb_listens:
-        augmented_listens.extend(_messybrainz_lookup(msb_listens))
-
-    _send_listens_to_redis(data['listen_type'], augmented_listens)
-
+    _send_listens_to_redis(data['listen_type'],
+                                _payload_to_augmented_list(payload, user_id))
     return "success"
 
 
@@ -99,7 +84,7 @@ def get_listens(user_id):
     Get listens for user ``user_id``. The format for the JSON returned is defined in our :ref:`json-doc`.
 
     If none of the optional arguments are given, this endpoint will return the :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` most recent listens.
-    The optional ``max_ts`` and ``min_ts`` UNIX epoch timestamps control at which point in time to start returning listens. You may specify max_ts or 
+    The optional ``max_ts`` and ``min_ts`` UNIX epoch timestamps control at which point in time to start returning listens. You may specify max_ts or
     min_ts, but not both in one call. Listens are always returned in descending timestamp order.
 
     :param max_ts: If you specify a ``max_ts`` timestamp, listens with listened_at less than (but not including) this value will be returned.
@@ -138,6 +123,11 @@ def get_listens(user_id):
         'count': len(listen_data),
         'listens': listen_data,
     }})
+
+
+def insert_json(jsonlist, user):
+    payload = _convert_to_native_format(jsonlist)
+    _send_listens_to_redis("import", _payload_to_augmented_list(payload, user))
 
 
 def _parse_int_arg(name, default=None):
@@ -309,6 +299,55 @@ def _validate_listen(listen):
         for ambid in ambids:
             if not is_valid_uuid(ambid):
                 _log_raise_400("Artist MBID format invalid.", listen)
+
+
+def _convert_to_native_format(data):
+    """
+    Converts the imported listen-payload from the lastfm backup file
+    to the native payload format.
+    """
+    payload = []
+    for native_lis in data:
+        listen = {}
+        listen['track_metadata'] = {}
+        listen['track_metadata']['additional_info'] = {}
+
+        if 'timestamp' in native_lis and 'unixtimestamp' in native_lis['timestamp']:
+            listen['listened_at'] = native_lis['timestamp']['unixtimestamp']
+
+        if 'track' in native_lis:
+            if 'name' in native_lis['track']:
+                listen['track_metadata']['track_name'] = native_lis['track']['name']
+            if 'mbid' in native_lis['track']:
+                listen['track_metadata']['additional_info']['recording_mbid'] = native_lis['track']['mbid']
+            if 'artist' in native_lis['track']:
+                if 'name' in native_lis['track']['artist']:
+                    listen['track_metadata']['artist_name'] = native_lis['track']['artist']['name']
+                if 'mbid' in native_lis['track']['artist']:
+                    listen['track_metadata']['additional_info']['artist_mbids'] = [native_lis['track']['artist']['mbid']]
+        payload.append(listen)
+    return payload
+
+
+def _payload_to_augmented_list(payload, user_id):
+    """ Converts the payload to augmented list after lookup
+        in the MessyBrainz database
+    """
+    augmented_listens = []
+    msb_listens = []
+    for listen in payload:
+        _validate_listen(listen)
+        listen['user_id'] = user_id
+
+        msb_listens.append(listen)
+        if len(msb_listens) >= MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP:
+            augmented_listens.extend(_messybrainz_lookup(msb_listens))
+            msb_listens = []
+
+    if msb_listens:
+        augmented_listens.extend(_messybrainz_lookup(msb_listens))
+    return augmented_listens
+
 
 def _log_raise_400(msg, data):
     """Helper function for logging issues with request data and showing error page.

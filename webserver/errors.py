@@ -24,6 +24,10 @@ def init_error_handlers(app):
     def not_found(error):
         return error_wrapper('errors/404.html', error, 404)
 
+    @app.errorhandler(413)
+    def file_size_too_large(error):
+        return error_wrapper('errors/413.html', error, 413)
+
     @app.errorhandler(500)
     def internal_server_error(error):
         return error_wrapper('errors/500.html', error, 500)
