@@ -148,6 +148,9 @@ def upload():
     if request.method == 'POST':
         try:
             f = request.files['file']
+            if f.filename == '':
+                flash('No file selected.')
+                return redirect(request.url)
         except RequestEntityTooLarge:
             raise RequestEntityTooLarge('Maximum filesize upload limit exceeded. File must be <=' + \
                   sizeof_readable(current_app.config['MAX_CONTENT_LENGTH']))
