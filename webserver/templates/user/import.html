@@ -3,10 +3,14 @@
 {% block title %}Import for "{{ user.musicbrainz_id }}" - ListenBrainz{% endblock %}
 
 {% block content %}
-  <h2 class="page-title">{{ user.musicbrainz_id }}</h2>
+  <h2 class="page-title">Import to user {{ user.musicbrainz_id }}</h2>
   {% if current_user.is_authenticated() and current_user == user %}
 
-     <h3>Import from Last.fm</h3>
+     <p>
+        You have the following options for importing your listen data:
+    </p>
+
+     <h3>Direct import from Last.fm</h3>
      {% if loader %}
         <p>
           <strong>Step 2</strong>
@@ -45,6 +49,17 @@
      </div>
      {% endif %}
 
+     <h3>Import a Last.fm backup file</h3>
+
+     <p>Import your listens from a Last.fm backup file (.zip)</p>
+     <div class="well">
+         <form action="upload" method="POST" enctype=multipart/form-data>
+             <input type="file" name="file">
+             </br>
+             <input type="submit" value="Upload">
+         </form>
+     </div>
+
      <h3>User token</h3>
      <p>
         If you would like to use an external program to import into ListenBrainz you will need the following
@@ -53,15 +68,6 @@
 
      <div class="well">
         {{ user.auth_token }}
-     </div>
-
-     <p><b> or </b></p>
-     <p>Import your listens from a Last.fm backup file (.zip)</p>
-     <div class="well">
-         <form action="upload" method="POST" enctype=multipart/form-data>
-             <input type=file name=file>
-             <input type=submit value=Upload>
-         </form>
      </div>
   {% endif %}
 {% endblock %}
