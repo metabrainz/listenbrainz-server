@@ -68,7 +68,7 @@ class Session(object):
         """
         dic = {'sid': session}
         query = "SELECT * FROM sessions WHERE sid=:sid"
-        if not api_key:
+        if api_key:
             dic['api_key'] = api_key
             query = "SELECT * FROM sessions WHERE sid=:sid AND api_key=:api_key"
 

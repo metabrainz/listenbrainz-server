@@ -221,15 +221,15 @@ def scrobble_listens(request, data):
 
     # Convert to native payload then submit 'em.
     listen_type, native_payload = _to_native_api(lookup, data['method'])
-    augumented_listens = api_tools("_get_augumented_listens", native_payload, session.user.name)
-    api_tools("_send_listens_to_kafka", listen_type, augumented_listens)
+    augmented_listens = api_tools("_get_augmented_listens", native_payload, session.user.name)
+    api_tools("_send_listens_to_redis", listen_type, augmented_listens)
 
     # With corrections than the original submitted listen.
     doc, tag, text = Doc().tagtext()
     with tag('lfm', status="ok"):
         with tag("nowplaying" if listen_type == "playing_now" else "scrobbles"):
 
-            for origL, augL in zip(lookup.values(), augumented_listens):
+            for origL, augL in zip(lookup.values(), augmented_listens):
                 corr = defaultdict(lambda: "0")
 
                 track = augL['track_metadata']['track_name']
