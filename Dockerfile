@@ -6,7 +6,10 @@ MAINTAINER Robert Kaye <rob@metabrainz.org>
 RUN apt-get update && apt-get install -y --no-install-recommends build-essential \
     git \
     redis-tools \ 
+    uwsgi \
+    uwsgi-plugin-python \
     wget 
+    
 RUN mkdir /code
 
 # PostgreSQL client
