@@ -18,8 +18,8 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Application data
-/data
-/pgdata
+data
+pgdata
 
 # Backups and dumps
 /export/
