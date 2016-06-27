@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends build-essential
     git \
     redis-tools \ 
     wget 
-    
+
 RUN mkdir /code
 RUN pip install uWSGI==2.0.13.1
 
