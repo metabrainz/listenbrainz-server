@@ -32,6 +32,11 @@ class ScheduledJobs():
         """ Clean all the listens that are older than a set no of days
             Default: 90 days
         """
+
+        # If max days is set to a negative number, don't throw anything out
+        if max_days < 0:
+            return
+
         seconds = max_days*24*3600
         engine = create_engine(self.conf['SQLALCHEMY_DATABASE_URI'], poolclass=NullPool)
         connection = engine.connect()
@@ -49,9 +54,9 @@ class ScheduledJobs():
         #         """
 
         query = """
-                DELETE FROM listens
+                DELETE FROM listen
                 WHERE id in (
-                    SELECT id FROM listens
+                    SELECT id FROM listen
                     JOIN (
                         SELECT user_id, extract(epoch from max(ts)) as max
                         FROM listens
