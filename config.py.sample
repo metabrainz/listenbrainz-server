@@ -14,7 +14,7 @@ TEST_SQLALCHEMY_DATABASE_URI = "postgresql://lb_test@/lb_test"
 
 # Other postgres configuration options
 # Oldest listens which can be stored in the database, in days.
-MAX_POSTGRES_LISTEN_HISTORY = "90"
+MAX_POSTGRES_LISTEN_HISTORY = "-1"
 # Log Postgres queries if they execeed this time, in milliseconds.
 PG_QUERY_TIMEOUT = "3000"
 # Disable synchronous_commit to OFF for Postgres. Default: False
