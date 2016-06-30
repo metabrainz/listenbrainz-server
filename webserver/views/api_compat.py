@@ -343,7 +343,7 @@ def user_info(request, data):
             with tag('url'):
                 text('http://listenbrainz.org/user/' + query_user.name)
             with tag('playcount'):
-                text(int(User.get_play_count(query_user.name)[0]))
+                text(User.get_play_count(query_user.name))
             with tag('registered', unixtime=str(query_user.created.strftime("%s"))):
                 text(str(query_user.created))
 
