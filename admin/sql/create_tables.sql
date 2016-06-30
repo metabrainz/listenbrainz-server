@@ -18,16 +18,16 @@ CREATE TABLE listen (
   raw_data        JSONB
 );
 
-CREATE TABLE tokens (
+CREATE TABLE token (
      id               SERIAL,
      user_id          INT,
      token            TEXT NOT NULL,
      api_key          VARCHAR NOT NULL,
      ts               TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-ALTER TABLE tokens ADD CONSTRAINT tokens_api_key_uniq UNIQUE (api_key);
+ALTER TABLE token ADD CONSTRAINT token_api_key_uniq UNIQUE (api_key);
 
-CREATE TABLE sessions (
+CREATE TABLE session (
     id        SERIAL,
     user_id   INT NOT NULL,
     sid       VARCHAR NOT NULL,
@@ -35,5 +35,5 @@ CREATE TABLE sessions (
     api_key   VARCHAR NOT NULL,
     ts        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-ALTER TABLE sessions ADD CONSTRAINT sessions_sid_token_apikey_uniq UNIQUE (user_id, token, api_key);
+ALTER TABLE session ADD CONSTRAINT session_sid_token_apikey_uniq UNIQUE (user_id, token, api_key);
 COMMIT;

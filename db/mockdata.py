@@ -79,10 +79,10 @@ class Session(object):
             If the api_key is also supplied then verify it as well.
         """
         dic = {'sid': session}
-        query = "SELECT * FROM sessions WHERE sid=:sid"
+        query = "SELECT * FROM session WHERE sid=:sid"
         if api_key:
             dic['api_key'] = api_key
-            query = "SELECT * FROM sessions WHERE sid=:sid AND api_key=:api_key"
+            query = "SELECT * FROM session WHERE sid=:sid AND api_key=:api_key"
 
         result = db.session.execute(query, dic)
         db.session.commit()
@@ -97,7 +97,7 @@ class Session(object):
             If session already exists for the user then renew the session_key(sid).
         """
         session = binascii.b2a_hex(os.urandom(20))
-        db.session.execute("INSERT INTO sessions (user_id, sid, token, api_key) VALUES (:user_id, :sid, :token, :api_key) \
+        db.session.execute("INSERT INTO session (user_id, sid, token, api_key) VALUES (:user_id, :sid, :token, :api_key) \
                             ON CONFLICT(user_id, token, api_key) DO UPDATE SET (sid, ts) = (EXCLUDED.sid, EXCLUDED.ts)",
                             {'user_id': token.user.id, 'sid': session, 'token': token.token, 'api_key': token.api_key})
         db.session.commit()
@@ -135,10 +135,10 @@ class Token(object):
     def load(token, api_key=None):
         """ Load the token from database. Check api_key as well if present.
         """
-        query = "SELECT * FROM tokens WHERE token=:token"
+        query = "SELECT * FROM token WHERE token=:token"
         params = {'token': token}
         if api_key:
-            query = "SELECT * FROM tokens WHERE token=:token AND api_key=:api_key"
+            query = "SELECT * FROM token WHERE token=:token AND api_key=:api_key"
             params['api_key'] = api_key
 
         result = db.session.execute(query, params)
@@ -151,7 +151,7 @@ class Token(object):
     @staticmethod
     def generate(api_key):
         token = binascii.b2a_hex(os.urandom(20))
-        db.session.execute('INSERT INTO tokens (token, api_key) VALUES (:token, :api_key) \
+        db.session.execute('INSERT INTO token (token, api_key) VALUES (:token, :api_key) \
                             ON CONFLICT(api_key) DO UPDATE SET token = EXCLUDED.token, ts = EXCLUDED.ts',
                            {'token': token, 'api_key': api_key})
         db.session.commit()
@@ -160,12 +160,12 @@ class Token(object):
     def approve(self, user):
         """ Authenticate the token.
         """
-        db.session.execute("UPDATE tokens SET user_id = :uid WHERE token=:token",
+        db.session.execute("UPDATE token SET user_id = :uid WHERE token=:token",
                            {'uid': User.get_id(user), 'token': self.token})
         db.session.commit()
 
     def consume(self):
         """ Use token to be able to create a new session.
         """
-        db.session.execute("DELETE FROM tokens WHERE id=:id", {'id': self.id})
+        db.session.execute("DELETE FROM token WHERE id=:id", {'id': self.id})
         db.session.commit()
