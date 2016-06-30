@@ -11,7 +11,7 @@ def generate_data(from_date, num_records):
     artist_msid = str(uuid.uuid4())
 
     for i in range(1, num_records):
-        item = Listen(uid="test", timestamp=current_date, artist_msid=artist_msid,
+        item = Listen(user_id="test", timestamp=current_date, artist_msid=artist_msid,
                       recording_msid=str(uuid.uuid4()))
         test_data.append(item)
         current_date += timedelta(seconds=1)
