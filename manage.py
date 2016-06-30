@@ -23,11 +23,6 @@ def runserver(host, port, debug):
     schedule_jobs(app)
     app.run(host=host, port=port, debug=debug)
 
-@cli.command()
-def init_kafka(archive, force):
-    """Initializes kafka"""
-
-    print("Done!")
 
 @cli.command()
 @click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
