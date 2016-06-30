@@ -7,4 +7,10 @@ CREATE UNIQUE INDEX user_id_ts_ndx_listen ON "listen" (user_id, ts);
 CREATE INDEX user_id_ndx_listen ON "listen" (user_id);
 CREATE INDEX ts_ndx_listen ON "listen" (ts);
 
+CREATE UNIQUE INDEX token_ndx_tokens ON "tokens" (token);
+CREATE UNIQUE INDEX token_api_key_ndx_tokens ON "tokens" (token, api_key);
+
+CREATE UNIQUE INDEX sid_ndx_sessions ON "sessions" (sid);
+CREATE UNIQUE INDEX sid_api_key_ndx_sessions ON "sessions" (sid, api_key);
+
 COMMIT;
