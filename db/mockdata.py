@@ -16,6 +16,16 @@ class User(object):
         self.api_key = auth_token
 
     @staticmethod
+    def get_id(mb_id):
+        result = db.session.execute(""" SELECT id FROM "user" WHERE
+                                        musicbrainz_id = :mb_id """, {"mb_id": mb_id})
+        db.session.commit()
+        row = result.fetchone()
+        if row:
+            return row[0]
+        return None
+
+    @staticmethod
     def load_by_name(mb_id):
         result = db.session.execute(""" SELECT * FROM "user" WHERE
                                         musicbrainz_id = :mb_id """, {"mb_id": mb_id})
@@ -27,7 +37,7 @@ class User(object):
 
     @staticmethod
     def load_by_id(serial):
-        result = db.session.execute(""" SELECT * FROM "user" WHERE id=:uid """, {"uid": serial})
+        result = db.session.execute(""" SELECT * FROM "user" WHERE id=:id """, {"id": serial})
         db.session.commit()
         row = result.fetchone()
         if row:
@@ -46,16 +56,18 @@ class User(object):
 
     @staticmethod
     def get_play_count(user_id):
-        result = db.session.execute(""" SELECT COUNT(*) FROM listens WHERE
+        """ Get playcount from the given user name.
+        """
+        result = db.session.execute(""" SELECT COUNT(*) FROM listen WHERE
                                         user_id = :user_id """, {"user_id": user_id})
         db.session.commit()
-        return result.fetchone()
+        return int(result.fetchone()[0])
 
 class Session(object):
     def __init__(self, row):
-        serial, user_id, sid, token, api_key, timestamp = row
+        serial, userid, sid, token, api_key, timestamp = row
         self.id = serial
-        self.user = User.load_by_name(user_id) or None
+        self.user = User.load_by_id(userid)
         self.sid = sid
         self.token = token
         self.api_key = api_key
@@ -86,8 +98,8 @@ class Session(object):
         """
         session = binascii.b2a_hex(os.urandom(20))
         db.session.execute("INSERT INTO sessions (user_id, sid, token, api_key) VALUES (:user_id, :sid, :token, :api_key) \
-                            ON CONFLICT(user_id, token, api_key) DO UPDATE SET (sid, ts) = (EXCLUDED.sid, EXCLUDED.ts)",\
-                            {'user_id': token.user.name, 'sid': session, 'token': token.token, 'api_key': token.api_key})
+                            ON CONFLICT(user_id, token, api_key) DO UPDATE SET (sid, ts) = (EXCLUDED.sid, EXCLUDED.ts)",
+                            {'user_id': token.user.id, 'sid': session, 'token': token.token, 'api_key': token.api_key})
         db.session.commit()
         token.consume()
         return Session.load(session)
@@ -100,7 +112,7 @@ class Token(object):
         self.token = token
         self.timestamp = timestamp
         self.api_key = api_key
-        self.user = User.load_by_name(userid) or None
+        self.user = User.load_by_id(userid)
 
     @staticmethod
     def is_valid_api_key(api_key, user_id=None):
@@ -149,7 +161,7 @@ class Token(object):
         """ Authenticate the token.
         """
         db.session.execute("UPDATE tokens SET user_id = :uid WHERE token=:token",
-                           {'uid': user, 'token': self.token})
+                           {'uid': User.get_id(user), 'token': self.token})
         db.session.commit()
 
     def consume(self):
