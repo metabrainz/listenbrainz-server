@@ -14,7 +14,7 @@ class TestListenStore(unittest2.TestCase):
     def setUpClass(self):
         self.log = logging.getLogger(__name__)
         conf = {
-            "SQLALCHEMY_DATABASE_URI": "postgresql://listenbrainz@/listenbrainz"
+            "SQLALCHEMY_DATABASE_URI": "postgresql://lb_test@/lb_test"
         }
         self.logstore = PostgresListenStore(conf)
         self._create_test_data()
