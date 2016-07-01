@@ -2,7 +2,6 @@ import db
 import unittest
 import json
 import os
-from flask import Flask
 
 # Configuration
 import sys
@@ -16,8 +15,7 @@ TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'test
 class DatabaseTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.app = Flask(__name__)
-        self.app.config.from_object(config)
+        self.config = config
         db.init_db_connection(config.TEST_SQLALCHEMY_DATABASE_URI)
         self.reset_db()
 
