@@ -1,5 +1,4 @@
 import db
-import db.data
 import unittest
 import json
 import os
@@ -16,7 +15,7 @@ TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'test
 class DatabaseTestCase(unittest.TestCase):
 
     def setUp(self):
-        db.init_db_connection(config['TEST_SQLALCHEMY_DATABASE_URI'])
+        db.init_db_connection(config.TEST_SQLALCHEMY_DATABASE_URI)
         self.reset_db()
 
     def tearDown(self):
@@ -27,7 +26,6 @@ class DatabaseTestCase(unittest.TestCase):
         self.init_db()
 
     def init_db(self):
-        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'))
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_primary_keys.sql'))
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
