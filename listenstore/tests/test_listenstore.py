@@ -4,7 +4,7 @@ from db.testing import DatabaseTestCase
 import logging
 from datetime import datetime
 from .util import generate_data, to_epoch
-from listenstore.listenstore import PostgresListenStore
+from webserver.postgres_connection import init_postgres_connection
 
 
 class TestListenStore(DatabaseTestCase):
@@ -12,10 +12,7 @@ class TestListenStore(DatabaseTestCase):
     def setUp(self):
         super(TestListenStore, self).setUp()
         self.log = logging.getLogger(__name__)
-        # conf = {
-        #     "SQLALCHEMY_DATABASE_URI": "postgresql://lb_test@/lb_test"
-        # }
-        self.logstore = PostgresListenStore(self.app.config)
+        self.logstore = init_postgres_connection(self.config.TEST_SQLALCHEMY_DATABASE_URI)
         self._create_test_data()
 
     def tearDown(self):
