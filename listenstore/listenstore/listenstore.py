@@ -96,9 +96,10 @@ class PostgresListenStore(ListenStore):
                 except Exception, e:     # Log errors
                         self.log.error(e)
 
-    def execute(self, connection, query, params=None):
-        res = connection.execute(query, params)
-        return res.fetchall()
+    def execute(self, query, params={}):
+        with self.engine.connect() as connection:
+            res = connection.execute(query, params)
+            return res.fetchall()
 
     def fetch_listens_from_storage(self, user_id, from_id, to_id, limit, order, precision):
         query = """ SELECT id, user_id, extract(epoch from ts), artist_msid, album_msid, recording_msid, raw_data """ + \
@@ -106,12 +107,12 @@ class PostgresListenStore(ListenStore):
                 """ AND extract(epoch from ts) > %(from_id)s AND extract(epoch from ts) < %(to_id)s  """ + \
                 """ ORDER BY extract(epoch from ts) """ + ORDER_TEXT[order] + """ LIMIT %(limit)s"""
         params = {
-            'user_id' : user_id,
-            'from_id' : from_id,
-            'to_id' : to_id,
-            'limit' : limit
+            'user_id': user_id,
+            'from_id': from_id,
+            'to_id': to_id,
+            'limit': limit
         }
-        with self.engine.connect() as connection:
-            results = self.execute(connection, query, params)
+
+        results = self.execute(query, params)
         for row in results:
             yield self.convert_row(row)
