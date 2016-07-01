@@ -2,6 +2,7 @@ import db
 import unittest
 import json
 import os
+from flask import Flask
 
 # Configuration
 import sys
@@ -15,6 +16,8 @@ TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'test
 class DatabaseTestCase(unittest.TestCase):
 
     def setUp(self):
+        self.app = Flask(__name__)
+        self.app.config.from_object(config)
         db.init_db_connection(config.TEST_SQLALCHEMY_DATABASE_URI)
         self.reset_db()
 
@@ -36,7 +39,7 @@ class DatabaseTestCase(unittest.TestCase):
             connection.execute('DROP TABLE IF EXISTS "user"       CASCADE')
             connection.execute('DROP TABLE IF EXISTS listen       CASCADE')
 
-    def load_data_files(self, mbid):
+    def load_data_files(self):
         """ Get the data files from the disk """
-        # return os.path.join(TEST_DATA_PATH, mbid + '.json')
+        # return os.path.join(TEST_DATA_PATH, file_name)
         return
