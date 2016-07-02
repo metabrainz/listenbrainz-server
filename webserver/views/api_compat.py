@@ -58,6 +58,12 @@ def api_auth_approve():
             user_id=current_user.musicbrainz_id,
             msg="This token is already approved. Please check the token and try again."
         )
+    if token.has_expired():
+        return render_template(
+            "user/auth.html",
+            user_id=current_user.musicbrainz_id,
+            msg="This token has expired. Please create a new token and try again."
+        )
     token.approve(user.name)
     return render_template(
         "user/auth.html",
@@ -128,8 +134,10 @@ def get_session(request, data):
     try:
         api_key = data['api_key']
         token = Token.load(data['token'], api_key)
+        if token.has_expired():
+            raise InvalidAPIUsage(15, output_format=output_format)  # Token expired
     except KeyError:
-        raise InvalidAPIUsage(6, output_format=output_format)   # Missing Required Params
+        raise InvalidAPIUsage(6, output_format=output_format)       # Missing Required Params
 
     if not token:
         if not Token.is_valid_api_key(api_key):
@@ -137,7 +145,7 @@ def get_session(request, data):
         raise InvalidAPIUsage(4, output_format=output_format)       # Invalid token
 
     if not token.user:
-        raise InvalidAPIUsage(14, output_format=output_format)   # Unauthorized token
+        raise InvalidAPIUsage(14, output_format=output_format)      # Unauthorized token
 
     session = Session.create(token)
 

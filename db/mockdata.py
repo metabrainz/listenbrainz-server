@@ -4,7 +4,12 @@ This module contains classes required by the compact API.
 
 import os
 import binascii
+from datetime import datetime, timedelta
 from db import db
+
+
+# Token expiration time in minutes
+TOKEN_EXPIRATION_TIME = 60
 
 
 class User(object):
@@ -155,6 +160,13 @@ class Token(object):
                            {'token': token, 'api_key': api_key})
         db.session.commit()
         return Token.load(token)
+
+    def has_expired(self):
+        """ Check if the token has expired.
+        """
+        if self.timestamp < datetime.utcnow() - timedelta(minutes=TOKEN_EXPIRATION_TIME):
+            return True
+        return False
 
     def approve(self, user):
         """ Authenticate the token.
