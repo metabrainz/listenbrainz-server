@@ -28,24 +28,10 @@ DEFAULT_ITEMS_PER_GET = 25
 MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
 
 
-def insert_json(jsonlist, user):
-    payload = _convert_to_native_format(jsonlist)
-    _send_listens_to_redis("import", _get_augmented_listens(payload, user))
-
-
-def api_tools(func, *args):
-    """ Provides access to all the private functions here in other modules.
-        INPUT: (function_name, argument1, argument2,...)
+def insert_payload(payload, user, listen_type="import"):
+    """ Convert the payload into augmented listens then submit them.
     """
-    def invalid_function(*args):
-        raise BadRequest('The function you are trying to access does not exist')
-
-    return {
-        "_send_listens_to_redis": _send_listens_to_redis,
-        "_messybrainz_lookup": _messybrainz_lookup,
-        "_validate_listen": _validate_listen,
-        "_get_augmented_listens": _get_augmented_listens
-    }.get(func, invalid_function)(*args)
+    _send_listens_to_redis(listen_type, _get_augmented_listens(payload, user))
 
 
 def _validate_listen(listen):
@@ -221,7 +207,7 @@ def _messybrainz_lookup(listens):
     return augmented_listens
 
 
-def _convert_to_native_format(data):
+def convert_backup_to_native_format(data):
     """
     Converts the imported listen-payload from the lastfm backup file
     to the native payload format.

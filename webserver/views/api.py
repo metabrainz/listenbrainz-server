@@ -8,8 +8,7 @@ import webserver
 import db
 from webserver.rate_limiter import ratelimit
 from werkzeug.exceptions import BadRequest, Unauthorized
-from api_tools import api_tools
-from api_tools import MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET
+from api_tools import insert_payload, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -57,7 +56,7 @@ def submit_listen():
         _log_raise_400("Invalid JSON document submitted.", raw_data)
 
     try:
-        api_tools("_send_listens_to_redis", data['listen_type'], api_tools("_get_augmented_listens", payload, user_id))
+        insert_payload(payload, user_id, listen_type=data['listen_type'])
     except Exception, e:
         raise InternalServerError("Something went wrong. Please try again.")
 
