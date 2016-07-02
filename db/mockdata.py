@@ -65,11 +65,10 @@ class User(object):
 
 class Session(object):
     def __init__(self, row):
-        serial, userid, sid, token, api_key, timestamp = row
+        serial, userid, sid, api_key, timestamp = row
         self.id = serial
         self.user = User.load_by_id(userid)
         self.sid = sid
-        self.token = token
         self.api_key = api_key
         self.timestamp = timestamp
 
@@ -97,9 +96,9 @@ class Session(object):
             If session already exists for the user then renew the session_key(sid).
         """
         session = binascii.b2a_hex(os.urandom(20))
-        db.session.execute("INSERT INTO session (user_id, sid, token, api_key) VALUES (:user_id, :sid, :token, :api_key) \
-                            ON CONFLICT(user_id, token, api_key) DO UPDATE SET (sid, ts) = (EXCLUDED.sid, EXCLUDED.ts)",
-                            {'user_id': token.user.id, 'sid': session, 'token': token.token, 'api_key': token.api_key})
+        db.session.execute("INSERT INTO session (user_id, sid, api_key) VALUES (:user_id, :sid, :api_key) \
+                            ON CONFLICT(user_id, api_key) DO UPDATE SET (sid, ts) = (EXCLUDED.sid, EXCLUDED.ts)",
+                            {'user_id': token.user.id, 'sid': session, 'api_key': token.api_key})
         db.session.commit()
         token.consume()
         return Session.load(session)

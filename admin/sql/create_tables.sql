@@ -31,9 +31,8 @@ CREATE TABLE session (
     id        SERIAL,
     user_id   INT NOT NULL,
     sid       VARCHAR NOT NULL,
-    token     VARCHAR NOT NULL,
     api_key   VARCHAR NOT NULL,
     ts        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-ALTER TABLE session ADD CONSTRAINT session_sid_token_apikey_uniq UNIQUE (user_id, token, api_key);
+ALTER TABLE session ADD CONSTRAINT session_user_id_api_key_uniq UNIQUE (user_id, api_key);
 COMMIT;
