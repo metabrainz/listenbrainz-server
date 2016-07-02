@@ -26,6 +26,7 @@ CREATE TABLE token (
      ts               TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ALTER TABLE token ADD CONSTRAINT token_api_key_uniq UNIQUE (api_key);
+ALTER TABLE token ADD CONSTRAINT token_token_uniq UNIQUE (token);
 
 CREATE TABLE session (
     id        SERIAL,
@@ -34,5 +35,5 @@ CREATE TABLE session (
     api_key   VARCHAR NOT NULL,
     ts        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-ALTER TABLE session ADD CONSTRAINT session_user_id_api_key_uniq UNIQUE (user_id, api_key);
+ALTER TABLE session ADD CONSTRAINT session_sid_uniq UNIQUE (sid);
 COMMIT;
