@@ -8,7 +8,7 @@ from datetime import datetime
 import webserver
 import db.user
 from flask import make_response
-from webserver.views.api_tools import _messybrainz_lookup, insert_json, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
+from webserver.views.api_tools import convert_backup_to_native_format, insert_payload, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
 from webserver.utils import sizeof_readable
 from os import path, makedirs
 import json
@@ -188,7 +188,8 @@ def upload():
                     failure += 1
                     continue
 
-                insert_json(jsonlist, current_user.musicbrainz_id)
+                payload = convert_backup_to_native_format(jsonlist)
+                insert_payload(payload, current_user.musicbrainz_id)
                 success += 1
         except Exception, e:
             raise BadRequest('Not a valid lastfm-backup-file.')

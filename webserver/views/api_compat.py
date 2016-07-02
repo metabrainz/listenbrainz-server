@@ -11,7 +11,7 @@ from webserver.external import messybrainz
 from webserver.rate_limiter import ratelimit
 from webserver.errors import InvalidAPIUsage
 import xmltodict
-from api_tools import api_tools
+from api_tools import insert_payload
 from db.mockdata import User, Session, Token
 
 api_bp = Blueprint('api_compat', __name__)
@@ -156,7 +156,8 @@ def get_session(request, data):
 
 
 def _to_native_api(lookup, method="track.scrobble"):
-    """ Converts the list of listens to the native API format
+    """ Converts the list of listens received in the new Last.fm submission format
+        to the native ListenBrainz API format.
         Returns: type_of_listen and listen_payload
     """
     listen_type = "listens"
@@ -221,8 +222,7 @@ def scrobble_listens(request, data):
 
     # Convert to native payload then submit 'em.
     listen_type, native_payload = _to_native_api(lookup, data['method'])
-    augmented_listens = api_tools("_get_augmented_listens", native_payload, session.user.name)
-    api_tools("_send_listens_to_redis", listen_type, augmented_listens)
+    insert_payload(native_payload, session.user.name, listen_type=listen_type)
 
     # With corrections than the original submitted listen.
     doc, tag, text = Doc().tagtext()
