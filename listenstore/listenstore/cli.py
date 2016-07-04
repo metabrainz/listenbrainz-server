@@ -4,7 +4,6 @@ import logging
 
 from .utils import argparse_factory, parse_args_and_config
 from .listenstore import PostgresListenStore
-from .kafkaconsumer import KafkaConsumer
 
 
 class Command(object):
@@ -19,7 +18,6 @@ class Command(object):
             You have no logger, databases, or config in __init__. """
         self.opt_parser = argparse_factory(self.desc)
         self._listenStore = None
-        self._kafkaConsumer = None
 
 
     # NB: only sets level after our Command starts running
@@ -53,6 +51,7 @@ class Command(object):
         finally:
            self.cleanup()
 
+
     def cleanup(self):
         return
 
@@ -66,12 +65,6 @@ class Command(object):
             to both Casandra and Postgres
         """
         pass
-
-    @property
-    def kafka_consumer(self):
-        if self._kafkaConsumer is None:
-            self._kafkaConsumer = KafkaConsumer(self.config)
-        return self._kafkaConsumer
 
     def renice(self, increment):
         os.nice(increment)
