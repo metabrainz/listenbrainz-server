@@ -5,7 +5,7 @@ This module contains classes required by the compact API.
 import os
 import binascii
 from datetime import datetime, timedelta
-from db import db
+import db
 
 
 # Token expiration time in minutes
@@ -22,51 +22,51 @@ class User(object):
 
     @staticmethod
     def get_id(mb_id):
-        result = db.session.execute(""" SELECT id FROM "user" WHERE
-                                        musicbrainz_id = :mb_id """, {"mb_id": mb_id})
-        db.session.commit()
-        row = result.fetchone()
-        if row:
-            return row[0]
-        return None
+        with db.engine.connect() as connection:
+            result = connection.execute(""" SELECT id FROM "user" WHERE
+                                            musicbrainz_id = :mb_id """, {"mb_id": mb_id})
+            row = result.fetchone()
+            if row:
+                return row[0]
+            return None
 
     @staticmethod
     def load_by_name(mb_id):
-        result = db.session.execute(""" SELECT * FROM "user" WHERE
-                                        musicbrainz_id = :mb_id """, {"mb_id": mb_id})
-        db.session.commit()
-        row = result.fetchone()
-        if row:
-            return User(row)
-        return None
+        with db.engine.connect() as connection:
+            result = connection.execute(""" SELECT * FROM "user" WHERE
+                                            musicbrainz_id = :mb_id """, {"mb_id": mb_id})
+            row = result.fetchone()
+            if row:
+                return User(row)
+            return None
 
     @staticmethod
     def load_by_id(serial):
-        result = db.session.execute(""" SELECT * FROM "user" WHERE id=:id """, {"id": serial})
-        db.session.commit()
-        row = result.fetchone()
-        if row:
-            return User(row)
-        return None
+        with db.engine.connect() as connection:
+            result = connection.execute(""" SELECT * FROM "user" WHERE id=:id """, {"id": serial})
+            row = result.fetchone()
+            if row:
+                return User(row)
+            return None
 
     @staticmethod
     def load_by_apikey(api_key):
-        result = db.session.execute(""" SELECT * FROM "user" WHERE
-                                        auth_token = :auth_token """, {"auth_token": api_key})
-        db.session.commit()
-        row = result.fetchone()
-        if row:
-            return User(row)
-        return None
+        with db.engine.connect() as connection:
+            result = connection.execute(""" SELECT * FROM "user" WHERE
+                                            auth_token = :auth_token """, {"auth_token": api_key})
+            row = result.fetchone()
+            if row:
+                return User(row)
+            return None
 
     @staticmethod
     def get_play_count(user_id):
         """ Get playcount from the given user name.
         """
-        result = db.session.execute(""" SELECT COUNT(*) FROM listen WHERE
-                                        user_id = :user_id """, {"user_id": user_id})
-        db.session.commit()
-        return int(result.fetchone()[0])
+        with db.engine.connect() as connection:
+            result = connection.execute(""" SELECT COUNT(*) FROM listen WHERE
+                                            user_id = :user_id """, {"user_id": user_id})
+            return int(result.fetchone()[0])
 
 class Session(object):
     def __init__(self, row):
@@ -88,12 +88,12 @@ class Session(object):
             dic['api_key'] = api_key
             query = "SELECT * FROM session WHERE sid=:sid AND api_key=:api_key"
 
-        result = db.session.execute(query, dic)
-        db.session.commit()
-        row = result.fetchone()
-        if row:
-            return Session(row)
-        return None
+        with db.engine.connect() as connection:
+            result = connection.execute(query, dic)
+            row = result.fetchone()
+            if row:
+                return Session(row)
+            return None
 
     @staticmethod
     def create(token):
@@ -101,9 +101,9 @@ class Session(object):
             If session already exists for the user then renew the session_key(sid).
         """
         session = binascii.b2a_hex(os.urandom(20))
-        db.session.execute("INSERT INTO session (user_id, sid, api_key) VALUES (:user_id, :sid, :api_key)",
-                           {'user_id': token.user.id, 'sid': session, 'api_key': token.api_key})
-        db.session.commit()
+        with db.engine.connect() as connection:
+            connection.execute("INSERT INTO session (user_id, sid, api_key) VALUES (:user_id, :sid, :api_key)",
+                               {'user_id': token.user.id, 'sid': session, 'api_key': token.api_key})
         token.consume()
         return Session.load(session)
 
@@ -128,11 +128,11 @@ class Token(object):
         else:
             query = 'SELECT * FROM "user" WHERE auth_token=:api_key'
 
-        result = db.session.execute(query, dic)
-        db.session.commit()
-        if result.fetchone():
-            return True
-        return False
+        with db.engine.connect() as connection:
+            result = connection.execute(query, dic)
+            if result.fetchone():
+                return True
+            return False
 
     @staticmethod
     def load(token, api_key=None):
@@ -144,20 +144,20 @@ class Token(object):
             query = "SELECT * FROM token WHERE token=:token AND api_key=:api_key"
             params['api_key'] = api_key
 
-        result = db.session.execute(query, params)
-        db.session.commit()
-        row = result.fetchone()
-        if row:
-            return Token(row)
-        return None
+        with db.engine.connect() as connection:
+            result = connection.execute(query, params)
+            row = result.fetchone()
+            if row:
+                return Token(row)
+            return None
 
     @staticmethod
     def generate(api_key):
         token = binascii.b2a_hex(os.urandom(20))
-        db.session.execute('INSERT INTO token (token, api_key) VALUES (:token, :api_key) \
-                            ON CONFLICT(api_key) DO UPDATE SET token = EXCLUDED.token, ts = EXCLUDED.ts',
-                           {'token': token, 'api_key': api_key})
-        db.session.commit()
+        with db.engine.connect() as connection:
+            connection.execute('INSERT INTO token (token, api_key) VALUES (:token, :api_key) \
+                                ON CONFLICT(api_key) DO UPDATE SET token = EXCLUDED.token, ts = EXCLUDED.ts',
+                               {'token': token, 'api_key': api_key})
         return Token.load(token)
 
     def has_expired(self):
@@ -170,12 +170,12 @@ class Token(object):
     def approve(self, user):
         """ Authenticate the token.
         """
-        db.session.execute("UPDATE token SET user_id = :uid WHERE token=:token",
+        with db.engine.connect() as connection:
+            connection.execute("UPDATE token SET user_id = :uid WHERE token=:token",
                            {'uid': User.get_id(user), 'token': self.token})
-        db.session.commit()
 
     def consume(self):
         """ Use token to be able to create a new session.
         """
-        db.session.execute("DELETE FROM token WHERE id=:id", {'id': self.id})
-        db.session.commit()
+        with db.engine.connect() as connection:
+            connection.execute("DELETE FROM token WHERE id=:id", {'id': self.id})
