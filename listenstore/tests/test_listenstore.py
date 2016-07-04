@@ -16,7 +16,7 @@ class TestListenStore(DatabaseTestCase):
         self._create_test_data()
 
     def tearDown(self):
-        # self.logstore.drop_schema()
+        super(TestListenStore, self).tearDown()
         self.logstore = None
 
     def _create_test_data(self):

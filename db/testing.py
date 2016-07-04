@@ -20,7 +20,7 @@ class DatabaseTestCase(unittest.TestCase):
         self.reset_db()
 
     def tearDown(self):
-        pass
+        self.drop_tables()
 
     def reset_db(self):
         self.drop_tables()
