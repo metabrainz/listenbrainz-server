@@ -38,7 +38,7 @@ def init_db(force, skip_create):
 
     uri = urlsplit(create_app().config['SQLALCHEMY_DATABASE_URI'])
     if force:
-        exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER + 
+        exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER +
                                     ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
                                     os.path.join(ADMIN_SQL_DIR, 'drop_db.sql'),
                                     shell=True)
@@ -84,29 +84,33 @@ def init_test_db(force=False):
 
     `PG_CONNECT_TEST` variable must be defined in the config file.
     """
+
+    uri = urlsplit(create_app().config['TEST_SQLALCHEMY_DATABASE_URI'])
     if force:
-        exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER + ' < ' +
+        exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER +
+                                    ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
                                     os.path.join(ADMIN_SQL_DIR, 'drop_test_db.sql'),
                                     shell=True)
         if exit_code != 0:
             raise Exception('Failed to drop existing database and user! Exit code: %i' % exit_code)
 
     print('Creating database and user for testing...')
-    exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER + ' < ' +
+    exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER +
+                                ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
                                 os.path.join(ADMIN_SQL_DIR, 'create_test_db.sql'),
                                 shell=True)
     if exit_code != 0:
         raise Exception('Failed to create new database and user! Exit code: %i' % exit_code)
 
-    exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER + ' -d ab_test < ' +
+    exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER + ' -d lb_test ' +
+                                ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
                                 os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'),
                                 shell=True)
     if exit_code != 0:
         raise Exception('Failed to create database extensions! Exit code: %i' % exit_code)
 
-    db.init_db_connection(config.PG_CONNECT_TEST)
+    db.init_db_connection(config.TEST_SQLALCHEMY_DATABASE_URI)
 
-    db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_types.sql'))
     db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
     db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_primary_keys.sql'))
     db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
@@ -134,7 +138,7 @@ def init_msb_db(force, skip_create):
 
     uri = urlsplit(create_app().config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
     if force:
-        exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER + 
+        exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER +
                                     ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
                                     os.path.join(MSB_ADMIN_SQL_DIR, 'drop_db.sql'),
                                     shell=True)
