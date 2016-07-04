@@ -6,7 +6,6 @@ from yattag import Doc
 import yattag
 from flask import Blueprint, request, render_template
 from flask_login import login_required, current_user
-from webserver.kafka_connection import _kafka
 from webserver.external import messybrainz
 from webserver.rate_limiter import ratelimit
 from webserver.errors import InvalidAPIUsage
