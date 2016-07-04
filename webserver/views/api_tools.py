@@ -1,8 +1,6 @@
-from kafka import SimpleProducer
 from flask import current_app
-from werkzeug.exceptions import InternalServerError, BadRequest, ServiceUnavailable
+from werkzeug.exceptions import InternalServerError, ServiceUnavailable
 from webserver.external import messybrainz
-from webserver.kafka_connection import _kafka
 from webserver.redis_connection import _redis
 
 import sys
