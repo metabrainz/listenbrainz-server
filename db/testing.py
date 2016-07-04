@@ -36,6 +36,9 @@ class DatabaseTestCase(unittest.TestCase):
         with db.engine.connect() as connection:
             connection.execute('DROP TABLE IF EXISTS "user"       CASCADE')
             connection.execute('DROP TABLE IF EXISTS listen       CASCADE')
+            connection.execute('DROP TABLE IF EXISTS token        CASCADE')
+            connection.execute('DROP TABLE IF EXISTS session      CASCADE')
+
 
     def load_data_files(self):
         """ Get the data files from the disk """
