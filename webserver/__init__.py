@@ -33,7 +33,7 @@ def create_app():
 
     # Database connection
     import db
-    db.init_db_connection(app)
+    db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
     from webserver.external import messybrainz
     messybrainz.init_db_connection(app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
 
