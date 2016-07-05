@@ -174,6 +174,7 @@ class Token(object):
         with db.engine.connect() as connection:
             connection.execute(sqlalchemy.text("UPDATE token SET user_id = :uid WHERE token=:token"),
                            {'uid': User.get_id(user), 'token': self.token})
+        self.user = User.load_by_name(user)
 
     def consume(self):
         """ Use token to be able to create a new session.
