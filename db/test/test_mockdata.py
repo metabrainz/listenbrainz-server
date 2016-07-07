@@ -3,7 +3,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 from db.testing import DatabaseTestCase
 import logging
 from datetime import datetime
-from tests.util import generate_data
+from tests.utils import generate_data
 from webserver.postgres_connection import init_postgres_connection
 import db
 from db.mockdata import User, Token, Session
