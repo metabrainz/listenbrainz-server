@@ -29,4 +29,4 @@ class TestListenStore(DatabaseTestCase):
     def test_fetch_listens(self):
         date = datetime(2015, 9, 3, 0, 0, 0)
         listens = self.logstore.fetch_listens(user_id="test", from_id=to_epoch(date), limit=10)
-        self.assertEquals(len(list(listens)), 10)
+        self.assertEqual(len(list(listens)), 10)

@@ -164,13 +164,12 @@ class Token(object):
 
     def has_expired(self):
         """ Check if the token has expired.
+            NOTE: Make sure you capture timezones to avoid issues.
         """
-        if self.timestamp < datetime.utcnow() - timedelta(minutes=TOKEN_EXPIRATION_TIME):
-            return True
-        return False
+        return (self.timestamp < datetime.now() - timedelta(minutes=TOKEN_EXPIRATION_TIME))
 
     def approve(self, user):
-        """ Authenticate the token.
+        """ Authenticate the token. User has to be present.
         """
         with db.engine.connect() as connection:
             connection.execute(text("UPDATE token SET user_id = :uid WHERE token=:token"),

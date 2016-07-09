@@ -20,7 +20,7 @@ CREATE TABLE listen (
 
 CREATE TABLE token (
      id               SERIAL,
-     user_id          INT,
+     user_id          INTEGER, -- FK to "user".id
      token            TEXT NOT NULL,
      api_key          VARCHAR NOT NULL,
      ts               TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -30,7 +30,7 @@ ALTER TABLE token ADD CONSTRAINT token_token_uniq UNIQUE (token);
 
 CREATE TABLE session (
     id        SERIAL,
-    user_id   INT NOT NULL,
+    user_id   INTEGER NOT NULL, -- FK to "user".id
     sid       VARCHAR NOT NULL,
     api_key   VARCHAR NOT NULL,
     ts        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
