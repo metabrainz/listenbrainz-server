@@ -6,7 +6,7 @@ import os
 import binascii
 from datetime import datetime, timedelta
 import db
-import sqlalchemy
+from sqlalchemy import text
 
 
 # Token expiration time in minutes
@@ -24,7 +24,7 @@ class User(object):
     @staticmethod
     def get_id(mb_id):
         with db.engine.connect() as connection:
-            result = connection.execute(sqlalchemy.text(""" SELECT id FROM "user" WHERE
+            result = connection.execute(text(""" SELECT id FROM "user" WHERE
                                             musicbrainz_id = :mb_id """), {"mb_id": mb_id})
             row = result.fetchone()
             if row:
@@ -34,7 +34,7 @@ class User(object):
     @staticmethod
     def load_by_name(mb_id):
         with db.engine.connect() as connection:
-            result = connection.execute(sqlalchemy.text(""" SELECT * FROM "user" WHERE
+            result = connection.execute(text(""" SELECT * FROM "user" WHERE
                                             musicbrainz_id = :mb_id """), {"mb_id": mb_id})
             row = result.fetchone()
             if row:
@@ -44,7 +44,7 @@ class User(object):
     @staticmethod
     def load_by_id(serial):
         with db.engine.connect() as connection:
-            result = connection.execute(sqlalchemy.text(""" SELECT * FROM "user" WHERE id=:id """), {"id": serial})
+            result = connection.execute(text(""" SELECT * FROM "user" WHERE id=:id """), {"id": serial})
             row = result.fetchone()
             if row:
                 return User(row)
@@ -53,7 +53,7 @@ class User(object):
     @staticmethod
     def load_by_apikey(api_key):
         with db.engine.connect() as connection:
-            result = connection.execute(sqlalchemy.text(""" SELECT * FROM "user" WHERE
+            result = connection.execute(text(""" SELECT * FROM "user" WHERE
                                             auth_token = :auth_token """), {"auth_token": api_key})
             row = result.fetchone()
             if row:
@@ -65,7 +65,7 @@ class User(object):
         """ Get playcount from the given user name.
         """
         with db.engine.connect() as connection:
-            result = connection.execute(sqlalchemy.text(""" SELECT COUNT(*) FROM listen WHERE
+            result = connection.execute(text(""" SELECT COUNT(*) FROM listen WHERE
                                             user_id = :user_id """), {"user_id": user_id})
             return int(result.fetchone()[0])
 
@@ -90,7 +90,7 @@ class Session(object):
             query = "SELECT * FROM session WHERE sid=:sid AND api_key=:api_key"
 
         with db.engine.connect() as connection:
-            result = connection.execute(sqlalchemy.text(query), dic)
+            result = connection.execute(text(query), dic)
             row = result.fetchone()
             if row:
                 return Session(row)
@@ -103,7 +103,7 @@ class Session(object):
         """
         session = binascii.b2a_hex(os.urandom(20))
         with db.engine.connect() as connection:
-            connection.execute(sqlalchemy.text("INSERT INTO session (user_id, sid, api_key) VALUES (:user_id, :sid, :api_key)"),
+            connection.execute(text("INSERT INTO session (user_id, sid, api_key) VALUES (:user_id, :sid, :api_key)"),
                                {'user_id': token.user.id, 'sid': session, 'api_key': token.api_key})
         token.consume()
         return Session.load(session)
@@ -130,7 +130,7 @@ class Token(object):
             query = 'SELECT * FROM "user" WHERE auth_token=:api_key'
 
         with db.engine.connect() as connection:
-            result = connection.execute(sqlalchemy.text(query), dic)
+            result = connection.execute(text(query), dic)
             if result.fetchone():
                 return True
             return False
@@ -146,7 +146,7 @@ class Token(object):
             params['api_key'] = api_key
 
         with db.engine.connect() as connection:
-            result = connection.execute(sqlalchemy.text(query), params)
+            result = connection.execute(text(query), params)
             row = result.fetchone()
             if row:
                 return Token(row)
@@ -156,9 +156,10 @@ class Token(object):
     def generate(api_key):
         token = binascii.b2a_hex(os.urandom(20))
         with db.engine.connect() as connection:
-            connection.execute(sqlalchemy.text('INSERT INTO token (token, api_key) VALUES (:token, :api_key) \
-                                ON CONFLICT(api_key) DO UPDATE SET token = EXCLUDED.token, ts = EXCLUDED.ts'),
-                               {'token': token, 'api_key': api_key})
+            q = """ INSERT INTO token (token, api_key) VALUES (:token, :api_key)
+                    ON CONFLICT(api_key) DO UPDATE SET token = EXCLUDED.token, ts = EXCLUDED.ts
+                """
+            connection.execute(text(q), {'token': token, 'api_key': api_key})
         return Token.load(token)
 
     def has_expired(self):
@@ -172,12 +173,12 @@ class Token(object):
         """ Authenticate the token.
         """
         with db.engine.connect() as connection:
-            connection.execute(sqlalchemy.text("UPDATE token SET user_id = :uid WHERE token=:token"),
-                           {'uid': User.get_id(user), 'token': self.token})
+            connection.execute(text("UPDATE token SET user_id = :uid WHERE token=:token"),
+                               {'uid': User.get_id(user), 'token': self.token})
         self.user = User.load_by_name(user)
 
     def consume(self):
         """ Use token to be able to create a new session.
         """
         with db.engine.connect() as connection:
-            connection.execute(sqlalchemy.text("DELETE FROM token WHERE id=:id"), {'id': self.id})
+            connection.execute(text("DELETE FROM token WHERE id=:id"), {'id': self.id})
