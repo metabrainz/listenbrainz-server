@@ -1,6 +1,5 @@
 import db
 import unittest
-import json
 import os
 
 # Configuration

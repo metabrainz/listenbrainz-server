@@ -11,7 +11,7 @@ from flask import make_response
 from webserver.views.api_tools import convert_backup_to_native_format, insert_payload, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
 from webserver.utils import sizeof_readable
 from os import path, makedirs
-import json
+import ujson
 import zipfile
 import re
 import os
@@ -134,7 +134,7 @@ def export_data():
             dic['recording_msid'] = None if obj.recording_msid is None else str(obj.recording_msid)
             output.append(dic)
 
-        response = make_response(json.dumps(output))
+        response = make_response(ujson.dumps(output))
         response.headers["Content-Disposition"] = "attachment; filename=" + filename
         response.headers['Content-Type'] = 'application/json; charset=utf-8'
         response.mimetype = "text/json"
@@ -181,7 +181,7 @@ def upload():
             for f in [f for f in files if regex.match(f)]:
                 try:
                     # Load listens file
-                    jsonlist = json.loads(zf.read(f))
+                    jsonlist = ujson.loads(zf.read(f))
                     if not isinstance(jsonlist, list):
                         raise ValueError
                 except ValueError:

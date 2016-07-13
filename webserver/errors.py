@@ -1,7 +1,7 @@
 from flask import render_template, make_response
 from yattag import Doc
 import yattag
-import json
+import ujson
 
 
 # List of errors compatible with LastFM messages for API_compat.
@@ -93,7 +93,7 @@ class InvalidAPIUsage(Exception):
         }.get(self.output_format, self.to_xml)()
 
     def to_json(self):
-        return json.dumps({
+        return ujson.dumps({
             "error": self.api_error_code,
             "message": ERROR_MESSAGES[self.api_error_code]
         }, indent=4)

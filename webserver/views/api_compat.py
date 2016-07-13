@@ -11,7 +11,9 @@ from webserver.rate_limiter import ratelimit
 from webserver.errors import InvalidAPIUsage
 import xmltodict
 from api_tools import insert_payload
-from db.mockdata import User, Session, Token
+from db.lastfm_user import User
+from db.lastfm_session import Session
+from db.lastfm_token import Token
 
 api_bp = Blueprint('api_compat', __name__)
 
@@ -98,8 +100,8 @@ def api_post():
         raise InvalidAPIUsage(3, output_format=request.args.get('format', "xml"))   # Invalid Method
 
     return {
-        'track.updatenowplaying': scrobble_listens,
-        'track.scrobble': scrobble_listens,
+        'track.updatenowplaying': record_listens,
+        'track.scrobble': record_listens,
         'auth.getsession': get_session
     }.get(method, invalid_method_error)(request, request.form)
 
@@ -199,7 +201,7 @@ def _to_native_api(lookup, method="track.scrobble"):
     return listen_type, listens
 
 
-def scrobble_listens(request, data):
+def record_listens(request, data):
     """ Submit the listen in the lastfm format to be inserted in db.
         Accepts listens for both track.updateNowPlaying and track.scrobble methods.
     """
