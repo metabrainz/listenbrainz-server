@@ -1,11 +1,12 @@
-from flask import current_app
-from werkzeug.exceptions import InternalServerError, ServiceUnavailable
-from webserver.external import messybrainz
-from webserver.redis_connection import _redis
-
+from __future__ import print_function
 import sys
 import uuid
-import json
+from werkzeug.exceptions import InternalServerError, ServiceUnavailable, BadRequest
+from flask import current_app
+import ujson
+
+from webserver.external import messybrainz
+from webserver.redis_connection import _redis
 
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
@@ -36,27 +37,27 @@ def _validate_listen(listen):
     """Make sure that required keys are present, filled out and not too large."""
 
     if 'listened_at' not in listen:
-        _log_raise_400("JSON document must contain the key listened_at at the top level.", listen)
+        log_raise_400("JSON document must contain the key listened_at at the top level.", listen)
 
     try:
         listen['listened_at'] = int(listen['listened_at'])
     except ValueError:
-        _log_raise_400("JSON document must contain an int value for listened_at.", listen)
+        log_raise_400("JSON document must contain an int value for listened_at.", listen)
 
     if 'listened_at' in listen and 'track_metadata' in listen and len(listen) > 2:
-        _log_raise_400("JSON document may only contain listened_at and "
+        log_raise_400("JSON document may only contain listened_at and "
                        "track_metadata top level keys", listen)
 
     # Basic metadata
     try:
         if not listen['track_metadata']['track_name']:
-            _log_raise_400("JSON document does not contain required "
+            log_raise_400("JSON document does not contain required "
                            "track_metadata.track_name.", listen)
         if not listen['track_metadata']['artist_name']:
-            _log_raise_400("JSON document does not contain required "
+            log_raise_400("JSON document does not contain required "
                            "track_metadata.artist_name.", listen)
     except KeyError:
-        _log_raise_400("JSON document does not contain a valid metadata.track_name "
+        log_raise_400("JSON document does not contain a valid metadata.track_name "
                        "and/or track_metadata.artist_name.", listen)
 
     if 'additional_info' in listen['track_metadata']:
@@ -64,25 +65,25 @@ def _validate_listen(listen):
         if 'tags' in listen['track_metadata']['additional_info']:
             tags = listen['track_metadata']['additional_info']['tags']
             if len(tags) > MAX_TAGS_PER_LISTEN:
-                _log_raise_400("JSON document may not contain more than %d items in "
+                log_raise_400("JSON document may not contain more than %d items in "
                                "track_metadata.additional_info.tags." % MAX_TAGS_PER_LISTEN, listen)
             for tag in tags:
                 if len(tag) > MAX_TAG_SIZE:
-                    _log_raise_400("JSON document may not contain track_metadata.additional_info.tags "
+                    log_raise_400("JSON document may not contain track_metadata.additional_info.tags "
                                    "longer than %d characters." % MAX_TAG_SIZE, listen)
         # MBIDs
         if 'release_mbid' in listen['track_metadata']['additional_info']:
             lmbid = listen['track_metadata']['additional_info']['release_mbid']
             if not is_valid_uuid(lmbid):
-                _log_raise_400("Release MBID format invalid.", listen)
+                log_raise_400("Release MBID format invalid.", listen)
         if 'recording_mbid' in listen['track_metadata']['additional_info']:
             cmbid = listen['track_metadata']['additional_info']['recording_mbid']
             if not is_valid_uuid(cmbid):
-                _log_raise_400("Recording MBID format invalid.", listen)
+                log_raise_400("Recording MBID format invalid.", listen)
         ambids = listen['track_metadata']['additional_info'].get('artist_mbids', [])
         for ambid in ambids:
             if not is_valid_uuid(ambid):
-                _log_raise_400("Artist MBID format invalid.", listen)
+                log_raise_400("Artist MBID format invalid.", listen)
 
 
 def _send_listens_to_redis(listen_type, listens):
@@ -90,14 +91,14 @@ def _send_listens_to_redis(listen_type, listens):
     for listen in listens:
         if listen_type == 'playing_now':
             try:
-                p.rpush('playing_now', json.dumps(listen).encode('utf-8'))
-            except Exception,e:
+                p.rpush('playing_now', ujson.dumps(listen).encode('utf-8'))
+            except Exception, e:
                 print(e)
                 current_app.logger.error("Redis rpush playing_now write error: " + str(sys.exc_info()[0]))
                 raise InternalServerError("Cannot record playing_now at this time.")
         else:
             try:
-                p.rpush('listens', json.dumps(listen).encode('utf-8'))
+                p.rpush('listens', ujson.dumps(listen).encode('utf-8'))
             except Exception, e:
                 print(e)
                 current_app.logger.error("Redis rpush listens write error: " + str(sys.exc_info()[0]))
@@ -148,7 +149,7 @@ def _messybrainz_lookup(listens):
 
         if 'additional_info' in listen['track_metadata']:
             ai = listen['track_metadata']['additional_info']
-            if 'artist_mbids' in ai and type(ai['artist_mbids']) == list:
+            if 'artist_mbids' in ai and isinstance(ai['artist_mbids'], list):
                 messy_dict['artist_mbids'] = ai['artist_mbids']
             if 'release_mbid' in ai:
                 messy_dict['release_mbid'] = ai['release_mbid']
@@ -163,7 +164,7 @@ def _messybrainz_lookup(listens):
     try:
         msb_responses = messybrainz.submit_listens(msb_listens)
     except messybrainz.exceptions.BadDataException as e:
-        _log_raise_400(str(e))
+        log_raise_400(str(e))
     except messybrainz.exceptions.NoDataFoundException:
         return []
     except messybrainz.exceptions.ErrorAddingException as e:
@@ -192,7 +193,7 @@ def _messybrainz_lookup(listens):
         release_mbid = messybrainz_resp.get('release_mbid', None)
         recording_mbid = messybrainz_resp.get('recording_mbid', None)
 
-        if 'artist_mbids'    not in listen['track_metadata']['additional_info'] and \
+        if 'artist_mbids'   not in listen['track_metadata']['additional_info'] and \
            'release_mbid'   not in listen['track_metadata']['additional_info'] and \
            'recording_mbid' not in listen['track_metadata']['additional_info']:
 
@@ -231,3 +232,16 @@ def convert_backup_to_native_format(data):
                     listen['track_metadata']['additional_info']['artist_mbids'] = [native_lis['track']['artist']['mbid']]
         payload.append(listen)
     return payload
+
+
+def log_raise_400(msg, data=""):
+    """ Helper function for logging issues with request data and showing error page.
+        Logs the message and data, raises BadRequest exception which shows 400 Bad
+        Request to the user.
+    """
+
+    if isinstance(data, dict):
+        data = ujson.dumps(data)
+
+    current_app.logger.debug("BadRequest: %s\nJSON: %s" % (msg, data))
+    raise BadRequest(msg)

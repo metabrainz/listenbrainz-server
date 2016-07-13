@@ -1,14 +1,12 @@
-import sys
-import json
-import uuid
-from flask import Blueprint, request, current_app, jsonify
-from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized, ServiceUnavailable
+from __future__ import print_function
+import ujson
+from flask import Blueprint, request, jsonify
+from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized
 from webserver.decorators import crossdomain
 import webserver
 import db
 from webserver.rate_limiter import ratelimit
-from werkzeug.exceptions import BadRequest, Unauthorized
-from api_tools import insert_payload, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET
+from api_tools import insert_payload, log_raise_400, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -33,9 +31,9 @@ def submit_listen():
 
     raw_data = request.get_data()
     try:
-        data = json.loads(raw_data.decode("utf-8"))
+        data = ujson.loads(raw_data.decode("utf-8"))
     except ValueError as e:
-        _log_raise_400("Cannot parse JSON document: %s" % e, raw_data)
+        log_raise_400("Cannot parse JSON document: %s" % e, raw_data)
 
     try:
         payload = data['payload']
@@ -43,17 +41,17 @@ def submit_listen():
             return "success"
 
         if len(raw_data) > len(payload) * MAX_LISTEN_SIZE:
-            _log_raise_400("JSON document is too large. In aggregate, listens may not "
+            log_raise_400("JSON document is too large. In aggregate, listens may not "
                            "be larger than %d characters." % MAX_LISTEN_SIZE, payload)
 
         if data['listen_type'] not in ('playing_now', 'single', 'import'):
-            _log_raise_400("JSON document requires a valid listen_type key.", payload)
+            log_raise_400("JSON document requires a valid listen_type key.", payload)
 
         if (data['listen_type'] == "single" or data['listen_type'] == 'playing_now') and len(payload) > 1:
-            _log_raise_400("JSON document contains more than listen for a single/playing_now. "
+            log_raise_400("JSON document contains more than listen for a single/playing_now. "
                            "It should contain only one.", payload)
     except KeyError:
-        _log_raise_400("Invalid JSON document submitted.", raw_data)
+        log_raise_400("Invalid JSON document submitted.", raw_data)
 
     try:
         insert_payload(payload, user_id, listen_type=data['listen_type'])
@@ -84,7 +82,7 @@ def get_listens(user_id):
     min_ts = _parse_int_arg("min_ts")
 
     if max_ts and min_ts:
-        _log_raise_400("You may only specify max_ts or min_ts, not both.")
+        log_raise_400("You may only specify max_ts or min_ts, not both.")
 
     db_conn = webserver.create_postgres()
     listens = db_conn.fetch_listens(
@@ -111,17 +109,6 @@ def get_listens(user_id):
     }})
 
 
-def _log_raise_400(msg, data):
-    """ Helper function for logging issues with request data and showing error page.
-        Logs the message and data, raises BadRequest exception which shows 400 Bad
-        Request to the user.
-    """
-
-    if type(data) == dict:
-        data = json.dumps(data)
-
-    current_app.logger.debug("BadRequest: %s\nJSON: %s" % (msg, data))
-    raise BadRequest(msg)
 
 
 def _parse_int_arg(name, default=None):
