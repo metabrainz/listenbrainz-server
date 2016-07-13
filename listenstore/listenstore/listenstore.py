@@ -31,11 +31,9 @@ class ListenStore(object):
     def max_id(self):
         return int(self.MAX_FUTURE_SECONDS + calendar.timegm(time.gmtime()))
 
-
-    def fetch_listens_from_storage():
+    def fetch_listens_from_storage(*args):
         """ Override this method in PostgresListenStore class """
         raise NotImplementedError()
-
 
     def fetch_listens(self, user_id, from_id=None, to_id=None, limit=None):
         """ Check from_id, to_id, and limit for fetching listens
@@ -72,12 +70,12 @@ class PostgresListenStore(ListenStore):
                       recording_msid=row[5], data=row[6])
 
     def format_dict(self, listen):
-        return { 'user_id': listen.user_id,
-                 'ts': listen.timestamp,
-                 'artist_msid': uuid.UUID(listen.artist_msid),
-                 'album_msid': uuid.UUID(listen.album_msid) if listen.album_msid is not None else None,
-                 'recording_msid': uuid.UUID(listen.recording_msid),
-                 'raw_data': ujson.dumps(listen.data)}
+        return {'user_id': listen.user_id,
+                'ts': listen.timestamp,
+                'artist_msid': uuid.UUID(listen.artist_msid),
+                'album_msid': uuid.UUID(listen.album_msid) if listen.album_msid is not None else None,
+                'recording_msid': uuid.UUID(listen.recording_msid),
+                'data': ujson.dumps(listen.data)}
 
     def insert_postgresql(self, listens):
         """ Insert a batch of listens, using asynchronous queries.
@@ -89,12 +87,18 @@ class PostgresListenStore(ListenStore):
                 if not listen.validate():
                     raise ValueError("Invalid listen: %s" % listen)
                 try:
-                    res = connection.execute(
-                    """ INSERT INTO listen(user_id, ts, artist_msid, album_msid, recording_msid, raw_data)
-                        VALUES ( %(user_id)s, to_timestamp(%(ts)s), %(artist_msid)s, %(album_msid)s,
-                        %(recording_msid)s, %(raw_data)s) ON CONFLICT DO NOTHING """, self.format_dict(listen))
+                    params = self.format_dict(listen)
+                    res = connection.execute("""
+                        INSERT INTO listen(user_id, ts, artist_msid, album_msid, recording_msid)
+                        VALUES (%(user_id)s, to_timestamp(%(ts)s), %(artist_msid)s, %(album_msid)s,
+                        %(recording_msid)s) ON CONFLICT DO NOTHING RETURNING id """, params)
+                    params['_id'] = res.fetchone()[0]
+
+                    res = connection.execute("""
+                        INSERT INTO listen_json(id, data) VALUES (%(_id)s, %(data)s) ON CONFLICT DO NOTHING
+                    """, params )
                 except Exception, e:     # Log errors
-                        self.log.error(e)
+                    self.log.error(e)
 
     def execute(self, query, params={}):
         with self.engine.connect() as connection:
@@ -102,10 +106,12 @@ class PostgresListenStore(ListenStore):
             return res.fetchall()
 
     def fetch_listens_from_storage(self, user_id, from_id, to_id, limit, order, precision):
-        query = """ SELECT id, user_id, extract(epoch from ts), artist_msid, album_msid, recording_msid, raw_data """ + \
-                """ FROM listen WHERE user_id = %(user_id)s """ + \
-                """ AND extract(epoch from ts) > %(from_id)s AND extract(epoch from ts) < %(to_id)s  """ + \
-                """ ORDER BY extract(epoch from ts) """ + ORDER_TEXT[order] + """ LIMIT %(limit)s"""
+        query = """ SELECT listen.id, user_id, extract(epoch from ts), artist_msid, album_msid, recording_msid, data
+                    FROM listen, listen_json
+                    WHERE listen.id = listen_json.id AND user_id = %(user_id)s AND extract(epoch from ts) > %(from_id)s
+                        AND extract(epoch from ts) < %(to_id)s
+                    ORDER BY extract(epoch from ts) """ + ORDER_TEXT[order] + """ LIMIT %(limit)s
+                """
         params = {
             'user_id': user_id,
             'from_id': from_id,
