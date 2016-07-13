@@ -29,8 +29,11 @@ MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
 
 def insert_payload(payload, user, listen_type="import"):
     """ Convert the payload into augmented listens then submit them.
+        Returns: augmented_listens
     """
-    _send_listens_to_redis(listen_type, _get_augmented_listens(payload, user))
+    augmented_listens = _get_augmented_listens(payload, user)
+    _send_listens_to_redis(listen_type, augmented_listens)
+    return augmented_listens
 
 
 def _validate_listen(listen):
@@ -122,8 +125,10 @@ def _get_augmented_listens(payload, user_id):
     """
     augmented_listens = []
     msb_listens = []
-    for listen in payload:
+    for l in payload:
+        listen = l.copy()   # Create a local object to prevent the mutation of the passed object
         _validate_listen(listen)
+
         listen['user_id'] = user_id
 
         msb_listens.append(listen)
