@@ -7,7 +7,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends build-essential
     git \
     redis-tools \ 
     wget 
+
 RUN mkdir /code
+RUN pip install uWSGI==2.0.13.1
 
 # PostgreSQL client
 RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
@@ -38,3 +40,5 @@ RUN pip install -r requirements.txt
 
 # Now install our code, which may change frequently
 COPY . /code/listenbrainz/
+
+USER daemon

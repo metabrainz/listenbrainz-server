@@ -15,12 +15,12 @@ services:
       - ./data/redis:/data
   web:
     build: .
-    command: python manage.py runserver -h 0.0.0.0 -p 8000
+    command: uwsgi /code/listenbrainz-server/docker/uwsgi.ini
     volumes:
       - .:/code/listenbrainz-server
       - ./data/app:/data
     ports:
-      - "8000:8000"
+      - "3031:3031"
     links:
       - redis
       - db
@@ -40,3 +40,12 @@ services:
     depends_on:
       - db
       - redis
+  nginx:
+    restart: always
+    build:
+      context: ./docker/nginx/
+      dockerfile: Dockerfile
+    links:
+      - web:web
+    ports:
+      - "80:80"
