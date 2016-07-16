@@ -14,6 +14,8 @@ from api_tools import insert_payload
 from db.lastfm_user import User
 from db.lastfm_session import Session
 from db.lastfm_token import Token
+import calendar
+from datetime import datetime
 
 api_bp = Blueprint('api_compat', __name__)
 
@@ -73,36 +75,21 @@ def api_auth_approve():
     )
 
 
-@api_bp.route('/2.0/', methods=['GET'])
-@ratelimit()
-def api_get():
-    """ Receives the GET-API calls and redirects them to appropriate methods.
-    """
-    method = request.args['method'].lower()
-
-    def invalid_method_error(*args):
-        raise InvalidAPIUsage(3, output_format=request.args.get('format', "xml"))   # Invalid Method
-
-    return {
-        'user.getinfo': user_info,
-        'auth.gettoken': get_token
-    }.get(method, invalid_method_error)(request, request.args)
-
-
 @api_bp.route('/2.0/', methods=['POST'])
 @ratelimit()
 def api_post():
     """ Receives the POST-API calls and redirects them to appropriate methods.
     """
     method = request.form['method'].lower()
-
     def invalid_method_error(*args):
         raise InvalidAPIUsage(3, output_format=request.args.get('format', "xml"))   # Invalid Method
 
     return {
         'track.updatenowplaying': record_listens,
         'track.scrobble': record_listens,
-        'auth.getsession': get_session
+        'auth.getsession': get_session,
+        'auth.gettoken': get_token,
+        'user.getinfo': user_info
     }.get(method, invalid_method_error)(request, request.form)
 
 
@@ -172,7 +159,7 @@ def _to_native_api(lookup, method="track.scrobble"):
     listen_type = "listens"
     if method == "track.updateNowPlaying":
         listen_type = "playing_now"
-        if len(loopkup.keys()) != 1:
+        if len(lookup.keys()) != 1:
             raise InvalidAPIUsage(6, output_format=output_format)       # Invalid parameters
 
     listens = []
@@ -228,6 +215,11 @@ def record_listens(request, data):
         else:
             number = 0
         lookup[number][key] = value
+
+    if request.form['method'].lower() == "track.updatenowplaying":
+        for i, listen in lookup.iteritems():
+            if 'timestamp' not in listen:
+                listen['timestamp'] = calendar.timegm(datetime.now().utctimetuple())
 
     # Convert to native payload then submit 'em.
     listen_type, native_payload = _to_native_api(lookup, data['method'])
