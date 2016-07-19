@@ -31,7 +31,7 @@ class ListenStore(object):
     def max_id(self):
         return int(self.MAX_FUTURE_SECONDS + calendar.timegm(time.gmtime()))
 
-    def fetch_listens_from_storage(*args):
+    def fetch_listens_from_storage():
         """ Override this method in PostgresListenStore class """
         raise NotImplementedError()
 
@@ -90,13 +90,17 @@ class PostgresListenStore(ListenStore):
                     params = self.format_dict(listen)
                     res = connection.execute("""
                         INSERT INTO listen(user_id, ts, artist_msid, album_msid, recording_msid)
-                        VALUES (%(user_id)s, to_timestamp(%(ts)s), %(artist_msid)s, %(album_msid)s,
-                        %(recording_msid)s) ON CONFLICT DO NOTHING RETURNING id """, params)
+                             VALUES (%(user_id)s, to_timestamp(%(ts)s), %(artist_msid)s, %(album_msid)s,
+                                    %(recording_msid)s)
+                                 ON CONFLICT DO NOTHING RETURNING id
+                    """, params)
                     params['_id'] = res.fetchone()[0]
 
                     res = connection.execute("""
-                        INSERT INTO listen_json(id, data) VALUES (%(_id)s, %(data)s) ON CONFLICT DO NOTHING
-                    """, params )
+                        INSERT INTO listen_json(id, data)
+                             VALUES (%(_id)s, %(data)s)
+                                 ON CONFLICT DO NOTHING
+                    """, params)
                 except Exception, e:     # Log errors
                     self.log.error(e)
 
@@ -106,19 +110,18 @@ class PostgresListenStore(ListenStore):
             return res.fetchall()
 
     def fetch_listens_from_storage(self, user_id, from_id, to_id, limit, order, precision):
-        query = """ SELECT listen.id, user_id, extract(epoch from ts), artist_msid, album_msid, recording_msid, data
-                    FROM listen, listen_json
-                    WHERE listen.id = listen_json.id AND user_id = %(user_id)s AND extract(epoch from ts) > %(from_id)s
-                        AND extract(epoch from ts) < %(to_id)s
-                    ORDER BY extract(epoch from ts) """ + ORDER_TEXT[order] + """ LIMIT %(limit)s
-                """
-        params = {
+        results = self.execute("""
+            SELECT listen.id, user_id, extract(epoch from ts), artist_msid, album_msid, recording_msid, data
+              FROM listen, listen_json
+             WHERE listen.id = listen_json.id AND user_id = %(user_id)s AND extract(epoch from ts) > %(from_id)s
+               AND extract(epoch from ts) < %(to_id)s
+          ORDER BY extract(epoch from ts) """ + ORDER_TEXT[order] + """ LIMIT %(limit)s
+        """, {
             'user_id': user_id,
             'from_id': from_id,
             'to_id': to_id,
             'limit': limit
-        }
+        })
 
-        results = self.execute(query, params)
         for row in results:
             yield self.convert_row(row)
