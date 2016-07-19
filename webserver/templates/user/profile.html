@@ -75,8 +75,18 @@
   {{ super() }}
   <script src="{{ url_for('static', filename='js/lib/jquery.timeago.js') }}"></script>
   <script type="text/javascript">
+    var offset = parseInt(new Date().getTimezoneOffset())*-1;
+    var sign = offset < 0 ? "-" : "+";
+    offset = offset < 0 ? offset*-1 : offset;
+    var hours = (parseInt(offset/60) < 10 ? "0" : "") + parseInt(offset/60).toString();
+    var minutes = (parseInt(offset%60) < 10 ? "0" : "") + parseInt(offset%60).toString();
+
     $(document).ready(function() {
       var times = $("abbr.timeago");
+      times.each(function(index, value) {
+        value.innerText = value.innerText + sign + hours + minutes;
+        value.setAttribute("title", value.getAttribute("title") + sign + hours + minutes);
+      });
       times.timeago();
     });
   </script>
