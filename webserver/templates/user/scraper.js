@@ -15,7 +15,10 @@ function select(selector, collection) {
 function map(applicable, collection) {
     var newCollection = [];
     for (var i = 0; i < collection.length; i++) {
-        newCollection.push(applicable(collection[i]));
+      var result = applicable(collection[i]);
+      if ('listened_at' in result) {
+        newCollection.push(result);
+      };
     }
     return newCollection;
 }
