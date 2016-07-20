@@ -88,40 +88,48 @@ class PostgresListenStore(ListenStore):
                     raise ValueError("Invalid listen: %s" % listen)
                 try:
                     params = self.format_dict(listen)
-                    res = connection.execute("""
+                    res = connection.execute(text("""
                         INSERT INTO listen(user_id, ts, artist_msid, album_msid, recording_msid)
-                             VALUES (%(user_id)s, to_timestamp(%(ts)s), %(artist_msid)s, %(album_msid)s,
-                                    %(recording_msid)s)
-                                 ON CONFLICT DO NOTHING RETURNING id
-                    """, params)
+                             VALUES (:user_id, to_timestamp(:ts), :artist_msid, :album_msid,
+                                    :recording_msid)
+                        ON CONFLICT DO NOTHING
+                          RETURNING id
+                    """), params)
                     params['_id'] = res.fetchone()[0]
 
-                    res = connection.execute("""
+                    res = connection.execute(text("""
                         INSERT INTO listen_json(id, data)
-                             VALUES (%(_id)s, %(data)s)
-                                 ON CONFLICT DO NOTHING
-                    """, params)
+                             VALUES (:_id, :data)
+                        ON CONFLICT DO NOTHING
+                    """), params)
                 except Exception, e:     # Log errors
                     self.log.error(e)
 
-    def execute(self, query, params={}):
-        with self.engine.connect() as connection:
-            res = connection.execute(query, params)
-            return res.fetchall()
-
     def fetch_listens_from_storage(self, user_id, from_id, to_id, limit, order, precision):
-        results = self.execute("""
-            SELECT listen.id, user_id, extract(epoch from ts), artist_msid, album_msid, recording_msid, data
-              FROM listen, listen_json
-             WHERE listen.id = listen_json.id AND user_id = %(user_id)s AND extract(epoch from ts) > %(from_id)s
-               AND extract(epoch from ts) < %(to_id)s
-          ORDER BY extract(epoch from ts) """ + ORDER_TEXT[order] + """ LIMIT %(limit)s
-        """, {
-            'user_id': user_id,
-            'from_id': from_id,
-            'to_id': to_id,
-            'limit': limit
-        })
+        with self.engine.connect() as connection:
+            results = connection.execute(text("""
+                SELECT listen.id
+                     , user_id
+                     , extract(epoch from ts)
+                     , artist_msid
+                     , album_msid
+                     , recording_msid
+                     , data
+                  FROM listen
+                     , listen_json
+                 WHERE listen.id = listen_json.id
+                   AND user_id = :user_id
+                   AND extract(epoch from ts) > :from_id
+                   AND extract(epoch from ts) < :to_id
+              ORDER BY extract(epoch from ts) """ + ORDER_TEXT[order] + """
+                 LIMIT :limit
+            """), {
+                'user_id': user_id,
+                'from_id': from_id,
+                'to_id': to_id,
 
-        for row in results:
-            yield self.convert_row(row)
+                'limit': limit
+            })
+
+            for row in results.fetchall():
+                yield self.convert_row(row)
