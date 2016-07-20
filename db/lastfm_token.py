@@ -20,19 +20,14 @@ class Token(object):
     @staticmethod
     def is_valid_api_key(api_key, user_id=None):
         """ Check if the api_key is valid or not, and return a boolean.
-        """
-        dic = {"api_key": api_key}
-        if user_id:
-            query = 'SELECT * FROM "user" WHERE auth_token=:api_key AND musicbrainz_id=:user_id'
-            dic['user_id'] = user_id
-        else:
-            query = 'SELECT * FROM "user" WHERE auth_token=:api_key'
 
-        with db.engine.connect() as connection:
-            result = connection.execute(text(query), dic)
-            if result.fetchone():
-                return True
-            return False
+            Last.fm uses a (api_key, user) mapping to detect the app which is making
+            the rquest, but since this mapping is private we have no way to authenticate
+            the api_key.
+
+            To prevent the abuse of the service, it falls back to ratelimiter.
+        """
+        return True
 
     @staticmethod
     def load(token, api_key=None):

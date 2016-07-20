@@ -39,10 +39,16 @@ class User(object):
             return None
 
     @staticmethod
-    def load_by_apikey(api_key):
+    def load_by_sessionkey(session_key, api_key):
         with db.engine.connect() as connection:
-            result = connection.execute(text(""" SELECT * FROM "user" WHERE
-                                            auth_token = :auth_token """), {"auth_token": api_key})
+            result = connection.execute(text("""
+                SELECT "user".*
+                  FROM session, "user"
+                 WHERE api_key = :api_key AND sid = :sk AND "user".id = session.user_id
+            """), {
+                "api_key": api_key,
+                "sk": session_key
+            })
             row = result.fetchone()
             if row:
                 return User(row)

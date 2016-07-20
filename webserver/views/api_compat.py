@@ -41,19 +41,18 @@ def api_auth_approve():
     """ Authenticate the user token provided.
     """
     user = User.load_by_name(current_user.musicbrainz_id)
+    if "token" not in request.form:
+        return render_template(
+            "user/auth.html",
+            user_id=current_user.musicbrainz_id,
+            msg="Missing required parameters. Please provide correct parameters and try again."
+        )
     token = Token.load(request.form['token'])
     if not token:
         return render_template(
             "user/auth.html",
             user_id=current_user.musicbrainz_id,
             msg="Either this token is already used or invalid. Please try again."
-        )
-
-    if token.api_key != user.api_key:
-        return render_template(
-            "user/auth.html",
-            user_id=current_user.musicbrainz_id,
-            msg="This token does not belong to this account. Please login in the correct account."
         )
     if token.user:
         return render_template(
@@ -75,23 +74,58 @@ def api_auth_approve():
     )
 
 
-@api_bp.route('/2.0/', methods=['POST'])
+@api_bp.route('/2.0/', methods=['POST', 'GET'])
 @ratelimit()
-def api_post():
+def api_methods():
     """ Receives the POST-API calls and redirects them to appropriate methods.
     """
-    method = request.form['method'].lower()
+    data = request.args if request.method == "GET" else request.form
+    method = data['method'].lower()
+
     def invalid_method_error(*args):
-        raise InvalidAPIUsage(3, output_format=request.args.get('format', "xml"))   # Invalid Method
+        raise InvalidAPIUsage(3, output_format=data.get('format', "xml"))   # Invalid Method
 
     return {
         'track.updatenowplaying': record_listens,
         'track.scrobble': record_listens,
         'auth.getsession': get_session,
         'auth.gettoken': get_token,
-        'user.getinfo': user_info
-    }.get(method, invalid_method_error)(request, request.form)
+        'user.getinfo': user_info,
+        'auth.getsessioninfo': session_info
+    }.get(method, invalid_method_error)(request, data)
 
+
+def session_info(request, data):
+    try:
+        sk = data["sk"]
+        api_key = data["api_key"]
+        output_format = data.get("format", "xml")
+        username = data["username"]
+    except KeyError:
+        raise InvalidAPIUsage(6, output_format=output_format)        # Missing Required Params
+
+    session = Session.load(sk, api_key)
+    if (not session) or User.load_by_name(username).id != session.user.id:
+        print("Invalid session")
+        raise InvalidAPIUsage(9, output_format=output_format)        # Invalid Session KEY
+
+    print("SESSION INFO for session %s, user %s" % (session.id, session.user.name))
+
+    doc, tag, text = Doc().tagtext()
+    with tag('lfm', status="ok"):
+        with tag('application'):
+            with tag('session'):
+                with tag('name'):
+                    text(session.user.name)
+                with tag('key'):
+                    text(session.id)
+                with tag('subscriber'):
+                    text('0')
+                with tag('country'):
+                    text('US')
+
+    return format_response('<?xml version="1.0" encoding="utf-8"?>\n' + yattag.indent(doc.getvalue()),
+                           output_format)
 
 
 def get_token(request, data):
@@ -122,8 +156,6 @@ def get_session(request, data):
     try:
         api_key = data['api_key']
         token = Token.load(data['token'], api_key)
-        if token.has_expired():
-            raise InvalidAPIUsage(15, output_format=output_format)  # Token expired
     except KeyError:
         raise InvalidAPIUsage(6, output_format=output_format)       # Missing Required Params
 
@@ -131,7 +163,8 @@ def get_session(request, data):
         if not Token.is_valid_api_key(api_key):
             raise InvalidAPIUsage(10, output_format=output_format)  # Invalid API_key
         raise InvalidAPIUsage(4, output_format=output_format)       # Invalid token
-
+    if token.has_expired():
+        raise InvalidAPIUsage(15, output_format=output_format)      # Token expired
     if not token.user:
         raise InvalidAPIUsage(14, output_format=output_format)      # Unauthorized token
 
@@ -151,7 +184,7 @@ def get_session(request, data):
                            data.get('format', "xml"))
 
 
-def _to_native_api(lookup, method="track.scrobble"):
+def _to_native_api(lookup, method="track.scrobble", output_format="xml"):
     """ Converts the list of listens received in the new Last.fm submission format
         to the native ListenBrainz API format.
         Returns: type_of_listen and listen_payload
@@ -222,7 +255,7 @@ def record_listens(request, data):
                 listen['timestamp'] = calendar.timegm(datetime.now().utctimetuple())
 
     # Convert to native payload then submit 'em.
-    listen_type, native_payload = _to_native_api(lookup, data['method'])
+    listen_type, native_payload = _to_native_api(lookup, data['method'], output_format)
     augmented_listens = insert_payload(native_payload, session.user.name, listen_type=listen_type)
 
     # With corrections than the original submitted listen.
@@ -323,11 +356,19 @@ def user_info(request, data):
     try:
         api_key = data['api_key']
         output_format = data.get("format", "xml")
+        sk = data.get('sk', None)
+        username = data.get("user", None)
+        if not (sk or username):
+            raise KeyError
 
-        user = User.load_by_apikey(api_key)
-        if not user:
+        if not Token.is_valid_api_key(api_key):
             raise InvalidAPIUsage(10, output_format=output_format)  # Invalid API key
-        query_user = User.load_by_name(data.get("user", None)) if data.get("user", None) else user
+
+        user = User.load_by_sessionkey(sk, api_key)
+        if not user:
+            raise InvalidAPIUsage(9, output_format=output_format)  # Invalid Session key
+
+        query_user = User.load_by_name(username) if (username and username != user.name) else user
         if not query_user:
             raise InvalidAPIUsage(7, output_format=output_format)  # Invalid resource specified
 
