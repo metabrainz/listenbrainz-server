@@ -14,18 +14,19 @@ class Session(object):
         self.user = User.load_by_id(userid)
 
     @staticmethod
-    def load(session, api_key=None):
+    def load(session_key, api_key):
         """ Load the session details from the database.
-            If the api_key is also supplied then verify it as well.
+            API_key and Session_key are required for a session.
         """
-        params = {'sid': session}
-        query = "SELECT * FROM session WHERE sid=:sid"
-        if api_key:
-            params['api_key'] = api_key
-            query = "SELECT * FROM session WHERE sid=:sid AND api_key=:api_key"
-
         with db.engine.connect() as connection:
-            result = connection.execute(text(query), params)
+            result = connection.execute(text("""
+                SELECT *
+                  FROM session
+                 WHERE sid=:sid AND api_key=:api_key
+            """), {
+                'sid': session_key,
+                'api_key': api_key
+            })
             row = result.fetchone()
             if row:
                 return Session(row)
@@ -38,7 +39,14 @@ class Session(object):
         """
         session = binascii.b2a_hex(os.urandom(20))
         with db.engine.connect() as connection:
-            connection.execute(text("INSERT INTO session (user_id, sid, api_key) VALUES (:user_id, :sid, :api_key)"),
-                               {'user_id': token.user.id, 'sid': session, 'api_key': token.api_key})
-        token.consume()
-        return Session.load(session)
+            result = connection.execute(text("""
+                INSERT INTO session (user_id, sid, api_key)
+                     VALUES (:user_id, :sid, :api_key)
+                  RETURNING *
+                 """), {
+                'user_id': token.user.id,
+                'sid': session,
+                'api_key': token.api_key
+            })
+            token.consume()
+            return Session(result.fetchone())
