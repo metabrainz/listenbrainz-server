@@ -127,7 +127,6 @@ class PostgresListenStore(ListenStore):
                 'user_id': user_id,
                 'from_id': from_id,
                 'to_id': to_id,
-
                 'limit': limit
             })
 
