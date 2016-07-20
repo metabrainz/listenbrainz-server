@@ -124,7 +124,7 @@ class PostgresListenStore(ListenStore):
             results = connection.execute(text("""
                 SELECT listen.id
                      , user_id
-                     , extract(epoch from ts)
+                     , ts AT TIME ZONE 'UTC'
                      , artist_msid
                      , album_msid
                      , recording_msid
