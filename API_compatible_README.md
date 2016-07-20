@@ -2,13 +2,11 @@
 
 *Instructions are for setting up API for Audacious client on Ubuntu. The steps can be modified for other clients as well.*
 
-**SOURCE_1**: http://redmine.audacious-media-player.org/boards/1/topics/788
-
 ### For development
-1. Install dependencies from **SOURCE_1** then clone the repo and install audacious.
+1. Install dependencies from [here](http://redmine.audacious-media-player.org/boards/1/topics/788) then clone the repo and install audacious.
 2. Before installing audacious-plugins, edit the file `audacious-plugins/src/scrobbler2/scrobbler.h` to update the following setting on line L28. This is required only because the local server does not have https support.  
   - `SCROBBLER_URL` to "http://ws.audioscrobbler.com/2.0/".  
-3. Compile and install the plugins from the instructions given in **SOURCE_1**.  
+3. Compile and install the plugins from the instructions given in [here](http://redmine.audacious-media-player.org/boards/1/topics/788).  
 4. Edit the `/etc/hosts` file and add the following entry.  
 
   > 127.0.0.1 ws.audioscrobbler.com  
