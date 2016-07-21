@@ -8,6 +8,9 @@ def create_postgres():
     from postgres_connection import init_postgres_connection
     return init_postgres_connection(current_app.config['SQLALCHEMY_DATABASE_URI'])
 
+def create_redis():
+    from redis_connection import init_redis_connection
+    return init_redis_connection(current_app.config['REDIS_HOST'])
 
 def schedule_jobs(app):
     """ Init all the scheduled jobs """
