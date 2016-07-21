@@ -15,6 +15,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.pool import NullPool
 import sqlalchemy.exc
 import pytz
+from redis import Redis
 
 MIN_ID = 1033430400     # approx when audioscrobbler was created
 ORDER_DESC = 0
@@ -120,6 +121,7 @@ class PostgresListenStore(ListenStore):
             to_ts: seconds since epoch, in float
         """
         with self.engine.connect() as connection:
+<<<<<<< ffd77b1b74e5c92a80adcbd52340cc39d48bf209
             results = connection.execute(text("""
                 SELECT listen.id
                      , user_id
@@ -147,3 +149,37 @@ class PostgresListenStore(ListenStore):
             for row in results.fetchall():
                 listens.append(self.convert_row(row))
             return listens
+=======
+            res = connection.execute(query, params)
+            return res.fetchall()
+
+    def fetch_listens_from_storage(self, user_id, from_id, to_id, limit, order, precision):
+        query = """ SELECT id, user_id, extract(epoch from ts), artist_msid, album_msid, recording_msid, raw_data """ + \
+                """ FROM listen WHERE user_id = %(user_id)s """ + \
+                """ AND extract(epoch from ts) > %(from_id)s AND extract(epoch from ts) < %(to_id)s  """ + \
+                """ ORDER BY extract(epoch from ts) """ + ORDER_TEXT[order] + """ LIMIT %(limit)s"""
+        params = {
+            'user_id': user_id,
+            'from_id': from_id,
+            'to_id': to_id,
+            'limit': limit
+        }
+
+        results = self.execute(query, params)
+        for row in results:
+            yield self.convert_row(row)
+
+
+class RedisListenStore(ListenStore):
+    def __init__(self, conf):
+        ListenStore.__init__(self, conf)
+        self.log.info('Connecting to redis: %s', conf['REDIS_HOST'])
+        self.redis = Redis(conf['REDIS_HOST'])
+
+    def get_playing_now(self, user_id):
+        """ Return the current playing song of the user """
+        data = self.redis.get('playing_now' + ':' + user_id)
+        if not data:
+            return None
+        return Listen().from_json(ujson.loads(data))
+>>>>>>> Add support for playing_now stream

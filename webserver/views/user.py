@@ -15,7 +15,6 @@ import ujson
 import zipfile
 import re
 import os
-import json, zipfile, re, os
 import pytz
 
 user_bp = Blueprint("user", __name__)
@@ -45,7 +44,9 @@ def profile(user_name):
     # Which database to use to showing user listens.
     db_conn = webserver.create_postgres()
 
-    user = _get_user(user_name) 
+    user = _get_user(user_name)
+    # Which database to use to show playing_now stream.
+    playing_now_conn = webserver.create_redis()
 
     # Getting data for current page
     max_ts = request.args.get("max_ts")
@@ -72,6 +73,16 @@ def profile(user_name):
             previous_listen_ts = previous_listens[-1].timestamp + 1
         else:
             previous_listen_ts = None
+
+            # If there are no previous listens then display now_playing
+            playing_now = playing_now_conn.get_playing_now(user_id)
+            if playing_now:
+                listen = {
+                    "track_metadata": playing_now.data,
+                    "playing_now": "true",
+                }
+                print('YES! playing now.....')
+                listens.insert(0, listen)
 
         # Checking if there is a "next" page...
         next_listens = db_conn.fetch_listens(user.id, limit=1, to_ts=listens[-1]["listened_at"])
