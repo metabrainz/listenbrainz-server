@@ -15,7 +15,12 @@ function select(selector, collection) {
 function map(applicable, collection) {
     var newCollection = [];
     for (var i = 0; i < collection.length; i++) {
-        newCollection.push(applicable(collection[i]));
+      var result = applicable(collection[i]);
+      if ('listened_at' in result) {
+        // If there is no 'listened_at' attribute then either the listen is invalid or the
+        // listen is currently playing. In both cases we need to skip the submission.
+        newCollection.push(result);
+      };
     }
     return newCollection;
 }
@@ -65,6 +70,13 @@ Scrobble.prototype.scrobbledAt = function () {
     if ('date' in this.rootScrobbleElement && 'uts' in this.rootScrobbleElement['date']) {
         return this.rootScrobbleElement['date']['uts'];
     } else {
+        /*
+        The audioscrobbler API's output differs when the user is playing song.
+        In case, when the user is playing song, the API returns 1st listen with
+        attribute as {"@attr": {"now_playing":"true"}} while other listens with
+        attribute as {"date": {"utc":"12345756", "#text":"21 Jul 2016, 10:22"}}
+        We need to only submit listens which were played in the past.
+        */
         return "";
     }
 };
