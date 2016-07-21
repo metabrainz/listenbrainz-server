@@ -10,7 +10,7 @@ class Listen(object):
                  recording_msid=None, data=None):
         self.user_id = user_id
         self.timestamp = timestamp
-        self.ts_since_epoch = calendar.timegm(self.timestamp.utctimetuple())
+        self.ts_since_epoch = calendar.timegm(self.timestamp.utctimetuple()) if self.timestamp else None
         self.artist_msid = artist_msid
         self.album_msid = album_msid
         self.recording_msid = recording_msid
