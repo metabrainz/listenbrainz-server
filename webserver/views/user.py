@@ -81,7 +81,6 @@ def profile(user_name):
                     "track_metadata": playing_now.data,
                     "playing_now": "true",
                 }
-                print('YES! playing now.....')
                 listens.insert(0, listen)
 
         # Checking if there is a "next" page...
