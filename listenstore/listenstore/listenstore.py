@@ -83,7 +83,7 @@ class PostgresListenStore(ListenStore):
                 try:
                     params = {
                         'user_id': listen.user_id,
-                        'ts': listen.timestamp,
+                        'ts': listen.ts_since_epoch,
                         'artist_msid': uuid.UUID(listen.artist_msid),
                         'album_msid': uuid.UUID(listen.album_msid) if listen.album_msid is not None else None,
                         'recording_msid': uuid.UUID(listen.recording_msid),

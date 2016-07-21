@@ -11,6 +11,7 @@ import uuid
 import pytz
 import db.user
 
+
 def generate_data(from_date, num_records):
     test_data = []
     current_date = to_epoch(from_date)
@@ -27,7 +28,6 @@ def generate_data(from_date, num_records):
                       recording_msid=str(uuid.uuid4()))
         test_data.append(item)
     return test_data
-
 
 def to_epoch(date):
     return int(time.mktime(date.timetuple()))
