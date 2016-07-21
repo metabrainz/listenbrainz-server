@@ -77,6 +77,8 @@ def submit_listen():
     except Exception, e:
         raise InternalServerError("Something went wrong. Please try again.")
 
+    _send_listens_to_redis(data['listen_type'],
+                                _payload_to_augmented_list(payload, data['listen_type'], user_id))
     return "success"
 
 
@@ -126,8 +128,6 @@ def get_listens(user_id):
         'count': len(listen_data),
         'listens': listen_data,
     }})
-
-
 
 
 def _parse_int_arg(name, default=None):
@@ -249,20 +249,30 @@ def _messybrainz_lookup(listens):
     return augmented_listens
 
 
-def _validate_listen(listen):
+def _validate_listen(listen, listen_type):
     """Make sure that required keys are present, filled out and not too large."""
 
-    if not 'listened_at' in listen:
-        _log_raise_400("JSON document must contain the key listened_at at the top level.", listen)
+    if listen_type in ('single', 'import'):
+        if 'listened_at' not in listen:
+            _log_raise_400("JSON document must contain the key listened_at at the top level.", listen)
 
-    try:
-        listen['listened_at'] = int(listen['listened_at'])
-    except ValueError:
-        _log_raise_400("JSON document must contain an int value for listened_at.", listen)
+        try:
+            listen['listened_at'] = int(listen['listened_at'])
+        except ValueError:
+            _log_raise_400("JSON document must contain an int value for listened_at.", listen)
 
-    if 'listened_at' in listen and 'track_metadata' in listen and len(listen) > 2:
-        _log_raise_400("JSON document may only contain listened_at and "
-                       "track_metadata top level keys", listen)
+        if 'listened_at' in listen and 'track_metadata' in listen and len(listen) > 2:
+            _log_raise_400("JSON document may only contain listened_at and "
+                           "track_metadata top level keys", listen)
+
+    elif listen_type == 'playing_now':
+        if 'listened_at' in listen:
+            _log_raise_400("JSON document must not contain listened_at while submitting "
+                           "playing_now.", listen)
+
+        if 'track_metadata' in listen and len(listen) > 1:
+            _log_raise_400("JSON document may only contain track_metadata as top level "
+                           "key when submitting now_playing.", listen)
 
     # Basic metadata
     try:
@@ -330,14 +340,14 @@ def _convert_to_native_format(data):
     return payload
 
 
-def _payload_to_augmented_list(payload, user_id):
+def _payload_to_augmented_list(payload, listen_type, user_id):
     """ Converts the payload to augmented list after lookup
         in the MessyBrainz database
     """
     augmented_listens = []
     msb_listens = []
     for listen in payload:
-        _validate_listen(listen)
+        _validate_listen(listen, listen_type)
         listen['user_id'] = user_id
 
         msb_listens.append(listen)
