@@ -104,8 +104,8 @@ def get_listens(user_id):
     listens = db_conn.fetch_listens(
         user_id,
         limit=min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET),
-        from_id=min_ts,
-        to_id=max_ts,
+        from_ts=min_ts,
+        to_ts=max_ts,
     )
     listen_data = []
     for listen in listens:
