@@ -163,4 +163,4 @@ class RedisListenStore(ListenStore):
             return None
         data = ujson.loads(data)
         data.update({'listened_at': datetime.utcnow()})
-        return Listen().from_json(data)
+        return Listen.from_json(data)
