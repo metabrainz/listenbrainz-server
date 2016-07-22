@@ -14,6 +14,7 @@ from dateutil.relativedelta import relativedelta
 from sqlalchemy import create_engine, text
 from sqlalchemy.pool import NullPool
 import sqlalchemy.exc
+import pytz
 
 MIN_ID = 1033430400     # approx when audioscrobbler was created
 ORDER_DESC = 0
@@ -126,14 +127,14 @@ class PostgresListenStore(ListenStore):
                      , listen_json
                  WHERE listen.id = listen_json.id
                    AND user_id = :user_id
-                   AND ts > :from_ts
-                   AND ts < :to_ts
+                   AND ts AT TIME ZONE 'UTC' > :from_ts
+                   AND ts AT TIME ZONE 'UTC' < :to_ts
               ORDER BY ts """ + ORDER_TEXT[order] + """
                  LIMIT :limit
             """), {
                 'user_id': user_id,
-                'from_ts': datetime.fromtimestamp(from_ts),
-                'to_ts': datetime.fromtimestamp(to_ts),
+                'from_ts': pytz.utc.localize(datetime.utcfromtimestamp(from_ts)),
+                'to_ts': pytz.utc.localize(datetime.utcfromtimestamp(to_ts)),
                 'limit': limit
             })
 
