@@ -35,24 +35,24 @@ class ListenStore(object):
         """ Override this method in PostgresListenStore class """
         raise NotImplementedError()
 
-    def fetch_listens(self, user_id, from_id=None, to_id=None, limit=None):
-        """ Check from_id, to_id, and limit for fetching listens
+    def fetch_listens(self, user_id, from_ts=None, to_ts=None, limit=None):
+        """ Check from_ts, to_ts, and limit for fetching listens
             and set them to default values if not given.
         """
-        if from_id and to_id:
-            raise ValueError("You cannot specify from_id and to_id at the same time.")
+        if from_ts and to_ts:
+            raise ValueError("You cannot specify from_ts and to_ts at the same time.")
 
-        if from_id:
+        if from_ts:
             order = ORDER_ASC
         else:
             order = ORDER_DESC
 
         precision = 'month'
-        if from_id is None:
-            from_id = MIN_ID
-        if to_id is None:
-            to_id = self.max_id()
-        return self.fetch_listens_from_storage(user_id, from_id, to_id, limit, order, precision)
+        if from_ts is None:
+            from_ts = MIN_ID
+        if to_ts is None:
+            to_ts = self.max_id()
+        return self.fetch_listens_from_storage(user_id, from_ts, to_ts, limit, order, precision)
 
 
 class PostgresListenStore(ListenStore):
@@ -106,6 +106,13 @@ class PostgresListenStore(ListenStore):
                     self.log.error(e)
 
     def fetch_listens_from_storage(self, user_id, from_ts, to_ts, limit, order, precision):
+        """ The timestamps are stored as UTC in the postgres datebase while on retrieving
+            the value they are converted to the local server's timezone. So to compare
+            datetime object we need to create a object in the same timezone as the server.
+
+            from_ts: seconds since epoch, in float
+            to_ts: seconds since epoch, in float
+        """
         with self.engine.connect() as connection:
             results = connection.execute(text("""
                 SELECT listen.id
@@ -125,8 +132,8 @@ class PostgresListenStore(ListenStore):
                  LIMIT :limit
             """), {
                 'user_id': user_id,
-                'from_ts': datetime.utcfromtimestamp(from_ts),
-                'to_ts': datetime.utcfromtimestamp(to_ts),
+                'from_ts': datetime.fromtimestamp(from_ts),
+                'to_ts': datetime.fromtimestamp(to_ts),
                 'limit': limit
             })
 

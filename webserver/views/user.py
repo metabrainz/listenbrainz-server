@@ -48,10 +48,10 @@ def profile(user_id):
         try:
             max_ts = int(float(max_ts))
         except ValueError:
-            raise BadRequest("Incorrect timestamp argument to_id:" %
-                             request.args.get("to_id"))
+            raise BadRequest("Incorrect timestamp argument to_ts:" %
+                             request.args.get("to_ts"))
     listens = []
-    for listen in db_conn.fetch_listens(user_id, limit=25, to_id=max_ts):
+    for listen in db_conn.fetch_listens(user_id, limit=25, to_ts=max_ts):
         listens.append({
             "track_metadata": listen.data,
             "listened_at": listen.timestamp,
@@ -60,16 +60,16 @@ def profile(user_id):
 
     if listens:
         # Checking if there is a "previous" page...
-        previous_listens = list(db_conn.fetch_listens(user_id, limit=25, from_id=listens[0]["listened_at"]))
+        previous_listens = db_conn.fetch_listens(user_id, limit=25, from_ts=listens[0]["listened_at"])
         if previous_listens:
             # Getting from the last item because `fetch_listens` returns in ascending
-            # order when `from_id` is used.
+            # order when `from_ts` is used.
             previous_listen_ts = previous_listens[-1].timestamp + 1
         else:
             previous_listen_ts = None
 
         # Checking if there is a "next" page...
-        next_listens = list(db_conn.fetch_listens(user_id, limit=1, to_id=listens[-1]["listened_at"]))
+        next_listens = db_conn.fetch_listens(user_id, limit=1, to_ts=listens[-1]["listened_at"])
         if next_listens:
             next_listen_ts = listens[-1]["listened_at"]
         else:
