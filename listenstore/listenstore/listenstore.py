@@ -105,7 +105,7 @@ class PostgresListenStore(ListenStore):
                 except Exception, e:     # Log errors
                     self.log.error(e)
 
-    def fetch_listens_from_storage(self, user_id, from_id, to_id, limit, order, precision):
+    def fetch_listens_from_storage(self, user_id, from_ts, to_ts, limit, order, precision):
         with self.engine.connect() as connection:
             results = connection.execute(text("""
                 SELECT listen.id
@@ -119,16 +119,18 @@ class PostgresListenStore(ListenStore):
                      , listen_json
                  WHERE listen.id = listen_json.id
                    AND user_id = :user_id
-                   AND extract(epoch from ts) > :from_id
-                   AND extract(epoch from ts) < :to_id
-              ORDER BY extract(epoch from ts) """ + ORDER_TEXT[order] + """
+                   AND ts > :from_ts
+                   AND ts < :to_ts
+              ORDER BY ts """ + ORDER_TEXT[order] + """
                  LIMIT :limit
             """), {
                 'user_id': user_id,
-                'from_id': from_id,
-                'to_id': to_id,
+                'from_ts': datetime.utcfromtimestamp(from_ts),
+                'to_ts': datetime.utcfromtimestamp(to_ts),
                 'limit': limit
             })
 
+            listens = []
             for row in results.fetchall():
-                yield self.convert_row(row)
+                listens.append(self.convert_row(row))
+            return listens
