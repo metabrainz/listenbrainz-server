@@ -3,7 +3,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 from datetime import datetime, timedelta
 from listenstore.listen import Listen
 import uuid
-
+import pytz
 
 def generate_data(from_date, num_records):
     test_data = []
@@ -19,4 +19,4 @@ def generate_data(from_date, num_records):
 
 
 def to_epoch(date):
-    return (date - datetime.utcfromtimestamp(0)).total_seconds()
+    return (date - pytz.utc.localize(datetime.utcfromtimestamp(0))).total_seconds()
