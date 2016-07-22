@@ -93,7 +93,11 @@ class PostgresListenStore(ListenStore):
                         INSERT INTO listen(user_id, ts, artist_msid, album_msid, recording_msid)
                              VALUES (:user_id, to_timestamp(:ts), :artist_msid, :album_msid,
                                     :recording_msid)
-                        ON CONFLICT DO NOTHING
+                                 ON CONFLICT(user_id, ts)
+                                 DO UPDATE
+                                SET artist_msid = EXCLUDED.artist_msid
+                                  , album_msid = EXCLUDED.album_msid
+                                  , recording_msid = EXCLUDED.recording_msid
                           RETURNING id
                     """), params)
                     params['_id'] = res.fetchone()[0]
@@ -101,7 +105,9 @@ class PostgresListenStore(ListenStore):
                     res = connection.execute(text("""
                         INSERT INTO listen_json(id, data)
                              VALUES (:_id, :data)
-                        ON CONFLICT DO NOTHING
+                                 ON CONFLICT(id)
+                                 DO UPDATE
+                                SET data = EXCLUDED.data
                     """), params)
                 except Exception, e:     # Log errors
                     self.log.error(e)

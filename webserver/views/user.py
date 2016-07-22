@@ -14,6 +14,7 @@ from webserver.views.api import _messybrainz_lookup, insert_json, MAX_ITEMS_PER_
 from webserver.utils import sizeof_readable
 from os import path, makedirs
 import json, zipfile, re, os
+import pytz
 
 user_bp = Blueprint("user", __name__)
 
@@ -55,7 +56,7 @@ def profile(user_id):
         listens.append({
             "track_metadata": listen.data,
             "listened_at": listen.timestamp,
-            "listened_at_iso": datetime.fromtimestamp(int(listen.timestamp)).isoformat() + "Z",
+            "listened_at_iso": pytz.utc.localize(datetime.utcfromtimestamp(int(listen.timestamp))).isoformat(),
         })
 
     if listens:

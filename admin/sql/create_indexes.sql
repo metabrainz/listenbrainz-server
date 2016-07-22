@@ -7,4 +7,6 @@ CREATE UNIQUE INDEX user_id_ts_ndx_listen ON "listen" (user_id, ts);
 CREATE INDEX user_id_ndx_listen ON "listen" (user_id);
 CREATE INDEX ts_ndx_listen ON "listen" (ts);
 
+CREATE UNIQUE INDEX id_listen_json ON "listen_json" (id);
+
 COMMIT;
