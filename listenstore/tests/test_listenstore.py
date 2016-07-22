@@ -28,6 +28,6 @@ class TestListenStore(DatabaseTestCase):
         self.log.info("Test data inserted")
 
     def test_fetch_listens(self):
-        date = datetime(2015, 9, 3, 0, 0, 0)
+        date = pytz.utc.localize(datetime(2015, 9, 3, 0, 0, 0))
         listens = self.logstore.fetch_listens(user_id="test", from_ts=to_epoch(date), limit=10)
         self.assertEquals(len(list(listens)), 10)
