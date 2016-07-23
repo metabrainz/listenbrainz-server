@@ -37,6 +37,9 @@ MUSICBRAINZ_CLIENT_SECRET = "CLIENT_SECRET"
 LASTFM_API_KEY = "USE_LASTFM_API_KEY"
 
 
+# Max time in seconds after which the playing_now stream will expire.
+PLAYING_NOW_MAX_DURATION = 5 * 60
+
 # LOGGING
 
 #LOG_FILE_ENABLED = True
