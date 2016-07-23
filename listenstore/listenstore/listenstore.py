@@ -62,7 +62,7 @@ class PostgresListenStore(ListenStore):
         ListenStore.__init__(self, conf)
         self.log.info('Connecting to postgresql: %s', conf['SQLALCHEMY_DATABASE_URI'])
         self.engine = create_engine(conf['SQLALCHEMY_DATABASE_URI'], poolclass=NullPool)
-        if 'PG_ASYNC_LISTEN_COMMIT' in conf and conf['PG_ASYNC_LISTEN_COMMIT'] == "True":
+        if 'PG_ASYNC_LISTEN_COMMIT' in conf and conf['PG_ASYNC_LISTEN_COMMIT']:
             self.log.info('Enabling Asynchronous listens commit for Postgresql')
             with self.engine.connect() as connection:
                 connection.execute("SET synchronous_commit TO off")
