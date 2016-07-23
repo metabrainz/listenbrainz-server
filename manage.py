@@ -1,6 +1,5 @@
 from __future__ import print_function
 import db
-from webserver import create_app, schedule_jobs
 import webserver
 from werkzeug.serving import run_simple
 import subprocess
@@ -37,8 +36,8 @@ def runserver(host, port, debug=False):
 
 @cli.command()
 @click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
-@click.option("--skip-create", "-s", is_flag=True, help="Skip creating database and user. Tables/indexes only.")
-def init_db(force, skip_create):
+@click.option("-create-db", is_flag=True, help="Skip creating database and user. Tables/indexes only.")
+def init_db(force, create_db):
     """Initializes database.
 
     This process involves several steps:
@@ -56,8 +55,7 @@ def init_db(force, skip_create):
         if exit_code != 0:
             raise Exception('Failed to drop existing database and user! Exit code: %i' % exit_code)
 
-
-    if not skip_create:
+    if create_db:
         print('Creating user and a database...')
         exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER +
                                     ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
@@ -86,6 +84,7 @@ def init_db(force, skip_create):
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
 
     print("Done!")
+
 
 @cli.command()
 @click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
@@ -129,16 +128,11 @@ def init_test_db(force=False):
 
     print("Done!")
 
-def run_script(uri, script):
-    return subprocess.call('psql -U ' + uri.username + ' -d messybrainz ' +
-                           '-h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
-                           os.path.join(MSB_ADMIN_SQL_DIR, script),
-                           shell=True)
 
 @cli.command()
 @click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
-@click.option("--skip-create", "-s", is_flag=True, help="Skip creating database and user. Tables/indexes only.")
-def init_msb_db(force, skip_create):
+@click.option("--create-db", is_flag=True, help="Skip creating database and user. Tables/indexes only.")
+def init_msb_db(force, create_db):
     """Initializes database.
 
     This process involves several steps:
@@ -146,18 +140,26 @@ def init_msb_db(force, skip_create):
     2. Primary keys and foreign keys are created.
     3. Indexes are created.
     """
+    uri = urlsplit(application.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
 
-    uri = urlsplit(create_app().config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
+    def run_psql_script(script, superuser=False):
+        if superuser:
+            username = config.PG_SUPER_USER
+        else:
+            username = uri.username
+        return subprocess.call(
+            'psql -U ' + username + ' -d messybrainz ' +
+            '-h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
+            os.path.join(MSB_ADMIN_SQL_DIR, script),
+            shell=True,
+        )
+
     if force:
-        exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER +
-                                    ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
-                                    os.path.join(MSB_ADMIN_SQL_DIR, 'drop_db.sql'),
-                                    shell=True)
+        exit_code = run_psql_script('drop_db.sql', superuser=True)
         if exit_code != 0:
             raise Exception('Failed to drop existing database and user! Exit code: %i' % exit_code)
 
-
-    if not skip_create:
+    if create_db:
         print('Creating user and a database...')
         exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER +
                                     ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
@@ -167,29 +169,30 @@ def init_msb_db(force, skip_create):
             raise Exception('Failed to create new database and user! Exit code: %i' % exit_code)
 
     print('Creating database extensions...')
-    exit_code = run_script(uri, 'create_extensions.sql')
+    exit_code = run_psql_script('create_extensions.sql', superuser=True)
     if exit_code != 0:
         raise Exception('Failed to create database extensions! Exit code: %i' % exit_code)
 
     print('Creating tables...')
-    exit_code = run_script(uri, 'create_tables.sql')
+    exit_code = run_psql_script('create_tables.sql')
     if exit_code != 0:
         raise Exception('Failed to create database tables! Exit code: %i' % exit_code)
 
     print('Creating primary and foreign keys...')
-    exit_code = run_script(uri, 'create_primary_keys.sql')
+    exit_code = run_psql_script('create_primary_keys.sql')
     if exit_code != 0:
         raise Exception('Failed to create primary keys! Exit code: %i' % exit_code)
-    exit_code = run_script(uri, 'create_foreign_keys.sql')
+    exit_code = run_psql_script('create_foreign_keys.sql')
     if exit_code != 0:
         raise Exception('Failed to create foreign keys! Exit code: %i' % exit_code)
 
     print('Creating indexes...')
-    exit_code = run_script(uri, 'create_indexes.sql')
+    exit_code = run_psql_script('create_indexes.sql')
     if exit_code != 0:
         raise Exception('Failed to create indexes keys! Exit code: %i' % exit_code)
 
     print("Done!")
+
 
 if __name__ == '__main__':
     cli()
