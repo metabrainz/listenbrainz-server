@@ -1,18 +1,18 @@
 from flask import Flask, current_app
 import sys
 import os
-import messybrainz
-import messybrainz.db
+from webserver.scheduler import ScheduledJobs
 
-from .scheduler import ScheduledJobs
 
 def create_postgres():
     from postgres_connection import init_postgres_connection
     return init_postgres_connection(current_app.config['SQLALCHEMY_DATABASE_URI'])
 
+
 def schedule_jobs(app):
     """ Init all the scheduled jobs """
     app.scheduledJobs = ScheduledJobs(app.config)
+
 
 def create_app():
     app = Flask(__name__)
