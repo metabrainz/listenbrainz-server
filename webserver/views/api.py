@@ -27,8 +27,6 @@ DEFAULT_ITEMS_PER_GET = 25
 
 MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
 
-# Max time in seconds after which the playing_now stream will expire.
-PLAYING_NOW_MAX_DURATION = 5 * 60
 
 @api_bp.route("/1/submit-listens", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
@@ -165,7 +163,7 @@ def _send_listens_to_redis(listen_type, listens):
         if listen_type == 'playing_now':
             try:
                 p.setex('playing_now' + ':' + listen['user_id'],
-                        ujson.dumps(listen).encode('utf-8'), PLAYING_NOW_MAX_DURATION)
+                        ujson.dumps(listen).encode('utf-8'), current_app.config['PLAYING_NOW_MAX_DURATION'])
             except:
                 current_app.logger.error("Redis rpush playing_now write error: " + str(sys.exc_info()[0]))
                 raise InternalServerError("Cannot record playing_now at this time.")

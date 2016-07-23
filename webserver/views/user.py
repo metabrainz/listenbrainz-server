@@ -74,15 +74,6 @@ def profile(user_name):
         else:
             previous_listen_ts = None
 
-            # If there are no previous listens then display now_playing
-            playing_now = playing_now_conn.get_playing_now(user_id)
-            if playing_now:
-                listen = {
-                    "track_metadata": playing_now.data,
-                    "playing_now": "true",
-                }
-                listens.insert(0, listen)
-
         # Checking if there is a "next" page...
         next_listens = db_conn.fetch_listens(user.id, limit=1, to_ts=listens[-1]["listened_at"])
         if next_listens:
@@ -93,6 +84,16 @@ def profile(user_name):
     else:
         previous_listen_ts = None
         next_listen_ts = None
+
+    # If there are no previous listens then display now_playing
+    if not previous_listen_ts:
+        playing_now = playing_now_conn.get_playing_now(user_id)
+        if playing_now:
+            listen = {
+                "track_metadata": playing_now.data,
+                "playing_now": "true",
+            }
+            listens.insert(0, listen)
 
     return render_template(
         "user/profile.html",
