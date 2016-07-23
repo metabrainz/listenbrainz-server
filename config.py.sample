@@ -18,8 +18,8 @@ TEST_SQLALCHEMY_DATABASE_URI = "postgresql://lb_test:lb_test@db:5432/lb_test"
 MAX_POSTGRES_LISTEN_HISTORY = "-1"
 # Log Postgres queries if they execeed this time, in milliseconds.
 PG_QUERY_TIMEOUT = "3000"
-# Disable synchronous_commit to OFF for Postgres. Default: False
-PG_ASYNC_LISTEN_COMMIT = "False"
+# Set to True to enable 'synchronous_commit' for Postgres. Default: False
+PG_ASYNC_LISTEN_COMMIT = False
 # The name of a postgres user who has superuser privileges. Your local user should
 # be able to connect to the database with this user.
 PG_SUPER_USER = "postgres"
