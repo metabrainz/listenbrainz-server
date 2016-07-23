@@ -33,10 +33,10 @@ class Token(object):
     def load(token, api_key=None):
         """ Load the token from database. Check api_key as well if present.
         """
-        query = "SELECT * FROM token WHERE token=:token"
+        query = "SELECT * FROM api_compat.token WHERE token=:token"
         params = {'token': token}
         if api_key:
-            query = "SELECT * FROM token WHERE token=:token AND api_key=:api_key"
+            query = "SELECT * FROM api_compat.token WHERE token=:token AND api_key=:api_key"
             params['api_key'] = api_key
 
         with db.engine.connect() as connection:
@@ -50,7 +50,7 @@ class Token(object):
     def generate(api_key):
         token = binascii.b2a_hex(os.urandom(20))
         with db.engine.connect() as connection:
-            q = """ INSERT INTO token (token, api_key) VALUES (:token, :api_key)
+            q = """ INSERT INTO api_compat.token (token, api_key) VALUES (:token, :api_key)
                     ON CONFLICT(api_key) DO UPDATE SET token = EXCLUDED.token, ts = EXCLUDED.ts
                 """
             connection.execute(text(q), {'token': token, 'api_key': api_key})
@@ -66,7 +66,7 @@ class Token(object):
         """ Authenticate the token. User has to be present.
         """
         with db.engine.connect() as connection:
-            connection.execute(text("UPDATE token SET user_id = :uid WHERE token=:token"),
+            connection.execute(text("UPDATE api_compat.token SET user_id = :uid WHERE token=:token"),
                                {'uid': User.get_id(user), 'token': self.token})
         self.user = User.load_by_name(user)
 
@@ -74,4 +74,4 @@ class Token(object):
         """ Use token to be able to create a new session.
         """
         with db.engine.connect() as connection:
-            connection.execute(text("DELETE FROM token WHERE id=:id"), {'id': self.id})
+            connection.execute(text("DELETE FROM api_compat.token WHERE id=:id"), {'id': self.id})

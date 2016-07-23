@@ -43,7 +43,7 @@ class User(object):
         with db.engine.connect() as connection:
             result = connection.execute(text("""
                 SELECT "user".*
-                  FROM session, "user"
+                  FROM api_compat.session, "user"
                  WHERE api_key = :api_key AND sid = :sk AND "user".id = session.user_id
             """), {
                 "api_key": api_key,

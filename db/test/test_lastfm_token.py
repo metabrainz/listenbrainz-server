@@ -28,7 +28,7 @@ class TestAPICompatTokenClass(DatabaseTestCase):
 
     def test_is_valid_api_key(self):
         self.assertTrue(Token.is_valid_api_key(self.user.api_key))
-        self.assertFalse(Token.is_valid_api_key(str(uuid.uuid4())))
+        self.assertTrue(Token.is_valid_api_key(str(uuid.uuid4())))
 
     def test_load(self):
         token = Token.generate(self.user.api_key)
