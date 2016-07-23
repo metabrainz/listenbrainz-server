@@ -42,11 +42,11 @@ def lastfmscraper(user_name):
 @user_bp.route("/<user_name>")
 def profile(user_name):
     # Which database to use to showing user listens.
-    db_conn = webserver.create_postgres()
+    db_conn = webserver.postgres_connection._postgres
 
     user = _get_user(user_name)
     # Which database to use to show playing_now stream.
-    playing_now_conn = webserver.create_redis()
+    playing_now_conn = webserver.redis_connection._redis
 
     # Getting data for current page
     max_ts = request.args.get("max_ts")
@@ -136,7 +136,7 @@ def import_data():
 def export_data():
     """ Exporting the data to json """
     if request.method == "POST":
-        db_conn = webserver.create_postgres()
+        db_conn = webserver.create_postgres(current_app)
         filename = current_user.musicbrainz_id + "_lb-" + datetime.today().strftime('%Y-%m-%d') + ".json"
 
         # Fetch output and convert it into dict with keys as indexes
