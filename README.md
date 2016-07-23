@@ -54,8 +54,8 @@ This should start the containers and allow you to setup the database.
 
 To initialize the database (create user, tables, etc.) run these commands:
 
-    $ docker-compose run web python manage.py init_db --skip-create
-    $ docker-compose run web python manage.py init_msb_db 
+    $ docker-compose run web python manage.py init_db 
+    $ docker-compose run web python manage.py init_msb_db --create-db
 
 After that server should be ready to go. Go to http://localhost:8000 and load the 
 ListenBrainz home page.
