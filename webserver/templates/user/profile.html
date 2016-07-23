@@ -31,21 +31,19 @@
             </thead>
             <tbody>
             {% for listen in listens %}
-
-            {% if listen.playing_now %}
-            <tr id="playing_now">
-              <td>{{ listen.track_metadata.artist_name }}</td>
-              <td>{{ listen.track_metadata.track_name }}</td>
-              <td><span class="glyphicon glyphicon-play" aria-hidden="true"></span> Playing now</td>
-            </tr>
-            {% else %}
-            <tr>
-              <td>{{ listen.track_metadata.artist_name }}</td>
-              <td>{{ listen.track_metadata.track_name }}</td>
-              <td><abbr class="timeago" title="{{ listen.listened_at_iso }}">{{ listen.listened_at_iso }}</abbr></td>
-            </tr>
-            {% endif %}
-
+              {% if listen.playing_now %}
+                <tr id="playing_now">
+                  <td>{{ listen.track_metadata.artist_name }}</td>
+                  <td>{{ listen.track_metadata.track_name }}</td>
+                  <td><span class="glyphicon glyphicon-play" aria-hidden="true"></span> Playing now</td>
+                </tr>
+              {% else %}
+                <tr>
+                  <td>{{ listen.track_metadata.artist_name }}</td>
+                  <td>{{ listen.track_metadata.track_name }}</td>
+                  <td><abbr class="timeago" title="{{ listen.listened_at_iso }}">{{ listen.listened_at_iso }}</abbr></td>
+                </tr>
+              {% endif %}
             {% endfor %}
             </tbody>
           </table>
