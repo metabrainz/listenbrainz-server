@@ -26,6 +26,7 @@ class DatabaseTestCase(unittest.TestCase):
         self.init_db()
 
     def init_db(self):
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_schema.sql'))
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_primary_keys.sql'))
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
@@ -33,6 +34,8 @@ class DatabaseTestCase(unittest.TestCase):
 
     def drop_tables(self):
         with db.engine.connect() as connection:
+            connection.execute('DROP SCHEMA IF EXISTS api_compat         CASCADE')
+
             connection.execute('DROP TABLE IF EXISTS "user"              CASCADE')
             connection.execute('DROP TABLE IF EXISTS listen              CASCADE')
             connection.execute('DROP TABLE IF EXISTS api_compat.token    CASCADE')
