@@ -9,9 +9,6 @@ env
 venv
 /build
 
-# Node
-node_modules
-
 # Logs
 *.log
 pip-log.txt
@@ -21,14 +18,9 @@ pip-delete-this-directory.txt
 data
 pgdata
 
-# Backups and dumps
-/export/
-
 # Test results
 htmlcov
 .coverage
 
 # Vagrant
 .vagrant
-
-.transifexrc
