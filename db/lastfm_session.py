@@ -21,7 +21,7 @@ class Session(object):
         with db.engine.connect() as connection:
             result = connection.execute(text("""
                 SELECT *
-                  FROM session
+                  FROM api_compat.session
                  WHERE sid=:sid AND api_key=:api_key
             """), {
                 'sid': session_key,
@@ -40,7 +40,7 @@ class Session(object):
         session = binascii.b2a_hex(os.urandom(20))
         with db.engine.connect() as connection:
             result = connection.execute(text("""
-                INSERT INTO session (user_id, sid, api_key)
+                INSERT INTO api_compat.session (user_id, sid, api_key)
                      VALUES (:user_id, :sid, :api_key)
                   RETURNING *
                  """), {

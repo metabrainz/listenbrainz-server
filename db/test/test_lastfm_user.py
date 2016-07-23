@@ -48,10 +48,6 @@ class TestAPICompatUserClass(DatabaseTestCase):
         assert isinstance(user, User) == True
         self.assertDictEqual(user.__dict__, self.user.__dict__)
 
-    def test_user_load_by_apikey(self):
-        user = User.load_by_apikey(self.user.api_key)
-        self.assertDictEqual(user.__dict__, self.user.__dict__)
-
     def test_user_get_play_count(self):
         count = User.get_play_count(self.user.name)
         self.assertEqual(count, 100)

@@ -33,14 +33,8 @@ class TestAPICompatSessionClass(DatabaseTestCase):
         self.assertDictEqual(user.__dict__, session.user.__dict__)
         session.user = None
 
-        # Load with session key
-        session2 = Session.load(session.sid)
+        # Load with session_key + api_key
+        session2 = Session.load(session.sid, session.api_key)
         self.assertDictEqual(user.__dict__, session2.__dict__['user'].__dict__)
         session2.user = None
         self.assertDictEqual(session.__dict__, session2.__dict__)
-
-        # Load with session_key + api_key
-        session3 = Session.load(session.sid, session.api_key)
-        self.assertDictEqual(user.__dict__, session3.__dict__['user'].__dict__)
-        session3.user = None
-        self.assertDictEqual(session.__dict__, session3.__dict__)
