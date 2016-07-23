@@ -14,11 +14,14 @@
  Flush dns and restart network manager using:  
  `sudo /etc/init.d/dns-clean start`  
  `sudo /etc/init.d/networking restart`  
-5. Register an application on musicbrainz with the following callback URL "http://\<hostname\>:\<port\>/login/musicbrainz/post" and update the received client-id and client-secret in config.py of listenbrainz. hostname and port number are as per the server.  
+5. Register an application on musicbrainz with the following callback URL "http://\<HOSTURL\>/login/musicbrainz/post" and update the received client-id and client-secret in config.py of listenbrainz. HOSTURL should be as per the settings of the server. Ex, "localhost:8080"  
 6. In audacious, goto, File > Settings > Plugins > Scrobbler2.0 and enable it. Now Open its settings and then authenticate.  
-7. When you get a URL from your application which starts http://last.fm/api/auth, replace it with http://\<hostname\>:\<port\>/.../../...". Hostname is listenbrainz.org if you are not running a local server.  
+7. When you get a URL from your application which look like this "http://last.fm/api/auth/?api_key=as3..234&..", replace it with "http://\<HOSTURL\>/api/auth/?api_key=as3..234&..".
+  - If you are running a local server, then HOSTURL should be similar to "localhost:8080".  
+  - If you are not running the server, then HOSTURL should be "listenbrainz.org".  
 8. Once done, Enjoy!
 
 
 ### For users
 - Repeat all the above steps, except for steps `Step2` and `Step5`
+- For `Step7` choose the 2nd option.

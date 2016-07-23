@@ -77,42 +77,43 @@ def api_auth_approve():
 @api_bp.route('/2.0/', methods=['POST', 'GET'])
 @ratelimit()
 def api_methods():
-    """ Receives the POST-API calls and redirects them to appropriate methods.
+    """ Receives both (GET & POST)-API calls and redirects them to appropriate methods.
     """
-    data = request.args if request.method == "GET" else request.form
+    data = request.args if request.method == 'GET' else request.form
     method = data['method'].lower()
 
-    def invalid_method_error(*args):
-        raise InvalidAPIUsage(3, output_format=data.get('format', "xml"))   # Invalid Method
-
-    return {
-        'track.updatenowplaying': record_listens,
-        'track.scrobble': record_listens,
-        'auth.getsession': get_session,
-        'auth.gettoken': get_token,
-        'user.getinfo': user_info,
-        'auth.getsessioninfo': session_info
-    }.get(method, invalid_method_error)(request, data)
+    if method in ('track.updatenowplaying', 'track.scrobble'):
+        return record_listens(request, data)
+    elif method == 'auth.getsession':
+        return get_session(request, data)
+    elif method == 'auth.gettoken':
+        return get_token(request, data)
+    elif method == 'user.getinfo':
+        return user_info(request, data)
+    elif method == 'auth.getsessioninfo':
+        return session_info
+    else:
+        # Invalid Method
+        raise InvalidAPIUsage(3, output_format=data.get('format', "xml"))
 
 
 def session_info(request, data):
     try:
-        sk = data["sk"]
-        api_key = data["api_key"]
-        output_format = data.get("format", "xml")
-        username = data["username"]
+        sk = data['sk']
+        api_key = data['api_key']
+        output_format = data.get('format', 'xml')
+        username = data['username']
     except KeyError:
         raise InvalidAPIUsage(6, output_format=output_format)        # Missing Required Params
 
     session = Session.load(sk, api_key)
     if (not session) or User.load_by_name(username).id != session.user.id:
-        print("Invalid session")
         raise InvalidAPIUsage(9, output_format=output_format)        # Invalid Session KEY
 
     print("SESSION INFO for session %s, user %s" % (session.id, session.user.name))
 
     doc, tag, text = Doc().tagtext()
-    with tag('lfm', status="ok"):
+    with tag('lfm', status='ok'):
         with tag('application'):
             with tag('session'):
                 with tag('name'):
@@ -131,8 +132,8 @@ def session_info(request, data):
 def get_token(request, data):
     """ Issue a token to user after verying his API_KEY
     """
-    output_format = data.get("format", "xml")
-    api_key = data.get('api_key', None)
+    output_format = data.get('format', 'xml')
+    api_key = data.get('api_key')
 
     if not api_key:
         raise InvalidAPIUsage(6, output_format=output_format)   # Missing required params
@@ -142,7 +143,7 @@ def get_token(request, data):
     token = Token.generate(api_key)
 
     doc, tag, text = Doc().tagtext()
-    with tag('lfm', status="ok"):
+    with tag('lfm', status='ok'):
         with tag('token'):
             text(token.token)
     return format_response('<?xml version="1.0" encoding="utf-8"?>\n' + yattag.indent(doc.getvalue()),
@@ -152,7 +153,7 @@ def get_token(request, data):
 def get_session(request, data):
     """ Create new session after validating the API_key and token.
     """
-    output_format = data.get("format", "xml")
+    output_format = data.get('format', 'xml')
     try:
         api_key = data['api_key']
         token = Token.load(data['token'], api_key)
@@ -171,7 +172,7 @@ def get_session(request, data):
     session = Session.create(token)
 
     doc, tag, text = Doc().tagtext()
-    with tag('lfm', status="ok"):
+    with tag('lfm', status='ok'):
         with tag('session'):
             with tag('name'):
                 text(session.user.name)
@@ -189,9 +190,9 @@ def _to_native_api(lookup, method="track.scrobble", output_format="xml"):
         to the native ListenBrainz API format.
         Returns: type_of_listen and listen_payload
     """
-    listen_type = "listens"
-    if method == "track.updateNowPlaying":
-        listen_type = "playing_now"
+    listen_type = 'listens'
+    if method == 'track.updateNowPlaying':
+        listen_type = 'playing_now'
         if len(lookup.keys()) != 1:
             raise InvalidAPIUsage(6, output_format=output_format)       # Invalid parameters
 
@@ -225,7 +226,7 @@ def record_listens(request, data):
     """ Submit the listen in the lastfm format to be inserted in db.
         Accepts listens for both track.updateNowPlaying and track.scrobble methods.
     """
-    output_format = data.get('format', "xml")
+    output_format = data.get('format', 'xml')
     try:
         sk, api_key = data['sk'], data['api_key']
     except KeyError:
@@ -249,7 +250,7 @@ def record_listens(request, data):
             number = 0
         lookup[number][key] = value
 
-    if request.form['method'].lower() == "track.updatenowplaying":
+    if request.form['method'].lower() == 'track.updatenowplaying':
         for i, listen in lookup.iteritems():
             if 'timestamp' not in listen:
                 listen['timestamp'] = calendar.timegm(datetime.now().utctimetuple())
@@ -260,11 +261,11 @@ def record_listens(request, data):
 
     # With corrections than the original submitted listen.
     doc, tag, text = Doc().tagtext()
-    with tag('lfm', status="ok"):
-        with tag("nowplaying" if listen_type == "playing_now" else "scrobbles"):
+    with tag('lfm', status='ok'):
+        with tag('nowplaying' if listen_type == 'playing_now' else 'scrobbles'):
 
             for origL, augL in zip(lookup.values(), augmented_listens):
-                corr = defaultdict(lambda: "0")
+                corr = defaultdict(lambda: '0')
 
                 track = augL['track_metadata']['track_name']
                 if origL['track'] != augL['track_metadata']['track_name']:
@@ -318,9 +319,9 @@ def format_response(data, format="xml"):
 
         (The #text notation is rarely used in XML responses.)
     """
-    if format == "xml":
+    if format == 'xml':
         return data
-    elif format == "json":
+    elif format == 'json':
         # Remove the <lfm> tag and its attributes
         jsonData = xmltodict.parse(data)['lfm']
         for k in jsonData.keys():
@@ -355,9 +356,9 @@ def user_info(request, data):
     """
     try:
         api_key = data['api_key']
-        output_format = data.get("format", "xml")
-        sk = data.get('sk', None)
-        username = data.get("user", None)
+        output_format = data.get('format', 'xml')
+        sk = data.get('sk')
+        username = data.get('user')
         if not (sk or username):
             raise KeyError
 
@@ -376,7 +377,7 @@ def user_info(request, data):
         raise InvalidAPIUsage(6, output_format=output_format)       # Missing required params
 
     doc, tag, text = Doc().tagtext()
-    with tag('lfm', status="ok"):
+    with tag('lfm', status='ok'):
         with tag('user'):
             with tag('name'):
                 text(query_user.name)
