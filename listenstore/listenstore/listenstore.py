@@ -70,15 +70,7 @@ class PostgresListenStore(ListenStore):
         return Listen(user_id=row[1], timestamp=row[2], artist_msid=row[3], album_msid=row[4],
                       recording_msid=row[5], data=row[6])
 
-    def format_dict(self, listen):
-        return {'user_id': listen.user_id,
-                'ts': listen.timestamp,
-                'artist_msid': uuid.UUID(listen.artist_msid),
-                'album_msid': uuid.UUID(listen.album_msid) if listen.album_msid is not None else None,
-                'recording_msid': uuid.UUID(listen.recording_msid),
-                'data': ujson.dumps(listen.data)}
-
-    def insert_postgresql(self, listens):
+    def insert(self, listens):
         """ Insert a batch of listens, using asynchronous queries.
             Batches should probably be no more than 500-1000 listens until this
             function supports limiting the number of queries in flight.
@@ -88,7 +80,14 @@ class PostgresListenStore(ListenStore):
                 if not listen.validate():
                     raise ValueError("Invalid listen: %s" % listen)
                 try:
-                    params = self.format_dict(listen)
+                    params = {
+                        'user_id': listen.user_id,
+                        'ts': listen.timestamp,
+                        'artist_msid': uuid.UUID(listen.artist_msid),
+                        'album_msid': uuid.UUID(listen.album_msid) if listen.album_msid is not None else None,
+                        'recording_msid': uuid.UUID(listen.recording_msid),
+                        'data': ujson.dumps(listen.data)}
+
                     res = connection.execute(text("""
                         INSERT INTO listen(user_id, ts, artist_msid, album_msid, recording_msid)
                              VALUES (:user_id, to_timestamp(:ts), :artist_msid, :album_msid,
@@ -100,8 +99,8 @@ class PostgresListenStore(ListenStore):
                                   , recording_msid = EXCLUDED.recording_msid
                           RETURNING id
                     """), params)
-                    params['_id'] = res.fetchone()[0]
 
+                    params['_id'] = res.fetchone()[0]
                     res = connection.execute(text("""
                         INSERT INTO listen_json(id, data)
                              VALUES (:_id, :data)

@@ -24,7 +24,7 @@ class TestListenStore(DatabaseTestCase):
         date = pytz.utc.localize(datetime(2015, 9, 3, 0, 0, 0))
         self.log.info("Inserting test data...")
         test_data = generate_data(date, 100)
-        self.logstore.insert_postgresql(test_data)
+        self.logstore.insert(test_data)
         self.log.info("Test data inserted")
 
     def test_fetch_listens(self):
