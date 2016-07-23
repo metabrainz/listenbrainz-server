@@ -2,6 +2,7 @@ from __future__ import print_function
 import db
 from webserver import create_app, schedule_jobs
 from werkzeug.wsgi import DispatcherMiddleware
+from werkzeug.serving import run_simple
 import subprocess
 import os
 import click
@@ -15,16 +16,22 @@ cli = click.Group()
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'sql')
 MSB_ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../messybrainz-server', 'admin', 'sql')
 
+
 @cli.command()
 @click.option("--host", "-h", default="0.0.0.0", show_default=True)
 @click.option("--port", "-p", default=8080, show_default=True)
-@click.option("--debug", "-d", type=bool,
+@click.option("--debug", "-d", is_flag=True,
               help="Turns debugging mode on or off. If specified, overrides "
                    "'DEBUG' value in the config file.")
-def runserver(host, port, debug):
-    app = create_app()
-    schedule_jobs(app)
-    app.run(host=host, port=port, debug=debug)
+def runserver(host, port, debug=False):
+    webserver.schedule_jobs(application)
+    run_simple(
+        hostname=host,
+        port=port,
+        application=application,
+        use_debugger=debug,
+        use_reloader=debug,
+    )
 
 
 @cli.command()
