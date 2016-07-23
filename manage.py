@@ -47,7 +47,7 @@ def init_db(force, skip_create):
     3. Indexes are created.
     """
 
-    uri = urlsplit(create_app().config['SQLALCHEMY_DATABASE_URI'])
+    uri = urlsplit(application.config['SQLALCHEMY_DATABASE_URI'])
     if force:
         exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER +
                                     ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
@@ -74,7 +74,7 @@ def init_db(force, skip_create):
         if exit_code != 0:
             raise Exception('Failed to create database extensions! Exit code: %i' % exit_code)
 
-    with create_app().app_context():
+    with application.app_context():
         print('Creating tables...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
 
@@ -96,7 +96,7 @@ def init_test_db(force=False):
     `PG_CONNECT_TEST` variable must be defined in the config file.
     """
 
-    uri = urlsplit(create_app().config['TEST_SQLALCHEMY_DATABASE_URI'])
+    uri = urlsplit(application.config['TEST_SQLALCHEMY_DATABASE_URI'])
     if force:
         exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER +
                                     ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
