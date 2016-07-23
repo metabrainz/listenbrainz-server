@@ -1,7 +1,7 @@
 from __future__ import print_function
 import db
 from webserver import create_app, schedule_jobs
-from werkzeug.wsgi import DispatcherMiddleware
+import webserver
 from werkzeug.serving import run_simple
 import subprocess
 import os
@@ -9,7 +9,8 @@ import click
 import config
 from urlparse import urlsplit
 
-application = DispatcherMiddleware(create_app())
+
+application = webserver.create_app()
 
 cli = click.Group()
 
