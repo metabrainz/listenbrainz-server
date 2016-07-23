@@ -7,7 +7,7 @@ _redis = None
 def init_redis_connection(host):
     """Create a connection to the Redis server."""
     global _redis
-    _redis = Redis(host)
-    return RedisListenStore({
+    _redis = RedisListenStore({
         'REDIS_HOST': host,
     })
+    return _redis

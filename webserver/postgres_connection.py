@@ -1,6 +1,10 @@
 from listenstore.listenstore import PostgresListenStore
 
+_postgres = None
+
 def init_postgres_connection(database_uri):
-    return PostgresListenStore({
+    global _postgres
+    _postgres = PostgresListenStore({
         'SQLALCHEMY_DATABASE_URI': database_uri,
     })
+    return _postgres

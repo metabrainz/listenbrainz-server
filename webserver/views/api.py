@@ -7,6 +7,7 @@ import webserver
 import db
 from webserver.rate_limiter import ratelimit
 from api_tools import insert_payload, log_raise_400, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET
+from webserver.redis_connection import _redis
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -103,7 +104,7 @@ def get_listens(user_id):
     if max_ts and min_ts:
         log_raise_400("You may only specify max_ts or min_ts, not both.")
 
-    db_conn = webserver.create_postgres()
+    db_conn = webserver.create_postgres(current_app)
     listens = db_conn.fetch_listens(
         user_id,
         limit=min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET),
@@ -158,7 +159,7 @@ def _validate_auth_header():
 def _send_listens_to_redis(listen_type, listens):
 
 
-    p = _redis.pipeline()
+    p = _redis.redis.pipeline()
     for listen in listens:
         if listen_type == 'playing_now':
             try:
