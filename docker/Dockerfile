@@ -1,15 +1,11 @@
 FROM python:2.7.12
 
-MAINTAINER Robert Kaye <rob@metabrainz.org>
-
-# General setup
-RUN apt-get update && apt-get install -y --no-install-recommends build-essential \
-    git \
-    redis-tools \ 
-    wget 
-
-RUN mkdir /code
-RUN pip install uWSGI==2.0.13.1
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+                       build-essential \
+                       redis-tools \
+                       git \
+                       wget
 
 # PostgreSQL client
 RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
@@ -22,23 +18,21 @@ RUN apt-get update \
 # Specifying password so that client doesn't ask scripts for it...
 ENV PGPASSWORD "listenbrainz"
 
-# MessyBrainz
+RUN mkdir /code
 WORKDIR /code
-RUN git clone https://github.com/metabrainz/messybrainz-server.git
 
-WORKDIR /code/messybrainz-server
+# MessyBrainz
+RUN git clone https://github.com/metabrainz/messybrainz-server.git messybrainz
+WORKDIR /code/messybrainz
 RUN pip install -r requirements.txt
 RUN python setup.py install
 
-# ListenBrainz
 RUN mkdir /code/listenbrainz
 WORKDIR /code/listenbrainz
 
-# These following steps are redundant, but they prevent the requirements from being installed too many times
 COPY requirements.txt /code/listenbrainz/
 RUN pip install -r requirements.txt
 
-# Now install our code, which may change frequently
 COPY . /code/listenbrainz/
 
-USER daemon
+CMD python manage.py runserver -h 0.0.0.0 -p 80 -d
