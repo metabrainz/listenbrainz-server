@@ -46,4 +46,4 @@ services:
       file: ./docker/common.yml
       service: nginx
     links:
-      - web:web
+      - web
