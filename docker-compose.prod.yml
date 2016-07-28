@@ -10,11 +10,13 @@ services:
       POSTGRES_USER: listenbrainz
       POSTGRES_PASSWD: listenbrainz
       POSTGRES_DB: listenbrainz
+    restart: always
 
   redis:
     image: redis:3.2.1
     volumes:
       - ./data/redis:/data
+    restart: always
 
   web:
     build:
@@ -29,6 +31,7 @@ services:
     depends_on:
       - redis
       - db
+    restart: always
 
   consumer:
     build: 
@@ -40,6 +43,7 @@ services:
     depends_on:
       - db
       - redis
+    restart: always
 
   nginx:
     extends:
@@ -47,3 +51,4 @@ services:
       service: nginx
     links:
       - web
+    restart: always
