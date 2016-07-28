@@ -4,7 +4,7 @@ services:
   db:
     image: postgres:9.5.3
     volumes:
-      - ./data/pgdata:/var/lib/postgresql/data/pgdata
+      - ../data/pgdata:/var/lib/postgresql/data/pgdata
     environment:
       PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_USER: listenbrainz
@@ -15,17 +15,16 @@ services:
   redis:
     image: redis:3.2.1
     volumes:
-      - ./data/redis:/data
+      - ../data/redis:/data
     restart: always
 
   web:
     build:
-      context: .
-      dockerfile: Dockerfile.prod
-    command: uwsgi /code/listenbrainz-server/docker/uwsgi.ini
+      context: ..
+      dockerfile: ./docker/Dockerfile.prod
+    command: uwsgi /code/listenbrainz/docker/uwsgi.ini
     volumes:
-      - .:/code/listenbrainz-server
-      - ./data/app:/data
+      - ../data/app:/data
     ports:
       - "3031:3031"
     depends_on:
@@ -34,12 +33,10 @@ services:
     restart: always
 
   consumer:
-    build: 
-      dockerfile: redis-consumer/Dockerfile
-      context: .
+    build:
+      context: ..
+      dockerfile: ./docker/redis-consumer/Dockerfile
     command: python redis-consumer/redis-consumer.py
-    volumes:
-      - .:/code/listenbrainz-server
     depends_on:
       - db
       - redis
@@ -47,7 +44,7 @@ services:
 
   nginx:
     extends:
-      file: ./docker/common.yml
+      file: common.yml
       service: nginx
     links:
       - web
