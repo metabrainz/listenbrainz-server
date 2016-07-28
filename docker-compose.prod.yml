@@ -2,13 +2,14 @@ version: "2"
 services:
 
   db:
-    extends:
-      file: ./docker/common.yml
-      service: db
+    image: postgres:9.5.3
     volumes:
       - ./data/pgdata:/var/lib/postgresql/data/pgdata
     environment:
       PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_USER: listenbrainz
+      POSTGRES_PASSWD: listenbrainz
+      POSTGRES_DB: listenbrainz
 
   redis:
     image: redis:3.2.1
