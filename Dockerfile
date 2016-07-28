@@ -1,4 +1,4 @@
-FROM python:2.7.11
+FROM python:2.7.12
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
