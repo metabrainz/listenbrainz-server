@@ -16,7 +16,9 @@ services:
       - ./data/redis:/data
 
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
     command: uwsgi /code/listenbrainz-server/docker/uwsgi.ini
     volumes:
       - .:/code/listenbrainz-server
