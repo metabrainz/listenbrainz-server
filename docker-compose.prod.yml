@@ -25,9 +25,6 @@ services:
       - ./data/app:/data
     ports:
       - "3031:3031"
-    links:
-      - redis
-      - db
     depends_on:
       - redis
       - db
@@ -39,9 +36,6 @@ services:
     command: python redis-consumer/redis-consumer.py
     volumes:
       - .:/code/listenbrainz-server
-    links:
-      - db
-      - redis
     depends_on:
       - db
       - redis
@@ -52,5 +46,3 @@ services:
       service: nginx
     links:
       - web:web
-    ports:
-      - "80:80"
