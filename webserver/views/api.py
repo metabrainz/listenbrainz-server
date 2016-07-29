@@ -29,6 +29,11 @@ DEFAULT_ITEMS_PER_GET = 25
 MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
 
 
+# Define the values for types of listens
+LISTEN_TYPE_SINGLE = 1
+LISTEN_TYPE_IMPORT = 2
+LISTEN_TYPE_PLAYING_NOW = 3
+
 @api_bp.route("/1/submit-listens", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
@@ -65,8 +70,9 @@ def submit_listen():
         if data['listen_type'] not in ('playing_now', 'single', 'import'):
             log_raise_400("JSON document requires a valid listen_type key.", payload)
 
-        if (data['listen_type'] == "single" or data['listen_type'] == 'playing_now') and len(payload) > 1:
-            log_raise_400("JSON document contains more than listen for a single/playing_now. "
+        listen_type = data['listen_type']
+        if (listen_type == LISTEN_TYPE_SINGLE or listen_type == LISTEN_TYPE_PLAYING_NOW) and len(payload) > 1:
+            _log_raise_400("JSON document contains more than listen for a single/playing_now. "
                            "It should contain only one.", payload)
     except KeyError:
         log_raise_400("Invalid JSON document submitted.", raw_data)
@@ -76,8 +82,8 @@ def submit_listen():
     except Exception, e:
         raise InternalServerError("Something went wrong. Please try again.")
 
-    _send_listens_to_redis(data['listen_type'],
-                                _payload_to_augmented_list(payload, data['listen_type'], user_id))
+    _send_listens_to_redis(listen_type,
+                                _payload_to_augmented_list(payload, listen_type, user_id))
     return "success"
 
 
@@ -161,7 +167,7 @@ def _send_listens_to_redis(listen_type, listens):
 
     p = _redis.redis.pipeline()
     for listen in listens:
-        if listen_type == 'playing_now':
+        if listen_type == LISTEN_TYPE_PLAYING_NOW:
             try:
                 p.setex('playing_now' + ':' + listen['user_id'],
                         ujson.dumps(listen).encode('utf-8'), current_app.config['PLAYING_NOW_MAX_DURATION'])
@@ -251,7 +257,7 @@ def _messybrainz_lookup(listens):
 def _validate_listen(listen, listen_type):
     """Make sure that required keys are present, filled out and not too large."""
 
-    if listen_type in ('single', 'import'):
+    if listen_type in (LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT):
         if 'listened_at' not in listen:
             _log_raise_400("JSON document must contain the key listened_at at the top level.", listen)
 
@@ -264,7 +270,7 @@ def _validate_listen(listen, listen_type):
             _log_raise_400("JSON document may only contain listened_at and "
                            "track_metadata top level keys", listen)
 
-    elif listen_type == 'playing_now':
+    elif listen_type == LISTEN_TYPE_PLAYING_NOW:
         if 'listened_at' in listen:
             _log_raise_400("JSON document must not contain listened_at while submitting "
                            "playing_now.", listen)
@@ -379,3 +385,11 @@ def is_valid_uuid(u):
         return True
     except ValueError:
         return False
+
+
+def _get_listen_type(listen_type):
+    return {
+        'single': LISTEN_TYPE_SINGLE,
+        'import': LISTEN_TYPE_IMPORT,
+        'playing_now': LISTEN_TYPE_PLAYING_NOW
+    }.get(listen_type)
