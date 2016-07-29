@@ -203,22 +203,28 @@ def _to_native_api(lookup, method="track.scrobble", output_format="xml"):
                 'additional_info': {}
             }
         }
+        if 'artist' in data:
+            listen['track_metadata']['artist_name'] = data['artist']
+        if 'track' in data:
+            listen['track_metadata']['track_name'] = data['track']
         if 'timestamp' in data:
             listen['listened_at'] = data['timestamp']
         if 'album' in data:
             listen['track_metadata']['release_name'] = data['album']
-        if 'track' in data:
-            listen['track_metadata']['track_name'] = data['track']
-        if 'artist' in data:
-            listen['track_metadata']['artist_name'] = data['artist']
+        if 'context' in data:
+            listen['track_metadata']['additional_info']['context'] = data['context']
+        if 'streamId' in data:
+            listen['track_metadata']['additional_info']['stream_id'] = data['streamId']
+        if 'trackNumber' in data:
+            listen['track_metadata']['additional_info']['tracknumber'] = data['trackNumber']
         if 'mbid' in data:
             listen['track_metadata']['release_mbid'] = data['mbid']
-        if 'trackNumber' in data or 'duration' in data or 'albumArtist' in data or \
-                'choosenByUser' in data or 'streamId' in data or 'context' in data:
-            # Album artist, Song Duration, trackNumber on the album, etc
-            # are not supported by the native ListenBrainz API
-            pass
+        if 'duration' in data:
+            listen['track_metadata']['additional_info']['duration'] = data['duration']
+        # Choosen_by_user is 1 by default
+        listen['track_metadata']['additional_info']['choosen_by_user'] = data.get('choosenByUser', 1)
         listens.append(listen)
+
     return listen_type, listens
 
 
