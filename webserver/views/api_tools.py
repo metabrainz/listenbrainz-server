@@ -88,6 +88,21 @@ def _validate_listen(listen):
             if not is_valid_uuid(ambid):
                 log_raise_400("Artist MBID format invalid.", listen)
 
+        # Duration
+        if 'duration' in listen['track_metadata']['additional_info']:
+            try:
+                int(listen['track_metadata']['additional_info']['duration'])
+            except ValueError:
+                log_raise_400("Track Duration invalid.", listen)
+
+        # Choosen_by_user
+        if 'choosen_by_user' in listen['track_metadata']['additional_info']:
+            try:
+                if int(listen['track_metadata']['additional_info']['choosen_by_user']) not in (0, 1):
+                    raise ValueError
+            except ValueError:
+                log_raise_400("choosen_by_user format invalid.", listen)
+
 
 def _send_listens_to_redis(listen_type, listens):
     p = _redis.pipeline()
