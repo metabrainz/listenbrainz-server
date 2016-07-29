@@ -38,7 +38,7 @@ LASTFM_API_KEY = "USE_LASTFM_API_KEY"
 
 
 # Max time in seconds after which the playing_now stream will expire.
-PLAYING_NOW_MAX_DURATION = 5 * 60
+PLAYING_NOW_MAX_DURATION = 10 * 60
 
 # LOGGING
 
