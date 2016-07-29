@@ -62,7 +62,18 @@ ListenBrainz home page.
 
 ### Virtual machine
 
-There will be an easy to use Vagrant setup once the docker branches are merged.
+To use a vagrant setup of the listenbrainz server, install the lastest VirtualBox and the latest Vagrant:
+
+* https://www.virtualbox.org/wiki/Downloads
+* https://www.vagrantup.com/downloads.html
+
+Then build the VM using:
+
+    $ vagrant up
+
+This should create and provision the virtual machine. If you need to run the server again, you can use this command
+
+    $ vagrant ssh -- /vagrant/vagrant/run-server.sh
 
 
 ## Documentation
