@@ -4,10 +4,12 @@ from db.testing import DatabaseTestCase
 import logging
 from datetime import datetime
 from .util import generate_data, to_epoch
+from listenstore.listen import Listen
 from listenstore.listenstore import PostgresListenStore, MIN_ID
 from webserver.postgres_connection import init_postgres_connection
 import random
-
+import uuid
+from collections import OrderedDict
 
 class TestPostgresListenStore(DatabaseTestCase):
 
@@ -41,3 +43,11 @@ class TestPostgresListenStore(DatabaseTestCase):
     def test_fetch_listens(self):
         listens = self.logstore.fetch_listens(user_id="test", from_id=to_epoch(self.INITIAL_DATE), limit=10)
         self.assertEquals(len(list(listens)), 10)
+
+    def test_convert_row(self):
+        data = [('id', 1), ('user_id', "test"), ('timestamp', 123456789), ('artist_msid', str(uuid.uuid4())), ('album_msid',
+                str(uuid.uuid4())), ('recording_msid', str(uuid.uuid4())), ('data', "{'additional_info':{}}")]
+        row = OrderedDict([(k, v) for (k, v) in data[1:]])
+        listen = self.logstore.convert_row([1] + row.values())
+        self.assertIsInstance(listen, Listen)
+        self.assertEquals(listen.__dict__, dict(row))
