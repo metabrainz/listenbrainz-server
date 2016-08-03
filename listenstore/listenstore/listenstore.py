@@ -14,6 +14,7 @@ from dateutil.relativedelta import relativedelta
 from sqlalchemy import create_engine, text
 from sqlalchemy.pool import NullPool
 import sqlalchemy.exc
+import pytz
 
 MIN_ID = 1033430400     # approx when audioscrobbler was created
 ORDER_DESC = 0
@@ -31,28 +32,28 @@ class ListenStore(object):
     def max_id(self):
         return int(self.MAX_FUTURE_SECONDS + calendar.timegm(time.gmtime()))
 
-    def fetch_listens_from_storage(*args):
+    def fetch_listens_from_storage():
         """ Override this method in PostgresListenStore class """
         raise NotImplementedError()
 
-    def fetch_listens(self, user_id, from_id=None, to_id=None, limit=None):
-        """ Check from_id, to_id, and limit for fetching listens
+    def fetch_listens(self, user_id, from_ts=None, to_ts=None, limit=None):
+        """ Check from_ts, to_ts, and limit for fetching listens
             and set them to default values if not given.
         """
-        if from_id and to_id:
-            raise ValueError("You cannot specify from_id and to_id at the same time.")
+        if from_ts and to_ts:
+            raise ValueError("You cannot specify from_ts and to_ts at the same time.")
 
-        if from_id:
+        if from_ts:
             order = ORDER_ASC
         else:
             order = ORDER_DESC
 
         precision = 'month'
-        if from_id is None:
-            from_id = MIN_ID
-        if to_id is None:
-            to_id = self.max_id()
-        return self.fetch_listens_from_storage(user_id, from_id, to_id, limit, order, precision)
+        if from_ts is None:
+            from_ts = MIN_ID
+        if to_ts is None:
+            to_ts = self.max_id()
+        return self.fetch_listens_from_storage(user_id, from_ts, to_ts, limit, order, precision)
 
 
 class PostgresListenStore(ListenStore):
@@ -69,6 +70,7 @@ class PostgresListenStore(ListenStore):
         return Listen(user_id=row[1], timestamp=row[2], artist_msid=row[3], album_msid=row[4],
                       recording_msid=row[5], data=row[6])
 
+<<<<<<< HEAD
     def format_dict(self, listen):
         return {'user_id': listen.user_id,
                 'ts': listen.timestamp,
@@ -78,6 +80,9 @@ class PostgresListenStore(ListenStore):
                 'raw_data': ujson.dumps(listen.data)}
 
     def insert_postgresql(self, listens):
+=======
+    def insert(self, listens):
+>>>>>>> ar/change-listens-table
         """ Insert a batch of listens, using asynchronous queries.
             Batches should probably be no more than 500-1000 listens until this
             function supports limiting the number of queries in flight.
@@ -87,17 +92,56 @@ class PostgresListenStore(ListenStore):
                 if not listen.validate():
                     raise ValueError("Invalid listen: %s" % listen)
                 try:
+<<<<<<< HEAD
                     connection.execute("""
                         INSERT INTO listen(user_id, ts, artist_msid, album_msid, recording_msid, raw_data)
                         VALUES ( %(user_id)s, to_timestamp(%(ts)s), %(artist_msid)s, %(album_msid)s,
                             %(recording_msid)s, %(raw_data)s)
                         ON CONFLICT DO NOTHING
                         """, self.format_dict(listen))
+=======
+                    params = {
+                        'user_id': listen.user_id,
+                        'ts': listen.timestamp,
+                        'artist_msid': uuid.UUID(listen.artist_msid),
+                        'album_msid': uuid.UUID(listen.album_msid) if listen.album_msid is not None else None,
+                        'recording_msid': uuid.UUID(listen.recording_msid),
+                        'data': ujson.dumps(listen.data)}
+
+                    res = connection.execute(text("""
+                        INSERT INTO listen(user_id, ts, artist_msid, album_msid, recording_msid)
+                             VALUES (:user_id, to_timestamp(:ts), :artist_msid, :album_msid,
+                                    :recording_msid)
+                                 ON CONFLICT(user_id, ts)
+                                 DO UPDATE
+                                SET artist_msid = EXCLUDED.artist_msid
+                                  , album_msid = EXCLUDED.album_msid
+                                  , recording_msid = EXCLUDED.recording_msid
+                          RETURNING id
+                    """), params)
+
+                    params['_id'] = res.fetchone()[0]
+                    res = connection.execute(text("""
+                        INSERT INTO listen_json(id, data)
+                             VALUES (:_id, :data)
+                                 ON CONFLICT(id)
+                                 DO UPDATE
+                                SET data = EXCLUDED.data
+                    """), params)
+>>>>>>> ar/change-listens-table
                 except Exception, e:     # Log errors
                     self.log.error(e)
 
-    def execute(self, query, params={}):
+    def fetch_listens_from_storage(self, user_id, from_ts, to_ts, limit, order, precision):
+        """ The timestamps are stored as UTC in the postgres datebase while on retrieving
+            the value they are converted to the local server's timezone. So to compare
+            datetime object we need to create a object in the same timezone as the server.
+
+            from_ts: seconds since epoch, in float
+            to_ts: seconds since epoch, in float
+        """
         with self.engine.connect() as connection:
+<<<<<<< HEAD
             res = connection.execute(query, params)
             return res.fetchall()
 
@@ -119,3 +163,32 @@ class PostgresListenStore(ListenStore):
         results = self.execute(query, params)
         for row in results:
             yield self.convert_row(row)
+=======
+            results = connection.execute(text("""
+                SELECT listen.id
+                     , user_id
+                     , extract(epoch from ts)
+                     , artist_msid
+                     , album_msid
+                     , recording_msid
+                     , data
+                  FROM listen
+                     , listen_json
+                 WHERE listen.id = listen_json.id
+                   AND user_id = :user_id
+                   AND ts AT TIME ZONE 'UTC' > :from_ts
+                   AND ts AT TIME ZONE 'UTC' < :to_ts
+              ORDER BY ts """ + ORDER_TEXT[order] + """
+                 LIMIT :limit
+            """), {
+                'user_id': user_id,
+                'from_ts': pytz.utc.localize(datetime.utcfromtimestamp(from_ts)),
+                'to_ts': pytz.utc.localize(datetime.utcfromtimestamp(to_ts)),
+                'limit': limit
+            })
+
+            listens = []
+            for row in results.fetchall():
+                listens.append(self.convert_row(row))
+            return listens
+>>>>>>> ar/change-listens-table

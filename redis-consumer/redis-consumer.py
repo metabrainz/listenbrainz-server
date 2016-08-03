@@ -47,7 +47,7 @@ class RedisConsumer(object):
 
                 # We've fetched them, now submit and if successful, clear the pending items
                 try:
-                    ls.insert_postgresql(submit)
+                    ls.insert(submit)
                     r.ltrim("listens-pending", 1, 0)
                 except ValueError:
                     pass
@@ -79,7 +79,7 @@ class RedisConsumer(object):
             while broken:
                 try:
                     t0 = time()
-                    ls.insert_postgresql(listens)
+                    ls.insert(listens)
                     self.time += time() - t0
                     broken = False
 

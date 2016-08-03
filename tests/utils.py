@@ -7,6 +7,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../listenstore"))
 from listenstore.listen import Listen
 import uuid
+import pytz
 
 def generate_data(from_date, num_records):
     test_data = []
@@ -22,4 +23,4 @@ def generate_data(from_date, num_records):
 
 
 def to_epoch(date):
-    return (date - datetime.utcfromtimestamp(0)).total_seconds()
+    return (date - pytz.utc.localize(datetime.utcfromtimestamp(0))).total_seconds()
