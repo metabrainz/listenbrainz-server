@@ -3,7 +3,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 from db.testing import DatabaseTestCase
 import logging
 from datetime import datetime
-from .util import generate_data, to_epoch
+from tests.utils import generate_data, to_epoch
 from webserver.postgres_connection import init_postgres_connection
 
 
@@ -16,7 +16,7 @@ class TestListenStore(DatabaseTestCase):
         self._create_test_data()
 
     def tearDown(self):
-        # self.logstore.drop_schema()
+        super(TestListenStore, self).tearDown()
         self.logstore = None
 
     def _create_test_data(self):
@@ -29,4 +29,4 @@ class TestListenStore(DatabaseTestCase):
     def test_fetch_listens(self):
         date = datetime(2015, 9, 3, 0, 0, 0)
         listens = self.logstore.fetch_listens(user_id="test", from_id=to_epoch(date), limit=10)
-        self.assertEquals(len(list(listens)), 10)
+        self.assertEqual(len(list(listens)), 10)
