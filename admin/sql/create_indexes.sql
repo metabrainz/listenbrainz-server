@@ -13,4 +13,6 @@ CREATE UNIQUE INDEX token_api_key_ndx_token ON api_compat.token (token, api_key)
 CREATE UNIQUE INDEX sid_ndx_session ON api_compat.session (sid);
 CREATE UNIQUE INDEX sid_api_key_ndx_session ON api_compat.session (sid, api_key);
 
+CREATE UNIQUE INDEX id_listen_json ON "listen_json" (id);
+
 COMMIT;

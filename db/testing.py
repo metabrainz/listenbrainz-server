@@ -34,13 +34,11 @@ class DatabaseTestCase(unittest.TestCase):
 
     def drop_tables(self):
         with db.engine.connect() as connection:
-            connection.execute('DROP SCHEMA IF EXISTS api_compat         CASCADE')
-
             connection.execute('DROP TABLE IF EXISTS "user"              CASCADE')
             connection.execute('DROP TABLE IF EXISTS listen              CASCADE')
+            connection.execute('DROP TABLE IF EXISTS listen_json         CASCADE')
             connection.execute('DROP TABLE IF EXISTS api_compat.token    CASCADE')
             connection.execute('DROP TABLE IF EXISTS api_compat.session  CASCADE')
-
 
     def load_data_files(self):
         """ Get the data files from the disk """
