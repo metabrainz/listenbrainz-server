@@ -70,19 +70,7 @@ class PostgresListenStore(ListenStore):
         return Listen(user_id=row[1], timestamp=row[2], artist_msid=row[3], album_msid=row[4],
                       recording_msid=row[5], data=row[6])
 
-<<<<<<< HEAD
-    def format_dict(self, listen):
-        return {'user_id': listen.user_id,
-                'ts': listen.timestamp,
-                'artist_msid': uuid.UUID(listen.artist_msid),
-                'album_msid': uuid.UUID(listen.album_msid) if listen.album_msid is not None else None,
-                'recording_msid': uuid.UUID(listen.recording_msid),
-                'raw_data': ujson.dumps(listen.data)}
-
-    def insert_postgresql(self, listens):
-=======
     def insert(self, listens):
->>>>>>> ar/change-listens-table
         """ Insert a batch of listens, using asynchronous queries.
             Batches should probably be no more than 500-1000 listens until this
             function supports limiting the number of queries in flight.
@@ -92,14 +80,6 @@ class PostgresListenStore(ListenStore):
                 if not listen.validate():
                     raise ValueError("Invalid listen: %s" % listen)
                 try:
-<<<<<<< HEAD
-                    connection.execute("""
-                        INSERT INTO listen(user_id, ts, artist_msid, album_msid, recording_msid, raw_data)
-                        VALUES ( %(user_id)s, to_timestamp(%(ts)s), %(artist_msid)s, %(album_msid)s,
-                            %(recording_msid)s, %(raw_data)s)
-                        ON CONFLICT DO NOTHING
-                        """, self.format_dict(listen))
-=======
                     params = {
                         'user_id': listen.user_id,
                         'ts': listen.timestamp,
@@ -128,7 +108,6 @@ class PostgresListenStore(ListenStore):
                                  DO UPDATE
                                 SET data = EXCLUDED.data
                     """), params)
->>>>>>> ar/change-listens-table
                 except Exception, e:     # Log errors
                     self.log.error(e)
 
@@ -141,29 +120,6 @@ class PostgresListenStore(ListenStore):
             to_ts: seconds since epoch, in float
         """
         with self.engine.connect() as connection:
-<<<<<<< HEAD
-            res = connection.execute(query, params)
-            return res.fetchall()
-
-    def fetch_listens_from_storage(self, user_id, from_id, to_id, limit, order, precision):
-        query = """
-                SELECT id, user_id, extract(epoch from ts), artist_msid, album_msid, recording_msid, raw_data
-                FROM listen
-                WHERE user_id = %(user_id)s AND extract(epoch from ts) > %(from_id)s
-                    AND extract(epoch from ts) < %(to_id)s
-                ORDER BY extract(epoch from ts) """ + ORDER_TEXT[order] + """ LIMIT %(limit)s
-                """
-        params = {
-            'user_id': user_id,
-            'from_id': from_id,
-            'to_id': to_id,
-            'limit': limit
-        }
-
-        results = self.execute(query, params)
-        for row in results:
-            yield self.convert_row(row)
-=======
             results = connection.execute(text("""
                 SELECT listen.id
                      , user_id
@@ -191,4 +147,3 @@ class PostgresListenStore(ListenStore):
             for row in results.fetchall():
                 listens.append(self.convert_row(row))
             return listens
->>>>>>> ar/change-listens-table
