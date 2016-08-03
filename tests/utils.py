@@ -1,9 +1,12 @@
 # coding=utf-8
 from __future__ import division, absolute_import, print_function, unicode_literals
-from datetime import datetime, timedelta
+from datetime import datetime
+import sys
+import os
+
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../listenstore"))
 from listenstore.listen import Listen
 import uuid
-
 
 def generate_data(from_date, num_records):
     test_data = []

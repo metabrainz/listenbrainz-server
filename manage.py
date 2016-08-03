@@ -121,6 +121,7 @@ def init_test_db(force=False):
 
     db.init_db_connection(config.TEST_SQLALCHEMY_DATABASE_URI)
 
+    db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_schema.sql'))
     db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
     db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_primary_keys.sql'))
     db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
@@ -172,6 +173,11 @@ def init_msb_db(force, create_db):
     exit_code = run_psql_script('create_extensions.sql', superuser=True)
     if exit_code != 0:
         raise Exception('Failed to create database extensions! Exit code: %i' % exit_code)
+
+    print('Creating schema...')
+    exit_code = run_script(uri, 'create_schema.sql')
+    if exit_code != 0:
+        raise Exception('Failed to create database schema! Exit code: %i' % exit_code)
 
     print('Creating tables...')
     exit_code = run_psql_script('create_tables.sql')

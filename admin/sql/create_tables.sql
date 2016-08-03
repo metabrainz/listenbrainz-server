@@ -18,4 +18,22 @@ CREATE TABLE listen (
   raw_data        JSONB
 );
 
+CREATE TABLE api_compat.token (
+     id               SERIAL,
+     user_id          INTEGER, -- FK to "user".id
+     token            TEXT NOT NULL,
+     api_key          VARCHAR NOT NULL,
+     ts               TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+ALTER TABLE api_compat.token ADD CONSTRAINT token_api_key_uniq UNIQUE (api_key);
+ALTER TABLE api_compat.token ADD CONSTRAINT token_token_uniq UNIQUE (token);
+
+CREATE TABLE api_compat.session (
+    id        SERIAL,
+    user_id   INTEGER NOT NULL, -- FK to "user".id
+    sid       VARCHAR NOT NULL,
+    api_key   VARCHAR NOT NULL,
+    ts        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+ALTER TABLE api_compat.session ADD CONSTRAINT session_sid_uniq UNIQUE (sid);
 COMMIT;

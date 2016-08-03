@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}User "{{ user_id }}" - ListenBrainz{% endblock %}
+
+{% block content %}
+  <div id="user-profile">
+    <h2 class="page-title">{{ user_id }}</h2>
+
+    {% if msg %}
+    <p> {{ msg }} </p>
+
+    {% else %}
+    <h3>Approve this client for account <b>{{ user_id }}</b>?</h3>
+    <p>A legacy last.fm application wishes to have access to your account. If you approve it, this application will be able to submit listens on your behalf. Please consider asking the developers of your application to add support to submit directly to ListenBrainz.</p>
+    Allow access?
+    <br/>
+    <form method='POST'>
+        <input type='hidden' name='token' value='{{ token }}'/>
+        <input type='submit' value='Yes please'/>
+    </form>
+    {% endif %}
+
+  </div>
+{% endblock %}

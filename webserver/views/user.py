@@ -8,12 +8,13 @@ from datetime import datetime
 import webserver
 import db.user
 from flask import make_response
-from webserver.views.api import _validate_listen, _messybrainz_lookup, _send_listens_to_redis,\
-                                _payload_to_augmented_list, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
-from webserver.views.api import _messybrainz_lookup, insert_json, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
+from webserver.views.api_tools import convert_backup_to_native_format, insert_payload, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
 from webserver.utils import sizeof_readable
 from os import path, makedirs
-import json, zipfile, re, os
+import ujson
+import zipfile
+import re
+import os
 
 user_bp = Blueprint("user", __name__)
 
@@ -180,14 +181,15 @@ def upload():
             for f in [f for f in files if regex.match(f)]:
                 try:
                     # Load listens file
-                    jsonlist = json.loads(zf.read(f))
+                    jsonlist = ujson.loads(zf.read(f))
                     if not isinstance(jsonlist, list):
                         raise ValueError
                 except ValueError:
                     failure += 1
                     continue
 
-                insert_json(jsonlist, current_user.musicbrainz_id)
+                payload = convert_backup_to_native_format(jsonlist)
+                insert_payload(payload, current_user.musicbrainz_id)
                 success += 1
         except Exception, e:
             raise BadRequest('Not a valid lastfm-backup-file.')

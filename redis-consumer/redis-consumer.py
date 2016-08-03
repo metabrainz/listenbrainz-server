@@ -90,7 +90,7 @@ class RedisConsumer(object):
             # clear the listens-pending list
             r.ltrim("listens-pending", 1, 0)
 
-            # clear the now playing list -- at some point we'll want to consume them in 
+            # clear the now playing list -- at some point we'll want to consume them in
             # some other fashion, but for now, just nuke them.
             r.ltrim("playing_now", 1, 0)
 
