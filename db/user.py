@@ -66,12 +66,13 @@ def get_by_mb_id(musicbrainz_id):
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT id, created, musicbrainz_id, auth_token
+            SELECT musicbrainz_id
               FROM "user"
              WHERE LOWER(musicbrainz_id) = LOWER(:mb_id)
         """), {"mb_id": musicbrainz_id})
         row = result.fetchone()
         return dict(row) if row else None
+
 
 
 def get_by_token(token):
