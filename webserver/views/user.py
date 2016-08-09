@@ -40,10 +40,12 @@ def lastfmscraper(user_id):
     return Response(scraper, content_type="text/javascript")
 
 
-@user_bp.route("/<user_id>")
-def profile(user_id):
+@user_bp.route("/<user_name>")
+def profile(user_name):
     # Which database to use to showing user listens.
     db_conn = webserver.create_postgres()
+
+    user_id = _get_user(user_name) 
 
     # Getting data for current page
     max_ts = request.args.get("max_ts")
@@ -201,15 +203,15 @@ def upload():
     return redirect(url_for("user.import_data"))
 
 
-def _get_user(user_id):
+def _get_user(user_name):
     """ Get current username """
     if current_user.is_authenticated() and \
-       current_user.musicbrainz_id == user_id:
+       current_user.musicbrainz_id == user_name:
         return current_user
     else:
-        user = db.user.get_by_mb_id(user_id)
+        user = db.user.get_by_mb_id(user_name)
         if user is None:
-            raise NotFound("Can't find this user.")
+            raise NotFound("Cannot find user: %s" % user_name)
         return user
 
 
