@@ -20,9 +20,9 @@ import pytz
 
 user_bp = Blueprint("user", __name__)
 
-@user_bp.route("/<user_id>/scraper.js")
+@user_bp.route("/<user_name>/scraper.js")
 @crossdomain()
-def lastfmscraper(user_id):
+def lastfmscraper(user_name):
     """ Fetch the scraper.js with proper variable injecting
     """
     user_token = request.args.get("user_token")
@@ -31,10 +31,10 @@ def lastfmscraper(user_id):
         raise NotFound
     scraper = render_template(
         "user/scraper.js",
-        base_url=url_for("api_v1.submit_listen", user_id=user_id, _external=True),
+        base_url=url_for("api_v1.submit_listen", user_name=user_name, _external=True),
         user_token=user_token,
         lastfm_username=lastfm_username,
-        user_id=user_id,
+        user_name=user_name,
         lastfm_api_key=current_app.config['LASTFM_API_KEY'],
     )
     return Response(scraper, content_type="text/javascript")
@@ -45,7 +45,7 @@ def profile(user_name):
     # Which database to use to showing user listens.
     db_conn = webserver.create_postgres()
 
-    user_id = _get_user(user_name) 
+    user = _get_user(user_name) 
 
     # Getting data for current page
     max_ts = request.args.get("max_ts")
@@ -56,7 +56,7 @@ def profile(user_name):
             raise BadRequest("Incorrect timestamp argument to_ts:" %
                              request.args.get("to_ts"))
     listens = []
-    for listen in db_conn.fetch_listens(user_id, limit=25, to_ts=max_ts):
+    for listen in db_conn.fetch_listens(user.id, limit=25, to_ts=max_ts):
         listens.append({
             "track_metadata": listen.data,
             "listened_at": listen.timestamp,
@@ -65,7 +65,7 @@ def profile(user_name):
 
     if listens:
         # Checking if there is a "previous" page...
-        previous_listens = db_conn.fetch_listens(user_id, limit=25, from_ts=listens[0]["listened_at"])
+        previous_listens = db_conn.fetch_listens(user.id, limit=25, from_ts=listens[0]["listened_at"])
         if previous_listens:
             # Getting from the last item because `fetch_listens` returns in ascending
             # order when `from_ts` is used.
@@ -74,7 +74,7 @@ def profile(user_name):
             previous_listen_ts = None
 
         # Checking if there is a "next" page...
-        next_listens = db_conn.fetch_listens(user_id, limit=1, to_ts=listens[-1]["listened_at"])
+        next_listens = db_conn.fetch_listens(user.id, limit=1, to_ts=listens[-1]["listened_at"])
         if next_listens:
             next_listen_ts = listens[-1]["listened_at"]
         else:
@@ -86,7 +86,7 @@ def profile(user_name):
 
     return render_template(
         "user/profile.html",
-        user=_get_user(user_id),
+        user=user,
         listens=listens,
         previous_listen_ts=previous_listen_ts,
         next_listen_ts=next_listen_ts,
@@ -108,7 +108,7 @@ def import_data():
         loader = render_template(
             "user/loader.js",
             base_url=url_for("user.lastfmscraper",
-                             user_id=current_user.musicbrainz_id,
+                             user_name=current_user.musicbrainz_id,
                              _external=True),
             user_token=current_user.auth_token,
             lastfm_username=lastfm_username,
@@ -130,7 +130,7 @@ def export_data():
 
         # Fetch output and convert it into dict with keys as indexes
         output = []
-        for index, obj in enumerate(db_conn.fetch_listens(current_user.musicbrainz_id)):
+        for index, obj in enumerate(db_conn.fetch_listens(current_user.id)):
             dic = obj.data
             dic['timestamp'] = obj.timestamp
             dic['album_msid'] = None if obj.album_msid is None else str(obj.album_msid)
@@ -193,7 +193,7 @@ def upload():
                     continue
 
                 payload = convert_backup_to_native_format(jsonlist)
-                insert_payload(payload, current_user.musicbrainz_id)
+                insert_payload(payload, current_user.id)
                 success += 1
         except Exception, e:
             raise BadRequest('Not a valid lastfm-backup-file.')
