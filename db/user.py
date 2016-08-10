@@ -66,7 +66,7 @@ def get_by_mb_id(musicbrainz_id):
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT musicbrainz_id
+            SELECT id, created, musicbrainz_id, auth_token
               FROM "user"
              WHERE LOWER(musicbrainz_id) = LOWER(:mb_id)
         """), {"mb_id": musicbrainz_id})
