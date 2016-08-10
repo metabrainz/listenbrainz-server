@@ -42,10 +42,10 @@
 
           <ul class="pager">
             {% if previous_listen_ts %}
-              <li class="previous"><a href="{{ url_for("user.profile", user_id=user.musicbrainz_id, max_ts=previous_listen_ts) }}">&larr; Previous</a></li>
+              <li class="previous"><a href="{{ url_for("user.profile", user_name=user.musicbrainz_id, max_ts=previous_listen_ts) }}">&larr; Previous</a></li>
             {% endif %}
             {% if next_listen_ts %}
-              <li class="next"><a href="{{ url_for("user.profile", user_id=user.musicbrainz_id, max_ts=next_listen_ts) }}">Next &rarr;</a></li>
+              <li class="next"><a href="{{ url_for("user.profile", user_name=user.musicbrainz_id, max_ts=next_listen_ts) }}">Next &rarr;</a></li>
             {% endif %}
           </ul>
         </div>

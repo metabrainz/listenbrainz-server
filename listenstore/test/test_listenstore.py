@@ -5,8 +5,8 @@ import logging
 from datetime import datetime
 from tests.utils import generate_data, to_epoch
 import pytz
-from .util import generate_data, to_epoch
 from webserver.postgres_connection import init_postgres_connection
+import db.user
 
 
 class TestListenStore(DatabaseTestCase):
@@ -30,5 +30,6 @@ class TestListenStore(DatabaseTestCase):
 
     def test_fetch_listens(self):
         date = pytz.utc.localize(datetime(2015, 9, 3, 0, 0, 0))
-        listens = self.logstore.fetch_listens(user_id="test", from_ts=to_epoch(date), limit=10)
+        user = db.user.get_by_mb_id("test")
+        listens = self.logstore.fetch_listens(user_id=user['id'], from_ts=to_epoch(date), limit=10)
         self.assertEquals(len(list(listens)), 10)

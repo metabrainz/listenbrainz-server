@@ -283,7 +283,7 @@ function submitListens() {
                     pageDone();
                 }
                 if (numCompleted >= numberOfPages) {
-                    updateMessage("<i class='fa fa-check'></i> Import finished<br><span><a href='https://listenbrainz.org/user/{{user_id}}'>Go to your ListenBrainz profile</a> | <a href='' id='close-progress-container'>Close</a></span><br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
+                    updateMessage("<i class='fa fa-check'></i> Import finished<br><span><a href='https://listenbrainz.org/user/{{user_name}}'>Go to your ListenBrainz profile</a> | <a href='' id='close-progress-container'>Close</a></span><br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
                     var close = document.getElementById('close-progress-container');
                     close.addEventListener('click', function(ev) {
                         ev.preventDefault();
