@@ -27,11 +27,11 @@ DEFAULT_ITEMS_PER_GET = 25
 MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
 
 
-def insert_payload(payload, user, listen_type="import"):
+def insert_payload(payload, user_id, listen_type="import"):
     """ Convert the payload into augmented listens then submit them.
         Returns: augmented_listens
     """
-    augmented_listens = _get_augmented_listens(payload, user)
+    augmented_listens = _get_augmented_listens(payload, user_id)
     _send_listens_to_redis(listen_type, augmented_listens)
     return augmented_listens
 

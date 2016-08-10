@@ -14,7 +14,7 @@ application = webserver.create_app()
 cli = click.Group()
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'sql')
-MSB_ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../messybrainz-server', 'admin', 'sql')
+MSB_ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../messybrainz', 'admin', 'sql')
 
 
 @cli.command()
@@ -36,7 +36,7 @@ def runserver(host, port, debug=False):
 
 @cli.command()
 @click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
-@click.option("-create-db", is_flag=True, help="Skip creating database and user. Tables/indexes only.")
+@click.option("--create-db", is_flag=True, help="Create the database and user.")
 def init_db(force, create_db):
     """Initializes database.
 
@@ -73,6 +73,9 @@ def init_db(force, create_db):
             raise Exception('Failed to create database extensions! Exit code: %i' % exit_code)
 
     with application.app_context():
+        print('Creating schema...')
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_schema.sql'))
+
         print('Creating tables...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
 
@@ -174,10 +177,10 @@ def init_msb_db(force, create_db):
     if exit_code != 0:
         raise Exception('Failed to create database extensions! Exit code: %i' % exit_code)
 
-    print('Creating schema...')
-    exit_code = run_script(uri, 'create_schema.sql')
-    if exit_code != 0:
-        raise Exception('Failed to create database schema! Exit code: %i' % exit_code)
+#    print('Creating schema...')
+#    exit_code = run_psql_script('create_schema.sql')
+#    if exit_code != 0:
+#        raise Exception('Failed to create database schema! Exit code: %i' % exit_code)
 
     print('Creating tables...')
     exit_code = run_psql_script('create_tables.sql')

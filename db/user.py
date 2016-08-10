@@ -74,6 +74,7 @@ def get_by_mb_id(musicbrainz_id):
         return dict(row) if row else None
 
 
+
 def get_by_token(token):
     """Get user with a specified authentication token.
 

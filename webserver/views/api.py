@@ -135,4 +135,4 @@ def _validate_auth_header():
     if user is None:
         raise Unauthorized("Invalid authorization token.")
 
-    return user['musicbrainz_id']
+    return user['id']

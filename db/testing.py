@@ -20,9 +20,11 @@ class DatabaseTestCase(unittest.TestCase):
 
     def tearDown(self):
         self.drop_tables()
+        self.drop_schema()
 
     def reset_db(self):
         self.drop_tables()
+        self.drop_schema()
         self.init_db()
 
     def init_db(self):
@@ -39,6 +41,10 @@ class DatabaseTestCase(unittest.TestCase):
             connection.execute('DROP TABLE IF EXISTS listen_json         CASCADE')
             connection.execute('DROP TABLE IF EXISTS api_compat.token    CASCADE')
             connection.execute('DROP TABLE IF EXISTS api_compat.session  CASCADE')
+
+    def drop_schema(self):
+        with db.engine.connect() as connection:
+            connection.execute('DROP SCHEMA IF EXISTS api_compat')
 
     def load_data_files(self):
         """ Get the data files from the disk """
