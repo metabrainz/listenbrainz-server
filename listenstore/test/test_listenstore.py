@@ -5,7 +5,6 @@ import logging
 from datetime import datetime
 from tests.utils import generate_data, to_epoch
 import pytz
-from .util import generate_data, to_epoch
 from webserver.postgres_connection import init_postgres_connection
 
 
