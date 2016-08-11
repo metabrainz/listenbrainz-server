@@ -6,33 +6,12 @@ from webserver.decorators import crossdomain
 import webserver
 import db
 from webserver.rate_limiter import ratelimit
-from api_tools import insert_payload, log_raise_400, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET
+from api_tools import insert_payload, log_raise_400, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET,\
+    LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
 from webserver.redis_connection import _redis
 
 api_bp = Blueprint('api_v1', __name__)
 
-#: Maximum overall listen size in bytes, to prevent egregious spamming.
-MAX_LISTEN_SIZE = 10240
-
-#: The maximum number of tags per listen.
-MAX_TAGS_PER_LISTEN = 50
-
-#: The maximum length of a tag
-MAX_TAG_SIZE = 64
-
-#: The maximum number of listens returned in a single GET request.
-MAX_ITEMS_PER_GET = 100
-
-#: The default number of listens returned in a single GET request.
-DEFAULT_ITEMS_PER_GET = 25
-
-MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
-
-
-# Define the values for types of listens
-LISTEN_TYPE_SINGLE = 1
-LISTEN_TYPE_IMPORT = 2
-LISTEN_TYPE_PLAYING_NOW = 3
 
 @api_bp.route("/1/submit-listens", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
@@ -50,7 +29,7 @@ def submit_listen():
     :statuscode 401: invalid authorization. See error message for details.
     :resheader Content-Type: *application/json*
     """
-    user_id = _validate_auth_header()
+    user = _validate_auth_header()
 
     raw_data = request.get_data()
     try:
@@ -78,12 +57,10 @@ def submit_listen():
         log_raise_400("Invalid JSON document submitted.", raw_data)
 
     try:
-        insert_payload(payload, user_id, listen_type=data['listen_type'])
+        insert_payload(payload, user["id"], listen_type=data['listen_type'])
     except Exception, e:
         raise InternalServerError("Something went wrong. Please try again.")
 
-    _send_listens_to_redis(listen_type,
-                                _payload_to_augmented_list(payload, listen_type, user_id))
     return "success"
 
 
@@ -159,7 +136,7 @@ def _validate_auth_header():
     if user is None:
         raise Unauthorized("Invalid authorization token.")
 
-    return user['musicbrainz_id']
+    return user
 
 
 def _send_listens_to_redis(listen_type, listens):
@@ -315,54 +292,6 @@ def _validate_listen(listen, listen_type):
         for ambid in ambids:
             if not is_valid_uuid(ambid):
                 _log_raise_400("Artist MBID format invalid.", listen)
-
-
-def _convert_to_native_format(data):
-    """
-    Converts the imported listen-payload from the lastfm backup file
-    to the native payload format.
-    """
-    payload = []
-    for native_lis in data:
-        listen = {}
-        listen['track_metadata'] = {}
-        listen['track_metadata']['additional_info'] = {}
-
-        if 'timestamp' in native_lis and 'unixtimestamp' in native_lis['timestamp']:
-            listen['listened_at'] = native_lis['timestamp']['unixtimestamp']
-
-        if 'track' in native_lis:
-            if 'name' in native_lis['track']:
-                listen['track_metadata']['track_name'] = native_lis['track']['name']
-            if 'mbid' in native_lis['track']:
-                listen['track_metadata']['additional_info']['recording_mbid'] = native_lis['track']['mbid']
-            if 'artist' in native_lis['track']:
-                if 'name' in native_lis['track']['artist']:
-                    listen['track_metadata']['artist_name'] = native_lis['track']['artist']['name']
-                if 'mbid' in native_lis['track']['artist']:
-                    listen['track_metadata']['additional_info']['artist_mbids'] = [native_lis['track']['artist']['mbid']]
-        payload.append(listen)
-    return payload
-
-
-def _payload_to_augmented_list(payload, listen_type, user_id):
-    """ Converts the payload to augmented list after lookup
-        in the MessyBrainz database
-    """
-    augmented_listens = []
-    msb_listens = []
-    for listen in payload:
-        _validate_listen(listen, listen_type)
-        listen['user_id'] = user_id
-
-        msb_listens.append(listen)
-        if len(msb_listens) >= MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP:
-            augmented_listens.extend(_messybrainz_lookup(msb_listens))
-            msb_listens = []
-
-    if msb_listens:
-        augmented_listens.extend(_messybrainz_lookup(msb_listens))
-    return augmented_listens
 
 
 def _log_raise_400(msg, data):

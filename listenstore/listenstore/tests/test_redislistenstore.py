@@ -8,6 +8,7 @@ from listenstore.listenstore import RedisListenStore, MIN_ID
 from webserver.redis_connection import init_redis_connection
 import random
 import ujson
+import db.user
 
 
 class TestRedisListenStore(DatabaseTestCase):
@@ -16,6 +17,7 @@ class TestRedisListenStore(DatabaseTestCase):
         super(TestRedisListenStore, self).setUp()
         self.log = logging.getLogger(__name__)
         self._redis = init_redis_connection(self.config.REDIS_HOST)
+        self.testuser_id = db.user.create("test")
         self._create_test_data()
 
     def tearDown(self):
@@ -24,9 +26,9 @@ class TestRedisListenStore(DatabaseTestCase):
 
     def _create_test_data(self):
         self.log.info("Inserting test data...")
-        self.listen = generate_data(datetime.utcfromtimestamp(random.randint(MIN_ID, MIN_ID + 10000000)), 1)[0]
+        self.listen = generate_data(self.testuser_id, datetime.utcfromtimestamp(random.randint(MIN_ID, MIN_ID + 10000000)), 1)[0]
         listen = self.listen.to_json()
-        self._redis.redis.setex('playing_now' + ':' + listen['user_id'],
+        self._redis.redis.setex('playing_now' + ':' + str(listen['user_id']),
                                 ujson.dumps(listen).encode('utf-8'), self.config.PLAYING_NOW_MAX_DURATION)
         self.log.info("Test data inserted")
 
