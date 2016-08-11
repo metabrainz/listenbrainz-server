@@ -27,7 +27,7 @@ class ListenStore(object):
     MAX_FETCH = 5000          # max batch size to fetch from the db
     MAX_FUTURE_SECONDS = 600  # 10 mins in future - max fwd clock skew
 
-    def __init__(self):
+    def __init__(self, conf):
         self.log = logging.getLogger(__name__)
 
     def max_id(self):
@@ -59,7 +59,7 @@ class ListenStore(object):
 
 class PostgresListenStore(ListenStore):
     def __init__(self, conf):
-        ListenStore.__init__(self)
+        ListenStore.__init__(self, conf)
         self.log.info('Connecting to postgresql: %s', conf['SQLALCHEMY_DATABASE_URI'])
         self.engine = create_engine(conf['SQLALCHEMY_DATABASE_URI'], poolclass=NullPool)
         if 'PG_ASYNC_LISTEN_COMMIT' in conf and conf['PG_ASYNC_LISTEN_COMMIT']:
@@ -158,7 +158,7 @@ class RedisListenStore(ListenStore):
 
     def get_playing_now(self, user_id):
         """ Return the current playing song of the user """
-        data = self.redis.get('playing_now' + ':' + user_id)
+        data = self.redis.get('playing_now' + ':' + str(user_id))
         if not data:
             return None
         data = ujson.loads(data)

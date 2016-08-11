@@ -27,40 +27,59 @@ DEFAULT_ITEMS_PER_GET = 25
 MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
 
 
-def insert_payload(payload, user_id, listen_type="import"):
+
+# Define the values for types of listens
+LISTEN_TYPE_SINGLE = 1
+LISTEN_TYPE_IMPORT = 2
+LISTEN_TYPE_PLAYING_NOW = 3
+
+def insert_payload(payload, user_id, listen_type=LISTEN_TYPE_IMPORT):
     """ Convert the payload into augmented listens then submit them.
         Returns: augmented_listens
     """
-    augmented_listens = _get_augmented_listens(payload, user_id)
-    _send_listens_to_redis(listen_type, augmented_listens)
+    try:
+        augmented_listens = _get_augmented_listens(payload, user_id, listen_type)
+        _send_listens_to_redis(listen_type, augmented_listens)
+    except Exception, e:
+        print(e)
     return augmented_listens
 
 
-def _validate_listen(listen):
+def _validate_listen(listen, listen_type):
     """Make sure that required keys are present, filled out and not too large."""
 
-    if 'listened_at' not in listen:
-        log_raise_400("JSON document must contain the key listened_at at the top level.", listen)
+    if listen_type in (LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT):
+        if 'listened_at' not in listen:
+            _log_raise_400("JSON document must contain the key listened_at at the top level.", listen)
 
-    try:
-        listen['listened_at'] = int(listen['listened_at'])
-    except ValueError:
-        log_raise_400("JSON document must contain an int value for listened_at.", listen)
+        try:
+            listen['listened_at'] = int(listen['listened_at'])
+        except ValueError:
+            _log_raise_400("JSON document must contain an int value for listened_at.", listen)
 
-    if 'listened_at' in listen and 'track_metadata' in listen and len(listen) > 2:
-        log_raise_400("JSON document may only contain listened_at and "
-                       "track_metadata top level keys", listen)
+        if 'listened_at' in listen and 'track_metadata' in listen and len(listen) > 2:
+            _log_raise_400("JSON document may only contain listened_at and "
+                           "track_metadata top level keys", listen)
+
+    elif listen_type == LISTEN_TYPE_PLAYING_NOW:
+        if 'listened_at' in listen:
+            _log_raise_400("JSON document must not contain listened_at while submitting "
+                           "playing_now.", listen)
+
+        if 'track_metadata' in listen and len(listen) > 1:
+            _log_raise_400("JSON document may only contain track_metadata as top level "
+                           "key when submitting now_playing.", listen)
 
     # Basic metadata
     try:
         if not listen['track_metadata']['track_name']:
-            log_raise_400("JSON document does not contain required "
+            _log_raise_400("JSON document does not contain required "
                            "track_metadata.track_name.", listen)
         if not listen['track_metadata']['artist_name']:
-            log_raise_400("JSON document does not contain required "
+            _log_raise_400("JSON document does not contain required "
                            "track_metadata.artist_name.", listen)
     except KeyError:
-        log_raise_400("JSON document does not contain a valid metadata.track_name "
+        _log_raise_400("JSON document does not contain a valid metadata.track_name "
                        "and/or track_metadata.artist_name.", listen)
 
     if 'additional_info' in listen['track_metadata']:
@@ -68,50 +87,35 @@ def _validate_listen(listen):
         if 'tags' in listen['track_metadata']['additional_info']:
             tags = listen['track_metadata']['additional_info']['tags']
             if len(tags) > MAX_TAGS_PER_LISTEN:
-                log_raise_400("JSON document may not contain more than %d items in "
+                _log_raise_400("JSON document may not contain more than %d items in "
                                "track_metadata.additional_info.tags." % MAX_TAGS_PER_LISTEN, listen)
             for tag in tags:
                 if len(tag) > MAX_TAG_SIZE:
-                    log_raise_400("JSON document may not contain track_metadata.additional_info.tags "
+                    _log_raise_400("JSON document may not contain track_metadata.additional_info.tags "
                                    "longer than %d characters." % MAX_TAG_SIZE, listen)
         # MBIDs
         if 'release_mbid' in listen['track_metadata']['additional_info']:
             lmbid = listen['track_metadata']['additional_info']['release_mbid']
             if not is_valid_uuid(lmbid):
-                log_raise_400("Release MBID format invalid.", listen)
+                _log_raise_400("Release MBID format invalid.", listen)
         if 'recording_mbid' in listen['track_metadata']['additional_info']:
             cmbid = listen['track_metadata']['additional_info']['recording_mbid']
             if not is_valid_uuid(cmbid):
-                log_raise_400("Recording MBID format invalid.", listen)
+                _log_raise_400("Recording MBID format invalid.", listen)
         ambids = listen['track_metadata']['additional_info'].get('artist_mbids', [])
         for ambid in ambids:
             if not is_valid_uuid(ambid):
-                log_raise_400("Artist MBID format invalid.", listen)
-
-        # Duration
-        if 'duration' in listen['track_metadata']['additional_info']:
-            try:
-                int(listen['track_metadata']['additional_info']['duration'])
-            except ValueError:
-                log_raise_400("Track Duration invalid.", listen)
-
-        # Choosen_by_user
-        if 'choosen_by_user' in listen['track_metadata']['additional_info']:
-            try:
-                if int(listen['track_metadata']['additional_info']['choosen_by_user']) not in (0, 1):
-                    raise ValueError
-            except ValueError:
-                log_raise_400("choosen_by_user format invalid.", listen)
+                _log_raise_400("Artist MBID format invalid.", listen)
 
 
 def _send_listens_to_redis(listen_type, listens):
-    p = _redis.pipeline()
+    p = _redis.redis.pipeline()
     for listen in listens:
-        if listen_type == 'playing_now':
+        if listen_type == "playing_now":
             try:
-                p.rpush('playing_now', ujson.dumps(listen).encode('utf-8'))
+                p.setex('playing_now' + ':' + listen['user_id'],
+                        ujson.dumps(listen).encode('utf-8'), current_app.config['PLAYING_NOW_MAX_DURATION'])
             except Exception, e:
-                print(e)
                 current_app.logger.error("Redis rpush playing_now write error: " + str(sys.exc_info()[0]))
                 raise InternalServerError("Cannot record playing_now at this time.")
         else:
@@ -121,7 +125,6 @@ def _send_listens_to_redis(listen_type, listens):
                 print(e)
                 current_app.logger.error("Redis rpush listens write error: " + str(sys.exc_info()[0]))
                 raise InternalServerError("Cannot record listen at this time.")
-
     p.execute()
 
 
@@ -134,7 +137,7 @@ def is_valid_uuid(u):
         return False
 
 
-def _get_augmented_listens(payload, user_id):
+def _get_augmented_listens(payload, user_id, listen_type):
     """ Converts the payload to augmented list after lookup
         in the MessyBrainz database
     """
@@ -142,7 +145,7 @@ def _get_augmented_listens(payload, user_id):
     msb_listens = []
     for l in payload:
         listen = l.copy()   # Create a local object to prevent the mutation of the passed object
-        _validate_listen(listen)
+        _validate_listen(listen, listen_type)
 
         listen['user_id'] = user_id
 
