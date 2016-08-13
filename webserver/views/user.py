@@ -10,6 +10,7 @@ import db.user
 from flask import make_response
 from webserver.views.api_tools import convert_backup_to_native_format, insert_payload, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
 from webserver.utils import sizeof_readable
+from webserver.login import User
 from os import path, makedirs
 import ujson
 import zipfile
@@ -43,10 +44,10 @@ def lastfmscraper(user_name):
 def profile(user_name):
     # Which database to use to showing user listens.
     db_conn = webserver.postgres_connection._postgres
-
-    user = _get_user(user_name)
     # Which database to use to show playing_now stream.
     playing_now_conn = webserver.redis_connection._redis
+
+    user = _get_user(user_name)
 
     # Getting data for current page
     max_ts = request.args.get("max_ts")
@@ -223,7 +224,7 @@ def _get_user(user_name):
         user = db.user.get_by_mb_id(user_name)
         if user is None:
             raise NotFound("Cannot find user: %s" % user_name)
-        return user
+        return User.from_dbrow(user)
 
 
 def _get_spotify_uri_for_listens(listens):
