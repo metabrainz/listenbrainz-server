@@ -139,8 +139,8 @@ class PostgresListenStore(ListenStore):
                  LIMIT :limit
             """), {
                 'user_id': user_id,
-                'from_ts': datetime.utcfromtimestamp(from_ts),
-                'to_ts': datetime.utcfromtimestamp(to_ts),
+                'from_ts': pytz.utc.localize(datetime.utcfromtimestamp(from_ts)),
+                'to_ts': pytz.utc.localize(datetime.utcfromtimestamp(to_ts)),
                 'limit': limit
             })
 

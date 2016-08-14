@@ -5,18 +5,17 @@ from listenstore.listen import Listen
 import uuid
 
 
-def generate_data(test_user_id, from_date, num_records):
+def generate_data(test_user_id, from_ts, num_records):
     test_data = []
-    current_date = to_epoch(from_date)
     artist_msid = str(uuid.uuid4())
 
     for i in range(num_records):
-        current_date += 1   # Add one second
-        item = Listen(user_id=test_user_id, timestamp=current_date, artist_msid=artist_msid,
+        from_ts += 1   # Add one second
+        item = Listen(user_id=test_user_id, timestamp=from_ts, artist_msid=artist_msid,
                       recording_msid=str(uuid.uuid4()))
         test_data.append(item)
     return test_data
 
 
 def to_epoch(date):
-    return (date - datetime.utcfromtimestamp(0)).total_seconds()
+    return int((date - datetime.utcfromtimestamp(0)).total_seconds())
