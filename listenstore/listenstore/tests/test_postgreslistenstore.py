@@ -27,19 +27,18 @@ class TestPostgresListenStore(DatabaseTestCase):
 
     def _create_test_data(self, from_ts=MIN_ID + 1, num_listens=random.randint(1, 100)):
         self.log.info("Inserting test data...")
-        date = datetime.utcfromtimestamp(from_ts)
-        test_data = generate_data(self.testuser_id, date, num_listens)
+        test_data = generate_data(self.testuser_id, from_ts, num_listens)
         self.logstore.insert(test_data)
         self.log.info("Test data inserted")
-        return date, num_listens
+        return from_ts, num_listens
 
     def test_insert_postgresql(self):
-        date, count = self._create_test_data()
-        self.assertEquals(len(self.logstore.fetch_listens(self.testuser_id, from_ts=to_epoch(date))), count)
+        from_ts, count = self._create_test_data()
+        self.assertEquals(len(self.logstore.fetch_listens(self.testuser_id, from_ts=from_ts)), count)
 
     def test_fetch_listens(self):
-        date, count = self._create_test_data()
-        listens = self.logstore.fetch_listens(user_id=self.testuser_id, from_ts=to_epoch(date), limit=count*10)
+        from_ts, count = self._create_test_data()
+        listens = self.logstore.fetch_listens(user_id=self.testuser_id, from_ts=from_ts, limit=count)
         self.assertEquals(len(listens), count)
 
     def test_convert_row(self):
