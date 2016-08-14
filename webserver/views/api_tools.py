@@ -113,8 +113,10 @@ def _send_listens_to_redis(listen_type, listens):
     for listen in listens:
         if listen_type == "playing_now":
             try:
+                expire_time = listen["track_metadata"]["additional_info"].get("duration",
+                                    current_app.config['PLAYING_NOW_MAX_DURATION'])
                 p.setex('playing_now' + ':' + listen['user_id'],
-                        ujson.dumps(listen).encode('utf-8'), current_app.config['PLAYING_NOW_MAX_DURATION'])
+                        ujson.dumps(listen).encode('utf-8'), expire_time)
             except Exception, e:
                 current_app.logger.error("Redis rpush playing_now write error: " + str(sys.exc_info()[0]))
                 raise InternalServerError("Cannot record playing_now at this time.")
