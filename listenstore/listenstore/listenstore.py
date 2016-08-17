@@ -15,6 +15,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.pool import NullPool
 import sqlalchemy.exc
 import pytz
+from redis import Redis
 
 MIN_ID = 1033430400     # approx when audioscrobbler was created
 ORDER_DESC = 0
@@ -26,7 +27,7 @@ class ListenStore(object):
     MAX_FETCH = 5000          # max batch size to fetch from the db
     MAX_FUTURE_SECONDS = 600  # 10 mins in future - max fwd clock skew
 
-    def __init__(self):
+    def __init__(self, conf):
         self.log = logging.getLogger(__name__)
 
     def max_id(self):
@@ -58,7 +59,7 @@ class ListenStore(object):
 
 class PostgresListenStore(ListenStore):
     def __init__(self, conf):
-        ListenStore.__init__(self)
+        ListenStore.__init__(self, conf)
         self.log.info('Connecting to postgresql: %s', conf['SQLALCHEMY_DATABASE_URI'])
         self.engine = create_engine(conf['SQLALCHEMY_DATABASE_URI'], poolclass=NullPool)
         if 'PG_ASYNC_LISTEN_COMMIT' in conf and conf['PG_ASYNC_LISTEN_COMMIT']:
@@ -147,3 +148,19 @@ class PostgresListenStore(ListenStore):
             for row in results.fetchall():
                 listens.append(self.convert_row(row))
             return listens
+
+
+class RedisListenStore(ListenStore):
+    def __init__(self, conf):
+        ListenStore.__init__(self, conf)
+        self.log.info('Connecting to redis: %s', conf['REDIS_HOST'])
+        self.redis = Redis(conf['REDIS_HOST'])
+
+    def get_playing_now(self, user_id):
+        """ Return the current playing song of the user """
+        data = self.redis.get('playing_now' + ':' + str(user_id))
+        if not data:
+            return None
+        data = ujson.loads(data)
+        data.update({'listened_at': datetime.utcnow()})
+        return Listen.from_json(data)

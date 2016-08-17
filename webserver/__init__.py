@@ -4,10 +4,13 @@ import os
 from webserver.scheduler import ScheduledJobs
 
 
-def create_postgres():
+def create_postgres(app):
     from postgres_connection import init_postgres_connection
-    return init_postgres_connection(current_app.config['SQLALCHEMY_DATABASE_URI'])
+    return init_postgres_connection(app.config['SQLALCHEMY_DATABASE_URI'])
 
+def create_redis(app):
+    from redis_connection import init_redis_connection
+    return init_redis_connection(app.config['REDIS_HOST'])
 
 def schedule_jobs(app):
     """ Init all the scheduled jobs """
@@ -27,9 +30,11 @@ def create_app():
     from webserver.loggers import init_loggers
     init_loggers(app)
 
-    # Redis connection
-    from redis_connection import init_redis_connection
-    init_redis_connection(app.config['REDIS_HOST'])
+    # Redis connection (RedisStore)
+    create_redis(app)
+
+    # Postgres connection (ListenStore)
+    create_postgres(app)
 
     # Database connection
     import db

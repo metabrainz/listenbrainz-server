@@ -36,9 +36,9 @@ def inject_x_rate_headers(response):
     return response
 
 class RateLimit(object):
-    
+
     # From the docs:
-    # We also give the key extra expiration_window seconds time to expire in redis so that badly 
+    # We also give the key extra expiration_window seconds time to expire in redis so that badly
     # synchronized clocks between the workers and the redis server do not cause problems.
     expiration_window = 10
 
@@ -47,7 +47,7 @@ class RateLimit(object):
         self.key = key_prefix + str(self.reset)
         self.limit = limit
         self.per = per
-        p = _redis.pipeline()
+        p = _redis.redis.pipeline()
         p.incr(self.key)
         p.expireat(self.key, self.reset + self.expiration_window)
         self.current = p.execute()[0]
@@ -63,30 +63,30 @@ def on_over_limit(limit):
            'information on your current rate limit.\n', 429
 
 def set_rate_limits(per_ip, per_token, window):
-    _redis.put(RATELIMIT_PER_TOKEN_KEY, per_token)
-    _redis.put(RATELIMIT_PER_IP_KEY, per_ip)
-    _redis.put(RATELIMIT_WINDOW_KEY, window)
+    _redis.redis.put(RATELIMIT_PER_TOKEN_KEY, per_token)
+    _redis.redis.put(RATELIMIT_PER_IP_KEY, per_ip)
+    _redis.redis.put(RATELIMIT_WINDOW_KEY, window)
 
 def check_limit_freshness():
     limits_timeout = getattr(g, '_' + RATELIMIT_TIMEOUT, 0)
     if time.time() <= limits_timeout:
         return
 
-    value = int(_redis.get(RATELIMIT_PER_TOKEN_KEY) or '0')
+    value = int(_redis.redis.get(RATELIMIT_PER_TOKEN_KEY) or '0')
     if not value:
-        _redis.set(RATELIMIT_PER_TOKEN_KEY, RATELIMIT_PER_TOKEN_DEFAULT)
+        _redis.redis.set(RATELIMIT_PER_TOKEN_KEY, RATELIMIT_PER_TOKEN_DEFAULT)
         value = RATELIMIT_PER_TOKEN_DEFAULT
     setattr(g, '_' + RATELIMIT_PER_TOKEN_KEY, value)
 
-    value = int(_redis.get(RATELIMIT_PER_IP_KEY) or '0')
+    value = int(_redis.redis.get(RATELIMIT_PER_IP_KEY) or '0')
     if not value:
-        _redis.set(RATELIMIT_PER_IP_KEY, RATELIMIT_PER_IP_DEFAULT)
+        _redis.redis.set(RATELIMIT_PER_IP_KEY, RATELIMIT_PER_IP_DEFAULT)
         value = RATELIMIT_PER_IP_DEFAULT
     setattr(g, '_' + RATELIMIT_PER_IP_KEY, value)
 
-    value = int(_redis.get(RATELIMIT_WINDOW_KEY) or '0')
+    value = int(_redis.redis.get(RATELIMIT_WINDOW_KEY) or '0')
     if not value:
-        _redis.set(RATELIMIT_WINDOW_KEY, RATELIMIT_WINDOW_DEFAULT)
+        _redis.redis.set(RATELIMIT_WINDOW_KEY, RATELIMIT_WINDOW_DEFAULT)
         value = RATELIMIT_WINDOW_DEFAULT
     setattr(g, '_' + RATELIMIT_WINDOW_KEY, value)
 
@@ -95,19 +95,19 @@ def check_limit_freshness():
 def get_per_ip_limits():
     check_limit_freshness()
     return {
-            'limit':   getattr(g, '_' + RATELIMIT_PER_IP_KEY), 
+            'limit':   getattr(g, '_' + RATELIMIT_PER_IP_KEY),
             'window' : getattr(g, '_' + RATELIMIT_WINDOW_KEY),
            }
 
 def get_per_token_limits():
     check_limit_freshness()
     return {
-            'limit':   getattr(g, '_' + RATELIMIT_PER_TOKEN_KEY), 
+            'limit':   getattr(g, '_' + RATELIMIT_PER_TOKEN_KEY),
             'window' : getattr(g, '_' + RATELIMIT_WINDOW_KEY),
            }
 
 def get_rate_limit_data(request):
-    '''Fetch key for the given request. If an Authorization header is provided, 
+    '''Fetch key for the given request. If an Authorization header is provided,
        the caller will get a better and personalized rate limit. If no header is provided,
        the caller will be rate limited by IP, which gets an overall lower rate limit.
        This should encourage callers to always provide the Authorization token
