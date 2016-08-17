@@ -1,7 +1,7 @@
 # coding=utf-8
 from __future__ import division, absolute_import, print_function, unicode_literals
 import datetime
-
+import ujson
 
 class Listen(object):
     """ Represents a listen object """
@@ -13,7 +13,7 @@ class Listen(object):
         self.album_msid = album_msid
         self.recording_msid = recording_msid
         if data is None:
-            self.data = {}
+            self.data = {'additional_info': {}}
         else:
             self.data = data
 
@@ -27,6 +27,14 @@ class Listen(object):
                   , recording_msid=j.get('recording_msid')
                   , data=j.get('track_metadata')
                   )
+
+    def to_json(self):
+        return {
+            'user_id': self.user_id,
+            'timestamp': self.timestamp,
+            'track_metadata': self.data,
+            'recording_msid': self.recording_msid
+        }
 
     def validate(self):
         return (self.user_id is not None and self.timestamp is not None and self.artist_msid is not None
