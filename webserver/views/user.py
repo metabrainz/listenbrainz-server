@@ -71,7 +71,7 @@ def profile(user_name):
         if previous_listens:
             # Getting from the last item because `fetch_listens` returns in ascending
             # order when `from_ts` is used.
-            previous_listen_ts = previous_listens[-1].timestamp + 1
+            previous_listen_ts = previous_listens[-1].ts_since_epoch + 1
         else:
             previous_listen_ts = None
 
