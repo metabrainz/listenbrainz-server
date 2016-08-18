@@ -3,8 +3,8 @@
 
 VAGRANTFILE_API_VERSION = "2"
 
-NCPUS = ENV['CB_NCPUS'] || '2'
-MEM = ENV['CB_MEM'] || '2048'
+NCPUS = ENV['CB_NCPUS'] || '1'
+MEM = ENV['CB_MEM'] || '1024'
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "ubuntu/trusty64"
