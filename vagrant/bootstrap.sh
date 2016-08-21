@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Setup a place for storing data inside the VM, not the host 
+mkdir -p /home/vagrant/data
+echo "export VAGRANT_DATA_DIR=/home/vagrant/data" >> ~/.profile
+
 # install docker
 command -v docker >/dev/null 2>&1
 rc=$?

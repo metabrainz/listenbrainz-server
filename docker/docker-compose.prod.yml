@@ -4,7 +4,7 @@ services:
   db:
     image: postgres:9.5.3
     volumes:
-      - ../data/pgdata:/var/lib/postgresql/data/pgdata
+      - $VAGRANT_DATA_DIR../data/pgdata:/var/lib/postgresql/data/pgdata
     environment:
       PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_USER: listenbrainz
@@ -15,7 +15,7 @@ services:
   redis:
     image: redis:3.2.1
     volumes:
-      - ../data/redis:/data
+      - $VAGRANT_DATA_DIR../data/redis:/data
     restart: always
 
   web:
@@ -24,7 +24,7 @@ services:
       dockerfile: ./docker/Dockerfile.prod
     command: uwsgi /code/listenbrainz/docker/uwsgi.ini
     volumes:
-      - ../data/app:/data
+      - $VAGRANT_DATA_DIR../data/app:/data
     ports:
       - "3031:3031"
     depends_on:
