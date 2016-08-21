@@ -2,6 +2,8 @@ from __future__ import absolute_import
 from flask import Blueprint, render_template, current_app, redirect, url_for
 from flask_login import current_user
 from webserver.redis_connection import _redis
+from redis_keys import REDIS_LISTEN_NEXTID, REDIS_LISTEN_CONSUMERS, REDIS_LISTEN_JSON, \
+    REDIS_LISTEN_JSON_REFCOUNT, REDIS_LISTEN_CONSUMER_IDS
 import os
 import subprocess
 import locale
@@ -56,6 +58,14 @@ def roadmap():
 def current_status():
 
     load = "%.2f %.2f %.2f" % os.getloadavg()
-    listens = _redis.llen("listens")
-    listens_pending = _redis.llen("listens_pending")
-    return render_template("index/current-status.html", load=load, listens=listens, listens_pending=listens_pending)
+    consumers = len(_redis.redis.smembers(REDIS_LISTEN_CONSUMERS))
+    listens = len(_redis.redis.keys(REDIS_LISTEN_JSON + "*"))
+    listen_refcounts = len(_redis.redis.keys(REDIS_LISTEN_JSON_REFCOUNT + "*"))
+    listen_ids = len(_redis.redis.keys(REDIS_LISTEN_CONSUMER_IDS + "*"))
+
+    return render_template("index/current-status.html", 
+                           load=load, 
+                           consumers=consumers,
+                           listens=listens, 
+                           listen_refcounts=listen_refcounts,
+                           listen_ids=listen_ids)

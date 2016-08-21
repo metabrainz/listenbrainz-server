@@ -7,16 +7,39 @@
   <div class="row">
 
     <div class="col-md-7 col-lg-8">
-      <h3>Incoming listens</h3>
+      <h3>Incoming listen queue</h3>
 
-      <table>
-        <tr>
-           <td>Number of listens in submission queue:</td><td>{{ listens }}</td></tr>
-           <td>Number of listens currently being inserted:</td><td>{{ listens_pending }}</td></tr>
-        </tr>
+      <table class="table table-border table-condensed table-striped">
+        <thead>
+          <tr>
+           <th>description</th>
+           <th>number</th>
+           <th>ideal number</th>
+         </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>number of listens:</td>
+            <td>{{ listens }}</td>
+            <td>less than 1M</td>
+          </tr>
+          <tr>
+            <td>number of listen ref counts:</td>
+            <td>{{ listen_refcounts }}</td>
+            <td>about the same as listens</td>
+          </tr>
+          <tr>
+            <td>number of listen consumer ids:</td>
+            <td>{{ listen_ids }}</td>
+            <td>near 0</td>
+          </tr>
+          <tr>
+            <td>number of consumers:</td>
+            <td>{{ consumers }}</td>
+            <td>between 1 and 5</td>
+          </tr>
+        </tbody>
       </table>
-      <p>
-      (values close to 0 indicate that everything is well)
 
       <h3>load average</h3>
 
