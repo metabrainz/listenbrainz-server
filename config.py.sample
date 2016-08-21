@@ -36,6 +36,11 @@ MUSICBRAINZ_CLIENT_SECRET = "CLIENT_SECRET"
 # Lastfm API key
 LASTFM_API_KEY = "USE_LASTFM_API_KEY"
 
+# BigQuery support
+# Enable/disable support. If enabled, the Application Credentials must reside in 
+# big-query-credentials.json in the top level directory.
+WRITE_TO_BIGQUERY = False
+
 
 # Max time in seconds after which the playing_now stream will expire.
 PLAYING_NOW_MAX_DURATION = 10 * 60

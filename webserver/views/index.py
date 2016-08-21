@@ -58,14 +58,16 @@ def roadmap():
 def current_status():
 
     load = "%.2f %.2f %.2f" % os.getloadavg()
-    consumers = len(_redis.redis.smembers(REDIS_LISTEN_CONSUMERS))
+    consumers = _redis.redis.smembers(REDIS_LISTEN_CONSUMERS)
     listens = len(_redis.redis.keys(REDIS_LISTEN_JSON + "*"))
     listen_refcounts = len(_redis.redis.keys(REDIS_LISTEN_JSON_REFCOUNT + "*"))
-    listen_ids = len(_redis.redis.keys(REDIS_LISTEN_CONSUMER_IDS + "*"))
+    listen_ids = []
+    for consumer in consumers:
+        listen_ids.append("%s: %d" % (consumer, _redis.redis.llen(REDIS_LISTEN_CONSUMER_IDS + consumer)))
 
     return render_template("index/current-status.html", 
                            load=load, 
-                           consumers=consumers,
+                           consumers=len(consumers),
                            listens=listens, 
                            listen_refcounts=listen_refcounts,
-                           listen_ids=listen_ids)
+                           listen_ids=", ".join(listen_ids))

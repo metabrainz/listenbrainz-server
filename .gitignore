@@ -6,6 +6,7 @@ config.py
 *.log
 .cache
 env
+big-query-credentials.json
 
 # Application data
 /data

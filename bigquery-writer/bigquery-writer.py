@@ -2,12 +2,14 @@
 
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../listenstore"))
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
 from redis import Redis
 from redis_keys import REDIS_LISTEN_JSON, REDIS_LISTEN_JSON_REFCOUNT, REDIS_LISTEN_CONSUMER_IDS, \
     REDIS_LISTEN_CONSUMERS
 import config
+from googleapiclient import discovery
+from googleapiclient.errors import HttpError
+from oauth2client.client import GoogleCredentials
 
 import ujson
 import logging
@@ -16,14 +18,21 @@ from time import time, sleep
 
 BATCH_SIZE = 1000
 REPORT_FREQUENCY = 5000
-BATCH_TIMEOUT = 3      # in seconds. Don't let a listen get older than this before writing
+BATCH_TIMEOUT = 5      # in seconds. Don't let a listen get older than this before writing
 REQUEST_TIMEOUT = 1    # in seconds. Wait this long to get a listen from redis
 
 CONSUMER_NAME = "bq"
+APP_CREDENTIALS_FILE = "big-query-credentials.json"
 
-class BigQueryConsumer(object):
+# Things left to do
+#   Redis persistence
+#   Use the two lists model in order to not lose any items in case of restart
+#   Figure out where the bigquery data actuall ends up. :)
+
+class BigQueryWriter(object):
     def __init__(self):
         self.log = logging.getLogger(__name__)
+        logging.basicConfig()
         self.total_inserts = 0
         self.inserts = 0
         self.time = 0
@@ -34,7 +43,21 @@ class BigQueryConsumer(object):
             r.sadd(REDIS_LISTEN_CONSUMERS, CONSUMER_NAME)
 
     def start(self, redis_host):
-        self.log.info("BiqQueryListenWriter started")
+
+        self.log.debug("BiqQueryWriter started")
+        if not config.WRITE_TO_BIGQUERY or not os.path.exists(APP_CREDENTIALS_FILE):
+            if not os.path.exists(APP_CREDENTIALS_FILE):
+                self.log.error("BiqQueryWriter not started, big-query-credentials.json is missing.")
+
+            # Rather than exit, just loop, otherwise the container will get 
+            # restarted over and over
+            while True:
+                sleep(100)
+
+        self.log.info("BiqQueryWriter started")
+
+        credentials = GoogleCredentials.get_application_default()
+        bigquery = discovery.build('bigquery', 'v2', credentials=credentials)
 
         r = Redis(redis_host)
         self._register_self(r)
@@ -50,9 +73,6 @@ class BigQueryConsumer(object):
                 # If we got an id, fetch the listen and add to our list 
                 if id:
                     id = id[1]
-                    # record the time when we get a first listen in this batch
-                    if not batch_start_time:
-                        batch_start_time = time()
 
                     listen = r.get(REDIS_LISTEN_JSON + id)
                     if listen:
@@ -60,6 +80,9 @@ class BigQueryConsumer(object):
                         data = ujson.loads(listen)
                         l = Listen().from_json(data)
                         if l.validate():
+                            # record the time when we get a first listen in this batch
+                            if not batch_start_time:
+                                batch_start_time = time()
                             listens.append(l)
                         else:
                             self.log.error("invalid listen: " + str(l))
@@ -71,8 +94,41 @@ class BigQueryConsumer(object):
                 if time() - batch_start_time >= BATCH_TIMEOUT:
                     break
 
+                if len(listens) >= BATCH_SIZE:
+                    break
+
+            if not listens:
+                batch_start_time = 0
+                continue
+
+            self.log.error("got %d listens" % len(listens))
             # We've collected listens to write, now write them
-            # TODO
+            bq_data = []
+            for listen in listens:
+                row = {
+                    'user_id' : listen.user_id,
+                    'ts' : listen.timestamp,
+                    'artist_msid' : listen.artist_msid,
+                    'album_msid' : listen.album_msid,
+                    'recording_msid' : listen.recording_msid,
+                    'data' : data
+                }
+                bq_data.append({
+                    'json': row,
+                    'insertId': "%s-%s" % (listen.user_id, listen.timestamp)
+                })
+
+            try:
+                t0 = time()
+                bigquery.tabledata().insertAll(
+                    projectId="listenbrainz",
+                    datasetId="listenbrainz_test",
+                    tableId="listen",
+                    body={ 'rows' : bq_data }).execute(num_retries=5)
+                self.time += time() - t0
+                self.log.error("Submitted %d rows" % len(bq_data))
+            except HttpError as e:
+                self.log.error("Submit to BigQuery failed: " + str(e))
 
             # Clear the start time, since we've cleaned out the batch
             batch_start_time = 0
@@ -95,5 +151,5 @@ class BigQueryConsumer(object):
                 self.time = 0
 
 if __name__ == "__main__":
-    rc = BigQueryConsumer()
+    rc = BigQueryWriter()
     rc.start(config.REDIS_HOST)
