@@ -11,9 +11,9 @@ RUN mkdir /code
 WORKDIR /code
 
 # These following steps are redundant, but they prevent the requirements from being installed too many times
-RUN mkdir /code/bigquery-consumer
-COPY ./bigquery-consumer/requirements.txt /code/bigquery-consumer
-RUN pip install -r /code/bigquery-consumer/requirements.txt
+RUN mkdir /code/bigquery-writer
+COPY ./bigquery-writer/requirements.txt /code/bigquery-writer
+RUN pip install -r /code/bigquery-writer/requirements.txt
 
 # This step is executed if our code changes, good.
 COPY . /code
