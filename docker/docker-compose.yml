@@ -4,7 +4,7 @@ services:
   db:
     image: postgres:9.5.3
     volumes:
-      - ../data/pgdata:/var/lib/postgresql/data/pgdata
+      - $VAGRANT_DATA_DIR../data/pgdata:/var/lib/postgresql/data/pgdata
     environment:
       PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_USER: listenbrainz
@@ -19,8 +19,8 @@ services:
       context: ..
       dockerfile: ./docker/Dockerfile
     volumes:
-      - ..:/code/listenbrainz
-      - ../data/app:/data
+      - $VAGRANT_DATA_DIR..:/code/listenbrainz
+      - $VAGRANT_DATA_DIR../data/app:/data
     ports:
       - "80:80"
     depends_on:
@@ -33,7 +33,7 @@ services:
       dockerfile: ./docker/redis-consumer/Dockerfile
     command: python redis-consumer/redis-consumer.py
     volumes:
-      - ..:/code/listenbrainz
+      - $VAGRANT_DATA_DIR..:/code/listenbrainz
     depends_on:
       - db
       - redis
