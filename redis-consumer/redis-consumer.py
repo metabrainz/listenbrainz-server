@@ -11,7 +11,8 @@ import config
 
 import ujson
 import logging
-from listenstore.listenstore import Listen, PostgresListenStore
+from listen import Listen
+from listenstore.listenstore import PostgresListenStore
 from time import time, sleep
 
 BATCH_SIZE = 1000

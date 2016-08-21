@@ -8,7 +8,7 @@ import time
 import uuid
 import six
 from datetime import date, datetime
-from .listen import Listen
+from listen import Listen
 from dateutil.relativedelta import relativedelta
 
 from sqlalchemy import create_engine, text
