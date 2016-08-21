@@ -4,18 +4,22 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../listenstore"))
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
+from redis import Redis
+from redis_keys import REDIS_LISTEN_JSON, REDIS_LISTEN_JSON_REFCOUNT, REDIS_LISTEN_CONSUMER_IDS, \
+    REDIS_LISTEN_CONSUMERS
 import config
 
 import ujson
 import logging
 from listenstore.listenstore import Listen, PostgresListenStore
 from time import time, sleep
-from redis import Redis
 
 BATCH_SIZE = 1000
 REPORT_FREQUENCY = 5000
-NO_ITEM_DELAY = .1   # in seconds
-BATCH_TIMEOUT = 3    # in seconds
+BATCH_TIMEOUT = 3      # in seconds. Don't let a listen get older than this before writing
+REQUEST_TIMEOUT = 1    # in seconds. Wait this long to get a listen from redis
+
+CONSUMER_NAME = "pg"
 
 class RedisConsumer(object):
     def __init__(self):
@@ -24,57 +28,53 @@ class RedisConsumer(object):
         self.inserts = 0
         self.time = 0
 
+    def _register_self(self, r):
+        consumers = r.smembers(REDIS_LISTEN_CONSUMERS)
+        if not CONSUMER_NAME in consumers:
+            r.sadd(REDIS_LISTEN_CONSUMERS, CONSUMER_NAME)
+
     def start(self, database_uri, redis_host):
         self.log.info("RedisListenConsumer started")
 
         r = Redis(redis_host)
+        self._register_self(r)
         ls = PostgresListenStore({
           'SQLALCHEMY_DATABASE_URI': database_uri,
         })
+
+        # 0 indicates that we've received no listens yet
+        batch_start_time = 0 
         while True:
             listens = []
-            t0 = time()
+            listen_ids = []
 
-            # If there are some bits left in listens-peding, insert them!
-            if r.llen("listens-pending") > 0:
-                listens = r.lrange("listens-pending", 0, -1)
-                submit = []
-                for listen in listens:
-                    data = ujson.loads(listen)
-                    l = Listen().from_json(data)
-                    if l.validate():
-                        submit.append(l)
-
-                # We've fetched them, now submit and if successful, clear the pending items
-                try:
-                    ls.insert(submit)
-                    r.ltrim("listens-pending", 1, 0)
-                except ValueError:
-                    pass
-
-            # read new items from listens, adding to listens-pending.
-            # keep doing this until we time out (no new ones) or we've reached our
-            # batch size. Then write to db
             while True:
-                listen = r.rpoplpush("listens", "listens-pending")
-                if listen:
-                    data = ujson.loads(listen)
-                    l = Listen().from_json(data)
-                    if l.validate():
-                        listens.append(l)
-                    else:
-                        self.log.error("invalid listen: " + str(l))
-                    t0 = time()
-                else:
-                    sleep(NO_ITEM_DELAY)
+                id = r.blpop(REDIS_LISTEN_CONSUMER_IDS + CONSUMER_NAME, REQUEST_TIMEOUT)
+                # If we got an id, fetch the listen and add to our list 
+                if id:
+                    id = id[1]
+                    # record the time when we get a first listen in this batch
+                    if not batch_start_time:
+                        batch_start_time = time()
 
-                if time() - t0 > BATCH_TIMEOUT or len(listens) >= BATCH_SIZE:
+                    listen = r.get(REDIS_LISTEN_JSON + id)
+                    if listen:
+                        listen_ids.append(id)
+                        data = ujson.loads(listen)
+                        l = Listen().from_json(data)
+                        if l.validate():
+                            listens.append(l)
+                        else:
+                            self.log.error("invalid listen: " + str(l))
+
+                    else:
+                        # TODO: What happens if we don't get a listen?
+                        pass
+
+                if time() - batch_start_time >= BATCH_TIMEOUT:
                     break
 
-            if not listens:
-                continue
-
-            # We've collected stuff to write, now write it
+            # We've collected listens to write, now write them
             broken = True
             while broken:
                 try:
@@ -87,8 +87,17 @@ class RedisConsumer(object):
                     self.log.error("Cannot insert listens: %s" % unicode(e))
                     broken = False
 
-            # clear the listens-pending list
-            r.ltrim("listens-pending", 1, 0)
+            # Clear the start time, since we've cleaned out the batch
+            batch_start_time = 0
+
+            # now clean up the listens from redis
+            for id in listen_ids:
+                # Get the refcount for this listen. If 0, delete it and the refcount
+                refcount = r.decr(REDIS_LISTEN_JSON_REFCOUNT + id)
+                if refcount == 0:
+                    r.delete(REDIS_LISTEN_JSON + id)
+                    r.delete(REDIS_LISTEN_JSON_REFCOUNT + id)
+
             # collect and occasionally print some stats
             self.inserts += len(listens)
             if self.inserts >= REPORT_FREQUENCY:
