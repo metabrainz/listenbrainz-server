@@ -42,6 +42,15 @@ services:
       - redis
     restart: always
 
+  bigquery:
+    build:
+      context: ..
+      dockerfile: ./docker/bigquery-consumer/Dockerfile
+    command: python bigquery-consumer/bigquery-consumer.py
+    depends_on:
+      - redis
+    restart: always
+
   nginx:
     extends:
       file: common.yml
