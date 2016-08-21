@@ -8,6 +8,13 @@ import ujson
 from webserver.external import messybrainz
 from webserver.redis_connection import _redis
 
+# For a detailed description of the PubSub Redis mechanism that is being implemented 
+# here see this page: https://davidmarquis.wordpress.com/2013/01/03/reliable-delivery-message-queues-with-redis/
+# The one change from the solution outlined above is the addition to ref-counts for the JSON
+# Each consumer must decrement the refcount and when the refcount reaches 0, it is responsible
+# for removing the JSON and REFCOUNT keys from redis
+from redis_keys import REDIS_LISTEN_NEXTID, REDIS_LISTEN_CONSUMERS, REDIS_LISTEN_JSON, \
+    REDIS_LISTEN_JSON_REFCOUNT, REDIS_LISTEN_CONSUMER_IDS
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
 MAX_LISTEN_SIZE = 10240
@@ -43,6 +50,57 @@ def insert_payload(payload, user_id, listen_type=LISTEN_TYPE_IMPORT):
     except Exception, e:
         print(e)
     return augmented_listens
+
+
+def _send_listens_to_redis(listen_type, listens):
+
+    p = _redis.redis.pipeline()
+    r = _redis.redis
+
+    consumers = []
+    for listen in listens:
+        if listen_type == LISTEN_TYPE_PLAYING_NOW:
+            try:
+                expire_time = listen["track_metadata"]["additional_info"].get("duration",
+                                    current_app.config['PLAYING_NOW_MAX_DURATION'])
+                p.setex('playing_now' + ':' + listen['user_id'],
+                        ujson.dumps(listen).encode('utf-8'), expire_time)
+            except Exception, e:
+                current_app.logger.error("Redis rpush playing_now write error: " + str(sys.exc_info()[0]))
+                raise InternalServerError("Cannot record playing_now at this time.")
+        else:
+            try:
+                # in order to allow multiple readers of the listen stream, we have a set
+                # called consumers. If a consumer is registered in this set, they *must*
+                # consume the listens at some point, otherwise redis will fill up.
+                if not consumers:
+                    consumers = r.smembers(REDIS_LISTEN_CONSUMERS)
+
+                if consumers:
+                    # Each listen gets a redis specific ID
+                    nextid = r.incr(REDIS_LISTEN_NEXTID)
+
+                    # Each listen is then inserted into redis using the id from above and a 
+                    # refcount is set so that we can remove data from redis in a timely fashion
+                    p.set(REDIS_LISTEN_JSON + str(nextid), ujson.dumps(listen).encode('utf-8'))
+                    p.set(REDIS_LISTEN_JSON_REFCOUNT + str(nextid), len(consumers))
+
+                    # Finally a message id is added a list kept for each consumer. This way
+                    # the consumer can pop message ids from the list and then consume the
+                    # listen. Each consumer must DECR the corresponding REDIS_LISTEN_JSON_REFCOUNT
+                    # key. If it goes to 0, then the consumer must remove the REDIS_LISTEN_JSON and 
+                    # REDIS_LISTEN_JSON_REFCOUNT keys
+                    for consumer in consumers:
+                        p.rpush(REDIS_LISTEN_CONSUMER_IDS + consumer, nextid)
+                else:
+                    current_app.logger.error("No consumers registered in redis. Not accepting listens.")
+                    raise InternalServerError("Cannot record listen at this time. (No consumers registered.)")
+
+            except:
+                current_app.logger.error("Redis rpush listens write error: " + str(sys.exc_info()[0]))
+                raise InternalServerError("Cannot record listen at this time.")
+
+    p.execute()
 
 
 def _validate_listen(listen, listen_type):
@@ -108,28 +166,6 @@ def _validate_listen(listen, listen_type):
                 _log_raise_400("Artist MBID format invalid.", listen)
 
 
-def _send_listens_to_redis(listen_type, listens):
-    p = _redis.redis.pipeline()
-    for listen in listens:
-        if listen_type == "playing_now":
-            try:
-                expire_time = listen["track_metadata"]["additional_info"].get("duration",
-                                    current_app.config['PLAYING_NOW_MAX_DURATION'])
-                p.setex('playing_now' + ':' + listen['user_id'],
-                        ujson.dumps(listen).encode('utf-8'), expire_time)
-            except Exception, e:
-                current_app.logger.error("Redis rpush playing_now write error: " + str(sys.exc_info()[0]))
-                raise InternalServerError("Cannot record playing_now at this time.")
-        else:
-            try:
-                p.rpush('listens', ujson.dumps(listen).encode('utf-8'))
-            except Exception, e:
-                print(e)
-                current_app.logger.error("Redis rpush listens write error: " + str(sys.exc_info()[0]))
-                raise InternalServerError("Cannot record listen at this time.")
-    p.execute()
-
-
 # lifted from AcousticBrainz
 def is_valid_uuid(u):
     try:
@@ -143,6 +179,7 @@ def _get_augmented_listens(payload, user_id, listen_type):
     """ Converts the payload to augmented list after lookup
         in the MessyBrainz database
     """
+
     augmented_listens = []
     msb_listens = []
     for l in payload:
