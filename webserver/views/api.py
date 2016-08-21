@@ -8,7 +8,6 @@ import db
 from webserver.rate_limiter import ratelimit
 from api_tools import insert_payload, log_raise_400, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET,\
     LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
-from webserver.redis_connection import _redis
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -138,27 +137,6 @@ def _validate_auth_header():
 
     return user
 
-
-def _send_listens_to_redis(listen_type, listens):
-
-
-    p = _redis.redis.pipeline()
-    for listen in listens:
-        if listen_type == LISTEN_TYPE_PLAYING_NOW:
-            try:
-                p.setex('playing_now' + ':' + listen['user_id'],
-                        ujson.dumps(listen).encode('utf-8'), current_app.config['PLAYING_NOW_MAX_DURATION'])
-            except:
-                current_app.logger.error("Redis rpush playing_now write error: " + str(sys.exc_info()[0]))
-                raise InternalServerError("Cannot record playing_now at this time.")
-        else:
-            try:
-                p.rpush('listens', ujson.dumps(listen).encode('utf-8'))
-            except:
-                current_app.logger.error("Redis rpush listens write error: " + str(sys.exc_info()[0]))
-                raise InternalServerError("Cannot record listen at this time.")
-
-    p.execute()
 
 def _messybrainz_lookup(listens):
 
