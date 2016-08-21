@@ -11,7 +11,7 @@ import config
 
 import ujson
 import logging
-from listenstore.listenstore import Listen
+from listen import Listen
 from time import time, sleep
 
 BATCH_SIZE = 1000
@@ -33,8 +33,8 @@ class BigQueryConsumer(object):
         if not CONSUMER_NAME in consumers:
             r.sadd(REDIS_LISTEN_CONSUMERS, CONSUMER_NAME)
 
-    def start(self, database_uri, redis_host):
-        self.log.info("BiqQueryListenConsumer started")
+    def start(self, redis_host):
+        self.log.info("BiqQueryListenWriter started")
 
         r = Redis(redis_host)
         self._register_self(r)
@@ -96,4 +96,4 @@ class BigQueryConsumer(object):
 
 if __name__ == "__main__":
     rc = BigQueryConsumer()
-    rc.start(config.SQLALCHEMY_DATABASE_URI, config.REDIS_HOST)
+    rc.start(config.REDIS_HOST)

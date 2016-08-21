@@ -1,7 +1,7 @@
 # coding=utf-8
 from __future__ import division, absolute_import, print_function, unicode_literals
 from datetime import datetime, timedelta
-from listenstore.listen import Listen
+from listen import Listen
 import uuid
 
 
