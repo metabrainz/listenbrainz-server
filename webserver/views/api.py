@@ -56,7 +56,7 @@ def submit_listen():
         log_raise_400("Invalid JSON document submitted.", raw_data)
 
     try:
-        insert_payload(payload, user["id"], listen_type=data['listen_type'])
+        insert_payload(payload, user, listen_type=data['listen_type'])
     except Exception, e:
         raise InternalServerError("Something went wrong. Please try again.")
 

@@ -205,7 +205,7 @@ def upload():
                     continue
 
                 payload = convert_backup_to_native_format(jsonlist)
-                insert_payload(payload, current_user.id)
+                insert_payload(payload, current_user)
                 success += 1
         except Exception, e:
             raise BadRequest('Not a valid lastfm-backup-file.')
