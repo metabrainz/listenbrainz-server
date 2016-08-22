@@ -98,7 +98,7 @@ def get_listens(user_id):
     for listen in listens:
         listen_data.append({
             "track_metadata": listen.data,
-            "listened_at": listen.timestamp,
+            "listened_at": listen.ts_since_epoch,
             "recording_msid": listen.recording_msid,
         })
 

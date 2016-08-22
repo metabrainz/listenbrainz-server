@@ -83,7 +83,7 @@ class PostgresListenStore(ListenStore):
                 try:
                     params = {
                         'user_id': listen.user_id,
-                        'ts': listen.timestamp,
+                        'ts': listen.ts_since_epoch,
                         'artist_msid': uuid.UUID(listen.artist_msid),
                         'album_msid': uuid.UUID(listen.album_msid) if listen.album_msid is not None else None,
                         'recording_msid': uuid.UUID(listen.recording_msid),
@@ -124,7 +124,7 @@ class PostgresListenStore(ListenStore):
             results = connection.execute(text("""
                 SELECT listen.id
                      , user_id
-                     , extract(epoch from ts)
+                     , ts AT TIME ZONE 'UTC'
                      , artist_msid
                      , album_msid
                      , recording_msid
@@ -162,5 +162,5 @@ class RedisListenStore(ListenStore):
         if not data:
             return None
         data = ujson.loads(data)
-        data.update({'listened_at': datetime.utcnow()})
+        data.update({'listened_at': MIN_ID+1})
         return Listen.from_json(data)
