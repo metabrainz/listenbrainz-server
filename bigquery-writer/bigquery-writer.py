@@ -12,7 +12,9 @@ from googleapiclient.errors import HttpError
 from oauth2client.client import GoogleCredentials
 
 import ujson
+import json # TODO: used for debugging. remove before submitting PR
 import logging
+import calendar
 from listen import Listen
 from time import time, sleep
 
@@ -27,7 +29,7 @@ APP_CREDENTIALS_FILE = "big-query-credentials.json"
 # Things left to do
 #   Redis persistence
 #   Use the two lists model in order to not lose any items in case of restart
-#   Figure out where the bigquery data actuall ends up. :)
+#   Avoid duplication in BigQuery
 
 class BigQueryWriter(object):
     def __init__(self):
@@ -108,7 +110,7 @@ class BigQueryWriter(object):
             for listen in listens:
                 row = {
                     'user_name' : listen.user_name,
-                    'listened_at' : listen.timestamp,
+                    'listened_at' : calendar.timegm(listen.timestamp.utctimetuple()),
 
                     'artist_msid' : listen.artist_msid,
                     'artist_name' : listen.data.get('artist_name', ''),
@@ -141,7 +143,6 @@ class BigQueryWriter(object):
                 self.time += time() - t0
                 self.log.error("Submitted %d rows" % len(bq_data))
             except HttpError as e:
-                import json
                 self.log.error("Submit to BigQuery failed: " + str(e))
                 self.log.error(json.dumps(body, indent=3))
 
