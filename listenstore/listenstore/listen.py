@@ -23,7 +23,7 @@ class Listen(object):
     def from_json(cls, j):
         """Factory to make Listen() objects from a dict"""
         return cls(  user_id=j['user_id']
-                  , timestamp=datetime.utcfromtimestamp(j['listened_at'])
+                  , timestamp=datetime.utcfromtimestamp(float(j['listened_at']))
                   , artist_msid=j['track_metadata']['additional_info'].get('artist_msid')
                   , album_msid=j['track_metadata']['additional_info'].get('album_msid')
                   , recording_msid=j.get('recording_msid')
