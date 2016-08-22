@@ -104,27 +104,45 @@ class BigQueryWriter(object):
             self.log.error("got %d listens" % len(listens))
             # We've collected listens to write, now write them
             bq_data = []
+
+            # REMOVE ME
+            import json
+            listens = listens[0:1]
             for listen in listens:
+                self.log.error(json.dumps(listen, indent=3))
                 row = {
-                    'user_id' : listen.user_id,
-                    'ts' : listen.timestamp,
+                    'user_name' : listen.user_id,
+                    'listened_at' : listen.timestamp,
+
                     'artist_msid' : listen.artist_msid,
+                    'artist_name' : listen.data.get('artist_name', ''),
+                    'artist_mbids' : ",".join(listen.data.get('artist_mbids', [])),
+
                     'album_msid' : listen.album_msid,
+                    'album_name' : listen.data.get('release_name', ''),
+                    'album_mbid' : listen.data.get('release_mbid', ''),
+
+                    'track_name' : listen.data.get('track_name', ''),
                     'recording_msid' : listen.recording_msid,
-                    'data' : data
+                    'recording_mbid' : listen.data.get('recording_mbid', ''),
+
+                    'tags' : ",".join(listen.data.get('tags', [])),
                 }
                 bq_data.append({
-                    'json': row,
+                    'json': row, 
                     'insertId': "%s-%s" % (listen.user_id, listen.timestamp)
                 })
 
+            body = { 'rows' : bq_data }
+            self.log.error(json.dumps(body, indent=3))
             try:
                 t0 = time()
-                bigquery.tabledata().insertAll(
+                ret = bigquery.tabledata().insertAll(
                     projectId="listenbrainz",
                     datasetId="listenbrainz_test",
                     tableId="listen",
-                    body={ 'rows' : bq_data }).execute(num_retries=5)
+                    body=body).execute(num_retries=5)
+                self.log.error(json.dumps(ret, indent=3))
                 self.time += time() - t0
                 self.log.error("Submitted %d rows" % len(bq_data))
             except HttpError as e:
