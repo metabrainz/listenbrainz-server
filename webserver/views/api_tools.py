@@ -40,12 +40,12 @@ LISTEN_TYPE_SINGLE = 1
 LISTEN_TYPE_IMPORT = 2
 LISTEN_TYPE_PLAYING_NOW = 3
 
-def insert_payload(payload, user_id, listen_type=LISTEN_TYPE_IMPORT):
+def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
     """ Convert the payload into augmented listens then submit them.
         Returns: augmented_listens
     """
     try:
-        augmented_listens = _get_augmented_listens(payload, user_id, listen_type)
+        augmented_listens = _get_augmented_listens(payload, user, listen_type)
         _send_listens_to_redis(listen_type, augmented_listens)
     except Exception, e:
         print(e)
@@ -175,7 +175,7 @@ def is_valid_uuid(u):
         return False
 
 
-def _get_augmented_listens(payload, user_id, listen_type):
+def _get_augmented_listens(payload, user, listen_type):
     """ Converts the payload to augmented list after lookup
         in the MessyBrainz database
     """
@@ -186,7 +186,8 @@ def _get_augmented_listens(payload, user_id, listen_type):
         listen = l.copy()   # Create a local object to prevent the mutation of the passed object
         _validate_listen(listen, listen_type)
 
-        listen['user_id'] = user_id
+        listen['user_id'] = user['id']
+        listen['user_name'] = user['musicbrainz_id']
 
         msb_listens.append(listen)
         if len(msb_listens) >= MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP:

@@ -5,9 +5,10 @@ import ujson
 
 class Listen(object):
     """ Represents a listen object """
-    def __init__(self, user_id=None, timestamp=None, artist_msid=None, album_msid=None,
+    def __init__(self, user_id=None, user_name=None, timestamp=None, artist_msid=None, album_msid=None,
                  recording_msid=None, data=None):
         self.user_id = user_id
+        self.user_name = user_name
         self.timestamp = timestamp
         self.artist_msid = artist_msid
         self.album_msid = album_msid
@@ -20,17 +21,19 @@ class Listen(object):
     @classmethod
     def from_json(cls, j):
         """Factory to make Listen() objects from a dict"""
-        return cls(  user_id=j['user_id']
-                  , timestamp=j['listened_at']
-                  , artist_msid=j['track_metadata']['additional_info'].get('artist_msid')
-                  , album_msid=j['track_metadata']['additional_info'].get('album_msid')
-                  , recording_msid=j.get('recording_msid')
-                  , data=j.get('track_metadata')
-                  )
+        return cls(user_id=j['user_id'], 
+            user_name=j.get('user_name', ""),
+            timestamp=j['listened_at'],
+            artist_msid=j['track_metadata']['additional_info'].get('artist_msid'),
+            album_msid=j['track_metadata']['additional_info'].get('album_msid'),
+            recording_msid=j.get('recording_msid'),
+            data=j.get('track_metadata')
+        )
 
     def to_json(self):
         return {
             'user_id': self.user_id,
+            'user_name': self.user_name,
             'timestamp': self.timestamp,
             'track_metadata': self.data,
             'recording_msid': self.recording_msid

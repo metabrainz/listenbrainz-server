@@ -105,13 +105,9 @@ class BigQueryWriter(object):
             # We've collected listens to write, now write them
             bq_data = []
 
-            # REMOVE ME
-            import json
-            listens = listens[0:1]
             for listen in listens:
-                self.log.error(json.dumps(listen, indent=3))
                 row = {
-                    'user_name' : listen.user_id,
+                    'user_name' : listen.user_name,
                     'listened_at' : listen.timestamp,
 
                     'artist_msid' : listen.artist_msid,
@@ -134,7 +130,6 @@ class BigQueryWriter(object):
                 })
 
             body = { 'rows' : bq_data }
-            self.log.error(json.dumps(body, indent=3))
             try:
                 t0 = time()
                 ret = bigquery.tabledata().insertAll(
@@ -146,7 +141,9 @@ class BigQueryWriter(object):
                 self.time += time() - t0
                 self.log.error("Submitted %d rows" % len(bq_data))
             except HttpError as e:
+                import json
                 self.log.error("Submit to BigQuery failed: " + str(e))
+                self.log.error(json.dumps(body, indent=3))
 
             # Clear the start time, since we've cleaned out the batch
             batch_start_time = 0
