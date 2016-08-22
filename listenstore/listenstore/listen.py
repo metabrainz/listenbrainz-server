@@ -1,7 +1,8 @@
 # coding=utf-8
 from __future__ import division, absolute_import, print_function, unicode_literals
-import datetime
 import ujson
+from datetime import datetime
+import calendar
 
 class Listen(object):
     """ Represents a listen object """
@@ -9,6 +10,7 @@ class Listen(object):
                  recording_msid=None, data=None):
         self.user_id = user_id
         self.timestamp = timestamp
+        self.ts_since_epoch = calendar.timegm(self.timestamp.utctimetuple()) if self.timestamp else None
         self.artist_msid = artist_msid
         self.album_msid = album_msid
         self.recording_msid = recording_msid
@@ -21,7 +23,7 @@ class Listen(object):
     def from_json(cls, j):
         """Factory to make Listen() objects from a dict"""
         return cls(  user_id=j['user_id']
-                  , timestamp=j['listened_at']
+                  , timestamp=datetime.utcfromtimestamp(float(j['listened_at']))
                   , artist_msid=j['track_metadata']['additional_info'].get('artist_msid')
                   , album_msid=j['track_metadata']['additional_info'].get('album_msid')
                   , recording_msid=j.get('recording_msid')
@@ -42,11 +44,11 @@ class Listen(object):
 
     @property
     def date(self):
-        return datetime.datetime.fromtimestamp(self.timestamp)
+        return self.timestamp
 
     def __repr__(self):
         return unicode(self).encode("utf-8")
 
     def __unicode__(self):
         return u"<Listen: user_id: %s, time: %s, artist_msid: %s, album_msid: %s, recording_msid: %s>" % \
-               (self.user_id, self.timestamp, self.artist_msid, self.album_msid, self.recording_msid)
+               (self.user_id, self.ts_since_epoch, self.artist_msid, self.album_msid, self.recording_msid)

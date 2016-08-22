@@ -76,8 +76,7 @@
   <script src="{{ url_for('static', filename='js/lib/jquery.timeago.js') }}"></script>
   <script type="text/javascript">
     $(document).ready(function() {
-      var times = $("abbr.timeago");
-      times.timeago();
+      $("abbr.timeago").timeago();
     });
   </script>
 {% endblock %}

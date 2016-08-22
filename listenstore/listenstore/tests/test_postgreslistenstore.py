@@ -42,9 +42,11 @@ class TestPostgresListenStore(DatabaseTestCase):
         self.assertEquals(len(listens), count)
 
     def test_convert_row(self):
-        data = [('id', 1), ('user_id', self.testuser_id), ('timestamp', 123456789), ('artist_msid', str(uuid.uuid4())), ('album_msid',
-                str(uuid.uuid4())), ('recording_msid', str(uuid.uuid4())), ('data', "{'additional_info':{}}")]
-        row = OrderedDict([(k, v) for (k, v) in data[1:]])
+        now = datetime.utcnow()
+        data = [('id', 1), ('user_id', self.testuser_id), ('timestamp', now), ('artist_msid', str(uuid.uuid4())),
+                ('album_msid', str(uuid.uuid4())), ('recording_msid', str(uuid.uuid4())), ('data', "{'additional_info':{}}"),
+                ('ts_since_epoch', to_epoch(now))]
+        row = OrderedDict([(str(k), v) for (k, v) in data[1:]])
         listen = self.logstore.convert_row([1] + row.values())
         self.assertIsInstance(listen, Listen)
-        self.assertEquals(listen.__dict__, dict(row))
+        self.assertDictEqual(listen.__dict__, dict(row))

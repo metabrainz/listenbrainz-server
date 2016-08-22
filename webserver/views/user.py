@@ -61,8 +61,8 @@ def profile(user_name):
     for listen in db_conn.fetch_listens(user.id, limit=25, to_ts=max_ts):
         listens.append({
             "track_metadata": listen.data,
-            "listened_at": listen.timestamp,
-            "listened_at_iso": pytz.utc.localize(datetime.utcfromtimestamp(int(listen.timestamp))).isoformat(),
+            "listened_at": listen.ts_since_epoch,
+            "listened_at_iso": listen.timestamp.isoformat() + "Z",
         })
 
     if listens:
@@ -71,7 +71,7 @@ def profile(user_name):
         if previous_listens:
             # Getting from the last item because `fetch_listens` returns in ascending
             # order when `from_ts` is used.
-            previous_listen_ts = previous_listens[-1].timestamp + 1
+            previous_listen_ts = previous_listens[-1].ts_since_epoch + 1
         else:
             previous_listen_ts = None
 
@@ -144,7 +144,7 @@ def export_data():
         output = []
         for index, obj in enumerate(db_conn.fetch_listens(current_user.id)):
             dic = obj.data
-            dic['timestamp'] = obj.timestamp
+            dic['timestamp'] = obj.ts_since_epoch
             dic['album_msid'] = None if obj.album_msid is None else str(obj.album_msid)
             dic['artist_msid'] = None if obj.artist_msid is None else str(obj.artist_msid)
             dic['recording_msid'] = None if obj.recording_msid is None else str(obj.recording_msid)
