@@ -56,6 +56,6 @@ def roadmap():
 def current_status():
 
     load = "%.2f %.2f %.2f" % os.getloadavg()
-    listens = _redis.llen("listens")
-    listens_pending = _redis.llen("listens_pending")
+    listens = _redis.redis.llen("listens")
+    listens_pending = _redis.redis.llen("listens_pending")
     return render_template("index/current-status.html", load=load, listens=listens, listens_pending=listens_pending)
