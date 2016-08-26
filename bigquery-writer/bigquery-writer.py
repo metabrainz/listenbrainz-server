@@ -5,7 +5,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
 from redis import Redis
 from redis_keys import REDIS_LISTEN_JSON, REDIS_LISTEN_JSON_REFCOUNT, REDIS_LISTEN_CONSUMER_IDS, \
-    REDIS_LISTEN_CONSUMERS
+    REDIS_LISTEN_CONSUMERS, REDIS_LISTEN_CONSUMER_IDS_PENDING
 import config
 from googleapiclient import discovery
 from googleapiclient.errors import HttpError
@@ -64,6 +64,12 @@ class BigQueryWriter(object):
         r = Redis(redis_host)
         self._register_self(r)
 
+        # If we have listens on the pending list, lets move them back to the submission list
+        ids = r.lrange(REDIS_LISTEN_CONSUMER_IDS_PENDING + CONSUMER_NAME, 0, -1)
+        if ids:
+            r.lpush(REDIS_LISTEN_CONSUMER_IDS + CONSUMER_NAME, *ids)
+            r.ltrim(REDIS_LISTEN_CONSUMER_IDS_PENDING + CONSUMER_NAME, 1, 0)
+
         # 0 indicates that we've received no listens yet
         batch_start_time = 0 
         while True:
@@ -71,11 +77,10 @@ class BigQueryWriter(object):
             listen_ids = []
 
             while True:
-                id = r.blpop(REDIS_LISTEN_CONSUMER_IDS + CONSUMER_NAME, REQUEST_TIMEOUT)
+                id = r.brpoplpush(REDIS_LISTEN_CONSUMER_IDS + CONSUMER_NAME, 
+                    REDIS_LISTEN_CONSUMER_IDS_PENDING + CONSUMER_NAME, REQUEST_TIMEOUT)
                 # If we got an id, fetch the listen and add to our list 
                 if id:
-                    id = id[1]
-
                     listen = r.get(REDIS_LISTEN_JSON + id)
                     if listen:
                         listen_ids.append(id)
@@ -148,6 +153,9 @@ class BigQueryWriter(object):
 
             # Clear the start time, since we've cleaned out the batch
             batch_start_time = 0
+
+            # clear the listens-pending list
+            r.ltrim(REDIS_LISTEN_CONSUMER_IDS_PENDING + CONSUMER_NAME, 1, 0)
 
             # now clean up the listens from redis
             for id in listen_ids:
