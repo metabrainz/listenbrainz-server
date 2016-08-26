@@ -6,7 +6,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../li
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
 from redis import Redis
 from redis_keys import REDIS_LISTEN_JSON, REDIS_LISTEN_JSON_REFCOUNT, REDIS_LISTEN_CONSUMER_IDS, \
-    REDIS_LISTEN_CONSUMERS
+    REDIS_LISTEN_CONSUMERS, REDIS_LISTEN_CONSUMER_IDS_PENDING
 import config
 
 import ujson
@@ -43,6 +43,12 @@ class RedisConsumer(object):
           'SQLALCHEMY_DATABASE_URI': database_uri,
         })
 
+        # If we have listens on the pending list, lets move them back to the submission list
+        ids = r.lrange(REDIS_LISTEN_CONSUMER_IDS_PENDING + CONSUMER_NAME, 0, -1)
+        if ids:
+            r.lpush(REDIS_LISTEN_CONSUMER_IDS + CONSUMER_NAME, *ids)
+            r.ltrim(REDIS_LISTEN_CONSUMER_IDS_PENDING + CONSUMER_NAME, 1, 0)
+
         # 0 indicates that we've received no listens yet
         batch_start_time = 0 
         while True:
@@ -50,10 +56,10 @@ class RedisConsumer(object):
             listen_ids = []
 
             while True:
-                id = r.blpop(REDIS_LISTEN_CONSUMER_IDS + CONSUMER_NAME, REQUEST_TIMEOUT)
+                id = r.brpoplpush(REDIS_LISTEN_CONSUMER_IDS + CONSUMER_NAME, 
+                    REDIS_LISTEN_CONSUMER_IDS_PENDING + CONSUMER_NAME, REQUEST_TIMEOUT)
                 # If we got an id, fetch the listen and add to our list 
                 if id:
-                    id = id[1]
                     # record the time when we get a first listen in this batch
                     if not batch_start_time:
                         batch_start_time = time()
@@ -75,6 +81,9 @@ class RedisConsumer(object):
                 if time() - batch_start_time >= BATCH_TIMEOUT:
                     break
 
+                if len(listens) >= BATCH_SIZE:
+                    break
+
             # We've collected listens to write, now write them
             broken = True
             while broken:
@@ -90,6 +99,10 @@ class RedisConsumer(object):
 
             # Clear the start time, since we've cleaned out the batch
             batch_start_time = 0
+
+
+            # clear the listens-pending list
+            r.ltrim(REDIS_LISTEN_CONSUMER_IDS_PENDING + CONSUMER_NAME, 1, 0)
 
             # now clean up the listens from redis
             for id in listen_ids:
