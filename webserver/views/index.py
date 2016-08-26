@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, current_app, redirect, url_for
 from flask_login import current_user
 from webserver.redis_connection import _redis
 from redis_keys import REDIS_LISTEN_NEXTID, REDIS_LISTEN_CONSUMERS, REDIS_LISTEN_JSON, \
-    REDIS_LISTEN_JSON_REFCOUNT, REDIS_LISTEN_CONSUMER_IDS
+    REDIS_LISTEN_JSON_REFCOUNT, REDIS_LISTEN_CONSUMER_IDS, REDIS_LISTEN_CONSUMER_IDS_PENDING
 import os
 import subprocess
 import locale
@@ -62,12 +62,15 @@ def current_status():
     listens = len(_redis.redis.keys(REDIS_LISTEN_JSON + "*"))
     listen_refcounts = len(_redis.redis.keys(REDIS_LISTEN_JSON_REFCOUNT + "*"))
     listen_ids = []
+    listen_ids_pending = []
     for consumer in consumers:
         listen_ids.append("%s: %d" % (consumer, _redis.redis.llen(REDIS_LISTEN_CONSUMER_IDS + consumer)))
+        listen_ids_pending.append("%s: %d" % (consumer, _redis.redis.llen(REDIS_LISTEN_CONSUMER_IDS_PENDING + consumer)))
 
     return render_template("index/current-status.html", 
                            load=load, 
                            consumers=len(consumers),
                            listens=listens, 
                            listen_refcounts=listen_refcounts,
-                           listen_ids=", ".join(listen_ids))
+                           listen_ids=", ".join(listen_ids),
+                           listen_ids_pending=", ".join(listen_ids_pending))

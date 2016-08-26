@@ -91,7 +91,7 @@ def _send_listens_to_redis(listen_type, listens):
                     # key. If it goes to 0, then the consumer must remove the REDIS_LISTEN_JSON and 
                     # REDIS_LISTEN_JSON_REFCOUNT keys
                     for consumer in consumers:
-                        p.rpush(REDIS_LISTEN_CONSUMER_IDS + consumer, nextid)
+                        p.lpush(REDIS_LISTEN_CONSUMER_IDS + consumer, nextid)
                 else:
                     current_app.logger.error("No consumers registered in redis. Not accepting listens.")
                     raise InternalServerError("Cannot record listen at this time. (No consumers registered.)")
