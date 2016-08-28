@@ -7,9 +7,7 @@ from redis import Redis
 from redis_keys import REDIS_LISTEN_JSON, REDIS_LISTEN_JSON_REFCOUNT, REDIS_LISTEN_CONSUMER_IDS, \
     REDIS_LISTEN_CONSUMERS, REDIS_LISTEN_CONSUMER_IDS_PENDING
 import config
-from googleapiclient import discovery
-from googleapiclient.errors import HttpError
-from oauth2client.client import GoogleCredentials
+from influxdb import InfluxDBClient
 
 import ujson
 import json # TODO: used for debugging. remove before submitting PR
@@ -23,14 +21,14 @@ REPORT_FREQUENCY = 5000
 BATCH_TIMEOUT = 5      # in seconds. Don't let a listen get older than this before writing
 REQUEST_TIMEOUT = 1    # in seconds. Wait this long to get a listen from redis
 
-CONSUMER_NAME = "bq"
-APP_CREDENTIALS_FILE = "big-query-credentials.json"
+CONSUMER_NAME = "in"
 
 # Things left to do
 #   Redis persistence
+#   Use the two lists model in order to not lose any items in case of restart
 #   Avoid duplication in BigQuery
 
-class BigQueryWriter(object):
+class InfluxDBWriter(object):
     def __init__(self):
         self.log = logging.getLogger(__name__)
         logging.basicConfig()
@@ -45,20 +43,7 @@ class BigQueryWriter(object):
 
     def start(self, redis_host):
 
-        self.log.debug("BiqQueryWriter started")
-        if not config.WRITE_TO_BIGQUERY or not os.path.exists(APP_CREDENTIALS_FILE):
-            if not os.path.exists(APP_CREDENTIALS_FILE):
-                self.log.error("BiqQueryWriter not started, big-query-credentials.json is missing.")
-
-            # Rather than exit, just loop, otherwise the container will get 
-            # restarted over and over
-            while True:
-                sleep(100)
-
-        self.log.info("BiqQueryWriter started")
-
-        credentials = GoogleCredentials.get_application_default()
-        bigquery = discovery.build('bigquery', 'v2', credentials=credentials)
+        self.log.debug("InfluxDBWriter started")
 
         r = Redis(redis_host)
         self._register_self(r)
@@ -109,46 +94,6 @@ class BigQueryWriter(object):
 
             self.log.error("got %d listens" % len(listens))
             # We've collected listens to write, now write them
-            bq_data = []
-
-            for listen in listens:
-                row = {
-                    'user_name' : listen.user_name,
-                    'listened_at' : calendar.timegm(listen.timestamp.utctimetuple()),
-
-                    'artist_msid' : listen.artist_msid,
-                    'artist_name' : listen.data.get('artist_name', ''),
-                    'artist_mbids' : ",".join(listen.data.get('artist_mbids', [])),
-
-                    'album_msid' : listen.album_msid,
-                    'album_name' : listen.data.get('release_name', ''),
-                    'album_mbid' : listen.data.get('release_mbid', ''),
-
-                    'track_name' : listen.data.get('track_name', ''),
-                    'recording_msid' : listen.recording_msid,
-                    'recording_mbid' : listen.data.get('recording_mbid', ''),
-
-                    'tags' : ",".join(listen.data.get('tags', [])),
-                }
-                bq_data.append({
-                    'json': row, 
-                    'insertId': "%s-%s" % (listen.user_id, listen.timestamp)
-                })
-
-            body = { 'rows' : bq_data }
-            try:
-                t0 = time()
-                ret = bigquery.tabledata().insertAll(
-                    projectId="listenbrainz",
-                    datasetId="listenbrainz_test",
-                    tableId="listen",
-                    body=body).execute(num_retries=5)
-                self.log.error(json.dumps(ret, indent=3))
-                self.time += time() - t0
-                self.log.error("Submitted %d rows" % len(bq_data))
-            except HttpError as e:
-                self.log.error("Submit to BigQuery failed: " + str(e))
-                self.log.error(json.dumps(body, indent=3))
 
             # Clear the start time, since we've cleaned out the batch
             batch_start_time = 0
@@ -174,5 +119,5 @@ class BigQueryWriter(object):
                 self.time = 0
 
 if __name__ == "__main__":
-    rc = BigQueryWriter()
+    rc = InfluxDBWriter()
     rc.start(config.REDIS_HOST)

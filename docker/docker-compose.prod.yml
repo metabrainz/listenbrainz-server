@@ -18,6 +18,12 @@ services:
       - $VAGRANT_DATA_DIR../data/redis:/data
     restart: always
 
+  influxdb:
+    image: influxdb:0.13.0
+    volumes:
+      - $VAGRANT_DATA_DIR../data/influxdb:/data
+    restart: always
+
   web:
     build:
       context: ..
@@ -30,6 +36,7 @@ services:
     depends_on:
       - redis
       - db
+      - influxdb
     restart: always
 
   consumer:
@@ -42,6 +49,16 @@ services:
       - redis
     restart: always
 
+  influx_writer:
+    build:
+      context: ..
+      dockerfile: ./docker/influx-writer/Dockerfile
+    command: python influx-writer/influx-writer.py
+    depends_on:
+      - redis
+      - influxdb
+    restart: always
+
   bigquery:
     build:
       context: ..
@@ -49,6 +66,7 @@ services:
     command: python bigquery-writer/bigquery-writer.py
     depends_on:
       - redis
+      - influxdb
     restart: always
 
   nginx:
