@@ -116,17 +116,18 @@ class RedisPubSubSubscriber(object):
 
     def __init__(self, redis, keyspace_prefix):
         self.prefix = keyspace_prefix
+        self.subscriber_name = None
         self.r = redis
 
 
-    def register_subscriber(self, subscriber_name):
+    def register(self, subscriber_name):
         subscribers = self.r.smembers(self.prefix + PUBSUB_SUBSCRIBERS)
         if not subscriber_name in subscribers:
             self.r.sadd(self.prefix + PUBSUB_SUBSCRIBERS, subscriber_name)
             self.subscriber_name = subscriber_name
 
 
-    def unregister_subscriber(self, subscriber_name):
+    def unregister(self, subscriber_name):
         r.sdel(self.prefix + PUBSUB_SUBSCRIBERS, subscriber_name)
         self.subscriber_name = None
 
@@ -167,7 +168,7 @@ class RedisPubSubSubscriber(object):
                 message = self.r.get(self.prefix + PUBSUB_JSON + id)
                 if message:
                     message_ids.append(id)
-                    messages.append(message)
+                    messages.append(ujson.loads(message))
 
             if time() - batch_start_time >= BATCH_TIMEOUT:
                 break
@@ -182,7 +183,7 @@ class RedisPubSubSubscriber(object):
         # We've collected messages to write, now write them
         broken = True
         for i in xrange(retries):
-            if self.write(ujson.loads(message)):
+            if self.write(messages):
                 broken = False
                 break
 

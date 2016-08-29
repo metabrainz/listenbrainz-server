@@ -7,6 +7,7 @@ import ujson
 
 from webserver.external import messybrainz
 from webserver.redis_connection import _redis
+from listen import Listen
 from redis_pubsub import RedisPubSubPublisher, NoSubscribersException
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
@@ -49,6 +50,7 @@ def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
 
 
 def _send_listens_to_redis(listen_type, listens):
+    submit = []
     for listen in listens:
         if listen_type == LISTEN_TYPE_PLAYING_NOW:
             try:
@@ -60,12 +62,15 @@ def _send_listens_to_redis(listen_type, listens):
                 current_app.logger.error("Redis rpush playing_now write error: " + str(sys.exc_info()[0]))
                 raise InternalServerError("Cannot record playing_now at this time.")
         else:
-            pubsub = RedisPubSubPublisher(_redis.redis, LISTEN_KEYSPACE)
-            try:
-                pubsub.publish(listens)
-            except NoSubscribersException:
-                current_app.logger.error("No consumers registered in redis. Not accepting listens.")
-                raise InternalServerError("Cannot record listen at this time. (No consumers registered.)")
+            submit.append(listen)
+
+    if submit:
+        pubsub = RedisPubSubPublisher(_redis.redis, LISTEN_KEYSPACE)
+        try:
+            pubsub.publish(submit)
+        except NoSubscribersException:
+            current_app.logger.error("No consumers registered in redis. Not accepting listens.")
+            raise InternalServerError("Cannot record listen at this time. (No consumers registered.)")
 
 
 def _validate_listen(listen, listen_type):
