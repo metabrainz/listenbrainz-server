@@ -15,7 +15,7 @@ from listenstore.listenstore import PostgresListenStore
 from time import time, sleep
 
 REPORT_FREQUENCY = 5000
-CONSUMER_NAME = "pg"
+SUBSCRIBER_NAME = "pg"
 KEYSPACE_NAME = "listen"
 
 class RedisConsumer(RedisPubSubSubscriber):
@@ -30,18 +30,18 @@ class RedisConsumer(RedisPubSubSubscriber):
           'SQLALCHEMY_DATABASE_URI': database_uri,
         })
 
-    def write(self, listens):
-        submit = []
-        for listen in listens:
-            submit.append(Listen().from_json(listen))
+    def write(self, listen_dicts):
         t0 = time()
-        self.ls.insert(submit)
+        listens = []
+        for listen in listen_dicts:
+            listens.append(Listen().from_json(listen))
+        self.ls.insert(listens)
         self.time += time() - t0
 
     def start(self):
         self.log.info("RedisListenConsumer started")
 
-        self.register_subscriber(CONSUMER_NAME)
+        self.register(SUBSCRIBER_NAME)
         while True:
             try:
                 count = self.subscriber()            
