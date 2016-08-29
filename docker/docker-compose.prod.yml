@@ -18,11 +18,13 @@ services:
       - $VAGRANT_DATA_DIR../data/redis:/data
     restart: always
 
-#  influxdb:
-#    image: influxdb:0.13.0
-#    volumes:
-#      - $VAGRANT_DATA_DIR../data/influxdb:/data
-#    restart: always
+  influx:
+    image: influxdb:0.13.0
+    volumes:
+      - $VAGRANT_DATA_DIR../data/influxdb:/data
+    ports:
+      - "8086:8086"
+    restart: always
 
   web:
     build:
@@ -36,28 +38,28 @@ services:
     depends_on:
       - redis
       - db
-#      - influxdb
+      - influx
     restart: always
 
-  consumer:
-    build:
-      context: ..
-      dockerfile: ./docker/redis-consumer/Dockerfile
-    command: python redis-consumer/redis-consumer.py
-    depends_on:
-      - db
-      - redis
-    restart: always
-
-#  influx_writer:
+#  consumer:
 #    build:
 #      context: ..
-#      dockerfile: ./docker/influx-writer/Dockerfile
-#    command: python influx-writer/influx-writer.py
+#      dockerfile: ./docker/redis-consumer/Dockerfile
+#    command: python redis-consumer/redis-consumer.py
 #    depends_on:
+#      - db
 #      - redis
-#      - influxdb
 #    restart: always
+
+  influx_writer:
+    build:
+      context: ..
+      dockerfile: ./docker/influx-writer/Dockerfile
+    command: python influx-writer/influx-writer.py
+    depends_on:
+      - redis
+      - influx
+    restart: always
 
 #  bigquery:
 #    build:
@@ -66,7 +68,7 @@ services:
 #    command: python bigquery-writer/bigquery-writer.py
 #    depends_on:
 #      - redis
-#      - influxdb
+#      - influx
 #    restart: always
 
   nginx:
