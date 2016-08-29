@@ -68,8 +68,8 @@ class PostgresListenStore(ListenStore):
                 connection.execute("SET synchronous_commit TO off")
 
     def convert_row(self, row):
-        return Listen(user_id=row[1], timestamp=row[2], artist_msid=row[3], album_msid=row[4],
-                      recording_msid=row[5], data=row[6])
+        return Listen(user_id=row[1], user_name=row[2], timestamp=row[3], artist_msid=row[4], 
+                      album_msid=row[5], recording_msid=row[6], data=row[7])
 
     def insert(self, listens):
         """ Insert a batch of listens, using asynchronous queries.
@@ -124,6 +124,7 @@ class PostgresListenStore(ListenStore):
             results = connection.execute(text("""
                 SELECT listen.id
                      , user_id
+                     , fuck.musicbrainz_id
                      , ts AT TIME ZONE 'UTC'
                      , artist_msid
                      , album_msid
@@ -131,7 +132,9 @@ class PostgresListenStore(ListenStore):
                      , data
                   FROM listen
                      , listen_json
+                     , user AS fuck
                  WHERE listen.id = listen_json.id
+                   AND user_id = fuck.id
                    AND user_id = :user_id
                    AND ts AT TIME ZONE 'UTC' > :from_ts
                    AND ts AT TIME ZONE 'UTC' < :to_ts

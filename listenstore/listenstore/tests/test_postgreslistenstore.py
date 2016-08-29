@@ -20,6 +20,9 @@ class TestPostgresListenStore(DatabaseTestCase):
         self.log = logging.getLogger(__name__)
         self.logstore = init_postgres_connection(self.config.TEST_SQLALCHEMY_DATABASE_URI)
         self.testuser_id = db.user.create("test")
+        user = db.user.get(self.testuser_id)
+        print(user)
+        self.testuser_name = db.user.get(self.testuser_id)['musicbrainz_id']
 
     def tearDown(self):
         self.logstore = None
@@ -45,8 +48,10 @@ class TestPostgresListenStore(DatabaseTestCase):
         now = datetime.utcnow()
         data = [('id', 1), ('user_id', self.testuser_id), ('timestamp', now), ('artist_msid', str(uuid.uuid4())),
                 ('album_msid', str(uuid.uuid4())), ('recording_msid', str(uuid.uuid4())), ('data', "{'additional_info':{}}"),
-                ('ts_since_epoch', to_epoch(now))]
+                ('ts_since_epoch', to_epoch(now)), ('user_name', self.testuser_name)]
         row = OrderedDict([(str(k), v) for (k, v) in data[1:]])
         listen = self.logstore.convert_row([1] + row.values())
         self.assertIsInstance(listen, Listen)
+        print("Listen ", listen.__dict__)
+        print("row ", dict(row))
         self.assertDictEqual(listen.__dict__, dict(row))
