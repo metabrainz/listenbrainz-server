@@ -56,7 +56,6 @@ class RedisPubSubPublisher(object):
         stats['num_consumers'] = len(stats['consumers'])
         stats['listen_ids'] = ", ".join(listen_ids)
         stats['listen_ids_pending'] = ", ".join(listen_ids_pending)
-        print(stats)
 
         return stats
 
@@ -203,7 +202,7 @@ class RedisPubSubSubscriber(object):
         # now clean up the messages from redis
         for id in message_ids:
             # Get the refcount for this message. If 0, delete it and the refcount
-            refcount = p.decr(self.prefix + PUBSUB_JSON_REFCOUNT + id)
+            refcount = r.decr(self.prefix + PUBSUB_JSON_REFCOUNT + id)
             if refcount == 0:
                 p.delete(self.prefix + PUBSUB_JSON + id)
                 p.delete(self.prefix + PUBSUB_JSON_REFCOUNT + id)
