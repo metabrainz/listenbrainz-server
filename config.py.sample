@@ -28,6 +28,11 @@ PG_SUPER_USER = "postgres"
 # Redis
 REDIS_HOST = "redis"
 
+# Influx DB (main listen store)
+INFLUX_HOST = "influx"
+INFLUX_PORT = 8086
+INFLUX_DB   = "listenbrainz"
+
 
 # MusicBrainz OAuth
 MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
