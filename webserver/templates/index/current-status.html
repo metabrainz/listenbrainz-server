@@ -20,27 +20,27 @@
         <tbody>
           <tr>
             <td>number of listens:</td>
-            <td>{{ listens }}</td>
+            <td>{{ stats.listens }}</td>
             <td>less than 1M</td>
           </tr>
           <tr>
             <td>number of listen ref counts:</td>
-            <td>{{ listen_refcounts }}</td>
+            <td>{{ stats.refcounts }}</td>
             <td>about the same as listens</td>
           </tr>
           <tr>
             <td>number of listen consumer ids:</td>
-            <td>{{ listen_ids }}</td>
+            <td>{{ stats.listen_ids }}</td>
             <td>near 0</td>
           </tr>
           <tr>
             <td>number of pending listen consumer ids:</td>
-            <td>{{ listen_ids_pending }}</td>
+            <td>{{ stats.listen_ids_pending }}</td>
             <td>near 0</td>
           </tr>
           <tr>
             <td>number of consumers:</td>
-            <td>{{ consumers }}</td>
+            <td>{{ stats.num_consumers }}</td>
             <td>between 1 and 5</td>
           </tr>
         </tbody>
