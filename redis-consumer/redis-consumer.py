@@ -38,6 +38,8 @@ class RedisConsumer(RedisPubSubSubscriber):
         self.ls.insert(listens)
         self.time += time() - t0
 
+        return True
+
     def start(self):
         self.log.info("RedisListenConsumer started")
 
