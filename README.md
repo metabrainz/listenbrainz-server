@@ -62,8 +62,7 @@ ListenBrainz home page.
 
 ### Virtual machine
 
-There will be an easy to use Vagrant setup once the docker branches are merged.
-
+TODO: Finish this
 
 ## Documentation
 
