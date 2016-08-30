@@ -56,6 +56,7 @@ To initialize the database (create user, tables, etc.) run these commands:
 
     $ docker exec -it docker_web_1 python manage.py init_db 
     $ docker exec -it docker_web_1 python manage.py init_msb_db --create-db
+    $ docker exec -it docker_influx_writer_1 python admin/influx/create_db.py
 
 After that server should be ready to go. Go to http://localhost:8000 and load the 
 ListenBrainz home page.
