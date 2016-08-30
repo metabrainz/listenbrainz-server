@@ -2,10 +2,11 @@
 
 import sys
 import os
+from datetime import datetime
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
 from redis import Redis
 from redis_pubsub import RedisPubSubSubscriber, NoSubscriberNameSetException, WriteFailException
-from influxdb import InfluxDBClient, requests
+from influxdb import InfluxDBClient
 import ujson
 import logging
 from listen import Listen
@@ -30,11 +31,58 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
     def write(self, listen_dicts):
 
         submit = []
+
+        # Calculate the time range that this set of listens coveres
+        min_time = 0
+        max_time = 0
+        user_name = ""
         for listen in listen_dicts:
+            t = int(listen['listened_at'])
+            if not max_time:
+                min_time = max_time = t
+                user_name = listen['user_name']
+                continue
+
+            if t > max_time:
+                max_time = t
+
+            if t < min_time:
+                min_time = t
+
+        # Quote single quote characters which could be used to mount an injection attack.
+        # Sadly, influxdb does not provide a means to do this in the client library
+        user_name = user_name.replace("'", "\'")
+
+        # quering for artist name here, since a field must be included in the query.
+        query = """SELECT time, artist_name
+                     FROM listen
+                    WHERE user_name = '%s'
+                      AND time >= %d000000000
+                      AND time <= %d000000000
+                """ % (user_name, min_time, max_time)
+        results = i.query(query)
+
+        # collect all the timestamps for this given time range.
+        timestamps = {}
+        for result in results.get_points(measurement='listen'):
+            dt = datetime.strptime(result['time'] , "%Y-%m-%dT%H:%M:%SZ")
+            timestamps[int(dt.strftime('%s'))] = 1
+
+        duplicate = 0
+        unique = 0
+        for listen in listen_dicts:
+            # Check to see if the timestamp is already in the DB
+            t = int(listen['listened_at'])
+            if t in timestamps:
+                duplicate += 1
+                continue
+
+            unique += 1
+
             meta = listen['track_metadata']
             data = {
                 'measurement' : 'listen',
-                'time' : int(listen['listened_at']) * 1000000000,
+                'time' : t,
                 'tags' : {
                     'user_name' : listen['user_name'],
                     'artist_msid' : meta['additional_info']['artist_msid'],
@@ -42,7 +90,7 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
                     'recording_msid' : listen['recording_msid'],
                 },
                 'fields' : {
-                    'artist_name' : meta['additional_info'].get('artist_name', ''),
+                    'artist_name' : meta['artist_name'],
                     'artist_mbids' : ",".join(meta['additional_info'].get('artist_mbids', [])),
                     'album_name' : meta['additional_info'].get('release_name', ''),
                     'album_mbid' : meta['additional_info'].get('release_mbid', ''),
@@ -53,12 +101,17 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
             }
             submit.append(data)
 
-        # TODO: Catch more exceptions?
+        self.log.error("dups: %d, unique %d" % (duplicate, unique))
+        if not unique:
+            return True
+
         t0 = time()
         try:
-            self.influx.write_points(submit)
-        except requests.exceptions.ConnectionError as e:
-            self.log.error("Cannot write data to influx: ", str(e))
+            if not self.influx.write_points(submit, time_precision='s'):
+                self.log.error("Cannot write data to influx. (write_points returned False)")
+                return False
+        except ValueError as e:
+            self.log.error("Cannot write data to influx: %s" % str(e))
             return False
 
         self.time += time() - t0
@@ -76,7 +129,7 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
                 self.log.error("InfluxWriterSubscriber has no subscriber name set.")
                 return
             except WriteFailException as e:
-                self.log.error("InfluxWriterSubscriber failed to write to Postgres.")
+                self.log.error("InfluxWriterSubscriber failed to write: %s" % str(e))
                 return
 
             if not count:

@@ -124,7 +124,6 @@ class PostgresListenStore(ListenStore):
             results = connection.execute(text("""
                 SELECT listen.id
                      , user_id
-                     , fuck.musicbrainz_id
                      , ts AT TIME ZONE 'UTC'
                      , artist_msid
                      , album_msid
@@ -132,9 +131,7 @@ class PostgresListenStore(ListenStore):
                      , data
                   FROM listen
                      , listen_json
-                     , user AS fuck
                  WHERE listen.id = listen_json.id
-                   AND user_id = fuck.id
                    AND user_id = :user_id
                    AND ts AT TIME ZONE 'UTC' > :from_ts
                    AND ts AT TIME ZONE 'UTC' < :to_ts
