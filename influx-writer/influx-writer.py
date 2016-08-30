@@ -5,7 +5,7 @@ import os
 from datetime import datetime
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
 from redis import Redis
-from redis_pubsub import RedisPubSubSubscriber, NoSubscriberNameSetException, WriteFailException
+from redis_pubsub import RedisPubSubSubscriber, RedisPubSubPublisher, NoSubscriberNameSetException, WriteFailException
 from influxdb import InfluxDBClient
 import ujson
 import logging
@@ -15,11 +15,14 @@ import config
 
 REPORT_FREQUENCY = 5000
 SUBSCRIBER_NAME = "in"
-KEYSPACE_NAME = "listen"
+KEYSPACE_NAME_INCOMING = "ilisten"
+KEYSPACE_NAME_UNIQUE = "ulisten"
 
 class InfluxWriterSubscriber(RedisPubSubSubscriber):
     def __init__(self, influx, redis):
-        RedisPubSubSubscriber.__init__(self, redis, KEYSPACE_NAME)
+        RedisPubSubSubscriber.__init__(self, redis, KEYSPACE_NAME_INCOMING)
+
+        self.publisher = RedisPubSubPublisher(redis, KEYSPACE_NAME_UNIQUE)
 
         self.influx = influx
         self.log = logging.getLogger(__name__)
@@ -31,6 +34,7 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
     def write(self, listen_dicts):
 
         submit = []
+        unique = []
 
         # Calculate the time range that this set of listens coveres
         min_time = 0
@@ -68,16 +72,16 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
             dt = datetime.strptime(result['time'] , "%Y-%m-%dT%H:%M:%SZ")
             timestamps[int(dt.strftime('%s'))] = 1
 
-        duplicate = 0
-        unique = 0
+        duplicate_count = 0
+        unique_count = 0
         for listen in listen_dicts:
             # Check to see if the timestamp is already in the DB
             t = int(listen['listened_at'])
             if t in timestamps:
-                duplicate += 1
+                duplicate_count += 1
                 continue
 
-            unique += 1
+            unique_count += 1
 
             meta = listen['track_metadata']
             data = {
@@ -100,9 +104,10 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
                 }
             }
             submit.append(data)
+            unique.append(listen)
 
-        self.log.error("dups: %d, unique %d" % (duplicate, unique))
-        if not unique:
+        self.log.error("dups: %d, unique %d" % (duplicate_count, unique_count))
+        if not unique_count:
             return True
 
         t0 = time()
@@ -113,6 +118,11 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
         except ValueError as e:
             self.log.error("Cannot write data to influx: %s" % str(e))
             return False
+
+        try:
+            self.publisher.publish(unique)
+        except NoSubscribersException:
+            self.log.error("No subscribers, cannot publish unique listens.")
 
         self.time += time() - t0
 

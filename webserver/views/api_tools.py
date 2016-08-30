@@ -35,7 +35,7 @@ LISTEN_TYPE_IMPORT = 2
 LISTEN_TYPE_PLAYING_NOW = 3
 
 # PubSub Keyspace
-LISTEN_KEYSPACE = "listen"
+LISTEN_KEYSPACE = "ilisten"  # for incoming listens
 
 def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
     """ Convert the payload into augmented listens then submit them.

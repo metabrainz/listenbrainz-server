@@ -61,15 +61,14 @@ services:
       - influx
     restart: always
 
-#  bigquery:
-#    build:
-#      context: ..
-#      dockerfile: ./docker/bigquery-writer/Dockerfile
-#    command: python bigquery-writer/bigquery-writer.py
-#    depends_on:
-#      - redis
-#      - influx
-#    restart: always
+  bigquery:
+    build:
+      context: ..
+      dockerfile: ./docker/bigquery-writer/Dockerfile
+    command: python bigquery-writer/bigquery-writer.py
+    depends_on:
+      - redis
+    restart: always
 
   nginx:
     extends:

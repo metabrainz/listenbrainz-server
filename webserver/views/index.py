@@ -57,7 +57,13 @@ def roadmap():
 def current_status():
 
     load = "%.2f %.2f %.2f" % os.getloadavg()
-    pubsub = RedisPubSubPublisher(_redis.redis, "listen")
-    stats = pubsub.get_stats()
+
+    stats = []
+    pubsub = RedisPubSubPublisher(_redis.redis, "ilisten")
+    stats_dict = pubsub.get_stats()
+    stats.append({ 'data' : stats_dict, 'desc' : "Incoming listens" })
+    pubsub = RedisPubSubPublisher(_redis.redis, "ulisten")
+    stats_dict = pubsub.get_stats()
+    stats.append({ 'data' : stats_dict, 'desc' : "Unique listens" })
 
     return render_template("index/current-status.html", load=load, stats = stats)
