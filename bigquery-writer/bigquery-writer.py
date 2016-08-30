@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import sys
 import os
 from datetime import datetime
@@ -21,6 +20,13 @@ SUBSCRIBER_NAME = "bq"
 KEYSPACE_NAME_INCOMING = "ilisten"
 KEYSPACE_NAME_UNIQUE = "ulisten"
 APP_CREDENTIALS_FILE = "big-query-credentials.json"
+
+# Things left to do
+#   Redis persistence
+#   Influx listenstore functions
+#   Add unit tests for pubsub object, incoing and unique queue
+#   Bring non-prod docker-compose up to date with prod one
+
 
 class BigQueryWriterSubscriber(RedisPubSubSubscriber):
     def __init__(self, redis):
