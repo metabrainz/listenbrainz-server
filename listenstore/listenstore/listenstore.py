@@ -68,8 +68,8 @@ class PostgresListenStore(ListenStore):
                 connection.execute("SET synchronous_commit TO off")
 
     def convert_row(self, row):
-        return Listen(user_id=row[1], user_name=row[2], timestamp=row[3], artist_msid=row[4], 
-                      album_msid=row[5], recording_msid=row[6], data=row[7])
+        return Listen(user_id=row[1], timestamp=row[2], artist_msid=row[3], 
+                      album_msid=row[4], recording_msid=row[5], data=row[6])
 
     def insert(self, listens):
         """ Insert a batch of listens, using asynchronous queries.
