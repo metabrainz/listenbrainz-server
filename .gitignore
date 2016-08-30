@@ -2,6 +2,7 @@
 .vagrant
 .DS_Store
 *.pyc
+*.swp
 config.py
 *.log
 .cache
