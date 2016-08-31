@@ -22,6 +22,15 @@ services:
     image: influxdb:0.13.0
     volumes:
       - $DATA_DIR../data/influxdb:/data
+    environment:
+      INFLUXDB_REPORTING_DISABLED: 'true'
+      INFLUXDB_META_LOGGING_ENABLED: 'false'
+      INFLUXDB_DATA_QUERY_LOG_ENABLED: 'false'
+      INFLUXDB_DATA_WAL_LOGGING_ENABLED: 'false'
+      INFLUXDB_DATA_DATA_LOGGING_ENABLED: 'false'
+      INFLUXDB_HTTP_LOG_ENABLED: 'false'
+      INFLUXDB_CONTINUOUS_QUERIES_LOG_ENABLED: 'false'
+
     ports:
       - "8086:8086"
     restart: always
