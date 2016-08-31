@@ -43,7 +43,7 @@ LASTFM_API_KEY = "USE_LASTFM_API_KEY"
 
 # BigQuery support
 # Enable/disable support. If enabled, the Application Credentials must reside in 
-# big-query-credentials.json in the top level directory.
+# bigquery-credentials.json in the top level directory.
 WRITE_TO_BIGQUERY = False
 
 

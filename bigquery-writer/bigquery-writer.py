@@ -19,7 +19,7 @@ REPORT_FREQUENCY = 5000
 SUBSCRIBER_NAME = "bq"
 KEYSPACE_NAME_INCOMING = "ilisten"
 KEYSPACE_NAME_UNIQUE = "ulisten"
-APP_CREDENTIALS_FILE = "big-query-credentials.json"
+APP_CREDENTIALS_FILE = "bigquery-credentials.json"
 
 # Things left to do
 #   Redis persistence
