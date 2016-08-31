@@ -22,8 +22,8 @@ r = Redis(config.REDIS_HOST)
 if len(sys.argv) < 4:
     print "Usage: %s <per ip limit> <per token limit> <window in s>" % (sys.argv[0])
     print "Current values:"
-    print "   Requests per token: ", r.get(RATELIMIT_PER_TOKEN_KEY)
     print "      Requests per ip: ", r.get(RATELIMIT_PER_IP_KEY)
+    print "   Requests per token: ", r.get(RATELIMIT_PER_TOKEN_KEY)
     print "          window size: ", r.get(RATELIMIT_WINDOW_KEY)
     sys.exit(-1)
 
