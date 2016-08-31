@@ -123,7 +123,7 @@ class RedisPubSubSubscriber(object):
         subscribers = self.r.smembers(self.prefix + PUBSUB_SUBSCRIBERS)
         if not subscriber_name in subscribers:
             self.r.sadd(self.prefix + PUBSUB_SUBSCRIBERS, subscriber_name)
-            self.subscriber_name = subscriber_name
+        self.subscriber_name = subscriber_name
 
 
     def unregister(self, subscriber_name):

@@ -3,6 +3,9 @@ import sys
 import os
 from webserver.scheduler import ScheduledJobs
 
+def create_influx(app):
+    from influx_connection import init_influx_connection
+    return init_influx_connection({ 'host':app.config['INFLUX_HOST'], 'port':app.config['INFLUX_PORT'], 'database':app.config['INFLUX_DB'] })
 
 def create_postgres(app):
     from postgres_connection import init_postgres_connection
@@ -30,11 +33,14 @@ def create_app():
     from webserver.loggers import init_loggers
     init_loggers(app)
 
-    # Redis connection (RedisStore)
+    # Redis connection
     create_redis(app)
 
-    # Postgres connection (ListenStore)
+    # Postgres connection 
     create_postgres(app)
+
+    # Influx connection 
+    create_influx(app)
 
     # Database connection
     import db

@@ -43,7 +43,7 @@ def lastfmscraper(user_name):
 @user_bp.route("/<user_name>")
 def profile(user_name):
     # Which database to use to showing user listens.
-    db_conn = webserver.postgres_connection._postgres
+    db_conn = webserver.influx_connection._influx
     # Which database to use to show playing_now stream.
     playing_now_conn = webserver.redis_connection._redis
 
@@ -58,7 +58,7 @@ def profile(user_name):
             raise BadRequest("Incorrect timestamp argument to_ts:" %
                              request.args.get("to_ts"))
     listens = []
-    for listen in db_conn.fetch_listens(user.id, limit=25, to_ts=max_ts):
+    for listen in db_conn.fetch_listens(user_name, limit=25, to_ts=max_ts):
         listens.append({
             "track_metadata": listen.data,
             "listened_at": listen.ts_since_epoch,
@@ -67,7 +67,7 @@ def profile(user_name):
 
     if listens:
         # Checking if there is a "previous" page...
-        previous_listens = db_conn.fetch_listens(user.id, limit=25, from_ts=listens[0]["listened_at"])
+        previous_listens = db_conn.fetch_listens(user_name, limit=25, from_ts=listens[0]["listened_at"])
         if previous_listens:
             # Getting from the last item because `fetch_listens` returns in ascending
             # order when `from_ts` is used.
@@ -76,7 +76,7 @@ def profile(user_name):
             previous_listen_ts = None
 
         # Checking if there is a "next" page...
-        next_listens = db_conn.fetch_listens(user.id, limit=1, to_ts=listens[-1]["listened_at"])
+        next_listens = db_conn.fetch_listens(user_name, limit=1, to_ts=listens[-1]["listened_at"])
         if next_listens:
             next_listen_ts = listens[-1]["listened_at"]
         else:
@@ -88,7 +88,7 @@ def profile(user_name):
 
     # If there are no previous listens then display now_playing
     if not previous_listen_ts:
-        playing_now = playing_now_conn.get_playing_now(str(user.id))
+        playing_now = playing_now_conn.get_playing_now(user_name)
         if playing_now:
             listen = {
                 "track_metadata": playing_now.data,
@@ -137,12 +137,12 @@ def import_data():
 def export_data():
     """ Exporting the data to json """
     if request.method == "POST":
-        db_conn = webserver.create_postgres(current_app)
+        db_conn = webserver.create_influx(current_app)
         filename = current_user.musicbrainz_id + "_lb-" + datetime.today().strftime('%Y-%m-%d') + ".json"
 
         # Fetch output and convert it into dict with keys as indexes
         output = []
-        for index, obj in enumerate(db_conn.fetch_listens(current_user.id)):
+        for index, obj in enumerate(db_conn.fetch_listens(current_user.musicbrainz_id)):
             dic = obj.data
             dic['timestamp'] = obj.ts_since_epoch
             dic['album_msid'] = None if obj.album_msid is None else str(obj.album_msid)

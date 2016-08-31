@@ -63,11 +63,11 @@ def submit_listen():
     return "success"
 
 
-@api_bp.route("/1/user/<user_id>/listens")
+@api_bp.route("/1/user/<user_name>/listens")
 @ratelimit()
-def get_listens(user_id):
+def get_listens(user_name):
     """
-    Get listens for user ``user_id``. The format for the JSON returned is defined in our :ref:`json-doc`.
+    Get listens for user ``user_name``. The format for the JSON returned is defined in our :ref:`json-doc`.
 
     If none of the optional arguments are given, this endpoint will return the :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` most recent listens.
     The optional ``max_ts`` and ``min_ts`` UNIX epoch timestamps control at which point in time to start returning listens. You may specify max_ts or
@@ -86,9 +86,9 @@ def get_listens(user_id):
     if max_ts and min_ts:
         log_raise_400("You may only specify max_ts or min_ts, not both.")
 
-    db_conn = webserver.create_postgres(current_app)
+    db_conn = webserver.create_influx(current_app)
     listens = db_conn.fetch_listens(
-        user_id,
+        user_name,
         limit=min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET),
         from_ts=min_ts,
         to_ts=max_ts,
@@ -105,7 +105,7 @@ def get_listens(user_id):
         listen_data = listen_data[::-1]
 
     return jsonify({'payload': {
-        'user_id': user_id,
+        'user_id': user_name,
         'count': len(listen_data),
         'listens': listen_data,
     }})

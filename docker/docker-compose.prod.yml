@@ -28,11 +28,12 @@ services:
       INFLUXDB_DATA_QUERY_LOG_ENABLED: 'false'
       INFLUXDB_DATA_WAL_LOGGING_ENABLED: 'false'
       INFLUXDB_DATA_DATA_LOGGING_ENABLED: 'false'
-      INFLUXDB_HTTP_LOG_ENABLED: 'false'
+      INFLUXDB_HTTP_LOG_ENABLED: 'true'
       INFLUXDB_CONTINUOUS_QUERIES_LOG_ENABLED: 'false'
 
     ports:
       - "8086:8086"
+      - "8083:8083"
     restart: always
 
   web:
@@ -49,16 +50,6 @@ services:
       - db
       - influx
     restart: always
-
-#  consumer:
-#    build:
-#      context: ..
-#      dockerfile: ./docker/redis-consumer/Dockerfile
-#    command: python redis-consumer/redis-consumer.py
-#    depends_on:
-#      - db
-#      - redis
-#    restart: always
 
   influx_writer:
     build:

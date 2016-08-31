@@ -64,7 +64,13 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
                       AND time >= %d000000000
                       AND time <= %d000000000
                 """ % (user_name, min_time, max_time)
-        results = i.query(query)
+        while True:
+            try:
+                results = i.query(query)
+                break
+            except Exception as e:
+                self.log.error("Cannot query influx: %s" % str(e))
+                sleep(3)
 
         # collect all the timestamps for this given time range.
         timestamps = {}
@@ -149,8 +155,9 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
             self.inserts += count
             if self.inserts >= REPORT_FREQUENCY:
                 self.total_inserts += self.inserts
-                self.log.info("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % \
-                    (count, self.time, count / self.time, self.total_inserts))
+                if self.time > 0:
+                    self.log.error("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % \
+                        (count, self.time, count / self.time, self.total_inserts))
                 self.inserts = 0
                 self.time = 0
 
