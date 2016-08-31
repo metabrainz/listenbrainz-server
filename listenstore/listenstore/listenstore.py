@@ -10,6 +10,7 @@ import six
 from datetime import date, datetime
 from listen import Listen
 from dateutil.relativedelta import relativedelta
+from influxdb import InfluxDBClient
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.pool import NullPool
@@ -21,6 +22,9 @@ MIN_ID = 1033430400     # approx when audioscrobbler was created
 ORDER_DESC = 0
 ORDER_ASC = 1
 ORDER_TEXT = [ "DESC", "ASC" ]
+
+# TODO: This needs to be broken into 3 files and moved out of the separate listenstore module,
+#       but I am leaving this for the next PR
 
 
 class ListenStore(object):
@@ -37,7 +41,7 @@ class ListenStore(object):
         """ Override this method in PostgresListenStore class """
         raise NotImplementedError()
 
-    def fetch_listens(self, user_id, from_ts=None, to_ts=None, limit=None):
+    def fetch_listens(self, user_name, from_ts=None, to_ts=None, limit=None):
         """ Check from_ts, to_ts, and limit for fetching listens
             and set them to default values if not given.
         """
@@ -54,7 +58,7 @@ class ListenStore(object):
             from_ts = MIN_ID
         if to_ts is None:
             to_ts = self.max_id()
-        return self.fetch_listens_from_storage(user_id, from_ts, to_ts, limit, order, precision)
+        return self.fetch_listens_from_storage(user_name, from_ts, to_ts, limit, order, precision)
 
 
 class PostgresListenStore(ListenStore):
@@ -68,8 +72,8 @@ class PostgresListenStore(ListenStore):
                 connection.execute("SET synchronous_commit TO off")
 
     def convert_row(self, row):
-        return Listen(user_id=row[1], timestamp=row[2], artist_msid=row[3], 
-                      album_msid=row[4], recording_msid=row[5], data=row[6])
+        return Listen(user_id=row[1], user_name=row[2], timestamp=row[3], artist_msid=row[4], 
+                      album_msid=row[5], recording_msid=row[6], data=row[7])
 
     def insert(self, listens):
         """ Insert a batch of listens, using asynchronous queries.
@@ -112,7 +116,7 @@ class PostgresListenStore(ListenStore):
                 except Exception, e:     # Log errors
                     self.log.error(e)
 
-    def fetch_listens_from_storage(self, user_id, from_ts, to_ts, limit, order, precision):
+    def fetch_listens_from_storage(self, user_name, from_ts, to_ts, limit, order, precision):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving
             the value they are converted to the local server's timezone. So to compare
             datetime object we need to create a object in the same timezone as the server.
@@ -124,6 +128,7 @@ class PostgresListenStore(ListenStore):
             results = connection.execute(text("""
                 SELECT listen.id
                      , user_id
+                     , musicbrainz_id
                      , ts AT TIME ZONE 'UTC'
                      , artist_msid
                      , album_msid
@@ -131,14 +136,16 @@ class PostgresListenStore(ListenStore):
                      , data
                   FROM listen
                      , listen_json
+                     , "user"
                  WHERE listen.id = listen_json.id
-                   AND user_id = :user_id
+                   AND user_id = "user".id
+                   AND "user".musicbrainz_id = :user_name
                    AND ts AT TIME ZONE 'UTC' > :from_ts
                    AND ts AT TIME ZONE 'UTC' < :to_ts
               ORDER BY ts """ + ORDER_TEXT[order] + """
                  LIMIT :limit
             """), {
-                'user_id': user_id,
+                'user_name': user_name,
                 'from_ts': pytz.utc.localize(datetime.utcfromtimestamp(from_ts)),
                 'to_ts': pytz.utc.localize(datetime.utcfromtimestamp(to_ts)),
                 'limit': limit
@@ -164,3 +171,87 @@ class RedisListenStore(ListenStore):
         data = ujson.loads(data)
         data.update({'listened_at': MIN_ID+1})
         return Listen.from_json(data)
+
+
+
+class InfluxListenStore(ListenStore):
+    def __init__(self, conf):
+        ListenStore.__init__(self, conf)
+        self.influx = InfluxDBClient(conf['host'], conf['port'], conf['database'])
+
+    def insert(self, listens):
+        """ Insert a batch of listens.
+        """
+
+        submit = []
+        for listen in listens:
+            data = {
+                'measurement' : 'listen',
+                'time' : listen.ts_since_epoch,
+                'tags' : {
+                    'user_name' : listen.user_name,
+                    'artist_msid' : listen.artist_msid,
+                    'album_msid' : listen.album_msid,
+                    'recording_msid' : listen.recording_msid,
+                },
+                'fields' : {
+                    'artist_name' : listen.data['artist_name'],
+                    'artist_mbids' : ",".join(listen.data['additional_info'].get('artist_mbids', [])),
+                    'album_name' : listen.data['additional_info'].get('release_name', ''),
+                    'album_mbid' : listen.data['additional_info'].get('release_mbid', ''),
+                    'track_name' : listen.data['track_name'],
+                    'recording_mbid' : listen.data['additional_info'].get('recording_mbid', ''),
+                    'tags' : ",".join(listen.data['additional_info'].get('tags', [])),
+                }
+            }
+            submit.append(data)
+
+        try:
+            if not self.influx.write_points(submit, time_precision='s'):
+                self.log.error("Cannot write data to influx. (write_points returned False)")
+        except ValueError as e:
+            self.log.error("Cannot write data to influx: %s" % str(e))
+
+
+
+    def fetch_listens_from_storage(self, user_name, from_ts, to_ts, limit, order, precision):
+        """ The timestamps are stored as UTC in the postgres datebase while on retrieving
+            the value they are converted to the local server's timezone. So to compare
+            datetime object we need to create a object in the same timezone as the server.
+
+            from_ts: seconds since epoch, in float
+            to_ts: seconds since epoch, in float
+        """
+
+        # Quote single quote characters which could be used to mount an injection attack.
+        # Sadly, influxdb does not provide a means to do this in the client library
+        user_name = user_name.replace("'", "\'")
+
+        self.log.error(user_name)
+        self.log.error(from_ts)
+        self.log.error(to_ts)
+
+        query = """SELECT *
+                     FROM listen
+                    WHERE user_name = '%s'
+                      AND time >= %d000000000
+                      AND time <= %d000000000
+                 ORDER BY time """ + ORDER_TEXT[order] + """
+                    LIMIT :limit
+                """ 
+
+        try:
+            results = self.influx.query(query % (user_name, from_ts, to_ts))
+        except Exception as e:
+            self.log.error("Cannot query influx: %s" % str(e))
+            return []
+
+        listens = []
+        for result in results.get_points(measurement='listen'):
+            dt = datetime.strptime(result['time'] , "%Y-%m-%dT%H:%M:%SZ")
+            t = int(dt.strftime('%s'))
+            self.log.error(result)
+
+        return listens
+
+

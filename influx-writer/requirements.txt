@@ -1,4 +1,4 @@
 ujson==1.33
 redis==2.10.3
 python-dateutil==2.2
-influxdb
+influxdb==3.0.0

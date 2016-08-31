@@ -4,7 +4,7 @@
 VAGRANTFILE_API_VERSION = "2"
 
 NCPUS = ENV['CB_NCPUS'] || '1'
-MEM = ENV['CB_MEM'] || '1024'
+MEM = ENV['CB_MEM'] || '2048'
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "ubuntu/trusty64"
@@ -24,4 +24,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # PostgreSQL
   config.vm.network "forwarded_port", guest: 5432, host: 15432
+
+  # influxdb
+  config.vm.network "forwarded_port", guest: 8083, host: 8083
+  config.vm.network "forwarded_port", guest: 8086, host: 8086
 end

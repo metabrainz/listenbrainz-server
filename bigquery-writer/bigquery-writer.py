@@ -118,8 +118,9 @@ class BigQueryWriterSubscriber(RedisPubSubSubscriber):
             self.inserts += count
             if self.inserts >= REPORT_FREQUENCY:
                 self.total_inserts += self.inserts
-                self.log.error("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % \
-                    (count, self.time, count / self.time, self.total_inserts))
+                if self.time > 0:
+                    self.log.error("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % \
+                        (count, self.time, count / self.time, self.total_inserts))
                 self.inserts = 0
                 self.time = 0
 

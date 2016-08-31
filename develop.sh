@@ -15,4 +15,5 @@ if [[ ! -d "docker" ]]; then
     exit -1
 fi
 
-docker-compose -f docker/docker-compose.prod.yml build && docker-compose -f docker/docker-compose.prod.yml up
+# invoke docker, but ungrep noisy influx log messages that I can't turn off
+docker-compose -f docker/docker-compose.prod.yml build && docker-compose -f docker/docker-compose.prod.yml up | grep -v '\[cacheloader\]' | grep -v '\[store\]' | grep -v '\[shard\]'
