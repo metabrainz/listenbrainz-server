@@ -33,6 +33,7 @@ class BigQueryWriterSubscriber(RedisPubSubSubscriber):
         RedisPubSubSubscriber.__init__(self, redis, KEYSPACE_NAME_UNIQUE)
 
         self.log = logging.getLogger(__name__)
+        self.log.setLevel(logging.INFO)
         logging.basicConfig()
         self.total_inserts = 0
         self.inserts = 0
@@ -89,13 +90,14 @@ class BigQueryWriterSubscriber(RedisPubSubSubscriber):
     def start(self):
         self.log.info("BigQueryWriterSubscriber started")
 
-        if not config.WRITE_TO_BIGQUERY or not os.path.exists(APP_CREDENTIALS_FILE):
-            if not os.path.exists(APP_CREDENTIALS_FILE):
-                self.log.error("BiqQueryWriter not started, big-query-credentials.json is missing.")
+        # if we're not supposed to run, just sleep
+        if not config.WRITE_TO_BIGQUERY:
+            sleep(1000)
+            return 
 
-            # Rather than exit, just loop, otherwise the container will get 
-            # restarted over and over
-                sleep(100)
+        if not os.path.exists(APP_CREDENTIALS_FILE):
+            self.log.error("BiqQueryWriter not started, big-query-credentials.json is missing.")
+            return
 
         credentials = GoogleCredentials.get_application_default()
         self.bigquery = discovery.build('bigquery', 'v2', credentials=credentials)
@@ -127,4 +129,7 @@ class BigQueryWriterSubscriber(RedisPubSubSubscriber):
 if __name__ == "__main__":
     r = Redis(config.REDIS_HOST)
     bq = BigQueryWriterSubscriber(r)
-    bq.start()
+    while True:
+        # If the start fails, try again in a few
+        bq.start()
+        sleep(3)

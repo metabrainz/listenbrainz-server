@@ -4,7 +4,7 @@ services:
   db:
     image: postgres:9.5.3
     volumes:
-      - $DATA_DIR../data/pgdata:/var/lib/postgresql/data/pgdata
+      - $DATA_DIR/data/pgdata:/var/lib/postgresql/data/pgdata
     environment:
       PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_USER: listenbrainz
@@ -15,13 +15,13 @@ services:
   redis:
     image: redis:3.2.1
     volumes:
-      - $DATA_DIR../data/redis:/data
+      - $DATA_DIR/data/redis:/data
     restart: always
 
   influx:
     image: influxdb:0.13.0
     volumes:
-      - $DATA_DIR../data/influxdb:/data
+      - $DATA_DIR/data/influxdb:/var/lib/influxdb
     environment:
       INFLUXDB_REPORTING_DISABLED: 'true'
       INFLUXDB_META_LOGGING_ENABLED: 'false'
@@ -42,7 +42,7 @@ services:
       dockerfile: ./docker/Dockerfile.prod
     command: uwsgi /code/listenbrainz/docker/uwsgi.ini
     volumes:
-      - $DATA_DIR../data/app:/data
+      - $DATA_DIR/data/app:/data
     ports:
       - "3031:3031"
     depends_on:

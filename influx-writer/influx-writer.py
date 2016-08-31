@@ -27,6 +27,7 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
         self.influx = influx
         self.log = logging.getLogger(__name__)
         logging.basicConfig()
+        self.log.setLevel(logging.INFO)
         self.total_inserts = 0
         self.inserts = 0
         self.time = 0
@@ -95,16 +96,16 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
                 'time' : t,
                 'tags' : {
                     'user_name' : listen['user_name'],
-                    'artist_msid' : meta['additional_info']['artist_msid'],
-                    'album_msid' : meta['additional_info'].get('album_msid', ''),
-                    'recording_msid' : listen['recording_msid'],
                 },
                 'fields' : {
                     'artist_name' : meta['artist_name'],
+                    'artist_msid' : meta['additional_info']['artist_msid'],
                     'artist_mbids' : ",".join(meta['additional_info'].get('artist_mbids', [])),
                     'album_name' : meta['additional_info'].get('release_name', ''),
+                    'album_msid' : meta['additional_info'].get('album_msid', ''),
                     'album_mbid' : meta['additional_info'].get('release_mbid', ''),
                     'track_name' : meta['track_name'],
+                    'recording_msid' : listen['recording_msid'],
                     'recording_mbid' : meta['additional_info'].get('recording_mbid', ''),
                     'tags' : ",".join(meta['additional_info'].get('tags', [])),
                 }
