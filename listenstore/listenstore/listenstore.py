@@ -33,6 +33,7 @@ class ListenStore(object):
 
     def __init__(self, conf):
         self.log = logging.getLogger(__name__)
+        self.log.setLevel(logging.INFO)
 
     def max_id(self):
         return int(self.MAX_FUTURE_SECONDS + calendar.timegm(time.gmtime()))
@@ -174,17 +175,40 @@ class RedisListenStore(ListenStore):
 
 
 
+REDIS_INFLUX_USER_LISTEN_COUNT = "ls.listencount." # append username
 class InfluxListenStore(ListenStore):
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
-        self.influx = InfluxDBClient(conf['host'], conf['port'], conf['database'])
+        self.redis = Redis(conf['redis'])
+        self.log.error("conf " + str(conf))
+        self.influx = InfluxDBClient(host=conf['host'], port=conf['port'], database=conf['database'])
+
+
+
+    def _get_num_listens_for_user(self, user_name):
+        count = self.redis.get(REDIS_INFLUX_USER_LISTEN_COUNT + user_hash(user_name))
+        if count:
+            self.log.info("hit: count for %s" % user.name)
+            return int(count)
+
+        results = self.influx.query("""SELECT count(*) 
+                                         FROM listen 
+                                        WHERE user_name = '%s'""" % (user_name, from_ts, to_ts, limit))
+        result = results.get_points(measurement='listen')
+        self.log.info("get count: %s" % str(result))
+#        count = self.redis.get(REDIS_INFLUX_USER_LISTEN_COUNT + user_hash(user_name))
+
+        return 0
+
 
     def insert(self, listens):
         """ Insert a batch of listens.
         """
 
         submit = []
+        user_names = {}
         for listen in listens:
+            user_names[listen.user_name] = 1
             data = {
                 'measurement' : 'listen',
                 'time' : listen.ts_since_epoch,
@@ -206,12 +230,17 @@ class InfluxListenStore(ListenStore):
             }
             submit.append(data)
 
+
         try:
             if not self.influx.write_points(submit, time_precision='s'):
                 self.log.error("Cannot write data to influx. (write_points returned False)")
         except ValueError as e:
             self.log.error("Cannot write data to influx: %s" % str(e))
 
+        # Invalidate cached listen counts for users
+#        l = [ REDIS_INFLUX_USER_LISTEN_COUNT + str(id) for id in user_names])
+#        self.log.info("delete: " % ",".join(l))
+#        self.redis.delete(*[ REDIS_INFLUX_USER_LISTEN_COUNT + user_hash(user_name) for id in user_names])
 
 
     def fetch_listens_from_storage(self, user_name, from_ts, to_ts, limit, order, precision):
@@ -227,21 +256,17 @@ class InfluxListenStore(ListenStore):
         # Sadly, influxdb does not provide a means to do this in the client library
         user_name = user_name.replace("'", "\'")
 
-        self.log.error(user_name)
-        self.log.error(from_ts)
-        self.log.error(to_ts)
-
         query = """SELECT *
                      FROM listen
                     WHERE user_name = '%s'
                       AND time >= %d000000000
                       AND time <= %d000000000
                  ORDER BY time """ + ORDER_TEXT[order] + """
-                    LIMIT :limit
+                    LIMIT %s
                 """ 
 
         try:
-            results = self.influx.query(query % (user_name, from_ts, to_ts))
+            results = self.influx.query(query % (user_name, from_ts, to_ts, limit))
         except Exception as e:
             self.log.error("Cannot query influx: %s" % str(e))
             return []
@@ -250,8 +275,33 @@ class InfluxListenStore(ListenStore):
         for result in results.get_points(measurement='listen'):
             dt = datetime.strptime(result['time'] , "%Y-%m-%dT%H:%M:%SZ")
             t = int(dt.strftime('%s'))
-            self.log.error(result)
+            self.log.info(result)
+            mbids = []
+            for id in result.get('artist_mbids', '').split(","):
+                if id:
+                    mbids.append(id) 
+            tags = []
+            for tag in result.get('tags', '').split(","):
+                if tag:
+                    tags.append(tag)
+
+            data = {
+                'artist_mbids' : mbids,
+                'album_msid' : result.get('album_msid', ''),
+                'album_mbid' : result.get('album_mbid', ''),
+                'album_name' : result.get('album_name', ''),
+                'recording_mbid' : result.get('recording_mbid', ''),
+                'tags' : tags
+            }
+            l = Listen(timestamp=t,
+                user_name=result['user_name'],
+                artist_msid=result['artist_msid'],
+                artist_name=result['artist_name'],
+                track_name=result['track_name'],
+                recording_msid=result['recording_msid'],
+                data={ 'additional_info' : data })
+            self.log.info(l)
+            listens.append(l)
+
 
         return listens
-
-
