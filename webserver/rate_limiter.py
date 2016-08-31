@@ -16,8 +16,8 @@ RATELIMIT_PER_IP_KEY = "rate_limit_per_ip_limit"
 RATELIMIT_WINDOW_KEY = "rate_limit_window"
 
 # Defaults
-RATELIMIT_PER_TOKEN_DEFAULT = 30
-RATELIMIT_PER_IP_DEFAULT = 10
+RATELIMIT_PER_TOKEN_DEFAULT = 50
+RATELIMIT_PER_IP_DEFAULT = 30
 RATELIMIT_WINDOW_DEFAULT = 10
 
 # g key for the timeout when limits must be refreshed from redis
