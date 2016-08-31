@@ -7,7 +7,7 @@ config.py
 *.log
 .cache
 env
-big-query-credentials.json
+bigquery-credentials.json
 
 # Application data
 /data
