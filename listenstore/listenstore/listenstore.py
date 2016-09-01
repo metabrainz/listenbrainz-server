@@ -295,10 +295,12 @@ class InfluxListenStore(ListenStore):
             l = Listen(timestamp=t,
                 user_name=result['user_name'],
                 artist_msid=result['artist_msid'],
-                artist_name=result['artist_name'],
-                track_name=result['track_name'],
                 recording_msid=result['recording_msid'],
-                data={ 'additional_info' : data })
+                data={ 
+                    'additional_info' : data,
+                    'artist_name' : result['artist_name'],
+                    'track_name' : result['track_name']
+                })
             self.log.info(l)
             listens.append(l)
 
