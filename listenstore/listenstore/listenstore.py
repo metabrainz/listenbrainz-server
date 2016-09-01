@@ -11,7 +11,6 @@ from datetime import date, datetime
 from listen import Listen
 from dateutil.relativedelta import relativedelta
 from influxdb import InfluxDBClient
-
 from sqlalchemy import create_engine, text
 from sqlalchemy.pool import NullPool
 import sqlalchemy.exc
@@ -184,7 +183,6 @@ class InfluxListenStore(ListenStore):
         self.influx = InfluxDBClient(host=conf['host'], port=conf['port'], database=conf['database'])
 
 
-
     def _get_num_listens_for_user(self, user_name):
         count = self.redis.get(REDIS_INFLUX_USER_LISTEN_COUNT + user_hash(user_name))
         if count:
@@ -214,16 +212,16 @@ class InfluxListenStore(ListenStore):
                 'time' : listen.ts_since_epoch,
                 'tags' : {
                     'user_name' : listen.user_name,
-                    'artist_msid' : listen.artist_msid,
-                    'album_msid' : listen.album_msid,
-                    'recording_msid' : listen.recording_msid,
                 },
                 'fields' : {
                     'artist_name' : listen.data['artist_name'],
+                    'artist_msid' : listen.artist_msid,
                     'artist_mbids' : ",".join(listen.data['additional_info'].get('artist_mbids', [])),
                     'album_name' : listen.data['additional_info'].get('release_name', ''),
+                    'album_msid' : listen.album_msid,
                     'album_mbid' : listen.data['additional_info'].get('release_mbid', ''),
                     'track_name' : listen.data['track_name'],
+                    'recording_msid' : listen.recording_msid,
                     'recording_mbid' : listen.data['additional_info'].get('recording_mbid', ''),
                     'tags' : ",".join(listen.data['additional_info'].get('tags', [])),
                 }
@@ -236,6 +234,7 @@ class InfluxListenStore(ListenStore):
                 self.log.error("Cannot write data to influx. (write_points returned False)")
         except ValueError as e:
             self.log.error("Cannot write data to influx: %s" % str(e))
+            raise
 
         # Invalidate cached listen counts for users
 #        l = [ REDIS_INFLUX_USER_LISTEN_COUNT + str(id) for id in user_names])

@@ -4,6 +4,7 @@ import sys
 import os
 from datetime import datetime
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "listenstore"))
 from redis import Redis
 from redis_pubsub import RedisPubSubSubscriber, RedisPubSubPublisher, NoSubscriberNameSetException, WriteFailException, NoSubscribersException
 from influxdb import InfluxDBClient
@@ -12,6 +13,7 @@ import logging
 from listen import Listen
 from time import time, sleep
 import config
+from listenstore.listenstore import InfluxListenStore
 
 REPORT_FREQUENCY = 5000
 SUBSCRIBER_NAME = "in"
@@ -19,12 +21,13 @@ KEYSPACE_NAME_INCOMING = "ilisten"
 KEYSPACE_NAME_UNIQUE = "ulisten"
 
 class InfluxWriterSubscriber(RedisPubSubSubscriber):
-    def __init__(self, influx, redis):
+    def __init__(self, ls, influx, redis):
         RedisPubSubSubscriber.__init__(self, redis, KEYSPACE_NAME_INCOMING)
 
         self.publisher = RedisPubSubPublisher(redis, KEYSPACE_NAME_UNIQUE)
 
         self.influx = influx
+        self.ls = ls
         self.log = logging.getLogger(__name__)
         logging.basicConfig()
         self.log.setLevel(logging.INFO)
@@ -89,49 +92,25 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
                 continue
 
             unique_count += 1
-
-            meta = listen['track_metadata']
-            data = {
-                'measurement' : 'listen',
-                'time' : t,
-                'tags' : {
-                    'user_name' : listen['user_name'],
-                },
-                'fields' : {
-                    'artist_name' : meta['artist_name'],
-                    'artist_msid' : meta['additional_info']['artist_msid'],
-                    'artist_mbids' : ",".join(meta['additional_info'].get('artist_mbids', [])),
-                    'album_name' : meta['additional_info'].get('release_name', ''),
-                    'album_msid' : meta['additional_info'].get('album_msid', ''),
-                    'album_mbid' : meta['additional_info'].get('release_mbid', ''),
-                    'track_name' : meta['track_name'],
-                    'recording_msid' : listen['recording_msid'],
-                    'recording_mbid' : meta['additional_info'].get('recording_mbid', ''),
-                    'tags' : ",".join(meta['additional_info'].get('tags', [])),
-                }
-            }
-            submit.append(data)
+            submit.append(Listen().from_json(listen))
             unique.append(listen)
 
         self.log.error("dups: %d, unique %d" % (duplicate_count, unique_count))
         if not unique_count:
             return True
 
-        t0 = time()
         try:
-            if not self.influx.write_points(submit, time_precision='s'):
-                self.log.error("Cannot write data to influx. (write_points returned False)")
-                return False
+            t0 = time()
+            self.ls.insert(submit)
+            self.time += time() - t0
         except ValueError as e:
-            self.log.error("Cannot write data to influx: %s" % str(e))
+            self.log.error("Cannot write data to listenstore: %s" % str(e))
             return False
 
         try:
             self.publisher.publish(unique)
         except NoSubscribersException:
             self.log.error("No subscribers, cannot publish unique listens.")
-
-        self.time += time() - t0
 
         return True
 
@@ -163,7 +142,11 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
                 self.time = 0
 
 if __name__ == "__main__":
-    r = Redis(config.REDIS_HOST)
+    ls = InfluxListenStore({ 'redis' : config.REDIS_HOST, 
+                             'host': config.INFLUX_HOST,
+                             'port': config.INFLUX_PORT,
+                             'database': config.INFLUX_DB})
     i = InfluxDBClient(host=config.INFLUX_HOST, port=config.INFLUX_PORT, database=config.INFLUX_DB)
-    rc = InfluxWriterSubscriber(i, r)
+    r = Redis(config.REDIS_HOST)
+    rc = InfluxWriterSubscriber(ls, i, r)
     rc.start()
