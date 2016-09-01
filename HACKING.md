@@ -26,3 +26,9 @@ and to drop all the listens in influx db:
 To get a postgres command prompt:
 
     docker exec -it docker_web_1 psql -U listenbrainz -h db listenbrainz
+
+### Tests
+
+To run the unit tests:
+
+    docker exec -it docker_web_1 py.test

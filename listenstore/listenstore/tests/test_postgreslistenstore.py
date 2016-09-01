@@ -37,18 +37,18 @@ class TestPostgresListenStore(DatabaseTestCase):
 
     def test_insert_postgresql(self):
         from_ts, count = self._create_test_data()
-        self.assertEquals(len(self.logstore.fetch_listens(self.testuser_id, from_ts=from_ts)), count)
+        self.assertEquals(len(self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=from_ts)), count)
 
     def test_fetch_listens(self):
         from_ts, count = self._create_test_data()
-        listens = self.logstore.fetch_listens(user_id=self.testuser_id, from_ts=from_ts, limit=count)
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=from_ts, limit=count)
         self.assertEquals(len(listens), count)
 
     def test_convert_row(self):
         now = datetime.utcnow()
-        data = [('id', 1), ('user_id', self.testuser_id), ('timestamp', now), ('artist_msid', str(uuid.uuid4())),
-                ('album_msid', str(uuid.uuid4())), ('recording_msid', str(uuid.uuid4())), ('data', "{'additional_info':{}}"),
-                ('ts_since_epoch', to_epoch(now)), ('user_name', self.testuser_name)]
+        data = [('id', 1), ('user_id', self.testuser_id), ('user_name', self.testuser_name), ('timestamp', now), 
+                ('artist_msid', str(uuid.uuid4())), ('album_msid', str(uuid.uuid4())), ('recording_msid', str(uuid.uuid4())), 
+                ('data', "{'additional_info':{}}"), ('ts_since_epoch', to_epoch(now)) ]
         row = OrderedDict([(str(k), v) for (k, v) in data[1:]])
         listen = self.logstore.convert_row([1] + row.values())
         self.assertIsInstance(listen, Listen)
