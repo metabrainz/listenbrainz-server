@@ -178,22 +178,19 @@ REDIS_INFLUX_USER_LISTEN_COUNT = "ls.listencount." # append username
 class InfluxListenStore(ListenStore):
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
-        self.redis = Redis(conf['redis'])
-        self.log.error("conf " + str(conf))
-        self.influx = InfluxDBClient(host=conf['host'], port=conf['port'], database=conf['database'])
+        self.redis = Redis(conf['REDIS_HOST'])
+        self.influx = InfluxDBClient(host=conf['INFLUX_HOST'], port=conf['INFLUX_PORT'], database=conf['INFLUX_DB'])
 
 
     def _get_num_listens_for_user(self, user_name):
         count = self.redis.get(REDIS_INFLUX_USER_LISTEN_COUNT + user_hash(user_name))
         if count:
-            self.log.info("hit: count for %s" % user.name)
             return int(count)
 
         results = self.influx.query("""SELECT count(*) 
                                          FROM listen 
                                         WHERE user_name = '%s'""" % (user_name, from_ts, to_ts, limit))
         result = results.get_points(measurement='listen')
-        self.log.info("get count: %s" % str(result))
 #        count = self.redis.get(REDIS_INFLUX_USER_LISTEN_COUNT + user_hash(user_name))
 
         return 0
@@ -260,12 +257,19 @@ class InfluxListenStore(ListenStore):
                     WHERE user_name = '%s'
                       AND time >= %d000000000
                       AND time <= %d000000000
-                 ORDER BY time """ + ORDER_TEXT[order] + """
-                    LIMIT %s
-                """ 
+                 ORDER BY time """ + ORDER_TEXT[order] 
+
+        args = [user_name, from_ts, to_ts]
+        if limit:
+            args.append(limit)
+            query += " LIMIT %s"
+
+        self.log.info(query)
+        self.log.info(args)
+        query = query % args
 
         try:
-            results = self.influx.query(query % (user_name, from_ts, to_ts, limit))
+            results = self.influx.query(query)
         except Exception as e:
             self.log.error("Cannot query influx: %s" % str(e))
             return []
@@ -274,7 +278,6 @@ class InfluxListenStore(ListenStore):
         for result in results.get_points(measurement='listen'):
             dt = datetime.strptime(result['time'] , "%Y-%m-%dT%H:%M:%SZ")
             t = int(dt.strftime('%s'))
-            self.log.info(result)
             mbids = []
             for id in result.get('artist_mbids', '').split(","):
                 if id:
@@ -301,7 +304,6 @@ class InfluxListenStore(ListenStore):
                     'artist_name' : result['artist_name'],
                     'track_name' : result['track_name']
                 })
-            self.log.info(l)
             listens.append(l)
 
 

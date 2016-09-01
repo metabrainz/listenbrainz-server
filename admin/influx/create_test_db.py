@@ -8,7 +8,7 @@ from influxdb import InfluxDBClient
 import config
 
 try:
-    i = InfluxDBClient(host=config.INFLUX_HOST, port=config.INFLUX_PORT, database=config.INFLUX_DB)
-    i.create_database(config.INFLUX_DB)
+    i = InfluxDBClient(host=config.INFLUX_HOST, port=config.INFLUX_PORT, database=config.INFLUX_TEST_DB)
+    i.create_database(config.INFLUX_TEST_DB)
 except Exception as e:
     print("Creating influx DB failed: ", e)

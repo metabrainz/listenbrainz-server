@@ -142,10 +142,10 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
                 self.time = 0
 
 if __name__ == "__main__":
-    ls = InfluxListenStore({ 'redis' : config.REDIS_HOST, 
-                             'host': config.INFLUX_HOST,
-                             'port': config.INFLUX_PORT,
-                             'database': config.INFLUX_DB})
+    ls = InfluxListenStore({ 'REDIS_HOST' : config.REDIS_HOST, 
+                             'INFLUX_HOST': config.INFLUX_HOST,
+                             'INFLUX_PORT': config.INFLUX_PORT,
+                             'INFLUX_DB': config.INFLUX_DB})
     i = InfluxDBClient(host=config.INFLUX_HOST, port=config.INFLUX_PORT, database=config.INFLUX_DB)
     r = Redis(config.REDIS_HOST)
     rc = InfluxWriterSubscriber(ls, i, r)
