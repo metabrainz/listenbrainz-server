@@ -7,7 +7,7 @@ import calendar
 class Listen(object):
     """ Represents a listen object """
     def __init__(self, user_id=None, user_name=None, timestamp=None, artist_msid=None, album_msid=None,
-                 recording_msid=None, artist_name=None, track_name=None, data=None):
+                 recording_msid=None, data=None):
         self.user_id = user_id
         self.user_name = user_name
 
@@ -29,9 +29,6 @@ class Listen(object):
             self.data = {'additional_info': {}}
         else:
             self.data = data
-
-        self.data['artist_name'] = artist_name
-        self.data['track_name'] = track_name
 
     @classmethod
     def from_json(cls, j):

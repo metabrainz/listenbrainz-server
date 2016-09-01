@@ -88,7 +88,6 @@ class BigQueryWriterSubscriber(RedisPubSubSubscriber):
         return True
 
     def start(self):
-        self.log.info("BigQueryWriterSubscriber started")
 
         # if we're not supposed to run, just sleep
         if not config.WRITE_TO_BIGQUERY:
@@ -99,6 +98,7 @@ class BigQueryWriterSubscriber(RedisPubSubSubscriber):
             self.log.error("BiqQueryWriter not started, big-query-credentials.json is missing.")
             return
 
+        self.log.info("BigQueryWriterSubscriber started")
         credentials = GoogleCredentials.get_application_default()
         self.bigquery = discovery.build('bigquery', 'v2', credentials=credentials)
 

@@ -39,8 +39,24 @@
                 </tr>
               {% else %}
                 <tr>
-                  <td>{{ listen.track_metadata.artist_name }}</td>
-                  <td>{{ listen.track_metadata.track_name }}</td>
+                  <td>
+                      {% if listen.track_metadata.additional_info.artist_mbids %}
+                        <a href="http://musicbrainz.org/recording/{{ listen.track_metadata.additional_info.artist_mbids }}">
+                      {% endif %}
+                      {{ listen.track_metadata.artist_name }}
+                      {% if listen.track_metadata.additional_info.artist_mbids %}
+                        </a>
+                      {% endif %}
+                  </td>
+                  <td>
+                      {% if listen.track_metadata.additional_info.recording_mbid %}
+                        <a href="http://musicbrainz.org/recording/{{ listen.track_metadata.additional_info.recording_mbid }}">
+                      {% endif %}
+                      {{ listen.track_metadata.track_name }}
+                      {% if listen.track_metadata.additional_info.recording_mbid %}
+                        </a>
+                      {% endif %}
+                  </td>
                   <td><abbr class="timeago" title="{{ listen.listened_at_iso }}">{{ listen.listened_at_iso }}</abbr></td>
                 </tr>
               {% endif %}
