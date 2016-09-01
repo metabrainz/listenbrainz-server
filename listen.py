@@ -16,8 +16,11 @@ class Listen(object):
             self.ts_since_epoch = int(timestamp)
             self.timestamp = datetime.utcfromtimestamp(self.ts_since_epoch)
         else:
-            self.timestamp = timestamp
-            self.ts_since_epoch = calendar.timegm(self.timestamp.utctimetuple())
+            if timestamp:
+                self.timestamp = timestamp
+                self.ts_since_epoch = calendar.timegm(self.timestamp.utctimetuple())
+            else:
+                self.timestamp = 0
 
         self.artist_msid = artist_msid
         self.album_msid = album_msid
