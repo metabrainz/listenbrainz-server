@@ -254,20 +254,15 @@ class InfluxListenStore(ListenStore):
 
         query = """SELECT *
                      FROM listen
-                    WHERE user_name = '%s'
-                      AND time >= %d000000000
-                      AND time <= %d000000000
+                    WHERE user_name = '""" + user_name + """'
+                      AND time >= """ + str(from_ts) + """000000000
+                      AND time <= """ + str(to_ts) + """000000000
                  ORDER BY time """ + ORDER_TEXT[order] 
 
-        args = [user_name, from_ts, to_ts]
         if limit:
-            args.append(limit)
-            query += " LIMIT %s"
+            query += " LIMIT " + str(limit)
 
         self.log.info(query)
-        self.log.info(args)
-        query = query % args
-
         try:
             results = self.influx.query(query)
         except Exception as e:
