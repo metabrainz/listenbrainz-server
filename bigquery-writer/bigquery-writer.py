@@ -23,7 +23,6 @@ APP_CREDENTIALS_FILE = "bigquery-credentials.json"
 
 # Things left to do
 #   Redis persistence
-#   Influx listenstore functions
 #   Add unit tests for pubsub object, incoing and unique queue
 #   Bring non-prod docker-compose up to date with prod one
 
