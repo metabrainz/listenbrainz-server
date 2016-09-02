@@ -83,3 +83,8 @@ class TestInfluxListenStore(DatabaseTestCase):
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1472567320, limit=1)
         self.assertEquals(len(listens), 1)
 
+    def test_fetch_listens_2(self):
+        count = self._create_test_data()
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1472567330)
+        self.assertEquals(len(listens), 1)
+
