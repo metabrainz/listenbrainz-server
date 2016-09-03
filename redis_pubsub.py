@@ -75,7 +75,7 @@ class RedisPubSubPublisher(object):
         if isinstance(message_or_list, (list, tuple)):
             messages = message_or_list
         else:
-            messages = (message_or_list)
+            messages = [message_or_list]
 
         p = self.r.pipeline()
 
@@ -117,6 +117,7 @@ class RedisPubSubSubscriber(object):
         self.prefix = keyspace_prefix
         self.subscriber_name = None
         self.r = redis
+        self.batch_timeout = BATCH_TIMEOUT
 
 
     def register(self, subscriber_name):
@@ -130,6 +131,8 @@ class RedisPubSubSubscriber(object):
         r.sdel(self.prefix + PUBSUB_SUBSCRIBERS, subscriber_name)
         self.subscriber_name = None
 
+    def set_batch_timeout(self, timeout):
+        self.batch_timeout = timeout
 
     def subscriber(self, retries=5):
         """
@@ -169,10 +172,10 @@ class RedisPubSubSubscriber(object):
                     message_ids.append(id)
                     messages.append(ujson.loads(message))
 
-            if time() - batch_start_time >= BATCH_TIMEOUT:
+            if time() - batch_start_time >= self.batch_timeout:
                 break
 
-            if len(messages) >= BATCH_SIZE:
+            if len(messages) >= self.batch_timeout:
                 break
     
         # If we received nothing during our window, return
