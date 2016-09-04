@@ -175,7 +175,7 @@ class RedisPubSubSubscriber(object):
             if time() - batch_start_time >= self.batch_timeout:
                 break
 
-            if len(messages) >= self.batch_timeout:
+            if len(messages) >= BATCH_SIZE:
                 break
     
         # If we received nothing during our window, return
