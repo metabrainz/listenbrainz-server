@@ -11,6 +11,7 @@ from flask import make_response
 from webserver.views.api_tools import convert_backup_to_native_format, insert_payload, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
 from webserver.utils import sizeof_readable
 from webserver.login import User
+from webserver.redis_connection import _redis
 from os import path, makedirs
 import ujson
 import zipfile
@@ -18,7 +19,15 @@ import re
 import os
 import pytz
 
+DEFAULT_FETCH_SIZE = 5
+
 user_bp = Blueprint("user", __name__)
+
+#TODO: REmove me
+import logging
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
+logging.basicConfig()
 
 @user_bp.route("/<user_name>/scraper.js")
 @crossdomain()
@@ -58,33 +67,29 @@ def profile(user_name):
             raise BadRequest("Incorrect timestamp argument to_ts:" %
                              request.args.get("to_ts"))
     listens = []
-    for listen in db_conn.fetch_listens(user_name, limit=25, to_ts=max_ts):
+    for listen in db_conn.fetch_listens(user_name, limit=DEFAULT_FETCH_SIZE, to_ts=max_ts):
+        # Let's fetch one more listen, so we know to show a next page link or not
         listens.append({
             "track_metadata": listen.data,
             "listened_at": listen.ts_since_epoch,
             "listened_at_iso": listen.timestamp.isoformat() + "Z",
         })
 
+    # Calculate if we need to show next/prev buttons
+    previous_listen_ts = None
+    next_listen_ts = None
     if listens:
-        # Checking if there is a "previous" page...
-        previous_listens = db_conn.fetch_listens(user_name, limit=25, from_ts=listens[0]["listened_at"])
-        if previous_listens:
-            # Getting from the last item because `fetch_listens` returns in ascending
-            # order when `from_ts` is used.
-            previous_listen_ts = previous_listens[-1].ts_since_epoch + 1
-        else:
-            previous_listen_ts = None
-
-        # Checking if there is a "next" page...
-        next_listens = db_conn.fetch_listens(user_name, limit=1, to_ts=listens[-1]["listened_at"])
-        if next_listens:
-            next_listen_ts = listens[-1]["listened_at"]
-        else:
-            next_listen_ts = None
-
-    else:
-        previous_listen_ts = None
-        next_listen_ts = None
+        (max_ts_per_user, min_ts_per_user) = db_conn.get_timestamps_for_user(user_name)
+        if min_ts_per_user >= 0:
+            if listens[-1]['listened_at'] > min_ts_per_user:
+                next_listen_ts = listens[-1]['listened_at']
+            else:
+                next_listen_ts = min_ts_per_user
+        
+            if listens[0]['listened_at'] < max_ts_per_user:
+                previous_listen_ts = listens[0]['listened_at']
+            else:
+                previous_listen_ts = max_ts_per_user
 
     # If there are no previous listens then display now_playing
     if not previous_listen_ts:

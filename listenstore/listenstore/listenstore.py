@@ -22,6 +22,9 @@ ORDER_DESC = 0
 ORDER_ASC = 1
 ORDER_TEXT = [ "DESC", "ASC" ]
 
+REDIS_USER_TIMESTAMPS = "user.%s.timestamps" # substitute user_name
+USER_CACHE_TIME = 3600 # in seconds. 1 hour
+
 # TODO: This needs to be broken into 3 files and moved out of the separate listenstore module,
 #       but I am leaving this for the next PR
 
@@ -196,6 +199,47 @@ class InfluxListenStore(ListenStore):
         return 0
 
 
+    def _select_single_value(self, query):
+        try:
+            results = self.influx.query(query)
+        except Exception as e:
+            self.log.error("Cannot query influx: %s" % str(e))
+            raise
+
+        for result in results.get_points(measurement='listen'):
+            self.log.info(result['time'])
+            return int(result['time'])
+
+        return None
+
+
+    def get_timestamps_for_user(self, user_name):
+        """ Return the max_ts and min_ts for a given user and cache the result in redis
+        """
+
+        tss = self.redis.get(REDIS_USER_TIMESTAMPS % user_name)
+        if tss:
+            self.log.info("got tss from redis: ", tss)
+            (min_ts, max_ts) = tss.split(",")
+            min_ts = int(min_ts)
+            max_ts = int(max_ts)
+        else:
+            query = """SELECT first(track_name) 
+                         FROM listen
+                        WHERE user_name = '""" + user_name + "'"
+            min_ts = self._select_single_value(query)
+
+            query = """SELECT last(track_name)
+                         FROM listen
+                        WHERE user_name = '""" + user_name + "'"
+            max_ts = self._select_single_value(query)
+
+            self.log.info("set tss to redis: ", min_ts,max_ts)
+            self.redis.setex(REDIS_USER_TIMESTAMPS % user_name, "%d,%d" % (min_ts,max_ts), USER_CACHE_TIME)
+
+        return (min_ts, max_ts)
+
+
     def insert(self, listens):
         """ Insert a batch of listens.
         """
@@ -233,7 +277,9 @@ class InfluxListenStore(ListenStore):
             self.log.error("Cannot write data to influx: %s" % str(e))
             raise
 
-        # Invalidate cached listen counts for users
+        # Invalidate cached data for user
+        self.r.delete(REDIS_USER_TIMESTAMPS)
+
 #        l = [ REDIS_INFLUX_USER_LISTEN_COUNT + str(id) for id in user_names])
 #        self.log.info("delete: " % ",".join(l))
 #        self.redis.delete(*[ REDIS_INFLUX_USER_LISTEN_COUNT + user_hash(user_name) for id in user_names])

@@ -21,9 +21,12 @@ KEYSPACE_NAME_INCOMING = "ilisten"
 KEYSPACE_NAME_UNIQUE = "ulisten"
 APP_CREDENTIALS_FILE = "bigquery-credentials.json"
 
-# Things left to do
+# TODO: 
+#   Review data pagination
+#   Data coverage check
+#   Add test for influx-writer and big-query writer. eek
+#   Big query hardcoded data set ids
 #   Redis persistence
-#   Add unit tests for pubsub object, incoing and unique queue
 #   Bring non-prod docker-compose up to date with prod one
 
 
