@@ -21,6 +21,7 @@ MIN_ID = 1033430400     # approx when audioscrobbler was created
 ORDER_DESC = 0
 ORDER_ASC = 1
 ORDER_TEXT = [ "DESC", "ASC" ]
+DEFAULT_LISTENS_PER_FETCH = 25
 
 REDIS_USER_TIMESTAMPS = "user.%s.timestamps" # substitute user_name
 USER_CACHE_TIME = 3600 # in seconds. 1 hour
@@ -44,24 +45,22 @@ class ListenStore(object):
         """ Override this method in PostgresListenStore class """
         raise NotImplementedError()
 
-    def fetch_listens(self, user_name, from_ts=None, to_ts=None, limit=None):
+    def fetch_listens(self, user_name, from_ts=None, to_ts=None, limit=DEFAULT_LISTENS_PER_FETCH):
         """ Check from_ts, to_ts, and limit for fetching listens
             and set them to default values if not given.
         """
         if from_ts and to_ts:
             raise ValueError("You cannot specify from_ts and to_ts at the same time.")
 
+        if not from_ts and not to_ts:
+            raise ValueError("You must specify either from_ts or to_ts.")
+
         if from_ts:
             order = ORDER_ASC
         else:
             order = ORDER_DESC
 
-        precision = 'month'
-        if from_ts is None:
-            from_ts = MIN_ID
-        if to_ts is None:
-            to_ts = self.max_id()
-        return self.fetch_listens_from_storage(user_name, from_ts, to_ts, limit, order, precision)
+        return self.fetch_listens_from_storage(user_name, from_ts, to_ts, limit, order)
 
 
 class PostgresListenStore(ListenStore):
@@ -119,7 +118,7 @@ class PostgresListenStore(ListenStore):
                 except Exception, e:     # Log errors
                     self.log.error(e)
 
-    def fetch_listens_from_storage(self, user_name, from_ts, to_ts, limit, order, precision):
+    def fetch_listens_from_storage(self, user_name, from_ts, to_ts, limit, order):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving
             the value they are converted to the local server's timezone. So to compare
             datetime object we need to create a object in the same timezone as the server.
@@ -128,7 +127,11 @@ class PostgresListenStore(ListenStore):
             to_ts: seconds since epoch, in float
         """
         with self.engine.connect() as connection:
-            results = connection.execute(text("""
+            args = {
+                'user_name': user_name,
+                'limit': limit
+            }
+            query = """
                 SELECT listen.id
                      , user_id
                      , musicbrainz_id
@@ -143,17 +146,23 @@ class PostgresListenStore(ListenStore):
                  WHERE listen.id = listen_json.id
                    AND user_id = "user".id
                    AND "user".musicbrainz_id = :user_name
-                   AND ts AT TIME ZONE 'UTC' > :from_ts
-                   AND ts AT TIME ZONE 'UTC' < :to_ts
+            """
+
+            if from_ts != None:
+                query += " AND ts AT TIME ZONE 'UTC' > :from_ts "
+            else:
+                query += " AND ts AT TIME ZONE 'UTC' < :to_ts "
+
+            query += """
               ORDER BY ts """ + ORDER_TEXT[order] + """
                  LIMIT :limit
-            """), {
-                'user_name': user_name,
-                'from_ts': pytz.utc.localize(datetime.utcfromtimestamp(from_ts)),
-                'to_ts': pytz.utc.localize(datetime.utcfromtimestamp(to_ts)),
-                'limit': limit
-            })
+            """
+            if from_ts != None:
+                args['from_ts'] = from_ts
+            else:
+                args['to_ts'] =  to_ts
 
+            results = connection.execute(text(query), args)
             listens = []
             for row in results.fetchall():
                 listens.append(self.convert_row(row))
@@ -207,8 +216,21 @@ class InfluxListenStore(ListenStore):
             raise
 
         for result in results.get_points(measurement='listen'):
-            self.log.info(result['time'])
-            return int(result['time'])
+            return result['time']
+
+        return None
+
+
+    def _select_single_timestamp(self, query):
+        try:
+            results = self.influx.query(query)
+        except Exception as e:
+            self.log.error("Cannot query influx: %s" % str(e))
+            raise
+
+        for result in results.get_points(measurement='listen'):
+            dt = datetime.strptime(result['time'] , "%Y-%m-%dT%H:%M:%SZ")
+            return int(dt.strftime('%s'))
 
         return None
 
@@ -219,22 +241,20 @@ class InfluxListenStore(ListenStore):
 
         tss = self.redis.get(REDIS_USER_TIMESTAMPS % user_name)
         if tss:
-            self.log.info("got tss from redis: ", tss)
             (min_ts, max_ts) = tss.split(",")
             min_ts = int(min_ts)
             max_ts = int(max_ts)
         else:
-            query = """SELECT first(track_name) 
+            query = """SELECT first(artist_msid) 
                          FROM listen
                         WHERE user_name = '""" + user_name + "'"
-            min_ts = self._select_single_value(query)
+            min_ts = self._select_single_timestamp(query)
 
-            query = """SELECT last(track_name)
+            query = """SELECT last(artist_msid)
                          FROM listen
                         WHERE user_name = '""" + user_name + "'"
-            max_ts = self._select_single_value(query)
+            max_ts = self._select_single_timestamp(query)
 
-            self.log.info("set tss to redis: ", min_ts,max_ts)
             self.redis.setex(REDIS_USER_TIMESTAMPS % user_name, "%d,%d" % (min_ts,max_ts), USER_CACHE_TIME)
 
         return (min_ts, max_ts)
@@ -278,14 +298,15 @@ class InfluxListenStore(ListenStore):
             raise
 
         # Invalidate cached data for user
-        self.r.delete(REDIS_USER_TIMESTAMPS)
+        for user_name in user_names.keys():
+            self.redis.delete(REDIS_USER_TIMESTAMPS % user_name)
 
 #        l = [ REDIS_INFLUX_USER_LISTEN_COUNT + str(id) for id in user_names])
 #        self.log.info("delete: " % ",".join(l))
 #        self.redis.delete(*[ REDIS_INFLUX_USER_LISTEN_COUNT + user_hash(user_name) for id in user_names])
 
 
-    def fetch_listens_from_storage(self, user_name, from_ts, to_ts, limit, order, precision):
+    def fetch_listens_from_storage(self, user_name, from_ts, to_ts, limit, order):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving
             the value they are converted to the local server's timezone. So to compare
             datetime object we need to create a object in the same timezone as the server.
@@ -300,15 +321,13 @@ class InfluxListenStore(ListenStore):
 
         query = """SELECT *
                      FROM listen
-                    WHERE user_name = '""" + user_name + """'
-                      AND time >= """ + str(from_ts) + """000000000
-                      AND time <= """ + str(to_ts) + """000000000
-                 ORDER BY time """ + ORDER_TEXT[order] 
+                    WHERE user_name = '""" + user_name + "' "
+        if from_ts != None:
+            query += "AND time > " + str(from_ts) + "000000000"
+        else:
+            query += "AND time < " + str(to_ts) + "000000000"
 
-        if limit:
-            query += " LIMIT " + str(limit)
-
-        self.log.info(query)
+        query += " ORDER BY time " + ORDER_TEXT[order] + " LIMIT " + str(limit)
         try:
             results = self.influx.query(query)
         except Exception as e:
@@ -337,15 +356,17 @@ class InfluxListenStore(ListenStore):
                 'tags' : tags
             }
             l = Listen(timestamp=t,
-                user_name=result['user_name'],
-                artist_msid=result['artist_msid'],
-                recording_msid=result['recording_msid'],
+                user_name=result.get('user_name', '<unknown>'),
+                artist_msid=result.get('artist_msid', ''),
+                recording_msid=result.get('recording_msid', ''),
                 data={ 
                     'additional_info' : data,
-                    'artist_name' : result['artist_name'],
-                    'track_name' : result['track_name']
+                    'artist_name' : result.get('artist_name', ''),
+                    'track_name' : result.get('track_name', '')
                 })
             listens.append(l)
 
+        if order == ORDER_ASC:
+            listens.reverse()
 
         return listens

@@ -5,6 +5,7 @@ from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, Int
 from werkzeug.utils import secure_filename
 from webserver.decorators import crossdomain
 from datetime import datetime
+from time import time
 import webserver
 import db.user
 from flask import make_response
@@ -19,15 +20,10 @@ import re
 import os
 import pytz
 
-DEFAULT_FETCH_SIZE = 5
+LISTENS_PER_PAGE = 25
 
 user_bp = Blueprint("user", __name__)
 
-#TODO: REmove me
-import logging
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
-logging.basicConfig()
 
 @user_bp.route("/<user_name>/scraper.js")
 @crossdomain()
@@ -66,8 +62,12 @@ def profile(user_name):
         except ValueError:
             raise BadRequest("Incorrect timestamp argument to_ts:" %
                              request.args.get("to_ts"))
+
+    if max_ts == None:
+        max_ts = int(time())
+
     listens = []
-    for listen in db_conn.fetch_listens(user_name, limit=DEFAULT_FETCH_SIZE, to_ts=max_ts):
+    for listen in db_conn.fetch_listens(user_name, limit=LISTENS_PER_PAGE, to_ts=max_ts):
         # Let's fetch one more listen, so we know to show a next page link or not
         listens.append({
             "track_metadata": listen.data,
@@ -79,17 +79,17 @@ def profile(user_name):
     previous_listen_ts = None
     next_listen_ts = None
     if listens:
-        (max_ts_per_user, min_ts_per_user) = db_conn.get_timestamps_for_user(user_name)
+        (min_ts_per_user, max_ts_per_user) = db_conn.get_timestamps_for_user(user_name)
         if min_ts_per_user >= 0:
             if listens[-1]['listened_at'] > min_ts_per_user:
                 next_listen_ts = listens[-1]['listened_at']
             else:
-                next_listen_ts = min_ts_per_user
+                next_listen_ts = None
         
             if listens[0]['listened_at'] < max_ts_per_user:
                 previous_listen_ts = listens[0]['listened_at']
             else:
-                previous_listen_ts = max_ts_per_user
+                previous_listen_ts = None
 
     # If there are no previous listens then display now_playing
     if not previous_listen_ts:

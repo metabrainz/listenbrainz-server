@@ -83,8 +83,14 @@ def get_listens(user_name):
     max_ts = _parse_int_arg("max_ts")
     min_ts = _parse_int_arg("min_ts")
 
+    # if no max given, use now()
+
     if max_ts and min_ts:
         log_raise_400("You may only specify max_ts or min_ts, not both.")
+
+    # If none are given, start with now and go down
+    if max_ts == None and min_ts == None:
+        max_ts = int(time())
 
     db_conn = webserver.create_influx(current_app)
     listens = db_conn.fetch_listens(

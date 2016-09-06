@@ -53,6 +53,4 @@ class TestPostgresListenStore(DatabaseTestCase):
         row = OrderedDict([(str(k), v) for (k, v) in data[1:]])
         listen = self.logstore.convert_row([1] + row.values())
         self.assertIsInstance(listen, Listen)
-        print("Listen ", listen.__dict__)
-        print("row ", dict(row))
         self.assertDictEqual(listen.__dict__, dict(row))
