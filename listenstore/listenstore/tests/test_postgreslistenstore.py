@@ -38,7 +38,7 @@ class TestPostgresListenStore(DatabaseTestCase):
 
     def test_insert_postgresql(self):
         from_ts, count = self._create_test_data()
-        self.assertEquals(len(self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=from_ts)), count)
+        self.assertEquals(len(self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=from_ts, limit=count)), count)
 
     def test_fetch_listens(self):
         from_ts, count = self._create_test_data()
