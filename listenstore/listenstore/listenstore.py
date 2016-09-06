@@ -158,9 +158,9 @@ class PostgresListenStore(ListenStore):
                  LIMIT :limit
             """
             if from_ts != None:
-                args['from_ts'] = from_ts
+                args['from_ts'] = pytz.utc.localize(datetime.utcfromtimestamp(from_ts))
             else:
-                args['to_ts'] =  to_ts
+                args['to_ts'] =  pytz.utc.localize(datetime.utcfromtimestamp(from_ts))
 
             results = connection.execute(text(query), args)
             listens = []
