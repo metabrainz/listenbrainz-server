@@ -58,16 +58,28 @@ def profile(user_name):
     max_ts = request.args.get("max_ts")
     if max_ts is not None:
         try:
-            max_ts = int(float(max_ts))
+            max_ts = int(max_ts)
         except ValueError:
-            raise BadRequest("Incorrect timestamp argument to_ts:" %
-                             request.args.get("to_ts"))
+            raise BadRequest("Incorrect timestamp argument max_ts:" % request.args.get("max_ts"))
 
-    if max_ts == None:
+    min_ts = request.args.get("min_ts")
+    if min_ts is not None:
+        try:
+            min_ts = int(min_ts)
+        except ValueError:
+            raise BadRequest("Incorrect timestamp argument min_ts:" % request.args.get("min_ts"))
+
+    if max_ts == None and min_ts == None:
         max_ts = int(time())
 
+    args = {}
+    if max_ts:
+        args['to_ts'] = max_ts
+    else:
+        args['from_ts'] = min_ts
+
     listens = []
-    for listen in db_conn.fetch_listens(user_name, limit=LISTENS_PER_PAGE, to_ts=max_ts):
+    for listen in db_conn.fetch_listens(user_name, limit=LISTENS_PER_PAGE, **args):
         # Let's fetch one more listen, so we know to show a next page link or not
         listens.append({
             "track_metadata": listen.data,
