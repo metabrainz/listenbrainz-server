@@ -31,7 +31,25 @@ TEST_LISTEN_JSON = [
         "listened_at": "1400000000",
         "user_name": "test",
         "recording_msid": "4269ddbc-9241-46da-935d-4fa9e0f7f371"
-    }""",
+    }
+    """,
+    """
+    {
+        "track_metadata": {
+           "track_name": "Immigrant Song 50",
+           "additional_info": {
+              "recording_mbid": "2cfad207-3f55-4aec-8120-86cf66e34d59",
+              "artist_msid": "e229c8fa-7450-4916-8848-4535a40dc151",
+              "release_msid": null
+           },
+           "artist_name": "Led Zeppelin"
+        },
+        "user_id": 1,
+        "listened_at": "1400000050",
+        "user_name": "test",
+        "recording_msid": "4269ddbc-9241-46da-935d-4fa9e0f7f371"
+    }
+    """,
     """
     {
         "track_metadata": {
@@ -47,7 +65,25 @@ TEST_LISTEN_JSON = [
         "listened_at": "1400000100",
         "user_name": "test",
         "recording_msid": "4269ddbc-9241-46da-935d-4fa9e0f7f371"
-    }""",
+    }
+    """,
+    """
+    {
+        "track_metadata": {
+           "track_name": "Immigrant Song 150",
+           "additional_info": {
+              "recording_mbid": "2cfad207-3f55-4aec-8120-86cf66e34d59",
+              "artist_msid": "e229c8fa-7450-4916-8848-4535a40dc151",
+              "release_msid": null
+           },
+           "artist_name": "Led Zeppelin"
+        },
+        "user_id": 1,
+        "listened_at": "1400000150",
+        "user_name": "test",
+        "recording_msid": "4269ddbc-9241-46da-935d-4fa9e0f7f371"
+    }
+    """,
     """
     {
         "track_metadata": {
@@ -63,7 +99,8 @@ TEST_LISTEN_JSON = [
         "listened_at": "1400000200",
         "user_name": "test",
         "recording_msid": "4269ddbc-9241-46da-935d-4fa9e0f7f371"
-    }"""
+    }
+    """
 ]
 
 class TestInfluxListenStore(DatabaseTestCase):
@@ -97,25 +134,30 @@ class TestInfluxListenStore(DatabaseTestCase):
         count = self._create_test_data()
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000000, limit=1)
         self.assertEquals(len(listens), 1)
-        self.assertEquals(listens[0].ts_since_epoch, 1400000100)
+        self.assertEquals(listens[0].ts_since_epoch, 1400000050)
 
     def test_fetch_listens_1(self):
         count = self._create_test_data()
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000000)
-        self.assertEquals(len(listens), 2)
+        self.assertEquals(len(listens), 4)
         self.assertEquals(listens[0].ts_since_epoch, 1400000200)
-        self.assertEquals(listens[1].ts_since_epoch, 1400000100)
+        self.assertEquals(listens[1].ts_since_epoch, 1400000150)
+        self.assertEquals(listens[2].ts_since_epoch, 1400000100)
+        self.assertEquals(listens[3].ts_since_epoch, 1400000050)
 
     def test_fetch_listens_2(self):
         count = self._create_test_data()
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000100)
-        self.assertEquals(len(listens), 1)
+        self.assertEquals(len(listens), 2)
         self.assertEquals(listens[0].ts_since_epoch, 1400000200)
+        self.assertEquals(listens[1].ts_since_epoch, 1400000150)
 
     def test_fetch_listens_3(self):
         count = self._create_test_data()
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
-        self.assertEquals(len(listens), 3)
+        self.assertEquals(len(listens), 5)
         self.assertEquals(listens[0].ts_since_epoch, 1400000200)
-        self.assertEquals(listens[1].ts_since_epoch, 1400000100)
-        self.assertEquals(listens[2].ts_since_epoch, 1400000000)
+        self.assertEquals(listens[1].ts_since_epoch, 1400000150)
+        self.assertEquals(listens[2].ts_since_epoch, 1400000100)
+        self.assertEquals(listens[3].ts_since_epoch, 1400000050)
+        self.assertEquals(listens[4].ts_since_epoch, 1400000000)
