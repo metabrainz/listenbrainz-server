@@ -23,7 +23,7 @@ def submit_listen():
 
     For complete details on the format of the JSON to be POSTed to this endpoint, see :ref:`json-doc`.
 
-    :reqheader Authorization: token <user token>
+    :reqheader Authorization: Token <user token>
     :statuscode 200: listen(s) accepted.
     :statuscode 400: invalid JSON sent, see error message for details.
     :statuscode 401: invalid authorization. See error message for details.
