@@ -2,3 +2,5 @@ User-agent: *
 Disallow: /current-status
 Disallow: /user/
 Disallow: /1/
+Disallow: /api/
+Disallow: /2.0/
