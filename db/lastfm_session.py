@@ -9,8 +9,11 @@ from lastfm_user import User
 class Session(object):
     """ Session class required by the api-compat """
 
-    def __init__(self, row):
-        self.id, userid, self.sid, self.api_key, self.timestamp = row
+    def __init__(self, id, userid, sid, api_key, timestamp):
+        self.id = id
+        self.sid = sid
+        self.api_key = api_key
+        self.timestamp = timestamp
         self.user = User.load_by_id(userid)
 
     @staticmethod
@@ -20,7 +23,11 @@ class Session(object):
         """
         with db.engine.connect() as connection:
             result = connection.execute(text("""
-                SELECT *
+                SELECT id
+                     , user_id
+                     , sid
+                     , api_key
+                     , ts
                   FROM api_compat.session
                  WHERE sid=:sid AND api_key=:api_key
             """), {
@@ -29,7 +36,8 @@ class Session(object):
             })
             row = result.fetchone()
             if row:
-                return Session(row)
+                id, userid, sid, api_key, timestamp = row
+                return Session(id, userid, sid, api_key, timestamp)
             return None
 
     @staticmethod
@@ -42,11 +50,12 @@ class Session(object):
             result = connection.execute(text("""
                 INSERT INTO api_compat.session (user_id, sid, api_key)
                      VALUES (:user_id, :sid, :api_key)
-                  RETURNING *
+                  RETURNING id, user_id, sid, api_key, ts
                  """), {
                 'user_id': token.user.id,
                 'sid': session,
                 'api_key': token.api_key
             })
             token.consume()
-            return Session(result.fetchone())
+            id, user_id, sid, api_key, ts, = result.fetchone()
+            return Session(id, user_id, sid, api_key, ts)
