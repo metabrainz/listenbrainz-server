@@ -36,8 +36,7 @@ class Session(object):
             })
             row = result.fetchone()
             if row:
-                id, userid, sid, api_key, timestamp = row
-                return Session(id, userid, sid, api_key, timestamp)
+                return Session(row["id"], row["user_id"], row["sid"], row["api_key"], row["ts"])
             return None
 
     @staticmethod
@@ -57,5 +56,5 @@ class Session(object):
                 'api_key': token.api_key
             })
             token.consume()
-            id, user_id, sid, api_key, ts, = result.fetchone()
-            return Session(id, user_id, sid, api_key, ts)
+            row = result.fetchone()
+            return Session(row["id"], row["user_id"], row["sid"], row["api_key"], row["ts"])
