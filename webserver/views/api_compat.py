@@ -8,7 +8,7 @@ from flask import Blueprint, request, render_template
 from flask_login import login_required, current_user
 from webserver.external import messybrainz
 from webserver.rate_limiter import ratelimit
-from webserver.errors import InvalidAPIUsage
+from webserver.errors import InvalidAPIUsage, CompatError
 import xmltodict
 from api_tools import insert_payload
 from db.lastfm_user import User
@@ -94,7 +94,7 @@ def api_methods():
         return session_info
     else:
         # Invalid Method
-        raise InvalidAPIUsage(3, output_format=data.get('format', "xml"))
+        raise InvalidAPIUsage(CompatError.INVALID_METHOD, output_format=data.get('format', "xml"))
 
 
 def session_info(request, data):
@@ -104,11 +104,11 @@ def session_info(request, data):
         output_format = data.get('format', 'xml')
         username = data['username']
     except KeyError:
-        raise InvalidAPIUsage(6, output_format=output_format)        # Missing Required Params
+        raise InvalidAPIUsage(CompatError.INVALID_PARAMETERS, output_format=output_format)        # Missing Required Params
 
     session = Session.load(sk, api_key)
     if (not session) or User.load_by_name(username).id != session.user.id:
-        raise InvalidAPIUsage(9, output_format=output_format)        # Invalid Session KEY
+        raise InvalidAPIUsage(CompatError.INVALID_SESSION_KEY, output_format=output_format)       # Invalid Session KEY
 
     print("SESSION INFO for session %s, user %s" % (session.id, session.user.name))
 
@@ -136,9 +136,9 @@ def get_token(request, data):
     api_key = data.get('api_key')
 
     if not api_key:
-        raise InvalidAPIUsage(6, output_format=output_format)   # Missing required params
+        raise InvalidAPIUsage(CompatError.INVALID_PARAMETERS, output_format=output_format)   # Missing required params
     if not Token.is_valid_api_key(api_key):
-        raise InvalidAPIUsage(10, output_format=output_format)   # Invalid API_KEY
+        raise InvalidAPIUsage(CompatError.INVALID_API_KEY, output_format=output_format)      # Invalid API_KEY
 
     token = Token.generate(api_key)
 
@@ -158,16 +158,16 @@ def get_session(request, data):
         api_key = data['api_key']
         token = Token.load(data['token'], api_key)
     except KeyError:
-        raise InvalidAPIUsage(6, output_format=output_format)       # Missing Required Params
+        raise InvalidAPIUsage(CompatError.INVALID_PARAMETERS, output_format=output_format)   # Missing Required Params
 
     if not token:
         if not Token.is_valid_api_key(api_key):
-            raise InvalidAPIUsage(10, output_format=output_format)  # Invalid API_key
-        raise InvalidAPIUsage(4, output_format=output_format)       # Invalid token
+            raise InvalidAPIUsage(CompatError.INVALID_API_KEY, output_format=output_format)  # Invalid API_key
+        raise InvalidAPIUsage(CompatError.INVALID_TOKEN, output_format=output_format)        # Invalid token
     if token.has_expired():
-        raise InvalidAPIUsage(15, output_format=output_format)      # Token expired
+        raise InvalidAPIUsage(CompatError.TOKEN_EXPIRED, output_format=output_format)        # Token expired
     if not token.user:
-        raise InvalidAPIUsage(14, output_format=output_format)      # Unauthorized token
+        raise InvalidAPIUsage(CompatError.UNAUTHORIZED_TOKEN, output_format=output_format)   # Unauthorized token
 
     session = Session.create(token)
 
@@ -194,7 +194,7 @@ def _to_native_api(lookup, method="track.scrobble", output_format="xml"):
     if method == 'track.updateNowPlaying':
         listen_type = 'playing_now'
         if len(lookup.keys()) != 1:
-            raise InvalidAPIUsage(6, output_format=output_format)       # Invalid parameters
+            raise InvalidAPIUsage(CompatError.INVALID_PARAMETERS, output_format=output_format)       # Invalid parameters
 
     listens = []
     for ind, data in lookup.iteritems():
@@ -236,13 +236,13 @@ def record_listens(request, data):
     try:
         sk, api_key = data['sk'], data['api_key']
     except KeyError:
-        raise InvalidAPIUsage(6, output_format=output_format)       # Invalid parameters
+        raise InvalidAPIUsage(CompatError.INVALID_PARAMETERS, output_format=output_format)    # Invalid parameters
 
     session = Session.load(sk, api_key)
     if not session:
         if not Token.is_valid_api_key(api_key):
-            raise InvalidAPIUsage(10, output_format=output_format)   # Invalid API_KEY
-        raise InvalidAPIUsage(9, output_format=output_format)        # Invalid Session KEY
+            raise InvalidAPIUsage(CompatError.INVALID_API_KEY, output_format=output_format)   # Invalid API_KEY
+        raise InvalidAPIUsage(CompatError.INVALID_SESSION_KEY, output_format=output_format)   # Invalid Session KEY
 
     lookup = defaultdict(dict)
     for key, value in data.items():
@@ -369,18 +369,18 @@ def user_info(request, data):
             raise KeyError
 
         if not Token.is_valid_api_key(api_key):
-            raise InvalidAPIUsage(10, output_format=output_format)  # Invalid API key
+            raise InvalidAPIUsage(CompatError.INVALID_API_KEY, output_format=output_format)     # Invalid API key
 
         user = User.load_by_sessionkey(sk, api_key)
         if not user:
-            raise InvalidAPIUsage(9, output_format=output_format)  # Invalid Session key
+            raise InvalidAPIUsage(CompatError.INVALID_SESSION_KEY, output_format=output_format)  # Invalid Session key
 
         query_user = User.load_by_name(username) if (username and username != user.name) else user
         if not query_user:
-            raise InvalidAPIUsage(7, output_format=output_format)  # Invalid resource specified
+            raise InvalidAPIUsage(CompatError.INVALID_RESOURCE, output_format=output_format)     # Invalid resource specified
 
     except KeyError:
-        raise InvalidAPIUsage(6, output_format=output_format)       # Missing required params
+        raise InvalidAPIUsage(CompatError.INVALID_PARAMETERS, output_format=output_format)       # Missing required params
 
     doc, tag, text = Doc().tagtext()
     with tag('lfm', status='ok'):
