@@ -2,39 +2,53 @@ from flask import render_template, make_response
 from yattag import Doc
 import yattag
 import ujson
+import collections
 
+LastFMError = collections.namedtuple('LastFMError', ['code', 'message'])
 
 # List of errors compatible with LastFM messages for API_compat.
-ERROR_MESSAGES = {
-    1: "This error does not exist",
-    2: "Invalid service -This service does not exist",
-    3: "Invalid Method - No method with that name in this package",
-    4: "Invalid Token - Invalid authentication token supplied",
-    5: "Invalid format - This service doesn't exist in that format",
-    6: "Invalid parameters - Your request is missing a required parameter",
-    7: "Invalid resource specified",
-    8: "Operation failed - Most likely the backend service failed. Please try again.",
-    9: "Invalid session key - Please re-authenticate",
-    10: "Invalid API key - You must be granted a valid key by last.fm",
-    11: "Service Offline - This service is temporarily offline. Try again later.",
-    12: "Subscribers Only - This station is only available to paid last.fm subscribers",
-    13: "Invalid method signature supplied",
-    14: "Unauthorized Token - This token has not been authorized",
-    15: "This token has expired",
-    16: "The service is temporarily unavailable, please try again.",
-    17: "Login: User requires to be logged in",
-    18: "Trial Expired - This user has no free radio plays left. Subscription required.",
-    19: "This error does not exist",
-    20: "Not Enough Content - There is not enough content to play this station",
-    21: "Not Enough Members - This group does not have enough members for radio",
-    22: "Not Enough Fans - This artist does not have enough fans for for radio",
-    23: "Not Enough Neighbours - There are not enough neighbours for radio",
-    24: "No Peak Radio - This user is not allowed to listen to radio during peak usage",
-    25: "Radio Not Found - Radio station not found",
-    26: "API Key Suspended - This application is not allowed to make requests to the web services",
-    27: "Deprecated - This type of request is no longer supported",
-    29: "Rate Limit Exceded - Your IP has made too many requests in a short period, exceeding our API guidelines"
-}
+class CompatError(object):
+    DOES_NOT_EXIST           = LastFMError(code = 1, message = "This error does not exist")
+    INVALID_SERVICE          = LastFMError(code = 2, message = "Invalid service -This service does not exist")
+    INVALID_METHOD           = LastFMError(code = 3, message = "Invalid Method - No method with that name in this package")
+    INVALID_TOKEN            = LastFMError(code = 4, message = "Invalid Token - Invalid authentication token supplied")
+    INVALID_FORMAT           = LastFMError(code = 5, message = "Invalid format - This service doesn't exist in that format")
+    INVALID_PARAMETERS       = LastFMError(code = 6, message = "Invalid parameters - " \
+                                                               "Your request is missing a required parameter")
+    INVALID_RESOURCE         = LastFMError(code = 7, message = "Invalid resource specified")
+    OP_FAILED                = LastFMError(code = 8, message = "Operation failed - Most likely the backend service failed. " \
+                                                               "Please try again.")
+    INVALID_SESSION_KEY      = LastFMError(code = 9, message = "Invalid session key - Please re-authenticate")
+    INVALID_API_KEY          = LastFMError(code = 10, message = "Invalid API key - You must be granted a valid key by last.fm")
+    SERVICE_OFFLINE          = LastFMError(code = 11, message = "Service Offline - This service is temporarily offline. " \
+                                                                "Try again later.")
+    SUBSCRIBERS_ONLY         = LastFMError(code = 12, message = "Subscribers Only - This station is only available to " \
+                                                                "paid last.fm subscribers")
+    INVALID_METHOD_SIGNATURE = LastFMError(code = 13, message = "Invalid method signature supplied")
+    UNAUTHORIZED_TOKEN       = LastFMError(code = 14, message = "Unauthorized Token - This token has not been authorized")
+    TOKEN_EXPIRED            = LastFMError(code = 15, message = "This token has expired")
+    SERVICE_UNAVAILABLE      = LastFMError(code = 16, message = "The service is temporarily unavailable, please try again.")
+    NEED_LOGIN               = LastFMError(code = 17, message = "Login: User requires to be logged in")
+    TRIAL_EXPIRED            = LastFMError(code = 18, message = "Trial Expired - This user has no free radio plays left. " \
+                                                                "Subscription required.")
+    DOES_NOT_EXIST_19        = LastFMError(code = 19, message = "This error does not exist")
+    NOT_ENOUGH_CONTENT       = LastFMError(code = 20, message = "Not Enough Content - There is not enough content to " \
+                                                                "play this station")
+    NOT_ENOUGH_MEMBERS       = LastFMError(code = 21, message = "Not Enough Members - This group does not have enough members " \
+                                                                "for radio")
+    NOT_ENOUGH_FANS          = LastFMError(code = 22, message = "Not Enough Fans - This artist does not have enough fans " \
+                                                                "for radio")
+    NOT_ENOUGH_NEIGHBOURS    = LastFMError(code = 23, message = "Not Enough Neighbours - There are not enough neighbours " \
+                                                                "for radio")
+    NO_PEAK_RADIO            = LastFMError(code = 24, message = "No Peak Radio - This user is not allowed to listen to " \
+                                                                "radio during peak usage")
+    RADIO_NOT_FOUND          = LastFMError(code = 25, message = "Radio Not Found - Radio station not found")
+    API_KEY_SUSPENDED        = LastFMError(code = 26, message = "API Key Suspended - This application is not allowed to make "
+                                                                "requests to the web services")
+    DEPRECATED               = LastFMError(code = 27, message = "Deprecated - This type of request is no longer supported")
+    RATE_LIMIT_EXCEEDED      = LastFMError(code = 29, message = "Rate Limit Exceded - Your IP has made too many requests in " \
+                                                                "exceeding our API guidelines")
+
 
 def init_error_handlers(app):
 
@@ -80,9 +94,9 @@ def init_error_handlers(app):
 
 class InvalidAPIUsage(Exception):
     """ General error class for the API_compat to render errors in multiple formats """
-    def __init__(self, api_error_code, status_code=500, output_format="xml"):
+    def __init__(self, api_error, status_code=500, output_format="xml"):
         Exception.__init__(self)
-        self.api_error_code = api_error_code
+        self.api_error = api_error
         self.status_code = status_code
         self.output_format = output_format
 
@@ -94,13 +108,13 @@ class InvalidAPIUsage(Exception):
 
     def to_json(self):
         return ujson.dumps({
-            "error": self.api_error_code,
-            "message": ERROR_MESSAGES[self.api_error_code]
+            "error": self.api_error.code,
+            "message": self.api_error.message
         }, indent=4)
 
     def to_xml(self):
         doc, tag, text = Doc().tagtext()
         with tag('lfm', status="failed"):
-            with tag('error', code=self.api_error_code):
-                text(ERROR_MESSAGES[self.api_error_code])
+            with tag('error', code=self.api_error.code):
+                text(self.api_error.message)
         return '<?xml version="1.0" encoding="utf-8"?>\n' + yattag.indent(doc.getvalue())
