@@ -287,8 +287,9 @@ def record_listens(request, data):
                 if origL.get('albumArtist', origL['artist']) != artist:
                     corr['albumArtist'] = '1'
 
-                # TODO: Add the album part
-                album = ""
+                album = augL['track_metadata'].get('release_name', '')
+                if origL.get('album', '') != album:
+                    corr['album'] = '1'
 
                 with tag('scrobble'):
                     with tag('track', corrected=corr['track']):
