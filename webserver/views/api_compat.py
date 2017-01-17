@@ -91,7 +91,7 @@ def api_methods():
     elif method == 'user.getinfo':
         return user_info(request, data)
     elif method == 'auth.getsessioninfo':
-        return session_info
+        return session_info(request, data)
     else:
         # Invalid Method
         raise InvalidAPIUsage(3, output_format=data.get('format', "xml"))
