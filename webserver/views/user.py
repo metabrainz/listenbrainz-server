@@ -20,6 +20,7 @@ import zipfile
 import re
 import os
 import pytz
+from alpha_importer import QUEUE_KEY, SET_KEY_PREFIX
 
 LISTENS_PER_PAGE = 25
 
@@ -146,7 +147,12 @@ def import_data():
         loader = "javascript:%s" % loader
     else:
         loader = None
-    return render_template("user/import.html", user=current_user,
+
+    waiting_for_alpha = False
+    queue_connection = _redis.redis
+    if queue_connection.exists("alphaimporter:set %s" % current_user.musicbrainz_id):
+        waiting_for_alpha = True
+    return render_template("user/import.html", user=current_user, waiting_for_alpha = waiting_for_alpha,
             loader=loader, lastfm_username=lastfm_username)
 
 
@@ -263,3 +269,17 @@ def _get_spotify_uri_for_listens(listens):
         return "spotify:trackset:Recent listens:" + ",".join(track_ids)
     else:
         return None
+
+@user_bp.route("/import/alpha")
+@login_required
+def import_from_alpha():
+    """ Just push the task into redis queue and then return to user page.
+    """
+    queue_connection = _redis.redis
+    # push into the queue
+    value = "{} {}".format(current_user.musicbrainz_id, current_user.auth_token)
+    queue_connection.rpush(QUEUE_KEY, value)
+
+    # push username into redis so that we know that this user is in waiting
+    queue_connection.set("{} {}".format(SET_KEY_PREFIX, current_user.musicbrainz_id), "1")
+    return redirect(url_for("user.import_data"))
