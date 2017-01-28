@@ -77,9 +77,10 @@ def set_remove(username):
     redis_connection.delete("{} {}".format(SET_KEY_PREFIX, username))
 
 if __name__ == '__main__':
-    while not queue_empty():
-        username, token = queue_front()
-        done = import_from_alpha(username, token)
-        if done:
-            queue_pop()
-            set_remove(username)
+    while True:
+        if not queue_empty():
+            username, token = queue_front()
+            done = import_from_alpha(username, token)
+            if done:
+                queue_pop()
+                set_remove(username)
