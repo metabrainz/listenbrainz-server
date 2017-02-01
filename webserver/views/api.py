@@ -8,7 +8,6 @@ import db
 from webserver.rate_limiter import ratelimit
 from api_tools import insert_payload, log_raise_400, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET,\
     LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
-from webserver.redis_connection import _redis
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -57,25 +56,25 @@ def submit_listen():
         log_raise_400("Invalid JSON document submitted.", raw_data)
 
     try:
-        insert_payload(payload, user["id"], listen_type=data['listen_type'])
+        insert_payload(payload, user, listen_type=data['listen_type'])
     except Exception, e:
         raise InternalServerError("Something went wrong. Please try again.")
 
     return "success"
 
 
-@api_bp.route("/1/user/<user_id>/listens")
+@api_bp.route("/1/user/<user_name>/listens")
 @ratelimit()
-def get_listens(user_id):
+def get_listens(user_name):
     """
-    Get listens for user ``user_id``. The format for the JSON returned is defined in our :ref:`json-doc`.
+    Get listens for user ``user_name``. The format for the JSON returned is defined in our :ref:`json-doc`.
 
     If none of the optional arguments are given, this endpoint will return the :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` most recent listens.
     The optional ``max_ts`` and ``min_ts`` UNIX epoch timestamps control at which point in time to start returning listens. You may specify max_ts or
     min_ts, but not both in one call. Listens are always returned in descending timestamp order.
 
     :param max_ts: If you specify a ``max_ts`` timestamp, listens with listened_at less than (but not including) this value will be returned.
-    :param min_ts: If you specify a ``min_ts`` timestamp, listens with listened_at greter than (but not including) this value will be returned.
+    :param min_ts: If you specify a ``min_ts`` timestamp, listens with listened_at greater than (but not including) this value will be returned.
     :param count: Optional, number of listens to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
@@ -84,12 +83,18 @@ def get_listens(user_id):
     max_ts = _parse_int_arg("max_ts")
     min_ts = _parse_int_arg("min_ts")
 
+    # if no max given, use now()
+
     if max_ts and min_ts:
         log_raise_400("You may only specify max_ts or min_ts, not both.")
 
-    db_conn = webserver.create_postgres(current_app)
+    # If none are given, start with now and go down
+    if max_ts == None and min_ts == None:
+        max_ts = int(time())
+
+    db_conn = webserver.create_influx(current_app)
     listens = db_conn.fetch_listens(
-        user_id,
+        user_name,
         limit=min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET),
         from_ts=min_ts,
         to_ts=max_ts,
@@ -106,7 +111,7 @@ def get_listens(user_id):
         listen_data = listen_data[::-1]
 
     return jsonify({'payload': {
-        'user_id': user_id,
+        'user_id': user_name,
         'count': len(listen_data),
         'listens': listen_data,
     }})
@@ -138,27 +143,6 @@ def _validate_auth_header():
 
     return user
 
-
-def _send_listens_to_redis(listen_type, listens):
-
-
-    p = _redis.redis.pipeline()
-    for listen in listens:
-        if listen_type == LISTEN_TYPE_PLAYING_NOW:
-            try:
-                p.setex('playing_now' + ':' + listen['user_id'],
-                        ujson.dumps(listen).encode('utf-8'), current_app.config['PLAYING_NOW_MAX_DURATION'])
-            except:
-                current_app.logger.error("Redis rpush playing_now write error: " + str(sys.exc_info()[0]))
-                raise InternalServerError("Cannot record playing_now at this time.")
-        else:
-            try:
-                p.rpush('listens', ujson.dumps(listen).encode('utf-8'))
-            except:
-                current_app.logger.error("Redis rpush listens write error: " + str(sys.exc_info()[0]))
-                raise InternalServerError("Cannot record listen at this time.")
-
-    p.execute()
 
 def _messybrainz_lookup(listens):
 

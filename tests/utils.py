@@ -6,7 +6,7 @@ import sys
 import os
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../listenstore"))
-from listenstore.listen import Listen
+from listen import Listen
 import uuid
 import pytz
 import db.user
