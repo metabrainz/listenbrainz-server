@@ -111,7 +111,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.logstore = init_influx_connection({ 'REDIS_HOST' : config.REDIS_HOST,
                                                  'INFLUX_HOST': config.INFLUX_HOST,
                                                  'INFLUX_PORT': config.INFLUX_PORT,
-                                                 'INFLUX_DB': config.INFLUX_TEST_DB} )
+                                                 'INFLUX_DB_NAME': config.INFLUX_TEST_DB} )
         self.testuser_id = db.user.create("test")
         user = db.user.get(self.testuser_id)
         print(user)

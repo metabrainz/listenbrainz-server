@@ -191,7 +191,7 @@ class InfluxListenStore(ListenStore):
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
         self.redis = Redis(conf['REDIS_HOST'])
-        self.influx = InfluxDBClient(host=conf['INFLUX_HOST'], port=conf['INFLUX_PORT'], database=conf['INFLUX_DB'])
+        self.influx = InfluxDBClient(host=conf['INFLUX_HOST'], port=conf['INFLUX_PORT'], database=conf['INFLUX_DB_NAME'])
 
 
     def _get_num_listens_for_user(self, user_name):

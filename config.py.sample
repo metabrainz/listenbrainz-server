@@ -31,7 +31,7 @@ REDIS_HOST = "redis"
 # Influx DB (main listen store)
 INFLUX_HOST    = "influx"
 INFLUX_PORT    = 8086
-INFLUX_DB      = "listenbrainz"
+INFLUX_DB_NAME  = "listenbrainz"
 INFLUX_TEST_DB = "lb_test"
 
 
