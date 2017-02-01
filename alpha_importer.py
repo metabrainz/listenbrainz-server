@@ -2,9 +2,13 @@ from __future__ import print_function
 from redis import Redis
 import config
 import requests
+from requests.exceptions import HTTPError
 import ujson
 import time
 import sys
+import logging
+from logging.handlers import RotatingFileHandler
+import os
 
 redis_connection = Redis(host = config.REDIS_HOST)
 QUEUE_KEY = 'alphaimporter:queue'
@@ -12,6 +16,18 @@ SET_KEY_PREFIX = 'alphaimporter:set'
 ALPHA_URL = 'https://api.listenbrainz.org/'
 BETA_URL = 'http://0.0.0.0:3031'
 LISTENS_PER_GET = 100
+LOG_FILE = os.path.join(os.getcwd(), 'alpha_importer.log')
+DELAY = 3 # delay if requests don't return http 200
+
+# create a logger to log messages into LOG_FILE
+logger = logging.getLogger('alpha_importer')
+logger.setLevel(logging.DEBUG)
+handler = RotatingFileHandler(LOG_FILE, maxBytes = 512 * 1024, backupCount = 100)
+handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
 
 def queue_empty():
     return redis_connection.llen(QUEUE_KEY) == 0
@@ -30,11 +46,11 @@ def get_batch(username, max_ts):
     if r.status_code == 200:
         return ujson.loads(r.text)
     else:
-        print("get from alpha http response code: {}".format(r.status_code), file = sys.stderr)
-        return None
+        logger.error("get from alpha http response code: {}".format(r.status_code))
+        raise HTTPError
 
 
-def get_data(batch):
+def extract_data(batch):
     data = {'listen_type':'import', 'payload': []}
     for listen in batch['payload']['listens']:
         data['payload'].append(listen)
@@ -44,30 +60,29 @@ def get_data(batch):
 def send_batch(data, token):
     send_url = '{}/1/submit-listens'.format(BETA_URL)
     r = requests.post(send_url, headers = {'Authorization': 'Token {}'.format(token)}, data = ujson.dumps(data))
-    if r.status_code == 200:
-        return 1
-    else:
-        print("submission to beta returned response code: {}".format(r.status_code), file = sys.stderr)
-        return 0
+    if r.status_code != 200:
+        logger.error("submission to beta returned response code: {}".format(r.status_code))
+        raise HTTPError
 
 
 def import_from_alpha(username, token):
     next_max = int(time.time())
-    cnt = 1
+    page_count = 1
     while True:
-        batch = get_batch(username, next_max)
-        if not batch: # if get_batch doesn't return data, we try again
-            continue
-        if batch['payload']['count'] == 0:
-            print("All pages done")
-            print("total number of pages = {}".format(cnt))
-            return 1
-        data = get_data(batch)
-        sent = send_batch(data, token)
-        if sent:
+        try:
+            batch = get_batch(username, next_max)
+            if batch['payload']['count'] == 0:
+                logger.info('All pages done for user {}'.format(username))
+                logger.info('Total number of pages done: {}'.format(page_count))
+                return True
+            data = extract_data(batch)
+            sent = send_batch(data, token)
             next_max = data['payload'][-1]['listened_at']
-            print("page #{} done".format(cnt))
-            cnt += 1
+            logger.info('Page #{} done.'.format(page_count))
+            page_count += 1
+        except HTTPError:
+            time.sleep(DELAY)
+
 
 def queue_pop():
     redis_connection.lpop(QUEUE_KEY)
@@ -76,11 +91,11 @@ def queue_pop():
 def set_remove(username):
     redis_connection.delete("{} {}".format(SET_KEY_PREFIX, username))
 
+
 if __name__ == '__main__':
     while True:
         if not queue_empty():
             username, token = queue_front()
-            done = import_from_alpha(username, token)
-            if done:
+            if import_from_alpha(username, token):
                 queue_pop()
                 set_remove(username)
