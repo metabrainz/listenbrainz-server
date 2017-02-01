@@ -7,7 +7,7 @@ def create_influx(app):
     from influx_connection import init_influx_connection
     return init_influx_connection({ 'INFLUX_HOST':app.config['INFLUX_HOST'], 
                                     'INFLUX_PORT':app.config['INFLUX_PORT'], 
-                                    'INFLUX_DB':app.config['INFLUX_DB'],
+                                    'INFLUX_DB_NAME':app.config['INFLUX_DB_NAME'],
                                     'REDIS_HOST':app.config['REDIS_HOST']})
 
 def create_postgres(app):
