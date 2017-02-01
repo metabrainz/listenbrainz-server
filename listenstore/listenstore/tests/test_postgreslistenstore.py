@@ -18,7 +18,7 @@ class TestPostgresListenStore(DatabaseTestCase):
     def setUp(self):
         super(TestPostgresListenStore, self).setUp()
         self.log = logging.getLogger(__name__)
-        self.logstore = init_postgres_connection(self.config.TEST_SQLALCHEMY_DATABASE_URI)
+        self.logstore = init_postgres_connection(self.config.SQLALCHEMY_DATABASE_URI)
         # TODO: Does this use the normal or test DB??
         self.testuser_id = db.user.create("test")
         user = db.user.get(self.testuser_id)

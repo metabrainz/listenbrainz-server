@@ -15,7 +15,7 @@ class DatabaseTestCase(unittest.TestCase):
 
     def setUp(self):
         self.config = config
-        db.init_db_connection(config.TEST_SQLALCHEMY_DATABASE_URI)
+        db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
         self.reset_db()
 
     def tearDown(self):
