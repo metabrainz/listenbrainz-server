@@ -24,3 +24,11 @@ class IndexViewsTestCase(ServerTestCase):
     def test_faq(self):
         resp = self.client.get(url_for('index.faq'))
         self.assert200(resp)
+
+    def test_api_docs(self):
+        resp = self.client.get(url_for('index.api_docs'))
+        self.assert200(resp)
+
+    def test_roadmap(self):
+        resp = self.client.get(url_for('index.roadmap'))
+        self.assert200(resp)

@@ -2,6 +2,7 @@ from __future__ import absolute_import
 from flask import Blueprint, render_template, current_app, redirect, url_for
 from flask_login import current_user
 from webserver.redis_connection import _redis
+from redis_pubsub import RedisPubSubPublisher
 import os
 import subprocess
 import locale
@@ -56,6 +57,13 @@ def roadmap():
 def current_status():
 
     load = "%.2f %.2f %.2f" % os.getloadavg()
-    listens = _redis.redis.llen("listens")
-    listens_pending = _redis.redis.llen("listens_pending")
-    return render_template("index/current-status.html", load=load, listens=listens, listens_pending=listens_pending)
+
+    stats = []
+    pubsub = RedisPubSubPublisher(_redis.redis, "ilisten")
+    stats_dict = pubsub.get_stats()
+    stats.append({ 'data' : stats_dict, 'desc' : "Incoming listens" })
+    pubsub = RedisPubSubPublisher(_redis.redis, "ulisten")
+    stats_dict = pubsub.get_stats()
+    stats.append({ 'data' : stats_dict, 'desc' : "Unique listens" })
+
+    return render_template("index/current-status.html", load=load, stats = stats)

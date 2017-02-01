@@ -7,7 +7,8 @@ import ujson
 
 from webserver.external import messybrainz
 from webserver.redis_connection import _redis
-
+from listen import Listen
+from redis_pubsub import RedisPubSubPublisher, NoSubscribersException
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
 MAX_LISTEN_SIZE = 10240
@@ -33,16 +34,43 @@ LISTEN_TYPE_SINGLE = 1
 LISTEN_TYPE_IMPORT = 2
 LISTEN_TYPE_PLAYING_NOW = 3
 
-def insert_payload(payload, user_id, listen_type=LISTEN_TYPE_IMPORT):
+# PubSub Keyspace
+LISTEN_KEYSPACE = "ilisten"  # for incoming listens
+
+def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
     """ Convert the payload into augmented listens then submit them.
         Returns: augmented_listens
     """
     try:
-        augmented_listens = _get_augmented_listens(payload, user_id, listen_type)
+        augmented_listens = _get_augmented_listens(payload, user, listen_type)
         _send_listens_to_redis(listen_type, augmented_listens)
     except Exception, e:
         print(e)
     return augmented_listens
+
+
+def _send_listens_to_redis(listen_type, listens):
+    submit = []
+    for listen in listens:
+        if listen_type == LISTEN_TYPE_PLAYING_NOW:
+            try:
+                expire_time = listen["track_metadata"]["additional_info"].get("duration",
+                                    current_app.config['PLAYING_NOW_MAX_DURATION'])
+                _redis.redis.setex('playing_now' + ':' + listen['user_id'],
+                        ujson.dumps(listen).encode('utf-8'), expire_time)
+            except Exception, e:
+                current_app.logger.error("Redis rpush playing_now write error: " + str(sys.exc_info()[0]))
+                raise InternalServerError("Cannot record playing_now at this time.")
+        else:
+            submit.append(listen)
+
+    if submit:
+        pubsub = RedisPubSubPublisher(_redis.redis, LISTEN_KEYSPACE)
+        try:
+            pubsub.publish(submit)
+        except NoSubscribersException:
+            current_app.logger.error("No consumers registered in redis. Not accepting listens.")
+            raise InternalServerError("Cannot record listen at this time. (No consumers registered.)")
 
 
 def _validate_listen(listen, listen_type):
@@ -108,28 +136,6 @@ def _validate_listen(listen, listen_type):
                 _log_raise_400("Artist MBID format invalid.", listen)
 
 
-def _send_listens_to_redis(listen_type, listens):
-    p = _redis.redis.pipeline()
-    for listen in listens:
-        if listen_type == "playing_now":
-            try:
-                expire_time = listen["track_metadata"]["additional_info"].get("duration",
-                                    current_app.config['PLAYING_NOW_MAX_DURATION'])
-                p.setex('playing_now' + ':' + listen['user_id'],
-                        ujson.dumps(listen).encode('utf-8'), expire_time)
-            except Exception, e:
-                current_app.logger.error("Redis rpush playing_now write error: " + str(sys.exc_info()[0]))
-                raise InternalServerError("Cannot record playing_now at this time.")
-        else:
-            try:
-                p.rpush('listens', ujson.dumps(listen).encode('utf-8'))
-            except Exception, e:
-                print(e)
-                current_app.logger.error("Redis rpush listens write error: " + str(sys.exc_info()[0]))
-                raise InternalServerError("Cannot record listen at this time.")
-    p.execute()
-
-
 # lifted from AcousticBrainz
 def is_valid_uuid(u):
     try:
@@ -139,17 +145,19 @@ def is_valid_uuid(u):
         return False
 
 
-def _get_augmented_listens(payload, user_id, listen_type):
+def _get_augmented_listens(payload, user, listen_type):
     """ Converts the payload to augmented list after lookup
         in the MessyBrainz database
     """
+
     augmented_listens = []
     msb_listens = []
     for l in payload:
         listen = l.copy()   # Create a local object to prevent the mutation of the passed object
         _validate_listen(listen, listen_type)
 
-        listen['user_id'] = user_id
+        listen['user_id'] = user['id']
+        listen['user_name'] = user['musicbrainz_id']
 
         msb_listens.append(listen)
         if len(msb_listens) >= MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP:

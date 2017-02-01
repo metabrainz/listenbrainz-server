@@ -1,0 +1,4 @@
+ujson==1.33
+redis==2.10.3
+google-api-python-client==1.5.2
+python-dateutil==2.2

@@ -28,3 +28,4 @@ apscheduler == 3.1.0
 yattag == 1.6.0
 xmltodict == 0.10.2
 unittest2 == 1.1.0
+influxdb == 3.0.0

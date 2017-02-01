@@ -4,7 +4,7 @@ services:
   db:
     image: postgres:9.5.3
     volumes:
-      - $VAGRANT_DATA_DIR../data/pgdata:/var/lib/postgresql/data/pgdata
+      - $DATA_DIR/data/pgdata:/var/lib/postgresql/data/pgdata
     environment:
       PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_USER: listenbrainz
@@ -15,7 +15,25 @@ services:
   redis:
     image: redis:3.2.1
     volumes:
-      - $VAGRANT_DATA_DIR../data/redis:/data
+      - $DATA_DIR/data/redis:/data
+    restart: always
+
+  influx:
+    image: influxdb:1.0.0
+    volumes:
+      - $DATA_DIR/data/influxdb:/var/lib/influxdb
+    environment:
+      INFLUXDB_REPORTING_DISABLED: 'true'
+      INFLUXDB_META_LOGGING_ENABLED: 'false'
+      INFLUXDB_DATA_QUERY_LOG_ENABLED: 'false'
+      INFLUXDB_DATA_WAL_LOGGING_ENABLED: 'false'
+      INFLUXDB_DATA_DATA_LOGGING_ENABLED: 'false'
+      INFLUXDB_HTTP_LOG_ENABLED: 'true'
+      INFLUXDB_CONTINUOUS_QUERIES_LOG_ENABLED: 'false'
+
+    ports:
+      - "8086:8086"
+      - "8083:8083"
     restart: always
 
   web:
@@ -24,21 +42,31 @@ services:
       dockerfile: ./docker/Dockerfile.prod
     command: uwsgi /code/listenbrainz/docker/uwsgi.ini
     volumes:
-      - $VAGRANT_DATA_DIR../data/app:/data
+      - $DATA_DIR/data/app:/data
     ports:
       - "3031:3031"
     depends_on:
       - redis
       - db
+      - influx
     restart: always
 
-  consumer:
+  influx_writer:
     build:
       context: ..
-      dockerfile: ./docker/redis-consumer/Dockerfile
-    command: python redis-consumer/redis-consumer.py
+      dockerfile: ./docker/influx-writer/Dockerfile
+    command: python influx-writer/influx-writer.py
     depends_on:
-      - db
+      - redis
+      - influx
+    restart: always
+
+  bigquery:
+    build:
+      context: ..
+      dockerfile: ./docker/bigquery-writer/Dockerfile
+    command: python bigquery-writer/bigquery-writer.py
+    depends_on:
       - redis
     restart: always
 

@@ -27,6 +27,7 @@
               <th>artist</th>
               <th>track</th>
               <th>time</th>
+              <th>timestamp</th>
             </tr>
             </thead>
             <tbody>
@@ -39,9 +40,26 @@
                 </tr>
               {% else %}
                 <tr>
-                  <td>{{ listen.track_metadata.artist_name }}</td>
-                  <td>{{ listen.track_metadata.track_name }}</td>
+                  <td>
+                      {% if listen.track_metadata.additional_info.artist_mbids %}
+                        <a href="http://musicbrainz.org/recording/{{ listen.track_metadata.additional_info.artist_mbids }}">
+                      {% endif %}
+                      {{ listen.track_metadata.artist_name }}
+                      {% if listen.track_metadata.additional_info.artist_mbids %}
+                        </a>
+                      {% endif %}
+                  </td>
+                  <td>
+                      {% if listen.track_metadata.additional_info.recording_mbid %}
+                        <a href="http://musicbrainz.org/recording/{{ listen.track_metadata.additional_info.recording_mbid }}">
+                      {% endif %}
+                      {{ listen.track_metadata.track_name }}
+                      {% if listen.track_metadata.additional_info.recording_mbid %}
+                        </a>
+                      {% endif %}
+                  </td>
                   <td><abbr class="timeago" title="{{ listen.listened_at_iso }}">{{ listen.listened_at_iso }}</abbr></td>
+                  <td>{{ listen.listened_at }}</td>
                 </tr>
               {% endif %}
             {% endfor %}
@@ -50,7 +68,7 @@
 
           <ul class="pager">
             {% if previous_listen_ts %}
-              <li class="previous"><a href="{{ url_for("user.profile", user_name=user.musicbrainz_id, max_ts=previous_listen_ts) }}">&larr; Previous</a></li>
+              <li class="previous"><a href="{{ url_for("user.profile", user_name=user.musicbrainz_id, min_ts=previous_listen_ts) }}">&larr; Previous</a></li>
             {% endif %}
             {% if next_listen_ts %}
               <li class="next"><a href="{{ url_for("user.profile", user_name=user.musicbrainz_id, max_ts=next_listen_ts) }}">Next &rarr;</a></li>

@@ -5,12 +5,14 @@ from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, Int
 from werkzeug.utils import secure_filename
 from webserver.decorators import crossdomain
 from datetime import datetime
+from time import time
 import webserver
 import db.user
 from flask import make_response
 from webserver.views.api_tools import convert_backup_to_native_format, insert_payload, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
 from webserver.utils import sizeof_readable
 from webserver.login import User
+from webserver.redis_connection import _redis
 from os import path, makedirs
 import ujson
 import zipfile
@@ -18,7 +20,10 @@ import re
 import os
 import pytz
 
+LISTENS_PER_PAGE = 25
+
 user_bp = Blueprint("user", __name__)
+
 
 @user_bp.route("/<user_name>/scraper.js")
 @crossdomain()
@@ -43,7 +48,7 @@ def lastfmscraper(user_name):
 @user_bp.route("/<user_name>")
 def profile(user_name):
     # Which database to use to showing user listens.
-    db_conn = webserver.postgres_connection._postgres
+    db_conn = webserver.influx_connection._influx
     # Which database to use to show playing_now stream.
     playing_now_conn = webserver.redis_connection._redis
 
@@ -53,42 +58,54 @@ def profile(user_name):
     max_ts = request.args.get("max_ts")
     if max_ts is not None:
         try:
-            max_ts = int(float(max_ts))
+            max_ts = int(max_ts)
         except ValueError:
-            raise BadRequest("Incorrect timestamp argument to_ts:" %
-                             request.args.get("to_ts"))
+            raise BadRequest("Incorrect timestamp argument max_ts:" % request.args.get("max_ts"))
+
+    min_ts = request.args.get("min_ts")
+    if min_ts is not None:
+        try:
+            min_ts = int(min_ts)
+        except ValueError:
+            raise BadRequest("Incorrect timestamp argument min_ts:" % request.args.get("min_ts"))
+
+    if max_ts == None and min_ts == None:
+        max_ts = int(time())
+
+    args = {}
+    if max_ts:
+        args['to_ts'] = max_ts
+    else:
+        args['from_ts'] = min_ts
+
     listens = []
-    for listen in db_conn.fetch_listens(user.id, limit=25, to_ts=max_ts):
+    for listen in db_conn.fetch_listens(user_name, limit=LISTENS_PER_PAGE, **args):
+        # Let's fetch one more listen, so we know to show a next page link or not
         listens.append({
             "track_metadata": listen.data,
             "listened_at": listen.ts_since_epoch,
             "listened_at_iso": listen.timestamp.isoformat() + "Z",
         })
 
+    # Calculate if we need to show next/prev buttons
+    previous_listen_ts = None
+    next_listen_ts = None
     if listens:
-        # Checking if there is a "previous" page...
-        previous_listens = db_conn.fetch_listens(user.id, limit=25, from_ts=listens[0]["listened_at"])
-        if previous_listens:
-            # Getting from the last item because `fetch_listens` returns in ascending
-            # order when `from_ts` is used.
-            previous_listen_ts = previous_listens[-1].ts_since_epoch + 1
-        else:
-            previous_listen_ts = None
-
-        # Checking if there is a "next" page...
-        next_listens = db_conn.fetch_listens(user.id, limit=1, to_ts=listens[-1]["listened_at"])
-        if next_listens:
-            next_listen_ts = listens[-1]["listened_at"]
-        else:
-            next_listen_ts = None
-
-    else:
-        previous_listen_ts = None
-        next_listen_ts = None
+        (min_ts_per_user, max_ts_per_user) = db_conn.get_timestamps_for_user(user_name)
+        if min_ts_per_user >= 0:
+            if listens[-1]['listened_at'] > min_ts_per_user:
+                next_listen_ts = listens[-1]['listened_at']
+            else:
+                next_listen_ts = None
+        
+            if listens[0]['listened_at'] < max_ts_per_user:
+                previous_listen_ts = listens[0]['listened_at']
+            else:
+                previous_listen_ts = None
 
     # If there are no previous listens then display now_playing
     if not previous_listen_ts:
-        playing_now = playing_now_conn.get_playing_now(str(user.id))
+        playing_now = playing_now_conn.get_playing_now(user_name)
         if playing_now:
             listen = {
                 "track_metadata": playing_now.data,
@@ -137,12 +154,12 @@ def import_data():
 def export_data():
     """ Exporting the data to json """
     if request.method == "POST":
-        db_conn = webserver.create_postgres(current_app)
+        db_conn = webserver.create_influx(current_app)
         filename = current_user.musicbrainz_id + "_lb-" + datetime.today().strftime('%Y-%m-%d') + ".json"
 
         # Fetch output and convert it into dict with keys as indexes
         output = []
-        for index, obj in enumerate(db_conn.fetch_listens(current_user.id)):
+        for index, obj in enumerate(db_conn.fetch_listens(current_user.musicbrainz_id)):
             dic = obj.data
             dic['timestamp'] = obj.ts_since_epoch
             dic['album_msid'] = None if obj.album_msid is None else str(obj.album_msid)
@@ -205,7 +222,7 @@ def upload():
                     continue
 
                 payload = convert_backup_to_native_format(jsonlist)
-                insert_payload(payload, current_user.id)
+                insert_payload(payload, current_user)
                 success += 1
         except Exception, e:
             raise BadRequest('Not a valid lastfm-backup-file.')

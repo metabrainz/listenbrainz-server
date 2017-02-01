@@ -2,10 +2,12 @@
 .vagrant
 .DS_Store
 *.pyc
+*.swp
 config.py
 *.log
 .cache
 env
+bigquery-credentials.json
 
 # Application data
 /data

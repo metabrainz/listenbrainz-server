@@ -5,6 +5,7 @@ from werkzeug.serving import run_simple
 import subprocess
 import os
 import click
+import subprocess
 import config
 from urlparse import urlsplit
 
@@ -15,6 +16,7 @@ cli = click.Group()
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'sql')
 MSB_ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../messybrainz', 'admin', 'sql')
+ADMIN_INFLUX_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'influx')
 
 
 @cli.command()
@@ -86,6 +88,9 @@ def init_db(force, create_db):
         print('Creating indexes...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
 
+    print('Create influx database...')
+    subprocess.call(os.path.join(ADMIN_INFLUX_DIR, 'create_db.py'))
+
     print("Done!")
 
 
@@ -129,6 +134,10 @@ def init_test_db(force=False):
     db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_primary_keys.sql'))
     db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
     db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
+
+    print('Create influx test database...')
+    print(os.path.join(ADMIN_INFLUX_DIR, 'create_test_db.py'))
+    subprocess.call(os.path.join(ADMIN_INFLUX_DIR, 'create_test_db.py'))
 
     print("Done!")
 
