@@ -10,20 +10,20 @@
         You have the following options for importing your listen data:
     </p>
 
-    <h3> Import for Listenbrainz alpha </h3>
-    {% if not waiting_for_alpha %}
+    <h3> Import from ListenBrainz Alpha </h3>
     <div class="well">
+    {% if alpha_import_status == "NO_REQUEST" %}
       <a href="/user/import/alpha" style="color: white">
         <p>
           <span class="btn btn-warning btn-lg" style="width: 400px">Import NOW</span>
         </p>
       </a>
-    </div>
-    {% else %}
-    <div class = "well">
+    {% elif alpha_import_status == "WAITING" %}
       <p> <strong> Import from LB alpha queued. Please wait. </strong> </p>
-    </div>
+    {% elif alpha_import_status == "DONE" %}
+      <p> <strong> Your import from ListenBrainz Alpha has completed successfully! </strong> </p>
     {% endif %}
+    </div>
 
      <h3>Direct import from Last.fm</h3>
      {% if loader %}
