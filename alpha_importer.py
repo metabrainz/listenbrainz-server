@@ -88,8 +88,8 @@ def queue_pop():
     redis_connection.lpop(QUEUE_KEY)
 
 
-def set_remove(username):
-    redis_connection.delete("{} {}".format(SET_KEY_PREFIX, username))
+def update_status(username, status):
+    redis_connection.set("{} {}".format(SET_KEY_PREFIX, username), status)
 
 
 if __name__ == '__main__':
@@ -98,4 +98,4 @@ if __name__ == '__main__':
             username, token = queue_front()
             if import_from_alpha(username, token):
                 queue_pop()
-                set_remove(username)
+                update_status(username, "DONE")
