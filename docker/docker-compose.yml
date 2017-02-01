@@ -15,7 +15,7 @@ services:
     image: redis:3.2.1
 
   influxdb:
-    image: influxdb:0.13.0
+    image: influxdb:1.0.0
     volumes:
       - $VAGRANT_DATA_DIR../data/influxdb:/data
     restart: always
