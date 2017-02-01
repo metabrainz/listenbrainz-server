@@ -13,8 +13,8 @@ import os
 redis_connection = Redis(host = config.REDIS_HOST)
 QUEUE_KEY = 'alphaimporter:queue'
 SET_KEY_PREFIX = 'alphaimporter:set'
-ALPHA_URL = 'https://api.listenbrainz.org/'
-BETA_URL = 'http://0.0.0.0:3031'
+ALPHA_URL = 'https://alpha.listenbrainz.org/'
+BETA_URL = 'https://listenbrainz.org'
 LISTENS_PER_GET = 100
 LOG_FILE = os.path.join(os.getcwd(), 'alpha_importer.log')
 DELAY = 3 # delay if requests don't return http 200
