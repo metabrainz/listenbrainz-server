@@ -14,7 +14,7 @@ class TestAPICompatUserClass(DatabaseTestCase):
     def setUp(self):
         super(TestAPICompatUserClass, self).setUp()
         self.log = logging.getLogger(__name__)
-        self.logstore = init_postgres_connection(self.config.TEST_SQLALCHEMY_DATABASE_URI)
+        self.logstore = init_postgres_connection(self.config.SQLALCHEMY_DATABASE_URI)
 
         # Create a user
         uid = db.user.create("test")

@@ -96,54 +96,6 @@ def init_db(force, create_db):
 
 @cli.command()
 @click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
-def init_test_db(force=False):
-    """Same as `init_db` command, but creates a database that will be used to
-    run tests and doesn't import data (no need to do that).
-
-    `PG_CONNECT_TEST` variable must be defined in the config file.
-    """
-
-    uri = urlsplit(application.config['TEST_SQLALCHEMY_DATABASE_URI'])
-    if force:
-        exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER +
-                                    ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
-                                    os.path.join(ADMIN_SQL_DIR, 'drop_test_db.sql'),
-                                    shell=True)
-        if exit_code != 0:
-            raise Exception('Failed to drop existing database and user! Exit code: %i' % exit_code)
-
-    print('Creating database and user for testing...')
-    exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER +
-                                ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
-                                os.path.join(ADMIN_SQL_DIR, 'create_test_db.sql'),
-                                shell=True)
-    if exit_code != 0:
-        raise Exception('Failed to create new database and user! Exit code: %i' % exit_code)
-
-    exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER + ' -d lb_test ' +
-                                ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
-                                os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'),
-                                shell=True)
-    if exit_code != 0:
-        raise Exception('Failed to create database extensions! Exit code: %i' % exit_code)
-
-    db.init_db_connection(config.TEST_SQLALCHEMY_DATABASE_URI)
-
-    db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_schema.sql'))
-    db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
-    db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_primary_keys.sql'))
-    db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
-    db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
-
-    print('Create influx test database...')
-    print(os.path.join(ADMIN_INFLUX_DIR, 'create_test_db.py'))
-    subprocess.call(os.path.join(ADMIN_INFLUX_DIR, 'create_test_db.py'))
-
-    print("Done!")
-
-
-@cli.command()
-@click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
 @click.option("--create-db", is_flag=True, help="Skip creating database and user. Tables/indexes only.")
 def init_msb_db(force, create_db):
     """Initializes database.

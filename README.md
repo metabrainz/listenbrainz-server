@@ -36,19 +36,12 @@ Then set the `MUSICBRAINZ_CLIENT_ID` and `MUSICBRAINZ_CLIENT_SECRET` in
 `config.py` to the OAuth Client ID and OAuth Client Secret of your application.
 
 
-### Build docker containers
+### Start the services
 
-    $ docker-compose build
+    $ ./develop.sh
 
-This will automatically download all the needed software and build the necessary
+This will automatically download all the needed software and build and start the necessary
 containers needed to run ListenBrainz.
-
-To actually start the containers, do
-
-    $ docker-compose up
-
-This should start the containers and allow you to setup the database.
-
 
 ### Database initialization
 
@@ -60,6 +53,16 @@ To initialize the database (create user, tables, etc.) run these commands:
 
 After that server should be ready to go. Go to http://localhost:8000 and load the 
 ListenBrainz home page.
+
+### Running tests
+
+In order to run the tests for ListenBrainz, simply run:
+
+    $ ./test.sh
+
+This will build and run the containers needed to run the tests. Each of these containers will not use volumes
+that link to data outside of the containers and thus will not interfere with production databases.
+
 
 ### Virtual machine
 

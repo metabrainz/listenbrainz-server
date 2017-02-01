@@ -9,9 +9,6 @@ SECRET_KEY = "CHANGE_ME"
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@db:5432/listenbrainz"
 MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@db:5432/messybrainz"
 
-# Database for testing
-TEST_SQLALCHEMY_DATABASE_URI = "postgresql://lb_test:lb_test@db:5432/lb_test"
-
 
 # Other postgres configuration options
 # Oldest listens which can be stored in the database, in days.
@@ -32,7 +29,6 @@ REDIS_HOST = "redis"
 INFLUX_HOST    = "influx"
 INFLUX_PORT    = 8086
 INFLUX_DB_NAME  = "listenbrainz"
-INFLUX_TEST_DB = "lb_test"
 
 
 # MusicBrainz OAuth
