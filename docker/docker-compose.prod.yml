@@ -4,13 +4,10 @@ services:
   db:
     image: postgres:9.5.3
     volumes:
-      - $DATA_DIR/data/pgdata:/var/lib/postgresql/data/pgdata
-    environment:
-      PGDATA: /var/lib/postgresql/data/pgdata
-      POSTGRES_USER: listenbrainz
-      POSTGRES_PASSWD: listenbrainz
-      POSTGRES_DB: listenbrainz
+      - $DATA_DIR/data/pgdata:/var/lib/postgresql
     restart: always
+    ports:
+      - "15432:5432"
 
   redis:
     image: redis:3.2.1
@@ -43,6 +40,7 @@ services:
     command: uwsgi /code/listenbrainz/docker/uwsgi.ini
     volumes:
       - $DATA_DIR/data/app:/data
+      - ..:/code/listenbrainz
     ports:
       - "3031:3031"
     depends_on:
