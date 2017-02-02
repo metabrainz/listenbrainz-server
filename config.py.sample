@@ -9,6 +9,10 @@ SECRET_KEY = "CHANGE_ME"
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@db:5432/listenbrainz"
 MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@db:5432/messybrainz"
 
+# Database for testing
+TEST_SQLALCHEMY_DATABASE_URI = "postgresql://lb_test:lb_test@db:5432/lb_test"
+
+POSTGRES_ADMIN_URI="postgresql://postgres@db/template1"
 
 # Other postgres configuration options
 # Oldest listens which can be stored in the database, in days.
@@ -17,9 +21,6 @@ MAX_POSTGRES_LISTEN_HISTORY = "-1"
 PG_QUERY_TIMEOUT = "3000"
 # Set to True to enable 'synchronous_commit' for Postgres. Default: False
 PG_ASYNC_LISTEN_COMMIT = False
-# The name of a postgres user who has superuser privileges. Your local user should
-# be able to connect to the database with this user.
-PG_SUPER_USER = "postgres"
 
 
 # Redis
@@ -39,7 +40,7 @@ MUSICBRAINZ_CLIENT_SECRET = "CLIENT_SECRET"
 LASTFM_API_KEY = "USE_LASTFM_API_KEY"
 
 # BigQuery support
-# Enable/disable support. If enabled, the Application Credentials must reside in 
+# Enable/disable support. If enabled, the Application Credentials must reside in
 # bigquery-credentials.json in the top level directory.
 WRITE_TO_BIGQUERY = False
 
