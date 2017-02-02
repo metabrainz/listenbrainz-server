@@ -41,9 +41,10 @@ COPY requirements.txt /code/listenbrainz/
 RUN pip install -r requirements.txt
 
 COPY . /code/listenbrainz/
+COPY config_test.py /code/listenbrainz/config.py
 
 RUN mkdir /data
 
-CMD dockerize -wait tcp://db:5432 -timeout 60s \
-              -wait tcp://influx:8086 -timeout 60s \
+CMD dockerize -wait tcp://db_test:5432 -timeout 60s \
+              -wait tcp://influx_test:8086 -timeout 60s \
             python manage.py init_db && python manage.py init_msb_db --create-db && python admin/influx/create_db.py && py.test

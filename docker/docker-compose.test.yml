@@ -1,0 +1,76 @@
+version: "2"
+services:
+
+  db_test:
+    image: postgres:9.5.3
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_USER: listenbrainz
+      POSTGRES_PASSWD: listenbrainz
+      POSTGRES_DB: listenbrainz
+    network_mode: bridge
+
+  redis_test:
+    image: redis:3.2.1
+    network_mode: bridge
+
+  influx_test:
+    image: influxdb:1.0.0
+    environment:
+      INFLUXDB_REPORTING_DISABLED: 'true'
+      INFLUXDB_META_LOGGING_ENABLED: 'false'
+      INFLUXDB_DATA_QUERY_LOG_ENABLED: 'false'
+      INFLUXDB_DATA_WAL_LOGGING_ENABLED: 'false'
+      INFLUXDB_DATA_DATA_LOGGING_ENABLED: 'false'
+      INFLUXDB_HTTP_LOG_ENABLED: 'true'
+      INFLUXDB_CONTINUOUS_QUERIES_LOG_ENABLED: 'false'
+    network_mode: bridge
+
+  web_test:
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile.prod
+    command: uwsgi /code/listenbrainz/docker/uwsgi.ini
+    links:
+      - redis_test
+      - db_test
+      - influx_test
+    network_mode: bridge
+
+  influx_writer_test:
+    build:
+      context: ..
+      dockerfile: ./docker/influx-writer/Dockerfile
+    command: python influx-writer/influx-writer.py
+    depends_on:
+      - redis_test
+      - influx_test
+    network_mode: bridge
+
+  bigquery_test:
+    build:
+      context: ..
+      dockerfile: ./docker/bigquery-writer/Dockerfile
+    command: python bigquery-writer/bigquery-writer.py
+    links:
+      - redis_test
+    network_mode: bridge
+
+  nginx_test:
+    extends:
+      file: common.yml
+      service: nginx
+    links:
+      - web_test
+    network_mode: bridge
+
+  listenbrainz_test:
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile.test
+    links:
+      - redis_test
+      - db_test
+      - web_test
+      - influx_test
+    network_mode: bridge
