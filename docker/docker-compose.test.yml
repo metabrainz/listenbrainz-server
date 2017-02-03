@@ -35,7 +35,6 @@ services:
       - redis_test
       - db_test
       - influx_test
-    network_mode: bridge
 
   influx_writer_test:
     build:
@@ -45,7 +44,6 @@ services:
     depends_on:
       - redis_test
       - influx_test
-    network_mode: bridge
 
   bigquery_test:
     build:
@@ -54,23 +52,20 @@ services:
     command: python bigquery-writer/bigquery-writer.py
     links:
       - redis_test
-    network_mode: bridge
 
   nginx_test:
     extends:
       file: common.yml
       service: nginx
-    links:
+    depends_on:
       - web_test
-    network_mode: bridge
 
   listenbrainz_test:
     build:
       context: ..
       dockerfile: ./docker/Dockerfile.test
-    links:
+    depends_on:
       - redis_test
       - db_test
       - web_test
       - influx_test
-    network_mode: bridge

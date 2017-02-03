@@ -9,6 +9,8 @@ SECRET_KEY = "yer mom"
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@db_test:5432/listenbrainz"
 MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@db_test:5432/messybrainz"
 
+POSTGRES_ADMIN_URI="postgresql://postgres@db_test/template1"
+
 
 # Other postgres configuration options
 # Oldest listens which can be stored in the database, in days.

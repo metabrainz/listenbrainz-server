@@ -5,6 +5,6 @@ if [[ ! -d "docker" ]]; then
     exit -1
 fi
 
-docker-compose -f docker/docker-compose.test.yml down
-docker-compose -f docker/docker-compose.test.yml build 
-docker-compose -f docker/docker-compose.test.yml up
+docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test down
+docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test build 
+docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test up
