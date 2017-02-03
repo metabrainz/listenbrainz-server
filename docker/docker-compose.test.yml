@@ -40,7 +40,7 @@ services:
   influx_writer_test:
     build:
       context: ..
-      dockerfile: ./docker/influx-writer/Dockerfile
+      dockerfile: ./docker/influx-writer/Dockerfile.test
     command: python influx-writer/influx-writer.py
     depends_on:
       - redis_test
