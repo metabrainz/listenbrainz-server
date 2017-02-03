@@ -3,11 +3,6 @@ services:
 
   db:
     image: postgres:9.5.3
-    environment:
-      PGDATA: /var/lib/postgresql/data/pgdata
-      POSTGRES_USER: listenbrainz
-      POSTGRES_PASSWD: listenbrainz
-      POSTGRES_DB: listenbrainz
 
   redis:
     image: redis:3.2.1
@@ -26,7 +21,8 @@ services:
   listenbrainz:
     build:
       context: ..
-      dockerfile: ./docker/Dockerfile
+      dockerfile: ./docker/Dockerfile.test
     depends_on:
       - redis
       - db
+      - influx
