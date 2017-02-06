@@ -1,6 +1,6 @@
 from __future__ import print_function
 import ujson
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized
 from webserver.decorators import crossdomain
 import webserver
