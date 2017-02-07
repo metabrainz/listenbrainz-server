@@ -48,7 +48,7 @@ def submit_listen():
         if data['listen_type'] not in ('playing_now', 'single', 'import'):
             log_raise_400("JSON document requires a valid listen_type key.", payload)
 
-        listen_type = data['listen_type']
+        listen_type = _get_listen_type(data['listen_type'])
         if (listen_type == LISTEN_TYPE_SINGLE or listen_type == LISTEN_TYPE_PLAYING_NOW) and len(payload) > 1:
             _log_raise_400("JSON document contains more than listen for a single/playing_now. "
                            "It should contain only one.", payload)
