@@ -21,7 +21,10 @@ services:
   listenbrainz:
     build:
       context: ..
-      dockerfile: ./docker/Dockerfile.test
+      dockerfile: ./docker/Dockerfile
+    command: py.test
+    volumes:
+      - ..:/code/listenbrainz
     depends_on:
       - redis
       - db
