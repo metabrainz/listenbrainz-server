@@ -16,5 +16,4 @@ if [[ ! -d "docker" ]]; then
 fi
 
 # invoke docker, but ungrep noisy influx log messages that I can't turn off
-docker-compose -f docker/docker-compose.prod.yml build && docker-compose -f docker/docker-compose.prod.yml up
-#docker-compose -f docker/docker-compose.prod.yml build && docker-compose -f docker/docker-compose.prod.yml up | grep -v '\[cacheloader\]' | grep -v '\[store\]' | grep -v '\[shard\]'
+docker-compose -f docker/docker-compose.prod.yml -p listenbrainz build && docker-compose -f docker/docker-compose.prod.yml -p listenbrainz up
