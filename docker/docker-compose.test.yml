@@ -1,0 +1,31 @@
+version: "2"
+services:
+
+  db:
+    image: postgres:9.5.3
+
+  redis:
+    image: redis:3.2.1
+
+  influx:
+    image: influxdb:1.0.0
+    environment:
+      INFLUXDB_REPORTING_DISABLED: 'true'
+      INFLUXDB_META_LOGGING_ENABLED: 'false'
+      INFLUXDB_DATA_QUERY_LOG_ENABLED: 'false'
+      INFLUXDB_DATA_WAL_LOGGING_ENABLED: 'false'
+      INFLUXDB_DATA_DATA_LOGGING_ENABLED: 'false'
+      INFLUXDB_HTTP_LOG_ENABLED: 'true'
+      INFLUXDB_CONTINUOUS_QUERIES_LOG_ENABLED: 'false'
+
+  listenbrainz:
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile
+    command: py.test
+    volumes:
+      - ..:/code/listenbrainz
+    depends_on:
+      - redis
+      - db
+      - influx

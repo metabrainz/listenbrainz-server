@@ -10,8 +10,6 @@ import config
 from urlparse import urlsplit
 
 
-application = webserver.create_app()
-
 cli = click.Group()
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'sql')
@@ -26,6 +24,7 @@ ADMIN_INFLUX_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ad
               help="Turns debugging mode on or off. If specified, overrides "
                    "'DEBUG' value in the config file.")
 def runserver(host, port, debug=False):
+    application = webserver.create_app()
     webserver.schedule_jobs(application)
     run_simple(
         hostname=host,
@@ -48,32 +47,23 @@ def init_db(force, create_db):
     3. Indexes are created.
     """
 
-    uri = urlsplit(application.config['SQLALCHEMY_DATABASE_URI'])
+    db.init_db_connection(config.POSTGRES_ADMIN_URI)
     if force:
-        exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER +
-                                    ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
-                                    os.path.join(ADMIN_SQL_DIR, 'drop_db.sql'),
-                                    shell=True)
-        if exit_code != 0:
-            raise Exception('Failed to drop existing database and user! Exit code: %i' % exit_code)
+	res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'drop_db.sql'))
+        if not res:
+            raise Exception('Failed to drop existing database and user! Exit code: %i' % res)
 
     if create_db:
         print('Creating user and a database...')
-        exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER +
-                                    ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
-                                    os.path.join(ADMIN_SQL_DIR, 'create_db.sql'),
-                                    shell=True)
-        if exit_code != 0:
-            raise Exception('Failed to create new database and user! Exit code: %i' % exit_code)
+	res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_db.sql'))
+        if not res:
+            raise Exception('Failed to create new database and user! Exit code: %i' % res)
 
         print('Creating database extensions...')
-        exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER + ' -d listenbrainz ' +
-                                    '-h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
-                                    os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'),
-                                    shell=True)
-        if exit_code != 0:
-            raise Exception('Failed to create database extensions! Exit code: %i' % exit_code)
+	res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'))
+	# Don't raise an exception if the extension already exists
 
+    application = webserver.create_app()
     with application.app_context():
         print('Creating schema...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_schema.sql'))
@@ -90,7 +80,6 @@ def init_db(force, create_db):
 
     print('Create influx database...')
     subprocess.call(os.path.join(ADMIN_INFLUX_DIR, 'create_db.py'))
-
     print("Done!")
 
 
@@ -100,44 +89,23 @@ def init_test_db(force=False):
     """Same as `init_db` command, but creates a database that will be used to
     run tests and doesn't import data (no need to do that).
 
-    `PG_CONNECT_TEST` variable must be defined in the config file.
+    the `PG_CONNECT_TEST` variable must be defined in the config file.
     """
 
-    uri = urlsplit(application.config['TEST_SQLALCHEMY_DATABASE_URI'])
+    db.init_db_connection(config.POSTGRES_ADMIN_URI)
     if force:
-        exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER +
-                                    ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
-                                    os.path.join(ADMIN_SQL_DIR, 'drop_test_db.sql'),
-                                    shell=True)
-        if exit_code != 0:
-            raise Exception('Failed to drop existing database and user! Exit code: %i' % exit_code)
+	res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'drop_test_db.sql'))
+        if not res:
+            raise Exception('Failed to drop existing database and user! Exit code: %i' % res)
 
-    print('Creating database and user for testing...')
-    exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER +
-                                ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
-                                os.path.join(ADMIN_SQL_DIR, 'create_test_db.sql'),
-                                shell=True)
-    if exit_code != 0:
-        raise Exception('Failed to create new database and user! Exit code: %i' % exit_code)
+    print('Creating user and a database for testing...')
+    res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_test_db.sql'))
+    if not res:
+	raise Exception('Failed to create test user and database! Exit code: %i' % res)
 
-    exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER + ' -d lb_test ' +
-                                ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
-                                os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'),
-                                shell=True)
-    if exit_code != 0:
-        raise Exception('Failed to create database extensions! Exit code: %i' % exit_code)
-
-    db.init_db_connection(config.TEST_SQLALCHEMY_DATABASE_URI)
-
-    db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_schema.sql'))
-    db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
-    db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_primary_keys.sql'))
-    db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
-    db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
-
-    print('Create influx test database...')
-    print(os.path.join(ADMIN_INFLUX_DIR, 'create_test_db.py'))
-    subprocess.call(os.path.join(ADMIN_INFLUX_DIR, 'create_test_db.py'))
+    res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'))
+    # Don't raise an exception if the extension already exists
+    db.engine.dispose()
 
     print("Done!")
 
@@ -153,61 +121,40 @@ def init_msb_db(force, create_db):
     2. Primary keys and foreign keys are created.
     3. Indexes are created.
     """
-    uri = urlsplit(application.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
 
-    def run_psql_script(script, superuser=False):
-        if superuser:
-            username = config.PG_SUPER_USER
-        else:
-            username = uri.username
-        return subprocess.call(
-            'psql -U ' + username + ' -d messybrainz ' +
-            '-h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
-            os.path.join(MSB_ADMIN_SQL_DIR, script),
-            shell=True,
-        )
-
+    db.init_db_connection(config.POSTGRES_ADMIN_URI)
     if force:
-        exit_code = run_psql_script('drop_db.sql', superuser=True)
-        if exit_code != 0:
-            raise Exception('Failed to drop existing database and user! Exit code: %i' % exit_code)
+	res = db.run_sql_script_without_transaction(os.path.join(MSB_ADMIN_SQL_DIR, 'drop_db.sql'))
+        if not res:
+            raise Exception('Failed to drop existing database and user! Exit code: %s' % res)
 
     if create_db:
         print('Creating user and a database...')
-        exit_code = subprocess.call('psql -U ' + config.PG_SUPER_USER +
-                                    ' -h ' + uri.hostname + ' -p ' + str(uri.port) + ' < ' +
-                                    os.path.join(MSB_ADMIN_SQL_DIR, 'create_db.sql'),
-                                    shell=True)
-        if exit_code != 0:
-            raise Exception('Failed to create new database and user! Exit code: %i' % exit_code)
+	res = db.run_sql_script_without_transaction(os.path.join(MSB_ADMIN_SQL_DIR, 'create_db.sql'))
+        if not res:
+            raise Exception('Failed to create new database and user! Exit code: %s' % res)
 
-    print('Creating database extensions...')
-    exit_code = run_psql_script('create_extensions.sql', superuser=True)
-    if exit_code != 0:
-        raise Exception('Failed to create database extensions! Exit code: %i' % exit_code)
+	print('Creating database extensions...')
+	res = db.run_sql_script_without_transaction(os.path.join(MSB_ADMIN_SQL_DIR, 'create_extensions.sql'))
+	# Don't raise an exception if the extension already exists
+
+    db.engine.dispose()
 
 #    print('Creating schema...')
 #    exit_code = run_psql_script('create_schema.sql')
 #    if exit_code != 0:
 #        raise Exception('Failed to create database schema! Exit code: %i' % exit_code)
 
+    db.init_db_connection(config.MESSYBRAINZ_SQLALCHEMY_DATABASE_URI)
     print('Creating tables...')
-    exit_code = run_psql_script('create_tables.sql')
-    if exit_code != 0:
-        raise Exception('Failed to create database tables! Exit code: %i' % exit_code)
+    db.run_sql_script(os.path.join(MSB_ADMIN_SQL_DIR, 'create_tables.sql'))
 
     print('Creating primary and foreign keys...')
-    exit_code = run_psql_script('create_primary_keys.sql')
-    if exit_code != 0:
-        raise Exception('Failed to create primary keys! Exit code: %i' % exit_code)
-    exit_code = run_psql_script('create_foreign_keys.sql')
-    if exit_code != 0:
-        raise Exception('Failed to create foreign keys! Exit code: %i' % exit_code)
+    db.run_sql_script(os.path.join(MSB_ADMIN_SQL_DIR, 'create_primary_keys.sql'))
+    db.run_sql_script(os.path.join(MSB_ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
 
     print('Creating indexes...')
-    exit_code = run_psql_script('create_indexes.sql')
-    if exit_code != 0:
-        raise Exception('Failed to create indexes keys! Exit code: %i' % exit_code)
+    db.run_sql_script(os.path.join(MSB_ADMIN_SQL_DIR, 'create_indexes.sql'))
 
     print("Done!")
 
