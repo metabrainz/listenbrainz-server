@@ -49,19 +49,19 @@ def init_db(force, create_db):
 
     db.init_db_connection(config.POSTGRES_ADMIN_URI)
     if force:
-	res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'drop_db.sql'))
+        res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'drop_db.sql'))
         if not res:
             raise Exception('Failed to drop existing database and user! Exit code: %i' % res)
 
     if create_db:
         print('Creating user and a database...')
-	res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_db.sql'))
+        res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_db.sql'))
         if not res:
             raise Exception('Failed to create new database and user! Exit code: %i' % res)
 
         print('Creating database extensions...')
-	res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'))
-	# Don't raise an exception if the extension already exists
+        res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'))
+    # Don't raise an exception if the extension already exists
 
     application = webserver.create_app()
     with application.app_context():
@@ -94,14 +94,14 @@ def init_test_db(force=False):
 
     db.init_db_connection(config.POSTGRES_ADMIN_URI)
     if force:
-	res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'drop_test_db.sql'))
+        res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'drop_test_db.sql'))
         if not res:
             raise Exception('Failed to drop existing database and user! Exit code: %i' % res)
 
     print('Creating user and a database for testing...')
     res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_test_db.sql'))
     if not res:
-	raise Exception('Failed to create test user and database! Exit code: %i' % res)
+        raise Exception('Failed to create test user and database! Exit code: %i' % res)
 
     res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'))
     # Don't raise an exception if the extension already exists
@@ -124,19 +124,19 @@ def init_msb_db(force, create_db):
 
     db.init_db_connection(config.POSTGRES_ADMIN_URI)
     if force:
-	res = db.run_sql_script_without_transaction(os.path.join(MSB_ADMIN_SQL_DIR, 'drop_db.sql'))
+        res = db.run_sql_script_without_transaction(os.path.join(MSB_ADMIN_SQL_DIR, 'drop_db.sql'))
         if not res:
             raise Exception('Failed to drop existing database and user! Exit code: %s' % res)
 
     if create_db:
         print('Creating user and a database...')
-	res = db.run_sql_script_without_transaction(os.path.join(MSB_ADMIN_SQL_DIR, 'create_db.sql'))
+        res = db.run_sql_script_without_transaction(os.path.join(MSB_ADMIN_SQL_DIR, 'create_db.sql'))
         if not res:
             raise Exception('Failed to create new database and user! Exit code: %s' % res)
 
-	print('Creating database extensions...')
-	res = db.run_sql_script_without_transaction(os.path.join(MSB_ADMIN_SQL_DIR, 'create_extensions.sql'))
-	# Don't raise an exception if the extension already exists
+    print('Creating database extensions...')
+    res = db.run_sql_script_without_transaction(os.path.join(MSB_ADMIN_SQL_DIR, 'create_extensions.sql'))
+    # Don't raise an exception if the extension already exists
 
     db.engine.dispose()
 
