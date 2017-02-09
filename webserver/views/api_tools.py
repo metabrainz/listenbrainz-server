@@ -78,36 +78,36 @@ def _validate_listen(listen, listen_type):
 
     if listen_type in (LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT):
         if 'listened_at' not in listen:
-            _log_raise_400("JSON document must contain the key listened_at at the top level.", listen)
+            log_raise_400("JSON document must contain the key listened_at at the top level.", listen)
 
         try:
             listen['listened_at'] = int(listen['listened_at'])
         except ValueError:
-            _log_raise_400("JSON document must contain an int value for listened_at.", listen)
+            log_raise_400("JSON document must contain an int value for listened_at.", listen)
 
         if 'listened_at' in listen and 'track_metadata' in listen and len(listen) > 2:
-            _log_raise_400("JSON document may only contain listened_at and "
+            log_raise_400("JSON document may only contain listened_at and "
                            "track_metadata top level keys", listen)
 
     elif listen_type == LISTEN_TYPE_PLAYING_NOW:
         if 'listened_at' in listen:
-            _log_raise_400("JSON document must not contain listened_at while submitting "
+            log_raise_400("JSON document must not contain listened_at while submitting "
                            "playing_now.", listen)
 
         if 'track_metadata' in listen and len(listen) > 1:
-            _log_raise_400("JSON document may only contain track_metadata as top level "
+            log_raise_400("JSON document may only contain track_metadata as top level "
                            "key when submitting now_playing.", listen)
 
     # Basic metadata
     try:
         if not listen['track_metadata']['track_name']:
-            _log_raise_400("JSON document does not contain required "
+            log_raise_400("JSON document does not contain required "
                            "track_metadata.track_name.", listen)
         if not listen['track_metadata']['artist_name']:
-            _log_raise_400("JSON document does not contain required "
+            log_raise_400("JSON document does not contain required "
                            "track_metadata.artist_name.", listen)
     except KeyError:
-        _log_raise_400("JSON document does not contain a valid metadata.track_name "
+        log_raise_400("JSON document does not contain a valid metadata.track_name "
                        "and/or track_metadata.artist_name.", listen)
 
     if 'additional_info' in listen['track_metadata']:
@@ -115,25 +115,25 @@ def _validate_listen(listen, listen_type):
         if 'tags' in listen['track_metadata']['additional_info']:
             tags = listen['track_metadata']['additional_info']['tags']
             if len(tags) > MAX_TAGS_PER_LISTEN:
-                _log_raise_400("JSON document may not contain more than %d items in "
+                log_raise_400("JSON document may not contain more than %d items in "
                                "track_metadata.additional_info.tags." % MAX_TAGS_PER_LISTEN, listen)
             for tag in tags:
                 if len(tag) > MAX_TAG_SIZE:
-                    _log_raise_400("JSON document may not contain track_metadata.additional_info.tags "
+                    log_raise_400("JSON document may not contain track_metadata.additional_info.tags "
                                    "longer than %d characters." % MAX_TAG_SIZE, listen)
         # MBIDs
         if 'release_mbid' in listen['track_metadata']['additional_info']:
             lmbid = listen['track_metadata']['additional_info']['release_mbid']
             if not is_valid_uuid(lmbid):
-                _log_raise_400("Release MBID format invalid.", listen)
+                log_raise_400("Release MBID format invalid.", listen)
         if 'recording_mbid' in listen['track_metadata']['additional_info']:
             cmbid = listen['track_metadata']['additional_info']['recording_mbid']
             if not is_valid_uuid(cmbid):
-                _log_raise_400("Recording MBID format invalid.", listen)
+                log_raise_400("Recording MBID format invalid.", listen)
         ambids = listen['track_metadata']['additional_info'].get('artist_mbids', [])
         for ambid in ambids:
             if not is_valid_uuid(ambid):
-                _log_raise_400("Artist MBID format invalid.", listen)
+                log_raise_400("Artist MBID format invalid.", listen)
 
 
 # lifted from AcousticBrainz
