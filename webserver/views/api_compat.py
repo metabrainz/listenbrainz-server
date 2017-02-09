@@ -10,7 +10,7 @@ from webserver.external import messybrainz
 from webserver.rate_limiter import ratelimit
 from webserver.errors import InvalidAPIUsage
 import xmltodict
-from api_tools import insert_payload
+from api_tools import insert_payload, validate_listen
 from db.lastfm_user import User
 from db.lastfm_session import Session
 from db.lastfm_token import Token
@@ -261,8 +261,10 @@ def record_listens(request, data):
             if 'timestamp' not in listen:
                 listen['timestamp'] = calendar.timegm(datetime.now().utctimetuple())
 
-    # Convert to native payload then submit 'em.
+    # Convert to native payload then submit 'em after validation.
     listen_type, native_payload = _to_native_api(lookup, data['method'], output_format)
+    for listen in native_payload:
+        validate_listen(listen, listen_type)
     augmented_listens = insert_payload(native_payload, session.user, listen_type=listen_type)
 
     # With corrections than the original submitted listen.

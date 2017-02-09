@@ -6,8 +6,8 @@ from webserver.decorators import crossdomain
 import webserver
 import db
 from webserver.rate_limiter import ratelimit
-from api_tools import insert_payload, log_raise_400, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET,\
-    LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
+from api_tools import insert_payload, log_raise_400, validate_listen, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET,\
+    DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -55,8 +55,12 @@ def submit_listen():
     except KeyError:
         log_raise_400("Invalid JSON document submitted.", raw_data)
 
+    # validate listens to make sure json is okay
+    for listen in payload:
+        validate_listen(listen, listen_type)
+
     try:
-        insert_payload(payload, user, listen_type=data['listen_type'])
+        insert_payload(payload, user, listen_type=_get_listen_type(data['listen_type']))
     except Exception, e:
         raise InternalServerError("Something went wrong. Please try again.")
 

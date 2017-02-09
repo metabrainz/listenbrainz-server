@@ -73,7 +73,7 @@ def _send_listens_to_redis(listen_type, listens):
             raise InternalServerError("Cannot record listen at this time. (No consumers registered.)")
 
 
-def _validate_listen(listen, listen_type):
+def validate_listen(listen, listen_type):
     """Make sure that required keys are present, filled out and not too large."""
 
     if listen_type in (LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT):
@@ -154,8 +154,6 @@ def _get_augmented_listens(payload, user, listen_type):
     msb_listens = []
     for l in payload:
         listen = l.copy()   # Create a local object to prevent the mutation of the passed object
-        _validate_listen(listen, listen_type)
-
         listen['user_id'] = user['id']
         listen['user_name'] = user['musicbrainz_id']
 
