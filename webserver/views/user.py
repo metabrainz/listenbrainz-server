@@ -9,7 +9,8 @@ from time import time
 import webserver
 import db.user
 from flask import make_response
-from webserver.views.api_tools import convert_backup_to_native_format, insert_payload, MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP
+from webserver.views.api_tools import convert_backup_to_native_format, insert_payload, validate_listen, \
+    MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP, LISTEN_TYPE_IMPORT
 from webserver.utils import sizeof_readable
 from webserver.login import User
 from webserver.redis_connection import _redis
@@ -97,7 +98,7 @@ def profile(user_name):
                 next_listen_ts = listens[-1]['listened_at']
             else:
                 next_listen_ts = None
-        
+
             if listens[0]['listened_at'] < max_ts_per_user:
                 previous_listen_ts = listens[0]['listened_at']
             else:
@@ -222,6 +223,8 @@ def upload():
                     continue
 
                 payload = convert_backup_to_native_format(jsonlist)
+                for listen in payload:
+                    validate_listen(listen, LISTEN_TYPE_IMPORT)
                 insert_payload(payload, current_user)
                 success += 1
         except Exception, e:
