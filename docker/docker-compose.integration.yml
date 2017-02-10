@@ -1,20 +1,13 @@
 version: "2"
 services:
 
-  db_test:
+  db:
     image: postgres:9.5.3
-    environment:
-      PGDATA: /var/lib/postgresql/data/pgdata
-      POSTGRES_USER: listenbrainz
-      POSTGRES_PASSWD: listenbrainz
-      POSTGRES_DB: listenbrainz
-    network_mode: bridge
 
-  redis_test:
+  redis:
     image: redis:3.2.1
-    network_mode: bridge
 
-  influx_test:
+  influx:
     image: influxdb:1.0.0
     environment:
       INFLUXDB_REPORTING_DISABLED: 'true'
@@ -24,31 +17,30 @@ services:
       INFLUXDB_DATA_DATA_LOGGING_ENABLED: 'false'
       INFLUXDB_HTTP_LOG_ENABLED: 'true'
       INFLUXDB_CONTINUOUS_QUERIES_LOG_ENABLED: 'false'
-    network_mode: bridge
 
-  influx_writer_test:
+  influx_writer:
     build:
       context: ..
-      dockerfile: ./docker/influx-writer/Dockerfile.test
+      dockerfile: ./docker/influx-writer/Dockerfile
     command: python influx-writer/influx-writer.py
     depends_on:
-      - redis_test
-      - influx_test
+      - redis
+      - influx
 
-  bigquery_test:
+  bigquery:
     build:
       context: ..
       dockerfile: ./docker/bigquery-writer/Dockerfile
     command: python bigquery-writer/bigquery-writer.py
     links:
-      - redis_test
+      - redis
 
-  listenbrainz_test:
+  listenbrainz:
     build:
       context: ..
-      dockerfile: ./docker/Dockerfile.test
+      dockerfile: ./docker/Dockerfile
+    command: py.test
     depends_on:
-      - redis_test
-      - db_test
-      - web_test
-      - influx_test
+      - redis
+      - db
+      - influx
