@@ -263,19 +263,25 @@ def _validate_listen(listen, listen_type):
                 if len(tag) > MAX_TAG_SIZE:
                     _log_raise_400("JSON document may not contain track_metadata.additional_info.tags "
                                    "longer than %d characters." % MAX_TAG_SIZE, listen)
+
         # MBIDs
-        if 'release_mbid' in listen['track_metadata']['additional_info']:
-            lmbid = listen['track_metadata']['additional_info']['release_mbid']
-            if not is_valid_uuid(lmbid):
-                _log_raise_400("Release MBID format invalid.", listen)
-        if 'recording_mbid' in listen['track_metadata']['additional_info']:
-            cmbid = listen['track_metadata']['additional_info']['recording_mbid']
-            if not is_valid_uuid(cmbid):
-                _log_raise_400("Recording MBID format invalid.", listen)
-        ambids = listen['track_metadata']['additional_info'].get('artist_mbids', [])
-        for ambid in ambids:
-            if not is_valid_uuid(ambid):
-                _log_raise_400("Artist MBID format invalid.", listen)
+        items = ['release_mbid', 'recording_mbid', 'release_group_mbid', 'track_mbid']
+        for i in items:
+            _verify_mbid_validity(listen, i)
+        multi_items['artist_mbids', 'work_mbids']
+        for i in multi_items:
+            _verify_multi_mbid_validity(listen, i)
+
+def _verify_mbid_validity(listen, key):
+    item = listen['track_metadata']['additional_info'].get(key)
+    if item and not is_valid_uuid(item):
+        _log_raise_400('%s MBID format invalid.' % (key, ), listen)
+
+def _verify_multi_mbid_validity(listen, key):
+    items = listen['track_metadata']['additional_info'].get(key, [])
+    for i in items:
+        if not is_valid_uuid(i):
+            _log_raise_400('%s MBID format invalid.' % (key, ), listen)
 
 
 def _log_raise_400(msg, data):
