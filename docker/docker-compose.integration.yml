@@ -39,7 +39,7 @@ services:
     build:
       context: ..
       dockerfile: ./docker/Dockerfile
-    command: py.test
+    command: py.test tests/integration
     depends_on:
       - redis
       - db

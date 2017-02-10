@@ -1,10 +1,13 @@
 from __future__ import absolute_import
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", ".."))
+
 from webserver.testing import ServerTestCase
 from flask import url_for
 import db.user
 import time
 import json
-import os
 
 class APITestCase(ServerTestCase):
 
@@ -65,7 +68,7 @@ class APITestCase(ServerTestCase):
 
     def test_single_more_than_one_listen(self):
         """ Test for an invalid submission which has listen_type 'single' but
-            more thean one listen in payload
+            more than one listen in payload
         """
         with open(os.path.join(os.getcwd(), 'testdata', 'single_more_than_one_listen.json'), 'r') as f:
             payload = json.load(f)
