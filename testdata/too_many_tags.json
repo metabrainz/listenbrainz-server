@@ -1,0 +1,67 @@
+{
+    "payload": [
+        {
+            "track_metadata": {
+                "track_name": "Fade",
+                "artist_name": "Kanye West",
+                "release_name": "The Life of Pablo",
+                "additional_info": {
+                    "tags": [
+                        "tag #1",
+                        "tag #2",
+                        "tag #3",
+                        "tag #4",
+                        "tag #5",
+                        "tag #6",
+                        "tag #7",
+                        "tag #8",
+                        "tag #9",
+                        "tag #10",
+                        "tag #11",
+                        "tag #12",
+                        "tag #13",
+                        "tag #14",
+                        "tag #15",
+                        "tag #16",
+                        "tag #17",
+                        "tag #18",
+                        "tag #19",
+                        "tag #20",
+                        "tag #21",
+                        "tag #22",
+                        "tag #23",
+                        "tag #24",
+                        "tag #25",
+                        "tag #26",
+                        "tag #27",
+                        "tag #28",
+                        "tag #29",
+                        "tag #30",
+                        "tag #31",
+                        "tag #32",
+                        "tag #33",
+                        "tag #34",
+                        "tag #35",
+                        "tag #36",
+                        "tag #37",
+                        "tag #38",
+                        "tag #39",
+                        "tag #40",
+                        "tag #41",
+                        "tag #42",
+                        "tag #43",
+                        "tag #44",
+                        "tag #45",
+                        "tag #46",
+                        "tag #47",
+                        "tag #48",
+                        "tag #49",
+                        "tag #50",
+                        "tag #51"
+                    ]
+                }
+            }
+        }
+    ],
+    "listen_type": "playing_now"
+}
