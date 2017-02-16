@@ -38,6 +38,7 @@ services:
       context: ..
       dockerfile: ./docker/Dockerfile.prod
     command: uwsgi /code/listenbrainz/docker/uwsgi.ini
+    image: web
     volumes:
       - $DATA_DIR/data/app:/data
       - ..:/code/listenbrainz
@@ -73,5 +74,12 @@ services:
       file: common.yml
       service: nginx
     links:
+      - web
+    restart: always
+
+  alpha_importer:
+    image: web
+    command: python alpha_importer.py
+    depends_on:
       - web
     restart: always
