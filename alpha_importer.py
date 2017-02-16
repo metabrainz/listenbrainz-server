@@ -11,18 +11,11 @@ from logging.handlers import RotatingFileHandler
 import os
 
 redis_connection = Redis(host = config.REDIS_HOST)
-QUEUE_KEY = 'alphaimporter:queue'
-SET_KEY_PREFIX = 'alphaimporter:set'
-ALPHA_URL = 'https://alpha.listenbrainz.org/'
-BETA_URL = 'https://listenbrainz.org'
-LISTENS_PER_GET = 100
-LOG_FILE = os.path.join(os.getcwd(), 'alpha_importer.log')
-DELAY = 3 # delay if requests don't return http 200
 
 # create a logger to log messages into LOG_FILE
 logger = logging.getLogger('alpha_importer')
 logger.setLevel(logging.DEBUG)
-handler = RotatingFileHandler(LOG_FILE, maxBytes = 512 * 1024, backupCount = 100)
+handler = RotatingFileHandler(config.IMPORTER_LOG_FILE, maxBytes = 512 * 1024, backupCount = 100)
 handler.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
@@ -30,18 +23,18 @@ logger.addHandler(handler)
 
 
 def queue_empty():
-    return redis_connection.llen(QUEUE_KEY) == 0
+    return redis_connection.llen(config.IMPORTER_QUEUE_KEY) == 0
 
 
 def queue_front():
     # get the first element from queue and split it to get username and auth_token
-    username, token = redis_connection.lindex(QUEUE_KEY, 0).split()
+    username, token = redis_connection.lindex(config.IMPORTER_QUEUE_KEY, 0).split()
     return username, token
 
 
 def get_batch(username, max_ts):
-    get_url = '{}/1/user/{}/listens'.format(ALPHA_URL, username)
-    payload = {"max_ts": max_ts, "count": LISTENS_PER_GET}
+    get_url = '{}/1/user/{}/listens'.format(config.ALPHA_URL, username)
+    payload = {"max_ts": max_ts, "count": config.LISTENS_PER_GET}
     r = requests.get(get_url, params = payload)
     if r.status_code == 200:
         return ujson.loads(r.text)
@@ -64,7 +57,7 @@ def extract_data(batch):
 
 
 def send_batch(data, token):
-    send_url = '{}/1/submit-listens'.format(BETA_URL)
+    send_url = '{}/1/submit-listens'.format(config.BETA_URL)
     r = requests.post(send_url, headers = {'Authorization': 'Token {}'.format(token)}, data = ujson.dumps(data))
     if r.status_code != 200:
         logger.error("submission to beta returned response code: {}".format(r.status_code))
@@ -91,11 +84,11 @@ def import_from_alpha(username, token):
 
 
 def queue_pop():
-    redis_connection.lpop(QUEUE_KEY)
+    redis_connection.lpop(config.IMPORTER_QUEUE_KEY)
 
 
 def update_status(username, status):
-    redis_connection.set("{} {}".format(SET_KEY_PREFIX, username), status)
+    redis_connection.set("{} {}".format(config.IMPORTER_SET_KEY_PREFIX, username), status)
 
 
 if __name__ == '__main__':
