@@ -20,7 +20,6 @@ import zipfile
 import re
 import os
 import pytz
-from alpha_importer import QUEUE_KEY, SET_KEY_PREFIX
 
 LISTENS_PER_PAGE = 25
 
@@ -150,7 +149,7 @@ def import_data():
 
     alpha_import_status = "NO_REQUEST"
     redis_connection = _redis.redis
-    user_key = "{} {}".format(SET_KEY_PREFIX, current_user.musicbrainz_id)
+    user_key = "{} {}".format(current_app.config['IMPORTER_SET_KEY_PREFIX'], current_user.musicbrainz_id)
     if redis_connection.exists(user_key):
         alpha_import_status = redis_connection.get(user_key)
     return render_template(
@@ -284,8 +283,8 @@ def import_from_alpha():
     redis_connection = _redis.redis
     # push into the queue
     value = "{} {}".format(current_user.musicbrainz_id, current_user.auth_token)
-    redis_connection.rpush(QUEUE_KEY, value)
+    redis_connection.rpush(current_app.config['IMPORTER_QUEUE_KEY'], value)
 
     # push username into redis so that we know that this user is in waiting
-    redis_connection.set("{} {}".format(SET_KEY_PREFIX, current_user.musicbrainz_id), "WAITING")
+    redis_connection.set("{} {}".format(current_app.config['IMPORTER_SET_KEY_PREFIX'], current_user.musicbrainz_id), "WAITING")
     return redirect(url_for("user.import_data"))
