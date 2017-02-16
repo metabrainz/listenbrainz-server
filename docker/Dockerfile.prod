@@ -42,4 +42,7 @@ RUN pip install -r requirements.txt
 # Now install our code, which may change frequently
 COPY . /code/listenbrainz
 
-# USER daemon
+RUN mkdir /logs
+RUN chown -R daemon:daemon /logs
+
+USER daemon
