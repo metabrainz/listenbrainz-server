@@ -53,6 +53,12 @@ def get_batch(username, max_ts):
 def extract_data(batch):
     data = {'listen_type':'import', 'payload': []}
     for listen in batch['payload']['listens']:
+        if 'recording_msid' in listen:
+            del listen['recording_msid']
+        if  'release_msid' in listen['track_metadata']['additional_info']:
+            del listen['track_metadata']['additional_info']['release_msid']
+        if 'artist_msid' in listen['track_metadata']['additional_info']:
+            del listen['track_metadata']['additional_info']['artist_msid']
         data['payload'].append(listen)
     return data
 
