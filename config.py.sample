@@ -78,5 +78,5 @@ IMPORTER_SET_KEY_PREFIX = 'alphaimporter:set'
 ALPHA_URL = 'https://alpha.listenbrainz.org/'
 BETA_URL = 'http://listenbrainz.org'
 LISTENS_PER_GET = 100
-IMPORTER_LOG_FILE = './alpha_importer.log'
+IMPORTER_LOG_FILE = '-'
 IMPORTER_DELAY = 3 # delay if requests don't return http 200
