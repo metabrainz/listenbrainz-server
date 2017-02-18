@@ -45,5 +45,3 @@ RUN chown -R daemon:daemon /logs
 
 # run as user daemon
 USER daemon
-
-#CMD python manage.py runserver -h 0.0.0.0 -p 80 -d
