@@ -4,47 +4,47 @@ services:
   db:
     image: postgres:9.5.3
     volumes:
-      - $VAGRANT_DATA_DIR../data/pgdata:/var/lib/postgresql/data/pgdata
-    environment:
-      PGDATA: /var/lib/postgresql/data/pgdata
-      POSTGRES_USER: listenbrainz
-      POSTGRES_PASSWD: listenbrainz
-      POSTGRES_DB: listenbrainz
+      - ./data/pgdata:/var/lib/postgresql
+    ports:
+      - "15432:5432"
 
   redis:
     image: redis:3.2.1
+    volumes:
+      - ./data/redis:/data
 
-  influxdb:
+  influx:
     image: influxdb:1.0.0
     volumes:
-      - $VAGRANT_DATA_DIR../data/influxdb:/data
-    restart: always
+      - ./data/influxdb:/var/lib/influxdb
+    environment:
+      INFLUXDB_REPORTING_DISABLED: 'true'
+      INFLUXDB_META_LOGGING_ENABLED: 'false'
+      INFLUXDB_DATA_QUERY_LOG_ENABLED: 'false'
+      INFLUXDB_DATA_WAL_LOGGING_ENABLED: 'false'
+      INFLUXDB_DATA_DATA_LOGGING_ENABLED: 'false'
+      INFLUXDB_HTTP_LOG_ENABLED: 'true'
+      INFLUXDB_CONTINUOUS_QUERIES_LOG_ENABLED: 'false'
 
+    ports:
+      - "8086:8086"
+      - "8083:8083"
 
   web:
     build:
       context: ..
       dockerfile: ./docker/Dockerfile
+    command: uwsgi /code/listenbrainz/docker/uwsgi.ini
+    image: web
     volumes:
-      - $VAGRANT_DATA_DIR..:/code/listenbrainz
-      - $VAGRANT_DATA_DIR../data/app:/data
+      - ./data/app:/data
+      - ..:/code/listenbrainz
     ports:
-      - "80:80"
+      - "3031:3031"
     depends_on:
       - redis
-      - influxdb
       - db
-
-  consumer:
-    build:
-      context: ..
-      dockerfile: ./docker/redis-consumer/Dockerfile
-    command: python redis-consumer/redis-consumer.py
-    volumes:
-      - $VAGRANT_DATA_DIR..:/code/listenbrainz
-    depends_on:
-      - db
-      - redis
+      - influx
 
   influx_writer:
     build:
@@ -53,8 +53,7 @@ services:
     command: python influx-writer/influx-writer.py
     depends_on:
       - redis
-      - influxdb
-    restart: always
+      - influx
 
   bigquery:
     build:
@@ -63,5 +62,16 @@ services:
     command: python bigquery-writer/bigquery-writer.py
     depends_on:
       - redis
-      - influxdb
-    restart: always
+
+  nginx:
+    extends:
+      file: common.yml
+      service: nginx
+    links:
+      - web
+
+  alpha_importer:
+    image: web
+    command: python alpha_importer.py
+    depends_on:
+      - web
