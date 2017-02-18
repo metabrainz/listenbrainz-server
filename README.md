@@ -47,7 +47,7 @@ containers needed to run ListenBrainz.
 
 To initialize the database (create user, tables, etc.) run these commands:
 
-    $ docker exec -it listenbrainz_web_1 python manage.py init_db 
+    $ docker exec -it listenbrainz_web_1 python manage.py init_db --create-db
     $ docker exec -it listenbrainz_web_1 python manage.py init_msb_db --create-db
     $ docker exec -it listenbrainz_influx_writer_1 python admin/influx/create_db.py
 
@@ -63,10 +63,6 @@ In order to run the tests for ListenBrainz, simply run:
 This will build and run the containers needed to run the tests. Each of these containers will not use volumes
 that link to data outside of the containers and thus will not interfere with production databases.
 
-
-### Virtual machine
-
-TODO: Finish this
 
 ## Documentation
 
