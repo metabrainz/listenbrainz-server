@@ -15,7 +15,12 @@ redis_connection = Redis(host = config.REDIS_HOST)
 # create a logger to log messages into LOG_FILE
 logger = logging.getLogger('alpha_importer')
 logger.setLevel(logging.DEBUG)
-handler = RotatingFileHandler(config.IMPORTER_LOG_FILE, maxBytes = 512 * 1024, backupCount = 100)
+
+if config.IMPORTER_LOG_FILE == "-":
+    handler = logging.StreamHandler(sys.stdout)
+else:
+    handler = RotatingFileHandler(config.IMPORTER_LOG_FILE, maxBytes = 512 * 1024, backupCount = 100)
+
 handler.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
