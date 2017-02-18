@@ -80,7 +80,7 @@ def import_from_alpha(username, token):
             logger.info('Page #{} done.'.format(page_count))
             page_count += 1
         except HTTPError:
-            time.sleep(DELAY)
+            time.sleep(config.IMPORTER_DELAY)
 
 
 def queue_pop():

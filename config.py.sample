@@ -79,4 +79,4 @@ ALPHA_URL = 'https://alpha.listenbrainz.org/'
 BETA_URL = 'http://listenbrainz.org'
 LISTENS_PER_GET = 100
 IMPORTER_LOG_FILE = './alpha_importer.log'
-DELAY = 3 # delay if requests don't return http 200
+IMPORTER_DELAY = 3 # delay if requests don't return http 200
