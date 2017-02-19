@@ -11,8 +11,6 @@ RUN apt-get update \
                        git \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install uWSGI==2.0.13.1
-
 # PostgreSQL client
 RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
 ENV PG_MAJOR 9.5
@@ -42,6 +40,3 @@ COPY . /code/listenbrainz/
 # setup a log dir
 RUN mkdir /logs
 RUN chown -R daemon:daemon /logs
-
-# run as user daemon
-USER daemon

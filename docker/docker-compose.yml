@@ -34,13 +34,12 @@ services:
     build:
       context: ..
       dockerfile: ./docker/Dockerfile
-    command: uwsgi /code/listenbrainz/docker/uwsgi.ini
+    command: python manage.py runserver -h 0.0.0.0 -p 80 -d
     image: web
     volumes:
-      - ./data/app:/data
       - ..:/code/listenbrainz
     ports:
-      - "3031:3031"
+      - "80:80"
     depends_on:
       - redis
       - db
@@ -62,13 +61,6 @@ services:
     command: python bigquery-writer/bigquery-writer.py
     depends_on:
       - redis
-
-  nginx:
-    extends:
-      file: common.yml
-      service: nginx
-    links:
-      - web
 
   alpha_importer:
     image: web
