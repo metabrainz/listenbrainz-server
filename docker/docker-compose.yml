@@ -1,10 +1,14 @@
 version: "2"
+
+volumes:
+  dbvolume:
+
 services:
 
   db:
     image: postgres:9.5.3
     volumes:
-      - ./data/pgdata:/var/lib/postgresql
+      - dbvolume:/var/lib/postgresql/data/
     ports:
       - "15432:5432"
 
