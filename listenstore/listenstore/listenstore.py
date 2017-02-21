@@ -27,6 +27,9 @@ DEFAULT_LISTENS_PER_FETCH = 25
 
 REDIS_USER_TIMESTAMPS = "user.%s.timestamps" # substitute user_name
 USER_CACHE_TIME = 3600 # in seconds. 1 hour
+LISTENCOUNT_CACHE_TIME_LOW = 15 * 60 # in seconds. 15 minutes
+LISTENCOUNT_CACHE_TIME_MEDIUM = 60 * 60 # in seconds. 1 hour
+LISTENCOUNT_CACHE_TIME_HIGH = 24 * 60 * 60 # in seconds. 1 day
 
 # TODO: This needs to be broken into 3 files and moved out of the separate listenstore module,
 #       but I am leaving this for the next PR
@@ -49,6 +52,10 @@ class ListenStore(object):
 
     def get_total_listen_count():
         """ Return the total number of listens stored in the ListenStore """
+        raise NotImplementedError()
+
+    def get_listen_count_for_user(self, user_name, need_exact):
+        """ Override this method in ListenStore implementation class """
         raise NotImplementedError()
 
     def fetch_listens(self, user_name, from_ts=None, to_ts=None, limit=DEFAULT_LISTENS_PER_FETCH):
@@ -204,18 +211,41 @@ class InfluxListenStore(ListenStore):
         self.influx = InfluxDBClient(host=conf['INFLUX_HOST'], port=conf['INFLUX_PORT'], database=conf['INFLUX_DB_NAME'])
 
 
-    def _get_num_listens_for_user(self, user_name):
-        count = self.redis.get(REDIS_INFLUX_USER_LISTEN_COUNT + user_hash(user_name))
-        if count:
-            return int(count)
+    def get_listen_count_for_user(self, user_name, need_exact = False):
+        """ Returns total listen count for user with user_name passed.
 
-        results = self.influx.query("""SELECT count(*)
-                                         FROM listen
-                                        WHERE user_name = '%s'""" % (user_name, from_ts, to_ts, limit))
-        result = results.get_points(measurement='listen')
-#        count = self.redis.get(REDIS_INFLUX_USER_LISTEN_COUNT + user_hash(user_name))
+            Args:
+                user_name: user name of user whose listen count is to be found
+                need_exact: signifies if cached value in redis will suffice or if exact value is needed
+        """
 
-        return 0
+        if not need_exact:
+            # check if the user's listen count is already in redis
+            # if already present return it directly instead of calculating it again
+            count = self.redis.get(REDIS_INFLUX_USER_LISTEN_COUNT + user_name)
+            if count:
+                return int(count)
+
+        try:
+            results = self.influx.query("""SELECT count(*)
+                                             FROM listen
+                                            WHERE user_name = '%s'""" % (user_name))
+        except Exception as e:
+            self.log.error("Cannot query influx: %s" % str(e))
+            raise
+
+        # get the number of listens from the json
+        count = results.raw['series'][0]['values'][0][1]
+
+        # put this value into redis with expiry time based on the number of listens
+        # that the user has
+        if count <= 1000:
+            self.redis.setex(REDIS_INFLUX_USER_LISTEN_COUNT + user_name, count, LISTENCOUNT_CACHE_TIME_LOW)
+        elif count <= 10000:
+            self.redis.setex(REDIS_INFLUX_USER_LISTEN_COUNT + user_name, count, LISTENCOUNT_CACHE_TIME_MEDIUM)
+        else:
+            self.redis.setex(REDIS_INFLUX_USER_LISTEN_COUNT + user_name, count, LISTENCOUNT_CACHE_TIME_HIGH)
+        return int(count)
 
 
     def _select_single_value(self, query):

@@ -11,6 +11,11 @@
       <b><a href="https://musicbrainz.org/user/{{ user.musicbrainz_id }}">See profile on MusicBrainz</a></b>
     </div>
 
+    <h3> Listen Count: {{ listen_count }}  </h3>
+    {% if not have_exact_listen_count %}
+    <p> Note: This is an approximate value. Click <a href = "{{ url_for("user.profile", user_name=user.musicbrainz_id, exact = 1) }}"> here </a> to get the exact listen count </p>
+    {% endif %}
+
     <h3>Recent listens</h3>
 
     {% if not listens %}

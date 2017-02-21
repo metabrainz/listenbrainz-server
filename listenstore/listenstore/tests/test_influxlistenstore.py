@@ -162,3 +162,8 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.assertEquals(listens[2].ts_since_epoch, 1400000100)
         self.assertEquals(listens[3].ts_since_epoch, 1400000050)
         self.assertEquals(listens[4].ts_since_epoch, 1400000000)
+
+    def test_get_listen_count_for_user(self):
+        count = self._create_test_data()
+        listen_count = self.logstore.get_listen_count_for_user(user_name = self.testuser_name)
+        self.assertEquals(count, listen_count)
