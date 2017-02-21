@@ -146,8 +146,19 @@ def import_data():
         loader = "javascript:%s" % loader
     else:
         loader = None
-    return render_template("user/import.html", user=current_user,
-            loader=loader, lastfm_username=lastfm_username)
+
+    alpha_import_status = "NO_REQUEST"
+    redis_connection = _redis.redis
+    user_key = "{} {}".format(current_app.config['IMPORTER_SET_KEY_PREFIX'], current_user.musicbrainz_id)
+    if redis_connection.exists(user_key):
+        alpha_import_status = redis_connection.get(user_key)
+    return render_template(
+        "user/import.html",
+        user=current_user,
+        alpha_import_status=alpha_import_status,
+        loader=loader,
+        lastfm_username=lastfm_username
+    )
 
 
 @user_bp.route("/export", methods=["GET", "POST"])
@@ -263,3 +274,17 @@ def _get_spotify_uri_for_listens(listens):
         return "spotify:trackset:Recent listens:" + ",".join(track_ids)
     else:
         return None
+
+@user_bp.route("/import/alpha")
+@login_required
+def import_from_alpha():
+    """ Just push the task into redis queue and then return to user page.
+    """
+    redis_connection = _redis.redis
+    # push into the queue
+    value = "{} {}".format(current_user.musicbrainz_id, current_user.auth_token)
+    redis_connection.rpush(current_app.config['IMPORTER_QUEUE_KEY'], value)
+
+    # push username into redis so that we know that this user is in waiting
+    redis_connection.set("{} {}".format(current_app.config['IMPORTER_SET_KEY_PREFIX'], current_user.musicbrainz_id), "WAITING")
+    return redirect(url_for("user.import_data"))
