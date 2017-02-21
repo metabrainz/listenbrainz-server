@@ -27,7 +27,6 @@
               <th>artist</th>
               <th>track</th>
               <th>time</th>
-              <th>timestamp</th>
             </tr>
             </thead>
             <tbody>
@@ -59,7 +58,6 @@
                       {% endif %}
                   </td>
                   <td><abbr class="timeago" title="{{ listen.listened_at_iso }}">{{ listen.listened_at_iso }}</abbr></td>
-                  <td>{{ listen.listened_at }}</td>
                 </tr>
               {% endif %}
             {% endfor %}
