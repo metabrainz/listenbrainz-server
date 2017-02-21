@@ -13,8 +13,11 @@ TOKEN_EXPIRATION_TIME = 60
 class Token(object):
     """ Token class required by the api-compat """
 
-    def __init__(self, row):
-        self.id, userid, self.token, self.api_key, self.timestamp = row
+    def __init__(self, id, userid, token, api_key, ts):
+        self.id = id
+        self.token = token
+        self.api_key = api_key
+        self.timestamp = ts
         self.user = User.load_by_id(userid)
 
     @staticmethod
@@ -33,17 +36,22 @@ class Token(object):
     def load(token, api_key=None):
         """ Load the token from database. Check api_key as well if present.
         """
-        query = "SELECT * FROM api_compat.token WHERE token=:token"
+        query = "SELECT id, user_id, token, api_key, ts \
+                   FROM api_compat.token \
+                  WHERE token=:token"
         params = {'token': token}
         if api_key:
-            query = "SELECT * FROM api_compat.token WHERE token=:token AND api_key=:api_key"
+            query = "SELECT id, user_id, token, api_key, ts \
+                       FROM api_compat.token \
+                      WHERE token=:token \
+                        AND api_key=:api_key"
             params['api_key'] = api_key
 
         with db.engine.connect() as connection:
             result = connection.execute(text(query), params)
             row = result.fetchone()
             if row:
-                return Token(row)
+                return Token(row['id'], row['user_id'], row['token'], row['api_key'], row['ts'])
             return None
 
     @staticmethod
