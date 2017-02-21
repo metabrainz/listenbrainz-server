@@ -22,12 +22,8 @@ KEYSPACE_NAME_UNIQUE = "ulisten"
 APP_CREDENTIALS_FILE = "bigquery-credentials.json"
 
 # TODO: 
-#   Review data pagination
-#   Data coverage check
-#   Add test for influx-writer and big-query writer. eek
 #   Big query hardcoded data set ids
 #   Redis persistence
-#   Bring non-prod docker-compose up to date with prod one
 
 
 class BigQueryWriterSubscriber(RedisPubSubSubscriber):
@@ -98,6 +94,7 @@ class BigQueryWriterSubscriber(RedisPubSubSubscriber):
 
         if not os.path.exists(APP_CREDENTIALS_FILE):
             self.log.error("BiqQueryWriter not started, big-query-credentials.json is missing.")
+            sleep(1000)
             return
 
         self.log.info("BigQueryWriterSubscriber started")
