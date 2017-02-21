@@ -79,6 +79,18 @@ def profile(user_name):
 
     user = _get_user(user_name)
 
+    need_exact = request.args.get("exact")
+    if not need_exact:
+        listen_count = db_conn.get_listen_count_for_user(user_name)
+        # round off to nearest 10 as we can't guarantee that the values
+        # are not old, so show approximate values instead
+        if listen_count > 10:
+            listen_count = (listen_count / 10) * 10
+        have_exact = False
+    else:
+        listen_count = db_conn.get_listen_count_for_user(user_name, need_exact = True)
+        have_exact = True
+
     # Getting data for current page
     max_ts = request.args.get("max_ts")
     if max_ts is not None:
@@ -144,7 +156,9 @@ def profile(user_name):
         listens=listens,
         previous_listen_ts=previous_listen_ts,
         next_listen_ts=next_listen_ts,
-        spotify_uri=_get_spotify_uri_for_listens(listens)
+        spotify_uri=_get_spotify_uri_for_listens(listens),
+        listen_count=listen_count,
+        have_exact_listen_count = have_exact,
     )
 
 
