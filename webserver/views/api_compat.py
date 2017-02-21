@@ -246,7 +246,7 @@ def record_listens(request, data):
 
     lookup = defaultdict(dict)
     for key, value in data.items():
-        if key == "sk" or key == "token" or key == "api_key" or key == "method":
+        if key in ["sk", "token", "api_key", "method", "api_sig"]:
             continue
         matches = re.match('(.*)\[(\d+)\]', key)
         if matches:
