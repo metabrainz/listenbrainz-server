@@ -1,6 +1,11 @@
 import db
 import uuid
 import sqlalchemy
+from db.exceptions import DatabaseException
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def create(musicbrainz_id):
@@ -22,6 +27,26 @@ def create(musicbrainz_id):
             "token": str(uuid.uuid4()),
         })
         return result.fetchone()["id"]
+
+def update_token(id):
+    """Update a user's token to a new UUID
+
+    Args:
+        id (int) - the row id of the user to update
+    """
+    with db.engine.connect() as connection:
+        try:
+            result = connection.execute(sqlalchemy.text("""
+                UPDATE "user"
+                   SET auth_token = :token
+                 WHERE id = :id
+            """), {
+                "token": str(uuid.uuid4()),
+                "id": id
+            })
+        except DatabaseException as e:
+            logger.error(e)
+            raise
 
 
 def get(id):
