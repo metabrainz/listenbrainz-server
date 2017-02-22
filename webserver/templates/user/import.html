@@ -6,8 +6,8 @@
   <h2 class="page-title">Import to user {{ user.musicbrainz_id }}</h2>
   {% if current_user.is_authenticated() and current_user == user %}
 
-     <p>
-        You have the following options for importing your listen data:
+    <p>
+      You have the following options for importing your listen data:
     </p>
 
     <h3> Import from ListenBrainz Alpha </h3>
@@ -33,70 +33,70 @@
     {% endif %}
     </div>
 
-     <h3>Direct import from Last.fm</h3>
-     {% if loader %}
+    <h3>Direct import from Last.fm</h3>
+    {% if loader %}
+      <p>
+        <strong>Step 2</strong>
+      </p>
+      <div class="well">
         <p>
-          <strong>Step 2</strong>
+           Import NOW !!  This will import your profile now without the need to open lastfm.<br/>
+           You need to keep this page open for the tool to work, it might take a while to complete. Though, you can continue doing your work. :)
         </p>
-        <div class="well">
+        <a href="{{loader}}" style="color: white;">
           <p>
-             Import NOW !!  This will import your profile now without the need to open lastfm.<br/>
-             You need to keep this page open for the tool to work, it might take a while to complete. Though, you can continue doing your work. :)
+            <span class="btn btn-warning btn-lg" style="width: 400px">Import NOW</span>
           </p>
-          <a href="{{loader}}" style="color: white;">
-            <p>
-              <span class="btn btn-warning btn-lg" style="width: 400px">Import NOW</span>
-            </p>
-          </a>
-        </div>
-     {% else %}
-     <p>
+        </a>
+      </div>
+    {% else %}
+      <p>
         <strong>Notes about the Last.fm import process:</strong>
-     </p>
-     <p>
+      </p>
+      <p>
         The Last.fm importer manually steps through your listen history and imports the listens
         one page at a time. Should it fail for whatever reason, it is safe to restart the import
         process. Running the import process multiple times <strong>does not</strong> create duplicates in your
         ListenBrainz listen history.
-     </p>
-     <br/>
-     <p>
+      </p>
+      <br/>
+      <p>
         <strong>Step 1</strong>
-     </p>
-     We need to know your Last.fm username:
-     <div class="well">
-         <form action="" method="GET">
-             <input type="text" name="lastfm_username" size="30" placeholder="Last.fm username">
-             <input type="submit" value="proceed to step 2">
-         </form>
-     </div>
-     {% endif %}
+      </p>
+      We need to know your Last.fm username:
+      <div class="well">
+        <form action="" method="GET">
+          <input type="text" name="lastfm_username" size="30" placeholder="Last.fm username">
+          <input type="submit" value="proceed to step 2">
+        </form>
+      </div>
+    {% endif %}
 
-     <h3>Import a Last.fm backup file</h3>
+    <h3>Import a Last.fm backup file</h3>
 
-     <p>Import your listens from a Last.fm backup file (.zip)</p>
-     <div class="well">
-         <form action="upload" method="POST" enctype=multipart/form-data>
-             <input type="file" name="file">
-             </br>
-             <input type="submit" value="Upload">
-         </form>
-     </div>
+    <p>Import your listens from a Last.fm backup file (.zip)</p>
+    <div class="well">
+      <form action="upload" method="POST" enctype=multipart/form-data>
+        <input type="file" name="file">
+        </br>
+        <input type="submit" value="Upload">
+      </form>
+    </div>
 
-     <h3>User token</h3>
-     <p>
-        If you would like to use an external program to import into ListenBrainz you will need the following
-        user token:
-     </p>
+    <h3>User token</h3>
+    <p>
+      If you would like to use an external program to import into ListenBrainz you will need the following
+      user token:
+    </p>
 
-     <div class="well">
-        {{ user.auth_token }}
-     </div>
+    <div class="well">
+      {{ user.auth_token }}
+    </div>
 
-     <p>If you want to reset your token, click below</p>
-     <p>
+    <p>If you want to reset your token, click below</p>
+    <p>
       <span class="btn btn-info btn-lg" style="width: 200px"><a href="{{ url_for("user.reset_token") }}" style="color: white;">Reset token</a></span>
-     </p>
+    </p>
 
   {% endif %}
 {% endblock %}
