@@ -94,10 +94,9 @@
      </div>
 
      <p>If you want to reset your token, click below</p>
-      <p>
-      <span class="btn btn-info btn-lg" style="width: 200px"><a href="{{ url_for("user.reset_token", user_id=user.musicbrainz_id) }}"
-         style="color: white;">Reset token</a></span>
-      <p>
+     <p>
+      <span class="btn btn-info btn-lg" style="width: 200px"><a href="{{ url_for("user.reset_token") }}" style="color: white;">Reset token</a></span>
+     </p>
 
   {% endif %}
 {% endblock %}

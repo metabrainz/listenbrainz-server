@@ -46,17 +46,24 @@ def lastfmscraper(user_name):
     )
     return Response(scraper, content_type="text/javascript")
 
-@user_bp.route("/<user_id>/resettoken", methods=["GET", "POST"])
+@user_bp.route("/resettoken", methods=["GET", "POST"])
 @login_required
-def reset_token(user_id):
+def reset_token():
     if request.method == "POST":
+        token = request.form.get("token")
+        if token != current_user.auth_token:
+            raise BadRequest("Can only reset token of currently logged in user")
         reset = request.form.get("reset")
         if reset == "yes":
             db.user.update_token(current_user.id)
             flash.info("Access token reset")
         return redirect(url_for("user.import_data"))
     else:
-        return render_template("user/resettoken.html")
+        token = current_user.auth_token
+        return render_template(
+            "user/resettoken.html",
+            token = token,
+        )
 
 @user_bp.route("/<user_name>")
 def profile(user_name):

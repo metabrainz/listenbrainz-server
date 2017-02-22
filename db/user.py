@@ -29,14 +29,15 @@ def update_token(id):
     Args:
         id (int) - the row id of the user to update
     """
-    query = """UPDATE "user"
-                  SET auth_token = :token
-                WHERE id = :id
-            """
-    result = db.session.execute(query,
-            {"token": str(uuid.uuid4()),
-             "id": id})
-    db.session.commit()
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            UPDATE "user"
+               SET auth_token = :token
+             WHERE id = :id
+        """), {
+            "token": str(uuid.uuid4()),
+            "id": id
+        })
 
 
 def get(id):
