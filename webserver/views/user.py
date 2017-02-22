@@ -9,6 +9,7 @@ from time import time
 import webserver
 from webserver import flash
 import db.user
+from db.exceptions import DatabaseException
 from flask import make_response
 from webserver.views.api_tools import convert_backup_to_native_format, insert_payload, validate_listen, \
     MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP, LISTEN_TYPE_IMPORT
@@ -55,8 +56,11 @@ def reset_token():
             raise BadRequest("Can only reset token of currently logged in user")
         reset = request.form.get("reset")
         if reset == "yes":
-            db.user.update_token(current_user.id)
-            flash.info("Access token reset")
+            try:
+                db.user.update_token(current_user.id)
+                flash.info("Access token reset")
+            except DatabaseException as e:
+                flash.error("Unable to reset token")
         return redirect(url_for("user.import_data"))
     else:
         token = current_user.auth_token
