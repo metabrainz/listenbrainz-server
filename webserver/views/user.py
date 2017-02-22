@@ -7,7 +7,9 @@ from webserver.decorators import crossdomain
 from datetime import datetime
 from time import time
 import webserver
+from webserver import flash
 import db.user
+from db.exceptions import DatabaseException
 from flask import make_response
 from webserver.views.api_tools import convert_backup_to_native_format, insert_payload, validate_listen, \
     MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP, LISTEN_TYPE_IMPORT
@@ -45,6 +47,27 @@ def lastfmscraper(user_name):
     )
     return Response(scraper, content_type="text/javascript")
 
+@user_bp.route("/resettoken", methods=["GET", "POST"])
+@login_required
+def reset_token():
+    if request.method == "POST":
+        token = request.form.get("token")
+        if token != current_user.auth_token:
+            raise BadRequest("Can only reset token of currently logged in user")
+        reset = request.form.get("reset")
+        if reset == "yes":
+            try:
+                db.user.update_token(current_user.id)
+                flash.info("Access token reset")
+            except DatabaseException as e:
+                flash.error("Something went wrong! Unable to reset token right now.")
+        return redirect(url_for("user.import_data"))
+    else:
+        token = current_user.auth_token
+        return render_template(
+            "user/resettoken.html",
+            token = token,
+        )
 
 @user_bp.route("/<user_name>")
 def profile(user_name):
