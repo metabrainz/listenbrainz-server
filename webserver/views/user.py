@@ -271,6 +271,11 @@ def upload():
             raise BadRequest('Not a valid lastfm-backup-file.')
         finally:
             os.remove(filename)
+
+        # reset listen count for user
+        db_connection = webserver.influx_connection._influx
+        db_connection.reset_listen_count(current_user.musicbrainz_id)
+
         flash('Congratulations! Your listens from %d  files have been uploaded successfully.' % (success))
     return redirect(url_for("user.import_data"))
 

@@ -9,6 +9,8 @@ import sys
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "listenstore"))
+from listenstore.listenstore import InfluxListenStore
 
 redis_connection = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
 
@@ -97,11 +99,16 @@ def update_status(username, status):
 
 
 if __name__ == '__main__':
+    db_connection = InfluxListenStore({'REDIS_HOST' : config.REDIS_HOST,
+                                       'INFLUX_HOST': config.INFLUX_HOST,
+                                       'INFLUX_PORT': config.INFLUX_PORT,
+                                       'INFLUX_DB_NAME': config.INFLUX_DB_NAME})
     while True:
         if not queue_empty():
             username, token = queue_front()
             if import_from_alpha(username, token):
                 queue_pop()
                 update_status(username, "DONE")
+                db_connection.reset_listen_count(username)
         else:
             time.sleep(3)

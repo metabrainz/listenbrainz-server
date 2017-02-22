@@ -251,6 +251,18 @@ class InfluxListenStore(ListenStore):
         return int(count)
 
 
+    def reset_listen_count(self, user_name):
+        """ Function to reset the listen count of user
+
+            Args:
+                user_name: the musicbrainz id of user whose listen count needs to be reset
+
+            Return value:
+                The exact number of listens of user.
+        """
+        return get_listen_count_for_user(user_name, need_exact = True)
+
+
     def _select_single_value(self, query):
         try:
             results = self.influx.query(query)
