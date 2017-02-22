@@ -60,7 +60,7 @@ def reset_token():
                 db.user.update_token(current_user.id)
                 flash.info("Access token reset")
             except DatabaseException as e:
-                flash.error("Unable to reset token")
+                flash.error("Something went wrong! Unable to reset token right now.")
         return redirect(url_for("user.import_data"))
     else:
         token = current_user.auth_token
