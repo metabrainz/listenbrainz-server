@@ -25,7 +25,9 @@ def create(musicbrainz_id):
 
 def update_token(id):
     """Update a user's token to a new UUID
-       Arguments: id - the row id of the user to update
+
+    Args:
+        id (int) - the row id of the user to update
     """
     query = """UPDATE "user"
                   SET auth_token = :token
