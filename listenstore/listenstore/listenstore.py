@@ -27,9 +27,6 @@ DEFAULT_LISTENS_PER_FETCH = 25
 
 REDIS_USER_TIMESTAMPS = "user.%s.timestamps" # substitute user_name
 USER_CACHE_TIME = 3600 # in seconds. 1 hour
-LISTENCOUNT_CACHE_TIME_LOW = 15 * 60 # in seconds. 15 minutes
-LISTENCOUNT_CACHE_TIME_MEDIUM = 60 * 60 # in seconds. 1 hour
-LISTENCOUNT_CACHE_TIME_HIGH = 24 * 60 * 60 # in seconds. 1 day
 
 # TODO: This needs to be broken into 3 files and moved out of the separate listenstore module,
 #       but I am leaving this for the next PR
@@ -204,6 +201,12 @@ class InfluxListenStore(ListenStore):
 
     REDIS_INFLUX_TOTAL_LISTEN_COUNT = "ls.listencount.total"
     TOTAL_LISTEN_COUNT_CACHE_TIME = 10 * 60
+    # variables which define how much time to cache listen count in redis
+    LISTENCOUNT_CACHE_TIME_LOW = 15 * 60 # in seconds. 15 minutes
+    LISTENCOUNT_CACHE_TIME_MEDIUM = 60 * 60 # in seconds. 1 hour
+    LISTENCOUNT_CACHE_TIME_HIGH = 24 * 60 * 60 # in seconds. 1 day
+    LOW_LISTEN_THRESHOLD = 1000
+    MEDIUM_LISTEN_THRESHOLD = 10000
 
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
@@ -230,7 +233,7 @@ class InfluxListenStore(ListenStore):
             results = self.influx.query("""SELECT count(*)
                                              FROM listen
                                             WHERE user_name = '%s'""" % (user_name))
-        except Exception as e:
+        except (InfluxDBServerError, InfluxDBClientError) as e:
             self.log.error("Cannot query influx: %s" % str(e))
             raise
 
@@ -239,12 +242,12 @@ class InfluxListenStore(ListenStore):
 
         # put this value into redis with expiry time based on the number of listens
         # that the user has
-        if count <= 1000:
-            self.redis.setex(REDIS_INFLUX_USER_LISTEN_COUNT + user_name, count, LISTENCOUNT_CACHE_TIME_LOW)
-        elif count <= 10000:
-            self.redis.setex(REDIS_INFLUX_USER_LISTEN_COUNT + user_name, count, LISTENCOUNT_CACHE_TIME_MEDIUM)
+        if count <= InfluxListenStore.LOW_LISTEN_THRESHOLD:
+            self.redis.setex(REDIS_INFLUX_USER_LISTEN_COUNT + user_name, count, InfluxListenStore.LISTENCOUNT_CACHE_TIME_LOW)
+        elif count <= InfluxListenStore.MEDIUM_LISTEN_THRESHOLD:
+            self.redis.setex(REDIS_INFLUX_USER_LISTEN_COUNT + user_name, count, InfluxListenStore.LISTENCOUNT_CACHE_TIME_MEDIUM)
         else:
-            self.redis.setex(REDIS_INFLUX_USER_LISTEN_COUNT + user_name, count, LISTENCOUNT_CACHE_TIME_HIGH)
+            self.redis.setex(REDIS_INFLUX_USER_LISTEN_COUNT + user_name, count, InfluxListenStore.LISTENCOUNT_CACHE_TIME_HIGH)
         return int(count)
 
 

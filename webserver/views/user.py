@@ -17,6 +17,7 @@ from webserver.utils import sizeof_readable
 from webserver.login import User
 from webserver.redis_connection import _redis
 from os import path, makedirs
+from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import ujson
 import zipfile
 import re
@@ -24,6 +25,7 @@ import os
 import pytz
 
 LISTENS_PER_PAGE = 25
+LISTEN_COUNT_APPROXIMATION = 10 # approximate listen count shown is rounded down to multiple of this
 
 user_bp = Blueprint("user", __name__)
 
@@ -79,17 +81,16 @@ def profile(user_name):
 
     user = _get_user(user_name)
 
-    need_exact = request.args.get("exact")
-    if not need_exact:
-        listen_count = db_conn.get_listen_count_for_user(user_name)
-        # round off to nearest 10 as we can't guarantee that the values
-        # are not old, so show approximate values instead
-        if listen_count > 10:
-            listen_count = (listen_count / 10) * 10
-        have_exact = False
-    else:
-        listen_count = db_conn.get_listen_count_for_user(user_name, need_exact = True)
-        have_exact = True
+    need_exact_listen_count = request.args.get("exact") == 'y'
+    try:
+        have_listen_count = True
+        listen_count = db_conn.get_listen_count_for_user(user_name, need_exact = need_exact_listen_count)
+    except (InfluxDBServerError, InfluxDBClientError):
+        have_listen_count = False
+        listen_count = 0
+
+    if have_listen_count and not need_exact_listen_count and listen_count > LISTEN_COUNT_APPROXIMATION:
+        listen_count = (listen_count / LISTEN_COUNT_APPROXIMATION) * LISTEN_COUNT_APPROXIMATION
 
     # Getting data for current page
     max_ts = request.args.get("max_ts")
@@ -157,8 +158,9 @@ def profile(user_name):
         previous_listen_ts=previous_listen_ts,
         next_listen_ts=next_listen_ts,
         spotify_uri=_get_spotify_uri_for_listens(listens),
+        have_listen_count = have_listen_count,
         listen_count=listen_count,
-        have_exact_listen_count = have_exact,
+        have_exact_listen_count = need_exact_listen_count,
     )
 
 
