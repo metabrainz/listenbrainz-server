@@ -122,18 +122,12 @@ def validate_listen(listen, listen_type):
                     log_raise_400("JSON document may not contain track_metadata.additional_info.tags "
                                    "longer than %d characters." % MAX_TAG_SIZE, listen)
         # MBIDs
-        if 'release_mbid' in listen['track_metadata']['additional_info']:
-            lmbid = listen['track_metadata']['additional_info']['release_mbid']
-            if not is_valid_uuid(lmbid):
-                log_raise_400("Release MBID format invalid.", listen)
-        if 'recording_mbid' in listen['track_metadata']['additional_info']:
-            cmbid = listen['track_metadata']['additional_info']['recording_mbid']
-            if not is_valid_uuid(cmbid):
-                log_raise_400("Recording MBID format invalid.", listen)
-        ambids = listen['track_metadata']['additional_info'].get('artist_mbids', [])
-        for ambid in ambids:
-            if not is_valid_uuid(ambid):
-                log_raise_400("Artist MBID format invalid.", listen)
+        single_mbid_keys = ['release_mbid', 'recording_mbid', 'release_group_mbid', 'track_mbid']
+        for key in single_mbid_keys:
+            verify_mbid_validity(listen, key, multi = False)
+        multiple_mbid_keys = ['artist_mbids', 'work_mbids']
+        for key in multiple_mbid_keys:
+            verify_mbid_validity(listen, key, multi = True)
 
 
 # lifted from AcousticBrainz
@@ -276,3 +270,20 @@ def log_raise_400(msg, data=""):
 
     current_app.logger.debug("BadRequest: %s\nJSON: %s" % (msg, data))
     raise BadRequest(msg)
+
+def verify_mbid_validity(listen, key, multi):
+    """ Verify that mbid(s) present in listen with key `key` is valid.
+
+        Args:
+            listen: listen data
+            key: the key whose mbids is to be validated
+            multi: boolean value signifying if the key contains multiple mbids
+    """
+    if not multi:
+        items = listen['track_metadata']['additional_info'].get(key)
+        items = [items] if items else []
+    else:
+        items = listen['track_metadata']['additional_info'].get(key, [])
+    for item in items:
+        if not is_valid_uuid(item):
+            log_raise_400("%s MBID format invalid." % (key, ), listen)
