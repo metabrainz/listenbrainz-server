@@ -336,6 +336,10 @@ class InfluxListenStore(ListenStore):
 
         listens = []
         for result in results.get_points(measurement='listen'):
+            # make sure that result does not contain value None for any key
+            for key in result:
+                if result[key] is None:
+                    result[key] = ''
             dt = datetime.strptime(result['time'] , "%Y-%m-%dT%H:%M:%SZ")
             t = int(dt.strftime('%s'))
             mbids = []
