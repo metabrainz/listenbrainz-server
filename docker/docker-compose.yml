@@ -62,6 +62,10 @@ services:
     build:
       context: ..
       dockerfile: ./docker/bigquery-writer/Dockerfile
+    volumes:
+      - ./credentials:/code/credentials
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: '/code/credentials/bigquery-credentials.json'
     command: python bigquery-writer/bigquery-writer.py
     depends_on:
       - redis
