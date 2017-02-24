@@ -336,39 +336,7 @@ class InfluxListenStore(ListenStore):
 
         listens = []
         for result in results.get_points(measurement='listen'):
-            # make sure that result does not contain value None for any key
-            for key in result:
-                if result[key] is None:
-                    result[key] = ''
-            dt = datetime.strptime(result['time'] , "%Y-%m-%dT%H:%M:%SZ")
-            t = int(dt.strftime('%s'))
-            mbids = []
-            for id in result.get('artist_mbids', '').split(","):
-                if id:
-                    mbids.append(id)
-            tags = []
-            for tag in result.get('tags', '').split(","):
-                if tag:
-                    tags.append(tag)
-
-            data = {
-                'artist_mbids' : mbids,
-                'album_msid' : result.get('album_msid', ''),
-                'album_mbid' : result.get('album_mbid', ''),
-                'album_name' : result.get('album_name', ''),
-                'recording_mbid' : result.get('recording_mbid', ''),
-                'tags' : tags
-            }
-            l = Listen(timestamp=t,
-                user_name=result.get('user_name', '<unknown>'),
-                artist_msid=result.get('artist_msid', ''),
-                recording_msid=result.get('recording_msid', ''),
-                data={
-                    'additional_info' : data,
-                    'artist_name' : result.get('artist_name', ''),
-                    'track_name' : result.get('track_name', '')
-                })
-            listens.append(l)
+            listens.append(Listen.from_influx(result))
 
         if order == ORDER_ASC:
             listens.reverse()
