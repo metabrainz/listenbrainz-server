@@ -10,4 +10,4 @@ env
 bigquery-credentials.json
 
 # Application data
-/data
+/docker/data
