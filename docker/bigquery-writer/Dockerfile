@@ -15,7 +15,5 @@ RUN mkdir /code/bigquery-writer
 COPY ./bigquery-writer/requirements.txt /code/bigquery-writer
 RUN pip install -r /code/bigquery-writer/requirements.txt
 
-ENV GOOGLE_APPLICATION_CREDENTIALS bigquery-credentials.json
-
 # This step is executed if our code changes, good.
 COPY . /code

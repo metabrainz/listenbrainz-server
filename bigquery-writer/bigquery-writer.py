@@ -19,7 +19,7 @@ REPORT_FREQUENCY = 5000
 SUBSCRIBER_NAME = "bq"
 KEYSPACE_NAME_INCOMING = "ilisten"
 KEYSPACE_NAME_UNIQUE = "ulisten"
-APP_CREDENTIALS_FILE = "bigquery-credentials.json"
+APP_CREDENTIALS_FILE = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
 
 # TODO: 
 #   Big query hardcoded data set ids
