@@ -238,7 +238,10 @@ class InfluxListenStore(ListenStore):
             raise
 
         # get the number of listens from the json
-        count = results.raw['series'][0]['values'][0][1]
+        try:
+            count = results.raw['series'][0]['values'][0][1]
+        except KeyError:
+            count = 0
 
         # put this value into redis with expiry time based on the number of listens
         # that the user has
