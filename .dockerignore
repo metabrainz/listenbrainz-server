@@ -15,14 +15,11 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Application data
-/docker/data
+docker/data
 
 # Test results
 htmlcov
 .coverage
-
-# Vagrant
-.vagrant
 
 # Private credentials
 credentials
