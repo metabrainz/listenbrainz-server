@@ -1,5 +1,8 @@
 version: "2"
 
+# IMPORTANT NOTE: For the web container we use exposing the code via a volume, not via
+# COPYing code into the container. This due to the quirky interaction with MessyBrainz.
+
 volumes:
   dbvolume:
 
@@ -63,7 +66,7 @@ services:
       context: ..
       dockerfile: ./docker/bigquery-writer/Dockerfile
     volumes:
-      - ./credentials:/code/credentials
+      - ../credentials:/code/credentials
     environment:
       GOOGLE_APPLICATION_CREDENTIALS: '/code/credentials/bigquery-credentials.json'
     command: python bigquery-writer/bigquery-writer.py
