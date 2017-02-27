@@ -1,7 +1,8 @@
 version: "2"
 
-# IMPORTANT NOTE: For the web container we use exposing the code via a volume, not via
-# COPYing code into the container. This due to the quirky interaction with MessyBrainz.
+# IMPORTANT NOTE: Volume paths mounted on containers are relative to the directory that 
+# this file is in (`docker/`) and so probably need to start with `../` to refer to a 
+# directory in the main code checkout
 
 volumes:
   dbvolume:
