@@ -1,5 +1,9 @@
 version: "2"
 
+# IMPORTANT NOTE: Volume paths mounted on containers are relative to the directory that 
+# this file is in (`docker/`) and so probably need to start with `../` to refer to a 
+# directory in the main code checkout
+
 volumes:
   dbvolume:
 
@@ -62,6 +66,10 @@ services:
     build:
       context: ..
       dockerfile: ./docker/bigquery-writer/Dockerfile
+    volumes:
+      - ../credentials:/code/credentials
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: '/code/credentials/bigquery-credentials.json'
     command: python bigquery-writer/bigquery-writer.py
     depends_on:
       - redis
