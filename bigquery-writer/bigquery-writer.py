@@ -19,7 +19,7 @@ REPORT_FREQUENCY = 5000
 SUBSCRIBER_NAME = "bq"
 KEYSPACE_NAME_INCOMING = "ilisten"
 KEYSPACE_NAME_UNIQUE = "ulisten"
-APP_CREDENTIALS_FILE = "bigquery-credentials.json"
+APP_CREDENTIALS_FILE = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
 
 # TODO: 
 #   Big query hardcoded data set ids
@@ -91,6 +91,11 @@ class BigQueryWriterSubscriber(RedisPubSubSubscriber):
         if not config.WRITE_TO_BIGQUERY:
             sleep(1000)
             return 
+
+        if not APP_CREDENTIALS_FILE:
+            self.log.error("BiqQueryWriter not started, the GOOGLE_APPLICATION_CREDENTIALS env var is not defined.")
+            sleep(1000)
+            return
 
         if not os.path.exists(APP_CREDENTIALS_FILE):
             self.log.error("BiqQueryWriter not started, big-query-credentials.json is missing.")
