@@ -12,19 +12,19 @@ services:
   db:
     image: postgres:9.5.3
     volumes:
-      - dbvolume:/var/lib/postgresql/data/
+      - ./dbvolume:/var/lib/postgresql/data/
     ports:
       - "15432:5432"
 
   redis:
     image: redis:3.2.1
     volumes:
-      - ./data/redis:/data
+      - ./docker/data/redis:/data
 
   influx:
     image: influxdb:1.0.0
     volumes:
-      - ./data/influxdb:/var/lib/influxdb
+      - ./docker/data/influxdb:/var/lib/influxdb
     environment:
       INFLUXDB_REPORTING_DISABLED: 'true'
       INFLUXDB_META_LOGGING_ENABLED: 'false'
@@ -41,8 +41,8 @@ services:
   web:
     build:
       context: ..
-      dockerfile: ./docker/Dockerfile
-    command: python manage.py runserver -h 0.0.0.0 -p 80 -d
+      dockerfile: Dockerfile
+    command: python /code/listenbrainz/manage.py runserver -h 0.0.0.0 -p 80 -d
     image: web
     volumes:
       - ..:/code/listenbrainz
@@ -56,7 +56,7 @@ services:
   influx_writer:
     build:
       context: ..
-      dockerfile: ./docker/influx-writer/Dockerfile
+      dockerfile: Dockerfile-influx-writer
     command: python influx-writer/influx-writer.py
     depends_on:
       - redis
@@ -65,7 +65,7 @@ services:
   bigquery:
     build:
       context: ..
-      dockerfile: ./docker/bigquery-writer/Dockerfile
+      dockerfile: Dockerfile-bigquery-writer
     volumes:
       - ../credentials:/code/credentials
     environment:
