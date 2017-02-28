@@ -21,7 +21,7 @@ services:
   listenbrainz:
     build:
       context: ..
-      dockerfile: ./docker/Dockerfile
+      dockerfile: Dockerfile
     command: py.test
     volumes:
       - ..:/code/listenbrainz
