@@ -120,7 +120,7 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
         self.register(SUBSCRIBER_NAME)
         while True:
             try:
-                count = self.subscriber()            
+                count = self.subscriber()
             except NoSubscriberNameSetException as e:
                 self.log.error("InfluxWriterSubscriber has no subscriber name set.")
                 return
@@ -142,7 +142,7 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
                 self.time = 0
 
 if __name__ == "__main__":
-    ls = InfluxListenStore({ 'REDIS_HOST' : config.REDIS_HOST, 
+    ls = InfluxListenStore({ 'REDIS_HOST' : config.REDIS_HOST,
                              'INFLUX_HOST': config.INFLUX_HOST,
                              'INFLUX_PORT': config.INFLUX_PORT,
                              'INFLUX_DB_NAME': config.INFLUX_DB_NAME})

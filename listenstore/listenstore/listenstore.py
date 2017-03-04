@@ -74,7 +74,7 @@ class PostgresListenStore(ListenStore):
                 connection.execute("SET synchronous_commit TO off")
 
     def convert_row(self, row):
-        return Listen(user_id=row[1], user_name=row[2], timestamp=row[3], artist_msid=row[4], 
+        return Listen(user_id=row[1], user_name=row[2], timestamp=row[3], artist_msid=row[4],
                       album_msid=row[5], recording_msid=row[6], data=row[7])
 
     def insert(self, listens):
@@ -199,8 +199,8 @@ class InfluxListenStore(ListenStore):
         if count:
             return int(count)
 
-        results = self.influx.query("""SELECT count(*) 
-                                         FROM listen 
+        results = self.influx.query("""SELECT count(*)
+                                         FROM listen
                                         WHERE user_name = '%s'""" % (user_name, from_ts, to_ts, limit))
         result = results.get_points(measurement='listen')
 #        count = self.redis.get(REDIS_INFLUX_USER_LISTEN_COUNT + user_hash(user_name))
@@ -245,7 +245,7 @@ class InfluxListenStore(ListenStore):
             min_ts = int(min_ts)
             max_ts = int(max_ts)
         else:
-            query = """SELECT first(artist_msid) 
+            query = """SELECT first(artist_msid)
                          FROM listen
                         WHERE user_name = '""" + user_name + "'"
             min_ts = self._select_single_timestamp(query)
@@ -341,7 +341,7 @@ class InfluxListenStore(ListenStore):
             mbids = []
             for id in result.get('artist_mbids', '').split(","):
                 if id:
-                    mbids.append(id) 
+                    mbids.append(id)
             tags = []
             for tag in result.get('tags', '').split(","):
                 if tag:
@@ -359,7 +359,7 @@ class InfluxListenStore(ListenStore):
                 user_name=result.get('user_name', '<unknown>'),
                 artist_msid=result.get('artist_msid', ''),
                 recording_msid=result.get('recording_msid', ''),
-                data={ 
+                data={
                     'additional_info' : data,
                     'artist_name' : result.get('artist_name', ''),
                     'track_name' : result.get('track_name', '')
