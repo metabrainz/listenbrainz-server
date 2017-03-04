@@ -4,7 +4,7 @@ import ujson
 from redis import Redis
 from time import time, sleep
 
-# For a detailed description of the PubSub Redis mechanism that is being implemented 
+# For a detailed description of the PubSub Redis mechanism that is being implemented
 # here see this page: https://davidmarquis.wordpress.com/2013/01/03/reliable-delivery-message-queues-with-redis/
 # This class is needed, since the PubSub support in Redis is not very robust -- it is quite
 # easy for messages to get lost.
@@ -20,7 +20,7 @@ PUBSUB_JSON_REFCOUNT = ".refcount."             # append nextid to key
 PUBSUB_SUBSCRIBER_IDS = ".ids."                 # append subscriber name to key
 PUBSUB_SUBSCRIBER_IDS_PENDING = ".ids-pending." # append subscriber name to key
 
-WRITE_FAIL_TIMEOUT = 5 # in seconds. 
+WRITE_FAIL_TIMEOUT = 5 # in seconds.
 BATCH_SIZE = 1000      # default size of messages to write
 BATCH_TIMEOUT = 3      # in seconds. Don't let a listen get older than this before writing
 REQUEST_TIMEOUT = 1    # in seconds. Wait this long to get a listen from redis
@@ -93,7 +93,7 @@ class RedisPubSubPublisher(object):
             # Each message gets a redis specific ID
             nextid = self.r.incr(self.prefix + PUBSUB_NEXTID)
 
-            # Each message is then inserted into redis using the id from above and a 
+            # Each message is then inserted into redis using the id from above and a
             # refcount is set so that we can remove data from redis in a timely fashion
             p.set(self.prefix + PUBSUB_JSON + str(nextid), ujson.dumps(message).encode('utf-8'))
             p.set(self.prefix + PUBSUB_JSON_REFCOUNT + str(nextid), len(self.subscribers))
@@ -101,7 +101,7 @@ class RedisPubSubPublisher(object):
             # Finally a message id is added a list kept for each subscriber. This way
             # the subscriber can pop message ids from the list and then consume the
             # message. Each subscriber must DECR the corresponding PUBSUB_JSON_REFCOUNT
-            # key. If it goes to 0, then the subscriber must remove the PUBSUB_JSON and 
+            # key. If it goes to 0, then the subscriber must remove the PUBSUB_JSON and
             # PUBSUB_JSON_REFCOUNT keys
             for subscriber in self.subscribers:
                 p.lpush(self.prefix + PUBSUB_SUBSCRIBER_IDS + subscriber, nextid)
@@ -136,7 +136,7 @@ class RedisPubSubSubscriber(object):
 
     def subscriber(self, retries=5):
         """
-        Subscriber main function which will call write() function to write 
+        Subscriber main function which will call write() function to write
         retrieved messages to the data store.
         """
 
@@ -152,16 +152,16 @@ class RedisPubSubSubscriber(object):
             r.ltrim(self.prefix + PUBSUB_SUBSCRIBER_IDS_PENDING + self.subscriber_name, 1, 0)
 
         # 0 indicates that we've received no messages yet
-        batch_start_time = 0 
+        batch_start_time = 0
 
         messages = []
         message_ids = []
 
         while True:
-            id = self.r.brpoplpush(self.prefix + PUBSUB_SUBSCRIBER_IDS + self.subscriber_name, 
+            id = self.r.brpoplpush(self.prefix + PUBSUB_SUBSCRIBER_IDS + self.subscriber_name,
                 self.prefix + PUBSUB_SUBSCRIBER_IDS_PENDING + self.subscriber_name, REQUEST_TIMEOUT)
 
-            # If we got an id, fetch the message and add to our list 
+            # If we got an id, fetch the message and add to our list
             if id:
                 # record the time when we get a first message in this batch
                 if not batch_start_time:
@@ -177,7 +177,7 @@ class RedisPubSubSubscriber(object):
 
             if len(messages) >= BATCH_SIZE:
                 break
-    
+
         # If we received nothing during our window, return
         if not len(messages):
             return 0
@@ -218,7 +218,7 @@ class RedisPubSubSubscriber(object):
     def write(self, messages):
         """
         This function must be overriden by the derived class!
-        If the function was able to correctly write all of the messages, 
+        If the function was able to correctly write all of the messages,
         return true. If not, return false. If the function returned false,
         all of the items will be retried at a later time.
 

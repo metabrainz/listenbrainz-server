@@ -46,7 +46,7 @@ class RedisConsumer(RedisPubSubSubscriber):
         self.register(SUBSCRIBER_NAME)
         while True:
             try:
-                count = self.subscriber()            
+                count = self.subscriber()
             except NoSubscriberNameSetException as e:
                 self.log.error("RedisListenConsumer has no subscriber name set.")
                 return
