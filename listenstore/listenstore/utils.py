@@ -26,7 +26,7 @@ def get_config(opt_vars):
         ConfigFile > CommandlineArguments > DefaultConfig
     """
 
-    config = {  
+    config = {
                 "SQLALCHEMY_DATABASE_URI": "postgresql://listenbrainz@/listenbrainz"
              }
     config.update(opt_vars)

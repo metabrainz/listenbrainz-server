@@ -21,7 +21,7 @@ KEYSPACE_NAME_INCOMING = "ilisten"
 KEYSPACE_NAME_UNIQUE = "ulisten"
 APP_CREDENTIALS_FILE = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
 
-# TODO: 
+# TODO:
 #   Big query hardcoded data set ids
 #   Redis persistence
 
@@ -63,7 +63,7 @@ class BigQueryWriterSubscriber(RedisPubSubSubscriber):
                 'tags' : ",".join(meta['additional_info'].get('tags', [])),
             }
             bq_data.append({
-                'json': row, 
+                'json': row,
                 'insertId': "%s-%s" % (listen['user_name'], listen['listened_at'])
             })
 
@@ -90,7 +90,7 @@ class BigQueryWriterSubscriber(RedisPubSubSubscriber):
         # if we're not supposed to run, just sleep
         if not config.WRITE_TO_BIGQUERY:
             sleep(1000)
-            return 
+            return
 
         if not APP_CREDENTIALS_FILE:
             self.log.error("BiqQueryWriter not started, the GOOGLE_APPLICATION_CREDENTIALS env var is not defined.")
@@ -109,7 +109,7 @@ class BigQueryWriterSubscriber(RedisPubSubSubscriber):
         self.register(SUBSCRIBER_NAME)
         while True:
             try:
-                count = self.subscriber()            
+                count = self.subscriber()
             except NoSubscriberNameSetException as e:
                 self.log.error("BigQueryWriterSubscriber has no subscriber name set.")
                 return

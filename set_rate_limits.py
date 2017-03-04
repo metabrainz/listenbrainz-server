@@ -2,7 +2,7 @@
 
 import sys
 from redis import Redis
-#from webserver.rate_limiter import RATELIMIT_PER_TOKEN_KEY 
+#from webserver.rate_limiter import RATELIMIT_PER_TOKEN_KEY
 #from webserver.rate_limiter import RATELIMIT_PER_IP_KEY
 #from webserver.rate_limiter import RATELIMIT_WINDOW_KEY
 import config
@@ -12,7 +12,7 @@ RATELIMIT_PER_TOKEN_KEY = "rate_limit_per_token_limit"
 RATELIMIT_PER_IP_KEY = "rate_limit_per_ip_limit"
 RATELIMIT_WINDOW_KEY = "rate_limit_window"
 
-# Yes, I could use getoptgetargparsewtfbbw, but then I would spend 20 mimnutes re-learning the stupid syntax. 
+# Yes, I could use getoptgetargparsewtfbbw, but then I would spend 20 mimnutes re-learning the stupid syntax.
 # Or, I could just do it myself in the space of seconds.
 # Also, I tried to integrate this script with manage.py, but then I ended up wasting an hour trying
 # to figure out how to do this. So, we have this script. If you want to see it part of manage.py, you'll
