@@ -38,7 +38,7 @@ class Listen(object):
             user_name=j.get('user_name', ""),
             timestamp=datetime.utcfromtimestamp(float(j['listened_at'])),
             artist_msid=j['track_metadata']['additional_info'].get('artist_msid'),
-            album_msid=j['track_metadata']['additional_info'].get('album_msid'),
+            album_msid=j['track_metadata']['additional_info'].get('release_msid'),
             recording_msid=j.get('recording_msid'),
             data=j.get('track_metadata')
         )
