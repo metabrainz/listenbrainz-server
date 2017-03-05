@@ -11,12 +11,12 @@ can submit one of three types JSON documents:
 
 * ``single`` - submit a single listen. This indicates that the user just finished listening to this track. Only
   a single track may be specified in the ``payload``.
-* ``playing_now`` - submit a playing_now notification; This indicates that the user just began listening to this 
+* ``playing_now`` - submit a playing_now notification; This indicates that the user just began listening to this
   track. The ``payload`` may contain only one track and submitting ``playing_now`` documents is optional.
 * ``import`` - submit previously saved listens; the ``payload`` may contain more than one listen, but the complete
   document may not exceed :data:`~webserver.views.api.MAX_LISTEN_SIZE` bytes in size.
 
-These different types of submissions are defined by the ``listen_type`` element at the top-most level of the submitted 
+These different types of submissions are defined by the ``listen_type`` element at the top-most level of the submitted
 JSON document. The only other element required at the top level is the payload element that provides an array of
 listens -- the payload may be one or more listens (as designated by the listen_type)::
 
@@ -132,6 +132,6 @@ element                 description
 
 At this point, we are not scrubbing any superflous elements that may be submitted via the ``additional_info`` element. We're
 open to see how people will make use of these unspecified fields and may decide to formally specify or scrub elements in
-the future. 
+the future.
 
 **Please do not submit copyrighted information in these fields!!**
