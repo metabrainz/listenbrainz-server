@@ -1,6 +1,7 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 import sys
 import os
+import uuid
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", ".."))
 
 from webserver.testing import ServerTestCase
@@ -9,21 +10,53 @@ import db.user
 import time
 import json
 
+# lifted from AcousticBrainz
+def is_valid_uuid(u):
+    try:
+        u = uuid.UUID(u)
+        return True
+    except ValueError:
+        return False
+
 class APITestCase(ServerTestCase):
 
     def setUp(self):
         self.user = db.user.get_or_create('testuserpleaseignore')
 
     def test_get_listens(self):
-        """ Test to see that get_listens returns valid response
+        """ Test to make sure that the api sends valid listens on get requests.
         """
-        payload = {
-            'max_ts': str(int(time.time())),
-            'count': '25'
-        }
-        url = url_for('api_v1.get_listens', user_name = self.user['musicbrainz_id'])
-        response = self.client.get(url, query_string=payload)
+        with open(os.path.join(os.getcwd(), 'testdata', 'valid_single.json'), 'r') as f:
+            payload = json.load(f)
+        payload['payload'][0]['listened_at'] = int(time.time())
+        response = self.send_data(payload)
         self.assert200(response)
+        time.sleep(10)
+        url = url_for('api_v1.get_listens', user_name = self.user['musicbrainz_id'])
+        response = self.client.get(url, query_string = {'count': '1'})
+        self.assert200(response)
+        data = json.loads(response.data)
+        self.assertTrue('payload' in data)
+        data = data['payload']
+        # make sure user id is correct
+        self.assertTrue('user_id' in data)
+        self.assertEquals(data['user_id'], self.user['musicbrainz_id'])
+        # make sure that count is 1 and list also contains 1 listen
+        self.assertTrue('count' in data)
+        self.assertEquals(data['count'], 1)
+        self.assertTrue('listens' in data)
+        self.assertEquals(len(data['listens']), 1)
+        # make sure timestamp is the same as sent
+        self.assertTrue('listened_at' in data['listens'][0])
+        sent_time = payload['payload'][0]['listened_at']
+        self.assertEquals(data['listens'][0]['listened_at'], sent_time)
+        # make sure that artist msid, release msid and recording msid are present in data
+        self.assertTrue('recording_msid' in data['listens'][0])
+        self.assertTrue(is_valid_uuid(data['listens'][0]['recording_msid']))
+        self.assertTrue('artist_msid' in data['listens'][0]['track_metadata'])
+        self.assertTrue(is_valid_uuid(data['listens'][0]['track_metadata']['artist_msid']))
+        self.assertTrue('release_msid' in data['listens'][0]['track_metadata'])
+        self.assertTrue(is_valid_uuid(data['listens'][0]['track_metadata']['release_msid']))
 
     def send_data(self, payload):
         """ Sends payload to api.submit_listen and return the response
