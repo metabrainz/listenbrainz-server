@@ -47,8 +47,8 @@ class TestPostgresListenStore(DatabaseTestCase):
 
     def test_convert_row(self):
         now = datetime.utcnow()
-        data = [('id', 1), ('user_id', self.testuser_id), ('user_name', self.testuser_name), ('timestamp', now), 
-                ('artist_msid', str(uuid.uuid4())), ('album_msid', str(uuid.uuid4())), ('recording_msid', str(uuid.uuid4())), 
+        data = [('id', 1), ('user_id', self.testuser_id), ('user_name', self.testuser_name), ('timestamp', now),
+                ('artist_msid', str(uuid.uuid4())), ('album_msid', str(uuid.uuid4())), ('recording_msid', str(uuid.uuid4())),
                 ('data', "{'additional_info':{}}"), ('ts_since_epoch', to_epoch(now)) ]
         row = OrderedDict([(str(k), v) for (k, v) in data[1:]])
         listen = self.logstore.convert_row([1] + row.values())
