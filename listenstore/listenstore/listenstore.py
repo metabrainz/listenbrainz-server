@@ -278,7 +278,7 @@ class InfluxListenStore(ListenStore):
                     'artist_name' : listen.data['artist_name'],
                     'artist_msid' : listen.artist_msid,
                     'artist_mbids' : ",".join(listen.data['additional_info'].get('artist_mbids', [])),
-                    'album_name' : listen.data['additional_info'].get('release_name', ''),
+                    'album_name' : listen.data.get('release_name', ''),
                     'album_msid' : listen.album_msid,
                     'album_mbid' : listen.data['additional_info'].get('release_mbid', ''),
                     'track_name' : listen.data['track_name'],
