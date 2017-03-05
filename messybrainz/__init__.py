@@ -1,8 +1,8 @@
-import exceptions
+from . import exceptions
 import sqlalchemy.exc
-import data
+from . import data
 
-import db
+from . import db
 
 def submit_listens_and_sing_me_a_sweet_song(recordings):
 

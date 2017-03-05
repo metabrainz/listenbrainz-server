@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from flask import Blueprint, render_template
 
 index_bp = Blueprint('index', __name__)

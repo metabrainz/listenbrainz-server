@@ -3,12 +3,12 @@ from fabric.colors import green
 
 def git_pull():
     local("git pull origin")
-    print(green("Updated local code.", bold=True))
+    print((green("Updated local code.", bold=True)))
 
 
 def install_requirements():
     local("pip install -r requirements.txt")
-    print(green("Installed requirements.", bold=True))
+    print((green("Installed requirements.", bold=True)))
 
 
 def compile_styling():
@@ -18,7 +18,7 @@ def compile_styling():
     """
     style_path = "webserver/static/css/"
     local("lessc --clean-css %smain.less > %smain.css" % (style_path, style_path))
-    print(green("Style sheets have been compiled successfully.", bold=True))
+    print((green("Style sheets have been compiled successfully.", bold=True)))
 
 
 def deploy():

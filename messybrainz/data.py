@@ -1,11 +1,11 @@
 from hashlib import sha256
 import logging
 import json
-import exceptions
+from . import exceptions
 import uuid
 from sqlalchemy.sql import text
 
-import exceptions
+from . import exceptions
 
 def get_id_from_meta_hash(connection, data):
     meta = {"artist": data["artist"], "release": data["release"]}
