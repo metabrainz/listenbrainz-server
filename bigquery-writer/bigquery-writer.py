@@ -131,7 +131,7 @@ class BigQueryWriterSubscriber(RedisPubSubSubscriber):
                 self.time = 0
 
 if __name__ == "__main__":
-    r = Redis(config.REDIS_HOST)
+    r = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
     bq = BigQueryWriterSubscriber(r)
     while True:
         # If the start fails, try again in a few
