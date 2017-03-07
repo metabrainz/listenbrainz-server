@@ -109,6 +109,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         super(TestInfluxListenStore, self).setUp()
         self.log = logging.getLogger(__name__)
         self.logstore = init_influx_connection({ 'REDIS_HOST' : config.REDIS_HOST,
+                                                 'REDIS_PORT' : config.REDIS_PORT,
                                                  'INFLUX_HOST': config.INFLUX_HOST,
                                                  'INFLUX_PORT': config.INFLUX_PORT,
                                                  'INFLUX_DB_NAME': config.INFLUX_DB_NAME} )
