@@ -67,6 +67,6 @@ class RedisConsumer(RedisPubSubSubscriber):
                 self.time = 0
 
 if __name__ == "__main__":
-    r = Redis(config.REDIS_HOST)
+    r = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
     rc = RedisConsumer(r,config.SQLALCHEMY_DATABASE_URI)
     rc.start()

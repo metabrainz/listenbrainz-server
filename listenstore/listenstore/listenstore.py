@@ -172,8 +172,8 @@ class PostgresListenStore(ListenStore):
 class RedisListenStore(ListenStore):
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
-        self.log.info('Connecting to redis: %s', conf['REDIS_HOST'])
-        self.redis = Redis(conf['REDIS_HOST'])
+        self.log.info('Connecting to redis: %s:%s', conf['REDIS_HOST'], conf['REDIS_PORT'])
+        self.redis = Redis(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'])
 
     def get_playing_now(self, user_id):
         """ Return the current playing song of the user """
@@ -190,7 +190,7 @@ REDIS_INFLUX_USER_LISTEN_COUNT = "ls.listencount." # append username
 class InfluxListenStore(ListenStore):
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
-        self.redis = Redis(conf['REDIS_HOST'])
+        self.redis = Redis(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'])
         self.influx = InfluxDBClient(host=conf['INFLUX_HOST'], port=conf['INFLUX_PORT'], database=conf['INFLUX_DB_NAME'])
 
 

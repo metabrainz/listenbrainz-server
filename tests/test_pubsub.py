@@ -28,7 +28,7 @@ class PubSubTestCase(unittest.TestCase):
     def setUp(self):
         self.results1 = []
         self.results2 = []
-        self.redis = Redis(config.REDIS_HOST)
+        self.redis = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
         self.pub = RedisPubSubPublisher(self.redis, KEYSPACE)
         self.sub1 = Subscriber(self.redis, KEYSPACE, "one", self.results1)
         self.sub2 = Subscriber(self.redis, KEYSPACE, "two", self.results2)
