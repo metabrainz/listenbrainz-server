@@ -17,7 +17,7 @@ class TestRedisListenStore(DatabaseTestCase):
     def setUp(self):
         super(TestRedisListenStore, self).setUp()
         self.log = logging.getLogger(__name__)
-        self._redis = init_redis_connection(self.config.REDIS_HOST)
+        self._redis = init_redis_connection(self.config.REDIS_HOST, self.config.REDIS_PORT)
         self.testuser_id = db.user.create("test")
         self._create_test_data()
 
