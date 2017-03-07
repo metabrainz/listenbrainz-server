@@ -8,7 +8,8 @@ def create_influx(app):
     return init_influx_connection({ 'INFLUX_HOST':app.config['INFLUX_HOST'],
                                     'INFLUX_PORT':app.config['INFLUX_PORT'],
                                     'INFLUX_DB_NAME':app.config['INFLUX_DB_NAME'],
-                                    'REDIS_HOST':app.config['REDIS_HOST']})
+                                    'REDIS_HOST':app.config['REDIS_HOST'],
+                                    'REDIS_PORT':app.config['REDIS_PORT']})
 
 def create_postgres(app):
     from postgres_connection import init_postgres_connection
@@ -16,7 +17,7 @@ def create_postgres(app):
 
 def create_redis(app):
     from redis_connection import init_redis_connection
-    return init_redis_connection(app.config['REDIS_HOST'])
+    return init_redis_connection(app.config['REDIS_HOST'], app.config['REDIS_PORT'])
 
 def schedule_jobs(app):
     """ Init all the scheduled jobs """
