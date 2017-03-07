@@ -10,7 +10,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os
 
-redis_connection = Redis(host = config.REDIS_HOST)
+redis_connection = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
 
 # create a logger to log messages into LOG_FILE
 logger = logging.getLogger('alpha_importer')
