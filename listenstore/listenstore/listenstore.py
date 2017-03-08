@@ -52,7 +52,13 @@ class ListenStore(object):
         raise NotImplementedError()
 
     def get_listen_count_for_user(self, user_name, need_exact):
-        """ Override this method in ListenStore implementation class """
+        """ Override this method in ListenStore implementation class
+
+        Args:
+            user_name: the user to get listens for
+            need_exact: if True, get an exact number of listens directly from the ListenStore
+                        otherwise, can get from a cache also
+        """
         raise NotImplementedError()
 
     def fetch_listens(self, user_name, from_ts=None, to_ts=None, limit=DEFAULT_LISTENS_PER_FETCH):
@@ -214,12 +220,13 @@ class InfluxListenStore(ListenStore):
         self.influx = InfluxDBClient(host=conf['INFLUX_HOST'], port=conf['INFLUX_PORT'], database=conf['INFLUX_DB_NAME'])
 
 
-    def get_listen_count_for_user(self, user_name, need_exact = False):
-        """ Returns total listen count for user with user_name passed.
+    def get_listen_count_for_user(self, user_name, need_exact=False):
+        """Get the total number of listens for a user. The number of listens comes from
+           a redis cache unless an exact number is asked for.
 
-            Args:
-                user_name: user name of user whose listen count is to be found
-                need_exact: signifies if cached value in redis will suffice or if exact value is needed
+        Args:
+            user_name: the user to get listens for
+            need_exact: if True, get an exact number of listens directly from the ListenStore
         """
 
         if not need_exact:
@@ -232,7 +239,7 @@ class InfluxListenStore(ListenStore):
         try:
             results = self.influx.query("""SELECT count(*)
                                              FROM listen
-                                            WHERE user_name = '%s'""" % (user_name))
+                                            WHERE user_name = '%s'""" % (user_name, ))
         except (InfluxDBServerError, InfluxDBClientError) as e:
             self.log.error("Cannot query influx: %s" % str(e))
             raise
@@ -245,25 +252,23 @@ class InfluxListenStore(ListenStore):
 
         # put this value into redis with expiry time based on the number of listens
         # that the user has
+        user_key = "{}{}".format(REDIS_INFLUX_USER_LISTEN_COUNT, user_name)
         if count <= InfluxListenStore.LOW_LISTEN_THRESHOLD:
-            self.redis.setex(REDIS_INFLUX_USER_LISTEN_COUNT + user_name, count, InfluxListenStore.LISTENCOUNT_CACHE_TIME_LOW)
+            self.redis.setex(user_key, count, InfluxListenStore.LISTENCOUNT_CACHE_TIME_LOW)
         elif count <= InfluxListenStore.MEDIUM_LISTEN_THRESHOLD:
-            self.redis.setex(REDIS_INFLUX_USER_LISTEN_COUNT + user_name, count, InfluxListenStore.LISTENCOUNT_CACHE_TIME_MEDIUM)
+            self.redis.setex(user_key, count, InfluxListenStore.LISTENCOUNT_CACHE_TIME_MEDIUM)
         else:
-            self.redis.setex(REDIS_INFLUX_USER_LISTEN_COUNT + user_name, count, InfluxListenStore.LISTENCOUNT_CACHE_TIME_HIGH)
+            self.redis.setex(user_key, count, InfluxListenStore.LISTENCOUNT_CACHE_TIME_HIGH)
         return int(count)
 
 
     def reset_listen_count(self, user_name):
-        """ Function to reset the listen count of user
+        """ Reset the listen count of a user from cache and put in a new calculated value.
 
             Args:
                 user_name: the musicbrainz id of user whose listen count needs to be reset
-
-            Return value:
-                The exact number of listens of user.
         """
-        return get_listen_count_for_user(user_name, need_exact = True)
+        get_listen_count_for_user(user_name, need_exact=True)
 
 
     def _select_single_value(self, query):
