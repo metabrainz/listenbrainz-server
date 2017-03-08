@@ -25,7 +25,9 @@ import os
 import pytz
 
 LISTENS_PER_PAGE = 25
-LISTEN_COUNT_APPROXIMATION = 10 # approximate listen count shown is rounded down to multiple of this
+
+# this variable is sent as a parameter to round and used to make the listen count approximate
+LISTEN_COUNT_APPROXIMATION_ROUND = -1
 
 user_bp = Blueprint("user", __name__)
 
@@ -89,8 +91,8 @@ def profile(user_name):
         have_listen_count = False
         listen_count = 0
 
-    if have_listen_count and not need_exact_listen_count and listen_count > LISTEN_COUNT_APPROXIMATION:
-        listen_count = (listen_count / LISTEN_COUNT_APPROXIMATION) * LISTEN_COUNT_APPROXIMATION
+    if have_listen_count and not need_exact_listen_count:
+        listen_count = int(round(listen_count, LISTEN_COUNT_APPROXIMATION_ROUND))
 
     # Getting data for current page
     max_ts = request.args.get("max_ts")
@@ -158,9 +160,9 @@ def profile(user_name):
         previous_listen_ts=previous_listen_ts,
         next_listen_ts=next_listen_ts,
         spotify_uri=_get_spotify_uri_for_listens(listens),
-        have_listen_count = have_listen_count,
+        have_listen_count=have_listen_count,
         listen_count=listen_count,
-        have_exact_listen_count = need_exact_listen_count,
+        have_exact_listen_count=need_exact_listen_count,
     )
 
 
