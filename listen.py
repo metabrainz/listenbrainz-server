@@ -47,34 +47,34 @@ class Listen(object):
     def from_influx(cls, row):
         """ Factory to make Listen objects from an influx row
         """
-        dt = datetime.strptime(row['time'] , "%Y-%m-%dT%H:%M:%SZ")
+        dt = datetime.strptime(row['time'] , '%Y-%m-%dT%H:%M:%SZ')
         t = int(dt.strftime('%s'))
         mbids = []
         if row.get('artist_mbids'):
-            for mbid in row.get('artist_mbids').split(","):
-                mbids.append(mbid) 
+            for mbid in row.get('artist_mbids').split(','):
+                mbids.append(mbid)
         tags = []
         if row.get('tags'):
-            for tag in row.get('tags').split(","):
+            for tag in row.get('tags').split(','):
                 tags.append(tag)
 
         data = {
-            'artist_mbids' : mbids,
-            'album_msid' : row.get('album_msid'),
-            'album_mbid' : row.get('album_mbid'),
-            'album_name' : row.get('album_name'),
-            'recording_mbid' : row.get('recording_mbid'),
-            'tags' : tags,
+            'artist_mbids': mbids,
+            'album_msid': row.get('album_msid'),
+            'album_mbid': row.get('album_mbid'),
+            'album_name': row.get('album_name'),
+            'recording_mbid': row.get('recording_mbid'),
+            'tags': tags,
         }
         return cls(
-            timestamp = t,
-            user_name = row.get('user_name'),
-            artist_msid = row.get('artist_msid'),
-            recording_msid = row.get('recording_msid'),
-            data = { 
-                'additional_info' : data,
-                'artist_name' : row.get('artist_name'),
-                'track_name' : row.get('track_name'),
+            timestamp=t,
+            user_name=row.get('user_name'),
+            artist_msid=row.get('artist_msid'),
+            recording_msid=row.get('recording_msid'),
+            data={
+                'additional_info': data,
+                'artist_name': row.get('artist_name'),
+                'track_name': row.get('track_name'),
             }
         )
 
