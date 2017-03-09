@@ -50,12 +50,15 @@ class Listen(object):
         dt = datetime.strptime(row['time'] , '%Y-%m-%dT%H:%M:%SZ')
         t = int(dt.strftime('%s'))
         mbids = []
-        if row.get('artist_mbids'):
-            for mbid in row.get('artist_mbids').split(','):
+        artist_mbids = row.get('artist_mbids')
+        if artist_mbids:
+            for mbid in artist_mbids.split(','):
                 mbids.append(mbid)
+
         tags = []
-        if row.get('tags'):
-            for tag in row.get('tags').split(','):
+        influx_tags = row.get('tags')
+        if influx_tags:
+            for tag in influx_tags.split(','):
                 tags.append(tag)
 
         data = {
