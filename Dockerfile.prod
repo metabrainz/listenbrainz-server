@@ -14,9 +14,11 @@ RUN apt-get update \
                        node-less \
                        node-clean-css \
                        redis-tools \
-                       uwsgi \
-                       uwsgi-plugin-python \
     && rm -rf /var/lib/apt/lists/*
+
+
+# This is needed to circumvent a bug in an ubunutu package
+RUN ln -s /usr/lib/python2.7/plat-*/_sysconfigdata_nd.py /usr/lib/python2.7/
 
 # PostgreSQL client
 RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
@@ -25,6 +27,8 @@ RUN echo 'deb http://apt.postgresql.org/pub/repos/apt/ jessie-pgdg main' $PG_MAJ
 RUN apt-get update \
     && apt-get install -y --no-install-recommends postgresql-client-$PG_MAJOR \
     && rm -rf /var/lib/apt/lists/*
+
+RUN pip install uWSGI==2.0.13.1
 
 RUN mkdir /code
 WORKDIR /code
@@ -39,6 +43,9 @@ RUN python setup.py install
 WORKDIR /code
 RUN git clone https://github.com/metabrainz/listenbrainz-server.git listenbrainz
 WORKDIR /code/listenbrainz
+
+# TODO:Remove this for merging!
+RUN git checkout production-docker-setup
 RUN pip install -r requirements.txt
 
 # Node
