@@ -1,3 +1,16 @@
-#!/bin/sh
+#!/bin/bash
 
-exec uwsgi /etc/uwsgi/uwsgi.ini
+if [ "${CONTAINER_NAME}" = "listenbrainz-web" ]
+then
+    exec uwsgi /etc/uwsgi/uwsgi.ini
+fi
+if [ "${CONTAINER_NAME}" = "listenbrainz-influx-writer" ]
+then
+    exec python influx-writer/influx-writer.py
+fi
+if [ "${CONTAINER_NAME}" = "listenbrainz-bigquery-writer" ]
+then
+    exec python biquery-writer/bigquery-writer.py
+fi
+
+echo "init script has no clue which service to start. Set env var CONTAINER_NAME!"
