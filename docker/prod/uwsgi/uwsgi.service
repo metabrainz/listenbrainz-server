@@ -6,10 +6,12 @@ then
 fi
 if [ "${CONTAINER_NAME}" = "listenbrainz-influx-writer" ]
 then
+    cd /code/listenbrainz
     exec python influx-writer/influx-writer.py
 fi
 if [ "${CONTAINER_NAME}" = "listenbrainz-bigquery-writer" ]
 then
+    cd /code/listenbrainz
     exec python biquery-writer/bigquery-writer.py
 fi
 
