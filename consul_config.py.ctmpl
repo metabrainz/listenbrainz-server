@@ -7,8 +7,8 @@ DEBUG = False
 
 SECRET_KEY = '''{{template "KEY" "secret_key"}}'''
 
-{{if service "listenbrainz-server-db"}}
-{{with index (service "listenbrainz-server-db") 0}}
+{{if service "listenbrainz-db"}}
+{{with index (service "listenbrainz-db") 0}}
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{{.Port}}/listenbrainz"
 MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@{{.Address}}:{{.Port}}/messybrainz"
 POSTGRES_ADMIN_URI="postgresql://postgres@{{.Address}}:{{.Port}}/template1"
@@ -20,15 +20,15 @@ MAX_POSTGRES_LISTEN_HISTORY = "-1"
 PG_QUERY_TIMEOUT = "3000"
 PG_ASYNC_LISTEN_COMMIT = False
 
-{{if service "listenbrainz-server-redis"}}
-{{with index (service "listenbrainz-server-redis") 0}}
+{{if service "listenbrainz-redis"}}
+{{with index (service "listenbrainz-redis") 0}}
 REDIS_HOST = "{{.Address}}"
 REDIS_PORT = {{.Port}}
 {{end}}
 {{end}}
 
-{{if service "listenbrainz-server-influxdb"}}
-{{with index (service "listenbrainz-server-influxdb") 0}}
+{{if service "listenbrainz-influxdb"}}
+{{with index (service "listenbrainz-influxdb") 0}}
 INFLUX_HOST    = "{{.Address}}"
 INFLUX_PORT    = {{.Port}}
 INFLUX_DB_NAME  = "listenbrainz"
