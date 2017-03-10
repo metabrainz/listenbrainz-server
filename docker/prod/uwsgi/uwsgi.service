@@ -12,7 +12,7 @@ fi
 if [ "${CONTAINER_NAME}" = "listenbrainz-bigquery-writer" ]
 then
     cd /code/listenbrainz
-    exec python biquery-writer/bigquery-writer.py
+    exec python bigquery-writer/bigquery-writer.py
 fi
 
 echo "init script has no clue which service to start. Set env var CONTAINER_NAME!"
