@@ -34,7 +34,8 @@ INFLUX_DB_NAME  = "listenbrainz"
 MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
 MUSICBRAINZ_CLIENT_SECRET = "CLIENT_SECRET"
 
-# Lastfm API key
+# Lastfm API
+LASTFM_API_URL = "https://ws.audioscrobbler.com/2.0/"
 LASTFM_API_KEY = "USE_LASTFM_API_KEY"
 
 # BigQuery support
