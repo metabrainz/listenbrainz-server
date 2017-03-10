@@ -44,6 +44,7 @@ def lastfmscraper(user_name):
         lastfm_username=lastfm_username,
         user_name=user_name,
         lastfm_api_key=current_app.config['LASTFM_API_KEY'],
+        lastfm_api_url=current_app.config['LASTFM_API_URL'],
     )
     return Response(scraper, content_type="text/javascript")
 

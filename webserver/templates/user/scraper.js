@@ -139,7 +139,7 @@ function getLastFMPage(page) {
         }, 3000);
     }
 
-    var url = "http://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user={{ lastfm_username }}&api_key={{ lastfm_api_key }}&format=json&page=" + page;
+    var url = "{{ lastfm_api_url }}?method=user.getrecenttracks&user={{ lastfm_username }}&api_key={{ lastfm_api_key }}&format=json&page=" + page;
 
     var xhr = new XMLHttpRequest();
     xhr.timeout = 10 * 1000; // 10 seconds
