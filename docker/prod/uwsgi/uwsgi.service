@@ -14,5 +14,10 @@ then
     cd /code/listenbrainz
     exec python bigquery-writer/bigquery-writer.py
 fi
+if [ "${CONTAINER_NAME}" = "listenbrainz-alpha-importer" ]
+then
+    cd /code/listenbrainz
+    exec python alpha_importer.py
+fi
 
 echo "init script has no clue which service to start. Set env var CONTAINER_NAME!"
