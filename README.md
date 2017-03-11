@@ -2,6 +2,8 @@
 
 Server for the ListenBrainz project.
 
+[Website](https://listenbrainz.org) | [Beta website](https://beta.listenbrainz.org) | [Bug tracker](https://tickets.metabrainz.org/projects/LB/issues)
+
 ## Installation
 
 *These instructions are meant to get you started quickly with development
