@@ -7,6 +7,20 @@
   <div class="row">
 
     <div class="col-md-7 col-lg-8">
+      <h3>ListenBrainz Stats</h3>
+      {% if user_count %}
+        Number of users registered: {{ user_count }}
+      {% endif %}
+      <br/>
+      {% if listen_count %}
+        Total number of listens: {{ listen_count }}
+      {% endif %}
+      <br/>
+        Number of people in queue for alpha imports: {{ alpha_importer_size }}
+      <br/>
+    </div>
+
+    <div class="col-md-7 col-lg-8">
       {% for s in stats %}
           <h3>{{ s.desc }}</h3>
           <table class="table table-border table-condensed table-striped">
