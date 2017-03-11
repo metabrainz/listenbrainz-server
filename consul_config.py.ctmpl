@@ -38,6 +38,7 @@ INFLUX_DB_NAME  = "listenbrainz"
 MUSICBRAINZ_CLIENT_ID = '''{{template "KEY" "musicbrainz/client_id"}}'''
 MUSICBRAINZ_CLIENT_SECRET = '''{{template "KEY" "musicbrainz/client_secret"}}'''
 
+LASTFM_API_URL = '''{{template "KEY" "lastfm_api_url"}}'''
 LASTFM_API_KEY = '''{{template "KEY" "lastfm_api_key"}}'''
 WRITE_TO_BIGQUERY = '''{{template "KEY" "write_to_bigquery"}}'''
 
