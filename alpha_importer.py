@@ -103,3 +103,5 @@ if __name__ == '__main__':
             if import_from_alpha(username, token):
                 queue_pop()
                 update_status(username, "DONE")
+        else:
+            time.sleep(3)
