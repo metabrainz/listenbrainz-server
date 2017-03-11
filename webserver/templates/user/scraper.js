@@ -232,7 +232,6 @@ function pageDone() {
 function submitListens() {
 
     struct = submitQueue.shift()
-    console.log("about to die??");
     if (!struct.payload.length) {
         pageDone();
         return;
