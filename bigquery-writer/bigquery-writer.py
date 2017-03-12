@@ -23,8 +23,6 @@ APP_CREDENTIALS_FILE = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
 
 # TODO:
 #   Big query hardcoded data set ids
-#   Redis persistence
-
 
 class BigQueryWriterSubscriber(RedisPubSubSubscriber):
     def __init__(self, redis):
