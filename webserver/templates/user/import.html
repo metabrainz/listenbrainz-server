@@ -19,17 +19,17 @@
       If you have questions about this, please feel free to <a href="https://metabrainz.org/contact">contact us</a>.
     </p>
     <div class="well">
-    {% if alpha_import_status == "NO_REQUEST" %}
-
-      <a href="/user/import/alpha" style="color: white">
-        <p>
-          <span class="btn btn-warning btn-lg" style="width: 400px">Import Now</span>
-        </p>
-      </a>
-    {% elif alpha_import_status == "WAITING" %}
+    {% if alpha_import_status == "WAITING" %}
       <p> <strong> Your request to import data from ListenBrainz alpha is in a queue and we will get to it as soon as possible! You can reload this page or click <a href = {{ url_for('user.import_data') }}>here</a> to know the status of the request. </strong> </p>
     {% elif alpha_import_status == "DONE" %}
-      <p> <strong> Your listen import from ListenBrainz Alpha has completed successfully! </strong> </p>
+      <p><strong>Your listen import from ListenBrainz Alpha has completed successfully!</strong></p>
+    {% endif %}
+    {% if alpha_import_status == "NO_REQUEST" or alpha_import_status == "DONE" %}
+      <a href={{ url_for("user.import_from_alpha") }} style="color: white">
+        <p>
+          <span class="btn btn-warning btn-lg" style="width: 400px">Import Now!</span>
+        </p>
+      </a>
     {% endif %}
     </div>
 
