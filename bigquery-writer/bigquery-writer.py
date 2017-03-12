@@ -96,7 +96,7 @@ class BigQueryWriterSubscriber(RedisPubSubSubscriber):
             return
 
         if not os.path.exists(APP_CREDENTIALS_FILE):
-            self.log.error("BiqQueryWriter not started, big-query-credentials.json is missing.")
+            self.log.error("BiqQueryWriter not started, %s is missing." % APP_CREDENTIALS_FILE)
             sleep(1000)
             return
 
