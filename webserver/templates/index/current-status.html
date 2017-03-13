@@ -7,6 +7,36 @@
   <div class="row">
 
     <div class="col-md-7 col-lg-8">
+      <h3>ListenBrainz Stats</h3>
+      <table class="table table-border table-condensed table-striped">
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th>Number</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% if user_count %}
+          <tr>
+            <td>Number of Users</td>
+            <td>{{ user_count }}</td>
+          </tr>
+        {% endif %}
+        {% if listen_count %}
+          <tr>
+            <td>Number of listens</td>
+            <td>{{ listen_count }}</td>
+          </tr>
+        {% endif %}
+          <tr>
+            <td>Number of people in queue for alpha imports</td>
+            <td>{{ alpha_importer_size }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="col-md-7 col-lg-8">
       {% for s in stats %}
           <h3>{{ s.desc }}</h3>
           <table class="table table-border table-condensed table-striped">

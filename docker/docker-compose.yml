@@ -56,7 +56,7 @@ services:
   influx_writer:
     build:
       context: ..
-      dockerfile: Dockerfile-influx-writer
+      dockerfile: Dockerfile
     command: python influx-writer/influx-writer.py
     depends_on:
       - redis
@@ -65,7 +65,7 @@ services:
   bigquery:
     build:
       context: ..
-      dockerfile: Dockerfile-bigquery-writer
+      dockerfile: Dockerfile
     volumes:
       - ../credentials:/code/credentials
     environment:

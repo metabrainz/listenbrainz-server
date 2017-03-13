@@ -44,6 +44,7 @@ def lastfmscraper(user_name):
         lastfm_username=lastfm_username,
         user_name=user_name,
         lastfm_api_key=current_app.config['LASTFM_API_KEY'],
+        lastfm_api_url=current_app.config['LASTFM_API_URL'],
     )
     return Response(scraper, content_type="text/javascript")
 
@@ -156,20 +157,6 @@ def import_data():
     if 'LASTFM_API_KEY' not in current_app.config or current_app.config['LASTFM_API_KEY'] == "":
         return NotFound("LASTFM_API_KEY not specified.")
 
-    lastfm_username = request.args.get("lastfm_username")
-    if lastfm_username:
-        loader = render_template(
-            "user/loader.js",
-            base_url=url_for("user.lastfmscraper",
-                             user_name=current_user.musicbrainz_id,
-                             _external=True),
-            user_token=current_user.auth_token,
-            lastfm_username=lastfm_username,
-        )
-        loader = "javascript:%s" % loader
-    else:
-        loader = None
-
     alpha_import_status = "NO_REQUEST"
     redis_connection = _redis.redis
     user_key = "{} {}".format(current_app.config['IMPORTER_SET_KEY_PREFIX'], current_user.musicbrainz_id)
@@ -179,8 +166,11 @@ def import_data():
         "user/import.html",
         user=current_user,
         alpha_import_status=alpha_import_status,
-        loader=loader,
-        lastfm_username=lastfm_username
+        scraper_url=url_for(
+            "user.lastfmscraper",
+            user_name=current_user.musicbrainz_id,
+            _external=True,
+        ),
     )
 
 
