@@ -17,7 +17,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 
-# This is needed to circumvent a bug in an ubunutu package
+# This is needed to circumvent a bug in the ubunutu python package
 RUN ln -s /usr/lib/python2.7/plat-*/_sysconfigdata_nd.py /usr/lib/python2.7/
 
 # PostgreSQL client
@@ -40,13 +40,12 @@ RUN pip install -r requirements.txt
 RUN python setup.py install
 
 # ListenBrainz
-WORKDIR /code
-RUN git clone https://github.com/metabrainz/listenbrainz-server.git listenbrainz
 WORKDIR /code/listenbrainz
-
-# TODO:Remove this for merging!
-RUN git checkout production-docker-setup
+COPY ./requirements.txt .
 RUN pip install -r requirements.txt
+
+COPY . /code/listenbrainz
+WORKDIR /code/listenbrainz
 
 # Node
 #RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
