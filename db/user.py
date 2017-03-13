@@ -124,7 +124,24 @@ def get_by_token(token):
         return dict(row) if row else None
 
 
+def get_user_count():
+    """ Get total number of users in database.
 
+    Returns:
+        int: user count
+    """
+
+    with db.engine.connect() as connection:
+        try:
+            result = connection.execute(sqlalchemy.text("""
+                SELECT count(*) AS user_count
+                  FROM "user"
+            """))
+            row = result.fetchone()
+            return row['user_count']
+        except DatabaseException as e:
+            logger.error(e)
+            raise
 
 def get_or_create(musicbrainz_id):
     """Get user with a specified MusicBrainz ID, or create if there's no account.

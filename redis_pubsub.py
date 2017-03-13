@@ -182,6 +182,8 @@ class RedisPubSubSubscriber(object):
         if not len(messages):
             return 0
 
+        print("Have %s messages, will attempt write." % len(messages))
+
         # We've collected messages to write, now write them
         broken = True
         for i in xrange(retries):
@@ -190,10 +192,12 @@ class RedisPubSubSubscriber(object):
                 break
 
             sleep(WRITE_FAIL_TIMEOUT)
+            print("write timeout. sleep")
 
 
         # We've tried to write repeatedly, but no luck. :(
         if broken:
+            print("Raising write fail exception")
             raise WriteFailException
 
         # Use a pipeline to clean up
@@ -213,6 +217,7 @@ class RedisPubSubSubscriber(object):
         # Flush everything we stuffed into the redis pipeline
         p.execute()
 
+        print("Wrote messages.")
         return len(messages)
 
     def write(self, messages):

@@ -1,0 +1,68 @@
+{{- define "KEY" -}}
+    {{ key (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .) }}
+{{- end -}}
+
+
+DEBUG = False
+
+SECRET_KEY = '''{{template "KEY" "secret_key"}}'''
+
+{{if service "listenbrainz-db"}}
+{{with index (service "listenbrainz-db") 0}}
+SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{{.Port}}/listenbrainz"
+MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@{{.Address}}:{{.Port}}/messybrainz"
+POSTGRES_ADMIN_URI="postgresql://postgres@{{.Address}}:{{.Port}}/template1"
+{{end}}
+{{end}}
+
+# Not currently used
+MAX_POSTGRES_LISTEN_HISTORY = "-1"
+PG_QUERY_TIMEOUT = "3000"
+PG_ASYNC_LISTEN_COMMIT = False
+
+{{if service "listenbrainz-redis"}}
+{{with index (service "listenbrainz-redis") 0}}
+REDIS_HOST = "{{.Address}}"
+REDIS_PORT = {{.Port}}
+{{end}}
+{{end}}
+
+{{if service "listenbrainz-influxdb"}}
+{{with index (service "listenbrainz-influxdb") 0}}
+INFLUX_HOST    = "{{.Address}}"
+INFLUX_PORT    = {{.Port}}
+INFLUX_DB_NAME  = "listenbrainz"
+{{end}}
+{{end}}
+
+MUSICBRAINZ_CLIENT_ID = '''{{template "KEY" "musicbrainz/client_id"}}'''
+MUSICBRAINZ_CLIENT_SECRET = '''{{template "KEY" "musicbrainz/client_secret"}}'''
+
+LASTFM_API_URL = '''{{template "KEY" "lastfm_api_url"}}'''
+LASTFM_API_KEY = '''{{template "KEY" "lastfm_api_key"}}'''
+WRITE_TO_BIGQUERY = '''{{template "KEY" "write_to_bigquery"}}'''
+
+# Default is fine for now
+PLAYING_NOW_MAX_DURATION = 10 * 60
+
+# Set to True if Less should be compiled in browser. Set to False if styling is pre-compiled.
+COMPILE_LESS = True
+
+# MAX file size to be allowed for the lastfm-backup import, default is infinite
+# Size is in bytes
+MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
+
+# Specify the upload folder where all the lastfm-backup will be stored
+# The path must be absolute path
+UPLOAD_FOLDER = '''{{template "KEY" "upload_folder"}}'''
+
+
+ALPHA_URL = '''{{template "KEY" "alpha_url"}}'''
+BETA_URL = '''{{template "KEY" "beta_url"}}'''
+
+# defaults are unlikely to be changed
+IMPORTER_QUEUE_KEY = 'alphaimporter:queue'
+IMPORTER_SET_KEY_PREFIX = 'alphaimporter:set'
+LISTENS_PER_GET = 100
+IMPORTER_LOG_FILE = '-'
+IMPORTER_DELAY = 3 # delay if requests don't return http 200

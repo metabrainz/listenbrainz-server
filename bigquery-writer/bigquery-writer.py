@@ -23,8 +23,6 @@ APP_CREDENTIALS_FILE = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
 
 # TODO:
 #   Big query hardcoded data set ids
-#   Redis persistence
-
 
 class BigQueryWriterSubscriber(RedisPubSubSubscriber):
     def __init__(self, redis):
@@ -98,7 +96,7 @@ class BigQueryWriterSubscriber(RedisPubSubSubscriber):
             return
 
         if not os.path.exists(APP_CREDENTIALS_FILE):
-            self.log.error("BiqQueryWriter not started, big-query-credentials.json is missing.")
+            self.log.error("BiqQueryWriter not started, %s is missing." % APP_CREDENTIALS_FILE)
             sleep(1000)
             return
 

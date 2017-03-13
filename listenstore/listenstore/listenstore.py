@@ -16,6 +16,7 @@ from sqlalchemy.pool import NullPool
 import sqlalchemy.exc
 import pytz
 from redis import Redis
+from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 
 MIN_ID = 1033430400     # approx when audioscrobbler was created
 ORDER_DESC = 0
@@ -43,6 +44,10 @@ class ListenStore(object):
 
     def fetch_listens_from_storage():
         """ Override this method in PostgresListenStore class """
+        raise NotImplementedError()
+
+    def get_total_listen_count():
+        """ Return the total number of listens stored in the ListenStore """
         raise NotImplementedError()
 
     def fetch_listens(self, user_name, from_ts=None, to_ts=None, limit=DEFAULT_LISTENS_PER_FETCH):
@@ -188,6 +193,10 @@ class RedisListenStore(ListenStore):
 
 REDIS_INFLUX_USER_LISTEN_COUNT = "ls.listencount." # append username
 class InfluxListenStore(ListenStore):
+
+    REDIS_INFLUX_TOTAL_LISTEN_COUNT = "ls.listencount.total"
+    TOTAL_LISTEN_COUNT_CACHE_TIME = 10 * 60
+
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
         self.redis = Redis(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'])
@@ -233,6 +242,31 @@ class InfluxListenStore(ListenStore):
             return int(dt.strftime('%s'))
 
         return None
+
+    def get_total_listen_count(self):
+        """ Returns the total number of listens stored in the ListenStore.
+            First checks the redis cache for the value, if not present there
+            makes a query to the db and caches it in redis.
+        """
+
+        count = self.redis.get(InfluxListenStore.REDIS_INFLUX_TOTAL_LISTEN_COUNT)
+        if count:
+            return int(count)
+
+        try:
+            result = self.influx.query("""SELECT count(*)
+                                            FROM listen""")
+        except (InfluxDBServerError, InfluxDBClientError) as e:
+            self.log.error("Cannot query influx: %s" % str(e))
+            raise
+
+        try:
+            count = result.raw['series'][0]['values'][0][1]
+        except KeyError:
+            count = 0
+
+        self.redis.setex(InfluxListenStore.REDIS_INFLUX_TOTAL_LISTEN_COUNT, count, InfluxListenStore.TOTAL_LISTEN_COUNT_CACHE_TIME)
+        return count
 
 
     def get_timestamps_for_user(self, user_name):
