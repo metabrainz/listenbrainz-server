@@ -41,7 +41,7 @@
                 <tr>
                   <td>
                       {% if listen.track_metadata.additional_info.artist_mbids %}
-                        <a href="http://musicbrainz.org/recording/{{ listen.track_metadata.additional_info.artist_mbids }}">
+                        <a href="http://musicbrainz.org/artist/{{ listen.track_metadata.additional_info.artist_mbids[0] }}">
                       {% endif %}
                       {{ listen.track_metadata.artist_name }}
                       {% if listen.track_metadata.additional_info.artist_mbids %}
