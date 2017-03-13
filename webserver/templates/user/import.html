@@ -35,22 +35,6 @@
     </div>
 
     <h3>Direct import from Last.fm</h3>
-    {% if loader %}
-      <p>
-        <strong>Step 2</strong>
-      </p>
-      <div class="well">
-        <p>
-           Import NOW !!  This will import your profile now without the need to open lastfm.<br/>
-           You need to keep this page open for the tool to work, it might take a while to complete. Though, you can continue doing your work. :)
-        </p>
-        <a href="{{loader}}" style="color: white;">
-          <p>
-            <span class="btn btn-warning btn-lg" style="width: 400px">Import NOW</span>
-          </p>
-        </a>
-      </div>
-    {% else %}
       <p>
         <strong>Notes about the Last.fm import process:</strong>
       </p>
@@ -60,18 +44,17 @@
         process. Running the import process multiple times <strong>does not</strong> create duplicates in your
         ListenBrainz listen history.
       </p>
-      <br/>
       <p>
-        <strong>Step 1</strong>
-      </p>
+        Clicking the "Import now!" button will import your profile now without the need to open lastfm.<br/>
+        You need to keep this page open for the tool to work, it might take a while to complete. Though, you can continue doing your work. :)
+      <br/>
       We need to know your Last.fm username:
       <div class="well">
-        <form action="" method="GET">
-          <input type="text" name="lastfm_username" size="30" placeholder="Last.fm username">
-          <input type="submit" value="proceed to step 2">
+        <form onsubmit="return lastfm_import();">
+          <input id = "lastfm_input" type="text" name="lastfm_username" size="30" placeholder="Last.fm Username">
+          <input type="submit" value="Import now!">
         </form>
       </div>
-    {% endif %}
 
     <h3>Import a Last.fm backup file</h3>
 
@@ -100,4 +83,20 @@
     </p>
 
   {% endif %}
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script type="text/javascript">
+    function lastfm_import() {
+      var lastfm_username = document.getElementById("lastfm_input").value;
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', encodeURI('{{ scraper_url }}?user_token={{ user.auth_token }}&lastfm_username='+ lastfm_username));
+      xhr.onload = function(content) {
+        eval(xhr.response);
+      };
+      xhr.send();
+      return false;
+    }
+  </script>
 {% endblock %}
