@@ -1,0 +1,21 @@
+{
+    "listen_type": "single",
+    "payload": [
+        {
+            "track_metadata": {
+                "track_name": "Fade",
+                "artist_name": "Kanye West",
+                "release_name": "The Life of Pablo"
+            },
+            "listened_at": 1486466946
+        },
+        {
+            "track_metadata": {
+                "track_name": "Sister",
+                "artist_name": "The Black Keys",
+                "release_name": "El Camino"
+            },
+            "listened_at": 1486466992
+        }
+    ]
+}

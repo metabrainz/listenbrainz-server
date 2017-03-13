@@ -1,0 +1,17 @@
+{
+    "payload": [
+        {
+            "track_metadata": {
+                "additional_info": {
+                    "tags": [
+                        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                    ]
+                },
+                "artist_name": "Kanye West",
+                "release_name": "The Life of Pablo",
+                "track_name": "Fade"
+            }
+        }
+    ],
+    "listen_type": "playing_now"
+}
