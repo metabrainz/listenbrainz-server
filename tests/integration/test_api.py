@@ -4,8 +4,7 @@ import os
 import uuid
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", ".."))
 
-from webserver.testing import ServerTestCase
-from db.testing import DatabaseTestCase
+from tests.integration import IntegrationTestCase
 from flask import url_for
 import db.user
 import time
@@ -21,11 +20,10 @@ def is_valid_uuid(u):
     except ValueError:
         return False
 
-class APITestCase(ServerTestCase, DatabaseTestCase):
+class APITestCase(IntegrationTestCase):
 
     def setUp(self):
-        super(ServerTestCase, self).setUp()
-        super(DatabaseTestCase, self).setUp()
+        super(APITestCase, self).setUp()
         self.user = db.user.get_or_create('testuserpleaseignore')
 
     def test_get_listens(self):
