@@ -1,0 +1,19 @@
+{
+    "payload": [
+        {
+            "listened_at": 1489671410,
+            "track_metadata": {
+                "release_name": "Majid Jordan",
+                "track_name": "Every Step Every Way",
+                "artist_name": "Majid Jordan",
+                "additional_info": {
+                    "link1": "https://genius.com/Majid-jordan-every-step-every-way-lyrics",
+                    "best_song": "definitely",
+                    "link2": "https://www.last.fm/music/Majid+Jordan/_/Every+Step+Every+Way",
+                    "other_stuff": "teststuffplsignore"
+                }
+            }
+        }
+    ],
+    "listen_type": "import"
+}
