@@ -40,7 +40,7 @@ class APITestCase(IntegrationTestCase):
         # This sleep allows for the influx subscriber to take its time in getting
         # the listen submitted from redis and writing it to influx.
         # Removing it causes an empty list of listens to be returned.
-        time.sleep(10)
+        time.sleep(15)
 
         url = url_for('api_v1.get_listens', user_name = self.user['musicbrainz_id'])
         response = self.client.get(url, query_string = {'count': '1'})
@@ -199,6 +199,31 @@ class APITestCase(IntegrationTestCase):
             payload = json.load(f)
         response = self.send_data(payload)
         self.assert400(response)
+
+    def test_additional_info(self):
+        """ Test to make sure that user generated data present in additional_info field
+            of listens is preserved
+        """
+        with open(self.path_to_data_file('additional_info.json'), 'r') as f:
+            payload = json.load(f)
+
+        payload['payload'][0]['listened_at'] = int(time.time())
+        response = self.send_data(payload)
+        self.assert200(response)
+
+        # wait for influx-writer to get its work done before getting the listen back
+        time.sleep(15)
+
+        url = url_for('api_v1.get_listens', user_name = self.user['musicbrainz_id'])
+        response = self.client.get(url, query_string = {'count': '1'})
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        sent_additional_info = payload['payload'][0]['track_metadata']['additional_info']
+        received_additional_info = data['listens'][0]['track_metadata']['additional_info']
+        self.assertEquals(sent_additional_info['best_song'], received_additional_info['best_song'])
+        self.assertEquals(sent_additional_info['link1'], received_additional_info['link1'])
+        self.assertEquals(sent_additional_info['link2'], received_additional_info['link2'])
+        self.assertEquals(sent_additional_info['other_stuff'], received_additional_info['other_stuff'])
 
     def path_to_data_file(self, fn):
         """ Returns the path of the test data file relative to the test file.
