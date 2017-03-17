@@ -327,7 +327,7 @@ class InfluxListenStore(ListenStore):
         try:
             if not self.influx.write_points(submit, time_precision='s'):
                 self.log.error("Cannot write data to influx. (write_points returned False)")
-        except ValueError as e:
+        except (InfluxDBServerError, InfluxDBClientError, ValueError) as e:
             self.log.error("Cannot write data to influx: %s" % str(e))
             raise
 
