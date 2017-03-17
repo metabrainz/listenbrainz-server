@@ -17,6 +17,7 @@ import sqlalchemy.exc
 import pytz
 from redis import Redis
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
+import json
 
 MIN_ID = 1033430400     # approx when audioscrobbler was created
 ORDER_DESC = 0
@@ -329,6 +330,8 @@ class InfluxListenStore(ListenStore):
                 self.log.error("Cannot write data to influx. (write_points returned False)")
         except (InfluxDBServerError, InfluxDBClientError, ValueError) as e:
             self.log.error("Cannot write data to influx: %s" % str(e))
+            self.log.error("Data that was being written when the error occurred: ")
+            self.log.error(json.dumps(submit, indent=4))
             raise
 
         # Invalidate cached data for user
