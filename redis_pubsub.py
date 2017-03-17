@@ -194,12 +194,6 @@ class RedisPubSubSubscriber(object):
             sleep(WRITE_FAIL_TIMEOUT)
             print("write timeout. sleep")
 
-
-        # We've tried to write repeatedly, but no luck. :(
-        if broken:
-            print("Raising write fail exception")
-            raise WriteFailException
-
         # Use a pipeline to clean up
         p = r.pipeline()
 
@@ -216,6 +210,11 @@ class RedisPubSubSubscriber(object):
 
         # Flush everything we stuffed into the redis pipeline
         p.execute()
+
+        # We've tried to write repeatedly, but no luck. :(
+        if broken:
+            print("Raising write fail exception")
+            raise WriteFailException
 
         print("Wrote messages.")
         return len(messages)

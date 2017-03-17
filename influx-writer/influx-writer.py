@@ -127,7 +127,7 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
                 return
             except WriteFailException as e:
                 self.log.error("InfluxWriterSubscriber failed to write: %s" % str(e))
-                return
+                count = 0
 
             if not count:
                 continue
