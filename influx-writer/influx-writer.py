@@ -8,6 +8,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", 
 from redis import Redis
 from redis_pubsub import RedisPubSubSubscriber, RedisPubSubPublisher, NoSubscriberNameSetException, WriteFailException, NoSubscribersException
 from influxdb import InfluxDBClient
+from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import ujson
 import logging
 from listen import Listen
@@ -103,7 +104,7 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
             t0 = time()
             self.ls.insert(submit)
             self.time += time() - t0
-        except ValueError as e:
+        except (InfluxDBClientError, InfluxDBServerError, ValueError) as e:
             self.log.error("Cannot write data to listenstore: %s" % str(e))
             return False
 
