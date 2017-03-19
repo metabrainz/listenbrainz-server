@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 import sys
 import os
@@ -117,16 +118,17 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
 
     def start(self):
         self.log.info("InfluxWriterSubscriber started")
+        print("InfluxWriterSubscriber started")
 
         self.register(SUBSCRIBER_NAME)
         while True:
             try:
                 count = self.subscriber()
             except NoSubscriberNameSetException as e:
-                self.log.error("InfluxWriterSubscriber has no subscriber name set.")
+                self.print_and_log_error("InfluxWriterSubscriber has no subscriber name set. Exiting")
                 return
             except WriteFailException as e:
-                self.log.error("InfluxWriterSubscriber failed to write: %s" % str(e))
+                self.print_and_log_error("InfluxWriterSubscriber failed to write: %s" % str(e))
                 count = 0
 
             if not count:
@@ -137,10 +139,14 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
             if self.inserts >= REPORT_FREQUENCY:
                 self.total_inserts += self.inserts
                 if self.time > 0:
-                    self.log.error("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % \
+                    self.print_and_log_error("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % \
                         (count, self.time, count / self.time, self.total_inserts))
                 self.inserts = 0
                 self.time = 0
+
+    def print_and_log_error(self, msg):
+        self.log.error(msg)
+        print(msg, file = sys.stderr)
 
 if __name__ == "__main__":
     ls = InfluxListenStore({ 'REDIS_HOST' : config.REDIS_HOST,
