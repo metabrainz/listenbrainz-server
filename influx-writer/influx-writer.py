@@ -125,12 +125,10 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
             try:
                 count = self.subscriber()
             except NoSubscriberNameSetException as e:
-                self.log.error("InfluxWriterSubscriber has no subscriber name set.")
-                print("InfluxWriterSubscriber has no subscriber name set. Exiting.")
+                self.print_and_log_error("InfluxWriterSubscriber has no subscriber name set. Exiting")
                 return
             except WriteFailException as e:
-                self.log.error("InfluxWriterSubscriber failed to write: %s" % str(e))
-                print("InfluxWriterSubscriber failed to write, skipping this batch of data.")
+                self.print_and_log_error("InfluxWriterSubscriber failed to write: %s" % str(e))
                 count = 0
 
             if not count:
@@ -147,6 +145,10 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
                         (count, self.time, count / self.time, self.total_inserts))
                 self.inserts = 0
                 self.time = 0
+
+    def print_and_log_error(self, msg):
+        self.log.error(msg)
+        print(msg, file = sys.stderr)
 
 if __name__ == "__main__":
     ls = InfluxListenStore({ 'REDIS_HOST' : config.REDIS_HOST,
