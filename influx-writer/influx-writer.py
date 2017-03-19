@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 import sys
 import os
@@ -117,6 +118,7 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
 
     def start(self):
         self.log.info("InfluxWriterSubscriber started")
+        print("InfluxWriterSubscriber started")
 
         self.register(SUBSCRIBER_NAME)
         while True:
@@ -124,9 +126,11 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
                 count = self.subscriber()
             except NoSubscriberNameSetException as e:
                 self.log.error("InfluxWriterSubscriber has no subscriber name set.")
+                print("InfluxWriterSubscriber has no subscriber name set. Exiting.")
                 return
             except WriteFailException as e:
                 self.log.error("InfluxWriterSubscriber failed to write: %s" % str(e))
+                print("InfluxWriterSubscriber failed to write, skipping this batch of data.")
                 count = 0
 
             if not count:
@@ -138,6 +142,8 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
                 self.total_inserts += self.inserts
                 if self.time > 0:
                     self.log.error("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % \
+                        (count, self.time, count / self.time, self.total_inserts))
+                    print("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % \
                         (count, self.time, count / self.time, self.total_inserts))
                 self.inserts = 0
                 self.time = 0
