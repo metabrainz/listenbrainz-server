@@ -1,8 +1,10 @@
-from __future__ import print_function
+from __future__ import print_function, division
 import sys
 import ujson
 from redis import Redis
 from time import time, sleep
+import logging
+import json
 
 # For a detailed description of the PubSub Redis mechanism that is being implemented
 # here see this page: https://davidmarquis.wordpress.com/2013/01/03/reliable-delivery-message-queues-with-redis/
@@ -29,7 +31,10 @@ class NoSubscribersException(Exception):
     pass
 
 class WriteFailException(Exception):
-    pass
+    def __init__(self, message, written, failed):
+        super(WriteFailException, self).__init__(message)
+        self.written = written
+        self.failed = failed
 
 class NoSubscriberNameSetException(Exception):
     pass
@@ -113,11 +118,14 @@ class RedisPubSubPublisher(object):
 
 class RedisPubSubSubscriber(object):
 
-    def __init__(self, redis, keyspace_prefix):
+    def __init__(self, redis, keyspace_prefix, logger_name):
         self.prefix = keyspace_prefix
         self.subscriber_name = None
         self.r = redis
         self.batch_timeout = BATCH_TIMEOUT
+        self.log = logging.getLogger(logger_name)
+        logging.basicConfig()
+        self.log.setLevel(logging.INFO)
 
 
     def register(self, subscriber_name):
@@ -134,9 +142,56 @@ class RedisPubSubSubscriber(object):
     def set_batch_timeout(self, timeout):
         self.batch_timeout = timeout
 
+    def write_batch(self, messages, retries=5):
+        """
+        Writes a batch of messages by calling the write() function.
+        If the write function isn't able to write, breaks up the batch into two
+        halves and recursively tries to write these halves. As a result, if a single
+        message is bad in a batch, only that message gets skipped.
+
+        Args:
+            messages: list of messages to be written
+            retries: number of times we try to write before giving up
+
+        Returns: the number of messages written
+        """
+
+        # if no messages in the list, then don't try to write and return
+        if not messages:
+            return 0
+
+        # Try to write entire batch in one go
+        done = False
+        for _ in xrange(retries):
+            if self.write(messages):
+                done = True
+                break
+
+            sleep(WRITE_FAIL_TIMEOUT)
+            self.log.error("write timeout. sleep")
+
+        if done:
+            return len(messages)
+        elif not done and len(messages) == 1:
+            # only one message in the batch and we are unable to write it
+            # so log the error and return
+            self.log.error("Unable to write, Bad listen: ")
+            self.log.error(json.dumps(messages[0], indent=4))
+            return 0
+        elif not done:
+            # weren't able to write the entire batch so divide it into
+            # two halves and try to write them
+            half = len(messages) // 2
+            written = 0
+            written += self.write_batch(messages[: half], retries)
+            written += self.write_batch(messages[half :], retries)
+            return written
+
+
+
     def subscriber(self, retries=5):
         """
-        Subscriber main function which will call write() function to write
+        Subscriber main function which will call write_batch() function to write
         retrieved messages to the data store.
         """
 
@@ -182,17 +237,10 @@ class RedisPubSubSubscriber(object):
         if not len(messages):
             return 0
 
-        print("Have %s messages, will attempt write." % len(messages))
+        self.log.info("Have {0} messages, will attempt write.".format(len(messages)))
 
         # We've collected messages to write, now write them
-        broken = True
-        for i in xrange(retries):
-            if self.write(messages):
-                broken = False
-                break
-
-            sleep(WRITE_FAIL_TIMEOUT)
-            print("write timeout. sleep")
+        written = self.write_batch(messages, retries)
 
         # Use a pipeline to clean up
         p = r.pipeline()
@@ -211,13 +259,14 @@ class RedisPubSubSubscriber(object):
         # Flush everything we stuffed into the redis pipeline
         p.execute()
 
-        # We've tried to write repeatedly, but no luck. :(
-        if broken:
-            print("Raising write fail exception")
-            raise WriteFailException
+        if written < len(messages):
+            skipped = len(messages) - written
+            error_msg = "Had to skip {0} messages out of {1}".format(skipped, len(messages))
+            self.log.error(error_msg)
+            raise WriteFailException(error_msg, written, skipped)
 
-        print("Wrote messages.")
-        return len(messages)
+        self.log.info("Wrote {0} messages.".format(written))
+        return written
 
     def write(self, messages):
         """

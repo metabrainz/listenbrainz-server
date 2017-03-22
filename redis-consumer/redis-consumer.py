@@ -20,9 +20,8 @@ KEYSPACE_NAME = "listen"
 
 class RedisConsumer(RedisPubSubSubscriber):
     def __init__(self, redis, database_uri):
-        RedisPubSubSubscriber.__init__(self, redis, KEYSPACE_NAME)
+        RedisPubSubSubscriber.__init__(self, redis, KEYSPACE_NAME, __name__)
 
-        self.log = logging.getLogger(__name__)
         self.total_inserts = 0
         self.inserts = 0
         self.time = 0
