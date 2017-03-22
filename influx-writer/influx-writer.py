@@ -24,15 +24,12 @@ KEYSPACE_NAME_UNIQUE = "ulisten"
 
 class InfluxWriterSubscriber(RedisPubSubSubscriber):
     def __init__(self, ls, influx, redis):
-        RedisPubSubSubscriber.__init__(self, redis, KEYSPACE_NAME_INCOMING)
+        RedisPubSubSubscriber.__init__(self, redis, KEYSPACE_NAME_INCOMING, __name__)
 
         self.publisher = RedisPubSubPublisher(redis, KEYSPACE_NAME_UNIQUE)
 
         self.influx = influx
         self.ls = ls
-        self.log = logging.getLogger(__name__)
-        logging.basicConfig()
-        self.log.setLevel(logging.INFO)
         self.total_inserts = 0
         self.inserts = 0
         self.time = 0
@@ -129,7 +126,7 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
                 return
             except WriteFailException as e:
                 self.print_and_log_error("InfluxWriterSubscriber failed to write: %s" % str(e))
-                count = 0
+                count = e.written
 
             if not count:
                 continue
