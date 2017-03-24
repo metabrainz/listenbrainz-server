@@ -67,7 +67,8 @@ def send_batch(data, token):
     if r.status_code != 200:
         logger.error("submission to beta returned response code: {}".format(r.status_code))
         logger.error(data)
-        raise HTTPError
+        # For now, skip the error and move on. This should be addressed in LB-142.
+        #raise HTTPError
 
 
 def import_from_alpha(username, token):
