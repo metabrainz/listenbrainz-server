@@ -66,6 +66,7 @@ def send_batch(data, token):
     r = requests.post(send_url, headers = {'Authorization': 'Token {}'.format(token)}, data = ujson.dumps(data))
     if r.status_code != 200:
         logger.error("submission to beta returned response code: {}".format(r.status_code))
+        logger.error(data)
         raise HTTPError
 
 
