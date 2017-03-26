@@ -34,7 +34,7 @@ def queue_empty():
 
 def queue_front():
     # get the first element from queue and split it to get username and auth_token
-    username, token = redis_connection.lindex(config.IMPORTER_QUEUE_KEY, 0).split()
+    token, username = redis_connection.lindex(config.IMPORTER_QUEUE_KEY, 0).split(" ", 1)
     return username, token
 
 

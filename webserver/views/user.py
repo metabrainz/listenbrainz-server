@@ -295,7 +295,7 @@ def import_from_alpha():
     """
     redis_connection = _redis.redis
     # push into the queue
-    value = "{} {}".format(current_user.musicbrainz_id, current_user.auth_token)
+    value = "{} {}".format(current_user.auth_token, current_user.musicbrainz_id)
     redis_connection.rpush(current_app.config['IMPORTER_QUEUE_KEY'], value)
 
     # push username into redis so that we know that this user is in waiting
