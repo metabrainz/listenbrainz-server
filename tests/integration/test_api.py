@@ -4,7 +4,7 @@ import os
 import uuid
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", ".."))
 
-from webserver.testing import ServerTestCase
+from tests.integration import IntegrationTestCase
 from flask import url_for
 import db.user
 import time
@@ -20,9 +20,10 @@ def is_valid_uuid(u):
     except ValueError:
         return False
 
-class APITestCase(ServerTestCase):
+class APITestCase(IntegrationTestCase):
 
     def setUp(self):
+        super(APITestCase, self).setUp()
         self.user = db.user.get_or_create('testuserpleaseignore')
 
     def test_get_listens(self):
@@ -199,7 +200,7 @@ class APITestCase(ServerTestCase):
         response = self.send_data(payload)
         self.assert400(response)
 
-    def path_to_data_file(self, fn): 
+    def path_to_data_file(self, fn):
         """ Returns the path of the test data file relative to the test file.
 
             Args:
