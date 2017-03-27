@@ -161,7 +161,7 @@ def profile(user_name):
         next_listen_ts=next_listen_ts,
         spotify_uri=_get_spotify_uri_for_listens(listens),
         have_listen_count=have_listen_count,
-        listen_count=listen_count,
+        listen_count=format(int(listen_count), ",d"),
         have_exact_listen_count=need_exact_listen_count,
     )
 
