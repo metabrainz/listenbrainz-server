@@ -88,8 +88,8 @@ def current_status():
         "index/current-status.html",
         load=load,
         stats=stats,
-        user_count=user_count,
-        listen_count=listen_count,
+        user_count=format(int(user_count), ",d"),
+        listen_count=format(int(listen_count), ",d"),
         alpha_importer_size=_get_alpha_importer_queue_size(),
     )
 
