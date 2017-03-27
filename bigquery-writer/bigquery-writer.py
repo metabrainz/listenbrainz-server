@@ -26,11 +26,8 @@ APP_CREDENTIALS_FILE = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
 
 class BigQueryWriterSubscriber(RedisPubSubSubscriber):
     def __init__(self, redis):
-        RedisPubSubSubscriber.__init__(self, redis, KEYSPACE_NAME_UNIQUE)
+        RedisPubSubSubscriber.__init__(self, redis, KEYSPACE_NAME_UNIQUE, __name__)
 
-        self.log = logging.getLogger(__name__)
-        self.log.setLevel(logging.INFO)
-        logging.basicConfig()
         self.total_inserts = 0
         self.inserts = 0
         self.time = 0
