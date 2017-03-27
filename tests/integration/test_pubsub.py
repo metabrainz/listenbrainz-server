@@ -13,7 +13,7 @@ NUM_POINTS = 100
 
 class Subscriber(RedisPubSubSubscriber):
     def __init__(self, redis, keyspace, name, results):
-        RedisPubSubSubscriber.__init__(self, redis, keyspace)
+        RedisPubSubSubscriber.__init__(self, redis, keyspace, __name__)
 
         self.register(name)
         self.results = results
