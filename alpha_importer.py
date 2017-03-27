@@ -9,7 +9,8 @@ import sys
 import logging
 from logging.handlers import RotatingFileHandler
 import os
-import json
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "listenstore"))
+from listenstore.listenstore import InfluxListenStore
 
 redis_connection = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
 
@@ -93,7 +94,7 @@ def send_batch(data, token, retries=5):
             return 1
         else:
             logger.error("Unable to submit bad listen to beta:")
-            logger.error(json.dumps(data, indent=4))
+            logger.error(ujson.dumps(data, indent=4))
             logger.error("Response code from beta: {}".format(r.status_code))
             logger.error(r.text)
             return 0
@@ -141,11 +142,17 @@ def update_status(username, status):
 
 
 if __name__ == '__main__':
+    db_connection = InfluxListenStore({'REDIS_HOST': config.REDIS_HOST,
+                                       'REDIS_PORT': config.REDIS_PORT,
+                                       'INFLUX_HOST': config.INFLUX_HOST,
+                                       'INFLUX_PORT': config.INFLUX_PORT,
+                                       'INFLUX_DB_NAME': config.INFLUX_DB_NAME})
     while True:
         if not queue_empty():
             username, token = queue_front()
-            import_from_alpha(username, token)
-            queue_pop()
-            update_status(username, "DONE")
+            if import_from_alpha(username, token):
+                queue_pop()
+                update_status(username, "DONE")
+                db_connection.reset_listen_count(username)
         else:
             time.sleep(3)

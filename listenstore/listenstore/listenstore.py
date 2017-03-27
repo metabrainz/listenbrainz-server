@@ -51,6 +51,16 @@ class ListenStore(object):
         """ Return the total number of listens stored in the ListenStore """
         raise NotImplementedError()
 
+    def get_listen_count_for_user(self, user_name, need_exact):
+        """ Override this method in ListenStore implementation class
+
+        Args:
+            user_name: the user to get listens for
+            need_exact: if True, get an exact number of listens directly from the ListenStore
+                        otherwise, can get from a cache also
+        """
+        raise NotImplementedError()
+
     def fetch_listens(self, user_name, from_ts=None, to_ts=None, limit=DEFAULT_LISTENS_PER_FETCH):
         """ Check from_ts, to_ts, and limit for fetching listens
             and set them to default values if not given.
@@ -197,6 +207,12 @@ class InfluxListenStore(ListenStore):
 
     REDIS_INFLUX_TOTAL_LISTEN_COUNT = "ls.listencount.total"
     TOTAL_LISTEN_COUNT_CACHE_TIME = 10 * 60
+    # variables which define how much time to cache listen count in redis
+    LISTENCOUNT_CACHE_TIME_LOW = 15 * 60 # in seconds. 15 minutes
+    LISTENCOUNT_CACHE_TIME_MEDIUM = 60 * 60 # in seconds. 1 hour
+    LISTENCOUNT_CACHE_TIME_HIGH = 24 * 60 * 60 # in seconds. 1 day
+    LOW_LISTEN_THRESHOLD = 1000
+    MEDIUM_LISTEN_THRESHOLD = 10000
 
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
@@ -204,18 +220,55 @@ class InfluxListenStore(ListenStore):
         self.influx = InfluxDBClient(host=conf['INFLUX_HOST'], port=conf['INFLUX_PORT'], database=conf['INFLUX_DB_NAME'])
 
 
-    def _get_num_listens_for_user(self, user_name):
-        count = self.redis.get(REDIS_INFLUX_USER_LISTEN_COUNT + user_hash(user_name))
-        if count:
-            return int(count)
+    def get_listen_count_for_user(self, user_name, need_exact=False):
+        """Get the total number of listens for a user. The number of listens comes from
+           a redis cache unless an exact number is asked for.
 
-        results = self.influx.query("""SELECT count(*)
-                                         FROM listen
-                                        WHERE user_name = '%s'""" % (user_name, from_ts, to_ts, limit))
-        result = results.get_points(measurement='listen')
-#        count = self.redis.get(REDIS_INFLUX_USER_LISTEN_COUNT + user_hash(user_name))
+        Args:
+            user_name: the user to get listens for
+            need_exact: if True, get an exact number of listens directly from the ListenStore
+        """
 
-        return 0
+        if not need_exact:
+            # check if the user's listen count is already in redis
+            # if already present return it directly instead of calculating it again
+            count = self.redis.get(REDIS_INFLUX_USER_LISTEN_COUNT + user_name)
+            if count:
+                return int(count)
+
+        try:
+            results = self.influx.query("""SELECT count(*)
+                                             FROM listen
+                                            WHERE user_name = '%s'""" % (user_name, ))
+        except (InfluxDBServerError, InfluxDBClientError) as e:
+            self.log.error("Cannot query influx: %s" % str(e))
+            raise
+
+        # get the number of listens from the json
+        try:
+            count = results.raw['series'][0]['values'][0][1]
+        except KeyError:
+            count = 0
+
+        # put this value into redis with expiry time based on the number of listens
+        # that the user has
+        user_key = "{}{}".format(REDIS_INFLUX_USER_LISTEN_COUNT, user_name)
+        if count <= InfluxListenStore.LOW_LISTEN_THRESHOLD:
+            self.redis.setex(user_key, count, InfluxListenStore.LISTENCOUNT_CACHE_TIME_LOW)
+        elif count <= InfluxListenStore.MEDIUM_LISTEN_THRESHOLD:
+            self.redis.setex(user_key, count, InfluxListenStore.LISTENCOUNT_CACHE_TIME_MEDIUM)
+        else:
+            self.redis.setex(user_key, count, InfluxListenStore.LISTENCOUNT_CACHE_TIME_HIGH)
+        return int(count)
+
+
+    def reset_listen_count(self, user_name):
+        """ Reset the listen count of a user from cache and put in a new calculated value.
+
+            Args:
+                user_name: the musicbrainz id of user whose listen count needs to be reset
+        """
+        get_listen_count_for_user(user_name, need_exact=True)
 
 
     def _select_single_value(self, query):

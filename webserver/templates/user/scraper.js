@@ -283,13 +283,7 @@ function submitListens() {
                     pageDone();
                 }
                 if (numCompleted >= numberOfPages) {
-                    updateMessage("<i class='fa fa-check'></i> Import finished<br><span><a href='https://listenbrainz.org/user/{{user_name}}'>Go to your ListenBrainz profile</a> | <a href='' id='close-progress-container'>Close</a></span><br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
-                    var close = document.getElementById('close-progress-container');
-                    close.addEventListener('click', function(ev) {
-                        ev.preventDefault();
-                        var el = document.getElementById('listen-progress-container');
-                        el.parentNode.removeChild(el);
-                    }, false);
+                    updateMessage("<i class='fa fa-check'></i> Import finished<br><span><a href={{ url_for('user.profile', user_name = user_name, exact = 'y') }}>Close and go to your ListenBrainz profile</a></span><br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
                 } else {
                     updateMessage("<i class='fa fa-cog fa-spin'></i> Sending page " + numCompleted + " of " + numberOfPages + " to ListenBrainz<br><span style='font-size:8pt'>Please don't navigate while this is running</span>");
                 }

@@ -17,6 +17,7 @@ from webserver.utils import sizeof_readable
 from webserver.login import User
 from webserver.redis_connection import _redis
 from os import path, makedirs
+from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import ujson
 import zipfile
 import re
@@ -24,6 +25,9 @@ import os
 import pytz
 
 LISTENS_PER_PAGE = 25
+
+# this variable is sent as a parameter to round and used to make the listen count approximate
+LISTEN_COUNT_APPROXIMATION_ROUND = -1
 
 user_bp = Blueprint("user", __name__)
 
@@ -78,6 +82,17 @@ def profile(user_name):
     playing_now_conn = webserver.redis_connection._redis
 
     user = _get_user(user_name)
+
+    need_exact_listen_count = request.args.get("exact") == 'y'
+    try:
+        have_listen_count = True
+        listen_count = db_conn.get_listen_count_for_user(user_name, need_exact = need_exact_listen_count)
+    except (InfluxDBServerError, InfluxDBClientError):
+        have_listen_count = False
+        listen_count = 0
+
+    if have_listen_count and not need_exact_listen_count:
+        listen_count = int(round(listen_count, LISTEN_COUNT_APPROXIMATION_ROUND))
 
     # Getting data for current page
     max_ts = request.args.get("max_ts")
@@ -144,7 +159,10 @@ def profile(user_name):
         listens=listens,
         previous_listen_ts=previous_listen_ts,
         next_listen_ts=next_listen_ts,
-        spotify_uri=_get_spotify_uri_for_listens(listens)
+        spotify_uri=_get_spotify_uri_for_listens(listens),
+        have_listen_count=have_listen_count,
+        listen_count=listen_count,
+        have_exact_listen_count=need_exact_listen_count,
     )
 
 
@@ -255,6 +273,11 @@ def upload():
             raise BadRequest('Not a valid lastfm-backup-file.')
         finally:
             os.remove(filename)
+
+        # reset listen count for user
+        db_connection = webserver.influx_connection._influx
+        db_connection.reset_listen_count(current_user.musicbrainz_id)
+
         flash('Congratulations! Your listens from %d  files have been uploaded successfully.' % (success))
     return redirect(url_for("user.import_data"))
 
