@@ -207,12 +207,7 @@ class InfluxListenStore(ListenStore):
 
     REDIS_INFLUX_TOTAL_LISTEN_COUNT = "ls.listencount.total"
     TOTAL_LISTEN_COUNT_CACHE_TIME = 10 * 60
-    # variables which define how much time to cache listen count in redis
-    LISTENCOUNT_CACHE_TIME_LOW = 15 * 60 # in seconds. 15 minutes
-    LISTENCOUNT_CACHE_TIME_MEDIUM = 60 * 60 # in seconds. 1 hour
-    LISTENCOUNT_CACHE_TIME_HIGH = 24 * 60 * 60 # in seconds. 1 day
-    LOW_LISTEN_THRESHOLD = 1000
-    MEDIUM_LISTEN_THRESHOLD = 10000
+    USER_LISTEN_COUNT_CACHE_TIME = 15 * 60 # in seconds. 15 minutes
 
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
@@ -247,18 +242,12 @@ class InfluxListenStore(ListenStore):
         # get the number of listens from the json
         try:
             count = results.get_points(measurement = 'listen').next()['count_recording_msid']
-        except KeyError:
+        except (KeyError, StopIteration):
             count = 0
 
-        # put this value into redis with expiry time based on the number of listens
-        # that the user has
+        # put this value into redis with an expiry time
         user_key = "{}{}".format(REDIS_INFLUX_USER_LISTEN_COUNT, user_name)
-        if count <= InfluxListenStore.LOW_LISTEN_THRESHOLD:
-            self.redis.setex(user_key, count, InfluxListenStore.LISTENCOUNT_CACHE_TIME_LOW)
-        elif count <= InfluxListenStore.MEDIUM_LISTEN_THRESHOLD:
-            self.redis.setex(user_key, count, InfluxListenStore.LISTENCOUNT_CACHE_TIME_MEDIUM)
-        else:
-            self.redis.setex(user_key, count, InfluxListenStore.LISTENCOUNT_CACHE_TIME_HIGH)
+        self.redis.setex(user_key, count, InfluxListenStore.USER_LISTEN_COUNT_CACHE_TIME)
         return int(count)
 
 
