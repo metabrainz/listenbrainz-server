@@ -26,9 +26,6 @@ import pytz
 
 LISTENS_PER_PAGE = 25
 
-# this variable is sent as a parameter to round and used to make the listen count approximate
-LISTEN_COUNT_APPROXIMATION_ROUND = -1
-
 user_bp = Blueprint("user", __name__)
 
 
@@ -83,16 +80,12 @@ def profile(user_name):
 
     user = _get_user(user_name)
 
-    need_exact_listen_count = request.args.get("exact") == 'y'
     try:
         have_listen_count = True
-        listen_count = db_conn.get_listen_count_for_user(user_name, need_exact = need_exact_listen_count)
+        listen_count = db_conn.get_listen_count_for_user(user_name)
     except (InfluxDBServerError, InfluxDBClientError):
         have_listen_count = False
         listen_count = 0
-
-    if have_listen_count and not need_exact_listen_count:
-        listen_count = int(round(listen_count, LISTEN_COUNT_APPROXIMATION_ROUND))
 
     # Getting data for current page
     max_ts = request.args.get("max_ts")
@@ -162,7 +155,6 @@ def profile(user_name):
         spotify_uri=_get_spotify_uri_for_listens(listens),
         have_listen_count=have_listen_count,
         listen_count=format(int(listen_count), ",d"),
-        have_exact_listen_count=need_exact_listen_count,
     )
 
 
