@@ -387,6 +387,13 @@ class InfluxListenStore(ListenStore):
             self.log.error(json.dumps(submit, indent=4))
             raise
 
+        # If we reach this point, we were able to write the listens to the InfluxListenStore.
+        # So update the listen counts of the users cached in redis.
+        for data in submit:
+            user_key = "{}{}".format(REDIS_INFLUX_USER_LISTEN_COUNT, data['tags']['user_name'])
+            if self.redis.exists(user_key):
+                self.redis.incr(user_key)
+
         # Invalidate cached data for user
         for user_name in user_names.keys():
             self.redis.delete(REDIS_USER_TIMESTAMPS % user_name)
