@@ -13,7 +13,6 @@
 
     {% if have_listen_count %}
       <h3> Listen Count: {{ listen_count }}  </h3>
-      <p> Note: This is an approximate value. <a href = "{{ url_for("user.profile", user_name=user.musicbrainz_id, exact = 'y') }}">Get exact listen count!</a> </p>
     {% else %}
       We were not able to get listen count for {{ user.musicbrainz_id }} due to an error. Please reload to try again.
     {% endif %}
