@@ -22,7 +22,6 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    command: py.test
     volumes:
       - ..:/code/listenbrainz
     depends_on:
