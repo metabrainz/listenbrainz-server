@@ -22,8 +22,7 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    command: py.test --junitxml=/data/test_report.xml \
-                     --cov-report xml:/data/coverage.xml
+    command: py.test --junitxml=/data/test_report.xml --cov-report xml:/data/coverage.xml
     volumes:
       - ..:/code/listenbrainz
     depends_on:
