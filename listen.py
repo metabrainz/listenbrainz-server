@@ -4,6 +4,28 @@ import ujson
 from datetime import datetime
 import calendar
 
+def flatten_dict(d, seperator='', parent_key=''):
+    """
+    Flattens a dictionary if it contains dictionaries inside it.
+
+    Args:
+        d: the dict to be flattened
+        seperator: the seperator used in keys in the flattened dict
+        parent_key: the key that is prefixed to all keys generated during flattening
+
+    Returns:
+        Flattened dict with keys such as key1.key2
+    """
+    result = []
+    for key, value in d.items():
+        new_key = "{}{}{}".format(parent_key, seperator, str(key))
+        if isinstance(value, dict):
+            result.extend(flatten_dict(value, '.', new_key).items())
+        else:
+            result.append((new_key, value))
+    return dict(result)
+
+
 class Listen(object):
     """ Represents a listen object """
     def __init__(self, user_id=None, user_name=None, timestamp=None, artist_msid=None, album_msid=None,
@@ -29,6 +51,7 @@ class Listen(object):
         if data is None:
             self.data = {'additional_info': {}}
         else:
+            data['additional_info'] = flatten_dict(data['additional_info'])
             self.data = data
 
     @classmethod
@@ -69,6 +92,11 @@ class Listen(object):
             'recording_mbid': row.get('recording_mbid'),
             'tags': tags,
         }
+
+        for key, value in row.items():
+            if key != 'time' and value is not None:
+                data[key] = value
+
         return cls(
             timestamp=t,
             user_name=row.get('user_name'),
