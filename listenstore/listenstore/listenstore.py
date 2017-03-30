@@ -209,21 +209,6 @@ class InfluxListenStore(ListenStore):
     TOTAL_LISTEN_COUNT_CACHE_TIME = 10 * 60
     USER_LISTEN_COUNT_CACHE_TIME = 15 * 60 # in seconds. 15 minutes
 
-    # keys in additional_info that we support explicitly and are not superfluous
-    SUPPORTED_KEYS = [
-        'artist_mbids',
-        'release_group_mbid',
-        'release_mbid',
-        'recording_mbid',
-        'track_mbid',
-        'work_mbids',
-        'tracknumber',
-        'isrc',
-        'spotify_id',
-        'tags',
-        'artist_msid',
-        'release_msid',
-    ]
 
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
@@ -361,29 +346,7 @@ class InfluxListenStore(ListenStore):
         user_names = {}
         for listen in listens:
             user_names[listen.user_name] = 1
-            data = {
-                'measurement' : 'listen',
-                'time' : listen.ts_since_epoch,
-                'tags' : {
-                    'user_name' : listen.user_name,
-                },
-                'fields' : {
-                    'artist_name' : listen.data['artist_name'],
-                    'artist_msid' : listen.artist_msid,
-                    'artist_mbids' : ",".join(listen.data['additional_info'].get('artist_mbids', [])),
-                    'album_name' : listen.data.get('release_name', ''),
-                    'album_msid' : listen.album_msid,
-                    'album_mbid' : listen.data['additional_info'].get('release_mbid', ''),
-                    'track_name' : listen.data['track_name'],
-                    'recording_msid' : listen.recording_msid,
-                    'recording_mbid' : listen.data['additional_info'].get('recording_mbid', ''),
-                    'tags' : ",".join(listen.data['additional_info'].get('tags', [])),
-                }
-            }
-            for key, value in listen.data['additional_info'].items():
-                if key not in InfluxListenStore.SUPPORTED_KEYS:
-                    data['fields'][key] = value
-            submit.append(data)
+            submit.append(listen.to_influx())
 
 
         try:
