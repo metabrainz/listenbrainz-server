@@ -6,7 +6,7 @@ import calendar
 
 def flatten_dict(d, seperator='', parent_key=''):
     """
-    Flattens a dictionary if it contains dictionaries inside it.
+    Flattens a nested dictionary structure into a single dict.
 
     Args:
         d: the dict to be flattened
@@ -28,6 +28,23 @@ def flatten_dict(d, seperator='', parent_key=''):
 
 class Listen(object):
     """ Represents a listen object """
+
+    # keys in additional_info that we support explicitly and are not superfluous
+    SUPPORTED_KEYS = [
+        'artist_mbids',
+        'release_group_mbid',
+        'release_mbid',
+        'recording_mbid',
+        'track_mbid',
+        'work_mbids',
+        'tracknumber',
+        'isrc',
+        'spotify_id',
+        'tags',
+        'artist_msid',
+        'release_msid',
+    ]
+
     def __init__(self, user_id=None, user_name=None, timestamp=None, artist_msid=None, album_msid=None,
                  recording_msid=None, data=None):
         self.user_id = user_id
@@ -93,8 +110,12 @@ class Listen(object):
             'tags': tags,
         }
 
+        # The influx row can contain many fields that are user-generated.
+        # We only need to add those fields which have some value in them to additional_info.
+        # Also, we need to make sure that we don't add fields like time, user_name etc. into
+        # the additional_info.
         for key, value in row.items():
-            if key != 'time' and value is not None:
+            if key not in ['time', 'user_name', 'recording_msid'] and value is not None:
                 data[key] = value
 
         return cls(
@@ -102,12 +123,33 @@ class Listen(object):
             user_name=row.get('user_name'),
             artist_msid=row.get('artist_msid'),
             recording_msid=row.get('recording_msid'),
+            album_msid=row.get('album_msid'),
             data={
                 'additional_info': data,
                 'artist_name': row.get('artist_name'),
                 'track_name': row.get('track_name'),
             }
         )
+
+    def to_api(self):
+        """
+        Converts listen into the format in which listens are returned in the payload by the api
+        on get_listen requests
+
+        Returns:
+            dict with fields 'track_metadata', 'listened_at' and 'recording_msid'
+        """
+        track_metadata = self.data.copy()
+        track_metadata['additional_info']['artist_msid'] = self.artist_msid
+        track_metadata['additional_info']['release_msid'] = self.album_msid
+
+        data = {
+            'track_metadata': track_metadata,
+            'listened_at': self.ts_since_epoch,
+            'recording_msid': self.recording_msid,
+        }
+
+        return data
 
     def to_json(self):
         return {
@@ -117,6 +159,41 @@ class Listen(object):
             'track_metadata': self.data,
             'recording_msid': self.recording_msid
         }
+
+    def to_influx(self):
+        """
+        Converts listen into dict that can be submitted to influx directly.
+
+        Returns:
+            a dict with approriate values of measurement, time, tags and fields
+        """
+
+        data = {
+            'measurement' : 'listen',
+            'time' : self.ts_since_epoch,
+            'tags' : {
+                'user_name' : self.user_name,
+            },
+            'fields' : {
+                'artist_name' : self.data['artist_name'],
+                'artist_msid' : self.artist_msid,
+                'artist_mbids' : ",".join(self.data['additional_info'].get('artist_mbids', [])),
+                'album_name' : self.data.get('release_name', ''),
+                'album_msid' : self.album_msid,
+                'album_mbid' : self.data['additional_info'].get('release_mbid', ''),
+                'track_name' : self.data['track_name'],
+                'recording_msid' : self.recording_msid,
+                'recording_mbid' : self.data['additional_info'].get('recording_mbid', ''),
+                'tags' : ",".join(self.data['additional_info'].get('tags', [])),
+            }
+        }
+
+        # add the user generated keys present in additional info to fields
+        for key, value in self.data['additional_info'].items():
+            if key not in Listen.SUPPORTED_KEYS:
+                data['fields'][key] = value
+
+        return data
 
     def validate(self):
         return (self.user_id is not None and self.timestamp is not None and self.artist_msid is not None
