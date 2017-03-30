@@ -209,7 +209,6 @@ class InfluxListenStore(ListenStore):
     TOTAL_LISTEN_COUNT_CACHE_TIME = 10 * 60
     USER_LISTEN_COUNT_CACHE_TIME = 15 * 60 # in seconds. 15 minutes
 
-
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
         self.redis = Redis(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'])
