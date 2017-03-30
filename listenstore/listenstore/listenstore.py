@@ -209,6 +209,22 @@ class InfluxListenStore(ListenStore):
     TOTAL_LISTEN_COUNT_CACHE_TIME = 10 * 60
     USER_LISTEN_COUNT_CACHE_TIME = 15 * 60 # in seconds. 15 minutes
 
+    # keys in additional_info that we support explicitly and are not superfluous
+    SUPPORTED_KEYS = [
+        'artist_mbids',
+        'release_group_mbid',
+        'release_mbid',
+        'recording_mbid',
+        'track_mbid',
+        'work_mbids',
+        'tracknumber',
+        'isrc',
+        'spotify_id',
+        'tags',
+        'artist_msid',
+        'release_msid',
+    ]
+
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
         self.redis = Redis(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'])
@@ -364,6 +380,9 @@ class InfluxListenStore(ListenStore):
                     'tags' : ",".join(listen.data['additional_info'].get('tags', [])),
                 }
             }
+            for key, value in listen.data['additional_info'].items():
+                if key not in InfluxListenStore.SUPPORTED_KEYS:
+                    data['fields'][key] = value
             submit.append(data)
 
 
