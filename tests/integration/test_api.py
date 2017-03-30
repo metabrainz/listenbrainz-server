@@ -60,8 +60,8 @@ class APITestCase(IntegrationTestCase):
 
         # make sure that artist msid, release msid and recording msid are present in data
         self.assertTrue(is_valid_uuid(data['listens'][0]['recording_msid']))
-        self.assertTrue(is_valid_uuid(data['listens'][0]['track_metadata']['artist_msid']))
-        self.assertTrue(is_valid_uuid(data['listens'][0]['track_metadata']['release_msid']))
+        self.assertTrue(is_valid_uuid(data['listens'][0]['track_metadata']['additional_info']['artist_msid']))
+        self.assertTrue(is_valid_uuid(data['listens'][0]['track_metadata']['additional_info']['release_msid']))
 
     def send_data(self, payload):
         """ Sends payload to api.submit_listen and return the response
