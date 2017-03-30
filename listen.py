@@ -68,7 +68,13 @@ class Listen(object):
         if data is None:
             self.data = {'additional_info': {}}
         else:
-            data['additional_info'] = flatten_dict(data['additional_info'])
+            try:
+                data['additional_info'] = flatten_dict(data['additional_info'])
+            except TypeError:
+                # TypeError may occur here because PostgresListenStore passes strings
+                # to data sometimes. If that occurs, we don't need to do anything.
+                pass
+
             self.data = data
 
     @classmethod
