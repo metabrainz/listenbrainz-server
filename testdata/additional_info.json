@@ -10,7 +10,10 @@
                     "link1": "https://genius.com/Majid-jordan-every-step-every-way-lyrics",
                     "best_song": "definitely",
                     "link2": "https://www.last.fm/music/Majid+Jordan/_/Every+Step+Every+Way",
-                    "other_stuff": "teststuffplsignore"
+                    "other_stuff": "teststuffplsignore",
+                    "nested": {
+                        "info": "here",
+                    }
                 }
             }
         }

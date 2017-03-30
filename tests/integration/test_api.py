@@ -224,6 +224,7 @@ class APITestCase(IntegrationTestCase):
         self.assertEquals(sent_additional_info['link1'], received_additional_info['link1'])
         self.assertEquals(sent_additional_info['link2'], received_additional_info['link2'])
         self.assertEquals(sent_additional_info['other_stuff'], received_additional_info['other_stuff'])
+        self.assertEquals(sent_additional_info['nested']['info'], received_additional_info['nested.info'])
 
     def path_to_data_file(self, fn):
         """ Returns the path of the test data file relative to the test file.
