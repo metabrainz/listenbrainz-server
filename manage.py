@@ -32,6 +32,7 @@ def runserver(host, port, debug=False):
         application=application,
         use_debugger=debug,
         use_reloader=debug,
+        processes=5
     )
 
 
