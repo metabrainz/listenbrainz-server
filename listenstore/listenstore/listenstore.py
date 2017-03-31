@@ -345,26 +345,7 @@ class InfluxListenStore(ListenStore):
         user_names = {}
         for listen in listens:
             user_names[listen.user_name] = 1
-            data = {
-                'measurement' : 'listen',
-                'time' : listen.ts_since_epoch,
-                'tags' : {
-                    'user_name' : listen.user_name,
-                },
-                'fields' : {
-                    'artist_name' : listen.data['artist_name'],
-                    'artist_msid' : listen.artist_msid,
-                    'artist_mbids' : ",".join(listen.data['additional_info'].get('artist_mbids', [])),
-                    'album_name' : listen.data.get('release_name', ''),
-                    'album_msid' : listen.album_msid,
-                    'album_mbid' : listen.data['additional_info'].get('release_mbid', ''),
-                    'track_name' : listen.data['track_name'],
-                    'recording_msid' : listen.recording_msid,
-                    'recording_mbid' : listen.data['additional_info'].get('recording_mbid', ''),
-                    'tags' : ",".join(listen.data['additional_info'].get('tags', [])),
-                }
-            }
-            submit.append(data)
+            submit.append(listen.to_influx())
 
 
         try:

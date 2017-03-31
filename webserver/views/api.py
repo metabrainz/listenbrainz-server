@@ -106,13 +106,7 @@ def get_listens(user_name):
     )
     listen_data = []
     for listen in listens:
-        track_metadata = listen.data.copy()
-        track_metadata['additional_info']['artist_msid'] = listen.artist_msid
-        listen_data.append({
-            "track_metadata": track_metadata,
-            "listened_at": listen.ts_since_epoch,
-            "recording_msid": listen.recording_msid,
-        })
+        listen_data.append(listen.to_api())
 
     if min_ts:
         listen_data = listen_data[::-1]
