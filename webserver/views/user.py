@@ -25,6 +25,7 @@ import os
 import pytz
 
 LISTENS_PER_PAGE = 25
+EXPORT_FETCH_COUNT= 5000
 
 user_bp = Blueprint("user", __name__)
 
@@ -192,9 +193,20 @@ def export_data():
         db_conn = webserver.create_influx(current_app)
         filename = current_user.musicbrainz_id + "_lb-" + datetime.today().strftime('%Y-%m-%d') + ".json"
 
+        # fetch all listens for the user from listenstore by making repeated queries to
+        # listenstore until we get all the data
+        to_ts = int(time())
+        listens = []
+        while True:
+            batch = db_conn.fetch_listens(current_user.musicbrainz_id, to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
+            if not batch:
+                break
+            listens.extend(batch)
+            to_ts = batch[-1].ts_since_epoch # new to_ts will the the timestamp of the last listen fetched
+
         # Fetch output and convert it into dict with keys as indexes
         output = []
-        for index, obj in enumerate(db_conn.fetch_listens(current_user.musicbrainz_id)):
+        for index, obj in enumerate(listens):
             dic = obj.data
             dic['timestamp'] = obj.ts_since_epoch
             dic['album_msid'] = None if obj.album_msid is None else str(obj.album_msid)
