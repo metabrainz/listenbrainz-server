@@ -16,7 +16,7 @@ class UserViewsTestCase(IntegrationTestCase):
 
     def setUp(self):
         super(UserViewsTestCase, self).setUp()
-        self.user = db.user.get_or_create('testuserpleaseignore')
+        self.user = db.user.get_or_create('iliekcomputers')
 
     def send_listens(self):
         with open(self.path_to_data_file('valid_import.json')) as f:
