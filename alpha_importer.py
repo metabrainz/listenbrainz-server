@@ -150,9 +150,9 @@ if __name__ == '__main__':
     while True:
         if not queue_empty():
             username, token = queue_front()
-            if import_from_alpha(username, token):
-                queue_pop()
-                update_status(username, "DONE")
-                db_connection.reset_listen_count(username)
+            import_from_alpha(username, token)
+            queue_pop()
+            update_status(username, "DONE")
+            db_connection.reset_listen_count(username)
         else:
             time.sleep(3)
