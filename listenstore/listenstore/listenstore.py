@@ -257,7 +257,7 @@ class InfluxListenStore(ListenStore):
             Args:
                 user_name: the musicbrainz id of user whose listen count needs to be reset
         """
-        get_listen_count_for_user(user_name, need_exact=True)
+        self.get_listen_count_for_user(user_name, need_exact=True)
 
 
     def _select_single_value(self, query):
