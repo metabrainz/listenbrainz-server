@@ -94,7 +94,7 @@ def send_batch(data, token, retries=5):
             return 1
         else:
             logger.error("Unable to submit bad listen to beta:")
-            logger.error(ujson.dumps(data, indent=4))
+            logger.error(ujson.dumps(data))
             logger.error("Response code from beta: {}".format(r.status_code))
             logger.error(r.text)
             return 0
