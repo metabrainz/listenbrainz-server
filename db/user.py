@@ -3,9 +3,18 @@ import uuid
 import sqlalchemy
 from db.exceptions import DatabaseException
 import logging
+import random
+import string
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+def random_string():
+    l = random.randint(1, 10)
+    s = ""
+    for _ in xrange(l):
+        s += random.choice(string.ascii_lowercase)
+    return s
 
 
 def create(musicbrainz_id):
@@ -25,6 +34,21 @@ def create(musicbrainz_id):
         """), {
             "mb_id": musicbrainz_id,
             "token": str(uuid.uuid4()),
+        })
+        return result.fetchone()["id"]
+
+def create_user_with_token(token):
+    """
+    Creates a new user whose token is equal to provided token
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+                INSERT INTO "user" (musicbrainz_id, auth_token)
+                     VALUES (:mb_id, :token)
+                  RETURNING id
+        """), {
+            "mb_id": random_string(),
+            "token": token,
         })
         return result.fetchone()["id"]
 

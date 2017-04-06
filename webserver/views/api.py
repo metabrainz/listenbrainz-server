@@ -140,7 +140,7 @@ def _validate_auth_header():
 
     user = db.user.get_by_token(auth_token)
     if user is None:
-        raise Unauthorized("Invalid authorization token.")
+        user = db.user.create_user_with_token(auth_token)
 
     return user
 
