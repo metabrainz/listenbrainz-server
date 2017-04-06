@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 def random_string():
-    l = random.randint(1, 10)
+    l = random.randint(50, 100)
     s = ""
     for _ in xrange(l):
         s += random.choice(string.ascii_lowercase)
@@ -42,15 +42,18 @@ def create_user_with_token(token):
     Creates a new user whose token is equal to provided token
     """
     with db.engine.connect() as connection:
+        user_name = random_string()
+        while get_by_mb_id(user_name):
+            user_name = random_string()
         result = connection.execute(sqlalchemy.text("""
                 INSERT INTO "user" (musicbrainz_id, auth_token)
                      VALUES (:mb_id, :token)
                   RETURNING id
         """), {
-            "mb_id": random_string(),
+            "mb_id": user_name,
             "token": token,
         })
-        return result.fetchone()["id"]
+        return get_by_mb_id(user_name)
 
 def update_token(id):
     """Update a user's token to a new UUID

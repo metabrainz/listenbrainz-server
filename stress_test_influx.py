@@ -6,8 +6,9 @@ import uuid
 import argparse
 import string
 import json
+import time
 
-BETA_URL = 'http://0.0.0.0:3031'
+LB_URL = 'http://0.0.0.0:3031'
 
 TIMESTAMP_LOW = 946684800   # unix timestamp of 01/01/2000
 TIMESTAMP_HIGH = 1491004800 # unix timestamp of 01/04/2017
@@ -23,7 +24,7 @@ class StressTester(object):
         """
         Returns a random timestamp between TIMESTAMP_LOW and TIMESTAMP_HIGH
         """
-        return int(TIMESTAMP_LOW + (TIMESTAMP_HIGH - TIMESTAMP_HIGH) * random.random())
+        return int(TIMESTAMP_LOW + (TIMESTAMP_HIGH - TIMESTAMP_LOW) * random.random())
 
     def random_string(self):
         """
@@ -58,25 +59,51 @@ class StressTester(object):
 
         return payload
 
+    def send_data(self, auth_token):
+        send_url = '{}/1/submit-listens'.format(LB_URL)
+        data = self.random_listen()
+        return requests.post(
+            send_url,
+            headers={'Authorization': 'Token {}'.format(auth_token)},
+            data = json.dumps(data),
+        )
+
     def user_submit(self, to_send, auth_token):
         accepted = 0
+        rejected = 0
+        percentage = 0
+        rejections = {}
         for _ in xrange(to_send):
-            send_url = '{}/1/submit-listens'.format(BETA_URL)
-            data = self.random_listen()
-            response = requests.post(
-                send_url,
-                headers={'Authorization': 'Token {}'.format(auth_token)},
-                data = json.dumps(data),
-            )
+            response = self.send_data(auth_token)
             if response.status_code == 200:
                 accepted += 1
-        print("For user with auth_token {}, number of listens accepted: {}".format(auth_token, accepted))
+            else:
+                rejected += 1
+                print(response.text)
+                if response.status_code in rejections:
+                    rejections[response.status_code] += 1
+                else:
+                    rejections[response.status_code] = 1
+            if accepted >= to_send / 10:
+                accepted = 0
+                percentage += 10
+                print("{} percent done for user with auth_token {}".format(percentage, auth_token))
+
+        if rejected > 0:
+            print(json.dumps(rejections, indent=4))
 
     def stress_test(self):
+        tokens = []
+        print("Creating users in the local server instance")
         for user in range(self.user_count):
+            cur_token = str(uuid.uuid4())
+            tokens.append(cur_token)
+            self.send_data(cur_token)
+        print("User creation done. Now sending listens through different threads.")
+
+        for token in tokens:
             to_send = self.listen_count / self.user_count
-            auth_token = str(uuid.uuid4())
-            user_thread = threading.Thread(target=self.user_submit, args=(to_send, auth_token))
+            user_thread = threading.Thread(target=self.user_submit, args=(to_send, token))
             user_thread.start()
 
 
