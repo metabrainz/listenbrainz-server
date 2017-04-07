@@ -8,7 +8,7 @@ import string
 import json
 import time
 
-LB_URL = 'http://0.0.0.0:3031'
+LB_URL = 'http://10.1.1.4'
 
 TIMESTAMP_LOW = 946684800   # unix timestamp of 01/01/2000
 TIMESTAMP_HIGH = 1491004800 # unix timestamp of 01/04/2017
@@ -16,9 +16,10 @@ TIMESTAMP_HIGH = 1491004800 # unix timestamp of 01/04/2017
 
 class StressTester(object):
 
-    def __init__(self, listen_count, user_count):
+    def __init__(self, listen_count, user_count, batch_size):
         self.listen_count = listen_count
         self.user_count = user_count
+        self.batch_size = batch_size
 
     def random_timestamp(self):
         """
@@ -37,31 +38,40 @@ class StressTester(object):
             s += random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits)
         return s
 
-    def random_listen(self):
+    def random_listen(self, count=1):
         """
         Generates random listen data
         """
 
-        payload = {
-            'listen_type': 'single',
-            'payload': [{
-                'listened_at': self.random_timestamp(),
-                'track_metadata': {
-                    'artist_name': self.random_string(),
-                    'track_name': self.random_string(),
-                    'release_name': self.random_string(),
-                    'additional_info': {
-                        'random_data': self.random_string(),
+        typ = 'single'
+        if count > 1:
+            typ = 'import'
+
+        listens= []
+        for i in xrange(count):
+            listens.append( 
+                    {
+                    'listened_at': self.random_timestamp(),
+                    'track_metadata': {
+                        'artist_name': self.random_string(),
+                        'track_name': self.random_string(),
+                        'release_name': self.random_string(),
+                        'additional_info': {
+                            'random_data': self.random_string(),
+                        }
                     }
-                }
-            }]
+                })
+
+        payload = {
+            'listen_type': typ,
+            'payload': listens
         }
 
         return payload
 
     def send_data(self, auth_token):
         send_url = '{}/1/submit-listens'.format(LB_URL)
-        data = self.random_listen()
+        data = self.random_listen(self.batch_size)
         return requests.post(
             send_url,
             headers={'Authorization': 'Token {}'.format(auth_token)},
@@ -111,9 +121,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--listencount", dest="listen_count", type=int, help="specify the number of listens to send while testing")
     parser.add_argument("-u", "--usercount", dest="user_count", type=int, help="specify the number of users to spread the listens over")
+    parser.add_argument("-b", "--batchsize", dest="batch_size", type=int, help="specify the number of listens per submission")
     args = parser.parse_args()
     if args.listen_count and args.user_count:
-        st = StressTester(args.listen_count, args.user_count)
+        st = StressTester(args.listen_count, args.user_count, args.batch_size)
         st.stress_test()
     else:
         print("Please provide all options required, see -h for help")
