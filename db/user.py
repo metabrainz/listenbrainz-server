@@ -40,6 +40,18 @@ def create(musicbrainz_id):
 def create_user_with_token(token):
     """
     Creates a new user whose token is equal to provided token
+
+    Args:
+        token (str): authorization token of a user
+
+    Returns:
+        Dictionary with the following structure:
+        {
+            "id": <user id>,
+            "created": <account creation time>,
+            "musicbrainz_id": <MusicBrainz username>,
+            "auth_token": <authentication token>,
+        }
     """
     with db.engine.connect() as connection:
         user_name = random_string()
