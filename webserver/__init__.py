@@ -29,7 +29,6 @@ def create_app():
 
     # Configuration
     sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
-    sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../listenstore"))
     import config
     app.config.from_object(config)
 
