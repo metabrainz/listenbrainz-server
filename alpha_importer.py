@@ -9,7 +9,7 @@ import sys
 import logging
 from logging.handlers import RotatingFileHandler
 import os
-from listenstore.listenstore import InfluxListenStore
+from listenstore import InfluxListenStore
 
 redis_connection = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
 
