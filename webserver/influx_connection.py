@@ -1,4 +1,4 @@
-from listenstore.listenstore import InfluxListenStore
+from listenstore import InfluxListenStore
 
 _influx = None
 

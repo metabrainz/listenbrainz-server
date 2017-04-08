@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", ".."))
 
 import config
 import unittest
 from redis import Redis
-from redis_pubsub import RedisPubSubSubscriber, RedisPubSubPublisher, NoSubscriberNameSetException, WriteFailException, NoSubscribersException
+from listenstore.redis_pubsub import RedisPubSubSubscriber, RedisPubSubPublisher, NoSubscriberNameSetException, WriteFailException, NoSubscribersException
 
 KEYSPACE = "test"
 NUM_POINTS = 100
