@@ -9,7 +9,6 @@ import sys
 import logging
 from logging.handlers import RotatingFileHandler
 import os
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "listenstore"))
 from listenstore.listenstore import InfluxListenStore
 
 redis_connection = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)

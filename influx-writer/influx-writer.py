@@ -5,7 +5,6 @@ import sys
 import os
 from datetime import datetime
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "listenstore"))
 from redis import Redis
 from redis_pubsub import RedisPubSubSubscriber, RedisPubSubPublisher, NoSubscriberNameSetException, WriteFailException, NoSubscribersException
 from influxdb import InfluxDBClient
