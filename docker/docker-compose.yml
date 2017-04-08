@@ -22,7 +22,7 @@ services:
       - ./docker/data/redis:/data
 
   influx:
-    image: influxdb:1.1.4
+    image: influxdb:1.2.2
     volumes:
       - ./docker/data/influxdb:/var/lib/influxdb
     environment:

@@ -7,16 +7,19 @@ import argparse
 import string
 import json
 import time
-
-LB_URL = 'http://10.1.1.4'
+import sys
+import os
 
 TIMESTAMP_LOW = 946684800   # unix timestamp of 01/01/2000
 TIMESTAMP_HIGH = 1491004800 # unix timestamp of 01/04/2017
 
+stop_all_threads = False
+
 
 class StressTester(object):
 
-    def __init__(self, listen_count, user_count, batch_size):
+    def __init__(self, url, listen_count, user_count, batch_size):
+        self.url = url
         self.listen_count = listen_count
         self.user_count = user_count
         self.batch_size = batch_size
@@ -70,7 +73,7 @@ class StressTester(object):
         return payload
 
     def send_data(self, auth_token):
-        send_url = '{}/1/submit-listens'.format(LB_URL)
+        send_url = '{}/1/submit-listens'.format(self.url)
         data = self.random_listen(self.batch_size)
         return requests.post(
             send_url,
@@ -84,6 +87,9 @@ class StressTester(object):
         percentage = 0
         rejections = {}
         for _ in xrange(to_send):
+            if stop_all_threads:
+                return
+
             response = self.send_data(auth_token)
             if response.status_code == 200:
                 accepted += 1
@@ -111,20 +117,39 @@ class StressTester(object):
             self.send_data(cur_token)
         print("User creation done. Now sending listens through different threads.")
 
+        self.threads = []
         for token in tokens:
             to_send = self.listen_count / self.user_count
             user_thread = threading.Thread(target=self.user_submit, args=(to_send, token))
             user_thread.start()
+            self.threads.append(user_thread)
 
+    def stop(self):
+        if not self.threads:
+            return
+
+        stop_all_threads = True
+        for th in self.threads:
+            th.join()
+            print("."),
+        print("")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--listencount", dest="listen_count", type=int, help="specify the number of listens to send while testing")
     parser.add_argument("-u", "--usercount", dest="user_count", type=int, help="specify the number of users to spread the listens over")
     parser.add_argument("-b", "--batchsize", dest="batch_size", type=int, help="specify the number of listens per submission")
+    parser.add_argument("-s", "--submiturl", dest="submit_url", type=str, help="The URL to submit to.")
     args = parser.parse_args()
-    if args.listen_count and args.user_count:
-        st = StressTester(args.listen_count, args.user_count, args.batch_size)
-        st.stress_test()
-    else:
+    if not args.listen_count or not args.user_count or not args.submit_url:
         print("Please provide all options required, see -h for help")
+        sys.exit(-1)
+
+    st = StressTester(args.submit_url, args.listen_count, args.user_count, args.batch_size)
+    print("Start stress test. pid: %s" % os.getpid())
+
+    try:
+        st.stress_test()
+    except KeyboardInterrupt:
+        print("Stopping, joining threads...")
+        st.stop()

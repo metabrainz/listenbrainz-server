@@ -94,7 +94,7 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
             submit.append(Listen().from_json(listen))
             unique.append(listen)
 
-        self.log.error("dups: %d, unique %d" % (duplicate_count, unique_count))
+        self.log.info("dups: %d, unique %d" % (duplicate_count, unique_count))
         if not unique_count:
             return True
 
@@ -136,7 +136,7 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
             if self.inserts >= REPORT_FREQUENCY:
                 self.total_inserts += self.inserts
                 if self.time > 0:
-                    self.print_and_log_error("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % \
+                    self.log.info("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % \
                         (count, self.time, count / self.time, self.total_inserts))
                 self.inserts = 0
                 self.time = 0

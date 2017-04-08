@@ -23,7 +23,7 @@ PUBSUB_SUBSCRIBER_IDS = ".ids."                 # append subscriber name to key
 PUBSUB_SUBSCRIBER_IDS_PENDING = ".ids-pending." # append subscriber name to key
 
 WRITE_FAIL_TIMEOUT = 5 # in seconds.
-BATCH_SIZE = 1000      # default size of messages to write
+BATCH_SIZE = 5000      # default size of messages to write
 BATCH_TIMEOUT = 3      # in seconds. Don't let a listen get older than this before writing
 REQUEST_TIMEOUT = 1    # in seconds. Wait this long to get a listen from redis
 
@@ -237,8 +237,6 @@ class RedisPubSubSubscriber(object):
         if not len(messages):
             return 0
 
-        self.log.info("Have {0} messages, will attempt write.".format(len(messages)))
-
         # We've collected messages to write, now write them
         written = self.write_batch(messages, retries)
 
@@ -265,7 +263,6 @@ class RedisPubSubSubscriber(object):
             self.log.error(error_msg)
             raise WriteFailException(error_msg, written, skipped)
 
-        self.log.info("Wrote {0} messages.".format(written))
         return written
 
     def write(self, messages):
