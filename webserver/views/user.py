@@ -209,7 +209,7 @@ def export_data():
         for index, obj in enumerate(listens):
             dic = obj.data
             dic['timestamp'] = obj.ts_since_epoch
-            dic['album_msid'] = None if obj.album_msid is None else str(obj.album_msid)
+            dic['release_msid'] = None if obj.release_msid is None else str(obj.release_msid)
             dic['artist_msid'] = None if obj.artist_msid is None else str(obj.artist_msid)
             dic['recording_msid'] = None if obj.recording_msid is None else str(obj.recording_msid)
             output.append(dic)
