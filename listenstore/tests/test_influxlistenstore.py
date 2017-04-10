@@ -5,7 +5,7 @@ import logging
 from datetime import datetime
 from .util import generate_data, to_epoch
 from listen import Listen
-from listenstore.listenstore import InfluxListenStore, MIN_ID
+from listenstore import InfluxListenStore
 from webserver.influx_connection import init_influx_connection
 import random
 import uuid

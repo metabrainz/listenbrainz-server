@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
 from redis import Redis
-from redis_pubsub import RedisPubSubSubscriber, RedisPubSubPublisher, NoSubscriberNameSetException, WriteFailException
+from listenstore.redis_pubsub import RedisPubSubSubscriber, RedisPubSubPublisher, NoSubscriberNameSetException, WriteFailException
 import ujson
 import logging
 from listen import Listen

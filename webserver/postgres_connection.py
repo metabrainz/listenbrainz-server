@@ -1,4 +1,4 @@
-from listenstore.listenstore import PostgresListenStore
+from listenstore import PostgresListenStore
 
 _postgres = None
 
