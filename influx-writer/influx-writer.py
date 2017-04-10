@@ -22,6 +22,9 @@ SUBSCRIBER_NAME = "in"
 KEYSPACE_NAME_INCOMING = "ilisten"
 KEYSPACE_NAME_UNIQUE = "ulisten"
 
+
+DUMP_JSON_WITH_ERRORS = False
+
 class InfluxWriterSubscriber(RedisPubSubSubscriber):
     def __init__(self, ls, influx, redis):
         RedisPubSubSubscriber.__init__(self, redis, KEYSPACE_NAME_INCOMING, __name__)
@@ -104,6 +107,9 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
             self.time += time() - t0
         except (InfluxDBClientError, InfluxDBServerError, ValueError) as e:
             self.log.error("Cannot write data to listenstore: %s" % str(e))
+            if DUMP_JSON_WITH_ERRORS:
+                self.log.error("Was writing the following data: ")
+                self.log.error(json.dumps(submit, indent=4))
             return False
 
         try:
