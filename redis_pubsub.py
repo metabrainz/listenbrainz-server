@@ -175,8 +175,7 @@ class RedisPubSubSubscriber(object):
         elif not done and len(messages) == 1:
             # only one message in the batch and we are unable to write it
             # so log the error and return
-            self.log.error("Unable to write, Bad listen: ")
-            self.log.error(json.dumps(messages[0], indent=4))
+            self.log.error("Unable to write, Bad listen.")
             return 0
         elif not done:
             # weren't able to write the entire batch so divide it into
