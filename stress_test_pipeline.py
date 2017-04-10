@@ -60,12 +60,14 @@ class StressTester(object):
                     'listened_at': self.random_timestamp(),
                     'user_id' : user_name,
                     'user_name' : user_name,
+                    'recording_msid': self.random_string(),
                     'track_metadata': {
                         'artist_name': self.random_string(),
                         'track_name': self.random_string(),
                         'release_name': self.random_string(),
                         'additional_info': {
                             'random_data': self.random_string(),
+                            'artist_msid': self.random_string(),
                         }
                     }
                 })

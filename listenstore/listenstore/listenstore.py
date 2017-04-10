@@ -293,7 +293,8 @@ class InfluxListenStore(ListenStore):
             makes a query to the db and caches it in redis.
         """
 
-        # TODO: Now what? :)
+        # In order to make this work again, we need to enumerate all the users and sum each one up. :(
+        # TODO: Fix this and implement as a batch process that runs once a day
         return 0
 
         count = self.redis.get(InfluxListenStore.REDIS_INFLUX_TOTAL_LISTEN_COUNT)
