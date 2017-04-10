@@ -27,6 +27,8 @@ class InfluxListenStore(ListenStore):
 
     @staticmethod
     def escape(value):
+        if not value:
+            return value
         return "\"{0}\"".format( value.replace("\\", "\\\\").replace( "\"", "\\\"").replace( "\n", "\\n"))
 
     def get_listen_count_for_user(self, user_name, need_exact=False):
