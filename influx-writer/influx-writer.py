@@ -60,36 +60,43 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
         # Sadly, influxdb does not provide a means to do this in the client library
         user_name = user_name.replace("'", "\'")
 
-        # quering for artist name here, since a field must be included in the query.
-        query = """SELECT time, artist_name
-                     FROM listen
-                    WHERE user_name = '%s'
-                      AND time >= %d000000000
-                      AND time <= %d000000000
-                """ % (user_name, min_time, max_time)
-        while True:
-            try:
-                results = i.query(query)
-                break
-            except Exception as e:
-                self.log.error("Cannot query influx: %s" % str(e))
-                sleep(3)
+#        # quering for artist name here, since a field must be included in the query.
+#        query = """SELECT time, artist_name
+#                     FROM listen
+#                    WHERE user_name = '%s'
+#                      AND time >= %d000000000
+#                      AND time <= %d000000000
+#                """ % (user_name, min_time, max_time)
+#        while True:
+#            try:
+#                results = i.query(query)
+#                break
+#            except Exception as e:
+#                self.log.error("Cannot query influx: %s" % str(e))
+#                sleep(3)
+#
+#        # collect all the timestamps for this given time range.
+#        timestamps = {}
+#        for result in results.get_points(measurement='listen'):
+#            dt = datetime.strptime(result['time'] , "%Y-%m-%dT%H:%M:%SZ")
+#            timestamps[int(dt.strftime('%s'))] = 1
+#
+#        duplicate_count = 0
+#        unique_count = 0
+#        for listen in listen_dicts:
+#            # Check to see if the timestamp is already in the DB
+#            t = int(listen['listened_at'])
+#            if t in timestamps:
+#                duplicate_count += 1
+#                continue
+#
+#            unique_count += 1
+#            submit.append(Listen().from_json(listen))
+#            unique.append(listen)
 
-        # collect all the timestamps for this given time range.
-        timestamps = {}
-        for result in results.get_points(measurement='listen'):
-            dt = datetime.strptime(result['time'] , "%Y-%m-%dT%H:%M:%SZ")
-            timestamps[int(dt.strftime('%s'))] = 1
-
-        duplicate_count = 0
         unique_count = 0
+        duplicate_count = 0
         for listen in listen_dicts:
-            # Check to see if the timestamp is already in the DB
-            t = int(listen['listened_at'])
-            if t in timestamps:
-                duplicate_count += 1
-                continue
-
             unique_count += 1
             submit.append(Listen().from_json(listen))
             unique.append(listen)
@@ -151,7 +158,7 @@ if __name__ == "__main__":
                              'INFLUX_HOST': config.INFLUX_HOST,
                              'INFLUX_PORT': config.INFLUX_PORT,
                              'INFLUX_DB_NAME': config.INFLUX_DB_NAME})
-    i = InfluxDBClient(host=config.INFLUX_HOST, port=config.INFLUX_PORT, database=config.INFLUX_DB_NAME)
+    i = InfluxDBClient(host=config.INFLUX_HOST, port=config.INFLUX_PORT, database=config.INFLUX_DB_NAME, timeout=120)
     r = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
     rc = InfluxWriterSubscriber(ls, i, r)
     rc.start()

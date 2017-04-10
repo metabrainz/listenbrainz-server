@@ -11,7 +11,7 @@ from listen import Listen
 from redis_pubsub import RedisPubSubPublisher, NoSubscribersException
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
-MAX_LISTEN_SIZE = 10240
+MAX_LISTEN_SIZE = 10000240
 
 #: The maximum number of tags per listen.
 MAX_TAGS_PER_LISTEN = 50

@@ -214,6 +214,9 @@ class InfluxListenStore(ListenStore):
         self.redis = Redis(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'])
         self.influx = InfluxDBClient(host=conf['INFLUX_HOST'], port=conf['INFLUX_PORT'], database=conf['INFLUX_DB_NAME'])
 
+    @staticmethod
+    def escape(value):
+        return "\"{0}\"".format( value.replace("\\", "\\\\").replace( "\"", "\\\"").replace( "\n", "\\n"))
 
     def get_listen_count_for_user(self, user_name, need_exact=False):
         """Get the total number of listens for a user. The number of listens comes from
@@ -233,8 +236,7 @@ class InfluxListenStore(ListenStore):
 
         try:
             results = self.influx.query("""SELECT count(*)
-                                             FROM listen
-                                            WHERE user_name = '%s'""" % (user_name, ))
+                                             FROM %s""" % (self.escape(user_name), ))
         except (InfluxDBServerError, InfluxDBClientError) as e:
             self.log.error("Cannot query influx: %s" % str(e))
             raise
@@ -273,14 +275,14 @@ class InfluxListenStore(ListenStore):
         return None
 
 
-    def _select_single_timestamp(self, query):
+    def _select_single_timestamp(self, query, measurement):
         try:
             results = self.influx.query(query)
         except Exception as e:
             self.log.error("Cannot query influx: %s" % str(e))
             raise
 
-        for result in results.get_points(measurement='listen'):
+        for result in results.get_points(measurement=self.escape(measurement)):
             dt = datetime.strptime(result['time'] , "%Y-%m-%dT%H:%M:%SZ")
             return int(dt.strftime('%s'))
 
@@ -296,6 +298,7 @@ class InfluxListenStore(ListenStore):
         if count:
             return int(count)
 
+        # TODO: Now what? :)
         try:
             result = self.influx.query("""SELECT count(*)
                                             FROM listen""")
@@ -323,14 +326,12 @@ class InfluxListenStore(ListenStore):
             max_ts = int(max_ts)
         else:
             query = """SELECT first(artist_msid)
-                         FROM listen
-                        WHERE user_name = '""" + user_name + "'"
-            min_ts = self._select_single_timestamp(query)
+                         FROM """ + self.escape(user_name)
+            min_ts = self._select_single_timestamp(query, user_name)
 
             query = """SELECT last(artist_msid)
-                         FROM listen
-                        WHERE user_name = '""" + user_name + "'"
-            max_ts = self._select_single_timestamp(query)
+                         FROM """ + self.escape(user_name)
+            max_ts = self._select_single_timestamp(query, user_name)
 
             self.redis.setex(REDIS_USER_TIMESTAMPS % user_name, "%d,%d" % (min_ts,max_ts), USER_CACHE_TIME)
 
@@ -345,7 +346,7 @@ class InfluxListenStore(ListenStore):
         user_names = {}
         for listen in listens:
             user_names[listen.user_name] = 1
-            submit.append(listen.to_influx())
+            submit.append(listen.to_influx(self.escape(listen.user_name)))
 
 
         try:
@@ -387,8 +388,7 @@ class InfluxListenStore(ListenStore):
         user_name = user_name.replace("'", "\'")
 
         query = """SELECT *
-                     FROM listen
-                    WHERE user_name = '""" + user_name + "' "
+                     FROM """ + self.escape(user_name) + " " 
         if from_ts != None:
             query += "AND time > " + str(from_ts) + "000000000"
         else:
