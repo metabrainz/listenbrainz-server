@@ -166,7 +166,7 @@ class Listen(object):
             'recording_msid': self.recording_msid
         }
 
-    def to_influx(self):
+    def to_influx(self, measurement):
         """
         Converts listen into dict that can be submitted to influx directly.
 
@@ -175,7 +175,7 @@ class Listen(object):
         """
 
         data = {
-            'measurement' : 'listen',
+            'measurement' : measurement,
             'time' : self.ts_since_epoch,
             'tags' : {
                 'user_name' : self.user_name,
