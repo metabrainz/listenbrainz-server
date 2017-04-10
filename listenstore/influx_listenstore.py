@@ -11,7 +11,6 @@ import json
 from listenstore import ORDER_DESC, ORDER_ASC, ORDER_TEXT, \
     USER_CACHE_TIME, REDIS_USER_TIMESTAMPS
 
-
 REDIS_INFLUX_USER_LISTEN_COUNT = "ls.listencount." # append username
 
 class InfluxListenStore(ListenStore):

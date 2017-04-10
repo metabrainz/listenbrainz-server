@@ -28,7 +28,7 @@ class PostgresListenStore(ListenStore):
 
     def convert_row(self, row):
         return Listen(user_id=row[1], user_name=row[2], timestamp=row[3], artist_msid=row[4],
-                      album_msid=row[5], recording_msid=row[6], data=row[7])
+                      release_msid=row[5], recording_msid=row[6], data=row[7])
 
     def insert(self, listens):
         """ Insert a batch of listens, using asynchronous queries.
@@ -44,18 +44,18 @@ class PostgresListenStore(ListenStore):
                         'user_id': listen.user_id,
                         'ts': listen.ts_since_epoch,
                         'artist_msid': uuid.UUID(listen.artist_msid),
-                        'album_msid': uuid.UUID(listen.album_msid) if listen.album_msid is not None else None,
+                        'release_msid': uuid.UUID(listen.release_msid) if listen.release_msid is not None else None,
                         'recording_msid': uuid.UUID(listen.recording_msid),
                         'data': ujson.dumps(listen.data)}
 
                     res = connection.execute(text("""
-                        INSERT INTO listen(user_id, ts, artist_msid, album_msid, recording_msid)
-                             VALUES (:user_id, to_timestamp(:ts), :artist_msid, :album_msid,
+                        INSERT INTO listen(user_id, ts, artist_msid, release_msid, recording_msid)
+                             VALUES (:user_id, to_timestamp(:ts), :artist_msid, :release_msid,
                                     :recording_msid)
                                  ON CONFLICT(user_id, ts)
                                  DO UPDATE
                                 SET artist_msid = EXCLUDED.artist_msid
-                                  , album_msid = EXCLUDED.album_msid
+                                  , release_msid = EXCLUDED.release_msid
                                   , recording_msid = EXCLUDED.recording_msid
                           RETURNING id
                     """), params)
@@ -90,7 +90,7 @@ class PostgresListenStore(ListenStore):
                      , musicbrainz_id
                      , ts AT TIME ZONE 'UTC'
                      , artist_msid
-                     , album_msid
+                     , release_msid
                      , recording_msid
                      , data
                   FROM listen
