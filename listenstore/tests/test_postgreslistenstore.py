@@ -5,7 +5,7 @@ import logging
 from datetime import datetime
 from .util import generate_data, to_epoch
 from listen import Listen
-from listenstore.listenstore import PostgresListenStore, MIN_ID
+from listenstore import PostgresListenStore, MIN_ID
 from webserver.postgres_connection import init_postgres_connection
 import random
 import uuid

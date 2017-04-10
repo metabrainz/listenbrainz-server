@@ -1,5 +1,5 @@
 from redis import Redis
-from listenstore.listenstore import RedisListenStore
+from listenstore import RedisListenStore
 
 _redis = None
 

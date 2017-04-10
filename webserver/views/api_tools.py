@@ -8,7 +8,7 @@ import ujson
 from webserver.external import messybrainz
 from webserver.redis_connection import _redis
 from listen import Listen
-from redis_pubsub import RedisPubSubPublisher, NoSubscribersException
+from listenstore.redis_pubsub import RedisPubSubPublisher, NoSubscribersException
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
 MAX_LISTEN_SIZE = 10240

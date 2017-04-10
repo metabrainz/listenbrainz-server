@@ -4,7 +4,7 @@ from db.testing import DatabaseTestCase
 import logging
 from datetime import datetime
 from .util import generate_data, to_epoch
-from listenstore.listenstore import RedisListenStore, MIN_ID
+from listenstore import MIN_ID, RedisListenStore
 from webserver.redis_connection import init_redis_connection
 from redis.connection import Connection
 import random
