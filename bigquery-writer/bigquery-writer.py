@@ -47,9 +47,9 @@ class BigQueryWriterSubscriber(RedisPubSubSubscriber):
                 'artist_name' : meta['artist_name'],
                 'artist_mbids' : ",".join(meta['additional_info'].get('artist_mbids', [])),
 
-                'album_msid' : meta['additional_info'].get('album_msid', ''),
-                'album_name' : meta['additional_info'].get('release_name', ''),
-                'album_mbid' : meta['additional_info'].get('release_mbid', ''),
+                'release_msid' : meta['additional_info'].get('release_msid', ''),
+                'release_name' : meta['additional_info'].get('release_name', ''),
+                'release_mbid' : meta['additional_info'].get('release_mbid', ''),
 
                 'track_name' : meta['track_name'],
                 'recording_msid' : listen['recording_msid'],

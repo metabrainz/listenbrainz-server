@@ -3,10 +3,11 @@ from db.testing import DatabaseTestCase
 import logging
 from datetime import datetime
 from tests.utils import generate_data
-from webserver.postgres_connection import init_postgres_connection
+from webserver.influx_connection import init_influx_connection
 import db
 from db.lastfm_user import User
 from sqlalchemy import text
+import config
 
 
 class TestAPICompatUserClass(DatabaseTestCase):
@@ -14,14 +15,25 @@ class TestAPICompatUserClass(DatabaseTestCase):
     def setUp(self):
         super(TestAPICompatUserClass, self).setUp()
         self.log = logging.getLogger(__name__)
-        self.logstore = init_postgres_connection(self.config.SQLALCHEMY_DATABASE_URI)
+        self.logstore = init_influx_connection({
+            'INFLUX_HOST': config.INFLUX_HOST,
+            'INFLUX_PORT': config.INFLUX_PORT,
+            'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
+            'REDIS_HOST': config.REDIS_HOST,
+            'REDIS_PORT': config.REDIS_PORT,
+        })
 
         # Create a user
         uid = db.user.create("test")
         self.assertIsNotNone(db.user.get(uid))
         with db.engine.connect() as connection:
-            result = connection.execute(text('SELECT * FROM "user" WHERE id = :id'),
-                                        {"id": uid})
+            result = connection.execute(text("""
+                SELECT *
+                  FROM "user"
+                 WHERE id = :id
+            """),{
+                "id": uid,
+            })
             row = result.fetchone()
             self.user = User(row['id'], row['created'], row['musicbrainz_id'], row['auth_token'])
 
@@ -48,7 +60,3 @@ class TestAPICompatUserClass(DatabaseTestCase):
         user = User.load_by_id(self.user.id)
         assert isinstance(user, User) == True
         self.assertDictEqual(user.__dict__, self.user.__dict__)
-
-    def test_user_get_play_count(self):
-        count = User.get_play_count(self.user.id)
-        self.assertEqual(count, 100)

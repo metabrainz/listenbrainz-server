@@ -26,17 +26,17 @@
     },
     {
         "mode": "NULLABLE",
-        "name": "album_msid",
+        "name": "release_msid",
         "type": "STRING"
     },
     {
         "mode": "NULLABLE",
-        "name": "album_name",
+        "name": "release_name",
         "type": "STRING"
     },
     {
         "mode": "NULLABLE",
-        "name": "album_mbid",
+        "name": "release_mbid",
         "type": "STRING"
     },
     {

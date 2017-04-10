@@ -23,8 +23,19 @@ def generate_data(from_date, num_records):
 
     for i in range(num_records):
         current_date += 1   # Add one second
-        item = Listen(user_id=user['id'], timestamp=datetime.utcfromtimestamp(current_date), artist_msid=artist_msid,
-                      recording_msid=str(uuid.uuid4()))
+        item = Listen(
+            user_id=user['id'],
+            user_name='testuserplsignore',
+            timestamp=datetime.utcfromtimestamp(current_date),
+            artist_msid=artist_msid,
+            recording_msid=str(uuid.uuid4()),
+            release_msid=str(uuid.uuid4()),
+            data={
+                'artist_name': 'Test Artist Pls ignore',
+                'track_name': 'Hello Goodbye',
+                'additional_info': {},
+            },
+        )
         test_data.append(item)
     return test_data
 

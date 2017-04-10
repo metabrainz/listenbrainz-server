@@ -13,7 +13,7 @@ CREATE TABLE listen (
   user_id         INTEGER NOT NULL, -- FK to user.name
   ts              TIMESTAMP WITH TIME ZONE NOT NULL,
   artist_msid     UUID NOT NULL,
-  album_msid      UUID,
+  release_msid    UUID,
   recording_msid  UUID NOT NULL
 );
 ALTER TABLE listen ADD CONSTRAINT listen_id_uniq UNIQUE (id);
