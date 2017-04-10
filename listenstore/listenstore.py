@@ -2,7 +2,7 @@
 from __future__ import division, absolute_import
 from __future__ import print_function, unicode_literals
 import logging
-from listenstore import ORDER_ASC, ORDER_DESC
+from listenstore import ORDER_ASC, ORDER_DESC, DEFAULT_LISTENS_PER_FETCH
 
 class ListenStore(object):
     MAX_FETCH = 5000          # max batch size to fetch from the db
