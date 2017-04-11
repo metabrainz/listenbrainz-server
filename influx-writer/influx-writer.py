@@ -3,6 +3,7 @@ from __future__ import print_function
 
 import sys
 import os
+import pika
 from datetime import datetime
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
 from redis import Redis
@@ -17,27 +18,58 @@ import config
 from listenstore import InfluxListenStore
 
 REPORT_FREQUENCY = 5000
-SUBSCRIBER_NAME = "in"
-KEYSPACE_NAME_INCOMING = "ilisten"
 KEYSPACE_NAME_UNIQUE = "ulisten"
-
-
 DUMP_JSON_WITH_ERRORS = False
 
-class InfluxWriterSubscriber(RedisPubSubSubscriber):
+
+# TODO: Consider persistence and acknowledgements
+class InfluxWriterSubscriber(object):
     def __init__(self, ls, influx, redis):
-        RedisPubSubSubscriber.__init__(self, redis, KEYSPACE_NAME_INCOMING, __name__)
+        self.log = logging.getLogger(__name__)
+        logging.basicConfig()
+        self.log.setLevel(logging.INFO)
+        while True:
+            try:
+                self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=config.RABBITMQ_HOST, port=config.RABBITMQ_PORT))
+                break
+            except pika.exceptions.ConnectionClosed:
+                print("Cannot connect to rabbitmq, sleeping 2 seconds")
+                sleep(2)
 
-        self.publisher = RedisPubSubPublisher(redis, KEYSPACE_NAME_UNIQUE)
-
+        self.channel = self.connection.channel()
+        self.channel.exchange_declare(exchange='incoming', type='fanout')
+        self.channel.queue_declare('incoming')
+        self.channel.queue_bind(exchange='incoming', queue='incoming')
+        self.channel.basic_consume(lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self), queue='incoming', no_ack=True)
         self.influx = influx
         self.ls = ls
         self.total_inserts = 0
         self.inserts = 0
         self.time = 0
 
-    def write(self, listen_dicts):
 
+    @staticmethod
+    def static_callback(ch, method, properties, body, obj):
+        return obj.callback(ch, method, properties, body)
+
+
+    def callback(self, ch, method, properties, body):
+        ret = self.write(ujson.loads(body))
+        # collect and occasionally print some stats
+        count = len(body)
+        self.inserts += count
+        if self.inserts >= REPORT_FREQUENCY:
+            self.total_inserts += self.inserts
+            if self.time > 0:
+                self.print_and_log_error("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % \
+                    (count, self.time, count / self.time, self.total_inserts))
+            self.inserts = 0
+            self.time = 0
+
+        return ret
+
+
+    def write(self, listen_dicts):
         submit = []
         unique = []
 
@@ -111,40 +143,18 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
                 self.log.error(json.dumps(submit, indent=4))
             return False
 
-        try:
-            self.publisher.publish(unique)
-        except NoSubscribersException:
-            self.log.error("No subscribers, cannot publish unique listens.")
+#        try:
+#            self.publisher.publish(unique)
+#        except NoSubscribersException:
+#            self.log.error("No subscribers, cannot publish unique listens.")
 
         return True
 
     def start(self):
         self.log.info("InfluxWriterSubscriber started")
-        print("InfluxWriterSubscriber started")
+        self.channel.start_consuming()
 
-        self.register(SUBSCRIBER_NAME)
-        while True:
-            try:
-                count = self.subscriber()
-            except NoSubscriberNameSetException as e:
-                self.print_and_log_error("InfluxWriterSubscriber has no subscriber name set. Exiting")
-                return
-            except WriteFailException as e:
-                self.print_and_log_error("InfluxWriterSubscriber failed to write: %s" % str(e))
-                count = e.written
-
-            if not count:
-                continue
-
-            # collect and occasionally print some stats
-            self.inserts += count
-            if self.inserts >= REPORT_FREQUENCY:
-                self.total_inserts += self.inserts
-                if self.time > 0:
-                    self.print_and_log_error("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % \
-                        (count, self.time, count / self.time, self.total_inserts))
-                self.inserts = 0
-                self.time = 0
+        self.connection.close()
 
     def print_and_log_error(self, msg):
         self.log.error(msg)

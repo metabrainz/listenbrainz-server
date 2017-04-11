@@ -38,6 +38,13 @@ services:
       - "8086:8086"
       - "8083:8083"
 
+  rabbitmq:
+    image: rabbitmq:3.6.9
+    volumes:
+      - ./docker/data/rabbitmq:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"
+
   web:
     build:
       context: ..
@@ -52,6 +59,7 @@ services:
       - redis
       - db
       - influx
+      - rabbitmq
 
   influx_writer:
     build:
@@ -61,6 +69,7 @@ services:
     depends_on:
       - redis
       - influx
+      - rabbitmq
 
   bigquery:
     build:
@@ -73,9 +82,11 @@ services:
     command: python bigquery-writer/bigquery-writer.py
     depends_on:
       - redis
+      - rabbitmq
 
   alpha_importer:
     image: web
     command: python alpha_importer.py
     depends_on:
       - web
+      - rabbitmq

@@ -30,3 +30,4 @@ unittest2 == 1.1.0
 influxdb == 4.0.0
 requests == 2.13.0
 google-api-python-client==1.5.2
+pika == 0.10.0
