@@ -5,6 +5,7 @@ from werkzeug.exceptions import InternalServerError, ServiceUnavailable, BadRequ
 from flask import current_app
 import ujson
 import pika
+import config
 
 from webserver.external import messybrainz
 from webserver.redis_connection import _redis
@@ -64,9 +65,7 @@ def _send_listens_to_queue(listen_type, listens):
     if submit:
         # TODO: Add exception handling
         # TODO: Add connection pooling
-        # TODO: Fix the config issue below
-#        connection = pika.BlockingConnection(pika.ConnectionParameters(host=current_app.config.RABBITMQ_HOST, port=current_app.config.RABBITMQ_PORT))
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host="rabbitmq", port=5672))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=config.RABBITMQ_HOST, port=config.RABBITMQ_PORT))
         channel = connection.channel()
         channel.exchange_declare(exchange='incoming', type='fanout')
         channel.basic_publish(exchange='incoming', routing_key='', body=ujson.dumps(submit))

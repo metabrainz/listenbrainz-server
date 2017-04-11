@@ -6,8 +6,6 @@ import os
 import pika
 from datetime import datetime
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
-from redis import Redis
-from listenstore.redis_pubsub import RedisPubSubSubscriber, RedisPubSubPublisher, NoSubscriberNameSetException, WriteFailException, NoSubscribersException
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import ujson
@@ -24,7 +22,7 @@ DUMP_JSON_WITH_ERRORS = False
 
 # TODO: Consider persistence and acknowledgements
 class InfluxWriterSubscriber(object):
-    def __init__(self, ls, influx, redis):
+    def __init__(self, ls, influx):
         self.log = logging.getLogger(__name__)
         logging.basicConfig()
         self.log.setLevel(logging.INFO)
@@ -36,11 +34,15 @@ class InfluxWriterSubscriber(object):
                 print("Cannot connect to rabbitmq, sleeping 2 seconds")
                 sleep(2)
 
-        self.channel = self.connection.channel()
-        self.channel.exchange_declare(exchange='incoming', type='fanout')
-        self.channel.queue_declare('incoming')
-        self.channel.queue_bind(exchange='incoming', queue='incoming')
-        self.channel.basic_consume(lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self), queue='incoming', no_ack=True)
+        self.incoming_ch = self.connection.channel()
+        self.incoming_ch.exchange_declare(exchange='incoming', type='fanout')
+        self.incoming_ch.queue_declare('incoming')
+        self.incoming_ch.queue_bind(exchange='incoming', queue='incoming')
+        self.incoming_ch.basic_consume(lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self), queue='incoming', no_ack=True)
+
+        self.unique_ch = self.connection.channel()
+        self.unique_ch.exchange_declare(exchange='unique', type='fanout')
+
         self.influx = influx
         self.ls = ls
         self.total_inserts = 0
@@ -54,15 +56,15 @@ class InfluxWriterSubscriber(object):
 
 
     def callback(self, ch, method, properties, body):
-        ret = self.write(ujson.loads(body))
+        listens = ujson.loads(body)
+        ret = self.write(listens)
         # collect and occasionally print some stats
-        count = len(body)
-        self.inserts += count
+        self.inserts += len(listens)
         if self.inserts >= REPORT_FREQUENCY:
             self.total_inserts += self.inserts
             if self.time > 0:
                 self.print_and_log_error("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % \
-                    (count, self.time, count / self.time, self.total_inserts))
+                    (self.inserts, self.time, self.inserts / self.time, self.total_inserts))
             self.inserts = 0
             self.time = 0
 
@@ -143,17 +145,14 @@ class InfluxWriterSubscriber(object):
                 self.log.error(json.dumps(submit, indent=4))
             return False
 
-#        try:
-#            self.publisher.publish(unique)
-#        except NoSubscribersException:
-#            self.log.error("No subscribers, cannot publish unique listens.")
+        # TODO: Add error handling here
+        self.unique_ch.basic_publish(exchange='unique', routing_key='', body=ujson.dumps(unique))
 
         return True
 
     def start(self):
         self.log.info("InfluxWriterSubscriber started")
-        self.channel.start_consuming()
-
+        self.incoming_ch.start_consuming()
         self.connection.close()
 
     def print_and_log_error(self, msg):
@@ -167,6 +166,5 @@ if __name__ == "__main__":
                              'INFLUX_PORT': config.INFLUX_PORT,
                              'INFLUX_DB_NAME': config.INFLUX_DB_NAME})
     i = InfluxDBClient(host=config.INFLUX_HOST, port=config.INFLUX_PORT, database=config.INFLUX_DB_NAME)
-    r = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
-    rc = InfluxWriterSubscriber(ls, i, r)
+    rc = InfluxWriterSubscriber(ls, i)
     rc.start()
