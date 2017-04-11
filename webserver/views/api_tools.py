@@ -4,11 +4,11 @@ import uuid
 from werkzeug.exceptions import InternalServerError, ServiceUnavailable, BadRequest
 from flask import current_app
 import ujson
+import pika
 
 from webserver.external import messybrainz
 from webserver.redis_connection import _redis
 from listen import Listen
-from listenstore.redis_pubsub import RedisPubSubPublisher, NoSubscribersException
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
 MAX_LISTEN_SIZE = 10240
@@ -34,22 +34,19 @@ LISTEN_TYPE_SINGLE = 1
 LISTEN_TYPE_IMPORT = 2
 LISTEN_TYPE_PLAYING_NOW = 3
 
-# PubSub Keyspace
-LISTEN_KEYSPACE = "ilisten"  # for incoming listens
-
 def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
     """ Convert the payload into augmented listens then submit them.
         Returns: augmented_listens
     """
     try:
         augmented_listens = _get_augmented_listens(payload, user, listen_type)
-        _send_listens_to_redis(listen_type, augmented_listens)
+        _send_listens_to_queue(listen_type, augmented_listens)
     except Exception, e:
         print(e)
     return augmented_listens
 
 
-def _send_listens_to_redis(listen_type, listens):
+def _send_listens_to_queue(listen_type, listens):
     submit = []
     for listen in listens:
         if listen_type == LISTEN_TYPE_PLAYING_NOW:
@@ -65,12 +62,15 @@ def _send_listens_to_redis(listen_type, listens):
             submit.append(listen)
 
     if submit:
-        pubsub = RedisPubSubPublisher(_redis.redis, LISTEN_KEYSPACE)
-        try:
-            pubsub.publish(submit)
-        except NoSubscribersException:
-            current_app.logger.error("No consumers registered in redis. Not accepting listens.")
-            raise InternalServerError("Cannot record listen at this time. (No consumers registered.)")
+        # TODO: Add exception handling
+        # TODO: Add connection pooling
+        # TODO: Fix the config issue below
+#        connection = pika.BlockingConnection(pika.ConnectionParameters(host=current_app.config.RABBITMQ_HOST, port=current_app.config.RABBITMQ_PORT))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host="rabbitmq", port=5672))
+        channel = connection.channel()
+        channel.exchange_declare(exchange='incoming', type='fanout')
+        channel.basic_publish(exchange='incoming', routing_key='', body=ujson.dumps(submit))
+        connection.close()
 
 
 def validate_listen(listen, listen_type):
