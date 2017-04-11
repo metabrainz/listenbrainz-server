@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 import sys
 import os
-from datetime import datetime
-sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
-from redis import Redis
-from listenstore.redis_pubsub import RedisPubSubSubscriber, RedisPubSubPublisher, NoSubscriberNameSetException, WriteFailException
 import ujson
 import logging
-from listen import Listen
+import pika
+from datetime import datetime
 from time import time, sleep
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
+from listen import Listen
 import config
 
 from googleapiclient import discovery
@@ -16,23 +15,45 @@ from googleapiclient.errors import HttpError
 from oauth2client.client import GoogleCredentials
 
 REPORT_FREQUENCY = 5000
-SUBSCRIBER_NAME = "bq"
-KEYSPACE_NAME_INCOMING = "ilisten"
-KEYSPACE_NAME_UNIQUE = "ulisten"
 APP_CREDENTIALS_FILE = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
 
 # TODO:
 #   Big query hardcoded data set ids
 
-class BigQueryWriterSubscriber(RedisPubSubSubscriber):
-    def __init__(self, redis):
-        RedisPubSubSubscriber.__init__(self, redis, KEYSPACE_NAME_UNIQUE, __name__)
+class BigQueryWriterSubscriber(object):
+    def __init__(self):
+        self.log = logging.getLogger(__name__)
+        logging.basicConfig()
+        self.log.setLevel(logging.INFO)
+
+        while True:
+            try:
+                self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=config.RABBITMQ_HOST, port=config.RABBITMQ_PORT))
+                break
+            except pika.exceptions.ConnectionClosed:
+                print("Cannot connect to rabbitmq, sleeping 2 seconds")
+                sleep(2)
+
+        self.channel = self.connection.channel()
+        self.channel.exchange_declare(exchange='unique', type='fanout')
+        self.channel.queue_declare('unique')
+        self.channel.queue_bind(exchange='unique', queue='unique')
+        self.channel.basic_consume(lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self), queue='unique', no_ack=True)
 
         self.total_inserts = 0
         self.inserts = 0
         self.time = 0
 
-    def write(self, listens):
+
+    @staticmethod
+    def static_callback(ch, method, properties, body, obj):
+        return obj.callback(ch, method, properties, body)
+
+
+    def callback(self, ch, method, properties, body):
+
+        listens = ujson.loads(body)
+        count = len(listens)
 
         # We've collected listens to write, now write them
         bq_data = []
@@ -78,6 +99,18 @@ class BigQueryWriterSubscriber(RedisPubSubSubscriber):
         # Clear the start time, since we've cleaned out the batch
         batch_start_time = 0
 
+        self.log.info("inserted %d listens." % count)
+
+        # collect and occasionally print some stats
+        self.inserts += count
+        if self.inserts >= REPORT_FREQUENCY:
+            self.total_inserts += self.inserts
+            if self.time > 0:
+                self.log.info("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % \
+                    (self.inserts, self.time, count / self.time, self.total_inserts))
+            self.inserts = 0
+            self.time = 0
+
         return True
 
     def start(self):
@@ -101,34 +134,10 @@ class BigQueryWriterSubscriber(RedisPubSubSubscriber):
         credentials = GoogleCredentials.get_application_default()
         self.bigquery = discovery.build('bigquery', 'v2', credentials=credentials)
 
-        self.register(SUBSCRIBER_NAME)
-        while True:
-            try:
-                count = self.subscriber()
-            except NoSubscriberNameSetException as e:
-                self.log.error("BigQueryWriterSubscriber has no subscriber name set.")
-                return
-            except WriteFailException as e:
-                self.log.error("BigQueryWriterSubscriber failed to write: %s" % str(e))
-                return
+        self.channel.start_consuming()
+        self.connection.close()
 
-            if not count:
-                continue
-
-            # collect and occasionally print some stats
-            self.inserts += count
-            if self.inserts >= REPORT_FREQUENCY:
-                self.total_inserts += self.inserts
-                if self.time > 0:
-                    self.log.error("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % \
-                        (count, self.time, count / self.time, self.total_inserts))
-                self.inserts = 0
-                self.time = 0
 
 if __name__ == "__main__":
-    r = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
-    bq = BigQueryWriterSubscriber(r)
-    while True:
-        # If the start fails, try again in a few
-        bq.start()
-        sleep(3)
+    bq = BigQueryWriterSubscriber()
+    bq.start()
