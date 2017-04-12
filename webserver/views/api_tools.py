@@ -68,7 +68,9 @@ def _send_listens_to_queue(listen_type, listens):
         connection = pika.BlockingConnection(pika.ConnectionParameters(host=config.RABBITMQ_HOST, port=config.RABBITMQ_PORT))
         channel = connection.channel()
         channel.exchange_declare(exchange='incoming', type='fanout')
-        channel.basic_publish(exchange='incoming', routing_key='', body=ujson.dumps(submit))
+        channel.queue_declare('incoming', durable=True)
+        channel.basic_publish(exchange='incoming', routing_key='', body=ujson.dumps(submit),
+            properties=pika.BasicProperties(delivery_mode = 2, ))
         connection.close()
 
 
