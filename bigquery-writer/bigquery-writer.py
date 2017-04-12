@@ -26,20 +26,8 @@ class BigQueryWriterSubscriber(object):
         logging.basicConfig()
         self.log.setLevel(logging.INFO)
 
-        while True:
-            try:
-                self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=config.RABBITMQ_HOST, port=config.RABBITMQ_PORT))
-                break
-            except pika.exceptions.ConnectionClosed:
-                print("Cannot connect to rabbitmq, sleeping 2 seconds")
-                sleep(2)
-
-        self.channel = self.connection.channel()
-        self.channel.exchange_declare(exchange='unique', type='fanout')
-        self.channel.queue_declare('unique', durable=True)
-        self.channel.queue_bind(exchange='unique', queue='unique')
-        self.channel.basic_consume(lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self), queue='unique')
-
+        self.connection = None
+        self.channel = None
         self.total_inserts = 0
         self.inserts = 0
         self.time = 0
@@ -92,11 +80,11 @@ class BigQueryWriterSubscriber(object):
                 tableId="listen",
                 body=body).execute(num_retries=5)
             self.time += time() - t0
-            self.channel.basic_ack(delivery_tag = method.delivery_tag)
         except HttpError as e:
             self.log.error("Submit to BigQuery failed: " + str(e))
             self.log.error(json.dumps(body, indent=3))
 
+        self.channel.basic_ack(delivery_tag = method.delivery_tag)
 
         # Clear the start time, since we've cleaned out the batch
         batch_start_time = 0
@@ -136,8 +124,28 @@ class BigQueryWriterSubscriber(object):
         credentials = GoogleCredentials.get_application_default()
         self.bigquery = discovery.build('bigquery', 'v2', credentials=credentials)
 
-        self.channel.start_consuming()
-        self.connection.close()
+        while True:
+            try:
+                self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=config.RABBITMQ_HOST, port=config.RABBITMQ_PORT))
+            except pika.exceptions.ConnectionClosed:
+                print("Cannot connect to rabbitmq, sleeping 2 seconds")
+                sleep(2)
+                continue
+
+            self.channel = self.connection.channel()
+            self.channel.exchange_declare(exchange='unique', type='fanout')
+            self.channel.queue_declare('unique', durable=True)
+            self.channel.queue_bind(exchange='unique', queue='unique')
+            self.channel.basic_consume(lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self), queue='unique')
+            try:
+                self.channel.start_consuming()
+            except pika.exceptions.ConnectionClosed:
+                self.log.info("Connection to rabbitmq closed. Re-opening.")
+                self.connection = None
+                self.channel = None
+                continue
+
+            self.connection.close()
 
 
 if __name__ == "__main__":
