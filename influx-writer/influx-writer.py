@@ -22,30 +22,15 @@ DUMP_JSON_WITH_ERRORS = False
 ERROR_RETRY_DELAY = 3 # number of seconds to wait until retrying an operation
 
 
-# TODO: Consider persistence and acknowledgements
 class InfluxWriterSubscriber(object):
     def __init__(self, ls, influx):
         self.log = logging.getLogger(__name__)
         logging.basicConfig()
         self.log.setLevel(logging.INFO)
-        while True:
-            try:
-                self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=config.RABBITMQ_HOST, port=config.RABBITMQ_PORT))
-                break
-            except pika.exceptions.ConnectionClosed:
-                print("Cannot connect to rabbitmq, sleeping 2 seconds")
-                sleep(2)
 
-        self.incoming_ch = self.connection.channel()
-        self.incoming_ch.exchange_declare(exchange='incoming', type='fanout')
-        self.incoming_ch.queue_declare('incoming', durable=True)
-        self.incoming_ch.queue_bind(exchange='incoming', queue='incoming')
-        self.incoming_ch.basic_consume(lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self), queue='incoming')
-
-        self.unique_ch = self.connection.channel()
-        self.unique_ch.exchange_declare(exchange='unique', type='fanout')
-        self.unique_ch.queue_declare('unique', durable=True)
-
+        self.incoming_ch = None
+        self.unique_ch = None
+        self.connection = None
         self.influx = influx
         self.ls = ls
         self.total_inserts = 0
@@ -71,7 +56,7 @@ class InfluxWriterSubscriber(object):
         if self.inserts >= REPORT_FREQUENCY:
             self.total_inserts += self.inserts
             if self.time > 0:
-                self.print_and_log_error("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % \
+                self.log.info("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % \
                     (self.inserts, self.time, self.inserts / self.time, self.total_inserts))
             self.inserts = 0
             self.time = 0
@@ -170,8 +155,33 @@ class InfluxWriterSubscriber(object):
 
     def start(self):
         self.log.info("InfluxWriterSubscriber started")
-        self.incoming_ch.start_consuming()
-        self.connection.close()
+        while True:
+            try:
+                self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=config.RABBITMQ_HOST, port=config.RABBITMQ_PORT))
+            except pika.exceptions.ConnectionClosed:
+                print("Cannot connect to rabbitmq, sleeping 2 seconds")
+                sleep(2)
+                continue
+
+            self.incoming_ch = self.connection.channel()
+            self.incoming_ch.exchange_declare(exchange='incoming', type='fanout')
+            self.incoming_ch.queue_declare('incoming', durable=True)
+            self.incoming_ch.queue_bind(exchange='incoming', queue='incoming')
+            self.incoming_ch.basic_consume(lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self), queue='incoming')
+
+            self.unique_ch = self.connection.channel()
+            self.unique_ch.exchange_declare(exchange='unique', type='fanout')
+            self.unique_ch.queue_declare('unique', durable=True)
+
+            try:
+                self.incoming_ch.start_consuming()
+            except pika.exceptions.ConnectionClosed:
+                self.log.info("Connection to rabbitmq closed. Re-opening.")
+                self.connection = None
+                self.channel = None
+                continue
+
+            self.connection.close()
 
     def print_and_log_error(self, msg):
         self.log.error(msg)
