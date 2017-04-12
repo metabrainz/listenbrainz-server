@@ -4,6 +4,9 @@ from __future__ import print_function, unicode_literals
 import logging
 from listenstore import ORDER_ASC, ORDER_DESC, DEFAULT_LISTENS_PER_FETCH
 
+REDIS_INCOMING_QUEUE_SIZE_KEY = "lb.incoming_q_size"
+REDIS_INCOMING_UNIQUE_SIZE_KEY = "lb.unique_q_size"
+
 class ListenStore(object):
     MAX_FETCH = 5000          # max batch size to fetch from the db
     MAX_FUTURE_SECONDS = 600  # 10 mins in future - max fwd clock skew

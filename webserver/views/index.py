@@ -83,6 +83,9 @@ def current_status():
     except pika.exceptions.ConnectionClosed:
         pass
 
+    incoming_count = _redis.redis.get("lb.incoming_q_size") or 0
+    unique_count = _redis.redis.get("lb.unique_q_size") or 0
+
     try:
         user_count = _get_user_count()
     except DatabaseException as e:
@@ -92,7 +95,9 @@ def current_status():
         "index/current-status.html",
         load=load,
         incoming_len=format(int(incoming_len), ",d"),
+        incoming_count=format(int(incoming_count), ",d"),
         unique_len=format(int(unique_len), ",d"),
+        unique_count=format(int(unique_count), ",d"),
         user_count=format(int(user_count), ",d"),
         alpha_importer_size=_get_alpha_importer_queue_size(),
     )
