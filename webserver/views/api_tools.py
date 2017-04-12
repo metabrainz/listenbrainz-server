@@ -35,6 +35,9 @@ LISTEN_TYPE_SINGLE = 1
 LISTEN_TYPE_IMPORT = 2
 LISTEN_TYPE_PLAYING_NOW = 3
 
+# TODO: Move this to LS
+INCOMING_QUEUE_SIZE_KEY = "lb.incoming_q_size"
+
 def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
     """ Convert the payload into augmented listens then submit them.
         Returns: augmented_listens
@@ -72,6 +75,7 @@ def _send_listens_to_queue(listen_type, listens):
         channel.basic_publish(exchange='incoming', routing_key='', body=ujson.dumps(submit),
             properties=pika.BasicProperties(delivery_mode = 2, ))
         connection.close()
+        _redis.redis.incr(INCOMING_QUEUE_SIZE_KEY, len(submit))
 
 
 def validate_listen(listen, listen_type):

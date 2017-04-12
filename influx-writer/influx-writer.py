@@ -15,19 +15,24 @@ from time import time, sleep
 import config
 from listenstore import InfluxListenStore
 from requests.exceptions import ConnectionError
+from redis import Redis
 
 REPORT_FREQUENCY = 5000
 KEYSPACE_NAME_UNIQUE = "ulisten"
 DUMP_JSON_WITH_ERRORS = False
 ERROR_RETRY_DELAY = 3 # number of seconds to wait until retrying an operation
 
+# TODO: Move this to LS
+INCOMING_QUEUE_SIZE_KEY = "lb.incoming_q_size"
+UNIQUE_QUEUE_SIZE_KEY = "lb.unique_q_size"
 
 class InfluxWriterSubscriber(object):
-    def __init__(self, ls, influx):
+    def __init__(self, ls, influx, redis):
         self.log = logging.getLogger(__name__)
         logging.basicConfig()
         self.log.setLevel(logging.INFO)
 
+        self.redis = redis
         self.incoming_ch = None
         self.unique_ch = None
         self.connection = None
@@ -49,10 +54,12 @@ class InfluxWriterSubscriber(object):
         if not ret:
             return ret
 
+        count = len(listens)
         self.incoming_ch.basic_ack(delivery_tag = method.delivery_tag)
+        self.redis.decr(INCOMING_QUEUE_SIZE_KEY, count)
 
         # collect and occasionally print some stats
-        self.inserts += len(listens)
+        self.inserts += count
         if self.inserts >= REPORT_FREQUENCY:
             self.total_inserts += self.inserts
             if self.time > 0:
@@ -150,6 +157,7 @@ class InfluxWriterSubscriber(object):
         # TODO: Add error handling here
         self.unique_ch.basic_publish(exchange='unique', routing_key='', body=ujson.dumps(unique), 
             properties=pika.BasicProperties(delivery_mode = 2,))
+        self.redis.incr(UNIQUE_QUEUE_SIZE_KEY, unique_count)
 
         return True
 
@@ -194,5 +202,7 @@ if __name__ == "__main__":
                              'INFLUX_PORT': config.INFLUX_PORT,
                              'INFLUX_DB_NAME': config.INFLUX_DB_NAME})
     i = InfluxDBClient(host=config.INFLUX_HOST, port=config.INFLUX_PORT, database=config.INFLUX_DB_NAME)
-    rc = InfluxWriterSubscriber(ls, i)
+    r = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
+
+    rc = InfluxWriterSubscriber(ls, i, r)
     rc.start()

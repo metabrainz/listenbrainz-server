@@ -9,6 +9,7 @@ from time import time, sleep
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
 from listen import Listen
 import config
+from redis import Redis
 
 from googleapiclient import discovery
 from googleapiclient.errors import HttpError
@@ -16,16 +17,18 @@ from oauth2client.client import GoogleCredentials
 
 REPORT_FREQUENCY = 5000
 APP_CREDENTIALS_FILE = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+UNIQUE_QUEUE_SIZE_KEY = "lb.unique_q_size"
 
 # TODO:
 #   Big query hardcoded data set ids
 
 class BigQueryWriterSubscriber(object):
-    def __init__(self):
+    def __init__(self, redis):
         self.log = logging.getLogger(__name__)
         logging.basicConfig()
         self.log.setLevel(logging.INFO)
 
+        self.redis = redis
         self.connection = None
         self.channel = None
         self.total_inserts = 0
@@ -85,6 +88,7 @@ class BigQueryWriterSubscriber(object):
             self.log.error(json.dumps(body, indent=3))
 
         self.channel.basic_ack(delivery_tag = method.delivery_tag)
+        self.redis.decr(UNIQUE_QUEUE_SIZE_KEY, count)
 
         # Clear the start time, since we've cleaned out the batch
         batch_start_time = 0
@@ -149,5 +153,6 @@ class BigQueryWriterSubscriber(object):
 
 
 if __name__ == "__main__":
-    bq = BigQueryWriterSubscriber()
+    r = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
+    bq = BigQueryWriterSubscriber(r)
     bq.start()
