@@ -36,9 +36,9 @@ class BigQueryWriterSubscriber(object):
 
         self.channel = self.connection.channel()
         self.channel.exchange_declare(exchange='unique', type='fanout')
-        self.channel.queue_declare('unique')
+        self.channel.queue_declare('unique', durable=True)
         self.channel.queue_bind(exchange='unique', queue='unique')
-        self.channel.basic_consume(lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self), queue='unique', no_ack=True)
+        self.channel.basic_consume(lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self), queue='unique')
 
         self.total_inserts = 0
         self.inserts = 0
@@ -92,9 +92,11 @@ class BigQueryWriterSubscriber(object):
                 tableId="listen",
                 body=body).execute(num_retries=5)
             self.time += time() - t0
+            self.channel.basic_ack(delivery_tag = method.delivery_tag)
         except HttpError as e:
             self.log.error("Submit to BigQuery failed: " + str(e))
             self.log.error(json.dumps(body, indent=3))
+
 
         # Clear the start time, since we've cleaned out the batch
         batch_start_time = 0

@@ -14,10 +14,12 @@ from listen import Listen
 from time import time, sleep
 import config
 from listenstore import InfluxListenStore
+from requests.exceptions import ConnectionError
 
 REPORT_FREQUENCY = 5000
 KEYSPACE_NAME_UNIQUE = "ulisten"
 DUMP_JSON_WITH_ERRORS = False
+ERROR_RETRY_DELAY = 3 # number of seconds to wait until retrying an operation
 
 
 # TODO: Consider persistence and acknowledgements
@@ -36,12 +38,13 @@ class InfluxWriterSubscriber(object):
 
         self.incoming_ch = self.connection.channel()
         self.incoming_ch.exchange_declare(exchange='incoming', type='fanout')
-        self.incoming_ch.queue_declare('incoming')
+        self.incoming_ch.queue_declare('incoming', durable=True)
         self.incoming_ch.queue_bind(exchange='incoming', queue='incoming')
-        self.incoming_ch.basic_consume(lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self), queue='incoming', no_ack=True)
+        self.incoming_ch.basic_consume(lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self), queue='incoming')
 
         self.unique_ch = self.connection.channel()
         self.unique_ch.exchange_declare(exchange='unique', type='fanout')
+        self.unique_ch.queue_declare('unique', durable=True)
 
         self.influx = influx
         self.ls = ls
@@ -58,6 +61,11 @@ class InfluxWriterSubscriber(object):
     def callback(self, ch, method, properties, body):
         listens = ujson.loads(body)
         ret = self.write(listens)
+        if not ret:
+            return ret
+
+        self.incoming_ch.basic_ack(delivery_tag = method.delivery_tag)
+
         # collect and occasionally print some stats
         self.inserts += len(listens)
         if self.inserts >= REPORT_FREQUENCY:
@@ -134,19 +142,29 @@ class InfluxWriterSubscriber(object):
         if not unique_count:
             return True
 
-        try:
-            t0 = time()
-            self.ls.insert(submit)
-            self.time += time() - t0
-        except (InfluxDBClientError, InfluxDBServerError, ValueError) as e:
-            self.log.error("Cannot write data to listenstore: %s" % str(e))
-            if DUMP_JSON_WITH_ERRORS:
-                self.log.error("Was writing the following data: ")
-                self.log.error(json.dumps(submit, indent=4))
-            return False
+        # TODO: handle this: ERROR Cannot write data to listenstore: {"error":"timeout"}
+        while True:
+            try:
+                t0 = time()
+                self.ls.insert(submit)
+                self.time += time() - t0
+                break
+
+            except ConnectionError as e:
+                self.log.error("Cannot write data to listenstore: %s. Sleep." % str(e))
+                sleep(ERROR_RETRY_DELAY)
+                continue
+
+            except (InfluxDBClientError, InfluxDBServerError, ValueError) as e:
+                self.log.error("Cannot write data to listenstore: %s" % str(e))
+                if DUMP_JSON_WITH_ERRORS:
+                    self.log.error("Was writing the following data: ")
+                    self.log.error(json.dumps(submit, indent=4))
+                return False
 
         # TODO: Add error handling here
-        self.unique_ch.basic_publish(exchange='unique', routing_key='', body=ujson.dumps(unique))
+        self.unique_ch.basic_publish(exchange='unique', routing_key='', body=ujson.dumps(unique), 
+            properties=pika.BasicProperties(delivery_mode = 2,))
 
         return True
 
