@@ -68,7 +68,7 @@ def _send_listens_to_queue(listen_type, listens):
         try:
             channel = _rabbitmq.channel()
             channel.exchange_declare(exchange='incoming', type='fanout')
-        except NoFreeChannels) as e:
+        except NoFreeChannels as e:
             current_app.logger.error("Cannot create a rabbitmq channel: " % str(e))
             raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
 
