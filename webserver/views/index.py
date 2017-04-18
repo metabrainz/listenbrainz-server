@@ -80,7 +80,7 @@ def current_status():
         queue = unique_ch.queue_declare('unique', durable=True)
         unique_len = queue.method.message_count
 
-    except pika.exceptions.ConnectionClosed:
+    except (pika.exceptions.ConnectionClosed, AttributeError):
         pass
 
     incoming_count = _redis.redis.get("lb.incoming_q_size") or 0

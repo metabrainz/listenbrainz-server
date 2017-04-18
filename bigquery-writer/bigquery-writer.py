@@ -128,11 +128,18 @@ class BigQueryWriterSubscriber(object):
         credentials = GoogleCredentials.get_application_default()
         self.bigquery = discovery.build('bigquery', 'v2', credentials=credentials)
 
+        try:
+            foo = config.RABBITMQ_HOST
+        except AttributeError:
+            self.log.error("Cannot connect to rabbitmq, sleeping 2 seconds")
+            sleep(2)
+            sys.exit(-1)
+
         while True:
             try:
                 self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=config.RABBITMQ_HOST, port=config.RABBITMQ_PORT))
-            except pika.exceptions.ConnectionClosed:
-                print("Cannot connect to rabbitmq, sleeping 2 seconds")
+            except (pika.exceptions.ConnectionClosed, AttributeError):
+                self.log.error("Cannot connect to rabbitmq, sleeping 2 seconds")
                 sleep(2)
                 continue
 
