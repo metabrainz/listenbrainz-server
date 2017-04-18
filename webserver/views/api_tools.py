@@ -5,10 +5,12 @@ from werkzeug.exceptions import InternalServerError, ServiceUnavailable, BadRequ
 from flask import current_app
 import ujson
 import pika
+import pika.exceptions
 import config
 
 from webserver.external import messybrainz
 from webserver.redis_connection import _redis
+from webserver.rabbitmq_connection import _rabbitmq
 from listen import Listen
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
@@ -66,16 +68,28 @@ def _send_listens_to_queue(listen_type, listens):
             submit.append(listen)
 
     if submit:
-        # TODO: Add exception handling
-        # TODO: Add connection pooling
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=config.RABBITMQ_HOST, port=config.RABBITMQ_PORT))
-        channel = connection.channel()
-        channel.exchange_declare(exchange='incoming', type='fanout')
-        channel.queue_declare('incoming', durable=True)
-        channel.basic_publish(exchange='incoming', routing_key='', body=ujson.dumps(submit),
-            properties=pika.BasicProperties(delivery_mode = 2, ))
-        connection.close()
+        try:
+            channel = _rabbitmq.channel()
+            channel.exchange_declare(exchange='incoming', type='fanout')
+            channel.queue_declare('incoming', durable=True)
+        except NoFreeChannels as e:
+            if channel:
+                channel.close() # just in case
+            current_app.logger.error("Cannot create a rabbitmq channel: " % str(e))
+            raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
+
+        # There is no good documentation on what exceptions could be raised here. Loads apparently,
+        # this catching blanco exceptions
+        try:
+            channel.basic_publish(exchange='incoming', routing_key='', body=ujson.dumps(submit),
+                properties=pika.BasicProperties(delivery_mode = 2, ))
+        except Exception as e:
+            channel.close()
+            current_app.logger.error("Cannot create a rabbitmq channel: " % str(e))
+            raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
+
         _redis.redis.incr(INCOMING_QUEUE_SIZE_KEY, len(submit))
+        channel.close()
 
 
 def validate_listen(listen, listen_type):
