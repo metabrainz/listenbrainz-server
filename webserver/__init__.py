@@ -19,6 +19,10 @@ def create_redis(app):
     from redis_connection import init_redis_connection
     return init_redis_connection(app.config['REDIS_HOST'], app.config['REDIS_PORT'])
 
+def create_rabbitmq(app):
+    from rabbitmq_connection import init_rabbitmq_connection
+    return init_rabbitmq_connection(app.config['RABBITMQ_HOST'], app.config['RABBITMQ_PORT'])
+
 def schedule_jobs(app):
     """ Init all the scheduled jobs """
     app.scheduledJobs = ScheduledJobs(app.config)

@@ -162,8 +162,7 @@ class InfluxWriterSubscriber(object):
         return True
 
     def start(self):
-        self.log.info("InfluxWriterSubscriber started")
-
+        self.log.info("influx-writer init")
         try:
             foo = config.RABBITMQ_HOST
         except AttributeError:
@@ -189,6 +188,7 @@ class InfluxWriterSubscriber(object):
             self.unique_ch.exchange_declare(exchange='unique', type='fanout')
             self.unique_ch.queue_declare('unique', durable=True)
 
+            self.log.info("influx-writer started")
             try:
                 self.incoming_ch.start_consuming()
             except pika.exceptions.ConnectionClosed:

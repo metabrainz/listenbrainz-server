@@ -114,6 +114,7 @@ class BigQueryWriterSubscriber(object):
             sleep(1000)
             return
 
+        self.log.info("bigquery-writer init")
         if not APP_CREDENTIALS_FILE:
             self.log.error("BiqQueryWriter not started, the GOOGLE_APPLICATION_CREDENTIALS env var is not defined.")
             sleep(1000)
@@ -124,7 +125,6 @@ class BigQueryWriterSubscriber(object):
             sleep(1000)
             return
 
-        self.log.info("BigQueryWriterSubscriber started")
         credentials = GoogleCredentials.get_application_default()
         self.bigquery = discovery.build('bigquery', 'v2', credentials=credentials)
 
@@ -147,6 +147,7 @@ class BigQueryWriterSubscriber(object):
             self.channel.exchange_declare(exchange='unique', type='fanout')
             self.channel.queue_declare('unique', durable=True)
             self.channel.queue_bind(exchange='unique', queue='unique')
+            self.log.info("bigquery-writer started")
             self.channel.basic_consume(lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self), queue='unique')
             try:
                 self.channel.start_consuming()
