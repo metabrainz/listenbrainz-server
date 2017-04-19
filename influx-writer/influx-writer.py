@@ -40,6 +40,11 @@ class InfluxWriterSubscriber(object):
         self.inserts = 0
         self.time = 0
 
+    @staticmethod
+    def escape(value):
+        if not value:
+            return value
+        return "\"{0}\"".format( value.replace("\\", "\\\\").replace( "\"", "\\\"").replace( "\n", "\\n"))
 
     @staticmethod
     def static_callback(ch, method, properties, body, obj):
@@ -68,7 +73,7 @@ class InfluxWriterSubscriber(object):
                 break
             except pika.exceptions.ConnectionClosed:
                 self.connect_to_rabbitmq()
-            
+
         count = len(listens)
         self.redis.decr(INCOMING_QUEUE_SIZE_KEY, count)
 
@@ -106,17 +111,13 @@ class InfluxWriterSubscriber(object):
             if t < min_time:
                 min_time = t
 
-        # Quote single quote characters which could be used to mount an injection attack.
-        # Sadly, influxdb does not provide a means to do this in the client library
-        user_name = user_name.replace("'", "\'")
-
         # quering for artist name here, since a field must be included in the query.
         query = """SELECT time, artist_name
-                     FROM listen
-                    WHERE user_name = '%s'
-                      AND time >= %d000000000
+                     FROM "\\"%s\\""
+                    WHERE time >= %d000000000
                       AND time <= %d000000000
                 """ % (user_name, min_time, max_time)
+
         while True:
             try:
                 results = self.influx.query(query)
@@ -127,7 +128,7 @@ class InfluxWriterSubscriber(object):
 
         # collect all the timestamps for this given time range.
         timestamps = {}
-        for result in results.get_points(measurement='listen'):
+        for result in results.get_points(measurement=self.escape(user_name)):
             dt = datetime.strptime(result['time'] , "%Y-%m-%dT%H:%M:%SZ")
             timestamps[int(dt.strftime('%s'))] = 1
 
@@ -169,7 +170,7 @@ class InfluxWriterSubscriber(object):
 
         while True:
             try:
-                self.unique_ch.basic_publish(exchange='unique', routing_key='', body=ujson.dumps(unique), 
+                self.unique_ch.basic_publish(exchange='unique', routing_key='', body=ujson.dumps(unique),
                     properties=pika.BasicProperties(delivery_mode = 2,))
                 break
             except pika.exceptions.ConnectionClosed:
