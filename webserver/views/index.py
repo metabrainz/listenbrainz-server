@@ -2,7 +2,6 @@ from __future__ import absolute_import
 from flask import Blueprint, render_template, current_app, redirect, url_for
 from flask_login import current_user
 from webserver.redis_connection import _redis
-from listenstore.redis_pubsub import RedisPubSubPublisher
 import os
 import subprocess
 import locale
