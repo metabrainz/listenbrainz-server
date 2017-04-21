@@ -19,7 +19,6 @@ from redis import Redis
 from redis_keys import INCOMING_QUEUE_SIZE_KEY, UNIQUE_QUEUE_SIZE_KEY
 
 REPORT_FREQUENCY = 5000
-KEYSPACE_NAME_UNIQUE = "ulisten"
 DUMP_JSON_WITH_ERRORS = False
 ERROR_RETRY_DELAY = 3 # number of seconds to wait until retrying an operation
 
@@ -52,7 +51,7 @@ class InfluxWriterSubscriber(object):
             try:
                 self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=config.RABBITMQ_HOST, port=config.RABBITMQ_PORT))
                 break
-            except Exceptions as e:
+            except Exception as e:
                 self.log.error("Cannot connect to rabbitmq: %s, sleeping 2 seconds")
                 sleep(2)
 
@@ -120,7 +119,7 @@ class InfluxWriterSubscriber(object):
                 """ % (user_name, min_time, max_time)
         while True:
             try:
-                results = i.query(query)
+                results = self.influx.query(query)
                 break
             except Exception as e:
                 self.log.error("Cannot query influx: %s" % str(e))
@@ -145,11 +144,6 @@ class InfluxWriterSubscriber(object):
             submit.append(Listen().from_json(listen))
             unique.append(listen)
 
-        self.log.error("dups: %d, unique %d" % (duplicate_count, unique_count))
-        if not unique_count:
-            return True
-
-        # TODO: handle this: ERROR Cannot write data to listenstore: {"error":"timeout"}
         while True:
             try:
                 t0 = time()
@@ -169,6 +163,10 @@ class InfluxWriterSubscriber(object):
                     self.log.error(json.dumps(submit, indent=4))
                 return False
 
+        self.log.error("dups: %d, unique %d" % (duplicate_count, unique_count))
+        if not unique_count:
+            return True
+
         while True:
             try:
                 self.unique_ch.basic_publish(exchange='unique', routing_key='', body=ujson.dumps(unique), 
@@ -184,28 +182,40 @@ class InfluxWriterSubscriber(object):
     def start(self):
         self.log.info("influx-writer init")
         if not hasattr(config, "REDIS_HOST"):
-            self.log.error("Redis service not defined. Seeping 2 seconds and exiting.")
+            self.log.error("Redis service not defined. Sleeping 2 seconds and exiting.")
             sleep(2)
             sys.exit(-1)
 
         if not hasattr(config, "INFLUX_HOST"):
-            self.log.error("Influx service not defined. Seeping 2 seconds and exiting.")
+            self.log.error("Influx service not defined. Sleeping 2 seconds and exiting.")
             sleep(2)
             sys.exit(-1)
 
         if not hasattr(config, "RABBITMQ_HOST"):
-            self.log.error("RabbitMQ service not defined. Seeping 2 seconds and exiting.")
+            self.log.error("RabbitMQ service not defined. Sleeping 2 seconds and exiting.")
             sleep(2)
             sys.exit(-1)
 
-        # TODO: Add better exception handling!
-        self.ls = InfluxListenStore({ 'REDIS_HOST' : config.REDIS_HOST,
-                                 'REDIS_PORT' : config.REDIS_PORT,
-                                 'INFLUX_HOST': config.INFLUX_HOST,
-                                 'INFLUX_PORT': config.INFLUX_PORT,
-                                 'INFLUX_DB_NAME': config.INFLUX_DB_NAME})
-        self.influx = InfluxDBClient(host=config.INFLUX_HOST, port=config.INFLUX_PORT, database=config.INFLUX_DB_NAME)
-        self.redis = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
+        while True:
+            try:
+                self.ls = InfluxListenStore({ 'REDIS_HOST' : config.REDIS_HOST,
+                                         'REDIS_PORT' : config.REDIS_PORT,
+                                         'INFLUX_HOST': config.INFLUX_HOST,
+                                         'INFLUX_PORT': config.INFLUX_PORT,
+                                         'INFLUX_DB_NAME': config.INFLUX_DB_NAME})
+                self.influx = InfluxDBClient(host=config.INFLUX_HOST, port=config.INFLUX_PORT, database=config.INFLUX_DB_NAME)
+                break
+            except Exception as err:
+                self.log.error("Cannot connect to influx: %s. Sleeping 2 seconds and trying again." % str(err))
+                sleep(2)
+
+        while True:
+            try:
+                self.redis = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
+                break
+            except Exception as err:
+                self.log.error("Cannot connect to redis: %s. Sleeping 2 seconds and trying again." % str(err))
+                sleep(2)
 
         while True:
             self.connect_to_rabbitmq()
