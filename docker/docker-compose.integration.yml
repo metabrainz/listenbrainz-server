@@ -35,6 +35,13 @@ services:
     links:
       - redis
 
+  rabbitmq:
+    image: rabbitmq:3.6.9
+    volumes:
+      - ./docker/data/rabbitmq:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"
+
   listenbrainz:
     build:
       context: ..
@@ -44,3 +51,4 @@ services:
       - redis
       - db
       - influx
+      - rabbitmq
