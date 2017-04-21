@@ -181,6 +181,7 @@ class InfluxWriterSubscriber(object):
 
     def start(self):
         self.log.info("influx-writer init")
+
         if not hasattr(config, "REDIS_HOST"):
             self.log.error("Redis service not defined. Sleeping 2 seconds and exiting.")
             sleep(2)
