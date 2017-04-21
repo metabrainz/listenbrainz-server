@@ -16,15 +16,13 @@ import config
 from listenstore import InfluxListenStore
 from requests.exceptions import ConnectionError
 from redis import Redis
+from redis_keys import INCOMING_QUEUE_SIZE_KEY, UNIQUE_QUEUE_SIZE_KEY
 
 REPORT_FREQUENCY = 5000
 KEYSPACE_NAME_UNIQUE = "ulisten"
 DUMP_JSON_WITH_ERRORS = False
 ERROR_RETRY_DELAY = 3 # number of seconds to wait until retrying an operation
 
-# TODO: Move this to LS
-INCOMING_QUEUE_SIZE_KEY = "lb.incoming_q_size"
-UNIQUE_QUEUE_SIZE_KEY = "lb.unique_q_size"
 
 class InfluxWriterSubscriber(object):
     def __init__(self):

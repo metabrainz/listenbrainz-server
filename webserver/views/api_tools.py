@@ -7,6 +7,7 @@ import ujson
 import pika
 import pika.exceptions
 import config
+from redis_keys import INCOMING_QUEUE_SIZE_KEY
 
 from webserver.external import messybrainz
 from webserver.redis_connection import _redis
@@ -36,9 +37,6 @@ MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
 LISTEN_TYPE_SINGLE = 1
 LISTEN_TYPE_IMPORT = 2
 LISTEN_TYPE_PLAYING_NOW = 3
-
-# TODO: Move this to LS
-INCOMING_QUEUE_SIZE_KEY = "lb.incoming_q_size"
 
 def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
     """ Convert the payload into augmented listens then submit them.
