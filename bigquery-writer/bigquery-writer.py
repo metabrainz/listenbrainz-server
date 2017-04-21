@@ -10,6 +10,7 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
 from listen import Listen
 import config
 from redis import Redis
+from redis_keys import UNIQUE_QUEUE_SIZE_KEY
 
 from googleapiclient import discovery
 from googleapiclient.errors import HttpError
@@ -17,7 +18,6 @@ from oauth2client.client import GoogleCredentials
 
 REPORT_FREQUENCY = 5000
 APP_CREDENTIALS_FILE = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
-UNIQUE_QUEUE_SIZE_KEY = "lb.unique_q_size"
 
 # TODO:
 #   Big query hardcoded data set ids
