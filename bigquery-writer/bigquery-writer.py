@@ -42,7 +42,7 @@ class BigQueryWriter(object):
                 self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=config.RABBITMQ_HOST, port=config.RABBITMQ_PORT))
                 break
             except Exception as e:
-                self.log.error("Cannot connect to rabbitmq: %s, sleeping 2 seconds")
+                self.log.error("Cannot connect to rabbitmq: %s, sleeping 2 seconds" % str(e))
                 sleep(2)
 
 
