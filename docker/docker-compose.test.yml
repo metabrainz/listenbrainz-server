@@ -19,7 +19,7 @@ services:
       INFLUXDB_CONTINUOUS_QUERIES_LOG_ENABLED: 'false'
 
   rabbitmq:
-    image: rabbitmq:3.6.9
+    image: rabbitmq:3.6.5
     volumes:
       - ./docker/data/rabbitmq:/var/lib/rabbitmq
     ports:

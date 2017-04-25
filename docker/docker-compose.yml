@@ -39,7 +39,7 @@ services:
       - "8083:8083"
 
   rabbitmq:
-    image: rabbitmq:3.6.9
+    image: rabbitmq:3.6.5
     volumes:
       - ./docker/data/rabbitmq:/var/lib/rabbitmq
     ports:
