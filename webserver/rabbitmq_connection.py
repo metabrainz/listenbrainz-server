@@ -10,6 +10,7 @@ def init_rabbitmq_connection(app):
 
     if not app.config.has_key("RABBITMQ_HOST"):
         app.logger.error("RabbitMQ host:port not defined. Sleeping 2 seconds, and exiting.")
+        sleep(2)
         sys.exit(-1)
 
     while True:
