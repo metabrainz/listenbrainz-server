@@ -4,10 +4,8 @@ import os
 import ujson
 import logging
 import pika
-from datetime import datetime
 from time import time, sleep
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
-from listen import Listen
 import config
 from redis import Redis
 from redis_keys import UNIQUE_QUEUE_SIZE_KEY
@@ -18,6 +16,7 @@ from oauth2client.client import GoogleCredentials
 
 REPORT_FREQUENCY = 5000
 APP_CREDENTIALS_FILE = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+ERROR_RETRY_DELAY = 3 # number of seconds to wait until retrying an operation
 
 # TODO:
 #   Big query hardcoded data set ids
@@ -42,16 +41,16 @@ class BigQueryWriter(object):
                 self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=config.RABBITMQ_HOST, port=config.RABBITMQ_PORT))
                 break
             except Exception as e:
-                self.log.error("Cannot connect to rabbitmq: %s, sleeping 2 seconds")
-                sleep(2)
+                self.log.error("Cannot connect to rabbitmq: %s, retrying in 3 seconds")
+                sleep(ERROR_RETRY_DELAY)
 
 
     @staticmethod
     def static_callback(ch, method, properties, body, obj):
-        return obj.callback(ch, method, properties, body)
+        return obj.callback(ch, method)
 
 
-    def callback(self, ch, method, properties, body):
+    def callback(self, ch, method):
 
         listens = ujson.loads(body)
         count = len(listens)
@@ -97,13 +96,13 @@ class BigQueryWriter(object):
                 break
 
             except HttpError as e:
-                self.log.error("Submit to BigQuery failed: %s. Sleeping 2 seconds." % str(e))
+                self.log.error("Submit to BigQuery failed: %s. Retrying in 3 seconds." % str(e))
             except Exception as e:
-                self.log.error("Unknown exception on submit to BigQuery failed: %s. Sleeping 2 seconds." % str(e))
+                self.log.error("Unknown exception on submit to BigQuery failed: %s. Retrying in 3 seconds." % str(e))
                 if DUMP_JSON_WITH_ERRORS:
                     self.log.error(json.dumps(body, indent=3))
 
-            sleep(2)
+            sleep(ERROR_RETRY_DELAY)
 
 
         while True:
@@ -114,10 +113,6 @@ class BigQueryWriter(object):
                 self.connect_to_rabbitmq()
 
         self.redis.decr(UNIQUE_QUEUE_SIZE_KEY, count)
-
-        # Clear the start time, since we've cleaned out the batch
-        batch_start_time = 0
-
         self.log.info("inserted %d listens." % count)
 
         # collect and occasionally print some stats
@@ -136,13 +131,13 @@ class BigQueryWriter(object):
         self.log.info("biqquer-writer init")
 
         if not hasattr(config, "REDIS_HOST"):
-            self.log.error("Redis service not defined. Sleeping 2 seconds and exiting.")
-            sleep(2)
+            self.log.error("Redis service not defined. Sleeping 3 seconds and exiting.")
+            sleep(ERROR_RETRY_DELAY)
             return
 
         if not hasattr(config, "RABBITMQ_HOST"):
-            self.log.error("RabbitMQ service not defined. Sleeping 2 seconds and exiting.")
-            sleep(2)
+            self.log.error("RabbitMQ service not defined. Sleeping 3 seconds and exiting.")
+            sleep(ERROR_RETRY_DELAY)
             return
 
         # if we're not supposed to run, just sleep
@@ -168,8 +163,8 @@ class BigQueryWriter(object):
                 self.redis = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
                 break
             except Exception as err:
-                self.log.error("Cannot connect to redis: %s. Sleeping 2 seconds and trying again." % str(err))
-                sleep(2)
+                self.log.error("Cannot connect to redis: %s. Retrying in 3 seconds and trying again." % str(err))
+                sleep(ERROR_RETRY_DELAY)
 
         while True:
             self.connect_to_rabbitmq()
