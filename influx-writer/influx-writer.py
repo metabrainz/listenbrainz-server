@@ -52,8 +52,8 @@ class InfluxWriterSubscriber(object):
                 self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=config.RABBITMQ_HOST, port=config.RABBITMQ_PORT))
                 break
             except Exception as e:
-                self.log.error("Cannot connect to rabbitmq: %s, sleeping 2 seconds")
-                sleep(2)
+                self.log.error("Cannot connect to rabbitmq: %s, retrying in 2 seconds")
+                sleep(ERROR_RETRY_DELAY)
 
 
     def callback(self, ch, method, properties, body):
@@ -184,17 +184,17 @@ class InfluxWriterSubscriber(object):
 
         if not hasattr(config, "REDIS_HOST"):
             self.log.error("Redis service not defined. Sleeping 2 seconds and exiting.")
-            sleep(2)
+            sleep(ERROR_RETRY_DELAY)
             sys.exit(-1)
 
         if not hasattr(config, "INFLUX_HOST"):
             self.log.error("Influx service not defined. Sleeping 2 seconds and exiting.")
-            sleep(2)
+            sleep(ERROR_RETRY_DELAY)
             sys.exit(-1)
 
         if not hasattr(config, "RABBITMQ_HOST"):
             self.log.error("RabbitMQ service not defined. Sleeping 2 seconds and exiting.")
-            sleep(2)
+            sleep(ERROR_RETRY_DELAY)
             sys.exit(-1)
 
         while True:
@@ -207,16 +207,16 @@ class InfluxWriterSubscriber(object):
                 self.influx = InfluxDBClient(host=config.INFLUX_HOST, port=config.INFLUX_PORT, database=config.INFLUX_DB_NAME)
                 break
             except Exception as err:
-                self.log.error("Cannot connect to influx: %s. Sleeping 2 seconds and trying again." % str(err))
-                sleep(2)
+                self.log.error("Cannot connect to influx: %s. Retrying in 2 seconds and trying again." % str(err))
+                sleep(ERROR_RETRY_DELAY)
 
         while True:
             try:
                 self.redis = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
                 break
             except Exception as err:
-                self.log.error("Cannot connect to redis: %s. Sleeping 2 seconds and trying again." % str(err))
-                sleep(2)
+                self.log.error("Cannot connect to redis: %s. Retrying in 2 seconds and trying again." % str(err))
+                sleep(ERROR_RETRY_DELAY)
 
         while True:
             self.connect_to_rabbitmq()
