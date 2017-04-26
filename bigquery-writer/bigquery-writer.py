@@ -47,10 +47,10 @@ class BigQueryWriter(object):
 
     @staticmethod
     def static_callback(ch, method, properties, body, obj):
-        return obj.callback(ch, method)
+        return obj.callback(ch, method, body)
 
 
-    def callback(self, ch, method):
+    def callback(self, ch, method, body):
 
         listens = ujson.loads(body)
         count = len(listens)
