@@ -29,53 +29,19 @@
           </tr>
         {% endif %}
           <tr>
+            <td>Number of incoming listens / items queued</td>
+            <td>{{ incoming_count }} / {{ incoming_len }}</td>
+          </tr>
+          <tr>
+            <td>Number of unique (new) listens / items queued</td>
+            <td>{{ unique_count }} / {{ unique_len }}</td>
+          </tr>
+          <tr>
             <td>Number of people in queue for alpha imports</td>
             <td>{{ alpha_importer_size }}</td>
           </tr>
         </tbody>
       </table>
-    </div>
-
-    <div class="col-md-7 col-lg-8">
-      {% for s in stats %}
-          <h3>{{ s.desc }}</h3>
-          <table class="table table-border table-condensed table-striped">
-            <thead>
-              <tr>
-               <th>description</th>
-               <th>number</th>
-               <th>ideal number</th>
-             </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>number of listens:</td>
-                <td>{{ s.data.listens }}</td>
-                <td>less than 1M</td>
-              </tr>
-              <tr>
-                <td>number of listen ref counts:</td>
-                <td>{{ s.data.refcounts }}</td>
-                <td>about the same as listens</td>
-              </tr>
-              <tr>
-                <td>number of listen consumer ids:</td>
-                <td>{{ s.data.listen_ids }}</td>
-                <td>near 0</td>
-              </tr>
-              <tr>
-                <td>number of pending listen consumer ids:</td>
-                <td>{{ s.data.listen_ids_pending }}</td>
-                <td>near 0</td>
-              </tr>
-              <tr>
-                <td>number of consumers:</td>
-                <td>{{ s.data.num_consumers }}</td>
-                <td>between 1 and 5</td>
-              </tr>
-            </tbody>
-          </table>
-      {% endfor %}
 
       <h3>load average</h3>
 

@@ -2,7 +2,6 @@ from __future__ import absolute_import
 from flask import Blueprint, render_template, current_app, redirect, url_for
 from flask_login import current_user
 from webserver.redis_connection import _redis
-from listenstore.redis_pubsub import RedisPubSubPublisher
 import os
 import subprocess
 import locale
@@ -10,6 +9,8 @@ import db.user
 from db.exceptions import DatabaseException
 import webserver
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
+import config
+import pika
 
 index_bp = Blueprint('index', __name__)
 locale.setlocale(locale.LC_ALL, '')
@@ -65,31 +66,38 @@ def current_status():
 
     load = "%.2f %.2f %.2f" % os.getloadavg()
 
-    stats = []
-    pubsub = RedisPubSubPublisher(_redis.redis, "ilisten")
-    stats_dict = pubsub.get_stats()
-    stats.append({ 'data' : stats_dict, 'desc' : "Incoming listens" })
-    pubsub = RedisPubSubPublisher(_redis.redis, "ulisten")
-    stats_dict = pubsub.get_stats()
-    stats.append({ 'data' : stats_dict, 'desc' : "Unique listens" })
+    incoming_len = -1
+    unique_len = -1
+    try:
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host=config.RABBITMQ_HOST, port=config.RABBITMQ_PORT))
+
+        incoming_ch = connection.channel()
+        queue = incoming_ch.queue_declare('incoming', durable=True)
+        incoming_len = queue.method.message_count
+
+        unique_ch = connection.channel()
+        queue = unique_ch.queue_declare('unique', durable=True)
+        unique_len = queue.method.message_count
+
+    except (pika.exceptions.ConnectionClosed, AttributeError):
+        pass
+
+    incoming_count = _redis.redis.get("lb.incoming_q_size") or 0
+    unique_count = _redis.redis.get("lb.unique_q_size") or 0
 
     try:
         user_count = _get_user_count()
     except DatabaseException as e:
         user_count = None
 
-    db_conn = webserver.influx_connection._influx
-    try:
-        listen_count = db_conn.get_total_listen_count()
-    except (InfluxDBServerError, InfluxDBClientError):
-        listen_count = None
-
     return render_template(
         "index/current-status.html",
         load=load,
-        stats=stats,
+        incoming_len=format(int(incoming_len), ",d"),
+        incoming_count=format(int(incoming_count), ",d"),
+        unique_len=format(int(unique_len), ",d"),
+        unique_count=format(int(unique_count), ",d"),
         user_count=format(int(user_count), ",d"),
-        listen_count=format(int(listen_count), ",d"),
         alpha_importer_size=_get_alpha_importer_queue_size(),
     )
 

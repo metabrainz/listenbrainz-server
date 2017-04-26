@@ -29,6 +29,9 @@ INFLUX_HOST    = "influx"
 INFLUX_PORT    = 8086
 INFLUX_DB_NAME  = "listenbrainz"
 
+# RabbitMQ
+RABBITMQ_HOST = "rabbitmq"
+RABBITMQ_PORT = 5672
 
 # MusicBrainz OAuth
 MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"

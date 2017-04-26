@@ -35,6 +35,13 @@ INFLUX_DB_NAME  = "listenbrainz"
 {{end}}
 {{end}}
 
+{{if service "listenbrainz-rabbitmq"}}
+{{with index (service "listenbrainz-rabbitmq") 0}}
+RABBITMQ_HOST = "{{.Address}}"
+RABBITMQ_PORT = {{.Port}}
+{{end}}
+{{end}}
+
 MUSICBRAINZ_CLIENT_ID = '''{{template "KEY" "musicbrainz/client_id"}}'''
 MUSICBRAINZ_CLIENT_SECRET = '''{{template "KEY" "musicbrainz/client_secret"}}'''
 

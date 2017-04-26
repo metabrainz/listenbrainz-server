@@ -3,10 +3,9 @@ from __future__ import print_function
 
 import sys
 import os
+import pika
 from datetime import datetime
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
-from redis import Redis
-from listenstore.redis_pubsub import RedisPubSubSubscriber, RedisPubSubPublisher, NoSubscriberNameSetException, WriteFailException, NoSubscribersException
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import ujson
@@ -15,29 +14,78 @@ from listen import Listen
 from time import time, sleep
 import config
 from listenstore import InfluxListenStore
+from requests.exceptions import ConnectionError
+from redis import Redis
+from redis_keys import INCOMING_QUEUE_SIZE_KEY, UNIQUE_QUEUE_SIZE_KEY
 
 REPORT_FREQUENCY = 5000
-SUBSCRIBER_NAME = "in"
-KEYSPACE_NAME_INCOMING = "ilisten"
-KEYSPACE_NAME_UNIQUE = "ulisten"
-
-
 DUMP_JSON_WITH_ERRORS = False
+ERROR_RETRY_DELAY = 3 # number of seconds to wait until retrying an operation
 
-class InfluxWriterSubscriber(RedisPubSubSubscriber):
-    def __init__(self, ls, influx, redis):
-        RedisPubSubSubscriber.__init__(self, redis, KEYSPACE_NAME_INCOMING, __name__)
 
-        self.publisher = RedisPubSubPublisher(redis, KEYSPACE_NAME_UNIQUE)
+class InfluxWriterSubscriber(object):
+    def __init__(self):
+        self.log = logging.getLogger(__name__)
+        logging.basicConfig()
+        self.log.setLevel(logging.INFO)
 
-        self.influx = influx
-        self.ls = ls
+        self.ls = None
+        self.influx = None
+        self.redis = None
+
+        self.incoming_ch = None
+        self.unique_ch = None
+        self.connection = None
         self.total_inserts = 0
         self.inserts = 0
         self.time = 0
 
-    def write(self, listen_dicts):
 
+    @staticmethod
+    def static_callback(ch, method, properties, body, obj):
+        return obj.callback(ch, method, properties, body)
+
+
+    def connect_to_rabbitmq(self):
+        while True:
+            try:
+                self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=config.RABBITMQ_HOST, port=config.RABBITMQ_PORT))
+                break
+            except Exception as e:
+                self.log.error("Cannot connect to rabbitmq: %s, retrying in 2 seconds")
+                sleep(ERROR_RETRY_DELAY)
+
+
+    def callback(self, ch, method, properties, body):
+        listens = ujson.loads(body)
+        ret = self.write(listens)
+        if not ret:
+            return ret
+
+        while True:
+            try:
+                self.incoming_ch.basic_ack(delivery_tag = method.delivery_tag)
+                break
+            except pika.exceptions.ConnectionClosed:
+                self.connect_to_rabbitmq()
+            
+        count = len(listens)
+        self.redis.decr(INCOMING_QUEUE_SIZE_KEY, count)
+
+        # collect and occasionally print some stats
+        self.inserts += count
+        if self.inserts >= REPORT_FREQUENCY:
+            self.total_inserts += self.inserts
+            if self.time > 0:
+                self.log.info("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % \
+                    (self.inserts, self.time, self.inserts / self.time, self.total_inserts))
+            self.inserts = 0
+            self.time = 0
+
+        return ret
+
+
+    def write(self, listen_dicts):
         submit = []
         unique = []
 
@@ -71,7 +119,7 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
                 """ % (user_name, min_time, max_time)
         while True:
             try:
-                results = i.query(query)
+                results = self.influx.query(query)
                 break
             except Exception as e:
                 self.log.error("Cannot query influx: %s" % str(e))
@@ -96,67 +144,107 @@ class InfluxWriterSubscriber(RedisPubSubSubscriber):
             submit.append(Listen().from_json(listen))
             unique.append(listen)
 
+        while True:
+            try:
+                t0 = time()
+                self.ls.insert(submit)
+                self.time += time() - t0
+                break
+
+            except ConnectionError as e:
+                self.log.error("Cannot write data to listenstore: %s. Sleep." % str(e))
+                sleep(ERROR_RETRY_DELAY)
+                continue
+
+            except (InfluxDBClientError, InfluxDBServerError, ValueError) as e:
+                self.log.error("Cannot write data to listenstore: %s" % str(e))
+                if DUMP_JSON_WITH_ERRORS:
+                    self.log.error("Was writing the following data: ")
+                    self.log.error(json.dumps(submit, indent=4))
+                return False
+
         self.log.error("dups: %d, unique %d" % (duplicate_count, unique_count))
         if not unique_count:
             return True
 
-        try:
-            t0 = time()
-            self.ls.insert(submit)
-            self.time += time() - t0
-        except (InfluxDBClientError, InfluxDBServerError, ValueError) as e:
-            self.log.error("Cannot write data to listenstore: %s" % str(e))
-            if DUMP_JSON_WITH_ERRORS:
-                self.log.error("Was writing the following data: ")
-                self.log.error(json.dumps(submit, indent=4))
-            return False
+        while True:
+            try:
+                self.unique_ch.basic_publish(exchange='unique', routing_key='', body=ujson.dumps(unique), 
+                    properties=pika.BasicProperties(delivery_mode = 2,))
+                break
+            except pika.exceptions.ConnectionClosed:
+                self.connect_to_rabbitmq()
 
-        try:
-            self.publisher.publish(unique)
-        except NoSubscribersException:
-            self.log.error("No subscribers, cannot publish unique listens.")
+        self.redis.incr(UNIQUE_QUEUE_SIZE_KEY, unique_count)
 
         return True
 
     def start(self):
-        self.log.info("InfluxWriterSubscriber started")
-        print("InfluxWriterSubscriber started")
+        self.log.info("influx-writer init")
 
-        self.register(SUBSCRIBER_NAME)
+        if not hasattr(config, "REDIS_HOST"):
+            self.log.error("Redis service not defined. Sleeping 2 seconds and exiting.")
+            sleep(ERROR_RETRY_DELAY)
+            sys.exit(-1)
+
+        if not hasattr(config, "INFLUX_HOST"):
+            self.log.error("Influx service not defined. Sleeping 2 seconds and exiting.")
+            sleep(ERROR_RETRY_DELAY)
+            sys.exit(-1)
+
+        if not hasattr(config, "RABBITMQ_HOST"):
+            self.log.error("RabbitMQ service not defined. Sleeping 2 seconds and exiting.")
+            sleep(ERROR_RETRY_DELAY)
+            sys.exit(-1)
+
         while True:
             try:
-                count = self.subscriber()
-            except NoSubscriberNameSetException as e:
-                self.print_and_log_error("InfluxWriterSubscriber has no subscriber name set. Exiting")
-                return
-            except WriteFailException as e:
-                self.print_and_log_error("InfluxWriterSubscriber failed to write: %s" % str(e))
-                count = e.written
+                self.ls = InfluxListenStore({ 'REDIS_HOST' : config.REDIS_HOST,
+                                         'REDIS_PORT' : config.REDIS_PORT,
+                                         'INFLUX_HOST': config.INFLUX_HOST,
+                                         'INFLUX_PORT': config.INFLUX_PORT,
+                                         'INFLUX_DB_NAME': config.INFLUX_DB_NAME})
+                self.influx = InfluxDBClient(host=config.INFLUX_HOST, port=config.INFLUX_PORT, database=config.INFLUX_DB_NAME)
+                break
+            except Exception as err:
+                self.log.error("Cannot connect to influx: %s. Retrying in 2 seconds and trying again." % str(err))
+                sleep(ERROR_RETRY_DELAY)
 
-            if not count:
+        while True:
+            try:
+                self.redis = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
+                break
+            except Exception as err:
+                self.log.error("Cannot connect to redis: %s. Retrying in 2 seconds and trying again." % str(err))
+                sleep(ERROR_RETRY_DELAY)
+
+        while True:
+            self.connect_to_rabbitmq()
+            self.incoming_ch = self.connection.channel()
+            self.incoming_ch.exchange_declare(exchange='incoming', type='fanout')
+            self.incoming_ch.queue_declare('incoming', durable=True)
+            self.incoming_ch.queue_bind(exchange='incoming', queue='incoming')
+            self.incoming_ch.basic_consume(lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self), queue='incoming')
+
+            self.unique_ch = self.connection.channel()
+            self.unique_ch.exchange_declare(exchange='unique', type='fanout')
+            self.unique_ch.queue_declare('unique', durable=True)
+
+            self.log.info("influx-writer started")
+            try:
+                self.incoming_ch.start_consuming()
+            except pika.exceptions.ConnectionClosed:
+                self.log.info("Connection to rabbitmq closed. Re-opening.")
+                self.connection = None
+                self.channel = None
                 continue
 
-            # collect and occasionally print some stats
-            self.inserts += count
-            if self.inserts >= REPORT_FREQUENCY:
-                self.total_inserts += self.inserts
-                if self.time > 0:
-                    self.print_and_log_error("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % \
-                        (count, self.time, count / self.time, self.total_inserts))
-                self.inserts = 0
-                self.time = 0
+            self.connection.close()
 
     def print_and_log_error(self, msg):
         self.log.error(msg)
         print(msg, file = sys.stderr)
 
 if __name__ == "__main__":
-    ls = InfluxListenStore({ 'REDIS_HOST' : config.REDIS_HOST,
-                             'REDIS_PORT' : config.REDIS_PORT,
-                             'INFLUX_HOST': config.INFLUX_HOST,
-                             'INFLUX_PORT': config.INFLUX_PORT,
-                             'INFLUX_DB_NAME': config.INFLUX_DB_NAME})
-    i = InfluxDBClient(host=config.INFLUX_HOST, port=config.INFLUX_PORT, database=config.INFLUX_DB_NAME)
-    r = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
-    rc = InfluxWriterSubscriber(ls, i, r)
+    rc = InfluxWriterSubscriber()
     rc.start()
