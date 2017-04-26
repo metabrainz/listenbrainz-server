@@ -4,11 +4,15 @@ import uuid
 from werkzeug.exceptions import InternalServerError, ServiceUnavailable, BadRequest
 from flask import current_app
 import ujson
+import pika
+import pika.exceptions
+import config
+from redis_keys import INCOMING_QUEUE_SIZE_KEY
 
 from webserver.external import messybrainz
 from webserver.redis_connection import _redis
+from webserver.rabbitmq_connection import _rabbitmq
 from listen import Listen
-from listenstore.redis_pubsub import RedisPubSubPublisher, NoSubscribersException
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
 MAX_LISTEN_SIZE = 10240
@@ -34,22 +38,19 @@ LISTEN_TYPE_SINGLE = 1
 LISTEN_TYPE_IMPORT = 2
 LISTEN_TYPE_PLAYING_NOW = 3
 
-# PubSub Keyspace
-LISTEN_KEYSPACE = "ilisten"  # for incoming listens
-
 def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
     """ Convert the payload into augmented listens then submit them.
         Returns: augmented_listens
     """
     try:
         augmented_listens = _get_augmented_listens(payload, user, listen_type)
-        _send_listens_to_redis(listen_type, augmented_listens)
+        _send_listens_to_queue(listen_type, augmented_listens)
     except Exception, e:
         print(e)
     return augmented_listens
 
 
-def _send_listens_to_redis(listen_type, listens):
+def _send_listens_to_queue(listen_type, listens):
     submit = []
     for listen in listens:
         if listen_type == LISTEN_TYPE_PLAYING_NOW:
@@ -65,12 +66,28 @@ def _send_listens_to_redis(listen_type, listens):
             submit.append(listen)
 
     if submit:
-        pubsub = RedisPubSubPublisher(_redis.redis, LISTEN_KEYSPACE)
         try:
-            pubsub.publish(submit)
-        except NoSubscribersException:
-            current_app.logger.error("No consumers registered in redis. Not accepting listens.")
-            raise InternalServerError("Cannot record listen at this time. (No consumers registered.)")
+            channel = _rabbitmq.channel()
+            channel.exchange_declare(exchange='incoming', type='fanout')
+            channel.queue_declare('incoming', durable=True)
+        except NoFreeChannels as e:
+            if channel:
+                channel.close() # just in case
+            current_app.logger.error("Cannot create a rabbitmq channel: " % str(e))
+            raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
+
+        # There is no good documentation on what exceptions could be raised here. Loads apparently,
+        # this catching blanco exceptions
+        try:
+            channel.basic_publish(exchange='incoming', routing_key='', body=ujson.dumps(submit),
+                properties=pika.BasicProperties(delivery_mode = 2, ))
+        except Exception as e:
+            channel.close()
+            current_app.logger.error("Cannot create a rabbitmq channel: " % str(e))
+            raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
+
+        _redis.redis.incr(INCOMING_QUEUE_SIZE_KEY, len(submit))
+        channel.close()
 
 
 def validate_listen(listen, listen_type):

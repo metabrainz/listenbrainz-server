@@ -18,6 +18,13 @@ services:
       INFLUXDB_HTTP_LOG_ENABLED: 'true'
       INFLUXDB_CONTINUOUS_QUERIES_LOG_ENABLED: 'false'
 
+  rabbitmq:
+    image: rabbitmq:3.6.5
+    volumes:
+      - ./docker/data/rabbitmq:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"
+
   listenbrainz:
     build:
       context: ..
@@ -29,3 +36,4 @@ services:
       - redis
       - db
       - influx
+      - rabbitmq

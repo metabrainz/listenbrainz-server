@@ -1,7 +1,0 @@
-SQLAlchemy == 1.0.8
-psycopg2==2.6.1
-ujson==1.33
-redis==2.10.3
-six==1.10.0
-python-dateutil==2.2
-pytz==2016.6.1

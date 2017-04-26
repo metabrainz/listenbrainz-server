@@ -6,18 +6,22 @@ from webserver.scheduler import ScheduledJobs
 def create_influx(app):
     from influx_connection import init_influx_connection
     return init_influx_connection({ 'INFLUX_HOST':app.config['INFLUX_HOST'],
-                                    'INFLUX_PORT':app.config['INFLUX_PORT'],
-                                    'INFLUX_DB_NAME':app.config['INFLUX_DB_NAME'],
-                                    'REDIS_HOST':app.config['REDIS_HOST'],
-                                    'REDIS_PORT':app.config['REDIS_PORT']})
+                                 'INFLUX_PORT':app.config['INFLUX_PORT'],
+                                 'INFLUX_DB_NAME':app.config['INFLUX_DB_NAME'],
+                                 'REDIS_HOST':app.config['REDIS_HOST'],
+                                 'REDIS_PORT':app.config['REDIS_PORT']})
 
 def create_postgres(app):
     from postgres_connection import init_postgres_connection
-    return init_postgres_connection(app.config['SQLALCHEMY_DATABASE_URI'])
+    init_postgres_connection(app.config['SQLALCHEMY_DATABASE_URI'])
 
 def create_redis(app):
     from redis_connection import init_redis_connection
-    return init_redis_connection(app.config['REDIS_HOST'], app.config['REDIS_PORT'])
+    init_redis_connection(app.config['REDIS_HOST'], app.config['REDIS_PORT'])
+
+def create_rabbitmq(app):
+    from rabbitmq_connection import init_rabbitmq_connection
+    init_rabbitmq_connection(app)
 
 def schedule_jobs(app):
     """ Init all the scheduled jobs """
@@ -44,6 +48,9 @@ def create_app():
 
     # Influx connection
     create_influx(app)
+
+    # RabbitMQ connection
+    create_rabbitmq(app)
 
     # Database connection
     import db
