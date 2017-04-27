@@ -10,7 +10,6 @@ import db.user
 import time
 import json
 
-TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'testdata')
 
 # lifted from AcousticBrainz
 def is_valid_uuid(u):
@@ -225,11 +224,3 @@ class APITestCase(IntegrationTestCase):
         self.assertEquals(sent_additional_info['link2'], received_additional_info['link2'])
         self.assertEquals(sent_additional_info['other_stuff'], received_additional_info['other_stuff'])
         self.assertEquals(sent_additional_info['nested']['info'], received_additional_info['nested.info'])
-
-    def path_to_data_file(self, fn):
-        """ Returns the path of the test data file relative to the test file.
-
-            Args:
-                fn: the name of the data file
-        """
-        return os.path.join(TEST_DATA_PATH, fn)

@@ -43,7 +43,6 @@ class InfluxListenStore(ListenStore):
             if count:
                 return int(count)
 
-
         try:
             results = self.influx.query('SELECT count(*) FROM "\\"' + escape(user_name) + '\\""')
         except (InfluxDBServerError, InfluxDBClientError) as e:
