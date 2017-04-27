@@ -10,6 +10,8 @@ from api_tools import insert_payload, log_raise_400, validate_listen, MAX_LISTEN
     DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
 import time
 
+CREATE_FAKE_USERS_FOR_STRESS_TESTING = False
+
 api_bp = Blueprint('api_v1', __name__)
 
 
@@ -140,7 +142,10 @@ def _validate_auth_header():
 
     user = db.user.get_by_token(auth_token)
     if user is None:
-        user = db.user.create_user_with_token(auth_token)
+        if CREATE_FAKE_USERS_FOR_STRESS_TESTING:
+            user = db.user.create_user_with_token(auth_token)
+        else:
+            raise Unauthorized("Invalid authorization token.")
 
     return user
 
