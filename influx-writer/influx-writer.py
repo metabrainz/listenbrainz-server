@@ -14,6 +14,7 @@ from listen import Listen
 from time import time, sleep
 import config
 from listenstore import InfluxListenStore
+from listenstore.utils import escape, get_measurement_name
 from requests.exceptions import ConnectionError
 from redis import Redis
 from redis_keys import INCOMING_QUEUE_SIZE_KEY, UNIQUE_QUEUE_SIZE_KEY
@@ -40,11 +41,6 @@ class InfluxWriterSubscriber(object):
         self.inserts = 0
         self.time = 0
 
-    @staticmethod
-    def escape(value):
-        if not value:
-            return value
-        return "\"{0}\"".format( value.replace("\\", "\\\\").replace( "\"", "\\\"").replace( "\n", "\\n"))
 
     @staticmethod
     def static_callback(ch, method, properties, body, obj):
@@ -116,7 +112,7 @@ class InfluxWriterSubscriber(object):
                      FROM "\\"%s\\""
                     WHERE time >= %d000000000
                       AND time <= %d000000000
-                """ % (user_name, min_time, max_time)
+                """ % (escape(user_name), min_time, max_time)
 
         while True:
             try:
@@ -128,7 +124,7 @@ class InfluxWriterSubscriber(object):
 
         # collect all the timestamps for this given time range.
         timestamps = {}
-        for result in results.get_points(measurement=self.escape(user_name)):
+        for result in results.get_points(measurement=get_measurement_name(user_name)):
             dt = datetime.strptime(result['time'] , "%Y-%m-%dT%H:%M:%SZ")
             timestamps[int(dt.strftime('%s'))] = 1
 
