@@ -47,5 +47,4 @@ class InfluxWriterTestCase(IntegrationTestCase):
 
         to_ts = int(time.time())
         listens = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
-        print(listens)
         self.assertEqual(len(listens), 1)
