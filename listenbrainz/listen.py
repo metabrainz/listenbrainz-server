@@ -2,6 +2,7 @@
 
 from datetime import datetime
 import calendar
+from listenbrainz.utils import escape
 
 def flatten_dict(d, seperator='', parent_key=''):
     """
@@ -178,7 +179,7 @@ class Listen(object):
             'measurement' : measurement,
             'time' : self.ts_since_epoch,
             'tags' : {
-                'user_name' : self.user_name,
+                'user_name' : escape(self.user_name),
             },
             'fields' : {
                 'artist_name' : self.data['artist_name'],
@@ -197,7 +198,7 @@ class Listen(object):
         # add the user generated keys present in additional info to fields
         for key, value in self.data['additional_info'].items():
             if key not in Listen.SUPPORTED_KEYS:
-                data['fields'][key] = str(value)
+                data['fields'][key] = escape(str(value))
 
         return data
 

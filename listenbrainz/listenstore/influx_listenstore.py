@@ -11,7 +11,7 @@ import json
 from datetime import datetime
 from listenbrainz.listenstore import ORDER_DESC, ORDER_ASC, ORDER_TEXT, \
     USER_CACHE_TIME, REDIS_USER_TIMESTAMPS
-from listenbrainz.listenstore.utils import escape, get_measurement_name
+from listenbrainz.utils import quote, get_escaped_measurement_name, get_measurement_name
 
 REDIS_INFLUX_USER_LISTEN_COUNT = "ls.listencount." # append username
 
@@ -45,7 +45,7 @@ class InfluxListenStore(ListenStore):
                 return int(count)
 
         try:
-            results = self.influx.query('SELECT count(*) FROM "\\"' + escape(user_name) + '\\""')
+            results = self.influx.query('SELECT count(*) FROM ' + get_escaped_measurement_name(user_name))
         except (InfluxDBServerError, InfluxDBClientError) as e:
             self.log.error("Cannot query influx: %s" % str(e))
             raise
@@ -137,10 +137,10 @@ class InfluxListenStore(ListenStore):
             min_ts = int(min_ts)
             max_ts = int(max_ts)
         else:
-            query = 'SELECT first(artist_msid) FROM "\\"' + escape(user_name) + '\\""'
+            query = 'SELECT first(artist_msid) FROM ' + get_escaped_measurement_name(user_name)
             min_ts = self._select_single_timestamp(query, get_measurement_name(user_name))
 
-            query = 'SELECT last(artist_msid) FROM "\\"' + escape(user_name) + '\\""'
+            query = 'SELECT last(artist_msid) FROM ' + get_escaped_measurement_name(user_name)
             max_ts = self._select_single_timestamp(query, get_measurement_name(user_name))
 
             self.redis.setex(REDIS_USER_TIMESTAMPS % user_name, "%d,%d" % (min_ts,max_ts), USER_CACHE_TIME)
@@ -156,8 +156,7 @@ class InfluxListenStore(ListenStore):
         user_names = {}
         for listen in listens:
             user_names[listen.user_name] = 1
-            submit.append(listen.to_influx(get_measurement_name(listen.user_name)))
-
+            submit.append(listen.to_influx(quote(listen.user_name)))
 
         if not self.influx.write_points(submit, time_precision='s'):
             self.log.error("Cannot write data to influx. (write_points returned False)")
@@ -189,7 +188,7 @@ class InfluxListenStore(ListenStore):
 
         # Quote single quote characters which could be used to mount an injection attack.
         # Sadly, influxdb does not provide a means to do this in the client library
-        query = 'SELECT * FROM "\\"' + escape(user_name) + '\\""'
+        query = 'SELECT * FROM ' + get_escaped_measurement_name(user_name)
 
         if from_ts != None:
             query += "WHERE time > " + str(from_ts) + "000000000"
