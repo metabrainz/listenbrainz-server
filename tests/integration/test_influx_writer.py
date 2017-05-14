@@ -59,7 +59,9 @@ class InfluxWriterTestCase(IntegrationTestCase):
         user2 = db.user.get_or_create('testuser2')
 
         r = self.send_single_listen(user1)
+        self.assert200(r)
         r = self.send_single_listen(user2)
+        self.assert200(r)
 
         time.sleep(5) # sleep to allow influx-writer to do its thing
 
