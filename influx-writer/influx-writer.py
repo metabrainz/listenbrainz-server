@@ -89,57 +89,68 @@ class InfluxWriterSubscriber(object):
     def write(self, listen_dicts):
         submit = []
         unique = []
-
-        # Calculate the time range that this set of listens coveres
-        min_time = 0
-        max_time = 0
-        user_name = ""
-        for listen in listen_dicts:
-            t = int(listen['listened_at'])
-            if not max_time:
-                min_time = max_time = t
-                user_name = listen['user_name']
-                continue
-
-            if t > max_time:
-                max_time = t
-
-            if t < min_time:
-                min_time = t
-
-        # quering for artist name here, since a field must be included in the query.
-        query = """SELECT time, artist_name
-                     FROM "\\"%s\\""
-                    WHERE time >= %d000000000
-                      AND time <= %d000000000
-                """ % (escape(user_name), min_time, max_time)
-
-        while True:
-            try:
-                results = self.influx.query(query)
-                break
-            except Exception as e:
-                self.log.error("Cannot query influx: %s" % str(e))
-                sleep(3)
-
-        # collect all the timestamps for this given time range.
-        timestamps = {}
-        for result in results.get_points(measurement=get_measurement_name(user_name)):
-            dt = datetime.strptime(result['time'] , "%Y-%m-%dT%H:%M:%SZ")
-            timestamps[int(dt.strftime('%s'))] = 1
-
         duplicate_count = 0
         unique_count = 0
+
+        # Partition the listens on the basis of user names
+        # and then store the time range for each user
+        min_times = {}
+        max_times = {}
+        user_listens = {}
         for listen in listen_dicts:
-            # Check to see if the timestamp is already in the DB
+
             t = int(listen['listened_at'])
-            if t in timestamps:
-                duplicate_count += 1
+            user_name = listen['user_name']
+
+            if user_name not in user_listens:
+                user_listens[user_name] = [listen]
+                min_times[user_name] = max_times[user_name] = t
                 continue
 
-            unique_count += 1
-            submit.append(Listen().from_json(listen))
-            unique.append(listen)
+            if t > max_times[user_name]:
+                max_times[user_name] = t
+
+            if t < min_times[user_name]:
+                min_times[user_name] = t
+
+            user_listens[user_name].append(listen)
+
+        for user_name in user_listens:
+
+            min_time = min_times[user_name]
+            max_time = max_times[user_name]
+
+            # quering for artist name here, since a field must be included in the query.
+            query = """SELECT time, artist_name
+                         FROM "\\"%s\\""
+                        WHERE time >= %d000000000
+                          AND time <= %d000000000
+                    """ % (escape(user_name), min_time, max_time)
+
+            while True:
+                try:
+                    results = self.influx.query(query)
+                    break
+                except Exception as e:
+                    self.log.error("Cannot query influx: %s" % str(e))
+                    sleep(3)
+
+            # collect all the timestamps for this given time range.
+            timestamps = {}
+            for result in results.get_points(measurement=get_measurement_name(user_name)):
+                dt = datetime.strptime(result['time'] , "%Y-%m-%dT%H:%M:%SZ")
+                timestamps[int(dt.strftime('%s'))] = 1
+
+            for listen in user_listens[user_name]:
+                # Check to see if the timestamp is already in the DB
+                t = int(listen['listened_at'])
+                if t in timestamps:
+                    duplicate_count += 1
+                    continue
+
+                unique_count += 1
+                submit.append(Listen().from_json(listen))
+                unique.append(listen)
 
         while True:
             try:
