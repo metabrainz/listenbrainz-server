@@ -16,6 +16,7 @@ from db.lastfm_session import Session
 from db.lastfm_token import Token
 import calendar
 from datetime import datetime
+from webserver.influx_connection import _influx
 
 api_bp = Blueprint('api_compat', __name__)
 
@@ -395,7 +396,7 @@ def user_info(request, data):
             with tag('url'):
                 text('http://listenbrainz.org/user/' + query_user.name)
             with tag('playcount'):
-                text(User.get_play_count(query_user.id))
+                text(User.get_play_count(query_user.id, _influx))
             with tag('registered', unixtime=str(query_user.created.strftime("%s"))):
                 text(str(query_user.created))
 
