@@ -24,7 +24,7 @@ ADMIN_INFLUX_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ad
               help="Turns debugging mode on or off. If specified, overrides "
                    "'DEBUG' value in the config file.")
 def runserver(host, port, debug=False):
-    application = webserver.create_app()
+    application = webserver.create_web_app()
     webserver.schedule_jobs(application)
     run_simple(
         hostname=host,

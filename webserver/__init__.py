@@ -28,7 +28,7 @@ def schedule_jobs(app):
     app.scheduledJobs = ScheduledJobs(app.config)
 
 
-def create_app():
+def _create_app(blueprints):
     app = Flask(__name__)
 
     # Configuration
@@ -79,7 +79,7 @@ def create_app():
     app.jinja_env.filters['date'] = utils.reformat_date
     app.jinja_env.filters['datetime'] = utils.reformat_datetime
 
-    _register_blueprints(app)
+    _register_blueprints(app, blueprints)
 
     return app
 
@@ -92,11 +92,38 @@ def create_app_rtfd():
     steps. Only blueprints/views are needed to render documentation.
     """
     app = Flask(__name__)
-    _register_blueprints(app)
+    _register_blueprints_rtfd(app)
     return app
 
 
-def _register_blueprints(app):
+def _register_blueprints(app, blueprints):
+    for bp, prefix in blueprints:
+        app.register_blueprint(bp, url_prefix=prefix)
+
+
+def create_web_app():
+    from webserver.views.index import index_bp
+    from webserver.views.login import login_bp
+    from webserver.views.user import user_bp
+    blueprints = [
+        (index_bp, ''),
+        (login_bp, '/login'),
+        (user_bp, '/user'),
+    ]
+    return _create_app(blueprints)
+
+
+def create_api_app():
+    from webserver.views.api import api_bp
+    from webserver.views.api_compat import api_bp as api_bp_compat
+    blueprints = [
+        (api_bp, ''),
+        (api_bp_compat, ''),
+    ]
+    return _create_app(blueprints)
+
+
+def _register_blueprints_rtfd(app):
     from webserver.views.index import index_bp
     from webserver.views.login import login_bp
     from webserver.views.api import api_bp
