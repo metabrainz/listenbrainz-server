@@ -1,7 +1,5 @@
-from __future__ import print_function
 import flask_testing
 from webserver import create_web_app, create_api_app, create_single_app
-from werkzeug.wsgi import DispatcherMiddleware
 
 
 class WebAppTestCase(flask_testing.TestCase):

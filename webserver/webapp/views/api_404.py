@@ -1,4 +1,3 @@
-from __future__ import print_function
 from flask import Blueprint
 from werkzeug.exceptions import NotFound
 
