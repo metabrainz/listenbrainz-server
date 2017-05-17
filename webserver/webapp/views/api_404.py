@@ -14,6 +14,7 @@ api_404_bp = Blueprint('api_404', __name__)
 @api_404_bp.route('/api/auth/', methods=['GET', 'POST'])
 def webapp_api_call(user_name=None):
     """
-    Insert documentation here
+    This route is used to raise 404s when api calls are made to the webapp
+    instead of the api.
     """
-    raise NotFound("Invalid call to API, please use api.listenbrainz.org instead")
+    raise NotFound("Incorrect address used in call to API, please use api.listenbrainz.org instead.")
