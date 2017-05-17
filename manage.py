@@ -8,6 +8,7 @@ import click
 import subprocess
 import config
 from urlparse import urlsplit
+from werkzeug.wsgi import DispatcherMiddleware
 
 
 cli = click.Group()
@@ -24,12 +25,15 @@ ADMIN_INFLUX_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ad
               help="Turns debugging mode on or off. If specified, overrides "
                    "'DEBUG' value in the config file.")
 def runserver(host, port, debug=False):
-    application = webserver.create_web_app()
-    webserver.schedule_jobs(application)
+    webapp = webserver.create_web_app()
+    webserver.schedule_jobs(webapp)
+    app = DispatcherMiddleware(webapp, {
+        '/api_app': webserver.create_api_app(),
+    })
     run_simple(
         hostname=host,
         port=port,
-        application=application,
+        application=app,
         use_debugger=debug,
         use_reloader=debug,
         processes=5
@@ -64,7 +68,7 @@ def init_db(force, create_db):
         res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'))
     # Don't raise an exception if the extension already exists
 
-    application = webserver.create_app()
+    application = webserver.create_web_app()
     with application.app_context():
         print('Creating schema...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_schema.sql'))

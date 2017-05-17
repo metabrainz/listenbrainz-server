@@ -18,6 +18,7 @@ def create_postgres(app):
 def create_redis(app):
     from redis_connection import init_redis_connection
     init_redis_connection(app.config['REDIS_HOST'], app.config['REDIS_PORT'])
+    print redis_connection._redis
 
 def create_rabbitmq(app):
     from rabbitmq_connection import init_rabbitmq_connection
@@ -28,7 +29,7 @@ def schedule_jobs(app):
     app.scheduledJobs = ScheduledJobs(app.config)
 
 
-def _create_app(blueprints):
+def create_app(blueprints):
     app = Flask(__name__)
 
     # Configuration
@@ -41,6 +42,7 @@ def _create_app(blueprints):
     init_loggers(app)
 
     # Redis connection
+    print("Create redis")
     create_redis(app)
 
     # Postgres connection
@@ -102,25 +104,27 @@ def _register_blueprints(app, blueprints):
 
 
 def create_web_app():
-    from webserver.views.index import index_bp
-    from webserver.views.login import login_bp
-    from webserver.views.user import user_bp
+    from webserver.webapp.views.index import index_bp
+    from webserver.webapp.views.login import login_bp
+    from webserver.webapp.views.user import user_bp
+    from webserver.webapp.views.api_404 import api_404_bp
     blueprints = [
         (index_bp, ''),
         (login_bp, '/login'),
         (user_bp, '/user'),
+        (api_404_bp, ''),
     ]
-    return _create_app(blueprints)
+    return create_app(blueprints)
 
 
 def create_api_app():
-    from webserver.views.api import api_bp
-    from webserver.views.api_compat import api_bp as api_bp_compat
+    from webserver.api.views.api import api_bp
+    from webserver.api.views.api_compat import api_bp as api_bp_compat
     blueprints = [
         (api_bp, ''),
         (api_bp_compat, ''),
     ]
-    return _create_app(blueprints)
+    return create_app(blueprints)
 
 
 def _register_blueprints_rtfd(app):

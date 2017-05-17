@@ -1,9 +1,9 @@
 from __future__ import absolute_import
-from webserver.testing import ServerTestCase
+from webserver.testing import WebAppTestCase
 from flask import url_for
 
 
-class IndexViewsTestCase(ServerTestCase):
+class IndexViewsTestCase(WebAppTestCase):
 
     def test_index(self):
         resp = self.client.get(url_for('index.index'))

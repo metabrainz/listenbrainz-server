@@ -11,7 +11,7 @@ from webserver import flash
 import db.user
 from db.exceptions import DatabaseException
 from flask import make_response
-from webserver.views.api_tools import convert_backup_to_native_format, insert_payload, validate_listen, \
+from webserver.api.tools import convert_backup_to_native_format, insert_payload, validate_listen, \
     MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP, LISTEN_TYPE_IMPORT
 from webserver.utils import sizeof_readable
 from webserver.login import User
