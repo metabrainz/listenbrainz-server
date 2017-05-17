@@ -1,0 +1,19 @@
+from flask import Blueprint
+from werkzeug.exceptions import NotFound
+
+
+# Blueprint to contain the view that returns 404 if API calls are made to
+# the web app instead of the api flask application
+api_404_bp = Blueprint('api_404', __name__)
+
+
+@api_404_bp.route('/1/submit_listens', methods=['GET', 'POST'])
+@api_404_bp.route('/1/user/<user_name>/listens', methods=['GET'])
+@api_404_bp.route('/2.0/', methods=['GET', 'POST'])
+@api_404_bp.route('/api/auth/', methods=['GET', 'POST'])
+def webapp_api_call(user_name=None):
+    """
+    This route is used to raise 404s when api calls are made to the webapp
+    instead of the api.
+    """
+    raise NotFound("Incorrect address used in call to API, please use api.listenbrainz.org instead.")

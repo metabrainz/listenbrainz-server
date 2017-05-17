@@ -1,8 +1,8 @@
-from webserver.testing import ServerTestCase
+from webserver.testing import WebAppTestCase
 from webserver import utils
 
 
-class UtilsTestCase(ServerTestCase):
+class UtilsTestCase(WebAppTestCase):
 
     def test_generate_string(self):
         length = 42
