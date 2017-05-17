@@ -18,7 +18,6 @@ def create_postgres(app):
 def create_redis(app):
     from redis_connection import init_redis_connection
     init_redis_connection(app.config['REDIS_HOST'], app.config['REDIS_PORT'])
-    print redis_connection._redis
 
 def create_rabbitmq(app):
     from rabbitmq_connection import init_rabbitmq_connection
@@ -29,7 +28,14 @@ def schedule_jobs(app):
     app.scheduledJobs = ScheduledJobs(app.config)
 
 
-def create_app(blueprints):
+def create_app(include_web_blueprints, include_api_blueprints):
+    """
+    Factory that creates Flask applications.
+
+    Args:
+        include_web_blueprints: if True, include the blueprints of the webapp
+        include_api_blueprints: if True, include the blueprints of the api
+    """
     app = Flask(__name__)
 
     # Configuration
@@ -42,7 +48,6 @@ def create_app(blueprints):
     init_loggers(app)
 
     # Redis connection
-    print("Create redis")
     create_redis(app)
 
     # Postgres connection
@@ -81,7 +86,14 @@ def create_app(blueprints):
     app.jinja_env.filters['date'] = utils.reformat_date
     app.jinja_env.filters['datetime'] = utils.reformat_datetime
 
-    _register_blueprints(app, blueprints)
+    # Register blueprints according to which app
+    # we're creating
+    if include_web_blueprints and include_api_blueprints:
+        _register_all_blueprints(app)
+    elif include_web_blueprints:
+        _register_web_blueprints(app)
+    elif include_api_blueprints:
+        _register_api_blueprints(app)
 
     return app
 
@@ -94,47 +106,42 @@ def create_app_rtfd():
     steps. Only blueprints/views are needed to render documentation.
     """
     app = Flask(__name__)
-    _register_blueprints_rtfd(app)
+    _register_all_blueprints(app)
     return app
 
-
-def _register_blueprints(app, blueprints):
-    for bp, prefix in blueprints:
-        app.register_blueprint(bp, url_prefix=prefix)
-
-
-def create_web_app():
+def _register_all_blueprints(app):
     from webserver.webapp.views.index import index_bp
     from webserver.webapp.views.login import login_bp
-    from webserver.webapp.views.user import user_bp
-    from webserver.webapp.views.api_404 import api_404_bp
-    blueprints = [
-        (index_bp, ''),
-        (login_bp, '/login'),
-        (user_bp, '/user'),
-        (api_404_bp, ''),
-    ]
-    return create_app(blueprints)
-
-
-def create_api_app():
     from webserver.api.views.api import api_bp
     from webserver.api.views.api_compat import api_bp as api_bp_compat
-    blueprints = [
-        (api_bp, ''),
-        (api_bp_compat, ''),
-    ]
-    return create_app(blueprints)
-
-
-def _register_blueprints_rtfd(app):
-    from webserver.views.index import index_bp
-    from webserver.views.login import login_bp
-    from webserver.views.api import api_bp
-    from webserver.views.api_compat import api_bp as api_bp_compat
-    from webserver.views.user import user_bp
+    from webserver.webapp.views.user import user_bp
     app.register_blueprint(index_bp)
     app.register_blueprint(login_bp, url_prefix='/login')
     app.register_blueprint(user_bp, url_prefix='/user')
     app.register_blueprint(api_bp)
     app.register_blueprint(api_bp_compat)
+
+def _register_web_blueprints(app):
+    from webserver.webapp.views.index import index_bp
+    from webserver.webapp.views.login import login_bp
+    from webserver.webapp.views.user import user_bp
+    from webserver.webapp.views.api_404 import api_404_bp
+    app.register_blueprint(index_bp)
+    app.register_blueprint(login_bp, url_prefix='/login')
+    app.register_blueprint(user_bp, url_prefix='/user')
+    app.register_blueprint(api_404_bp)
+
+def _register_api_blueprints(app):
+    from webserver.api.views.api import api_bp
+    from webserver.api.views.api_compat import api_bp as api_compat_bp
+    app.register_blueprint(api_bp)
+    app.register_blueprint(api_compat_bp)
+
+def create_web_app():
+    return create_app(include_web_blueprints=True, include_api_blueprints=False)
+
+def create_api_app():
+    return create_app(include_web_blueprints=False, include_api_blueprints=True)
+
+def create_single_app():
+    return create_app(include_web_blueprints=True, include_api_blueprints=True)

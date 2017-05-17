@@ -72,7 +72,6 @@ def check_limit_freshness():
     if time.time() <= limits_timeout:
         return
 
-    print _redis
     value = int(_redis.redis.get(RATELIMIT_PER_TOKEN_KEY) or '0')
     if not value:
         _redis.redis.set(RATELIMIT_PER_TOKEN_KEY, RATELIMIT_PER_TOKEN_DEFAULT)
