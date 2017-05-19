@@ -94,31 +94,34 @@ class InfluxWriterSubscriber(object):
 
         # Partition the listens on the basis of user names
         # and then store the time range for each user
-        min_times = {}
-        max_times = {}
-        user_listens = {}
+        users = {}
         for listen in listen_dicts:
 
             t = int(listen['listened_at'])
             user_name = listen['user_name']
 
-            if user_name not in user_listens:
-                user_listens[user_name] = [listen]
-                min_times[user_name] = max_times[user_name] = t
+            if user_name not in users:
+                users[user_name] = {
+                    'min_time': t,
+                    'max_time': t,
+                    'listens': [listen],
+                }
                 continue
 
-            if t > max_times[user_name]:
-                max_times[user_name] = t
+            if t > users[user_name]['max_time']:
+                users[user_name]['max_time'] = t
 
-            if t < min_times[user_name]:
-                min_times[user_name] = t
+            if t < users[user_name]['min_time']:
+                users[user_name]['min_time'] = t
 
-            user_listens[user_name].append(listen)
+            users[user_name]['listens'].append(listen)
 
-        for user_name in user_listens:
+        # get listens in the time range for each user and
+        # remove duplicates on the basis of timestamps
+        for user_name in users:
 
-            min_time = min_times[user_name]
-            max_time = max_times[user_name]
+            min_time = users[user_name]['min_time']
+            max_time = users[user_name]['max_time']
 
             # quering for artist name here, since a field must be included in the query.
             query = """SELECT time, artist_name
@@ -141,7 +144,7 @@ class InfluxWriterSubscriber(object):
                 dt = datetime.strptime(result['time'] , "%Y-%m-%dT%H:%M:%SZ")
                 timestamps[int(dt.strftime('%s'))] = 1
 
-            for listen in user_listens[user_name]:
+            for listen in users[user_name]['listens']:
                 # Check to see if the timestamp is already in the DB
                 t = int(listen['listened_at'])
                 if t in timestamps:
