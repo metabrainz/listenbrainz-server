@@ -64,10 +64,8 @@ class User(object):
             return None
 
     @staticmethod
-    def get_play_count(user_id):
+    def get_play_count(user_id, listenstore):
         """ Get playcount from the given user name.
         """
-        with db.engine.connect() as connection:
-            result = connection.execute(text(""" SELECT COUNT(*) FROM listen WHERE
-                                            user_id = :user_id """), {"user_id": user_id})
-            return int(result.fetchone()[0])
+        user = User.load_by_id(user_id)
+        return listenstore.get_listen_count_for_user(user.name, need_exact=False)

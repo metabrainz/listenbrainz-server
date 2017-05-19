@@ -24,7 +24,7 @@ class TestAPICompatUserClass(DatabaseTestCase):
         })
 
         # Create a user
-        uid = db.user.create("test")
+        uid = db.user.create("test_api_compat_user")
         self.assertIsNotNone(db.user.get(uid))
         with db.engine.connect() as connection:
             result = connection.execute(text("""
@@ -40,7 +40,7 @@ class TestAPICompatUserClass(DatabaseTestCase):
         # Insert some listens
         date = datetime(2015, 9, 3, 0, 0, 0)
         self.log.info("Inserting test data...")
-        test_data = generate_data(date, 100)
+        test_data = generate_data(date, 100, self.user.name)
         self.logstore.insert(test_data)
         self.log.info("Test data inserted")
 
@@ -60,3 +60,7 @@ class TestAPICompatUserClass(DatabaseTestCase):
         user = User.load_by_id(self.user.id)
         assert isinstance(user, User) == True
         self.assertDictEqual(user.__dict__, self.user.__dict__)
+
+    def test_user_get_play_count(self):
+        count = User.get_play_count(self.user.id, self.logstore)
+        self.assertEqual(count, 100)
