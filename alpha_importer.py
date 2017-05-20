@@ -10,8 +10,9 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os
 from listenstore import InfluxListenStore
+import redis
 
-redis_connection = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
+redis_connection = None
 
 # create a logger to log messages into LOG_FILE
 logger = logging.getLogger('alpha_importer')
@@ -26,6 +27,20 @@ handler.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
+
+def init_redis_connection():
+    """ Initiates the connection to Redis """
+
+    global redis_connection
+    while True:
+        try:
+            redis_connection = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
+            redis_connection.ping()
+            return
+        except redis.exceptions.ConnectionError as e:
+            logger.error("Couldn't connect to redis: {}:{}".format(config.REDIS_HOST, config.REDIS_PORT))
+            logger.error("Sleeping for 2 seconds and trying again...")
+            time.sleep(2)
 
 
 def queue_empty():
@@ -141,6 +156,7 @@ def update_status(username, status):
 
 
 if __name__ == '__main__':
+    init_redis_connection()
     db_connection = InfluxListenStore({'REDIS_HOST': config.REDIS_HOST,
                                        'REDIS_PORT': config.REDIS_PORT,
                                        'INFLUX_HOST': config.INFLUX_HOST,
