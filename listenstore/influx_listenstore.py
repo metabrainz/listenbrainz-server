@@ -24,6 +24,7 @@ class InfluxListenStore(ListenStore):
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
         self.redis = Redis(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'])
+        self.redis.ping()
         self.influx = InfluxDBClient(host=conf['INFLUX_HOST'], port=conf['INFLUX_PORT'], database=conf['INFLUX_DB_NAME'])
 
 
