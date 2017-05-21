@@ -155,13 +155,26 @@ def update_status(username, status):
     redis_connection.set("{} {}".format(config.IMPORTER_SET_KEY_PREFIX, username), status)
 
 
+def init_influx_connection():
+    """ Connects to influx and returns an InfluxListenStore instance """
+    while True:
+        try:
+            return InfluxListenStore({
+                'REDIS_HOST': config.REDIS_HOST,
+                'REDIS_PORT': config.REDIS_PORT,
+                'INFLUX_HOST': config.INFLUX_HOST,
+                'INFLUX_PORT': config.INFLUX_PORT,
+                'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
+            })
+        except Exception as e:
+            logger.error("Couldn't create InfluxListenStore instance: {}".format(str(e)))
+            logger.error("Sleeping 2 seconds and then retrying...")
+            time.sleep(2)
+
+
 if __name__ == '__main__':
     init_redis_connection()
-    db_connection = InfluxListenStore({'REDIS_HOST': config.REDIS_HOST,
-                                       'REDIS_PORT': config.REDIS_PORT,
-                                       'INFLUX_HOST': config.INFLUX_HOST,
-                                       'INFLUX_PORT': config.INFLUX_PORT,
-                                       'INFLUX_DB_NAME': config.INFLUX_DB_NAME})
+    db_connection = init_influx_connection()
     while True:
         if not queue_empty():
             username, token = queue_front()

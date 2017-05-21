@@ -15,7 +15,7 @@ class TestAPICompatUserClass(DatabaseTestCase):
     def setUp(self):
         super(TestAPICompatUserClass, self).setUp()
         self.log = logging.getLogger(__name__)
-        self.logstore = init_influx_connection({
+        self.logstore = init_influx_connection(self.log, {
             'INFLUX_HOST': config.INFLUX_HOST,
             'INFLUX_PORT': config.INFLUX_PORT,
             'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
