@@ -5,11 +5,13 @@ from webserver.scheduler import ScheduledJobs
 
 def create_influx(app):
     from influx_connection import init_influx_connection
-    return init_influx_connection({ 'INFLUX_HOST':app.config['INFLUX_HOST'],
-                                 'INFLUX_PORT':app.config['INFLUX_PORT'],
-                                 'INFLUX_DB_NAME':app.config['INFLUX_DB_NAME'],
-                                 'REDIS_HOST':app.config['REDIS_HOST'],
-                                 'REDIS_PORT':app.config['REDIS_PORT']})
+    return init_influx_connection(app.logger, {
+        'INFLUX_HOST': app.config['INFLUX_HOST'],
+        'INFLUX_PORT': app.config['INFLUX_PORT'],
+        'INFLUX_DB_NAME': app.config['INFLUX_DB_NAME'],
+        'REDIS_HOST': app.config['REDIS_HOST'],
+        'REDIS_PORT': app.config['REDIS_PORT'],
+    })
 
 def create_postgres(app):
     from postgres_connection import init_postgres_connection
