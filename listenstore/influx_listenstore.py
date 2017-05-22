@@ -13,13 +13,25 @@ from listenstore import ORDER_DESC, ORDER_ASC, ORDER_TEXT, \
     USER_CACHE_TIME, REDIS_USER_TIMESTAMPS
 from listenstore.utils import escape, get_measurement_name
 
-REDIS_INFLUX_USER_LISTEN_COUNT = "ls.listencount." # append username
+COUNT_INFO = {
+    "listen": {
+        "query": "count(*)",
+        "influx_key": "count_recording_msid",
+        "redis_key": "ls.listencount.", # append username
+        "redis_cache_time": 15 * 60, # in seconds. 15 minutes
+    },
+    "artist": {
+        "query": "count(distinct(artist_msid))",
+        "influx_key": "count",
+        "redis_key": "ls.artistcount.", # append username
+        "redis_cache_time": 15 * 60, # in seconds. 15 minutes
+    }
+}
 
 class InfluxListenStore(ListenStore):
 
     REDIS_INFLUX_TOTAL_LISTEN_COUNT = "ls.listencount.total"
     TOTAL_LISTEN_COUNT_CACHE_TIME = 10 * 60
-    USER_LISTEN_COUNT_CACHE_TIME = 15 * 60 # in seconds. 15 minutes
 
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
@@ -28,7 +40,55 @@ class InfluxListenStore(ListenStore):
         self.influx = InfluxDBClient(host=conf['INFLUX_HOST'], port=conf['INFLUX_PORT'], database=conf['INFLUX_DB_NAME'])
 
 
+    def _get_count_for_user(self, attribute, user_name, need_exact=False):
+        """Get the total number of some attribute for a user. Boilerplate for fetching listens,
+           artists, albums, and tracks.
+
+        Args:
+            attribute: the specific count to get. Must be 'listen' or 'artist'.
+            user_name: the user to get artists for
+            need_exact: if True, get an exact number of artists directly from the ListenStore
+        """
+        if attribute not in ['listen', 'artist', 'album', 'track']:
+            raise ValueError("'attribute' must be 'listen' or 'artist'.")
+
+        if not need_exact:
+            # check if the user's listen count is already in redis
+            # if already present return it directly instead of calculating it again
+            count = self.redis.get(COUNT_INFO[attribute]['redis_key'] + user_name)
+            if count:
+                return int(count)
+
+        try:
+            results = self.influx.query('SELECT ' + COUNT_INFO[attribute]['query'] + ' FROM "\\"' + escape(user_name) + '\\""')
+        except (InfluxDBServerError, InfluxDBClientError) as e:
+            self.log.error("Cannot query influx: %s" % str(e))
+            raise
+
+        # get the number of listens from the json
+        try:
+            count = results.get_points(measurement = get_measurement_name(user_name)).next()[COUNT_INFO[attribute]['influx_key']]
+        except (KeyError, StopIteration):
+            count = 0
+
+        # put this value into redis with an expiry time
+        user_key = "{}{}".format(COUNT_INFO[attribute]['redis_key'], user_name)
+        self.redis.setex(user_key, count, COUNT_INFO[attribute]['redis_cache_time'])
+        return int(count)
+
+
     def get_listen_count_for_user(self, user_name, need_exact=False):
+        """Get the total number of artists for a user. The number of artists comes from
+           a redis cache unless an exact number is asked for.
+
+        Args:
+            user_name: the user to get artists for
+            need_exact: if True, get an exact number of artists directly from the ListenStore
+        """
+        return self._get_count_for_user('listen', user_name, need_exact)
+
+
+    def get_artist_count_for_user(self, user_name, need_exact=False):
         """Get the total number of listens for a user. The number of listens comes from
            a redis cache unless an exact number is asked for.
 
@@ -36,30 +96,7 @@ class InfluxListenStore(ListenStore):
             user_name: the user to get listens for
             need_exact: if True, get an exact number of listens directly from the ListenStore
         """
-
-        if not need_exact:
-            # check if the user's listen count is already in redis
-            # if already present return it directly instead of calculating it again
-            count = self.redis.get(REDIS_INFLUX_USER_LISTEN_COUNT + user_name)
-            if count:
-                return int(count)
-
-        try:
-            results = self.influx.query('SELECT count(*) FROM "\\"' + escape(user_name) + '\\""')
-        except (InfluxDBServerError, InfluxDBClientError) as e:
-            self.log.error("Cannot query influx: %s" % str(e))
-            raise
-
-        # get the number of listens from the json
-        try:
-            count = results.get_points(measurement = get_measurement_name(user_name)).next()['count_recording_msid']
-        except (KeyError, StopIteration):
-            count = 0
-
-        # put this value into redis with an expiry time
-        user_key = "{}{}".format(REDIS_INFLUX_USER_LISTEN_COUNT, user_name)
-        self.redis.setex(user_key, count, InfluxListenStore.USER_LISTEN_COUNT_CACHE_TIME)
-        return int(count)
+        return self._get_count_for_user('artist', user_name, need_exact)
 
 
     def reset_listen_count(self, user_name):
@@ -171,7 +208,7 @@ class InfluxListenStore(ListenStore):
         # If we reach this point, we were able to write the listens to the InfluxListenStore.
         # So update the listen counts of the users cached in redis.
         for data in submit:
-            user_key = "{}{}".format(REDIS_INFLUX_USER_LISTEN_COUNT, data['tags']['user_name'])
+            user_key = "{}{}".format(COUNT_INFO['listen']['redis_key'], data['tags']['user_name'])
             if self.redis.exists(user_key):
                 self.redis.incr(user_key)
 

@@ -11,11 +11,18 @@
       <b><a href="https://musicbrainz.org/user/{{ user.musicbrainz_id }}">See profile on MusicBrainz</a></b>
     </div>
 
-    {% if have_listen_count %}
-      <h3> Listen Count: {{ listen_count }}  </h3>
-    {% else %}
-      We were not able to get listen count for {{ user.musicbrainz_id }} due to an error. Please reload to try again.
-    {% endif %}
+    <ul class="list-inline">
+      {% if have_listen_count %}
+        <li><h3>{{ listen_count }} <small>listens</small></h3></li>
+      {% else %}
+        <p>We were not able to get listen count for {{ user.musicbrainz_id }} due to an error. Please reload to try again.</p>
+      {% endif %}
+      {% if have_artist_count %}
+        <li><h3>{{ artist_count }} <small>artists</small></h3></li>
+      {% else %}
+        <p>We were not able to get artist count for {{ user.musicbrainz_id }} due to an error. Please reload to try again.</p>
+      {% endif %}
+    </ul>
 
     <h3>Recent listens</h3>
 

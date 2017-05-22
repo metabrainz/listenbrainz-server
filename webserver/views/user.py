@@ -88,6 +88,13 @@ def profile(user_name):
         have_listen_count = False
         listen_count = 0
 
+    try:
+        have_artist_count = True
+        artist_count = db_conn.get_artist_count_for_user(user_name)
+    except (InfluxDBServerError, InfluxDBClientError):
+        have_artist_count = False
+        artist_count = 0
+
     # Getting data for current page
     max_ts = request.args.get("max_ts")
     if max_ts is not None:
@@ -156,6 +163,8 @@ def profile(user_name):
         spotify_uri=_get_spotify_uri_for_listens(listens),
         have_listen_count=have_listen_count,
         listen_count=format(int(listen_count), ",d"),
+        have_artist_count=have_artist_count,
+        artist_count=format(int(artist_count), ",d"),
     )
 
 
