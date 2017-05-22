@@ -13,10 +13,6 @@ def create_influx(app):
         'REDIS_PORT': app.config['REDIS_PORT'],
     })
 
-def create_postgres(app):
-    from postgres_connection import init_postgres_connection
-    init_postgres_connection(app.config['SQLALCHEMY_DATABASE_URI'])
-
 def create_redis(app):
     from redis_connection import init_redis_connection
     init_redis_connection(app.logger, app.config['REDIS_HOST'], app.config['REDIS_PORT'])
@@ -44,9 +40,6 @@ def create_app():
 
     # Redis connection
     create_redis(app)
-
-    # Postgres connection
-    create_postgres(app)
 
     # Influx connection
     create_influx(app)

@@ -1,6 +1,9 @@
+from __future__ import print_function
 import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
+import time
+import psycopg2
 
 # This value must be incremented after schema changes on replicated tables!
 SCHEMA_VERSION = 1
@@ -16,7 +19,15 @@ def init_db_connection(connect_str):
     for more info.
     """
     global engine
-    engine = create_engine(connect_str, poolclass=NullPool)
+    while True:
+        try:
+            engine = create_engine(connect_str, poolclass=NullPool)
+            print("Connection to db established!")
+            break
+        except psycopg2.OperationalError as e:
+            print("Couldn't establish connection to db: {}".format(str(e)))
+            print("Sleeping 2 seconds and trying again...")
+            time.sleep(2)
 
 
 def run_sql_script(sql_file_path):
