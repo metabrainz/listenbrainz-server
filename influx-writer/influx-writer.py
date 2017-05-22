@@ -106,8 +106,7 @@ class InfluxWriterSubscriber(object):
         while True:
             try:
                 self.ls.insert(data)
-                done = True
-                break
+                return len(data)
             except (InfluxDBServerError, InfluxDBClientError, ValueError) as e:
                 failure_count += 1
                 if failure_count >= retries:
@@ -117,9 +116,8 @@ class InfluxWriterSubscriber(object):
                 self.log.error("Cannot write data to listenstore: %s. Sleep." % str(e))
                 sleep(ERROR_RETRY_DELAY)
 
-        if done:
-            return len(data)
-        elif not done and len(data) == 1:
+        # if we get here, we failed on trying to write the data
+        if len(data) == 1:
             # try to send the bad listen one more time and if it doesn't work
             # log the error
             try:
