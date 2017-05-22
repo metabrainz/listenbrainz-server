@@ -101,7 +101,6 @@ class InfluxWriterSubscriber(object):
         if not data:
             return 0
 
-        done = False
         failure_count = 0
         while True:
             try:
