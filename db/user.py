@@ -3,9 +3,18 @@ import uuid
 import sqlalchemy
 from db.exceptions import DatabaseException
 import logging
+import random
+import string
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+def random_string():
+    l = random.randint(50, 100)
+    s = ""
+    for _ in xrange(l):
+        s += random.choice(string.ascii_lowercase)
+    return s
 
 
 def create(musicbrainz_id):
@@ -27,6 +36,36 @@ def create(musicbrainz_id):
             "token": str(uuid.uuid4()),
         })
         return result.fetchone()["id"]
+
+def create_user_with_token(token):
+    """
+    Creates a new user whose token is equal to provided token
+
+    Args:
+        token (str): authorization token of a user
+
+    Returns:
+        Dictionary with the following structure:
+        {
+            "id": <user id>,
+            "created": <account creation time>,
+            "musicbrainz_id": <MusicBrainz username>,
+            "auth_token": <authentication token>,
+        }
+    """
+    with db.engine.connect() as connection:
+        user_name = random_string()
+        while get_by_mb_id(user_name):
+            user_name = random_string()
+        result = connection.execute(sqlalchemy.text("""
+                INSERT INTO "user" (musicbrainz_id, auth_token)
+                     VALUES (:mb_id, :token)
+                  RETURNING id
+        """), {
+            "mb_id": user_name,
+            "token": token,
+        })
+        return get_by_mb_id(user_name)
 
 def update_token(id):
     """Update a user's token to a new UUID
