@@ -17,7 +17,7 @@ def create_postgres(app):
 
 def create_redis(app):
     from redis_connection import init_redis_connection
-    init_redis_connection(app.config['REDIS_HOST'], app.config['REDIS_PORT'])
+    init_redis_connection(app.logger, app.config['REDIS_HOST'], app.config['REDIS_PORT'])
 
 def create_rabbitmq(app):
     from rabbitmq_connection import init_rabbitmq_connection

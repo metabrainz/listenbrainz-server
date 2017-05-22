@@ -246,6 +246,7 @@ class InfluxWriterSubscriber(object):
         while True:
             try:
                 self.redis = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
+                self.redis.ping()
                 break
             except Exception as err:
                 self.log.error("Cannot connect to redis: %s. Retrying in 2 seconds and trying again." % str(err))

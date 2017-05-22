@@ -7,6 +7,7 @@ import ujson
 import uuid
 from listen import Listen
 from redis import Redis
+import redis
 import json
 
 
@@ -24,3 +25,11 @@ class RedisListenStore(ListenStore):
         data = ujson.loads(data)
         data.update({'listened_at': MIN_ID+1})
         return Listen.from_json(data)
+
+    def check_connection(self):
+        """ Pings the redis server to check if the connection works or not """
+        try:
+            self.redis.ping()
+        except redis.exceptions.ConnectionError as e:
+            self.log.error("Redis ping didn't work: {}".format(str(e)))
+            raise
