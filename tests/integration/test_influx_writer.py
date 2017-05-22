@@ -48,3 +48,26 @@ class InfluxWriterTestCase(IntegrationTestCase):
         to_ts = int(time.time())
         listens = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
         self.assertEqual(len(listens), 1)
+
+    def test_dedup_different_users(self):
+        """
+        Test to make sure influx writer doesn't confuse listens with same timestamps
+        but different users to be duplicates
+        """
+
+        user1 = db.user.get_or_create('testuser1')
+        user2 = db.user.get_or_create('testuser2')
+
+        r = self.send_single_listen(user1)
+        self.assert200(r)
+        r = self.send_single_listen(user2)
+        self.assert200(r)
+
+        time.sleep(5) # sleep to allow influx-writer to do its thing
+
+        to_ts = int(time.time())
+        listens = self.ls.fetch_listens(user1['musicbrainz_id'], to_ts=to_ts)
+        self.assertEqual(len(listens), 1)
+
+        listens = self.ls.fetch_listens(user2['musicbrainz_id'], to_ts=to_ts)
+        self.assertEqual(len(listens), 1)
