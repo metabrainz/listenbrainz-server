@@ -137,7 +137,6 @@ class InfluxWriterSubscriber(object):
 
 
     def write(self, listen_dicts):
-        self.log.info("have shit to write here")
         submit = []
         unique = []
         duplicate_count = 0
@@ -266,7 +265,6 @@ class InfluxWriterSubscriber(object):
                 self.log.error("Cannot connect to redis: %s. Retrying in 2 seconds and trying again." % str(err))
                 sleep(ERROR_RETRY_DELAY)
 
-        self.log.info("Connected to influx and redis")
         while True:
             self.connect_to_rabbitmq()
             self.incoming_ch = self.connection.channel()
