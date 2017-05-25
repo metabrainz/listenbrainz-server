@@ -11,7 +11,7 @@ from listenbrainz.redis_keys import INCOMING_QUEUE_SIZE_KEY
 
 from listenbrainz.webserver.external import messybrainz
 from listenbrainz.webserver.redis_connection import _redis
-from listenbrainz.webserver.rabbitmq_connection import _rabbitmq
+import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
 from listenbrainz.listen import Listen
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
@@ -67,7 +67,7 @@ def _send_listens_to_queue(listen_type, listens):
 
     if submit:
         try:
-            channel = _rabbitmq.channel()
+            channel = rabbitmq_connection._rabbitmq.channel()
             channel.exchange_declare(exchange='incoming', type='fanout')
             channel.queue_declare('incoming', durable=True)
         except Exception as e:
