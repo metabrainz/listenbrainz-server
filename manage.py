@@ -39,14 +39,12 @@ def create_influx_db():
     """
     Creates influx database from config options
     """
-    print("Trying to create influx db from create_influx_db")
     subprocess.call([
         os.path.join(ADMIN_INFLUX_DIR, 'create_db.py'),
         config.INFLUX_HOST,
         str(config.INFLUX_PORT),
         config.INFLUX_DB_NAME,
     ])
-    print("done: create influx db from create_influx_db")
 
 @cli.command()
 @click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
@@ -92,7 +90,6 @@ def init_db(force, create_db):
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
 
     print('Create influx database...')
-    print("Hello brother")
     create_influx_db()
     print("Done!")
 

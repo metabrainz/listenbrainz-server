@@ -28,8 +28,6 @@ def schedule_jobs(app):
 
 
 def create_app():
-    print("Creating app")
-    print("LET US START")
     app = Flask(__name__)
 
     # Configuration

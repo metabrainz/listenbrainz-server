@@ -49,12 +49,12 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    command: python /code/listenbrainz/manage.py runserver -h 0.0.0.0 -p 3031 -d
+    command: python /code/listenbrainz/manage.py runserver -h 0.0.0.0 -p 80 -d
     image: web
     volumes:
       - ..:/code/listenbrainz
     ports:
-      - "3031:3031"
+      - "80:80"
     depends_on:
       - redis
       - db

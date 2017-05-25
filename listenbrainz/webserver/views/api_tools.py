@@ -70,11 +70,11 @@ def _send_listens_to_queue(listen_type, listens):
             channel = rabbitmq_connection._rabbitmq.channel()
             channel.exchange_declare(exchange='incoming', type='fanout')
             channel.queue_declare('incoming', durable=True)
-        except Exception as e:
-            raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
+        except pika.exceptions.NoFreeChannels as e:
             if channel:
                 channel.close() # just in case
             current_app.logger.error("Cannot create a rabbitmq channel: " % str(e))
+            raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
 
         # There is no good documentation on what exceptions could be raised here. Loads apparently,
         # this catching blanco exceptions
