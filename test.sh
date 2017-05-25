@@ -37,7 +37,8 @@ function setup {
     echo "Running setup"
     docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME run --rm listenbrainz dockerize -wait tcp://db:5432 -timeout 60s \
                   -wait tcp://influx:8086 -timeout 60s \
-                bash -c "python manage.py init_db --create-db && python manage.py init_msb_db --create-db && python admin/influx/create_db.py"
+                bash -c "python manage.py init_db --create-db && \
+                         python manage.py init_msb_db --create-db"
 }
 
 function is_db_running {
