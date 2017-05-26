@@ -34,7 +34,7 @@ def init_redis_connection():
     global redis_connection
     while True:
         try:
-            redis_connection = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
+            redis_connection = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT, decode_responses=True)
             redis_connection.ping()
             return
         except redis.exceptions.ConnectionError as e:
