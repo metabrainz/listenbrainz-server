@@ -35,10 +35,16 @@ function bring_up_db {
 
 function setup {
     echo "Running setup"
+    # PostgreSQL Database initialization
     docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME run --rm listenbrainz dockerize -wait tcp://db:5432 -timeout 60s \
                   -wait tcp://influx:8086 -timeout 60s \
                 bash -c "python manage.py init_db --create-db && \
                          python manage.py init_msb_db --create-db"
+
+    # Influx Database initialization
+    docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME up -d influx
+    docker cp admin/influx/create_db.sql listenbrainztest_influx_1:/create_db.sql
+    docker exec -d listenbrainztest_influx_1 bash -c "influx < /create_db.sql"
 }
 
 function is_db_running {

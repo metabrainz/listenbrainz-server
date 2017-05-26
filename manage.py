@@ -35,16 +35,6 @@ def runserver(host, port, debug=False):
         processes=5
     )
 
-def create_influx_db():
-    """
-    Creates influx database from config options
-    """
-    subprocess.call([
-        os.path.join(ADMIN_INFLUX_DIR, 'create_db.py'),
-        config.INFLUX_HOST,
-        str(config.INFLUX_PORT),
-        config.INFLUX_DB_NAME,
-    ])
 
 @cli.command()
 @click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
@@ -88,10 +78,6 @@ def init_db(force, create_db):
 
         print('Creating indexes...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
-
-    print('Create influx database...')
-    create_influx_db()
-    print("Done!")
 
 
 @cli.command()
