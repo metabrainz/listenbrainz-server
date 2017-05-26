@@ -57,7 +57,7 @@ class Token(object):
 
     @staticmethod
     def generate(api_key):
-        token = binascii.b2a_hex(os.urandom(20))
+        token = str(binascii.b2a_hex(os.urandom(20)))
         with db.engine.connect() as connection:
             q = """ INSERT INTO api_compat.token (token, api_key) VALUES (:token, :api_key)
                     ON CONFLICT(api_key) DO UPDATE SET token = EXCLUDED.token, ts = EXCLUDED.ts
