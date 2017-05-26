@@ -1,5 +1,5 @@
 # coding=utf-8
-from __future__ import division, absolute_import, print_function, unicode_literals
+
 from listenbrainz.db.testing import DatabaseTestCase
 import logging
 from datetime import datetime
@@ -131,41 +131,41 @@ class TestInfluxListenStore(DatabaseTestCase):
 
     def test_insert_influx(self):
         count = self._create_test_data()
-        self.assertEquals(len(self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1399999999)), count)
+        self.assertEqual(len(self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1399999999)), count)
 
     def test_fetch_listens_0(self):
         count = self._create_test_data()
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000000, limit=1)
-        self.assertEquals(len(listens), 1)
-        self.assertEquals(listens[0].ts_since_epoch, 1400000050)
+        self.assertEqual(len(listens), 1)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000050)
 
     def test_fetch_listens_1(self):
         count = self._create_test_data()
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000000)
-        self.assertEquals(len(listens), 4)
-        self.assertEquals(listens[0].ts_since_epoch, 1400000200)
-        self.assertEquals(listens[1].ts_since_epoch, 1400000150)
-        self.assertEquals(listens[2].ts_since_epoch, 1400000100)
-        self.assertEquals(listens[3].ts_since_epoch, 1400000050)
+        self.assertEqual(len(listens), 4)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
+        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[3].ts_since_epoch, 1400000050)
 
     def test_fetch_listens_2(self):
         count = self._create_test_data()
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000100)
-        self.assertEquals(len(listens), 2)
-        self.assertEquals(listens[0].ts_since_epoch, 1400000200)
-        self.assertEquals(listens[1].ts_since_epoch, 1400000150)
+        self.assertEqual(len(listens), 2)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
 
     def test_fetch_listens_3(self):
         count = self._create_test_data()
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
-        self.assertEquals(len(listens), 5)
-        self.assertEquals(listens[0].ts_since_epoch, 1400000200)
-        self.assertEquals(listens[1].ts_since_epoch, 1400000150)
-        self.assertEquals(listens[2].ts_since_epoch, 1400000100)
-        self.assertEquals(listens[3].ts_since_epoch, 1400000050)
-        self.assertEquals(listens[4].ts_since_epoch, 1400000000)
+        self.assertEqual(len(listens), 5)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
+        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[3].ts_since_epoch, 1400000050)
+        self.assertEqual(listens[4].ts_since_epoch, 1400000000)
 
     def test_get_listen_count_for_user(self):
         count = self._create_test_data()
         listen_count = self.logstore.get_listen_count_for_user(user_name=self.testuser_name)
-        self.assertEquals(count, listen_count)
+        self.assertEqual(count, listen_count)

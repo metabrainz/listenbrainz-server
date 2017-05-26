@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from listenbrainz.webserver.testing import ServerTestCase
 from flask import url_for
 import listenbrainz.db.user as db_user

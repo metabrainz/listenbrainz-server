@@ -1,4 +1,4 @@
-from __future__ import print_function, absolute_import
+
 import sys
 import uuid
 from werkzeug.exceptions import InternalServerError, ServiceUnavailable, BadRequest
@@ -48,7 +48,7 @@ def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
         _send_listens_to_queue(listen_type, augmented_listens)
     except (InternalServerError, ServiceUnavailable) as e:
         raise
-    except Exception, e:
+    except Exception as e:
         print(e)
     return augmented_listens
 
@@ -65,7 +65,7 @@ def _send_listens_to_queue(listen_type, listens):
                     ujson.dumps(listen).encode('utf-8'),
                     expire_time
                 )
-            except Exception, e:
+            except Exception as e:
                 current_app.logger.error("Redis rpush playing_now write error: " + str(e))
                 raise ServiceUnavailable("Cannot record playing_now at this time.")
         else:

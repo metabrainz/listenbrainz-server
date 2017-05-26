@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from flask import Blueprint, request, redirect, render_template, url_for, session
 from flask_login import login_user, logout_user, login_required
 from listenbrainz.webserver.login import login_forbidden, provider

@@ -9,6 +9,7 @@ RUN apt-get update \
                        build-essential \
                        redis-tools \
                        git \
+                       libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # PostgreSQL client

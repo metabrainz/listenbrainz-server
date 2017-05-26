@@ -1,4 +1,4 @@
-from __future__ import print_function, absolute_import
+
 import ujson
 from flask import Blueprint, request, jsonify, current_app
 from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized, ServiceUnavailable
@@ -64,7 +64,7 @@ def submit_listen():
         insert_payload(payload, user, listen_type=_get_listen_type(data['listen_type']))
     except ServiceUnavailable as e:
         raise
-    except Exception, e:
+    except Exception as e:
         raise InternalServerError("Something went wrong. Please try again.")
 
     return "success"

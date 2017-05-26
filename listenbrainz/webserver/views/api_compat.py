@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 import time
 import json
 import re
@@ -112,7 +112,7 @@ def session_info(request, data):
     if (not session) or User.load_by_name(username).id != session.user.id:
         raise InvalidAPIUsage(CompatError.INVALID_SESSION_KEY, output_format=output_format)       # Invalid Session KEY
 
-    print("SESSION INFO for session %s, user %s" % (session.id, session.user.name))
+    print(("SESSION INFO for session %s, user %s" % (session.id, session.user.name)))
 
     doc, tag, text = Doc().tagtext()
     with tag('lfm', status='ok'):
@@ -195,11 +195,11 @@ def _to_native_api(lookup, method="track.scrobble", output_format="xml"):
     listen_type = 'listens'
     if method == 'track.updateNowPlaying':
         listen_type = 'playing_now'
-        if len(lookup.keys()) != 1:
+        if len(list(lookup.keys())) != 1:
             raise InvalidAPIUsage(CompatError.INVALID_PARAMETERS, output_format=output_format)       # Invalid parameters
 
     listens = []
-    for ind, data in lookup.iteritems():
+    for ind, data in lookup.items():
         listen = {
             'track_metadata': {
                 'additional_info': {}
@@ -247,7 +247,7 @@ def record_listens(request, data):
         raise InvalidAPIUsage(CompatError.INVALID_SESSION_KEY, output_format=output_format)   # Invalid Session KEY
 
     lookup = defaultdict(dict)
-    for key, value in data.items():
+    for key, value in list(data.items()):
         if key in ["sk", "token", "api_key", "method", "api_sig"]:
             continue
         matches = re.match('(.*)\[(\d+)\]', key)
@@ -259,7 +259,7 @@ def record_listens(request, data):
         lookup[number][key] = value
 
     if request.form['method'].lower() == 'track.updatenowplaying':
-        for i, listen in lookup.iteritems():
+        for i, listen in lookup.items():
             if 'timestamp' not in listen:
                 listen['timestamp'] = calendar.timegm(datetime.now().utctimetuple())
 
@@ -274,7 +274,7 @@ def record_listens(request, data):
     with tag('lfm', status='ok'):
         with tag('nowplaying' if listen_type == 'playing_now' else 'scrobbles'):
 
-            for origL, augL in zip(lookup.values(), augmented_listens):
+            for origL, augL in zip(list(lookup.values()), augmented_listens):
                 corr = defaultdict(lambda: '0')
 
                 track = augL['track_metadata']['track_name']
@@ -335,7 +335,7 @@ def format_response(data, format="xml"):
     elif format == 'json':
         # Remove the <lfm> tag and its attributes
         jsonData = xmltodict.parse(data)['lfm']
-        for k in jsonData.keys():
+        for k in list(jsonData.keys()):
             if k[0] == '@':
                 jsonData.pop(k)
 
@@ -345,10 +345,10 @@ def format_response(data, format="xml"):
             """
             if not isinstance(data, dict):
                 return data
-            for k in data.keys():
+            for k in list(data.keys()):
                 if k[0] == "@":
                     data[k[1:]] = data.pop(k)
-                elif isinstance(data[k], basestring):
+                elif isinstance(data[k], str):
                     continue
                 elif isinstance(data[k], list):
                     for ind, item in enumerate(data[k]):
@@ -356,7 +356,7 @@ def format_response(data, format="xml"):
                 elif isinstance(data[k], dict):
                     data[k] = remove_attrib_prefix(data[k])
                 else:
-                    print type(data[k])
+                    print(type(data[k]))
             return data
 
         return json.dumps(remove_attrib_prefix(jsonData), indent=4)

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from flask import Blueprint, render_template, request, url_for, Response, redirect, flash, current_app
 from flask_login import current_user, login_required
 from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
@@ -273,7 +273,7 @@ def upload():
                     validate_listen(listen, LISTEN_TYPE_IMPORT)
                 insert_payload(payload, current_user)
                 success += 1
-        except Exception, e:
+        except Exception as e:
             raise BadRequest('Not a valid lastfm-backup-file.')
         finally:
             os.remove(filename)
