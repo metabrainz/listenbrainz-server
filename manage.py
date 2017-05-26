@@ -1,4 +1,3 @@
-from __future__ import print_function, absolute_import
 from listenbrainz import db
 from listenbrainz import webserver
 from werkzeug.serving import run_simple
@@ -7,7 +6,7 @@ import os
 import click
 import subprocess
 from listenbrainz import config
-from urlparse import urlsplit
+from urllib.parse import urlsplit
 from influxdb import InfluxDBClient
 
 

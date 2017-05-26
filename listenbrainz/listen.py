@@ -1,5 +1,5 @@
 # coding=utf-8
-from __future__ import division, absolute_import, print_function, unicode_literals
+
 import ujson
 from datetime import datetime
 import calendar
@@ -17,10 +17,10 @@ def flatten_dict(d, seperator='', parent_key=''):
         Flattened dict with keys such as key1.key2
     """
     result = []
-    for key, value in d.items():
+    for key, value in list(d.items()):
         new_key = "{}{}{}".format(parent_key, seperator, str(key))
         if isinstance(value, dict):
-            result.extend(flatten_dict(value, '.', new_key).items())
+            result.extend(list(flatten_dict(value, '.', new_key).items()))
         else:
             result.append((new_key, value))
     return dict(result)
@@ -120,7 +120,7 @@ class Listen(object):
         # We only need to add those fields which have some value in them to additional_info.
         # Also, we need to make sure that we don't add fields like time, user_name etc. into
         # the additional_info.
-        for key, value in row.items():
+        for key, value in list(row.items()):
             if key not in ['time', 'user_name', 'recording_msid'] and value is not None:
                 data[key] = value
 
@@ -195,7 +195,7 @@ class Listen(object):
         }
 
         # add the user generated keys present in additional info to fields
-        for key, value in self.data['additional_info'].items():
+        for key, value in list(self.data['additional_info'].items()):
             if key not in Listen.SUPPORTED_KEYS:
                 data['fields'][key] = value
 
@@ -210,8 +210,8 @@ class Listen(object):
         return self.timestamp
 
     def __repr__(self):
-        return unicode(self).encode("utf-8")
+        return str(self).encode("utf-8")
 
     def __unicode__(self):
-        return u"<Listen: user_name: %s, time: %s, artist_msid: %s, release_msid: %s, recording_msid: %s, artist_name: %s, track_name: %s>" % \
+        return "<Listen: user_name: %s, time: %s, artist_msid: %s, release_msid: %s, recording_msid: %s, artist_name: %s, track_name: %s>" % \
                (self.user_name, self.ts_since_epoch, self.artist_msid, self.release_msid, self.recording_msid, self.data['artist_name'], self.data['track_name'])
