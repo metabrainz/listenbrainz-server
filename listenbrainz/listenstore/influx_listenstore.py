@@ -52,7 +52,7 @@ class InfluxListenStore(ListenStore):
 
         # get the number of listens from the json
         try:
-            count = results.get_points(measurement = get_measurement_name(user_name)).next()['count_recording_msid']
+            count = results.get_points(measurement = get_measurement_name(user_name)).__next__()['count_recording_msid']
         except (KeyError, StopIteration):
             count = 0
 
@@ -119,7 +119,7 @@ class InfluxListenStore(ListenStore):
             raise
 
         try:
-            count = result.get_points(measurement = 'listen').next()['count_recording_msid']
+            count = result.get_points(measurement = 'listen').__next__()['count_recording_msid']
         except KeyError:
             count = 0
 
