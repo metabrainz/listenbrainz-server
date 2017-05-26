@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from webserver import create_app
+from listenbrainz.webserver import create_app
 import argparse
 from werkzeug.contrib.profiler import ProfilerMiddleware
 
