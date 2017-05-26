@@ -24,16 +24,16 @@ RUN mkdir /code
 WORKDIR /code
 
 # MessyBrainz
-RUN git clone https://github.com/metabrainz/messybrainz-server.git messybrainz
+RUN git clone https://github.com/paramsingh/messybrainz-server.git messybrainz
 WORKDIR /code/messybrainz
-RUN pip install -r requirements.txt
-RUN python setup.py install
+RUN pip3 install -r requirements.txt
+RUN python3 setup.py install
 
 RUN mkdir /code/listenbrainz
 WORKDIR /code/listenbrainz
 
 COPY requirements.txt /code/listenbrainz/
-RUN pip install -r requirements.txt
+RUN pip3 install -r requirements.txt
 
 # Now install our code, which may change frequently
 COPY . /code/listenbrainz/
