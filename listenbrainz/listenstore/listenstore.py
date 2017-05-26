@@ -1,6 +1,6 @@
 # coding=utf-8
-from __future__ import division, absolute_import
-from __future__ import print_function, unicode_literals
+
+
 import logging
 from listenbrainz.listenstore import ORDER_ASC, ORDER_DESC, DEFAULT_LISTENS_PER_FETCH
 

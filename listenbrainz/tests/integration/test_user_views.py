@@ -1,4 +1,4 @@
-from __future__ import absolute_import, print_function
+
 import sys
 import os
 import uuid
@@ -43,4 +43,4 @@ class UserViewsTestCase(IntegrationTestCase):
         resp = self.client.post(url_for('user.export_data'))
         self.assert200(resp)
         data = json.loads(resp.data)
-        self.assertEquals(len(data), 2)
+        self.assertEqual(len(data), 2)

@@ -1,6 +1,6 @@
 # coding=utf-8
-from __future__ import division, absolute_import
-from __future__ import print_function, unicode_literals
+
+
 from listenbrainz.listenstore import ListenStore
 import logging
 from listenbrainz.listen import Listen
@@ -176,7 +176,7 @@ class InfluxListenStore(ListenStore):
                 self.redis.incr(user_key)
 
         # Invalidate cached data for user
-        for user_name in user_names.keys():
+        for user_name in list(user_names.keys()):
             self.redis.delete(REDIS_USER_TIMESTAMPS % user_name)
 
 #        l = [ REDIS_INFLUX_USER_LISTEN_COUNT + str(id) for id in user_names])

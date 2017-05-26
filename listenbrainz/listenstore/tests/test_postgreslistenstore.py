@@ -1,5 +1,5 @@
 # coding=utf-8
-from __future__ import division, absolute_import, print_function, unicode_literals
+
 from listenbrainz.db.testing import DatabaseTestCase
 import logging
 from datetime import datetime
@@ -38,12 +38,12 @@ class TestPostgresListenStore(DatabaseTestCase):
 
     def test_insert_postgresql(self):
         from_ts, count = self._create_test_data()
-        self.assertEquals(len(self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=from_ts, limit=count)), count)
+        self.assertEqual(len(self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=from_ts, limit=count)), count)
 
     def test_fetch_listens(self):
         from_ts, count = self._create_test_data()
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=from_ts, limit=count)
-        self.assertEquals(len(listens), count)
+        self.assertEqual(len(listens), count)
 
     def test_convert_row(self):
         now = datetime.utcnow()
@@ -51,6 +51,6 @@ class TestPostgresListenStore(DatabaseTestCase):
                 ('artist_msid', str(uuid.uuid4())), ('release_msid', str(uuid.uuid4())), ('recording_msid', str(uuid.uuid4())),
                 ('data', "{'additional_info':{}}"), ('ts_since_epoch', to_epoch(now)) ]
         row = OrderedDict([(str(k), v) for (k, v) in data[1:]])
-        listen = self.logstore.convert_row([1] + row.values())
+        listen = self.logstore.convert_row([1] + list(row.values()))
         self.assertIsInstance(listen, Listen)
         self.assertDictEqual(listen.__dict__, dict(row))
