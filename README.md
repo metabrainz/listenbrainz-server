@@ -17,10 +17,9 @@ MessyBrainz, run the following command.
 
 Now in order to initialize the database (create user, tables etc.) run these commands
 
-    $ docker-compose -f docker/docker-compose.yml -p messybrainz run --rm web bash -c "python manage.py init_db"
+    $ docker-compose -f docker/docker-compose.yml -p messybrainz run --rm web bash -c "python3 manage.py init_db"
 
 Everything should be good to go now. You should be able to access the webserver at `http://localhost:8080`.
 
 Also, in order to run the tests, just use the command: `./test.sh`.
 
-Full installation instructions are available in [INSTALL.md](https://github.com/metabrainz/messybrainz-server/blob/master/INSTALL.md) file.
