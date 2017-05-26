@@ -1,12 +1,12 @@
-from __future__ import print_function
-import db
-import webserver
+from __future__ import print_function, absolute_import
+from listenbrainz import db
+from listenbrainz import webserver
 from werkzeug.serving import run_simple
 import subprocess
 import os
 import click
 import subprocess
-import config
+from listenbrainz import config
 from urlparse import urlsplit
 
 
@@ -78,10 +78,6 @@ def init_db(force, create_db):
 
         print('Creating indexes...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
-
-    print('Create influx database...')
-    subprocess.call(os.path.join(ADMIN_INFLUX_DIR, 'create_db.py'))
-    print("Done!")
 
 
 @cli.command()
