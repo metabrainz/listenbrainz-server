@@ -1,0 +1,53 @@
+sudo: required
+
+language: python
+
+services:
+  - docker
+
+install:
+  # Copy the config file
+  - cp listenbrainz/config.py.sample listenbrainz/config.py
+
+  # Build the unit test docker-compose project
+  - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test build
+  - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test run --rm listenbrainz dockerize -wait tcp://db:5432 -timeout 60s -wait tcp://influx:8086 -timeout 60s bash -c "python manage.py init_db --create-db && python manage.py init_msb_db --create-db"
+  - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test up -d influx
+  - docker cp admin/influx/create_db.sql listenbrainztest_influx_1:/create_db.sql
+  - docker exec -d listenbrainztest_influx_1 bash -c "influx < /create_db.sql"
+  - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test stop
+
+  # This file seemes to cause permission problems somehow, not sure how, leading to errors in building
+  # the other containers. So remove it.
+  - sudo rm docker/docker/data/rabbitmq/.erlang.cookie
+
+  # Build the integration test docker-compose project
+  - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int build
+  - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int run --rm listenbrainz dockerize -wait tcp://db:5432 -timeout 60s -wait tcp://influx:8086 -timeout 60s bash -c "python manage.py init_db --create-db && python manage.py init_msb_db --create-db"
+  - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int up -d influx
+  - docker cp admin/influx/create_db.sql listenbrainzint_influx_1:/create_db.sql
+  - docker exec -d listenbrainzint_influx_1 bash -c "influx < /create_db.sql"
+  - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int stop
+
+script:
+  # First run unit tests and bring containers down then
+  - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test up -d db influx redis
+  - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test run --rm listenbrainz
+                dockerize
+                -wait tcp://db:5432 -timeout 60s
+                -wait tcp://influx:8086 -timeout 60s
+                -wait tcp://redis:6379 -timeout 60s
+                py.test
+  - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test down
+
+  # Bring up integration test containers, run tests and bring them down
+  - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int up -d db influx redis influx_writer bigquery rabbitmq
+  - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int
+               run --rm listenbrainz dockerize
+                                     -wait tcp://db:5432 -timeout 60s
+                                     -wait tcp://influx:8086 -timeout 60s
+                                     -wait tcp://redis:6379 -timeout 60s
+                                     -wait tcp://rabbitmq:5672 -timeout 60s
+                                     bash -c "py.test listenbrainz/tests/integration"
+  - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int down
+
