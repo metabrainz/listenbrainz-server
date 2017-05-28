@@ -1,0 +1,16 @@
+version: "2"
+
+services:
+  db:
+    image: postgres:9.5.3
+
+  messybrainz:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    command: py.test
+    image: web
+    volumes:
+      - ..:/code/messybrainz
+    depends_on:
+      - db
