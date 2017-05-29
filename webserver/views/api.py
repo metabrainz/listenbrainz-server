@@ -142,7 +142,7 @@ def _validate_auth_header():
 
     user = db.user.get_by_token(auth_token)
     if user is None:
-        if CREATE_FAKE_USERS_FOR_STRESS_TESTING:
+        if current_app.config['DEBUG'] and CREATE_FAKE_USERS_FOR_STRESS_TESTING:
             user = db.user.create_user_with_token(auth_token)
         else:
             raise Unauthorized("Invalid authorization token.")
