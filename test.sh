@@ -23,14 +23,16 @@ fi
 
 
 function bring_up_db {
-    docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME up -d db
+    docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME up -d db redis
 }
 
 function setup {
     echo "Running setup"
     # PostgreSQL Database initialization
-    docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME run --rm messybrainz dockerize -wait tcp://db:5432 \
-                -timeout 60s \
+    docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME run --rm messybrainz \
+                dockerize \
+                -wait tcp://db:5432 -timeout 60s \
+                -wait tcp://redis:6379 -timeout 60s \
                 bash -c "python manage.py init_db"
 }
 

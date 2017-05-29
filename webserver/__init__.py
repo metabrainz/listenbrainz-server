@@ -3,6 +3,10 @@ from messybrainz import db
 import sys
 import os
 
+def create_redis(app):
+    from messybrainz.cache import init_redis_connection
+    init_redis_connection(app, app.config['REDIS_HOST'], app.config['REDIS_PORT'])
+
 
 def create_app():
     app = Flask(__name__)
@@ -11,6 +15,9 @@ def create_app():
     sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
     import config
     app.config.from_object(config)
+
+    # Redis connection
+    create_redis(app)
 
     # Logging
     from webserver.loggers import init_loggers
