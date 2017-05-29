@@ -12,6 +12,7 @@ from listenbrainz.redis_keys import INCOMING_QUEUE_SIZE_KEY
 from listenbrainz.webserver.external import messybrainz
 from listenbrainz.webserver.redis_connection import _redis
 import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
+from listenbrainz.webserver.rabbitmq_connection import init_rabbitmq_connection
 from listenbrainz.listen import Listen
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
@@ -66,28 +67,40 @@ def _send_listens_to_queue(listen_type, listens):
             submit.append(listen)
 
     if submit:
-        try:
-            channel = rabbitmq_connection._rabbitmq.channel()
-            channel.exchange_declare(exchange='incoming', type='fanout')
-            channel.queue_declare('incoming', durable=True)
-        except pika.exceptions.NoFreeChannels as e:
-            if channel:
-                channel.close() # just in case
-            current_app.logger.error("Cannot create a rabbitmq channel: " % str(e))
-            raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
+        while True:
+            try:
+                channel = rabbitmq_connection._rabbitmq.channel()
+                channel.exchange_declare(exchange='incoming', type='fanout')
+                channel.queue_declare('incoming', durable=True)
+            except pika.exceptions.ConnectionClosed as e:
+                # RabbitMQ connection closed, so re-establish and try again
+                current_app.logger.error("Connection to rabbitmq closed while creating channel: %s" % str(e))
+                init_rabbitmq_connection(current_app)
+                continue
+            except pika.exceptions.NoFreeChannels as e:
+                if channel:
+                    channel.close() # just in case
+                current_app.logger.error("Cannot create a rabbitmq channel: %s" % str(e))
+                raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
 
-        # There is no good documentation on what exceptions could be raised here. Loads apparently,
-        # this catching blanco exceptions
-        try:
-            channel.basic_publish(exchange='incoming', routing_key='', body=ujson.dumps(submit),
-                properties=pika.BasicProperties(delivery_mode = 2, ))
-        except Exception as e:
+            # There is no good documentation on what exceptions could be raised here. Loads apparently,
+            # this catching blanco exceptions
+            try:
+                channel.basic_publish(exchange='incoming', routing_key='', body=ujson.dumps(submit),
+                    properties=pika.BasicProperties(delivery_mode = 2, ))
+            except pika.exceptions.ConnectionClosed as e:
+                # RabbitMQ connection closed, so re-establish and try again
+                current_app.logger.error("Connection to rabbitmq closed while trying to publish: %s" % str(e))
+                init_rabbitmq_connection(current_app)
+                continue
+            except Exception as e:
+                channel.close()
+                current_app.logger.error("Cannot publish to rabbitmq channel: %s" % str(e))
+                raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
+
+            _redis.redis.incr(INCOMING_QUEUE_SIZE_KEY, len(submit))
             channel.close()
-            current_app.logger.error("Cannot create a rabbitmq channel: " % str(e))
-            raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
-
-        _redis.redis.incr(INCOMING_QUEUE_SIZE_KEY, len(submit))
-        channel.close()
+            return
 
 
 def validate_listen(listen, listen_type):
