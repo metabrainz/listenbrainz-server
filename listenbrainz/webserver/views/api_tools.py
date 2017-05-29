@@ -74,7 +74,7 @@ def _send_listens_to_queue(listen_type, listens):
                 channel.queue_declare('incoming', durable=True)
             except pika.exceptions.ConnectionClosed as e:
                 # RabbitMQ connection closed, so re-establish and try again
-                current_app.logger.error("Connection to rabbitmq closed: %s" % str(e))
+                current_app.logger.error("Connection to rabbitmq closed while creating channel: %s" % str(e))
                 init_rabbitmq_connection(current_app)
                 continue
             except pika.exceptions.NoFreeChannels as e:
@@ -90,12 +90,12 @@ def _send_listens_to_queue(listen_type, listens):
                     properties=pika.BasicProperties(delivery_mode = 2, ))
             except pika.exceptions.ConnectionClosed as e:
                 # RabbitMQ connection closed, so re-establish and try again
-                current_app.logger.error("Connection to rabbitmq closed: %s" % str(e))
+                current_app.logger.error("Connection to rabbitmq closed while trying to publish: %s" % str(e))
                 init_rabbitmq_connection(current_app)
                 continue
             except Exception as e:
                 channel.close()
-                current_app.logger.error("Cannot create a rabbitmq channel: %s" % str(e))
+                current_app.logger.error("Cannot publish to rabbitmq channel: %s" % str(e))
                 raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
 
             _redis.redis.incr(INCOMING_QUEUE_SIZE_KEY, len(submit))
