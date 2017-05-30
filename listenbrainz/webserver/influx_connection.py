@@ -1,3 +1,4 @@
+import time
 from listenbrainz.listenstore import InfluxListenStore
 
 _influx = None
