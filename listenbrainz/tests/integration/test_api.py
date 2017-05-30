@@ -215,3 +215,14 @@ class APITestCase(IntegrationTestCase):
         self.assertEquals(sent_additional_info['link2'], received_additional_info['link2'])
         self.assertEquals(sent_additional_info['other_stuff'], received_additional_info['other_stuff'])
         self.assertEquals(sent_additional_info['nested']['info'], received_additional_info['nested.info'])
+
+    def test_service_unavailable_when_no_rabbitmq(self):
+        """ Test to make sure that webserver returns 503 if rabbitmq connection is down """
+
+        import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
+        rabbitmq_connection._rabbitmq.close()
+        with open(self.path_to_data_file('valid_single.json'), 'r') as f:
+            payload = json.load(f)
+        payload['payload'][0]['listened_at'] = int(time.time())
+        r = self.send_data(payload)
+        self.assertStatus(r, 503)
