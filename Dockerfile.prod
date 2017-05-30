@@ -44,6 +44,7 @@ RUN pip install -r requirements.txt
 
 COPY . /code/listenbrainz
 WORKDIR /code/listenbrainz
+RUN rm /code/listenbrainz/listenbrainz/config.py /code/listenbrainz/listenbrainz/config.pyc 
 
 # Node
 RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
