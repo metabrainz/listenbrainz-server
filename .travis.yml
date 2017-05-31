@@ -18,6 +18,7 @@ install:
       "python manage.py init_db --create-db &&
        python manage.py init_msb_db --create-db &&
        python manage.py init_influx"
+  - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test stop
 
   # This file seemes to cause permission problems somehow, not sure how, leading to errors in building
   # the other containers. So remove it.
@@ -32,6 +33,7 @@ install:
       "python manage.py init_db --create-db &&
        python manage.py init_msb_db --create-db &&
        python manage.py init_influx"
+  - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int stop
 
 script:
   # First run unit tests and bring containers down then
