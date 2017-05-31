@@ -8,6 +8,7 @@ import click
 import subprocess
 from listenbrainz import config
 from urlparse import urlsplit
+from influxdb import InfluxDBClient
 
 
 cli = click.Group()
@@ -155,6 +156,23 @@ def init_msb_db(force, create_db):
 
     print("Done!")
 
+
+@cli.command()
+def init_influx():
+    """ Initializes influx database. """
+
+    print("Connecting to Influx...")
+    influx_client = InfluxDBClient(
+        host=config.INFLUX_HOST,
+        port=config.INFLUX_PORT,
+        database=config.INFLUX_DB_NAME,
+    )
+    print("Connected to Influx!")
+
+    print("Creating influx database...")
+    influx_client.create_database(config.INFLUX_DB_NAME)
+
+    print("Done!")
 
 if __name__ == '__main__':
     cli()
