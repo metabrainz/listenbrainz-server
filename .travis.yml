@@ -48,6 +48,7 @@ script:
 
   # Bring up integration test containers, run tests and bring them down
   - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int up -d db influx redis influx_writer bigquery rabbitmq
+  - sleep 10
   - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int
                run --rm listenbrainz dockerize
                                      -wait tcp://db:5432 -timeout 60s
