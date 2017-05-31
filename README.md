@@ -49,10 +49,10 @@ containers needed to run ListenBrainz.
 
 To initialize the database (create user, tables, etc.) run these commands:
 
-    $ docker exec -it listenbrainz_web_1 python manage.py init_db --create-db
-    $ docker exec -it listenbrainz_web_1 python manage.py init_msb_db --create-db
-    $ docker cp admin/influx/create_db.sql listenbrainz_influx_1:/create_db.sql
-    $ docker exec -d listenbrainz_influx_1 bash -c "influx < /create_db.sql"
+    $ docker-compose -f docker/docker-compose.yml -p listenbrainz run --rm web python manage.py init_db --create-db
+    $ docker-compose -f docker/docker-compose.yml -p listenbrainz run --rm web python manage.py init_msb_db --create-db
+    $ docker-compose -f docker/docker-compose.yml -p listenbrainz run --rm web python manage.py init_influx
+
 
 After that server should be ready to go. Go to http://localhost:8000 and load the
 ListenBrainz home page.
