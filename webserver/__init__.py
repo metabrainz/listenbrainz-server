@@ -2,11 +2,7 @@ from flask import Flask, g
 from messybrainz import db
 import sys
 import os
-
-def create_redis(app):
-    from messybrainz.cache import init_redis_connection
-    init_redis_connection(app, app.config['REDIS_HOST'], app.config['REDIS_PORT'])
-
+import logging
 
 def create_app():
     app = Flask(__name__)
@@ -16,8 +12,18 @@ def create_app():
     import config
     app.config.from_object(config)
 
-    # Redis connection
-    create_redis(app)
+    # Redis (cache)
+    from brainzutils import cache
+    if "REDIS_HOST" in app.config and \
+       "REDIS_PORT" in app.config and \
+       "REDIS_NAMESPACE" in app.config:
+        cache.init(
+            host=app.config["REDIS_HOST"],
+            port=app.config["REDIS_PORT"],
+            namespace=app.config["REDIS_NAMESPACE"],
+        )
+    else:
+        logging.warning("Redis is not defined in config file. Skipping initialization.")
 
     # Logging
     from webserver.loggers import init_loggers
