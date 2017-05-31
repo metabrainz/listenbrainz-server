@@ -23,12 +23,10 @@ docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME build
 echo "Running setup"
 docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME run --rm listenbrainz dockerize -wait tcp://db:5432 -timeout 60s \
                   -wait tcp://influx:8086 -timeout 60s \
-                bash -c "python manage.py init_db --create-db && python manage.py init_msb_db --create-db"
+                bash -c "python manage.py init_db --create-db && \
+                         python manage.py init_msb_db --create-db && \
+                         python manage.py init_influx"
 
-echo "Creating Influx Database"
-docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME up -d influx
-docker cp admin/influx/create_db.sql listenbrainzint_influx_1:/create_db.sql
-docker exec -d listenbrainzint_influx_1 bash -c "influx < /create_db.sql"
 
 echo "Bring containers up"
 docker-compose -f docker/docker-compose.integration.yml -p $COMPOSE_PROJECT_NAME up -d db influx redis influx_writer bigquery rabbitmq
