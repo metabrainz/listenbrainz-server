@@ -7,7 +7,6 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
                        build-essential \
-                       memcached \
                        redis-tools \
                        libpq-dev \
                        git \

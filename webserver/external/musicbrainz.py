@@ -1,6 +1,6 @@
 import musicbrainzngs
 from musicbrainzngs.musicbrainz import ResponseError
-from db import cache
+from brainzutils import cache
 
 CACHE_TIMEOUT = 86400  # 1 day
 

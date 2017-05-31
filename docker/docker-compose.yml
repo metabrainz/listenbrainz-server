@@ -16,6 +16,11 @@ services:
     ports:
       - "15432:5432"
 
+  redis:
+    image: redis:3.2.1
+    volumes:
+      - ./docker/data/redis:/data
+
   web:
     build:
       context: ..
