@@ -67,7 +67,7 @@ def _send_listens_to_queue(listen_type, listens):
                 )
             except Exception, e:
                 current_app.logger.error("Redis rpush playing_now write error: " + str(e))
-                raise InternalServerError("Cannot record playing_now at this time.")
+                raise ServiceUnavailable("Cannot record playing_now at this time.")
         else:
             submit.append(listen)
 
