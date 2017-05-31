@@ -14,16 +14,15 @@ def create_app():
 
     # Redis (cache)
     from brainzutils import cache
-    if "REDIS_HOST" in app.config and \
-       "REDIS_PORT" in app.config and \
-       "REDIS_NAMESPACE" in app.config:
+    try:
         cache.init(
             host=app.config["REDIS_HOST"],
             port=app.config["REDIS_PORT"],
             namespace=app.config["REDIS_NAMESPACE"],
         )
-    else:
-        logging.warning("Redis is not defined in config file. Skipping initialization.")
+    except KeyError as e:
+        logging.error("Redis is not defined in config file. Error: {}".format(e))
+        raise
 
     # Logging
     from webserver.loggers import init_loggers
