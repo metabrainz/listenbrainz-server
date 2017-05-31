@@ -25,7 +25,7 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    command: python /code/messybrainz/manage.py runserver -h 0.0.0.0 -p 8080 -d
+    command: python3 /code/messybrainz/manage.py runserver -h 0.0.0.0 -p 8080 -d
     image: web
     volumes:
       - ..:/code/messybrainz
