@@ -11,11 +11,13 @@ install:
 
   # Build the unit test docker-compose project
   - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test build
-  - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test run --rm listenbrainz dockerize -wait tcp://db:5432 -timeout 60s -wait tcp://influx:8086 -timeout 60s bash -c "python manage.py init_db --create-db && python manage.py init_msb_db --create-db"
-  - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test up -d influx
-  - docker cp admin/influx/create_db.sql listenbrainztest_influx_1:/create_db.sql
-  - docker exec -d listenbrainztest_influx_1 bash -c "influx < /create_db.sql"
-  - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test stop
+  - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test run --rm listenbrainz
+      dockerize
+      -wait tcp://db:5432 -timeout 60s
+      -wait tcp://influx:8086 -timeout 60s bash -c
+      "python manage.py init_db --create-db &&
+       python manage.py init_msb_db --create-db &&
+       python manage.py init_influx"
 
   # This file seemes to cause permission problems somehow, not sure how, leading to errors in building
   # the other containers. So remove it.
@@ -23,11 +25,13 @@ install:
 
   # Build the integration test docker-compose project
   - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int build
-  - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int run --rm listenbrainz dockerize -wait tcp://db:5432 -timeout 60s -wait tcp://influx:8086 -timeout 60s bash -c "python manage.py init_db --create-db && python manage.py init_msb_db --create-db"
-  - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int up -d influx
-  - docker cp admin/influx/create_db.sql listenbrainzint_influx_1:/create_db.sql
-  - docker exec -d listenbrainzint_influx_1 bash -c "influx < /create_db.sql"
-  - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int stop
+  - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int run --rm listenbrainz
+      dockerize
+      -wait tcp://db:5432 -timeout 60s
+      -wait tcp://influx:8086 -timeout 60s bash -c
+      "python manage.py init_db --create-db &&
+       python manage.py init_msb_db --create-db &&
+       python manage.py init_influx"
 
 script:
   # First run unit tests and bring containers down then
