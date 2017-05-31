@@ -5,8 +5,6 @@ The server components for the MessyBrainz project.
 
 ## Installation
 
-### Docker
-
 You can use [docker](https://www.docker.com/) and [docker-compose](https://docs.docker.com/compose/)
 to run the MessyBrainz server. Make sure docker and docker-compose are installed.
 
@@ -24,7 +22,5 @@ Now in order to initialize the database (create user, tables etc.) run these com
 Everything should be good to go now. You should be able to access the webserver at `http://localhost:8080`.
 
 Also, in order to run the tests, just use the command: `./test.sh`.
-
-### The Usual Way
 
 Full installation instructions are available in [INSTALL.md](https://github.com/metabrainz/messybrainz-server/blob/master/INSTALL.md) file.
