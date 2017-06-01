@@ -24,7 +24,7 @@ RUN mkdir /code
 WORKDIR /code
 
 # MessyBrainz
-RUN git clone https://github.com/paramsingh/messybrainz-server.git messybrainz
+RUN git clone https://github.com/metabrainz/messybrainz-server.git messybrainz
 WORKDIR /code/messybrainz
 RUN pip3 install -r requirements.txt
 RUN python3 setup.py install
