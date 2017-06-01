@@ -112,7 +112,7 @@ def session_info(request, data):
     if (not session) or User.load_by_name(username).id != session.user.id:
         raise InvalidAPIUsage(CompatError.INVALID_SESSION_KEY, output_format=output_format)       # Invalid Session KEY
 
-    print(("SESSION INFO for session %s, user %s" % (session.id, session.user.name)))
+    print("SESSION INFO for session %s, user %s" % (session.id, session.user.name))
 
     doc, tag, text = Doc().tagtext()
     with tag('lfm', status='ok'):
@@ -247,7 +247,7 @@ def record_listens(request, data):
         raise InvalidAPIUsage(CompatError.INVALID_SESSION_KEY, output_format=output_format)   # Invalid Session KEY
 
     lookup = defaultdict(dict)
-    for key, value in list(data.items()):
+    for key, value in data.items():
         if key in ["sk", "token", "api_key", "method", "api_sig"]:
             continue
         matches = re.match('(.*)\[(\d+)\]', key)
@@ -335,7 +335,7 @@ def format_response(data, format="xml"):
     elif format == 'json':
         # Remove the <lfm> tag and its attributes
         jsonData = xmltodict.parse(data)['lfm']
-        for k in list(jsonData.keys()):
+        for k in jsonData.keys():
             if k[0] == '@':
                 jsonData.pop(k)
 
