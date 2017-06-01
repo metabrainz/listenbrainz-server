@@ -33,7 +33,7 @@ function setup {
                 dockerize \
                 -wait tcp://db:5432 -timeout 60s \
                 -wait tcp://redis:6379 -timeout 60s \
-                bash -c "python manage.py init_db"
+                bash -c "python3 manage.py init_db"
 }
 
 function is_db_running {

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from flask import Blueprint, request, Response
 from webserver.decorators import crossdomain, ip_filter
 from werkzeug.exceptions import BadRequest, NotFound

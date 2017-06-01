@@ -1,4 +1,4 @@
-FROM python:2.7.12
+FROM metabrainz/python:3.6
 
 ENV DOCKERIZE_VERSION v0.2.0
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
@@ -27,7 +27,7 @@ RUN mkdir /code/messybrainz
 WORKDIR /code/messybrainz
 
 COPY requirements.txt /code/messybrainz/
-RUN pip install -r requirements.txt
+RUN pip3 install -r requirements.txt
 
 # Now install our code, which may change frequently
 COPY . /code/messybrainz/
