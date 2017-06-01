@@ -17,7 +17,7 @@ def flatten_dict(d, seperator='', parent_key=''):
         Flattened dict with keys such as key1.key2
     """
     result = []
-    for key, value in list(d.items()):
+    for key, value in d.items():
         new_key = "{}{}{}".format(parent_key, seperator, str(key))
         if isinstance(value, dict):
             result.extend(list(flatten_dict(value, '.', new_key).items()))
@@ -120,7 +120,7 @@ class Listen(object):
         # We only need to add those fields which have some value in them to additional_info.
         # Also, we need to make sure that we don't add fields like time, user_name etc. into
         # the additional_info.
-        for key, value in list(row.items()):
+        for key, value in row.items():
             if key not in ['time', 'user_name', 'recording_msid'] and value is not None:
                 data[key] = value
 
@@ -195,7 +195,7 @@ class Listen(object):
         }
 
         # add the user generated keys present in additional info to fields
-        for key, value in list(self.data['additional_info'].items()):
+        for key, value in self.data['additional_info'].items():
             if key not in Listen.SUPPORTED_KEYS:
                 data['fields'][key] = value
 
