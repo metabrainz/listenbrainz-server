@@ -45,6 +45,9 @@ LASTFM_API_KEY = "USE_LASTFM_API_KEY"
 # Enable/disable support. If enabled, the Application Credentials must reside in
 # bigquery-credentials.json in the top level directory.
 WRITE_TO_BIGQUERY = False
+BIGQUERY_PROJECT_ID = "listenbrainz"
+BIGQUERY_DATASET_ID = "listenbrainz_test"
+BIGQUERY_TABLE_ID = "listen"
 
 
 # Max time in seconds after which the playing_now stream will expire.
