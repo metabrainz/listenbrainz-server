@@ -88,9 +88,9 @@ class BigQueryWriter(object):
             try:
                 t0 = time()
                 ret = self.bigquery.tabledata().insertAll(
-                    projectId="listenbrainz",
-                    datasetId="listenbrainz_test",
-                    tableId="listen",
+                    projectId=config.BIGQUERY_PROJECT_ID,
+                    datasetId=config.BIGQUERY_DATASET_ID,
+                    tableId=config.BIQUERY_TABLE_ID,
                     body=body).execute(num_retries=5)
                 self.time += time() - t0
                 break
