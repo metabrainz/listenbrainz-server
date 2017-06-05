@@ -4,6 +4,7 @@ import uuid
 import sqlalchemy
 from listenbrainz.db.exceptions import DatabaseException
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -67,7 +68,7 @@ def get(id):
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT id, created, musicbrainz_id, auth_token
+            SELECT id, created, musicbrainz_id, auth_token, last_login
               FROM "user"
              WHERE id = :id
         """), {"id": id})
@@ -92,7 +93,7 @@ def get_by_mb_id(musicbrainz_id):
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT id, created, musicbrainz_id, auth_token
+            SELECT id, created, musicbrainz_id, auth_token, last_login
               FROM "user"
              WHERE LOWER(musicbrainz_id) = LOWER(:mb_id)
         """), {"mb_id": musicbrainz_id})
@@ -117,7 +118,7 @@ def get_by_token(token):
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT id, created, musicbrainz_id
+            SELECT id, created, musicbrainz_id, last_login
               FROM "user"
              WHERE auth_token = :auth_token
         """), {"auth_token": token})
@@ -164,3 +165,25 @@ def get_or_create(musicbrainz_id):
         create(musicbrainz_id)
         user = get_by_mb_id(musicbrainz_id)
     return user
+
+def update_last_login(musicbrainz_id, ts=int(time.time())):
+    """ Update the value of last_login field for user with specified MusicBrainz ID
+
+    Args:
+        musicbrainz_id (str): MusicBrainz username of a user
+        ts (int): Timestamp value with which to update the database, defaults to now
+    """
+
+    with db.engine.connect() as connection:
+        try:
+            result = connection.execute(sqlalchemy.text("""
+                UPDATE "user"
+                   SET last_login = to_timestamp(:ts)
+                 WHERE musicbrainz_id = :musicbrainz_id
+                """), {
+                    "ts": ts,
+                    "musicbrainz_id": musicbrainz_id,
+            })
+        except sqlalchemy.exc.ProgrammingError as e:
+            logger.error(e)
+            raise
