@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 from listenbrainz import db
 import unittest
 import os

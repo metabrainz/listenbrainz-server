@@ -1,6 +1,6 @@
 # coding=utf-8
-from __future__ import division, absolute_import
-from __future__ import print_function, unicode_literals
+
+
 from listenbrainz.listenstore import ListenStore, MIN_ID
 import logging
 import ujson
@@ -15,7 +15,7 @@ class RedisListenStore(ListenStore):
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
         self.log.info('Connecting to redis: %s:%s', conf['REDIS_HOST'], conf['REDIS_PORT'])
-        self.redis = Redis(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'])
+        self.redis = Redis(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], decode_responses=True)
 
     def get_playing_now(self, user_id):
         """ Return the current playing song of the user """

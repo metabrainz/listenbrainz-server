@@ -1,4 +1,4 @@
-FROM python:2.7.12
+FROM metabrainz/python:3.6
 
 ENV DOCKERIZE_VERSION v0.2.0
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
@@ -9,6 +9,7 @@ RUN apt-get update \
                        build-essential \
                        redis-tools \
                        git \
+                       libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # PostgreSQL client
@@ -25,14 +26,14 @@ WORKDIR /code
 # MessyBrainz
 RUN git clone https://github.com/metabrainz/messybrainz-server.git messybrainz
 WORKDIR /code/messybrainz
-RUN pip install -r requirements.txt
-RUN python setup.py install
+RUN pip3 install -r requirements.txt
+RUN python3 setup.py install
 
 RUN mkdir /code/listenbrainz
 WORKDIR /code/listenbrainz
 
 COPY requirements.txt /code/listenbrainz/
-RUN pip install -r requirements.txt
+RUN pip3 install -r requirements.txt
 
 # Now install our code, which may change frequently
 COPY . /code/listenbrainz/

@@ -1,4 +1,4 @@
-from __future__ import absolute_import, print_function
+
 import sys
 import os
 import uuid
@@ -38,15 +38,15 @@ class APITestCase(IntegrationTestCase):
         data = json.loads(response.data)['payload']
 
         # make sure user id is correct
-        self.assertEquals(data['user_id'], self.user['musicbrainz_id'])
+        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
         # make sure that count is 1 and list also contains 1 listen
-        self.assertEquals(data['count'], 1)
-        self.assertEquals(len(data['listens']), 1)
+        self.assertEqual(data['count'], 1)
+        self.assertEqual(len(data['listens']), 1)
 
         # make sure timestamp is the same as sent
         sent_time = payload['payload'][0]['listened_at']
-        self.assertEquals(data['listens'][0]['listened_at'], sent_time)
+        self.assertEqual(data['listens'][0]['listened_at'], sent_time)
 
         # make sure that artist msid, release msid and recording msid are present in data
         self.assertTrue(is_valid_uuid(data['listens'][0]['recording_msid']))
@@ -210,11 +210,11 @@ class APITestCase(IntegrationTestCase):
         data = json.loads(response.data)['payload']
         sent_additional_info = payload['payload'][0]['track_metadata']['additional_info']
         received_additional_info = data['listens'][0]['track_metadata']['additional_info']
-        self.assertEquals(sent_additional_info['best_song'], received_additional_info['best_song'])
-        self.assertEquals(sent_additional_info['link1'], received_additional_info['link1'])
-        self.assertEquals(sent_additional_info['link2'], received_additional_info['link2'])
-        self.assertEquals(sent_additional_info['other_stuff'], received_additional_info['other_stuff'])
-        self.assertEquals(sent_additional_info['nested']['info'], received_additional_info['nested.info'])
+        self.assertEqual(sent_additional_info['best_song'], received_additional_info['best_song'])
+        self.assertEqual(sent_additional_info['link1'], received_additional_info['link1'])
+        self.assertEqual(sent_additional_info['link2'], received_additional_info['link2'])
+        self.assertEqual(sent_additional_info['other_stuff'], received_additional_info['other_stuff'])
+        self.assertEqual(sent_additional_info['nested']['info'], received_additional_info['nested.info'])
 
     def test_service_unavailable_when_no_rabbitmq(self):
         """ Test to make sure that webserver returns 503 if rabbitmq connection is down """
