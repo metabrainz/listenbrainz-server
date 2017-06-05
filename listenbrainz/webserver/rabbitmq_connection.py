@@ -9,7 +9,7 @@ def init_rabbitmq_connection(app):
     global _rabbitmq
 
     app.logger.info("Call to init_rabbit_mq_connection")
-    if not app.config.has_key("RABBITMQ_HOST"):
+    if "RABBITMQ_HOST" not in app.config:
         app.logger.error("RabbitMQ host:port not defined. Sleeping 2 seconds, and exiting.")
         sleep(2)
         sys.exit(-1)

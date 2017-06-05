@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-from __future__ import print_function, division, absolute_import
+#!/usr/bin/env python3
+
 
 import sys
 import os
@@ -258,7 +258,7 @@ class InfluxWriterSubscriber(object):
 
         while True:
             try:
-                self.redis = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
+                self.redis = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT, decode_responses=True)
                 self.redis.ping()
                 break
             except Exception as err:

@@ -15,9 +15,9 @@ install:
       dockerize
       -wait tcp://db:5432 -timeout 60s
       -wait tcp://influx:8086 -timeout 60s bash -c
-      "python manage.py init_db --create-db &&
-       python manage.py init_msb_db --create-db &&
-       python manage.py init_influx"
+      "python3 manage.py init_db --create-db &&
+       python3 manage.py init_msb_db --create-db &&
+       python3 manage.py init_influx"
   - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test stop
 
   # This file seemes to cause permission problems somehow, not sure how, leading to errors in building
@@ -30,9 +30,9 @@ install:
       dockerize
       -wait tcp://db:5432 -timeout 60s
       -wait tcp://influx:8086 -timeout 60s bash -c
-      "python manage.py init_db --create-db &&
-       python manage.py init_msb_db --create-db &&
-       python manage.py init_influx"
+      "python3 manage.py init_db --create-db &&
+       python3 manage.py init_msb_db --create-db &&
+       python3 manage.py init_influx"
   - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int stop
 
 script:

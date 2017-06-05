@@ -1,6 +1,6 @@
 # coding=utf-8
-from __future__ import division, absolute_import
-from __future__ import print_function, unicode_literals
+
+
 from listenbrainz.listenstore import ListenStore
 import logging
 from listenbrainz.listen import Listen
@@ -23,7 +23,7 @@ class InfluxListenStore(ListenStore):
 
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
-        self.redis = Redis(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'])
+        self.redis = Redis(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], decode_responses=True)
         self.redis.ping()
         self.influx = InfluxDBClient(host=conf['INFLUX_HOST'], port=conf['INFLUX_PORT'], database=conf['INFLUX_DB_NAME'])
 
@@ -52,7 +52,7 @@ class InfluxListenStore(ListenStore):
 
         # get the number of listens from the json
         try:
-            count = results.get_points(measurement = get_measurement_name(user_name)).next()['count_recording_msid']
+            count = results.get_points(measurement = get_measurement_name(user_name)).__next__()['count_recording_msid']
         except (KeyError, StopIteration):
             count = 0
 
@@ -119,7 +119,7 @@ class InfluxListenStore(ListenStore):
             raise
 
         try:
-            count = result.get_points(measurement = 'listen').next()['count_recording_msid']
+            count = result.get_points(measurement = 'listen').__next__()['count_recording_msid']
         except KeyError:
             count = 0
 

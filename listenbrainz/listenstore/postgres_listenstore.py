@@ -1,6 +1,6 @@
 # coding=utf-8
-from __future__ import division, absolute_import
-from __future__ import print_function, unicode_literals
+
+
 from listenbrainz.listenstore import ListenStore, ORDER_TEXT
 import logging
 import ujson
@@ -68,7 +68,7 @@ class PostgresListenStore(ListenStore):
                                  DO UPDATE
                                 SET data = EXCLUDED.data
                     """), params)
-                except Exception, e:     # Log errors
+                except Exception as e:     # Log errors
                     self.log.error(e)
 
     def fetch_listens_from_storage(self, user_name, from_ts, to_ts, limit, order):

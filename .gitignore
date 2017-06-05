@@ -8,6 +8,7 @@ config.py
 .cache
 env
 bigquery-credentials.json
+*.bak
 
 # Application data
 /docker/data

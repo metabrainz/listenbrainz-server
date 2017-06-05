@@ -1,4 +1,4 @@
-from __future__ import print_function, division
+
 from redis import Redis
 from listenbrainz import config
 import requests
@@ -34,7 +34,7 @@ def init_redis_connection():
     global redis_connection
     while True:
         try:
-            redis_connection = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
+            redis_connection = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT, decode_responses=True)
             redis_connection.ping()
             return
         except redis.exceptions.ConnectionError as e:
@@ -90,7 +90,7 @@ def send_batch(data, token, retries=5):
 
     send_url = '{}/1/submit-listens'.format(config.BETA_URL)
     done = False
-    for _ in xrange(retries):
+    for _ in range(retries):
         r = requests.post(send_url, headers={'Authorization': 'Token {}'.format(token)}, data = ujson.dumps(data))
         if r.status_code == 200:
             done = True
