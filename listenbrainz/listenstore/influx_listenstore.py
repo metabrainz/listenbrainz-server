@@ -14,12 +14,15 @@ from listenbrainz.listenstore import ORDER_DESC, ORDER_ASC, ORDER_TEXT, \
 from listenbrainz.listenstore.utils import escape, get_measurement_name
 
 REDIS_INFLUX_USER_LISTEN_COUNT = "ls.listencount." # append username
+COUNT_RETENTION_POLICY = "one_week"
+COUNT_MEASUREMENT_NAME = "listen_counts"
+COUNT_MEASUREMENT = COUNT_RETENTION_POLICY + "." + COUNT_MEASUREMENT_NAME
 
 class InfluxListenStore(ListenStore):
 
     REDIS_INFLUX_TOTAL_LISTEN_COUNT = "ls.listencount.total"
-    TOTAL_LISTEN_COUNT_CACHE_TIME = 10 * 60
-    USER_LISTEN_COUNT_CACHE_TIME = 15 * 60 # in seconds. 15 minutes
+    TOTAL_LISTEN_COUNT_CACHE_TIME = 5 * 60
+    USER_LISTEN_COUNT_CACHE_TIME = 10 * 60 # in seconds. 15 minutes
 
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
@@ -74,8 +77,8 @@ class InfluxListenStore(ListenStore):
     def _select_single_value(self, query, measurement):
         try:
             results = self.influx.query(query)
-        except Exception as e:
-            self.log.error("Cannot query influx: %s" % str(e))
+        except Exception as err:
+            self.log.error("Cannot query influx: %s" % str(err))
             raise
 
         for result in results.get_points(measurement=measurement):
@@ -87,8 +90,8 @@ class InfluxListenStore(ListenStore):
     def _select_single_timestamp(self, query, measurement):
         try:
             results = self.influx.query(query)
-        except Exception as e:
-            self.log.error("Cannot query influx: %s" % str(e))
+        except Exception as err:
+            self.log.error("Cannot query influx: %s" % str(err))
             raise
 
         for result in results.get_points(measurement=measurement):
@@ -103,25 +106,42 @@ class InfluxListenStore(ListenStore):
             makes a query to the db and caches it in redis.
         """
 
-        # In order to make this work again, we need to enumerate all the users and sum each one up. :(
-        # TODO: Fix this and implement as a batch process that runs once a day
-        return 0
-
         count = self.redis.get(InfluxListenStore.REDIS_INFLUX_TOTAL_LISTEN_COUNT)
         if count:
             return int(count)
 
         try:
-            result = self.influx.query("""SELECT count(*)
-                                            FROM listen""")
-        except (InfluxDBServerError, InfluxDBClientError) as e:
-            self.log.error("Cannot query influx: %s" % str(e))
+            result = self.influx.query("""SELECT listen_total
+                                            FROM "%s"
+                                        ORDER BY time DESC
+                                           LIMIT 1""" % COUNT_MEASUREMENT)
+        except (InfluxDBServerError, InfluxDBClientError) as err:
+            self.log.error("Cannot query influx: %s" % str(err))
             raise
 
         try:
-            count = result.get_points(measurement = 'listen').__next__()['count_recording_msid']
-        except KeyError:
+            item = result.get_points(measurement = COUNT_MEASUREMENT).next()
+            count = int(item['listen_total'])
+            dtm = datetime.strptime(item['time'] , "%Y-%m-%dT%H:%M:%SZ")
+            timestamp = int(dtm.strftime('%s'))
+        except (KeyError, ValueError, StopIteration):
+            timestamp = 0
             count = 0
+
+        # Now sum counts that have been added in the interval we're interested in
+        try:
+            result = self.influx.query("""SELECT sum(item_count) as total
+                                            FROM "%s"
+                                           WHERE time > %d000000000""" % (COUNT_MEASUREMENT, timestamp))
+        except (InfluxDBServerError, InfluxDBClientError) as err:
+            self.log.error("Cannot query influx: %s" % str(err))
+            raise
+
+        try:
+            data = result.get_points(measurement = COUNT_MEASUREMENT).next()
+            count += int(data['total'])
+        except StopIteration:
+            pass
 
         self.redis.setex(InfluxListenStore.REDIS_INFLUX_TOTAL_LISTEN_COUNT, count, InfluxListenStore.TOTAL_LISTEN_COUNT_CACHE_TIME)
         return count
@@ -153,35 +173,124 @@ class InfluxListenStore(ListenStore):
         """
 
         submit = []
+        user_name_counts = {}
         user_names = {}
         for listen in listens:
             user_names[listen.user_name] = 1
             submit.append(listen.to_influx(get_measurement_name(listen.user_name)))
 
-
         try:
             if not self.influx.write_points(submit, time_precision='s'):
                 self.log.error("Cannot write data to influx. (write_points returned False)")
-        except (InfluxDBServerError, InfluxDBClientError, ValueError) as e:
-            self.log.error("Cannot write data to influx: %s" % str(e))
+        except (InfluxDBServerError, InfluxDBClientError, ValueError) as err:
+            self.log.error("Cannot write data to influx: %s" % str(err))
             self.log.error("Data that was being written when the error occurred: ")
             self.log.error(json.dumps(submit, indent=4))
             raise
 
-        # If we reach this point, we were able to write the listens to the InfluxListenStore.
-        # So update the listen counts of the users cached in redis.
-        for data in submit:
-            user_key = "{}{}".format(REDIS_INFLUX_USER_LISTEN_COUNT, data['tags']['user_name'])
-            if self.redis.exists(user_key):
-                self.redis.incr(user_key)
+        # Enter a measurement to count items inserted
+        submit = [{
+            'measurement' : COUNT_MEASUREMENT,
+            'tags' : {
+                'item_count' : len(listens)
+            },
+            'fields' : {
+                'item_count' : len(listens)
+            }
+        }]
+        try:
+            if not self.influx.write_points(submit, time_precision='s'):
+                self.log.error("Cannot write listen cound to influx. (write_points returned False)")
+        except (InfluxDBServerError, InfluxDBClientError, ValueError) as err:
+            self.log.error("Cannot write data to influx: %s" % str(err))
+            raise
 
-        # Invalidate cached data for user
-        for user_name in user_names.keys():
+        # If we reach this point, we were able to write the listens to the InfluxListenStore.
+        # So update the listen counts of the users cached in redis and invalidate cached data for user
+        for user_name in user_name_counts:
+            user_key = "{}{}".format(REDIS_INFLUX_USER_LISTEN_COUNT, user_name)
+            self.redis.incrby(user_key, user_name_counts[user_name])
             self.redis.delete(REDIS_USER_TIMESTAMPS % user_name)
 
-#        l = [ REDIS_INFLUX_USER_LISTEN_COUNT + str(id) for id in user_names])
-#        self.log.info("delete: " % ",".join(l))
-#        self.redis.delete(*[ REDIS_INFLUX_USER_LISTEN_COUNT + user_hash(user_name) for id in user_names])
+    def update_listen_counts(self):
+        """ This should be called every few seconds in order to sum up all of the listen counts
+            in influx and write them to a single figure
+        """
+
+        # To update the current listen total, find when we last updated the total.
+        try:
+            result = self.influx.query("""SELECT listen_total
+                                            FROM "%s"
+                                        ORDER BY time DESC
+                                           LIMIT 1""" % COUNT_MEASUREMENT)
+        except (InfluxDBServerError, InfluxDBClientError) as err:
+            self.log.error("Cannot query influx: %s" % str(err))
+            raise
+
+        try:
+            item = result.get_points(measurement = COUNT_MEASUREMENT).next()
+            dtm = datetime.strptime(item['time'] , "%Y-%m-%dT%H:%M:%SZ")
+            start_timestamp = int(dtm.strftime('%s'))
+            total = int(item['listen_total'])
+        except (KeyError, ValueError, StopIteration):
+            total = 0
+            start_timestamp = 0
+
+        # Next, find the timestamp of the latest and greatest count
+        try:
+            result = self.influx.query("""SELECT item_count
+                                            FROM "%s"
+                                        ORDER BY time DESC
+                                           LIMIT 1""" % (COUNT_MEASUREMENT))
+        except (InfluxDBServerError, InfluxDBClientError) as err:
+            self.log.error("Cannot query influx: %s" % str(err))
+            raise
+
+        try:
+            self.log.info(result)
+            item = result.get_points(measurement = COUNT_MEASUREMENT).next()
+            dtm = datetime.strptime(item['time'] , "%Y-%m-%dT%H:%M:%SZ")
+            end_timestamp = int(dtm.strftime('%s'))
+        except KeyError:
+            # This means we have no item_counts to update, so bail.
+            self.log.info("no counts!")
+            return
+
+        # Now sum counts that have been added in the interval we're interested in
+        try:
+            result = self.influx.query("""SELECT sum(item_count) as total
+                                            FROM "%s"
+                                           WHERE time > %d000000000 and time <= %d000000000""" % (COUNT_MEASUREMENT, start_timestamp, end_timestamp))
+        except (InfluxDBServerError, InfluxDBClientError) as err:
+            self.log.error("Cannot query influx: %s" % str(err))
+            raise
+
+        try:
+            data = result.get_points(measurement = COUNT_MEASUREMENT).next()
+            total += int(data['total'])
+        except StopIteration:
+            # This means we have no item_counts to update, so bail.
+            return
+
+        # Finally write a new total with the timestamp of the last point
+        submit = [{
+            'measurement' : COUNT_MEASUREMENT,
+            'time' : end_timestamp,
+            'tags' : {
+                'listen_total' : total
+            },
+            'fields' : {
+                'listen_total' : total
+            }
+        }]
+
+
+        try:
+            if not self.influx.write_points(submit, time_precision='s'):
+                self.log.error("Cannot write data to influx. (write_points returned False)")
+        except (InfluxDBServerError, InfluxDBClientError, ValueError) as err:
+            self.log.error("Cannot update listen counts in influx: %s" % str(err))
+            raise
 
 
     def fetch_listens_from_storage(self, user_name, from_ts, to_ts, limit, order):
@@ -205,8 +314,8 @@ class InfluxListenStore(ListenStore):
         query += " ORDER BY time " + ORDER_TEXT[order] + " LIMIT " + str(limit)
         try:
             results = self.influx.query(query)
-        except Exception as e:
-            self.log.error("Cannot query influx: %s" % str(e))
+        except Exception as err:
+            self.log.error("Cannot query influx: %s" % str(err))
             return []
 
         listens = []
