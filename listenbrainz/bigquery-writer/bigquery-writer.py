@@ -3,6 +3,7 @@
 import sys
 import os
 import ujson
+import json
 import logging
 import pika
 from time import time, sleep
@@ -17,6 +18,7 @@ from oauth2client.client import GoogleCredentials
 REPORT_FREQUENCY = 5000
 APP_CREDENTIALS_FILE = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
 ERROR_RETRY_DELAY = 3 # number of seconds to wait until retrying an operation
+DUMP_JSON_WITH_ERRORS = True
 
 # TODO:
 #   Big query hardcoded data set ids
@@ -90,7 +92,7 @@ class BigQueryWriter(object):
                 ret = self.bigquery.tabledata().insertAll(
                     projectId=config.BIGQUERY_PROJECT_ID,
                     datasetId=config.BIGQUERY_DATASET_ID,
-                    tableId=config.BIQUERY_TABLE_ID,
+                    tableId=config.BIGQUERY_TABLE_ID,
                     body=body).execute(num_retries=5)
                 self.time += time() - t0
                 break
