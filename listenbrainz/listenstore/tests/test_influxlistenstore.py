@@ -167,5 +167,6 @@ class TestInfluxListenStore(DatabaseTestCase):
 
     def test_get_listen_count_for_user(self):
         count = self._create_test_data()
+        self.logstore.update_listen_counts()
         listen_count = self.logstore.get_listen_count_for_user(user_name=self.testuser_name)
         self.assertEqual(count, listen_count)
