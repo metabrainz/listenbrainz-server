@@ -15,8 +15,9 @@ from listenbrainz.listenstore.utils import escape, get_measurement_name
 
 REDIS_INFLUX_USER_LISTEN_COUNT = "ls.listencount." # append username
 COUNT_RETENTION_POLICY = "one_week"
-COUNT_MEASUREMENT_NAME = "listen_counts"
-COUNT_MEASUREMENT = COUNT_RETENTION_POLICY + "." + COUNT_MEASUREMENT_NAME
+COUNT_MEASUREMENT_NAME = "listen_count"
+TEMP_COUNT_MEASUREMENT = COUNT_RETENTION_POLICY + "." + COUNT_MEASUREMENT_NAME
+TIMELINE_COUNT_MEASUREMENT = COUNT_MEASUREMENT_NAME
 
 class InfluxListenStore(ListenStore):
 
@@ -111,17 +112,17 @@ class InfluxListenStore(ListenStore):
             return int(count)
 
         try:
-            result = self.influx.query("""SELECT listen_total
+            result = self.influx.query("""SELECT %s
                                             FROM "%s"
                                         ORDER BY time DESC
-                                           LIMIT 1""" % COUNT_MEASUREMENT)
+                                           LIMIT 1""" % (COUNT_MEASUREMENT_NAME, TIMELINE_COUNT_MEASUREMENT))
         except (InfluxDBServerError, InfluxDBClientError) as err:
             self.log.error("Cannot query influx: %s" % str(err))
             raise
 
         try:
-            item = result.get_points(measurement = COUNT_MEASUREMENT).__next__()
-            count = int(item['listen_total'])
+            item = result.get_points(measurement = TIMELINE_COUNT_MEASUREMENT).__next__()
+            count = int(item[COUNT_MEASUREMENT_NAME])
             dtm = datetime.strptime(item['time'] , "%Y-%m-%dT%H:%M:%SZ")
             timestamp = int(dtm.strftime('%s'))
         except (KeyError, ValueError, StopIteration):
@@ -130,15 +131,15 @@ class InfluxListenStore(ListenStore):
 
         # Now sum counts that have been added in the interval we're interested in
         try:
-            result = self.influx.query("""SELECT sum(item_count) as total
+            result = self.influx.query("""SELECT sum(%s) as total
                                             FROM "%s"
-                                           WHERE time > %d000000000""" % (COUNT_MEASUREMENT, timestamp))
+                                           WHERE time > %d000000000""" % (COUNT_MEASUREMENT_NAME, TEMP_COUNT_MEASUREMENT, timestamp))
         except (InfluxDBServerError, InfluxDBClientError) as err:
             self.log.error("Cannot query influx: %s" % str(err))
             raise
 
         try:
-            data = result.get_points(measurement = COUNT_MEASUREMENT).__next__()
+            data = result.get_points(measurement = TEMP_COUNT_MEASUREMENT).__next__()
             count += int(data['total'])
         except StopIteration:
             pass
@@ -192,10 +193,10 @@ class InfluxListenStore(ListenStore):
         submit = [{
             'measurement' : COUNT_MEASUREMENT,
             'tags' : {
-                'item_count' : len(listens)
+                COUNT_MEASUREMENT_NAME : len(listens)
             },
             'fields' : {
-                'item_count' : len(listens)
+                COUNT_MEASUREMENT_NAME : len(listens)
             }
         }]
         try:
@@ -219,36 +220,36 @@ class InfluxListenStore(ListenStore):
 
         # To update the current listen total, find when we last updated the total.
         try:
-            result = self.influx.query("""SELECT listen_total
+            result = self.influx.query("""SELECT %s
                                             FROM "%s"
                                         ORDER BY time DESC
-                                           LIMIT 1""" % COUNT_MEASUREMENT)
+                                           LIMIT 1""" % (COUNT_MEASUREMENT_NAME, TEMP_COUNT_MEASUREMENT))
         except (InfluxDBServerError, InfluxDBClientError) as err:
             self.log.error("Cannot query influx: %s" % str(err))
             raise
 
         try:
-            item = result.get_points(measurement = COUNT_MEASUREMENT).__next__()
+            item = result.get_points(measurement = TEMP_COUNT_MEASUREMENT).__next__()
             dtm = datetime.strptime(item['time'] , "%Y-%m-%dT%H:%M:%SZ")
             start_timestamp = int(dtm.strftime('%s'))
-            total = int(item['listen_total'])
+            total = int(item[COUNT_MEASUREMENT_NAME])
         except (KeyError, ValueError, StopIteration):
             total = 0
             start_timestamp = 0
 
         # Next, find the timestamp of the latest and greatest count
         try:
-            result = self.influx.query("""SELECT item_count
+            result = self.influx.query("""SELECT %s
                                             FROM "%s"
                                         ORDER BY time DESC
-                                           LIMIT 1""" % (COUNT_MEASUREMENT))
+                                           LIMIT 1""" % (COUNT_MEASUREMENT_NAME, TIMELINE_COUNT_MEASUREMENT))
         except (InfluxDBServerError, InfluxDBClientError) as err:
             self.log.error("Cannot query influx: %s" % str(err))
             raise
 
         try:
             self.log.info(result)
-            item = result.get_points(measurement = COUNT_MEASUREMENT).__next__()
+            item = result.get_points(measurement = TIMELINE_COUNT_MEASUREMENT).__next__()
             dtm = datetime.strptime(item['time'] , "%Y-%m-%dT%H:%M:%SZ")
             end_timestamp = int(dtm.strftime('%s'))
         except KeyError:
@@ -258,15 +259,15 @@ class InfluxListenStore(ListenStore):
 
         # Now sum counts that have been added in the interval we're interested in
         try:
-            result = self.influx.query("""SELECT sum(item_count) as total
+            result = self.influx.query("""SELECT sum(%s) as total
                                             FROM "%s"
-                                           WHERE time > %d000000000 and time <= %d000000000""" % (COUNT_MEASUREMENT, start_timestamp, end_timestamp))
+                                           WHERE time > %d000000000 and time <= %d000000000""" % (COUNT_MEASUREMENT_NAME, TEMP_COUNT_MEASUREMENT, start_timestamp, end_timestamp))
         except (InfluxDBServerError, InfluxDBClientError) as err:
             self.log.error("Cannot query influx: %s" % str(err))
             raise
 
         try:
-            data = result.get_points(measurement = COUNT_MEASUREMENT).__next__()
+            data = result.get_points(measurement = TEMP_COUNT_MEASUREMENT).__next__()
             total += int(data['total'])
         except StopIteration:
             # This means we have no item_counts to update, so bail.
@@ -274,13 +275,13 @@ class InfluxListenStore(ListenStore):
 
         # Finally write a new total with the timestamp of the last point
         submit = [{
-            'measurement' : COUNT_MEASUREMENT,
+            'measurement' : TIMELINE_COUNT_MEASUREMENT,
             'time' : end_timestamp,
             'tags' : {
-                'listen_total' : total
+                COUNT_MEASUREMENT_NAME : total
             },
             'fields' : {
-                'listen_total' : total
+                COUNT_MEASUREMENT_NAME : total
             }
         }]
 
