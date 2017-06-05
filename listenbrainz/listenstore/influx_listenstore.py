@@ -120,7 +120,7 @@ class InfluxListenStore(ListenStore):
             raise
 
         try:
-            item = result.get_points(measurement = COUNT_MEASUREMENT).next()
+            item = result.get_points(measurement = COUNT_MEASUREMENT).__next__()
             count = int(item['listen_total'])
             dtm = datetime.strptime(item['time'] , "%Y-%m-%dT%H:%M:%SZ")
             timestamp = int(dtm.strftime('%s'))
@@ -138,7 +138,7 @@ class InfluxListenStore(ListenStore):
             raise
 
         try:
-            data = result.get_points(measurement = COUNT_MEASUREMENT).next()
+            data = result.get_points(measurement = COUNT_MEASUREMENT).__next__()
             count += int(data['total'])
         except StopIteration:
             pass
@@ -228,7 +228,7 @@ class InfluxListenStore(ListenStore):
             raise
 
         try:
-            item = result.get_points(measurement = COUNT_MEASUREMENT).next()
+            item = result.get_points(measurement = COUNT_MEASUREMENT).__next__()
             dtm = datetime.strptime(item['time'] , "%Y-%m-%dT%H:%M:%SZ")
             start_timestamp = int(dtm.strftime('%s'))
             total = int(item['listen_total'])
@@ -248,7 +248,7 @@ class InfluxListenStore(ListenStore):
 
         try:
             self.log.info(result)
-            item = result.get_points(measurement = COUNT_MEASUREMENT).next()
+            item = result.get_points(measurement = COUNT_MEASUREMENT).__next__()
             dtm = datetime.strptime(item['time'] , "%Y-%m-%dT%H:%M:%SZ")
             end_timestamp = int(dtm.strftime('%s'))
         except KeyError:
@@ -266,7 +266,7 @@ class InfluxListenStore(ListenStore):
             raise
 
         try:
-            data = result.get_points(measurement = COUNT_MEASUREMENT).next()
+            data = result.get_points(measurement = COUNT_MEASUREMENT).__next__()
             total += int(data['total'])
         except StopIteration:
             # This means we have no item_counts to update, so bail.
