@@ -3,6 +3,8 @@ from flask import Blueprint, request, redirect, render_template, url_for, sessio
 from flask_login import login_user, logout_user, login_required
 from listenbrainz.webserver.login import login_forbidden, provider
 from listenbrainz.webserver import flash
+import listenbrainz.db.user as db_user
+import time
 
 login_bp = Blueprint('login', __name__)
 
@@ -25,7 +27,9 @@ def musicbrainz():
 def musicbrainz_post():
     """Callback endpoint."""
     if provider.validate_post_login():
-        login_user(provider.get_user())
+        user = provider.get_user()
+        db_user.update_last_login(user.musicbrainz_id, int(time.time()))
+        login_user(user)
         next = session.get('next')
         if next:
             return redirect(next)
