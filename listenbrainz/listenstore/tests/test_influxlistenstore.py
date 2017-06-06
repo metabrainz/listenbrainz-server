@@ -110,6 +110,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         super(TestInfluxListenStore, self).setUp()
         self.log = logging.getLogger(__name__)
 
+        # In order to do counting correctly, we need a clean DB to start with
         influx = InfluxDBClient(host=config.INFLUX_HOST, port=config.INFLUX_PORT, database=config.INFLUX_DB_NAME)
         influx.query('''drop database %s''' % config.INFLUX_DB_NAME)
         influx.query('''create database %s''' % config.INFLUX_DB_NAME)
@@ -136,16 +137,24 @@ class TestInfluxListenStore(DatabaseTestCase):
 
     # this test should be done first, because the other tests keep inserting more rows
     def test_aaa_get_total_listen_count(self):
-        listen_count = self.logstore.get_total_listen_count()
+        listen_count = self.logstore.get_total_listen_count(False)
         self.assertEqual(0, listen_count)
 
         count = self._create_test_data()
-        listen_count = self.logstore.get_total_listen_count()
+        listen_count = self.logstore.get_total_listen_count(False)
         self.assertEqual(count, listen_count)
 
         self.logstore.update_listen_counts()
-        listen_count = self.logstore.get_total_listen_count()
+        listen_count = self.logstore.get_total_listen_count(False)
         self.assertEqual(count, listen_count)
+
+        count = self._create_test_data()
+        listen_count = self.logstore.get_total_listen_count(False)
+        self.assertEqual(count * 2, listen_count)
+
+        self.logstore.update_listen_counts()
+        listen_count = self.logstore.get_total_listen_count(False)
+        self.assertEqual(count * 2, listen_count)
 
     def test_insert_influx(self):
         count = self._create_test_data()

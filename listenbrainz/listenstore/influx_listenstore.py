@@ -101,15 +101,16 @@ class InfluxListenStore(ListenStore):
 
         return None
 
-    def get_total_listen_count(self):
+    def get_total_listen_count(self, cache=True):
         """ Returns the total number of listens stored in the ListenStore.
             First checks the redis cache for the value, if not present there
             makes a query to the db and caches it in redis.
         """
 
-        count = self.redis.get(InfluxListenStore.REDIS_INFLUX_TOTAL_LISTEN_COUNT)
-        if count:
-            return int(count)
+        if cache:
+            count = self.redis.get(InfluxListenStore.REDIS_INFLUX_TOTAL_LISTEN_COUNT)
+            if count:
+                return int(count)
 
         try:
             result = self.influx.query("""SELECT %s
@@ -129,8 +130,6 @@ class InfluxListenStore(ListenStore):
             timestamp = 0
             count = 0
 
-        #self.log.info("%d items from timeline" % count)
-
         # Now sum counts that have been added in the interval we're interested in
         try:
             result = self.influx.query("""SELECT sum(%s) as total
@@ -146,9 +145,8 @@ class InfluxListenStore(ListenStore):
         except StopIteration:
             pass
 
-        #self.log.info("%d total items" % count)
-
-        self.redis.setex(InfluxListenStore.REDIS_INFLUX_TOTAL_LISTEN_COUNT, count, InfluxListenStore.TOTAL_LISTEN_COUNT_CACHE_TIME)
+        if cache:
+            self.redis.setex(InfluxListenStore.REDIS_INFLUX_TOTAL_LISTEN_COUNT, count, InfluxListenStore.TOTAL_LISTEN_COUNT_CACHE_TIME)
         return count
 
 
@@ -178,7 +176,6 @@ class InfluxListenStore(ListenStore):
         """
 
         submit = []
-        user_name_counts = {}
         user_names = {}
         for listen in listens:
             user_names[listen.user_name] = 1
@@ -192,6 +189,17 @@ class InfluxListenStore(ListenStore):
             self.log.error("Data that was being written when the error occurred: ")
             self.log.error(json.dumps(submit, indent=4))
             raise
+
+        # If we reach this point, we were able to write the listens to the InfluxListenStore.
+        # So update the listen counts of the users cached in redis.
+        for data in submit:
+            user_key = "{}{}".format(REDIS_INFLUX_USER_LISTEN_COUNT, data['tags']['user_name'])
+            if self.redis.exists(user_key):
+                self.redis.incr(user_key)
+
+        # Invalidate cached data for user
+        for user_name in user_names.keys():
+            self.redis.delete(REDIS_USER_TIMESTAMPS % user_name)
 
         # Enter a measurement to count items inserted
         submit = [{
@@ -210,12 +218,6 @@ class InfluxListenStore(ListenStore):
             self.log.error("Cannot write data to influx: %s" % str(err))
             raise
 
-        # If we reach this point, we were able to write the listens to the InfluxListenStore.
-        # So update the listen counts of the users cached in redis and invalidate cached data for user
-        for user_name in user_name_counts:
-            user_key = "{}{}".format(REDIS_INFLUX_USER_LISTEN_COUNT, user_name)
-            self.redis.incrby(user_key, user_name_counts[user_name])
-            self.redis.delete(REDIS_USER_TIMESTAMPS % user_name)
 
     def update_listen_counts(self):
         """ This should be called every few seconds in order to sum up all of the listen counts
@@ -258,8 +260,6 @@ class InfluxListenStore(ListenStore):
         except (KeyError, StopIteration):
             end_timestamp = start_timestamp
 
-        #self.log.info("start %d end %d" % (start_timestamp, end_timestamp))
-
         # Now sum counts that have been added in the interval we're interested in
         try:
             result = self.influx.query("""SELECT sum(%s) as total
@@ -269,15 +269,12 @@ class InfluxListenStore(ListenStore):
             self.log.error("Cannot query influx: %s" % str(err))
             raise
 
-        # self.log.info("first total %d" % total)
         try:
             data = result.get_points(measurement = TEMP_COUNT_MEASUREMENT).__next__()
             total += int(data['total'])
         except StopIteration:
             # This means we have no item_counts to update, so bail.
             return
-
-        # self.log.info("second total %d" % total)
 
         # Finally write a new total with the timestamp of the last point
         submit = [{

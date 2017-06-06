@@ -170,9 +170,9 @@ def init_influx():
 
     print("Creating influx database...")
     influx_client.create_database(config.INFLUX_DB_NAME)
-    # TODO use the actual 7 day query here
-    # i.create_retention_policy("one_week", "1w", 1, "listenbrainz")
-    influx_client.create_retention_policy("one_week", "1h", 1, "listenbrainz")
+    influx_client.create_retention_policy("one_week", "1w", 1, "listenbrainz")
+
+    print("Done!")
 
 if __name__ == '__main__':
     cli()
