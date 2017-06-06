@@ -7,17 +7,17 @@ fi
 if [ "${CONTAINER_NAME}" = "listenbrainz-influx-writer" ]
 then
     cd /code/listenbrainz
-    exec python -m listenbrainz/influx-writer/influx-writer
+    exec python3 -m listenbrainz.influx-writer.influx-writer
 fi
 if [ "${CONTAINER_NAME}" = "listenbrainz-bigquery-writer" ]
 then
     cd /code/listenbrainz
-    exec python -m listenbrainz/bigquery-writer/bigquery-writer
+    exec python3 -m listenbrainz.bigquery-writer.bigquery-writer
 fi
 if [ "${CONTAINER_NAME}" = "listenbrainz-alpha-importer" ]
 then
     cd /code/listenbrainz
-    exec python -m listenbrainz/alpha_importer
+    exec python3 -m listenbrainz.alpha_importer
 fi
 
 echo "init script has no clue which service to start. Set env var CONTAINER_NAME!"

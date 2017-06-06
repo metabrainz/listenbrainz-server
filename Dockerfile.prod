@@ -1,4 +1,4 @@
-FROM metabrainz/python:2.7
+FROM metabrainz/python:3.6
 
 ENV DOCKERIZE_VERSION v0.2.0
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
@@ -15,9 +15,6 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 
-# This is needed to circumvent a bug in the ubunutu python package
-RUN ln -s /usr/lib/python2.7/plat-*/_sysconfigdata_nd.py /usr/lib/python2.7/
-
 # PostgreSQL client
 RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
 ENV PG_MAJOR 9.5
@@ -26,7 +23,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends postgresql-client-$PG_MAJOR \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install uWSGI==2.0.13.1
+RUN pip3 install uWSGI==2.0.13.1
 
 RUN mkdir /code
 WORKDIR /code
@@ -34,13 +31,13 @@ WORKDIR /code
 # MessyBrainz
 RUN git clone https://github.com/metabrainz/messybrainz-server.git messybrainz
 WORKDIR /code/messybrainz
-RUN pip install -r requirements.txt
-RUN python setup.py install
+RUN pip3 install -r requirements.txt
+RUN python3 setup.py install
 
 # ListenBrainz
 WORKDIR /code/listenbrainz
 COPY ./requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip3 install -r requirements.txt
 
 COPY . /code/listenbrainz
 WORKDIR /code/listenbrainz
