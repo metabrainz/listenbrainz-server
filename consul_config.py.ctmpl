@@ -1,0 +1,42 @@
+{{- define "KEY" -}}
+    {{ key (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .) }}
+{{- end -}}
+
+DEBUG = False
+
+SECRET_KEY = '''{{template "KEY" "secret_key"}}'''
+
+{{if service "listenbrainz-db"}}
+{{with index (service "listenbrainz-db") 0}}
+SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz@{{.Address}}:{{.Port}}/messybrainz"
+TEST_SQLALCHEMY_DATABASE_URI = "postgresql://msb_test@{{.Address}}:{{.Port}}/msb_test"
+POSTGRES_ADMIN_URI="postgresql://postgres@{{.Address}}:{{.Port}}/template1"
+{{end}}
+{{end}}
+
+
+# MUSICBRAINZ
+
+MUSICBRAINZ_USERAGENT = "messybrainz-server"
+MUSICBRAINZ_HOSTNAME = "musicbrainz.org"
+
+{{if service "listenbrainz-redis"}}
+{{with index (service "listenbrainz-redis") 0}}
+REDIS_HOST = "{{.Address}}"
+REDIS_PORT = {{.Port}}
+REDIS_NAMESPACE = "messybrainz"
+{{end}}
+{{end}}
+
+BEHIND_GATEWAY = True
+REMOTE_ADDR_HEADER = "X-MB-Remote-Addr"
+
+IP_FILTER_ON = False
+IP_WHITELIST = [
+    #'127.0.0.1',
+]
+
+# Set to True if Less should be compiled in browser. Set to False if styling is pre-compiled.
+COMPILE_LESS = False
+
+FILE_STORAGE_DIR = "./files"

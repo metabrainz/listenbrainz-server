@@ -1,4 +1,4 @@
-
+import ujson
 from flask import Blueprint, request, Response
 from webserver.decorators import crossdomain, ip_filter
 from werkzeug.exceptions import BadRequest, NotFound
@@ -44,6 +44,8 @@ def get(messybrainz_id):
         data = messybrainz.load_recording(messybrainz_id)
     except messybrainz.exceptions.NoDataFoundException:
         raise NotFound
+
+    return Response(ujson.dumps(data), mimetype='application/json')
 
 
 @api_bp.route("/<uuid:messybrainz_id>/aka")

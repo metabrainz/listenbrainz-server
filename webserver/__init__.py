@@ -4,6 +4,7 @@ import sys
 import os
 import logging
 
+
 def create_app():
     app = Flask(__name__)
 
@@ -57,3 +58,5 @@ def create_app():
         pass
 
     return app
+
+application = create_app()
