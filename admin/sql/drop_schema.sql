@@ -1,0 +1,6 @@
+BEGIN;
+
+DROP SCHEMA IF EXISTS api_compat;
+DROP SCHEMA IF EXISTS statistics;
+
+COMMIT;
