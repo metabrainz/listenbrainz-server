@@ -32,16 +32,10 @@ class DatabaseTestCase(unittest.TestCase):
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
 
     def drop_tables(self):
-        with db.engine.connect() as connection:
-            connection.execute('DROP TABLE IF EXISTS "user"              CASCADE')
-            connection.execute('DROP TABLE IF EXISTS listen              CASCADE')
-            connection.execute('DROP TABLE IF EXISTS listen_json         CASCADE')
-            connection.execute('DROP TABLE IF EXISTS api_compat.token    CASCADE')
-            connection.execute('DROP TABLE IF EXISTS api_compat.session  CASCADE')
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'drop_tables.sql'))
 
     def drop_schema(self):
-        with db.engine.connect() as connection:
-            connection.execute('DROP SCHEMA IF EXISTS api_compat')
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'drop_schema.sql'))
 
     def load_data_files(self):
         """ Get the data files from the disk """
