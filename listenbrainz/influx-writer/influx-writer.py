@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
+
 import sys
 import os
-import logging
+import pika
 from datetime import datetime
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import ujson
-import pika
 import logging
 from listenbrainz.listen import Listen
 from time import time, sleep
@@ -18,7 +18,7 @@ from requests.exceptions import ConnectionError
 from redis import Redis
 from listenbrainz.redis_keys import INCOMING_QUEUE_SIZE_KEY, UNIQUE_QUEUE_SIZE_KEY
 
-REPORT_FREQUENCY = 1000
+REPORT_FREQUENCY = 5000
 DUMP_JSON_WITH_ERRORS = False
 ERROR_RETRY_DELAY = 3 # number of seconds to wait until retrying an operation
 
