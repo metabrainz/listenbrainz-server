@@ -1,4 +1,3 @@
-
 import sys
 import uuid
 from werkzeug.exceptions import InternalServerError, ServiceUnavailable, BadRequest
@@ -31,7 +30,6 @@ MAX_ITEMS_PER_GET = 100
 DEFAULT_ITEMS_PER_GET = 25
 
 MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
-
 
 
 # Define the values for types of listens
@@ -76,12 +74,8 @@ def _send_listens_to_queue(listen_type, listens):
             channel = rabbitmq_connection._rabbitmq.channel()
             channel.exchange_declare(exchange='incoming', type='fanout')
             channel.queue_declare('incoming', durable=True)
-        except pika.exceptions.ConnectionClosed as e:
-            current_app.logger.error("Connection to rabbitmq closed while creating channel: %s" % str(e))
-            raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
-        except pika.exceptions.NoFreeChannels as e:
-            if channel:
-                channel.close() # just in case
+        except (pika.exceptions.NoFreeChannels, Exception) as e:
+            rabbitmq_connection._rabbitmq.return_broken_channel()
             current_app.logger.error("Cannot create a rabbitmq channel: %s" % str(e))
             raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
 
@@ -99,7 +93,7 @@ def _send_listens_to_queue(listen_type, listens):
             raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
 
         _redis.redis.incr(INCOMING_QUEUE_SIZE_KEY, len(submit))
-        channel.close()
+        rabbitmq_connection._rabbitmq.return_channel()
 
 
 def validate_listen(listen, listen_type):
