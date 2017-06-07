@@ -1,7 +1,6 @@
 import unittest
 from listenbrainz.listen import Listen
 from datetime import datetime
-import json
 
 
 class ListenTestCase(unittest.TestCase):
