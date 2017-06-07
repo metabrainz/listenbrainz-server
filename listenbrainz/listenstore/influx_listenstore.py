@@ -165,7 +165,7 @@ class InfluxListenStore(ListenStore):
         except (InfluxDBServerError, InfluxDBClientError, ValueError) as e:
             self.log.error("Cannot write data to influx: %s" % str(e))
             self.log.error("Data that was being written when the error occurred: ")
-            self.log.error(json.dumps(submit, indent=4))
+            self.log.error(json.dumps(submit, indent=4)[:2048])
             raise
 
         # If we reach this point, we were able to write the listens to the InfluxListenStore.
