@@ -12,7 +12,7 @@ MessyBrainz is currently used in support of two projects, [ListenBrainz](https:/
 and [AcousticBrainz](https://acousticbrainz.org). Submission to MessyBrainz is restricted, however
 the resulting data will be made freely available.
 
-[Website](https://messybrainz.org) | [Beta Website](https://beta.messybrainz.org)
+[Website](https://messybrainz.org)
 
 ## Installation
 
