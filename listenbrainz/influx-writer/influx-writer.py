@@ -16,7 +16,6 @@ from listenbrainz.listenstore import InfluxListenStore
 from listenbrainz.listenstore.utils import escape, get_measurement_name
 from requests.exceptions import ConnectionError
 from redis import Redis
-from listenbrainz.redis_keys import INCOMING_QUEUE_SIZE_KEY, UNIQUE_QUEUE_SIZE_KEY
 
 REPORT_FREQUENCY = 5000
 DUMP_JSON_WITH_ERRORS = False
@@ -70,7 +69,6 @@ class InfluxWriterSubscriber(object):
                 self.connect_to_rabbitmq()
 
         count = len(listens)
-        self.redis.decr(INCOMING_QUEUE_SIZE_KEY, count)
 
         # collect and occasionally print some stats
         self.inserts += count
@@ -220,8 +218,6 @@ class InfluxWriterSubscriber(object):
                 break
             except pika.exceptions.ConnectionClosed:
                 self.connect_to_rabbitmq()
-
-        self.redis.incr(UNIQUE_QUEUE_SIZE_KEY, unique_count)
 
         return True
 
