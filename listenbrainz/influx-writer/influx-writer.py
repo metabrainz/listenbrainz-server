@@ -52,7 +52,7 @@ class InfluxWriterSubscriber(object):
                 self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=config.RABBITMQ_HOST, port=config.RABBITMQ_PORT))
                 break
             except Exception as e:
-                self.log.error("Cannot connect to rabbitmq: %s, retrying in 2 seconds")
+                self.log.error("Cannot connect to rabbitmq: %s, retrying in 2 seconds", str(e))
                 sleep(ERROR_RETRY_DELAY)
 
 
@@ -81,6 +81,9 @@ class InfluxWriterSubscriber(object):
                     (self.inserts, self.time, self.inserts / self.time, self.total_inserts))
             self.inserts = 0
             self.time = 0
+
+            # now update listen counts in influx
+            self.ls.update_listen_counts()
 
         return ret
 
@@ -246,10 +249,10 @@ class InfluxWriterSubscriber(object):
         while True:
             try:
                 self.ls = InfluxListenStore({ 'REDIS_HOST' : config.REDIS_HOST,
-                                         'REDIS_PORT' : config.REDIS_PORT,
-                                         'INFLUX_HOST': config.INFLUX_HOST,
-                                         'INFLUX_PORT': config.INFLUX_PORT,
-                                         'INFLUX_DB_NAME': config.INFLUX_DB_NAME})
+                                              'REDIS_PORT' : config.REDIS_PORT,
+                                              'INFLUX_HOST': config.INFLUX_HOST,
+                                              'INFLUX_PORT': config.INFLUX_PORT,
+                                              'INFLUX_DB_NAME': config.INFLUX_DB_NAME})
                 self.influx = InfluxDBClient(host=config.INFLUX_HOST, port=config.INFLUX_PORT, database=config.INFLUX_DB_NAME)
                 break
             except Exception as err:
@@ -283,7 +286,6 @@ class InfluxWriterSubscriber(object):
             except pika.exceptions.ConnectionClosed:
                 self.log.info("Connection to rabbitmq closed. Re-opening.")
                 self.connection = None
-                self.channel = None
                 continue
 
             self.connection.close()
