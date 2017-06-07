@@ -29,12 +29,12 @@
           </tr>
         {% endif %}
           <tr>
-            <td>Number of incoming listens / items queued</td>
-            <td>{{ incoming_count }} / {{ incoming_len }}</td>
+            <td>Number of incoming batches queued</td>
+            <td>{{ incoming_len }}</td>
           </tr>
           <tr>
-            <td>Number of unique (new) listens / items queued</td>
-            <td>{{ unique_count }} / {{ unique_len }}</td>
+            <td>Number of unique incoming batches queued</td>
+            <td>{{ unique_len }}</td>
           </tr>
           <tr>
             <td>Number of people in queue for alpha imports</td>
