@@ -92,6 +92,7 @@ def current_status():
 
     return render_template(
         "index/current-status.html",
+        load=load,
         listen_count=format(int(listen_count), ",d"),
         incoming_len=format(int(incoming_len), ",d"),
         unique_len=format(int(unique_len), ",d"),
