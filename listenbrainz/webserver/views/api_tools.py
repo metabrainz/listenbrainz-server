@@ -6,7 +6,6 @@ import ujson
 import pika
 import pika.exceptions
 from listenbrainz import config
-from listenbrainz.redis_keys import INCOMING_QUEUE_SIZE_KEY
 
 from listenbrainz.webserver.external import messybrainz
 import listenbrainz.webserver.redis_connection as redis_connection
@@ -92,7 +91,6 @@ def _send_listens_to_queue(listen_type, listens):
             current_app.logger.error("Cannot publish to rabbitmq channel: %s" % str(e))
             raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
 
-        _redis.redis.incr(INCOMING_QUEUE_SIZE_KEY, len(submit))
         rabbitmq_connection._rabbitmq.return_channel()
 
 

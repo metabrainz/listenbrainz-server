@@ -9,7 +9,6 @@ import pika
 from time import time, sleep
 import listenbrainz.config as config
 from redis import Redis
-from listenbrainz.redis_keys import UNIQUE_QUEUE_SIZE_KEY
 
 from googleapiclient import discovery
 from googleapiclient.errors import HttpError
@@ -114,7 +113,6 @@ class BigQueryWriter(object):
             except pika.exceptions.ConnectionClosed:
                 self.connect_to_rabbitmq()
 
-        self.redis.decr(UNIQUE_QUEUE_SIZE_KEY, count)
         self.log.info("inserted %d listens." % count)
 
         # collect and occasionally print some stats
