@@ -8,6 +8,8 @@ import locale
 import listenbrainz.db.user as db_user
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz import webserver
+from listenbrainz.listenstore import InfluxListenStore
+from listenbrainz.webserver.influx_connection import _influx
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from listenbrainz import config
 import pika
@@ -82,9 +84,7 @@ def current_status():
     except (pika.exceptions.ConnectionClosed, AttributeError):
         pass
 
-    incoming_count = _redis.redis.get("lb.incoming_q_size") or 0
-    unique_count = _redis.redis.get("lb.unique_q_size") or 0
-
+    listen_count = _influx.get_total_listen_count()
     try:
         user_count = _get_user_count()
     except DatabaseException as e:
@@ -92,11 +92,9 @@ def current_status():
 
     return render_template(
         "index/current-status.html",
-        load=load,
+        listen_count=format(int(listen_count), ",d"),
         incoming_len=format(int(incoming_len), ",d"),
-        incoming_count=format(int(incoming_count), ",d"),
         unique_len=format(int(unique_len), ",d"),
-        unique_count=format(int(unique_count), ",d"),
         user_count=format(int(user_count), ",d"),
         alpha_importer_size=_get_alpha_importer_queue_size(),
     )
