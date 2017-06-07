@@ -9,6 +9,7 @@ from time import time
 from listenbrainz import webserver
 from listenbrainz.webserver import flash
 import listenbrainz.db.user as db_user
+import listenbrainz.config as config
 from listenbrainz.db.exceptions import DatabaseException
 from flask import make_response
 from listenbrainz.webserver.views.api_tools import convert_backup_to_native_format, insert_payload, validate_listen, \
@@ -41,7 +42,7 @@ def lastfmscraper(user_name):
         raise NotFound
     scraper = render_template(
         "user/scraper.js",
-        base_url=url_for("api_v1.submit_listen", user_name=user_name, _external=True),
+        base_url="{}/1/submit-listens".format(config.BETA_URL),
         user_token=user_token,
         lastfm_username=lastfm_username,
         user_name=user_name,
