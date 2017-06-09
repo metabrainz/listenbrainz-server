@@ -14,7 +14,8 @@ CREATE TABLE statistics.user (
 ALTER TABLE statistics.user ADD CONSTRAINT user_stats_user_id_uniq UNIQUE (user_id);
 
 CREATE TABLE statistics.artist (
-    msid                    UUID NOT NULL, -- PK
+    id                      SERIAL, -- PK
+    msid                    UUID NOT NULL,
     name                    VARCHAR,
     releases                JSONB,
     recordings              JSONB,
@@ -25,7 +26,8 @@ CREATE TABLE statistics.artist (
 ALTER TABLE statistics.artist ADD CONSTRAINT artist_stats_msid_uniq UNIQUE (msid);
 
 CREATE TABLE statistics.release (
-    msid                    UUID NOT NULL, -- PK
+    id                      SERIAL, -- PK
+    msid                    UUID NOT NULL,
     name                    VARCHAR,
     recordings              JSONB,
     users                   JSONB,
@@ -35,7 +37,8 @@ CREATE TABLE statistics.release (
 ALTER TABLE statistics.release ADD CONSTRAINT release_stats_msid_uniq UNIQUE (msid);
 
 CREATE TABLE statistics.recording (
-    msid                    UUID NOT NULL, -- PK
+    id                      SERIAL, -- PK
+    msid                    UUID NOT NULL,
     name                    VARCHAR,
     users_all_time          JSONB,
     listen_count            JSONB,
@@ -46,9 +49,9 @@ ALTER TABLE statistics.recording ADD CONSTRAINT recording_stats_msid_uniq UNIQUE
 
 -- Create primary keys
 ALTER TABLE statistics.user ADD CONSTRAINT stats_user_pkey PRIMARY KEY (user_id);
-ALTER TABLE statistics.artist ADD CONSTRAINT stats_artist_pkey PRIMARY KEY (msid);
-ALTER TABLE statistics.release ADD CONSTRAINT stats_release_pkey PRIMARY KEY (msid);
-ALTER TABLE statistics.recording ADD CONSTRAINT stats_recording_pkey PRIMARY KEY (msid);
+ALTER TABLE statistics.artist ADD CONSTRAINT stats_artist_pkey PRIMARY KEY (id);
+ALTER TABLE statistics.release ADD CONSTRAINT stats_release_pkey PRIMARY KEY (id);
+ALTER TABLE statistics.recording ADD CONSTRAINT stats_recording_pkey PRIMARY KEY (id);
 
 -- Create foreign key
 ALTER TABLE statistics.user ADD CONSTRAINT user_stats_user_id_foreign_key FOREIGN KEY (user_id) REFERENCES "user" (id);
