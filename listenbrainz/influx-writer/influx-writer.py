@@ -122,8 +122,9 @@ class InfluxWriterSubscriber(object):
             except (InfluxDBServerError, InfluxDBClientError, ValueError, ConnectionError) as e:
                 self.log.error("Unable to insert bad listen to listenstore: %s" % str(e))
                 if DUMP_JSON_WITH_ERRORS:
-                    self.log.error("Was writing the following data: ")
-                    self.log.error(json.dumps(data, indent=4))
+                    self.log.error("Was writing the following data:")
+                    influx_dict = data[0].to_influx(get_measurement_name(data[0].user_name))
+                    self.log.error(ujson.dumps(influx_dict))
                 return 0
         else:
             slice_index = len(data) // 2
