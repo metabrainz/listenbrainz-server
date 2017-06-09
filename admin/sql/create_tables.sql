@@ -50,7 +50,6 @@ CREATE TABLE statistics.user (
     recordings              JSONB,
     last_updated            TIMESTAMP WITH TIME ZONE
 );
-ALTER TABLE statistics.user ADD CONSTRAINT user_stats_user_id_uniq UNIQUE (user_id);
 
 CREATE TABLE statistics.artist (
     id                      SERIAL, -- PK
