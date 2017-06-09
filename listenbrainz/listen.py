@@ -196,7 +196,7 @@ class Listen(object):
         # add the user generated keys present in additional info to fields
         for key, value in self.data['additional_info'].items():
             if key not in Listen.SUPPORTED_KEYS:
-                data['fields'][key] = value
+                data['fields'][key] = str(value)
 
         return data
 
