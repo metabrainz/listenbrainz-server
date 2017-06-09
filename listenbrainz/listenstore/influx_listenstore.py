@@ -159,14 +159,8 @@ class InfluxListenStore(ListenStore):
             submit.append(listen.to_influx(get_measurement_name(listen.user_name)))
 
 
-        try:
-            if not self.influx.write_points(submit, time_precision='s'):
-                self.log.error("Cannot write data to influx. (write_points returned False)")
-        except (InfluxDBServerError, InfluxDBClientError, ValueError) as e:
-            self.log.error("Cannot write data to influx: %s" % str(e))
-            self.log.error("Data that was being written when the error occurred: ")
-            self.log.error(json.dumps(submit, indent=4)[:2048])
-            raise
+        if not self.influx.write_points(submit, time_precision='s'):
+            self.log.error("Cannot write data to influx. (write_points returned False)")
 
         # If we reach this point, we were able to write the listens to the InfluxListenStore.
         # So update the listen counts of the users cached in redis.
