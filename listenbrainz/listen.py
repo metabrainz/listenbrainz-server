@@ -42,6 +42,7 @@ class Listen(object):
         'tags',
         'artist_msid',
         'release_msid',
+        'recording_msid',
     ]
 
     def __init__(self, user_id=None, user_name=None, timestamp=None, artist_msid=None, release_msid=None,
