@@ -17,11 +17,9 @@ class DatabaseTestCase(unittest.TestCase):
 
     def tearDown(self):
         self.drop_tables()
-        self.drop_schema()
 
     def reset_db(self):
         self.drop_tables()
-        self.drop_schema()
         self.init_db()
 
     def init_db(self):
@@ -32,6 +30,7 @@ class DatabaseTestCase(unittest.TestCase):
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
 
     def drop_tables(self):
+        self.drop_schema()
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'drop_tables.sql'))
 
     def drop_schema(self):
