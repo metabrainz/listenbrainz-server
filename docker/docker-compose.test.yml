@@ -8,7 +8,7 @@ services:
     image: redis:3.2.1
 
   influx:
-    image: influxdb:1.1.4
+    image: influxdb:1.2.4
     environment:
       INFLUXDB_REPORTING_DISABLED: 'true'
       INFLUXDB_META_LOGGING_ENABLED: 'false'
