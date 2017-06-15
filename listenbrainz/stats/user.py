@@ -30,7 +30,7 @@ def get_top_tracks(musicbrainz_id, time_interval=None):
 
     filter_str = ""
     if time_interval:
-        filter_str = "AND TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL {}".format(time_interval)
+        filter_str = "AND listened_at > TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL {})".format(time_interval)
 
     # construct the query string
     query = """SELECT artist_name
