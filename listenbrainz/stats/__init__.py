@@ -93,7 +93,6 @@ def run_query(query, parameters):
         "useLegacySql": False,
         "queryParameters": get_parameters_dict(parameters),
         "query": query,
-        "maxResults": 10000
     }
 
     response = bigquery.jobs().query(
