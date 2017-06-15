@@ -39,3 +39,53 @@ class StatsTestCase(unittest.TestCase):
         self.assertEqual(modified_params[0]['parameterType']['type'], params[0]['type'])
         self.assertIsInstance(modified_params[0]['parameterValue'], dict)
         self.assertEqual(modified_params[0]['parameterValue']['value'], params[0]['value'])
+
+    def test_format_results(self):
+
+        # this is the format of the data returned by Google BigQuery
+        data = {
+            'schema': {
+                'fields': [
+                    {
+                        'name': 'artist_name',
+                        'type': 'STRING',
+                        'mode': 'NULLABLE'
+                    },
+                    {
+                        'name': 'artist_msid',
+                        'type': 'STRING',
+                        'mode': 'NULLABLE'
+                    }
+                ]
+            },
+            'rows': [
+                {
+                    'f': [
+                        {
+                            'v': 'Daft Punk'
+                        },
+                        {
+                            'v': '72c41851-d1eb-441c-a1fa-046f996f36b0'
+                        }
+                    ]
+                },
+                {
+                    'f': [
+                        {
+                            'v': 'Animal Collective'
+                        },
+                        {
+                            'v': '1a586268-204a-4691-9ee4-96269ff3cace'
+                        }
+                    ]
+                }
+            ]
+        }
+
+        formatted_data = stats.format_results(data)
+
+        self.assertEqual(len(formatted_data), 2)
+        self.assertEqual(formatted_data[0]['artist_name'], data['rows'][0]['f'][0]['v'])
+        self.assertEqual(formatted_data[0]['artist_msid'], data['rows'][0]['f'][1]['v'])
+        self.assertEqual(formatted_data[1]['artist_name'], data['rows'][1]['f'][0]['v'])
+        self.assertEqual(formatted_data[1]['artist_msid'], data['rows'][1]['f'][1]['v'])

@@ -75,6 +75,20 @@ def wait_for_completion(projectId, jobId):
         else:
             time.sleep(JOB_COMPLETION_CHECK_DELAY)
 
+def format_results(data):
+    """ The data returned by BigQuery contains a dict for the schema and a seperate dict for
+        the rows. This function formats the data into a form similar to the data returned
+        by sqlalchemy i.e. a dictionary keyed by row names
+    """
+
+    formatted_data = []
+    for row in data['rows']:
+        formatted_row = {}
+        for index, val in enumerate(row['f']):
+            formatted_row[data['schema']['fields'][index]['name']] = val['v']
+        formatted_data.append(formatted_row)
+    return formatted_data
+
 
 def run_query(query, parameters):
     """ Run provided query on Google BigQuery and return the results in the form of a dictionary
@@ -119,7 +133,7 @@ def run_query(query, parameters):
         except KeyError:
             # if there is no page token, we have all the results
             # so just return the data
-            return data
+            return format_results(data)
     else:
         query_result = bigquery.jobs().getQueryResults(**job_reference).execute(num_retries=5)
         data['schema'] = query_result['schema']
@@ -129,7 +143,7 @@ def run_query(query, parameters):
         except KeyError:
             # if there is no page token, we have all the results
             # so just return the data
-            return data
+            return format_results(data)
 
     # keep making requests until we reach the last page and return the data
     # as soon as we do
@@ -139,4 +153,4 @@ def run_query(query, parameters):
         try:
             prev_token = query_result['pageToken']
         except KeyError:
-            return data
+            return format_results(data)
