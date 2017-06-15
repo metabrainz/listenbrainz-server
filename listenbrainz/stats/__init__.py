@@ -9,7 +9,7 @@ logger.setLevel(logging.INFO)
 
 APP_CREDENTIALS_FILE = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
 
-_bigquery = None
+bigquery = None
 
 
 def init_bigquery_connection():
@@ -25,4 +25,4 @@ def init_bigquery_connection():
 
     global _bigquery
     credentials = GoogleCredentials.get_application_default()
-    _bigquery = discovery.build('bigquery', 'v2', credentials=credentials)
+    bigquery = discovery.build('bigquery', 'v2', credentials=credentials)

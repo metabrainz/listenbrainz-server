@@ -30,6 +30,8 @@ services:
       context: ..
       dockerfile: Dockerfile
     command: py.test
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: '/code/credentials/bigquery-credentials.json'
     volumes:
       - ..:/code/listenbrainz
     depends_on:
