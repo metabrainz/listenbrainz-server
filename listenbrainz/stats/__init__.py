@@ -23,6 +23,6 @@ def init_bigquery_connection():
         logger.error("The BigQuery credentials file does not exist, cannot connect to BigQuery")
         raise NoCredentialsFileException
 
-    global _bigquery
+    global bigquery
     credentials = GoogleCredentials.get_application_default()
     bigquery = discovery.build('bigquery', 'v2', credentials=credentials)
