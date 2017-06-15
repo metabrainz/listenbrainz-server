@@ -18,3 +18,24 @@ class StatsTestCase(unittest.TestCase):
         else:
             stats.init_bigquery_connection()
             self.assertIsNotNone(stats.bigquery)
+
+    def test_get_parameters(self):
+
+        params = [
+            {
+                'name': 'param1',
+                'type': 'STRING',
+                'value': '12312'
+            }
+        ]
+
+        modified_params = stats.get_parameters_dict(params)
+
+        self.assertIsInstance(modified_params, list)
+        self.assertEqual(len(modified_params), 1)
+        self.assertIsInstance(modified_params[0], dict)
+        self.assertEqual(modified_params[0]['name'], params[0]['name'])
+        self.assertIsInstance(modified_params[0]['parameterType'], dict)
+        self.assertEqual(modified_params[0]['parameterType']['type'], params[0]['type'])
+        self.assertIsInstance(modified_params[0]['parameterValue'], dict)
+        self.assertEqual(modified_params[0]['parameterValue']['value'], params[0]['value'])
