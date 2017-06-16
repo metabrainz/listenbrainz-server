@@ -1,4 +1,5 @@
 from googleapiclient import discovery
+import googleapiclient
 from oauth2client.client import GoogleCredentials
 import os
 import logging
@@ -69,7 +70,14 @@ def wait_for_completion(projectId, jobId):
     """ Make requests periodically until the passed job has been completed """
 
     while True:
-        job = bigquery.jobs().get(projectId=projectId, jobId=jobId).execute(num_retries=5)
+
+        try:
+            job = bigquery.jobs().get(projectId=projectId, jobId=jobId).execute(num_retries=5)
+        except googleapiclient.errors.HttpError as err:
+            logger.error("HttpError while waiting for completion of job: {}".format(err))
+            time.sleep(JOB_COMPLETION_CHECK_DELAY)
+            continue
+
         if job["status"]["state"] == "DONE":
             return
         else:
@@ -126,29 +134,35 @@ def run_query(query, parameters):
     data = {}
     prev_token = None
     if have_results:
-        data['schema'] = response['schema']
-        data['rows'] = response['rows']
-        try:
-            prev_token = response['pageToken']
-        except KeyError:
-            # if there is no page token, we have all the results
-            # so just return the data
-            return format_results(data)
+        first_page = response
     else:
-        query_result = bigquery.jobs().getQueryResults(**job_reference).execute(num_retries=5)
-        data['schema'] = query_result['schema']
-        data['rows'] = query_result['rows']
-        try:
-            prev_token = query_result['pageToken']
-        except KeyError:
-            # if there is no page token, we have all the results
-            # so just return the data
-            return format_results(data)
+        while True:
+            try:
+                first_page = bigquery.jobs().getQueryResults(**job_reference).execute(num_retries=5)
+                break
+            except googleapiclient.errors.HttpError as err:
+                logger.error("HttpError when getting first page after completion of job: {}".format(err))
+                time.sleep(JOB_COMPLETION_CHECK_DELAY)
+
+
+    data['schema'] = first_page['schema']
+    data['rows']   = first_page['rows']
+    try:
+        prev_token = first_page['pageToken']
+    except KeyError:
+        # if there is no page token, we have all the results
+        # so just return the data
+        return format_results(data)
 
     # keep making requests until we reach the last page and return the data
     # as soon as we do
     while True:
-        query_result = bigquery.jobs().getQueryResults(pageToken=prev_token, **job_reference).execute(num_retries=5)
+        try:
+            query_result = bigquery.jobs().getQueryResults(pageToken=prev_token, **job_reference).execute(num_retries=5)
+        except googleapiclient.errors.HttpError as err:
+            logger.error("HttpError when getting query results: {}".format(err))
+            continue
+
         data['rows'].extend(query_result['rows'])
         try:
             prev_token = query_result['pageToken']
