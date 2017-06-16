@@ -1,6 +1,5 @@
 # coding=utf-8
 
-import ujson
 from datetime import datetime
 import calendar
 
@@ -121,7 +120,7 @@ class Listen(object):
         # Also, we need to make sure that we don't add fields like time, user_name etc. into
         # the additional_info.
         for key, value in row.items():
-            if key not in ['time', 'user_name', 'recording_msid'] and value is not None:
+            if key not in ['time', 'user_name', 'recording_msid', 'artist_mbids', 'tags'] and value is not None:
                 data[key] = value
 
         return cls(
