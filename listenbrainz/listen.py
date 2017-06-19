@@ -42,6 +42,7 @@ class Listen(object):
         'tags',
         'artist_msid',
         'release_msid',
+        'recording_msid',
     ]
 
     def __init__(self, user_id=None, user_name=None, timestamp=None, artist_msid=None, release_msid=None,
@@ -196,7 +197,7 @@ class Listen(object):
         # add the user generated keys present in additional info to fields
         for key, value in self.data['additional_info'].items():
             if key not in Listen.SUPPORTED_KEYS:
-                data['fields'][key] = value
+                data['fields'][key] = str(value)
 
         return data
 
