@@ -13,7 +13,7 @@ from listenbrainz.listen import Listen
 from time import time, sleep
 import listenbrainz.config as config
 from listenbrainz.listenstore import InfluxListenStore
-from listenbrainz.listenstore.utils import escape, get_measurement_name
+from listenbrainz.utils import escape, get_measurement_name, get_escaped_measurement_name
 from requests.exceptions import ConnectionError
 from redis import Redis
 
@@ -174,10 +174,10 @@ class InfluxWriterSubscriber(object):
 
             # quering for artist name here, since a field must be included in the query.
             query = """SELECT time, artist_name
-                         FROM "\\"%s\\""
+                         FROM %s
                         WHERE time >= %d000000000
                           AND time <= %d000000000
-                    """ % (escape(user_name), min_time, max_time)
+                    """ % (get_escaped_measurement_name(user_name), min_time, max_time)
 
             while True:
                 try:
