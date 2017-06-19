@@ -69,12 +69,14 @@ def _send_listens_to_queue(listen_type, listens):
             submit.append(listen)
 
     if submit:
+        channel = None
         try:
             channel = rabbitmq_connection._rabbitmq.channel()
             channel.exchange_declare(exchange='incoming', type='fanout')
             channel.queue_declare('incoming', durable=True)
         except (pika.exceptions.NoFreeChannels, Exception) as e:
-            rabbitmq_connection._rabbitmq.return_broken_channel(channel)
+            if channel:
+                rabbitmq_connection._rabbitmq.return_broken_channel(channel)
             current_app.logger.error("Cannot create a rabbitmq channel: %s" % str(e))
             raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
 
