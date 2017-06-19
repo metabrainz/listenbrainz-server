@@ -2,15 +2,8 @@
 
 import sys
 from redis import Redis
-#from webserver.rate_limiter import RATELIMIT_PER_TOKEN_KEY
-#from webserver.rate_limiter import RATELIMIT_PER_IP_KEY
-#from webserver.rate_limiter import RATELIMIT_WINDOW_KEY
+from listenbrainz.redis_keys import RATELIMIT_PER_TOKEN_KEY, RATELIMIT_PER_IP_KEY, RATELIMIT_WINDOW_KEY
 from listenbrainz import config
-
-# TODO: Do not duplicate these. Import from webserver when doing the source tree re-org
-RATELIMIT_PER_TOKEN_KEY = "rate_limit_per_token_limit"
-RATELIMIT_PER_IP_KEY = "rate_limit_per_ip_limit"
-RATELIMIT_WINDOW_KEY = "rate_limit_window"
 
 # Yes, I could use getoptgetargparsewtfbbw, but then I would spend 20 mimnutes re-learning the stupid syntax.
 # Or, I could just do it myself in the space of seconds.
@@ -22,9 +15,9 @@ r = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
 if len(sys.argv) < 4:
     print("Usage: %s <per ip limit> <per token limit> <window in s>" % (sys.argv[0]))
     print("Current values:")
-    print("      Requests per ip: ", r.get(RATELIMIT_PER_IP_KEY))
-    print("   Requests per token: ", r.get(RATELIMIT_PER_TOKEN_KEY))
-    print("          window size: ", r.get(RATELIMIT_WINDOW_KEY))
+    print("      Requests per ip: ", int(r.get(RATELIMIT_PER_IP_KEY) or -1))
+    print("   Requests per token: ", int(r.get(RATELIMIT_PER_TOKEN_KEY) or -1))
+    print("          window size: ", int(r.get(RATELIMIT_WINDOW_KEY) or -1))
     sys.exit(-1)
 
 try:
