@@ -1,7 +1,7 @@
 import unittest
 from listenbrainz.listen import Listen
 from datetime import datetime
-from listenbrainz.listenstore.utils import get_measurement_name
+from listenbrainz.utils import quote
 import time
 import uuid
 
@@ -75,7 +75,7 @@ class ListenTestCase(unittest.TestCase):
             }
         )
 
-        data = listen.to_influx(get_measurement_name(listen.user_name))
+        data = listen.to_influx(quote(listen.user_name))
 
         # Make sure every value that we don't explicitly support is a string
         for key in data['fields']:
@@ -84,6 +84,7 @@ class ListenTestCase(unittest.TestCase):
                 self.assertIsInstance(data['fields'][key], str)
 
         # Check values
+        self.assertEqual(data['measurement'], quote(listen.user_name))
         self.assertEqual(data['time'], listen.ts_since_epoch)
         self.assertEqual(data['tags']['user_name'], listen.user_name)
         self.assertEqual(data['fields']['artist_msid'], listen.artist_msid)

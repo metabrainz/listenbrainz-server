@@ -38,10 +38,26 @@ class InfluxWriterTestCase(IntegrationTestCase):
         # send the same listen twice
         r = self.send_single_listen(user)
         self.assert200(r)
-        time.sleep(5)
+        time.sleep(2)
         r = self.send_single_listen(user)
         self.assert200(r)
-        time.sleep(5)
+        time.sleep(2)
+
+        to_ts = int(time.time())
+        listens = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
+        self.assertEqual(len(listens), 1)
+
+    def test_dedup_user_special_characters(self):
+
+        user = db_user.get_or_create('i have a\\weird\\user, name"\n')
+
+        # send the same listen twice
+        r = self.send_single_listen(user)
+        self.assert200(r)
+        time.sleep(2)
+        r = self.send_single_listen(user)
+        self.assert200(r)
+        time.sleep(2)
 
         to_ts = int(time.time())
         listens = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
@@ -61,7 +77,7 @@ class InfluxWriterTestCase(IntegrationTestCase):
         r = self.send_single_listen(user2)
         self.assert200(r)
 
-        time.sleep(5) # sleep to allow influx-writer to do its thing
+        time.sleep(2) # sleep to allow influx-writer to do its thing
 
         to_ts = int(time.time())
         listens = self.ls.fetch_listens(user1['musicbrainz_id'], to_ts=to_ts)
