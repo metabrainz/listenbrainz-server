@@ -9,11 +9,7 @@ from functools import update_wrapper
 from flask import request, g
 from listenbrainz.webserver.redis_connection import _redis
 import listenbrainz.db.user as db_user
-
-# Using _ and not - here so I can re-use these keys for use in the g object
-RATELIMIT_PER_TOKEN_KEY = "rate_limit_per_token_limit"
-RATELIMIT_PER_IP_KEY = "rate_limit_per_ip_limit"
-RATELIMIT_WINDOW_KEY = "rate_limit_window"
+from listenbrainz.redis_keys import RATELIMIT_PER_TOKEN_KEY, RATELIMIT_PER_IP_KEY, RATELIMIT_WINDOW_KEY
 
 # Defaults
 RATELIMIT_PER_TOKEN_DEFAULT = 50
