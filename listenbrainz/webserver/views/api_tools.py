@@ -91,7 +91,7 @@ def _send_listens_to_queue(listen_type, listens):
             current_app.logger.error("Cannot publish to rabbitmq channel: %s" % str(e))
             raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
 
-        rabbitmq_connection._rabbitmq.return_channel()
+        rabbitmq_connection._rabbitmq.return_channel(channel)
 
 
 def validate_listen(listen, listen_type):
