@@ -215,3 +215,4 @@ class APITestCase(IntegrationTestCase):
         self.assertEqual(sent_additional_info['link2'], received_additional_info['link2'])
         self.assertEqual(sent_additional_info['other_stuff'], received_additional_info['other_stuff'])
         self.assertEqual(sent_additional_info['nested']['info'], received_additional_info['nested.info'])
+        self.assertEqual(str(sent_additional_info['release_type']), received_additional_info['release_type'])
