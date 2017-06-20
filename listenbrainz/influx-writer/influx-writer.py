@@ -22,7 +22,7 @@ DUMP_JSON_WITH_ERRORS = False
 ERROR_RETRY_DELAY = 3 # number of seconds to wait until retrying an operation
 
 # the difference in timestamps which we consider to be duplicates if same artist msid and recording msid
-TIMESTAMP_DUPLICATE_DIFF = 21
+TIMESTAMP_DUPLICATE_DIFF = 31
 
 
 class InfluxWriterSubscriber(object):
@@ -206,21 +206,16 @@ class InfluxWriterSubscriber(object):
                 # This will check if timestamps in the range (t - TIMESTAMP_DUPLICATE_DIFF, t + TIMESTAMP_DUPLICATE_DIFF)
                 # exist in the database for the user, with the same artist msid and recording msid. If it does, we
                 # consider this listen to be a duplicate and skip it.
-                for delta in range(TIMESTAMP_DUPLICATE_DIFF):
+                deltas = [0] + [sign * val for val in range(1, TIMESTAMP_DUPLICATE_DIFF) for sign in (+1, -1)]
+                for delta in deltas:
                     fuzzed = t + delta
-                    if fuzzed in timestamps:
-                        if artist_msid == timestamps[fuzzed]['artist_msid'] and recording_msid == timestamps[fuzzed]['recording_msid']:
-                            duplicate_count += 1
-                            break
-
-                    fuzzed = t - delta
                     if fuzzed in timestamps:
                         if artist_msid == timestamps[fuzzed]['artist_msid'] and recording_msid == timestamps[fuzzed]['recording_msid']:
                             duplicate_count += 1
                             break
                 else:
                     unique_count += 1
-                    submit.append(Listen().from_json(listen))
+                    submit.append(Listen.from_json(listen))
                     unique.append(listen)
 
         t0 = time()
