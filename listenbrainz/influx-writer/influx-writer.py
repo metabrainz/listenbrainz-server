@@ -4,7 +4,6 @@
 import sys
 import os
 import pika
-from datetime import datetime
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import ujson
@@ -13,7 +12,8 @@ from listenbrainz.listen import Listen
 from time import time, sleep
 import listenbrainz.config as config
 from listenbrainz.listenstore import InfluxListenStore
-from listenbrainz.utils import escape, get_measurement_name, get_escaped_measurement_name
+from listenbrainz.utils import escape, get_measurement_name, get_escaped_measurement_name, \
+                               get_influx_query_timestamp, convert_to_unix_timestamp
 from requests.exceptions import ConnectionError
 from redis import Redis
 
@@ -180,9 +180,9 @@ class InfluxWriterSubscriber(object):
             # quering for artist name here, since a field must be included in the query.
             query = """SELECT time, artist_msid, recording_msid
                          FROM %s
-                        WHERE time >= %d000000000
-                          AND time <= %d000000000
-                    """ % (get_escaped_measurement_name(user_name), min_time, max_time)
+                        WHERE time >= %s
+                          AND time <= %s
+                    """ % (get_escaped_measurement_name(user_name), get_influx_query_timestamp(min_time), get_influx_query_timestamp(max_time))
 
             while True:
                 try:
@@ -195,8 +195,7 @@ class InfluxWriterSubscriber(object):
             # collect all the timestamps for this given time range.
             timestamps = {}
             for result in results.get_points(measurement=get_measurement_name(user_name)):
-                dt = datetime.strptime(result['time'] , "%Y-%m-%dT%H:%M:%SZ")
-                timestamps[int(dt.strftime('%s'))] = result
+                timestamps[convert_to_unix_timestamp(result['time'])] = result
 
             for listen in users[user_name]['listens']:
                 t = int(listen['listened_at'])

@@ -11,7 +11,7 @@ import json
 from datetime import datetime
 from listenbrainz.listenstore import ORDER_DESC, ORDER_ASC, ORDER_TEXT, \
     USER_CACHE_TIME, REDIS_USER_TIMESTAMPS
-from listenbrainz.utils import quote, get_escaped_measurement_name, get_measurement_name
+from listenbrainz.utils import quote, get_escaped_measurement_name, get_measurement_name, get_influx_query_timestamp
 
 REDIS_INFLUX_USER_LISTEN_COUNT = "ls.listencount." # append username
 
@@ -191,9 +191,9 @@ class InfluxListenStore(ListenStore):
         query = 'SELECT * FROM ' + get_escaped_measurement_name(user_name)
 
         if from_ts != None:
-            query += "WHERE time > " + str(from_ts) + "000000000"
+            query += "WHERE time > " + get_influx_query_timestamp(from_ts)
         else:
-            query += "WHERE time < " + str(to_ts) + "000000000"
+            query += "WHERE time < " + get_influx_query_timestamp(to_ts)
 
         query += " ORDER BY time " + ORDER_TEXT[order] + " LIMIT " + str(limit)
         try:
