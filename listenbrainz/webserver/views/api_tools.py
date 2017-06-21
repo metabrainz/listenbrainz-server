@@ -71,13 +71,24 @@ def _send_listens_to_queue(listen_type, listens):
     if submit:
         channel = None
         try:
-            channel = rabbitmq_connection._rabbitmq.channel()
+            try:
+                channel = rabbitmq_connection._rabbitmq.channel()
+            except KeyError:
+                # Try again if we trip a bug in the rabbitmq pool library
+                channel = rabbitmq_connection._rabbitmq.channel()
+        except (pika.exceptions.NoFreeChannels, Exception) as e:
+            if channel:
+                rabbitmq_connection._rabbitmq.return_broken_channel(channel)
+            current_app.logger.error("Cannot create a rabbitmq channel: %s" % str(e))
+            raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
+
+        try:
             channel.exchange_declare(exchange='incoming', type='fanout')
             channel.queue_declare('incoming', durable=True)
         except (pika.exceptions.NoFreeChannels, Exception) as e:
             if channel:
                 rabbitmq_connection._rabbitmq.return_broken_channel(channel)
-            current_app.logger.error("Cannot create a rabbitmq channel: %s" % str(e))
+            current_app.logger.error("Cannot declare rabbitmq exchange: %s" % str(e))
             raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
 
         # There is no good documentation on what exceptions could be raised here. Loads apparently,
