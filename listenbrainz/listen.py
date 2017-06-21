@@ -2,7 +2,7 @@
 
 from datetime import datetime
 import calendar
-from listenbrainz.utils import escape
+from listenbrainz.utils import escape, convert_to_unix_timestamp
 
 def flatten_dict(d, seperator='', parent_key=''):
     """
@@ -94,8 +94,7 @@ class Listen(object):
     def from_influx(cls, row):
         """ Factory to make Listen objects from an influx row
         """
-        dt = datetime.strptime(row['time'] , '%Y-%m-%dT%H:%M:%SZ')
-        t = int(dt.strftime('%s'))
+        t = convert_to_unix_timestamp(row['time'])
         mbids = []
         artist_mbids = row.get('artist_mbids')
         if artist_mbids:

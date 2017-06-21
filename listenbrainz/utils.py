@@ -1,3 +1,4 @@
+from datetime import datetime
 
 def escape(value):
     """ Escapes backslashes, quotes and new lines present in the string value
@@ -27,3 +28,12 @@ def get_escaped_measurement_name(user_name):
     # must be replaced by 4 backslashes. Yes, this is hacky and ugly.
     return '"\\"{}\\""'.format(user_name.replace('\\', '\\\\\\\\').replace('"', '\\"').replace('\n', '\\\\\\\\n'))
 
+
+def get_influx_query_timestamp(ts):
+    """ Influx queries require timestamps in nanoseconds so convert ts into nanoseconds and return a string"""
+    return "{}000000000".format(ts)
+
+def convert_to_unix_timestamp(influx_row_time):
+    """ Converts time retreived from influxdb into unix timestamp """
+    dt = datetime.strptime(influx_row_time, "%Y-%m-%dT%H:%M:%SZ")
+    return int(dt.strftime('%s'))

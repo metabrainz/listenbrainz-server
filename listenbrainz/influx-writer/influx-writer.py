@@ -4,7 +4,6 @@
 import sys
 import os
 import pika
-from datetime import datetime
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import ujson
@@ -13,13 +12,17 @@ from listenbrainz.listen import Listen
 from time import time, sleep
 import listenbrainz.config as config
 from listenbrainz.listenstore import InfluxListenStore
-from listenbrainz.utils import escape, get_measurement_name, get_escaped_measurement_name
+from listenbrainz.utils import escape, get_measurement_name, get_escaped_measurement_name, \
+                               get_influx_query_timestamp, convert_to_unix_timestamp
 from requests.exceptions import ConnectionError
 from redis import Redis
 
 REPORT_FREQUENCY = 5000
 DUMP_JSON_WITH_ERRORS = False
 ERROR_RETRY_DELAY = 3 # number of seconds to wait until retrying an operation
+
+# the difference in timestamps which we consider to be duplicates if same artist msid and recording msid
+TIMESTAMP_DUPLICATE_DIFF = 31
 
 
 class InfluxWriterSubscriber(object):
@@ -169,15 +172,17 @@ class InfluxWriterSubscriber(object):
         # remove duplicates on the basis of timestamps
         for user_name in users:
 
-            min_time = users[user_name]['min_time']
-            max_time = users[user_name]['max_time']
+            # get the range of time that we need to get from influx for
+            # deduplication of listens
+            min_time = users[user_name]['min_time'] - TIMESTAMP_DUPLICATE_DIFF
+            max_time = users[user_name]['max_time'] + TIMESTAMP_DUPLICATE_DIFF
 
             # quering for artist name here, since a field must be included in the query.
-            query = """SELECT time, artist_name
+            query = """SELECT time, artist_msid, recording_msid
                          FROM %s
-                        WHERE time >= %d000000000
-                          AND time <= %d000000000
-                    """ % (get_escaped_measurement_name(user_name), min_time, max_time)
+                        WHERE time >= %s
+                          AND time <= %s
+                    """ % (get_escaped_measurement_name(user_name), get_influx_query_timestamp(min_time), get_influx_query_timestamp(max_time))
 
             while True:
                 try:
@@ -190,19 +195,27 @@ class InfluxWriterSubscriber(object):
             # collect all the timestamps for this given time range.
             timestamps = {}
             for result in results.get_points(measurement=get_measurement_name(user_name)):
-                dt = datetime.strptime(result['time'] , "%Y-%m-%dT%H:%M:%SZ")
-                timestamps[int(dt.strftime('%s'))] = 1
+                timestamps[convert_to_unix_timestamp(result['time'])] = result
 
             for listen in users[user_name]['listens']:
-                # Check to see if the timestamp is already in the DB
                 t = int(listen['listened_at'])
-                if t in timestamps:
-                    duplicate_count += 1
-                    continue
+                artist_msid    = listen['track_metadata']['additional_info']['artist_msid']
+                recording_msid = listen['recording_msid']
 
-                unique_count += 1
-                submit.append(Listen().from_json(listen))
-                unique.append(listen)
+                # This will check if timestamps in the range (t - TIMESTAMP_DUPLICATE_DIFF, t + TIMESTAMP_DUPLICATE_DIFF)
+                # exist in the database for the user, with the same artist msid and recording msid. If it does, we
+                # consider this listen to be a duplicate and skip it.
+                deltas = [0] + [sign * val for val in range(1, TIMESTAMP_DUPLICATE_DIFF) for sign in (+1, -1)]
+                for delta in deltas:
+                    fuzzed = t + delta
+                    if fuzzed in timestamps:
+                        if artist_msid == timestamps[fuzzed]['artist_msid'] and recording_msid == timestamps[fuzzed]['recording_msid']:
+                            duplicate_count += 1
+                            break
+                else:
+                    unique_count += 1
+                    submit.append(Listen.from_json(listen))
+                    unique.append(listen)
 
         t0 = time()
         submitted_count = self.insert_to_listenstore(submit)
