@@ -1,7 +1,7 @@
 import sys
 from time import sleep
-from flask import Flask
-from flask.ext.pika import Pika as FPika
+import pika
+import pika_pool
 
 _rabbitmq = None
 
@@ -14,24 +14,20 @@ def init_rabbitmq_connection(app):
         sleep(2)
         sys.exit(-1)
 
-    FLASK_PIKA_PARAMS = {
-        'host':app.config['RABBITMQ_HOST'],
-        'port': app.config['RABBITMQ_PORT'],
-        'username': 'guest',
-        'password': 'guest',
-    }
-
-    FLASK_PIKA_POOL_PARAMS = {
-        'pool_size': 100,
-        'pool_recycle': 600
-    }
-
-    app.config['FLASK_PIKA_PARAMS'] = FLASK_PIKA_PARAMS
-    app.config['FLASK_PIKA_POOL_PARAMS'] = FLASK_PIKA_POOL_PARAMS
+    params = pika.URLParameters(
+        'amqp://guest:guest@%s:%d/?socket_timeout=10&connection_attempts=2' % (app.config['RABBITMQ_HOST'], app.config['RABBITMQ_PORT'])
+    )
 
     while True:
         try:
-            _rabbitmq = FPika(app)
+            _rabbitmq = pika_pool.QueuedPool(
+                    create=lambda: pika.BlockingConnection(parameters=params),
+                    max_size=100,
+                    max_overflow=10,
+                    timeout=10,
+                    recycle=3600,
+                    stale=45,
+            )
             return
         except Exception as err:
             app.logger.error("Cannot connect to rabbitmq, sleeping 2 seconds")
