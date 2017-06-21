@@ -82,10 +82,10 @@ def _send_listens_to_queue(listen_type, listens):
             current_app.logger.error("Cannot acquire pika channel. Increase number of available channels.")
             raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
         except PikaPoolTimeout as e:
-            current_app.logger.error("Cannot publish to rabbitmq channel: %s" % str(e))
+            current_app.logger.error("Cannot publish to rabbitmq channel -- timeout: %s" % str(e))
             raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
         except Exception as e:
-            current_app.logger.error("Cannot publish to rabbitmq channel: %s" % str(e))
+            current_app.logger.error("Cannot publish to rabbitmq channel: %s / %s" % (type(e).__name__, str(e)))
             raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
 
 def validate_listen(listen, listen_type):
