@@ -22,7 +22,7 @@ def init_rabbitmq_connection(app):
     }
 
     FLASK_PIKA_POOL_PARAMS = {
-        'pool_size': 8,
+        'pool_size': 100,
         'pool_recycle': 600
     }
 
