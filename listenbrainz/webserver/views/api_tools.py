@@ -5,12 +5,12 @@ from flask import current_app
 import ujson
 import pika
 import pika.exceptions
+from pika_pool import Overflow as PikaPoolOverflow, Timeout as PikaPoolTimeout
 from listenbrainz import config
 
 from listenbrainz.webserver.external import messybrainz
 import listenbrainz.webserver.redis_connection as redis_connection
 import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
-from listenbrainz.webserver.rabbitmq_connection import init_rabbitmq_connection
 from listenbrainz.listen import Listen
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
@@ -69,43 +69,24 @@ def _send_listens_to_queue(listen_type, listens):
             submit.append(listen)
 
     if submit:
-        channel = None
         try:
-            try:
-                channel = rabbitmq_connection._rabbitmq.channel()
-            except KeyError:
-                # Try again if we trip a bug in the rabbitmq pool library
-                channel = rabbitmq_connection._rabbitmq.channel()
-        except (pika.exceptions.NoFreeChannels, Exception) as e:
-            if channel:
-                rabbitmq_connection._rabbitmq.return_broken_channel(channel)
-            current_app.logger.error("Cannot create a rabbitmq channel: %s" % str(e))
-            raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
-
-        try:
-            channel.exchange_declare(exchange='incoming', type='fanout')
-            channel.queue_declare('incoming', durable=True)
-        except (pika.exceptions.NoFreeChannels, Exception) as e:
-            if channel:
-                rabbitmq_connection._rabbitmq.return_broken_channel(channel)
-            current_app.logger.error("Cannot declare rabbitmq exchange: %s" % str(e))
-            raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
-
-        # There is no good documentation on what exceptions could be raised here. Loads apparently,
-        # this catching blanco exceptions
-        try:
-            channel.basic_publish(exchange='incoming', routing_key='', body=ujson.dumps(submit),
-                properties=pika.BasicProperties(delivery_mode = 2, ))
+            with rabbitmq_connection._rabbitmq.acquire() as cxn:
+                cxn.channel.exchange_declare(exchange='incoming', type='fanout')
+                cxn.channel.queue_declare('incoming', durable=True)
+                cxn.channel.basic_publish(exchange='incoming', routing_key='', body=ujson.dumps(submit),
+                    properties=pika.BasicProperties(delivery_mode = 2, ))
         except pika.exceptions.ConnectionClosed as e:
             current_app.logger.error("Connection to rabbitmq closed while trying to publish: %s" % str(e))
             raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
-        except Exception as e:
-            channel.close()
-            current_app.logger.error("Cannot publish to rabbitmq channel: %s" % str(e))
+        except PikaPoolOverflow:
+            current_app.logger.error("Cannot acquire pika channel. Increase number of available channels.")
             raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
-
-        rabbitmq_connection._rabbitmq.return_channel(channel)
-
+        except PikaPoolTimeout as e:
+            current_app.logger.error("Cannot publish to rabbitmq channel -- timeout: %s" % str(e))
+            raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
+        except Exception as e:
+            current_app.logger.error("Cannot publish to rabbitmq channel: %s / %s" % (type(e).__name__, str(e)))
+            raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
 
 def validate_listen(listen, listen_type):
     """Make sure that required keys are present, filled out and not too large."""
