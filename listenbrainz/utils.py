@@ -1,5 +1,7 @@
 from datetime import datetime
 
+INFLUX_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+
 def escape(value):
     """ Escapes backslashes, quotes and new lines present in the string value
     """
@@ -35,5 +37,8 @@ def get_influx_query_timestamp(ts):
 
 def convert_to_unix_timestamp(influx_row_time):
     """ Converts time retreived from influxdb into unix timestamp """
-    dt = datetime.strptime(influx_row_time, "%Y-%m-%dT%H:%M:%SZ")
+    dt = datetime.strptime(influx_row_time, INFLUX_TIME_FORMAT)
     return int(dt.strftime('%s'))
+
+def convert_timestamp_to_influx_row_format(ts):
+    return datetime.fromtimestamp(ts).strftime(INFLUX_TIME_FORMAT)
