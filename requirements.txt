@@ -3,7 +3,6 @@ Flask-Testing == 0.4.2
 Flask-Login == 0.2.11
 Flask-WTF == 0.12
 Flask-SQLAlchemy == 2.0
-Flask-Pika == 0.3.8
 Jinja2 == 2.8
 Werkzeug == 0.10.4
 SQLAlchemy == 1.0.8
@@ -32,3 +31,4 @@ influxdb == 4.1.0
 requests == 2.13.0
 google-api-python-client==1.5.2
 pika == 0.10.0
+pika_pool == 0.1.3
