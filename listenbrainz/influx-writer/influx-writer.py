@@ -13,7 +13,8 @@ from time import time, sleep
 import listenbrainz.config as config
 from listenbrainz.listenstore import InfluxListenStore
 from listenbrainz.utils import escape, get_measurement_name, get_escaped_measurement_name, \
-                               get_influx_query_timestamp, convert_to_unix_timestamp
+                               get_influx_query_timestamp, convert_to_unix_timestamp, \
+                               convert_timestamp_to_influx_row_format
 from requests.exceptions import ConnectionError
 from redis import Redis
 
@@ -216,6 +217,11 @@ class InfluxWriterSubscriber(object):
                     unique_count += 1
                     submit.append(Listen.from_json(listen))
                     unique.append(listen)
+                    timestamps[t] = {
+                        'time': convert_timestamp_to_influx_row_format(t),
+                        'artist_msid': artist_msid,
+                        'recording_msid': recording_msid
+                    }
 
         t0 = time()
         submitted_count = self.insert_to_listenstore(submit)
