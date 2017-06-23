@@ -44,6 +44,7 @@ def lastfmscraper(user_name):
     scraper = render_template(
         "user/scraper.js",
         base_url="{}/1/submit-listens".format(config.BETA_URL),
+        import_url="{}/user/latest-import".format(config.BETA_URL),
         user_token=user_token,
         lastfm_username=lastfm_username,
         user_name=user_name,
@@ -332,7 +333,7 @@ def import_from_alpha():
     return redirect(url_for("user.import_data"))
 
 
-@user_bp.route('/latest_import', methods=['GET', 'POST'])
+@user_bp.route('/latest-import', methods=['GET', 'POST'])
 @crossdomain(headers='Authorization, Content-Type')
 def latest_import():
     """ If a POST request, authenticate and update the latest_import field for current_user in db

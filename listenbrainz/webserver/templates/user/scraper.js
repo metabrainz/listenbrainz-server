@@ -147,9 +147,24 @@ function getLastFMPage(page) {
     xhr.onload = function () {
         if (/^2/.test(this.status)) {
             if (numberOfPages <= 1) {
-              numberOfPages = JSON.parse(this.response)['recenttracks']['@attr']['totalPages'];
+                var data = JSON.parse(this.response);
+                numberOfPages = data['recenttracks']['@attr']['totalPages'];
+
+                // initially set the stop page to the total number of pages
+                // we'll later update it if we're able to stop earlier because of previous imports
+                stopPage = numberOfPages;
+
+                if (data['recenttracks']['track'].length > 0) {
+                    // if date is present, use it
+                    if ('date' in data['recenttracks']['track'][0]) {
+                        maximumTimestampForImport = data['recenttracks']['track'][0]['date']['uts'];
+                    }
+                    else { // the latest listen is a playing_now, use current time
+                        maximumTimestampForImport = Math.floor(Date.now() / 1000);
+                    }
+                }
             }
-            reportPageAndGetNext(this.response);
+            reportPageAndGetNext(this.response, page);
         } else if (/^5/.test(this.status)) {
             retry('got ' + this.status);
         } else {
@@ -173,6 +188,7 @@ function getLastFMPage(page) {
 var version = "1.6";
 var page = 1;
 var numberOfPages = 1;
+var stopPage = numberOfPages; // the page that the import stops at
 
 var numCompleted = 0;
 var maxActiveFetches = 10;
@@ -188,14 +204,26 @@ var timesGetPage = 0;
 var times4Error = 0;
 var times5Error = 0;
 
+// a flag that is set to true once we get to pages that we've done already in previous imports
+var previouslyDone = false;
 
-function reportPageAndGetNext(response) {
+// the latest timestamp that we've imported earlier, so that we know where to stop
+var latestImportTime = 0;
+
+// the latest listen found in this import, we'll report back to the server with this
+var maximumTimestampForImport = 0;
+
+function reportPageAndGetNext(response, page) {
     timesGetPage++;
     if (page == 1) {
         updateMessage("<i class='fa fa-cog fa-spin'></i> working<br><span style='font-size:8pt'>Please do not close this page while the process is running</span>");
     }
     var struct = encodeScrobbles(response);
     submitQueue.push(struct);
+    if (struct['payload'][struct['payload'].length - 1]['listened_at'] <= latestImportTime) {
+        previouslyDone = true;
+        stopPage = page;
+    }
     if (!isSubmitActive){
         isSubmitActive = true;
         submitListens();
@@ -207,7 +235,7 @@ function reportPageAndGetNext(response) {
 function getNextPagesIfSlots() {
     // Get a new lastfm page and queue it only if there are more pages to download and we have
     // less than 10 pages waiting to submit
-    while (page <= numberOfPages && activeFetches < maxActiveFetches) {
+    while (!previouslyDone && page <= numberOfPages && activeFetches < maxActiveFetches) {
         activeFetches++;
         getLastFMPage(page);
         page += 1;
@@ -282,10 +310,11 @@ function submitListens() {
                     console.log("received http status " + this.status + ", skipping");
                     pageDone();
                 }
-                if (numCompleted >= numberOfPages) {
-                    updateMessage("<i class='fa fa-check'></i> Import finished<br><span><a href={{ url_for('user.profile', user_name = user_name, exact = 'y') }}>Close and go to your ListenBrainz profile</a></span><br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
+                if (numCompleted >= stopPage) {
+                    updateLatestImportTimeOnLB();
+
                 } else {
-                    updateMessage("<i class='fa fa-cog fa-spin'></i> Sending page " + numCompleted + " of " + numberOfPages + " to ListenBrainz<br><span style='font-size:8pt'>Please don't navigate while this is running</span>");
+                    updateMessage("<i class='fa fa-cog fa-spin'></i> Sending page " + numCompleted + " to ListenBrainz<br><span style='font-size:8pt'>Please don't navigate while this is running</span>");
                 }
             };
             xhr.ontimeout = function(context) {
@@ -318,7 +347,53 @@ function updateMessage(message) {
         "<br><span style='font-size:6pt; position:absolute; bottom:1px; right: 3px'>v"+version+"</span>";
 }
 
+function getLatestImportTime() {
+    /*
+     *  Send a GET request to the ListenBrainz server to get the latest import time
+     *  from previous imports for the user.
+     */
+
+    var url = "{{ import_url }}" + "?" + "user_name=" + encodeURIComponent("{{ user_name }}");
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url);
+    xhr.onload = function(content) {
+        if (this.status == 200) {
+            latestImportTime = parseInt(JSON.parse(this.response)['latest_import']);
+            getNextPagesIfSlots();
+        }
+        else {
+            updateMessage("An error occured while trying to import from Last.fm, please try again. :(");
+        }
+    };
+    xhr.send();
+}
+
+function updateLatestImportTimeOnLB() {
+    /*
+     * Send a POST request to the ListenBrainz server after the import is complete to
+     * update the latest import time on the server. This will make future imports stop
+     * when they reach this point of time in the listen history.
+     */
+    var url = "{{ import_url }}";
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", url);
+    xhr.setRequestHeader("Authorization", "Token {{ user_token }}");
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    xhr.timeout = 10 * 1000; // 10 seconds
+    xhr.onload = function(content) {
+        if (this.status == 200) {
+            updateMessage("<i class='fa fa-check'></i> Import finished<br><span><a href={{ url_for('user.profile', user_name = user_name) }}>Close and go to your ListenBrainz profile</a></span><br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
+        }
+        else {
+            updateMessage("An error occurred, please try again. :(");
+        }
+    };
+    xhr.send(JSON.stringify({
+        'ts': maximumTimestampForImport
+    }));
+}
+
 document.body.insertAdjacentHTML( 'afterbegin', '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">');
 document.body.insertAdjacentHTML( 'afterbegin', '<div style="position:fixed; top:200px; z-index: 200000000000000; width:500px; margin-left:-250px; left:50%; background-color:#fff; box-shadow: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22); text-align:center; padding:50px;" id="listen-progress-container"></div>');
 updateMessage("Your import from Last.fm is starting!");
-getNextPagesIfSlots();
+getLatestImportTime();
