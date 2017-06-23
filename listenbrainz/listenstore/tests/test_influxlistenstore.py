@@ -7,6 +7,7 @@ from listenbrainz.listenstore.tests.util import generate_data, to_epoch
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import InfluxListenStore
 from listenbrainz.webserver.influx_connection import init_influx_connection
+from influxdb import InfluxDBClient
 import random
 import uuid
 from collections import OrderedDict
@@ -14,6 +15,7 @@ from sqlalchemy import text
 import ujson
 import listenbrainz.db.user as db_user
 from listenbrainz import config
+from time import sleep
 
 TEST_LISTEN_JSON = [
     """
@@ -103,6 +105,12 @@ class TestInfluxListenStore(DatabaseTestCase):
     def setUp(self):
         super(TestInfluxListenStore, self).setUp()
         self.log = logging.getLogger(__name__)
+
+        # In order to do counting correctly, we need a clean DB to start with
+        influx = InfluxDBClient(host=config.INFLUX_HOST, port=config.INFLUX_PORT, database=config.INFLUX_DB_NAME)
+        influx.query('''drop database %s''' % config.INFLUX_DB_NAME)
+        influx.query('''create database %s''' % config.INFLUX_DB_NAME)
+
         self.logstore = init_influx_connection(self.log, {
             'REDIS_HOST': config.REDIS_HOST,
             'REDIS_PORT': config.REDIS_PORT,
@@ -112,7 +120,6 @@ class TestInfluxListenStore(DatabaseTestCase):
         })
         self.testuser_id = db_user.create("test")
         user = db_user.get(self.testuser_id)
-        print(user)
         self.testuser_name = db_user.get(self.testuser_id)['musicbrainz_id']
 
     def tearDown(self):
@@ -127,6 +134,29 @@ class TestInfluxListenStore(DatabaseTestCase):
             test_data.append(Listen().from_json(x))
         self.logstore.insert(test_data)
         return len(test_data)
+
+    # this test should be done first, because the other tests keep inserting more rows
+    def test_aaa_get_total_listen_count(self):
+        listen_count = self.logstore.get_total_listen_count(False)
+        self.assertEqual(0, listen_count)
+
+        count = self._create_test_data()
+        sleep(1)
+        listen_count = self.logstore.get_total_listen_count(False)
+        self.assertEqual(count, listen_count)
+
+        self.logstore.update_listen_counts()
+        listen_count = self.logstore.get_total_listen_count(False)
+        self.assertEqual(count, listen_count)
+
+        count = self._create_test_data()
+        sleep(1)
+        listen_count = self.logstore.get_total_listen_count(False)
+        self.assertEqual(count * 2, listen_count)
+
+        self.logstore.update_listen_counts()
+        listen_count = self.logstore.get_total_listen_count(False)
+        self.assertEqual(count * 2, listen_count)
 
     def test_insert_influx(self):
         count = self._create_test_data(self.testuser_name)
@@ -166,6 +196,7 @@ class TestInfluxListenStore(DatabaseTestCase):
 
     def test_get_listen_count_for_user(self):
         count = self._create_test_data(self.testuser_name)
+        self.logstore.update_listen_counts()
         listen_count = self.logstore.get_listen_count_for_user(user_name=self.testuser_name)
         self.assertEqual(count, listen_count)
 
