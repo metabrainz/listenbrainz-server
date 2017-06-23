@@ -41,12 +41,12 @@ class InfluxListenStore(ListenStore):
             need_exact: if True, get an exact number of listens directly from the ListenStore
         """
 
-        if not need_exact:
-            # check if the user's listen count is already in redis
-            # if already present return it directly instead of calculating it again
-            count = self.redis.get(REDIS_INFLUX_USER_LISTEN_COUNT + user_name)
-            if count:
-                return int(count)
+#        if not need_exact:
+#            # check if the user's listen count is already in redis
+#            # if already present return it directly instead of calculating it again
+#            count = self.redis.get(REDIS_INFLUX_USER_LISTEN_COUNT + user_name)
+#            if count:
+#                return int(count)
 
         try:
             results = self.influx.query('SELECT count(*) FROM ' + get_escaped_measurement_name(user_name))
@@ -107,10 +107,10 @@ class InfluxListenStore(ListenStore):
             makes a query to the db and caches it in redis.
         """
 
-        if cache:
-            count = self.redis.get(InfluxListenStore.REDIS_INFLUX_TOTAL_LISTEN_COUNT)
-            if count:
-                return int(count)
+#        if cache:
+#            count = self.redis.get(InfluxListenStore.REDIS_INFLUX_TOTAL_LISTEN_COUNT)
+#            if count:
+#                return int(count)
 
         try:
             result = self.influx.query("""SELECT %s
@@ -195,22 +195,23 @@ class InfluxListenStore(ListenStore):
         for user_name in user_names.keys():
             self.redis.delete(REDIS_USER_TIMESTAMPS % user_name)
 
-        # Enter a measurement to count items inserted
-        submit = [{
-            'measurement' : TEMP_COUNT_MEASUREMENT,
-            'tags' : {
-                COUNT_MEASUREMENT_NAME : len(listens)
-            },
-            'fields' : {
-                COUNT_MEASUREMENT_NAME : len(listens)
-            }
-        }]
-        try:
-            if not self.influx.write_points(submit, time_precision='s'):
-                self.log.error("Cannot write listen cound to influx. (write_points returned False)")
-        except (InfluxDBServerError, InfluxDBClientError, ValueError) as err:
-            self.log.error("Cannot write data to influx: %s" % str(err))
-            raise
+        if len(listens):
+            # Enter a measurement to count items inserted
+            submit = [{
+                'measurement' : TEMP_COUNT_MEASUREMENT,
+                'tags' : {
+                    COUNT_MEASUREMENT_NAME : len(listens)
+                },
+                'fields' : {
+                    COUNT_MEASUREMENT_NAME : len(listens)
+                }
+            }]
+            try:
+                if not self.influx.write_points(submit):
+                    self.log.error("Cannot write listen cound to influx. (write_points returned False)")
+            except (InfluxDBServerError, InfluxDBClientError, ValueError) as err:
+                self.log.error("Cannot write data to influx: %s" % str(err))
+                raise
 
 
     def update_listen_counts(self):
@@ -230,7 +231,7 @@ class InfluxListenStore(ListenStore):
 
         try:
             item = result.get_points(measurement = TIMELINE_COUNT_MEASUREMENT).__next__()
-            dtm = datetime.strptime(item['time'] , "%Y-%m-%dT%H:%M:%SZ")
+            dtm = datetime.strptime(item['time'] , "%Y-%m-%dT%H:%M:%S.%fZ")
             start_timestamp = int(dtm.strftime('%s'))
             total = int(item[COUNT_MEASUREMENT_NAME])
         except (KeyError, ValueError, StopIteration):
@@ -249,7 +250,7 @@ class InfluxListenStore(ListenStore):
 
         try:
             item = result.get_points(measurement = TEMP_COUNT_MEASUREMENT).__next__()
-            dtm = datetime.strptime(item['time'] , "%Y-%m-%dT%H:%M:%SZ")
+            dtm = datetime.strptime(item['time'] , "%Y-%m-%dT%H:%M:%S.%fZ")
             end_timestamp = int(dtm.strftime('%s'))
         except (KeyError, StopIteration):
             end_timestamp = start_timestamp
@@ -284,7 +285,7 @@ class InfluxListenStore(ListenStore):
 
 
         try:
-            if not self.influx.write_points(submit, time_precision='s'):
+            if not self.influx.write_points(submit):
                 self.log.error("Cannot write data to influx. (write_points returned False)")
         except (InfluxDBServerError, InfluxDBClientError, ValueError) as err:
             self.log.error("Cannot update listen counts in influx: %s" % str(err))
