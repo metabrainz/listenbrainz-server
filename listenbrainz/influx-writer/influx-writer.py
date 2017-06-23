@@ -22,9 +22,6 @@ REPORT_FREQUENCY = 5000
 DUMP_JSON_WITH_ERRORS = False
 ERROR_RETRY_DELAY = 3 # number of seconds to wait until retrying an operation
 
-# the difference in timestamps which we consider to be duplicates if same artist msid and recording msid
-TIMESTAMP_DUPLICATE_DIFF = 31
-
 
 class InfluxWriterSubscriber(object):
     def __init__(self):
