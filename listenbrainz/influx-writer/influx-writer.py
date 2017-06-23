@@ -175,11 +175,11 @@ class InfluxWriterSubscriber(object):
 
             # get the range of time that we need to get from influx for
             # deduplication of listens
-            min_time = users[user_name]['min_time'] - TIMESTAMP_DUPLICATE_DIFF
-            max_time = users[user_name]['max_time'] + TIMESTAMP_DUPLICATE_DIFF
+            min_time = users[user_name]['min_time']
+            max_time = users[user_name]['max_time']
 
             # quering for artist name here, since a field must be included in the query.
-            query = """SELECT time, artist_msid, recording_msid
+            query = """SELECT time, artist_name
                          FROM %s
                         WHERE time >= %s
                           AND time <= %s
@@ -196,32 +196,20 @@ class InfluxWriterSubscriber(object):
             # collect all the timestamps for this given time range.
             timestamps = {}
             for result in results.get_points(measurement=get_measurement_name(user_name)):
-                timestamps[convert_to_unix_timestamp(result['time'])] = result
+                timestamps[convert_to_unix_timestamp(result['time'])] = 1
 
             for listen in users[user_name]['listens']:
+                # Check if this listen is already present in Influx DB and if it is
+                # mark current listen as duplicate
                 t = int(listen['listened_at'])
-                artist_msid    = listen['track_metadata']['additional_info']['artist_msid']
-                recording_msid = listen['recording_msid']
-
-                # This will check if timestamps in the range (t - TIMESTAMP_DUPLICATE_DIFF, t + TIMESTAMP_DUPLICATE_DIFF)
-                # exist in the database for the user, with the same artist msid and recording msid. If it does, we
-                # consider this listen to be a duplicate and skip it.
-                deltas = [0] + [sign * val for val in range(1, TIMESTAMP_DUPLICATE_DIFF) for sign in (+1, -1)]
-                for delta in deltas:
-                    fuzzed = t + delta
-                    if fuzzed in timestamps:
-                        if artist_msid == timestamps[fuzzed]['artist_msid'] and recording_msid == timestamps[fuzzed]['recording_msid']:
-                            duplicate_count += 1
-                            break
+                if t in timestamps:
+                    duplicate_count += 1
+                    continue
                 else:
                     unique_count += 1
                     submit.append(Listen.from_json(listen))
                     unique.append(listen)
-                    timestamps[t] = {
-                        'time': convert_timestamp_to_influx_row_format(t),
-                        'artist_msid': artist_msid,
-                        'recording_msid': recording_msid
-                    }
+                    timestamps[t] = 1
 
         t0 = time()
         submitted_count = self.insert_to_listenstore(submit)
