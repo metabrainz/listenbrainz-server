@@ -63,27 +63,6 @@ class InfluxWriterTestCase(IntegrationTestCase):
         listens = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
-    def test_dedup_fuzzed_timestamps(self):
-        """ Test to make sure that listens with fuzzed timestamps (possibly from alpha imports)
-            get recognized as duplicates
-        """
-
-
-        user = db_user.get_or_create('fuzzedtimestampsuser')
-
-        r = self.send_listen(user, 'valid_single.json')
-        self.assert200(r)
-        time.sleep(2)
-
-        # ts difference between valid_single and fuzzed_ts_valid_single is 9
-        r = self.send_listen(user, 'fuzzed_ts_valid_single.json')
-        self.assert200(r)
-        time.sleep(2)
-
-        to_ts = int(time.time())
-        listens = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
-        self.assertEqual(len(listens), 1)
-
     def test_dedup_same_batch(self):
 
         user = db_user.get_or_create('phifedawg')
