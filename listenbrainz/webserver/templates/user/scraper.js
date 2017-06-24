@@ -213,6 +213,8 @@ var latestImportTime = 0;
 // the latest listen found in this import, we'll report back to the server with this
 var maximumTimestampForImport = 0;
 
+var showNumberOfPages = true; // should we show number of pages in the user message or not
+
 function reportPageAndGetNext(response, page) {
     timesGetPage++;
     if (page == 1) {
@@ -314,7 +316,16 @@ function submitListens() {
                     updateLatestImportTimeOnLB();
 
                 } else {
-                    updateMessage("<i class='fa fa-cog fa-spin'></i> Sending page " + numCompleted + " to ListenBrainz<br><span style='font-size:8pt'>Please don't navigate while this is running</span>");
+                    var msg = "<i class='fa fa-cog fa-spin'></i> Sending page " + numCompleted;
+                    if (showNumberOfPages) {
+                        msg += " of " + numberOfPages;
+                    }
+                    msg += " to ListenBrainz.<br><span style='font-size:8pt'>";
+                    if (!showNumberOfPages) {
+                        msg += "Note: This import will stop at the starting point of your last import. :)<br>";
+                    }
+                    msg += "Please don't navigate while this is running</span>"
+                    updateMessage(msg);
                 }
             };
             xhr.ontimeout = function(context) {
@@ -359,6 +370,11 @@ function getLatestImportTime() {
     xhr.onload = function(content) {
         if (this.status == 200) {
             latestImportTime = parseInt(JSON.parse(this.response)['latest_import']);
+
+            // if this is the first import for this user ever, show the number of pages
+            // in the progress, otherwise don't
+            showNumberOfPages = latestImportTime == 0;
+
             getNextPagesIfSlots();
         }
         else {
