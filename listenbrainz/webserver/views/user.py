@@ -358,6 +358,7 @@ def latest_import():
         try:
             db_user.update_latest_import(user['musicbrainz_id'], int(ts))
         except DatabaseException as e:
+            current_app.logger.error("Error while updating latest import: {}".format(e))
             raise InternalServerError('Could not update latest_import, try again')
 
         return 'success'
