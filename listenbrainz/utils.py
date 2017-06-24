@@ -1,6 +1,7 @@
 from datetime import datetime
 
 INFLUX_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+INFLUX_TIME_FORMAT_NANO = "%Y-%m-%dT%H:%M:%S"
 
 def escape(value):
     """ Escapes backslashes, quotes and new lines present in the string value
@@ -42,3 +43,13 @@ def convert_to_unix_timestamp(influx_row_time):
 
 def convert_timestamp_to_influx_row_format(ts):
     return datetime.fromtimestamp(ts).strftime(INFLUX_TIME_FORMAT)
+
+def convert_influx_nano_to_python_time(influx_row_time):
+    """ Converts time retreived from influxdb into python floating point time """
+    date_bits = influx_row_time.split(".")
+    dt = datetime.strptime(date_bits[0], INFLUX_TIME_FORMAT_NANO)
+    fractional = int(date_bits[1][:-1])
+    return float(dt.strftime('%s')) + (fractional / 100000000.0)
+
+def convert_python_time_to_nano_int(t):
+    return int(t * 100000000)
