@@ -59,12 +59,16 @@ ListenBrainz home page.
 
 ### Running tests
 
-In order to run the tests for ListenBrainz, simply run:
+In order to run the unit tests for ListenBrainz, simply run:
 
     $ ./test.sh
 
 This will build and run the containers needed to run the tests. Each of these containers will not use volumes
 that link to data outside of the containers and thus will not interfere with production databases.
+
+Also, run the integrations tests for ListenBrainz using the following command:
+
+    $ ./integration-test.sh
 
 
 ## Documentation
@@ -75,3 +79,24 @@ You can build the documentation yourself:
     $ cd ~/listenbrainz/docs
     $ make clean html
 
+## License Notice
+
+```
+listenbrainz-server - Server for the ListenBrainz project.
+
+Copyright (C) 2017 MetaBrainz Foundation Inc.
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+```
