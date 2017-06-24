@@ -140,7 +140,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         listen_count = self.logstore.get_total_listen_count(False)
         self.assertEqual(0, listen_count)
 
-        count = self._create_test_data()
+        count = self._create_test_data(self.testuser_name)
         sleep(1)
         listen_count = self.logstore.get_total_listen_count(False)
         self.assertEqual(count, listen_count)
@@ -149,7 +149,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         listen_count = self.logstore.get_total_listen_count(False)
         self.assertEqual(count, listen_count)
 
-        count = self._create_test_data()
+        count = self._create_test_data(self.testuser_name)
         sleep(1)
         listen_count = self.logstore.get_total_listen_count(False)
         self.assertEqual(count * 2, listen_count)
