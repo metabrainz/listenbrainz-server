@@ -7,10 +7,33 @@
   {% if current_user.is_authenticated() and current_user == user %}
 
     <p>
-      You have the following options for importing your listen data:
+        Most users will want to import from Last.fm directly. <em>If you've been submitting data to ListenBrainz alpha that has not been added to Last.fm, please
+        read this whole page before proceeding!</em>
     </p>
 
+    <h3>Direct import from Last.fm</h3>
+      <p>
+        The Last.fm importer manually steps through your listen history and imports the listens
+        one page at a time. Should it fail for whatever reason, it is safe to restart the import
+        process. Running the import process multiple times <strong>does not</strong> create duplicates in your
+        ListenBrainz listen history.
+      </p>
+      <p>
+        Clicking the "Import now!" button will import your profile now without the need to open lastfm.<br/>
+        You need to keep this page open for the tool to work, it might take a while to complete. Though, you can continue doing your work. :)
+      <br/>
+      We need to know your Last.fm username:
+      <div class="well">
+        <form onsubmit="return lastfm_import();">
+          <input id = "lastfm_input" type="text" name="lastfm_username" size="30" placeholder="Last.fm Username">
+          <input type="submit" value="Import now!">
+        </form>
+      </div>
+
     <h3> Import from ListenBrainz Alpha </h3>
+      <p>
+        <strong>Most people should not use this option! Please read this section carefully to ensure that this the right option for you!</strong>
+      </p>
       <p> The alpha version of the ListenBrainz site had one significant oversight: It imported listens from Last.fm using the Last.fm web page which only had <i>minute resolution</i> on the listen data. ListenBrainz really needs the more detailed <i>second resolution</i> data that is available from Last.fm API. To fix this problem and to preserve the data that some users may have submitted to ListenBrainz Alpha, please consider the two options carefully:
         <ol>
           <li>You have only used ListenBrainz to import data from Last.fm and have not submitted new listens to ListenBrainz directly. For this case, we recommend that you do a clean import of your Last.fm history from the Last.fm import below.
@@ -33,28 +56,6 @@
       </a>
     {% endif %}
     </div>
-
-    <h3>Direct import from Last.fm</h3>
-      <p>
-        <strong>Notes about the Last.fm import process:</strong>
-      </p>
-      <p>
-        The Last.fm importer manually steps through your listen history and imports the listens
-        one page at a time. Should it fail for whatever reason, it is safe to restart the import
-        process. Running the import process multiple times <strong>does not</strong> create duplicates in your
-        ListenBrainz listen history.
-      </p>
-      <p>
-        Clicking the "Import now!" button will import your profile now without the need to open lastfm.<br/>
-        You need to keep this page open for the tool to work, it might take a while to complete. Though, you can continue doing your work. :)
-      <br/>
-      We need to know your Last.fm username:
-      <div class="well">
-        <form onsubmit="return lastfm_import();">
-          <input id = "lastfm_input" type="text" name="lastfm_username" size="30" placeholder="Last.fm Username">
-          <input type="submit" value="Import now!">
-        </form>
-      </div>
 
     <h3>Import a Last.fm backup file</h3>
 
