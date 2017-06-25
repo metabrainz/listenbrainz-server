@@ -8,7 +8,6 @@ import locale
 import listenbrainz.db.user as db_user
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz import webserver
-from listenbrainz.listenstore import InfluxListenStore
 from listenbrainz.webserver.influx_connection import _influx
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from listenbrainz import config
@@ -92,6 +91,7 @@ def current_status():
 
     return render_template(
         "index/current-status.html",
+        load=load,
         listen_count=format(int(listen_count), ",d"),
         incoming_len=format(int(incoming_len), ",d"),
         unique_len=format(int(unique_len), ",d"),

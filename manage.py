@@ -170,6 +170,7 @@ def init_influx():
 
     print("Creating influx database...")
     influx_client.create_database(config.INFLUX_DB_NAME)
+    influx_client.create_retention_policy("one_week", "1w", 1, "listenbrainz")
 
     print("Done!")
 
