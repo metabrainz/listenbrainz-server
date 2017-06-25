@@ -37,7 +37,7 @@ class UserViewsTestCase(IntegrationTestCase):
         resp = self.send_listens()
         self.assert200(resp)
 
-        time.sleep(5)
+        time.sleep(2)
 
         # now export data and check if contains all the listens we just sent
         resp = self.client.post(url_for('user.export_data'))

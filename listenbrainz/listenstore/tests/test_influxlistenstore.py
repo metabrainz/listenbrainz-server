@@ -29,7 +29,6 @@ TEST_LISTEN_JSON = [
         },
         "user_id": 1,
         "listened_at": "1400000000",
-        "user_name": "test",
         "recording_msid": "4269ddbc-9241-46da-935d-4fa9e0f7f371"
     }
     """,
@@ -46,7 +45,6 @@ TEST_LISTEN_JSON = [
         },
         "user_id": 1,
         "listened_at": "1400000050",
-        "user_name": "test",
         "recording_msid": "4269ddbc-9241-46da-935d-4fa9e0f7f371"
     }
     """,
@@ -63,7 +61,6 @@ TEST_LISTEN_JSON = [
         },
         "user_id": 1,
         "listened_at": "1400000100",
-        "user_name": "test",
         "recording_msid": "4269ddbc-9241-46da-935d-4fa9e0f7f371"
     }
     """,
@@ -80,7 +77,6 @@ TEST_LISTEN_JSON = [
         },
         "user_id": 1,
         "listened_at": "1400000150",
-        "user_name": "test",
         "recording_msid": "4269ddbc-9241-46da-935d-4fa9e0f7f371"
     }
     """,
@@ -97,7 +93,6 @@ TEST_LISTEN_JSON = [
         },
         "user_id": 1,
         "listened_at": "1400000200",
-        "user_name": "test",
         "recording_msid": "4269ddbc-9241-46da-935d-4fa9e0f7f371"
     }
     """
@@ -124,23 +119,27 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.logstore = None
         super(TestInfluxListenStore, self).tearDown()
 
-    def _create_test_data(self):
-        test_data = [ Listen().from_json(ujson.loads(jdata)) for jdata in TEST_LISTEN_JSON ]
+    def _create_test_data(self, user_name):
+        test_data = []
+        for jdata in TEST_LISTEN_JSON:
+            x = ujson.loads(jdata)
+            x['user_name'] = user_name
+            test_data.append(Listen().from_json(x))
         self.logstore.insert(test_data)
         return len(test_data)
 
     def test_insert_influx(self):
-        count = self._create_test_data()
+        count = self._create_test_data(self.testuser_name)
         self.assertEqual(len(self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1399999999)), count)
 
     def test_fetch_listens_0(self):
-        count = self._create_test_data()
+        count = self._create_test_data(self.testuser_name)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000000, limit=1)
         self.assertEqual(len(listens), 1)
         self.assertEqual(listens[0].ts_since_epoch, 1400000050)
 
     def test_fetch_listens_1(self):
-        count = self._create_test_data()
+        count = self._create_test_data(self.testuser_name)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000000)
         self.assertEqual(len(listens), 4)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
@@ -149,14 +148,14 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
 
     def test_fetch_listens_2(self):
-        count = self._create_test_data()
+        count = self._create_test_data(self.testuser_name)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000100)
         self.assertEqual(len(listens), 2)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
 
     def test_fetch_listens_3(self):
-        count = self._create_test_data()
+        count = self._create_test_data(self.testuser_name)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
@@ -166,6 +165,15 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
 
     def test_get_listen_count_for_user(self):
-        count = self._create_test_data()
+        count = self._create_test_data(self.testuser_name)
         listen_count = self.logstore.get_listen_count_for_user(user_name=self.testuser_name)
         self.assertEqual(count, listen_count)
+
+    def test_fetch_listens_escaped(self):
+        user = db_user.get_or_create('i have a\\weird\\user, name"\n')
+        user_name = user['musicbrainz_id']
+        count = self._create_test_data(user_name)
+        listens = self.logstore.fetch_listens(user_name=user_name, from_ts=1400000100)
+        self.assertEquals(len(listens), 2)
+        self.assertEquals(listens[0].ts_since_epoch, 1400000200)
+        self.assertEquals(listens[1].ts_since_epoch, 1400000150)

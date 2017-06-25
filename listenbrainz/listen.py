@@ -1,8 +1,8 @@
 # coding=utf-8
 
-import ujson
 from datetime import datetime
 import calendar
+from listenbrainz.utils import escape, convert_to_unix_timestamp
 
 def flatten_dict(d, seperator='', parent_key=''):
     """
@@ -43,6 +43,7 @@ class Listen(object):
         'tags',
         'artist_msid',
         'release_msid',
+        'recording_msid',
     ]
 
     def __init__(self, user_id=None, user_name=None, timestamp=None, artist_msid=None, release_msid=None,
@@ -93,8 +94,7 @@ class Listen(object):
     def from_influx(cls, row):
         """ Factory to make Listen objects from an influx row
         """
-        dt = datetime.strptime(row['time'] , '%Y-%m-%dT%H:%M:%SZ')
-        t = int(dt.strftime('%s'))
+        t = convert_to_unix_timestamp(row['time'])
         mbids = []
         artist_mbids = row.get('artist_mbids')
         if artist_mbids:
@@ -121,7 +121,7 @@ class Listen(object):
         # Also, we need to make sure that we don't add fields like time, user_name etc. into
         # the additional_info.
         for key, value in row.items():
-            if key not in ['time', 'user_name', 'recording_msid'] and value is not None:
+            if key not in ['time', 'user_name', 'recording_msid', 'artist_mbids', 'tags'] and value is not None:
                 data[key] = value
 
         return cls(
@@ -178,7 +178,7 @@ class Listen(object):
             'measurement' : measurement,
             'time' : self.ts_since_epoch,
             'tags' : {
-                'user_name' : self.user_name,
+                'user_name' : escape(self.user_name),
             },
             'fields' : {
                 'artist_name' : self.data['artist_name'],
@@ -197,7 +197,7 @@ class Listen(object):
         # add the user generated keys present in additional info to fields
         for key, value in self.data['additional_info'].items():
             if key not in Listen.SUPPORTED_KEYS:
-                data['fields'][key] = value
+                data['fields'][key] = escape(str(value))
 
         return data
 

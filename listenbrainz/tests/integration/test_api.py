@@ -30,7 +30,7 @@ class APITestCase(IntegrationTestCase):
         # This sleep allows for the influx subscriber to take its time in getting
         # the listen submitted from redis and writing it to influx.
         # Removing it causes an empty list of listens to be returned.
-        time.sleep(15)
+        time.sleep(2)
 
         url = url_for('api_v1.get_listens', user_name = self.user['musicbrainz_id'])
         response = self.client.get(url, query_string = {'count': '1'})
@@ -202,7 +202,7 @@ class APITestCase(IntegrationTestCase):
         self.assert200(response)
 
         # wait for influx-writer to get its work done before getting the listen back
-        time.sleep(15)
+        time.sleep(2)
 
         url = url_for('api_v1.get_listens', user_name = self.user['musicbrainz_id'])
         response = self.client.get(url, query_string = {'count': '1'})
@@ -215,3 +215,4 @@ class APITestCase(IntegrationTestCase):
         self.assertEqual(sent_additional_info['link2'], received_additional_info['link2'])
         self.assertEqual(sent_additional_info['other_stuff'], received_additional_info['other_stuff'])
         self.assertEqual(sent_additional_info['nested']['info'], received_additional_info['nested.info'])
+        self.assertEqual(str(sent_additional_info['release_type']), received_additional_info['release_type'])

@@ -264,7 +264,7 @@ function submitListens() {
                     pageDone();
                 } else if (this.status == 429) {
                     // This should never happen, but if it does, toss it back in and try again.
-                    submitQueue.unshift();
+                    submitQueue.unshift(struct);
                     pageDone();
                 } else if (this.status >= 400 && this.status < 500) {
                     times4Error++;
@@ -290,15 +290,18 @@ function submitListens() {
             };
             xhr.ontimeout = function(context) {
                 console.log("timeout, req'ing");
-                submitListens(struct);
+                submitQueue.unshift(struct);
+                submitListens();
             }
             xhr.onabort = function(context) {
                 console.log("abort, req'ing");
-                submitListens(struct);
+                submitQueue.unshift(struct);
+                submitListens();
             };
             xhr.onerror = function(context) {
                 console.log("error, req'ing");
-                submitListens(struct);
+                submitQueue.unshift(struct);
+                submitListens();
             };
             xhr.send(JSON.stringify(struct));
         }, delay);
