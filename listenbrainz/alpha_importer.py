@@ -14,7 +14,7 @@ import redis
 
 redis_connection = None
 
-LATEST_IMPORT_ENDPOINT = '{root_url}/user/latest-import'.format(root_url=config.BETA_URL)
+LATEST_IMPORT_ENDPOINT = '{root_url}/1/latest-import'.format(root_url=config.BETA_URL)
 
 # create a logger to log messages into LOG_FILE
 logger = logging.getLogger('alpha_importer')
