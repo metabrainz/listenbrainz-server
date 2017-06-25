@@ -8,7 +8,6 @@ import locale
 import listenbrainz.db.user as db_user
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz import webserver
-from listenbrainz.listenstore import InfluxListenStore
 from listenbrainz.webserver.influx_connection import _influx
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from listenbrainz import config

@@ -14,6 +14,8 @@ import redis
 
 redis_connection = None
 
+LATEST_IMPORT_ENDPOINT = '{root_url}/user/latest-import'.format(root_url=config.BETA_URL)
+
 # create a logger to log messages into LOG_FILE
 logger = logging.getLogger('alpha_importer')
 logger.setLevel(logging.DEBUG)
@@ -125,17 +127,67 @@ def send_batch(data, token, retries=5):
         sent += send_batch(half_data, token, retries)
         return sent
 
+def get_latest_import_time(username):
+    """ Send a GET request to the ListenBrainz Beta server to get the latest import time
+        from previous imports for the user.
+    """
+    response = requests.get(
+        LATEST_IMPORT_ENDPOINT,
+        params={
+            'user_name': username
+        }
+    )
+    if response.status_code == 200:
+        return int(ujson.loads(response.text)['latest_import'])
+    else:
+        raise HTTPError
+
+def update_latest_import_time(token, ts):
+    """ Send a POST request to the ListenBrainz server after the import is complete to
+        update the latest import time on the server. This will make future imports stop
+        when they reach this point of time in the listen history.
+    """
+
+    response = requests.post(
+        LATEST_IMPORT_ENDPOINT,
+        headers={'Authorization': 'Token {user_token}'.format(user_token=token)},
+        data=ujson.dumps({'ts': ts})
+    )
+    if response.status_code != 200:
+        raise HTTPError
+
 
 def import_from_alpha(username, token):
-    next_max = int(time.time())
+
+    # first get the timestamp until which previous imports have already added data
+    latest_import_ts = get_latest_import_time(username)
+
+    next_max = int(time.time()) # variable used for pagination
     page_count = 1
+
+    # we'll send this to LB Beta at the end of the import
+    newest_timestamp_imported_this_time = 0
+
+    stop = False
     while True:
         try:
-            batch = get_batch(username, next_max)
-            if batch['payload']['count'] == 0:
+            if stop:
+                update_latest_import_time(token, newest_timestamp_imported_this_time)
                 logger.info('All pages done for user {}'.format(username))
                 logger.info('Total number of pages done: {}'.format(page_count - 1))
                 return
+
+            batch = get_batch(username, next_max)
+
+            # if this is the last page or if this is the page upto which we had imported earlier, then stop
+            if batch['payload']['count'] == 0 or batch['payload']['listens'][-1]['listened_at'] <= latest_import_ts:
+                stop = True
+
+            # if this is the first page, then  get the value with which we'll update latest_update on LB
+            if page_count == 1 and batch['payload']['count'] > 0:
+                newest_timestamp_imported_this_time = batch['payload']['listens'][0]['listened_at']
+
+            # send the current batch of data
             data = extract_data(batch)
             sent = send_batch(data, token)
             next_max = data['payload'][-1]['listened_at']

@@ -51,6 +51,9 @@ def update_token(id):
             raise
 
 
+USER_GET_COLUMNS = ['id', 'created', 'musicbrainz_id', 'auth_token', 'last_login', 'latest_import']
+
+
 def get(id):
     """Get user with a specified ID.
 
@@ -68,10 +71,10 @@ def get(id):
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT id, created, musicbrainz_id, auth_token, last_login
+            SELECT {columns}
               FROM "user"
              WHERE id = :id
-        """), {"id": id})
+        """.format(columns=','.join(USER_GET_COLUMNS))), {"id": id})
         row = result.fetchone()
         return dict(row) if row else None
 
@@ -93,10 +96,10 @@ def get_by_mb_id(musicbrainz_id):
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT id, created, musicbrainz_id, auth_token, last_login
+            SELECT {columns}
               FROM "user"
              WHERE LOWER(musicbrainz_id) = LOWER(:mb_id)
-        """), {"mb_id": musicbrainz_id})
+        """.format(columns=','.join(USER_GET_COLUMNS))), {"mb_id": musicbrainz_id})
         row = result.fetchone()
         return dict(row) if row else None
 
@@ -118,10 +121,10 @@ def get_by_token(token):
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT id, created, musicbrainz_id, last_login
+            SELECT {columns}
               FROM "user"
              WHERE auth_token = :auth_token
-        """), {"auth_token": token})
+        """.format(columns=','.join(USER_GET_COLUMNS))), {"auth_token": token})
         row = result.fetchone()
         return dict(row) if row else None
 
@@ -187,3 +190,28 @@ def update_last_login(musicbrainz_id, ts=int(time.time())):
         except sqlalchemy.exc.ProgrammingError as e:
             logger.error(e)
             raise
+
+def update_latest_import(musicbrainz_id, ts):
+    """ Update the value of latest_import field for user with specified MusicBrainz ID
+        If the field already contains a bigger value, no change take place.
+
+    Args:
+        musicbrainz_id (str): MusicBrainz username of user
+        ts (int): Timestamp value with which to update the database
+    """
+
+    user = get_by_mb_id(musicbrainz_id)
+    if ts > int(user['latest_import'].strftime('%s')):
+        with db.engine.connect() as connection:
+            try:
+                result = connection.execute(sqlalchemy.text("""
+                    UPDATE "user"
+                       SET latest_import = to_timestamp(:ts)
+                     WHERE musicbrainz_id = :musicbrainz_id
+                    """), {
+                        'ts': ts,
+                        'musicbrainz_id': musicbrainz_id
+                    })
+            except sqlalchemy.exc.ProgrammingError as e:
+                logger.error(e)
+                raise DatabaseException
