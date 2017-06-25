@@ -216,3 +216,41 @@ class APITestCase(IntegrationTestCase):
         self.assertEqual(sent_additional_info['other_stuff'], received_additional_info['other_stuff'])
         self.assertEqual(sent_additional_info['nested']['info'], received_additional_info['nested.info'])
         self.assertEqual(str(sent_additional_info['release_type']), received_additional_info['release_type'])
+
+
+    def test_latest_import(self):
+        """ Test for api.latest_import """
+
+        # initially the value of latest_import will be 0
+        response = self.client.get(url_for('api_v1.latest_import'), query_string={'user_name': self.user['musicbrainz_id']})
+        self.assert200(response)
+        data = json.loads(response.data)
+        self.assertEqual(data['musicbrainz_id'], self.user['musicbrainz_id'])
+        self.assertEqual(data['latest_import'], 0)
+
+        # now an update
+        val = int(time.time())
+        response = self.client.post(
+            url_for('api_v1.latest_import'),
+            data=json.dumps({'ts': val}),
+            headers={'Authorization': 'Token {token}'.format(token=self.user['auth_token'])}
+        )
+        self.assert200(response)
+
+        # now the value must have changed
+        response = self.client.get(url_for('api_v1.latest_import'), query_string={'user_name': self.user['musicbrainz_id']})
+        self.assert200(response)
+        data = json.loads(response.data)
+        self.assertEqual(data['musicbrainz_id'], self.user['musicbrainz_id'])
+        self.assertEqual(data['latest_import'], val)
+
+    def test_latest_import_unauthorized(self):
+        """ Test for invalid tokens passed to user.latest_import view"""
+
+        val = int(time.time())
+        response = self.client.post(
+            url_for('api_v1.latest_import'),
+            data=json.dumps({'ts': val}),
+            headers={'Authorization': 'Token thisisinvalid'}
+        )
+        self.assert401(response)
