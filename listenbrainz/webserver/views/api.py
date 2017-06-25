@@ -120,6 +120,60 @@ def get_listens(user_name):
     }})
 
 
+@api_bp.route('/1/latest-import', methods=['GET', 'POST'])
+@crossdomain(headers='Authorization, Content-Type')
+def latest_import():
+    """
+    Get and update the timestamp of the newest listen submitted in previous imports to ListenBrainz.
+
+    In order to get the timestamp for a user, make a GET request to this endpoint. The data returned will
+    be JSON of the following format:
+
+    {
+        'musicbrainz_id': the MusicBrainz ID of the user,
+
+        'latest_import': the timestamp of the newest listen submitted in previous imports. Defaults to 0
+    }
+
+    :param user_name: the MusicBrainz ID of the user whose data is needed
+    :statuscode 200: Yay, you have data!
+    :resheader Content-Type: *application/json*
+
+    In order to update the timestamp of a user, you'll have to provide a user token in the Authorization
+    Header. User tokens can be found on https://listenbrainz.org/user/import .
+
+    The JSON that needs to be posted must contain a field named `ts` in the root with a valid unix timestamp.
+
+    :reqheader Authorization: Token <user token>
+    :statuscode 200: latest import timestamp updated
+    :statuscode 400: invalid JSON sent, see error message for details.
+    :statuscode 401: invalid authorization. See error message for details.
+    """
+    if request.method == 'GET':
+        user = db_user.get_by_mb_id(request.args.get('user_name', ''))
+        if user is None:
+            raise NotFound("Cannot find user: {user_name}".format(user_name=user_name))
+        return jsonify({
+                'musicbrainz_id': user['musicbrainz_id'],
+                'latest_import': 0 if not user['latest_import'] else int(user['latest_import'].strftime('%s'))
+            })
+    elif request.method == 'POST':
+        user = _validate_auth_header()
+
+        try:
+            ts = ujson.loads(request.get_data()).get('ts', 0)
+        except ValueError:
+            raise BadRequest('Invalid data sent')
+
+        try:
+            db_user.update_latest_import(user['musicbrainz_id'], int(ts))
+        except DatabaseException as e:
+            current_app.logger.error("Error while updating latest import: {}".format(e))
+            raise InternalServerError('Could not update latest_import, try again')
+
+        return 'success'
+
+
 def _parse_int_arg(name, default=None):
     value = request.args.get(name)
     if value:

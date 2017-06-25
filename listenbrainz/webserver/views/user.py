@@ -17,7 +17,6 @@ from listenbrainz.webserver.views.api_tools import convert_backup_to_native_form
 from listenbrainz.webserver.utils import sizeof_readable
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver.redis_connection import _redis
-from listenbrainz.webserver.views.api import _validate_auth_header
 from os import path, makedirs
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import ujson
@@ -44,7 +43,7 @@ def lastfmscraper(user_name):
     scraper = render_template(
         "user/scraper.js",
         base_url="{}/1/submit-listens".format(config.BETA_URL),
-        import_url="{}/user/latest-import".format(config.BETA_URL),
+        import_url="{}/1/latest-import".format(config.BETA_URL),
         user_token=user_token,
         lastfm_username=lastfm_username,
         user_name=user_name,
@@ -331,34 +330,3 @@ def import_from_alpha():
     # push username into redis so that we know that this user is in waiting
     redis_connection.set("{} {}".format(current_app.config['IMPORTER_SET_KEY_PREFIX'], current_user.musicbrainz_id), "WAITING")
     return redirect(url_for("user.import_data"))
-
-
-@user_bp.route('/latest-import', methods=['GET', 'POST'])
-@crossdomain(headers='Authorization, Content-Type')
-def latest_import():
-    """ If a POST request, authenticate and update the latest_import field for current_user in db
-        If a GET request, return a json object containing user_name and latest_import unix timestamp
-    """
-    if request.method == 'GET':
-        user = db_user.get_by_mb_id(request.args.get('user_name', ''))
-        if user is None:
-            raise NotFound("Cannot find user: {user_name}".format(user_name=user_name))
-        return jsonify({
-                'musicbrainz_id': user['musicbrainz_id'],
-                'latest_import': 0 if not user['latest_import'] else int(user['latest_import'].strftime('%s'))
-            })
-    elif request.method == 'POST':
-        user = _validate_auth_header()
-
-        try:
-            ts = ujson.loads(request.get_data()).get('ts', 0)
-        except ValueError:
-            raise BadRequest('Invalid data sent')
-
-        try:
-            db_user.update_latest_import(user['musicbrainz_id'], int(ts))
-        except DatabaseException as e:
-            current_app.logger.error("Error while updating latest import: {}".format(e))
-            raise InternalServerError('Could not update latest_import, try again')
-
-        return 'success'
