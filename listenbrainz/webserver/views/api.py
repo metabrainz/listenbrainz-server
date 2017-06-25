@@ -1,7 +1,7 @@
 
 import ujson
 from flask import Blueprint, request, jsonify, current_app
-from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized, ServiceUnavailable
+from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized, ServiceUnavailable, NotFound
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz import webserver
 import listenbrainz.db.user as db_user
@@ -120,8 +120,9 @@ def get_listens(user_name):
     }})
 
 
-@api_bp.route('/1/latest-import', methods=['GET', 'POST'])
+@api_bp.route('/1/latest-import', methods=['GET', 'POST', 'OPTIONS'])
 @crossdomain(headers='Authorization, Content-Type')
+@ratelimit()
 def latest_import():
     """
     Get and update the timestamp of the newest listen submitted in previous imports to ListenBrainz.
