@@ -12,7 +12,7 @@ from datetime import datetime
 from listenbrainz.listenstore import ORDER_DESC, ORDER_ASC, ORDER_TEXT, \
     USER_CACHE_TIME, REDIS_USER_TIMESTAMPS
 from listenbrainz.utils import quote, get_escaped_measurement_name, get_measurement_name, get_influx_query_timestamp, \
-    convert_influx_nano_to_python_time, convert_python_time_to_nano_int
+    convert_influx_nano_to_python_time, convert_python_time_to_nano_int, convert_to_unix_timestamp
 
 REDIS_INFLUX_USER_LISTEN_COUNT = "ls.listencount." # append username
 COUNT_RETENTION_POLICY = "one_week"
@@ -125,8 +125,7 @@ class InfluxListenStore(ListenStore):
         try:
             item = result.get_points(measurement = TIMELINE_COUNT_MEASUREMENT).__next__()
             count = int(item[COUNT_MEASUREMENT_NAME])
-            dtm = datetime.strptime(item['time'] , "%Y-%m-%dT%H:%M:%SZ")
-            timestamp = int(dtm.strftime('%s'))
+            timestamp = convert_to_unix_timestamp(item['time'])
         except (KeyError, ValueError, StopIteration):
             timestamp = 0
             count = 0
@@ -135,7 +134,7 @@ class InfluxListenStore(ListenStore):
         try:
             result = self.influx.query("""SELECT sum(%s) as total
                                             FROM "%s"
-                                           WHERE time > %d000000000""" % (COUNT_MEASUREMENT_NAME, TEMP_COUNT_MEASUREMENT, timestamp))
+                                           WHERE time > %s""" % (COUNT_MEASUREMENT_NAME, TEMP_COUNT_MEASUREMENT, get_influx_query_timestamp(timestamp)))
         except (InfluxDBServerError, InfluxDBClientError) as err:
             self.log.error("Cannot query influx: %s" % str(err))
             raise

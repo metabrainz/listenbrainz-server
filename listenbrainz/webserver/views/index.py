@@ -8,11 +8,9 @@ import locale
 import listenbrainz.db.user as db_user
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz import webserver
-from listenbrainz.listenstore import InfluxListenStore
 from listenbrainz.webserver.influx_connection import _influx
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from listenbrainz import config
-from listenbrainz.listenstore import InfluxListenStore
 import pika
 
 index_bp = Blueprint('index', __name__)
@@ -90,13 +88,6 @@ def current_status():
         user_count = _get_user_count()
     except DatabaseException as e:
         user_count = None
-
-    ls = InfluxListenStore({ 'REDIS_HOST' : config.REDIS_HOST,
-        'REDIS_PORT' : config.REDIS_PORT,
-        'INFLUX_HOST': config.INFLUX_HOST,
-        'INFLUX_PORT': config.INFLUX_PORT,
-        'INFLUX_DB_NAME': config.INFLUX_DB_NAME})
-    listen_count = ls.get_total_listen_count()
 
     return render_template(
         "index/current-status.html",
