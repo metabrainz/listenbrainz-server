@@ -23,3 +23,20 @@ class UserTestCase(DatabaseTestCase):
         db_user.update_last_login(user['musicbrainz_id'], val)
         user = db_user.get_by_mb_id(user['musicbrainz_id'])
         self.assertEqual(val, int(user['last_login'].strftime('%s')))
+
+    def test_update_latest_import(self):
+        user = db_user.get_or_create('testlatestimportuser')
+
+        val = int(time.time())
+        db_user.update_latest_import(user['musicbrainz_id'], val)
+        user = db_user.get_by_mb_id(user['musicbrainz_id'])
+        self.assertEqual(val, int(user['latest_import'].strftime('%s')))
+
+        db_user.update_latest_import(user['musicbrainz_id'], val - 10)
+        user = db_user.get_by_mb_id(user['musicbrainz_id'])
+        self.assertEqual(val, int(user['latest_import'].strftime('%s')))
+
+        val += 10
+        db_user.update_latest_import(user['musicbrainz_id'], val)
+        user = db_user.get_by_mb_id(user['musicbrainz_id'])
+        self.assertEqual(val, int(user['latest_import'].strftime('%s')))
