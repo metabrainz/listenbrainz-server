@@ -13,7 +13,7 @@ Reference
 API Calls
 ^^^^^^^^^
 
-.. autoflask:: webserver:create_app_rtfd()
+.. autoflask:: listenbrainz.webserver:create_app_rtfd()
    :blueprints: api_v1
    :include-empty-docstring:
    :undoc-static:
@@ -29,8 +29,8 @@ Constants
 
 Constants that are releavant to using the API:
 
-.. autodata:: webserver.views.api.MAX_LISTEN_SIZE
-.. autodata:: webserver.views.api.MAX_ITEMS_PER_GET
-.. autodata:: webserver.views.api.DEFAULT_ITEMS_PER_GET
-.. autodata:: webserver.views.api.MAX_TAGS_PER_LISTEN
-.. autodata:: webserver.views.api.MAX_TAG_SIZE
+.. autodata:: listenbrainz.webserver.views.api_tools.MAX_LISTEN_SIZE
+.. autodata:: listenbrainz.webserver.views.api_tools.MAX_ITEMS_PER_GET
+.. autodata:: listenbrainz.webserver.views.api_tools.DEFAULT_ITEMS_PER_GET
+.. autodata:: listenbrainz.webserver.views.api_tools.MAX_TAGS_PER_LISTEN
+.. autodata:: listenbrainz.webserver.views.api_tools.MAX_TAG_SIZE
