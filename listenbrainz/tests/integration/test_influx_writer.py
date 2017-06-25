@@ -21,8 +21,8 @@ class InfluxWriterTestCase(IntegrationTestCase):
                              'INFLUX_PORT': config.INFLUX_PORT,
                              'INFLUX_DB_NAME': config.INFLUX_DB_NAME})
 
-    def send_single_listen(self, user):
-        with open(self.path_to_data_file('valid_single.json')) as f:
+    def send_listen(self, user, filename):
+        with open(self.path_to_data_file(filename)) as f:
             payload = json.load(f)
         return self.client.post(
             url_for('api_v1.submit_listen'),
@@ -36,16 +36,44 @@ class InfluxWriterTestCase(IntegrationTestCase):
         user = db_user.get_or_create('testinfluxwriteruser')
 
         # send the same listen twice
-        r = self.send_single_listen(user)
+        r = self.send_listen(user, 'valid_single.json')
         self.assert200(r)
-        time.sleep(5)
-        r = self.send_single_listen(user)
+        time.sleep(2)
+        r = self.send_listen(user, 'valid_single.json')
         self.assert200(r)
-        time.sleep(5)
+        time.sleep(2)
 
         to_ts = int(time.time())
         listens = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
         self.assertEqual(len(listens), 1)
+
+    def test_dedup_user_special_characters(self):
+
+        user = db_user.get_or_create('i have a\\weird\\user, name"\n')
+
+        # send the same listen twice
+        r = self.send_listen(user, 'valid_single.json')
+        self.assert200(r)
+        time.sleep(2)
+        r = self.send_listen(user, 'valid_single.json')
+        self.assert200(r)
+        time.sleep(2)
+
+        to_ts = int(time.time())
+        listens = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
+        self.assertEqual(len(listens), 1)
+
+    def test_dedup_same_batch(self):
+
+        user = db_user.get_or_create('phifedawg')
+        r = self.send_listen(user, 'same_batch_duplicates.json')
+        self.assert200(r)
+        time.sleep(2)
+
+        to_ts = int(time.time())
+        listens = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
+        self.assertEqual(len(listens), 1)
+
 
     def test_dedup_different_users(self):
         """
@@ -56,12 +84,12 @@ class InfluxWriterTestCase(IntegrationTestCase):
         user1 = db_user.get_or_create('testuser1')
         user2 = db_user.get_or_create('testuser2')
 
-        r = self.send_single_listen(user1)
+        r = self.send_listen(user1, 'valid_single.json')
         self.assert200(r)
-        r = self.send_single_listen(user2)
+        r = self.send_listen(user2, 'valid_single.json')
         self.assert200(r)
 
-        time.sleep(5) # sleep to allow influx-writer to do its thing
+        time.sleep(2) # sleep to allow influx-writer to do its thing
 
         to_ts = int(time.time())
         listens = self.ls.fetch_listens(user1['musicbrainz_id'], to_ts=to_ts)

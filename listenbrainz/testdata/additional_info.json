@@ -13,7 +13,11 @@
                     "other_stuff": "teststuffplsignore",
                     "nested": {
                         "info": "here"
-                    }
+                    },
+                    "release_type": [
+                        "ALBUM",
+                        "REMIX"
+                    ]
                 }
             }
         }

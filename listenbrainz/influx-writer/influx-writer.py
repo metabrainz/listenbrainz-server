@@ -4,7 +4,6 @@
 import sys
 import os
 import pika
-from datetime import datetime
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import ujson
@@ -13,7 +12,9 @@ from listenbrainz.listen import Listen
 from time import time, sleep
 import listenbrainz.config as config
 from listenbrainz.listenstore import InfluxListenStore
-from listenbrainz.listenstore.utils import escape, get_measurement_name
+from listenbrainz.utils import escape, get_measurement_name, get_escaped_measurement_name, \
+                               get_influx_query_timestamp, convert_to_unix_timestamp, \
+                               convert_timestamp_to_influx_row_format
 from requests.exceptions import ConnectionError
 from redis import Redis
 
@@ -122,8 +123,9 @@ class InfluxWriterSubscriber(object):
             except (InfluxDBServerError, InfluxDBClientError, ValueError, ConnectionError) as e:
                 self.log.error("Unable to insert bad listen to listenstore: %s" % str(e))
                 if DUMP_JSON_WITH_ERRORS:
-                    self.log.error("Was writing the following data: ")
-                    self.log.error(json.dumps(data, indent=4))
+                    self.log.error("Was writing the following data:")
+                    influx_dict = data[0].to_influx(get_measurement_name(data[0].user_name))
+                    self.log.error(ujson.dumps(influx_dict))
                 return 0
         else:
             slice_index = len(data) // 2
@@ -168,15 +170,17 @@ class InfluxWriterSubscriber(object):
         # remove duplicates on the basis of timestamps
         for user_name in users:
 
+            # get the range of time that we need to get from influx for
+            # deduplication of listens
             min_time = users[user_name]['min_time']
             max_time = users[user_name]['max_time']
 
             # quering for artist name here, since a field must be included in the query.
             query = """SELECT time, artist_name
-                         FROM "\\"%s\\""
-                        WHERE time >= %d000000000
-                          AND time <= %d000000000
-                    """ % (escape(user_name), min_time, max_time)
+                         FROM %s
+                        WHERE time >= %s
+                          AND time <= %s
+                    """ % (get_escaped_measurement_name(user_name), get_influx_query_timestamp(min_time), get_influx_query_timestamp(max_time))
 
             while True:
                 try:
@@ -189,19 +193,20 @@ class InfluxWriterSubscriber(object):
             # collect all the timestamps for this given time range.
             timestamps = {}
             for result in results.get_points(measurement=get_measurement_name(user_name)):
-                dt = datetime.strptime(result['time'] , "%Y-%m-%dT%H:%M:%SZ")
-                timestamps[int(dt.strftime('%s'))] = 1
+                timestamps[convert_to_unix_timestamp(result['time'])] = 1
 
             for listen in users[user_name]['listens']:
-                # Check to see if the timestamp is already in the DB
+                # Check if this listen is already present in Influx DB and if it is
+                # mark current listen as duplicate
                 t = int(listen['listened_at'])
                 if t in timestamps:
                     duplicate_count += 1
                     continue
-
-                unique_count += 1
-                submit.append(Listen().from_json(listen))
-                unique.append(listen)
+                else:
+                    unique_count += 1
+                    submit.append(Listen.from_json(listen))
+                    unique.append(listen)
+                    timestamps[t] = 1
 
         t0 = time()
         submitted_count = self.insert_to_listenstore(submit)
