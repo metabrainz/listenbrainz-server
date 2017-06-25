@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# This script flushes out the listencounts that are in the 7day retention policy and sums them 
+# into the permanent listen count measurement.
+
 import listenbrainz.config as config
 from listenbrainz.listenstore import InfluxListenStore
 
