@@ -4,6 +4,9 @@ ListenBrainz API for Beta
 The ListenBrainz server supports the following end-points for submitting and fetching listens. All endpoints have this root URL:
 
 **Beta Root URL**: ``https://beta-api.listenbrainz.org``
+
+While we are in beta testing, to submit to our beta server use this root URL:
+
 **Production Root URL**: ``https://api.listenbrainz.org``
 
 NOTE: All of ListenBrainz services are available on **HTTPS** only!
