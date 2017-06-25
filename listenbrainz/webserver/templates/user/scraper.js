@@ -185,7 +185,7 @@ function getLastFMPage(page) {
     xhr.send();
 }
 
-var version = "1.6";
+var version = "1.7";
 var page = 1;
 var numberOfPages = 1;
 var stopPage = numberOfPages; // the page that the import stops at
