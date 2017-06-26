@@ -178,8 +178,7 @@ class InfluxWriterSubscriber(object):
             min_time = users[user_name]['min_time']
             max_time = users[user_name]['max_time']
 
-            # quering for artist name here, since a field must be included in the query.
-            query = """SELECT time, artist_name
+            query = """SELECT time, artist_msid, recording_msid
                          FROM %s
                         WHERE time >= %s
                           AND time <= %s
@@ -196,20 +195,28 @@ class InfluxWriterSubscriber(object):
             # collect all the timestamps for this given time range.
             timestamps = {}
             for result in results.get_points(measurement=get_measurement_name(user_name)):
-                timestamps[convert_to_unix_timestamp(result['time'])] = 1
+                timestamps[convert_to_unix_timestamp(result['time'])] = result
 
             for listen in users[user_name]['listens']:
                 # Check if this listen is already present in Influx DB and if it is
                 # mark current listen as duplicate
                 t = int(listen['listened_at'])
+                artist_msid = listen['track_metadata']['additional_info']['artist_msid']
+                recording_msid = listen['recording_msid']
+
                 if t in timestamps:
-                    duplicate_count += 1
-                    continue
-                else:
-                    unique_count += 1
-                    submit.append(Listen.from_json(listen))
-                    unique.append(listen)
-                    timestamps[t] = 1
+                    if timestamps[t]['artist_msid'] == artist_msid and timestamps[t]['recording_msid'] == recording_msid:
+                        duplicate_count += 1
+                        continue
+
+                unique_count += 1
+                submit.append(Listen.from_json(listen))
+                unique.append(listen)
+                timestamps[t] = {
+                    'time': convert_timestamp_to_influx_row_format(t),
+                    'artist_msid': artist_msid,
+                    'recording_msid': recording_msid
+                }
 
         t0 = time()
         submitted_count = self.insert_to_listenstore(submit)
