@@ -1,0 +1,12 @@
+{
+    "listen_type": "single",
+    "payload": [
+        {
+            "listened_at": 1486449409,
+            "track_metadata": {
+                "artist_name": "Radiohead",
+                "track_name": "I Promise"
+            }
+        }
+    ]
+}
