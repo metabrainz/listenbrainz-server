@@ -97,3 +97,21 @@ class InfluxWriterTestCase(IntegrationTestCase):
 
         listens = self.ls.fetch_listens(user2['musicbrainz_id'], to_ts=to_ts)
         self.assertEqual(len(listens), 1)
+
+    def test_dedup_same_timestamp_different_tracks(self):
+        """ Test to check that if there are two tracks w/ the same timestamp,
+            they don't get considered as duplicates
+        """
+
+        user = db_user.get_or_create('difftracksametsuser')
+
+        r = self.send_listen(user, 'valid_single.json')
+        self.assert200(r)
+
+        r = self.send_listen(user, 'same_timestamp_diff_track_valid_single.json')
+        self.assert200(r)
+        time.sleep(2)
+
+        to_ts = int(time.time())
+        listens = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
+        self.assertEqual(len(listens), 2)

@@ -80,14 +80,13 @@ class ListenTestCase(unittest.TestCase):
         # Make sure every value that we don't explicitly support is a string
         for key in data['fields']:
             if key not in Listen.SUPPORTED_KEYS:
-                print(key)
                 self.assertIsInstance(data['fields'][key], str)
 
         # Check values
         self.assertEqual(data['measurement'], quote(listen.user_name))
         self.assertEqual(data['time'], listen.ts_since_epoch)
         self.assertEqual(data['tags']['user_name'], listen.user_name)
-        self.assertEqual(data['fields']['artist_msid'], listen.artist_msid)
-        self.assertEqual(data['fields']['recording_msid'], listen.recording_msid)
+        self.assertEqual(data['tags']['artist_msid'], listen.artist_msid)
+        self.assertEqual(data['tags']['recording_msid'], listen.recording_msid)
         self.assertEqual(data['fields']['track_name'], listen.data['track_name'])
         self.assertEqual(data['fields']['artist_name'], listen.data['artist_name'])
