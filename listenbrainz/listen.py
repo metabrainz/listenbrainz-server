@@ -179,6 +179,8 @@ class Listen(object):
             'time' : self.ts_since_epoch,
             'tags' : {
                 'user_name' : escape(self.user_name),
+                'artist_msid' : self.artist_msid,
+                'recording_msid' : self.recording_msid,
             },
             'fields' : {
                 'artist_name' : self.data['artist_name'],
