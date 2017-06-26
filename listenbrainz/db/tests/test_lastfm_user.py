@@ -38,13 +38,6 @@ class TestAPICompatUserClass(DatabaseTestCase):
             row = result.fetchone()
             self.user = User(row['id'], row['created'], row['musicbrainz_id'], row['auth_token'])
 
-        # Insert some listens
-        date = datetime(2015, 9, 3, 0, 0, 0)
-        self.log.info("Inserting test data...")
-        test_data = generate_data(date, 100, self.user.name)
-        self.logstore.insert(test_data)
-        self.log.info("Test data inserted")
-
     def tearDown(self):
         super(TestAPICompatUserClass, self).tearDown()
 
@@ -63,5 +56,9 @@ class TestAPICompatUserClass(DatabaseTestCase):
         self.assertDictEqual(user.__dict__, self.user.__dict__)
 
     def test_user_get_play_count(self):
+        date = datetime(2015, 9, 3, 0, 0, 0)
+        test_data = generate_data(date, 100, self.user.name)
+        self.assertEqual(len(test_data), 100)
+        self.logstore.insert(test_data)
         count = User.get_play_count(self.user.id, self.logstore)
         self.assertEqual(count, 100)
