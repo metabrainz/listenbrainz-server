@@ -1,3 +1,24 @@
+/*
+ * listenbrainz-server - Server for the ListenBrainz project.
+ *
+ * Copyright (C) 2017 MetaBrainz Foundation Inc.
+ * Copyright (C) 2017 Param Singh
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
+
 function makeURIObject(lastfmURI, spotifyURI) {
 
 }
@@ -66,6 +87,14 @@ Scrobble.prototype.trackName = function () {
     }
 };
 
+Scrobble.prototype.releaseName = function() {
+    if ('album' in this.rootScrobbleElement && '#text' in this.rootScrobbleElement['album']) {
+        return this.rootScrobbleElement['album']['#text'];
+    } else {
+        return "";
+    }
+};
+
 Scrobble.prototype.scrobbledAt = function () {
     if ('date' in this.rootScrobbleElement && 'uts' in this.rootScrobbleElement['date']) {
         return this.rootScrobbleElement['date']['uts'];
@@ -94,6 +123,7 @@ Scrobble.prototype.asJSONSerializable = function () {
         "track_metadata": {
             "track_name": this.trackName(),
             "artist_name": this.artistName(),
+            "release_name": this.releaseName(),
             "additional_info": {
                 "recording_mbid": this.trackMBID()
             }
