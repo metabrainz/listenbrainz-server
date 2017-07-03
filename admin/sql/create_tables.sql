@@ -5,7 +5,7 @@ CREATE TABLE "user" (
   created        TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   musicbrainz_id VARCHAR NOT NULL,
   auth_token     VARCHAR,
-  last_login     TIMESTAMP WITH TIME ZONE,
+  last_login     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   latest_import  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT TIMESTAMP 'epoch'
 );
 ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_id_key UNIQUE (musicbrainz_id);

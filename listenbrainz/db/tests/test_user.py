@@ -19,10 +19,10 @@ class UserTestCase(DatabaseTestCase):
 
     def test_update_last_login(self):
         user = db_user.get_or_create('testlastloginuser')
-        val = int(time.time())
-        db_user.update_last_login(user['musicbrainz_id'], val)
+        db_user.update_last_login(user['musicbrainz_id'])
         user = db_user.get_by_mb_id(user['musicbrainz_id'])
-        self.assertEqual(val, int(user['last_login'].strftime('%s')))
+        # after update_last_login, the val should be equal to the current time
+        self.assertEqual(int(time.time()), int(user['last_login'].strftime('%s')))
 
     def test_update_latest_import(self):
         user = db_user.get_or_create('testlatestimportuser')
