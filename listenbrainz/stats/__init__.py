@@ -48,6 +48,9 @@ def get_parameters_dict(parameters):
         Returns: A list of dictionaries that can be passed to the API call
     """
 
+    if not parameters:
+        return None
+
     bq_params = []
     for param in parameters:
         # construct parameter dict
@@ -98,7 +101,7 @@ def format_results(data):
     return formatted_data
 
 
-def run_query(query, parameters):
+def run_query(query, parameters=None):
     """ Run provided query on Google BigQuery and return the results in the form of a dictionary
 
         Note: This is a synchronous action

@@ -18,7 +18,6 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import listenbrainz.config as config
-import json
 from listenbrainz import stats
 
 
