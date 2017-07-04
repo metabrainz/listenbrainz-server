@@ -151,7 +151,8 @@ def latest_import():
     :statuscode 401: invalid authorization. See error message for details.
     """
     if request.method == 'GET':
-        user = db_user.get_by_mb_id(request.args.get('user_name', ''))
+        user_name = request.args.get('user_name', '')
+        user = db_user.get_by_mb_id(user_name)
         if user is None:
             raise NotFound("Cannot find user: {user_name}".format(user_name=user_name))
         return jsonify({
