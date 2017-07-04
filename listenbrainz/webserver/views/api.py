@@ -2,6 +2,7 @@
 import ujson
 from flask import Blueprint, request, jsonify, current_app
 from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized, ServiceUnavailable, NotFound
+from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz import webserver
 import listenbrainz.db.user as db_user
