@@ -190,6 +190,10 @@ def import_from_alpha(username, token):
             # send the current batch of data
             data = extract_data(batch)
             sent = send_batch(data, token)
+            if not sent:
+                stop = True
+                continue
+
             next_max = data['payload'][-1]['listened_at']
             logger.info('Page #{} done.'.format(page_count))
             if sent < len(data['payload']):
