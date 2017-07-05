@@ -1,4 +1,3 @@
-
 import sys
 import os
 import uuid
@@ -254,3 +253,8 @@ class APITestCase(IntegrationTestCase):
             headers={'Authorization': 'Token thisisinvalid'}
         )
         self.assert401(response)
+
+    def test_latest_import_unknown_user(self):
+        """Tests api.latest_import without a valid username"""
+        response = self.client.get(url_for('api_v1.latest_import'), query_string={'user_name': ''})
+        self.assert404(response)
