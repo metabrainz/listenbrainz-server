@@ -8,7 +8,6 @@ import time
 import sys
 import logging
 from logging.handlers import RotatingFileHandler
-import os
 from listenbrainz.listenstore import InfluxListenStore
 import redis
 
@@ -158,6 +157,9 @@ def update_latest_import_time(token, ts):
 
 
 def import_from_alpha(username, token):
+    """ Function to import listens from alpha for user with given username """
+
+    logger.info('Beginning alpha import for %s' % username)
 
     # first get the timestamp until which previous imports have already added data
     latest_import_ts = get_latest_import_time(username)
@@ -190,10 +192,12 @@ def import_from_alpha(username, token):
             # send the current batch of data
             data = extract_data(batch)
             sent = send_batch(data, token)
-            next_max = data['payload'][-1]['listened_at']
-            logger.info('Page #{} done.'.format(page_count))
-            if sent < len(data['payload']):
-                logger.error("Only wrote {} out of {} listens for page {}".format(sent, len(data['payload']), page_count))
+
+            # if we have more pages to get, get the timestamp
+            # of the last listen in this list
+            if not stop:
+                next_max = data['payload'][-1]['listened_at']
+
             page_count += 1
         except HTTPError as e:
             time.sleep(config.IMPORTER_DELAY)
