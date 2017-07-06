@@ -258,3 +258,12 @@ class APITestCase(IntegrationTestCase):
         """Tests api.latest_import without a valid username"""
         response = self.client.get(url_for('api_v1.latest_import'), query_string={'user_name': ''})
         self.assert404(response)
+
+    def test_multiple_artist_names(self):
+        """ Tests multiple artist names in artist_name field of data """
+
+        with open(self.path_to_data_file('artist_name_list.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertIn('artist_name must be a single string.', response.data.decode('utf-8'))
