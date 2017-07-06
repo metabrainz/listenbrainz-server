@@ -121,6 +121,8 @@ def validate_listen(listen, listen_type):
         if not listen['track_metadata']['artist_name']:
             log_raise_400("JSON document does not contain required "
                            "track_metadata.artist_name.", listen)
+        if not isinstance(listen['track_metadata']['artist_name'], str):
+            log_raise_400("artist_name must be a single string.", listen)
     except KeyError:
         log_raise_400("JSON document does not contain a valid metadata.track_name "
                        "and/or track_metadata.artist_name.", listen)
