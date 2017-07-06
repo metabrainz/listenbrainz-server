@@ -100,6 +100,8 @@ elements::
       }
     }
 
+Each of the three required elements must be simple strings.
+
 We strongly recommend to add whatever additional metadata you may have for a track to the ``additional_info`` element.
 Any additional information will allow us to better correlate your listen data to existing MusicBrainz based data. If you
 have MusicBrainz IDs availble, submit them!
