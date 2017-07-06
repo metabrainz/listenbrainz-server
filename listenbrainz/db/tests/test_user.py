@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 from listenbrainz.db.testing import DatabaseTestCase
 import listenbrainz.db.user as db_user
+from listenbrainz import db
 import time
+import sqlalchemy
 
 
 class UserTestCase(DatabaseTestCase):
@@ -18,11 +20,28 @@ class UserTestCase(DatabaseTestCase):
         self.assertNotEqual(old_token, user['auth_token'])
 
     def test_update_last_login(self):
+        """ Tests db.user.update_last_login """
+
         user = db_user.get_or_create('testlastloginuser')
+
+        # set the last login value of the user to 0
+        with db.engine.connect() as connection:
+            connection.execute(sqlalchemy.text("""
+                UPDATE "user"
+                   SET last_login = to_timestamp(0)
+                 WHERE id = :id
+            """), {
+                'id': user['id']
+            })
+
+        user = db_user.get(user['id'])
+        self.assertEquals(int(user['last_login'].strftime('%s')), 0)
+
         db_user.update_last_login(user['musicbrainz_id'])
         user = db_user.get_by_mb_id(user['musicbrainz_id'])
-        # after update_last_login, the val should be equal to the current time
-        self.assertEqual(int(time.time()), int(user['last_login'].strftime('%s')))
+
+        # after update_last_login, the val should be greater than the old value i.e 0
+        self.assertGreater(int(user['last_login'].strftime('%s')), 0)
 
     def test_update_latest_import(self):
         user = db_user.get_or_create('testlatestimportuser')
