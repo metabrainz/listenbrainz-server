@@ -19,10 +19,8 @@ class TestPostgresListenStore(DatabaseTestCase):
         super(TestPostgresListenStore, self).setUp()
         self.log = logging.getLogger(__name__)
         self.logstore = init_postgres_connection(self.config.SQLALCHEMY_DATABASE_URI)
-        # TODO: Does this use the normal or test DB??
         self.testuser_id = db_user.create("test")
         user = db_user.get(self.testuser_id)
-        print(user)
         self.testuser_name = db_user.get(self.testuser_id)['musicbrainz_id']
 
     def tearDown(self):
@@ -53,4 +51,9 @@ class TestPostgresListenStore(DatabaseTestCase):
         row = OrderedDict([(str(k), v) for (k, v) in data[1:]])
         listen = self.logstore.convert_row([1] + list(row.values()))
         self.assertIsInstance(listen, Listen)
-        self.assertDictEqual(listen.__dict__, dict(row))
+        self.assertEqual(listen.user_name, row['user_name'])
+        self.assertEqual(listen.ts_since_epoch, row['ts_since_epoch'])
+        self.assertEqual(listen.artist_msid, row['artist_msid'])
+        self.assertEqual(listen.release_msid, row['release_msid'])
+        self.assertEqual(listen.recording_msid, row['recording_msid'])
+

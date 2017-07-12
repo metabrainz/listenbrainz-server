@@ -66,6 +66,7 @@ class ListenTestCase(unittest.TestCase):
             user_name='testuser',
             artist_msid=uuid.uuid4(),
             recording_msid=uuid.uuid4(),
+            dedup_tag=3,
             data={
                 'artist_name': 'Radiohead',
                 'track_name': 'True Love Waits',
@@ -85,7 +86,9 @@ class ListenTestCase(unittest.TestCase):
         # Check values
         self.assertEqual(data['measurement'], quote(listen.user_name))
         self.assertEqual(data['time'], listen.ts_since_epoch)
+        self.assertEqual(data['tags']['dedup_tag'], listen.dedup_tag)
         self.assertEqual(data['fields']['user_name'], listen.user_name)
         self.assertEqual(data['fields']['artist_msid'], listen.artist_msid)
+        self.assertEqual(data['fields']['recording_msid'], listen.recording_msid)
         self.assertEqual(data['fields']['track_name'], listen.data['track_name'])
         self.assertEqual(data['fields']['artist_name'], listen.data['artist_name'])

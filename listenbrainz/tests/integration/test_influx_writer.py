@@ -105,13 +105,20 @@ class InfluxWriterTestCase(IntegrationTestCase):
 
         user = db_user.get_or_create('difftracksametsuser')
 
+        # send four different tracks with the same timestamp
         r = self.send_listen(user, 'valid_single.json')
         self.assert200(r)
 
         r = self.send_listen(user, 'same_timestamp_diff_track_valid_single.json')
         self.assert200(r)
+
+        r = self.send_listen(user, 'same_timestamp_diff_track_valid_single_2.json')
+        self.assert200(r)
+
+        r = self.send_listen(user, 'same_timestamp_diff_track_valid_single_3.json')
+        self.assert200(r)
         time.sleep(2)
 
         to_ts = int(time.time())
         listens = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
-        self.assertEqual(len(listens), 2)
+        self.assertEqual(len(listens), 4)

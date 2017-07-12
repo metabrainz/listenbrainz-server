@@ -17,6 +17,7 @@ from listenbrainz.utils import escape, get_measurement_name, get_escaped_measure
                                convert_timestamp_to_influx_row_format
 from requests.exceptions import ConnectionError
 from redis import Redis
+from collections import defaultdict
 
 REPORT_FREQUENCY = 5000
 DUMP_JSON_WITH_ERRORS = False
@@ -193,26 +194,39 @@ class InfluxWriterSubscriber(object):
                     sleep(3)
 
             # collect all the timestamps for this given time range.
-            timestamps = {}
+
+            timestamps = defaultdict(list) # dict of list of listens indexed by timestamp
             for result in results.get_points(measurement=get_measurement_name(user_name)):
-                timestamps[convert_to_unix_timestamp(result['time'])] = result
+                timestamps[convert_to_unix_timestamp(result['time'])].append(result)
 
             for listen in users[user_name]['listens']:
-                # Check if this listen is already present in Influx DB and if it is
-                # mark current listen as duplicate
+                # Check if a listen with the same timestamp and recording msid is already present in
+                # Influx DB and if it is, mark current listen as duplicate
                 t = int(listen['listened_at'])
                 recording_msid = listen['recording_msid']
+                dup = False
 
-                if t in timestamps and timestamps[t]['recording_msid'] == recording_msid:
-                    duplicate_count += 1
-                else:
+                if t in timestamps:
+                    for row in timestamps[t]:
+                        if row['recording_msid'] == recording_msid:
+                            duplicate_count += 1
+                            dup = True
+                            break
+                    else:
+                        # if there are listens with the same timestamp but different
+                        # metadata, we add a tag specifically for making sure that
+                        # influxdb doesn't drop one of the listens. This value
+                        # is monotonically increasing and defaults to 0
+                        listen['dedup_tag'] = len(timestamps[t])
+
+                if not dup:
                     unique_count += 1
                     submit.append(Listen.from_json(listen))
                     unique.append(listen)
-                    timestamps[t] = {
+                    timestamps[t].append({
                         'time': convert_timestamp_to_influx_row_format(t),
                         'recording_msid': recording_msid
-                    }
+                    })
 
         t0 = time()
         submitted_count = self.insert_to_listenstore(submit)
