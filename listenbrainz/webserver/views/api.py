@@ -22,6 +22,10 @@ def submit_listen():
     Submit listens to the server. A user token (found on https://listenbrainz.org/user/import ) must
     be provided in the Authorization header!
 
+    Listens should be submitted for tracks when the user has listened to half the track or 4 minutes of
+    the track, whichever is lower. If the user hasn't listened to 4 minutes or half the track, it doesn't 
+    fully count as a listen and should not be submitted.
+
     For complete details on the format of the JSON to be POSTed to this endpoint, see :ref:`json-doc`.
 
     :reqheader Authorization: Token <user token>
