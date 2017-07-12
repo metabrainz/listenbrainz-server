@@ -187,7 +187,7 @@ class InfluxListenStore(ListenStore):
         # If we reach this point, we were able to write the listens to the InfluxListenStore.
         # So update the listen counts of the users cached in redis.
         for data in submit:
-            user_key = "{}{}".format(REDIS_INFLUX_USER_LISTEN_COUNT, data['tags']['user_name'])
+            user_key = "{}{}".format(REDIS_INFLUX_USER_LISTEN_COUNT, data['fields']['user_name'])
             if self.redis.exists(user_key):
                 self.redis.incr(user_key)
 
