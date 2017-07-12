@@ -47,7 +47,7 @@ class Listen(object):
     ]
 
     def __init__(self, user_id=None, user_name=None, timestamp=None, artist_msid=None, release_msid=None,
-                 recording_msid=None, data=None):
+                 recording_msid=None, dedup_tag=0, data=None):
         self.user_id = user_id
         self.user_name = user_name
 
@@ -66,6 +66,7 @@ class Listen(object):
         self.artist_msid = artist_msid
         self.release_msid = release_msid
         self.recording_msid = recording_msid
+        self.dedup_tag = dedup_tag
         if data is None:
             self.data = {'additional_info': {}}
         else:
@@ -81,12 +82,14 @@ class Listen(object):
     @classmethod
     def from_json(cls, j):
         """Factory to make Listen() objects from a dict"""
-        return cls(user_id=j['user_id'],
+        return cls(
+            user_id=j['user_id'],
             user_name=j.get('user_name', ""),
             timestamp=datetime.utcfromtimestamp(float(j['listened_at'])),
             artist_msid=j['track_metadata']['additional_info'].get('artist_msid'),
             release_msid=j['track_metadata']['additional_info'].get('release_msid'),
             recording_msid=j.get('recording_msid'),
+            dedup_tag=j.get('dedup_tag', 0),
             data=j.get('track_metadata')
         )
 
@@ -171,15 +174,12 @@ class Listen(object):
         Converts listen into dict that can be submitted to influx directly.
 
         Returns:
-            a dict with approriate values of measurement, time, tags and fields
+            a dict with appropriate values of measurement, time, tags and fields
         """
 
         data = {
             'measurement' : measurement,
             'time' : self.ts_since_epoch,
-            'tags' : { 
-                'recording_msid' : self.recording_msid
-            },
             'fields' : {
                 'user_name' : escape(self.user_name),
                 'artist_name' : self.data['artist_name'],
@@ -194,6 +194,10 @@ class Listen(object):
                 'tags' : ",".join(self.data['additional_info'].get('tags', [])),
             }
         }
+
+        # if we need a dedup tag, then add it to the row
+        if self.dedup_tag > 0:
+            data['tags'] = {'dedup_tag': self.dedup_tag}
 
         # add the user generated keys present in additional info to fields
         for key, value in self.data['additional_info'].items():
