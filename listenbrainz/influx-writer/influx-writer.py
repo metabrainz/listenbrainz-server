@@ -216,8 +216,7 @@ class InfluxWriterSubscriber(object):
                         # if there are listens with the same timestamp but different
                         # metadata, we add a tag specifically for making sure that
                         # influxdb doesn't drop one of the listens. This value
-                        # is monotonically increasing and starts from 1 for each
-                        # timestamp
+                        # is monotonically increasing and defaults to 0
                         listen['dedup_tag'] = len(timestamps[t])
 
                 if not dup:
