@@ -47,7 +47,7 @@ class Listen(object):
     ]
 
     def __init__(self, user_id=None, user_name=None, timestamp=None, artist_msid=None, release_msid=None,
-                 recording_msid=None, dedup_tag=None, data=None):
+                 recording_msid=None, dedup_tag=0, data=None):
         self.user_id = user_id
         self.user_name = user_name
 
@@ -174,15 +174,12 @@ class Listen(object):
         Converts listen into dict that can be submitted to influx directly.
 
         Returns:
-            a dict with approriate values of measurement, time, tags and fields
+            a dict with appropriate values of measurement, time, tags and fields
         """
 
         data = {
             'measurement' : measurement,
             'time' : self.ts_since_epoch,
-            'tags' : {
-                'dedup_tag' : self.dedup_tag
-            },
             'fields' : {
                 'user_name' : escape(self.user_name),
                 'artist_name' : self.data['artist_name'],
@@ -197,6 +194,10 @@ class Listen(object):
                 'tags' : ",".join(self.data['additional_info'].get('tags', [])),
             }
         }
+
+        # if we need a dedup tag, then add it to the row
+        if self.dedup_tag > 0:
+            data['tags'] = {'dedup_tag': self.dedup_tag}
 
         # add the user generated keys present in additional info to fields
         for key, value in self.data['additional_info'].items():
