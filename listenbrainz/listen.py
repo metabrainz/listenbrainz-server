@@ -89,7 +89,7 @@ class Listen(object):
             artist_msid=j['track_metadata']['additional_info'].get('artist_msid'),
             release_msid=j['track_metadata']['additional_info'].get('release_msid'),
             recording_msid=j.get('recording_msid'),
-            dedup_tag=j.get('dedup_tag'),
+            dedup_tag=j.get('dedup_tag', 0),
             data=j.get('track_metadata')
         )
 
