@@ -177,11 +177,11 @@ class Listen(object):
         data = {
             'measurement' : measurement,
             'time' : self.ts_since_epoch,
-            'tags' : {
-                'user_name' : escape(self.user_name),
-                'recording_msid' : self.recording_msid,
+            'tags' : { 
+                'recording_msid' : self.recording_msid
             },
             'fields' : {
+                'user_name' : escape(self.user_name),
                 'artist_name' : self.data['artist_name'],
                 'artist_msid' : self.artist_msid,
                 'artist_mbids' : ",".join(self.data['additional_info'].get('artist_mbids', [])),
