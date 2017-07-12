@@ -85,8 +85,7 @@ class ListenTestCase(unittest.TestCase):
         # Check values
         self.assertEqual(data['measurement'], quote(listen.user_name))
         self.assertEqual(data['time'], listen.ts_since_epoch)
-        self.assertEqual(data['tags']['user_name'], listen.user_name)
+        self.assertEqual(data['fields']['user_name'], listen.user_name)
         self.assertEqual(data['fields']['artist_msid'], listen.artist_msid)
-        self.assertEqual(data['tags']['recording_msid'], listen.recording_msid)
         self.assertEqual(data['fields']['track_name'], listen.data['track_name'])
         self.assertEqual(data['fields']['artist_name'], listen.data['artist_name'])
