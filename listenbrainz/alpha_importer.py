@@ -182,7 +182,7 @@ def import_from_alpha(username, token):
             batch = get_batch(username, next_max)
 
             # if this is the last page or if this is the page upto which we had imported earlier, then stop
-            if batch['payload']['count'] == 0 or batch['payload']['listens'][-1]['listened_at'] <= latest_import_ts:
+            if batch['payload']['count'] == 0 or batch['payload']['listens'][-1]['listened_at'] < latest_import_ts:
                 stop = True
 
             # if this is the first page, then  get the value with which we'll update latest_update on LB
