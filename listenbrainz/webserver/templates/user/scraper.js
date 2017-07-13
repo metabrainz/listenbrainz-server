@@ -215,9 +215,11 @@ function getLastFMPage(page) {
     xhr.send();
 }
 
-var version = "1.7";
+var version = "1.7.1";
 var page = 1;
 var numberOfPages = 1;
+var playCount = -1; // the number of scrobbles reported by Last.FM
+var countReceived = 0; // number of scrobbles the Last.FM API sends us, this can be diff from playCount
 var stopPage = numberOfPages; // the page that the import stops at
 
 var numCompleted = 0;
@@ -252,7 +254,8 @@ function reportPageAndGetNext(response, page) {
     }
     var struct = encodeScrobbles(response);
     submitQueue.push(struct);
-    if (struct['payload'][struct['payload'].length - 1]['listened_at'] <= latestImportTime) {
+    countReceived += struct['payload'].length;
+    if (struct['payload'][struct['payload'].length - 1]['listened_at'] < latestImportTime) {
         previouslyDone = true;
         stopPage = page;
     }
@@ -428,7 +431,16 @@ function updateLatestImportTimeOnLB() {
     xhr.timeout = 10 * 1000; // 10 seconds
     xhr.onload = function(content) {
         if (this.status == 200) {
-            updateMessage("<i class='fa fa-check'></i> Import finished<br><span><a href={{ url_for('user.profile', user_name = user_name) }}>Close and go to your ListenBrainz profile</a></span><br><span style='font-size:8pt'>Thank you for using ListenBrainz</span>");
+            var final_msg = "<i class='fa fa-check'></i> Import finished<br>";
+            final_msg += "<span><a href={{ url_for('user.profile', user_name = user_name) }}>Close and go to your ListenBrainz profile</a></span><br>";
+            final_msg += "<span style='font-size:8pt'>Successfully submitted " + countReceived + " listens to ListenBrainz."
+                + " Please note that some of these listens might be duplicates leading to a lower listen count on LB.</span></br>";
+            if (playCount != -1 && countReceived != playCount) {
+                final_msg += "<em><span style='font-size:8pt;' class='text-danger'>The number of submitted listens is different from the "
+                    + playCount + " that Last.fm reports due to an inconsistency in their API, sorry!</span></em><br>";
+            }
+            final_msg += "<span style='font-size:8pt'>Thank you for using ListenBrainz</span>"
+            updateMessage(final_msg);
         }
         else {
             updateMessage("An error occurred, please try again. :(");
@@ -439,7 +451,40 @@ function updateLatestImportTimeOnLB() {
     }));
 }
 
+function getTotalNumberOfScrobbles() {
+    /*
+     * Get the total play count reported by Last.FM for user
+     */
+
+    function retry() {
+        setTimeout(getTotalNumberOfScrobbles, 3000);
+    }
+
+    var url = '{{ lastfm_api_url }}?method=user.getinfo&user={{ lastfm_username }}&api_key={{ lastfm_api_key }}&format=json';
+
+    var xhr = new XMLHttpRequest();
+    xhr.timeout = 10 * 1000; // 10 seconds
+    xhr.open('GET', encodeURI(url));
+    xhr.onload = function () {
+        var data = JSON.parse(this.response)['user'];
+        if ('playcount' in data) {
+            playCount = parseInt(data['playcount']);
+        }
+        else {
+            playCount = -1;
+        }
+    };
+    xhr.ontimeout = function () {
+        retry();
+    };
+    xhr.onerror = function () {
+        retry();
+    };
+    xhr.send();
+}
+
 document.body.insertAdjacentHTML( 'afterbegin', '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">');
 document.body.insertAdjacentHTML( 'afterbegin', '<div style="position:fixed; top:200px; z-index: 200000000000000; width:500px; margin-left:-250px; left:50%; background-color:#fff; box-shadow: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22); text-align:center; padding:50px;" id="listen-progress-container"></div>');
 updateMessage("Your import from Last.fm is starting!");
+getTotalNumberOfScrobbles();
 getLatestImportTime();
