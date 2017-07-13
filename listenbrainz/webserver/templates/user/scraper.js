@@ -255,7 +255,7 @@ function reportPageAndGetNext(response, page) {
     var struct = encodeScrobbles(response);
     submitQueue.push(struct);
     countReceived += struct['payload'].length;
-    if (struct['payload'][struct['payload'].length - 1]['listened_at'] <= latestImportTime) {
+    if (struct['payload'][struct['payload'].length - 1]['listened_at'] < latestImportTime) {
         previouslyDone = true;
         stopPage = page;
     }
