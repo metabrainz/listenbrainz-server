@@ -75,6 +75,7 @@ class APITestCase(IntegrationTestCase):
             content_type = 'application/json'
         )
         self.assert401(response)
+        self.assertEqual(response.json['code'], 401)
 
         # request with invalid authorization header
         response = self.client.post(
@@ -84,6 +85,7 @@ class APITestCase(IntegrationTestCase):
             content_type = 'application/json'
         )
         self.assert401(response)
+        self.assertEqual(response.json['code'], 401)
 
     def test_valid_single(self):
         """ Test for valid submissioon of listen_type listen
@@ -101,6 +103,7 @@ class APITestCase(IntegrationTestCase):
             payload = json.load(f)
         response = self.send_data(payload)
         self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
 
     def test_valid_playing_now(self):
         """ Test for valid submission of listen_type 'playing_now'
@@ -118,6 +121,7 @@ class APITestCase(IntegrationTestCase):
             payload = json.load(f)
         response = self.send_data(payload)
         self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
 
     def test_playing_now_more_than_one_listen(self):
         """ Test for invalid submission of listen_type 'playing_now' which contains
@@ -127,6 +131,8 @@ class APITestCase(IntegrationTestCase):
             payload = json.load(f)
         response = self.send_data(payload)
         self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+
 
     def test_valid_import(self):
         """ Test for a valid submission of listen_type 'import'
@@ -144,6 +150,7 @@ class APITestCase(IntegrationTestCase):
             payload = json.load(f)
         response = self.send_data(payload)
         self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
 
     def test_too_many_tags_in_listen(self):
         """ Test for invalid submission in which a listen contains more than the allowed
@@ -153,6 +160,7 @@ class APITestCase(IntegrationTestCase):
             payload = json.load(f)
         response = self.send_data(payload)
         self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
 
     def test_too_long_tag(self):
         """ Test for invalid submission in which a listen contains a tag of length > 64
@@ -161,6 +169,7 @@ class APITestCase(IntegrationTestCase):
             payload = json.load(f)
         response = self.send_data(payload)
         self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
 
     def test_invalid_release_mbid(self):
         """ Test for invalid submission in which a listen contains an invalid release_mbid
@@ -170,6 +179,7 @@ class APITestCase(IntegrationTestCase):
             payload = json.load(f)
         response = self.send_data(payload)
         self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
 
     def test_invalid_artist_mbid(self):
         """ Test for invalid submission in which a listen contains an invalid artist_mbid
@@ -179,6 +189,7 @@ class APITestCase(IntegrationTestCase):
             payload = json.load(f)
         response = self.send_data(payload)
         self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
 
     def test_invalid_recording_mbid(self):
         """ Test for invalid submission in which a listen contains an invalid recording_mbid
@@ -188,6 +199,7 @@ class APITestCase(IntegrationTestCase):
             payload = json.load(f)
         response = self.send_data(payload)
         self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
 
     def test_additional_info(self):
         """ Test to make sure that user generated data present in additional_info field
@@ -253,11 +265,13 @@ class APITestCase(IntegrationTestCase):
             headers={'Authorization': 'Token thisisinvalid'}
         )
         self.assert401(response)
+        self.assertEqual(response.json['code'], 401)
 
     def test_latest_import_unknown_user(self):
         """Tests api.latest_import without a valid username"""
         response = self.client.get(url_for('api_v1.latest_import'), query_string={'user_name': ''})
         self.assert404(response)
+        self.assertEqual(response.json['code'], 404)
 
     def test_multiple_artist_names(self):
         """ Tests multiple artist names in artist_name field of data """
@@ -266,4 +280,5 @@ class APITestCase(IntegrationTestCase):
             payload = json.load(f)
         response = self.send_data(payload)
         self.assert400(response)
-        self.assertIn('artist_name must be a single string.', response.data.decode('utf-8'))
+        self.assertEqual(response.json['code'], 400)
+        self.assertEqual('artist_name must be a single string.', response.json['error'])
