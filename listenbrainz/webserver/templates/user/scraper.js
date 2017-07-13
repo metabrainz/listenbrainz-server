@@ -245,7 +245,7 @@ var latestImportTime = 0;
 // the latest listen found in this import, we'll report back to the server with this
 var maximumTimestampForImport = 0;
 
-var showNumberOfPages = true; // should we show number of pages in the user message or not
+var notIncrementalImport = true;
 
 function reportPageAndGetNext(response, page) {
     timesGetPage++;
@@ -350,7 +350,7 @@ function submitListens() {
 
                 } else {
                     var msg = "<i class='fa fa-cog fa-spin'></i> Sending page " + numCompleted;
-                    if (showNumberOfPages) {
+                    if (notIncrementalImport) {
                         msg += " of " + numberOfPages;
                     }
                     msg += " to ListenBrainz.<br><span style='font-size:8pt'>";
@@ -406,7 +406,7 @@ function getLatestImportTime() {
 
             // if this is the first import for this user ever, show the number of pages
             // in the progress, otherwise don't
-            showNumberOfPages = latestImportTime == 0;
+            notIncrementalImport = latestImportTime == 0;
 
             getNextPagesIfSlots();
         }
@@ -435,7 +435,7 @@ function updateLatestImportTimeOnLB() {
             final_msg += "<span><a href={{ url_for('user.profile', user_name = user_name) }}>Close and go to your ListenBrainz profile</a></span><br>";
             final_msg += "<span style='font-size:8pt'>Successfully submitted " + countReceived + " listens to ListenBrainz."
                 + " Please note that some of these listens might be duplicates leading to a lower listen count on LB.</span></br>";
-            if (playCount != -1 && countReceived != playCount) {
+            if (notIncrementalImport == false && playCount != -1 && countReceived != playCount) {
                 final_msg += "<em><span style='font-size:8pt;' class='text-danger'>The number of submitted listens is different from the "
                     + playCount + " that Last.fm reports due to an inconsistency in their API, sorry!</span></em><br>";
             }
