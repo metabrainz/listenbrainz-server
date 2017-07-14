@@ -81,7 +81,7 @@ class BigQueryWriter(object):
             }
             bq_data.append({
                 'json': row,
-                'insertId': "%s-%s" % (listen['user_name'], listen['listened_at'])
+                'insertId': "%s-%s-%s" % (listen['user_name'], listen['listened_at'], listen['recording_msid'])
             })
 
         body = { 'rows' : bq_data }
