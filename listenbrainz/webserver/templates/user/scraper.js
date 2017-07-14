@@ -354,7 +354,7 @@ function submitListens() {
                         msg += " of " + numberOfPages;
                     }
                     msg += " to ListenBrainz.<br><span style='font-size:8pt'>";
-                    if (!showNumberOfPages) {
+                    if (notIncrementalImport == false) {
                         msg += "Note: This import will stop at the starting point of your last import. :)<br>";
                     }
                     msg += "Please don't navigate while this is running</span>"
