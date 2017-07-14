@@ -245,7 +245,7 @@ var latestImportTime = 0;
 // the latest listen found in this import, we'll report back to the server with this
 var maximumTimestampForImport = 0;
 
-var notIncrementalImport = true;
+var incrementalImport = false;
 
 function reportPageAndGetNext(response, page) {
     timesGetPage++;
@@ -350,14 +350,21 @@ function submitListens() {
 
                 } else {
                     var msg = "<i class='fa fa-cog fa-spin'></i> Sending page " + numCompleted;
-                    if (notIncrementalImport) {
+
+                    // show total number of pages if this is the first import and not an incremental
+                    // import
+                    if (!incrementalImport) {
                         msg += " of " + numberOfPages;
                     }
+
                     msg += " to ListenBrainz.<br><span style='font-size:8pt'>";
-                    if (notIncrementalImport == false) {
+
+                    // show a message explaining that this is an incremental import
+                    if (incrementalImport) {
                         msg += "Note: This import will stop at the starting point of your last import. :)<br>";
                     }
-                    msg += "Please don't navigate while this is running</span>"
+
+                    msg += "Please don't close this page while this is running</span>"
                     updateMessage(msg);
                 }
             };
@@ -404,9 +411,9 @@ function getLatestImportTime() {
         if (this.status == 200) {
             latestImportTime = parseInt(JSON.parse(this.response)['latest_import']);
 
-            // if this is the first import for this user ever, show the number of pages
-            // in the progress, otherwise don't
-            notIncrementalImport = latestImportTime == 0;
+            // if the latest import time is greater than 0, this is an incremental import
+            // and messages should be shown accordingly
+            incrementalImport = latestImportTime > 0;
 
             getNextPagesIfSlots();
         }
@@ -435,11 +442,16 @@ function updateLatestImportTimeOnLB() {
             final_msg += "<span><a href={{ url_for('user.profile', user_name = user_name) }}>Close and go to your ListenBrainz profile</a></span><br>";
             final_msg += "<span style='font-size:8pt'>Successfully submitted " + countReceived + " listens to ListenBrainz."
                 + " Please note that some of these listens might be duplicates leading to a lower listen count on LB.</span></br>";
-            if (notIncrementalImport == false && playCount != -1 && countReceived != playCount) {
+
+            // if the count received is different from the api count, show a message accordingly
+            // also don't show this message if it's an incremental import, because countReceived
+            // and playCount will be different by definition in incremental imports
+            if (!incrementalImport && playCount != -1 && countReceived != playCount) {
                 final_msg += "<em><span style='font-size:10pt;' class='text-danger'>The number of submitted listens is different from the "
                     + playCount + " that Last.fm reports due to an inconsistency in their API, sorry!</span></em><br>";
             }
-            final_msg += "<span style='font-size:8pt'>Thank you for using ListenBrainz</span>"
+
+            final_msg += "<span style='font-size:8pt'>Thank you for using ListenBrainz!</span>";
             updateMessage(final_msg);
         }
         else {
