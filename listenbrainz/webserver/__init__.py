@@ -30,6 +30,13 @@ def schedule_jobs(app):
 def create_app():
     app = Flask(__name__)
 
+#    if not os.path.exists("config.py"
+#
+#    app.config.from_pyfile(os.path.join(
+#        os.path.dirname(os.path.realpath(__file__)),
+#        '..', '..', 'custom_config.py'
+#    ), silent=True)
+
     # Configuration
     from listenbrainz import config
     app.config.from_object(config)
