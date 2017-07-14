@@ -436,7 +436,7 @@ function updateLatestImportTimeOnLB() {
             final_msg += "<span style='font-size:8pt'>Successfully submitted " + countReceived + " listens to ListenBrainz."
                 + " Please note that some of these listens might be duplicates leading to a lower listen count on LB.</span></br>";
             if (playCount != -1 && countReceived != playCount) {
-                final_msg += "<em><span style='font-size:8pt;' class='text-danger'>The number of submitted listens is different from the "
+                final_msg += "<em><span style='font-size:10pt;' class='text-danger'>The number of submitted listens is different from the "
                     + playCount + " that Last.fm reports due to an inconsistency in their API, sorry!</span></em><br>";
             }
             final_msg += "<span style='font-size:8pt'>Thank you for using ListenBrainz</span>"
