@@ -31,6 +31,7 @@ def schedule_jobs(app):
 def create_app():
     app = Flask(__name__)
 
+    print("in read the docs? ", os.getenv('READTHEDOCS', ""))
     # If we're building inside readthedocs, copy the same config file and use it -- it is
     # enough config to build docs
     if os.getenv('READTHEDOCS', "") and not os.path.exists("listenbrainz/config.py"):
