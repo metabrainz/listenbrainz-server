@@ -2,6 +2,7 @@
 from flask import Flask, current_app
 import sys
 import os
+from shutil import copyfile
 from listenbrainz.webserver.scheduler import ScheduledJobs
 
 def create_influx(app):
@@ -30,12 +31,10 @@ def schedule_jobs(app):
 def create_app():
     app = Flask(__name__)
 
-#    if not os.path.exists("config.py"
-#
-#    app.config.from_pyfile(os.path.join(
-#        os.path.dirname(os.path.realpath(__file__)),
-#        '..', '..', 'custom_config.py'
-#    ), silent=True)
+    # If we're building inside readthedocs, copy the same config file and use it -- it is
+    # enough config to build docs
+#    if os.getenv('READTHEDOCS', "") and not os.path.exists("listenbrainz/config.py"):
+#        copyfile("listenbrainz/config.py.sample", "listenbrainz/config.py")
 
     # Configuration
     from listenbrainz import config
