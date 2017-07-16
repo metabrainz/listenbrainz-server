@@ -33,8 +33,8 @@ def create_app():
 
     # If we're building inside readthedocs, copy the same config file and use it -- it is
     # enough config to build docs
-#    if os.getenv('READTHEDOCS', "") and not os.path.exists("listenbrainz/config.py"):
-#        copyfile("listenbrainz/config.py.sample", "listenbrainz/config.py")
+    if os.getenv('READTHEDOCS', "") and not os.path.exists("listenbrainz/config.py"):
+        copyfile("listenbrainz/config.py.sample", "listenbrainz/config.py")
 
     # Configuration
     from listenbrainz import config
