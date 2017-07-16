@@ -90,9 +90,7 @@ def create_app_rtfd():
     """
     app = Flask(__name__)
 
-    print(os.getcwd())
-    copyfile("config.py.sample", "config.py")
-#    copyfile("listenbrainz/config.py.sample", "listenbrainz/config.py")
+    copyfile("listenbrainz/config.py.sample", "listenbrainz/config.py")
     from listenbrainz import config
     app.config.from_object(config)
 
