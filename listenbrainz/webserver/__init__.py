@@ -31,12 +31,6 @@ def schedule_jobs(app):
 def create_app():
     app = Flask(__name__)
 
-    print("in read the docs? ", os.getenv('READTHEDOCS', ""))
-    # If we're building inside readthedocs, copy the same config file and use it -- it is
-    # enough config to build docs
-    if os.getenv('READTHEDOCS', "") and not os.path.exists("listenbrainz/config.py"):
-        copyfile("listenbrainz/config.py.sample", "listenbrainz/config.py")
-
     # Configuration
     from listenbrainz import config
     app.config.from_object(config)
@@ -88,6 +82,11 @@ def create_app():
 
 def create_app_rtfd():
     """Creates application for generating the documentation.
+
+    # If we're building inside readthedocs, copy the same config file and use it -- it is
+    # enough config to build docs
+    if os.getenv('READTHEDOCS', "") and not os.path.exists("listenbrainz/config.py"):
+        copyfile("listenbrainz/config.py.sample", "listenbrainz/config.py")
 
     Read the Docs builder doesn't have any of our databases or special
     packages (like MessyBrainz), so we have to ignore these initialization
