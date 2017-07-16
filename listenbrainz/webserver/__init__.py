@@ -83,7 +83,6 @@ def create_app():
 def create_app_rtfd():
     """Creates application for generating the documentation.
 
-
     Read the Docs builder doesn't have any of our databases or special
     packages (like MessyBrainz), so we have to ignore these initialization
     steps. Only blueprints/views are needed to render documentation.
