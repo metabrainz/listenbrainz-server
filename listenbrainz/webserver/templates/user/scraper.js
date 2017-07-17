@@ -328,7 +328,7 @@ function submitListens() {
                 } else if (this.status == 429) {
                     // This should never happen, but if it does, toss it back in and try again.
                     submitQueue.unshift(struct);
-                    pageDone();
+                    submitListens();
                 } else if (this.status >= 400 && this.status < 500) {
                     times4Error++;
                     // We mark 4xx errors as completed because we don't
