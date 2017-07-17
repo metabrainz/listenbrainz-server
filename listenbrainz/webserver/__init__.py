@@ -31,11 +31,6 @@ def schedule_jobs(app):
 def create_app():
     app = Flask(__name__)
 
-    # If we're building inside readthedocs, copy the same config file and use it -- it is
-    # enough config to build docs
-#    if os.getenv('READTHEDOCS', "") and not os.path.exists("listenbrainz/config.py"):
-#        copyfile("listenbrainz/config.py.sample", "listenbrainz/config.py")
-
     # Configuration
     from listenbrainz import config
     app.config.from_object(config)
@@ -93,6 +88,11 @@ def create_app_rtfd():
     steps. Only blueprints/views are needed to render documentation.
     """
     app = Flask(__name__)
+
+    copyfile("../listenbrainz/config.py.sample", "../listenbrainz/config.py")
+    from listenbrainz import config
+    app.config.from_object(config)
+
     _register_blueprints(app)
     return app
 
