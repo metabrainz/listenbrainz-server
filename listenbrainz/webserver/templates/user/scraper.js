@@ -326,7 +326,7 @@ function submitListens() {
             xhr.timeout = 10 * 1000; // 10 seconds
             xhr.onload = function(content) {
                 rl_remain = parseInt(xhr.getResponseHeader("X-RateLimit-Remaining"));
-                rl_reset = parseInt(xhr.getResponseHeader("X-RateLimit-Reset"));
+                rl_reset = parseInt(xhr.getResponseHeader("X-RateLimit-Reset-In"));
                 rl_origin = new Date().getTime() / 1000;
                 if (this.status >= 200 && this.status < 300) {
                     pageDone();
@@ -416,7 +416,7 @@ function getLatestImportTime() {
         xhr.open("GET", url);
         xhr.onload = function(content) {
             rl_remain = parseInt(xhr.getResponseHeader("X-RateLimit-Remaining"));
-            rl_reset = parseInt(xhr.getResponseHeader("X-RateLimit-Reset"));
+            rl_reset = parseInt(xhr.getResponseHeader("X-RateLimit-Reset-In"));
             rl_origin = new Date().getTime() / 1000;
             if (this.status == 200) {
                 latestImportTime = parseInt(JSON.parse(this.response)['latest_import']);
@@ -452,7 +452,7 @@ function updateLatestImportTimeOnLB() {
         xhr.timeout = 10 * 1000; // 10 seconds
         xhr.onload = function(content) {
             rl_remain = parseInt(xhr.getResponseHeader("X-RateLimit-Remaining"));
-            rl_reset = parseInt(xhr.getResponseHeader("X-RateLimit-Reset"));
+            rl_reset = parseInt(xhr.getResponseHeader("X-RateLimit-Reset-In"));
             rl_origin = new Date().getTime() / 1000;
             if (this.status == 200) {
                 var final_msg = "<i class='fa fa-check'></i> Import finished<br>";
