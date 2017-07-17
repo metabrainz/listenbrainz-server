@@ -299,7 +299,7 @@ function getRateLimitDelay() {
     if (rl_reset < 0 || current > rl_origin + rl_reset)
         delay = 0;
     else if (rl_remain > 0)
-        delay = Math.max(0, Math.ceil((rl_reset * 1000) / rl_remain);
+        delay = Math.max(0, Math.ceil((rl_reset * 1000) / rl_remain));
     else
         delay = Math.max(0, Math.ceil(rl_reset * 1000));
     return delay;
