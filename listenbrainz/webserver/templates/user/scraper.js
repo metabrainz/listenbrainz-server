@@ -230,6 +230,7 @@ var submitQueue = [];
 var isSubmitActive = false;
 var rl_remain = -1;
 var rl_reset = -1;
+var rl_origin = -1;
 
 var timesReportScrobbles = 0;
 var timesGetPage = 0;
@@ -295,12 +296,12 @@ function getRateLimitDelay() {
     /* Get the amount of time we should wait according to LB rate limits before making a request to LB */
     var delay = 0;
     var current = new Date().getTime() / 1000;
-    if (rl_reset < 0 || current > rl_reset)
+    if (rl_reset < 0 || current > rl_origin + rl_reset)
         delay = 0;
     else if (rl_remain > 0)
-        delay = Math.max(0, Math.ceil((rl_reset - current) * 1000 / rl_remain));
+        delay = Math.max(0, Math.ceil((rl_reset * 1000) / rl_remain));
     else
-        delay = Math.max(0, Math.ceil((rl_reset - current) * 1000));
+        delay = Math.max(0, Math.ceil(rl_reset * 1000));
     return delay;
 }
 
@@ -325,7 +326,8 @@ function submitListens() {
             xhr.timeout = 10 * 1000; // 10 seconds
             xhr.onload = function(content) {
                 rl_remain = parseInt(xhr.getResponseHeader("X-RateLimit-Remaining"));
-                rl_reset = parseInt(xhr.getResponseHeader("X-RateLimit-Reset"));
+                rl_reset = parseInt(xhr.getResponseHeader("X-RateLimit-Reset-In"));
+                rl_origin = new Date().getTime() / 1000;
                 if (this.status >= 200 && this.status < 300) {
                     pageDone();
                 } else if (this.status == 429) {
@@ -414,7 +416,8 @@ function getLatestImportTime() {
         xhr.open("GET", url);
         xhr.onload = function(content) {
             rl_remain = parseInt(xhr.getResponseHeader("X-RateLimit-Remaining"));
-            rl_reset = parseInt(xhr.getResponseHeader("X-RateLimit-Reset"));
+            rl_reset = parseInt(xhr.getResponseHeader("X-RateLimit-Reset-In"));
+            rl_origin = new Date().getTime() / 1000;
             if (this.status == 200) {
                 latestImportTime = parseInt(JSON.parse(this.response)['latest_import']);
 
@@ -449,7 +452,8 @@ function updateLatestImportTimeOnLB() {
         xhr.timeout = 10 * 1000; // 10 seconds
         xhr.onload = function(content) {
             rl_remain = parseInt(xhr.getResponseHeader("X-RateLimit-Remaining"));
-            rl_reset = parseInt(xhr.getResponseHeader("X-RateLimit-Reset"));
+            rl_reset = parseInt(xhr.getResponseHeader("X-RateLimit-Reset-In"));
+            rl_origin = new Date().getTime() / 1000;
             if (this.status == 200) {
                 var final_msg = "<i class='fa fa-check'></i> Import finished<br>";
                 final_msg += "<span><a href={{ url_for('user.profile', user_name = user_name) }}>Close and go to your ListenBrainz profile</a></span><br>";
