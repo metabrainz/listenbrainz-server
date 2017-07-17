@@ -29,6 +29,7 @@ def inject_x_rate_headers(response):
         h.add('X-RateLimit-Remaining', str(limit.remaining))
         h.add('X-RateLimit-Limit', str(limit.limit))
         h.add('X-RateLimit-Reset', str(limit.reset))
+        h.add('X-RateLimit-Reset-In', str(limit.seconds_before_reset))
     return response
 
 class RateLimit(object):
@@ -39,7 +40,9 @@ class RateLimit(object):
     expiration_window = 10
 
     def __init__(self, key_prefix, limit, per):
-        self.reset = (int(time.time()) // per) * per + per
+        current_time = int(time.time())
+        self.reset = (current_time // per) * per + per
+        self.seconds_before_reset = self.reset - current_time
         self.key = key_prefix + str(self.reset)
         self.limit = limit
         self.per = per
