@@ -2,6 +2,7 @@
 from flask import Flask, current_app
 import sys
 import os
+from shutil import copyfile
 from listenbrainz.webserver.scheduler import ScheduledJobs
 
 def create_influx(app):
@@ -87,6 +88,11 @@ def create_app_rtfd():
     steps. Only blueprints/views are needed to render documentation.
     """
     app = Flask(__name__)
+
+    copyfile("../listenbrainz/config.py.sample", "../listenbrainz/config.py")
+    from listenbrainz import config
+    app.config.from_object(config)
+
     _register_blueprints(app)
     return app
 
