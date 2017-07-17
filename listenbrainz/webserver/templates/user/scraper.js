@@ -230,6 +230,7 @@ var submitQueue = [];
 var isSubmitActive = false;
 var rl_remain = -1;
 var rl_reset = -1;
+var rl_origin = -1;
 
 var timesReportScrobbles = 0;
 var timesGetPage = 0;
@@ -291,6 +292,18 @@ function pageDone() {
     getNextPagesIfSlots();
 }
 
+function getRateLimitDelay() {
+    /* Get the amount of time we should wait according to LB rate limits before making a request to LB */
+    var delay = 0;
+    var current = new Date().getTime() / 1000;
+    if (rl_reset < 0 || current > rl_origin + rl_reset)
+        delay = 0;
+    else if (rl_remain > 0)
+        delay = Math.max(0, Math.ceil((rl_reset * 1000) / rl_remain));
+    else
+        delay = Math.max(0, Math.ceil(rl_reset * 1000));
+    return delay;
+}
 
 function submitListens() {
 
@@ -300,16 +313,7 @@ function submitListens() {
         return;
     }
 
-    var current = new Date().getTime() / 1000;
-    var delay = -1;
-
-    // If we have no prior reset time or the reset time has passed, delay is 0
-    if (rl_reset < 0 || current > rl_reset)
-        delay = 0;
-    else if (rl_remain > 0)
-        delay = Math.max(0, Math.ceil((rl_reset - current) * 1000 / rl_remain));
-    else
-        delay = Math.max(0, Math.ceil((rl_reset - current) * 1000));
+    var delay = getRateLimitDelay();
 
     setTimeout( function () {
             timesReportScrobbles++;
@@ -322,13 +326,14 @@ function submitListens() {
             xhr.timeout = 10 * 1000; // 10 seconds
             xhr.onload = function(content) {
                 rl_remain = parseInt(xhr.getResponseHeader("X-RateLimit-Remaining"));
-                rl_reset = parseInt(xhr.getResponseHeader("X-RateLimit-Reset"));
+                rl_reset = parseInt(xhr.getResponseHeader("X-RateLimit-Reset-In"));
+                rl_origin = new Date().getTime() / 1000;
                 if (this.status >= 200 && this.status < 300) {
                     pageDone();
                 } else if (this.status == 429) {
                     // This should never happen, but if it does, toss it back in and try again.
                     submitQueue.unshift(struct);
-                    pageDone();
+                    submitListens();
                 } else if (this.status >= 400 && this.status < 500) {
                     times4Error++;
                     // We mark 4xx errors as completed because we don't
@@ -404,24 +409,30 @@ function getLatestImportTime() {
      *  from previous imports for the user.
      */
 
-    var url = "{{ import_url }}" + "?" + "user_name=" + encodeURIComponent("{{ user_name }}");
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", url);
-    xhr.onload = function(content) {
-        if (this.status == 200) {
-            latestImportTime = parseInt(JSON.parse(this.response)['latest_import']);
+    var delay = getRateLimitDelay();
+    setTimeout(function() {
+        var url = "{{ import_url }}" + "?" + "user_name=" + encodeURIComponent("{{ user_name }}");
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url);
+        xhr.onload = function(content) {
+            rl_remain = parseInt(xhr.getResponseHeader("X-RateLimit-Remaining"));
+            rl_reset = parseInt(xhr.getResponseHeader("X-RateLimit-Reset-In"));
+            rl_origin = new Date().getTime() / 1000;
+            if (this.status == 200) {
+                latestImportTime = parseInt(JSON.parse(this.response)['latest_import']);
 
-            // if the latest import time is greater than 0, this is an incremental import
-            // and messages should be shown accordingly
-            incrementalImport = latestImportTime > 0;
+                // if the latest import time is greater than 0, this is an incremental import
+                // and messages should be shown accordingly
+                incrementalImport = latestImportTime > 0;
 
-            getNextPagesIfSlots();
-        }
-        else {
-            updateMessage("An error occured while trying to import from Last.fm, please try again. :(");
-        }
-    };
-    xhr.send();
+                getNextPagesIfSlots();
+            }
+            else {
+                updateMessage("An error occured while trying to import from Last.fm, please try again. :(");
+            }
+        };
+        xhr.send();
+    }, delay);
 }
 
 function updateLatestImportTimeOnLB() {
@@ -430,37 +441,44 @@ function updateLatestImportTimeOnLB() {
      * update the latest import time on the server. This will make future imports stop
      * when they reach this point of time in the listen history.
      */
-    var url = "{{ import_url }}";
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", url);
-    xhr.setRequestHeader("Authorization", "Token {{ user_token }}");
-    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-    xhr.timeout = 10 * 1000; // 10 seconds
-    xhr.onload = function(content) {
-        if (this.status == 200) {
-            var final_msg = "<i class='fa fa-check'></i> Import finished<br>";
-            final_msg += "<span><a href={{ url_for('user.profile', user_name = user_name) }}>Close and go to your ListenBrainz profile</a></span><br>";
-            final_msg += "<span style='font-size:8pt'>Successfully submitted " + countReceived + " listens to ListenBrainz."
-                + " Please note that some of these listens might be duplicates leading to a lower listen count on LB.</span></br>";
 
-            // if the count received is different from the api count, show a message accordingly
-            // also don't show this message if it's an incremental import, because countReceived
-            // and playCount will be different by definition in incremental imports
-            if (!incrementalImport && playCount != -1 && countReceived != playCount) {
-                final_msg += "<em><span style='font-size:10pt;' class='text-danger'>The number of submitted listens is different from the "
-                    + playCount + " that Last.fm reports due to an inconsistency in their API, sorry!</span></em><br>";
+    var delay = getRateLimitDelay();
+    setTimeout(function() {
+        var url = "{{ import_url }}";
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", url);
+        xhr.setRequestHeader("Authorization", "Token {{ user_token }}");
+        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xhr.timeout = 10 * 1000; // 10 seconds
+        xhr.onload = function(content) {
+            rl_remain = parseInt(xhr.getResponseHeader("X-RateLimit-Remaining"));
+            rl_reset = parseInt(xhr.getResponseHeader("X-RateLimit-Reset-In"));
+            rl_origin = new Date().getTime() / 1000;
+            if (this.status == 200) {
+                var final_msg = "<i class='fa fa-check'></i> Import finished<br>";
+                final_msg += "<span><a href={{ url_for('user.profile', user_name = user_name) }}>Close and go to your ListenBrainz profile</a></span><br>";
+                final_msg += "<span style='font-size:8pt'>Successfully submitted " + countReceived + " listens to ListenBrainz."
+                    + " Please note that some of these listens might be duplicates leading to a lower listen count on LB.</span></br>";
+
+                // if the count received is different from the api count, show a message accordingly
+                // also don't show this message if it's an incremental import, because countReceived
+                // and playCount will be different by definition in incremental imports
+                if (!incrementalImport && playCount != -1 && countReceived != playCount) {
+                    final_msg += "<em><span style='font-size:10pt;' class='text-danger'>The number of submitted listens is different from the "
+                        + playCount + " that Last.fm reports due to an inconsistency in their API, sorry!</span></em><br>";
+                }
+
+                final_msg += "<span style='font-size:8pt'>Thank you for using ListenBrainz!</span>";
+                updateMessage(final_msg);
             }
-
-            final_msg += "<span style='font-size:8pt'>Thank you for using ListenBrainz!</span>";
-            updateMessage(final_msg);
-        }
-        else {
-            updateMessage("An error occurred, please try again. :(");
-        }
-    };
-    xhr.send(JSON.stringify({
-        'ts': maximumTimestampForImport
-    }));
+            else {
+                updateMessage("An error occurred, please try again. :(");
+            }
+        };
+        xhr.send(JSON.stringify({
+            'ts': maximumTimestampForImport
+        }));
+    }, delay);
 }
 
 function getTotalNumberOfScrobbles() {
