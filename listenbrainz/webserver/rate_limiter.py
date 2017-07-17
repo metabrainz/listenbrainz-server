@@ -28,7 +28,8 @@ def inject_x_rate_headers(response):
         h.add('Access-Control-Expose-Headers', 'X-RateLimit-Remaining,X-RateLimit-Limit,X-RateLimit-Reset')
         h.add('X-RateLimit-Remaining', str(limit.remaining))
         h.add('X-RateLimit-Limit', str(limit.limit))
-        h.add('X-RateLimit-Reset', str(limit.seconds_before_reset))
+        h.add('X-RateLimit-Reset', str(limit.reset))
+        h.add('X-RateLimit-Reset-In', str(limit.seconds_before_reset))
     return response
 
 class RateLimit(object):
