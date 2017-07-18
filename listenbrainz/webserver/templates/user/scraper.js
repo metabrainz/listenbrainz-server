@@ -215,6 +215,7 @@ function getLastFMPage(page) {
     xhr.send();
 }
 
+var user_name = "{{ user_name }}";
 var version = "1.7.1";
 var page = 1;
 var numberOfPages = 1;
@@ -416,7 +417,9 @@ function getLatestImportTime() {
 
     var delay = getRateLimitDelay();
     setTimeout(function() {
-        var url = "{{ import_url }}" + "?" + "user_name=" + encodeURIComponent("{{ user_name }}");
+        // user_name has already been uri encoded on the server
+        var url = "{{ import_url }}?user_name=" + user_name;
+
         var xhr = new XMLHttpRequest();
         xhr.open("GET", url);
         xhr.onload = function(content) {
@@ -457,7 +460,7 @@ function updateLatestImportTimeOnLB() {
             updateRateLimitParameters(xhr);
             if (this.status == 200) {
                 var final_msg = "<i class='fa fa-check'></i> Import finished<br>";
-                final_msg += "<span><a href={{ url_for('user.profile', user_name = user_name) }}>Close and go to your ListenBrainz profile</a></span><br>";
+                final_msg += "<span><a href={{ profile_url }}>Close and go to your ListenBrainz profile</a></span><br>";
                 final_msg += "<span style='font-size:8pt'>Successfully submitted " + countReceived + " listens to ListenBrainz."
                     + " Please note that some of these listens might be duplicates leading to a lower listen count on LB.</span></br>";
 
