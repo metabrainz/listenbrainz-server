@@ -92,7 +92,8 @@
     function lastfm_import() {
       var lastfm_username = document.getElementById("lastfm_input").value;
       var xhr = new XMLHttpRequest();
-      xhr.open('GET', encodeURI('{{ scraper_url }}?user_token={{ user.auth_token }}&lastfm_username='+ lastfm_username));
+      // do not need to encode scraper_url because it is the result of a url_for call on the server
+      xhr.open('GET', '{{ scraper_url }}?user_token={{ user.auth_token }}&lastfm_username='+ encodeURIComponent(lastfm_username));
       xhr.onload = function(content) {
         eval(xhr.response);
       };
