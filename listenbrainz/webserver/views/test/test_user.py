@@ -19,6 +19,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assert200(response)
 
     def test_scraper_username(self):
+        """ Tests that the username is correctly rendered in the last.fm importer """
         response = self.client.get(
             url_for('user.lastfmscraper', user_name=self.user['musicbrainz_id']),
             query_string={
@@ -29,7 +30,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assert200(response)
         self.assertIn('var user_name = "{}";'.format(urllib.parse.quote_plus(self.user['musicbrainz_id'])), response.data.decode('utf-8'))
 
-        print(url_for('user.lastfmscraper', user_name=self.weirduser['musicbrainz_id']))
         response = self.client.get(
             url_for('user.lastfmscraper', user_name=self.weirduser['musicbrainz_id']),
             query_string={
@@ -38,7 +38,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
             }
         )
         self.assert200(response)
-        # the username should be escaped in the template because it is in quotes
         self.assertIn('var user_name = "{}";'.format(urllib.parse.quote_plus(self.weirduser['musicbrainz_id'])), response.data.decode('utf-8'))
 
     def tearDown(self):
