@@ -17,7 +17,6 @@ from listenbrainz.webserver.views.api_tools import convert_backup_to_native_form
 from listenbrainz.webserver.utils import sizeof_readable
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver.redis_connection import _redis
-from listenbrainz.utils import escape
 from os import path, makedirs
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import ujson
@@ -25,6 +24,7 @@ import zipfile
 import re
 import os
 import pytz
+import urllib
 
 LISTENS_PER_PAGE = 25
 EXPORT_FETCH_COUNT= 5000
@@ -47,7 +47,9 @@ def lastfmscraper(user_name):
         import_url="{}/1/latest-import".format(config.BETA_URL),
         user_token=user_token,
         lastfm_username=lastfm_username,
-        user_name=escape(user_name), # need to escape user_name here because other wise jinja doesn't handle usernames with backslashes correctly
+        # need to escape user_name here because other wise jinja doesn't handle usernames with backslashes correctly
+        user_name=urllib.parse.quote_plus(user_name),
+        profile_url=url_for('user.profile', user_name=user_name),
         lastfm_api_key=current_app.config['LASTFM_API_KEY'],
         lastfm_api_url=current_app.config['LASTFM_API_URL'],
     )
