@@ -63,60 +63,53 @@ def init_error_handlers(app):
             'error': error.description,
             }), code
 
+    def handle_error(error, code):
+        """ Returns appropriate error message on HTTP exceptions
+
+            error (werkzeug.exceptions.HTTPException): The exception that needs to be handled
+            code (int): the HTTP error code that should be returned
+
+            Returns:
+                A Response which will be a json error if request was made to the LB api and an html page
+                otherwise
+        """
+        if request.path.startswith('/1/'):
+            return json_error_wrapper(error, code)
+        else:
+            return error_wrapper(f'errors/{code}.html', error, code)
+
     @app.errorhandler(400)
     def bad_request(error):
-        if request.path.startswith('/1/'):
-            return json_error_wrapper(error, 400)
-        else:
-            return error_wrapper('errors/400.html', error, 400)
+        return handle_error(error, 400)
 
     @app.errorhandler(401)
     def unauthorized(error):
-        if request.path.startswith('/1/'):
-            return json_error_wrapper(error, 401)
-        else:
-            return error_wrapper('errors/401.html', error, 401)
+        return handle_error(error, 401)
 
     @app.errorhandler(403)
     def forbidden(error):
-        if request.path.startswith('/1/'):
-            return json_error_wrapper(error, 403)
-        else:
-            return error_wrapper('errors/403.html', error, 403)
+        return handle_error(error, 403)
 
     @app.errorhandler(404)
     def not_found(error):
-        if request.path.startswith('/1/'):
-            return json_error_wrapper(error, 404)
-        else:
-            return error_wrapper('errors/404.html', error, 404)
+        return handle_error(error, 404)
 
     @app.errorhandler(413)
     def file_size_too_large(error):
-        if request.path.startswith('/1/'):
-            return json_error_wrapper(error, 413)
-        else:
-            return error_wrapper('errors/413.html', error, 413)
+        return handle_error(error, 413)
 
     @app.errorhandler(500)
     def internal_server_error(error):
-        if request.path.startswith('/1/'):
-            return json_error_wrapper(error, 500)
-        else:
-            return error_wrapper('errors/500.html', error, 500)
+        return handle_error(error, 500)
 
     @app.errorhandler(503)
     def service_unavailable(error):
-        if request.path.startswith('/1/'):
-            return json_error_wrapper(error, 503)
-        else:
-            return error_wrapper('errors/503.html', error, 503)
+        return handle_error(error, 503)
 
     # Handle error of API_compat
     @app.errorhandler(InvalidAPIUsage)
     def handle_api_compat_error(error):
         return error.render_error()
-
 
 
 class InvalidAPIUsage(Exception):
