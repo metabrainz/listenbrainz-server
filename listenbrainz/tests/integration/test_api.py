@@ -25,6 +25,7 @@ class APITestCase(IntegrationTestCase):
         payload['payload'][0]['listened_at'] = int(time.time())
         response = self.send_data(payload)
         self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
 
         # This sleep allows for the influx subscriber to take its time in getting
         # the listen submitted from redis and writing it to influx.
@@ -94,6 +95,7 @@ class APITestCase(IntegrationTestCase):
             payload = json.load(f)
         response = self.send_data(payload)
         self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
 
     def test_single_more_than_one_listen(self):
         """ Test for an invalid submission which has listen_type 'single' but
@@ -112,6 +114,7 @@ class APITestCase(IntegrationTestCase):
             payload = json.load(f)
         response = self.send_data(payload)
         self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
 
     def test_playing_now_with_ts(self):
         """ Test for invalid submission of listen_type 'playing_now' which contains
@@ -141,6 +144,7 @@ class APITestCase(IntegrationTestCase):
             payload = json.load(f)
         response = self.send_data(payload)
         self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
 
     def test_too_large_listen(self):
         """ Test for invalid submission in which the overall size of the listens sent is more than
@@ -211,6 +215,7 @@ class APITestCase(IntegrationTestCase):
         payload['payload'][0]['listened_at'] = int(time.time())
         response = self.send_data(payload)
         self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
 
         # wait for influx-writer to get its work done before getting the listen back
         time.sleep(2)
@@ -247,6 +252,7 @@ class APITestCase(IntegrationTestCase):
             headers={'Authorization': 'Token {token}'.format(token=self.user['auth_token'])}
         )
         self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
 
         # now the value must have changed
         response = self.client.get(url_for('api_v1.latest_import'), query_string={'user_name': self.user['musicbrainz_id']})
