@@ -1,11 +1,7 @@
-
 from listenbrainz.webserver.testing import ServerTestCase
 from flask import url_for
 import listenbrainz.db.user as db_user
 from listenbrainz.db.testing import DatabaseTestCase
-import urllib
-import time
-import ujson
 
 class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
     def setUp(self):
