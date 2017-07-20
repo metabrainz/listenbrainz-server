@@ -72,7 +72,7 @@ def submit_listen():
     except Exception as e:
         raise InternalServerError("Something went wrong. Please try again.")
 
-    return "success"
+    return jsonify({'status': 'ok'})
 
 
 @api_bp.route("/1/user/<user_name>/listens")
@@ -178,7 +178,7 @@ def latest_import():
             current_app.logger.error("Error while updating latest import: {}".format(e))
             raise InternalServerError('Could not update latest_import, try again')
 
-        return 'success'
+        return jsonify({'status': 'ok'})
 
 
 def _parse_int_arg(name, default=None):

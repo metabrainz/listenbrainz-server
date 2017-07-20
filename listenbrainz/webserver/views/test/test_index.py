@@ -32,3 +32,8 @@ class IndexViewsTestCase(ServerTestCase):
     def test_roadmap(self):
         resp = self.client.get(url_for('index.roadmap'))
         self.assert200(resp)
+
+    def test_404(self):
+        resp = self.client.get('/canyoufindthis')
+        self.assert404(resp)
+        self.assertIn('Not Found', resp.data.decode('utf-8'))
