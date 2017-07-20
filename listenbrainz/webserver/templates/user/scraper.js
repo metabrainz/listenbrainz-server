@@ -305,6 +305,13 @@ function getRateLimitDelay() {
     return delay;
 }
 
+function updateRateLimitParameters(xhr) {
+    /* Update the variables we use to honor LB's rate limits */
+    rl_remain = parseInt(xhr.getResponseHeader("X-RateLimit-Remaining"));
+    rl_reset = parseInt(xhr.getResponseHeader("X-RateLimit-Reset-In"));
+    rl_origin = new Date().getTime() / 1000;
+}
+
 function submitListens() {
 
     struct = submitQueue.shift()
@@ -325,9 +332,7 @@ function submitListens() {
             xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
             xhr.timeout = 10 * 1000; // 10 seconds
             xhr.onload = function(content) {
-                rl_remain = parseInt(xhr.getResponseHeader("X-RateLimit-Remaining"));
-                rl_reset = parseInt(xhr.getResponseHeader("X-RateLimit-Reset-In"));
-                rl_origin = new Date().getTime() / 1000;
+                updateRateLimitParameters(xhr);
                 if (this.status >= 200 && this.status < 300) {
                     pageDone();
                 } else if (this.status == 429) {
@@ -415,9 +420,7 @@ function getLatestImportTime() {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", url);
         xhr.onload = function(content) {
-            rl_remain = parseInt(xhr.getResponseHeader("X-RateLimit-Remaining"));
-            rl_reset = parseInt(xhr.getResponseHeader("X-RateLimit-Reset-In"));
-            rl_origin = new Date().getTime() / 1000;
+            updateRateLimitParameters(xhr);
             if (this.status == 200) {
                 latestImportTime = parseInt(JSON.parse(this.response)['latest_import']);
 
@@ -451,9 +454,7 @@ function updateLatestImportTimeOnLB() {
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         xhr.timeout = 10 * 1000; // 10 seconds
         xhr.onload = function(content) {
-            rl_remain = parseInt(xhr.getResponseHeader("X-RateLimit-Remaining"));
-            rl_reset = parseInt(xhr.getResponseHeader("X-RateLimit-Reset-In"));
-            rl_origin = new Date().getTime() / 1000;
+            updateRateLimitParameters(xhr);
             if (this.status == 200) {
                 var final_msg = "<i class='fa fa-check'></i> Import finished<br>";
                 final_msg += "<span><a href={{ url_for('user.profile', user_name = user_name) }}>Close and go to your ListenBrainz profile</a></span><br>";
