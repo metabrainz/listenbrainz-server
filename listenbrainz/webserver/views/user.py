@@ -48,7 +48,7 @@ def lastfmscraper(user_name):
         user_token=user_token,
         lastfm_username=lastfm_username,
         # need to escape user_name here because other wise jinja doesn't handle usernames with backslashes correctly
-        user_name=urllib.parse.quote_plus(user_name),
+        user_name=urllib.parse.quote(user_name),
         profile_url=url_for('user.profile', user_name=user_name),
         lastfm_api_key=current_app.config['LASTFM_API_KEY'],
         lastfm_api_url=current_app.config['LASTFM_API_URL'],
