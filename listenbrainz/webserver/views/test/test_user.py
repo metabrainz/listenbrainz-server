@@ -28,7 +28,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
             }
         )
         self.assert200(response)
-        self.assertIn('var user_name = "{}";'.format(urllib.parse.quote_plus(self.user['musicbrainz_id'])), response.data.decode('utf-8'))
+        self.assertIn('var user_name = "iliekcomputers";', response.data.decode('utf-8'))
 
         response = self.client.get(
             url_for('user.lastfmscraper', user_name=self.weirduser['musicbrainz_id']),
@@ -38,7 +38,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
             }
         )
         self.assert200(response)
-        self.assertIn('var user_name = "{}";'.format(urllib.parse.quote_plus(self.weirduser['musicbrainz_id'])), response.data.decode('utf-8'))
+        self.assertIn('var user_name = "weird%5Cuser%20name";', response.data.decode('utf-8'))
 
     def tearDown(self):
         ServerTestCase.tearDown(self)
