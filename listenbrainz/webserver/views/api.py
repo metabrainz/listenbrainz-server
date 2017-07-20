@@ -14,7 +14,7 @@ import time
 api_bp = Blueprint('api_v1', __name__)
 
 
-@api_bp.route("/1/submit-listens", methods=["POST", "OPTIONS"])
+@api_bp.route("/submit-listens", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def submit_listen():
@@ -75,7 +75,7 @@ def submit_listen():
     return jsonify({'status': 'ok'})
 
 
-@api_bp.route("/1/user/<user_name>/listens")
+@api_bp.route("/user/<user_name>/listens")
 @ratelimit()
 def get_listens(user_name):
     """
@@ -125,7 +125,7 @@ def get_listens(user_name):
     }})
 
 
-@api_bp.route('/1/latest-import', methods=['GET', 'POST', 'OPTIONS'])
+@api_bp.route('/latest-import', methods=['GET', 'POST', 'OPTIONS'])
 @crossdomain(headers='Authorization, Content-Type')
 @ratelimit()
 def latest_import():
