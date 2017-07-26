@@ -14,14 +14,18 @@ def init_rabbitmq_connection(app):
         sleep(2)
         sys.exit(-1)
 
-    params = pika.URLParameters(
-        'amqp://guest:guest@%s:%d/?socket_timeout=10&connection_attempts=2' % (app.config['RABBITMQ_HOST'], app.config['RABBITMQ_PORT'])
-    )
+    credentials = pika.PlainCredentials(app.config['RABBITMQ_USERNAME'], app.config['RABBITMQ_PASSWORD'])
+    connection_parameters = pika.ConnectionParameters(
+            host=app.config['RABBITMQ_HOST'],
+            port=app.config['RABBITMQ_PORT'],
+            virtual_host=app.config['RABBITMQ_VHOST'],
+            credentials=credentials
+        )
 
     while True:
         try:
             _rabbitmq = pika_pool.QueuedPool(
-                    create=lambda: pika.BlockingConnection(parameters=params),
+                    create=lambda: pika.BlockingConnection(connection_parameters),
                     max_size=100,
                     max_overflow=10,
                     timeout=10,
