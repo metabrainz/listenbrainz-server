@@ -32,6 +32,9 @@ INFLUX_DB_NAME  = "listenbrainz"
 # RabbitMQ
 RABBITMQ_HOST = "rabbitmq"
 RABBITMQ_PORT = 5672
+RABBITMQ_USERNAME = "guest"
+RABBITMQ_PASSWORD = "guest"
+RABBITMQ_VHOST = "/"
 
 # MusicBrainz OAuth
 MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
