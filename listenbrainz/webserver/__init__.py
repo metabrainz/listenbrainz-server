@@ -1,9 +1,10 @@
-
 from flask import Flask, current_app
 import sys
 import os
 from shutil import copyfile
 from listenbrainz.webserver.scheduler import ScheduledJobs
+
+API_PREFIX = '/1'
 
 def create_influx(app):
     from listenbrainz.webserver.influx_connection import init_influx_connection
@@ -106,5 +107,5 @@ def _register_blueprints(app):
     app.register_blueprint(index_bp)
     app.register_blueprint(login_bp, url_prefix='/login')
     app.register_blueprint(user_bp, url_prefix='/user')
-    app.register_blueprint(api_bp)
+    app.register_blueprint(api_bp, url_prefix=API_PREFIX)
     app.register_blueprint(api_bp_compat)
