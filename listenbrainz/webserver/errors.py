@@ -3,6 +3,7 @@ from yattag import Doc
 import yattag
 import ujson
 import collections
+from listenbrainz.webserver import API_PREFIX
 
 LastFMError = collections.namedtuple('LastFMError', ['code', 'message'])
 
@@ -73,7 +74,7 @@ def init_error_handlers(app):
                 A Response which will be a json error if request was made to the LB api and an html page
                 otherwise
         """
-        if request.path.startswith('/1/'):
+        if request.path.startswith(API_PREFIX):
             return json_error_wrapper(error, code)
         else:
             return error_wrapper(f'errors/{code}.html', error, code)
