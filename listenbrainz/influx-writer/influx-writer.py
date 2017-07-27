@@ -50,7 +50,14 @@ class InfluxWriterSubscriber(object):
     def connect_to_rabbitmq(self):
         while True:
             try:
-                self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=config.RABBITMQ_HOST, port=config.RABBITMQ_PORT))
+                credentials = pika.PlainCredentials(config.RABBITMQ_USERNAME, config.RABBITMQ_PASSWORD)
+                connection_parameters = pika.ConnectionParameters(
+                        host=config.RABBITMQ_HOST,
+                        port=config.RABBITMQ_PORT,
+                        virtual_host=config.RABBITMQ_VHOST,
+                        credentials=credentials
+                    )
+                self.connection = pika.BlockingConnection(connection_parameters)
                 break
             except Exception as e:
                 self.log.error("Cannot connect to rabbitmq: %s, retrying in 2 seconds" % str(e))
