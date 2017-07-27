@@ -7,8 +7,8 @@ DEBUG = False
 
 SECRET_KEY = '''{{template "KEY" "secret_key"}}'''
 
-{{if service "listenbrainz-db"}}
-{{with index (service "listenbrainz-db") 0}}
+{{if service "postgres-master"}
+{{with index (service "postgres-master") 0}}
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{{.Port}}/listenbrainz"
 MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@{{.Address}}:{{.Port}}/messybrainz"
 POSTGRES_ADMIN_URI="postgresql://postgres@{{.Address}}:{{.Port}}/template1"
@@ -35,8 +35,8 @@ INFLUX_DB_NAME  = "listenbrainz"
 {{end}}
 {{end}}
 
-{{if service "listenbrainz-rabbitmq"}}
-{{with index (service "listenbrainz-rabbitmq") 0}}
+{{if service "rabbitmq"}}
+{{with index (service "rabbitmq") 0}}
 RABBITMQ_HOST = "{{.Address}}"
 RABBITMQ_PORT = {{.Port}}
 {{end}}
