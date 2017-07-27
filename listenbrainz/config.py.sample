@@ -32,6 +32,9 @@ INFLUX_DB_NAME  = "listenbrainz"
 # RabbitMQ
 RABBITMQ_HOST = "rabbitmq"
 RABBITMQ_PORT = 5672
+RABBITMQ_USERNAME = "guest"
+RABBITMQ_PASSWORD = "guest"
+RABBITMQ_VHOST = "/"
 
 # MusicBrainz OAuth
 MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
@@ -84,7 +87,7 @@ UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
 IMPORTER_QUEUE_KEY = 'alphaimporter:queue'
 IMPORTER_SET_KEY_PREFIX = 'alphaimporter:set'
 ALPHA_URL = 'https://alpha.listenbrainz.org'
-BETA_URL = 'https://listenbrainz.org'
+BETA_URL = 'https://api.listenbrainz.org'
 LISTENS_PER_GET = 100
 IMPORTER_LOG_FILE = '-'
 IMPORTER_DELAY = 3 # delay if requests don't return http 200

@@ -27,10 +27,6 @@
 
   <div class="container">
 
-    <div class = "alert alert-danger">
-      <strong>Note:</strong> Please understand that ListenBrainz has not officially entered beta yet and that this is just a test version of ListenBrainz beta. We cannot promise that your data will remain intact as we're just testing out our code right now. After some time, we may need to delete all data and start from scratch. Please make sure that this version of ListenBrainz is not the only place your listen history is stored.
-    </div>
-
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% for category, message in messages %}
         {{ print_message(message, category) }}
