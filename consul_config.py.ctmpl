@@ -41,6 +41,10 @@ RABBITMQ_HOST = "{{.Address}}"
 RABBITMQ_PORT = {{.Port}}
 {{end}}
 {{end}}
+RABBITMQ_USERNAME = '''{{template "KEY" "rabbitmq_user"}}'''
+RABBITMQ_PASSWORD = '''{{template "KEY" "rabbitmq_pass"}}'''
+RABBITMQ_VHOST = '''{{template "KEY" "rabbitmq_vhost"}}'''
+
 
 MUSICBRAINZ_CLIENT_ID = '''{{template "KEY" "musicbrainz/client_id"}}'''
 MUSICBRAINZ_CLIENT_SECRET = '''{{template "KEY" "musicbrainz/client_secret"}}'''
