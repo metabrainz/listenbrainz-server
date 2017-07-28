@@ -6,8 +6,8 @@ DEBUG = False
 
 SECRET_KEY = '''{{template "KEY" "secret_key"}}'''
 
-{{if service "listenbrainz-db"}}
-{{with index (service "listenbrainz-db") 0}}
+{{if service "pgbouncer-master"}}
+{{with index (service "pgbouncer-master") 0}}
 SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz@{{.Address}}:{{.Port}}/messybrainz"
 TEST_SQLALCHEMY_DATABASE_URI = "postgresql://msb_test@{{.Address}}:{{.Port}}/msb_test"
 POSTGRES_ADMIN_URI="postgresql://postgres@{{.Address}}:{{.Port}}/template1"
