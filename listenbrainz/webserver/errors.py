@@ -77,7 +77,7 @@ def init_error_handlers(app):
         if request.path.startswith(API_PREFIX):
             return json_error_wrapper(error, code)
         else:
-            return error_wrapper(f'errors/{code}.html', error, code)
+            return error_wrapper('errors/{code}.html'.format(code=code), error, code)
 
     @app.errorhandler(400)
     def bad_request(error):
