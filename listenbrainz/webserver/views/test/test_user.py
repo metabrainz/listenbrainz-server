@@ -2,6 +2,7 @@ from listenbrainz.webserver.testing import ServerTestCase
 from flask import url_for
 import listenbrainz.db.user as db_user
 from listenbrainz.db.testing import DatabaseTestCase
+import time
 
 class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
     def setUp(self):
@@ -35,6 +36,29 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         )
         self.assert200(response)
         self.assertIn('var user_name = "weird%5Cuser%20name";', response.data.decode('utf-8'))
+
+    def test_reset_import_timestamp_get(self):
+        self.temporary_login(self.user['id'])
+        response = self.client.get(url_for('user.reset_latest_import_timestamp'))
+        self.assertTemplateUsed('user/resetlatestimportts.html')
+        self.assert200(response)
+
+    def test_reset_import_timestamp_post(self):
+        self.temporary_login(self.user['id'])
+        val = int(time.time())
+        db_user.update_latest_import(self.user['musicbrainz_id'], val)
+
+        response = self.client.post(
+            url_for('user.reset_latest_import_timestamp'),
+            data={
+                'reset': 'yes',
+                'token': self.user['auth_token']
+            }
+        )
+        self.assertStatus(response, 302) # should have redirected to the import page
+        self.assertRedirects(response, url_for('user.import_data'))
+        ts = db_user.get(self.user['id'])['latest_import'].strftime('%s')
+        self.assertEqual(int(ts), 0)
 
     def tearDown(self):
         ServerTestCase.tearDown(self)
