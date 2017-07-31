@@ -193,25 +193,33 @@ def update_last_login(musicbrainz_id, ts=int(time.time())):
 
 def update_latest_import(musicbrainz_id, ts):
     """ Update the value of latest_import field for user with specified MusicBrainz ID
-        If the field already contains a bigger value, no change take place.
 
     Args:
         musicbrainz_id (str): MusicBrainz username of user
         ts (int): Timestamp value with which to update the database
     """
 
+    with db.engine.connect() as connection:
+        try:
+            result = connection.execute(sqlalchemy.text("""
+                UPDATE "user"
+                   SET latest_import = to_timestamp(:ts)
+                 WHERE musicbrainz_id = :musicbrainz_id
+                """), {
+                    'ts': ts,
+                    'musicbrainz_id': musicbrainz_id
+                })
+        except sqlalchemy.exc.ProgrammingError as e:
+            logger.error(e)
+            raise DatabaseException
+
+def increase_latest_import(musicbrainz_id, ts):
+    """Increases the latest_import field for user with specified MusicBrainz ID"""
     user = get_by_mb_id(musicbrainz_id)
     if ts > int(user['latest_import'].strftime('%s')):
-        with db.engine.connect() as connection:
-            try:
-                result = connection.execute(sqlalchemy.text("""
-                    UPDATE "user"
-                       SET latest_import = to_timestamp(:ts)
-                     WHERE musicbrainz_id = :musicbrainz_id
-                    """), {
-                        'ts': ts,
-                        'musicbrainz_id': musicbrainz_id
-                    })
-            except sqlalchemy.exc.ProgrammingError as e:
-                logger.error(e)
-                raise DatabaseException
+        update_latest_import(musicbrainz_id, ts)
+
+def reset_latest_import(musicbrainz_id):
+    """Resets the latest_import field for user with specified MusicBrainz ID to 0"""
+    user = get_by_mb_id(musicbrainz_id)
+    update_latest_import(musicbrainz_id, 0)
