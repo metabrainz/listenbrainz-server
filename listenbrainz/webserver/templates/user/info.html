@@ -1,0 +1,38 @@
+{% extends 'user/base.html' %}
+
+{% block profile_content %}
+
+    <div style="margin-top:20px">
+      <img src="{{ url_for('static', filename='img/musicbrainz-16.svg') }}" />
+      <b><a href="https://musicbrainz.org/user/{{ user.musicbrainz_id }}">See profile on MusicBrainz</a></b>
+    </div>
+
+    <br/>
+
+    <p>
+      If you think that a partial import has somehow missed some listens, you may reset your previous
+      import timestamp. This will cause your next import to be a complete import which should add any
+      missing listens while still avoiding adding duplicates to your history.
+    </p>
+
+    <p>If you want to reset your previous import timestamp, click below</p>
+    <p>
+      <span class="btn btn-info btn-lg" style="width: 300px"><a href="{{ url_for("user.reset_latest_import_timestamp") }}" style="color: white;">Reset Import Timestamp</a></span>
+    </p>
+
+    <h3>User token</h3>
+    <p>
+      If you would like to use an external program to submit data to ListenBrainz you will need the following
+      user token:
+    </p>
+
+    <div class="well">
+      {{ user.auth_token }}
+    </div>
+
+    <p>If you want to reset your token, click below</p>
+    <p>
+      <span class="btn btn-info btn-lg" style="width: 200px"><a href="{{ url_for("user.reset_token") }}" style="color: white;">Reset token</a></span>
+    </p>
+
+{% endblock %}

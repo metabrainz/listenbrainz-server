@@ -37,7 +37,7 @@
                 {{ current_user.musicbrainz_id }} <span class="caret"></span>
               </a>
               <ul class="dropdown-menu" role="menu">
-                <li><a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">Your listens</a></li>
+                <li><a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">Your Profile</a></li>
                 <li><a href="{{ url_for('user.import_data') }}">Import listens</a></li>
                 <li><a href="{{ url_for('user.export_data') }}">Export listens</a></li>
                 <li><a href="{{ url_for('login.logout') }}">Sign out</a></li>
