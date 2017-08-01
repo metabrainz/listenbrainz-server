@@ -189,7 +189,7 @@ def profile(user_name):
 
 @user_bp.route("/<user_name>/info")
 def info(user_name):
-    user = db_user.get_by_mb_id(user_name)
+    user = _get_user(user_name)
     return render_template(
         "user/info.html",
         section="info",
