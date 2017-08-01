@@ -77,6 +77,28 @@ def reset_token():
             token = token,
         )
 
+@user_bp.route("/resetlatestimportts", methods=["GET", "POST"])
+@login_required
+def reset_latest_import_timestamp():
+    if request.method == "POST":
+        token = request.form.get("token")
+        if token != current_user.auth_token:
+            raise BadRequest("Can only reset latest import timestamp of currently logged in user")
+        reset = request.form.get("reset")
+        if reset == "yes":
+            try:
+                db_user.reset_latest_import(current_user.musicbrainz_id)
+                flash.info("Latest import time reset, we'll now import all your data instead of stopping at your last imported listen.")
+            except DatabaseException as e:
+                flash.error("Something went wrong! Unable to reset latest import timestamp right now.")
+        return redirect(url_for("user.import_data"))
+    else:
+        token = current_user.auth_token
+        return render_template(
+            "user/resetlatestimportts.html",
+            token=token,
+        )
+
 @user_bp.route("/<user_name>")
 def profile(user_name):
     # Which database to use to showing user listens.
