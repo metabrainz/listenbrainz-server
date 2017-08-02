@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-from listenbrainz.db.testing import DatabaseTestCase
-import listenbrainz.db.user as db_user
-from listenbrainz import db
 import time
 import sqlalchemy
-
+from listenbrainz import db
+from listenbrainz.db.testing import DatabaseTestCase
+import listenbrainz.db.user as db_user
 
 class UserTestCase(DatabaseTestCase):
 
@@ -59,3 +58,34 @@ class UserTestCase(DatabaseTestCase):
         db_user.update_latest_import(user['musicbrainz_id'], val)
         user = db_user.get_by_mb_id(user['musicbrainz_id'])
         self.assertEqual(val, int(user['latest_import'].strftime('%s')))
+
+    def test_get_recently_logged_in_users(self):
+        """Tests getting recently logged in users"""
+
+        # create two users, set one's last_login
+        # to a very old value and one's last_login
+        # to now and then call get_recently_logged_in_users
+        user1 = db_user.get_or_create('recentuser1')
+        with db.engine.connect() as connection:
+            connection.execute(sqlalchemy.text("""
+                UPDATE "user"
+                   SET last_login = to_timestamp(0)
+                 WHERE musicbrainz_id = :musicbrainz_id
+                """), {
+                    'musicbrainz_id': 'recentuser1'
+                })
+
+        user2 = db_user.get_or_create('recentuser2')
+        with db.engine.connect() as connection:
+            connection.execute(sqlalchemy.text("""
+                UPDATE "user"
+                   SET last_login = NOW()
+                 WHERE musicbrainz_id = :musicbrainz_id
+                """), {
+                    'musicbrainz_id': 'recentuser2'
+                })
+
+        recent_users = db_user.get_recently_logged_in_users()
+        self.assertEqual(len(recent_users), 1)
+        self.assertEqual(recent_users[0]['musicbrainz_id'], 'recentuser2')
+
