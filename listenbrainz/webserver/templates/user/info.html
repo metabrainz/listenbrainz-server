@@ -2,13 +2,6 @@
 
 {% block profile_content %}
 
-    <div style="margin-top:20px">
-      <img src="{{ url_for('static', filename='img/musicbrainz-16.svg') }}" />
-      <b><a href="https://musicbrainz.org/user/{{ user.musicbrainz_id }}">See profile on MusicBrainz</a></b>
-    </div>
-
-    <br/>
-
     <p>
       If you think that a partial import has somehow missed some listens, you may reset your previous
       import timestamp. This will cause your next import to be a complete import which should add any

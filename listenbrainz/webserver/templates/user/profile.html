@@ -1,6 +1,10 @@
 {% extends 'user/base.html' %}
 
 {% block profile_content %}
+
+    <img src="{{ url_for('static', filename='img/musicbrainz-16.svg') }}" />
+    <b><a href="https://musicbrainz.org/user/{{ user.musicbrainz_id }}">See profile on MusicBrainz</a></b>
+
     {% if have_listen_count %}
       <h3> Listen Count: {{ listen_count }}  </h3>
     {% else %}
