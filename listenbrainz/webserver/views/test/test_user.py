@@ -62,15 +62,17 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
 
     def test_user_info_view(self):
         """Tests the user info view and makes sure auth token is present there"""
+        self.temporary_login(self.user['id'])
         response = self.client.get(url_for('user.info', user_name=self.user['musicbrainz_id']))
         self.assertTemplateUsed('user/info.html')
         self.assert200(response)
         self.assertIn(self.user['auth_token'], response.data.decode('utf-8'))
 
-    def test_user_info_404(self):
-        """Tests 404 for user info view"""
-        response = self.client.get(url_for('user.info', user_name='thisuserdoesnotexist'))
-        self.assert404(response)
+    def test_user_info_not_logged_in(self):
+        """Tests user info view when not logged in"""
+        response = self.client.get(url_for('user.info'))
+        self.assertStatus(response, 302)
+        self.assertRedirects(response, url_for('login.index', next='/user/info'))
 
     def tearDown(self):
         ServerTestCase.tearDown(self)
