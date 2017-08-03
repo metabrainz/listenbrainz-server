@@ -3,9 +3,10 @@
 """
 import logging
 from apscheduler.schedulers.background import BackgroundScheduler
+from listenbrainz.stats.calculate import calculate_stats
 
 class ScheduledJobs():
-    """ Schedule the scripts that need to be run at scheduled intervals """
+    """Schedule the scripts that need to be run at regular intervals """
 
     def __init__(self, conf):
         self.log = logging.getLogger(__name__)
@@ -25,5 +26,5 @@ class ScheduledJobs():
             self.scheduler.shutdown()
 
     def add_jobs(self):
-        """ Add the jobs that need to be run to the scheduler """
-        pass
+        """Add the jobs that need to be run to the scheduler"""
+        self.scheduler.add_job(calculate_stats, 'interval', days=conf['STATS_CALCULATION_INTERVAL'])
