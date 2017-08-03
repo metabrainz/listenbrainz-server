@@ -60,6 +60,18 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         ts = db_user.get(self.user['id'])['latest_import'].strftime('%s')
         self.assertEqual(int(ts), 0)
 
+    def test_user_info_view(self):
+        """Tests the user info view and makes sure auth token is present there"""
+        response = self.client.get(url_for('user.info', user_name=self.user['musicbrainz_id']))
+        self.assertTemplateUsed('user/info.html')
+        self.assert200(response)
+        self.assertIn(self.user['auth_token'], response.data.decode('utf-8'))
+
+    def test_user_info_404(self):
+        """Tests 404 for user info view"""
+        response = self.client.get(url_for('user.info', user_name='thisuserdoesnotexist'))
+        self.assert404(response)
+
     def tearDown(self):
         ServerTestCase.tearDown(self)
         DatabaseTestCase.tearDown(self)
