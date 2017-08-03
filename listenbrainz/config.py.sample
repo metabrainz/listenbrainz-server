@@ -55,6 +55,10 @@ BIGQUERY_TABLE_ID = "listen"
 # Stats
 STATS_ENTITY_LIMIT = 100 # the number of entities to calculate at max with BQ
 
+# Stats
+STATS_CALCULATE_LOGIN = 7
+
+
 # Max time in seconds after which the playing_now stream will expire.
 PLAYING_NOW_MAX_DURATION = 10 * 60
 
