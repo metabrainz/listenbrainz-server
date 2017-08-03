@@ -16,6 +16,6 @@ def calculate_user_stats():
             releases=releases,
         )
 
-def calculate():
-    pass
+def calculate_stats():
+    calculate_user_stats()
 
