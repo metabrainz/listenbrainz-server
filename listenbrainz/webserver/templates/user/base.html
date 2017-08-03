@@ -6,12 +6,6 @@
   <div id="user-profile">
     <h2 class="page-title">{{ user.musicbrainz_id }}</h2>
 
-
-    <ul class="nav nav-tabs" role="tablist">
-        <li {{ 'class=active' if section=='listens' }}><a href="{{ url_for('user.profile', user_name=user.musicbrainz_id) }}">Listens</a></li>
-        <li {{ 'class=active' if section=='info' }}><a href="{{ url_for('user.info', user_name=user.musicbrainz_id) }}">Info</a></li>
-    </ul>
-
     {% block profile_content %} {% endblock %}
 
   </div>
