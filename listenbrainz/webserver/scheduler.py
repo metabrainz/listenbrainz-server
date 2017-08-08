@@ -27,4 +27,4 @@ class ScheduledJobs():
 
     def add_jobs(self):
         """Add the jobs that need to be run to the scheduler"""
-        self.scheduler.add_job(calculate_stats, 'interval', days=conf['STATS_CALCULATION_INTERVAL'])
+        self.scheduler.add_job(calculate_stats, 'interval', days=self.conf['STATS_CALCULATION_INTERVAL'])
