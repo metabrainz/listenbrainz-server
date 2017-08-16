@@ -58,10 +58,12 @@ def get_top_recordings(musicbrainz_id, time_interval=None):
                 {time_filter_clause}
              GROUP BY recording_msid, track_name, artist_name, artist_msid
              ORDER BY listen_count DESC
+                LIMIT {limit}
             """.format(
                 dataset_id=config.BIGQUERY_DATASET_ID,
                 table_id=config.BIGQUERY_TABLE_ID,
                 time_filter_clause=filter_clause,
+                limit=config.STATS_ENTITY_LIMIT
             )
 
     # construct the parameters that must be passed to the Google BigQuery API
@@ -108,10 +110,12 @@ def get_top_artists(musicbrainz_id, time_interval=None):
                 {time_filter_clause}
              GROUP BY artist_msid, artist_name
              ORDER BY listen_count DESC
+                LIMIT {limit}
             """.format(
                     dataset_id=config.BIGQUERY_DATASET_ID,
                     table_id=config.BIGQUERY_TABLE_ID,
                     time_filter_clause=filter_clause,
+                    limit=config.STATS_ENTITY_LIMIT,
                 )
 
     parameters = [
@@ -158,10 +162,12 @@ def get_top_releases(musicbrainz_id, time_interval=None):
                 {time_filter_clause}
              GROUP BY artist_msid, artist_name, release_name, release_msid
              ORDER BY listen_count DESC
+                LIMIT {limit}
             """.format(
                     dataset_id=config.BIGQUERY_DATASET_ID,
                     table_id=config.BIGQUERY_TABLE_ID,
                     time_filter_clause=filter_clause,
+                    limit=config.STATS_ENTITY_LIMIT,
                 )
 
     parameters = [

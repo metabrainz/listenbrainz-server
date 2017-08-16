@@ -52,6 +52,8 @@ BIGQUERY_PROJECT_ID = "listenbrainz"
 BIGQUERY_DATASET_ID = "listenbrainz_test"
 BIGQUERY_TABLE_ID = "listen"
 
+# Stats
+STATS_ENTITY_LIMIT = 100 # the number of entities to calculate at max with BQ
 
 # Max time in seconds after which the playing_now stream will expire.
 PLAYING_NOW_MAX_DURATION = 10 * 60
