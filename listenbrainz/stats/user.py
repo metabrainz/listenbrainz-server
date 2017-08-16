@@ -45,7 +45,7 @@ def get_top_recordings(musicbrainz_id, time_interval=None):
 
     filter_clause = ""
     if time_interval:
-        filter_clause = "AND listened_at > TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL {})".format(time_interval)
+        filter_clause = "AND listened_at >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL {})".format(time_interval)
 
     # construct the query string
     query = """SELECT artist_name
@@ -99,7 +99,7 @@ def get_top_artists(musicbrainz_id, time_interval=None):
 
     filter_clause = ""
     if time_interval:
-        filter_clause = "AND listened_at > TIMESTAMP_SUB(CURRENT_TIME(), INTERVAL {})".format(time_interval)
+        filter_clause = "AND listened_at >= TIMESTAMP_SUB(CURRENT_TIME(), INTERVAL {})".format(time_interval)
 
 
     query = """SELECT artist_name
@@ -149,7 +149,7 @@ def get_top_releases(musicbrainz_id, time_interval=None):
 
     filter_clause = ""
     if time_interval:
-        filter_clause = "AND listened_at > TIMESTAMP_SUB(CURRENT_TIME(), INTERVAL {})".format(time_interval)
+        filter_clause = "AND listened_at >= TIMESTAMP_SUB(CURRENT_TIME(), INTERVAL {})".format(time_interval)
 
 
     query = """SELECT artist_name
