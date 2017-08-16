@@ -34,11 +34,12 @@ def get_top_recordings(musicbrainz_id, time_interval=None):
             sorted list of the following format
             [
                 {
-                    "track_name" (str)
-                    "recording_msid" (uuid)
-                    "artist_name" (str)
-                    "artist_msid" (uuid)
-                    "listen_count" (int)
+                    'track_name' (str)
+                    'recording_msid' (uuid)
+                    'artist_name' (str)
+                    'artist_msid' (uuid)
+                    'artist_mbids' (string of comma-seperated uuids)
+                    'listen_count' (int)
                 }
             ]
     """
@@ -47,16 +48,17 @@ def get_top_recordings(musicbrainz_id, time_interval=None):
     if time_interval:
         filter_clause = "AND listened_at >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL {})".format(time_interval)
 
-    # construct the query string
     query = """SELECT artist_name
                     , artist_msid
+                    , artist_mbids
                     , recording_msid
+                    , recording_mbid
                     , track_name
                     , COUNT(recording_msid) as listen_count
                  FROM {dataset_id}.{table_id}
                 WHERE user_name = @musicbrainz_id
                 {time_filter_clause}
-             GROUP BY recording_msid, track_name, artist_name, artist_msid
+             GROUP BY recording_msid, recording_mbid, track_name, artist_name, artist_msid, artist_mbids
              ORDER BY listen_count DESC
                 LIMIT {limit}
             """.format(
@@ -92,7 +94,8 @@ def get_top_artists(musicbrainz_id, time_interval=None):
                     {
                         'artist_name' (str),
                         'artist_msid' (uuid),
-                        'listen_count' (int)
+                        'artist_mbids' (string of comma-seperated uuids),
+                        'listen_count' (int),
                     }
                 ]
     """
@@ -104,11 +107,12 @@ def get_top_artists(musicbrainz_id, time_interval=None):
 
     query = """SELECT artist_name
                     , artist_msid
+                    , artist_mbids
                     , COUNT(artist_msid) as listen_count
                  FROM {dataset_id}.{table_id}
                 WHERE user_name = @musicbrainz_id
                 {time_filter_clause}
-             GROUP BY artist_msid, artist_name
+             GROUP BY artist_msid, artist_name, artist_mbids
              ORDER BY listen_count DESC
                 LIMIT {limit}
             """.format(
@@ -140,6 +144,7 @@ def get_top_releases(musicbrainz_id, time_interval=None):
                     {
                         'artist_name' (str),
                         'artist_msid' (uuid),
+                        'artist_mbids' (string of comma seperated uuids),
                         'release_name' (str),
                         'release_msid' (uuid),
                         'listen_count' (int)
@@ -154,13 +159,15 @@ def get_top_releases(musicbrainz_id, time_interval=None):
 
     query = """SELECT artist_name
                     , artist_msid
+                    , artist_mbids
                     , release_name
                     , release_msid
+                    , release_mbid
                     , COUNT(release_msid) as listen_count
                  FROM {dataset_id}.{table_id}
                 WHERE user_name = @musicbrainz_id
                 {time_filter_clause}
-             GROUP BY artist_msid, artist_name, release_name, release_msid
+             GROUP BY artist_msid, artist_mbids, artist_name, release_name, release_msid, release_mbid
              ORDER BY listen_count DESC
                 LIMIT {limit}
             """.format(
