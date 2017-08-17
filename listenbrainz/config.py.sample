@@ -54,8 +54,6 @@ BIGQUERY_TABLE_ID = "listen"
 
 # Stats
 STATS_ENTITY_LIMIT = 100 # the number of entities to calculate at max with BQ
-
-# Stats
 STATS_CALCULATE_LOGIN = 30
 STATS_CALCULATION_INTERVAL = 7
 
