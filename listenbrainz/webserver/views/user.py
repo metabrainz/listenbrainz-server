@@ -153,6 +153,8 @@ def profile(user_name):
             listens.insert(0, listen)
 
     user_stats = db_stats.get_user_stats(user.id)
+    if not user_stats:
+        user_stats = {}
 
     return render_template(
         "user/profile.html",

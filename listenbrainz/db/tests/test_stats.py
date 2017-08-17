@@ -36,12 +36,14 @@ class StatsDatabaseTestCase(DatabaseTestCase):
             user_id=self.user['id'],
             artists=artists,
             recordings=recordings,
-            releases=releases
+            releases=releases,
+            artist_count=2,
         )
 
         # TODO(param): test the last_updated values too
         result = db_stats.get_user_stats(user_id=self.user['id'])
-        self.assertDictEqual(result['artists'], artists)
+        self.assertDictEqual(result['artists']['all_time'], artists)
+        self.assertEqual(result['artists']['count'], 2)
         self.assertDictEqual(result['releases'], releases)
         self.assertDictEqual(result['recordings'], recordings)
 
