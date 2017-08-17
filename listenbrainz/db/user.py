@@ -169,27 +169,25 @@ def get_or_create(musicbrainz_id):
         user = get_by_mb_id(musicbrainz_id)
     return user
 
-def update_last_login(musicbrainz_id, ts=int(time.time())):
+def update_last_login(musicbrainz_id):
     """ Update the value of last_login field for user with specified MusicBrainz ID
 
     Args:
         musicbrainz_id (str): MusicBrainz username of a user
-        ts (int): Timestamp value with which to update the database, defaults to now
     """
 
     with db.engine.connect() as connection:
         try:
             result = connection.execute(sqlalchemy.text("""
                 UPDATE "user"
-                   SET last_login = to_timestamp(:ts)
+                   SET last_login = NOW()
                  WHERE musicbrainz_id = :musicbrainz_id
                 """), {
-                    "ts": ts,
                     "musicbrainz_id": musicbrainz_id,
             })
-        except sqlalchemy.exc.ProgrammingError as e:
-            logger.error(e)
-            raise
+        except sqlalchemy.exc.ProgrammingError as err:
+            logger.error(err)
+            raise DatabaseException("Couldn't update last_login: %s" % str(err))
 
 def update_latest_import(musicbrainz_id, ts):
     """ Update the value of latest_import field for user with specified MusicBrainz ID
