@@ -11,12 +11,14 @@ def calculate_user_stats():
         recordings = stats_user.get_top_recordings(musicbrainz_id=user['musicbrainz_id'])
         artists    = stats_user.get_top_artists(musicbrainz_id=user['musicbrainz_id'])
         releases   = stats_user.get_top_releases(musicbrainz_id=user['musicbrainz_id'])
+        artist_count = stats_user.get_artist_count(musicbrainz_id=user['musicbrainz_id'])
 
         db_stats.insert_user_stats(
             user_id=user['id'],
             artists=artists,
             recordings=recordings,
             releases=releases,
+            artist_count=artist_count
         )
 
 def calculate_stats():
