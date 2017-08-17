@@ -53,6 +53,9 @@ services:
     image: web
     volumes:
       - ..:/code/listenbrainz
+      - ../credentials:/code/credentials
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: '/code/credentials/bigquery-credentials.json'
     ports:
       - "80:80"
     depends_on:
