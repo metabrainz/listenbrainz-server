@@ -36,6 +36,7 @@ def get_top_recordings(musicbrainz_id, time_interval=None):
                 {
                     'track_name' (str)
                     'recording_msid' (uuid)
+                    'recording_mbid' (uuid)
                     'artist_name' (str)
                     'artist_msid' (uuid)
                     'artist_mbids' (string of comma-seperated uuids)
@@ -147,6 +148,7 @@ def get_top_releases(musicbrainz_id, time_interval=None):
                         'artist_mbids' (string of comma seperated uuids),
                         'release_name' (str),
                         'release_msid' (uuid),
+                        'release_mbid' (uuid),
                         'listen_count' (int)
                     }
                 ]
