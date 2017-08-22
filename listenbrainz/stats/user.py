@@ -167,7 +167,7 @@ def get_artist_count(musicbrainz_id, time_interval=None):
         }
     ]
 
-    return stats.run_query(query, parameters)['listen_count']
+    return stats.run_query(query, parameters)[0]['artist_count']
 
 
 
