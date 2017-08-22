@@ -153,8 +153,10 @@ def profile(user_name):
             listens.insert(0, listen)
 
     user_stats = db_stats.get_user_stats(user.id)
-    if not user_stats:
-        user_stats = {}
+    try:
+        artist_count = int(user_stats['artists']['count'])
+    except (KeyError, TypeError):
+        artist_count = 0
 
     return render_template(
         "user/profile.html",
@@ -165,7 +167,7 @@ def profile(user_name):
         spotify_uri=_get_spotify_uri_for_listens(listens),
         have_listen_count=have_listen_count,
         listen_count=format(int(listen_count), ",d"),
-        artist_count=format(int(user_stats['artists']['count']), ",d")
+        artist_count=format(artist_count, ",d")
     )
 
 
