@@ -165,7 +165,7 @@ def profile(user_name):
         spotify_uri=_get_spotify_uri_for_listens(listens),
         have_listen_count=have_listen_count,
         listen_count=format(int(listen_count), ",d"),
-        artist_count=format(len(user_stats.get("artists", [])), ",d")
+        artist_count=format(int(user_stats['artists']['count']), ",d")
     )
 
 
