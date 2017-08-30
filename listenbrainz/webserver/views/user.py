@@ -139,6 +139,156 @@ def profile(user_name):
     )
 
 
+<<<<<<< HEAD
+=======
+@user_bp.route("/info")
+@login_required
+def info():
+    return render_template(
+        "user/info.html",
+        user=current_user
+    )
+
+@user_bp.route("/<user_name>/artists")
+def artists(user_name):
+    """
+    """
+    user = _get_user(user_name)
+    data = db_stats.get_user_stats(user.id)['artists']['all_time']
+    return render_template(
+        "user/artists.html",
+        user=user,
+        data=ujson.dumps(data),
+    )
+
+@user_bp.route("/import")
+@login_required
+def import_data():
+    """ Displays the import page to user, giving various options """
+
+    # Return error if LASTFM_API_KEY is not given in config.py
+    if 'LASTFM_API_KEY' not in current_app.config or current_app.config['LASTFM_API_KEY'] == "":
+        return NotFound("LASTFM_API_KEY not specified.")
+
+    alpha_import_status = "NO_REQUEST"
+    redis_connection = _redis.redis
+    user_key = "{} {}".format(current_app.config['IMPORTER_SET_KEY_PREFIX'], current_user.musicbrainz_id)
+    if redis_connection.exists(user_key):
+        alpha_import_status = redis_connection.get(user_key)
+    return render_template(
+        "user/import.html",
+        user=current_user,
+        alpha_import_status=alpha_import_status,
+        scraper_url=url_for(
+            "user.lastfmscraper",
+            user_name=current_user.musicbrainz_id,
+            _external=True,
+        ),
+    )
+
+
+@user_bp.route("/export", methods=["GET", "POST"])
+@login_required
+def export_data():
+    """ Exporting the data to json """
+    if request.method == "POST":
+        db_conn = webserver.create_influx(current_app)
+        filename = current_user.musicbrainz_id + "_lb-" + datetime.today().strftime('%Y-%m-%d') + ".json"
+
+        # fetch all listens for the user from listenstore by making repeated queries to
+        # listenstore until we get all the data
+        to_ts = int(time())
+        listens = []
+        while True:
+            batch = db_conn.fetch_listens(current_user.musicbrainz_id, to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
+            if not batch:
+                break
+            listens.extend(batch)
+            to_ts = batch[-1].ts_since_epoch # new to_ts will the the timestamp of the last listen fetched
+
+        # Fetch output and convert it into dict with keys as indexes
+        output = []
+        for index, obj in enumerate(listens):
+            dic = obj.data
+            dic['timestamp'] = obj.ts_since_epoch
+            dic['release_msid'] = None if obj.release_msid is None else str(obj.release_msid)
+            dic['artist_msid'] = None if obj.artist_msid is None else str(obj.artist_msid)
+            dic['recording_msid'] = None if obj.recording_msid is None else str(obj.recording_msid)
+            output.append(dic)
+
+        response = make_response(ujson.dumps(output))
+        response.headers["Content-Disposition"] = "attachment; filename=" + filename
+        response.headers['Content-Type'] = 'application/json; charset=utf-8'
+        response.mimetype = "text/json"
+        return response
+    else:
+        return render_template("user/export.html", user=current_user)
+
+
+@user_bp.route("/upload", methods=['GET', 'POST'])
+@login_required
+def upload():
+    if request.method == 'POST':
+        try:
+            f = request.files['file']
+            if f.filename == '':
+                flash('No file selected.')
+                return redirect(request.url)
+        except RequestEntityTooLarge:
+            raise RequestEntityTooLarge('Maximum filesize upload limit exceeded. File must be <=' + \
+                  sizeof_readable(current_app.config['MAX_CONTENT_LENGTH']))
+        except:
+            raise InternalServerError("Something went wrong. Could not upload the file")
+
+        # Check upload folder
+        if not 'UPLOAD_FOLDER' in current_app.config:
+            raise InternalServerError("Could not upload the file. Upload folder not specified")
+        upload_path = path.join(path.abspath(current_app.config['UPLOAD_FOLDER']), current_user.musicbrainz_id)
+        if not path.isdir(upload_path):
+            makedirs(upload_path)
+
+        # Write to a file
+        filename = path.join(upload_path, secure_filename(f.filename))
+        f.save(filename)
+
+        if not zipfile.is_zipfile(filename):
+            raise BadRequest('Not a valid zip file.')
+
+        success = failure = 0
+        regex = re.compile('json/scrobbles/scrobbles-*')
+        try:
+            zf = zipfile.ZipFile(filename, 'r')
+            files = zf.namelist()
+            # Iterate over file that match the regex
+            for f in [f for f in files if regex.match(f)]:
+                try:
+                    # Load listens file
+                    jsonlist = ujson.loads(zf.read(f))
+                    if not isinstance(jsonlist, list):
+                        raise ValueError
+                except ValueError:
+                    failure += 1
+                    continue
+
+                payload = convert_backup_to_native_format(jsonlist)
+                for listen in payload:
+                    validate_listen(listen, LISTEN_TYPE_IMPORT)
+                insert_payload(payload, current_user)
+                success += 1
+        except Exception as e:
+            raise BadRequest('Not a valid lastfm-backup-file.')
+        finally:
+            os.remove(filename)
+
+        # reset listen count for user
+        db_connection = webserver.influx_connection._influx
+        db_connection.reset_listen_count(current_user.musicbrainz_id)
+
+        flash('Congratulations! Your listens from %d  files have been uploaded successfully.' % (success))
+    return redirect(url_for("user.import_data"))
+
+
+>>>>>>> 640cfd3... Add an artist view and template
 def _get_user(user_name):
     """ Get current username """
     if current_user.is_authenticated() and \
