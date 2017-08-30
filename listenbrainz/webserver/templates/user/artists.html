@@ -1,0 +1,27 @@
+{% extends 'user/base.html' %}
+
+{% block profile_content %}
+	<img src="{{ url_for('static', filename='img/musicbrainz-16.svg') }}" />
+    <b><a href="https://musicbrainz.org/user/{{ user.musicbrainz_id }}">See profile on MusicBrainz</a></b>
+
+	<h3> Top Artists </h3>
+
+	<div class="row">
+	  <div id="graph" class="col-md-8">
+	  </div>
+	</div>
+
+
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ url_for('static', filename='js/lib/d3.v4.min.js') }}"></script>
+  <script type="text/javascript">
+	var data = 1;
+	var svg = d3.select("#graph").append("svg")
+								 .attr("height", "100%")
+								 .attr("width", "100%");
+	svg.selectAll("rect").data(data).enter().append("rect").attr("height", "250").attr("width", "40").attr("x", "25").attr("y", "50");	
+  </script>
+{% endblock %}
