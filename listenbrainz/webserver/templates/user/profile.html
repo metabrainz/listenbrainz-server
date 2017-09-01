@@ -12,28 +12,28 @@
     </div>
 
 
-	<h3> Statistics </h3>
+  <h3> Statistics </h3>
 
-	<div class="row">
-	  <div class="col-md-8">
-		<table class="table table-border table-condensed table-striped">
-	      <tbody>
-		  {% if listen_count %}
-			<tr>
-			  <td>Listen count</td>
-			  <td>{{ listen_count }}</td>
-			</tr>
-		  {% endif %}
+  <div class="row">
+    <div class="col-md-8">
+    <table class="table table-border table-condensed table-striped">
+        <tbody>
+      {% if listen_count %}
+      <tr>
+        <td>Listen count</td>
+        <td>{{ listen_count }}</td>
+      </tr>
+      {% endif %}
 
-		  {% if artist_count %}
-			<tr>
-			  <td>Artist count</td>
-			  <td>{{ artist_count }}</td>
-			</tr>
-		  {% endif %}
-		</table>
-	  </div>
-	</div>
+      {% if artist_count %}
+      <tr>
+        <td>Artist count</td>
+        <td>{{ artist_count }}</td>
+      </tr>
+      {% endif %}
+    </table>
+    </div>
+  </div>
 
     <h3>Recent listens</h3>
 
