@@ -1,15 +1,15 @@
 {% extends 'user/base.html' %}
 
 {% block profile_content %}
-	<img src="{{ url_for('static', filename='img/musicbrainz-16.svg') }}" />
+    <img src="{{ url_for('static', filename='img/musicbrainz-16.svg') }}" />
     <b><a href="https://musicbrainz.org/user/{{ user.musicbrainz_id }}">See profile on MusicBrainz</a></b>
 
-	<h3> Top Artists </h3>
+    <h3> Top Artists </h3>
 
-	<div class="row">
-	  <div id="graph" class="col-md-8">
-	  </div>
-	</div>
+    <div class="row">
+      <div id="graph" class="col-md-8">
+      </div>
+    </div>
 
 
 {% endblock %}
@@ -18,10 +18,51 @@
   {{ super() }}
   <script src="{{ url_for('static', filename='js/lib/d3.v4.min.js') }}"></script>
   <script type="text/javascript">
-	var data = 1;
-	var svg = d3.select("#graph").append("svg")
-								 .attr("height", "100%")
-								 .attr("width", "100%");
-	svg.selectAll("rect").data(data).enter().append("rect").attr("height", "250").attr("width", "40").attr("x", "25").attr("y", "50");	
+    var data = {{ data|safe }};
+    var svg = d3.select("#graph").append("svg")
+                                 .attr("height", (40 * data.length).toString())
+                                 .attr("width", "100%");
+    svg.selectAll(".row")
+       .data(data)
+       .enter().append("rect")
+               .attr("class", "row")
+               .attr("height", "40")
+               .attr("width", "100%")
+               .attr("x", "0")
+               .attr("y", function(d, i) { return 40 * i; })
+               .attr("fill", function(d, i) { return i % 2 == 0 ? "#F9F9F9" : "#FFFFFF"; })
+
+    svg.selectAll(".bar")
+       .data(data)
+       .enter().append("rect")
+               .attr("class", "bar")
+               .attr("height", "30")
+               .attr("width", function(d, i) {return Math.max(((d.listen_count * 50) / data[0].listen_count), 10).toString() + "%";})
+               .attr("x", "50%")
+               .attr("y", function(d, i) { return 40 * i + 5; });	
+
+    svg.selectAll(".index")
+       .data(data)
+       .enter().append("text")
+               .text(function(d, i) { return (i + 1).toString(); })
+               .attr("class", "index")
+               .attr("x", "1%")
+               .attr("y", function(d, i) { return 40 * i + 25; });
+
+    svg.selectAll(".artist-names")
+       .data(data)
+       .enter().append("text")
+               .text(function(d, i) { return d.artist_name; })
+               .attr("class", "artist-names")
+               .attr("x", "7%")
+               .attr("y", function(d, i) { return 40 * i + 25; });
+
+    svg.selectAll(".listen-counts")
+       .data(data)
+       .enter().append("text")
+               .text(function(d, i) { return d.listen_count })
+               .attr("class", "listen-counts")
+               .attr("x", "50.5%")
+               .attr("y", function(d, i) {return 40 * i + 25; });
   </script>
 {% endblock %}
