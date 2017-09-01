@@ -225,7 +225,6 @@ def get_recently_logged_in_users():
                   FROM "user"
                  WHERE last_login >= NOW() - INTERVAL ':x days'
                 """.format(columns=','.join(USER_GET_COLUMNS))), {
-                    #TODO(param): think about the name of this variable in config
-                    'x': config.STATS_CALCULATE_LOGIN
+                    'x': config.STATS_CALCULATION_LOGIN_TIME
                 })
         return [dict(row) for row in result]
