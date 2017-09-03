@@ -37,6 +37,24 @@ def runserver(host, port, debug=False):
 
 
 @cli.command()
+@click.option("--host", "-h", default="0.0.0.0", show_default=True)
+@click.option("--port", "-p", default=8080, show_default=True)
+@click.option("--debug", "-d", is_flag=True,
+              help="Turns debugging mode on or off. If specified, overrides "
+                   "'DEBUG' value in the config file.")
+def run_api_compat_server(host, port, debug=False):
+    application = webserver.create_api_compat_app()
+    run_simple(
+        hostname=host,
+        port=port,
+        application=application,
+        use_debugger=debug,
+        use_reloader=debug,
+        processes=5
+    )
+
+
+@cli.command()
 @click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
 @click.option("--create-db", is_flag=True, help="Create the database and user.")
 def init_db(force, create_db):
