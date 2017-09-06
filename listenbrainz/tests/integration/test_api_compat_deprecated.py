@@ -76,6 +76,29 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         self.assertEqual(response[0], 'OK')
         self.assertEqual(len(response[1]), 32)
 
+    def test_handshake_post(self):
+        """ Tests POST requests to handshake endpoint """
+
+        ts = int(time.time())
+        args = {
+            'hs': 'true',
+            'p': '1.2',
+            'c': 'tst',
+            'v': '0.1',
+            'u': self.user['musicbrainz_id'],
+            't': ts,
+            'a': _get_audioscrobbler_auth_token(self.user['auth_token'], ts)
+        }
+
+        r = self.client.post('/', query_string=args)
+
+        self.assert200(r)
+        response = r.data.decode('utf-8').split('\n')
+        self.assertEqual(len(response), 4)
+        self.assertEqual(response[0], 'OK')
+        self.assertEqual(len(response[1]), 32)
+
+
     def test_root_url_when_no_handshake(self):
         """ Tests the root url when there's no handshaking taking place """
 
