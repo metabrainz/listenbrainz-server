@@ -28,7 +28,7 @@ import listenbrainz.db.user as db_user
 from hashlib import md5
 from time import time
 
-from flask import Blueprint, request, render_template
+from flask import Blueprint, request, render_template, redirect
 from listenbrainz.db.lastfm_session import Session
 from listenbrainz.webserver.views.api_tools import insert_payload
 
@@ -46,8 +46,8 @@ def handshake():
         in clients.
     """
 
-    if not request.args.get('hs', '') == 'true':
-        return render_template('api_compat/index.html')
+    if request.args.get('hs', '') != 'true':
+        return redirect('https://listenbrainz.org/lastfm-proxy')
 
     user = db_user.get_by_mb_id(request.args.get('u'))
     if user is None:
@@ -76,7 +76,6 @@ def handshake():
 def submit_listens():
     """ Submit listens received from clients into the listenstore after validating them. """
 
-
     session = Session.load(request.form.get('s', ''))
     if session is None:
         return "BADSESSION\n", 401
@@ -93,8 +92,6 @@ def submit_listens():
 
     if not listens:
         return "FAILED No data submitted!\n", 400
-
-
 
     user = db_user.get(session.user_id)
     insert_payload(listens, user)
@@ -142,6 +139,7 @@ def _to_native_api(data, index):
         listen['track_metadata']['additional_info']['recording_mbid'] = data['m[{}]'.format(index)]
 
     return listen
+
 
 def _get_audioscrobbler_auth_token(lb_auth_token, timestamp):
     """ Gets the correct auth token for checking against the token sent by client

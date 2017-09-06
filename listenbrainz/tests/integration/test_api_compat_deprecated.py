@@ -103,8 +103,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         """ Tests the root url when there's no handshaking taking place """
 
         r = self.client.get('/')
-        self.assertTemplateUsed('api_compat/index.html')
-        self.assert200(r)
+        self.assertStatus(r, 302)
 
 
     def test_handshake_unknown_user(self):
