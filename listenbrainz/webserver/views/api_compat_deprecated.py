@@ -36,7 +36,7 @@ from listenbrainz.webserver.views.api_tools import insert_payload
 api_compat_old_bp = Blueprint('api_compat_old', __name__)
 
 
-@api_compat_old_bp.route('/')
+@api_compat_old_bp.route('/', methods=['GET', 'POST', 'OPTIONS'])
 def handshake():
     """ View to handshake with the client.
 
