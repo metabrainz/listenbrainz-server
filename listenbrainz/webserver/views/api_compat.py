@@ -108,7 +108,7 @@ def session_info(request, data):
     except KeyError:
         raise InvalidAPIUsage(CompatError.INVALID_PARAMETERS, output_format=output_format)        # Missing Required Params
 
-    session = Session.load(sk, api_key)
+    session = Session.load(sk)
     if (not session) or User.load_by_name(username).id != session.user.id:
         raise InvalidAPIUsage(CompatError.INVALID_SESSION_KEY, output_format=output_format)       # Invalid Session KEY
 
@@ -240,7 +240,7 @@ def record_listens(request, data):
     except KeyError:
         raise InvalidAPIUsage(CompatError.INVALID_PARAMETERS, output_format=output_format)    # Invalid parameters
 
-    session = Session.load(sk, api_key)
+    session = Session.load(sk)
     if not session:
         if not Token.is_valid_api_key(api_key):
             raise InvalidAPIUsage(CompatError.INVALID_API_KEY, output_format=output_format)   # Invalid API_KEY

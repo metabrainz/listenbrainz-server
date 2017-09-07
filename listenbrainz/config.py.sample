@@ -91,3 +91,6 @@ BETA_URL = 'https://api.listenbrainz.org'
 LISTENS_PER_GET = 100
 IMPORTER_LOG_FILE = '-'
 IMPORTER_DELAY = 3 # delay if requests don't return http 200
+
+
+LASTFM_PROXY_URL = 'http://0.0.0.0:8080/'

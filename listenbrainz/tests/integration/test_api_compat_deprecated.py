@@ -1,0 +1,215 @@
+""" This module tests AudioScrobbler v1.2 compatibility features """
+
+# listenbrainz-server - Server for the ListenBrainz project.
+#
+# Copyright (C) 2017 Param Singh <paramsingh258@gmail.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+
+
+import time
+import listenbrainz.config as config
+import listenbrainz.db.user as db_user
+
+from hashlib import md5
+from flask import url_for
+from listenbrainz.listenstore import InfluxListenStore
+from listenbrainz.tests.integration import APICompatIntegrationTestCase
+from listenbrainz.webserver.views.api_compat_deprecated import _get_audioscrobbler_auth_token
+
+
+class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
+
+    def setUp(self):
+        super(APICompatDeprecatedTestCase, self).setUp()
+        self.user = db_user.get_or_create('apicompatoldtestuser')
+        self.ls = InfluxListenStore({
+            'REDIS_HOST' : config.REDIS_HOST,
+            'REDIS_PORT' : config.REDIS_PORT,
+            'INFLUX_HOST': config.INFLUX_HOST,
+            'INFLUX_PORT': config.INFLUX_PORT,
+            'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
+        })
+
+
+    def handshake(self, user_name, auth_token, timestamp):
+        """ Makes a request to the handshake endpoint of the AudioScrobbler API and
+            returns the response.
+        """
+
+        args = {
+            'hs': 'true',
+            'p': '1.2',
+            'c': 'tst',
+            'v': '0.1',
+            'u': user_name,
+            't': timestamp,
+            'a': auth_token
+        }
+
+        return self.client.get('/', query_string=args)
+
+
+    def test_handshake(self):
+        """ Tests handshake for a user that exists """
+
+        timestamp = int(time.time())
+        audioscrobbler_auth_token = _get_audioscrobbler_auth_token(self.user['auth_token'], timestamp)
+
+        r = self.handshake(self.user['musicbrainz_id'], audioscrobbler_auth_token, timestamp)
+
+        self.assert200(r)
+        response = r.data.decode('utf-8').split('\n')
+        self.assertEqual(len(response), 4)
+        self.assertEqual(response[0], 'OK')
+        self.assertEqual(len(response[1]), 32)
+
+    def test_handshake_post(self):
+        """ Tests POST requests to handshake endpoint """
+
+        ts = int(time.time())
+        args = {
+            'hs': 'true',
+            'p': '1.2',
+            'c': 'tst',
+            'v': '0.1',
+            'u': self.user['musicbrainz_id'],
+            't': ts,
+            'a': _get_audioscrobbler_auth_token(self.user['auth_token'], ts)
+        }
+
+        r = self.client.post('/', query_string=args)
+
+        self.assert200(r)
+        response = r.data.decode('utf-8').split('\n')
+        self.assertEqual(len(response), 4)
+        self.assertEqual(response[0], 'OK')
+        self.assertEqual(len(response[1]), 32)
+
+
+    def test_root_url_when_no_handshake(self):
+        """ Tests the root url when there's no handshaking taking place """
+
+        r = self.client.get('/')
+        self.assertStatus(r, 302)
+
+
+    def test_handshake_unknown_user(self):
+        """ Tests handshake for user that is not in the db """
+
+        r = self.handshake('', '', '')
+        self.assert401(r)
+
+
+    def test_handshake_invalid_auth(self):
+        """ Tests handshake when invalid authorization token is sent """
+
+        r = self.handshake(self.user['musicbrainz_id'], '', int(time.time()))
+        self.assert401(r)
+
+
+    def test_submit_listen(self):
+        """ Sends a valid listen after handshaking and checks if it is present in the
+            listenstore
+        """
+
+        timestamp = int(time.time())
+        audioscrobbler_auth_token = _get_audioscrobbler_auth_token(self.user['auth_token'], timestamp)
+
+        r = self.handshake(self.user['musicbrainz_id'], audioscrobbler_auth_token, timestamp)
+        self.assert200(r)
+        response = r.data.decode('utf-8').split('\n')
+        self.assertEqual(response[0], 'OK')
+
+        sid = response[1]
+        data = {
+            's': sid,
+            'a[0]': 'Kishore Kumar',
+            't[0]': 'Saamne Ye Kaun Aya',
+            'o[0]': 'P',
+            'l[0]': 300,
+            'b[0]': 'Jawani Diwani',
+            'i[0]': int(time.time()),
+        }
+
+        r = self.client.post(url_for('api_compat_old.submit_listens'), data=data)
+        self.assert200(r)
+        self.assertEqual(r.data.decode('utf-8'), 'OK\n')
+
+        time.sleep(1)
+        to_ts = int(time.time())
+        listens = self.ls.fetch_listens(self.user['musicbrainz_id'], to_ts=to_ts)
+        self.assertEqual(len(listens), 1)
+
+
+    def test_submit_listen_invalid_sid(self):
+        """ Tests endpoint for 400 Bad Request if invalid session id is sent """
+
+        sid = ''
+        data = {
+            's': sid,
+            'a[0]': 'Kishore Kumar',
+            't[0]': 'Saamne Ye Kaun Aya',
+            'o[0]': 'P',
+            'l[0]': 300,
+            'b[0]': 'Jawani Diwani',
+            'i[0]': int(time.time()),
+        }
+
+        r = self.client.post(url_for('api_compat_old.submit_listens'), data=data)
+        self.assert401(r)
+        self.assertEqual(r.data.decode('utf-8'), 'BADSESSION\n')
+
+
+    def test_submit_listen_invalid_data(self):
+        """ Tests endpoint for 400 Bad Request if invalid data is sent """
+
+        timestamp = int(time.time())
+        audioscrobbler_auth_token = _get_audioscrobbler_auth_token(self.user['auth_token'], timestamp)
+
+        r = self.handshake(self.user['musicbrainz_id'], audioscrobbler_auth_token, timestamp)
+        self.assert200(r)
+        response = r.data.decode('utf-8').split('\n')
+        self.assertEqual(response[0], 'OK')
+
+        sid = response[1]
+
+        # no artist in data
+        data = {
+            's': sid,
+            't[0]': 'Saamne Ye Kaun Aya',
+            'o[0]': 'P',
+            'l[0]': 300,
+            'b[0]': 'Jawani Diwani',
+            'i[0]': int(time.time()),
+        }
+
+        r = self.client.post(url_for('api_compat_old.submit_listens'), data=data)
+        self.assert400(r)
+        self.assertEqual(r.data.decode('utf-8').split()[0], 'FAILED')
+
+        # add artist and remove track name
+        data['a[0]'] = 'Kishore Kumar'
+        del data['t[0]']
+        r = self.client.post(url_for('api_compat_old.submit_listens'), data=data)
+        self.assert400(r)
+        self.assertEqual(r.data.decode('utf-8').split()[0], 'FAILED')
+
+        # add track name and remove timestamp
+        data['t[0]'] = 'Saamne Ye Kaun Aya'
+        del data['i[0]']
+        r = self.client.post(url_for('api_compat_old.submit_listens'), data=data)
+        self.assert400(r)
+        self.assertEqual(r.data.decode('utf-8').split()[0], 'FAILED')
