@@ -73,6 +73,7 @@ UPLOAD_FOLDER = '''{{template "KEY" "upload_folder"}}'''
 
 ALPHA_URL = '''{{template "KEY" "alpha_url"}}'''
 BETA_URL = '''{{template "KEY" "beta_url"}}'''
+LASTFM_PROXY_URL = '''{{template "KEY" "lastfm_proxy_url"}}'''
 
 # defaults are unlikely to be changed
 IMPORTER_QUEUE_KEY = 'alphaimporter:queue'
