@@ -34,7 +34,7 @@ class TestAPICompatSessionClass(DatabaseTestCase):
         session.user = None
 
         # Load with session_key + api_key
-        session2 = Session.load(session.sid, session.api_key)
+        session2 = Session.load(session.sid)
         self.assertDictEqual(user.__dict__, session2.__dict__['user'].__dict__)
         session2.user = None
         self.assertDictEqual(session.__dict__, session2.__dict__)
