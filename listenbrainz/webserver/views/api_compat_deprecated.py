@@ -29,8 +29,9 @@ from hashlib import md5
 from time import time
 
 from flask import Blueprint, request, render_template, redirect
+from werkzeug.exceptions import BadRequest
 from listenbrainz.db.lastfm_session import Session
-from listenbrainz.webserver.views.api_tools import insert_payload
+from listenbrainz.webserver.views.api_tools import insert_payload, LISTEN_TYPE_PLAYING_NOW
 
 
 api_compat_old_bp = Blueprint('api_compat_old', __name__)
@@ -67,23 +68,44 @@ def handshake():
         'OK',
         session.sid,
         '{}/np_1.2'.format(config.LASTFM_PROXY_URL),
-        '{}/protocol_1.2'.format(config.LASTFM_PROXY_URL)
+        '{}/protocol_1.2\n'.format(config.LASTFM_PROXY_URL)
     ])
 
 
+@api_compat_old_bp.route('/np_1.2', methods=['POST', 'OPTIONS'])
+def submit_now_playing():
+    """ Handle now playing notifications sent by clients """
+
+    try:
+        session = _get_session(request.form.get('s', ''))
+    except BadRequest:
+        return 'BADSESSION\n', 401
+
+    listen = _to_native_api(request.form, append_key='')
+    if listen is None:
+        return 'FAILED Invalid data submitted!\n', 400
+
+
+    listens = [listen]
+    user = db_user.get(session.user_id)
+    insert_payload(listens, user, LISTEN_TYPE_PLAYING_NOW)
+
+    return 'OK\n'
+
+
 @api_compat_old_bp.route('/protocol_1.2', methods=['POST', 'OPTIONS'])
-@api_compat_old_bp.route('/np_1.2', methods=['POST', 'OPTIONS'] )
 def submit_listens():
     """ Submit listens received from clients into the listenstore after validating them. """
 
-    session = Session.load(request.form.get('s', ''))
-    if session is None:
-        return "BADSESSION\n", 401
+    try:
+        session = _get_session(request.form.get('s', ''))
+    except BadRequest:
+        return 'BADSESSION\n', 401
 
     listens = []
     index = 0
     while True:
-        listen = _to_native_api(request.form, index)
+        listen = _to_native_api(request.form, append_key='[{}]'.format(index))
         if listen is None:
             break
         else:
@@ -91,18 +113,18 @@ def submit_listens():
             index += 1
 
     if not listens:
-        return "FAILED No data submitted!\n", 400
+        return 'FAILED Invalid data submitted!\n', 400
 
     user = db_user.get(session.user_id)
     insert_payload(listens, user)
 
-    return "OK\n"
+    return 'OK\n'
 
 
-def _to_native_api(data, index):
-    """ Converts the scrobble submitted at given index to the audioscrobbler api into
-        a listen of the native api format. Returns None if no scrobble exists at that
-        index.
+def _to_native_api(data, append_key):
+    """ Converts the scrobble submitted with given string appended to keys to the audioscrobbler api into
+        a listen of the native api format. Returns None if no scrobble exists with that string appended
+        to keys.
 
         Returns: dict of form
             {
@@ -116,29 +138,48 @@ def _to_native_api(data, index):
 
     try:
         listen = {
-            'listened_at': data['i[{}]'.format(index)],
             'track_metadata': {
-                'artist_name': data['a[{}]'.format(index)],
-                'track_name': data['t[{}]'.format(index)],
-                'release_name': data['b[{}]'.format(index)],
+                'artist_name': data['a{}'.format(append_key)],
+                'track_name': data['t{}'.format(append_key)],
+                'release_name': data['b{}'.format(append_key)],
                 'additional_info': {
-                    'source': data['o[{}]'.format(index)]
+                    'source': data['o{}'.format(append_key)]
                 }
             }
         }
     except KeyError:
         return None
 
-    if 'r[{}]'.format(index) in data:
-        listen['track_metadata']['additional_info']['rating'] = data['r[{}]'.format(index)]
+    # if this is not a now playing request, get the timestamp
+    if append_key != '':
+        try:
+            listen['listened_at'] = data['i{}'.format(append_key)]
+        except KeyError:
+            return None
 
-    if 'n[{}]'.format(index) in data:
-        listen['track_metadata']['additional_info']['track_number'] = data['n[{}]'.format(index)]
+    if 'r{}'.format(append_key) in data:
+        listen['track_metadata']['additional_info']['rating'] = data['r{}'.format(append_key)]
 
-    if 'm[{}]'.format(index) in data:
-        listen['track_metadata']['additional_info']['recording_mbid'] = data['m[{}]'.format(index)]
+    if 'n{}'.format(append_key) in data:
+        listen['track_metadata']['additional_info']['track_number'] = data['n{}'.format(append_key)]
+
+    if 'm{}'.format(append_key) in data:
+        listen['track_metadata']['additional_info']['recording_mbid'] = data['m{}'.format(append_key)]
 
     return listen
+
+
+def _get_session(session_id):
+    """ Get the session with the passed session id.
+
+        Returns: Session object with given session id
+                 If session is not present in db, raises BadRequest
+    """
+
+    session = Session.load(session_id)
+    if session is None:
+        raise BadRequest
+    return session
 
 
 def _get_audioscrobbler_auth_token(lb_auth_token, timestamp):

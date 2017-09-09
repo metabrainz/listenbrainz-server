@@ -25,9 +25,11 @@ import listenbrainz.db.user as db_user
 
 from hashlib import md5
 from flask import url_for
+from werkzeug.exceptions import BadRequest
+from listenbrainz.db.lastfm_session import Session
 from listenbrainz.listenstore import InfluxListenStore
 from listenbrainz.tests.integration import APICompatIntegrationTestCase
-from listenbrainz.webserver.views.api_compat_deprecated import _get_audioscrobbler_auth_token
+from listenbrainz.webserver.views.api_compat_deprecated import _get_audioscrobbler_auth_token, _get_session
 
 
 class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
@@ -72,7 +74,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
 
         self.assert200(r)
         response = r.data.decode('utf-8').split('\n')
-        self.assertEqual(len(response), 4)
+        self.assertEqual(len(response), 5)
         self.assertEqual(response[0], 'OK')
         self.assertEqual(len(response[1]), 32)
 
@@ -94,7 +96,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
 
         self.assert200(r)
         response = r.data.decode('utf-8').split('\n')
-        self.assertEqual(len(response), 4)
+        self.assertEqual(len(response), 5)
         self.assertEqual(response[0], 'OK')
         self.assertEqual(len(response[1]), 32)
 
@@ -213,3 +215,45 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         r = self.client.post(url_for('api_compat_old.submit_listens'), data=data)
         self.assert400(r)
         self.assertEqual(r.data.decode('utf-8').split()[0], 'FAILED')
+
+
+    def test_playing_now(self):
+        """ Tests playing now notifications """
+
+        timestamp = int(time.time())
+        audioscrobbler_auth_token = _get_audioscrobbler_auth_token(self.user['auth_token'], timestamp)
+
+        r = self.handshake(self.user['musicbrainz_id'], audioscrobbler_auth_token, timestamp)
+        self.assert200(r)
+        response = r.data.decode('utf-8').split('\n')
+        self.assertEqual(response[0], 'OK')
+
+        sid = response[1]
+        data = {
+            's': sid,
+            'a': 'Kishore Kumar',
+            't': 'Saamne Ye Kaun Aya',
+            'o': 'P',
+            'l': 300,
+            'b': 'Jawani Diwani',
+        }
+
+        r = self.client.post(url_for('api_compat_old.submit_now_playing'), data=data)
+        self.assert200(r)
+        self.assertEqual(r.data.decode('utf-8'), 'OK\n')
+
+
+    def test_get_session(self):
+        """ Tests _get_session method in api_compat_deprecated """
+
+        s = Session.create_by_user_id(self.user['id'])
+
+        session = _get_session(s.sid)
+        self.assertEqual(s.sid, session.sid)
+
+
+    def test_get_session_which_doesnt_exist(self):
+        """ Make sure BadRequest is raised when we try to get a session that doesn't exists """
+
+        with self.assertRaises(BadRequest):
+            session = _get_session('')
