@@ -138,6 +138,8 @@ def _to_native_api(data, append_key):
                     'track_name': (str)
                 }
             }
+
+        #TODO(param): add tests for this function
     """
 
     try:
@@ -146,9 +148,7 @@ def _to_native_api(data, append_key):
                 'artist_name': data['a{}'.format(append_key)],
                 'track_name': data['t{}'.format(append_key)],
                 'release_name': data['b{}'.format(append_key)],
-                'additional_info': {
-                    'source': data.get('o{}'.format(append_key), '')
-                }
+                'additional_info': {}
             }
         }
     except KeyError:
@@ -161,6 +161,9 @@ def _to_native_api(data, append_key):
         except KeyError:
             return None
 
+    if 'o{}'.format(append_key) in data:
+        listen['track_metadata']['additional_info']['source'] = data['o{}'.format(append_key)]
+
     if 'r{}'.format(append_key) in data:
         listen['track_metadata']['additional_info']['rating'] = data['r{}'.format(append_key)]
 
@@ -169,6 +172,10 @@ def _to_native_api(data, append_key):
 
     if 'm{}'.format(append_key) in data:
         listen['track_metadata']['additional_info']['recording_mbid'] = data['m{}'.format(append_key)]
+
+    # if there is nothing in the additional info field of the track, remove it
+    if listen['track_metadata']['additional_info'] == {}:
+        del listen['track_metadata']['additional_info']
 
     return listen
 
