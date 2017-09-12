@@ -22,13 +22,14 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+import json
 import listenbrainz.config as config
 import listenbrainz.db.user as db_user
 
 from hashlib import md5
 from time import time
 
-from flask import Blueprint, request, render_template, redirect
+from flask import current_app, Blueprint, request, render_template, redirect
 from werkzeug.exceptions import BadRequest
 from listenbrainz.db.lastfm_session import Session
 from listenbrainz.webserver.views.api_tools import insert_payload, LISTEN_TYPE_PLAYING_NOW
@@ -63,6 +64,7 @@ def handshake():
         return 'BADAUTH\n', 401
 
     session = Session.create_by_user_id(user['id'])
+    current_app.logger.info('New session created with id: {}'.format(session.sid))
 
     return '\n'.join([
         'OK',
@@ -75,6 +77,8 @@ def handshake():
 @api_compat_old_bp.route('/np_1.2', methods=['POST', 'OPTIONS'])
 def submit_now_playing():
     """ Handle now playing notifications sent by clients """
+
+    current_app.logger.info(json.dumps(request.form, indent=4))
 
     try:
         session = _get_session(request.form.get('s', ''))
@@ -143,7 +147,7 @@ def _to_native_api(data, append_key):
                 'track_name': data['t{}'.format(append_key)],
                 'release_name': data['b{}'.format(append_key)],
                 'additional_info': {
-                    'source': data['o{}'.format(append_key)]
+                    'source': data.get('o{}'.format(append_key), '')
                 }
             }
         }

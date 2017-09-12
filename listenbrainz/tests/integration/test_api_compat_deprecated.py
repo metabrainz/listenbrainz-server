@@ -233,8 +233,6 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
             's': sid,
             'a': 'Kishore Kumar',
             't': 'Saamne Ye Kaun Aya',
-            'o': 'P',
-            'l': 300,
             'b': 'Jawani Diwani',
         }
 
