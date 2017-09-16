@@ -139,7 +139,6 @@ def _to_native_api(data, append_key):
                 }
             }
 
-        #TODO(param): add tests for this function
     """
 
     try:
