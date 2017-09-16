@@ -173,6 +173,9 @@ def _to_native_api(data, append_key):
     if 'm{}'.format(append_key) in data:
         listen['track_metadata']['additional_info']['recording_mbid'] = data['m{}'.format(append_key)]
 
+    if 'l{}'.format(append_key) in data:
+        listen['track_metadata']['additional_info']['track_length'] = data['l{}'.format(append_key)]
+
     # if there is nothing in the additional info field of the track, remove it
     if listen['track_metadata']['additional_info'] == {}:
         del listen['track_metadata']['additional_info']
