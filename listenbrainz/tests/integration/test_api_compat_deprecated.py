@@ -255,3 +255,8 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
 
         with self.assertRaises(BadRequest):
             session = _get_session('')
+
+    def test_404(self):
+
+        r = self.client.get('/thisurldoesnotexist')
+        self.assert404(r)
