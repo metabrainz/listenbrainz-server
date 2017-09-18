@@ -29,7 +29,8 @@ from werkzeug.exceptions import BadRequest
 from listenbrainz.db.lastfm_session import Session
 from listenbrainz.listenstore import InfluxListenStore
 from listenbrainz.tests.integration import APICompatIntegrationTestCase
-from listenbrainz.webserver.views.api_compat_deprecated import _get_audioscrobbler_auth_token, _get_session
+from listenbrainz.webserver.views.api_compat_deprecated import _get_audioscrobbler_auth_token, _get_session, \
+    _to_native_api
 
 
 class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
@@ -256,7 +257,104 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         with self.assertRaises(BadRequest):
             session = _get_session('')
 
+
     def test_404(self):
 
         r = self.client.get('/thisurldoesnotexist')
         self.assert404(r)
+
+
+    def test_to_native_api_now_playing(self):
+        """ Tests _to_native_api when used with data sent to the now_playing endpoint """
+
+        data = {
+            's': '',
+            'a': 'Kishore Kumar',
+            't': 'Saamne Ye Kaun Aya',
+            'b': 'Jawani Diwani',
+        }
+
+        native_data = _to_native_api(data, '')
+        self.assertDictEqual(native_data, {
+                'track_metadata': {
+                    'track_name': 'Saamne Ye Kaun Aya',
+                    'artist_name': 'Kishore Kumar',
+                    'release_name': 'Jawani Diwani'
+                }
+            }
+        )
+
+        del data['a']
+        native_data = _to_native_api(data, '')
+        self.assertIsNone(native_data)
+
+        data['a'] = 'Kishore Kumar'
+        del data['t']
+        native_data = _to_native_api(data, '')
+        self.assertIsNone(native_data)
+
+        data['t'] = 'Saamne Ye Kaun Aya'
+        del data['b']
+        native_data = _to_native_api(data, '')
+        self.assertIsNone(native_data)
+
+
+    def test_to_native_api(self):
+        """ Tests _to_native_api with data that is sent to the submission endpoint """
+
+        t = int(time.time())
+
+        data = {
+            's': '',
+            'a[0]': 'Kishore Kumar',
+            't[0]': 'Saamne Ye Kaun Aya',
+            'o[0]': 'P',
+            'l[0]': 300,
+            'b[0]': 'Jawani Diwani',
+            'i[0]': t,
+            'a[1]': 'Kishore Kumar',
+            't[1]': 'Wada Karo',
+            'o[1]': 'P',
+            'l[1]': 300,
+            'b[1]': 'Jawani Diwani',
+            'i[1]': t + 10,
+        }
+
+        self.assertDictEqual(_to_native_api(data, '[0]'), {
+            'listened_at': t,
+            'track_metadata': {
+                'artist_name': 'Kishore Kumar',
+                'track_name':  'Saamne Ye Kaun Aya',
+                'release_name': 'Jawani Diwani',
+                'additional_info': {
+                    'source': 'P',
+                    'track_length': 300
+                }
+            }
+        })
+
+        self.assertDictEqual(_to_native_api(data, '[1]'), {
+            'listened_at': t + 10,
+            'track_metadata': {
+                'artist_name': 'Kishore Kumar',
+                'track_name':  'Wada Karo',
+                'release_name': 'Jawani Diwani',
+                'additional_info': {
+                    'source': 'P',
+                    'track_length': 300
+                }
+            }
+        })
+
+        del data['a[0]']
+        self.assertIsNone(_to_native_api(data, '[0]'))
+
+        data['a[0]'] = 'Kishore Kumar'
+        del data['t[0]']
+        native_data = _to_native_api(data, '[0]')
+        self.assertIsNone(native_data)
+
+        data['t[0]'] = 'Saamne Ye Kaun Aya'
+        del data['b[0]']
+        native_data = _to_native_api(data, '[0]')
+        self.assertIsNone(native_data)
