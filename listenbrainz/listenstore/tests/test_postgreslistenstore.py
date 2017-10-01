@@ -1,17 +1,18 @@
 # coding=utf-8
 
-from listenbrainz.db.testing import DatabaseTestCase
 import logging
-from datetime import datetime
-from listenbrainz.listenstore.tests.util import generate_data, to_epoch
-from listenbrainz.listen import Listen
-from listenbrainz.listenstore import PostgresListenStore, MIN_ID
-from listenbrainz.webserver.postgres_connection import init_postgres_connection
 import random
 import uuid
 from collections import OrderedDict
-from sqlalchemy import text
+from datetime import datetime
+
 import listenbrainz.db.user as db_user
+from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.listen import Listen
+from listenbrainz.listenstore import MIN_ID
+from listenbrainz.listenstore.tests.util import generate_data, to_epoch
+from listenbrainz.webserver.postgres_connection import init_postgres_connection
+
 
 class TestPostgresListenStore(DatabaseTestCase):
 

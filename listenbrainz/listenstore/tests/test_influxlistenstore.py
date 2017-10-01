@@ -1,21 +1,16 @@
 # coding=utf-8
 
-from listenbrainz.db.testing import DatabaseTestCase
 import logging
-from datetime import datetime
-from listenbrainz.listenstore.tests.util import generate_data, to_epoch
-from listenbrainz.listen import Listen
-from listenbrainz.listenstore import InfluxListenStore
-from listenbrainz.webserver.influx_connection import init_influx_connection
-from influxdb import InfluxDBClient
-import random
-import uuid
-from collections import OrderedDict
-from sqlalchemy import text
 import ujson
+from time import sleep
+
+from influxdb import InfluxDBClient
+
 import listenbrainz.db.user as db_user
 from listenbrainz import config
-from time import sleep
+from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.listen import Listen
+from listenbrainz.webserver.influx_connection import init_influx_connection
 
 TEST_LISTEN_JSON = [
     """
