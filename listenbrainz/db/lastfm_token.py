@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import os
 import binascii
+import os
 from datetime import datetime, timedelta
-from listenbrainz import db
+
 from sqlalchemy import text
+
+from listenbrainz import db
 from listenbrainz.db.lastfm_user import User
 
 # Token expiration time in minutes

@@ -1,14 +1,16 @@
 
-from listenbrainz.db.testing import DatabaseTestCase
 import logging
 from datetime import datetime
+
+from sqlalchemy import text
+
+import listenbrainz.db.user as db_user
+from listenbrainz import config
+from listenbrainz import db
+from listenbrainz.db.lastfm_user import User
+from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.tests.utils import generate_data
 from listenbrainz.webserver.influx_connection import init_influx_connection
-from listenbrainz import db
-import listenbrainz.db.user as db_user
-from listenbrainz.db.lastfm_user import User
-from sqlalchemy import text
-from listenbrainz import config
 
 
 class TestAPICompatUserClass(DatabaseTestCase):

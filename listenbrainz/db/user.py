@@ -1,10 +1,11 @@
 
-from listenbrainz import db
-import uuid
-import sqlalchemy
-from listenbrainz.db.exceptions import DatabaseException
 import logging
-import time
+import uuid
+
+import sqlalchemy
+
+from listenbrainz import db
+from listenbrainz.db.exceptions import DatabaseException
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

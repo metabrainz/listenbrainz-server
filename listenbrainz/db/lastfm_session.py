@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import os
 import binascii
-from listenbrainz import db
+import os
+
 from sqlalchemy import text
+
+from listenbrainz import db
 from listenbrainz.db.lastfm_user import User
 
 
