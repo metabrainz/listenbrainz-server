@@ -1,19 +1,16 @@
 # coding=utf-8
 
 
-from listenbrainz.listenstore import ListenStore, ORDER_TEXT
-import logging
 import ujson
-import time
 import uuid
+from datetime import datetime
+
 import pytz
-from datetime import date, datetime
-from listenbrainz.listen import Listen
-from dateutil.relativedelta import relativedelta
 from sqlalchemy import create_engine, text
 from sqlalchemy.pool import NullPool
-import sqlalchemy.exc
-import json
+
+from listenbrainz.listen import Listen
+from listenbrainz.listenstore import ListenStore, ORDER_TEXT
 
 
 class PostgresListenStore(ListenStore):

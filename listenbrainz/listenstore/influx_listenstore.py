@@ -1,15 +1,15 @@
 # coding=utf-8
 
 
-from listenbrainz.listenstore import ListenStore
-import logging
-from listenbrainz.listen import Listen
-from influxdb import InfluxDBClient
-from redis import Redis
-from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
-import json
 from datetime import datetime
-from listenbrainz.listenstore import ORDER_DESC, ORDER_ASC, ORDER_TEXT, \
+
+from influxdb import InfluxDBClient
+from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
+from redis import Redis
+
+from listenbrainz.listen import Listen
+from listenbrainz.listenstore import ListenStore
+from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, \
     USER_CACHE_TIME, REDIS_USER_TIMESTAMPS
 from listenbrainz.utils import quote, get_escaped_measurement_name, get_measurement_name, get_influx_query_timestamp, \
     convert_influx_nano_to_python_time, convert_python_time_to_nano_int, convert_to_unix_timestamp
