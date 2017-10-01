@@ -101,7 +101,7 @@ class PostgresListenStore(ListenStore):
                    AND "user".musicbrainz_id = :user_name
             """
 
-            if from_ts != None:
+            if from_ts is not None:
                 query += " AND ts AT TIME ZONE 'UTC' > :from_ts "
             else:
                 query += " AND ts AT TIME ZONE 'UTC' < :to_ts "
@@ -110,10 +110,10 @@ class PostgresListenStore(ListenStore):
               ORDER BY ts """ + ORDER_TEXT[order] + """
                  LIMIT :limit
             """
-            if from_ts != None:
+            if from_ts is not None:
                 args['from_ts'] = pytz.utc.localize(datetime.utcfromtimestamp(from_ts))
             else:
-                args['to_ts'] =  pytz.utc.localize(datetime.utcfromtimestamp(from_ts))
+                args['to_ts'] = pytz.utc.localize(datetime.utcfromtimestamp(from_ts))
 
             results = connection.execute(text(query), args)
             listens = []
