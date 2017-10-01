@@ -1,8 +1,9 @@
 # coding=utf-8
 
-from datetime import datetime, timedelta
-from listenbrainz.listen import Listen
 import uuid
+from datetime import datetime
+
+from listenbrainz.listen import Listen
 
 
 def generate_data(test_user_id, from_ts, num_records):

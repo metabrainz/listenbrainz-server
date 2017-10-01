@@ -100,6 +100,7 @@ TEST_LISTEN_JSON = [
     """
 ]
 
+
 class TestInfluxListenStore(DatabaseTestCase):
 
     def setUp(self):
@@ -119,7 +120,6 @@ class TestInfluxListenStore(DatabaseTestCase):
             'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
         })
         self.testuser_id = db_user.create("test")
-        user = db_user.get(self.testuser_id)
         self.testuser_name = db_user.get(self.testuser_id)['musicbrainz_id']
 
     def tearDown(self):
@@ -163,13 +163,13 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.assertEqual(len(self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1399999999)), count)
 
     def test_fetch_listens_0(self):
-        count = self._create_test_data(self.testuser_name)
+        self._create_test_data(self.testuser_name)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000000, limit=1)
         self.assertEqual(len(listens), 1)
         self.assertEqual(listens[0].ts_since_epoch, 1400000050)
 
     def test_fetch_listens_1(self):
-        count = self._create_test_data(self.testuser_name)
+        self._create_test_data(self.testuser_name)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000000)
         self.assertEqual(len(listens), 4)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
@@ -178,14 +178,14 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
 
     def test_fetch_listens_2(self):
-        count = self._create_test_data(self.testuser_name)
+        self._create_test_data(self.testuser_name)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000100)
         self.assertEqual(len(listens), 2)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
 
     def test_fetch_listens_3(self):
-        count = self._create_test_data(self.testuser_name)
+        self._create_test_data(self.testuser_name)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
@@ -203,7 +203,7 @@ class TestInfluxListenStore(DatabaseTestCase):
     def test_fetch_listens_escaped(self):
         user = db_user.get_or_create('i have a\\weird\\user, name"\n')
         user_name = user['musicbrainz_id']
-        count = self._create_test_data(user_name)
+        self._create_test_data(user_name)
         listens = self.logstore.fetch_listens(user_name=user_name, from_ts=1400000100)
         self.assertEquals(len(listens), 2)
         self.assertEquals(listens[0].ts_since_epoch, 1400000200)

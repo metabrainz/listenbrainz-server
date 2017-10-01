@@ -14,24 +14,24 @@ from listenbrainz.listenstore import ORDER_DESC, ORDER_ASC, ORDER_TEXT, \
 from listenbrainz.utils import quote, get_escaped_measurement_name, get_measurement_name, get_influx_query_timestamp, \
     convert_influx_nano_to_python_time, convert_python_time_to_nano_int, convert_to_unix_timestamp
 
-REDIS_INFLUX_USER_LISTEN_COUNT = "ls.listencount." # append username
+REDIS_INFLUX_USER_LISTEN_COUNT = "ls.listencount."  # append username
 COUNT_RETENTION_POLICY = "one_week"
 COUNT_MEASUREMENT_NAME = "listen_count"
 TEMP_COUNT_MEASUREMENT = COUNT_RETENTION_POLICY + "." + COUNT_MEASUREMENT_NAME
 TIMELINE_COUNT_MEASUREMENT = COUNT_MEASUREMENT_NAME
 
+
 class InfluxListenStore(ListenStore):
 
     REDIS_INFLUX_TOTAL_LISTEN_COUNT = "ls.listencount.total"
     TOTAL_LISTEN_COUNT_CACHE_TIME = 5 * 60
-    USER_LISTEN_COUNT_CACHE_TIME = 10 * 60 # in seconds. 15 minutes
+    USER_LISTEN_COUNT_CACHE_TIME = 10 * 60  # in seconds. 15 minutes
 
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
         self.redis = Redis(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], decode_responses=True)
         self.redis.ping()
         self.influx = InfluxDBClient(host=conf['INFLUX_HOST'], port=conf['INFLUX_PORT'], database=conf['INFLUX_DB_NAME'])
-
 
     def get_listen_count_for_user(self, user_name, need_exact=False):
         """Get the total number of listens for a user. The number of listens comes from
@@ -66,7 +66,6 @@ class InfluxListenStore(ListenStore):
         self.redis.setex(user_key, count, InfluxListenStore.USER_LISTEN_COUNT_CACHE_TIME)
         return int(count)
 
-
     def reset_listen_count(self, user_name):
         """ Reset the listen count of a user from cache and put in a new calculated value.
 
@@ -74,7 +73,6 @@ class InfluxListenStore(ListenStore):
                 user_name: the musicbrainz id of user whose listen count needs to be reset
         """
         self.get_listen_count_for_user(user_name, need_exact=True)
-
 
     def _select_single_value(self, query, measurement):
         try:
@@ -88,7 +86,6 @@ class InfluxListenStore(ListenStore):
 
         return None
 
-
     def _select_single_timestamp(self, query, measurement):
         try:
             results = self.influx.query(query)
@@ -97,7 +94,7 @@ class InfluxListenStore(ListenStore):
             raise
 
         for result in results.get_points(measurement=measurement):
-            dt = datetime.strptime(result['time'] , "%Y-%m-%dT%H:%M:%SZ")
+            dt = datetime.strptime(result['time'], "%Y-%m-%dT%H:%M:%SZ")
             return int(dt.strftime('%s'))
 
         return None
@@ -123,7 +120,7 @@ class InfluxListenStore(ListenStore):
             raise
 
         try:
-            item = result.get_points(measurement = TIMELINE_COUNT_MEASUREMENT).__next__()
+            item = result.get_points(measurement=TIMELINE_COUNT_MEASUREMENT).__next__()
             count = int(item[COUNT_MEASUREMENT_NAME])
             timestamp = convert_to_unix_timestamp(item['time'])
         except (KeyError, ValueError, StopIteration):
@@ -140,7 +137,7 @@ class InfluxListenStore(ListenStore):
             raise
 
         try:
-            data = result.get_points(measurement = TEMP_COUNT_MEASUREMENT).__next__()
+            data = result.get_points(measurement=TEMP_COUNT_MEASUREMENT).__next__()
             count += int(data['total'])
         except StopIteration:
             pass
@@ -148,7 +145,6 @@ class InfluxListenStore(ListenStore):
         if cache:
             self.redis.setex(InfluxListenStore.REDIS_INFLUX_TOTAL_LISTEN_COUNT, count, InfluxListenStore.TOTAL_LISTEN_COUNT_CACHE_TIME)
         return count
-
 
     def get_timestamps_for_user(self, user_name):
         """ Return the max_ts and min_ts for a given user and cache the result in redis
@@ -166,10 +162,9 @@ class InfluxListenStore(ListenStore):
             query = 'SELECT last(artist_msid) FROM ' + get_escaped_measurement_name(user_name)
             max_ts = self._select_single_timestamp(query, get_measurement_name(user_name))
 
-            self.redis.setex(REDIS_USER_TIMESTAMPS % user_name, "%d,%d" % (min_ts,max_ts), USER_CACHE_TIME)
+            self.redis.setex(REDIS_USER_TIMESTAMPS % user_name, "%d,%d" % (min_ts, max_ts), USER_CACHE_TIME)
 
-        return (min_ts, max_ts)
-
+        return min_ts, max_ts
 
     def insert(self, listens):
         """ Insert a batch of listens.
@@ -198,12 +193,12 @@ class InfluxListenStore(ListenStore):
         if len(listens):
             # Enter a measurement to count items inserted
             submit = [{
-                'measurement' : TEMP_COUNT_MEASUREMENT,
-                'tags' : {
-                    COUNT_MEASUREMENT_NAME : len(listens)
+                'measurement': TEMP_COUNT_MEASUREMENT,
+                'tags': {
+                    COUNT_MEASUREMENT_NAME: len(listens)
                 },
-                'fields' : {
-                    COUNT_MEASUREMENT_NAME : len(listens)
+                'fields': {
+                    COUNT_MEASUREMENT_NAME: len(listens)
                 }
             }]
             try:
@@ -212,7 +207,6 @@ class InfluxListenStore(ListenStore):
             except (InfluxDBServerError, InfluxDBClientError, ValueError) as err:
                 self.log.error("Cannot write data to influx: %s" % str(err))
                 raise
-
 
     def update_listen_counts(self):
         """ This should be called every few seconds in order to sum up all of the listen counts
@@ -230,7 +224,7 @@ class InfluxListenStore(ListenStore):
             raise
 
         try:
-            item = result.get_points(measurement = TIMELINE_COUNT_MEASUREMENT).__next__()
+            item = result.get_points(measurement=TIMELINE_COUNT_MEASUREMENT).__next__()
             total = int(item[COUNT_MEASUREMENT_NAME])
             start_timestamp = convert_influx_nano_to_python_time(item['time'])
         except (KeyError, ValueError, StopIteration):
@@ -248,7 +242,7 @@ class InfluxListenStore(ListenStore):
             raise
 
         try:
-            item = result.get_points(measurement = TEMP_COUNT_MEASUREMENT).__next__()
+            item = result.get_points(measurement=TEMP_COUNT_MEASUREMENT).__next__()
             end_timestamp = convert_influx_nano_to_python_time(item['time'])
         except (KeyError, StopIteration):
             end_timestamp = start_timestamp
@@ -258,13 +252,13 @@ class InfluxListenStore(ListenStore):
             result = self.influx.query("""SELECT sum(%s) as total
                                             FROM "%s"
                                            WHERE time > %d and time <= %d""" % (COUNT_MEASUREMENT_NAME, TEMP_COUNT_MEASUREMENT,
-                                            convert_python_time_to_nano_int(start_timestamp), convert_python_time_to_nano_int(end_timestamp)))
+                                       convert_python_time_to_nano_int(start_timestamp), convert_python_time_to_nano_int(end_timestamp)))
         except (InfluxDBServerError, InfluxDBClientError) as err:
             self.log.error("Cannot query influx: %s" % str(err))
             raise
 
         try:
-            data = result.get_points(measurement = TEMP_COUNT_MEASUREMENT).__next__()
+            data = result.get_points(measurement=TEMP_COUNT_MEASUREMENT).__next__()
             total += int(data['total'])
         except StopIteration:
             # This means we have no item_counts to update, so bail.
@@ -272,16 +266,15 @@ class InfluxListenStore(ListenStore):
 
         # Finally write a new total with the timestamp of the last point
         submit = [{
-            'measurement' : TIMELINE_COUNT_MEASUREMENT,
-            'time' : end_timestamp,
-            'tags' : {
-                COUNT_MEASUREMENT_NAME : total
+            'measurement': TIMELINE_COUNT_MEASUREMENT,
+            'time': end_timestamp,
+            'tags': {
+                COUNT_MEASUREMENT_NAME: total
             },
-            'fields' : {
-                COUNT_MEASUREMENT_NAME : total
+            'fields': {
+                COUNT_MEASUREMENT_NAME: total
             }
         }]
-
 
         try:
             if not self.influx.write_points(submit):
@@ -289,7 +282,6 @@ class InfluxListenStore(ListenStore):
         except (InfluxDBServerError, InfluxDBClientError, ValueError) as err:
             self.log.error("Cannot update listen counts in influx: %s" % str(err))
             raise
-
 
     def fetch_listens_from_storage(self, user_name, from_ts, to_ts, limit, order):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving
@@ -304,7 +296,7 @@ class InfluxListenStore(ListenStore):
         # Sadly, influxdb does not provide a means to do this in the client library
         query = 'SELECT * FROM ' + get_escaped_measurement_name(user_name)
 
-        if from_ts != None:
+        if from_ts is not None:
             query += "WHERE time > " + get_influx_query_timestamp(from_ts)
         else:
             query += "WHERE time < " + get_influx_query_timestamp(to_ts)
