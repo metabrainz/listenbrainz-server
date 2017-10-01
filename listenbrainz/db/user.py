@@ -30,6 +30,7 @@ def create(musicbrainz_id):
         })
         return result.fetchone()["id"]
 
+
 def update_token(id):
     """Update a user's token to a new UUID
 
@@ -38,7 +39,7 @@ def update_token(id):
     """
     with db.engine.connect() as connection:
         try:
-            result = connection.execute(sqlalchemy.text("""
+            connection.execute(sqlalchemy.text("""
                 UPDATE "user"
                    SET auth_token = :token
                  WHERE id = :id
@@ -104,7 +105,6 @@ def get_by_mb_id(musicbrainz_id):
         return dict(row) if row else None
 
 
-
 def get_by_token(token):
     """Get user with a specified authentication token.
 
@@ -148,6 +148,7 @@ def get_user_count():
             logger.error(e)
             raise
 
+
 def get_or_create(musicbrainz_id):
     """Get user with a specified MusicBrainz ID, or create if there's no account.
 
@@ -169,6 +170,7 @@ def get_or_create(musicbrainz_id):
         user = get_by_mb_id(musicbrainz_id)
     return user
 
+
 def update_last_login(musicbrainz_id):
     """ Update the value of last_login field for user with specified MusicBrainz ID
 
@@ -178,7 +180,7 @@ def update_last_login(musicbrainz_id):
 
     with db.engine.connect() as connection:
         try:
-            result = connection.execute(sqlalchemy.text("""
+            connection.execute(sqlalchemy.text("""
                 UPDATE "user"
                    SET last_login = NOW()
                  WHERE musicbrainz_id = :musicbrainz_id
@@ -188,6 +190,7 @@ def update_last_login(musicbrainz_id):
         except sqlalchemy.exc.ProgrammingError as err:
             logger.error(err)
             raise DatabaseException("Couldn't update last_login: %s" % str(err))
+
 
 def update_latest_import(musicbrainz_id, ts):
     """ Update the value of latest_import field for user with specified MusicBrainz ID
@@ -202,7 +205,7 @@ def update_latest_import(musicbrainz_id, ts):
     if ts > int(user['latest_import'].strftime('%s')):
         with db.engine.connect() as connection:
             try:
-                result = connection.execute(sqlalchemy.text("""
+                connection.execute(sqlalchemy.text("""
                     UPDATE "user"
                        SET latest_import = to_timestamp(:ts)
                      WHERE musicbrainz_id = :musicbrainz_id
