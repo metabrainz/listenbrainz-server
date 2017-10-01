@@ -32,7 +32,7 @@ class TestAPICompatUserClass(DatabaseTestCase):
                 SELECT *
                   FROM "user"
                  WHERE id = :id
-            """),{
+            """), {
                 "id": uid,
             })
             row = result.fetchone()
@@ -47,12 +47,12 @@ class TestAPICompatUserClass(DatabaseTestCase):
 
     def test_user_load_by_name(self):
         user = User.load_by_name(self.user.name)
-        assert isinstance(user, User) == True
+        self.assertTrue(isinstance(user, User))
         self.assertDictEqual(user.__dict__, self.user.__dict__)
 
     def test_user_load_by_id(self):
         user = User.load_by_id(self.user.id)
-        assert isinstance(user, User) == True
+        self.assertTrue(isinstance(user, User))
         self.assertDictEqual(user.__dict__, self.user.__dict__)
 
     def test_user_get_play_count(self):
