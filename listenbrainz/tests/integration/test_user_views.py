@@ -15,7 +15,7 @@ class UserViewsTestCase(IntegrationTestCase):
         self.user = db_user.get_or_create('iliekcomputers')
 
     def send_listens(self):
-        with open(self.path_to_data_file('valid_import.json')) as f:
+        with open(self.path_to_data_file('user_export_test.json')) as f:
             payload = json.load(f)
         return self.client.post(
             url_for('api_v1.submit_listen'),
@@ -43,4 +43,4 @@ class UserViewsTestCase(IntegrationTestCase):
         resp = self.client.post(url_for('user.export_data'))
         self.assert200(resp)
         data = json.loads(resp.data)
-        self.assertEqual(len(data), 2)
+        self.assertEqual(len(data), 3)

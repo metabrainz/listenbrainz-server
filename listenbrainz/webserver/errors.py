@@ -74,10 +74,10 @@ def init_error_handlers(app):
                 A Response which will be a json error if request was made to the LB api and an html page
                 otherwise
         """
-        if request.path.startswith(API_PREFIX):
+        if request.path.startswith(API_PREFIX) or app.config.get('IS_API_COMPAT_APP', False):
             return json_error_wrapper(error, code)
         else:
-            return error_wrapper(f'errors/{code}.html', error, code)
+            return error_wrapper('errors/{code}.html'.format(code=code), error, code)
 
     @app.errorhandler(400)
     def bad_request(error):
