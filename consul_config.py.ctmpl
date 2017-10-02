@@ -7,7 +7,7 @@ DEBUG = False
 
 SECRET_KEY = '''{{template "KEY" "secret_key"}}'''
 
-{{if service "postgres-master"}
+{{if service "postgres-master"}}
 {{with index (service "postgres-master") 0}}
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{{.Port}}/listenbrainz"
 MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@{{.Address}}:{{.Port}}/messybrainz"
