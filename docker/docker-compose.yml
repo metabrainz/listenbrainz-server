@@ -12,19 +12,21 @@ services:
   db:
     image: postgres:9.5.3
     volumes:
-      - ./dbvolume:/var/lib/postgresql/data/
+      - ./dbvolume:/var/lib/postgresql/data:z
     ports:
       - "15432:5432"
 
   redis:
     image: redis:3.2.1
     volumes:
-      - ./docker/data/redis:/data
+      - ./data/redis:/data:z
+    ports:
+      - "6379:6379"
 
   influx:
     image: influxdb:1.2.4
     volumes:
-      - ./docker/data/influxdb:/var/lib/influxdb
+      - ./data/influxdb:/var/lib/influxdb:z
     environment:
       INFLUXDB_REPORTING_DISABLED: 'true'
       INFLUXDB_META_LOGGING_ENABLED: 'false'
@@ -41,7 +43,7 @@ services:
   rabbitmq:
     image: rabbitmq:3.6.5
     volumes:
-      - ./docker/data/rabbitmq:/var/lib/rabbitmq
+      - ./data/rabbitmq:/var/lib/rabbitmq:z
     ports:
       - "5672:5672"
 
@@ -52,12 +54,12 @@ services:
     command: python3 /code/listenbrainz/manage.py runserver -h 0.0.0.0 -p 80 -d
     image: web
     volumes:
-      - ..:/code/listenbrainz
-      - ../credentials:/code/credentials
+      - ..:/code/listenbrainz:z
+      - ../credentials:/code/credentials:z
     environment:
       GOOGLE_APPLICATION_CREDENTIALS: '/code/credentials/bigquery-credentials.json'
     ports:
-      - "80:80"
+      - "8000:80"
     depends_on:
       - redis
       - db
@@ -79,7 +81,7 @@ services:
       context: ..
       dockerfile: Dockerfile
     volumes:
-      - ../credentials:/code/credentials
+      - ../credentials:/code/credentials:z
     environment:
       GOOGLE_APPLICATION_CREDENTIALS: '/code/credentials/bigquery-credentials.json'
     command: python3 -m "listenbrainz.bigquery-writer.bigquery-writer"
