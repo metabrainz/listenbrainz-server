@@ -21,6 +21,7 @@ docker/data
 [Ll]ib
 [Ll]ib64
 [Ll]ocal
+[Mm]an
 [Ss]cripts
 pyvenv.cfg
 .venv
