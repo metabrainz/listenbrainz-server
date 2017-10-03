@@ -1,15 +1,9 @@
-{% extends 'base.html' %}
+{% extends 'user/base.html' %}
 
-{% block title %}User "{{ user.musicbrainz_id }}" - ListenBrainz{% endblock %}
+{% block profile_content %}
 
-{% block content %}
-  <div id="user-profile">
-    <h2 class="page-title">{{ user.musicbrainz_id }}</h2>
-
-    <div>
-      <img src="{{ url_for('static', filename='img/musicbrainz-16.svg') }}" />
-      <b><a href="https://musicbrainz.org/user/{{ user.musicbrainz_id }}">See profile on MusicBrainz</a></b>
-    </div>
+    <img src="{{ url_for('static', filename='img/musicbrainz-16.svg') }}" />
+    <b><a href="https://musicbrainz.org/user/{{ user.musicbrainz_id }}">See profile on MusicBrainz</a></b>
 
     {% if have_listen_count %}
       <h3> Listen Count: {{ listen_count }}  </h3>
@@ -90,15 +84,4 @@
 
     {% endif %}
 
-  </div>
-{% endblock %}
-
-{% block scripts %}
-  {{ super() }}
-  <script src="{{ url_for('static', filename='js/lib/jquery.timeago.js') }}"></script>
-  <script type="text/javascript">
-    $(document).ready(function() {
-      $("abbr.timeago").timeago();
-    });
-  </script>
 {% endblock %}

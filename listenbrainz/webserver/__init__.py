@@ -29,7 +29,11 @@ def schedule_jobs(app):
     app.scheduledJobs = ScheduledJobs(app.config)
 
 
-def create_app():
+def gen_app():
+    """ Generate a Flask app for LB with all configurations done and connections established.
+
+    In the Flask app returned, blueprints are not registered.
+    """
     app = Flask(__name__)
 
     # Configuration
@@ -76,7 +80,33 @@ def create_app():
     app.jinja_env.filters['date'] = utils.reformat_date
     app.jinja_env.filters['datetime'] = utils.reformat_datetime
 
+    return app
+
+
+def create_app():
+
+    app = gen_app()
     _register_blueprints(app)
+    return app
+
+
+def create_api_compat_app():
+    """ Creates application for the AudioScrobbler API.
+
+    The AudioScrobbler API v1.2 requires special views for the root URL so we
+    need to create a different app and only register the api_compat blueprints
+    """
+
+    app = gen_app()
+
+    from listenbrainz.webserver.views.api_compat import api_bp as api_compat_bp
+    from listenbrainz.webserver.views.api_compat_deprecated import api_compat_old_bp
+    app.register_blueprint(api_compat_bp)
+    app.register_blueprint(api_compat_old_bp)
+
+    # add a value into the config dict of the app to note that this is the
+    # app for api_compat. This is later used in error handling.
+    app.config['IS_API_COMPAT_APP'] = True
 
     return app
 
