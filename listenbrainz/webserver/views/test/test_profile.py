@@ -32,6 +32,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assert200(response)
         self.assertIn(self.user['auth_token'], response.data.decode('utf-8'))
 
+    def test_reset_import_timestamp(self):
         self.temporary_login(self.user['id'])
         val = int(time.time())
         db_user.update_latest_import(self.user['musicbrainz_id'], val)
@@ -43,8 +44,8 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
                 'token': self.user['auth_token']
             }
         )
-        self.assertStatus(response, 302) # should have redirected to the import page
-        self.assertRedirects(response, url_for('profile.import_data'))
+        self.assertStatus(response, 302) # should have redirected to the info page
+        self.assertRedirects(response, url_for('profile.info'))
         ts = db_user.get(self.user['id'])['latest_import'].strftime('%s')
         self.assertEqual(int(ts), 0)
 
@@ -61,7 +62,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
             }
         )
         self.assertStatus(response, 302)  # should have redirected to the import page
-        self.assertRedirects(response, url_for('profile.import_data'))
+        self.assertRedirects(response, url_for('profile.info'))
         ts = db_user.get(self.user['id'])['latest_import'].strftime('%s')
         self.assertEqual(int(ts), 0)
 
