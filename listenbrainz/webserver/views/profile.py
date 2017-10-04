@@ -42,7 +42,7 @@ def reset_token():
                 flash.info("Access token reset")
             except DatabaseException:
                 flash.error("Something went wrong! Unable to reset token right now.")
-        return redirect(url_for("profile.import_data"))
+        return redirect(url_for("profile.info"))
     else:
         token = current_user.auth_token
         return render_template(
@@ -65,7 +65,7 @@ def reset_latest_import_timestamp():
                 flash.info("Latest import time reset, we'll now import all your data instead of stopping at your last imported listen.")
             except DatabaseException:
                 flash.error("Something went wrong! Unable to reset latest import timestamp right now.")
-        return redirect(url_for("profile.import_data"))
+        return redirect(url_for("profile.info"))
     else:
         token = current_user.auth_token
         return render_template(
@@ -206,7 +206,7 @@ def upload():
         db_connection = webserver.influx_connection._influx
         db_connection.reset_listen_count(current_user.musicbrainz_id)
 
-        flash.info('Congratulations! Your listens from %d  files have been uploaded successfully.' % success)
+        flash.info('Congratulations! Your listens from %d files have been uploaded successfully.' % success)
     return redirect(url_for("profile.import_data"))
 
 
