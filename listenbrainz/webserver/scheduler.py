@@ -1,9 +1,10 @@
 """ This module contains code that triggers jobs we want to run
     on regular intervals.
 """
-import logging
 from apscheduler.schedulers.background import BackgroundScheduler
+from listenbrainz import stats
 from listenbrainz.stats.calculate import calculate_stats
+import logging
 
 class ScheduledJobs():
     """Schedule the scripts that need to be run at regular intervals """
@@ -15,6 +16,7 @@ class ScheduledJobs():
 
         self.conf = conf
         self.scheduler = BackgroundScheduler()
+        stats.init_bigquery_connection()
         self.add_jobs()
         self.run()
 
