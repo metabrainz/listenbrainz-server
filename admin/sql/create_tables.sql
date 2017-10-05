@@ -58,7 +58,7 @@ CREATE TABLE statistics.artist (
     name                    VARCHAR,
     release                 JSONB,
     recording               JSONB,
-    "user"                  JSONB,
+    listener                JSONB,
     listen_count            JSONB,
     last_updated            TIMESTAMP WITH TIME ZONE
 );
@@ -69,7 +69,7 @@ CREATE TABLE statistics.release (
     msid                    UUID NOT NULL,
     name                    VARCHAR,
     recording               JSONB,
-    "user"                  JSONB,
+    listener                JSONB,
     listen_count            JSONB,
     last_updated            TIMESTAMP WITH TIME ZONE
 );
@@ -79,7 +79,7 @@ CREATE TABLE statistics.recording (
     id                      SERIAL, -- PK
     msid                    UUID NOT NULL,
     name                    VARCHAR,
-    "user"                  JSONB,
+    listener                JSONB,
     listen_count            JSONB,
     last_updated            TIMESTAMP WITH TIME ZONE
 
