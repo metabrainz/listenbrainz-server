@@ -216,8 +216,8 @@ def update_latest_import(musicbrainz_id, ts):
 
 
 def get_recently_logged_in_users():
-    """Returns a list of users who have logged-in in the last X days, X is
-       defined in the config.
+    """Returns a list of users who have logged-in in the
+    last config.STATS_CALCULATION_LOGIN_TIME days
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
