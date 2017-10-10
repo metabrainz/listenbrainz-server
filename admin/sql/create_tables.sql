@@ -46,21 +46,21 @@ ALTER TABLE api_compat.session ADD CONSTRAINT session_sid_uniq UNIQUE (sid);
 
 CREATE TABLE statistics.user (
     user_id                 INTEGER NOT NULL, -- PK and FK to "user".id
-    artists                 JSONB,
-    releases                JSONB,
-    recordings              JSONB,
-    last_updated            TIMESTAMP WITH TIME ZONE
+    artist                  JSONB,
+    release                 JSONB,
+    recording               JSONB,
+    last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE statistics.artist (
     id                      SERIAL, -- PK
     msid                    UUID NOT NULL,
     name                    VARCHAR,
-    releases                JSONB,
-    recordings              JSONB,
-    users                   JSONB,
+    release                 JSONB,
+    recording               JSONB,
+    listener                JSONB,
     listen_count            JSONB,
-    last_updated            TIMESTAMP WITH TIME ZONE
+    last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 ALTER TABLE statistics.artist ADD CONSTRAINT artist_stats_msid_uniq UNIQUE (msid);
 
@@ -68,10 +68,10 @@ CREATE TABLE statistics.release (
     id                      SERIAL, -- PK
     msid                    UUID NOT NULL,
     name                    VARCHAR,
-    recordings              JSONB,
-    users                   JSONB,
+    recording               JSONB,
+    listener                JSONB,
     listen_count            JSONB,
-    last_updated            TIMESTAMP WITH TIME ZONE
+    last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 ALTER TABLE statistics.release ADD CONSTRAINT release_stats_msid_uniq UNIQUE (msid);
 
@@ -79,9 +79,9 @@ CREATE TABLE statistics.recording (
     id                      SERIAL, -- PK
     msid                    UUID NOT NULL,
     name                    VARCHAR,
-    users_all_time          JSONB,
+    listener                JSONB,
     listen_count            JSONB,
-    last_updated            TIMESTAMP WITH TIME ZONE
+    last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 
 );
 ALTER TABLE statistics.recording ADD CONSTRAINT recording_stats_msid_uniq UNIQUE (msid);

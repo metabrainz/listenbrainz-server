@@ -1,11 +1,13 @@
 
 import logging
+
 import uuid
 
 import sqlalchemy
 
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -217,3 +219,18 @@ def update_latest_import(musicbrainz_id, ts):
             except sqlalchemy.exc.ProgrammingError as e:
                 logger.error(e)
                 raise DatabaseException
+
+
+def get_recently_logged_in_users():
+    """Returns a list of users who have logged-in in the
+    last config.STATS_CALCULATION_LOGIN_TIME days
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+                SELECT {columns}
+                  FROM "user"
+                 WHERE last_login >= NOW() - INTERVAL ':x days'
+                """.format(columns=','.join(USER_GET_COLUMNS))), {
+                    'x': config.STATS_CALCULATION_LOGIN_TIME
+                })
+        return [dict(row) for row in result]

@@ -12,10 +12,11 @@ from redis import Redis
 
 from googleapiclient import discovery
 from googleapiclient.errors import HttpError
+from listenbrainz.bigquery import create_bigquery_object
+from listenbrainz.bigquery import NoCredentialsVariableException, NoCredentialsFileException
 from oauth2client.client import GoogleCredentials
 
 REPORT_FREQUENCY = 5000
-APP_CREDENTIALS_FILE = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
 ERROR_RETRY_DELAY = 3 # number of seconds to wait until retrying an operation
 DUMP_JSON_WITH_ERRORS = True
 
@@ -153,18 +154,11 @@ class BigQueryWriter(object):
             sleep(66666)
             return
 
-        if not APP_CREDENTIALS_FILE:
-            self.log.error("BiqQueryWriter not started, the GOOGLE_APPLICATION_CREDENTIALS env var is not defined.")
+        try:
+            self.bigquery = create_bigquery_object()
+        except (NoCredentialsFileException, NoCredentialsVariableException):
+            self.log.error("Credential File not present or invalid! Sleeping...")
             sleep(1000)
-            return
-
-        if not os.path.exists(APP_CREDENTIALS_FILE):
-            self.log.error("BiqQueryWriter not started, %s is missing." % APP_CREDENTIALS_FILE)
-            sleep(1000)
-            return
-
-        credentials = GoogleCredentials.get_application_default()
-        self.bigquery = discovery.build('bigquery', 'v2', credentials=credentials)
 
         while True:
             try:
