@@ -1,15 +1,15 @@
 # coding=utf-8
 
-from listenbrainz.db.testing import DatabaseTestCase
 import logging
-from datetime import datetime
-from listenbrainz.listenstore.tests.util import generate_data, to_epoch
-from listenbrainz.listenstore import MIN_ID, RedisListenStore
-from listenbrainz.webserver.redis_connection import init_redis_connection
-from redis.connection import Connection
-import random
 import ujson
+
+from redis.connection import Connection
+
 import listenbrainz.db.user as db_user
+from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.listenstore import MIN_ID
+from listenbrainz.listenstore.tests.util import generate_data
+from listenbrainz.webserver.redis_connection import init_redis_connection
 
 
 class TestRedisListenStore(DatabaseTestCase):

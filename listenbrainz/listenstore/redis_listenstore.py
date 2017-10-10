@@ -1,14 +1,13 @@
 # coding=utf-8
 
 
-from listenbrainz.listenstore import ListenStore, MIN_ID
-import logging
 import ujson
-import uuid
-from listenbrainz.listen import Listen
-from redis import Redis
+
 import redis
-import json
+from redis import Redis
+
+from listenbrainz.listen import Listen
+from listenbrainz.listenstore import ListenStore, MIN_ID
 
 
 class RedisListenStore(ListenStore):
