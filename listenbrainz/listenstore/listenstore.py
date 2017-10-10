@@ -1,8 +1,11 @@
 # coding=utf-8
 
-
+import calendar
 import logging
+import time
+
 from listenbrainz.listenstore import ORDER_ASC, ORDER_DESC, DEFAULT_LISTENS_PER_FETCH
+
 
 class ListenStore(object):
     MAX_FETCH = 5000          # max batch size to fetch from the db
@@ -15,11 +18,11 @@ class ListenStore(object):
     def max_id(self):
         return int(self.MAX_FUTURE_SECONDS + calendar.timegm(time.gmtime()))
 
-    def fetch_listens_from_storage():
+    def fetch_listens_from_storage(self):
         """ Override this method in PostgresListenStore class """
         raise NotImplementedError()
 
-    def get_total_listen_count():
+    def get_total_listen_count(self):
         """ Return the total number of listens stored in the ListenStore """
         raise NotImplementedError()
 
