@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Reset import timestamp- ListenBrainz{% endblock %}
+
+{% block content %}
+  <h3 class="page-title">Reset Import Timestamp</h3>
+  <p>Are you sure you want to reset your import timestamp? </p>
+
+  <p>
+     Our last.fm importer keeps track of the listens you've imported and then only imports
+     new listens added after previous imports. To do this, we keep track of the timestamp of
+     the newest listen submitted in your last.fm import. By resetting this timestamp, you'll
+     be able to import your entire last.fm data again. However, this will not create duplicates in
+     your ListenBrainz listen history.
+  </p>
+
+  <form method="post">
+      <input type="hidden" name="reset" value="yes">
+      <input type="hidden" name="token" value="{{ token }}">
+      <p>
+         <button type="submit" class="btn btn-info btn-lg" style="width: 200px">Yes, reset it.</button>
+      <p>
+  </form>
+
+{% endblock %}
