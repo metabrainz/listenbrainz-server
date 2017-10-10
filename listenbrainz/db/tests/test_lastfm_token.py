@@ -1,13 +1,15 @@
 
-from listenbrainz.db.testing import DatabaseTestCase
 import logging
-from datetime import timedelta
-from listenbrainz import db
-import listenbrainz.db.user as db_user
-from listenbrainz.db.lastfm_user import User
-from listenbrainz.db.lastfm_token import Token, TOKEN_EXPIRATION_TIME
-from sqlalchemy import text
 import uuid
+from datetime import timedelta
+
+from sqlalchemy import text
+
+import listenbrainz.db.user as db_user
+from listenbrainz import db
+from listenbrainz.db.lastfm_token import Token, TOKEN_EXPIRATION_TIME
+from listenbrainz.db.lastfm_user import User
+from listenbrainz.db.testing import DatabaseTestCase
 
 
 class TestAPICompatTokenClass(DatabaseTestCase):
@@ -37,7 +39,7 @@ class TestAPICompatTokenClass(DatabaseTestCase):
         self.assertIsInstance(token, Token)
         self.assertIsNone(token.user)
 
-        ##### Before approving
+        """ Before approving """
         # Load with token
         token1 = Token.load(token.token)
         self.assertIsNone(token1.user)
@@ -50,7 +52,7 @@ class TestAPICompatTokenClass(DatabaseTestCase):
 
         token.approve(self.user.name)
 
-        ##### After approving the token
+        """ After approving the token """
         # Load with token
         token1 = Token.load(token.token)
         self.assertIsInstance(token1.user, User)

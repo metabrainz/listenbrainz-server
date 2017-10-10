@@ -1,10 +1,11 @@
 
-from listenbrainz.db.testing import DatabaseTestCase
 import logging
+
 import listenbrainz.db.user as db_user
-from listenbrainz.db.lastfm_user import User
 from listenbrainz.db.lastfm_session import Session
 from listenbrainz.db.lastfm_token import Token
+from listenbrainz.db.lastfm_user import User
+from listenbrainz.db.testing import DatabaseTestCase
 
 
 class TestAPICompatSessionClass(DatabaseTestCase):

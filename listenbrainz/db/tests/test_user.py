@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 import time
+
 import sqlalchemy
+
+import listenbrainz.db.user as db_user
 from listenbrainz import db
 from listenbrainz.db.testing import DatabaseTestCase
-import listenbrainz.db.user as db_user
+
 
 class UserTestCase(DatabaseTestCase):
 
