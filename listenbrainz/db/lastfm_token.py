@@ -39,15 +39,15 @@ class Token(object):
     def load(token, api_key=None):
         """ Load the token from database. Check api_key as well if present.
         """
-        query = "SELECT id, user_id, token, api_key, ts \
-                   FROM api_compat.token \
-                  WHERE token=:token"
+        query = """SELECT id, user_id, token, api_key, ts
+                     FROM api_compat.token
+                    WHERE token = :token"""
         params = {'token': token}
         if api_key:
-            query = "SELECT id, user_id, token, api_key, ts \
-                       FROM api_compat.token \
-                      WHERE token=:token \
-                        AND api_key=:api_key"
+            query = """SELECT id, user_id, token, api_key, ts
+                         FROM api_compat.token
+                        WHERE token = :token
+                          AND api_key = :api_key"""
             params['api_key'] = api_key
 
         with db.engine.connect() as connection:

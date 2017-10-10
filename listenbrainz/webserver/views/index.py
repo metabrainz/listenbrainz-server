@@ -57,6 +57,11 @@ def api_docs():
     return render_template("index/api-docs.html")
 
 
+@index_bp.route("/lastfm-proxy")
+def proxy():
+    return render_template("index/lastfm-proxy.html")
+
+
 @index_bp.route("/roadmap")
 def roadmap():
     return render_template("index/roadmap.html")
