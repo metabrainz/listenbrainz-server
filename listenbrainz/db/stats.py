@@ -29,12 +29,12 @@ def insert_user_stats(user_id, artists, recordings, releases, artist_count):
 
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            INSERT INTO statistics.user (user_id, artists, recordings, releases)
+            INSERT INTO statistics.user (user_id, artist, recording, release)
                  VALUES (:user_id, :artists, :recordings, :releases)
             ON CONFLICT (user_id)
-          DO UPDATE SET artists = :artists,
-                        recordings = :recordings,
-                        releases = :releases,
+          DO UPDATE SET artist = :artists,
+                        recording = :recordings,
+                        release = :releases,
                         last_updated = NOW()
             """), {
                 'user_id': user_id,
@@ -62,7 +62,7 @@ def get_user_stats(user_id):
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT user_id, artists, releases, recordings, last_updated
+            SELECT user_id, artist, release, recording, last_updated
               FROM statistics.user
              WHERE user_id = :user_id
             """), {

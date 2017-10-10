@@ -36,9 +36,9 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         )
 
         result = db_stats.get_user_stats(user_id=self.user['id'])
-        self.assertDictEqual(result['artists']['all_time'], artists)
-        self.assertEqual(result['artists']['count'], 2)
-        self.assertDictEqual(result['releases'], releases)
-        self.assertDictEqual(result['recordings'], recordings)
+        self.assertDictEqual(result['artist']['all_time'], artists)
+        self.assertEqual(result['artist']['count'], 2)
+        self.assertDictEqual(result['release'], releases)
+        self.assertDictEqual(result['recording'], recordings)
         self.assertGreater(int(result['last_updated'].strftime('%s')), 0)
 
