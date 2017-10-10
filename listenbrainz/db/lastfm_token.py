@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import os
 import binascii
+import os
 from datetime import datetime, timedelta
-from listenbrainz import db
+
 from sqlalchemy import text
+
+from listenbrainz import db
 from listenbrainz.db.lastfm_user import User
 
 # Token expiration time in minutes
@@ -26,7 +28,7 @@ class Token(object):
         """ Check if the api_key is valid or not, and return a boolean.
 
             Last.fm uses a (api_key, user) mapping to detect the app which is making
-            the rquest, but since this mapping is private we have no way to authenticate
+            the request, but since this mapping is private we have no way to authenticate
             the api_key.
 
             To prevent the abuse of the service, it falls back to ratelimiter.
@@ -69,7 +71,7 @@ class Token(object):
         """ Check if the token has expired.
             NOTE: Make sure you capture timezones to avoid issues.
         """
-        return (self.timestamp < datetime.now() - timedelta(minutes=TOKEN_EXPIRATION_TIME))
+        return self.timestamp < datetime.now() - timedelta(minutes=TOKEN_EXPIRATION_TIME)
 
     def approve(self, user):
         """ Authenticate the token. User has to be present.

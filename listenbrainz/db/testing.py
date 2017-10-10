@@ -1,8 +1,9 @@
 
-from listenbrainz import db
-import unittest
 import os
+import unittest
+
 from listenbrainz import config
+from listenbrainz import db
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..','admin', 'sql')
 TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'test_data')
