@@ -133,11 +133,49 @@ def get_top_artists(musicbrainz_id, time_interval=None):
 
     return stats.run_query(query, parameters)
 
+
+def get_artist_count(musicbrainz_id, time_interval=None):
+    """ Get artist count for user with given MusicBrainz ID over a particular period of time 
+        
+        Args: musicbrainz_id (str): the MusicBrainz ID of the user
+              time_interval  (str): the time interval over which artist count should be returned
+                                    (defaults to all time)
+
+        Returns: artist_count (int): total number of artists listened to by the user in that
+                                     period of time
+    """
+
+    filter_clause = ""
+    if time_interval:
+        filter_clause = "AND listened_at >= TIMESTAMP_SUB(CURRENT_TIME(), INTERVAL {})".format(time_interval)
+
+    query = """SELECT COUNT(DISTINCT(artist_msid)) as artist_count
+                 FROM {dataset_id}.{table_id}
+                WHERE user_name = @musicbrainz_id
+                {time_filter_clause}
+            """.format(
+                    dataset_id=config.BIGQUERY_DATASET_ID,
+                    table_id=config.BIGQUERY_TABLE_ID,
+                    time_filter_clause=filter_clause,
+                )
+
+    parameters = [
+        {
+            'name': 'musicbrainz_id',
+            'type': 'STRING',
+            'value': musicbrainz_id,
+        }
+    ]
+
+    return stats.run_query(query, parameters)[0]['artist_count']
+
+
+
 def get_top_releases(musicbrainz_id, time_interval=None):
     """ Get top releases for user with given MusicBrainz ID over a particular period of time
 
         Args: musicbrainz_id (str): the MusicBrainz ID of the user
-              time_interval  (str): the time interval over which top artists should be returned
+              time_interval  (str): the time interval over which top releases should be returned
                                     (defaults to all time)
 
         Returns: A sorted list of dicts with the following structure

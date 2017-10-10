@@ -49,7 +49,7 @@ CREATE TABLE statistics.user (
     artists                 JSONB,
     releases                JSONB,
     recordings              JSONB,
-    last_updated            TIMESTAMP WITH TIME ZONE
+    last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE statistics.artist (
@@ -60,7 +60,7 @@ CREATE TABLE statistics.artist (
     recordings              JSONB,
     users                   JSONB,
     listen_count            JSONB,
-    last_updated            TIMESTAMP WITH TIME ZONE
+    last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 ALTER TABLE statistics.artist ADD CONSTRAINT artist_stats_msid_uniq UNIQUE (msid);
 
@@ -71,7 +71,7 @@ CREATE TABLE statistics.release (
     recordings              JSONB,
     users                   JSONB,
     listen_count            JSONB,
-    last_updated            TIMESTAMP WITH TIME ZONE
+    last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 ALTER TABLE statistics.release ADD CONSTRAINT release_stats_msid_uniq UNIQUE (msid);
 
@@ -81,7 +81,7 @@ CREATE TABLE statistics.recording (
     name                    VARCHAR,
     users_all_time          JSONB,
     listen_count            JSONB,
-    last_updated            TIMESTAMP WITH TIME ZONE
+    last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 
 );
 ALTER TABLE statistics.recording ADD CONSTRAINT recording_stats_msid_uniq UNIQUE (msid);
