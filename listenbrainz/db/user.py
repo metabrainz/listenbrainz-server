@@ -7,6 +7,7 @@ import sqlalchemy
 
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz import config
 
 
 logger = logging.getLogger(__name__)
