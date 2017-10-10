@@ -1,4 +1,3 @@
-
 from flask import Blueprint, render_template, request, url_for, Response, redirect, flash, current_app, jsonify
 from flask_login import current_user, login_required
 from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
@@ -9,6 +8,7 @@ from time import time
 from listenbrainz import webserver
 from listenbrainz.webserver import flash
 import listenbrainz.db.user as db_user
+import listenbrainz.db.stats as db_stats
 import listenbrainz.config as config
 from listenbrainz.db.exceptions import DatabaseException
 from flask import make_response
@@ -152,6 +152,12 @@ def profile(user_name):
             }
             listens.insert(0, listen)
 
+    user_stats = db_stats.get_user_stats(user.id)
+    try:
+        artist_count = int(user_stats['artists']['count'])
+    except (KeyError, TypeError):
+        artist_count = 0
+
     return render_template(
         "user/profile.html",
         user=user,
@@ -161,6 +167,7 @@ def profile(user_name):
         spotify_uri=_get_spotify_uri_for_listens(listens),
         have_listen_count=have_listen_count,
         listen_count=format(int(listen_count), ",d"),
+        artist_count=format(artist_count, ",d")
     )
 
 
