@@ -71,7 +71,7 @@ your application. Fill out the form with these three options.
 
 * **Name**: (any name you want and will recognize, I used ``listenbrainz-server-devel``)
 * **Type**: ``Web Application``
-* **Callback URL**: ``http://localhost:8000/login/musicbrainz/post``
+* **Callback URL**: ``http://localhost/login/musicbrainz/post``
 
 After entering this information, you'll have a OAuth client ID and OAuth client secret. You'll use
 these for configuring ListenBrainz.
