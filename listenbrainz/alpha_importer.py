@@ -78,6 +78,10 @@ def extract_data(batch):
     return data
 
 
+class BetaAuthorizationException(Exception):
+    pass
+
+
 def send_batch(data, token, retries=5):
     """
     Sends a batch of data. If fails, then breaks the data into two parts and
@@ -96,6 +100,9 @@ def send_batch(data, token, retries=5):
         if r.status_code == 200:
             done = True
             break
+        elif r.status_code == 401 and r.json()['error'] == 'Invalid authorization token.':
+            logger.error('Invalid auth token according to beta, not going to retry now.')
+            raise BetaAuthorizationException
         else:
             time.sleep(config.IMPORTER_DELAY)
 
@@ -201,6 +208,11 @@ def import_from_alpha(username, token):
             page_count += 1
         except HTTPError as e:
             time.sleep(config.IMPORTER_DELAY)
+
+        except BetaAuthorizationException:
+            logger.error('Invalid authorization token for user %s', username)
+            logger.info('Stopping alpha import for user %s', username)
+            return
 
 
 def queue_pop():
