@@ -32,3 +32,4 @@ requests == 2.13.0
 google-api-python-client==1.5.2
 pika == 0.10.0
 git+https://github.com/bninja/pika-pool.git@5b1d3b650395aed60d9995fbfd289de7e62fe8d5#egg=pika_pool
+git+https://github.com/metabrainz/messybrainz-server.git@production#egg=messybrainz
