@@ -2,7 +2,7 @@
 from redis import Redis
 from listenbrainz import config
 import requests
-from requests.exceptions import HTTPError
+from requests.exceptions import ConnectionError, HTTPError
 import ujson
 import time
 import sys
@@ -153,7 +153,7 @@ def update_latest_import_time(token, ts):
         data=ujson.dumps({'ts': ts})
     )
     if response.status_code != 200:
-        raise HTTPError
+        raise HTTPError(response.text)
 
 
 def import_from_alpha(username, token):
@@ -162,7 +162,13 @@ def import_from_alpha(username, token):
     logger.info('Beginning alpha import for %s' % username)
 
     # first get the timestamp until which previous imports have already added data
-    latest_import_ts = get_latest_import_time(username)
+    while True:
+        try:
+            latest_import_ts = get_latest_import_time(username)
+            break
+        except (ConnectionError, HTTPError) as e:
+            logger.error('Unable to connect to alpha site to get latest_import_ts: {}, sleeping...'.format(e))
+            time.sleep(3)
 
     next_max = int(time.time()) # variable used for pagination
     page_count = 1
@@ -199,7 +205,7 @@ def import_from_alpha(username, token):
                 next_max = data['payload'][-1]['listened_at']
 
             page_count += 1
-        except HTTPError as e:
+        except (ConnectionError, HTTPError) as e:
             time.sleep(config.IMPORTER_DELAY)
 
 
