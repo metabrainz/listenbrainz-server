@@ -27,7 +27,7 @@ def index():
 @index_bp.route("/import")
 def import_data():
     if current_user.is_authenticated():
-        return redirect(url_for("user.import_data"))
+        return redirect(url_for("profile.import_data"))
     else:
         return current_app.login_manager.unauthorized()
 
