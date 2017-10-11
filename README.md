@@ -54,7 +54,7 @@ To initialize the database (create user, tables, etc.) run these commands:
     $ docker-compose -f docker/docker-compose.yml -p listenbrainz run --rm web python3 manage.py init_influx
 
 
-After that server should be ready to go. Go to http://localhost:8000 and load the
+After that server should be ready to go. Go to http://localhost and load the
 ListenBrainz home page.
 
 ### Running tests

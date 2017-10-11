@@ -59,7 +59,7 @@ services:
     environment:
       GOOGLE_APPLICATION_CREDENTIALS: '/code/credentials/bigquery-credentials.json'
     ports:
-      - "8000:80"
+      - "80:80"
     depends_on:
       - redis
       - db
