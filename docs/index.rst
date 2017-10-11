@@ -10,6 +10,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   dev/devel-env
    dev/api
    dev/json
 
