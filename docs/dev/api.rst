@@ -39,7 +39,8 @@ following headers:
   window
 
 - **X-RateLimit-Reset-In**: Number of seconds when current time window expires
-  [#]_
+  (*recommended*: this header is resilient against clients with incorrect
+  clocks)
 
 - **X-RateLimit-Reset**: UNIX epoch number of seconds (without timezone) when
   current time window expires [#]_
@@ -50,8 +51,6 @@ allowed, the server will respond with error code ``429: Too Many Requests``.
 Requests that provide the *Authorization* header with a valid user token may
 receive higher rate limits than those without valid user tokens.
 
-.. [#] **Recommended**: This header is resilient against clients with incorrect
-   clocks
 .. [#] Provided for compatibility with other APIs, but we still recommend using
    ``X-RateLimit-Reset-In`` wherever possible
 
