@@ -36,7 +36,7 @@
       </p>
       <p> The alpha version of the ListenBrainz site had one significant oversight: It imported listens from Last.fm using the Last.fm web page which only had <i>minute resolution</i> on the listen data. ListenBrainz really needs the more detailed <i>second resolution</i> data that is available from Last.fm API. To fix this problem and to preserve the data that some users may have submitted to ListenBrainz Alpha, please consider the two options carefully:
         <ol>
-          <li>You have only used ListenBrainz to import data from Last.fm and have not submitted new listens to ListenBrainz directly. For this case, we recommend that you do a clean import of your Last.fm history from the Last.fm import below.
+          <li>You have only used ListenBrainz to import data from Last.fm and have not submitted new listens to ListenBrainz directly. For this case, we recommend that you do a clean import of your Last.fm history from the Last.fm import above.
           <li>If you have submitted listens to ListenBrainz Alpha that are not in Last.fm, you can do an import from ListenBrainz Alpha into ListenBrainz Beta (the site you're using right now). Click the "Import Now!" button below to start this process. Please note that if you have both Last.fm imported data and your own submitted data, the Last.fm data that was previously imported will continue to have <i>minute resolution</i> timestamps.
         </ol>
       It is safe to import from the alpha more than once, your data will not be duplicated.
@@ -67,21 +67,6 @@
         <input type="submit" value="Upload">
       </form>
     </div>
-
-    <h3>User token</h3>
-    <p>
-      If you would like to use an external program to import into ListenBrainz you will need the following
-      user token:
-    </p>
-
-    <div class="well">
-      {{ user.auth_token }}
-    </div>
-
-    <p>If you want to reset your token, click below</p>
-    <p>
-      <span class="btn btn-info btn-lg" style="width: 200px"><a href="{{ url_for("user.reset_token") }}" style="color: white;">Reset token</a></span>
-    </p>
 
   {% endif %}
 {% endblock %}

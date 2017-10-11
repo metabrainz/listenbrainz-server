@@ -4,6 +4,10 @@ if [ "${CONTAINER_NAME}" = "listenbrainz-web" ]
 then
     exec uwsgi /etc/uwsgi/uwsgi.ini
 fi
+if [ "${CONTAINER_NAME}" = "listenbrainz-api-compat" ]
+then
+    exec uwsgi /etc/uwsgi/uwsgi-api-compat.ini
+fi
 if [ "${CONTAINER_NAME}" = "listenbrainz-influx-writer" ]
 then
     cd /code/listenbrainz

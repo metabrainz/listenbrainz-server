@@ -37,3 +37,7 @@ class IndexViewsTestCase(ServerTestCase):
         resp = self.client.get('/canyoufindthis')
         self.assert404(resp)
         self.assertIn('Not Found', resp.data.decode('utf-8'))
+
+    def test_lastfm_proxy(self):
+        resp = self.client.get(url_for('index.proxy'))
+        self.assert200(resp)
