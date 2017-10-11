@@ -1,17 +1,15 @@
-
-import sys
-import os
-import uuid
-from listenbrainz.tests.integration import IntegrationTestCase
-from flask import url_for
-import listenbrainz.db.user as db_user
-import time
 import json
+import time
 
-class UserViewsTestCase(IntegrationTestCase):
+from flask import url_for
 
+import listenbrainz.db.user as db_user
+from listenbrainz.tests.integration import IntegrationTestCase
+
+
+class ProfileViewsTestCase(IntegrationTestCase):
     def setUp(self):
-        super(UserViewsTestCase, self).setUp()
+        super().setUp()
         self.user = db_user.get_or_create('iliekcomputers')
 
     def send_listens(self):
@@ -19,9 +17,9 @@ class UserViewsTestCase(IntegrationTestCase):
             payload = json.load(f)
         return self.client.post(
             url_for('api_v1.submit_listen'),
-            data = json.dumps(payload),
-            headers = {'Authorization': 'Token {}'.format(self.user['auth_token'])},
-            content_type = 'application/json'
+            data=json.dumps(payload),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+            content_type='application/json'
         )
 
     def test_export(self):
@@ -30,7 +28,7 @@ class UserViewsTestCase(IntegrationTestCase):
         """
         # test get requests to export view first
         self.temporary_login(self.user['id'])
-        resp = self.client.get(url_for('user.export_data'))
+        resp = self.client.get(url_for('profile.export_data'))
         self.assert200(resp)
 
         # send two listens for the user
@@ -40,7 +38,7 @@ class UserViewsTestCase(IntegrationTestCase):
         time.sleep(2)
 
         # now export data and check if contains all the listens we just sent
-        resp = self.client.post(url_for('user.export_data'))
+        resp = self.client.post(url_for('profile.export_data'))
         self.assert200(resp)
         data = json.loads(resp.data)
         self.assertEqual(len(data), 3)
