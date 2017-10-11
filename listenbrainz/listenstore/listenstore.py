@@ -43,7 +43,7 @@ class ListenStore(object):
         if from_ts and to_ts:
             raise ValueError("You cannot specify from_ts and to_ts at the same time.")
 
-        if not from_ts and not to_ts:
+        if from_ts is None and to_ts is None:
             raise ValueError("You must specify either from_ts or to_ts.")
 
         if from_ts:

@@ -7,8 +7,8 @@ DEBUG = False
 
 SECRET_KEY = '''{{template "KEY" "secret_key"}}'''
 
-{{if service "postgres-master"}}
-{{with index (service "postgres-master") 0}}
+{{if service "pgbouncer-master"}}
+{{with index (service "pgbouncer-master") 0}}
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{{.Port}}/listenbrainz"
 MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@{{.Address}}:{{.Port}}/messybrainz"
 POSTGRES_ADMIN_URI="postgresql://postgres@{{.Address}}:{{.Port}}/template1"
@@ -73,6 +73,7 @@ UPLOAD_FOLDER = '''{{template "KEY" "upload_folder"}}'''
 
 ALPHA_URL = '''{{template "KEY" "alpha_url"}}'''
 BETA_URL = '''{{template "KEY" "beta_url"}}'''
+LASTFM_PROXY_URL = '''{{template "KEY" "lastfm_proxy_url"}}'''
 
 # defaults are unlikely to be changed
 IMPORTER_QUEUE_KEY = 'alphaimporter:queue'
