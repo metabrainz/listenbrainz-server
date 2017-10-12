@@ -1,5 +1,5 @@
-ListenBrainz API for Beta
-=========================
+ListenBrainz API
+================
 
 The ListenBrainz server supports the following end-points for submitting and
 fetching listens.  All endpoints have this root URL for our current production
@@ -11,7 +11,7 @@ site [#]_.
 
 *Note*: All ListenBrainz services are only available on **HTTPS**!
 
-.. [#] The beta endpoints (i.e. ``beta.listenbrainz.org`` was deprecated in
+.. [#] The beta endpoints (i.e. ``beta.listenbrainz.org``) were deprecated in
    Fall 2017. If you were using this endpoint, please use the current,
    production endpoints instead.
 
