@@ -23,7 +23,6 @@ psycopg2 == 2.6.1
 python-dateutil == 2.2
 ujson == 1.33
 redis == 2.10.3
-apscheduler == 3.1.0
 yattag == 1.6.0
 xmltodict == 0.10.2
 unittest2 == 1.1.0
