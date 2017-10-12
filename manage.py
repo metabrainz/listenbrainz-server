@@ -1,5 +1,6 @@
 from listenbrainz import db
 from listenbrainz import webserver
+from listenbrainz import stats
 from werkzeug.serving import run_simple
 import subprocess
 import os
@@ -25,7 +26,6 @@ ADMIN_INFLUX_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ad
                    "'DEBUG' value in the config file.")
 def runserver(host, port, debug=False):
     application = webserver.create_app()
-    webserver.schedule_jobs(application)
     run_simple(
         hostname=host,
         port=port,
@@ -191,6 +191,12 @@ def init_influx():
     influx_client.create_retention_policy("one_week", "1w", 1, "listenbrainz")
 
     print("Done!")
+
+
+# Add other commands here
+import listenbrainz.stats.calculate as calculate
+cli.add_command(calculate.cli, name="stats")
+
 
 if __name__ == '__main__':
     cli()

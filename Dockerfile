@@ -11,6 +11,7 @@ RUN apt-get update \
                        git \
                        libpq-dev \
                        libffi-dev \
+                       cron \
     && rm -rf /var/lib/apt/lists/*
 
 # PostgreSQL client
@@ -44,3 +45,8 @@ COPY . /code/listenbrainz/
 # setup a log dir
 RUN mkdir /logs
 RUN chown -R daemon:daemon /logs
+
+ADD crontab /etc/cron.d/crontab
+RUN chmod 0644 /etc/cron.d/crontab
+RUN touch /var/log/cron.log
+RUN crontab /etc/cron.d/crontab

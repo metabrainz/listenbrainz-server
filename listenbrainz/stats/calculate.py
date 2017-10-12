@@ -1,6 +1,9 @@
-import listenbrainz.stats.user as stats_user
-import listenbrainz.db.user as db_user
+import click
 import listenbrainz.db.stats as db_stats
+import listenbrainz.db.user as db_user
+import listenbrainz.stats.user as stats_user
+import time
+
 from listenbrainz import db
 from listenbrainz import config
 from listenbrainz import stats
@@ -24,12 +27,26 @@ def calculate_user_stats():
 def calculate_stats():
     calculate_user_stats()
 
-if __name__ == '__main__':
+
+cli = click.Group()
+
+@cli.command()
+def calculate():
+    """ Command to calculate statistics from Google BigQuery.
+    This can be used from the manage.py file.
+    """
+
+    if not config.WRITE_TO_BIGQUERY:
+        time.sleep(10000)
+
     print('Connecting to Google BigQuery...')
     stats.init_bigquery_connection()
+    print('Connected!')
+
     print('Connecting to database...')
     db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
     print('Connected!')
+
     print('Calculating statistics using Google BigQuery...')
     calculate_stats()
     print('Calculations done!')
