@@ -1,15 +1,17 @@
 
-from redis import Redis
-from listenbrainz import config
-import requests
-from requests.exceptions import HTTPError
-import ujson
-import time
-import sys
 import logging
-from logging.handlers import RotatingFileHandler
-from listenbrainz.listenstore import InfluxListenStore
 import redis
+import requests
+import sys
+import time
+import ujson
+
+from listenbrainz import config
+from listenbrainz.listenstore import InfluxListenStore
+from logging.handlers import RotatingFileHandler
+from redis import Redis
+from requests.exceptions import ConnectionError, HTTPError
+
 
 redis_connection = None
 
@@ -19,7 +21,7 @@ LATEST_IMPORT_ENDPOINT = '{root_url}/1/latest-import'.format(root_url=config.BET
 logger = logging.getLogger('alpha_importer')
 logger.setLevel(logging.DEBUG)
 
-if config.IMPORTER_LOG_FILE == "-":
+if config.IMPORTER_LOG_FILE == '-':
     handler = logging.StreamHandler(sys.stdout)
 else:
     handler = RotatingFileHandler(config.IMPORTER_LOG_FILE, maxBytes=512 * 1024, backupCount=100)
@@ -39,8 +41,8 @@ def init_redis_connection():
             redis_connection.ping()
             return
         except redis.exceptions.ConnectionError as e:
-            logger.error("Couldn't connect to redis: {}:{}".format(config.REDIS_HOST, config.REDIS_PORT))
-            logger.error("Sleeping for 2 seconds and trying again...")
+            logger.error('Couldn\'t connect to redis: %s:%d', config.REDIS_HOST, config.REDIS_PORT)
+            logger.error('Sleeping for 2 seconds and trying again...')
             time.sleep(2)
 
 
@@ -50,18 +52,18 @@ def queue_empty():
 
 def queue_front():
     # get the first element from queue and split it to get username and auth_token
-    token, username = redis_connection.lindex(config.IMPORTER_QUEUE_KEY, 0).split(" ", 1)
+    token, username = redis_connection.lindex(config.IMPORTER_QUEUE_KEY, 0).split(' ', 1)
     return username, token
 
 
 def get_batch(username, max_ts):
     get_url = '{}/1/user/{}/listens'.format(config.ALPHA_URL, username)
-    payload = {"max_ts": max_ts, "count": config.LISTENS_PER_GET}
-    r = requests.get(get_url, params = payload)
+    payload = {'max_ts': max_ts, 'count': config.LISTENS_PER_GET}
+    r = requests.get(get_url, params=payload)
     if r.status_code == 200:
         return ujson.loads(r.text)
     else:
-        logger.error("GET from alpha HTTP response code: {}".format(r.status_code))
+        logger.error('GET from alpha HTTP response code: %s', str(r.status_code))
         raise HTTPError
 
 
@@ -92,7 +94,7 @@ def send_batch(data, token, retries=5):
     send_url = '{}/1/submit-listens'.format(config.BETA_URL)
     done = False
     for _ in range(retries):
-        r = requests.post(send_url, headers={'Authorization': 'Token {}'.format(token)}, data = ujson.dumps(data))
+        r = requests.post(send_url, headers={'Authorization': 'Token {}'.format(token)}, data=ujson.dumps(data))
         if r.status_code == 200:
             done = True
             break
@@ -104,13 +106,13 @@ def send_batch(data, token, retries=5):
     elif not done and len(data['payload']) == 1:
         # try to send the bad listen one more time and if it doesn't work
         # log the error
-        r = requests.post(send_url, headers={'Authorization': 'Token {}'.format(token)}, data = ujson.dumps(data))
+        r = requests.post(send_url, headers={'Authorization': 'Token {}'.format(token)}, data=ujson.dumps(data))
         if r.status_code == 200:
             return 1
         else:
-            logger.error("Unable to submit bad listen to beta:")
+            logger.error('Unable to submit bad listen to beta:')
             logger.error(ujson.dumps(data))
-            logger.error("Response code from beta: {}".format(r.status_code))
+            logger.error('Response code from beta: %s', str(r.status_code))
             logger.error(r.text)
             return 0
     else:
@@ -153,16 +155,22 @@ def update_latest_import_time(token, ts):
         data=ujson.dumps({'ts': ts})
     )
     if response.status_code != 200:
-        raise HTTPError
+        raise HTTPError(response.text)
 
 
 def import_from_alpha(username, token):
     """ Function to import listens from alpha for user with given username """
 
-    logger.info('Beginning alpha import for %s' % username)
+    logger.info('Beginning alpha import for %s', username)
 
     # first get the timestamp until which previous imports have already added data
-    latest_import_ts = get_latest_import_time(username)
+    while True:
+        try:
+            latest_import_ts = get_latest_import_time(username)
+            break
+        except (ConnectionError, HTTPError) as e:
+            logger.error('Unable to connect to alpha site to get latest_import_ts: %s, sleeping...', str(e))
+            time.sleep(3)
 
     next_max = int(time.time()) # variable used for pagination
     page_count = 1
@@ -175,8 +183,8 @@ def import_from_alpha(username, token):
         try:
             if stop:
                 update_latest_import_time(token, newest_timestamp_imported_this_time)
-                logger.info('All pages done for user {}'.format(username))
-                logger.info('Total number of pages done: {}'.format(page_count - 1))
+                logger.info('All pages done for user %s', username)
+                logger.info('Total number of pages done: %s', str(page_count - 1))
                 return
 
             batch = get_batch(username, next_max)
@@ -199,7 +207,7 @@ def import_from_alpha(username, token):
                 next_max = data['payload'][-1]['listened_at']
 
             page_count += 1
-        except HTTPError as e:
+        except (ConnectionError, HTTPError) as e:
             time.sleep(config.IMPORTER_DELAY)
 
 
@@ -223,7 +231,7 @@ def init_influx_connection():
                 'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
             })
         except Exception as e:
-            logger.error("Couldn't create InfluxListenStore instance: {}".format(str(e)))
+            logger.error("Couldn't create InfluxListenStore instance: %s", str(e))
             logger.error("Sleeping 2 seconds and then retrying...")
             time.sleep(2)
 
@@ -231,13 +239,13 @@ def init_influx_connection():
 if __name__ == '__main__':
     init_redis_connection()
     db_connection = init_influx_connection()
-    logger.info("alpha_importer started")
+    logger.info('alpha_importer started')
     while True:
         if not queue_empty():
             username, token = queue_front()
             import_from_alpha(username, token)
             queue_pop()
-            update_status(username, "DONE")
+            update_status(username, 'DONE')
             db_connection.reset_listen_count(username)
         else:
             time.sleep(3)
