@@ -70,6 +70,17 @@ Also, run the integrations tests for ListenBrainz using the following command:
 
     $ ./integration-test.sh
 
+### Calculating statistics
+
+ListenBrainz uses Google BigQuery to calculate statistics. You need to add a BigQuery credentials file
+called `bigquery-credentials.json` to the `credentials` directory for this to work. This file can be
+obtained from the Google BigQuery site by creating a new project. The `WRITE_TO_BIGQUERY` variable in
+`config.py` needs to be set to True also.
+
+The stats are automatically calculated in the `scheduler` container, but if you want to manually
+start the stats calculation, run the following command.
+
+    $ docker-compose -f docker/docker-compose.yml -p listenbrainz run --rm web python manage.py stats calculate
 
 ## Documentation
 

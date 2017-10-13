@@ -2,7 +2,6 @@ from flask import Flask, current_app
 import sys
 import os
 from shutil import copyfile
-from listenbrainz.webserver.scheduler import ScheduledJobs
 
 API_PREFIX = '/1'
 
@@ -16,17 +15,15 @@ def create_influx(app):
         'REDIS_PORT': app.config['REDIS_PORT'],
     })
 
+
 def create_redis(app):
     from listenbrainz.webserver.redis_connection import init_redis_connection
     init_redis_connection(app.logger, app.config['REDIS_HOST'], app.config['REDIS_PORT'])
 
+
 def create_rabbitmq(app):
     from listenbrainz.webserver.rabbitmq_connection import init_rabbitmq_connection
     init_rabbitmq_connection(app)
-
-def schedule_jobs(app):
-    """ Init all the scheduled jobs """
-    app.scheduledJobs = ScheduledJobs(app.config)
 
 
 def gen_app():
