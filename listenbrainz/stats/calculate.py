@@ -36,8 +36,10 @@ def calculate():
     This can be used from the manage.py file.
     """
 
+    # if no bigquery support, sleep
     if not config.WRITE_TO_BIGQUERY:
-        time.sleep(10000)
+        while True:
+            time.sleep(10000)
 
     print('Connecting to Google BigQuery...')
     stats.init_bigquery_connection()
