@@ -53,11 +53,6 @@ services:
       dockerfile: Dockerfile
     command: python3 /code/listenbrainz/manage.py runserver -h 0.0.0.0 -p 80 -d
     image: web
-    volumes:
-      - ..:/code/listenbrainz:z
-      - ../credentials:/code/credentials:z
-    environment:
-      GOOGLE_APPLICATION_CREDENTIALS: '/code/credentials/bigquery-credentials.json'
     ports:
       - "80:80"
     depends_on:
@@ -108,3 +103,15 @@ services:
     depends_on:
       - web
       - rabbitmq
+
+  scheduler:
+    image: web
+    command: cron && tail -f /var/log/cron.log
+    volumes:
+      - ../credentials:/code/credentials:z
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: '/code/credentials/bigquery-credentials.json'
+    depends_on:
+      - db
+      - rabbitmq
+      - web

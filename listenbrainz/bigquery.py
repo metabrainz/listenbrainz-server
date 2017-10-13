@@ -1,9 +1,15 @@
-import os
-from googleapiclient import discovery
 import googleapiclient
+import logging
+import os
+
+from googleapiclient import discovery
 from oauth2client.client import GoogleCredentials
 
 APP_CREDENTIALS_FILE = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 def create_bigquery_object():
     """ Initiates the connection to Google BigQuery. Returns a BigQuery object. """
