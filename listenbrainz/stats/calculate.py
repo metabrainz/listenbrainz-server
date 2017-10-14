@@ -3,6 +3,7 @@ import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import listenbrainz.stats.user as stats_user
 import logging
+import sys
 import time
 
 from listenbrainz import config
@@ -11,6 +12,11 @@ from listenbrainz import stats
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
 def calculate_user_stats():
@@ -18,9 +24,10 @@ def calculate_user_stats():
     """
 
     logger.info('Beginning calculation of user stats...')
+
     while True:
         try:
-            users = db_stats.get_users_with_uncalculated_stats()
+            users = db_user.get_users_with_uncalculated_stats()
             break
         except Exception as e:
             logger.error('Error while getting user list for stats calculation: %s', str(e))
@@ -98,14 +105,14 @@ def calculate():
         while True:
             time.sleep(10000)
 
-    print('Connecting to Google BigQuery...')
+    logger.info('Connecting to Google BigQuery...')
     stats.init_bigquery_connection()
-    print('Connected!')
+    logger.info('Connected!')
 
-    print('Connecting to database...')
+    logger.info('Connecting to database...')
     db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
-    print('Connected!')
+    logger.info('Connected!')
 
-    print('Calculating statistics using Google BigQuery...')
+    logger.info('Calculating statistics using Google BigQuery...')
     calculate_stats()
-    print('Calculations done!')
+    logger.info('Calculations done!')
