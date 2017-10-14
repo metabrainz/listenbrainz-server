@@ -89,7 +89,7 @@ ALTER TABLE statistics.recording ADD CONSTRAINT recording_stats_msid_uniq UNIQUE
 
 CREATE TABLE data_dump (
   id          SERIAL,
-  created     TIMESTAMP WITH TIMEZONE NOT NULL DEFAULT NOW()
+  created     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 COMMIT;
