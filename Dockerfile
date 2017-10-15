@@ -12,6 +12,7 @@ RUN apt-get update \
                        libpq-dev \
                        libffi-dev \
                        cron \
+                       pxz \
     && rm -rf /var/lib/apt/lists/*
 
 # PostgreSQL client
