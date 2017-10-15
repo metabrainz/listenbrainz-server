@@ -233,11 +233,12 @@ def create_private_dump(location, time_now, threads=None):
 
 
 def create_stats_dump(location, time_now, threads=None):
-    """ Create postgres database dump for private data in db.
-        This includes dumps of the following tables:
-            "user",
-            api_compat.token,
-            api_compat.session
+    """ Create postgres database dump for statistics in db.
+        This includes dumps of all tables in the statistics schema:
+            statistics.user
+            statistics.artist
+            statistics.release
+            statistics.recording
     """
     return _create_dump(location, 'stats', STATS_TABLES, time_now, threads)
 
