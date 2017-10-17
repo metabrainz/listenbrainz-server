@@ -33,6 +33,10 @@ During registration set the callback url to
    `http://<your_host>/login/musicbrainz/post`
 
 Where <your_host> is the DNS name or IP address of the machine running ListenBrainz.
+An example callback url if you're running the server on your own local machine would
+be
+
+    `http://localhost/login/musicbrainz/post`
 
 Then set the `MUSICBRAINZ_CLIENT_ID` and `MUSICBRAINZ_CLIENT_SECRET` in
 `config.py` to the OAuth Client ID and OAuth Client Secret of your application.
