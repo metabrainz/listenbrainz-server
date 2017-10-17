@@ -342,6 +342,73 @@ def add_dump_entry():
         return result.fetchone()['id']
 
 
-if __name__ == '__main__':
-    db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
-    dump_postgres_db('/dump/')
+def import_postgres_dump(location):
+
+    private_dump_archive_path = None
+    stats_dump_archive_path = None
+
+    for archive in os.listdir(location):
+        if os.path.isfile(os.path.join(location, archive)):
+            if 'private' in archive:
+                private_dump_archive_path = os.path.join(location, archive)
+            else:
+                stats_dump_archive_path = os.path.join(location, archive)
+
+
+    if private_dump_archive_path:
+        logger.info('Importing private dump %s...', private_dump_archive_path)
+        try:
+            _import_dump(private_dump_archive_path, 'private', PRIVATE_TABLES)
+            logger.info('Import of private dump %s done!', private_dump_archive_path)
+        except SchemaMismatchException as e:
+            logger.error(str(e))
+
+
+    if stats_dump_archive_path:
+        logger.info('Importing stats dump %s...', stats_dump_archive_path)
+        try:
+            _import_dump(stats_dump_archive_path, 'private', PRIVATE_TABLES)
+            logger.info('Import of stats dump %s done!', stats_dump_archive_path)
+        except SchemaMismatchException as e:
+            logger.error(str(e))
+
+
+def _import_dump(archive_path, dump_type, tables):
+
+    pxz_command = ["pxz", "--decompress", "--stdout", archive_path]
+    pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
+
+    table_names = STATS_TABLES if dump_type == 'stats' else PRIVATE_TABLES
+
+    connection = db.engine.raw_connection()
+    try:
+        cursor = connection.cursor()
+
+        with tarfile.open(fileobj=pxz.stdout, mode="r|") as tar:
+            for member in tar:
+                file_name = member.name.split("/")[-1]
+
+                if file_name == "SCHEMA_SEQUENCE":
+                    # Verifying schema version
+                    schema_seq = int(tar.extractfile(member).read().strip())
+                    if schema_seq != db.SCHEMA_VERSION:
+                        raise SchemaMismatchException("Incorrect schema version! Expected: %d, got: %d."
+                                        "Please, get the latest version of the dump."
+                                        % (db.SCHEMA_VERSION, schema_seq))
+                    else:
+                        logging.info("Schema version verified.")
+
+                else:
+                    if file_name in table_names:
+                        logging.info(" - Importing data into %s table..." % file_name)
+                        cursor.copy_from(tar.extractfile(member), '%s' % file_name,
+                                         columns=TABLES[file_name])
+        connection.commit()
+    finally:
+        connection.close()
+
+    pxz.stdout.close()
+
+
+class SchemaMismatchException(Exception):
+    pass
