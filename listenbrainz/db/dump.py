@@ -357,6 +357,11 @@ def get_dump_entries():
 
 
 def import_postgres_dump(location):
+    """ Imports postgres dump created by dump_postgres_db present at location.
+
+        Arguments:
+            location: the directory where the private and stats archives are present
+    """
 
     private_dump_archive_path = None
     stats_dump_archive_path = None
@@ -388,6 +393,13 @@ def import_postgres_dump(location):
 
 
 def _import_dump(archive_path, dump_type, tables):
+    """ Import dump present in passed archive path into postgres db.
+
+        Arguments:
+            archive_path: path to the .tar.xz archive to be imported
+            dump_type: type of dump to be imported ('private' or 'stats')
+            tables: list of tables present in the archive
+    """
 
     pxz_command = ["pxz", "--decompress", "--stdout", archive_path]
     pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
