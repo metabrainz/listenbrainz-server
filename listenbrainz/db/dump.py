@@ -221,6 +221,7 @@ def _create_dump(location, dump_type, tables, time_now, threads=None):
 
             temp_dir = tempfile.mkdtemp()
 
+<<<<<<< 4ede05097f5fabadb18876f85718cd1ad8685062
             try:
                 schema_seq_path = os.path.join(temp_dir, "SCHEMA_SEQUENCE")
                 with open(schema_seq_path, "w") as f:
@@ -243,6 +244,23 @@ def _create_dump(location, dump_type, tables, time_now, threads=None):
 
 
             archive_tables_dir = os.path.join(temp_dir, 'lbdump', 'lbdump')
+=======
+            schema_seq_path = os.path.join(temp_dir, 'SCHEMA_SEQUENCE')
+            with open(schema_seq_path, 'w') as f:
+                f.write(str(db.SCHEMA_VERSION))
+            tar.add(schema_seq_path,
+                    arcname=os.path.join(archive_name, 'SCHEMA_SEQUENCE'))
+            timestamp_path = os.path.join(temp_dir, 'TIMESTAMP')
+            with open(timestamp_path, 'w') as f:
+                f.write(time_now.isoformat(' '))
+            tar.add(timestamp_path,
+                    arcname=os.path.join(archive_name, 'TIMESTAMP'))
+            tar.add(DUMP_LICENSE_FILE_PATH,
+                    arcname=os.path.join(archive_name, 'COPYING'))
+
+
+            archive_tables_dir = os.path.join(temp_dir, 'lb-{}-dump'.format(dump_type), 'lb{}dump'.format(dump_type))
+>>>>>>> Replace " with ' for consistency
             create_path(archive_tables_dir)
 
 
