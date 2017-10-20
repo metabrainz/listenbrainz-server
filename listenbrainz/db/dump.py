@@ -272,7 +272,7 @@ def _create_dump(location, dump_type, tables, time_now, threads=None):
 
         pxz.stdin.close()
 
-    return location
+    return archive_path
 
 
 def create_private_dump(location, time_now, threads=None):
@@ -340,6 +340,20 @@ def add_dump_entry():
                   RETURNING id
             """))
         return result.fetchone()['id']
+
+
+def get_dump_entries():
+    """ Returns a list of all dump entries in the data_dump table
+    """
+
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+                SELECT id, created
+                  FROM data_dump
+              ORDER BY created DESC
+            """))
+
+        return [dict(row) for row in result]
 
 
 def import_postgres_dump(location):
