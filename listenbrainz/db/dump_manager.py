@@ -22,11 +22,17 @@ create and import postgres data dumps.
 
 import click
 import listenbrainz.db.dump as db_dump
+import logging
 import os
 
+from datetime import datetime
 from listenbrainz import config
 from listenbrainz import db
+from listenbrainz.utils import create_path
+from listenbrainz.webserver.influx_connection import init_influx_connection
 
+
+log = logging.getLogger(__name__)
 
 cli = click.Group()
 
@@ -35,7 +41,18 @@ cli = click.Group()
 @click.option('--threads', '-t', type=int)
 def create(location, threads):
     db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
-    db_dump.dump_postgres_db(location, threads)
+    ls = init_influx_connection(log,  {
+        'REDIS_HOST': config.REDIS_HOST,
+        'REDIS_PORT': config.REDIS_PORT,
+        'INFLUX_HOST': config.INFLUX_HOST,
+        'INFLUX_PORT': config.INFLUX_PORT,
+        'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
+    })
+    time_now = datetime.today()
+    dump_path = os.path.join(location, 'listenbrainz-dump-{time}'.format(time=time_now.strftime('%Y%m%d-%H%M%S')))
+    create_path(dump_path)
+    db_dump.dump_postgres_db(dump_path, time_now, threads)
+    ls.dump_listens(dump_path, time_now, threads)
 
 
 @cli.command()

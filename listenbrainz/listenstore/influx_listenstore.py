@@ -1,5 +1,12 @@
 # coding=utf-8
 
+import listenbrainz.db.user as db_user
+import os.path
+import subprocess
+import tarfile
+import tempfile
+import shutil
+import ujson
 
 from datetime import datetime
 
@@ -12,13 +19,17 @@ from listenbrainz.listenstore import ListenStore
 from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, \
     USER_CACHE_TIME, REDIS_USER_TIMESTAMPS
 from listenbrainz.utils import quote, get_escaped_measurement_name, get_measurement_name, get_influx_query_timestamp, \
-    convert_influx_nano_to_python_time, convert_python_time_to_nano_int, convert_to_unix_timestamp
+    convert_influx_nano_to_python_time, convert_python_time_to_nano_int, convert_to_unix_timestamp, \
+    create_path
 
 REDIS_INFLUX_USER_LISTEN_COUNT = "ls.listencount."  # append username
 COUNT_RETENTION_POLICY = "one_week"
 COUNT_MEASUREMENT_NAME = "listen_count"
 TEMP_COUNT_MEASUREMENT = COUNT_RETENTION_POLICY + "." + COUNT_MEASUREMENT_NAME
 TIMELINE_COUNT_MEASUREMENT = COUNT_MEASUREMENT_NAME
+
+DUMP_LICENSE_FILE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                      '..', 'db', 'licenses', 'COPYING-PublicDomain')
 
 
 class InfluxListenStore(ListenStore):
@@ -316,3 +327,87 @@ class InfluxListenStore(ListenStore):
             listens.reverse()
 
         return listens
+
+
+    def dump_listens(self, location, dump_time=datetime.today(), threads=None):
+        """ Fetches listens of each user from her measurement and dumps them into a file.
+            These files are compressed into an archive.
+
+        Args:
+            location: the directory where the listens dump archive should be created
+            dump_time (datetime): the time at which the data dump was started
+            threads (int): the number of threads to user for compression
+
+        Returns:
+            the path to the dump archive
+        """
+
+        self.log.info('Beginning dump of listens from InfluxDB...')
+
+        self.log.info('Getting list of users whose listens are to be dumped...')
+        users = db_user.get_all_users()
+        total = len(users)
+        self.log.info('Total number of users: %d', total)
+
+        archive_name = 'listenbrainz-listens-dump-{time}'.format(time=dump_time.strftime('%Y%m%d-%H%M%S'))
+        archive_path = os.path.join(location, '{filename}.tar.xz'.format(filename=archive_name))
+        with open(archive_path, 'w') as archive:
+
+            pxz_command = ['pxz', '--compress']
+            if threads is not None:
+                pxz_command.append('-T {threads}'.format(threads=threads))
+
+            pxz = subprocess.Popen(pxz_command, stdin=subprocess.PIPE, stdout=archive)
+
+            with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
+
+                temp_dir = tempfile.mkdtemp()
+
+                # add copyright notice and timestamp
+                timestamp_path = os.path.join(temp_dir, 'TIMESTAMP')
+                with open(timestamp_path, 'w') as f:
+                    f.write(dump_time.isoformat(' '))
+                tar.add(timestamp_path,
+                        arcname=os.path.join(archive_name, 'TIMESTAMP'))
+                tar.add(DUMP_LICENSE_FILE_PATH,
+                        arcname=os.path.join(archive_name, 'COPYING'))
+
+                listens_path = os.path.join(temp_dir, 'listens')
+                create_path(listens_path)
+
+                # get listens from all measurements and write them to files in
+                # a temporary dir before adding them to the archive
+                for user in users:
+                    query = 'SELECT * FROM ' + get_escaped_measurement_name(user['musicbrainz_id'])
+
+                    # loop until we get this user's listens
+                    while True:
+                        try:
+                            results = self.influx.query(query)
+                            break
+                        except Exception as e:
+                            self.log.error('Error while getting listens for user %s', user['musicbrainz_id'])
+                            self.log.error(str(e))
+
+                    listens = []
+                    for row in results.get_points(get_measurement_name(user['musicbrainz_id'])):
+                        listens.append(Listen.from_influx(row).to_api())
+
+                    user_listens_file = '{username}-listens.json'.format(username=user['musicbrainz_id'])
+                    user_listens_path = os.path.join(listens_path, user_listens_file)
+                    with open(user_listens_path, 'w') as f:
+                        f.write(ujson.dumps(listens))
+
+                # add the listens directory to the archive
+                self.log.info('Got all listens, adding them to the archive...')
+                tar.add(listens_path,
+                        arcname=os.path.join(archive_name, 'listens'))
+
+                # remove the temporary directory
+                shutil.rmtree(temp_dir)
+
+            pxz.stdin.close()
+
+        self.log.info('ListenBrainz listen dump done!')
+        self.log.info('Dump present at %s!', archive_path)
+        return archive_path

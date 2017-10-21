@@ -248,3 +248,26 @@ def get_users_with_uncalculated_stats():
                 })
 
         return [dict(row) for row in result]
+
+
+def get_all_users():
+    """ Returns a list of all users in the database
+
+        Returns: A list of dicts of the following format for each user
+            {
+                'id': int
+                'musicbrainz_id': string
+                'created': datetime.datetime
+                'auth_token': uuid
+                'last_login': datetime.datetime
+                'latest_import': datetime.datetime
+            }
+    """
+
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+                SELECT {columns}
+                  FROM "user"
+            """.format(columns=', '.join(USER_GET_COLUMNS))))
+
+        return [dict(row) for row in result]
