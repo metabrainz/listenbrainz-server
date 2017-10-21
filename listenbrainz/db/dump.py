@@ -124,11 +124,12 @@ PRIVATE_TABLES = {
 }
 
 
-def dump_postgres_db(location, threads=None):
+def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
     """ Create postgres database dump in the specified location
 
         Arguments:
             location: Directory where the final dump will be stored
+            dump_time: datetime object representing when the dump was started
             threads: Maximal number of threads to run during compression
 
         Returns:
@@ -136,40 +137,38 @@ def dump_postgres_db(location, threads=None):
     """
 
     logger.info('Beginning dump of PostgreSQL database...')
-    time_now = datetime.today()
-    dump_path = os.path.join(location, 'listenbrainz-dump-{time}'.format(time=time_now.strftime('%Y%m%d-%H%M%S')))
-    create_path(dump_path)
-    logger.info('dump path: %s', dump_path)
+    logger.info('dump path: %s', location)
 
 
     logger.info('Creating dump of private data...')
     try:
-        private_dump = create_private_dump(dump_path, time_now, threads)
+        private_dump = create_private_dump(location, dump_time, threads)
     except IOError as e:
         log_ioerrors(logger, e)
         logger.info('Removing created files and giving up...')
-        shutil.rmtree(dump_path)
+        shutil.rmtree(location)
         return
     except Exception as e:
         logger.error('Unable to create private db dump due to error %s', str(e))
         logger.info('Removing created files and giving up...')
-        shutil.rmtree(dump_path)
+        shutil.rmtree(location)
         return
     logger.info('Dump of private data created at %s!', private_dump)
 
     logger.info('Creating dump of stats data...')
     try:
-        stats_dump = create_stats_dump(dump_path, time_now, threads)
+        stats_dump = create_stats_dump(location, dump_time, threads)
     except IOError as e:
         log_ioerrors(logger, e)
         logger.info('Removing created files and giving up...')
-        shutil.rmtree(dump_path)
+        shutil.rmtree(location)
         return
     except Exception as e:
         logger.error('Unable to create statistics dump due to error %s', str(e))
         logger.info('Removing created files and giving up...')
-        shutil.rmtree(dump_path)
+        shutil.rmtree(location)
         return
+
     logger.info('Dump of stats data created at %s!', stats_dump)
 
 
@@ -184,11 +183,11 @@ def dump_postgres_db(location, threads=None):
 
     logger.info('New entry with id %d added to data_dump table!', dump_id)
 
-    logger.info('ListenBrainz PostgreSQL data dump created at %s!', dump_path)
-    return dump_path
+    logger.info('ListenBrainz PostgreSQL data dump created at %s!', location)
+    return location
 
 
-def _create_dump(location, dump_type, tables, time_now, threads=None):
+def _create_dump(location, dump_type, tables, dump_time, threads=None):
     """ Creates a dump of the provided tables at the location passed
 
         Arguments:
@@ -196,7 +195,7 @@ def _create_dump(location, dump_type, tables, time_now, threads=None):
             dump_type: the type of data dump being made - private or stats
             tables: a dict containing the names of the tables to be dumped as keys and the columns
                     to be dumped as values
-            time_now: the time at which the dump process was started
+            dump_time: the time at which the dump process was started
             threads: the maximum number of threads to use for compression
 
         Returns:
@@ -205,7 +204,7 @@ def _create_dump(location, dump_type, tables, time_now, threads=None):
 
     archive_name = 'listenbrainz-{dump_type}-dump-{time}'.format(
         dump_type=dump_type,
-        time=time_now.strftime('%Y%m%d-%H%M%S')
+        time=dump_time.strftime('%Y%m%d-%H%M%S')
     )
     archive_path = os.path.join(location, '{archive_name}.tar.xz'.format(
         archive_name=archive_name,
@@ -231,7 +230,7 @@ def _create_dump(location, dump_type, tables, time_now, threads=None):
                         arcname=os.path.join(archive_name, "SCHEMA_SEQUENCE"))
                 timestamp_path = os.path.join(temp_dir, "TIMESTAMP")
                 with open(timestamp_path, "w") as f:
-                    f.write(time_now.isoformat(" "))
+                    f.write(dump_time.isoformat(" "))
                 tar.add(timestamp_path,
                         arcname=os.path.join(archive_name, "TIMESTAMP"))
                 tar.add(DUMP_LICENSE_FILE_PATH,
@@ -277,7 +276,7 @@ def _create_dump(location, dump_type, tables, time_now, threads=None):
     return archive_path
 
 
-def create_private_dump(location, time_now, threads=None):
+def create_private_dump(location, dump_time, threads=None):
     """ Create postgres database dump for private data in db.
         This includes dumps of the following tables:
             "user",
@@ -288,12 +287,12 @@ def create_private_dump(location, time_now, threads=None):
         location=location,
         dump_type='private',
         tables=PRIVATE_TABLES,
-        time_now=time_now,
+        dump_time=dump_time,
         threads=threads,
     )
 
 
-def create_stats_dump(location, time_now, threads=None):
+def create_stats_dump(location, dump_time, threads=None):
     """ Create postgres database dump for statistics in db.
         This includes dumps of all tables in the statistics schema:
             statistics.user
@@ -305,7 +304,7 @@ def create_stats_dump(location, time_now, threads=None):
         location=location,
         dump_type='stats',
         tables=STATS_TABLES,
-        time_now=time_now,
+        dump_time=dump_time,
         threads=threads,
     )
 
