@@ -1,20 +1,18 @@
-from flask import Blueprint, render_template, request, url_for, Response, redirect, flash, current_app, jsonify
-from flask_login import current_user, login_required
-from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
-from werkzeug.utils import secure_filename
-from listenbrainz.webserver.decorators import crossdomain
-from datetime import datetime
-from time import time
-import urllib
-from listenbrainz import webserver
-from listenbrainz.webserver import flash
-import listenbrainz.db.user as db_user
+import listenbrainz.config as config
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
+import urllib
+import ujson
+
+from flask import Blueprint, render_template, request, url_for, Response, redirect, flash, current_app, jsonify
+from flask_login import current_user, login_required
 from listenbrainz import webserver
+from listenbrainz.webserver import flash
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver.redis_connection import _redis
+from time import time
+from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
 
 LISTENS_PER_PAGE = 25
 
