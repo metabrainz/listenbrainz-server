@@ -14,8 +14,6 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         DatabaseTestCase.setUp(self)
         self.user = db_user.get_or_create('stats_user')
 
-    def path_to_data_file(self, filename):
-       return os.path.join(StatsDatabaseTestCase.TEST_DATA_PATH, filename)
 
     def test_insert_user_stats(self):
 
