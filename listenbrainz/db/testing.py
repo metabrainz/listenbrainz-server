@@ -6,7 +6,7 @@ from listenbrainz import config
 from listenbrainz import db
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..','admin', 'sql')
-TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'test_data')
+TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'testdata')
 
 
 class DatabaseTestCase(unittest.TestCase):
@@ -37,7 +37,10 @@ class DatabaseTestCase(unittest.TestCase):
     def drop_schema(self):
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'drop_schema.sql'))
 
-    def load_data_files(self):
-        """ Get the data files from the disk """
-        # return os.path.join(TEST_DATA_PATH, file_name)
-        return
+    def path_to_data_file(self, file_name):
+        """ Returns the path of the test data file relative to listenbrainz/db/testing.py.
+
+            Args:
+                file_name: the name of the data file
+        """
+        return os.path.join(TEST_DATA_PATH, file_name)
