@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import json
 import os
-import listenbrainz.db.user as db_user
 import listenbrainz.db.stats as db_stats
+import listenbrainz.db.user as db_user
+
 from listenbrainz.db.testing import DatabaseTestCase
 
 
