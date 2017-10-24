@@ -17,12 +17,14 @@ the ``submit-listens`` endpoint. Submit one of three types JSON documents:
    - Only a single track may be specified in ``payload``
 
 - ``playing_now``: Submit ``playing_now`` notification
-  
+
    - Indicates that user just began listening to track
 
    - ``payload`` contains *only* one track
 
    - Submitting ``playing_now`` documents is optional
+
+   - Timestamp must be omitted from a ``playing_now`` submission.
 
 - ``import``: Submit previously saved listens
 
