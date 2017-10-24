@@ -8,7 +8,6 @@ from listenbrainz.db.testing import DatabaseTestCase
 
 class StatsDatabaseTestCase(DatabaseTestCase):
 
-    TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'testdata')
 
     def setUp(self):
         DatabaseTestCase.setUp(self)
