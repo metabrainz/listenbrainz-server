@@ -1,0 +1,8 @@
+BEGIN;
+
+CREATE TABLE data_dump (
+  id          SERIAL,
+  created     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+COMMIT;
