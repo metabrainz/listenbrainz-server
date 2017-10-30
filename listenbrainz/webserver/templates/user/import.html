@@ -7,8 +7,7 @@
   {% if current_user.is_authenticated() and current_user == user %}
 
     <p>
-        Most users will want to import from Last.fm directly. <em>If you've been submitting data to ListenBrainz alpha that has not been added to Last.fm, please
-        read this whole page before proceeding!</em>
+        Most users will want to import from Last.fm directly.
     </p>
 
     <h3>Direct import from Last.fm</h3>
@@ -29,33 +28,6 @@
           <input type="submit" value="Import now!">
         </form>
       </div>
-
-    <h3> Import from ListenBrainz Alpha </h3>
-      <p>
-        <strong>Most users should not use this option! Please read this section carefully to ensure that this is the right option for you!</strong>
-      </p>
-      <p> The alpha version of the ListenBrainz site had one significant oversight: It imported listens from Last.fm using the Last.fm web page which only had <i>minute resolution</i> on the listen data. ListenBrainz really needs the more detailed <i>second resolution</i> data that is available from Last.fm API. To fix this problem and to preserve the data that some users may have submitted to ListenBrainz Alpha, please consider the two options carefully:
-        <ol>
-          <li>You have only used ListenBrainz to import data from Last.fm and have not submitted new listens to ListenBrainz directly. For this case, we recommend that you do a clean import of your Last.fm history from the Last.fm import above.
-          <li>If you have submitted listens to ListenBrainz Alpha that are not in Last.fm, you can do an import from ListenBrainz Alpha into ListenBrainz Beta (the site you're using right now). Click the "Import Now!" button below to start this process. Please note that if you have both Last.fm imported data and your own submitted data, the Last.fm data that was previously imported will continue to have <i>minute resolution</i> timestamps.
-        </ol>
-      It is safe to import from the alpha more than once, your data will not be duplicated.
-      If you have questions about this, please feel free to <a href="https://metabrainz.org/contact">contact us</a>.
-    </p>
-    <div class="well">
-    {% if alpha_import_status == "WAITING" %}
-      <p> <strong> Your request to import data from ListenBrainz alpha is in a queue and we will get to it as soon as possible! You can reload this page or click <a href = {{ url_for('profile.import_data') }}>here</a> to know the status of the request. </strong> </p>
-    {% elif alpha_import_status == "DONE" %}
-      <p><strong>Your listen import from ListenBrainz Alpha has completed successfully!</strong></p>
-    {% endif %}
-    {% if alpha_import_status == "NO_REQUEST" or alpha_import_status == "DONE" %}
-      <a href={{ url_for("profile.import_from_alpha") }} style="color: white">
-        <p>
-          <span class="btn btn-warning btn-lg" style="width: 400px">Import Now!</span>
-        </p>
-      </a>
-    {% endif %}
-    </div>
 
     <h3>Import a Last.fm backup file</h3>
 
