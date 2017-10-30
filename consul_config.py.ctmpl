@@ -71,13 +71,5 @@ MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
 UPLOAD_FOLDER = '''{{template "KEY" "upload_folder"}}'''
 
 
-ALPHA_URL = '''{{template "KEY" "alpha_url"}}'''
 BETA_URL = '''{{template "KEY" "beta_url"}}'''
 LASTFM_PROXY_URL = '''{{template "KEY" "lastfm_proxy_url"}}'''
-
-# defaults are unlikely to be changed
-IMPORTER_QUEUE_KEY = 'alphaimporter:queue'
-IMPORTER_SET_KEY_PREFIX = 'alphaimporter:set'
-LISTENS_PER_GET = 100
-IMPORTER_LOG_FILE = '-'
-IMPORTER_DELAY = 3 # delay if requests don't return http 200
