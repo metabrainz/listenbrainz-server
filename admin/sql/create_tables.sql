@@ -71,4 +71,10 @@ CREATE TABLE statistics.recording (
 );
 ALTER TABLE statistics.recording ADD CONSTRAINT recording_stats_msid_uniq UNIQUE (msid);
 
+
+CREATE TABLE data_dump (
+  id          SERIAL,
+  created     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
 COMMIT;
