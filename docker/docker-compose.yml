@@ -96,10 +96,3 @@ services:
     depends_on:
       - redis
       - rabbitmq
-
-  alpha_importer:
-    image: web
-    command: python3 -m "listenbrainz.alpha_importer"
-    depends_on:
-      - web
-      - rabbitmq
