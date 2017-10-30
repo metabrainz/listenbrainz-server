@@ -92,15 +92,9 @@ def import_data():
     if 'LASTFM_API_KEY' not in current_app.config or current_app.config['LASTFM_API_KEY'] == "":
         return NotFound("LASTFM_API_KEY not specified.")
 
-    alpha_import_status = "NO_REQUEST"
-    redis_connection = _redis.redis
-    user_key = "{} {}".format(current_app.config['IMPORTER_SET_KEY_PREFIX'], current_user.musicbrainz_id)
-    if redis_connection.exists(user_key):
-        alpha_import_status = redis_connection.get(user_key)
     return render_template(
         "user/import.html",
         user=current_user,
-        alpha_import_status=alpha_import_status,
         scraper_url=url_for(
             "user.lastfmscraper",
             user_name=current_user.musicbrainz_id,
@@ -207,19 +201,4 @@ def upload():
         db_connection.reset_listen_count(current_user.musicbrainz_id)
 
         flash.info('Congratulations! Your listens from %d files have been uploaded successfully.' % success)
-    return redirect(url_for("profile.import_data"))
-
-
-@profile_bp.route("/import/alpha")
-@login_required
-def import_from_alpha():
-    """ Just push the task into redis queue and then return to user page.
-    """
-    redis_connection = _redis.redis
-    # push into the queue
-    value = "{} {}".format(current_user.auth_token, current_user.musicbrainz_id)
-    redis_connection.rpush(current_app.config['IMPORTER_QUEUE_KEY'], value)
-
-    # push username into redis so that we know that this user is in waiting
-    redis_connection.set("{} {}".format(current_app.config['IMPORTER_SET_KEY_PREFIX'], current_user.musicbrainz_id), "WAITING")
     return redirect(url_for("profile.import_data"))
