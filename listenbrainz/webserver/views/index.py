@@ -101,7 +101,6 @@ def current_status():
         incoming_len=format(int(incoming_len), ",d"),
         unique_len=format(int(unique_len), ",d"),
         user_count=format(int(user_count), ",d"),
-        alpha_importer_size=_get_alpha_importer_queue_size(),
     )
 
 
@@ -121,16 +120,3 @@ def _get_user_count():
             raise
         redis_connection.setex(user_count_key, user_count, CACHE_TIME)
         return user_count
-
-def _get_alpha_importer_queue_size():
-    """ Returns the number of people in queue for an import from LB alpha
-    """
-    redis_connection = _redis.redis
-    alpha_importer_size_key = "{}.{}".format(STATS_PREFIX, "alpha_importer_queue_size")
-    if redis_connection.exists(alpha_importer_size_key):
-        return redis_connection.get(alpha_importer_size_key)
-    else:
-        count = redis_connection.llen(current_app.config['IMPORTER_QUEUE_KEY'])
-        count = 0 if not count else count
-        redis_connection.setex(alpha_importer_size_key, count, CACHE_TIME)
-        return count
