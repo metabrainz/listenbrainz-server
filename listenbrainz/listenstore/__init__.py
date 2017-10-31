@@ -22,9 +22,7 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)s %(message)s')
 
 
-from listenbrainz.listenstore import postgres_listenstore
 from listenbrainz.listenstore import redis_listenstore
 from listenbrainz.listenstore import influx_listenstore
-PostgresListenStore = postgres_listenstore.PostgresListenStore
 RedisListenStore = redis_listenstore.RedisListenStore
 InfluxListenStore = influx_listenstore.InfluxListenStore
