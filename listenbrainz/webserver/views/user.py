@@ -110,7 +110,7 @@ def profile(user_name):
 
     # If there are no previous listens then display now_playing
     if not previous_listen_ts:
-        playing_now = playing_now_conn.get_playing_now(user_name)
+        playing_now = playing_now_conn.get_playing_now(user.id)
         if playing_now:
             listen = {
                 "track_metadata": playing_now.data,
