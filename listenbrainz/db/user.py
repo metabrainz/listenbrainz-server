@@ -236,13 +236,13 @@ def get_users_with_uncalculated_stats():
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-                SELECT public."user".musicbrainz_id
-                  FROM public."user"
-             LEFT JOIN statistics.user
-                    ON public."user".id = statistics.user.user_id
-                 WHERE public."user".last_login >= NOW() - INTERVAL ':x days'
-                   AND (statistics.user.last_updated IS NULL OR statistics.user.last_updated < NOW() - INTERVAL ':y days')
-                """.format(columns=','.join(USER_GET_COLUMNS))), {
+                SELECT pu.musicbrainz_id
+                  FROM public."user" pu
+             LEFT JOIN statistics.user su
+                    ON pu.id = su.user_id
+                 WHERE pu.last_login >= NOW() - INTERVAL ':x days'
+                   AND (su.last_updated IS NULL OR su.last_updated < NOW() - INTERVAL ':y days')
+                """), {
                     'x': config.STATS_CALCULATION_LOGIN_TIME,
                     'y': config.STATS_CALCULATION_INTERVAL,
                 })
