@@ -232,16 +232,19 @@ def reset_latest_import(musicbrainz_id):
     update_latest_import(musicbrainz_id, 0)
 
 
-def get_recently_logged_in_users():
-    """Returns a list of users who have logged-in in the
-    last config.STATS_CALCULATION_LOGIN_TIME days
-    """
+def get_users_with_uncalculated_stats():
+
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-                SELECT {columns}
-                  FROM "user"
-                 WHERE last_login >= NOW() - INTERVAL ':x days'
-                """.format(columns=','.join(USER_GET_COLUMNS))), {
-                    'x': config.STATS_CALCULATION_LOGIN_TIME
+                SELECT pu.musicbrainz_id
+                  FROM public."user" pu
+             LEFT JOIN statistics.user su
+                    ON pu.id = su.user_id
+                 WHERE pu.last_login >= NOW() - INTERVAL ':x days'
+                   AND (su.last_updated IS NULL OR su.last_updated < NOW() - INTERVAL ':y days')
+                """), {
+                    'x': config.STATS_CALCULATION_LOGIN_TIME,
+                    'y': config.STATS_CALCULATION_INTERVAL,
                 })
+
         return [dict(row) for row in result]

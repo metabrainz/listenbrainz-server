@@ -4,13 +4,16 @@ import listenbrainz.db.user as db_user
 import listenbrainz.stats.user as stats_user
 import time
 
-from listenbrainz import db
 from listenbrainz import config
+from listenbrainz import db
 from listenbrainz import stats
 
 
 def calculate_user_stats():
-    for user in db_user.get_recently_logged_in_users():
+    """Get the users we need to calculate our statistics for and calculate their stats.
+    """
+
+    for user in db_user.get_users_with_uncalculated_stats():
         recordings = stats_user.get_top_recordings(musicbrainz_id=user['musicbrainz_id'])
         artists = stats_user.get_top_artists(musicbrainz_id=user['musicbrainz_id'])
         releases = stats_user.get_top_releases(musicbrainz_id=user['musicbrainz_id'])
@@ -23,6 +26,7 @@ def calculate_user_stats():
             releases=releases,
             artist_count=artist_count
         )
+
 
 def calculate_stats():
     calculate_user_stats()
