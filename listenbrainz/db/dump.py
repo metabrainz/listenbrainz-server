@@ -210,8 +210,10 @@ def _create_dump(location, dump_type, tables, time_now, threads=None):
             create_path(archive_tables_dir)
 
 
-            for table in tables:
-                copy_table(archive_tables_dir, table)
+            with db.engine.begin() as connection:
+                cursor = connection.connection.cursor()
+                for table in tables:
+                    copy_table(cursor, archive_tables_dir, table)
 
             tar.add(archive_tables_dir, arcname=os.path.join(archive_name, 'lb{}dump'.format(dump_type)))
 
@@ -243,24 +245,20 @@ def create_stats_dump(location, time_now, threads=None):
     return _create_dump(location, 'stats', STATS_TABLES, time_now, threads)
 
 
-def copy_table(location, table_name):
+def copy_table(cursor, location, table_name):
     """ Copies a PostgreSQL table to a file
 
         Arguments:
+            cursor: a psycopg cursor
             location: the directory where the table should be copied
             table_name: the name of the table to be copied
     """
-
-    connection = db.engine.raw_connection()
-    cursor = connection.cursor()
 
     with open(os.path.join(location, table_name), 'w') as f:
         cursor.copy_to(f, '(SELECT {columns} FROM {table})'.format(
             columns=','.join(TABLES[table_name]),
             table=table_name
         ))
-
-    connection.close()
 
 
 def add_dump_entry():
