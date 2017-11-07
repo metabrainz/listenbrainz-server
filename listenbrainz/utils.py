@@ -74,3 +74,11 @@ def create_path(path):
         if exception.errno != errno.EEXIST:
             raise Exception("Failed to create directory structure %s. Error: %s" %
                             (path, exception))
+
+
+def log_ioerrors(logger, e):
+    """ Logs IOErrors that occur in case we run out of disk space.
+        This is used in data dumps and is a placeholder while Sentry support
+        is added.
+    """
+    logger.error('IOError while creating dump: %s', str(e))

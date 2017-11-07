@@ -32,7 +32,7 @@ import tarfile
 import tempfile
 
 from datetime import datetime
-from listenbrainz.utils import create_path
+from listenbrainz.utils import create_path, log_ioerrors
 
 
 DUMP_LICENSE_FILE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -142,16 +142,43 @@ def dump_postgres_db(location, threads=None):
 
 
     logger.info('Creating dump of private data...')
-    private_dump = create_private_dump(dump_path, time_now, threads)
+    try:
+        private_dump = create_private_dump(dump_path, time_now, threads)
+    except IOError as e:
+        log_ioerrors(logger, e)
+        logger.info('Removing created files and giving up...')
+        shutil.rmtree(dump_path)
+        return
+    except Exception as e:
+        logger.error('Unable to create private db dump due to error %s', str(e))
+        logger.info('Removing created files and giving up...')
+        shutil.rmtree(dump_path)
+        return
     logger.info('Dump of private data created at %s!', private_dump)
 
     logger.info('Creating dump of stats data...')
-    stats_dump = create_stats_dump(dump_path, time_now, threads)
+    try:
+        stats_dump = create_stats_dump(dump_path, time_now, threads)
+    except IOError as e:
+        log_ioerrors(logger, e)
+        logger.info('Removing created files and giving up...')
+        shutil.rmtree(dump_path)
+        return
+    except Exception as e:
+        logger.error('Unable to create statistics dump due to error %s', str(e))
+        logger.info('Removing created files and giving up...')
+        shutil.rmtree(dump_path)
+        return
     logger.info('Dump of stats data created at %s!', stats_dump)
 
 
     logger.info('Creating a new entry in the data_dump table...')
-    dump_id = add_dump_entry()
+    try:
+        dump_id = add_dump_entry()
+    except Exception as e:
+        logger.info('Error while adding dump entry: %s', str(e))
+        return
+
     logger.info('New entry with id %d added to data_dump table!', dump_id)
 
     logger.info('ListenBrainz PostgreSQL data dump created at %s!', dump_path)
@@ -192,18 +219,25 @@ def _create_dump(location, dump_type, tables, time_now, threads=None):
 
             temp_dir = tempfile.mkdtemp()
 
-            schema_seq_path = os.path.join(temp_dir, "SCHEMA_SEQUENCE")
-            with open(schema_seq_path, "w") as f:
-                f.write(str(db.SCHEMA_VERSION))
-            tar.add(schema_seq_path,
-                    arcname=os.path.join(archive_name, "SCHEMA_SEQUENCE"))
-            timestamp_path = os.path.join(temp_dir, "TIMESTAMP")
-            with open(timestamp_path, "w") as f:
-                f.write(time_now.isoformat(" "))
-            tar.add(timestamp_path,
-                    arcname=os.path.join(archive_name, "TIMESTAMP"))
-            tar.add(DUMP_LICENSE_FILE_PATH,
-                    arcname=os.path.join(archive_name, "COPYING"))
+            try:
+                schema_seq_path = os.path.join(temp_dir, "SCHEMA_SEQUENCE")
+                with open(schema_seq_path, "w") as f:
+                    f.write(str(db.SCHEMA_VERSION))
+                tar.add(schema_seq_path,
+                        arcname=os.path.join(archive_name, "SCHEMA_SEQUENCE"))
+                timestamp_path = os.path.join(temp_dir, "TIMESTAMP")
+                with open(timestamp_path, "w") as f:
+                    f.write(time_now.isoformat(" "))
+                tar.add(timestamp_path,
+                        arcname=os.path.join(archive_name, "TIMESTAMP"))
+                tar.add(DUMP_LICENSE_FILE_PATH,
+                        arcname=os.path.join(archive_name, "COPYING"))
+            except IOError as e:
+                logger.error('IOError while adding dump metadata...')
+                raise
+            except Exception as e:
+                logger.error('Exception while adding dump metadata: %s', str(e))
+                raise
 
 
             archive_tables_dir = os.path.join(temp_dir, 'lb-{}-dump'.format(dump_type), 'lb{}dump'.format(dump_type))
@@ -213,7 +247,14 @@ def _create_dump(location, dump_type, tables, time_now, threads=None):
             with db.engine.begin() as connection:
                 cursor = connection.connection.cursor()
                 for table in tables:
-                    copy_table(cursor, archive_tables_dir, table)
+                    try:
+                        copy_table(cursor, archive_tables_dir, table)
+                    except IOError as e:
+                        logger.error('IOError while copying table %s', table)
+                        raise
+                    except Exception as e:
+                        logger.error('Error while copying table %s: %s', table, str(e))
+                        raise
 
             tar.add(archive_tables_dir, arcname=os.path.join(archive_name, 'lb{}dump'.format(dump_type)))
 
