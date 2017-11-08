@@ -379,8 +379,16 @@ def import_postgres_dump(location):
         try:
             _import_dump(private_dump_archive_path, 'private', PRIVATE_TABLES)
             logger.info('Import of private dump %s done!', private_dump_archive_path)
+        except IOError as e:
+            log_ioerrors(logger, e)
+            return
         except SchemaMismatchException as e:
-            logger.error(str(e))
+            logger.error('SchemaMismatchException: %s', str(e))
+            return
+        except Exception as e:
+            logger.error('Error while importing private dump: %s', str(e))
+            return
+        logger.info('Private dump %s imported!', private_dump_archive_path)
 
 
     if stats_dump_archive_path:
@@ -388,8 +396,19 @@ def import_postgres_dump(location):
         try:
             _import_dump(stats_dump_archive_path, 'private', PRIVATE_TABLES)
             logger.info('Import of stats dump %s done!', stats_dump_archive_path)
+        except IOError as e:
+            log_ioerrors(logger, e)
+            return
         except SchemaMismatchException as e:
-            logger.error(str(e))
+            logger.error('SchemaMismatchException: %s', str(e))
+            return
+        except Exception as e:
+            logger.error('Error while importing stats dump: %s', str(e))
+            return
+        logger.info('Stats dump %s imported!', stats_dump_archive_path)
+
+    logger.info('PostgreSQL import of data dump at %s done!', location)
+
 
 
 def _import_dump(archive_path, dump_type, tables):
@@ -406,32 +425,37 @@ def _import_dump(archive_path, dump_type, tables):
 
     table_names = STATS_TABLES if dump_type == 'stats' else PRIVATE_TABLES
 
-    connection = db.engine.raw_connection()
-    try:
-        cursor = connection.cursor()
-
-        with tarfile.open(fileobj=pxz.stdout, mode="r|") as tar:
+    # create a transaction and start importing
+    with db.engine.begin() as connection:
+        cursor = connection.connection.cursor()
+        with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
             for member in tar:
-                file_name = member.name.split("/")[-1]
+                file_name = member.name.split('/')[-1]
 
-                if file_name == "SCHEMA_SEQUENCE":
+                if file_name == 'SCHEMA_SEQUENCE':
                     # Verifying schema version
                     schema_seq = int(tar.extractfile(member).read().strip())
                     if schema_seq != db.SCHEMA_VERSION:
-                        raise SchemaMismatchException("Incorrect schema version! Expected: %d, got: %d."
-                                        "Please, get the latest version of the dump."
+                        raise SchemaMismatchException('Incorrect schema version! Expected: %d, got: %d.'
+                                        'Please, get the latest version of the dump.'
                                         % (db.SCHEMA_VERSION, schema_seq))
                     else:
-                        logging.info("Schema version verified.")
+                        logger.info('Schema version verified.')
 
                 else:
                     if file_name in table_names:
-                        logging.info(" - Importing data into %s table..." % file_name)
-                        cursor.copy_from(tar.extractfile(member), '%s' % file_name,
-                                         columns=TABLES[file_name])
-        connection.commit()
-    finally:
-        connection.close()
+                        logger.info(' - Importing data into %s table...', file_name)
+                        try:
+                            cursor.copy_from(tar.extractfile(member), '%s' % file_name,
+                                             columns=TABLES[file_name])
+                        except IOError as e:
+                            logger.error('IOError while extracting table %s: %s', file_name, str(e))
+                            raise
+                        except Exception as e:
+                            logger.error('Error while extracting table %s: %s', filename, str(e))
+                            raise
+
+                        logger.info('Imported table %s', file_name)
 
     pxz.stdout.close()
 
