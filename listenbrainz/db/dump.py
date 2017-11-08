@@ -173,11 +173,12 @@ def dump_postgres_db(location, threads=None):
 
 
     logger.info('Creating a new entry in the data_dump table...')
-    try:
-        dump_id = add_dump_entry()
-    except Exception as e:
-        logger.info('Error while adding dump entry: %s', str(e))
-        return
+    while True:
+        try:
+            dump_id = add_dump_entry()
+            break
+        except Exception as e:
+            logger.error('Error while adding dump entry: %s', str(e))
 
     logger.info('New entry with id %d added to data_dump table!', dump_id)
 
