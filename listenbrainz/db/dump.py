@@ -241,23 +241,26 @@ def _create_dump(location, dump_type, tables, time_now, threads=None):
                 raise
 
 
-            archive_tables_dir = os.path.join(temp_dir, 'lb-{}-dump'.format(dump_type), 'lb{}dump'.format(dump_type))
+            archive_tables_dir = os.path.join(temp_dir, 'lbdump', 'lbdump')
             create_path(archive_tables_dir)
 
 
-            with db.engine.begin() as connection:
-                cursor = connection.connection.cursor()
-                for table in tables:
-                    try:
-                        copy_table(cursor, archive_tables_dir, table)
-                    except IOError as e:
-                        logger.error('IOError while copying table %s', table)
-                        raise
-                    except Exception as e:
-                        logger.error('Error while copying table %s: %s', table, str(e))
-                        raise
+            with db.engine.connect() as connection:
+                with connection.begin() as transaction:
+                    cursor = connection.connection.cursor()
+                    for table in tables:
+                        try:
+                            copy_table(cursor, archive_tables_dir, table)
+                        except IOError as e:
+                            logger.error('IOError while copying table %s', table)
+                            raise
+                        except Exception as e:
+                            logger.error('Error while copying table %s: %s', table, str(e))
+                            raise
+                    transaction.rollback()
 
-            tar.add(archive_tables_dir, arcname=os.path.join(archive_name, 'lb{}dump'.format(dump_type)))
+
+            tar.add(archive_tables_dir, arcname=os.path.join(archive_name, 'lbdump'.format(dump_type)))
 
             shutil.rmtree(temp_dir)
 
