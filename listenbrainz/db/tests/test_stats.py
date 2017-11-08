@@ -1,21 +1,19 @@
 # -*- coding: utf-8 -*-
 import json
 import os
-import listenbrainz.db.user as db_user
 import listenbrainz.db.stats as db_stats
+import listenbrainz.db.user as db_user
+
 from listenbrainz.db.testing import DatabaseTestCase
 
 
 class StatsDatabaseTestCase(DatabaseTestCase):
 
-    TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'testdata')
 
     def setUp(self):
         DatabaseTestCase.setUp(self)
         self.user = db_user.get_or_create('stats_user')
 
-    def path_to_data_file(self, filename):
-       return os.path.join(StatsDatabaseTestCase.TEST_DATA_PATH, filename)
 
     def test_insert_user_stats(self):
 
