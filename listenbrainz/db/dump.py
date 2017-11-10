@@ -30,6 +30,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import time
 
 from datetime import datetime
 from listenbrainz.utils import create_path, log_ioerrors
@@ -179,6 +180,7 @@ def dump_postgres_db(location, threads=None):
             break
         except Exception as e:
             logger.error('Error while adding dump entry: %s', str(e))
+            time.sleep(3)
 
     logger.info('New entry with id %d added to data_dump table!', dump_id)
 
