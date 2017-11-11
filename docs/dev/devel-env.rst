@@ -135,10 +135,11 @@ running, visit your new site from your browser!
 
 .. code-block:: none
 
-    http://localhost:8000/
+    http://localhost/
 
 
 Now, you are all set to begin making changes and testing them in your development environment!
 
 .. _MusicBrainz applications page: https://musicbrainz.org/account/applications
 .. _register: https://musicbrainz.org/account/applications/register
+
