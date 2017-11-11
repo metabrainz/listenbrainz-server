@@ -83,6 +83,7 @@ def get_top_recordings(musicbrainz_id, time_interval=None):
 
     return stats.run_query(query, parameters)
 
+
 def get_top_artists(musicbrainz_id, time_interval=None):
     """ Get top artists for user with given MusicBrainz ID over a particular period of time
 
@@ -170,7 +171,6 @@ def get_artist_count(musicbrainz_id, time_interval=None):
     return stats.run_query(query, parameters)[0]['artist_count']
 
 
-
 def get_top_releases(musicbrainz_id, time_interval=None):
     """ Get top releases for user with given MusicBrainz ID over a particular period of time
 
@@ -209,6 +209,50 @@ def get_top_releases(musicbrainz_id, time_interval=None):
                 {time_filter_clause}
              GROUP BY artist_msid, artist_mbids, artist_name, release_name, release_msid, release_mbid
              ORDER BY listen_count DESC
+                LIMIT {limit}
+            """.format(
+                    dataset_id=config.BIGQUERY_DATASET_ID,
+                    table_id=config.BIGQUERY_TABLE_ID,
+                    time_filter_clause=filter_clause,
+                    limit=config.STATS_ENTITY_LIMIT,
+                )
+
+    parameters = [
+        {
+            'type': 'STRING',
+            'name': 'musicbrainz_id',
+            'value': musicbrainz_id
+        }
+    ]
+
+    return stats.run_query(query, parameters)
+
+
+def get_play_count(musicbrainz_id, time_interval=None):
+    """ Get play count for user with given MusicBrainz ID over a particular
+        period of time
+
+        Args: musicbrainz_id (str): the MusicBrainz ID of the user
+              time_interval  (str): the time interval over which top releases
+                                    should be returned (defaults to all time)
+
+        Returns: A sorted list of dicts with the following structure
+                [
+                    {
+                        'listen_count' (int)
+                    }
+                ]
+    """
+
+    filter_clause = ""
+    if time_interval:
+        filter_clause = "AND listened_at >= TIMESTAMP_SUB(CURRENT_TIME(), INTERVAL {})".format(time_interval)
+
+
+    query = """SELECT COUNT(release_msid) as listen_count
+                 FROM {dataset_id}.{table_id}
+                WHERE user_name = @musicbrainz_id
+                {time_filter_clause}
                 LIMIT {limit}
             """.format(
                     dataset_id=config.BIGQUERY_DATASET_ID,
