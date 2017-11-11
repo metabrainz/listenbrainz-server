@@ -1,0 +1,37 @@
+Hello! Thanks for submitting a pull request to ListenBrainz. We appreciate your
+time and interest in helping our project!
+
+Use the template below to help us review your change. Not everything will be
+required, depending on your change. Keep or delete what is relevant for your
+change. Just remember that it helps us review if you give more helpful info for
+us to understand your change.
+
+{{{{{ DELETE EVERYTHING ABOVE THIS }}}}}
+
+# Summary
+
+* This is a…
+    * [x] Bug fix
+    * [] Feature addition
+    * [] Refactoring
+    * [] Minor / simple change (like a typo)
+    * [] Other
+* **Describe this change in 1-2 sentences**:
+
+
+# Background
+
+Anything that helps us understand why you are making this change goes here.
+
+* JIRA ticket (_optional_):
+
+
+# Details
+
+The details of your change. Talk about technical details, considerations, or other interesting points.
+
+
+# Action
+
+Other than merge your change, is there anything else you want / need us to do with your change? This includes reviewing a specific part.
+
