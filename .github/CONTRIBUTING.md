@@ -90,6 +90,18 @@ We follow a "typical" GitHub workflow for contributing changes.
     * Rebase to fix merge conflicts, remove unwanted commits, reword or edit
       previous commits, or squashing multiple, related changes into one commit.
 
+
+## Writing unit tests
+
+Unit tests are an important part of ListenBrainz. It helps make it easier for
+developers to test changes and help prevent easily avoidable mistakes later on.
+
+New bugfixes or new features should include unit tests. Unit tests are present
+with their modules while integration tests are present in
+`listenbrainz/tests/integration`. If you need help with writing a unit test, ask
+in IRC or Discourse (links above).
+
+
 ---
 
 ![MetaBrainz community \<3 - from MetaBrainz Summit 2017](https://musicbrainz.files.wordpress.com/2017/11/meb.jpg?w=625 "MetaBrainz community <3 - from MetaBrainz Summit 2017")
