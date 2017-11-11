@@ -1,17 +1,34 @@
-from flask import Flask, g
-from messybrainz import db
-import sys
-import os
 import logging
+import os
+import sys
+
+from brainzutils.flask import CustomFlask
+from messybrainz import db
 
 
-def create_app():
-    app = Flask(__name__)
+def create_app(debug=None, config_path=None):
+    app = CustomFlask(
+        import_name=__name__,
+        use_flask_uuid=True,
+        use_debug_toolbar=True,
+    )
 
     # Configuration
-    sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
-    import config
-    app.config.from_object(config)
+    app.config.from_pyfile(os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        '..', 'default_config.py'
+    ))
+    app.config.from_pyfile(os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        '..', 'custom_config.py'
+    ), silent=True)
+
+    if config_path:
+        app.config.from_pyfile(config_path)
+
+    if debug is not None:
+        app.debug = debug
+
 
     # Redis (cache)
     from brainzutils import cache

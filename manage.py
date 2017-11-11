@@ -17,7 +17,7 @@ cli = click.Group()
               help="Turns debugging mode on or off. If specified, overrides "
                    "'DEBUG' value in the config file.")
 def runserver(host, port, debug=False):
-    create_app().run(host=host, port=port, debug=debug)
+    create_app(debug=debug).run(host=host, port=port)
 
 
 @cli.command()
