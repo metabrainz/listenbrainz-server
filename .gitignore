@@ -4,6 +4,7 @@
 *.pyc
 *.swp
 config.py
+custom_config.py
 *.log
 .cache
 env

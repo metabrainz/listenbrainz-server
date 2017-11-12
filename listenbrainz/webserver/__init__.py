@@ -1,6 +1,7 @@
-from flask import Flask, current_app
-import sys
 import os
+import sys
+
+from brainzutils.flask import CustomFlask
 from shutil import copyfile
 
 API_PREFIX = '/1'
@@ -26,20 +27,39 @@ def create_rabbitmq(app):
     init_rabbitmq_connection(app)
 
 
-def gen_app():
+def gen_app(config_path=None, debug=None):
     """ Generate a Flask app for LB with all configurations done and connections established.
 
     In the Flask app returned, blueprints are not registered.
     """
-    app = Flask(__name__)
+    app = CustomFlask(
+        import_name=__name__,
+        use_flask_uuid=True,
+        use_debug_toolbar=True,
+    )
 
     # Configuration
-    from listenbrainz import config
-    app.config.from_object(config)
+    app.config.from_pyfile(os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        '..', 'default_config.py'
+    ))
+    app.config.from_pyfile(os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        '..', 'custom_config.py'
+    ), silent=True)
+
+    if config_path:
+        app.config.from_pyfile(config_path)
+
+    if debug is not None:
+        app.debug = debug
 
     # Logging
-    from listenbrainz.webserver.loggers import init_loggers
-    init_loggers(app)
+    app.init_loggers(
+        file_config=app.config.get('LOG_FILE'),
+        email_config=app.config.get('LOG_EMAIL'),
+        sentry_config=app.config.get('LOG_SENTRY')
+    )
 
     # Redis connection
     create_redis(app)
@@ -80,21 +100,21 @@ def gen_app():
     return app
 
 
-def create_app():
+def create_app(config_path=None, debug=None):
 
-    app = gen_app()
+    app = gen_app(config_path=config_path, debug=debug)
     _register_blueprints(app)
     return app
 
 
-def create_api_compat_app():
+def create_api_compat_app(config_path=None, debug=None):
     """ Creates application for the AudioScrobbler API.
 
     The AudioScrobbler API v1.2 requires special views for the root URL so we
     need to create a different app and only register the api_compat blueprints
     """
 
-    app = gen_app()
+    app = gen_app(config_path=config_path, debug=debug)
 
     from listenbrainz.webserver.views.api_compat import api_bp as api_compat_bp
     from listenbrainz.webserver.views.api_compat_deprecated import api_compat_old_bp
@@ -115,7 +135,11 @@ def create_app_rtfd():
     packages (like MessyBrainz), so we have to ignore these initialization
     steps. Only blueprints/views are needed to render documentation.
     """
-    app = Flask(__name__)
+    app = CustomFlask(
+        import_name=__name__,
+        use_flask_uuid=True,
+        use_debug_toolbar=True,
+    )
 
     copyfile("../listenbrainz/config.py.sample", "../listenbrainz/config.py")
     from listenbrainz import config
