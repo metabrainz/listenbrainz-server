@@ -1,11 +1,15 @@
 
+import listenbrainz.db.user as db_user
 import logging
 from datetime import datetime
-
 from sqlalchemy import text
 
-import listenbrainz.db.user as db_user
-from listenbrainz import config
+
+from listenbrainz import default_config as config
+try:
+    from listenbrainz import custom_config as config
+except ImportError:
+    pass
 from listenbrainz import db
 from listenbrainz.db.lastfm_user import User
 from listenbrainz.db.testing import DatabaseTestCase

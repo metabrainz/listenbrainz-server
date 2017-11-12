@@ -22,7 +22,12 @@ on Google BigQuery.
 """
 
 from listenbrainz import stats
-from listenbrainz import config
+
+from listenbrainz import default_config as config
+try:
+    from listenbrainz import custom_config as config
+except ImportError:
+    pass
 
 
 def get_artist_count():

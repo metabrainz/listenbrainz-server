@@ -1,8 +1,12 @@
 import os
 import logging
 from listenbrainz.bigquery import create_bigquery_object
-import listenbrainz.config as config
 import time
+from listenbrainz import default_config as config
+try:
+    from listenbrainz import custom_config as config
+except ImportError:
+    pass
 
 JOB_COMPLETION_CHECK_DELAY = 5 # seconds
 

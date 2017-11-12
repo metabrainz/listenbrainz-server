@@ -10,7 +10,6 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz import webserver
 from listenbrainz.webserver.influx_connection import _influx
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
-from listenbrainz import config
 import pika
 
 index_bp = Blueprint('index', __name__)
@@ -75,7 +74,10 @@ def current_status():
     incoming_len = -1
     unique_len = -1
     try:
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=config.RABBITMQ_HOST, port=config.RABBITMQ_PORT))
+        connection = pika.BlockingConnection(pika.ConnectionParameters(
+            host=current_app.config['RABBITMQ_HOST'],
+            port=current_app.config['RABBITMQ_PORT'],
+        ))
 
         incoming_ch = connection.channel()
         queue = incoming_ch.queue_declare('incoming', durable=True)

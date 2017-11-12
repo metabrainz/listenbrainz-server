@@ -20,7 +20,6 @@
 
 
 import time
-import listenbrainz.config as config
 import listenbrainz.db.user as db_user
 
 from hashlib import md5
@@ -31,6 +30,12 @@ from listenbrainz.listenstore import InfluxListenStore
 from listenbrainz.tests.integration import APICompatIntegrationTestCase
 from listenbrainz.webserver.views.api_compat_deprecated import _get_audioscrobbler_auth_token, _get_session, \
     _to_native_api
+
+from listenbrainz import default_config as config
+try:
+    from listenbrainz import custom_config as config
+except ImportError:
+    pass
 
 
 class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):

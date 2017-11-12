@@ -10,7 +10,6 @@ import ujson
 import logging
 from listenbrainz.listen import Listen
 from time import time, sleep
-import listenbrainz.config as config
 from listenbrainz.listenstore import InfluxListenStore
 from listenbrainz.utils import escape, get_measurement_name, get_escaped_measurement_name, \
                                get_influx_query_timestamp, convert_to_unix_timestamp, \
@@ -18,6 +17,12 @@ from listenbrainz.utils import escape, get_measurement_name, get_escaped_measure
 from requests.exceptions import ConnectionError
 from redis import Redis
 from collections import defaultdict
+
+from listenbrainz import default_config as config
+try:
+    from listenbrainz import custom_config as config
+except ImportError:
+    pass
 
 REPORT_FREQUENCY = 5000
 DUMP_JSON_WITH_ERRORS = False
