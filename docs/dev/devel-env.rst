@@ -84,7 +84,7 @@ first time configuring ListenBrainz, copy the sample to a live configuration.
 
 .. code-block:: bash
 
-    cp listenbrainz/config.py.sample listenbrainz/config.py
+    cp listenbrainz/custom_config.py.sample listenbrainz/custom_config.py
 
 
 Next, open the file with your favorite text editor and look for this section.
