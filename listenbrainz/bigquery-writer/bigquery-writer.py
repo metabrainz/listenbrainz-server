@@ -7,7 +7,6 @@ import json
 import logging
 import pika
 from time import time, sleep
-import listenbrainz.config as config
 from redis import Redis
 
 from googleapiclient import discovery
@@ -15,6 +14,12 @@ from googleapiclient.errors import HttpError
 from listenbrainz.bigquery import create_bigquery_object
 from listenbrainz.bigquery import NoCredentialsVariableException, NoCredentialsFileException
 from oauth2client.client import GoogleCredentials
+
+from listenbrainz import default_config as config
+try:
+    from listenbrainz import custom_config as config
+except ImportError:
+    pass
 
 REPORT_FREQUENCY = 5000
 ERROR_RETRY_DELAY = 3 # number of seconds to wait until retrying an operation

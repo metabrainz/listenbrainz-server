@@ -141,9 +141,10 @@ def create_app_rtfd():
         use_debug_toolbar=True,
     )
 
-    copyfile("../listenbrainz/config.py.sample", "../listenbrainz/config.py")
-    from listenbrainz import config
-    app.config.from_object(config)
+    app.config.from_pyfile(os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        '..', 'default_config.py'
+    ))
 
     _register_blueprints(app)
     return app

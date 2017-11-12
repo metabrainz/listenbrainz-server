@@ -7,10 +7,15 @@ from time import sleep
 from influxdb import InfluxDBClient
 
 import listenbrainz.db.user as db_user
-from listenbrainz import config
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.listen import Listen
 from listenbrainz.webserver.influx_connection import init_influx_connection
+
+from listenbrainz import default_config as config
+try:
+    from listenbrainz import custom_config as config
+except ImportError:
+    pass
 
 TEST_LISTEN_JSON = [
     """

@@ -6,7 +6,6 @@ import ujson
 import pika
 import pika.exceptions
 from pika_pool import Overflow as PikaPoolOverflow, Timeout as PikaPoolTimeout
-from listenbrainz import config
 
 from listenbrainz.webserver.external import messybrainz
 import listenbrainz.webserver.redis_connection as redis_connection

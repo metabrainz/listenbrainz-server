@@ -20,7 +20,6 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-import listenbrainz.config as config
 import listenbrainz.db as db
 import logging
 import os
@@ -34,6 +33,11 @@ import tempfile
 from datetime import datetime
 from listenbrainz.utils import create_path, log_ioerrors
 
+from listenbrainz import default_config as config
+try:
+    from listenbrainz import custom_config as config
+except ImportError:
+    pass
 
 DUMP_LICENSE_FILE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                       "licenses", "COPYING-PublicDomain")
