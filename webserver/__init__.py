@@ -43,8 +43,11 @@ def create_app(debug=None, config_path=None):
         raise
 
     # Logging
-    from webserver.loggers import init_loggers
-    init_loggers(app)
+    app.init_loggers(
+        file_config=app.config.get('LOG_FILE'),
+        email_config=app.config.get('LOG_EMAIL'),
+        sentry_config=app.config.get('LOG_SENTRY')
+    )
 
     # Extensions
     from flask_uuid import FlaskUUID
