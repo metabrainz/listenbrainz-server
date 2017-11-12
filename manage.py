@@ -3,7 +3,12 @@ from webserver import create_app
 import subprocess
 import os
 import click
-import config
+
+import default_config as config
+try:
+    import custom_config as config
+except ImportError:
+    pass
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'sql')
 
