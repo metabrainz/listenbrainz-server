@@ -197,7 +197,7 @@ def init_influx():
 import listenbrainz.stats.calculate as calculate
 cli.add_command(calculate.cli, name="stats")
 import listenbrainz.db.dump_manager as dump_manager
-cli.add_command(dump_manager.cli, name="dumps")
+cli.add_command(dump_manager.cli, name="dump")
 
 
 if __name__ == '__main__':
