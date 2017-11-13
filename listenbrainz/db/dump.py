@@ -395,8 +395,16 @@ def import_postgres_dump(location):
 
     if stats_dump_archive_path:
         logger.info('Importing stats dump %s...', stats_dump_archive_path)
+
+        tables_to_import = STATS_TABLES.copy()
+        if private_dump_archive_path:
+            # if the private dump exists and has been imported, we need to
+            # ignore the sanitized user table in the stats dump
+            # so remove it from tables_to_import
+            del tables_to_import['"user"']
+
         try:
-            _import_dump(stats_dump_archive_path, 'private', PRIVATE_TABLES)
+            _import_dump(stats_dump_archive_path, 'stats', tables_to_import)
             logger.info('Import of stats dump %s done!', stats_dump_archive_path)
         except IOError as e:
             log_ioerrors(logger, e)
@@ -418,14 +426,13 @@ def _import_dump(archive_path, dump_type, tables):
 
         Arguments:
             archive_path: path to the .tar.xz archive to be imported
-            dump_type: type of dump to be imported ('private' or 'stats')
-            tables: list of tables present in the archive
+            dump_type (str): type of dump to be imported ('private' or 'stats')
+            tables: dict of tables present in the archive with table name as key and
+                    columns to import as values
     """
 
     pxz_command = ["pxz", "--decompress", "--stdout", archive_path]
     pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
-
-    table_names = STATS_TABLES if dump_type == 'stats' else PRIVATE_TABLES
 
     # create a transaction and start importing
     with db.engine.begin() as connection:
@@ -445,16 +452,17 @@ def _import_dump(archive_path, dump_type, tables):
                         logger.info('Schema version verified.')
 
                 else:
-                    if file_name in table_names:
-                        logger.info(' - Importing data into %s table...', file_name)
+                    if file_name in tables:
+                        logger.info('Importing data into %s table...', file_name)
                         try:
                             cursor.copy_from(tar.extractfile(member), '%s' % file_name,
-                                             columns=TABLES[file_name])
+                                             columns=tables[file_name])
                         except IOError as e:
                             logger.error('IOError while extracting table %s: %s', file_name, str(e))
                             raise
                         except Exception as e:
-                            logger.error('Error while extracting table %s: %s', filename, str(e))
+                            logger.error('Exception while importing table %s', file_name)
+                            logger.error(str(e))
                             raise
 
                         logger.info('Imported table %s', file_name)
