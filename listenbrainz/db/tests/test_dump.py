@@ -65,7 +65,12 @@ class DumpTestCase(DatabaseTestCase):
     def test_copy_table(self):
         db_dump.add_dump_entry()
         with db.engine.connect() as connection:
-            db_dump.copy_table(connection.connection.cursor(), self.tempdir, 'data_dump')
+            db_dump.copy_table(
+                cursor=connection.connection.cursor(),
+                location=self.tempdir,
+                columns='id, created',
+                table_name='data_dump',
+            )
         dumps = db_dump.get_dump_entries()
         with open(os.path.join(self.tempdir, 'data_dump'), 'r') as f:
             file_contents = [line for line in f]
