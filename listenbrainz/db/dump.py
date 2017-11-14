@@ -56,8 +56,8 @@ STATS_TABLES = {
         # the following are dummy values for columns that we do not want to
         # dump in the stats dump
         '\'auth_token\'', # auth token
-        '1970-01-01 00:00:00+00', # last_login
-        '1970-01-01 00:00:00+00', # latest_import
+        'to_timestamp(0)', # last_login
+        'to_timestamp(0)', # latest_import
     ),
     'statistics.user': (
         'user_id',
