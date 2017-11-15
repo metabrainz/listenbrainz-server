@@ -11,15 +11,15 @@
 # Summary
 
 <!--
-    Update the checkbox for the type of contribution you are making.
+    Update the checkbox with an [x] for the type of contribution you are making.
 -->
 
 * This is a…
     * [x] Bug fix
-    * [] Feature addition
-    * [] Refactoring
-    * [] Minor / simple change (like a typo)
-    * [] Other
+    * [ ] Feature addition
+    * [ ] Refactoring
+    * [ ] Minor / simple change (like a typo)
+    * [ ] Other
 * **Describe this change in 1-2 sentences**:
 
 
