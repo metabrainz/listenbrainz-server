@@ -46,28 +46,18 @@ formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-TABLES = {
+# this dict contains the tables dumped in stats dump as keys
+# and a tuple of columns that should be dumped as values
+STATS_TABLES = {
     '"user"': (
         'id',
         'created',
         'musicbrainz_id',
-        'auth_token',
-        'last_login',
-        'latest_import',
-    ),
-    'api_compat.token': (
-        'id',
-        'user_id',
-        'token',
-        'api_key',
-        'ts',
-    ),
-    'api_compat.session': (
-        'id',
-        'user_id',
-        'sid',
-        'api_key',
-        'ts',
+        # the following are dummy values for columns that we do not want to
+        # dump in the stats dump
+        '\'auth_token\'', # auth token
+        'to_timestamp(0)', # last_login
+        'to_timestamp(0)', # latest_import
     ),
     'statistics.user': (
         'user_id',
@@ -103,25 +93,35 @@ TABLES = {
         'listen_count',
         'last_updated',
     ),
-    'data_dump': (
+}
+
+# this dict contains the tables dumped in the private dump as keys
+# and a tuple of columns that should be dumped as values
+PRIVATE_TABLES = {
+    '"user"': (
         'id',
         'created',
+        'musicbrainz_id',
+        'auth_token',
+        'last_login',
+        'latest_import',
+    ),
+    'api_compat.token': (
+        'id',
+        'user_id',
+        'token',
+        'api_key',
+        'ts',
+    ),
+    'api_compat.session': (
+        'id',
+        'user_id',
+        'sid',
+        'api_key',
+        'ts',
     ),
 }
 
-
-PRIVATE_TABLES = [
-    '"user"',
-    'api_compat.session',
-    'api_compat.token',
-]
-
-STATS_TABLES = [
-    'statistics.user',
-    'statistics.release',
-    'statistics.artist',
-    'statistics.recording',
-]
 
 def dump_postgres_db(location, threads=None):
     """ Create postgres database dump in the specified location
@@ -192,7 +192,8 @@ def _create_dump(location, dump_type, tables, time_now, threads=None):
         Arguments:
             location: the path where the dump should be created
             dump_type: the type of data dump being made - private or stats
-            tables: a list containing the names of the tables to be dumped
+            tables: a dict containing the names of the tables to be dumped as keys and the columns
+                    to be dumped as values
             time_now: the time at which the dump process was started
             threads: the maximum number of threads to use for compression
 
@@ -250,7 +251,12 @@ def _create_dump(location, dump_type, tables, time_now, threads=None):
                     cursor = connection.connection.cursor()
                     for table in tables:
                         try:
-                            copy_table(cursor, archive_tables_dir, table)
+                            copy_table(
+                                cursor=cursor,
+                                location=archive_tables_dir,
+                                columns=','.join(tables[table]),
+                                table_name=table,
+                            )
                         except IOError as e:
                             logger.error('IOError while copying table %s', table)
                             raise
@@ -276,7 +282,13 @@ def create_private_dump(location, time_now, threads=None):
             api_compat.token,
             api_compat.session
     """
-    return _create_dump(location, 'private', PRIVATE_TABLES, time_now, threads)
+    return _create_dump(
+        location=location,
+        dump_type='private',
+        tables=PRIVATE_TABLES,
+        time_now=time_now,
+        threads=threads,
+    )
 
 
 def create_stats_dump(location, time_now, threads=None):
@@ -287,21 +299,29 @@ def create_stats_dump(location, time_now, threads=None):
             statistics.release
             statistics.recording
     """
-    return _create_dump(location, 'stats', STATS_TABLES, time_now, threads)
+    return _create_dump(
+        location=location,
+        dump_type='stats',
+        tables=STATS_TABLES,
+        time_now=time_now,
+        threads=threads,
+    )
 
 
-def copy_table(cursor, location, table_name):
+def copy_table(cursor, location, columns, table_name):
     """ Copies a PostgreSQL table to a file
 
         Arguments:
             cursor: a psycopg cursor
             location: the directory where the table should be copied
+            columns: a comma seperated string listing the columns of the table
+                     that should be dumped
             table_name: the name of the table to be copied
     """
 
     with open(os.path.join(location, table_name), 'w') as f:
         cursor.copy_to(f, '(SELECT {columns} FROM {table})'.format(
-            columns=','.join(TABLES[table_name]),
+            columns=columns,
             table=table_name
         ))
 
