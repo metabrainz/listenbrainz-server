@@ -30,6 +30,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import time
 
 from datetime import datetime
 from listenbrainz.utils import create_path, log_ioerrors
@@ -179,6 +180,7 @@ def dump_postgres_db(location, threads=None):
             break
         except Exception as e:
             logger.error('Error while adding dump entry: %s', str(e))
+            time.sleep(3)
 
     logger.info('New entry with id %d added to data_dump table!', dump_id)
 
@@ -272,7 +274,7 @@ def _create_dump(location, dump_type, tables, time_now, threads=None):
 
         pxz.stdin.close()
 
-    return location
+    return archive_path
 
 
 def create_private_dump(location, time_now, threads=None):
@@ -342,6 +344,134 @@ def add_dump_entry():
         return result.fetchone()['id']
 
 
-if __name__ == '__main__':
-    db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
-    dump_postgres_db('/dump/')
+def get_dump_entries():
+    """ Returns a list of all dump entries in the data_dump table
+    """
+
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+                SELECT id, created
+                  FROM data_dump
+              ORDER BY created DESC
+            """))
+
+        return [dict(row) for row in result]
+
+
+def import_postgres_dump(location):
+    """ Imports postgres dump created by dump_postgres_db present at location.
+
+        Arguments:
+            location: the directory where the private and stats archives are present
+    """
+
+    private_dump_archive_path = None
+    stats_dump_archive_path = None
+
+    for archive in os.listdir(location):
+        if os.path.isfile(os.path.join(location, archive)):
+            if 'private' in archive:
+                private_dump_archive_path = os.path.join(location, archive)
+            else:
+                stats_dump_archive_path = os.path.join(location, archive)
+
+
+    if private_dump_archive_path:
+        logger.info('Importing private dump %s...', private_dump_archive_path)
+        try:
+            _import_dump(private_dump_archive_path, 'private', PRIVATE_TABLES)
+            logger.info('Import of private dump %s done!', private_dump_archive_path)
+        except IOError as e:
+            log_ioerrors(logger, e)
+            return
+        except SchemaMismatchException as e:
+            logger.error('SchemaMismatchException: %s', str(e))
+            return
+        except Exception as e:
+            logger.error('Error while importing private dump: %s', str(e))
+            return
+        logger.info('Private dump %s imported!', private_dump_archive_path)
+
+
+    if stats_dump_archive_path:
+        logger.info('Importing stats dump %s...', stats_dump_archive_path)
+
+        tables_to_import = STATS_TABLES.copy()
+        if private_dump_archive_path:
+            # if the private dump exists and has been imported, we need to
+            # ignore the sanitized user table in the stats dump
+            # so remove it from tables_to_import
+            del tables_to_import['"user"']
+
+        try:
+            _import_dump(stats_dump_archive_path, 'stats', tables_to_import)
+            logger.info('Import of stats dump %s done!', stats_dump_archive_path)
+        except IOError as e:
+            log_ioerrors(logger, e)
+            return
+        except SchemaMismatchException as e:
+            logger.error('SchemaMismatchException: %s', str(e))
+            return
+        except Exception as e:
+            logger.error('Error while importing stats dump: %s', str(e))
+            return
+        logger.info('Stats dump %s imported!', stats_dump_archive_path)
+
+    logger.info('PostgreSQL import of data dump at %s done!', location)
+
+
+
+def _import_dump(archive_path, dump_type, tables):
+    """ Import dump present in passed archive path into postgres db.
+
+        Arguments:
+            archive_path: path to the .tar.xz archive to be imported
+            dump_type (str): type of dump to be imported ('private' or 'stats')
+            tables: dict of tables present in the archive with table name as key and
+                    columns to import as values
+    """
+
+    pxz_command = ["pxz", "--decompress", "--stdout", archive_path]
+    pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
+
+    connection = db.engine.raw_connection()
+    connection.set_session(autocommit=True)
+    try:
+        cursor = connection.cursor()
+        with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
+            for member in tar:
+                file_name = member.name.split('/')[-1]
+
+                if file_name == 'SCHEMA_SEQUENCE':
+                    # Verifying schema version
+                    schema_seq = int(tar.extractfile(member).read().strip())
+                    if schema_seq != db.SCHEMA_VERSION:
+                        raise SchemaMismatchException('Incorrect schema version! Expected: %d, got: %d.'
+                                        'Please, get the latest version of the dump.'
+                                        % (db.SCHEMA_VERSION, schema_seq))
+                    else:
+                        logger.info('Schema version verified.')
+
+                else:
+                    if file_name in tables:
+                        logger.info('Importing data into %s table...', file_name)
+                        try:
+                            cursor.copy_from(tar.extractfile(member), '%s' % file_name,
+                                             columns=tables[file_name])
+                        except IOError as e:
+                            logger.error('IOError while extracting table %s: %s', file_name, str(e))
+                            raise
+                        except Exception as e:
+                            logger.error('Exception while importing table %s', file_name)
+                            logger.error(str(e))
+                            raise
+
+                        logger.info('Imported table %s', file_name)
+    finally:
+        connection.close()
+
+    pxz.stdout.close()
+
+
+class SchemaMismatchException(Exception):
+    pass
