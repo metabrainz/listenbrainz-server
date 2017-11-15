@@ -434,9 +434,10 @@ def _import_dump(archive_path, dump_type, tables):
     pxz_command = ["pxz", "--decompress", "--stdout", archive_path]
     pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
 
-    # create a transaction and start importing
-    with db.engine.begin() as connection:
-        cursor = connection.connection.cursor()
+    connection = db.engine.raw_connection()
+    connection.set_session(autocommit=True)
+    try:
+        cursor = connection.cursor()
         with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
             for member in tar:
                 file_name = member.name.split('/')[-1]
@@ -466,6 +467,8 @@ def _import_dump(archive_path, dump_type, tables):
                             raise
 
                         logger.info('Imported table %s', file_name)
+    finally:
+        connection.close()
 
     pxz.stdout.close()
 
