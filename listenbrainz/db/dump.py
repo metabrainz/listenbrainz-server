@@ -32,6 +32,7 @@ import tempfile
 import time
 
 from datetime import datetime
+from listenbrainz import DUMP_LICENSE_FILE_PATH
 from listenbrainz.utils import create_path, log_ioerrors
 
 from listenbrainz import default_config as config
@@ -39,9 +40,6 @@ try:
     from listenbrainz import custom_config as config
 except ImportError:
     pass
-
-DUMP_LICENSE_FILE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                      "licenses", "COPYING-PublicDomain")
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
