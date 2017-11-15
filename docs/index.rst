@@ -1,9 +1,16 @@
-ListenBrainz' API documentation
-===============================
+ListenBrainz documentation
+==========================
 
-This documentation is aimed at developers who want to :doc:`use our API <dev/api>` to submit and fetch listens. We suggest taking
-a look the the :doc:`json <dev/json>` documentation, since most of the complexity in using the API comes from constructing/reading
-the ListenBrainz JSON documents.
+This documentation is for:
+
+- Developers :doc:`using our API <dev/api>` to submit and fetch listens
+- System administrators managing a ListenBrainz installation
+- Contributors to the ListenBrainz project
+
+Review the :doc:`JSON <dev/json>` documentation if you plan to work with the
+ListenBrainz API. Most of the complexity comes from reading or constructing
+ListenBrainz JSON documents.
+
 
 Contents:
 
