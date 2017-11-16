@@ -20,7 +20,7 @@ from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, \
     USER_CACHE_TIME, REDIS_USER_TIMESTAMPS
 from listenbrainz.utils import quote, get_escaped_measurement_name, get_measurement_name, get_influx_query_timestamp, \
     convert_influx_nano_to_python_time, convert_python_time_to_nano_int, convert_to_unix_timestamp, \
-    create_path
+    create_path, log_ioerrors
 
 REDIS_INFLUX_USER_LISTEN_COUNT = "ls.listencount."  # append username
 COUNT_RETENTION_POLICY = "one_week"
@@ -346,8 +346,7 @@ class InfluxListenStore(ListenStore):
 
         self.log.info('Getting list of users whose listens are to be dumped...')
         users = db_user.get_all_users()
-        total = len(users)
-        self.log.info('Total number of users: %d', total)
+        self.log.info('Total number of users: %d', len(users))
 
         archive_name = 'listenbrainz-listens-dump-{time}'.format(time=dump_time.strftime('%Y%m%d-%H%M%S'))
         archive_path = os.path.join(location, '{filename}.tar.xz'.format(filename=archive_name))
@@ -363,14 +362,21 @@ class InfluxListenStore(ListenStore):
 
                 temp_dir = tempfile.mkdtemp()
 
-                # add copyright notice and timestamp
-                timestamp_path = os.path.join(temp_dir, 'TIMESTAMP')
-                with open(timestamp_path, 'w') as f:
-                    f.write(dump_time.isoformat(' '))
-                tar.add(timestamp_path,
-                        arcname=os.path.join(archive_name, 'TIMESTAMP'))
-                tar.add(DUMP_LICENSE_FILE_PATH,
-                        arcname=os.path.join(archive_name, 'COPYING'))
+                try:
+                    # add copyright notice and timestamp
+                    timestamp_path = os.path.join(temp_dir, 'TIMESTAMP')
+                    with open(timestamp_path, 'w') as f:
+                        f.write(dump_time.isoformat(' '))
+                    tar.add(timestamp_path,
+                            arcname=os.path.join(archive_name, 'TIMESTAMP'))
+                    tar.add(DUMP_LICENSE_FILE_PATH,
+                            arcname=os.path.join(archive_name, 'COPYING'))
+                except IOError as e:
+                    log_ioerrors(self.log, e)
+                    raise
+                except Exception as e:
+                    self.log.error('Exception while adding dump metadata: %s', str(e))
+                    raise
 
                 listens_path = os.path.join(temp_dir, 'listens')
                 create_path(listens_path)
@@ -395,8 +401,17 @@ class InfluxListenStore(ListenStore):
 
                     user_listens_file = '{username}-listens.json'.format(username=user['musicbrainz_id'])
                     user_listens_path = os.path.join(listens_path, user_listens_file)
-                    with open(user_listens_path, 'w') as f:
-                        f.write(ujson.dumps(listens))
+
+                    try:
+                        with open(user_listens_path, 'w') as f:
+                            f.write(ujson.dumps(listens))
+                    except IOError as e:
+                        log_ioerrors(self.log, e)
+                        raise
+                    except Exception as e:
+                        self.log.error('Exception while creating json for user: %s', user['musicbrainz_id'])
+                        self.log.error(str(e))
+                        raise
 
                 # add the listens directory to the archive
                 self.log.info('Got all listens, adding them to the archive...')
