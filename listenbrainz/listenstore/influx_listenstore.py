@@ -388,52 +388,55 @@ class InfluxListenStore(ListenStore):
                 for user in users:
                     username = user['musicbrainz_id']
                     offset = 0
-                    listens = []
 
-                    # Get this user's listens in chunks
-                    while True:
-
-                        # loop until we get this chunk of listens
-                        while True:
-                            try:
-                                result = self.influx.query("""
-                                    SELECT *
-                                      FROM {measurement}
-                                     LIMIT {limit}
-                                    OFFSET {offset}
-                                """.format(
-                                    measurement=get_escaped_measurement_name(username),
-                                    limit=DUMP_CHUNK_SIZE,
-                                    offset=offset,
-                                ))
-                                break
-                            except Exception as e:
-                                self.log.error('Error while getting listens for user %s', user['musicbrainz_id'])
-                                self.log.error(str(e))
-                                time.sleep(3)
-
-                        rows = list(result.get_points(get_measurement_name(username)))
-                        if not rows:
-                            break
-
-                        for row in rows:
-                            listens.append(Listen.from_influx(row).to_api())
-
-                        offset += DUMP_CHUNK_SIZE
-
-                    user_listens_file = '{username}-listens.json'.format(username=user['musicbrainz_id'])
+                    user_listens_file = '{username}.json'.format(username=username)
                     user_listens_path = os.path.join(listens_path, user_listens_file)
 
-                    try:
-                        with open(user_listens_path, 'w') as f:
-                            f.write(ujson.dumps(listens))
-                    except IOError as e:
-                        log_ioerrors(self.log, e)
-                        raise
-                    except Exception as e:
-                        self.log.error('Exception while creating json for user: %s', user['musicbrainz_id'])
-                        self.log.error(str(e))
-                        raise
+                    with open(user_listens_path, 'w') as f:
+                        # Get this user's listens in chunks
+                        while True:
+
+                            # loop until we get this chunk of listens
+                            while True:
+                                try:
+                                    result = self.influx.query("""
+                                        SELECT *
+                                          FROM {measurement}
+                                         WHERE time <= {timestamp}
+                                      ORDER BY time DESC
+                                         LIMIT {limit}
+                                        OFFSET {offset}
+                                    """.format(
+                                        measurement=get_escaped_measurement_name(username),
+                                        timestamp=get_influx_query_timestamp(dump_time.strftime('%s')),
+                                        limit=DUMP_CHUNK_SIZE,
+                                        offset=offset,
+                                    ))
+                                    break
+                                except Exception as e:
+                                    self.log.error('Error while getting listens for user %s', user['musicbrainz_id'])
+                                    self.log.error(str(e))
+                                    time.sleep(3)
+
+
+                            rows = list(result.get_points(get_measurement_name(username)))
+                            if not rows:
+                                break
+
+                            for row in rows:
+                                listen = Listen.from_influx(row).to_api()
+                                try:
+                                    f.write(ujson.dumps(listen))
+                                    f.write('\n')
+                                except IOError as e:
+                                    log_ioerrors(self.log, e)
+                                    raise
+                                except Exception as e:
+                                    self.log.error('Exception while creating json for user: %s', user['musicbrainz_id'])
+                                    self.log.error(str(e))
+                                    raise
+
+                            offset += DUMP_CHUNK_SIZE
 
                 # add the listens directory to the archive
                 self.log.info('Got all listens, adding them to the archive...')
