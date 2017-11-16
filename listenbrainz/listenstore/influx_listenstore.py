@@ -5,6 +5,7 @@ import os.path
 import subprocess
 import tarfile
 import tempfile
+import time
 import shutil
 import ujson
 
@@ -30,6 +31,7 @@ TIMELINE_COUNT_MEASUREMENT = COUNT_MEASUREMENT_NAME
 
 DUMP_LICENSE_FILE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                       '..', 'db', 'licenses', 'COPYING-PublicDomain')
+DUMP_CHUNK_SIZE = 100000
 
 
 class InfluxListenStore(ListenStore):
@@ -384,20 +386,40 @@ class InfluxListenStore(ListenStore):
                 # get listens from all measurements and write them to files in
                 # a temporary dir before adding them to the archive
                 for user in users:
-                    query = 'SELECT * FROM ' + get_escaped_measurement_name(user['musicbrainz_id'])
-
-                    # loop until we get this user's listens
-                    while True:
-                        try:
-                            results = self.influx.query(query)
-                            break
-                        except Exception as e:
-                            self.log.error('Error while getting listens for user %s', user['musicbrainz_id'])
-                            self.log.error(str(e))
-
+                    username = user['musicbrainz_id']
+                    offset = 0
                     listens = []
-                    for row in results.get_points(get_measurement_name(user['musicbrainz_id'])):
-                        listens.append(Listen.from_influx(row).to_api())
+
+                    # Get this user's listens in chunks
+                    while True:
+
+                        # loop until we get this chunk of listens
+                        while True:
+                            try:
+                                result = self.influx.query("""
+                                    SELECT *
+                                      FROM {measurement}
+                                     LIMIT {limit}
+                                    OFFSET {offset}
+                                """.format(
+                                    measurement=get_escaped_measurement_name(username),
+                                    limit=DUMP_CHUNK_SIZE,
+                                    offset=offset,
+                                ))
+                                break
+                            except Exception as e:
+                                self.log.error('Error while getting listens for user %s', user['musicbrainz_id'])
+                                self.log.error(str(e))
+                                time.sleep(3)
+
+                        rows = list(result.get_points(get_measurement_name(username)))
+                        if not rows:
+                            break
+
+                        for row in rows:
+                            listens.append(Listen.from_influx(row).to_api())
+
+                        offset += DUMP_CHUNK_SIZE
 
                     user_listens_file = '{username}-listens.json'.format(username=user['musicbrainz_id'])
                     user_listens_path = os.path.join(listens_path, user_listens_file)
