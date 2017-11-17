@@ -512,8 +512,6 @@ class InfluxListenStore(ListenStore):
 
                     # if some listens are left, write them to db
                     if listen_count > 0:
-                        self.log.info('Inserting following: ')
-                        self.log.info(json.dumps(listens, indent=4))
                         self.write_points_to_db(listens)
 
         self.log.info('Import of listens from dump %s done!', archive_path)
