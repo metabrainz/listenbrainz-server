@@ -64,3 +64,21 @@ def create(location, threads):
 def import_dump(location):
     db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
     db_dump.import_postgres_dump(location)
+
+
+@cli.command()
+@click.option('--location', '-l')
+def import_listens_dump(location=None):
+
+    if not location:
+        print('No location given!')
+        return
+
+    ls = init_influx_connection(log,  {
+        'REDIS_HOST': config.REDIS_HOST,
+        'REDIS_PORT': config.REDIS_PORT,
+        'INFLUX_HOST': config.INFLUX_HOST,
+        'INFLUX_PORT': config.INFLUX_PORT,
+        'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
+    })
+    ls.import_listens_dump(location)
