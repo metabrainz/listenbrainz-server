@@ -375,7 +375,7 @@ class InfluxListenStore(ListenStore):
                     # add schema version
                     schema_version_path = os.path.join(temp_dir, 'SCHEMA_SEQUENCE')
                     with open(schema_version_path, 'w') as f:
-                        f.write(LISTENS_DUMP_SCHEMA_VERSION)
+                        f.write(str(LISTENS_DUMP_SCHEMA_VERSION))
                     tar.add(schema_version_path,
                             arcname=os.path.join(archive_name, 'SCHEMA_SEQUENCE'))
 
