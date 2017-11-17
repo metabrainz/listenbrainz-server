@@ -106,14 +106,24 @@ TEST_LISTEN_JSON = [
 
 class TestInfluxListenStore(DatabaseTestCase):
 
+
+    def reset_influx_db(self):
+        """ Resets the entire influx db """
+        influx = InfluxDBClient(
+            host=config.INFLUX_HOST,
+            port=config.INFLUX_PORT,
+            database=config.INFLUX_DB_NAME
+        )
+        influx.query('DROP DATABASE %s' % config.INFLUX_DB_NAME)
+        influx.query('CREATE DATABASE %s' % config.INFLUX_DB_NAME)
+
+
     def setUp(self):
         super(TestInfluxListenStore, self).setUp()
         self.log = logging.getLogger(__name__)
 
         # In order to do counting correctly, we need a clean DB to start with
-        influx = InfluxDBClient(host=config.INFLUX_HOST, port=config.INFLUX_PORT, database=config.INFLUX_DB_NAME)
-        influx.query('''drop database %s''' % config.INFLUX_DB_NAME)
-        influx.query('''create database %s''' % config.INFLUX_DB_NAME)
+        self.reset_influx_db()
 
         self.logstore = init_influx_connection(self.log, {
             'REDIS_HOST': config.REDIS_HOST,
@@ -212,11 +222,30 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.assertEquals(listens[0].ts_since_epoch, 1400000200)
         self.assertEquals(listens[1].ts_since_epoch, 1400000150)
 
-    def test_dump_listens(self):
 
+    def test_dump_listens(self):
         self._create_test_data(self.testuser_name)
         temp_dir = tempfile.mkdtemp()
         dump = self.logstore.dump_listens(
             location=temp_dir,
         )
         self.assertTrue(os.path.isfile(dump))
+
+
+    def test_import_listens(self):
+        count = self._create_test_data(self.testuser_name)
+        temp_dir = tempfile.mkdtemp()
+        dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+        )
+        self.assertTrue(os.path.isfile(dump_location))
+        self.reset_influx_db()
+
+        self.logstore.import_listens_dump(dump_location)
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
+        self.assertEqual(len(listens), 5)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
+        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[3].ts_since_epoch, 1400000050)
+        self.assertEqual(listens[4].ts_since_epoch, 1400000000)
