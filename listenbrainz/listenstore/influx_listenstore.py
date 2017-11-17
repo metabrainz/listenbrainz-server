@@ -18,7 +18,7 @@ from redis import Redis
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import ListenStore
 from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, \
-    USER_CACHE_TIME, REDIS_USER_TIMESTAMPS
+    USER_CACHE_TIME, REDIS_USER_TIMESTAMPS, LISTENS_DUMP_SCHEMA_VERSION
 from listenbrainz.utils import quote, get_escaped_measurement_name, get_measurement_name, get_influx_query_timestamp, \
     convert_influx_nano_to_python_time, convert_python_time_to_nano_int, convert_to_unix_timestamp, \
     create_path, log_ioerrors
@@ -365,14 +365,24 @@ class InfluxListenStore(ListenStore):
                 temp_dir = tempfile.mkdtemp()
 
                 try:
-                    # add copyright notice and timestamp
+                    # add timestamp
                     timestamp_path = os.path.join(temp_dir, 'TIMESTAMP')
                     with open(timestamp_path, 'w') as f:
                         f.write(dump_time.isoformat(' '))
                     tar.add(timestamp_path,
                             arcname=os.path.join(archive_name, 'TIMESTAMP'))
+
+                    # add schema version
+                    schema_version_path = os.path.join(temp_dir, 'SCHEMA_SEQUENCE')
+                    with open(schema_version_path, 'w') as f:
+                        f.write(LISTENS_DUMP_SCHEMA_VERSION)
+                    tar.add(schema_version_path,
+                            arcname=os.path.join(archive_name, 'SCHEMA_SEQUENCE'))
+
+                    # add copyright notice
                     tar.add(DUMP_LICENSE_FILE_PATH,
                             arcname=os.path.join(archive_name, 'COPYING'))
+
                 except IOError as e:
                     log_ioerrors(self.log, e)
                     raise
