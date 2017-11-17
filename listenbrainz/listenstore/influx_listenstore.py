@@ -399,7 +399,7 @@ class InfluxListenStore(ListenStore):
                     username = user['musicbrainz_id']
                     offset = 0
 
-                    user_listens_file = '{username}.json'.format(username=username)
+                    user_listens_file = '{username}.listens'.format(username=username)
                     user_listens_path = os.path.join(listens_path, user_listens_file)
 
                     with open(user_listens_path, 'w') as f:
