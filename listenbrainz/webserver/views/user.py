@@ -51,6 +51,8 @@ def profile(user_name):
     playing_now_conn = webserver.redis_connection._redis
 
     user = _get_user(user_name)
+    # User name used to get user may not have the same case as original user name.
+    user_name = user.musicbrainz_id
 
     try:
         have_listen_count = True
