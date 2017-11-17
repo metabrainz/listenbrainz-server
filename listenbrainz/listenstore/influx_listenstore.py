@@ -461,3 +461,73 @@ class InfluxListenStore(ListenStore):
         self.log.info('ListenBrainz listen dump done!')
         self.log.info('Dump present at %s!', archive_path)
         return archive_path
+
+
+    def import_listens_dump(self, archive_path, threads=None):
+        """ Imports listens into InfluxDB from a ListenBrainz listens dump .tar.xz archive.
+
+        Args:
+            archive (str): the path to the listens dump .tar.xz archive to be imported
+            threads (int): the number of threads to be used for decompression (defaults to 1)
+        """
+
+        self.log.info('Beginning import of listens from dump %s...', archive_path)
+
+        pxz_command = ['pxz', '--decompress', '--stdout', archive_path]
+        if threads is not None:
+            pxz_command.append('-T {threads}'.format(threads=threads))
+        pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
+
+
+        with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
+            for member in tar:
+                file_name = member.name.split('/')[-1]
+
+                if file_name == 'SCHEMA_SEQUENCE':
+                    self.log.info('Checking if schema version of dump matches...')
+                    schema_seq = int(tar.extractfile(member).read().strip())
+                    if schema_seq != LISTENS_DUMP_SCHEMA_VERSION:
+                        raise SchemaMismatchException('Incorrect schema version! Expected: %d, got: %d.'
+                                        'Please, get the latest version of the dump.'
+                                        % (LISTENS_DUMP_SCHEMA_VERSION, schema_seq))
+
+                elif file_name.endswith('.listens'):
+
+                    # remove .listens from the filename to get the username
+                    user_name = file_name[:-8]
+                    self.log.info('Importing user %s', user_name)
+                    listens = []
+                    listen_count = 0
+
+                    # iterate through files and keep writing listens in chunks
+                    for listen in tar.extractfile(member):
+                        influx_listen = Listen.from_json(ujson.loads(listen)).to_influx(quote(user_name))
+                        listens.append(influx_listen)
+                        listen_count += 1
+
+                        if listen_count > DUMP_CHUNK_SIZE:
+                            self.write_points_to_db(listens)
+                            listen_count = 0
+                            listens = []
+
+                    # if some listens are left, write them to db
+                    if listen_count > 0:
+                        self.log.info('Inserting following: ')
+                        self.log.info(json.dumps(listens, indent=4))
+                        self.write_points_to_db(listens)
+
+        self.log.info('Import of listens from dump %s done!', archive_path)
+
+
+    def write_points_to_db(self, points):
+        """ Write the given data to InfluxDB. This function sleeps for 3 seconds
+            and tries again if the write fails.
+
+        Args:
+            points: a list containing dicts in the form taken by influx python bindings
+        """
+
+        while not self.influx.write_points(points, time_precision='s'):
+            self.log.error('Error while writing listens to influx, '
+                'write_points returned False')
+            time.sleep(3)
