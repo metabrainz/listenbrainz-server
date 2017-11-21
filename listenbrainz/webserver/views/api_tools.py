@@ -70,10 +70,14 @@ def _send_listens_to_queue(listen_type, listens):
     if submit:
         try:
             with rabbitmq_connection._rabbitmq.acquire() as cxn:
-                cxn.channel.exchange_declare(exchange='incoming', type='fanout')
-                cxn.channel.queue_declare('incoming', durable=True)
-                cxn.channel.basic_publish(exchange='incoming', routing_key='', body=ujson.dumps(submit),
-                    properties=pika.BasicProperties(delivery_mode = 2, ))
+                cxn.channel.exchange_declare(exchange=current_app.config['INCOMING_EXCHANGE'], type='fanout')
+                cxn.channel.queue_declare(current_app.config['INCOMING_QUEUE'], durable=True)
+                cxn.channel.basic_publish(
+                    exchange=current_app.config['INCOMING_EXCHANGE'],
+                    routing_key='',
+                    body=ujson.dumps(submit),
+                    properties=pika.BasicProperties(delivery_mode = 2, ),
+                )
         except pika.exceptions.ConnectionClosed as e:
             current_app.logger.error("Connection to rabbitmq closed while trying to publish: %s" % str(e))
             raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")

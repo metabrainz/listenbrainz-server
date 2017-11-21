@@ -177,10 +177,13 @@ class BigQueryWriter(object):
         while True:
             self.connect_to_rabbitmq()
             self.channel = self.connection.channel()
-            self.channel.exchange_declare(exchange='unique', type='fanout')
-            self.channel.queue_declare('unique', durable=True)
-            self.channel.queue_bind(exchange='unique', queue='unique')
-            self.channel.basic_consume(lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self), queue='unique')
+            self.channel.exchange_declare(exchange=config.UNIQUE_EXCHANGE, type='fanout')
+            self.channel.queue_declare(config.UNIQUE_QUEUE, durable=True)
+            self.channel.queue_bind(exchange=config.UNIQUE_EXCHANGE, queue=config.UNIQUE_QUEUE)
+            self.channel.basic_consume(
+                lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self),
+                queue=config.UNIQUE_QUEUE,
+            )
 
             self.log.info("bigquery-writer started")
             try:

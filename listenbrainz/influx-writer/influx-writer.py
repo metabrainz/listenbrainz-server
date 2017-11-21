@@ -250,8 +250,12 @@ class InfluxWriterSubscriber(object):
 
         while True:
             try:
-                self.unique_ch.basic_publish(exchange='unique', routing_key='', body=ujson.dumps(unique),
-                    properties=pika.BasicProperties(delivery_mode = 2,))
+                self.unique_ch.basic_publish(
+                    exchange=config.UNIQUE_EXCHANGE,
+                    routing_key='',
+                    body=ujson.dumps(unique),
+                    properties=pika.BasicProperties(delivery_mode = 2,),
+                )
                 break
             except pika.exceptions.ConnectionClosed:
                 self.connect_to_rabbitmq()
@@ -301,14 +305,17 @@ class InfluxWriterSubscriber(object):
         while True:
             self.connect_to_rabbitmq()
             self.incoming_ch = self.connection.channel()
-            self.incoming_ch.exchange_declare(exchange='incoming', type='fanout')
-            self.incoming_ch.queue_declare('incoming', durable=True)
-            self.incoming_ch.queue_bind(exchange='incoming', queue='incoming')
-            self.incoming_ch.basic_consume(lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self), queue='incoming')
+            self.incoming_ch.exchange_declare(exchange=config.INCOMING_EXCHANGE, type='fanout')
+            self.incoming_ch.queue_declare(config.INCOMING_QUEUE, durable=True)
+            self.incoming_ch.queue_bind(exchange=config.INCOMING_EXCHANGE, queue=config.INCOMING_QUEUE)
+            self.incoming_ch.basic_consume(
+                lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self),
+                queue=config.INCOMING_QUEUE,
+            )
 
             self.unique_ch = self.connection.channel()
-            self.unique_ch.exchange_declare(exchange='unique', type='fanout')
-            self.unique_ch.queue_declare('unique', durable=True)
+            self.unique_ch.exchange_declare(exchange=config.UNIQUE_EXCHANGE, type='fanout')
+            self.unique_ch.queue_declare(config.UNIQUE_QUEUE, durable=True)
 
             self.log.info("influx-writer started")
             try:
