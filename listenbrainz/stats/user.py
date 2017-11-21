@@ -17,7 +17,11 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-import listenbrainz.config as config
+from listenbrainz import default_config as config
+try:
+    from listenbrainz import custom_config as config
+except ImportError:
+    pass
 from listenbrainz import stats
 
 
@@ -135,8 +139,8 @@ def get_top_artists(musicbrainz_id, time_interval=None):
 
 
 def get_artist_count(musicbrainz_id, time_interval=None):
-    """ Get artist count for user with given MusicBrainz ID over a particular period of time 
-        
+    """ Get artist count for user with given MusicBrainz ID over a particular period of time
+
         Args: musicbrainz_id (str): the MusicBrainz ID of the user
               time_interval  (str): the time interval over which artist count should be returned
                                     (defaults to all time)

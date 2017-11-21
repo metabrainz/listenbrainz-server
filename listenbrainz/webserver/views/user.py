@@ -10,7 +10,6 @@ from listenbrainz import webserver
 from listenbrainz.webserver import flash
 import listenbrainz.db.user as db_user
 import listenbrainz.db.stats as db_stats
-import listenbrainz.config as config
 import listenbrainz.db.user as db_user
 from listenbrainz import webserver
 from listenbrainz.webserver.decorators import crossdomain
@@ -33,8 +32,8 @@ def lastfmscraper(user_name):
         raise NotFound
     scraper = render_template(
         "user/scraper.js",
-        base_url="{}/1/submit-listens".format(config.BETA_URL),
-        import_url="{}/1/latest-import".format(config.BETA_URL),
+        base_url="{}/1/submit-listens".format(current_app.config['BETA_URL']),
+        import_url="{}/1/latest-import".format(current_app.config['BETA_URL']),
         user_token=user_token,
         lastfm_username=lastfm_username,
         # need to escape user_name here because other wise jinja doesn't handle usernames with backslashes correctly

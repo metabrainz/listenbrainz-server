@@ -2,7 +2,12 @@
 import os
 import unittest
 
-from listenbrainz import config
+from listenbrainz import default_config as config
+try:
+    from listenbrainz import custom_config as config
+except ImportError:
+    pass
+
 from listenbrainz import db
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..','admin', 'sql')

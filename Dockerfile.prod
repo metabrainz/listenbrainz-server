@@ -12,6 +12,7 @@ RUN apt-get update \
                        libffi-dev \
                        libssl-dev \
                        redis-tools \
+                       pxz \
     && rm -rf /var/lib/apt/lists/*
 
 
