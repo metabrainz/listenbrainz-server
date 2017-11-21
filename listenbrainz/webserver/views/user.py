@@ -32,8 +32,8 @@ def lastfmscraper(user_name):
         raise NotFound
     scraper = render_template(
         "user/scraper.js",
-        base_url="{}/1/submit-listens".format(current_app.config['BETA_URL']),
-        import_url="{}/1/latest-import".format(current_app.config['BETA_URL']),
+        base_url="{}/1/submit-listens".format(current_app.config['API_URL']),
+        import_url="{}/1/latest-import".format(current_app.config['API_URL']),
         user_token=user_token,
         lastfm_username=lastfm_username,
         # need to escape user_name here because other wise jinja doesn't handle usernames with backslashes correctly
@@ -112,7 +112,7 @@ def profile(user_name):
 
     # If there are no previous listens then display now_playing
     if not previous_listen_ts:
-        playing_now = playing_now_conn.get_playing_now(user_name)
+        playing_now = playing_now_conn.get_playing_now(user.id)
         if playing_now:
             listen = {
                 "track_metadata": playing_now.data,
