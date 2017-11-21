@@ -3,7 +3,12 @@ from unittest.mock import patch
 import os
 from listenbrainz import stats
 from listenbrainz.stats.exceptions import NoCredentialsVariableException, NoCredentialsFileException
-import listenbrainz.config as config
+
+from listenbrainz import default_config as config
+try:
+    from listenbrainz import custom_config as config
+except ImportError:
+    pass
 
 bigquery_responses = {
     "done": {

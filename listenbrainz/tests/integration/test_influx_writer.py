@@ -8,8 +8,13 @@ from flask import url_for
 import listenbrainz.db.user as db_user
 import time
 import json
-from listenbrainz import config
 from influxdb import InfluxDBClient
+
+from listenbrainz import default_config as config
+try:
+    from listenbrainz import custom_config as config
+except ImportError:
+    pass
 
 class InfluxWriterTestCase(IntegrationTestCase):
 

@@ -6,9 +6,14 @@ import subprocess
 import os
 import click
 import subprocess
-from listenbrainz import config
 from urllib.parse import urlsplit
 from influxdb import InfluxDBClient
+
+from listenbrainz import default_config as config
+try:
+    from listenbrainz import custom_config as config
+except ImportError:
+    pass
 
 
 cli = click.Group()
