@@ -26,11 +26,15 @@ import logging
 import os
 
 from datetime import datetime
-from listenbrainz import config
 from listenbrainz import db
 from listenbrainz.utils import create_path
 from listenbrainz.webserver.influx_connection import init_influx_connection
 
+import listenbrainz.default_config as config
+try:
+    import listenbrainz.custom_config as config
+except ImportError:
+    pass
 
 log = logging.getLogger(__name__)
 
