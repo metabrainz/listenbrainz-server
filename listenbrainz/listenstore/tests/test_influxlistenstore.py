@@ -234,6 +234,7 @@ class TestInfluxListenStore(DatabaseTestCase):
 
     def test_import_listens(self):
         count = self._create_test_data(self.testuser_name)
+        sleep(1)
         temp_dir = tempfile.mkdtemp()
         dump_location = self.logstore.dump_listens(
             location=temp_dir,
