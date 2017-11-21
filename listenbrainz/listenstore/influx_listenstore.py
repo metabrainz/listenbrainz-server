@@ -15,6 +15,7 @@ from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from redis import Redis
 
+from listenbrainz import DUMP_LICENSE_FILE_PATH
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import ListenStore
 from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, \
@@ -29,8 +30,6 @@ COUNT_MEASUREMENT_NAME = "listen_count"
 TEMP_COUNT_MEASUREMENT = COUNT_RETENTION_POLICY + "." + COUNT_MEASUREMENT_NAME
 TIMELINE_COUNT_MEASUREMENT = COUNT_MEASUREMENT_NAME
 
-DUMP_LICENSE_FILE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                      '..', 'db', 'licenses', 'COPYING-PublicDomain')
 DUMP_CHUNK_SIZE = 100000
 
 
