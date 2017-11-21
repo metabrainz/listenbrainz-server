@@ -36,6 +36,19 @@ class ListenStore(object):
         """
         raise NotImplementedError()
 
+    def dump_listens(self, location, dump_time, threads=None):
+        """ Override this method in the implementation class.
+
+        Args:
+            location (str): the directory where the listens dump archive should be created
+            dump_time (datetime): the time at which the data dump was started
+            threads (int): the number of threads to user for compression
+
+        Returns:
+            the path to the dump archive
+        """
+        raise NotImplementedError()
+
     def fetch_listens(self, user_name, from_ts=None, to_ts=None, limit=DEFAULT_LISTENS_PER_FETCH):
         """ Check from_ts, to_ts, and limit for fetching listens
             and set them to default values if not given.

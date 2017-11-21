@@ -1,5 +1,13 @@
 # coding=utf-8
 
+import listenbrainz.db.user as db_user
+import os.path
+import subprocess
+import tarfile
+import tempfile
+import time
+import shutil
+import ujson
 
 from datetime import datetime
 
@@ -10,15 +18,20 @@ from redis import Redis
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import ListenStore
 from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, \
-    USER_CACHE_TIME, REDIS_USER_TIMESTAMPS
+    USER_CACHE_TIME, REDIS_USER_TIMESTAMPS, LISTENS_DUMP_SCHEMA_VERSION
 from listenbrainz.utils import quote, get_escaped_measurement_name, get_measurement_name, get_influx_query_timestamp, \
-    convert_influx_nano_to_python_time, convert_python_time_to_nano_int, convert_to_unix_timestamp
+    convert_influx_nano_to_python_time, convert_python_time_to_nano_int, convert_to_unix_timestamp, \
+    create_path, log_ioerrors
 
 REDIS_INFLUX_USER_LISTEN_COUNT = "ls.listencount."  # append username
 COUNT_RETENTION_POLICY = "one_week"
 COUNT_MEASUREMENT_NAME = "listen_count"
 TEMP_COUNT_MEASUREMENT = COUNT_RETENTION_POLICY + "." + COUNT_MEASUREMENT_NAME
 TIMELINE_COUNT_MEASUREMENT = COUNT_MEASUREMENT_NAME
+
+DUMP_LICENSE_FILE_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                      '..', 'db', 'licenses', 'COPYING-PublicDomain')
+DUMP_CHUNK_SIZE = 100000
 
 
 class InfluxListenStore(ListenStore):
@@ -316,3 +329,135 @@ class InfluxListenStore(ListenStore):
             listens.reverse()
 
         return listens
+
+
+    def dump_listens(self, location, dump_time=datetime.today(), threads=None):
+        """ Fetches listens of each user from her measurement and dumps them into a file.
+            These files are compressed into an archive.
+
+        Args:
+            location: the directory where the listens dump archive should be created
+            dump_time (datetime): the time at which the data dump was started
+            threads (int): the number of threads to user for compression
+
+        Returns:
+            the path to the dump archive
+        """
+
+        self.log.info('Beginning dump of listens from InfluxDB...')
+
+        self.log.info('Getting list of users whose listens are to be dumped...')
+        users = db_user.get_all_users()
+        self.log.info('Total number of users: %d', len(users))
+
+        archive_name = 'listenbrainz-listens-dump-{time}'.format(time=dump_time.strftime('%Y%m%d-%H%M%S'))
+        archive_path = os.path.join(location, '{filename}.tar.xz'.format(filename=archive_name))
+        with open(archive_path, 'w') as archive:
+
+            pxz_command = ['pxz', '--compress']
+            if threads is not None:
+                pxz_command.append('-T {threads}'.format(threads=threads))
+
+            pxz = subprocess.Popen(pxz_command, stdin=subprocess.PIPE, stdout=archive)
+
+            with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
+
+                temp_dir = tempfile.mkdtemp()
+
+                try:
+                    # add timestamp
+                    timestamp_path = os.path.join(temp_dir, 'TIMESTAMP')
+                    with open(timestamp_path, 'w') as f:
+                        f.write(dump_time.isoformat(' '))
+                    tar.add(timestamp_path,
+                            arcname=os.path.join(archive_name, 'TIMESTAMP'))
+
+                    # add schema version
+                    schema_version_path = os.path.join(temp_dir, 'SCHEMA_SEQUENCE')
+                    with open(schema_version_path, 'w') as f:
+                        f.write(str(LISTENS_DUMP_SCHEMA_VERSION))
+                    tar.add(schema_version_path,
+                            arcname=os.path.join(archive_name, 'SCHEMA_SEQUENCE'))
+
+                    # add copyright notice
+                    tar.add(DUMP_LICENSE_FILE_PATH,
+                            arcname=os.path.join(archive_name, 'COPYING'))
+
+                except IOError as e:
+                    log_ioerrors(self.log, e)
+                    raise
+                except Exception as e:
+                    self.log.error('Exception while adding dump metadata: %s', str(e))
+                    raise
+
+                listens_path = os.path.join(temp_dir, 'listens')
+                create_path(listens_path)
+
+                # get listens from all measurements and write them to files in
+                # a temporary dir before adding them to the archive
+                for user in users:
+                    username = user['musicbrainz_id']
+                    offset = 0
+
+                    user_listens_file = '{username}.listens'.format(username=username)
+                    user_listens_path = os.path.join(listens_path, user_listens_file)
+
+                    with open(user_listens_path, 'w') as f:
+                        # Get this user's listens in chunks
+                        while True:
+
+                            # loop until we get this chunk of listens
+                            while True:
+                                try:
+                                    result = self.influx.query("""
+                                        SELECT *
+                                          FROM {measurement}
+                                         WHERE time <= {timestamp}
+                                      ORDER BY time DESC
+                                         LIMIT {limit}
+                                        OFFSET {offset}
+                                    """.format(
+                                        measurement=get_escaped_measurement_name(username),
+                                        timestamp=get_influx_query_timestamp(dump_time.strftime('%s')),
+                                        limit=DUMP_CHUNK_SIZE,
+                                        offset=offset,
+                                    ))
+                                    break
+                                except Exception as e:
+                                    self.log.error('Error while getting listens for user %s', user['musicbrainz_id'])
+                                    self.log.error(str(e))
+                                    time.sleep(3)
+
+
+                            rows = list(result.get_points(get_measurement_name(username)))
+                            if not rows:
+                                break
+
+                            for row in rows:
+                                listen = Listen.from_influx(row).to_api()
+                                try:
+                                    f.write(ujson.dumps(listen))
+                                    f.write('\n')
+                                except IOError as e:
+                                    log_ioerrors(self.log, e)
+                                    raise
+                                except Exception as e:
+                                    self.log.error('Exception while creating json for user: %s', user['musicbrainz_id'])
+                                    self.log.error(str(e))
+                                    raise
+
+                            offset += DUMP_CHUNK_SIZE
+
+                # add the listens directory to the archive
+                self.log.info('Got all listens, adding them to the archive...')
+                tar.add(listens_path,
+                        arcname=os.path.join(archive_name, 'listens'))
+
+                # remove the temporary directory
+                shutil.rmtree(temp_dir)
+
+            pxz.stdin.close()
+
+        self.log.info('ListenBrainz listen dump done!')
+        self.log.info('Dump present at %s!', archive_path)
+        return archive_path
