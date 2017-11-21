@@ -30,8 +30,8 @@ def lastfmscraper(user_name):
         raise NotFound
     scraper = render_template(
         "user/scraper.js",
-        base_url="{}/1/submit-listens".format(config.BETA_URL),
-        import_url="{}/1/latest-import".format(config.BETA_URL),
+        base_url="{}/1/submit-listens".format(config.API_URL),
+        import_url="{}/1/latest-import".format(config.API_URL),
         user_token=user_token,
         lastfm_username=lastfm_username,
         # need to escape user_name here because other wise jinja doesn't handle usernames with backslashes correctly

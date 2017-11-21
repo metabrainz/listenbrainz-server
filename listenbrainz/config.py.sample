@@ -83,6 +83,6 @@ MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
 UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
 
 
-BETA_URL = 'https://api.listenbrainz.org' # this is used by the last.fm importer
+API_URL = 'https://api.listenbrainz.org' # this is used by the last.fm importer
 
 LASTFM_PROXY_URL = 'http://0.0.0.0:8080/'
