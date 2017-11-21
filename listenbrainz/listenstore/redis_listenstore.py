@@ -17,8 +17,16 @@ class RedisListenStore(ListenStore):
         self.redis = Redis(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], decode_responses=True)
 
     def get_playing_now(self, user_id):
-        """ Return the current playing song of the user """
-        data = self.redis.get('playing_now' + ':' + str(user_id))
+        """ Return the current playing song of the user
+
+            Arguments:
+                user_id (int): the id of the user in the db
+
+            Returns:
+                Listen object which is the currently playing song of the user
+
+        """
+        data = self.redis.get('playing_now:{}'.format(user_id))
         if not data:
             return None
         data = ujson.loads(data)

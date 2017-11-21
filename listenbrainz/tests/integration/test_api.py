@@ -116,6 +116,9 @@ class APITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
+        r = self.client.get(url_for('user.profile', user_name=self.user['musicbrainz_id']))
+        self.assertIn('Playing now', r.data.decode('utf-8'))
+
     def test_playing_now_with_ts(self):
         """ Test for invalid submission of listen_type 'playing_now' which contains
             timestamp 'listened_at'

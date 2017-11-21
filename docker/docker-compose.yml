@@ -99,13 +99,6 @@ services:
       - redis
       - rabbitmq
 
-  alpha_importer:
-    image: web
-    command: python3 -m "listenbrainz.alpha_importer"
-    depends_on:
-      - web
-      - rabbitmq
-
   scheduler:
     image: web
     command: cron && tail -f /var/log/cron.log

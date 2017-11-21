@@ -87,15 +87,6 @@ MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
 # The path must be absolute path
 UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
 
-# Alpha importer config stuff
-
-IMPORTER_QUEUE_KEY = 'alphaimporter:queue'
-IMPORTER_SET_KEY_PREFIX = 'alphaimporter:set'
-ALPHA_URL = 'https://alpha.listenbrainz.org'
-BETA_URL = 'https://api.listenbrainz.org'
-LISTENS_PER_GET = 100
-IMPORTER_LOG_FILE = '-'
-IMPORTER_DELAY = 3 # delay if requests don't return http 200
-
+API_URL = 'https://api.listenbrainz.org'
 
 LASTFM_PROXY_URL = 'http://0.0.0.0:8080/'
