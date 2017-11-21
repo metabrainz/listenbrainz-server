@@ -1,16 +1,17 @@
 # coding=utf-8
 
+import listenbrainz.db.user as db_user
 import logging
+import os
+import tempfile
 import ujson
-from time import sleep
 
 from influxdb import InfluxDBClient
-
-import listenbrainz.db.user as db_user
 from listenbrainz import config
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.listen import Listen
 from listenbrainz.webserver.influx_connection import init_influx_connection
+from time import sleep
 
 TEST_LISTEN_JSON = [
     """
@@ -203,3 +204,12 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.assertEquals(len(listens), 2)
         self.assertEquals(listens[0].ts_since_epoch, 1400000200)
         self.assertEquals(listens[1].ts_since_epoch, 1400000150)
+
+    def test_dump_listens(self):
+
+        self._create_test_data(self.testuser_name)
+        temp_dir = tempfile.mkdtemp()
+        dump = self.logstore.dump_listens(
+            location=temp_dir,
+        )
+        self.assertTrue(os.path.isfile(dump))
