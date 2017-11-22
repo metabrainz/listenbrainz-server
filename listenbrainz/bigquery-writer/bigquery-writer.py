@@ -37,6 +37,11 @@ class BigQueryWriter(object):
         self.time = 0
 
 
+    def on_connection_closed(self, connection, reply_code, reply_text):
+        self.log.info('RabbitMQ connection got closed!')
+        self.connection.add_timeout(5, self.connect_to_rabbitmq)
+
+
     def connect_to_rabbitmq(self):
         while True:
             try:
@@ -51,6 +56,14 @@ class BigQueryWriter(object):
                 break
             except Exception as e:
                 self.log.error("Cannot connect to rabbitmq: %s, retrying in 3 seconds" % str(e))
+                sleep(ERROR_RETRY_DELAY)
+                continue
+
+            # adding on_close callback
+            try:
+                self.connection.add_on_close_callback(self.on_connection_closed)
+            except Exception as e:
+                self.log.error('Error while adding callback: %s', str(e))
                 sleep(ERROR_RETRY_DELAY)
 
 
@@ -181,7 +194,10 @@ class BigQueryWriter(object):
             self.channel.exchange_declare(exchange='unique', type='fanout')
             self.channel.queue_declare('unique', durable=True)
             self.channel.queue_bind(exchange='unique', queue='unique')
-            self.channel.basic_consume(lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self), queue='unique')
+            self.channel.basic_consume(
+                lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self),
+                queue='unique',
+            )
 
             self.log.info("bigquery-writer started")
             try:
