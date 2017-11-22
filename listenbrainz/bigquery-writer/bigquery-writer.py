@@ -37,8 +37,14 @@ class BigQueryWriter(object):
         self.time = 0
 
 
+    @staticmethod
+    def static_on_connection_closed(connection, reply_code, reply_text, obj):
+        obj.on_connection_closed(connection, reply_code, reply_text)
+
+
     def on_connection_closed(self, connection, reply_code, reply_text):
         self.log.info('RabbitMQ connection got closed!')
+        self.log.info('Connecting again...')
         self.connection.add_timeout(5, self.connect_to_rabbitmq)
 
 
@@ -61,7 +67,9 @@ class BigQueryWriter(object):
 
             # adding on_close callback
             try:
-                self.connection.add_on_close_callback(self.on_connection_closed)
+                self.connection.add_on_close_callback(
+                    lambda connection, reply_code, reply_text: self.static_on_connection_closed(connection, reply_code, reply_text, obj=self),
+                )
             except Exception as e:
                 self.log.error('Error while adding callback: %s', str(e))
                 sleep(ERROR_RETRY_DELAY)

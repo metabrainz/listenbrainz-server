@@ -41,6 +41,10 @@ class InfluxWriterSubscriber(object):
         self.inserts = 0
         self.time = 0
 
+    @staticmethod
+    def static_on_connection_closed(connection, reply_code, reply_text, obj):
+        obj.on_connection_closed(connection, reply_code, reply_text)
+
 
     def on_connection_closed(self, connection, reply_code, reply_text):
         self.log.info('RabbitMQ connection got closed!')
@@ -71,7 +75,9 @@ class InfluxWriterSubscriber(object):
 
             # adding on_close callback
             try:
-                self.connection.add_on_close_callback(self.on_connection_closed)
+                self.connection.add_on_close_callback(
+                    lambda connection, reply_code, reply_text: self.static_on_connection_closed(connection, reply_code, reply_text, obj=self),
+                )
             except Exception as e:
                 self.log.error('Error while adding callback: %s', str(e))
                 sleep(ERROR_RETRY_DELAY)
