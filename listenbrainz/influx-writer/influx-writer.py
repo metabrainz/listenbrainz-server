@@ -47,6 +47,11 @@ class InfluxWriterSubscriber(object):
         self.time = 0
 
 
+    def on_connection_closed(self, connection, reply_code, reply_text):
+        self.log.info('RabbitMQ connection got closed!')
+        self.connection.add_timeout(5, self.connect_to_rabbitmq)
+
+
     @staticmethod
     def static_callback(ch, method, properties, body, obj):
         return obj.callback(ch, method, properties, body)
@@ -66,6 +71,14 @@ class InfluxWriterSubscriber(object):
                 break
             except Exception as e:
                 self.log.error("Cannot connect to rabbitmq: %s, retrying in 2 seconds" % str(e))
+                sleep(ERROR_RETRY_DELAY)
+                continue
+
+            # adding on_close callback
+            try:
+                self.connection.add_on_close_callback(self.on_connection_closed)
+            except Exception as e:
+                self.log.error('Error while adding callback: %s', str(e))
                 sleep(ERROR_RETRY_DELAY)
 
 
