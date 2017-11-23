@@ -199,7 +199,7 @@ class BigQueryWriter(object):
         while True:
             self.connect_to_rabbitmq()
             self.channel = self.connection.channel()
-            self.channel.exchange_declare(exchange='unique', type='fanout')
+            self.channel.exchange_declare(exchange='unique', exchange_type='fanout')
             self.channel.queue_declare('unique', durable=True)
             self.channel.queue_bind(exchange='unique', queue='unique')
             self.channel.basic_consume(
