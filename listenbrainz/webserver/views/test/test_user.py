@@ -1,8 +1,13 @@
-from flask import url_for
+from flask import url_for, current_app
+from influxdb import InfluxDBClient
+
+from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.listenstore.tests.util import create_test_data_for_influxlistenstore
+from listenbrainz.webserver.influx_connection import init_influx_connection
+from listenbrainz.webserver.testing import ServerTestCase
 
 import listenbrainz.db.user as db_user
-from listenbrainz.db.testing import DatabaseTestCase
-from listenbrainz.webserver.testing import ServerTestCase
+import logging
 
 
 class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
@@ -12,7 +17,27 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.user = db_user.get_or_create('iliekcomputers')
         self.weirduser = db_user.get_or_create('weird\\user name')
 
+        self.log = logging.getLogger(__name__)
+        self.influx = InfluxDBClient(
+            host=current_app.config['INFLUX_HOST'],
+            port=current_app.config['INFLUX_PORT'],
+            database=current_app.config['INFLUX_DB_NAME'],
+        )
+
+        self.influx.query('''create database %s''' % current_app.config['INFLUX_DB_NAME'])
+
+        self.logstore = init_influx_connection(self.log, {
+            'REDIS_HOST': current_app.config['REDIS_HOST'],
+            'REDIS_PORT': current_app.config['REDIS_PORT'],
+            'INFLUX_HOST': current_app.config['INFLUX_HOST'],
+            'INFLUX_PORT': current_app.config['INFLUX_PORT'],
+            'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
+        })
+
     def tearDown(self):
+        self.influx.query('''drop database %s''' % current_app.config['INFLUX_DB_NAME'])
+        self.logstore = None
+
         ServerTestCase.tearDown(self)
         DatabaseTestCase.tearDown(self)
 
@@ -41,3 +66,17 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         )
         self.assert200(response)
         self.assertIn('var user_name = "weird%5Cuser%20name";', response.data.decode('utf-8'))
+
+    def _create_test_data(self, user_name):
+        test_data = create_test_data_for_influxlistenstore(user_name)
+        self.logstore.insert(test_data)
+
+    def test_username_case(self):
+        """Tests that the username in URL is case insenstive"""
+        self._create_test_data('iliekcomputers')
+
+        response1 = self.client.get(url_for('user.profile', user_name='iliekcomputers'))
+        response2 = self.client.get(url_for('user.profile', user_name='IlieKcomPUteRs'))
+        self.assert200(response1)
+        self.assert200(response2)
+        self.assertEqual(response1.data.decode('utf-8'), response2.data.decode('utf-8'))
