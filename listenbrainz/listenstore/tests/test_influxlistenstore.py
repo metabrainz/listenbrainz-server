@@ -3,7 +3,7 @@
 from listenbrainz.db.testing import DatabaseTestCase
 import logging
 from datetime import datetime
-from listenbrainz.listenstore.tests.util import generate_data, to_epoch
+from listenbrainz.listenstore.tests.util import create_test_data_for_influxlistenstore
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import InfluxListenStore
 from listenbrainz.webserver.influx_connection import init_influx_connection
@@ -17,88 +17,6 @@ import listenbrainz.db.user as db_user
 from listenbrainz import config
 from time import sleep
 
-TEST_LISTEN_JSON = [
-    """
-    {
-        "track_metadata": {
-           "track_name": "Immigrant Song 0",
-           "additional_info": {
-              "recording_mbid": "2cfad207-3f55-4aec-8120-86cf66e34d59",
-              "artist_msid": "e229c8fa-7450-4916-8848-4535a40dc151",
-              "release_msid": null
-           },
-           "artist_name": "Led Zeppelin"
-        },
-        "user_id": 1,
-        "listened_at": "1400000000",
-        "recording_msid": "4269ddbc-9241-46da-935d-4fa9e0f7f371"
-    }
-    """,
-    """
-    {
-        "track_metadata": {
-           "track_name": "Immigrant Song 50",
-           "additional_info": {
-              "recording_mbid": "2cfad207-3f55-4aec-8120-86cf66e34d59",
-              "artist_msid": "e229c8fa-7450-4916-8848-4535a40dc151",
-              "release_msid": null
-           },
-           "artist_name": "Led Zeppelin"
-        },
-        "user_id": 1,
-        "listened_at": "1400000050",
-        "recording_msid": "4269ddbc-9241-46da-935d-4fa9e0f7f371"
-    }
-    """,
-    """
-    {
-        "track_metadata": {
-           "track_name": "Immigrant Song 100",
-           "additional_info": {
-              "recording_mbid": "2cfad207-3f55-4aec-8120-86cf66e34d59",
-              "artist_msid": "e229c8fa-7450-4916-8848-4535a40dc151",
-              "release_msid": null
-           },
-           "artist_name": "Led Zeppelin"
-        },
-        "user_id": 1,
-        "listened_at": "1400000100",
-        "recording_msid": "4269ddbc-9241-46da-935d-4fa9e0f7f371"
-    }
-    """,
-    """
-    {
-        "track_metadata": {
-           "track_name": "Immigrant Song 150",
-           "additional_info": {
-              "recording_mbid": "2cfad207-3f55-4aec-8120-86cf66e34d59",
-              "artist_msid": "e229c8fa-7450-4916-8848-4535a40dc151",
-              "release_msid": null
-           },
-           "artist_name": "Led Zeppelin"
-        },
-        "user_id": 1,
-        "listened_at": "1400000150",
-        "recording_msid": "4269ddbc-9241-46da-935d-4fa9e0f7f371"
-    }
-    """,
-    """
-    {
-        "track_metadata": {
-           "track_name": "Immigrant Song 200",
-           "additional_info": {
-              "recording_mbid": "2cfad207-3f55-4aec-8120-86cf66e34d59",
-              "artist_msid": "e229c8fa-7450-4916-8848-4535a40dc151",
-              "release_msid": null
-           },
-           "artist_name": "Led Zeppelin"
-        },
-        "user_id": 1,
-        "listened_at": "1400000200",
-        "recording_msid": "4269ddbc-9241-46da-935d-4fa9e0f7f371"
-    }
-    """
-]
 
 class TestInfluxListenStore(DatabaseTestCase):
 
@@ -127,11 +45,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         super(TestInfluxListenStore, self).tearDown()
 
     def _create_test_data(self, user_name):
-        test_data = []
-        for jdata in TEST_LISTEN_JSON:
-            x = ujson.loads(jdata)
-            x['user_name'] = user_name
-            test_data.append(Listen().from_json(x))
+        test_data = create_test_data_for_influxlistenstore(user_name)
         self.logstore.insert(test_data)
         return len(test_data)
 
