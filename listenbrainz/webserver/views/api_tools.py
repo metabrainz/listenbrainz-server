@@ -71,7 +71,7 @@ def _send_listens_to_queue(listen_type, listens):
     if submit:
         try:
             with rabbitmq_connection._rabbitmq.acquire() as cxn:
-                cxn.channel.exchange_declare(exchange='incoming', type='fanout')
+                cxn.channel.exchange_declare(exchange='incoming', exchange_type='fanout')
                 cxn.channel.queue_declare('incoming', durable=True)
                 cxn.channel.basic_publish(exchange='incoming', routing_key='', body=ujson.dumps(submit),
                     properties=pika.BasicProperties(delivery_mode = 2, ))

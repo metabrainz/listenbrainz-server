@@ -315,13 +315,13 @@ class InfluxWriterSubscriber(object):
         while True:
             self.connect_to_rabbitmq()
             self.incoming_ch = self.connection.channel()
-            self.incoming_ch.exchange_declare(exchange='incoming', type='fanout')
+            self.incoming_ch.exchange_declare(exchange='incoming', exchange_type='fanout')
             self.incoming_ch.queue_declare('incoming', durable=True)
             self.incoming_ch.queue_bind(exchange='incoming', queue='incoming')
             self.incoming_ch.basic_consume(lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self), queue='incoming')
 
             self.unique_ch = self.connection.channel()
-            self.unique_ch.exchange_declare(exchange='unique', type='fanout')
+            self.unique_ch.exchange_declare(exchange='unique', exchange_type='fanout')
             self.unique_ch.queue_declare('unique', durable=True)
 
             self.log.info("influx-writer started")
