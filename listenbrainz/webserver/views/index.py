@@ -1,4 +1,5 @@
 
+#TODO(param): alphabetize these
 from flask import Blueprint, render_template, current_app, redirect, url_for
 from flask_login import current_user
 from listenbrainz.webserver.redis_connection import _redis
@@ -11,6 +12,8 @@ from listenbrainz import webserver
 from listenbrainz.webserver.influx_connection import _influx
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import pika
+import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
+
 
 index_bp = Blueprint('index', __name__)
 locale.setlocale(locale.LC_ALL, '')
@@ -74,18 +77,14 @@ def current_status():
     incoming_len = -1
     unique_len = -1
     try:
-        connection = pika.BlockingConnection(pika.ConnectionParameters(
-            host=current_app.config['RABBITMQ_HOST'],
-            port=current_app.config['RABBITMQ_PORT'],
-        ))
+        with rabbitmq_connection._rabbitmq.acquire() as connection:
+            incoming_ch = connection.channel()
+            queue = incoming_ch.queue_declare(current_app.config['INCOMING_QUEUE'], durable=True)
+            incoming_len = queue.method.message_count
 
-        incoming_ch = connection.channel()
-        queue = incoming_ch.queue_declare('incoming', durable=True)
-        incoming_len = queue.method.message_count
-
-        unique_ch = connection.channel()
-        queue = unique_ch.queue_declare('unique', durable=True)
-        unique_len = queue.method.message_count
+            unique_ch = connection.channel()
+            queue = unique_ch.queue_declare(current_app.config['UNIQUE_QUEUE'], durable=True)
+            unique_len = queue.method.message_count
 
     except (pika.exceptions.ConnectionClosed, AttributeError):
         pass
