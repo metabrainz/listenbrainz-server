@@ -488,7 +488,8 @@ class InfluxListenStore(ListenStore):
                     schema_seq = int(tar.extractfile(member).read().strip())
                     if schema_seq != LISTENS_DUMP_SCHEMA_VERSION:
                         raise SchemaMismatchException('Incorrect schema version! Expected: %d, got: %d.'
-                                        'Please, get the latest version of the dump.'
+                                        'Please ensure that the data dump version matches the code version'
+                                        'in order to import the data.'
                                         % (LISTENS_DUMP_SCHEMA_VERSION, schema_seq))
 
                 elif file_name.endswith('.listens'):
