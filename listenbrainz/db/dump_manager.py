@@ -70,7 +70,7 @@ def create(location, threads):
 
 @cli.command()
 @click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'))
-def import_dump(location):
+def import_db(location):
     """ Import a ListenBrainz PostgreSQL dump into the PostgreSQL database.
 
         Note: This method tries to import the private dump first, followed by the statistics
@@ -87,7 +87,7 @@ def import_dump(location):
 @cli.command()
 @click.option('--location', '-l')
 @click.option('--threads', '-t', type=int)
-def import_listens_dump(location=None, threads=None):
+def import_listens(location=None, threads=None):
     """ Import a ListenBrainz listen dump into the Influx database.
 
         Args:
