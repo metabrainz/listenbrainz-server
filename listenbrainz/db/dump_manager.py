@@ -24,8 +24,10 @@ import click
 import listenbrainz.db.dump as db_dump
 import logging
 import os
+import sys
 
 from datetime import datetime
+from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from listenbrainz import db
 from listenbrainz.utils import create_path
 from listenbrainz.webserver.influx_connection import init_influx_connection
@@ -93,7 +95,7 @@ def import_listens_dump(location=None):
 
     if not location:
         print('No location given!')
-        return
+        sys.exit(1)
 
     ls = init_influx_connection(log,  {
         'REDIS_HOST': config.REDIS_HOST,
@@ -102,4 +104,18 @@ def import_listens_dump(location=None):
         'INFLUX_PORT': config.INFLUX_PORT,
         'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
     })
-    ls.import_listens_dump(location)
+
+    try:
+        ls.import_listens_dump(location)
+    except IOError as e:
+        log.error('IOError while trying to import data into Influx: %s', str(e))
+        raise
+    except InfluxDBClientError as e:
+        log.error('Error while sending data to Influx: %s', str(e))
+        raise
+    except InfluxDBServerError as e:
+        log.error('InfluxDB Server Error while importing data: %s', str(e))
+        raise
+    except Exception as e:
+        log.error('Unexpected error while importing data: %s', str(e))
+        raise
