@@ -86,11 +86,13 @@ def import_dump(location):
 
 @cli.command()
 @click.option('--location', '-l')
-def import_listens_dump(location=None):
+@click.option('--threads', '-t', type=int)
+def import_listens_dump(location=None, threads=None):
     """ Import a ListenBrainz listen dump into the Influx database.
 
         Args:
             location (str): path to the listenbrainz listen .tar.xz archive
+            threads (int): the number of threads to use while decompressing, defaults to 1
     """
 
     if not location:
@@ -106,7 +108,7 @@ def import_listens_dump(location=None):
     })
 
     try:
-        ls.import_listens_dump(location)
+        ls.import_listens_dump(location, threads)
     except IOError as e:
         log.error('IOError while trying to import data into Influx: %s', str(e))
         raise
