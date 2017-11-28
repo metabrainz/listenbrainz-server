@@ -28,7 +28,7 @@ except ImportError:
 # the number of listens to send to BQ in one batch
 # NOTE: this MUST be greater than the maximum number of listens sent to us in one
 # RabbitMQ batch
-SUBMIT_CHUNK_SIZE = 200
+SUBMIT_CHUNK_SIZE = 1000
 # the number of RabbitMQ batches to prefetch
 PREFETCH_COUNT = 20
 
