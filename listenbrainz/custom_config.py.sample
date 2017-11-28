@@ -37,10 +37,10 @@ RABBITMQ_PASSWORD = "guest"
 RABBITMQ_VHOST = "/"
 
 # RabbitMQ exchanges and queues
-INCOMING_EXCHANGE = "incoming_exchange"
-INCOMING_QUEUE = "incoming_queue"
-UNIQUE_EXCHANGE = "unique_exchange"
-UNIQUE_QUEUE = "unique_queue"
+INCOMING_EXCHANGE = "incoming"
+INCOMING_QUEUE = "incoming"
+UNIQUE_EXCHANGE = "unique"
+UNIQUE_QUEUE = "unique"
 
 # MusicBrainz OAuth
 MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
