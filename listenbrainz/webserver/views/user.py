@@ -1,4 +1,3 @@
-import listenbrainz.config as config
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import urllib
