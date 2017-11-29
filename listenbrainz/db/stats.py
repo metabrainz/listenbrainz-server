@@ -65,28 +65,28 @@ def insert_user_stats(user_id, artists, recordings, releases, artist_count):
         )
 
 
-def get_user_stat(user_id, stat):
+def get_user_stats(user_id, columns):
     """ Get a particular stat for user with the given row ID.
 
         Args:
             user_id (int): the row ID of the user in the DB
-            stat (str): the column name of the user stat to be retrieved
+            columns (str): the column name(s) of the user stat to be retrieved
 
         Returns:
             A dict of the following format
             {
                 'user_id' (int): the row ID of the user in the DB,
-                '<stat>'  (dict): the stat requested
+                '<stat>'  (dict): the stats requested
                 'last_updated' (datetime): datetime object representing when
                                            this stat was last updated
             }
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT user_id, {stat}, last_updated
+            SELECT user_id, {columns}, last_updated
               FROM statistics.user
              WHERE user_id = :user_id
-            """.format(stat=stat)), {
+            """.format(columns=columns)), {
                 'user_id': user_id
             }
         )
@@ -104,9 +104,30 @@ def get_user_artists(user_id):
             A dict of the following format
             {
                 'user_id' (int): the row ID of the user in the DB,
-                '<stat>'  (dict): the stat requested
+                'artist'  (dict): artist stats for the user
                 'last_updated' (datetime): datetime object representing when
                                         this stat was last updated
             }
     """
-    return get_user_stat(user_id, 'artist')
+    return get_user_stats(user_id, 'artist')
+
+
+def get_all_user_stats(user_id):
+    """ Get ALL user stats for user with given ID.
+
+        Args:
+            user_id (int): the row ID of the user in the DB
+
+        Returns:
+            A dict of the following format
+            {
+                'user_id' (int): the row ID of the user in the DB
+                'artist' (dict): artist stats for the user
+                'recording' (dict): recording stats for the user
+                'release' (dict): release stats for the user
+                'last_updated': datetime object representing when these stats were
+                                last updated
+            }
+    """
+
+    return get_user_stats(user_id, 'artist, recording, release')
