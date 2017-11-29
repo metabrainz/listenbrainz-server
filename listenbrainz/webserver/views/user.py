@@ -144,17 +144,18 @@ def artists(user_name):
         redirect to the user page with a message.
     """
     user = _get_user(user_name)
-    data = db_stats.get_user_artists(user.id)['artist']['all_time']
+    data = db_stats.get_user_artists(user.id)
 
     # if no data, flash a message and return to profile page
     if data is None:
         flash.error('No data calculated for user {user_name} yet.'.format(user_name=user_name))
         return redirect(url_for('user.profile', user_name=user_name))
 
+    top_artists = data['artist']['all_time']
     return render_template(
         "user/artists.html",
         user=user,
-        data=ujson.dumps(data),
+        data=ujson.dumps(top_artists),
     )
 
 
