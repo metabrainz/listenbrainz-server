@@ -238,10 +238,22 @@ def reset_latest_import(musicbrainz_id):
 
 
 def get_users_with_uncalculated_stats():
+    """ Returns users whose stats have not been calculated by the stats calculation process
+        yet. This means that the user must have logged-in in the last
+        config.STATS_CALCULATION_LOGIN_TIME days and her stats must not have already
+        been calculated in this interval.
+
+        Returns:
+            A list of dicts each of the form
+            {
+                'id' (int): the row ID of the user,
+                'musicbrainz_id' (str): the musicbrainz_id of the user
+            }
+    """
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-                SELECT pu.musicbrainz_id
+                SELECT pu.id, pu.musicbrainz_id
                   FROM public."user" pu
              LEFT JOIN statistics.user su
                     ON pu.id = su.user_id
