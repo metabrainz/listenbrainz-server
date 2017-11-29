@@ -118,7 +118,7 @@ def profile(user_name):
             }
             listens.insert(0, listen)
 
-    user_stats = db_stats.get_user_stats(user.id)
+    user_stats = db_stats.get_user_artists(user.id)
     try:
         artist_count = int(user_stats['artists']['count'])
     except (KeyError, TypeError):
@@ -139,10 +139,18 @@ def profile(user_name):
 
 @user_bp.route("/<user_name>/artists")
 def artists(user_name):
-    """
+    """ Show the top artists for the user. These users must have been already
+        calculated using Google BigQuery. If the stats are not present, we
+        redirect to the user page with a message.
     """
     user = _get_user(user_name)
-    data = db_stats.get_user_stats(user.id)['artist']['all_time']
+    data = db_stats.get_user_artists(user.id)['artist']['all_time']
+
+    # if no data, flash a message and return to profile page
+    if data is None:
+        flash.error('No data calculated for user {user_name} yet.'.format(user_name=user_name))
+        return redirect(url_for('user.profile', user_name=user_name))
+
     return render_template(
         "user/artists.html",
         user=user,

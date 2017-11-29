@@ -2,8 +2,28 @@
    calculated from Google BigQuery into the database.
 """
 
+# listenbrainz-server - Server for the ListenBrainz project.
+#
+# Copyright (C) 2017 MetaBrainz Foundation Inc.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+
+
 import sqlalchemy
 import ujson
+
 from listenbrainz import db
 
 
@@ -45,29 +65,48 @@ def insert_user_stats(user_id, artists, recordings, releases, artist_count):
         )
 
 
-def get_user_stats(user_id):
-    """Get user stats for user with given ID.
+def get_user_stat(user_id, stat):
+    """ Get a particular stat for user with the given row ID.
 
-        Args: user_id (int): the row ID of the user in the DB
+        Args:
+            user_id (int): the row ID of the user in the DB
+            stat (str): the column name of the user stat to be retrieved
 
-        Returns: A dict of the following format
-                 {
-                    "user_id" (int): the id of the user
-                    "artists" (dict): artist stats for the user
-                    "releases" (dict) : release stats for the user
-                    "recordings" (dict): recording stats for the user
-                    "last_updated" (datetime): timestamp when the stats were last updated
-                 }
+        Returns:
+            A dict of the following format
+            {
+                'user_id' (int): the row ID of the user in the DB,
+                '<stat>'  (dict): the stat requested
+                'last_updated' (datetime): datetime object representing when
+                                           this stat was last updated
+            }
     """
-
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT user_id, artist, release, recording, last_updated
+            SELECT user_id, {stat}, last_updated
               FROM statistics.user
              WHERE user_id = :user_id
-            """), {
+            """.format(stat=stat)), {
                 'user_id': user_id
             }
         )
         row = result.fetchone()
         return dict(row) if row else None
+
+
+def get_user_artists(user_id):
+    """Get top artists for user with given ID.
+
+        Args:
+            user_id (int): the row ID of the user in the DB
+
+        Returns:
+            A dict of the following format
+            {
+                'user_id' (int): the row ID of the user in the DB,
+                '<stat>'  (dict): the stat requested
+                'last_updated' (datetime): datetime object representing when
+                                        this stat was last updated
+            }
+    """
+    return get_user_stat(user_id, 'artist')
