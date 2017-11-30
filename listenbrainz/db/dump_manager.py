@@ -70,7 +70,8 @@ def create(location, threads):
 
 @cli.command()
 @click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'))
-def import_db(location):
+@click.option('--threads', '-t', type=int)
+def import_db(location, threads=None):
     """ Import a ListenBrainz PostgreSQL dump into the PostgreSQL database.
 
         Note: This method tries to import the private dump first, followed by the statistics
@@ -79,9 +80,10 @@ def import_db(location):
 
         Args:
             location (str): path to the directory which contains the private and the stats dump
+            threads (int): the number of threads to use during decompression, defaults to 1
     """
     db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
-    db_dump.import_postgres_dump(location)
+    db_dump.import_postgres_dump(location, threads)
 
 
 @cli.command()
