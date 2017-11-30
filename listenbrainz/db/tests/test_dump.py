@@ -62,6 +62,7 @@ class DumpTestCase(DatabaseTestCase):
         now_dumps = db_dump.get_dump_entries()
         self.assertEqual(len(now_dumps), len(prev_dumps) + 1)
 
+
     def test_copy_table(self):
         db_dump.add_dump_entry()
         with db.engine.connect() as connection:
@@ -75,6 +76,7 @@ class DumpTestCase(DatabaseTestCase):
         with open(os.path.join(self.tempdir, 'data_dump'), 'r') as f:
             file_contents = [line for line in f]
         self.assertEqual(len(dumps), len(file_contents))
+
 
     def test_import_postgres_db(self):
 
@@ -94,4 +96,11 @@ class DumpTestCase(DatabaseTestCase):
         user_count = db_user.get_user_count()
         self.assertEqual(user_count, 1)
 
+        # reset again, and use more threads to import
+        self.reset_db()
+        user_count = db_user.get_user_count()
+        self.assertEqual(user_count, 0)
 
+        db_dump.import_postgres_dump(location, threads=2)
+        user_count = db_user.get_user_count()
+        self.assertEqual(user_count, 1)

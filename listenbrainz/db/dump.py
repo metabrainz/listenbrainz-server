@@ -359,11 +359,12 @@ def get_dump_entries():
         return [dict(row) for row in result]
 
 
-def import_postgres_dump(location):
+def import_postgres_dump(location, threads=None):
     """ Imports postgres dump created by dump_postgres_db present at location.
 
         Arguments:
             location: the directory where the private and stats archives are present
+            threads: the number of threads to use while decompressing the archives, defaults to 1
     """
 
     private_dump_archive_path = None
@@ -380,7 +381,7 @@ def import_postgres_dump(location):
     if private_dump_archive_path:
         logger.info('Importing private dump %s...', private_dump_archive_path)
         try:
-            _import_dump(private_dump_archive_path, 'private', PRIVATE_TABLES)
+            _import_dump(private_dump_archive_path, 'private', PRIVATE_TABLES, threads)
             logger.info('Import of private dump %s done!', private_dump_archive_path)
         except IOError as e:
             log_ioerrors(logger, e)
@@ -405,7 +406,7 @@ def import_postgres_dump(location):
             del tables_to_import['"user"']
 
         try:
-            _import_dump(stats_dump_archive_path, 'stats', tables_to_import)
+            _import_dump(stats_dump_archive_path, 'stats', tables_to_import, threads)
             logger.info('Import of stats dump %s done!', stats_dump_archive_path)
         except IOError as e:
             log_ioerrors(logger, e)
@@ -422,7 +423,7 @@ def import_postgres_dump(location):
 
 
 
-def _import_dump(archive_path, dump_type, tables):
+def _import_dump(archive_path, dump_type, tables, threads=None):
     """ Import dump present in passed archive path into postgres db.
 
         Arguments:
@@ -430,9 +431,13 @@ def _import_dump(archive_path, dump_type, tables):
             dump_type (str): type of dump to be imported ('private' or 'stats')
             tables: dict of tables present in the archive with table name as key and
                     columns to import as values
+            threads (int): the number of threads to use while decompressing, defaults to 1
     """
 
     pxz_command = ["pxz", "--decompress", "--stdout", archive_path]
+    if threads is not None:
+        pxz_command.append('-T {threads}'.format(threads=threads))
+
     pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
 
     connection = db.engine.raw_connection()
