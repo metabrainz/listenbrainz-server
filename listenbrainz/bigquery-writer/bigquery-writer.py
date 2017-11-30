@@ -29,11 +29,10 @@ except ImportError:
 # NOTE: this MUST be greater than the maximum number of listens sent to us in one
 # RabbitMQ batch
 SUBMIT_CHUNK_SIZE = 1000
-# the number of RabbitMQ batches to prefetch
-PREFETCH_COUNT = 20
 
-# TODO:
-#   Big query hardcoded data set ids
+PREFETCH_COUNT = 20    # the number of RabbitMQ batches to prefetch
+FLUSH_LISTENS_TIME = 3 # the number of seconds to wait before flushing all listens in queue to BQ
+
 
 class BigQueryWriter(ListenWriter):
     def __init__(self):
@@ -44,6 +43,8 @@ class BigQueryWriter(ListenWriter):
 
         self.bq_data = []
         self.delivery_tags = []
+
+        self.timer_id = None # keeps track of the timer added to flush listens
 
 
 
@@ -112,6 +113,12 @@ class BigQueryWriter(ListenWriter):
 
     def callback(self, ch, method, body):
 
+        # if some timeout exists, remove it as we'll add a new one
+        # before this method exits
+        if self.timer_id is not None:
+            ch.connection.remove_timeout(self.timer_id)
+            self.timer_id = None
+
         listens = ujson.loads(body)
         count = len(listens)
 
@@ -151,6 +158,10 @@ class BigQueryWriter(ListenWriter):
         # if we won't get any new messages until we ack these, submit data
         if len(self.delivery_tags) == PREFETCH_COUNT:
             self.submit_data()
+
+        # add a timeout that makes sure that the listens in the queue get submitted
+        # after some time
+        self.timer_id = ch.connection.add_timeout(FLUSH_LISTENS_TIME, self.submit_data)
 
         return True
 
