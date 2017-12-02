@@ -23,6 +23,18 @@
 * **Describe this change in 1-2 sentences**:
 
 
+# Checklist
+
+<!--
+    Check off these if you agree with the statement.
+-->
+
+* [ ] I think my code is as clean as possible.
+* [ ] I think I've added enough error handling.
+* [ ] I think I've documented my code clearly as possible.
+* [ ] I've run `./test.sh`, and all the test pass.
+* [ ] I've added new tests (if you've added new features)
+
 # Problem
 
 <!-- 
