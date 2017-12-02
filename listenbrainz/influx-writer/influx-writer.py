@@ -14,6 +14,7 @@ from listenbrainz.listenstore import InfluxListenStore
 from listenbrainz.utils import escape, get_measurement_name, get_escaped_measurement_name, \
                                get_influx_query_timestamp, convert_to_unix_timestamp, \
                                convert_timestamp_to_influx_row_format
+import listenbrainz.utils as utils
 from requests.exceptions import ConnectionError
 from redis import Redis
 from collections import defaultdict
@@ -53,20 +54,16 @@ class InfluxWriterSubscriber(object):
 
 
     def connect_to_rabbitmq(self):
-        while True:
-            try:
-                credentials = pika.PlainCredentials(config.RABBITMQ_USERNAME, config.RABBITMQ_PASSWORD)
-                connection_parameters = pika.ConnectionParameters(
-                        host=config.RABBITMQ_HOST,
-                        port=config.RABBITMQ_PORT,
-                        virtual_host=config.RABBITMQ_VHOST,
-                        credentials=credentials
-                    )
-                self.connection = pika.BlockingConnection(connection_parameters)
-                break
-            except Exception as e:
-                self.log.error("Cannot connect to rabbitmq: %s, retrying in 2 seconds" % str(e))
-                sleep(ERROR_RETRY_DELAY)
+        connection_config = {
+            "username": config.RABBITMQ_USERNAME,
+            "password": config.RABBITMQ_PASSWORD,
+            "host": config.RABBITMQ_HOST,
+            "port": config.RABBITMQ_PORT,
+            "virtual_host": config.RABBITMQ_VHOST,
+        }
+        self.connection = utils.connect_to_rabbitmq(**connection_config,
+                                                    error_logger=self.log.error,
+                                                    error_retry_delay=ERROR_RETRY_DELAY)
 
 
     def callback(self, ch, method, properties, body):

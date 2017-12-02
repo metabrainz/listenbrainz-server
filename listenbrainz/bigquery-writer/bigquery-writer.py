@@ -8,6 +8,7 @@ import logging
 import pika
 from time import time, sleep
 from redis import Redis
+import listenbrainz.utils as utils
 
 from googleapiclient import discovery
 from googleapiclient.errors import HttpError
@@ -44,20 +45,16 @@ class BigQueryWriter(object):
 
 
     def connect_to_rabbitmq(self):
-        while True:
-            try:
-                credentials = pika.PlainCredentials(config.RABBITMQ_USERNAME, config.RABBITMQ_PASSWORD)
-                connection_parameters = pika.ConnectionParameters(
-                        host=config.RABBITMQ_HOST,
-                        port=config.RABBITMQ_PORT,
-                        virtual_host=config.RABBITMQ_VHOST,
-                        credentials=credentials
-                    )
-                self.connection = pika.BlockingConnection(connection_parameters)
-                break
-            except Exception as e:
-                self.log.error("Cannot connect to rabbitmq: %s, retrying in 3 seconds" % str(e))
-                sleep(ERROR_RETRY_DELAY)
+        connection_config = {
+            "username": config.RABBITMQ_USERNAME,
+            "password": config.RABBITMQ_PASSWORD,
+            "host": config.RABBITMQ_HOST,
+            "port": config.RABBITMQ_PORT,
+            "virtual_host": config.RABBITMQ_VHOST
+        }
+        self.connection = utils.connect_to_rabbitmq(**connection_config,
+                                                    error_logger=self.log.error,
+                                                    error_retry_delay=ERROR_RETRY_DELAY)
 
 
     @staticmethod
