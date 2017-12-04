@@ -77,10 +77,10 @@ class BigQueryWriter(ListenWriter):
                 self.log.error("Submit to BigQuery failed: %s. Retrying in 3 seconds." % str(e))
             except Exception as e:
                 self.log.error("Unknown exception on submit to BigQuery failed: %s. Retrying in 3 seconds." % str(e))
-                if DUMP_JSON_WITH_ERRORS:
+                if self.DUMP_JSON_WITH_ERRORS:
                     self.log.error(json.dumps(body, indent=3))
 
-            sleep(ERROR_RETRY_DELAY)
+            sleep(self.ERROR_RETRY_DELAY)
 
 
         while True:
@@ -120,7 +120,7 @@ class BigQueryWriter(ListenWriter):
                 break
             except Exception as err:
                 self.log.error("Cannot connect to redis: %s. Retrying in 3 seconds and trying again." % str(err))
-                sleep(ERROR_RETRY_DELAY)
+                sleep(self.ERROR_RETRY_DELAY)
 
         while True:
             self.connect_to_rabbitmq()

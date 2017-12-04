@@ -16,11 +16,11 @@ def init_rabbitmq_connection(app):
         sys.exit(-1)
 
     connection_config = {
-        "username": app.config['RABBITMQ_USERNAME'],
-        "password": app.config['RABBITMQ_PASSWORD'],
-        "host": app.config['RABBITMQ_HOST'],
-        "port": app.config['RABBITMQ_PORT'],
-        "virtual_host": app.config['RABBITMQ_VHOST']
+        'username': app.config['RABBITMQ_USERNAME'],
+        'password': app.config['RABBITMQ_PASSWORD'],
+        'host': app.config['RABBITMQ_HOST'],
+        'port': app.config['RABBITMQ_PORT'],
+        'virtual_host': app.config['RABBITMQ_VHOST']
     }
 
     connection = utils.connect_to_rabbitmq(**connection_config,
