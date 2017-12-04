@@ -32,11 +32,11 @@ class ListenWriter:
 
     def connect_to_rabbitmq(self):
         connection_config = {
-            "username": self.config.RABBITMQ_USERNAME,
-            "password": self.config.RABBITMQ_PASSWORD,
-            "host": self.config.RABBITMQ_HOST,
-            "port": self.config.RABBITMQ_PORT,
-            "virtual_host": self.config.RABBITMQ_VHOST
+            'username': self.config.RABBITMQ_USERNAME,
+            'password': self.config.RABBITMQ_PASSWORD,
+            'host': self.config.RABBITMQ_HOST,
+            'port': self.config.RABBITMQ_PORT,
+            'virtual_host': self.config.RABBITMQ_VHOST
         }
         self.connection = utils.connect_to_rabbitmq(**connection_config,
                                                     error_logger=self.log.error,
