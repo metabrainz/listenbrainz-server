@@ -19,51 +19,16 @@ from requests.exceptions import ConnectionError
 from redis import Redis
 from collections import defaultdict
 
-from listenbrainz import default_config as config
-try:
-    from listenbrainz import custom_config as config
-except ImportError:
-    pass
+from listenbrainz.listen_writer import ListenWriter
 
-REPORT_FREQUENCY = 5000
-DUMP_JSON_WITH_ERRORS = False
-ERROR_RETRY_DELAY = 3 # number of seconds to wait until retrying an operation
-
-
-class InfluxWriterSubscriber(object):
+class InfluxWriterSubscriber(ListenWriter):
     def __init__(self):
-        self.log = logging.getLogger(__name__)
-        logging.basicConfig()
-        self.log.setLevel(logging.INFO)
+        super().__init__()
 
         self.ls = None
         self.influx = None
-        self.redis = None
-
         self.incoming_ch = None
         self.unique_ch = None
-        self.connection = None
-        self.total_inserts = 0
-        self.inserts = 0
-        self.time = 0
-
-
-    @staticmethod
-    def static_callback(ch, method, properties, body, obj):
-        return obj.callback(ch, method, properties, body)
-
-
-    def connect_to_rabbitmq(self):
-        connection_config = {
-            "username": config.RABBITMQ_USERNAME,
-            "password": config.RABBITMQ_PASSWORD,
-            "host": config.RABBITMQ_HOST,
-            "port": config.RABBITMQ_PORT,
-            "virtual_host": config.RABBITMQ_VHOST,
-        }
-        self.connection = utils.connect_to_rabbitmq(**connection_config,
-                                                    error_logger=self.log.error,
-                                                    error_retry_delay=ERROR_RETRY_DELAY)
 
 
     def callback(self, ch, method, properties, body):
@@ -81,18 +46,7 @@ class InfluxWriterSubscriber(object):
 
         count = len(listens)
 
-        # collect and occasionally print some stats
-        self.inserts += count
-        if self.inserts >= REPORT_FREQUENCY:
-            self.total_inserts += self.inserts
-            if self.time > 0:
-                self.log.info("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % \
-                    (self.inserts, self.time, self.inserts / self.time, self.total_inserts))
-            self.inserts = 0
-            self.time = 0
-
-            # now update listen counts in influx
-            self.ls.update_listen_counts()
+        self._collect_and_log_stats(count, call_method=self.ls.update_listen_counts)
 
         return ret
 
@@ -259,22 +213,15 @@ class InfluxWriterSubscriber(object):
 
         return True
 
+
     def start(self):
         self.log.info("influx-writer init")
 
-        if not hasattr(config, "REDIS_HOST"):
-            self.log.error("Redis service not defined. Sleeping 2 seconds and exiting.")
-            sleep(ERROR_RETRY_DELAY)
-            sys.exit(-1)
+        self._verify_hosts_in_config()
 
         if not hasattr(config, "INFLUX_HOST"):
-            self.log.error("Influx service not defined. Sleeping 2 seconds and exiting.")
-            sleep(ERROR_RETRY_DELAY)
-            sys.exit(-1)
-
-        if not hasattr(config, "RABBITMQ_HOST"):
-            self.log.error("RabbitMQ service not defined. Sleeping 2 seconds and exiting.")
-            sleep(ERROR_RETRY_DELAY)
+            self.log.error("Influx service not defined. Sleeping {0} seconds and exiting.".format(self.ERROR_RETRY_DELAY))
+            sleep(self.ERROR_RETRY_DELAY)
             sys.exit(-1)
 
         while True:
@@ -324,9 +271,11 @@ class InfluxWriterSubscriber(object):
 
             self.connection.close()
 
+
     def print_and_log_error(self, msg):
         self.log.error(msg)
         print(msg, file = sys.stderr)
+
 
 if __name__ == "__main__":
     rc = InfluxWriterSubscriber()
