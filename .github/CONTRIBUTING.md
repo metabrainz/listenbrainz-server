@@ -72,7 +72,7 @@ We follow a "typical" GitHub workflow for contributing changes.
       case**.
     * Commit message contents don't need a lot of details, but make sure others
       can look back later and understand your changes and why.
-4. Ensure that you follow the [PR requirements](#pr-requirements).
+4. Ensure that you follow the [pull request requirements](#pull-request-requirements).
 5. **[Create](https://help.github.com/articles/creating-a-pull-request/) a new
    pull request** on GitHub.
     * Make your pull request title descriptive and consistent.
@@ -102,9 +102,9 @@ with their modules while integration tests are present in
 `listenbrainz/tests/integration`. If you need help with writing a unit test, ask
 in IRC or Discourse (links above).
 
-## PR Requirements
+## Pull Request Requirements
 
-Before posting a PR, make an effort to:
+Before posting a Pull Request, make an effort to:
 
 * Clean up and simplify your code.
 * Add as much error handling as possible.
