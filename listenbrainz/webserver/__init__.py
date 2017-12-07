@@ -1,8 +1,12 @@
-from flask import Flask, current_app
-import sys
 import os
-from shutil import copyfile
+import pprint
+import subprocess
+import sys
+
+from flask import Flask, current_app
 from listenbrainz.webserver.scheduler import ScheduledJobs
+from listenbrainz.utils import get_git_commit
+from shutil import copyfile
 
 API_PREFIX = '/1'
 
@@ -43,6 +47,15 @@ def gen_app():
     # Logging
     from listenbrainz.webserver.loggers import init_loggers
     init_loggers(app)
+
+
+    # Output config values and some other info
+    app.logger.info('Configuration values are as follows: ')
+    app.logger.info(pprint.pformat(app.config, indent=4))
+    try:
+        app.logger.info('Running on git commit %s', get_git_commit())
+    except subprocess.CalledProcessError as e:
+        app.logger.info('Unable to retrieve git commit due to error: %s', str(e))
 
     # Redis connection
     create_redis(app)
