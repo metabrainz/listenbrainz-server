@@ -1,10 +1,16 @@
 import os
+import pprint
 import sys
+import time
 
 from brainzutils.flask import CustomFlask
+from listenbrainz.utils import get_git_commit
 from shutil import copyfile
 
 API_PREFIX = '/1'
+deploy_env = os.environ.get('DEPLOY_ENV', '') # used to check if we're in a docker deployed environment
+CONSUL_CONFIG_FILE_RETRY_COUNT = 10
+
 
 def create_influx(app):
     from listenbrainz.webserver.influx_connection import init_influx_connection
@@ -38,6 +44,23 @@ def gen_app(config_path=None, debug=None):
         use_debug_toolbar=True,
     )
 
+
+    if deploy_env:
+        consul_config = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            '..', 'consul_config.py'
+        )
+
+        for _ in range(CONSUL_CONFIG_FILE_RETRY_COUNT):
+            if not os.path.exists(consul_config):
+                time.sleep(1)
+
+        if not os.path.exists(consul_config):
+            print('No configuration file generated yet. Retried %d times, exiting.' % CONSUL_CONFIG_FILE_RETRY_COUNT);
+            sys.exit(-1)
+
+        app.config.from_pyfile(consul_config)
+
     # Configuration
     app.config.from_pyfile(os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
@@ -60,6 +83,11 @@ def gen_app(config_path=None, debug=None):
         email_config=app.config.get('LOG_EMAIL'),
         sentry_config=app.config.get('LOG_SENTRY')
     )
+
+    # Output config values and some other info
+    app.logger.info('Configuration values are as follows: ')
+    app.logger.info(pprint.pformat(app.config, indent=4))
+    app.logger.info('Running on git commit %s', get_git_commit())
 
     # Redis connection
     create_redis(app)

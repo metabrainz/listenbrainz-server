@@ -1,5 +1,6 @@
 import errno
 import os
+import subprocess
 
 from datetime import datetime
 
@@ -82,3 +83,9 @@ def log_ioerrors(logger, e):
         is added.
     """
     logger.error('IOError while creating dump: %s', str(e))
+
+
+def get_git_commit():
+    """ Gets the SHA hash of the current git commit of the repository
+    """
+    return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('utf-8')[:8]
