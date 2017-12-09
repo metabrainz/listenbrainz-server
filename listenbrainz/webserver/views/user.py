@@ -142,12 +142,21 @@ def artists(user_name):
         calculated using Google BigQuery. If the stats are not present, we
         redirect to the user page with a message.
     """
-    user = _get_user(user_name)
-    data = db_stats.get_user_artists(user.id)
+
+    try:
+        user = _get_user(user_name)
+        data = db_stats.get_user_artists(user.id)
+    except DatabaseException as e:
+        current_app.logger.error('Error while getting top artist page for user %s: %s', user.musicbrainz_id, str(e))
+        raise
 
     # if no data, flash a message and return to profile page
     if data is None:
-        flash.error('No data calculated for user {user_name} yet.'.format(user_name=user_name))
+        msg = ('No data calculated for user %s yet. ListenBrainz only calculates statistics for'
+        'recently active users. If %s has logged in recently, they\'ve already been added to'
+        'the stats calculation queue. Please wait until the next statistics calculation batch is finished.') % (user_name, user_name)
+
+        flash.error(msg)
         return redirect(url_for('user.profile', user_name=user_name))
 
     top_artists = data['artist']['all_time']

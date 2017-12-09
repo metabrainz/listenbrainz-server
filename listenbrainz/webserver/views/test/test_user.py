@@ -52,6 +52,9 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         r = self.client.get(url_for('user.artists', user_name=self.user['musicbrainz_id']))
         self.assertRedirects(r, url_for('user.profile', user_name=self.user['musicbrainz_id']))
 
+        r = self.client.get(url_for('user.artists', user_name=self.user['musicbrainz_id']), follow_redirects=True)
+        self.assert200(r)
+        self.assertIn('No data calculated', r.data.decode('utf-8'))
 
         # add some artist stats to the db
         with open(self.path_to_data_file('user_top_artists.json')) as f:
