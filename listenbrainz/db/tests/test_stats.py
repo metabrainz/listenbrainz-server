@@ -34,10 +34,10 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         )
 
         result = db_stats.get_all_user_stats(user_id=self.user['id'])
-        self.assertDictEqual(result['artist']['all_time'], artists)
+        self.assertListEqual(result['artist']['all_time'], artists)
         self.assertEqual(result['artist']['count'], 2)
-        self.assertDictEqual(result['release'], releases)
-        self.assertDictEqual(result['recording'], recordings)
+        self.assertListEqual(result['release']['all_time'], releases)
+        self.assertListEqual(result['recording']['all_time'], recordings)
         self.assertGreater(int(result['last_updated'].strftime('%s')), 0)
 
     def insert_test_data(self):
@@ -71,7 +71,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(data['artist']['count'], 2)
 
         data = db_stats.get_user_stats(self.user['id'], 'recording')
-        self.assertDictEqual(data['recording'], data_inserted['user_recordings'])
+        self.assertListEqual(data['recording']['all_time'], data_inserted['user_recordings'])
 
     def test_get_user_artists(self):
         data_inserted = self.insert_test_data()
@@ -81,9 +81,9 @@ class StatsDatabaseTestCase(DatabaseTestCase):
     def test_get_all_user_stats(self):
         data_inserted = self.insert_test_data()
         result = db_stats.get_all_user_stats(self.user['id'])
-        self.assertDictEqual(result['artist']['all_time'], data_inserted['user_artists'])
+        self.assertListEqual(result['artist']['all_time'], data_inserted['user_artists'])
         self.assertEqual(result['artist']['count'], 2)
-        self.assertDictEqual(result['release'], data_inserted['user_releases'])
-        self.assertDictEqual(result['recording'], data_inserted['user_recordings'])
+        self.assertListEqual(result['release']['all_time'], data_inserted['user_releases'])
+        self.assertListEqual(result['recording']['all_time'], data_inserted['user_recordings'])
         self.assertGreater(int(result['last_updated'].strftime('%s')), 0)
 
