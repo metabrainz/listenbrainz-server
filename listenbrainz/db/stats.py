@@ -40,12 +40,20 @@ def insert_user_stats(user_id, artists, recordings, releases, artist_count):
              artist_count (int): the total number of artists listened to by the user
     """
 
-    # put all artist stats into one dict which will then be inserted
-    # into the artist column of the stats.user table
     artist_stats = {
         'count': artist_count,
-        'all_time': artists
+        'all_time': artists,
     }
+
+    recording_stats = {
+        'all_time': recordings,
+    }
+
+
+    release_stats = {
+        'all_time': releases,
+    }
+
 
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
@@ -59,8 +67,8 @@ def insert_user_stats(user_id, artists, recordings, releases, artist_count):
             """), {
                 'user_id': user_id,
                 'artists': ujson.dumps(artist_stats),
-                'recordings': ujson.dumps(recordings),
-                'releases': ujson.dumps(releases)
+                'recordings': ujson.dumps(recording_stats),
+                'releases': ujson.dumps(release_stats),
             }
         )
 
