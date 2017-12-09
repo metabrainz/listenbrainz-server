@@ -84,10 +84,13 @@ def get_user_stats(user_id, columns):
             A dict of the following format
             {
                 'user_id' (int): the row ID of the user in the DB,
-                '<stat>'  (dict): the stats requested
+                '<stat>'  (dict): the stats requested, for better description see below
                 'last_updated' (datetime): datetime object representing when
                                            this stat was last updated
             }
+
+            The `stat` dict contains all stats calculated by Google BigQuery stored in that column
+            from listenbrainz.stats.user, keyed by stat name.
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
@@ -112,10 +115,22 @@ def get_user_artists(user_id):
             A dict of the following format
             {
                 'user_id' (int): the row ID of the user in the DB,
-                'artist'  (dict): artist stats for the user
+                'artist'  (dict): artist stats for the user, see below for better description
                 'last_updated' (datetime): datetime object representing when
                                         this stat was last updated
             }
+
+
+            the `artist` dict will be of the following format:
+            {
+                'all_time': all time artist listen counts for the user
+                            calculated by listenbrainz.stats.user.get_top_artists
+                'artist_count': the total number of artists this user has listened to
+                                calculated by listenbrainz.stats.user.get_artist_count
+            }
+
+            In general, the `artist` dict will contain all artist related stats
+            calculated for the user in listenbrainz.stats.user, keyed by stat name.
     """
     return get_user_stats(user_id, 'artist')
 
@@ -130,12 +145,19 @@ def get_all_user_stats(user_id):
             A dict of the following format
             {
                 'user_id' (int): the row ID of the user in the DB
-                'artist' (dict): artist stats for the user
-                'recording' (dict): recording stats for the user
-                'release' (dict): release stats for the user
+                'artist' (dict): artist stats for the user, for description see below
+                'recording' (dict): recording stats for the user, for description see below
+                'release' (dict): release stats for the user, for description see below
                 'last_updated': datetime object representing when these stats were
                                 last updated
             }
+
+
+            The artist dict contains all artist related stats calculated for the user
+            from listenbrianz.stats.user
+
+            Similarly, the recording and release dicts contain all recording and release
+            related stats calculated for the user keyed by stat name.
     """
 
     return get_user_stats(user_id, 'artist, recording, release')
