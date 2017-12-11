@@ -1,6 +1,9 @@
-from flask import url_for
 
+import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
+import ujson
+
+from flask import url_for
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.webserver.testing import ServerTestCase
 
@@ -41,3 +44,29 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         )
         self.assert200(response)
         self.assertIn('var user_name = "weird%5Cuser%20name";', response.data.decode('utf-8'))
+
+    def test_top_artists(self):
+        """ Tests the artist stats view """
+
+        # when no stats in db, it should redirect to the profile page
+        r = self.client.get(url_for('user.artists', user_name=self.user['musicbrainz_id']))
+        self.assertRedirects(r, url_for('user.profile', user_name=self.user['musicbrainz_id']))
+
+        r = self.client.get(url_for('user.artists', user_name=self.user['musicbrainz_id']), follow_redirects=True)
+        self.assert200(r)
+        self.assertIn('No data calculated', r.data.decode('utf-8'))
+
+        # add some artist stats to the db
+        with open(self.path_to_data_file('user_top_artists.json')) as f:
+            artists = ujson.load(f)
+
+        db_stats.insert_user_stats(
+            user_id=self.user['id'],
+            artists=artists,
+            recordings={},
+            releases={},
+            artist_count=2,
+        )
+
+        r = self.client.get(url_for('user.artists', user_name=self.user['musicbrainz_id']))
+        self.assert200(r)

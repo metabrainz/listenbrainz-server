@@ -1,20 +1,17 @@
-from flask import Blueprint, render_template, request, url_for, Response, redirect, flash, current_app, jsonify
-from flask_login import current_user, login_required
-from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
-from werkzeug.utils import secure_filename
-from listenbrainz.webserver.decorators import crossdomain
-from datetime import datetime
-from time import time
-import urllib
-from listenbrainz import webserver
-from listenbrainz.webserver import flash
-import listenbrainz.db.user as db_user
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
+import urllib
+import ujson
+
+from flask import Blueprint, render_template, request, url_for, Response, redirect, flash, current_app, jsonify
+from flask_login import current_user, login_required
 from listenbrainz import webserver
+from listenbrainz.webserver import flash
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver.redis_connection import _redis
+from time import time
+from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
 
 LISTENS_PER_PAGE = 25
 
@@ -120,7 +117,7 @@ def profile(user_name):
             }
             listens.insert(0, listen)
 
-    user_stats = db_stats.get_user_stats(user.id)
+    user_stats = db_stats.get_user_artists(user.id)
     try:
         artist_count = int(user_stats['artists']['count'])
     except (KeyError, TypeError):
@@ -136,6 +133,37 @@ def profile(user_name):
         have_listen_count=have_listen_count,
         listen_count=format(int(listen_count), ",d"),
         artist_count=format(artist_count, ",d")
+    )
+
+
+@user_bp.route("/<user_name>/artists")
+def artists(user_name):
+    """ Show the top artists for the user. These users must have been already
+        calculated using Google BigQuery. If the stats are not present, we
+        redirect to the user page with a message.
+    """
+
+    try:
+        user = _get_user(user_name)
+        data = db_stats.get_user_artists(user.id)
+    except DatabaseException as e:
+        current_app.logger.error('Error while getting top artist page for user %s: %s', user.musicbrainz_id, str(e))
+        raise
+
+    # if no data, flash a message and return to profile page
+    if data is None:
+        msg = ('No data calculated for user %s yet. ListenBrainz only calculates statistics for'
+        'recently active users. If %s has logged in recently, they\'ve already been added to'
+        'the stats calculation queue. Please wait until the next statistics calculation batch is finished.') % (user_name, user_name)
+
+        flash.error(msg)
+        return redirect(url_for('user.profile', user_name=user_name))
+
+    top_artists = data['artist']['all_time']
+    return render_template(
+        "user/artists.html",
+        user=user,
+        data=ujson.dumps(top_artists),
     )
 
 
