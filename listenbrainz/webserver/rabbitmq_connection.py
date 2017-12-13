@@ -2,6 +2,7 @@ import sys
 from time import sleep
 import pika
 import pika_pool
+import listenbrainz.utils as utils
 
 _rabbitmq = None
 
@@ -14,26 +15,23 @@ def init_rabbitmq_connection(app):
         sleep(2)
         sys.exit(-1)
 
-    credentials = pika.PlainCredentials(app.config['RABBITMQ_USERNAME'], app.config['RABBITMQ_PASSWORD'])
-    connection_parameters = pika.ConnectionParameters(
-            host=app.config['RABBITMQ_HOST'],
-            port=app.config['RABBITMQ_PORT'],
-            virtual_host=app.config['RABBITMQ_VHOST'],
-            credentials=credentials
-        )
+    connection_config = {
+        'username': app.config['RABBITMQ_USERNAME'],
+        'password': app.config['RABBITMQ_PASSWORD'],
+        'host': app.config['RABBITMQ_HOST'],
+        'port': app.config['RABBITMQ_PORT'],
+        'virtual_host': app.config['RABBITMQ_VHOST']
+    }
 
-    while True:
-        try:
-            _rabbitmq = pika_pool.QueuedPool(
-                    create=lambda: pika.BlockingConnection(connection_parameters),
-                    max_size=100,
-                    max_overflow=10,
-                    timeout=10,
-                    recycle=3600,
-                    stale=45,
-            )
-            return
-        except Exception as err:
-            app.logger.error("Cannot connect to rabbitmq, sleeping 2 seconds")
-            sleep(2)
-            continue
+    connection = utils.connect_to_rabbitmq(**connection_config,
+                                           error_logger=app.logger.error,
+                                           error_retry_delay=2)
+
+    _rabbitmq = pika_pool.QueuedPool(
+        create=lambda: connection,
+        max_size=100,
+        max_overflow=10,
+        timeout=10,
+        recycle=3600,
+        stale=45,
+    )
