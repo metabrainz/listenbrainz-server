@@ -44,18 +44,18 @@ def gen_app():
     from listenbrainz import config
     app.config.from_object(config)
 
+    # Output config values and some other info
+    print('Configuration values are as follows: ')
+    print(pprint.pformat(app.config, indent=4))
+    try:
+        with open('.git-version') as git_version_file:
+            print('Running on git commit: %s', git_version_file.read().strip())
+    except IOError as e:
+        print('Unable to retrieve git commit. Error: %s', str(e))
+
     # Logging
     from listenbrainz.webserver.loggers import init_loggers
     init_loggers(app)
-
-
-    # Output config values and some other info
-    app.logger.info('Configuration values are as follows: ')
-    app.logger.info(pprint.pformat(app.config, indent=4))
-    try:
-        app.logger.info('Running on git commit %s', get_git_commit())
-    except subprocess.CalledProcessError as e:
-        app.logger.info('Unable to retrieve git commit due to error: %s', str(e))
 
     # Redis connection
     create_redis(app)
