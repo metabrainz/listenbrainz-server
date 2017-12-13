@@ -1,8 +1,10 @@
-from flask import Flask, current_app
-import sys
 import os
-from shutil import copyfile
+import pprint
+import sys
+
+from flask import Flask, current_app
 from listenbrainz.webserver.scheduler import ScheduledJobs
+from shutil import copyfile
 
 API_PREFIX = '/1'
 
@@ -39,6 +41,15 @@ def gen_app():
     # Configuration
     from listenbrainz import config
     app.config.from_object(config)
+
+    # Output config values and some other info
+    print('Configuration values are as follows: ')
+    print(pprint.pformat(app.config, indent=4))
+    try:
+        with open('.git-version') as git_version_file:
+            print('Running on git commit: %s', git_version_file.read().strip())
+    except IOError as e:
+        print('Unable to retrieve git commit. Error: %s', str(e))
 
     # Logging
     from listenbrainz.webserver.loggers import init_loggers
