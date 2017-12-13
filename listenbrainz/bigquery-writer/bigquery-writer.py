@@ -8,6 +8,7 @@ import logging
 import pika
 from time import time, sleep
 from redis import Redis
+import listenbrainz.utils as utils
 
 from googleapiclient import discovery
 from googleapiclient.errors import HttpError
@@ -15,55 +16,17 @@ from listenbrainz.bigquery import create_bigquery_object
 from listenbrainz.bigquery import NoCredentialsVariableException, NoCredentialsFileException
 from oauth2client.client import GoogleCredentials
 
-from listenbrainz import default_config as config
-try:
-    from listenbrainz import custom_config as config
-except ImportError:
-    pass
-
-REPORT_FREQUENCY = 5000
-ERROR_RETRY_DELAY = 3 # number of seconds to wait until retrying an operation
-DUMP_JSON_WITH_ERRORS = True
+from listenbrainz.listen_writer import ListenWriter
 
 # TODO:
 #   Big query hardcoded data set ids
 
-class BigQueryWriter(object):
+class BigQueryWriter(ListenWriter):
     def __init__(self):
-        self.log = logging.getLogger(__name__)
-        logging.basicConfig()
-        self.log.setLevel(logging.INFO)
+        super().__init__()
 
-        self.redis = None
-        self.connection = None
         self.channel = None
-
-        self.total_inserts = 0
-        self.inserts = 0
-        self.time = 0
-
-
-    def connect_to_rabbitmq(self):
-        while True:
-            try:
-                credentials = pika.PlainCredentials(config.RABBITMQ_USERNAME, config.RABBITMQ_PASSWORD)
-                connection_parameters = pika.ConnectionParameters(
-                        host=config.RABBITMQ_HOST,
-                        port=config.RABBITMQ_PORT,
-                        virtual_host=config.RABBITMQ_VHOST,
-                        credentials=credentials
-                    )
-                self.connection = pika.BlockingConnection(connection_parameters)
-                break
-            except Exception as e:
-                self.log.error("Cannot connect to rabbitmq: %s, retrying in 3 seconds" % str(e))
-                sleep(ERROR_RETRY_DELAY)
-
-
-    @staticmethod
-    def static_callback(ch, method, properties, body, obj):
-        return obj.callback(ch, method, body)
-
+        self.DUMP_JSON_WITH_ERRORS = True
 
     def callback(self, ch, method, body):
 
@@ -103,9 +66,9 @@ class BigQueryWriter(object):
             try:
                 t0 = time()
                 ret = self.bigquery.tabledata().insertAll(
-                    projectId=config.BIGQUERY_PROJECT_ID,
-                    datasetId=config.BIGQUERY_DATASET_ID,
-                    tableId=config.BIGQUERY_TABLE_ID,
+                    projectId=self.config.BIGQUERY_PROJECT_ID,
+                    datasetId=self.config.BIGQUERY_DATASET_ID,
+                    tableId=self.config.BIGQUERY_TABLE_ID,
                     body=body).execute(num_retries=5)
                 self.time += time() - t0
                 break
@@ -114,10 +77,10 @@ class BigQueryWriter(object):
                 self.log.error("Submit to BigQuery failed: %s. Retrying in 3 seconds." % str(e))
             except Exception as e:
                 self.log.error("Unknown exception on submit to BigQuery failed: %s. Retrying in 3 seconds." % str(e))
-                if DUMP_JSON_WITH_ERRORS:
+                if self.DUMP_JSON_WITH_ERRORS:
                     self.log.error(json.dumps(body, indent=3))
 
-            sleep(ERROR_RETRY_DELAY)
+            sleep(self.ERROR_RETRY_DELAY)
 
 
         while True:
@@ -129,33 +92,18 @@ class BigQueryWriter(object):
 
         self.log.info("inserted %d listens." % count)
 
-        # collect and occasionally print some stats
-        self.inserts += count
-        if self.inserts >= REPORT_FREQUENCY:
-            self.total_inserts += self.inserts
-            if self.time > 0:
-                self.log.info("Inserted %d rows in %.1fs (%.2f listens/sec). Total %d rows." % \
-                    (self.inserts, self.time, count / self.time, self.total_inserts))
-            self.inserts = 0
-            self.time = 0
+        self._collect_and_log_stats(count)
 
         return True
+
 
     def start(self):
         self.log.info("biqquer-writer init")
 
-        if not hasattr(config, "REDIS_HOST"):
-            self.log.error("Redis service not defined. Sleeping 3 seconds and exiting.")
-            sleep(ERROR_RETRY_DELAY)
-            return
-
-        if not hasattr(config, "RABBITMQ_HOST"):
-            self.log.error("RabbitMQ service not defined. Sleeping 3 seconds and exiting.")
-            sleep(ERROR_RETRY_DELAY)
-            return
+        self._verify_hosts_in_config()
 
         # if we're not supposed to run, just sleep
-        if not config.WRITE_TO_BIGQUERY:
+        if not self.config.WRITE_TO_BIGQUERY:
             sleep(66666)
             return
 
@@ -167,22 +115,22 @@ class BigQueryWriter(object):
 
         while True:
             try:
-                self.redis = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
+                self.redis = Redis(host=self.config.REDIS_HOST, port=self.config.REDIS_PORT)
                 self.redis.ping()
                 break
             except Exception as err:
                 self.log.error("Cannot connect to redis: %s. Retrying in 3 seconds and trying again." % str(err))
-                sleep(ERROR_RETRY_DELAY)
+                sleep(self.ERROR_RETRY_DELAY)
 
         while True:
             self.connect_to_rabbitmq()
             self.channel = self.connection.channel()
-            self.channel.exchange_declare(exchange=config.UNIQUE_EXCHANGE, type='fanout')
-            self.channel.queue_declare(config.UNIQUE_QUEUE, durable=True)
-            self.channel.queue_bind(exchange=config.UNIQUE_EXCHANGE, queue=config.UNIQUE_QUEUE)
+            self.channel.exchange_declare(exchange=self.config.UNIQUE_EXCHANGE, type='fanout')
+            self.channel.queue_declare(self.config.UNIQUE_QUEUE, durable=True)
+            self.channel.queue_bind(exchange=self.config.UNIQUE_EXCHANGE, queue=self.config.UNIQUE_QUEUE)
             self.channel.basic_consume(
                 lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self),
-                queue=config.UNIQUE_QUEUE,
+                queue=self.config.UNIQUE_QUEUE,
             )
 
             self.log.info("bigquery-writer started")
