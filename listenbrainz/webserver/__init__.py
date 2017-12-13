@@ -1,6 +1,5 @@
 import os
 import pprint
-import subprocess
 import sys
 
 from flask import Flask, current_app
