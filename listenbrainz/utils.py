@@ -1,5 +1,3 @@
-import subprocess
-
 from datetime import datetime
 
 INFLUX_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
@@ -55,9 +53,3 @@ def convert_influx_nano_to_python_time(influx_row_time):
 
 def convert_python_time_to_nano_int(t):
     return int(t * 100000000)
-
-
-def get_git_commit():
-    """ Gets the SHA hash of the current git commit of the repository
-    """
-    return subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('utf-8')[:8]
