@@ -44,6 +44,10 @@ RABBITMQ_PORT = {{.Port}}
 RABBITMQ_USERNAME = '''{{template "KEY" "rabbitmq_user"}}'''
 RABBITMQ_PASSWORD = '''{{template "KEY" "rabbitmq_pass"}}'''
 RABBITMQ_VHOST = '''{{template "KEY" "rabbitmq_vhost"}}'''
+INCOMING_EXCHANGE = '''{{template "KEY" "incoming_exchange"}}'''
+INCOMING_QUEUE = '''{{template "KEY" "incoming_queue"}}'''
+UNIQUE_EXCHANGE = '''{{template "KEY" "unique_exchange"}}'''
+UNIQUE_QUEUE = '''{{template "KEY" "unique_queue"}}'''
 
 
 MUSICBRAINZ_CLIENT_ID = '''{{template "KEY" "musicbrainz/client_id"}}'''
