@@ -5,7 +5,6 @@ import sys
 
 from flask import Flask, current_app
 from listenbrainz.webserver.scheduler import ScheduledJobs
-from listenbrainz.utils import get_git_commit
 from shutil import copyfile
 
 API_PREFIX = '/1'
