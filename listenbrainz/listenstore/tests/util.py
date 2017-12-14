@@ -1,9 +1,14 @@
 # coding=utf-8
 
+import json
+import os
 import uuid
-from datetime import datetime
 
+from datetime import datetime
 from listenbrainz.listen import Listen
+
+
+TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'testdata')
 
 
 def generate_data(test_user_id, from_ts, num_records):
@@ -20,3 +25,27 @@ def generate_data(test_user_id, from_ts, num_records):
 
 def to_epoch(date):
     return int((date - datetime.utcfromtimestamp(0)).total_seconds())
+
+
+def create_test_data_for_influxlistenstore(user_name):
+    """Create listens for influxlistenstore tests.
+
+    From a json file 'influx_listenstore_test_listens.json' in testdata
+    it creates Listen objects with a specified user_name for tests.
+
+    Args:
+        user_name (str): MusicBrainz username of a user.
+
+    Returns:
+        A list of Listen objects.
+    """
+    test_data_file = os.path.join(TEST_DATA_PATH, 'influx_listenstore_test_listens.json')
+    with open(test_data_file, 'r') as f:
+        listens = json.load(f)
+
+    test_data = []
+    for listen in listens['payload']:
+        listen['user_name'] = user_name
+        test_data.append(Listen().from_json(listen))
+
+    return test_data
