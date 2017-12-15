@@ -111,12 +111,10 @@ def connect_to_rabbitmq(username, password,
                 host=host,
                 port=port,
                 virtual_host=virtual_host,
-                credentials=credentials
+                credentials=credentials,
             )
             return connection_type(connection_parameters)
         except Exception as err:
             error_message = "Cannot connect to RabbitMQ: {error}, retrying in {delay} seconds."
             error_logger(error_message.format(error=str(err), delay=error_retry_delay))
             time.sleep(error_retry_delay)
-
-            continue

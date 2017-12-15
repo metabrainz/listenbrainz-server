@@ -28,7 +28,8 @@ class BigQueryWriter(ListenWriter):
         self.channel = None
         self.DUMP_JSON_WITH_ERRORS = True
 
-    def callback(self, ch, method, body):
+
+    def callback(self, ch, method, properties, body):
 
         listens = ujson.loads(body)
         count = len(listens)
@@ -98,7 +99,7 @@ class BigQueryWriter(ListenWriter):
 
 
     def start(self):
-        self.log.info("biqquer-writer init")
+        self.log.info("bigquery-writer init")
 
         self._verify_hosts_in_config()
 
@@ -125,7 +126,7 @@ class BigQueryWriter(ListenWriter):
         while True:
             self.connect_to_rabbitmq()
             self.channel = self.connection.channel()
-            self.channel.exchange_declare(exchange=self.config.UNIQUE_EXCHANGE, type='fanout')
+            self.channel.exchange_declare(exchange=self.config.UNIQUE_EXCHANGE, exchange_type='fanout')
             self.channel.queue_declare(self.config.UNIQUE_QUEUE, durable=True)
             self.channel.queue_bind(exchange=self.config.UNIQUE_EXCHANGE, queue=self.config.UNIQUE_QUEUE)
             self.channel.basic_consume(

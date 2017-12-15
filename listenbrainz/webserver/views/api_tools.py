@@ -70,7 +70,7 @@ def _send_listens_to_queue(listen_type, listens):
     if submit:
         try:
             with rabbitmq_connection._rabbitmq.acquire() as cxn:
-                cxn.channel.exchange_declare(exchange=current_app.config['INCOMING_EXCHANGE'], type='fanout')
+                cxn.channel.exchange_declare(exchange=current_app.config['INCOMING_EXCHANGE'], exchange_type='fanout')
                 cxn.channel.queue_declare(current_app.config['INCOMING_QUEUE'], durable=True)
                 cxn.channel.basic_publish(
                     exchange=current_app.config['INCOMING_EXCHANGE'],
