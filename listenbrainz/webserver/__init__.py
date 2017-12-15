@@ -1,4 +1,5 @@
 import os
+import pprint
 import sys
 
 from brainzutils.flask import CustomFlask
@@ -53,6 +54,15 @@ def gen_app(config_path=None, debug=None):
 
     if debug is not None:
         app.debug = debug
+
+    # Output config values and some other info
+    print('Configuration values are as follows: ')
+    print(pprint.pformat(app.config, indent=4))
+    try:
+        with open('.git-version') as git_version_file:
+            print('Running on git commit: %s', git_version_file.read().strip())
+    except IOError as e:
+        print('Unable to retrieve git commit. Error: %s', str(e))
 
     # Logging
     app.init_loggers(
