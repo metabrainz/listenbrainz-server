@@ -150,14 +150,15 @@ class TestInfluxListenStore(DatabaseTestCase):
 
     def test_import_listens(self):
         count = self._create_test_data(self.testuser_name)
-        sleep(2)
+        sleep(1)
         temp_dir = tempfile.mkdtemp()
         dump_location = self.logstore.dump_listens(
             location=temp_dir,
         )
+        sleep(1)
         self.assertTrue(os.path.isfile(dump_location))
         self.reset_influx_db()
-
+        sleep(1)
         self.logstore.import_listens_dump(dump_location)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
         self.assertEqual(len(listens), 5)
