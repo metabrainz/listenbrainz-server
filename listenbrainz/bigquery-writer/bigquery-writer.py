@@ -93,7 +93,7 @@ class BigQueryWriter(ListenWriter):
             except pika.exceptions.ConnectionClosed:
                 self.connect_to_rabbitmq()
 
-            sleep(ERROR_RETRY_DELAY)
+            sleep(self.ERROR_RETRY_DELAY)
 
         # collect and occasionally print some stats
         time_taken = time() - t0
