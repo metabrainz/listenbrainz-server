@@ -111,7 +111,7 @@ class BigQueryWriter(ListenWriter):
         self.delivery_tags = []
 
 
-    def callback(self, ch, method, body):
+    def callback(self, ch, method, properties, body):
 
         # if some timeout exists, remove it as we'll add a new one
         # before this method exits
