@@ -27,7 +27,8 @@ except ImportError:
 
 # the number of listens to send to BQ in one batch
 # NOTE: this MUST be greater than the maximum number of listens sent to us in one
-# RabbitMQ batch
+# RabbitMQ batch, otherwise BigQueryWriter will submit a partial batch and send an ack for
+# the batch.
 SUBMIT_CHUNK_SIZE = 1000
 
 PREFETCH_COUNT = 20    # the number of RabbitMQ batches to prefetch
