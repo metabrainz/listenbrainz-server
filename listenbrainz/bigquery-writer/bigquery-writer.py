@@ -25,11 +25,12 @@ except ImportError:
     pass
 
 
-# the number of listens to send to BQ in one batch
-# NOTE: this MUST be greater than the maximum number of listens sent to us in one
+SUBMIT_CHUNK_SIZE = 1000 # the number of listens to send to BQ in one batch
+
+# NOTE: this MUST be greater than or equal to the maximum number of listens sent to us in one
 # RabbitMQ batch, otherwise BigQueryWriter will submit a partial batch and send an ack for
 # the batch.
-SUBMIT_CHUNK_SIZE = 1000
+assert(SUBMIT_CHUNK_SIZE >= 50)
 
 PREFETCH_COUNT = 20    # the number of RabbitMQ batches to prefetch
 FLUSH_LISTENS_TIME = 3 # the number of seconds to wait before flushing all listens in queue to BQ
