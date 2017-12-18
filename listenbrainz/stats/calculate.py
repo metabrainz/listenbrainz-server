@@ -23,7 +23,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-def calculate_user_stats():
+def calculate_user_stats(force=False):
     """Get the users we need to calculate our statistics for and calculate their stats.
     """
 
@@ -31,7 +31,10 @@ def calculate_user_stats():
 
     while True:
         try:
-            users = db_user.get_users_with_uncalculated_stats()
+            if force:
+                users = db_user.get_all_users()
+            else:
+                users = db_user.get_users_with_uncalculated_stats()
             break
         except Exception as e:
             logger.error('Error while getting user list for stats calculation: %s', str(e))
@@ -92,14 +95,15 @@ def calculate_user_stats():
     logger.info('Stats calculation failed for %d users', failed)
 
 
-def calculate_stats():
-    calculate_user_stats()
+def calculate_stats(force=False):
+    calculate_user_stats(force)
 
 
 cli = click.Group()
 
 @cli.command()
-def calculate():
+@click.option('--force', '-f', is_flag=True, help='Force statistics calculation for ALL users')
+def calculate(force):
     """ Command to calculate statistics from Google BigQuery.
     This can be used from the manage.py file.
     """
@@ -118,5 +122,5 @@ def calculate():
     logger.info('Connected!')
 
     logger.info('Calculating statistics using Google BigQuery...')
-    calculate_stats()
+    calculate_stats(force=force)
     logger.info('Calculations done!')
