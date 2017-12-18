@@ -6,6 +6,9 @@
     depending on your change. Keep or delete what is relevant for your change.
     Remember that it helps us review if you give more helpful info for us to
     understand your change.
+    
+    Ensure that you've read through and followed the Contributing Guidelines, in
+    ./github/CONTRIBUTING.md.
 -->
 
 # Summary
@@ -21,7 +24,6 @@
     * [ ] Minor / simple change (like a typo)
     * [ ] Other
 * **Describe this change in 1-2 sentences**:
-
 
 # Problem
 

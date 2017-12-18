@@ -72,19 +72,20 @@ We follow a "typical" GitHub workflow for contributing changes.
       case**.
     * Commit message contents don't need a lot of details, but make sure others
       can look back later and understand your changes and why.
-4. **[Create](https://help.github.com/articles/creating-a-pull-request/) a new
+4. Ensure that you follow the [pull request requirements](#pull-request-requirements).
+5. **[Create](https://help.github.com/articles/creating-a-pull-request/) a new
    pull request** on GitHub.
     * Make your pull request title descriptive and consistent.
     * If you are fixing an issue in our bug tracker, reference it like this:
       `PICARD-257: Allow preserving existing cover-art tags`. **Not**
       `[PICARD-257] - Allow preserving existing cover-art tags` or `Allow
       preserving existing cover-art tags (PICARD-257)` or simply `PICARD-257`.
-5. **Add a bug tracker link** to the ticket your pull request solves in the
+6. **Add a bug tracker link** to the ticket your pull request solves in the
    description.
-6. **Make smaller pull requests** for each major change.
+7. **Make smaller pull requests** for each major change.
     * If you are solving more than one issue, split them into multiple pull
       requests. It is easier to review and merge patches this way.
-7. Get feedback on a pull request and need to make changes? **Use a
+8. Get feedback on a pull request and need to make changes? **Use a
    [git rebase](https://help.github.com/articles/about-git-rebase/)** instead of
    adding new commits.
     * Rebase to fix merge conflicts, remove unwanted commits, reword or edit
@@ -101,6 +102,15 @@ with their modules while integration tests are present in
 `listenbrainz/tests/integration`. If you need help with writing a unit test, ask
 in IRC or Discourse (links above).
 
+## Pull Request Requirements
+
+Before posting a Pull Request, make an effort to:
+
+* Clean up and simplify your code.
+* Add as much error handling as possible.
+* Document your code.
+* Run all existing tests and make them pass.
+* Write any new tests required if you've added new features.
 
 ---
 
