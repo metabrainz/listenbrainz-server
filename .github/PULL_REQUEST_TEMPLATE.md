@@ -32,7 +32,7 @@
     What problem are you trying to fix? What does this change address?
 -->
 
-* JIRA ticket (_optional_):
+* JIRA ticket (_optional_): <!-- [LB-XXX](https://tickets.metabrainz.org/browse/LB-XXX) -->
 
 
 # Solution
