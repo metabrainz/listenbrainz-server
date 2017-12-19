@@ -42,21 +42,8 @@ INCOMING_QUEUE = "incoming"
 UNIQUE_EXCHANGE = "unique"
 UNIQUE_QUEUE = "unique"
 
-# MusicBrainz OAuth
-MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
-MUSICBRAINZ_CLIENT_SECRET = "CLIENT_SECRET"
-
 # Lastfm API
 LASTFM_API_URL = "https://ws.audioscrobbler.com/2.0/"
-LASTFM_API_KEY = "USE_LASTFM_API_KEY"
-
-# BigQuery support
-# Enable/disable support. If enabled, the Application Credentials must reside in
-# bigquery-credentials.json in the top level directory.
-WRITE_TO_BIGQUERY = False
-BIGQUERY_PROJECT_ID = "listenbrainz"
-BIGQUERY_DATASET_ID = "listenbrainz_test"
-BIGQUERY_TABLE_ID = "listen"
 
 # Stats
 STATS_ENTITY_LIMIT = 100 # the number of entities to calculate at max with BQ
@@ -92,7 +79,3 @@ MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
 # Specify the upload folder where all the lastfm-backup will be stored
 # The path must be absolute path
 UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
-
-
-API_URL = 'https://api.listenbrainz.org'
-LASTFM_PROXY_URL = 'http://0.0.0.0:8080/'
