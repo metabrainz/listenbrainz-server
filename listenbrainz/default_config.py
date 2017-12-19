@@ -49,6 +49,14 @@ UNIQUE_QUEUE = "unique"
 # Lastfm API
 LASTFM_API_URL = "https://ws.audioscrobbler.com/2.0/"
 
+# BigQuery support
+# Enable/disable support. If enabled, the Application Credentials must reside in
+# bigquery-credentials.json in the top level directory.
+WRITE_TO_BIGQUERY = False
+BIGQUERY_PROJECT_ID = ""
+BIGQUERY_DATASET_ID = ""
+BIGQUERY_TABLE_ID = ""
+
 # Stats
 STATS_ENTITY_LIMIT = 100 # the number of entities to calculate at max with BQ
 STATS_CALCULATION_LOGIN_TIME = 30 # users must have logged in to LB in the past 30 days for stats to be calculated
