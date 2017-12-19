@@ -202,7 +202,7 @@ class InfluxWriterSubscriber(ListenWriter):
         while True:
             try:
                 self.unique_ch.basic_publish(
-                    exchange=self.config.UNIQUE_EXCHANGE,
+                    exchange=self.config['UNIQUE_EXCHANGE'],
                     routing_key='',
                     body=ujson.dumps(unique),
                     properties=pika.BasicProperties(delivery_mode = 2,),
@@ -219,19 +219,19 @@ class InfluxWriterSubscriber(ListenWriter):
 
         self._verify_hosts_in_config()
 
-        if not hasattr(self.config, "INFLUX_HOST"):
+        if 'INFLUX_HOST' not in self.config:
             self.log.error("Influx service not defined. Sleeping {0} seconds and exiting.".format(self.ERROR_RETRY_DELAY))
             sleep(self.ERROR_RETRY_DELAY)
             sys.exit(-1)
 
         while True:
             try:
-                self.ls = InfluxListenStore({ 'REDIS_HOST' : self.config.REDIS_HOST,
-                                              'REDIS_PORT' : self.config.REDIS_PORT,
-                                              'INFLUX_HOST': self.config.INFLUX_HOST,
-                                              'INFLUX_PORT': self.config.INFLUX_PORT,
-                                              'INFLUX_DB_NAME': self.config.INFLUX_DB_NAME})
-                self.influx = InfluxDBClient(host=self.config.INFLUX_HOST, port=self.config.INFLUX_PORT, database=self.config.INFLUX_DB_NAME)
+                self.ls = InfluxListenStore({ 'REDIS_HOST' : self.config['REDIS_HOST'],
+                                              'REDIS_PORT' : self.config['REDIS_PORT'],
+                                              'INFLUX_HOST': self.config['INFLUX_HOST'],
+                                              'INFLUX_PORT': self.config['INFLUX_PORT'],
+                                              'INFLUX_DB_NAME': self.config['INFLUX_DB_NAME']})
+                self.influx = InfluxDBClient(host=self.config['INFLUX_HOST'], port=self.config['INFLUX_PORT'], database=self.config['INFLUX_DB_NAME'])
                 break
             except Exception as err:
                 self.log.error("Cannot connect to influx: %s. Retrying in 2 seconds and trying again." % str(err))
@@ -239,7 +239,7 @@ class InfluxWriterSubscriber(ListenWriter):
 
         while True:
             try:
-                self.redis = Redis(host=self.config.REDIS_HOST, port=self.config.REDIS_PORT, decode_responses=True)
+                self.redis = Redis(host=self.config['REDIS_HOST'], port=self.config['REDIS_PORT'], decode_responses=True)
                 self.redis.ping()
                 break
             except Exception as err:
@@ -249,16 +249,16 @@ class InfluxWriterSubscriber(ListenWriter):
         while True:
             self.connect_to_rabbitmq()
             self.incoming_ch = self.connection.channel()
-            self.incoming_ch.exchange_declare(exchange=self.config.INCOMING_EXCHANGE, exchange_type='fanout')
-            self.incoming_ch.queue_declare(self.config.INCOMING_QUEUE, durable=True)
-            self.incoming_ch.queue_bind(exchange=self.config.INCOMING_EXCHANGE, queue=self.config.INCOMING_QUEUE)
+            self.incoming_ch.exchange_declare(exchange=self.config['INCOMING_EXCHANGE'], exchange_type='fanout')
+            self.incoming_ch.queue_declare(self.config['INCOMING_QUEUE'], durable=True)
+            self.incoming_ch.queue_bind(exchange=self.config['INCOMING_EXCHANGE'], queue=self.config['INCOMING_QUEUE'])
             self.incoming_ch.basic_consume(
                 lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self),
-                queue=self.config.INCOMING_QUEUE,
+                queue=self.config['INCOMING_QUEUE'],
             )
 
             self.unique_ch = self.connection.channel()
-            self.unique_ch.exchange_declare(exchange=self.config.UNIQUE_EXCHANGE, exchange_type='fanout')
+            self.unique_ch.exchange_declare(exchange=self.config['UNIQUE_EXCHANGE'], exchange_type='fanout')
 
             self.log.info("influx-writer started")
             try:
