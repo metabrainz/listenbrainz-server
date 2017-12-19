@@ -11,14 +11,6 @@ MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@db:5
 
 POSTGRES_ADMIN_URI="postgresql://postgres@db/template1"
 
-# Other postgres configuration options
-# Oldest listens which can be stored in the database, in days.
-MAX_POSTGRES_LISTEN_HISTORY = "-1"
-# Log Postgres queries if they execeed this time, in milliseconds.
-PG_QUERY_TIMEOUT = "3000"
-# Set to True to enable 'synchronous_commit' for Postgres. Default: False
-PG_ASYNC_LISTEN_COMMIT = False
-
 # MusicBrainz OAuth
 MUSICBRAINZ_CLIENT_ID = ""
 MUSICBRAINZ_CLIENT_SECRET = ""
