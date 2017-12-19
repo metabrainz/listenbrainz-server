@@ -67,10 +67,11 @@ class BigQueryWriter(ListenWriter):
             try:
                 t0 = time()
                 ret = self.bigquery.tabledata().insertAll(
-                    projectId=self.config.BIGQUERY_PROJECT_ID,
-                    datasetId=self.config.BIGQUERY_DATASET_ID,
-                    tableId=self.config.BIGQUERY_TABLE_ID,
-                    body=body).execute(num_retries=5)
+                    projectId=self.config['BIGQUERY_PROJECT_ID'],
+                    datasetId=self.config['BIGQUERY_DATASET_ID'],
+                    tableId=self.config['BIGQUERY_TABLE_ID'],
+                    body=body,
+                ).execute(num_retries=5)
                 self.time += time() - t0
                 break
 
@@ -104,7 +105,7 @@ class BigQueryWriter(ListenWriter):
         self._verify_hosts_in_config()
 
         # if we're not supposed to run, just sleep
-        if not self.config.WRITE_TO_BIGQUERY:
+        if not self.config['WRITE_TO_BIGQUERY']:
             sleep(66666)
             return
 
@@ -116,7 +117,7 @@ class BigQueryWriter(ListenWriter):
 
         while True:
             try:
-                self.redis = Redis(host=self.config.REDIS_HOST, port=self.config.REDIS_PORT)
+                self.redis = Redis(host=self.config['REDIS_HOST'], port=self.config['REDIS_PORT'])
                 self.redis.ping()
                 break
             except Exception as err:
@@ -126,12 +127,12 @@ class BigQueryWriter(ListenWriter):
         while True:
             self.connect_to_rabbitmq()
             self.channel = self.connection.channel()
-            self.channel.exchange_declare(exchange=self.config.UNIQUE_EXCHANGE, exchange_type='fanout')
-            self.channel.queue_declare(self.config.UNIQUE_QUEUE, durable=True)
-            self.channel.queue_bind(exchange=self.config.UNIQUE_EXCHANGE, queue=self.config.UNIQUE_QUEUE)
+            self.channel.exchange_declare(exchange=self.config['UNIQUE_EXCHANGE'], exchange_type='fanout')
+            self.channel.queue_declare(self.config['UNIQUE_QUEUE'], durable=True)
+            self.channel.queue_bind(exchange=self.config['UNIQUE_EXCHANGE'], queue=self.config['UNIQUE_QUEUE'])
             self.channel.basic_consume(
                 lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self),
-                queue=self.config.UNIQUE_QUEUE,
+                queue=self.config['UNIQUE_QUEUE']
             )
 
             self.log.info("bigquery-writer started")
