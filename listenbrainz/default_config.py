@@ -19,6 +19,10 @@ PG_QUERY_TIMEOUT = "3000"
 # Set to True to enable 'synchronous_commit' for Postgres. Default: False
 PG_ASYNC_LISTEN_COMMIT = False
 
+# MusicBrainz OAuth
+MUSICBRAINZ_CLIENT_ID = ""
+MUSICBRAINZ_CLIENT_SECRET = ""
+
 
 # Redis
 REDIS_HOST = "redis"
