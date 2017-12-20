@@ -23,7 +23,19 @@ CACHE_TIME = 10 * 60 # time in seconds we cache the stats
 
 @index_bp.route("/")
 def index():
-    return render_template("index/index.html")
+
+    # get total listen count
+    try:
+        listen_count = _influx.get_total_listen_count()
+    except Exception as e:
+        current_app.logger.error('Error while trying to get total listen count: %s', str(e))
+        listen_count = None
+
+
+    return render_template(
+        "index/index.html",
+        listen_count=listen_count,
+    )
 
 
 @index_bp.route("/import")
