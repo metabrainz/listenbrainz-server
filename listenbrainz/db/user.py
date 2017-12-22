@@ -290,6 +290,7 @@ def get_all_users(columns=None):
         result = connection.execute(sqlalchemy.text("""
                 SELECT {columns}
                   FROM "user"
+              ORDER BY id
             """.format(columns=columns if columns else ', '.join(USER_GET_COLUMNS))))
 
         return [dict(row) for row in result]
