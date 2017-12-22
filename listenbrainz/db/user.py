@@ -267,10 +267,13 @@ def get_users_with_uncalculated_stats():
         return [dict(row) for row in result]
 
 
-def get_all_users():
+def get_all_users(columns=None):
     """ Returns a list of all users in the database
 
-        Returns: A list of dicts of the following format for each user
+        Args:
+            columns: a comma-seperated string of columns to be returned
+
+        Returns: if columns is None, A list of dicts of the following format for each user
             {
                 'id': int
                 'musicbrainz_id': string
@@ -279,12 +282,14 @@ def get_all_users():
                 'last_login': datetime.datetime
                 'latest_import': datetime.datetime
             }
+
+            otherwise, a list of dicts for each user with only the columns passed as argument
     """
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
                 SELECT {columns}
                   FROM "user"
-            """.format(columns=', '.join(USER_GET_COLUMNS))))
+            """.format(columns=columns if columns else ', '.join(USER_GET_COLUMNS))))
 
         return [dict(row) for row in result]

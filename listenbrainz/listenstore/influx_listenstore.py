@@ -32,6 +32,8 @@ TIMELINE_COUNT_MEASUREMENT = COUNT_MEASUREMENT_NAME
 
 DUMP_CHUNK_SIZE = 100000
 
+NUMBER_OF_USERS_PER_DIRECTORY = 1000
+
 
 class InfluxListenStore(ListenStore):
 
@@ -346,7 +348,7 @@ class InfluxListenStore(ListenStore):
         self.log.info('Beginning dump of listens from InfluxDB...')
 
         self.log.info('Getting list of users whose listens are to be dumped...')
-        users = db_user.get_all_users()
+        users = db_user.get_all_users(columns='id, musicbrainz_id')
         self.log.info('Total number of users: %d', len(users))
 
         archive_name = 'listenbrainz-listens-dump-{time}'.format(time=dump_time.strftime('%Y%m%d-%H%M%S'))
@@ -382,6 +384,13 @@ class InfluxListenStore(ListenStore):
                     tar.add(DUMP_LICENSE_FILE_PATH,
                             arcname=os.path.join(archive_name, 'COPYING'))
 
+                    # add cross-reference json file
+                    index_path = os.path.join(temp_dir, 'index.json')
+                    with open(index_path, 'w') as f:
+                        f.write(ujson.dumps(users))
+                    tar.add(index_path,
+                            arcname=os.path.join(archive_name, 'index.json'))
+
                 except IOError as e:
                     log_ioerrors(self.log, e)
                     raise
@@ -394,12 +403,18 @@ class InfluxListenStore(ListenStore):
 
                 # get listens from all measurements and write them to files in
                 # a temporary dir before adding them to the archive
+                count = 1
                 for user in users:
                     username = user['musicbrainz_id']
+                    index = user['id']
                     offset = 0
 
-                    user_listens_file = '{username}.listens'.format(username=username)
-                    user_listens_path = os.path.join(listens_path, user_listens_file)
+                    directory = os.path.join(listens_path, '%03d' % (index % NUMBER_OF_USERS_PER_DIRECTORY))
+                    self.log.info('dumping user #%d with musicbrainz_id %s in directory: %s', count, username, directory)
+                    create_path(directory)
+
+                    user_listens_file = 'user-%06d.listens' % index
+                    user_listens_path = os.path.join(directory, user_listens_file)
 
                     with open(user_listens_path, 'w') as f:
                         # Get this user's listens in chunks
@@ -447,6 +462,8 @@ class InfluxListenStore(ListenStore):
 
                             offset += DUMP_CHUNK_SIZE
 
+                    count += 1
+
                 # add the listens directory to the archive
                 self.log.info('Got all listens, adding them to the archive...')
                 tar.add(listens_path,
@@ -478,10 +495,13 @@ class InfluxListenStore(ListenStore):
         pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
 
 
+        index = None
         with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
+
+            schema_check_done = False
+            index_loaded = False
             for member in tar:
                 file_name = member.name.split('/')[-1]
-
                 if file_name == 'SCHEMA_SEQUENCE':
                     self.log.info('Checking if schema version of dump matches...')
                     schema_seq = int(tar.extractfile(member).read().strip())
@@ -490,11 +510,32 @@ class InfluxListenStore(ListenStore):
                                         'Please ensure that the data dump version matches the code version'
                                         'in order to import the data.'
                                         % (LISTENS_DUMP_SCHEMA_VERSION, schema_seq))
+                    schema_check_done = True
 
-                elif file_name.endswith('.listens'):
+                elif file_name == 'index.json':
+                    with tar.extractfile(member) as f:
+                        index = ujson.load(f)
+                    index_loaded = True
 
-                    # remove .listens from the filename to get the username
-                    user_name = file_name[:-8]
+                if schema_check_done and index_loaded:
+                    self.log.info('Schema version matched and index.json loaded!')
+                    self.log.info('Starting import of listens...')
+                    break
+            else:
+                raise SchemaMismatchException('Metadata files missing in dump, please ensure that the dump file is valid.')
+
+            for member in tar:
+                file_name = member.name.split('/')[-1]
+                if file_name.endswith('.listens'):
+
+                    # slice filename to get the user id
+                    try:
+                        user_id = int(file_name[5:-8])
+                    except ValueError as e:
+                        self.log.error('Invalid listens file in dump, please ensure that data dump is valid')
+                        raise
+
+                    user_name = index[user_id]['musicbrainz_id']
                     self.log.info('Importing user %s', user_name)
                     listens = []
                     listen_count = 0
