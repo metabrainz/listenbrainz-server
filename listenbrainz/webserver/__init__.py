@@ -7,6 +7,12 @@ from shutil import copyfile
 
 API_PREFIX = '/1'
 
+# Check to see if we're running under a docker deployment. If so, don't second guess
+# the config file setup and just wait for the correct configuration to be generated.
+deploy_env = os.environ.get('DEPLOY_ENV', '')
+
+CONSUL_CONFIG_FILE_RETRY_COUNT = 10
+
 def create_influx(app):
     from listenbrainz.webserver.influx_connection import init_influx_connection
     return init_influx_connection(app.logger, {
@@ -39,18 +45,40 @@ def gen_app(config_path=None, debug=None):
         use_debug_toolbar=True,
     )
 
+    print("Starting metabrainz service with %s environment." % deploy_env);
+
     # Configuration
+    print("loading %s" % os.path.join( os.path.dirname(os.path.realpath(__file__)), '..', 'default_config.py'))
     app.config.from_pyfile(os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
         '..', 'default_config.py'
     ))
+    print("loading %s" % os.path.join( os.path.dirname(os.path.realpath(__file__)), '..', 'custom_config.py'))
     app.config.from_pyfile(os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
         '..', 'custom_config.py'
     ), silent=True)
 
     if config_path:
+        print("loading custom %s" % config_path)
         app.config.from_pyfile(config_path)
+
+    # Load configuration files: If we're running under a docker deployment, wait until
+    # the consul configuration is available.
+    if deploy_env:
+        consul_config = os.path.join( os.path.dirname(os.path.realpath(__file__)),
+            '..', 'consul_config.py')
+
+        print("loading consul %s" % consul_config)
+        for i in range(CONSUL_CONFIG_FILE_RETRY_COUNT):
+            if not os.path.exists(consul_config):
+                sleep(1)
+
+        if not os.path.exists(consul_config):
+            print("No configuration file generated yet. Retried %d times, exiting." % CONSUL_CONFIG_FILE_RETRY_COUNT);
+            sys.exit(-1)
+
+        app.config.from_pyfile(consul_config, silent=True)
 
     if debug is not None:
         app.debug = debug
