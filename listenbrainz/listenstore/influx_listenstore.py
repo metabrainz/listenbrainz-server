@@ -403,14 +403,13 @@ class InfluxListenStore(ListenStore):
 
                 # get listens from all measurements and write them to files in
                 # a temporary dir before adding them to the archive
-                count = 1
                 for user in users:
                     username = user['musicbrainz_id']
                     index = user['id']
                     offset = 0
 
                     directory = os.path.join(listens_path, '%03d' % (index % NUMBER_OF_USERS_PER_DIRECTORY))
-                    self.log.info('dumping user #%d with musicbrainz_id %s in directory: %s', count, username, directory)
+                    self.log.info('dumping user #%d with MusicBrainz ID %s in directory: %s', index, username, directory)
                     create_path(directory)
 
                     user_listens_file = 'user-%06d.listens' % index
@@ -461,8 +460,6 @@ class InfluxListenStore(ListenStore):
                                     raise
 
                             offset += DUMP_CHUNK_SIZE
-
-                    count += 1
 
                 # add the listens directory to the archive
                 self.log.info('Got all listens, adding them to the archive...')
