@@ -150,16 +150,40 @@ class TestInfluxListenStore(DatabaseTestCase):
 
     def test_import_listens(self):
         count = self._create_test_data(self.testuser_name)
-        sleep(2)
+        sleep(1)
         temp_dir = tempfile.mkdtemp()
         dump_location = self.logstore.dump_listens(
             location=temp_dir,
         )
+        sleep(1)
         self.assertTrue(os.path.isfile(dump_location))
         self.reset_influx_db()
 
+        sleep(1)
         self.logstore.import_listens_dump(dump_location)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
+        self.assertEqual(len(listens), 5)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
+        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[3].ts_since_epoch, 1400000050)
+        self.assertEqual(listens[4].ts_since_epoch, 1400000000)
+
+    def test_dump_and_import_listens_escaped(self):
+        user = db_user.get_or_create('i have a\\weird\\user, na/me"\n')
+        count = self._create_test_data(user['musicbrainz_id'])
+        sleep(1)
+        temp_dir = tempfile.mkdtemp()
+        dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+        )
+        sleep(1)
+        self.assertTrue(os.path.isfile(dump_location))
+        self.reset_influx_db()
+
+        sleep(1)
+        self.logstore.import_listens_dump(dump_location)
+        listens = self.logstore.fetch_listens(user_name=user['musicbrainz_id'], to_ts=1400000300)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
