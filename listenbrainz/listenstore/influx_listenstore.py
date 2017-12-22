@@ -348,7 +348,7 @@ class InfluxListenStore(ListenStore):
         self.log.info('Beginning dump of listens from InfluxDB...')
 
         self.log.info('Getting list of users whose listens are to be dumped...')
-        users = db_user.get_all_users(columns='id, musicbrainz_id')
+        users = db_user.get_all_users(columns=['id', 'musicbrainz_id'])
         self.log.info('Total number of users: %d', len(users))
 
         archive_name = 'listenbrainz-listens-dump-{time}'.format(time=dump_time.strftime('%Y%m%d-%H%M%S'))
