@@ -271,7 +271,7 @@ def get_all_users(columns=None):
     """ Returns a list of all users in the database
 
         Args:
-            columns: a comma-seperated string of columns to be returned
+            columns: a list of columns to be returned for each user
 
         Returns: if columns is None, A list of dicts of the following format for each user
             {
@@ -286,11 +286,14 @@ def get_all_users(columns=None):
             otherwise, a list of dicts for each user with only the columns passed as argument
     """
 
+    if columns is None:
+        columns = USER_GET_COLUMNS
+
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
                 SELECT {columns}
                   FROM "user"
               ORDER BY id
-            """.format(columns=columns if columns else ', '.join(USER_GET_COLUMNS))))
+            """.format(columns=', '.join(columns))))
 
         return [dict(row) for row in result]
