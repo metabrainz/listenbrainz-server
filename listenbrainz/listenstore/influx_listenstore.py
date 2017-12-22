@@ -486,15 +486,18 @@ class InfluxListenStore(ListenStore):
 
         self.log.info('Beginning import of listens from dump %s...', archive_path)
 
+        # construct the pxz command to decompress the archive
         pxz_command = ['pxz', '--decompress', '--stdout', archive_path]
         if threads is not None:
             pxz_command.append('-T {threads}'.format(threads=threads))
-        pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
 
+
+        # run the command once to ensure schema version is correct
+        # and load the index
+        pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
 
         index = None
         with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
-
             schema_check_done = False
             index_loaded = False
             for member in tar:
@@ -521,6 +524,13 @@ class InfluxListenStore(ListenStore):
             else:
                 raise SchemaMismatchException('Metadata files missing in dump, please ensure that the dump file is valid.')
 
+
+        # close pxz command and start over again, this time with the aim of importing all listens
+        pxz.stdout.close()
+        pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
+
+        users_done = 0
+        with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
             for member in tar:
                 file_name = member.name.split('/')[-1]
                 if file_name.endswith('.listens'):
@@ -552,7 +562,11 @@ class InfluxListenStore(ListenStore):
                     if listen_count > 0:
                         self.write_points_to_db(listens)
 
+                    users_done += 1
+
         self.log.info('Import of listens from dump %s done!', archive_path)
+        pxz.stdout.close()
+        return users_done
 
 
     def write_points_to_db(self, points):
