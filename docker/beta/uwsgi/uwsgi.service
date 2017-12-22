@@ -1,17 +1,17 @@
 #!/bin/bash
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-web-prod" ] 
+if [ "${CONTAINER_NAME}" = "listenbrainz-web-beta" ]
 then
     exec uwsgi /etc/uwsgi/uwsgi.ini
 fi
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-influx-writer-prod" ]
+if [ "${CONTAINER_NAME}" = "listenbrainz-influx-writer-beta" ]
 then
     cd /code/listenbrainz
     exec python3 -m listenbrainz.influx-writer.influx-writer
 fi
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-bigquery-writer-prod" ]
+if [ "${CONTAINER_NAME}" = "listenbrainz-bigquery-writer-beta" ]
 then
     cd /code/listenbrainz
     exec python3 -m listenbrainz.bigquery-writer.bigquery-writer
