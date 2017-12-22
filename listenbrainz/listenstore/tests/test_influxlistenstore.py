@@ -204,3 +204,20 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.assertEqual(listens[2].ts_since_epoch, 1400000100)
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
+
+
+    def test_import_dump_many_users(self):
+        for i in range(50):
+            db_user.create('user%d' % i)
+
+        temp_dir = tempfile.mkdtemp()
+        dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+        )
+        sleep(1)
+        self.assertTrue(os.path.isfile(dump_location))
+        self.reset_influx_db()
+
+        done = self.logstore.import_listens_dump(dump_location)
+        sleep(1)
+        self.assertEqual(done, len(db_user.get_all_users()))
