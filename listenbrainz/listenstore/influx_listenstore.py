@@ -482,6 +482,9 @@ class InfluxListenStore(ListenStore):
         Args:
             archive (str): the path to the listens dump .tar.xz archive to be imported
             threads (int): the number of threads to be used for decompression (defaults to 1)
+
+        Returns:
+            int: the number of users for whom listens have been imported
         """
 
         self.log.info('Beginning import of listens from dump %s...', archive_path)
