@@ -8,6 +8,7 @@ import tempfile
 import time
 import shutil
 import ujson
+import urllib.parse
 
 from datetime import datetime
 
@@ -394,14 +395,16 @@ class InfluxListenStore(ListenStore):
 
                 # get listens from all measurements and write them to files in
                 # a temporary dir before adding them to the archive
-                for user in users:
+                for index, user in enumerate(users):
                     username = user['musicbrainz_id']
+                    self.log.info('Dumping listens for user #%d: %s...', index + 1, username)
                     offset = 0
 
-                    user_listens_file = '{username}.listens'.format(username=username)
+                    user_listens_file = '{username}.listens'.format(username=urllib.parse.quote_plus(username))
                     user_listens_path = os.path.join(listens_path, user_listens_file)
 
                     with open(user_listens_path, 'w') as f:
+
                         # Get this user's listens in chunks
                         while True:
 
@@ -494,7 +497,7 @@ class InfluxListenStore(ListenStore):
                 elif file_name.endswith('.listens'):
 
                     # remove .listens from the filename to get the username
-                    user_name = file_name[:-8]
+                    user_name = urllib.parse.unquote_plus(file_name[:-8])
                     self.log.info('Importing user %s', user_name)
                     listens = []
                     listen_count = 0
