@@ -1,9 +1,10 @@
 import os
 import pprint
 import sys
+from time import sleep
+from shutil import copyfile
 
 from brainzutils.flask import CustomFlask
-from shutil import copyfile
 
 API_PREFIX = '/1'
 
@@ -53,32 +54,31 @@ def gen_app(config_path=None, debug=None):
         os.path.dirname(os.path.realpath(__file__)),
         '..', 'default_config.py'
     ))
-    print("loading %s" % os.path.join( os.path.dirname(os.path.realpath(__file__)), '..', 'custom_config.py'))
-    app.config.from_pyfile(os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        '..', 'custom_config.py'
-    ), silent=True)
-
-    if config_path:
-        print("loading custom %s" % config_path)
-        app.config.from_pyfile(config_path)
 
     # Load configuration files: If we're running under a docker deployment, wait until
-    # the consul configuration is available.
+    # the consul configuration has been copied to custom_config.py
+    custom_config = os.path.join( os.path.dirname(os.path.realpath(__file__)), '..', 'custom_config.py' )
     if deploy_env:
-        consul_config = os.path.join( os.path.dirname(os.path.realpath(__file__)),
-            '..', 'consul_config.py')
-
-        print("loading consul %s" % consul_config)
+        print("Checking if consul template generated config file exists: %s" % custom_config)
         for i in range(CONSUL_CONFIG_FILE_RETRY_COUNT):
-            if not os.path.exists(consul_config):
+            if not os.path.exists(custom_config):
                 sleep(1)
 
-        if not os.path.exists(consul_config):
+        if not os.path.exists(custom_config):
             print("No configuration file generated yet. Retried %d times, exiting." % CONSUL_CONFIG_FILE_RETRY_COUNT);
             sys.exit(-1)
 
-        app.config.from_pyfile(consul_config, silent=True)
+        print("loading consul config file %s)" % os.path.join( os.path.dirname(os.path.realpath(__file__)), '..', 'custom_config.py'))
+        app.config.from_pyfile(custom_config)
+
+    else:
+        print("loading custom config %s" % custom_config)
+        app.config.from_pyfile(custom_config, silent=True)
+
+    if config_path:
+        print("loading additional config %s" % config_path)
+        app.config.from_pyfile(config_path)
+
 
     if debug is not None:
         app.debug = debug
