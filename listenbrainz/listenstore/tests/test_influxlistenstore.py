@@ -160,6 +160,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.reset_influx_db()
         sleep(1)
         self.logstore.import_listens_dump(dump_location)
+        sleep(1)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
