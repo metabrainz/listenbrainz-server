@@ -532,7 +532,7 @@ class InfluxListenStore(ListenStore):
                         self.log.error('Invalid listens file in dump, please ensure that data dump is valid')
                         raise
 
-                    user_name = index[user_id]['musicbrainz_id']
+                    user_name = index[user_id - 1]['musicbrainz_id'] # user_id is 1 indexed while our list is 0 indexed
                     self.log.info('Importing user %s', user_name)
                     listens = []
                     listen_count = 0
