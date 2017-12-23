@@ -16,6 +16,7 @@ from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from redis import Redis
 
 from listenbrainz import DUMP_LICENSE_FILE_PATH
+from listenbrainz.db.dump import SchemaMismatchException
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import ListenStore
 from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, \
