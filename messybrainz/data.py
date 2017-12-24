@@ -18,7 +18,7 @@ def get_id_from_meta_hash(connection, data):
         The MessyBrainz ID for the recording with same metadata hash if it exists, None otherwise
     """
 
-    meta = {"artist": data["artist"], "release": data["release"]}
+    meta = {"artist": data["artist"], "title": data["title"]}
     meta_json = json.dumps(meta, sort_keys=True, separators=(',', ':'))
     meta_sha256 = sha256(meta_json.encode("utf-8")).hexdigest()
 
