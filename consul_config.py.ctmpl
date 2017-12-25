@@ -77,3 +77,11 @@ UPLOAD_FOLDER = '''{{template "KEY" "upload_folder"}}'''
 
 API_URL = '''{{template "KEY" "api_url"}}'''
 LASTFM_PROXY_URL = '''{{template "KEY" "lastfm_proxy_url"}}'''
+
+
+# Sentry config
+LOG_SENTRY = {
+    'dsn': '''{{template "KEY" "sentry/dsn_private"}}''',
+    'environment': '''{{template "KEY" "sentry/environment"}}''',
+}
+SENTRY_DSN_PUBLIC = '''{{template "KEY" "sentry/dsn_public"}}'''
