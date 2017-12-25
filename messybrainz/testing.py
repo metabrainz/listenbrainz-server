@@ -32,8 +32,10 @@ ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 
 class DatabaseTestCase(unittest.TestCase):
 
     def setUp(self):
+        db.init_db_engine(config.POSTGRES_ADMIN_URI)
+        self.create_db()
         db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
-        self.reset_db()
+        self.init_db()
 
 
     def tearDown(self):
@@ -43,6 +45,10 @@ class DatabaseTestCase(unittest.TestCase):
     def reset_db(self):
         self.drop_tables()
         self.init_db()
+
+
+    def create_db(self):
+        db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_db.sql'))
 
 
     def init_db(self):
