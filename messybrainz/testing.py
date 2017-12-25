@@ -20,9 +20,9 @@ import os
 import unittest
 import messybrainz.db as db
 
-import default_config as config
+import messybrainz.default_config as config
 try:
-    import custom_config as config
+    import messybrainz.custom_config as config
 except ImportError:
     pass
 

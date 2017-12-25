@@ -1,7 +1,7 @@
 import flask_testing
 import os
 
-from webserver import create_app
+from messybrainz.webserver import create_app
 
 
 class ServerTestCase(flask_testing.TestCase):

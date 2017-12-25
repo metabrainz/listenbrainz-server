@@ -1,12 +1,12 @@
 from messybrainz import db
-from webserver import create_app
+from messybrainz.webserver import create_app
 import subprocess
 import os
 import click
 
-import default_config as config
+import messybrainz.default_config as config
 try:
-    import custom_config as config
+    import messybraiz.custom_config as config
 except ImportError:
     pass
 
