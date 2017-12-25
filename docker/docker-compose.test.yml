@@ -7,11 +7,8 @@ services:
   messybrainz:
     build:
       context: ..
-      dockerfile: Dockerfile
-    command: py.test
+      dockerfile: ./docker/Dockerfile.test
     image: web
-    volumes:
-      - ..:/code/messybrainz
     depends_on:
       - db
 
