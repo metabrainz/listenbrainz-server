@@ -1,3 +1,0 @@
-#!/bin/bash
-export CONSUL_HOST=10.2.2.23
-export DEPLOY_ENV="prod"
