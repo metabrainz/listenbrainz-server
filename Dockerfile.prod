@@ -1,5 +1,7 @@
 FROM metabrainz/python:3.6
 
+ARG deploy_env
+
 ENV DOCKERIZE_VERSION v0.2.0
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
@@ -60,11 +62,11 @@ RUN lessc --clean-css listenbrainz/webserver/static/css/main.less > listenbrainz
 
 # Consul Template service is already set up with the base image.
 # Just need to copy the configuration.
-COPY ./docker/prod/consul-template.conf /etc/consul-template.conf
+COPY ./docker/consul-template.conf /etc/consul-template.conf
 
-COPY ./docker/prod/uwsgi/uwsgi.service /etc/service/uwsgi/run
+COPY ./docker/$deploy_env/uwsgi/uwsgi.service /etc/service/uwsgi/run
 RUN chmod 755 /etc/service/uwsgi/run
-COPY ./docker/prod/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
+COPY ./docker/$deploy_env/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
 COPY ./docker/prod/uwsgi/uwsgi-api-compat.ini /etc/uwsgi/uwsgi-api-compat.ini
 
 # setup a log dir
