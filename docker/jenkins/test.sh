@@ -37,7 +37,7 @@ function run_tests {
 
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                   up -d db redis influx rabbitmq --force-recreate
+                   up -d db redis influx rabbitmq
 
     # List images and containers related to this build
     docker images | grep $COMPOSE_PROJECT_NAME | awk '{print $0}'
@@ -47,7 +47,7 @@ function run_tests {
       dockerize \
       -wait tcp://db:5432 -timeout 60s \
       -wait tcp://influx:8086 -timeout 60s bash -c \
-      "python3 manage.py init_db --create-db && \
+      "ls && python3 manage.py init_db --create-db && \
        python3 manage.py init_msb_db --create-db && \
        python3 manage.py init_influx"
 
