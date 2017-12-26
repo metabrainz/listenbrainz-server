@@ -1,24 +1,15 @@
-'''
-submit_listens.py
-'''
-
 from time import time
-from enum import Enum
 import requests
 
 ROOT = '127.0.0.1'
-TOKEN = 'YOUR_TOKEN_HERE'
-AUTH_HEADER = {
-    "Authorization": "Token {0}".format(TOKEN)
-}
 
-# The token in AUTH-HEADER must be the token of the user you're submitting listens for.
-def submit_listen(listen_type, payload):
+def submit_listen(listen_type, payload, token):
     """Submits listens for the track(s) in payload.
 
     Args:
-        listen_type: One type from the ListenType enum.
+        listen_type (str): either of 'single', 'import' or 'playing_now'
         payload: A list of Track dictionaries.
+        token: the auth token of the user you're submitting listens for
 
     Returns:
          The json response if there's an OK status.
@@ -31,20 +22,18 @@ def submit_listen(listen_type, payload):
     response = requests.post(
         url="http://{0}/1/submit-listens".format(ROOT),
         json={
-            "listen_type": listen_type.value,
-            "payload": payload
+            "listen_type": listen_type,
+            "payload": payload,
         },
-        headers=AUTH_HEADER
+        headers={
+            "Authorization": "Token {0}".format(token)
+        }
     )
 
     response.raise_for_status()
 
     return response.json()
 
-class ListenType(Enum):
-    Single = "single"
-    Playing = "playing_now"
-    Import = "import"
 
 if __name__ == "__main__":
     EXAMPLE_PAYLOAD = [
@@ -67,7 +56,9 @@ if __name__ == "__main__":
         }
     ]
 
-    json_response = submit_listen(listen_type=ListenType.Single, payload=EXAMPLE_PAYLOAD)
+    # Input token from the user and call submit listen
+    token = input('Please enter your auth token: ')
+    json_response = submit_listen(listen_type='single', payload=EXAMPLE_PAYLOAD, token=token)
 
     print("Response was: {0}".format(json_response))
     print("Check your listens - there should be a Never Gonna Give You Up track, played recently.")
