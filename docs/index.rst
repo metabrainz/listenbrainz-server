@@ -19,6 +19,7 @@ Contents:
 
    dev/devel-env
    dev/api
+   dev/api-usage
    dev/json
    dev/api-compat
 
