@@ -27,7 +27,7 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    command: python3 -m "listenbrainz.influx-writer.influx-writer"
+    command: python3 -m "listenbrainz.influx_writer.influx_writer"
     depends_on:
       - redis
       - influx
@@ -36,7 +36,7 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    command: python3 -m "listenbrainz.bigquery-writer.bigquery-writer"
+    command: python3 -m "listenbrainz.bigquery_writer.bigquery_writer"
     links:
       - redis
 
