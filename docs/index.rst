@@ -20,6 +20,7 @@ Contents:
    dev/devel-env
    dev/api
    dev/json
+   dev/api-compat
 
 Indices and tables
 ==================
