@@ -113,23 +113,37 @@ class BigQueryWriter(ListenWriter):
         self.delivery_tags = []
 
 
-    def callback(self, ch, method, properties, body):
+    def convert_to_bigquery_payload(self, listens):
+        """ Converts a list of listens to Google BigQuery rows.
 
-        # if some timeout exists, remove it as we'll add a new one
-        # before this method exits
-        if self.timer_id is not None:
-            ch.connection.remove_timeout(self.timer_id)
-            self.timer_id = None
+        Args:
+            listens (list): a list of listens
+            Each listen must be of the following format:
+                {
+                    'user_name': MusicBrainz ID of the user
+                    'listened_at': unix timestamp of the listen
+                    'track_metadata': {
+                        'artist_msid': MessyBrainz ID of the artist,
+                        'artist_name': Name of the artist,
+                        'track_name': the name of the track,
+                        'recording_msid': the MessyBrainz ID of the recording,
+                    }
+                }
 
-        listens = ujson.loads(body)
-        count = len(listens)
+        Returns:
+            payload (list): a list of dictionaries, each representing a row that can
+                            be submitted to Google BigQuery
 
-        # if adding this batch pushes us over the line, send this batch before
-        # adding new listens to queue
-        if len(self.bq_data) + count > SUBMIT_CHUNK_SIZE:
-            self.submit_data()
-
-        # now add current listens to the queue
+            Each row is of the following format:
+                {
+                    'insertId': the unique insert ID of the row, this is used by BigQuery to ensure
+                                rows don't get lost,
+                    'json': {
+                        value for each of the rows in the BigQuery schema
+                    }
+                }
+        """
+        payload = []
         for listen in listens:
             meta = listen['track_metadata']
             row = {
@@ -150,11 +164,32 @@ class BigQueryWriter(ListenWriter):
 
                 'tags' : ','.join(meta['additional_info'].get('tags', [])),
             }
-            self.bq_data.append({
+            payload.append({
                 'json': row,
                 'insertId': '%s-%s-%s' % (listen['user_name'], listen['listened_at'], listen['recording_msid'])
             })
+        return payload
 
+
+    def callback(self, ch, method, properties, body):
+
+        # if some timeout exists, remove it as we'll add a new one
+        # before this method exits
+        if self.timer_id is not None:
+            ch.connection.remove_timeout(self.timer_id)
+            self.timer_id = None
+
+        listens = ujson.loads(body)
+        count = len(listens)
+
+        # if adding this batch pushes us over the line, send this batch before
+        # adding new listens to queue
+        if len(self.bq_data) + count > SUBMIT_CHUNK_SIZE:
+            self.submit_data()
+
+        # now add current listens to the queue
+        payload = self.convert_to_bigquery_payload(listens)
+        self.bq_data.extend(payload)
         self.delivery_tags.append(method.delivery_tag)
 
         # if we won't get any new messages until we ack these, submit data
