@@ -80,7 +80,7 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    command: python3 -m "listenbrainz.influx-writer.influx-writer"
+    command: python3 -m "listenbrainz.influx_writer.influx_writer"
     depends_on:
       - redis
       - influx
@@ -94,7 +94,7 @@ services:
       - ../credentials:/code/credentials:z
     environment:
       GOOGLE_APPLICATION_CREDENTIALS: '/code/credentials/bigquery-credentials.json'
-    command: python3 -m "listenbrainz.bigquery-writer.bigquery-writer"
+    command: python3 -m "listenbrainz.bigquery_writer.bigquery_writer"
     depends_on:
       - redis
       - rabbitmq

@@ -12,13 +12,13 @@ fi
 if [ "${CONTAINER_NAME}" = "listenbrainz-influx-writer-beta" ]
 then
     cd /code/listenbrainz
-    exec python3 -m listenbrainz.influx-writer.influx-writer
+    exec python3 -m listenbrainz.influx_writer.influx_writer
 fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-bigquery-writer-beta" ]
 then
     cd /code/listenbrainz
-    exec python3 -m listenbrainz.bigquery-writer.bigquery-writer
+    exec python3 -m listenbrainz.bigquery_writer.bigquery_writer
 fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-api-compat" ]
