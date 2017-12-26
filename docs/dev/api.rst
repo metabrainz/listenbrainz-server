@@ -25,6 +25,41 @@ API Calls
    :blueprints: api_v1
    :include-empty-docstring:
    :undoc-static:
+   :undoc-endpoints: api_v1.latest_import
+
+.. http:get:: /1/latest-import
+
+  Get the timestamp of the newest listen submitted by a user in previous imports to ListenBrainz.
+
+  In order to get the timestamp for a user, make a GET request to this endpoint. The data returned will
+  be JSON of the following format::
+
+      {
+          'musicbrainz_id': the MusicBrainz ID of the user,
+          'latest_import': the timestamp of the newest listen submitted in previous imports.
+                           Defaults to 0
+      }
+
+  :param user_name: the MusicBrainz ID of the user whose data is needed
+  :statuscode 200: Yay, you have data!
+  :resheader Content-Type: *application/json*
+
+.. http:post:: /1/latest-import
+
+  Update the timestamp of the newest listen submitted by a user in an import to ListenBrainz.
+
+  In order to update the timestamp of a user, you'll have to provide a user token in the Authorization Header. User tokens can be found on https://listenbrainz.org/user/import .
+
+  The JSON that needs to be posted must contain a field named `ts` in the root with a valid unix timestamp. Example::
+
+    {
+      'ts': 0
+    }
+
+  :reqheader Authorization: Token <user token>
+  :statuscode 200: latest import timestamp updated
+  :statuscode 400: invalid JSON sent, see error message for details.
+  :statuscode 401: invalid authorization. See error message for details.
 
 Rate limiting
 ^^^^^^^^^^^^^
