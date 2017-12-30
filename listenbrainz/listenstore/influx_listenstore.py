@@ -609,7 +609,7 @@ class InfluxListenStore(ListenStore):
 
                                 if len(listens) > DUMP_CHUNK_SIZE:
                                     self.write_points_to_db(listens)
-                                    listens = 0
+                                    listens = []
 
                             if len(listens) > 0:
                                 self.write_points_to_db(listens)
