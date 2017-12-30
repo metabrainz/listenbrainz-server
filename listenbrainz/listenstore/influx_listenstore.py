@@ -10,8 +10,8 @@ import shutil
 import ujson
 import uuid
 
+from collections import defaultdict
 from datetime import datetime
-
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from redis import Redis
@@ -574,6 +574,18 @@ class InfluxListenStore(ListenStore):
 
         # close pxz command and start over again, this time with the aim of importing all listens
         pxz.stdout.close()
+
+        file_contents = defaultdict(list)
+        for user, info in index.items():
+            file_contents[info['file_name']].append({
+                'user_name': user,
+                'offset': info['offset'],
+                'size': info['size'],
+            })
+
+        for file in file_contents:
+            file_contents[file] = sorted(file_contents[file], key=lambda x: x['offset'])
+
         pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
 
         users_done = 0
@@ -582,34 +594,28 @@ class InfluxListenStore(ListenStore):
                 file_name = member.name.split('/')[-1]
                 if file_name.endswith('.listens'):
 
-                    # slice filename to get the user id
-                    try:
-                        user_id = int(file_name[5:-8])
-                    except ValueError as e:
-                        self.log.error('Invalid listens file in dump, please ensure that data dump is valid')
-                        raise
-
-                    user_name = index[user_id - 1]['musicbrainz_id'] # user_id is 1 indexed while our list is 0 indexed
-                    self.log.info('Importing user %s', user_name)
-                    listens = []
-                    listen_count = 0
-
-                    # iterate through files and keep writing listens in chunks
-                    for listen in tar.extractfile(member):
-                        influx_listen = Listen.from_json(ujson.loads(listen)).to_influx(quote(user_name))
-                        listens.append(influx_listen)
-                        listen_count += 1
-
-                        if listen_count > DUMP_CHUNK_SIZE:
-                            self.write_points_to_db(listens)
-                            listen_count = 0
+                    file_name = file_name[:-8]
+                    with tar.extractfile(member) as f:
+                        for user in file_contents[file_name]:
+                            self.log.info('Importing user %s...', user['user_name'])
+                            assert(f.tell() == user['offset'])
+                            bytes_read = 0
                             listens = []
+                            while bytes_read < user['size']:
+                                line = f.readline()
+                                bytes_read += len(line)
+                                listen = Listen.from_json(ujson.loads(line)).to_influx(quote(user['user_name']))
+                                listens.append(listen)
 
-                    # if some listens are left, write them to db
-                    if listen_count > 0:
-                        self.write_points_to_db(listens)
+                                if len(listens) > DUMP_CHUNK_SIZE:
+                                    self.write_points_to_db(listens)
+                                    listens = 0
 
-                    users_done += 1
+                            if len(listens) > 0:
+                                self.write_points_to_db(listens)
+
+                            self.log.info('Import of user %s done!', user['user_name'])
+                            users_done += 1
 
         self.log.info('Import of listens from dump %s done!', archive_path)
         pxz.stdout.close()
