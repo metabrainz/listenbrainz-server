@@ -58,13 +58,13 @@ class DumpTestCase(DatabaseTestCase):
 
     def test_add_dump_entry(self):
         prev_dumps = db_dump.get_dump_entries()
-        db_dump.add_dump_entry()
+        db_dump.add_dump_entry(datetime.today().strftime('%s'))
         now_dumps = db_dump.get_dump_entries()
         self.assertEqual(len(now_dumps), len(prev_dumps) + 1)
 
 
     def test_copy_table(self):
-        db_dump.add_dump_entry()
+        db_dump.add_dump_entry(datetime.today().strftime('%s'))
         with db.engine.connect() as connection:
             db_dump.copy_table(
                 cursor=connection.connection.cursor(),
@@ -104,3 +104,12 @@ class DumpTestCase(DatabaseTestCase):
         db_dump.import_postgres_dump(location, threads=2)
         user_count = db_user.get_user_count()
         self.assertEqual(user_count, 1)
+
+
+    def test_dump_postgres_db_table_entries(self):
+        db_user.create('test_user')
+        timestamp = datetime.today()
+        location = db_dump.dump_postgres_db(self.tempdir, dump_time=timestamp)
+        dump_entries = db_dump.get_dump_entries()
+        self.assertEqual(len(dump_entries), 1)
+        self.assertEqual(dump_entries[0]['created'].strftime('%s'), timestamp.strftime('%s'))
