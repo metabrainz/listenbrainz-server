@@ -583,8 +583,8 @@ class InfluxListenStore(ListenStore):
                 'size': info['size'],
             })
 
-        for file in file_contents:
-            file_contents[file] = sorted(file_contents[file], key=lambda x: x['offset'])
+        for file_name in file_contents:
+            file_contents[file_name] = sorted(file_contents[file_name], key=lambda x: x['offset'])
 
         pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
 
