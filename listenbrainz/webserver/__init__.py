@@ -5,6 +5,7 @@ from time import sleep
 from shutil import copyfile
 
 from brainzutils.flask import CustomFlask
+from listenbrainz.webserver.utils import init_cache
 
 API_PREFIX = '/1'
 
@@ -102,6 +103,9 @@ def gen_app(config_path=None, debug=None):
         email_config=app.config.get('LOG_EMAIL'),
         sentry_config=app.config.get('LOG_SENTRY')
     )
+
+    # Brainzutils cache
+    init_cache(app)
 
     # Redis connection
     create_redis(app)
