@@ -5,6 +5,7 @@ import ujson
 
 from flask import Blueprint, render_template, request, url_for, Response, redirect, flash, current_app, jsonify
 from flask_login import current_user, login_required
+from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from listenbrainz import webserver
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.decorators import crossdomain
