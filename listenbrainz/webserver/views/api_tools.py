@@ -8,9 +8,11 @@ import pika.exceptions
 from pika_pool import Overflow as PikaPoolOverflow, Timeout as PikaPoolTimeout
 
 from listenbrainz.webserver.external import messybrainz
-import listenbrainz.webserver.redis_connection as redis_connection
+#import listenbrainz.webserver.redis_connection as redis_connection
 import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
 from listenbrainz.listen import Listen
+
+from brainzutils import cache
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
 MAX_LISTEN_SIZE = 10240
@@ -56,7 +58,7 @@ def _send_listens_to_queue(listen_type, listens):
             try:
                 expire_time = listen["track_metadata"]["additional_info"].get("duration",
                                     current_app.config['PLAYING_NOW_MAX_DURATION'])
-                redis_connection._redis.redis.setex(
+                cache.set(
                     'playing_now:{}'.format(listen['user_id']),
                     ujson.dumps(listen).encode('utf-8'),
                     expire_time
