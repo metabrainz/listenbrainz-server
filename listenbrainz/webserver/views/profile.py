@@ -17,7 +17,7 @@ import listenbrainz.db.user as db_user
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver import flash
-from listenbrainz.webserver.redis_connection import _redis
+#from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.utils import sizeof_readable
 from listenbrainz.webserver.views.api_tools import convert_backup_to_native_format, insert_payload, validate_listen, \
     LISTEN_TYPE_IMPORT
