@@ -25,9 +25,9 @@ def create_influx(app):
     })
 
 
-#def create_redis(app):
-#    from listenbrainz.webserver.redis_connection import init_redis_connection
-#    init_redis_connection(app.logger, app.config['REDIS_HOST'], app.config['REDIS_PORT'])
+def create_redis(app):
+    from listenbrainz.webserver.redis_connection import init_redis_connection
+    init_redis_connection(app.logger, app.config['REDIS_HOST'], app.config['REDIS_PORT'])
 
 
 def create_rabbitmq(app):
@@ -99,8 +99,8 @@ def gen_app(config_path=None, debug=None):
         sentry_config=app.config.get('LOG_SENTRY')
     )
 
-    # # Redis connection
-    # create_redis(app)
+    # Redis connection
+    create_redis(app)
     
     # Cache 
     if 'REDIS_HOST' in app.config and\
