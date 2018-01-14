@@ -385,13 +385,13 @@ def import_postgres_dump(location, threads=None):
             logger.info('Import of private dump %s done!', private_dump_archive_path)
         except IOError as e:
             log_ioerrors(logger, e)
-            return
+            raise
         except SchemaMismatchException as e:
             logger.error('SchemaMismatchException: %s', str(e))
-            return
+            raise
         except Exception as e:
             logger.error('Error while importing private dump: %s', str(e))
-            return
+            raise
         logger.info('Private dump %s imported!', private_dump_archive_path)
 
 
@@ -410,13 +410,13 @@ def import_postgres_dump(location, threads=None):
             logger.info('Import of stats dump %s done!', stats_dump_archive_path)
         except IOError as e:
             log_ioerrors(logger, e)
-            return
+            raise
         except SchemaMismatchException as e:
             logger.error('SchemaMismatchException: %s', str(e))
-            return
+            raise
         except Exception as e:
             logger.error('Error while importing stats dump: %s', str(e))
-            return
+            raise
         logger.info('Stats dump %s imported!', stats_dump_archive_path)
 
     logger.info('PostgreSQL import of data dump at %s done!', location)
