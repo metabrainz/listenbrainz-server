@@ -346,6 +346,7 @@ class InfluxListenStore(ListenStore):
         Returns:
             int: the number of bytes written to the file
         """
+        self.log.info('Dumping user %s...', username)
         offset = 0
         bytes_written = 0
         # Get this user's listens in chunks
@@ -392,6 +393,7 @@ class InfluxListenStore(ListenStore):
 
             offset += DUMP_CHUNK_SIZE
 
+        self.log.info('Listens for user %s dumped, total %d bytes written!', username, bytes_written)
         return bytes_written
 
     def dump_listens(self, location, dump_time=datetime.today(), threads=None):
