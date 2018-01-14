@@ -105,7 +105,7 @@ def gen_app(config_path=None, debug=None):
     # Cache 
     if 'REDIS_HOST' in app.config and\
        'REDIS_PORT' in app.config and\
-       'REDIS_NAMESPACE' in app.config and:
+       'REDIS_NAMESPACE' in app.config:
         
         from brainzutils import cache
         cache.init(
