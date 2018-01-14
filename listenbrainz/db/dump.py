@@ -441,7 +441,6 @@ def _import_dump(archive_path, dump_type, tables, threads=None):
     pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
 
     connection = db.engine.raw_connection()
-    connection.set_session(autocommit=True)
     try:
         cursor = connection.cursor()
         with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
@@ -464,6 +463,7 @@ def _import_dump(archive_path, dump_type, tables, threads=None):
                         try:
                             cursor.copy_from(tar.extractfile(member), '%s' % file_name,
                                              columns=tables[file_name])
+                            connection.commit()
                         except IOError as e:
                             logger.error('IOError while extracting table %s: %s', file_name, str(e))
                             raise
