@@ -1,18 +1,14 @@
-'''
-get_listens.py
-'''
-
 import requests
 
 ROOT = '127.0.0.1'
+# The following token must be valid, but it doesn't have to be the token of the user you're
+# trying to get the listen history of.
 TOKEN = 'YOUR_TOKEN_HERE'
-USERNAME = 'YOUR_USERNAME_HERE' # Replace with the username from which you got the token above.
 AUTH_HEADER = {
     "Authorization": "Token {0}".format(TOKEN)
 }
 
-# The token in AUTH-HEADER must be valid, but it doesn't have to be the token of the user you're
-# trying to get the listen history of.
+
 def get_listens(username, min_ts=None, max_ts=None, count=None):
     """Gets the listen history of a given user.
 
@@ -38,9 +34,11 @@ def get_listens(username, min_ts=None, max_ts=None, count=None):
         params={
             "min_ts": min_ts,
             "max_ts": max_ts,
-            "count": count
+            "count": count,
         },
-        headers=AUTH_HEADER
+        # Note that an authorization header isn't compulsary for requests to get listens
+        # BUT requests with authorization headers are given relaxed rate limits by ListenBrainz
+        headers=AUTH_HEADER,
     )
 
     response.raise_for_status()
@@ -48,8 +46,9 @@ def get_listens(username, min_ts=None, max_ts=None, count=None):
     return response.json()['payload']['listens']
 
 if __name__ == "__main__":
-    listens = get_listens(USERNAME)
+    username = input('Please input the MusicBrainz ID of the user: ')
+    listens = get_listens(username)
 
     for track in listens:
         print("Track: {0}, listened at {1}".format(track["track_metadata"]["track_name"],
-                                                   track.get("listened_at", "unknown")))
+                                                   track["listened_at"]))

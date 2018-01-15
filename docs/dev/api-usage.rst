@@ -28,12 +28,6 @@ in, with :code:`ROOT` being either :code:`localhost` for the dev version or
    You should use the token from the API you're using. In production, change the
    token to one from :code:`listenbrainz.org`.
 
-If you want to run the samples, you'll need to add the imports from this common
-file that are required by each sample:
-
-.. include:: ./api_usage_examples/common.py
-   :code: python
-
 Examples
 ########
 
@@ -60,6 +54,9 @@ If there's nothing in the listen history of your user, you can run
 If there is some listen history, you should see a list
 of tracks like this:
 
+.. include:: ./api_usage_examples/get_listens.py
+   :code: python
+
 .. code::
 
     Track: Never Gonna Give You Up, listened at 1512040365
@@ -68,8 +65,7 @@ of tracks like this:
     Track: Never Gonna Give You Up, listened at 1443521965
     Track: Never Gonna Give You Up, listened at 42042042
 
-.. include:: ./api_usage_examples/get_listens.py
-   :code: python
+
 
 Latest Import
 -------------
@@ -90,11 +86,13 @@ set by a script, then the server will return :code:`0` by default. Run
 :code:`set_latest_import` before this if you don't want to actually import any
 data.
 
+.. include:: ./api_usage_examples/get_latest_import.py
+   :code: python
+
 You should see output like this:
 
 .. code::
 
    User naiveaiguy last imported on 30 11 2017 at 12:23
 
-.. include:: ./api_usage_examples/get_latest_import.py
-   :code: python
+
