@@ -1,22 +1,14 @@
-'''
-set_latest_import.py
-'''
-
 from time import time
 import requests
 
 ROOT = '127.0.0.1'
-TOKEN = 'YOUR_TOKEN_HERE'
-AUTH_HEADER = {
-    "Authorization": "Token {0}".format(TOKEN)
-}
 
-# Token in AUTH_HEADER must be that of the user you're setting for.
-def set_latest_import(timestamp):
+def set_latest_import(timestamp, token):
     """Sets the time of the latest import.
 
     Args:
         timestamp: Unix epoch to set latest import to.
+        token: the auth token of the user you're setting latest_import of
 
     Returns:
         The JSON response if there's an OK status.
@@ -30,7 +22,9 @@ def set_latest_import(timestamp):
         json={
             "ts": timestamp
         },
-        headers=AUTH_HEADER
+        headers={
+            "Authorization": "Token {0}".format(token),
+        }
     )
 
     response.raise_for_status()
@@ -38,8 +32,9 @@ def set_latest_import(timestamp):
     return response.json()
 
 if __name__ == "__main__":
-    epoch = int(time())
-    json_response = set_latest_import(epoch)
+    ts = int(time())
+    token = input('Please enter your auth token: ')
+    json_response = set_latest_import(ts, token)
 
     print("Response was: {0}".format(json_response))
-    print("Set latest import time to {0}.".format(epoch))
+    print("Set latest import time to {0}.".format(ts))
