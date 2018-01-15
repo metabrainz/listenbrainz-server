@@ -177,7 +177,7 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
     logger.info('Creating a new entry in the data_dump table...')
     while True:
         try:
-            dump_id = add_dump_entry()
+            dump_id = add_dump_entry(dump_time.strftime('%s'))
             break
         except Exception as e:
             logger.error('Error while adding dump entry: %s', str(e))
@@ -329,8 +329,11 @@ def copy_table(cursor, location, columns, table_name):
         ))
 
 
-def add_dump_entry():
-    """ Adds an entry to the data_dump table with current time.
+def add_dump_entry(timestamp):
+    """ Adds an entry to the data_dump table with specified time.
+
+        Args:
+            timestamp: the unix timestamp to be added
 
         Returns:
             id (int): the id of the new entry added
@@ -339,9 +342,11 @@ def add_dump_entry():
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
                 INSERT INTO data_dump (created)
-                     VALUES (NOW())
+                     VALUES (TO_TIMESTAMP(:ts))
                   RETURNING id
-            """))
+            """), {
+                'ts': timestamp,
+            })
         return result.fetchone()['id']
 
 
