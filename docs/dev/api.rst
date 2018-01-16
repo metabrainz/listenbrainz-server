@@ -48,7 +48,7 @@ API Calls
 
   Update the timestamp of the newest listen submitted by a user in an import to ListenBrainz.
 
-  In order to update the timestamp of a user, you'll have to provide a user token in the Authorization Header. User tokens can be found on https://listenbrainz.org/user/import .
+  In order to update the timestamp of a user, you'll have to provide a user token in the Authorization Header. User tokens can be found on https://listenbrainz.org/profile/.
 
   The JSON that needs to be posted must contain a field named `ts` in the root with a valid unix timestamp. Example::
 
