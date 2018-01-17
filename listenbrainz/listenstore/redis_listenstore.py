@@ -29,7 +29,7 @@ class RedisListenStore(ListenStore):
 
         """
         #data = self.redis.get('playing_now:{}'.format(user_id))
-        data = cache.get('playing_now', namespace='REDIS_NAMESPACE')
+        data = cache.get('playing_now:{}'.format(user_id))
         if not data:
             return None
         data = ujson.loads(data)
