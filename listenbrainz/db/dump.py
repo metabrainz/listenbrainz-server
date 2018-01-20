@@ -135,7 +135,7 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
             threads: Maximal number of threads to run during compression
 
         Returns:
-            Path to created dump.
+            a tuple: (path to private dump, path to public dump)
     """
 
     logger.info('Beginning dump of PostgreSQL database...')
@@ -186,7 +186,7 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
     logger.info('New entry with id %d added to data_dump table!', dump_id)
 
     logger.info('ListenBrainz PostgreSQL data dump created at %s!', location)
-    return location
+    return private_dump, public_dump
 
 
 def _create_dump(location, dump_type, tables, dump_time, threads=None):
