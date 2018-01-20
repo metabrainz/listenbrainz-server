@@ -365,24 +365,13 @@ def get_dump_entries():
         return [dict(row) for row in result]
 
 
-def import_postgres_dump(location, threads=None):
+def import_postgres_dump(private_dump_archive_path=None, public_dump_archive_path=None, threads=None):
     """ Imports postgres dump created by dump_postgres_db present at location.
 
         Arguments:
             location: the directory where the private and public archives are present
             threads: the number of threads to use while decompressing the archives, defaults to 1
     """
-
-    private_dump_archive_path = None
-    public_dump_archive_path = None
-
-    for archive in os.listdir(location):
-        if os.path.isfile(os.path.join(location, archive)):
-            if 'private' in archive:
-                private_dump_archive_path = os.path.join(location, archive)
-            else:
-                public_dump_archive_path = os.path.join(location, archive)
-
 
     if private_dump_archive_path:
         logger.info('Importing private dump %s...', private_dump_archive_path)
@@ -424,8 +413,6 @@ def import_postgres_dump(location, threads=None):
             logger.error('Error while importing public dump: %s', str(e))
             raise
         logger.info('Public dump %s imported!', public_dump_archive_path)
-
-    logger.info('PostgreSQL import of data dump at %s done!', location)
 
 
 
