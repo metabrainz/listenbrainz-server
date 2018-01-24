@@ -422,7 +422,7 @@ class InfluxListenStore(ListenStore):
         archive_path = os.path.join(location, '{filename}.tar.xz'.format(filename=archive_name))
         with open(archive_path, 'w') as archive:
 
-            pxz_command = ['pxz', '--compress', '-T {threads}'.format(threads=threads)]
+            pxz_command = ['pxz', '--compress', '-T{threads}'.format(threads=threads)]
             pxz = subprocess.Popen(pxz_command, stdin=subprocess.PIPE, stdout=archive)
 
             with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
@@ -535,7 +535,7 @@ class InfluxListenStore(ListenStore):
         self.log.info('Beginning import of listens from dump %s...', archive_path)
 
         # construct the pxz command to decompress the archive
-        pxz_command = ['pxz', '--decompress', '--stdout', archive_path, '-T {threads}'.format(threads=threads)]
+        pxz_command = ['pxz', '--decompress', '--stdout', archive_path, '-T{threads}'.format(threads=threads)]
 
         # run the command once to ensure schema version is correct
         # and load the index
