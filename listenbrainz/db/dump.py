@@ -33,6 +33,7 @@ import time
 
 from datetime import datetime
 from listenbrainz import DUMP_LICENSE_FILE_PATH
+from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.utils import create_path, log_ioerrors
 
 from listenbrainz import default_config as config
@@ -189,7 +190,7 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
     return private_dump, public_dump
 
 
-def _create_dump(location, dump_type, tables, dump_time, threads=None):
+def _create_dump(location, dump_type, tables, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Creates a dump of the provided tables at the location passed
 
         Arguments:
@@ -214,10 +215,7 @@ def _create_dump(location, dump_type, tables, dump_time, threads=None):
 
     with open(archive_path, 'w') as archive:
 
-        pxz_command = ['pxz', '--compress']
-        if threads is not None:
-            pxz_command.append('-T {threads}'.format(threads=threads))
-
+        pxz_command = ['pxz', '--compress', '-T {threads}'.format(threads=threads)]
         pxz = subprocess.Popen(pxz_command, stdin=subprocess.PIPE, stdout=archive)
 
         with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
@@ -278,7 +276,7 @@ def _create_dump(location, dump_type, tables, dump_time, threads=None):
     return archive_path
 
 
-def create_private_dump(location, dump_time, threads=None):
+def create_private_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Create postgres database dump for private data in db.
         This includes dumps of the following tables:
             "user",
@@ -294,7 +292,7 @@ def create_private_dump(location, dump_time, threads=None):
     )
 
 
-def create_public_dump(location, dump_time, threads=None):
+def create_public_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Create postgres database dump for statistics and user info in db.
         This includes a sanitized dump of the "user"' table and dumps of all tables
         in the statistics schema:
@@ -365,12 +363,13 @@ def get_dump_entries():
         return [dict(row) for row in result]
 
 
-def import_postgres_dump(private_dump_archive_path=None, public_dump_archive_path=None, threads=None):
+def import_postgres_dump(private_dump_archive_path=None, public_dump_archive_path=None, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Imports postgres dump created by dump_postgres_db present at location.
 
         Arguments:
             location: the directory where the private and public archives are present
-            threads: the number of threads to use while decompressing the archives, defaults to 1
+            threads: the number of threads to use while decompressing the archives, defaults to
+                     db.DUMP_DEFAULT_THREAD_COUNT
     """
 
     if private_dump_archive_path:
@@ -416,7 +415,7 @@ def import_postgres_dump(private_dump_archive_path=None, public_dump_archive_pat
 
 
 
-def _import_dump(archive_path, dump_type, tables, threads=None):
+def _import_dump(archive_path, dump_type, tables, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Import dump present in passed archive path into postgres db.
 
         Arguments:
@@ -424,13 +423,11 @@ def _import_dump(archive_path, dump_type, tables, threads=None):
             dump_type (str): type of dump to be imported ('private' or 'public')
             tables: dict of tables present in the archive with table name as key and
                     columns to import as values
-            threads (int): the number of threads to use while decompressing, defaults to 1
+            threads (int): the number of threads to use while decompressing, defaults to
+                            db.DUMP_DEFAULT_THREAD_COUNT
     """
 
-    pxz_command = ["pxz", "--decompress", "--stdout", archive_path]
-    if threads is not None:
-        pxz_command.append('-T {threads}'.format(threads=threads))
-
+    pxz_command = ['pxz', '--decompress', '--stdout', archive_path, '-T {threads}'.format(threads=threads)]
     pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
 
     connection = db.engine.raw_connection()
