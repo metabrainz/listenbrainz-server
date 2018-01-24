@@ -29,6 +29,7 @@ import sys
 from datetime import datetime
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from listenbrainz import db
+from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.utils import create_path
 from listenbrainz.webserver.influx_connection import init_influx_connection
 
@@ -42,9 +43,10 @@ log = logging.getLogger(__name__)
 
 cli = click.Group()
 
+
 @cli.command()
 @click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'))
-@click.option('--threads', '-t', type=int)
+@click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
 def create(location, threads):
     """ Create a ListenBrainz data dump which includes a private dump, a statistics dump
         and a dump of the actual listens from InfluxDB
@@ -72,8 +74,8 @@ def create(location, threads):
 @click.option('--private-archive', '-pr', default=None)
 @click.option('--public-archive', '-pu', default=None)
 @click.option('--listen-archive', '-l', default=None)
-@click.option('--threads', '-t', type=int)
-def import_dump(private_archive, public_archive, listen_archive, threads=None):
+@click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
+def import_dump(private_archive, public_archive, listen_archive, threads):
     """ Import a ListenBrainz dump into the database.
 
         Note: This method tries to import the private db dump first, followed by the public db
