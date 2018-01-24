@@ -58,7 +58,7 @@ PUBLIC_TABLES = {
         'musicbrainz_id',
         # the following are dummy values for columns that we do not want to
         # dump in the public dump
-        '\'auth_token\'', # auth token
+        '\'\'', # auth token
         'to_timestamp(0)', # last_login
         'to_timestamp(0)', # latest_import
     ),
