@@ -56,6 +56,10 @@ RUN chmod 0644 /etc/cron.d/crontab
 RUN touch /var/log/cron.log
 RUN crontab /etc/cron.d/crontab
 
+# Make sure the cron service doesn't start automagically
+# http://smarden.org/runit/runsv.8.html
+RUN touch /etc/service/cron/down
+
 # Node
 RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
 RUN apt-get install -y nodejs

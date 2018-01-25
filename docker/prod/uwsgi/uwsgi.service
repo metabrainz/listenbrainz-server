@@ -1,57 +1,31 @@
 #!/bin/bash
 
-function is_cron_up {
-    if [ pid = $(pgrep cron) ]
-    then
-        return 1
-    else
-        return 0
-    fi
-}
-
-function bring_cron_down {
-    if [ is_cron_up ]
-    then
-        service cron stop
-    fi
-}
-
-function bring_cron_up {
-    if ! [ is_cron_up ]
-    then
-        exec cron -f
-    fi
-}
-
 if [ "${CONTAINER_NAME}" = "listenbrainz-web-prod" ]
 then
-    bring_cron_down
     exec uwsgi /etc/uwsgi/uwsgi.ini
 fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-influx-writer-prod" ]
 then
-    bring_cron_down
     cd /code/listenbrainz
     exec python3 -m listenbrainz.influx-writer.influx-writer
 fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-bigquery-writer-prod" ]
 then
-    bring_cron_down
     cd /code/listenbrainz
     exec python3 -m listenbrainz.bigquery-writer.bigquery-writer
 fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-api-compat" ]
 then
-    bring_cron_down
     exec uwsgi /etc/uwsgi/uwsgi-api-compat.ini
 fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-scheduler-prod" ]
 then
-    bring_cron_up
+    rm /etc/service/cron/down
+    exec cron -f
 fi
 
 echo "init script has no clue which service to start. Set env var CONTAINER_NAME!"
