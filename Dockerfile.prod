@@ -14,7 +14,6 @@ RUN apt-get update \
                        libffi-dev \
                        libssl-dev \
                        redis-tools \
-                       cron \
                        pxz \
     && rm -rf /var/lib/apt/lists/*
 
