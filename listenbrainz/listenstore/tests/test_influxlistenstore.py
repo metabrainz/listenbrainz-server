@@ -3,15 +3,18 @@
 import listenbrainz.db.user as db_user
 import logging
 import os
+import subprocess
+import tarfile
 import tempfile
 import ujson
 
 from datetime import datetime
 from collections import OrderedDict
 from influxdb import InfluxDBClient
+from listenbrainz.db.dump import SchemaMismatchException
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.listen import Listen
-from listenbrainz.listenstore import InfluxListenStore
+from listenbrainz.listenstore import InfluxListenStore, LISTENS_DUMP_SCHEMA_VERSION
 from listenbrainz.listenstore.tests.util import create_test_data_for_influxlistenstore
 from listenbrainz.webserver.influx_connection import init_influx_connection
 from sqlalchemy import text
@@ -160,6 +163,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.reset_influx_db()
         sleep(1)
         self.logstore.import_listens_dump(dump_location)
+        sleep(1)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
@@ -167,3 +171,152 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.assertEqual(listens[2].ts_since_epoch, 1400000100)
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
+
+    def test_dump_and_import_listens_escaped(self):
+        user = db_user.get_or_create('i have a\\weird\\user, na/me"\n')
+        count = self._create_test_data(user['musicbrainz_id'])
+        sleep(1)
+
+        count = self._create_test_data(self.testuser_name)
+        sleep(1)
+
+        temp_dir = tempfile.mkdtemp()
+        dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+        )
+        sleep(1)
+        self.assertTrue(os.path.isfile(dump_location))
+        self.reset_influx_db()
+
+        self.logstore.import_listens_dump(dump_location)
+        sleep(1)
+
+        listens = self.logstore.fetch_listens(user_name=user['musicbrainz_id'], to_ts=1400000300)
+        self.assertEqual(len(listens), 5)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
+        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[3].ts_since_epoch, 1400000050)
+        self.assertEqual(listens[4].ts_since_epoch, 1400000000)
+
+
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
+        self.assertEqual(len(listens), 5)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
+        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[3].ts_since_epoch, 1400000050)
+        self.assertEqual(listens[4].ts_since_epoch, 1400000000)
+
+
+    def test_import_dump_many_users(self):
+        for i in range(50):
+            db_user.create('user%d' % i)
+
+        temp_dir = tempfile.mkdtemp()
+        dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+        )
+        sleep(1)
+        self.assertTrue(os.path.isfile(dump_location))
+        self.reset_influx_db()
+
+        done = self.logstore.import_listens_dump(dump_location)
+        sleep(1)
+        self.assertEqual(done, len(db_user.get_all_users()))
+
+
+    def create_test_dump(self, archive_name, archive_path, schema_version=None, index=None):
+        """ Creates a test dump to test the import listens functionality.
+
+        Args:
+            archive_name (str): the name of the archive
+            archive_path (str): the full path to the archive
+            schema_version (int): the version of the schema to be written into SCHEMA_SEQUENCE
+                                  if not provided, the SCHEMA_SEQUENCE file is not added to the archive
+            index (dict): the index dict to be written into index.json
+                          if not provided, index.json is not added to the archive
+
+        Returns:
+            the full path to the archive created
+        """
+
+        temp_dir = tempfile.mkdtemp()
+        with open(archive_path, 'w') as archive:
+            pxz_command = ['pxz', '--compress']
+            pxz = subprocess.Popen(pxz_command, stdin=subprocess.PIPE, stdout=archive)
+
+            with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
+                if schema_version is not None:
+                    schema_version_path = os.path.join(temp_dir, 'SCHEMA_SEQUENCE')
+                    with open(schema_version_path, 'w') as f:
+                        f.write(str(schema_version))
+                    tar.add(schema_version_path,
+                            arcname=os.path.join(archive_name, 'SCHEMA_SEQUENCE'))
+
+                if index is not None:
+                    index_json_path = os.path.join(temp_dir, 'index.json')
+                    with open(index_json_path, 'w') as f:
+                        f.write(ujson.dumps({}))
+                    tar.add(index_json_path,
+                            arcname=os.path.join(archive_name, 'index.json'))
+
+            pxz.stdin.close()
+
+        return archive_path
+
+
+    def test_schema_mismatch_exception_for_dump_incorrect_schema(self):
+        """ Tests that SchemaMismatchException is raised when the schema of the dump is old """
+
+        # create a temp archive with incorrect SCHEMA_VERSION
+        temp_dir = tempfile.mkdtemp()
+        archive_name = 'temp_dump'
+        archive_path = os.path.join(temp_dir, archive_name + '.tar.xz')
+        archive_path = self.create_test_dump(
+            archive_name=archive_name,
+            archive_path=archive_path,
+            schema_version=LISTENS_DUMP_SCHEMA_VERSION - 1,
+            index={},
+        )
+        sleep(1)
+        with self.assertRaises(SchemaMismatchException):
+            self.logstore.import_listens_dump(archive_path)
+
+
+    def test_schema_mismatch_exception_for_dump_no_schema(self):
+        """ Tests that SchemaMismatchException is raised when there is no schema version in the archive """
+
+        temp_dir = tempfile.mkdtemp()
+        archive_name = 'temp_dump'
+        archive_path = os.path.join(temp_dir, archive_name + '.tar.xz')
+
+        archive_path = self.create_test_dump(
+            archive_name=archive_name,
+            archive_path=archive_path,
+            schema_version=None,
+            index={},
+        )
+
+        sleep(1)
+        with self.assertRaises(SchemaMismatchException):
+            self.logstore.import_listens_dump(archive_path)
+
+
+    def test_schema_mismatch_exception_for_dump_no_index(self):
+        """ Tests that SchemaMismatchException is raised when there is no index.json in the archive """
+
+        temp_dir = tempfile.mkdtemp()
+        archive_name = 'temp_dump'
+        archive_path = os.path.join(temp_dir, archive_name + '.tar.xz')
+
+        archive_path = self.create_test_dump(
+            archive_name=archive_name,
+            archive_path=archive_path,
+            schema_version=LISTENS_DUMP_SCHEMA_VERSION,
+            index=None,
+        )
+
+        sleep(1)
+        with self.assertRaises(SchemaMismatchException):
+            self.logstore.import_listens_dump(archive_path)
