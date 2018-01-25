@@ -11,7 +11,6 @@ RUN apt-get update \
                        git \
                        libpq-dev \
                        libffi-dev \
-                       cron \
                        pxz \
     && rm -rf /var/lib/apt/lists/*
 
