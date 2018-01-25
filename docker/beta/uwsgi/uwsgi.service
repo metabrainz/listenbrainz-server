@@ -25,6 +25,7 @@ fi
 if [ "${CONTAINER_NAME}" = "listenbrainz-scheduler-beta" ]
 then
     rm /etc/service/cron/down
+    sv restart cron
     exec cron -f
 fi
 
