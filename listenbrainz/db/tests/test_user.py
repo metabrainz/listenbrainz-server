@@ -133,3 +133,32 @@ class UserTestCase(DatabaseTestCase):
         user = db_user.get_by_mb_id(user['musicbrainz_id'])
         self.assertEqual(int(user['latest_import'].strftime('%s')), 0)
 
+    def test_get_all_users(self):
+        """ Tests that get_all_users returns ALL users in the db """
+
+        users = db_user.get_all_users()
+        self.assertEqual(len(users), 0)
+        db_user.create('user1')
+        users = db_user.get_all_users()
+        self.assertEqual(len(users), 1)
+        db_user.create('user2')
+        users = db_user.get_all_users()
+        self.assertEqual(len(users), 2)
+
+    def test_get_all_users_columns(self):
+        """ Tests that get_all_users only returns those columns which are asked for """
+
+        # check that all columns of the user table are present
+        # if columns is not specified
+        users = db_user.get_all_users()
+        for user in users:
+            for column in db_user.USER_GET_COLUMNS:
+                self.assertIn(column, user)
+
+        # check that only id is present if columns = ['id']
+        users = db_user.get_all_users(['id'])
+        for user in users:
+            self.assertIn('id', user)
+            for column in db_user.USER_GET_COLUMNS:
+                if column != 'id':
+                    self.assertNotIn(column, user)

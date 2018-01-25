@@ -49,16 +49,16 @@ formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-# this dict contains the tables dumped in stats dump as keys
+# this dict contains the tables dumped in public dump as keys
 # and a tuple of columns that should be dumped as values
-STATS_TABLES = {
+PUBLIC_TABLES = {
     '"user"': (
         'id',
         'created',
         'musicbrainz_id',
         # the following are dummy values for columns that we do not want to
-        # dump in the stats dump
-        '\'auth_token\'', # auth token
+        # dump in the public dump
+        '\'\'', # auth token
         'to_timestamp(0)', # last_login
         'to_timestamp(0)', # latest_import
     ),
@@ -157,21 +157,21 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
         return
     logger.info('Dump of private data created at %s!', private_dump)
 
-    logger.info('Creating dump of stats data...')
+    logger.info('Creating dump of public data...')
     try:
-        stats_dump = create_stats_dump(location, dump_time, threads)
+        public_dump = create_public_dump(location, dump_time, threads)
     except IOError as e:
         log_ioerrors(logger, e)
         logger.info('Removing created files and giving up...')
         shutil.rmtree(location)
         return
     except Exception as e:
-        logger.error('Unable to create statistics dump due to error %s', str(e))
+        logger.error('Unable to create public dump due to error %s', str(e))
         logger.info('Removing created files and giving up...')
         shutil.rmtree(location)
         return
 
-    logger.info('Dump of stats data created at %s!', stats_dump)
+    logger.info('Dump of public data created at %s!', public_dump)
 
 
     logger.info('Creating a new entry in the data_dump table...')
@@ -194,7 +194,7 @@ def _create_dump(location, dump_type, tables, dump_time, threads=None):
 
         Arguments:
             location: the path where the dump should be created
-            dump_type: the type of data dump being made - private or stats
+            dump_type: the type of data dump being made - private or public
             tables: a dict containing the names of the tables to be dumped as keys and the columns
                     to be dumped as values
             dump_time: the time at which the dump process was started
@@ -294,9 +294,10 @@ def create_private_dump(location, dump_time, threads=None):
     )
 
 
-def create_stats_dump(location, dump_time, threads=None):
-    """ Create postgres database dump for statistics in db.
-        This includes dumps of all tables in the statistics schema:
+def create_public_dump(location, dump_time, threads=None):
+    """ Create postgres database dump for statistics and user info in db.
+        This includes a sanitized dump of the "user"' table and dumps of all tables
+        in the statistics schema:
             statistics.user
             statistics.artist
             statistics.release
@@ -304,8 +305,8 @@ def create_stats_dump(location, dump_time, threads=None):
     """
     return _create_dump(
         location=location,
-        dump_type='stats',
-        tables=STATS_TABLES,
+        dump_type='public',
+        tables=PUBLIC_TABLES,
         dump_time=dump_time,
         threads=threads,
     )
@@ -368,19 +369,19 @@ def import_postgres_dump(location, threads=None):
     """ Imports postgres dump created by dump_postgres_db present at location.
 
         Arguments:
-            location: the directory where the private and stats archives are present
+            location: the directory where the private and public archives are present
             threads: the number of threads to use while decompressing the archives, defaults to 1
     """
 
     private_dump_archive_path = None
-    stats_dump_archive_path = None
+    public_dump_archive_path = None
 
     for archive in os.listdir(location):
         if os.path.isfile(os.path.join(location, archive)):
             if 'private' in archive:
                 private_dump_archive_path = os.path.join(location, archive)
             else:
-                stats_dump_archive_path = os.path.join(location, archive)
+                public_dump_archive_path = os.path.join(location, archive)
 
 
     if private_dump_archive_path:
@@ -390,39 +391,39 @@ def import_postgres_dump(location, threads=None):
             logger.info('Import of private dump %s done!', private_dump_archive_path)
         except IOError as e:
             log_ioerrors(logger, e)
-            return
+            raise
         except SchemaMismatchException as e:
             logger.error('SchemaMismatchException: %s', str(e))
-            return
+            raise
         except Exception as e:
             logger.error('Error while importing private dump: %s', str(e))
-            return
+            raise
         logger.info('Private dump %s imported!', private_dump_archive_path)
 
 
-    if stats_dump_archive_path:
-        logger.info('Importing stats dump %s...', stats_dump_archive_path)
+    if public_dump_archive_path:
+        logger.info('Importing public dump %s...', public_dump_archive_path)
 
-        tables_to_import = STATS_TABLES.copy()
+        tables_to_import = PUBLIC_TABLES.copy()
         if private_dump_archive_path:
             # if the private dump exists and has been imported, we need to
-            # ignore the sanitized user table in the stats dump
+            # ignore the sanitized user table in the public dump
             # so remove it from tables_to_import
             del tables_to_import['"user"']
 
         try:
-            _import_dump(stats_dump_archive_path, 'stats', tables_to_import, threads)
-            logger.info('Import of stats dump %s done!', stats_dump_archive_path)
+            _import_dump(public_dump_archive_path, 'public', tables_to_import, threads)
+            logger.info('Import of Public dump %s done!', public_dump_archive_path)
         except IOError as e:
             log_ioerrors(logger, e)
-            return
+            raise
         except SchemaMismatchException as e:
             logger.error('SchemaMismatchException: %s', str(e))
-            return
+            raise
         except Exception as e:
-            logger.error('Error while importing stats dump: %s', str(e))
-            return
-        logger.info('Stats dump %s imported!', stats_dump_archive_path)
+            logger.error('Error while importing public dump: %s', str(e))
+            raise
+        logger.info('Public dump %s imported!', public_dump_archive_path)
 
     logger.info('PostgreSQL import of data dump at %s done!', location)
 
@@ -433,7 +434,7 @@ def _import_dump(archive_path, dump_type, tables, threads=None):
 
         Arguments:
             archive_path: path to the .tar.xz archive to be imported
-            dump_type (str): type of dump to be imported ('private' or 'stats')
+            dump_type (str): type of dump to be imported ('private' or 'public')
             tables: dict of tables present in the archive with table name as key and
                     columns to import as values
             threads (int): the number of threads to use while decompressing, defaults to 1
@@ -446,7 +447,6 @@ def _import_dump(archive_path, dump_type, tables, threads=None):
     pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
 
     connection = db.engine.raw_connection()
-    connection.set_session(autocommit=True)
     try:
         cursor = connection.cursor()
         with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
@@ -469,6 +469,7 @@ def _import_dump(archive_path, dump_type, tables, threads=None):
                         try:
                             cursor.copy_from(tar.extractfile(member), '%s' % file_name,
                                              columns=tables[file_name])
+                            connection.commit()
                         except IOError as e:
                             logger.error('IOError while extracting table %s: %s', file_name, str(e))
                             raise
