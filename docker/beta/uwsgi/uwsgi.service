@@ -22,4 +22,10 @@ then
     exec uwsgi /etc/uwsgi/uwsgi-api-compat.ini
 fi
 
+if [ "${CONTAINER_NAME}" = "listenbrainz-scheduler-beta" ]
+then
+    rm /etc/service/cron/down
+    sv restart cron
+fi
+
 echo "init script has no clue which service to start. Set env var CONTAINER_NAME!"

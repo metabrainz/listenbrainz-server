@@ -11,7 +11,6 @@ RUN apt-get update \
                        git \
                        libpq-dev \
                        libffi-dev \
-                       cron \
                        pxz \
     && rm -rf /var/lib/apt/lists/*
 
@@ -51,3 +50,4 @@ ADD crontab /etc/cron.d/crontab
 RUN chmod 0644 /etc/cron.d/crontab
 RUN touch /var/log/cron.log
 RUN crontab /etc/cron.d/crontab
+RUN touch /etc/service/cron/down
