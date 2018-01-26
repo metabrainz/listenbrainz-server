@@ -17,6 +17,7 @@ from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from redis import Redis
 
 from listenbrainz import DUMP_LICENSE_FILE_PATH
+from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db.dump import SchemaMismatchException
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import ListenStore
@@ -396,7 +397,7 @@ class InfluxListenStore(ListenStore):
         self.log.info('Listens for user %s dumped, total %d bytes written!', username, bytes_written)
         return bytes_written
 
-    def dump_listens(self, location, dump_time=datetime.today(), threads=None):
+    def dump_listens(self, location, dump_time=datetime.today(), threads=DUMP_DEFAULT_THREAD_COUNT):
         """ Dumps all listens in the ListenStore into a .tar.xz archive.
 
         Files are created with UUIDs as names. Each file can contain listens for a number of users.
@@ -421,10 +422,7 @@ class InfluxListenStore(ListenStore):
         archive_path = os.path.join(location, '{filename}.tar.xz'.format(filename=archive_name))
         with open(archive_path, 'w') as archive:
 
-            pxz_command = ['pxz', '--compress']
-            if threads is not None:
-                pxz_command.append('-T {threads}'.format(threads=threads))
-
+            pxz_command = ['pxz', '--compress', '-T{threads}'.format(threads=threads)]
             pxz = subprocess.Popen(pxz_command, stdin=subprocess.PIPE, stdout=archive)
 
             with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
@@ -522,12 +520,13 @@ class InfluxListenStore(ListenStore):
         return archive_path
 
 
-    def import_listens_dump(self, archive_path, threads=None):
+    def import_listens_dump(self, archive_path, threads=DUMP_DEFAULT_THREAD_COUNT):
         """ Imports listens into InfluxDB from a ListenBrainz listens dump .tar.xz archive.
 
         Args:
             archive (str): the path to the listens dump .tar.xz archive to be imported
-            threads (int): the number of threads to be used for decompression (defaults to 1)
+            threads (int): the number of threads to be used for decompression
+                           (defaults to DUMP_DEFAULT_THREAD_COUNT)
 
         Returns:
             int: the number of users for whom listens have been imported
@@ -536,10 +535,7 @@ class InfluxListenStore(ListenStore):
         self.log.info('Beginning import of listens from dump %s...', archive_path)
 
         # construct the pxz command to decompress the archive
-        pxz_command = ['pxz', '--decompress', '--stdout', archive_path]
-        if threads is not None:
-            pxz_command.append('-T {threads}'.format(threads=threads))
-
+        pxz_command = ['pxz', '--decompress', '--stdout', archive_path, '-T{threads}'.format(threads=threads)]
 
         # run the command once to ensure schema version is correct
         # and load the index

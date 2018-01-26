@@ -10,6 +10,8 @@ SCHEMA_VERSION = 2
 
 engine = None
 
+DUMP_DEFAULT_THREAD_COUNT = 4
+
 
 def init_db_connection(connect_str):
     """Initializes database connection using the specified Flask app.

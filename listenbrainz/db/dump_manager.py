@@ -29,6 +29,7 @@ import sys
 from datetime import datetime
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from listenbrainz import db
+from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.utils import create_path
 from listenbrainz.webserver.influx_connection import init_influx_connection
 
@@ -42,9 +43,10 @@ log = logging.getLogger(__name__)
 
 cli = click.Group()
 
+
 @cli.command()
 @click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'))
-@click.option('--threads', '-t', type=int)
+@click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
 def create(location, threads):
     """ Create a ListenBrainz data dump which includes a private dump, a statistics dump
         and a dump of the actual listens from InfluxDB
@@ -69,37 +71,31 @@ def create(location, threads):
 
 
 @cli.command()
-@click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'))
-@click.option('--threads', '-t', type=int)
-def import_db(location, threads=None):
-    """ Import a ListenBrainz PostgreSQL dump into the PostgreSQL database.
+@click.option('--private-archive', '-pr', default=None)
+@click.option('--public-archive', '-pu', default=None)
+@click.option('--listen-archive', '-l', default=None)
+@click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
+def import_dump(private_archive, public_archive, listen_archive, threads):
+    """ Import a ListenBrainz dump into the database.
 
-        Note: This method tries to import the private dump first, followed by the statistics
+        Note: This method tries to import the private db dump first, followed by the public db
             dump. However, in absence of a private dump, it imports sanitized versions of the
-            user table in the statistics dump in order to satisfy foreign key constraints.
+            user table in the public dump in order to satisfy foreign key constraints.
+
+        Then it imports the listen dump.
 
         Args:
-            location (str): path to the directory which contains the private and the stats dump
+            private_archive (str): the path to the ListenBrainz private dump to be imported
+            public_archive (str): the path to the ListenBrainz public dump to be imported
+            listen_archive (str): the path to the ListenBrainz listen dump archive to be imported
             threads (int): the number of threads to use during decompression, defaults to 1
     """
-    db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
-    db_dump.import_postgres_dump(location, threads)
-
-
-@cli.command()
-@click.option('--location', '-l')
-@click.option('--threads', '-t', type=int)
-def import_listens(location=None, threads=None):
-    """ Import a ListenBrainz listen dump into the Influx database.
-
-        Args:
-            location (str): path to the listenbrainz listen .tar.xz archive
-            threads (int): the number of threads to use while decompressing, defaults to 1
-    """
-
-    if not location:
-        print('No location given!')
+    if not private_archive and not public_archive and not listen_archive:
+        print('You need to enter a path to the archive(s) to import!')
         sys.exit(1)
+
+    db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
+    db_dump.import_postgres_dump(private_archive, public_archive, threads)
 
     ls = init_influx_connection(log,  {
         'REDIS_HOST': config.REDIS_HOST,
@@ -110,7 +106,7 @@ def import_listens(location=None, threads=None):
     })
 
     try:
-        ls.import_listens_dump(location, threads)
+        ls.import_listens_dump(listen_archive, threads)
     except IOError as e:
         log.error('IOError while trying to import data into Influx: %s', str(e))
         raise
