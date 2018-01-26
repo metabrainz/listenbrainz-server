@@ -344,7 +344,7 @@ class InfluxListenStore(ListenStore):
             dump_time (datetime): the time at which the specific data dump was initiated
 
         Returns:
-            int: the number of bytes written to the file
+            int: the number of bytes this user's listens take in the dump file
         """
         self.log.info('Dumping user %s...', username)
         offset = 0
@@ -394,7 +394,10 @@ class InfluxListenStore(ListenStore):
             offset += DUMP_CHUNK_SIZE
 
         self.log.info('Listens for user %s dumped, total %d bytes written!', username, bytes_written)
-        return bytes_written
+
+        # the size for this user should not include the last newline we wrote
+        # hence return bytes_written - 1 as the size in the dump for this user
+        return bytes_written - 1
 
     def dump_listens(self, location, dump_time=datetime.today(), threads=None):
         """ Dumps all listens in the ListenStore into a .tar.xz archive.
