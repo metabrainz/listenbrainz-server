@@ -26,7 +26,6 @@ if [ "${CONTAINER_NAME}" = "listenbrainz-scheduler-beta" ]
 then
     rm /etc/service/cron/down
     sv restart cron
-    exec cron -f
 fi
 
 echo "init script has no clue which service to start. Set env var CONTAINER_NAME!"
