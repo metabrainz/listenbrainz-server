@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-web-prod" ] 
+if [ "${CONTAINER_NAME}" = "listenbrainz-web-prod" ]
 then
     exec uwsgi /etc/uwsgi/uwsgi.ini
 fi
@@ -20,6 +20,12 @@ fi
 if [ "${CONTAINER_NAME}" = "listenbrainz-api-compat" ]
 then
     exec uwsgi /etc/uwsgi/uwsgi-api-compat.ini
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-scheduler-prod" ]
+then
+    rm /etc/service/cron/down
+    sv restart cron
 fi
 
 echo "init script has no clue which service to start. Set env var CONTAINER_NAME!"

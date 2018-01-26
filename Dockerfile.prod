@@ -47,7 +47,17 @@ COPY . /code/listenbrainz
 WORKDIR /code/listenbrainz
 
 # Sometimes the local copy of config.py[c] gets in the way. Better nuke it to not conflict.
-RUN rm -f /code/listenbrainz/listenbrainz/config.py /code/listenbrainz/listenbrainz/config.pyc 
+RUN rm -f /code/listenbrainz/listenbrainz/config.py /code/listenbrainz/listenbrainz/config.pyc
+
+# Add cron jobs
+ADD crontab /etc/cron.d/crontab
+RUN chmod 0644 /etc/cron.d/crontab
+RUN touch /var/log/cron.log
+RUN crontab /etc/cron.d/crontab
+
+# Make sure the cron service doesn't start automagically
+# http://smarden.org/runit/runsv.8.html
+RUN touch /etc/service/cron/down
 
 # Node
 RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
