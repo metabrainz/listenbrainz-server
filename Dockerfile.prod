@@ -50,7 +50,7 @@ WORKDIR /code/listenbrainz
 RUN rm -f /code/listenbrainz/listenbrainz/config.py /code/listenbrainz/listenbrainz/config.pyc
 
 # Add cron jobs
-ADD crontab /etc/cron.d/lb-crontab
+ADD docker/crontab /etc/cron.d/lb-crontab
 RUN chmod 0644 /etc/cron.d/lb-crontab && crontab -u nobody /etc/cron.d/lb-crontab
 RUN touch /var/log/stats.log /var/log/dump_create.log && chown nobody:nogroup /var/log/stats.log /var/log/dump_create.log
 
