@@ -190,6 +190,6 @@ Also, run the **integration tests** for ListenBrainz.
 
    ./integration-test.sh
 
-When the tests complete, you will if your changes are valid or not. These tests
+When the tests complete, you will see if your changes are valid or not. These tests
 are a helpful way to validate new changes without a lot of work.
 
