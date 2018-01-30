@@ -1,9 +1,10 @@
 PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin
 PYTHONPATH=/usr/local/lib/python36.zip:/usr/local/lib/python3.6:/usr/local/lib/python3.6/lib-dynload:/usr/local/lib/python3.6/site-packages:/usr/local/lib/python3.6/site-packages/messybrainz-99.0.0.dev0-py3.6.egg
-GOOGLE_APPLICATION_CREDENTIALS=/code/credentials/bigquery-credentials.json
+GOOGLE_APPLICATION_CREDENTIALS=/code/listenbrainz/credentials/bigquery-credentials.json
 
 # Statistics calculation via Google BigQuery
-00 00 * * 0 python /code/listenbrainz/manage.py stats calculate > /var/log/stats.log 2>&1
+42 11 * * 0 /usr/local/bin/python /code/listenbrainz/manage.py >> /var/log/stats.log 2>&1
+#0 0 * * 0 /usr/local/bin/python /code/listenbrainz/manage.py >> /var/log/stats.log 2>&1
 
 # Data dumps creation for backup and public use
-15 00 1 * * python /code/listenbrainz/manage.py dump create > /var/log/dump_create.log 2>&1
+15 0 1 * * nobody python /code/listenbrainz/manage.py dump create >> /var/log/dump_create.log 2>&1

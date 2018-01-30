@@ -50,10 +50,9 @@ WORKDIR /code/listenbrainz
 RUN rm -f /code/listenbrainz/listenbrainz/config.py /code/listenbrainz/listenbrainz/config.pyc
 
 # Add cron jobs
-ADD crontab /etc/cron.d/crontab
-RUN chmod 0644 /etc/cron.d/crontab
-RUN touch /var/log/cron.log
-RUN crontab /etc/cron.d/crontab
+ADD crontab /etc/cron.d/lb-crontab
+RUN chmod 0644 /etc/cron.d/lb-crontab && crontab -u nobody /etc/cron.d/lb-crontab
+RUN touch /var/log/stats.log /var/log/dump_create.log && chown nobody:nogroup /var/log/stats.log /var/log/dump_create.log
 
 # Make sure the cron service doesn't start automagically
 # http://smarden.org/runit/runsv.8.html
