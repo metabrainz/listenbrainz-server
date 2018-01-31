@@ -347,8 +347,6 @@ class InfluxListenStore(ListenStore):
         Returns:
             int: the number of bytes this user's listens take in the dump file
         """
-        self.log.info('Dumping user %s...', username)
-
         t0 = time.time()
         offset = 0
         bytes_written = 0
