@@ -38,7 +38,7 @@ Structure of the listens dump
 =============================
 
 The ListenBrainz listens dump consists of a number of files containing listens
-in JSON format per line. Each user's listens are listed in one file in chronological
+in JSON format, one document per line. Each user's listens are listed in one file in chronological
 order, with the latest listen first. The exact location of each user's listens is
 listed in the ``index.json`` file which is a JSON document containing a file name,
 an offset and size (in bytes) to uniquely identify the location and size of each user's
