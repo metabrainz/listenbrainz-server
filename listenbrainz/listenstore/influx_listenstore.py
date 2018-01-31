@@ -347,9 +347,11 @@ class InfluxListenStore(ListenStore):
         Returns:
             int: the number of bytes this user's listens take in the dump file
         """
-        self.log.info('Dumping user %s...', username)
+        t0 = time.time()
         offset = 0
         bytes_written = 0
+        listen_count = 0
+
         # Get this user's listens in chunks
         while True:
             # loop until we get this chunk of listens
@@ -389,12 +391,15 @@ class InfluxListenStore(ListenStore):
                     self.log.error(str(e))
                     raise
 
+            listen_count += rows_added
             if not rows_added:
                 break
 
             offset += DUMP_CHUNK_SIZE
 
-        self.log.info('Listens for user %s dumped, total %d bytes written!', username, bytes_written)
+        time_taken = time.time() - t0
+        self.log.info('Listens for user %s dumped, total %d listens written at %.2f listens / sec!',
+            username, listen_count, listen_count / time_taken)
 
         # the size for this user should not include the last newline we wrote
         # hence return bytes_written - 1 as the size in the dump for this user
