@@ -22,14 +22,5 @@ then
     exec uwsgi /etc/uwsgi/uwsgi-api-compat.ini
 fi
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-scheduler-prod" ]
-then
-    rm -f /etc/service/cron/down
-    sv restart cron
-    while true
-    do
-        sleep 9998
-    done
-fi
 
 echo "init script has no clue which service to start. Set env var CONTAINER_NAME!"
