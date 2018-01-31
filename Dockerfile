@@ -46,8 +46,11 @@ COPY . /code/listenbrainz/
 RUN mkdir /logs
 RUN chown -R daemon:daemon /logs
 
-ADD crontab /etc/cron.d/crontab
-RUN chmod 0644 /etc/cron.d/crontab
-RUN touch /var/log/cron.log
-RUN crontab /etc/cron.d/crontab
+# Add cron jobs
+ADD docker/crontab /etc/cron.d/lb-crontab
+RUN chmod 0644 /etc/cron.d/lb-crontab && crontab -u nobody /etc/cron.d/lb-crontab
+RUN touch /var/log/stats.log /var/log/dump_create.log && chown nobody:nogroup /var/log/stats.log /var/log/dump_create.log
+
+# Make sure the cron service doesn't start automagically
+# http://smarden.org/runit/runsv.8.html
 RUN touch /etc/service/cron/down
