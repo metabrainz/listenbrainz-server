@@ -49,11 +49,11 @@ class BigQueryWriterTestCase(unittest.TestCase):
                 'track_metadata': {
                     'track_name': 'Good Guy',
                     'artist_name': 'Frank Ocean',
+                    'release_name': 'Blonde',
                     'additional_info': {
                         'artist_msid': '145bdcc6-35c3-4456-9257-0af8c9e79bed',
                         'artist_mbids': ['e520459c-dff4-491d-a6e4-c97be35e0044'],
                         'release_msid': '9c42ded3-f344-48e8-b939-874aa94cbe20',
-                        'release_name': 'Blonde',
                         'release_mbid': '8294645a-f996-44b6-9060-7f189b9f59f3',
                         'recording_mbid': 'c4625cbf-f5a8-46d9-baa5-ba8c3b9127bc',
                         'tags': ['rnb', 'pop'],
