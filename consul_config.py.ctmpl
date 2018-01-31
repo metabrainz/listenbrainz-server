@@ -85,3 +85,9 @@ LOG_SENTRY = {
     'environment': '''{{template "KEY" "sentry/environment"}}''',
 }
 SENTRY_DSN_PUBLIC = '''{{template "KEY" "sentry/dsn_public"}}'''
+
+
+# Stats
+STATS_ENTITY_LIMIT = 100 # the number of entities to calculate at max with BQ
+STATS_CALCULATION_LOGIN_TIME = 30 # users must have logged in to LB in the past 30 days for stats to be calculated
+STATS_CALCULATION_INTERVAL = 7 # stats are calculated every 7 days
