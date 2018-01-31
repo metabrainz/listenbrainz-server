@@ -6,4 +6,4 @@ GOOGLE_APPLICATION_CREDENTIALS=/code/listenbrainz/credentials/bigquery-credentia
 0 0 * * 0 /usr/local/bin/python /code/listenbrainz/manage.py stats calculate >> /var/log/stats.log 2>&1
 
 # Data dumps creation for backup and public use
-15 0 1 * * nobody python /code/listenbrainz/manage.py dump create >> /var/log/dump_create.log 2>&1
+15 0 1 * * /usr/local/bin/python /code/listenbrainz/manage.py dump create >> /var/log/dump_create.log 2>&1
