@@ -22,6 +22,7 @@ Contents:
    dev/api-usage
    dev/json
    dev/api-compat
+   dev/listenbrainz-dumps
 
 Indices and tables
 ==================
