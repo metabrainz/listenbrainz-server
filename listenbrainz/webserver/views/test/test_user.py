@@ -117,7 +117,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
 
 
     def test_username_case(self):
-        """Tests that the username in URL is case insenstive"""
+        """Tests that the username in URL is case insensitive"""
         self._create_test_data('iliekcomputers')
 
         response1 = self.client.get(url_for('user.profile', user_name='iliekcomputers'))
