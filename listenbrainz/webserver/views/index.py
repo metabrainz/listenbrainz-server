@@ -48,7 +48,12 @@ def import_data():
 
 @index_bp.route("/download")
 def downloads():
-    return render_template("index/downloads.html")
+    return redirect(url_for('index.data'))
+
+
+@index_bp.route("/data")
+def data():
+    return render_template("index/data.html")
 
 
 @index_bp.route("/contribute")
