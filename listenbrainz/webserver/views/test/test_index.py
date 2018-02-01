@@ -11,6 +11,10 @@ class IndexViewsTestCase(ServerTestCase):
 
     def test_downloads(self):
         resp = self.client.get(url_for('index.downloads'))
+        self.assert_redirects(resp, url_for('index.data'))
+
+    def test_data(self):
+        resp = self.client.get(url_for('index.data'))
         self.assert200(resp)
 
     def test_contribute(self):
