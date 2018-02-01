@@ -48,6 +48,20 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         response = self.client.get(url_for('user.profile', user_name=self.user['musicbrainz_id']))
         self.assert200(response)
 
+        # check that artist count is shown if stats have been calculated
+        db_stats.insert_user_stats(
+            user_id=self.user['id'],
+            artists={},
+            recordings={},
+            releases={},
+            artist_count=2,
+        )
+        response = self.client.get(url_for('user.profile', user_name=self.user['musicbrainz_id']))
+        self.assert200(response)
+        self.assertTemplateUsed('user/profile.html')
+        self.assertContext('artist_count', '2')
+
+
     def test_scraper_username(self):
         """ Tests that the username is correctly rendered in the last.fm importer """
         response = self.client.get(
