@@ -121,7 +121,7 @@ def profile(user_name):
 
     user_stats = db_stats.get_user_artists(user.id)
     try:
-        artist_count = int(user_stats['artists']['count'])
+        artist_count = int(user_stats['artist']['count'])
     except (KeyError, TypeError):
         artist_count = 0
 
