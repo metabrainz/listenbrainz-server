@@ -155,8 +155,8 @@ def artists(user_name):
     # if no data, flash a message and return to profile page
     if data is None:
         msg = ('No data calculated for user %s yet. ListenBrainz only calculates statistics for'
-        'recently active users. If %s has logged in recently, they\'ve already been added to'
-        'the stats calculation queue. Please wait until the next statistics calculation batch is finished.') % (user_name, user_name)
+        ' recently active users. If %s has logged in recently, they\'ve already been added to'
+        ' the stats calculation queue. Please wait until the next statistics calculation batch is finished.') % (user_name, user_name)
 
         flash.error(msg)
         return redirect(url_for('user.profile', user_name=user_name))
