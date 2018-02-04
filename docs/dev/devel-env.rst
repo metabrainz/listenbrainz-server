@@ -111,6 +111,17 @@ Update the strings with your client ID and secret. After doing this, your
 ListenBrainz development environment is able to authenticate and log in from
 your MusicBrainz login.
 
+Also, in order for last.fm import to work, you should also update your last.fm api key in this file. Look for the following section in the file.
+
+.. code-block:: yaml
+
+    # Lastfm API
+    LASTFM_API_URL = "https://ws.audioscrobbler.com/2.0/"
+    LASTFM_API_KEY = "USE_LASTFM_API_KEY"
+
+Update the last.fm api key with your key. After doing this, your
+ListenBrainz development environment is able to import your listens from last.fm.
+
 
 Initialize ListenBrainz containers
 ----------------------------------
