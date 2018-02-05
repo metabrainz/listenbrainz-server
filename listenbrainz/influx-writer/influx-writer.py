@@ -154,6 +154,8 @@ class InfluxWriterSubscriber(ListenWriter):
                     break
                 except Exception as e:
                     self.log.error("Cannot query influx: %s" % str(e))
+                    self.log.error('Query parameters: %s, %s, %s', user_name, min_time, max_time)
+                    self.log.error('Query: %s', query)
                     sleep(3)
 
             # collect all the timestamps for this given time range.
