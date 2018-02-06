@@ -180,6 +180,10 @@ class InfluxWriterSubscriber(object):
             t = int(listen['listened_at'])
             user_name = listen['user_name']
 
+            # if the timestamp is illegal, don't use it for ranges
+            t.bit_length() > 32:
+                continue
+
             if user_name not in users:
                 users[user_name] = {
                     'min_time': t,
@@ -231,6 +235,10 @@ class InfluxWriterSubscriber(object):
                 t = int(listen['listened_at'])
                 recording_msid = listen['recording_msid']
                 dup = False
+
+                # skip over listens with illegal timestamps
+                if t.bit_length() > 32:
+                    continue
 
                 if t in timestamps:
                     for row in timestamps[t]:
