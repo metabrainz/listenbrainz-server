@@ -104,6 +104,9 @@ def validate_listen(listen, listen_type):
             log_raise_400("JSON document may only contain listened_at and "
                            "track_metadata top level keys", listen)
 
+        if listen['listened_at'] > int(time.time()):
+            log_raise_400("Value for key listened_at is too high.", listen)
+
     elif listen_type == LISTEN_TYPE_PLAYING_NOW:
         if 'listened_at' in listen:
             log_raise_400("JSON document must not contain listened_at while submitting "
