@@ -297,6 +297,7 @@ class APITestCase(IntegrationTestCase):
 
         with open(self.path_to_data_file('timestamp_in_ns.json'), 'r') as f:
             payload = json.load(f)
+        payload['listened_at'] = int(time.time()) * 10**9
         response = self.send_data(payload)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
