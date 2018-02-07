@@ -156,8 +156,11 @@ def _to_native_api(data, append_key):
     # if this is not a now playing request, get the timestamp
     if append_key != '':
         try:
-            listen['listened_at'] = data['i{}'.format(append_key)]
-        except KeyError:
+            listen['listened_at'] = int(data['i{}'.format(append_key)])
+        except (KeyError, ValueError):
+            return None
+
+        if listen['listened_at'] > int(time()):
             return None
 
     if 'o{}'.format(append_key) in data:
