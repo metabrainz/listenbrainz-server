@@ -160,7 +160,10 @@ def _to_native_api(data, append_key):
         except (KeyError, ValueError):
             return None
 
-        if listen['listened_at'] > int(time()):
+        # if timestamp is too high, this is an invalid listen
+        # in order to make up for possible clock skew, we allow
+        # timestamps to be one hour ahead of server time
+        if listen['listened_at'] > int(time()) + 86400:
             return None
 
     if 'o{}'.format(append_key) in data:
