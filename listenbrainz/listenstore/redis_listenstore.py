@@ -9,6 +9,8 @@ from redis import Redis
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import ListenStore, MIN_ID
 
+from brainzutils import cache
+
 
 class RedisListenStore(ListenStore):
     def __init__(self, conf):
@@ -26,7 +28,8 @@ class RedisListenStore(ListenStore):
                 Listen object which is the currently playing song of the user
 
         """
-        data = self.redis.get('playing_now:{}'.format(user_id))
+        #data = self.redis.get('playing_now:{}'.format(user_id))
+        data = cache.get('playing_now:{}'.format(user_id))
         if not data:
             return None
         data = ujson.loads(data)

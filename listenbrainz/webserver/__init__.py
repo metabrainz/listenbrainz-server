@@ -101,7 +101,20 @@ def gen_app(config_path=None, debug=None):
 
     # Redis connection
     create_redis(app)
-
+    
+    # Cache 
+    if 'REDIS_HOST' in app.config and\
+       'REDIS_PORT' in app.config and\
+       'REDIS_NAMESPACE' in app.config:
+        
+        from brainzutils import cache
+        cache.init(
+            host=app.config['REDIS_HOST'],
+            port=app.config['REDIS_PORT'],
+            namespace=app.config['REDIS_NAMESPACE'])
+    else:
+        raise Exception('One or more redis cache configuration options are missing from custom_config.py')
+    
     # Influx connection
     create_influx(app)
 

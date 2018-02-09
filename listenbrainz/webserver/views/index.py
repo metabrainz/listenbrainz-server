@@ -2,7 +2,8 @@
 #TODO(param): alphabetize these
 from flask import Blueprint, render_template, current_app, redirect, url_for
 from flask_login import current_user
-from listenbrainz.webserver.redis_connection import _redis
+#from listenbrainz.webserver.redis_connection import _redis
+from brainzutils import cache
 import os
 import subprocess
 import locale
@@ -127,14 +128,23 @@ def _get_user_count():
         If not present in the cache, it makes a query to the db and stores the
         result in the cache for 10 minutes.
     """
-    redis_connection = _redis.redis
+    #redis_connection = _redis.redis
     user_count_key = "{}.{}".format(STATS_PREFIX, 'user_count')
-    if redis_connection.exists(user_count_key):
-        return redis_connection.get(user_count_key)
-    else:
+    #if redis_connection.exists(user_count_key):
+    #    return redis_connection.get(user_count_key)
+    #else:
+    #    try:
+    #        user_count = db_user.get_user_count()
+    #    except DatabaseException as e:
+    #        raise
+    #    redis_connection.setex(user_count_key, user_count, CACHE_TIME)
+    #    return user_count
+    try:
+        return cache.get(user_count_key)
+    except:
         try:
             user_count = db_user.get_user_count()
         except DatabaseException as e:
             raise
-        redis_connection.setex(user_count_key, user_count, CACHE_TIME)
+        cache.set(user_count_key, user_count, CACHE_TIME)
         return user_count
