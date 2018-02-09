@@ -11,6 +11,7 @@ from flask import current_app
 from pika_pool import Overflow as PikaPoolOverflow, Timeout as PikaPoolTimeout
 from listenbrainz import config
 from listenbrainz.listen import Listen
+from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
 from listenbrainz.webserver.external import messybrainz
 from werkzeug.exceptions import InternalServerError, ServiceUnavailable, BadRequest
 
@@ -108,7 +109,7 @@ def validate_listen(listen, listen_type):
         # if timestamp is too high, raise BadRequest
         # in order to make up for possible clock skew, we allow
         # timestamps to be one hour ahead of server time
-        if listen['listened_at'] > int(time.time()) + 60 * 60:
+        if listen['listened_at'] > int(time.time()) + API_LISTENED_AT_ALLOWED_SKEW:
             log_raise_400("Value for key listened_at is too high.", listen)
 
     elif listen_type == LISTEN_TYPE_PLAYING_NOW:
