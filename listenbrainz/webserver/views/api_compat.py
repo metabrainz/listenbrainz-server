@@ -2,6 +2,7 @@
 import time
 import json
 import re
+import listenbrainz.db.user as db_user
 from collections import defaultdict
 from yattag import Doc
 import yattag
@@ -267,7 +268,9 @@ def record_listens(request, data):
     listen_type, native_payload = _to_native_api(lookup, data['method'], output_format)
     for listen in native_payload:
         validate_listen(listen, listen_type)
-    augmented_listens = insert_payload(native_payload, session.user, listen_type=listen_type)
+
+    user = db_user.get(session.user_id)
+    augmented_listens = insert_payload(native_payload, user, listen_type=listen_type)
 
     # With corrections than the original submitted listen.
     doc, tag, text = Doc().tagtext()
