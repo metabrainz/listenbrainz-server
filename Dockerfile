@@ -42,14 +42,17 @@ RUN pip3 install -r requirements.txt
 # Now install our code, which may change frequently
 COPY . /code/listenbrainz/
 
+# create a user named listenbrainz for storing dump file backups
+RUN useradd --create-home --shell /bin/bash listenbrainz
+
 # setup a log dir
 RUN mkdir /logs
 RUN chown -R daemon:daemon /logs
 
 # Add cron jobs
 ADD docker/crontab /etc/cron.d/lb-crontab
-RUN chmod 0644 /etc/cron.d/lb-crontab && crontab -u nobody /etc/cron.d/lb-crontab
-RUN touch /var/log/stats.log /var/log/dump_create.log && chown nobody:nogroup /var/log/stats.log /var/log/dump_create.log
+RUN chmod 0644 /etc/cron.d/lb-crontab && crontab -u listenbrainz /etc/cron.d/lb-crontab
+RUN touch /var/log/stats.log /var/log/dump_create.log && chown listenbrainz:listenbrainz /var/log/stats.log /var/log/dump_create.log
 
 # Make sure the cron service doesn't start automagically
 # http://smarden.org/runit/runsv.8.html
