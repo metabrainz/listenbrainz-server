@@ -109,7 +109,7 @@ def validate_listen(listen, listen_type):
         # if timestamp is too high, raise BadRequest
         # in order to make up for possible clock skew, we allow
         # timestamps to be one hour ahead of server time
-        if listen['listened_at'] > int(time.time()) + API_LISTENED_AT_ALLOWED_SKEW:
+        if not is_valid_timestamp(listen['listened_at']):
             log_raise_400("Value for key listened_at is too high.", listen)
 
     elif listen_type == LISTEN_TYPE_PLAYING_NOW:
@@ -312,3 +312,16 @@ def verify_mbid_validity(listen, key, multi):
     for item in items:
         if not is_valid_uuid(item):
             log_raise_400("%s MBID format invalid." % (key, ), listen)
+
+
+def is_valid_timestamp(ts):
+    """ Returns True if the timestamp passed is in the API's
+    allowed range of timestamps, False otherwise
+
+    Args:
+        ts (int): the timestamp to be checked for validity
+
+    Returns:
+        bool: True if timestamp is valid, False otherwise
+    """
+    return ts <= int(time.time()) + API_LISTENED_AT_ALLOWED_SKEW

@@ -32,8 +32,7 @@ from time import time
 from flask import current_app, Blueprint, request, render_template, redirect
 from werkzeug.exceptions import BadRequest
 from listenbrainz.db.lastfm_session import Session
-from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
-from listenbrainz.webserver.views.api_tools import insert_payload, LISTEN_TYPE_PLAYING_NOW
+from listenbrainz.webserver.views.api_tools import insert_payload, is_valid_timestamp, LISTEN_TYPE_PLAYING_NOW
 
 
 api_compat_old_bp = Blueprint('api_compat_old', __name__)
@@ -164,7 +163,7 @@ def _to_native_api(data, append_key):
         # if timestamp is too high, this is an invalid listen
         # in order to make up for possible clock skew, we allow
         # timestamps to be one hour ahead of server time
-        if listen['listened_at'] > int(time()) + API_LISTENED_AT_ALLOWED_SKEW:
+        if not is_valid_timestamp(listen['listened_at']):
             return None
 
     if 'o{}'.format(append_key) in data:
