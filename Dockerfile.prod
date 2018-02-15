@@ -49,10 +49,13 @@ WORKDIR /code/listenbrainz
 # Sometimes the local copy of config.py[c] gets in the way. Better nuke it to not conflict.
 RUN rm -f /code/listenbrainz/listenbrainz/config.py /code/listenbrainz/listenbrainz/config.pyc
 
+# create a user named listenbrainz for cron jobs and storing dump file backups
+RUN useradd --create-home --shell /bin/bash listenbrainz
+
 # Add cron jobs
 ADD docker/crontab /etc/cron.d/lb-crontab
-RUN chmod 0644 /etc/cron.d/lb-crontab && crontab -u nobody /etc/cron.d/lb-crontab
-RUN touch /var/log/stats.log /var/log/dump_create.log && chown nobody:nogroup /var/log/stats.log /var/log/dump_create.log
+RUN chmod 0644 /etc/cron.d/lb-crontab && crontab -u listenbrainz /etc/cron.d/lb-crontab
+RUN touch /var/log/stats.log /var/log/dump_create.log && chown listenbrainz:listenbrainz /var/log/stats.log /var/log/dump_create.log
 
 # Make sure the cron service doesn't start automagically
 # http://smarden.org/runit/runsv.8.html
