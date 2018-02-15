@@ -21,8 +21,8 @@
 echo "This script is being run by the following user: "; whoami
 
 # This is to help with disk space monitoring - run "df" before and after
-echo "Disk space when RunExport starts:" ; df -m
-trap 'echo "Disk space when RunExport ends:" ; df -m' 0
+echo "Disk space when create-dumps starts:" ; df -m
+trap 'echo "Disk space when create-dumps ends:" ; df -m' 0
 
 
 LB_SERVER_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)
