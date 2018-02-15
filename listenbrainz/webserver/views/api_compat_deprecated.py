@@ -32,7 +32,7 @@ from time import time
 from flask import current_app, Blueprint, request, render_template, redirect
 from werkzeug.exceptions import BadRequest
 from listenbrainz.db.lastfm_session import Session
-from listenbrainz.webserver.views.api_tools import insert_payload, LISTEN_TYPE_PLAYING_NOW
+from listenbrainz.webserver.views.api_tools import insert_payload, is_valid_timestamp, LISTEN_TYPE_PLAYING_NOW
 
 
 api_compat_old_bp = Blueprint('api_compat_old', __name__)
@@ -156,8 +156,14 @@ def _to_native_api(data, append_key):
     # if this is not a now playing request, get the timestamp
     if append_key != '':
         try:
-            listen['listened_at'] = data['i{}'.format(append_key)]
-        except KeyError:
+            listen['listened_at'] = int(data['i{}'.format(append_key)])
+        except (KeyError, ValueError):
+            return None
+
+        # if timestamp is too high, this is an invalid listen
+        # in order to make up for possible clock skew, we allow
+        # timestamps to be one hour ahead of server time
+        if not is_valid_timestamp(listen['listened_at']):
             return None
 
     if 'o{}'.format(append_key) in data:
