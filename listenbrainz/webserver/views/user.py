@@ -123,7 +123,7 @@ def profile(user_name):
     try:
         artist_count = int(user_stats['artist']['count'])
     except (KeyError, TypeError):
-        artist_count = 0
+        artist_count = None
 
     return render_template(
         "user/profile.html",
@@ -134,7 +134,7 @@ def profile(user_name):
         spotify_uri=_get_spotify_uri_for_listens(listens),
         have_listen_count=have_listen_count,
         listen_count=format(int(listen_count), ",d"),
-        artist_count=format(artist_count, ",d")
+        artist_count=format(artist_count, ",d") if artist_count else None
     )
 
 
