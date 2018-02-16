@@ -64,7 +64,8 @@ RUN touch /etc/service/cron/down
 # Node
 RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
 RUN apt-get install -y nodejs
-RUN npm install -g less less-plugin-clean-css
+RUN npm install -g less
+RUN npm install less-plugin-clean-css
 
 # Compile the CSS
 # Note: this will not persist because /code/listenbrainz is a volume
