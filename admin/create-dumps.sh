@@ -50,8 +50,13 @@ chown "$BACKUP_USER:$BACKUP_GROUP" \
       "$BACKUP_DIR"/fullexport/"$DUMP_NAME"
 echo "Backup directories created!"
 
+# Copy the files into the backup directory
 echo "Begin copying..."
 chown "$BACKUP_USER:$BACKUP_GROUP" "$DUMP_DIR"/*
 chmod "$BACKUP_FILE_MODE" "$DUMP_DIR"/*
 retry cp -a "$DUMP_DIR"/* "$BACKUP_DIR"/fullexport/"$DUMP_NAME"/
 echo "Dumps copied to backup directory!"
+
+# rsync the files into the FTP server
+# TODO (param): remove old dumps
+./admin/rsync-dump-files.sh
