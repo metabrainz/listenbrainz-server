@@ -33,7 +33,7 @@ source admin/functions.sh
 
 TEMP_DIR="/home/listenbrainz/data/dumps"
 
-python manage.py dump create -l $TEMP_DIR -t $DUMP_THREADS
+/usr/local/bin/python manage.py dump create -l $TEMP_DIR -t $DUMP_THREADS
 
 DUMP_NAME=`ls $TEMP_DIR | sort -r | head -1`
 DUMP_DIR="$TEMP_DIR"/"$DUMP_NAME"
