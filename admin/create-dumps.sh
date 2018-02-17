@@ -38,6 +38,9 @@ python manage.py dump create -l $TEMP_DIR -t $DUMP_THREADS
 DUMP_NAME=`ls $TEMP_DIR | sort -r | head -1`
 DUMP_DIR="$TEMP_DIR"/"$DUMP_NAME"
 
+# Backup dumps to the backup volume
+
+# Create backup directories owned by user "listenbrainz"
 echo "Creating Backup directories..."
 mkdir -m "$BACKUP_DIR_MODE" -p \
          "$BACKUP_DIR"/fullexport/ \
