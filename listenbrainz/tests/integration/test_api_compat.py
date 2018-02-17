@@ -86,3 +86,41 @@ class APICompatTestCase(APICompatIntegrationTestCase):
 
         token = Token.load(response['lfm']['token'], api_key=self.lfm_user.api_key)
         self.assertIsNotNone(token)
+
+    def test_get_session(self):
+        """ Tests if the session key is valid and session is established correctly. """
+
+        token = Token.generate(self.lfm_user.api_key)
+        token.approve(self.lfm_user.name)
+
+        data = {
+            'method': 'auth.getsession',
+            'api_key': self.lfm_user.api_key,
+            'token': token.token,
+        }
+        r = self.client.post(url_for('api_compat.api_methods'), data=data)
+        self.assert200(r)
+
+        response = xmltodict.parse(r.data)
+        self.assertEqual(response['lfm']['@status'], 'ok')
+        self.assertEqual(response['lfm']['session']['name'], self.lfm_user.name)
+
+        session_key = Session.load(response['lfm']['session']['key'])
+        self.assertIsNotNone(session_key)
+
+    def test_get_session_invalid_token(self):
+        """ Tests if correct error codes are returned in case token supplied
+            is invalid during establishment of session.
+        """
+
+        data = {
+            'method': 'auth.getsession',
+            'api_key': self.lfm_user.api_key,
+            'token': '',
+        }
+        r = self.client.post(url_for('api_compat.api_methods'), data=data)
+        self.assert200(r)
+
+        response = xmltodict.parse(r.data)
+        self.assertEqual(response['lfm']['@status'], 'failed')
+        self.assertEqual(response['lfm']['error']['@code'], '4')
