@@ -51,7 +51,7 @@ chown "$BACKUP_USER:$BACKUP_GROUP" \
 echo "Backup directories created!"
 
 # Copy the files into the backup directory
-echo "Begin copying..."
+echo "Begin copying dumps to backup directory..."
 chown "$BACKUP_USER:$BACKUP_GROUP" "$DUMP_DIR"/*
 chmod "$BACKUP_FILE_MODE" "$DUMP_DIR"/*
 retry cp -a "$DUMP_DIR"/* "$BACKUP_DIR"/fullexport/"$DUMP_NAME"/
@@ -59,4 +59,26 @@ echo "Dumps copied to backup directory!"
 
 # rsync the files into the FTP server
 # TODO (param): remove old dumps
+
+# create the dir in which to copy the dumps before
+# changing their permissions to the FTP_FILE_MODE
+echo "Creating FTP directories and setting permissions..."
+mkdir -m "$FTP_DIR_MODE" -p \
+         "$FTP_DIR"/fullexport/ \
+         "$FTP_DIR"/fullexport/"$DUMP_NAME"
+
+# make sure these dirs are owned by the correct user
+chown "$FTP_USER:$FTP_GROUP" \
+      "$FTP_DIR" \
+      "$FTP_DIR"/fullexport/ \
+      "$FTP_DIR"/fullexport/"$DUMP_NAME"
+
+# make sure all dump files are owned by the correct user
+# and set appropriate mode for files to be uploaded to
+# the FTP server
+chown "$FTP_USER:$FTP_GROUP" "$DUMP_DIR"/*
+chmod "$FTP_FILE_MODE" "$DUMP_DIR"/*
+retry cp -a "$DUMP_DIR"/* "$FTP_DIR"/fullexport/"$DUMP_NAME"/
 ./admin/rsync-dump-files.sh
+
+echo "Dumps created, backed up and uploaded to the FTP server!"

@@ -11,8 +11,17 @@ BACKUP_GROUP=listenbrainz
 BACKUP_DIR_MODE=700
 BACKUP_FILE_MODE=600
 
+# Same but for the files that need to copied to the FTP server,
+# for public consumption
+FTP_DIR='/home/listenbrainz/ftp/'
+FTP_USER=listenbrainz
+FTP_GROUP=listenbrainz
+FTP_DIR_MODE=755
+FTP_FILE_MODE=644
+
+
 # rsync to FTP server configuration
 RSYNC_FULLEXPORT_HOST='10.2.2.28'
 RSYNC_FULLEXPORT_PORT='65415'
-RSYNC_FULLEXPORT_DIR="/home/listenbrainz/backup/fullexport"
+RSYNC_FULLEXPORT_DIR="$FTP_DIR/fullexport"
 RSYNC_FULLEXPORT_KEY='~/.ssh/rsync-listenbrainz-dumps-full'
