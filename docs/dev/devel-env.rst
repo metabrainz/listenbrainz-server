@@ -125,6 +125,8 @@ ListenBrainz development environment is able to import your listens from Last.FM
 
 In case you don't have a Last.FM API key, you can get it from `Last.FM API page`_.
 
+You also need to update the ``API_URL`` field value to ``http://localhost``.
+
 
 .. _Last.FM API page: https://last.fm/api
 
