@@ -43,7 +43,6 @@ def gen_app(config_path=None, debug=None):
     app = CustomFlask(
         import_name=__name__,
         use_flask_uuid=True,
-        use_debug_toolbar=True,
     )
 
     print("Starting metabrainz service with %s environment." % deploy_env);
@@ -82,6 +81,10 @@ def gen_app(config_path=None, debug=None):
 
     if debug is not None:
         app.debug = debug
+
+    # initialize Flask-DebugToolbar if the debug option is True
+    if app.debug and app.config['SECRET_KEY']:
+        app.init_debug_toolbar()
 
     # Output config values and some other info
     print('Configuration values are as follows: ')
