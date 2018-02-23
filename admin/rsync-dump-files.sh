@@ -29,7 +29,7 @@ source admin/functions.sh
 retry rsync \
     --archive \
     --delete \
-    --exclude='listenbrainz-private-dump*' \
+    -FF \
     --rsh "ssh -i $RSYNC_FULLEXPORT_KEY -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $RSYNC_FULLEXPORT_PORT" \
     --verbose \
     $RSYNC_FULLEXPORT_DIR/ \
