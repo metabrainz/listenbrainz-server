@@ -1,16 +1,18 @@
-import sys
-import uuid
-from werkzeug.exceptions import InternalServerError, ServiceUnavailable, BadRequest
-from flask import current_app
-import ujson
+import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
+import listenbrainz.webserver.redis_connection as redis_connection
 import pika
 import pika.exceptions
-from pika_pool import Overflow as PikaPoolOverflow, Timeout as PikaPoolTimeout
+import sys
+import time
+import ujson
+import uuid
 
-from listenbrainz.webserver.external import messybrainz
-import listenbrainz.webserver.redis_connection as redis_connection
-import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
+from flask import current_app
+from pika_pool import Overflow as PikaPoolOverflow, Timeout as PikaPoolTimeout
 from listenbrainz.listen import Listen
+from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
+from listenbrainz.webserver.external import messybrainz
+from werkzeug.exceptions import InternalServerError, ServiceUnavailable, BadRequest
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
 MAX_LISTEN_SIZE = 10240
@@ -106,6 +108,12 @@ def validate_listen(listen, listen_type):
         if 'listened_at' in listen and 'track_metadata' in listen and len(listen) > 2:
             log_raise_400("JSON document may only contain listened_at and "
                            "track_metadata top level keys", listen)
+
+        # if timestamp is too high, raise BadRequest
+        # in order to make up for possible clock skew, we allow
+        # timestamps to be one hour ahead of server time
+        if not is_valid_timestamp(listen['listened_at']):
+            log_raise_400("Value for key listened_at is too high.", listen)
 
     elif listen_type == LISTEN_TYPE_PLAYING_NOW:
         if 'listened_at' in listen:
@@ -307,3 +315,16 @@ def verify_mbid_validity(listen, key, multi):
     for item in items:
         if not is_valid_uuid(item):
             log_raise_400("%s MBID format invalid." % (key, ), listen)
+
+
+def is_valid_timestamp(ts):
+    """ Returns True if the timestamp passed is in the API's
+    allowed range of timestamps, False otherwise
+
+    Args:
+        ts (int): the timestamp to be checked for validity
+
+    Returns:
+        bool: True if timestamp is valid, False otherwise
+    """
+    return ts <= int(time.time()) + API_LISTENED_AT_ALLOWED_SKEW
