@@ -117,6 +117,11 @@ class InfluxWriterSubscriber(ListenWriter):
             t = int(listen['listened_at'])
             user_name = listen['user_name']
 
+            # if the timestamp is illegal, don't use it for ranges
+            if t.bit_length() > 32:
+                self.log.error("timestamp %d is too large." % t)
+                continue
+
             if user_name not in users:
                 users[user_name] = {
                     'min_time': t,
