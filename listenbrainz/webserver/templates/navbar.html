@@ -26,7 +26,7 @@
       </ul>
 
       {# Not showing user stuff on error pages. If attempt to load user info fails there, page will not render. #}
-      {% if not error %}
+      {% if not error or code != 500 %}
         <ul class="nav navbar-nav navbar-right">
           <li class="import-link">
             <a href="{{ url_for('profile.import_data') }}">Import!</a>
