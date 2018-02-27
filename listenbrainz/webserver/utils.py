@@ -25,16 +25,3 @@ def reformat_date(value, fmt="%b %d, %Y"):
 
 def reformat_datetime(value, fmt="%b %d, %Y, %H:%M %Z"):
     return value.strftime(fmt)
-
-def init_cache(app):
-    from brainzutils import cache
-    import logging
-    try:
-        cache.init(
-            host=app.config['REDIS_HOST'],
-            port=app.config['REDIS_PORT'],
-            namespace=app.config['REDIS_NAMESPACE'],
-        )
-    except KeyError as e:
-        logging.error("Redis is not defined in config file. Error: {}".format(e))
-        raise
