@@ -1,29 +1,28 @@
-
+import listenbrainz.db.stats as db_stats
+import listenbrainz.db.user as db_user
+import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
 import os
 import re
 import ujson
 import zipfile
+
+
 from datetime import datetime
-from os import path, makedirs
-from time import time
-
-from flask import Blueprint, render_template, request, url_for, redirect, current_app
-from flask import make_response
+from flask import Blueprint, render_template, request, url_for, redirect, current_app, make_response
 from flask_login import current_user, login_required
-from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
-from werkzeug.utils import secure_filename
-
-import listenbrainz.db.user as db_user
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.utils import sizeof_readable
 from listenbrainz.webserver.views.api_tools import convert_backup_to_native_format, insert_payload, validate_listen, \
-    LISTEN_TYPE_IMPORT
+    LISTEN_TYPE_IMPORT, publish_data_to_queue
+from os import path, makedirs
+from time import time
+from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
+from werkzeug.utils import secure_filename
 
 profile_bp = Blueprint("profile", __name__)
-
 
 EXPORT_FETCH_COUNT = 5000
 
@@ -202,3 +201,26 @@ def upload():
 
         flash.info('Congratulations! Your listens from %d files have been uploaded successfully.' % success)
     return redirect(url_for("profile.import_data"))
+
+
+@profile_bp.route('/request-stats', methods=['GET'])
+@login_required
+def request_stats():
+    if db_stats.valid_stats_exist(current_user.id):
+        flash.info('Your stats were calculated in the most recent stats calculation interval, please wait until the next interval!')
+        return redirect(url_for('profile.info'))
+    else:
+        # publish to rabbitmq queue that the stats-calculator consumes
+        data = {
+            'type': 'user',
+            'id': current_user.id,
+            'musicbrainz_id': current_user.musicbrainz_id,
+        }
+        publish_data_to_queue(
+            data=data,
+            exchange=current_app.config['STATS_EXCHANGE'],
+            queue=current_app.config['STATS_QUEUE'],
+            error_msg='Could not put user %s into statistics calculation queue, please try again later',
+        )
+        flash.info('You have been added to the stats calculation queue! Please check back later.')
+        return redirect(url_for('profile.info'))
