@@ -222,6 +222,12 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         self.assert400(r)
         self.assertEqual(r.data.decode('utf-8').split()[0], 'FAILED')
 
+        # re-add a timestamp in ns
+        data['i[0]'] = int(time.time()) * 10**9
+        r = self.client.post(url_for('api_compat_old.submit_listens'), data=data)
+        self.assert400(r)
+        self.assertEqual(r.data.decode('utf-8').split()[0], 'FAILED')
+
 
     def test_playing_now(self):
         """ Tests playing now notifications """

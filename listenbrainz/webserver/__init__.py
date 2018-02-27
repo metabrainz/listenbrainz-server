@@ -13,6 +13,7 @@ API_PREFIX = '/1'
 deploy_env = os.environ.get('DEPLOY_ENV', '')
 
 CONSUL_CONFIG_FILE_RETRY_COUNT = 10
+API_LISTENED_AT_ALLOWED_SKEW = 60 * 60 # allow a skew of 1 hour in listened_at submissions
 
 def create_influx(app):
     from listenbrainz.webserver.influx_connection import init_influx_connection
