@@ -1,5 +1,5 @@
-from listenbrainz.webserver.testing import ServerTestCase
 from listenbrainz.webserver import utils
+from listenbrainz.webserver.testing import ServerTestCase
 
 
 class UtilsTestCase(ServerTestCase):

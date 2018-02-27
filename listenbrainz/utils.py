@@ -124,3 +124,23 @@ def init_cache(host, port, namespace):
     """ Initializes brainzutils cache. """
     from brainzutils import cache
     cache.init(host=host, port=port, namespace=namespace)
+
+
+def create_channel_to_consume(connection, exchange, queue, callback_function):
+    """ Returns a newly created channel that can consume from the specified queue.
+
+    Args:
+        connection: a RabbitMQ connection
+        exchange (str): the name of the exchange
+        queue (str): the name of the queue
+        callback_function: the callback function to be called on message reception
+
+    Returns:
+        a RabbitMQ channel
+    """
+    ch = connection.channel()
+    ch.exchange_declare(exchange=exchange, exchange_type='fanout')
+    ch.queue_declare(queue, durable=True)
+    ch.queue_bind(exchange=exchange, queue=queue)
+    ch.basic_consume(callback_function, queue=queue, no_ack=False)
+    return ch
