@@ -76,7 +76,7 @@ cli = click.Group()
 @cli.command()
 @click.option('--force', '-f', is_flag=True, help='Force statistics calculation for ALL entities')
 def populate_queue(force):
-    """ Populate the ListenBraiz stats calculatio queue with entities
+    """ Populate the ListenBrainz stats calculation queue with entities
         which need their stats calculated.
     """
     logger.info('Connecting to database...')
