@@ -87,8 +87,12 @@ retry cp -a "$DUMP_DIR"/* "$FTP_CURRENT_DUMP_DIR"
 # create an explicit rsync filter for the new private dump in the
 # ftp folder
 touch "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
-PRIVATE_DUMP_RULE=`printf "exclude listenbrainz-private-dump-%s.tar.xz" $DUMP_TIMESTAMP`
-echo $PRIVATE_DUMP_RULE >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
+PUBLIC_DUMP_RULE=`printf "include listenbrainz-public-dump-%s.tar.xz" $DUMP_TIMESTAMP`
+echo "$PUBLIC_DUMP_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
+LISTENS_DUMP_RULE=`printf "include listenbrainz-listens-dump-%s.tar.xz" $DUMP_TIMESTAMP`
+echo "$LISTENS_DUMP_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
+EXCLUDE_RULE="exclude *"
+echo "$EXCLUDE_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
 
 # rsync to ftp folder taking care of the rules
 ./admin/rsync-dump-files.sh
