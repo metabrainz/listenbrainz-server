@@ -97,19 +97,24 @@ class StatsCalculator:
             self.log.info('Stats already exist for user %s, moving on!', user['musicbrainz_id'])
             return False
 
-        self.log.info('Calculating statistics for user %s...', user['musicbrainz_id'])
-        recordings = stats_user.get_top_recordings(user['musicbrainz_id'])
-        self.log.info('Top recordings for user %s done!', user['musicbrainz_id'])
+        try:
+            self.log.info('Calculating statistics for user %s...', user['musicbrainz_id'])
+            recordings = stats_user.get_top_recordings(user['musicbrainz_id'])
+            self.log.info('Top recordings for user %s done!', user['musicbrainz_id'])
 
-        artists = stats_user.get_top_artists(user['musicbrainz_id'])
-        self.log.info('Top artists for user %s done!', user['musicbrainz_id'])
+            artists = stats_user.get_top_artists(user['musicbrainz_id'])
+            self.log.info('Top artists for user %s done!', user['musicbrainz_id'])
 
-        releases = stats_user.get_top_releases(user['musicbrainz_id'])
-        self.log.info('Top releases for user %s done!', user['musicbrainz_id'])
+            releases = stats_user.get_top_releases(user['musicbrainz_id'])
+            self.log.info('Top releases for user %s done!', user['musicbrainz_id'])
 
-        artist_count = stats_user.get_artist_count(user['musicbrainz_id'])
-        self.log.info('Artist count for user %s done!', user['musicbrainz_id'])
+            artist_count = stats_user.get_artist_count(user['musicbrainz_id'])
+            self.log.info('Artist count for user %s done!', user['musicbrainz_id'])
 
+        except Exception as e:
+            self.log.error('Unable to calculate stats for user %s. :(', user['musicbrainz_id'])
+            self.log.error('Giving up for now...')
+            return False
 
         self.log.info('Inserting calculated stats for user %s into db', user['musicbrainz_id'])
         while True:
