@@ -206,6 +206,9 @@ def upload():
 @profile_bp.route('/request-stats', methods=['GET'])
 @login_required
 def request_stats():
+    """ Check if the current user's statistics have been calculated and if not,
+        put them in the stats queue for stats_calculator.
+    """
     if db_stats.valid_stats_exist(current_user.id):
         flash.info('Your stats were calculated in the most recent stats calculation interval, please wait until the next interval!')
         return redirect(url_for('profile.info'))
