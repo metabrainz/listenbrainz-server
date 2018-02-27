@@ -28,6 +28,13 @@
       <span class="btn btn-info btn-lg" style="width: 200px"><a href="{{ url_for("profile.reset_token") }}" style="color: white;">Reset token</a></span>
     </p>
 
+    <h3> Request Statistics Calculation </h3>
+
+    <p>
+      You can make a request to get your statistics calculated. This will put you into a queue
+      that tracks users whose stats need to be calculated. We will then calculate your statistics
+      as soon as possible.
+    </p>
     <p>
       <span class="btn btn-info btn-lg" style="width: 200px"><a href="{{ url_for("profile.request_stats") }}" style="color: white;">Request stats</a></span>
     </p>
