@@ -118,3 +118,25 @@ def connect_to_rabbitmq(username, password,
             error_message = "Cannot connect to RabbitMQ: {error}, retrying in {delay} seconds."
             error_logger(error_message.format(error=str(err), delay=error_retry_delay))
             time.sleep(error_retry_delay)
+
+
+def init_cache():
+    """ Initializes brainzutils cache. """
+    from brainzutils import cache
+    from listenbrainz import default_config as config
+    try:
+        from listenbrainz import custom_config as config
+    except ImportError:
+        pass
+
+    import logging
+
+    try:
+        cache.init(
+            host=config.REDIS_HOST,
+            port=config.REDIS_PORT,
+            namespace=config.REDIS_NAMESPACE,
+        )
+    except KeyError as e:
+        logging.error("Redis is not defined in config file. Error: {}".format(e))
+        raise

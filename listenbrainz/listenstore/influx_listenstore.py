@@ -25,7 +25,7 @@ from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, \
     USER_CACHE_TIME, REDIS_USER_TIMESTAMPS, LISTENS_DUMP_SCHEMA_VERSION
 from listenbrainz.utils import quote, get_escaped_measurement_name, get_measurement_name, get_influx_query_timestamp, \
     convert_influx_nano_to_python_time, convert_python_time_to_nano_int, convert_to_unix_timestamp, \
-    create_path, log_ioerrors
+    create_path, log_ioerrors, init_cache
 
 REDIS_INFLUX_USER_LISTEN_COUNT = "ls.listencount."  # append username
 COUNT_RETENTION_POLICY = "one_week"
@@ -48,6 +48,8 @@ class InfluxListenStore(ListenStore):
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
         self.influx = InfluxDBClient(host=conf['INFLUX_HOST'], port=conf['INFLUX_PORT'], database=conf['INFLUX_DB_NAME'])
+        # Initialize brainzutils cache
+        init_cache()
 
     def get_listen_count_for_user(self, user_name, need_exact=False):
         """Get the total number of listens for a user. The number of listens comes from
