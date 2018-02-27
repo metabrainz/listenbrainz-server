@@ -131,7 +131,7 @@ def get_user_artists(user_id):
             {
                 'all_time': all time artist listen counts for the user
                             calculated by listenbrainz.stats.user.get_top_artists
-                'artist_count': the total number of artists this user has listened to
+                'count': the total number of artists this user has listened to
                                 calculated by listenbrainz.stats.user.get_artist_count
             }
 
