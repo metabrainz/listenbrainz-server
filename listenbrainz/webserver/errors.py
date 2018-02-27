@@ -54,7 +54,7 @@ class CompatError(object):
 def init_error_handlers(app):
 
     def error_wrapper(template, error, code):
-        resp = make_response(render_template(template, error=error))
+        resp = make_response(render_template(template, error=error, code=code))
         resp.headers['Access-Control-Allow-Origin'] = '*'
         return resp, code
 
