@@ -75,10 +75,10 @@ class InfluxWriterSubscriber(ListenWriter):
                 failure_count += 1
                 if failure_count >= retries:
                     break
-                sleep(ERROR_RETRY_DELAY)
+                sleep(self.ERROR_RETRY_DELAY)
             except ConnectionError as e:
                 self.log.error("Cannot write data to listenstore: %s. Sleep." % str(e))
-                sleep(ERROR_RETRY_DELAY)
+                sleep(self.ERROR_RETRY_DELAY)
 
         # if we get here, we failed on trying to write the data
         if len(data) == 1:
@@ -89,7 +89,7 @@ class InfluxWriterSubscriber(ListenWriter):
                 return 1
             except (InfluxDBServerError, InfluxDBClientError, ValueError, ConnectionError) as e:
                 self.log.error("Unable to insert bad listen to listenstore: %s" % str(e))
-                if DUMP_JSON_WITH_ERRORS:
+                if self.DUMP_JSON_WITH_ERRORS:
                     self.log.error("Was writing the following data:")
                     influx_dict = data[0].to_influx(get_measurement_name(data[0].user_name))
                     self.log.error(ujson.dumps(influx_dict))
@@ -240,7 +240,7 @@ class InfluxWriterSubscriber(ListenWriter):
                 break
             except Exception as err:
                 self.log.error("Cannot connect to influx: %s. Retrying in 2 seconds and trying again." % str(err))
-                sleep(ERROR_RETRY_DELAY)
+                sleep(self.ERROR_RETRY_DELAY)
 
         while True:
             try:
@@ -249,7 +249,7 @@ class InfluxWriterSubscriber(ListenWriter):
                 break
             except Exception as err:
                 self.log.error("Cannot connect to redis: %s. Retrying in 2 seconds and trying again." % str(err))
-                sleep(ERROR_RETRY_DELAY)
+                sleep(self.ERROR_RETRY_DELAY)
 
         while True:
             self.connect_to_rabbitmq()
