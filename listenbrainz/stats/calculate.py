@@ -2,9 +2,12 @@ import click
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import listenbrainz.stats.user as stats_user
+import listenbrainz.utils as utils
 import logging
+import pika
 import sys
 import time
+import ujson
 
 from listenbrainz import default_config as config
 try:
@@ -23,104 +26,63 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
-def calculate_user_stats(force=False):
-    """Get the users we need to calculate our statistics for and calculate their stats.
+def push_users_to_queue(channel, force=False):
+    """ Get users from the db whose stats haven't been calculated and push
+        them into the queue.
+
+        Args:
+            channel: the RabbitMQ channel in which we should publish the user data
     """
-
-    logger.info('Beginning calculation of user stats...')
-
-    while True:
-        try:
-            if force:
-                users = db_user.get_all_users()
-            else:
-                users = db_user.get_users_with_uncalculated_stats()
-            break
-        except Exception as e:
-            logger.error('Error while getting user list for stats calculation: %s', str(e))
-            logger.error('Going to sleep for 3 seconds and then try again...')
-            time.sleep(3)
-
-    total = len(users)
-    done = 0
-    failed = 0
+    logger.info('pushing users to stats calculation queue...')
+    if force:
+        users = db_user.get_all_users()
+    else:
+        users = db_user.get_users_with_uncalculated_stats()
 
     for user in users:
+        data = {
+            'type': 'user',
+            'id': user['id'],
+            'musicbrainz_id': user['musicbrainz_id']
+        }
 
-        logger.info('Calculating statistics for user %s...', user['musicbrainz_id'])
-        try:
-            recordings = stats_user.get_top_recordings(musicbrainz_id=user['musicbrainz_id'])
-            logger.info('Top recordings for user %s done!', user['musicbrainz_id'])
-
-            artists = stats_user.get_top_artists(musicbrainz_id=user['musicbrainz_id'])
-            logger.info('Top artists for user %s done!', user['musicbrainz_id'])
-
-            releases = stats_user.get_top_releases(musicbrainz_id=user['musicbrainz_id'])
-            logger.info('Top releases for user %s done!', user['musicbrainz_id'])
-
-            artist_count = stats_user.get_artist_count(musicbrainz_id=user['musicbrainz_id'])
-            logger.info('Artist count for user %s done!', user['musicbrainz_id'])
-
-        except Exception as e:
-            logger.error('Unable to calculate stats for user %s. :(', user['musicbrainz_id'])
-            logger.error('Giving up for now...')
-            failed += 1
-            continue
-
-        logger.info('Inserting calculated stats for user %s into db', user['musicbrainz_id'])
-        while True:
-            try:
-                db_stats.insert_user_stats(
-                    user_id=user['id'],
-                    artists=artists,
-                    recordings=recordings,
-                    releases=releases,
-                    artist_count=artist_count
-                )
-                logger.info('Stats calculation for user %s done!', user['musicbrainz_id'])
-                break
-
-            except Exception as e:
-                logger.error('Unable to insert calculated stats into db for user %s', user['musicbrainz_id'])
-                logger.error('Error: %s', str(e))
-                logger.error('Going to sleep and trying again...')
-                time.sleep(3)
-
-        done += 1
+        channel.basic_publish(
+            exchange=config.STATS_EXCHANGE,
+            routing_key='',
+            body=ujson.dumps(data),
+            properties=pika.BasicProperties(delivery_mode = 2,),
+        )
+    logger.info('pushed %d users!', len(users))
 
 
-    logger.info('User statistics calculations done!')
-    logger.info('Total users: %d', total)
-    logger.info('Successfully calculated stats for %d users', done)
-    logger.info('Stats calculation failed for %d users', failed)
-
-
-def calculate_stats(force=False):
-    calculate_user_stats(force)
+def push_entities_to_queue(force=False):
+    """ Creates a RabbitMQ connection and uses it to push entities which
+        need their stats calculated into the queue.
+    """
+    rabbitmq_connection = utils.connect_to_rabbitmq(
+        username=config.RABBITMQ_USERNAME,
+        password=config.RABBITMQ_PASSWORD,
+        host=config.RABBITMQ_HOST,
+        port=config.RABBITMQ_PORT,
+        virtual_host=config.RABBITMQ_VHOST,
+    )
+    channel = rabbitmq_connection.channel()
+    channel.exchange_declare(exchange=config.STATS_EXCHANGE, exchange_type='fanout')
+    push_users_to_queue(channel, force)
 
 
 cli = click.Group()
 
 @cli.command()
-@click.option('--force', '-f', is_flag=True, help='Force statistics calculation for ALL users')
-def calculate(force):
-    """ Command to calculate statistics from Google BigQuery.
-    This can be used from the manage.py file.
+@click.option('--force', '-f', is_flag=True, help='Force statistics calculation for ALL entities')
+def populate_queue(force):
+    """ Populate the ListenBraiz stats calculatio queue with entities
+        which need their stats calculated.
     """
-
-    # if no bigquery support, sleep
-    if not config.WRITE_TO_BIGQUERY:
-        while True:
-            time.sleep(10000)
-
-    logger.info('Connecting to Google BigQuery...')
-    stats.init_bigquery_connection()
-    logger.info('Connected!')
-
     logger.info('Connecting to database...')
     db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
     logger.info('Connected!')
 
-    logger.info('Calculating statistics using Google BigQuery...')
-    calculate_stats(force=force)
-    logger.info('Calculations done!')
+    logger.info('Pushing entities whose stats should be calculated into the queue...')
+    push_entities_to_queue(force=force)
+    logger.info('Pushed all relevant entities, stats_calculator should calculate stats soon!')
