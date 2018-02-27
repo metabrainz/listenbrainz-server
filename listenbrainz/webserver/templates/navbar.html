@@ -25,42 +25,32 @@
         <li><a href="{{ url_for('index.faq') }}">FAQ</a></li>
       </ul>
 
-      {# Not showing user stuff on error pages. If attempt to load user info fails there, page will not render. #}
-      {% if not error or code != 500 %}
-        <ul class="nav navbar-nav navbar-right">
-          <li class="import-link">
-            <a href="{{ url_for('profile.import_data') }}">Import!</a>
-          </li>
-          {% if not current_user or current_user.is_anonymous() %}
-            <li>
-              <a href="{{ url_for('login.index') }}">Sign in</a>
-            </li>
-          {% else %}
-            <li class="dropdown">
-              <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                {{ current_user.musicbrainz_id }} <span class="caret"></span>
-              </a>
-              <ul class="dropdown-menu" role="menu">
-                <li><a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">Your Listens</a></li>
-                <li><a href="{{ url_for('profile.import_data') }}">Import listens</a></li>
-                <li><a href="{{ url_for('profile.export_data') }}">Export listens</a></li>
-                <li><a href="{{ url_for('profile.info') }}">Your Info</a></li>
-                <li><a href="{{ url_for('login.logout') }}">Sign out</a></li>
-              </ul>
-            </li>
-          {% endif %}
-        </ul>
-      {% else %}
-        {% if not current_user or current_user.is_anonymous() %}
-          <ul class="nav navbar-nav navbar-right">
-            <li class="import-link">
-              <a href="{{ url_for('profile.import_data') }}">Import!</a>
-            </li>
-            <li>
-              <a href="{{ url_for('login.index') }}">Sign in</a>
-            </li>
+      {# Not showing user stuff on error page with error code 500. If attempt to load user info fails there, page will not render. #}
+      <ul class="nav navbar-nav navbar-right">
+        {% if not error or code != 404 %}
+        <li class="import-link">
+          <a href="{{ url_for('profile.import_data') }}">Import!</a>
+        </li>
         {% endif %}
+      {% if not current_user or current_user.is_anonymous() %}
+        <li>
+          <a href="{{ url_for('login.index') }}">Sign in</a>
+        </li>
+      {% elif not error or code != 404 %}
+        <li class="dropdown">
+          <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+            {{ current_user.musicbrainz_id }} <span class="caret"></span>
+          </a>
+          <ul class="dropdown-menu" role="menu">
+            <li><a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">Your Listens</a></li>
+            <li><a href="{{ url_for('profile.import_data') }}">Import listens</a></li>
+            <li><a href="{{ url_for('profile.export_data') }}">Export listens</a></li>
+            <li><a href="{{ url_for('profile.info') }}">Your Info</a></li>
+            <li><a href="{{ url_for('login.logout') }}">Sign out</a></li>
+          </ul>
+        </li>
       {%- endif -%}
+      </ul>
     </div>
 
   </div>
