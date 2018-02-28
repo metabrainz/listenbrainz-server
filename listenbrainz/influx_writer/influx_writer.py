@@ -233,6 +233,7 @@ class InfluxWriterSubscriber(ListenWriter):
             try:
                 self.ls = InfluxListenStore({ 'REDIS_HOST' : self.config.REDIS_HOST,
                                               'REDIS_PORT' : self.config.REDIS_PORT,
+                                              'REDIS_NAMESPACE' : self.config.REDIS_NAMESPACE,
                                               'INFLUX_HOST': self.config.INFLUX_HOST,
                                               'INFLUX_PORT': self.config.INFLUX_PORT,
                                               'INFLUX_DB_NAME': self.config.INFLUX_DB_NAME})

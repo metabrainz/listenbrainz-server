@@ -23,6 +23,7 @@ def create_influx(app):
         'INFLUX_DB_NAME': app.config['INFLUX_DB_NAME'],
         'REDIS_HOST': app.config['REDIS_HOST'],
         'REDIS_PORT': app.config['REDIS_PORT'],
+        'REDIS_NAMESPACE': app.config['REDIS_NAMESPACE'],
     })
 
 
