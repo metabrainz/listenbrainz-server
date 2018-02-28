@@ -1,9 +1,14 @@
 from flask import url_for
 from listenbrainz.webserver import create_app
 from listenbrainz.webserver.testing import ServerTestCase
+from listenbrainz.db.testing import DatabaseTestCase
 
 
-class IndexViewsTestCase(ServerTestCase):
+class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
+
+    def setUp(self):
+        ServerTestCase.setUp(self)
+        DatabaseTestCase.setUp(self)
 
     def test_index(self):
         resp = self.client.get(url_for('index.index'))
