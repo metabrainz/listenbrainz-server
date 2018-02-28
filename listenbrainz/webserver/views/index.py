@@ -95,12 +95,10 @@ def current_status():
     unique_len = -1
     try:
         with rabbitmq_connection._rabbitmq.acquire() as connection:
-            incoming_ch = connection.channel()
-            queue = incoming_ch.queue_declare(current_app.config['INCOMING_QUEUE'], durable=True)
+            queue = connection.channel.queue_declare(current_app.config['INCOMING_QUEUE'], durable=True)
             incoming_len = queue.method.message_count
 
-            unique_ch = connection.channel()
-            queue = unique_ch.queue_declare(current_app.config['UNIQUE_QUEUE'], durable=True)
+            queue = connection.channel.queue_declare(current_app.config['UNIQUE_QUEUE'], durable=True)
             unique_len = queue.method.message_count
 
     except (pika.exceptions.ConnectionClosed, AttributeError):
