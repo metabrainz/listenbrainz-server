@@ -120,23 +120,7 @@ def connect_to_rabbitmq(username, password,
             time.sleep(error_retry_delay)
 
 
-def init_cache():
+def init_cache(host, port, namespace):
     """ Initializes brainzutils cache. """
     from brainzutils import cache
-    from listenbrainz import default_config as config
-    try:
-        from listenbrainz import custom_config as config
-    except ImportError:
-        pass
-
-    import logging
-
-    try:
-        cache.init(
-            host=config.REDIS_HOST,
-            port=config.REDIS_PORT,
-            namespace=config.REDIS_NAMESPACE,
-        )
-    except KeyError as e:
-        logging.error("Redis is not defined in config file. Error: {}".format(e))
-        raise
+    cache.init(host=host, port=port, namespace=namespace)
