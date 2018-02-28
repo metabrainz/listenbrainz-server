@@ -57,3 +57,7 @@ class IndexViewsTestCase(ServerTestCase):
         resp = client.get('/data')
         self.assert200(resp)
         self.assertIn('flDebug', str(resp.data))
+
+    def test_current_status(self):
+        resp = self.client.get(url_for('index.current_status'))
+        self.assert200(resp)
