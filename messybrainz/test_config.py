@@ -1,4 +1,4 @@
-DEBUG = False  # set to False in production mode
+DEBUG = False # set to False in production mode
 
 SECRET_KEY = "CHANGE_ME"
 
