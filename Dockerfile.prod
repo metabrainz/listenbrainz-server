@@ -15,6 +15,7 @@ RUN apt-get update \
                        libssl-dev \
                        redis-tools \
                        pxz \
+                       rsync \
     && rm -rf /var/lib/apt/lists/*
 
 
@@ -51,6 +52,8 @@ RUN rm -f /code/listenbrainz/listenbrainz/config.py /code/listenbrainz/listenbra
 
 # create a user named listenbrainz for cron jobs and storing dump file backups
 RUN useradd --create-home --shell /bin/bash listenbrainz
+RUN mkdir /home/listenbrainz/backup /home/listenbrainz/ftp
+RUN chown -R listenbrainz:listenbrainz /home/listenbrainz/backup /home/listenbrainz/ftp
 
 # Add cron jobs
 ADD docker/crontab /etc/cron.d/lb-crontab
