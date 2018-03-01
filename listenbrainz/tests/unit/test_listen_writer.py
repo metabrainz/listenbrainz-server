@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 from listenbrainz.listen_writer import ListenWriter
 
 class ListenWriterTestCase(unittest.TestCase):
@@ -7,7 +8,8 @@ class ListenWriterTestCase(unittest.TestCase):
         self.lwriter = ListenWriter()
 
 
-    def test_verify_hosts_in_config(self):
+    @patch('time.sleep', return_value=None)
+    def test_verify_hosts_in_config(self, mock_sleep):
         """ Test for the _verify_hosts_in_config method """
 
         config1 = self.lwriter.config
