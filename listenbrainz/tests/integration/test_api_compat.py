@@ -124,3 +124,59 @@ class APICompatTestCase(APICompatIntegrationTestCase):
         response = xmltodict.parse(r.data)
         self.assertEqual(response['lfm']['@status'], 'failed')
         self.assertEqual(response['lfm']['error']['@code'], '4')
+
+    def test_record_listen(self):
+        """ Tests if listen is recorded correctly if valid information is provided. """
+
+        token = Token.generate(self.lfm_user.api_key)
+        token.approve(self.lfm_user.name)
+        session = Session.create(token)
+
+        data = {
+            'method': 'track.scrobble',
+            'api_key': self.lfm_user.api_key,
+            'sk': session.sid,
+            'artist[0]': 'Kishore Kumar',
+            'track[0]': 'Saamne Ye Kaun Aya',
+            'album[0]': 'Jawani Diwani',
+            'duration[0]': 300,
+            'timestamp[0]': int(time.time()),
+        }
+
+        r = self.client.post(url_for('api_compat.api_methods'), data=data)
+        self.assert200(r)
+
+        response = xmltodict.parse(r.data)
+        self.assertEqual(response['lfm']['@status'], 'ok')
+        self.assertEqual(response['lfm']['scrobbles']['@accepted'], '1')
+
+    def test_record_listen_multiple_listens(self):
+        """ Tests if multiple listens get recorded correctly in case valid information
+            is provided.
+        """
+
+        token = Token.generate(self.lfm_user.api_key)
+        token.approve(self.lfm_user.name)
+        session = Session.create(token)
+
+        data = {
+            'method': 'track.scrobble',
+            'api_key': self.lfm_user.api_key,
+            'sk': session.sid,
+            'artist[0]': 'Kishore Kumar',
+            'track[0]': 'Saamne Ye Kaun Aya',
+            'album[0]': 'Jawani Diwani',
+            'duration[0]': 300,
+            'timestamp[0]': int(time.time()),
+            'artist[1]': 'Fifth Harmony',
+            'track[1]': 'Deliver',
+            'duration[1]': 200,
+            'timestamp[1]': int(time.time())+300,
+        }
+
+        r = self.client.post(url_for('api_compat.api_methods'), data=data)
+        self.assert200(r)
+
+        response = xmltodict.parse(r.data)
+        self.assertEqual(response['lfm']['@status'], 'ok')
+        self.assertEqual(response['lfm']['scrobbles']['@accepted'], '2')
