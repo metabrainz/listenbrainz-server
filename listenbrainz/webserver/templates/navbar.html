@@ -36,7 +36,7 @@
         <li>
           <a href="{{ url_for('login.index') }}">Sign in</a>
         </li>
-      {% elif not error or code != 404 %}
+      {% elif not error or code != 500 %}
         <li class="dropdown">
           <a class="dropdown-toggle" data-toggle="dropdown" href="#">
             {{ current_user.musicbrainz_id }} <span class="caret"></span>
