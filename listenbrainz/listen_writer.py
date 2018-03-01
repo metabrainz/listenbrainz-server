@@ -2,7 +2,7 @@ import sys
 import logging
 import listenbrainz.utils as utils
 
-from time import sleep
+import time
 from listenbrainz import default_config as config
 try:
     from listenbrainz import custom_config as config
@@ -61,10 +61,10 @@ class ListenWriter:
     def _verify_hosts_in_config(self):
         if not hasattr(self.config, "REDIS_HOST"):
             self.log.error("Redis service not defined. Sleeping {0} seconds and exiting.".format(self.ERROR_RETRY_DELAY))
-            sleep(self.ERROR_RETRY_DELAY)
+            time.sleep(self.ERROR_RETRY_DELAY)
             sys.exit(-1)
 
         if not hasattr(self.config, "RABBITMQ_HOST"):
             self.log.error("RabbitMQ service not defined. Sleeping {0} seconds and exiting.".format(self.ERROR_RETRY_DELAY))
-            sleep(self.ERROR_RETRY_DELAY)
+            time.sleep(self.ERROR_RETRY_DELAY)
             sys.exit(-1)
