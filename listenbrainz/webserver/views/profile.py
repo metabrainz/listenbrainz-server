@@ -210,7 +210,8 @@ def request_stats():
         put them in the stats queue for stats_calculator.
     """
     if db_stats.valid_stats_exist(current_user.id):
-        flash.info('Your stats were calculated in the most recent stats calculation interval, please wait until the next interval!')
+        flash.info('Your stats were calculated in the most recent stats calculation interval,'
+            ' please wait until the next interval! We calculate new statistics every Monday at 00:00 UTC.')
         return redirect(url_for('profile.info'))
     else:
         # publish to rabbitmq queue that the stats-calculator consumes
