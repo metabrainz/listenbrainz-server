@@ -180,3 +180,99 @@ class APICompatTestCase(APICompatIntegrationTestCase):
         response = xmltodict.parse(r.data)
         self.assertEqual(response['lfm']['@status'], 'ok')
         self.assertEqual(response['lfm']['scrobbles']['@accepted'], '2')
+
+    def test_create_response_for_single_listen(self):
+        """ Tests create_response_for_single_listen method in api_compat
+            to check if responses are generated correctly.
+        """
+
+        from listenbrainz.webserver.views.api_compat import create_response_for_single_listen
+
+        timestamp = int(time.time())
+
+        original_listen = {
+            'artist': 'Kishore Kumar',
+            'track': 'Saamne Ye Kaun Aya',
+            'album': 'Jawani Diwani',
+            'duration': 300,
+            'timestamp': timestamp,
+        }
+
+        augmented_listen = {
+            'listened_at': timestamp,
+            'track_metadata': {
+                'artist_name': 'Kishore Kumar',
+                'track_name':  'Saamne Ye Kaun Aya',
+                'release_name': 'Jawani Diwani',
+                'additional_info': {
+                    'track_length': 300
+                }
+            }
+        }
+
+        # If original listen and augmented listen are same
+        xml_response = create_response_for_single_listen(original_listen, augmented_listen, listen_type="listens")
+        response = xmltodict.parse(xml_response)
+
+        self.assertEqual(response['scrobble']['track']['#text'], 'Saamne Ye Kaun Aya')
+        self.assertEqual(response['scrobble']['track']['@corrected'], '0')
+        self.assertEqual(response['scrobble']['artist']['#text'], 'Kishore Kumar')
+        self.assertEqual(response['scrobble']['artist']['@corrected'], '0')
+        self.assertEqual(response['scrobble']['album']['#text'], 'Jawani Diwani')
+        self.assertEqual(response['scrobble']['timestamp'], str(timestamp))
+
+        # If listen type is 'playing_now'
+        xml_response = create_response_for_single_listen(original_listen, augmented_listen, listen_type="playing_now")
+        response = xmltodict.parse(xml_response)
+
+        self.assertEqual(response['nowplaying']['track']['#text'], 'Saamne Ye Kaun Aya')
+        self.assertEqual(response['nowplaying']['track']['@corrected'], '0')
+        self.assertEqual(response['nowplaying']['artist']['#text'], 'Kishore Kumar')
+        self.assertEqual(response['nowplaying']['artist']['@corrected'], '0')
+        self.assertEqual(response['nowplaying']['album']['#text'], 'Jawani Diwani')
+        self.assertEqual(response['nowplaying']['album']['@corrected'], '0')
+        self.assertEqual(response['nowplaying']['timestamp'], str(timestamp))
+
+        # If artist was corrected
+        original_listen['artist'] = 'Pink'
+
+        xml_response = create_response_for_single_listen(original_listen, augmented_listen, listen_type="listens")
+        response = xmltodict.parse(xml_response)
+
+        self.assertEqual(response['scrobble']['track']['#text'], 'Saamne Ye Kaun Aya')
+        self.assertEqual(response['scrobble']['track']['@corrected'], '0')
+        self.assertEqual(response['scrobble']['artist']['#text'], 'Kishore Kumar')
+        self.assertEqual(response['scrobble']['artist']['@corrected'], '1')
+        self.assertEqual(response['scrobble']['album']['#text'], 'Jawani Diwani')
+        self.assertEqual(response['scrobble']['album']['@corrected'], '0')
+        self.assertEqual(response['scrobble']['timestamp'], str(timestamp))
+
+        # If track was corrected
+        original_listen['artist'] = 'Kishore Kumar'
+        original_listen['track'] = 'Deliver'
+
+        xml_response = create_response_for_single_listen(original_listen, augmented_listen, listen_type="listens")
+        response = xmltodict.parse(xml_response)
+
+        self.assertEqual(response['scrobble']['track']['#text'], 'Saamne Ye Kaun Aya')
+        self.assertEqual(response['scrobble']['track']['@corrected'], '1')
+        self.assertEqual(response['scrobble']['artist']['#text'], 'Kishore Kumar')
+        self.assertEqual(response['scrobble']['artist']['@corrected'], '0')
+        self.assertEqual(response['scrobble']['album']['#text'], 'Jawani Diwani')
+        self.assertEqual(response['scrobble']['album']['@corrected'], '0')
+        self.assertEqual(response['scrobble']['timestamp'], str(timestamp))
+
+        # If album was corrected
+        original_listen['track'] = 'Saamne Ye Kaun Aya'
+        original_listen['album'] = 'Good Life'
+
+        xml_response = create_response_for_single_listen(original_listen, augmented_listen, listen_type="listens")
+        response = xmltodict.parse(xml_response)
+
+        self.assertEqual(response['scrobble']['track']['#text'], 'Saamne Ye Kaun Aya')
+        self.assertEqual(response['scrobble']['track']['@corrected'], '0')
+        self.assertEqual(response['scrobble']['artist']['#text'], 'Kishore Kumar')
+        self.assertEqual(response['scrobble']['artist']['@corrected'], '0')
+        self.assertEqual(response['scrobble']['album']['#text'], 'Jawani Diwani')
+        self.assertEqual(response['scrobble']['album']['@corrected'], '1')
+        self.assertEqual(response['scrobble']['timestamp'], str(timestamp))
