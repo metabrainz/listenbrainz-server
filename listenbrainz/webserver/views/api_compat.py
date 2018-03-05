@@ -279,7 +279,7 @@ def record_listens(request, data):
             doc.asis(create_response_for_single_listen(list(lookup.values())[0], augmented_listens[0], listen_type))
         else:
             accepted_listens = len(lookup.values())
-            # Currently LB acceptes all the listens and ignores none
+            # Currently LB accepts all the listens and ignores none
             with tag('scrobbles', accepted=accepted_listens, ignored='0'):
                 for original_listen, augmented_listen in zip(list(lookup.values()), augmented_listens):
                     doc.asis(create_response_for_single_listen(original_listen, augmented_listen, listen_type))
@@ -298,6 +298,10 @@ def create_response_for_single_listen(original_listen, augmented_listen, listen_
 
     Returns:
         XML response for a single listen.
+        If listen is of type 'playing_now' response is as described in following link
+        https://www.last.fm/api/show/track.updateNowPlaying
+        Otherwise response is as described in following link
+        https://www.last.fm/api/show/track.scrobble .
     """
     corrected = defaultdict(lambda: '0')
 
