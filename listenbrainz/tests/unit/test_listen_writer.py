@@ -25,8 +25,8 @@ class ListenWriterTestCase(unittest.TestCase):
 
         self.assertEqual(s.exception.code, -1)
 
-        if hasattr(config2, "REDISMQ_HOST"):
-            delattr(config2, "REDISMQ_HOST")
+        if hasattr(config2, "RABBITMQ_HOST"):
+            delattr(config2, "RABBITMQ_HOST")
 
         self.lwriter.config = config2
 
