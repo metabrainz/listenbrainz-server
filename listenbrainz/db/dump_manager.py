@@ -59,6 +59,7 @@ def create(location, threads):
     ls = init_influx_connection(log,  {
         'REDIS_HOST': config.REDIS_HOST,
         'REDIS_PORT': config.REDIS_PORT,
+        'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
         'INFLUX_HOST': config.INFLUX_HOST,
         'INFLUX_PORT': config.INFLUX_PORT,
         'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
@@ -100,6 +101,7 @@ def import_dump(private_archive, public_archive, listen_archive, threads):
     ls = init_influx_connection(log,  {
         'REDIS_HOST': config.REDIS_HOST,
         'REDIS_PORT': config.REDIS_PORT,
+        'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
         'INFLUX_HOST': config.INFLUX_HOST,
         'INFLUX_PORT': config.INFLUX_PORT,
         'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
