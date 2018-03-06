@@ -28,6 +28,7 @@ from flask import url_for, current_app
 from listenbrainz.db.lastfm_session import Session
 from listenbrainz.db.lastfm_token import Token
 from listenbrainz.db.lastfm_user import User
+from listenbrainz.listenstore import InfluxListenStore
 from listenbrainz.tests.integration import APICompatIntegrationTestCase
 
 
@@ -42,6 +43,14 @@ class APICompatTestCase(APICompatIntegrationTestCase):
             self.lb_user['musicbrainz_id'],
             self.lb_user['auth_token'],
         )
+
+        self.ls = InfluxListenStore({
+            'REDIS_HOST': current_app.config['REDIS_HOST'],
+            'REDIS_PORT': current_app.config['REDIS_PORT'],
+            'INFLUX_HOST': current_app.config['INFLUX_HOST'],
+            'INFLUX_PORT': current_app.config['INFLUX_PORT'],
+            'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
+        })
 
     def test_record_listen_now_playing(self):
         """ Tests if listen of type 'nowplaying' is recorded correctly
@@ -132,6 +141,7 @@ class APICompatTestCase(APICompatIntegrationTestCase):
         token.approve(self.lfm_user.name)
         session = Session.create(token)
 
+        timestamp = int(time.time())
         data = {
             'method': 'track.scrobble',
             'api_key': self.lfm_user.api_key,
@@ -140,7 +150,7 @@ class APICompatTestCase(APICompatIntegrationTestCase):
             'track[0]': 'Saamne Ye Kaun Aya',
             'album[0]': 'Jawani Diwani',
             'duration[0]': 300,
-            'timestamp[0]': int(time.time()),
+            'timestamp[0]': timestamp,
         }
 
         r = self.client.post(url_for('api_compat.api_methods'), data=data)
@@ -149,6 +159,11 @@ class APICompatTestCase(APICompatIntegrationTestCase):
         response = xmltodict.parse(r.data)
         self.assertEqual(response['lfm']['@status'], 'ok')
         self.assertEqual(response['lfm']['scrobbles']['@accepted'], '1')
+
+        # Check if listen reached the influx listenstore
+        time.sleep(1)
+        listens = self.ls.fetch_listens(self.lb_user['musicbrainz_id'], from_ts=timestamp-1)
+        self.assertEqual(len(listens), 1)
 
     def test_record_listen_multiple_listens(self):
         """ Tests if multiple listens get recorded correctly in case valid information
@@ -159,6 +174,7 @@ class APICompatTestCase(APICompatIntegrationTestCase):
         token.approve(self.lfm_user.name)
         session = Session.create(token)
 
+        timestamp = int(time.time())
         data = {
             'method': 'track.scrobble',
             'api_key': self.lfm_user.api_key,
@@ -167,11 +183,11 @@ class APICompatTestCase(APICompatIntegrationTestCase):
             'track[0]': 'Saamne Ye Kaun Aya',
             'album[0]': 'Jawani Diwani',
             'duration[0]': 300,
-            'timestamp[0]': int(time.time()),
+            'timestamp[0]': timestamp,
             'artist[1]': 'Fifth Harmony',
             'track[1]': 'Deliver',
             'duration[1]': 200,
-            'timestamp[1]': int(time.time())+300,
+            'timestamp[1]': timestamp+300,
         }
 
         r = self.client.post(url_for('api_compat.api_methods'), data=data)
@@ -180,6 +196,11 @@ class APICompatTestCase(APICompatIntegrationTestCase):
         response = xmltodict.parse(r.data)
         self.assertEqual(response['lfm']['@status'], 'ok')
         self.assertEqual(response['lfm']['scrobbles']['@accepted'], '2')
+
+        # Check if listens reached the influx listenstore
+        time.sleep(1)
+        listens = self.ls.fetch_listens(self.lb_user['musicbrainz_id'], from_ts=timestamp-1)
+        self.assertEqual(len(listens), 2)
 
     def test_create_response_for_single_listen(self):
         """ Tests create_response_for_single_listen method in api_compat
