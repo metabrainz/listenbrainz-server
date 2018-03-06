@@ -24,6 +24,7 @@ PG_ASYNC_LISTEN_COMMIT = False
 {{with index (service "listenbrainz-redis") 0}}
 REDIS_HOST = "{{.Address}}"
 REDIS_PORT = {{.Port}}
+REDIS_NAMESPACE = "listenbrainz"
 {{end}}
 {{end}}
 

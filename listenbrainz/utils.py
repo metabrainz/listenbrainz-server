@@ -118,3 +118,9 @@ def connect_to_rabbitmq(username, password,
             error_message = "Cannot connect to RabbitMQ: {error}, retrying in {delay} seconds."
             error_logger(error_message.format(error=str(err), delay=error_retry_delay))
             time.sleep(error_retry_delay)
+
+
+def init_cache(host, port, namespace):
+    """ Initializes brainzutils cache. """
+    from brainzutils import cache
+    cache.init(host=host, port=port, namespace=namespace)
