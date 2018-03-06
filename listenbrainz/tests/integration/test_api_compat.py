@@ -47,6 +47,7 @@ class APICompatTestCase(APICompatIntegrationTestCase):
         self.ls = InfluxListenStore({
             'REDIS_HOST': current_app.config['REDIS_HOST'],
             'REDIS_PORT': current_app.config['REDIS_PORT'],
+            'REDIS_NAMESPACE': current_app.config['REDIS_NAMESPACE'],
             'INFLUX_HOST': current_app.config['INFLUX_HOST'],
             'INFLUX_PORT': current_app.config['INFLUX_PORT'],
             'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
