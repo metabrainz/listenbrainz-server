@@ -34,13 +34,3 @@
 
   </div>
 {% endblock %}
-
-{% block scripts %}
-  {{ super() }}
-  <script src="{{ url_for('static', filename='js/lib/jquery.timeago.js') }}"></script>
-  <script type="text/javascript">
-    $(document).ready(function() {
-      $("abbr.timeago").timeago();
-    });
-  </script>
-{% endblock %}

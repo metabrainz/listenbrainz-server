@@ -9,7 +9,7 @@
     <ul class="nav nav-tabs" role="tablist">
         <li {{ 'class=active' if section=='listens' }}><a href="{{ url_for('user.profile', user_name=user.musicbrainz_id) }}">Listens</a></li>
         <li {{ 'class=active' if section=='artists' }}><a href="{{ url_for('user.artists', user_name=user.musicbrainz_id) }}">Artists</a></li>
-	</ul>
+    </ul>
 
     {% block profile_content %} {% endblock %}
 
