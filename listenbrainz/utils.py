@@ -4,6 +4,7 @@ import pika
 import time
 
 from datetime import datetime
+from redis import Redis
 
 INFLUX_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 INFLUX_TIME_FORMAT_NANO = "%Y-%m-%dT%H:%M:%S"
@@ -144,3 +145,27 @@ def create_channel_to_consume(connection, exchange, queue, callback_function):
     ch.queue_bind(exchange=exchange, queue=queue)
     ch.basic_consume(callback_function, queue=queue, no_ack=False)
     return ch
+
+
+def connect_to_redis(host, port, log=print):
+    """ Create a connection to redis and return it
+
+    Note: This is a blocking function which keeps trying to connect to redis until
+    it establishes a connection
+
+    Args:
+        host: the hostname of the redis server
+        port: the port of the redis server
+        log: the function to use for error logging
+
+    Returns:
+        Redis object
+    """
+    while True:
+        try:
+            redis = Redis(host=host, port=port)
+            redis.ping()
+            return redis
+        except Exception as err:
+            log("Cannot connect to redis: %s. Retrying in 3 seconds and trying again." % str(err))
+            sleep(3)
