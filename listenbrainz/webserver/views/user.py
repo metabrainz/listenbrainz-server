@@ -134,7 +134,8 @@ def profile(user_name):
         spotify_uri=_get_spotify_uri_for_listens(listens),
         have_listen_count=have_listen_count,
         listen_count=format(int(listen_count), ",d"),
-        artist_count=format(artist_count, ",d") if artist_count else None
+        artist_count=format(artist_count, ",d") if artist_count else None,
+        section='listens'
     )
 
 
@@ -166,6 +167,7 @@ def artists(user_name):
         "user/artists.html",
         user=user,
         data=ujson.dumps(top_artists),
+        section='artists'
     )
 
 
