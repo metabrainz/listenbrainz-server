@@ -27,6 +27,7 @@ import pika
 import ujson
 
 from listenbrainz import db, stats, utils
+from listenbrainz.stats.utils import construct_stats_queue_key
 from listenbrainz.webserver import create_app
 
 class StatsCalculator:
@@ -61,7 +62,9 @@ class StatsCalculator:
 
         entity_type = data.get('type', '')
         if entity_type == 'user':
-            self.calculate_stats_for_user(data)
+            done = self.calculate_stats_for_user(data)
+            if done:
+                self.redis.set(construct_stats_queue_key(data['musicbrainz_id']), 'done')
         else:
             self.log.info('Cannot recognize the type of entity in queue, ignoring...')
             return
@@ -91,6 +94,7 @@ class StatsCalculator:
         except KeyError:
             self.log.error('Invalid user data sent into queue, ignoring...')
             return False
+
 
         # if this user already has recent stats, ignore
         if db_stats.valid_stats_exist(user['id']):
@@ -157,6 +161,9 @@ class StatsCalculator:
         db.init_db_connection(self.app.config['SQLALCHEMY_DATABASE_URI'])
         self.log.info('Connected!')
 
+        self.log.info('Connecting to redis...')
+        self.redis = utils.connect_to_redis(host=self.app.config['REDIS_HOST'], port=self.app.config['REDIS_PORT'], log=self.log.error)
+        self.log.info('Connected!')
 
         while True:
             self.init_rabbitmq_connection()

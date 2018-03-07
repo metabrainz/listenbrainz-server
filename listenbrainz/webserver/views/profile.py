@@ -12,6 +12,7 @@ from flask import Blueprint, render_template, request, url_for, redirect, curren
 from flask_login import current_user, login_required
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz.stats.utils import construct_stats_queue_key
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.utils import sizeof_readable
@@ -76,9 +77,19 @@ def reset_latest_import_timestamp():
 @profile_bp.route("/")
 @login_required
 def info():
+
+    # check if user is in stats calculation queue or if valid stats already exist
+    in_stats_queue = _redis.redis.get(construct_stats_queue_key(current_user.musicbrainz_id)) == 'queued'
+    try:
+        stats_exist = db_stats.valid_stats_exist(current_user.id)
+    except DatabaseException:
+        stats_exist = False
+
     return render_template(
         "profile/info.html",
-        user=current_user
+        user=current_user,
+        in_stats_queue=in_stats_queue,
+        stats_exist=stats_exist,
     )
 
 
@@ -209,10 +220,12 @@ def request_stats():
     """ Check if the current user's statistics have been calculated and if not,
         put them in the stats queue for stats_calculator.
     """
-    if db_stats.valid_stats_exist(current_user.id):
+    status = _redis.redis.get(construct_stats_queue_key(current_user.musicbrainz_id)) == 'queued'
+    if status == 'queued':
+        flash.info('You have already been added to the stats calculation queue! Please check back later.')
+    elif db_stats.valid_stats_exist(current_user.id):
         flash.info('Your stats were calculated in the most recent stats calculation interval,'
             ' please wait until the next interval! We calculate new statistics every Monday at 00:00 UTC.')
-        return redirect(url_for('profile.info'))
     else:
         # publish to rabbitmq queue that the stats-calculator consumes
         data = {
@@ -226,5 +239,6 @@ def request_stats():
             queue=current_app.config['STATS_QUEUE'],
             error_msg='Could not put user %s into statistics calculation queue, please try again later',
         )
+        _redis.redis.set(construct_stats_queue_key(current_user.musicbrainz_id), 'queued')
         flash.info('You have been added to the stats calculation queue! Please check back later.')
-        return redirect(url_for('profile.info'))
+    return redirect(url_for('profile.info'))

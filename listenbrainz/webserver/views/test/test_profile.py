@@ -74,6 +74,22 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertStatus(response, 302)
         self.assertRedirects(response, url_for('login.index', next=profile_info_url))
 
+
+    def test_info_valid_stats(self):
+        db_stats.insert_user_stats(
+            user_id=self.user['id'],
+            artists={},
+            recordings={},
+            releases={},
+            artist_count=0,
+        )
+
+        self.temporary_login(self.user['id'])
+        response = self.client.get(url_for('profile.info'))
+        self.assert200(response)
+        self.assertIn('Please wait until our next batch', str(response.data))
+
+
     @patch('listenbrainz.webserver.views.api_tools.publish_data_to_queue')
     def test_request_stats(self, mock_publish):
         self.temporary_login(self.user['id'])
