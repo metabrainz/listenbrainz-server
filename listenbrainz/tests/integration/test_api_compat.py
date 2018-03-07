@@ -28,6 +28,7 @@ from flask import url_for, current_app
 from listenbrainz.db.lastfm_session import Session
 from listenbrainz.db.lastfm_token import Token
 from listenbrainz.db.lastfm_user import User
+from listenbrainz.listenstore import InfluxListenStore
 from listenbrainz.tests.integration import APICompatIntegrationTestCase
 
 
@@ -42,6 +43,15 @@ class APICompatTestCase(APICompatIntegrationTestCase):
             self.lb_user['musicbrainz_id'],
             self.lb_user['auth_token'],
         )
+
+        self.ls = InfluxListenStore({
+            'REDIS_HOST': current_app.config['REDIS_HOST'],
+            'REDIS_PORT': current_app.config['REDIS_PORT'],
+            'REDIS_NAMESPACE': current_app.config['REDIS_NAMESPACE'],
+            'INFLUX_HOST': current_app.config['INFLUX_HOST'],
+            'INFLUX_PORT': current_app.config['INFLUX_PORT'],
+            'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
+        })
 
     def test_record_listen_now_playing(self):
         """ Tests if listen of type 'nowplaying' is recorded correctly
@@ -124,3 +134,167 @@ class APICompatTestCase(APICompatIntegrationTestCase):
         response = xmltodict.parse(r.data)
         self.assertEqual(response['lfm']['@status'], 'failed')
         self.assertEqual(response['lfm']['error']['@code'], '4')
+
+    def test_record_listen(self):
+        """ Tests if listen is recorded correctly if valid information is provided. """
+
+        token = Token.generate(self.lfm_user.api_key)
+        token.approve(self.lfm_user.name)
+        session = Session.create(token)
+
+        timestamp = int(time.time())
+        data = {
+            'method': 'track.scrobble',
+            'api_key': self.lfm_user.api_key,
+            'sk': session.sid,
+            'artist[0]': 'Kishore Kumar',
+            'track[0]': 'Saamne Ye Kaun Aya',
+            'album[0]': 'Jawani Diwani',
+            'duration[0]': 300,
+            'timestamp[0]': timestamp,
+        }
+
+        r = self.client.post(url_for('api_compat.api_methods'), data=data)
+        self.assert200(r)
+
+        response = xmltodict.parse(r.data)
+        self.assertEqual(response['lfm']['@status'], 'ok')
+        self.assertEqual(response['lfm']['scrobbles']['@accepted'], '1')
+
+        # Check if listen reached the influx listenstore
+        time.sleep(1)
+        listens = self.ls.fetch_listens(self.lb_user['musicbrainz_id'], from_ts=timestamp-1)
+        self.assertEqual(len(listens), 1)
+
+    def test_record_listen_multiple_listens(self):
+        """ Tests if multiple listens get recorded correctly in case valid information
+            is provided.
+        """
+
+        token = Token.generate(self.lfm_user.api_key)
+        token.approve(self.lfm_user.name)
+        session = Session.create(token)
+
+        timestamp = int(time.time())
+        data = {
+            'method': 'track.scrobble',
+            'api_key': self.lfm_user.api_key,
+            'sk': session.sid,
+            'artist[0]': 'Kishore Kumar',
+            'track[0]': 'Saamne Ye Kaun Aya',
+            'album[0]': 'Jawani Diwani',
+            'duration[0]': 300,
+            'timestamp[0]': timestamp,
+            'artist[1]': 'Fifth Harmony',
+            'track[1]': 'Deliver',
+            'duration[1]': 200,
+            'timestamp[1]': timestamp+300,
+        }
+
+        r = self.client.post(url_for('api_compat.api_methods'), data=data)
+        self.assert200(r)
+
+        response = xmltodict.parse(r.data)
+        self.assertEqual(response['lfm']['@status'], 'ok')
+        self.assertEqual(response['lfm']['scrobbles']['@accepted'], '2')
+
+        # Check if listens reached the influx listenstore
+        time.sleep(1)
+        listens = self.ls.fetch_listens(self.lb_user['musicbrainz_id'], from_ts=timestamp-1)
+        self.assertEqual(len(listens), 2)
+
+    def test_create_response_for_single_listen(self):
+        """ Tests create_response_for_single_listen method in api_compat
+            to check if responses are generated correctly.
+        """
+
+        from listenbrainz.webserver.views.api_compat import create_response_for_single_listen
+
+        timestamp = int(time.time())
+
+        original_listen = {
+            'artist': 'Kishore Kumar',
+            'track': 'Saamne Ye Kaun Aya',
+            'album': 'Jawani Diwani',
+            'duration': 300,
+            'timestamp': timestamp,
+        }
+
+        augmented_listen = {
+            'listened_at': timestamp,
+            'track_metadata': {
+                'artist_name': 'Kishore Kumar',
+                'track_name':  'Saamne Ye Kaun Aya',
+                'release_name': 'Jawani Diwani',
+                'additional_info': {
+                    'track_length': 300
+                }
+            }
+        }
+
+        # If original listen and augmented listen are same
+        xml_response = create_response_for_single_listen(original_listen, augmented_listen, listen_type="listens")
+        response = xmltodict.parse(xml_response)
+
+        self.assertEqual(response['scrobble']['track']['#text'], 'Saamne Ye Kaun Aya')
+        self.assertEqual(response['scrobble']['track']['@corrected'], '0')
+        self.assertEqual(response['scrobble']['artist']['#text'], 'Kishore Kumar')
+        self.assertEqual(response['scrobble']['artist']['@corrected'], '0')
+        self.assertEqual(response['scrobble']['album']['#text'], 'Jawani Diwani')
+        self.assertEqual(response['scrobble']['timestamp'], str(timestamp))
+
+        # If listen type is 'playing_now'
+        xml_response = create_response_for_single_listen(original_listen, augmented_listen, listen_type="playing_now")
+        response = xmltodict.parse(xml_response)
+
+        self.assertEqual(response['nowplaying']['track']['#text'], 'Saamne Ye Kaun Aya')
+        self.assertEqual(response['nowplaying']['track']['@corrected'], '0')
+        self.assertEqual(response['nowplaying']['artist']['#text'], 'Kishore Kumar')
+        self.assertEqual(response['nowplaying']['artist']['@corrected'], '0')
+        self.assertEqual(response['nowplaying']['album']['#text'], 'Jawani Diwani')
+        self.assertEqual(response['nowplaying']['album']['@corrected'], '0')
+        self.assertEqual(response['nowplaying']['timestamp'], str(timestamp))
+
+        # If artist was corrected
+        original_listen['artist'] = 'Pink'
+
+        xml_response = create_response_for_single_listen(original_listen, augmented_listen, listen_type="listens")
+        response = xmltodict.parse(xml_response)
+
+        self.assertEqual(response['scrobble']['track']['#text'], 'Saamne Ye Kaun Aya')
+        self.assertEqual(response['scrobble']['track']['@corrected'], '0')
+        self.assertEqual(response['scrobble']['artist']['#text'], 'Kishore Kumar')
+        self.assertEqual(response['scrobble']['artist']['@corrected'], '1')
+        self.assertEqual(response['scrobble']['album']['#text'], 'Jawani Diwani')
+        self.assertEqual(response['scrobble']['album']['@corrected'], '0')
+        self.assertEqual(response['scrobble']['timestamp'], str(timestamp))
+
+        # If track was corrected
+        original_listen['artist'] = 'Kishore Kumar'
+        original_listen['track'] = 'Deliver'
+
+        xml_response = create_response_for_single_listen(original_listen, augmented_listen, listen_type="listens")
+        response = xmltodict.parse(xml_response)
+
+        self.assertEqual(response['scrobble']['track']['#text'], 'Saamne Ye Kaun Aya')
+        self.assertEqual(response['scrobble']['track']['@corrected'], '1')
+        self.assertEqual(response['scrobble']['artist']['#text'], 'Kishore Kumar')
+        self.assertEqual(response['scrobble']['artist']['@corrected'], '0')
+        self.assertEqual(response['scrobble']['album']['#text'], 'Jawani Diwani')
+        self.assertEqual(response['scrobble']['album']['@corrected'], '0')
+        self.assertEqual(response['scrobble']['timestamp'], str(timestamp))
+
+        # If album was corrected
+        original_listen['track'] = 'Saamne Ye Kaun Aya'
+        original_listen['album'] = 'Good Life'
+
+        xml_response = create_response_for_single_listen(original_listen, augmented_listen, listen_type="listens")
+        response = xmltodict.parse(xml_response)
+
+        self.assertEqual(response['scrobble']['track']['#text'], 'Saamne Ye Kaun Aya')
+        self.assertEqual(response['scrobble']['track']['@corrected'], '0')
+        self.assertEqual(response['scrobble']['artist']['#text'], 'Kishore Kumar')
+        self.assertEqual(response['scrobble']['artist']['@corrected'], '0')
+        self.assertEqual(response['scrobble']['album']['#text'], 'Jawani Diwani')
+        self.assertEqual(response['scrobble']['album']['@corrected'], '1')
+        self.assertEqual(response['scrobble']['timestamp'], str(timestamp))
