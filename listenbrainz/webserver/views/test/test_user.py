@@ -47,6 +47,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
     def test_user_page(self):
         response = self.client.get(url_for('user.profile', user_name=self.user['musicbrainz_id']))
         self.assert200(response)
+        self.assertContext('section', 'listens')
 
         # check that artist count is not shown if stats haven't been calculated yet
         response = self.client.get(url_for('user.profile', user_name=self.user['musicbrainz_id']))
@@ -115,6 +116,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
 
         r = self.client.get(url_for('user.artists', user_name=self.user['musicbrainz_id']))
         self.assert200(r)
+        self.assertContext('section', 'artists')
 
 
     def _create_test_data(self, user_name):
