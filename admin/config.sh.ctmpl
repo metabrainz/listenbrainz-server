@@ -8,7 +8,7 @@ DUMP_THREADS="{{template "KEY" "dump_threads"}}"
 # Where to back things up to, who should own the backup files, and what mode
 # those files should have.
 # The backups include a full database export
-BACKUP_DIR="{{template "KEY" "backup_dir"}"
+BACKUP_DIR="{{template "KEY" "backup_dir"}}"
 BACKUP_USER=listenbrainz
 BACKUP_GROUP=listenbrainz
 BACKUP_DIR_MODE=700
