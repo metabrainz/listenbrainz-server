@@ -1,6 +1,10 @@
-{% extends 'user/base.html' %}
+{% extends 'base.html' %}
 
-{% block profile_content %}
+{% block title %}User "{{ user.musicbrainz_id }}" - ListenBrainz{% endblock %}
+
+{% block content %}
+  <div id="user-profile">
+    <h2 class="page-title">{{ user.musicbrainz_id }}</h2>
 
     <p>
       If you think that a partial import has somehow missed some listens, you may reset your previous
@@ -49,5 +53,7 @@
         <span class="btn btn-info btn-lg" style="width: 200px"><a href="{{ url_for("profile.request_stats") }}" style="color: white;">Request stats</a></span>
       </p>
     {% endif %}
+
+  </div>
 
 {% endblock %}
