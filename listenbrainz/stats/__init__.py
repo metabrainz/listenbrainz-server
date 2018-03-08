@@ -10,6 +10,8 @@ except ImportError:
 
 JOB_COMPLETION_CHECK_DELAY = 5 # seconds
 
+STATS_QUEUE_REDIS_KEY_PREFIX = 'listenbrainz.stats_queue.'
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
