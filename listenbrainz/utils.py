@@ -4,6 +4,7 @@ import pika
 import time
 
 from datetime import datetime
+from redis import Redis
 
 INFLUX_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 INFLUX_TIME_FORMAT_NANO = "%Y-%m-%dT%H:%M:%S"
@@ -118,3 +119,53 @@ def connect_to_rabbitmq(username, password,
             error_message = "Cannot connect to RabbitMQ: {error}, retrying in {delay} seconds."
             error_logger(error_message.format(error=str(err), delay=error_retry_delay))
             time.sleep(error_retry_delay)
+
+
+def init_cache(host, port, namespace):
+    """ Initializes brainzutils cache. """
+    from brainzutils import cache
+    cache.init(host=host, port=port, namespace=namespace)
+
+
+def create_channel_to_consume(connection, exchange, queue, callback_function):
+    """ Returns a newly created channel that can consume from the specified queue.
+
+    Args:
+        connection: a RabbitMQ connection
+        exchange (str): the name of the exchange
+        queue (str): the name of the queue
+        callback_function: the callback function to be called on message reception
+
+    Returns:
+        a RabbitMQ channel
+    """
+    ch = connection.channel()
+    ch.exchange_declare(exchange=exchange, exchange_type='fanout')
+    ch.queue_declare(queue, durable=True)
+    ch.queue_bind(exchange=exchange, queue=queue)
+    ch.basic_consume(callback_function, queue=queue, no_ack=False)
+    return ch
+
+
+def connect_to_redis(host, port, log=print):
+    """ Create a connection to redis and return it
+
+    Note: This is a blocking function which keeps trying to connect to redis until
+    it establishes a connection
+
+    Args:
+        host: the hostname of the redis server
+        port: the port of the redis server
+        log: the function to use for error logging
+
+    Returns:
+        Redis object
+    """
+    while True:
+        try:
+            redis = Redis(host=host, port=port)
+            redis.ping()
+            return redis
+        except Exception as err:
+            log("Cannot connect to redis: %s. Retrying in 3 seconds and trying again." % str(err))
+            sleep(3)

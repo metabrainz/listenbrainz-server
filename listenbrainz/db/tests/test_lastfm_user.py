@@ -28,6 +28,7 @@ class TestAPICompatUserClass(DatabaseTestCase):
             'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
             'REDIS_HOST': config.REDIS_HOST,
             'REDIS_PORT': config.REDIS_PORT,
+            'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
         })
 
         # Create a user
