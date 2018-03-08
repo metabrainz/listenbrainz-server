@@ -24,6 +24,7 @@ import listenbrainz.db.stats as db_stats
 import listenbrainz.stats.user as stats_user
 import logging
 import pika
+import time
 import ujson
 
 from listenbrainz import db, stats, utils
