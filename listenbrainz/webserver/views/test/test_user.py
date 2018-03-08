@@ -32,6 +32,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.logstore = init_influx_connection(self.log, {
             'REDIS_HOST': current_app.config['REDIS_HOST'],
             'REDIS_PORT': current_app.config['REDIS_PORT'],
+            'REDIS_NAMESPACE': current_app.config['REDIS_NAMESPACE'],
             'INFLUX_HOST': current_app.config['INFLUX_HOST'],
             'INFLUX_PORT': current_app.config['INFLUX_PORT'],
             'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
@@ -47,6 +48,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
     def test_user_page(self):
         response = self.client.get(url_for('user.profile', user_name=self.user['musicbrainz_id']))
         self.assert200(response)
+        self.assertContext('section', 'listens')
 
         # check that artist count is not shown if stats haven't been calculated yet
         response = self.client.get(url_for('user.profile', user_name=self.user['musicbrainz_id']))
@@ -115,6 +117,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
 
         r = self.client.get(url_for('user.artists', user_name=self.user['musicbrainz_id']))
         self.assert200(r)
+        self.assertContext('section', 'artists')
 
 
     def _create_test_data(self, user_name):
