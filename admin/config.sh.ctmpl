@@ -1,7 +1,7 @@
-#!/bin/bash
 {{- define "KEY" -}}
     {{ key (printf "docker-server-configs/LB/create-dumps-config.json/%s" .) }}
 {{- end -}}
+#!/bin/bash
 
 DUMP_THREADS="{{template "KEY" "dump_threads"}}"
 

@@ -21,6 +21,12 @@ then
     exec python3 -m listenbrainz.bigquery_writer.bigquery_writer
 fi
 
+if [ "${CONTAINER_NAME}" = "listenbrainz-stats-calculator-beta" ]
+then
+    cd /code/listenbrainz
+    exec python3 -m listenbrainz.stats.stats_calculator
+fi
+
 if [ "${CONTAINER_NAME}" = "listenbrainz-api-compat" ]
 then
     exec uwsgi /etc/uwsgi/uwsgi-api-compat.ini
