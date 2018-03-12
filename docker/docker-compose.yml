@@ -13,15 +13,11 @@ services:
     image: postgres:9.5.3
     volumes:
       - ./dbvolume:/var/lib/postgresql/data:z
-    ports:
-      - "15432:5432"
 
   redis:
     image: redis:3.2.1
     volumes:
       - ./data/redis:/data:z
-    ports:
-      - "6379:6379"
 
   influx:
     image: influxdb:1.2.4
@@ -36,16 +32,10 @@ services:
       INFLUXDB_HTTP_LOG_ENABLED: 'true'
       INFLUXDB_CONTINUOUS_QUERIES_LOG_ENABLED: 'false'
 
-    ports:
-      - "8086:8086"
-      - "8083:8083"
-
   rabbitmq:
     image: rabbitmq:3.6.5
     volumes:
       - ./data/rabbitmq:/var/lib/rabbitmq:z
-    ports:
-      - "5672:5672"
 
   web:
     build:
