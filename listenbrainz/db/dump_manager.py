@@ -24,6 +24,8 @@ import click
 import listenbrainz.db.dump as db_dump
 import logging
 import os
+import re
+import shutil
 import sys
 
 from datetime import datetime
@@ -121,3 +123,41 @@ def import_dump(private_archive, public_archive, listen_archive, threads):
     except Exception as e:
         log.error('Unexpected error while importing data: %s', str(e))
         raise
+
+
+@cli.command()
+@click.argument('location', type=str)
+def delete_old_dumps(location):
+    _cleanup_dumps(location)
+
+
+def _cleanup_dumps(location):
+    """ Delete old dumps while keeping the latest two dumps in the specified directory
+
+    Args:
+        location (str): the dir which needs to be cleaned up
+
+    Returns:
+        (int, int): the number of dumps remaining, the number of dumps deleted
+    """
+    dump_re = re.compile('listenbrainz-dump-[0-9]*-[0-9]*')
+    dumps = [x for x in sorted(os.listdir(location), reverse=True) if dump_re.match(x)]
+    if not dumps:
+        print('No dumps present in specified directory!')
+        return
+
+    keep = dumps[0:2]
+    keep_count = 0
+    for dump in keep:
+        print('Keeping %s...' % dump)
+        keep_count += 1
+
+    remove = dumps[2:]
+    remove_count = 0
+    for dump in remove:
+        print('Removing %s...' % dump)
+        shutil.rmtree(os.path.join(location, dump))
+        remove_count += 1
+
+    print('Deleted %d old exports, kept %d exports!' % (remove_count, keep_count))
+    return keep_count, remove_count
