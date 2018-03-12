@@ -24,4 +24,4 @@ FTP_FILE_MODE=644
 RSYNC_FULLEXPORT_HOST='10.2.2.28'
 RSYNC_FULLEXPORT_PORT='65415'
 RSYNC_FULLEXPORT_DIR="$FTP_DIR/fullexport"
-RSYNC_FULLEXPORT_KEY='~/.ssh/rsync-listenbrainz-dumps-full'
+RSYNC_FULLEXPORT_KEY='/home/listenbrainz/.ssh/rsync-listenbrainz-dumps-full'
