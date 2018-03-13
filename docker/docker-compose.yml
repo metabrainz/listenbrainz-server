@@ -12,7 +12,7 @@ services:
   db:
     image: postgres:9.5.3
     volumes:
-      - ./dbvolume:/var/lib/postgresql/data:z
+      - dbvolume:/var/lib/postgresql/data:z
 
   redis:
     image: redis:3.2.1
