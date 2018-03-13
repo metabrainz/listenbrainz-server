@@ -41,6 +41,9 @@ try:
 except ImportError:
     pass
 
+
+NUMBER_OF_DUMPS_TO_KEEP = 2
+
 log = logging.getLogger(__name__)
 
 cli = click.Group()
@@ -146,13 +149,13 @@ def _cleanup_dumps(location):
         print('No dumps present in specified directory!')
         return
 
-    keep = dumps[0:2]
+    keep = dumps[0:NUMBER_OF_DUMPS_TO_KEEP]
     keep_count = 0
     for dump in keep:
         print('Keeping %s...' % dump)
         keep_count += 1
 
-    remove = dumps[2:]
+    remove = dumps[NUMBER_OF_DUMPS_TO_KEEP:]
     remove_count = 0
     for dump in remove:
         print('Removing %s...' % dump)
