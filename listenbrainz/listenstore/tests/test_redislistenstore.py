@@ -28,7 +28,7 @@ class TestRedisListenStore(DatabaseTestCase):
 
     def _create_test_data(self):
         self.log.info("Inserting test data...")
-        self.listen = generate_data(self.testuser_id, MIN_ID + 1, 1)[0]
+        self.listen = generate_data(self.testuser_id,'test', MIN_ID + 1, 1)[0]
         listen = self.listen.to_json()
         self._redis.redis.setex('playing_now' + ':' + str(listen['user_id']),
                                 ujson.dumps(listen).encode('utf-8'), self.config.PLAYING_NOW_MAX_DURATION)
