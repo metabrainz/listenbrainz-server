@@ -6,8 +6,10 @@ import os
 import subprocess
 import tarfile
 import tempfile
+import time
 import ujson
 
+from brainzutils import cache
 from datetime import datetime
 from collections import OrderedDict
 from influxdb import InfluxDBClient
@@ -15,7 +17,8 @@ from listenbrainz.db.dump import SchemaMismatchException
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore import InfluxListenStore, LISTENS_DUMP_SCHEMA_VERSION
-from listenbrainz.listenstore.tests.util import create_test_data_for_influxlistenstore
+from listenbrainz.listenstore.influx_listenstore import REDIS_INFLUX_USER_LISTEN_COUNT
+from listenbrainz.listenstore.tests.util import create_test_data_for_influxlistenstore, generate_data
 from listenbrainz.webserver.influx_connection import init_influx_connection
 from sqlalchemy import text
 from time import sleep
@@ -321,3 +324,14 @@ class TestInfluxListenStore(DatabaseTestCase):
         sleep(1)
         with self.assertRaises(SchemaMismatchException):
             self.logstore.import_listens_dump(archive_path)
+
+
+    def test_listen_counts_in_cache(self):
+        count = self._create_test_data(self.testuser_name)
+        self.assertEqual(count, self.logstore.get_listen_count_for_user(self.testuser_name, need_exact=True))
+        user_key = '{}{}'.format(REDIS_INFLUX_USER_LISTEN_COUNT, self.testuser_name)
+        self.assertEqual(count, int(cache.get(user_key, decode=False)))
+
+        batch = generate_data(self.testuser_id, self.testuser_name, int(time.time()), 1)
+        self.logstore.insert(batch)
+        self.assertEqual(count + 1, int(cache.get(user_key, decode=False)))
