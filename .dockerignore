@@ -14,9 +14,6 @@ venv
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Application data
-docker/data
-
 # Test results
 htmlcov
 .coverage
