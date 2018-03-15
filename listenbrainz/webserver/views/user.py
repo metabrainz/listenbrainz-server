@@ -189,7 +189,7 @@ def _get_spotify_uri_for_listens(listens):
 
     def get_track_id_from_listen(listen):
         additional_info = listen["track_metadata"]["additional_info"]
-        if "spotify_id" in additional_info:
+        if "spotify_id" in additional_info and additional_info["spotify_id"] is not None:
             return additional_info["spotify_id"].rsplit('/', 1)[-1]
         else:
             return None
