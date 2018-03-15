@@ -24,8 +24,8 @@
       We need to know your Last.fm username:
       <div class="well">
         <form onsubmit="return lastfm_import();">
-          <input id = "lastfm_input" type="text" name="lastfm_username" size="30" placeholder="Last.fm Username" oninput="check()">
-          <input id = "import_button" type="submit" value="Import now!" disabled>
+          <input id="lastfm_input" type="text" name="lastfm_username" size="30" placeholder="Last.fm Username">
+          <input id="import_button" type="submit" value="Import now!">
         </form>
       </div>
 
@@ -59,12 +59,15 @@
     }
   </script>
   <script type="text/javascript">
-    function check() {
-      var i = document.getElementById("lastfm_input");
-      if(i.value == "")
-        document.getElementById("import_button").disabled = true;
-      else
-        document.getElementById("import_button").disabled = false;
-    }
+    $(document).ready(function() {
+      $("#import_button").prop("disabled", true);
+      $("#lastfm_input").on("input", function() {
+        if($("#lastfm_input").val() == "") {
+          $("#import_button").prop("disabled", true);
+        } else {
+          $("#import_button").prop("disabled", false);
+        }
+      });
+    });
   </script>
 {% endblock %}
