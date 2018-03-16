@@ -52,7 +52,7 @@ def gen_app(config_path=None, debug=None):
     # Load configuration files: If we're running under a docker deployment, wait until
     config_file = os.path.join( os.path.dirname(os.path.realpath(__file__)), '..', 'config.py' )
     if deploy_env:
-        print("Checking if consul template generated config file exists: %s" % custom_config)
+        print("Checking if consul template generated config file exists: %s" % config_file)
         for i in range(CONSUL_CONFIG_FILE_RETRY_COUNT):
             if not os.path.exists(config_file):
                 sleep(1)
