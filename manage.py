@@ -9,7 +9,7 @@ import subprocess
 from urllib.parse import urlsplit
 from influxdb import InfluxDBClient
 
-from listenbrainz import config as config
+from listenbrainz import config
 
 cli = click.Group()
 

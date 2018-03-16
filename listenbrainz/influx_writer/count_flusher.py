@@ -3,7 +3,7 @@
 # This script flushes out the listencounts that are in the 7day retention policy and sums them
 # into the permanent listen count measurement.
 
-from listenbrainz import config as config
+from listenbrainz import config
 from listenbrainz.listenstore import InfluxListenStore
 
 ls = InfluxListenStore({ 'REDIS_HOST': config.REDIS_HOST,

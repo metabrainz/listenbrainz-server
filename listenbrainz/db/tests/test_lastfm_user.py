@@ -5,7 +5,7 @@ from datetime import datetime
 from sqlalchemy import text
 
 
-from listenbrainz import config as config
+from listenbrainz import config
 from listenbrainz import db
 from listenbrainz.db.lastfm_user import User
 from listenbrainz.db.testing import DatabaseTestCase

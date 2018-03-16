@@ -3,7 +3,8 @@ import logging
 import listenbrainz.utils as utils
 
 import time
-from listenbrainz import config as config
+from listenbrainz import config
+    
 
 class ListenWriter:
     def __init__(self):

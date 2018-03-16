@@ -2,7 +2,7 @@
 import os
 import unittest
 
-from listenbrainz import config as config
+from listenbrainz import config
 from listenbrainz import db
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..','admin', 'sql')

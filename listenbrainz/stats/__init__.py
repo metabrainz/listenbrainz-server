@@ -2,7 +2,7 @@ import os
 import logging
 from listenbrainz.bigquery import create_bigquery_object
 import time
-from listenbrainz import config as config
+from listenbrainz import config
 
 JOB_COMPLETION_CHECK_DELAY = 5 # seconds
 

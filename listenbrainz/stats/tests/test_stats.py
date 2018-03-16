@@ -4,7 +4,7 @@ import os
 from listenbrainz import stats
 from listenbrainz.stats.exceptions import NoCredentialsVariableException, NoCredentialsFileException
 
-from listenbrainz import config as config
+from listenbrainz import config
 
 bigquery_responses = {
     "done": {
