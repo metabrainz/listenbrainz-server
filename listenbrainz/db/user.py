@@ -7,12 +7,7 @@ import sqlalchemy
 
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
-
-from listenbrainz import default_config as config
-try:
-    from listenbrainz import custom_config as config
-except ImportError:
-    pass
+from listenbrainz import config as config
 
 
 logger = logging.getLogger(__name__)

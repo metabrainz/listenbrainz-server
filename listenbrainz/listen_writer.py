@@ -3,11 +3,7 @@ import logging
 import listenbrainz.utils as utils
 
 import time
-from listenbrainz import default_config as config
-try:
-    from listenbrainz import custom_config as config
-except ImportError:
-    pass
+from listenbrainz import config as config
 
 class ListenWriter:
     def __init__(self):
