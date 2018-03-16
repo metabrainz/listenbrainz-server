@@ -28,7 +28,7 @@ def musicbrainz_post():
     """Callback endpoint."""
     if provider.validate_post_login():
         user = provider.get_user()
-        db_user.update_last_login(user.musicbrainz_id, int(time.time()))
+        db_user.update_last_login(user.musicbrainz_id)
         login_user(user)
         next = session.get('next')
         if next:

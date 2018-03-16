@@ -20,7 +20,6 @@
 
 
 import time
-import listenbrainz.config as config
 import listenbrainz.db.user as db_user
 
 from hashlib import md5
@@ -32,6 +31,8 @@ from listenbrainz.tests.integration import APICompatIntegrationTestCase
 from listenbrainz.webserver.views.api_compat_deprecated import _get_audioscrobbler_auth_token, _get_session, \
     _to_native_api
 
+from listenbrainz import config
+
 
 class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
 
@@ -39,8 +40,9 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         super(APICompatDeprecatedTestCase, self).setUp()
         self.user = db_user.get_or_create('apicompatoldtestuser')
         self.ls = InfluxListenStore({
-            'REDIS_HOST' : config.REDIS_HOST,
-            'REDIS_PORT' : config.REDIS_PORT,
+            'REDIS_HOST': config.REDIS_HOST,
+            'REDIS_PORT': config.REDIS_PORT,
+            'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
             'INFLUX_HOST': config.INFLUX_HOST,
             'INFLUX_PORT': config.INFLUX_PORT,
             'INFLUX_DB_NAME': config.INFLUX_DB_NAME,

@@ -1,0 +1,32 @@
+#!/bin/bash
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-web-beta" ]
+then
+    exec uwsgi /etc/uwsgi/uwsgi.ini
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-influx-writer-beta" ]
+then
+    cd /code/listenbrainz
+    exec python3 -m listenbrainz.influx_writer.influx_writer
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-bigquery-writer-beta" ]
+then
+    cd /code/listenbrainz
+    exec python3 -m listenbrainz.bigquery_writer.bigquery_writer
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-stats-calculator-beta" ]
+then
+    cd /code/listenbrainz
+    exec python3 -m listenbrainz.stats.stats_calculator
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-api-compat" ]
+then
+    exec uwsgi /etc/uwsgi/uwsgi-api-compat.ini
+fi
+
+
+echo "init script has no clue which service to start. Set env var CONTAINER_NAME!"

@@ -1,14 +1,15 @@
 from listenbrainz import db
 from listenbrainz import webserver
+from listenbrainz import stats
 from werkzeug.serving import run_simple
 import subprocess
 import os
 import click
 import subprocess
-from listenbrainz import config
 from urllib.parse import urlsplit
 from influxdb import InfluxDBClient
 
+from listenbrainz import config
 
 cli = click.Group()
 
@@ -25,7 +26,6 @@ ADMIN_INFLUX_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'ad
                    "'DEBUG' value in the config file.")
 def runserver(host, port, debug=False):
     application = webserver.create_app()
-    webserver.schedule_jobs(application)
     run_simple(
         hostname=host,
         port=port,
@@ -191,6 +191,14 @@ def init_influx():
     influx_client.create_retention_policy("one_week", "1w", 1, "listenbrainz")
 
     print("Done!")
+
+
+# Add other commands here
+import listenbrainz.stats.populate as populate
+cli.add_command(populate.cli, name="stats")
+import listenbrainz.db.dump_manager as dump_manager
+cli.add_command(dump_manager.cli, name="dump")
+
 
 if __name__ == '__main__':
     cli()

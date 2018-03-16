@@ -235,6 +235,12 @@ class APITestCase(IntegrationTestCase):
         self.assertEqual(sent_additional_info['other_stuff'], received_additional_info['other_stuff'])
         self.assertEqual(sent_additional_info['nested']['info'], received_additional_info['nested.info'])
         self.assertEqual(str(sent_additional_info['release_type']), received_additional_info['release_type'])
+        self.assertEqual(sent_additional_info['spotify_id'], received_additional_info['spotify_id'])
+        self.assertEqual(sent_additional_info['isrc'], received_additional_info['isrc'])
+        self.assertEqual(sent_additional_info['tracknumber'], received_additional_info['tracknumber'])
+        self.assertEqual(sent_additional_info['release_group_mbid'], received_additional_info['release_group_mbid'])
+        self.assertListEqual(sent_additional_info['work_mbids'], received_additional_info['work_mbids'])
+        self.assertListEqual(sent_additional_info['artist_mbids'], received_additional_info['artist_mbids'])
 
 
     def test_latest_import(self):

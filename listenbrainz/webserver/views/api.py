@@ -19,7 +19,7 @@ api_bp = Blueprint('api_v1', __name__)
 @ratelimit()
 def submit_listen():
     """
-    Submit listens to the server. A user token (found on https://listenbrainz.org/user/import ) must
+    Submit listens to the server. A user token (found on  https://listenbrainz.org/profile/ ) must
     be provided in the Authorization header!
 
     Listens should be submitted for tracks when the user has listened to half the track or 4 minutes of
@@ -146,7 +146,7 @@ def latest_import():
     :resheader Content-Type: *application/json*
 
     In order to update the timestamp of a user, you'll have to provide a user token in the Authorization
-    Header. User tokens can be found on https://listenbrainz.org/user/import .
+    Header. User tokens can be found on https://listenbrainz.org/profile/ .
 
     The JSON that needs to be posted must contain a field named `ts` in the root with a valid unix timestamp.
 

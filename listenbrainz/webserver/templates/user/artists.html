@@ -1,0 +1,22 @@
+{% extends 'user/base.html' %}
+
+{% block profile_content %}
+
+    <h3> Top Artists </h3>
+
+    <div class="row">
+      <div id="graph" class="col-md-8">
+      </div>
+    </div>
+
+
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ url_for('static', filename='js/lib/d3.v4.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/graphs.js') }}"></script>
+  <script type="text/javascript">
+    draw_artist_graph({{ data|safe }});
+  </script>
+{% endblock %}
