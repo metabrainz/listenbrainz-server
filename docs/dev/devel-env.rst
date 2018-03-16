@@ -97,7 +97,7 @@ configuration.
 
 .. code-block:: bash
 
-    cp listenbrainz/custom_config.py.sample listenbrainz/custom_config.py
+    cp listenbrainz/config.py.sample listenbrainz/config.py
 
 Next, open the file with your favorite text editor and look for this section.
 
