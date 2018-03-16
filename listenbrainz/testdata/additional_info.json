@@ -19,10 +19,10 @@
                         "REMIX"
                     ],
                     "spotify_id": "http://open.spotify.com/track/1rrgWMXGCGHru5bIRxGFV0",
-                    "artist_mbids": ["abaa7001-0d80-4e58-be5d-d2d246fd9d87"],
+                    "artist_mbids": ["abaa7001-0d80-4e58-be5d-d2d246fd9d87", "7babc9be-ca2b-4544-b932-7c9ab38770d6"],
                     "release_group_mbid": "c2f7be65-056f-4589-ba84-3ad8cb674628",
                     "track_mbid": "3ad754b9-1af2-4743-8ee5-d91ba4c82f0f",
-                    "work_mbids": ["ac4f356f-23e5-40ab-990e-da7e34b65d6e"],
+                    "work_mbids": ["ac4f356f-23e5-40ab-990e-da7e34b65d6e", "ac3a827c-ad58-4624-9aa4-ecfffc56d8fe"],
                     "tracknumber": "7",
                     "isrc": "isrc"
                 }
