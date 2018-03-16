@@ -12,7 +12,8 @@ cd "$(dirname "${BASH_SOURCE[0]}")/../"
 
 git describe --tags --dirty --always > .git-version
 
-TAG=${1:-beta}
-echo "building for tag $TAG"
-docker build -t metabrainz/listenbrainz:$TAG -f Dockerfile.prod --build-arg deploy_env=$TAG . && \
+ENV=${1:-beta}
+TAG=${2:-beta}
+echo "building for env $ENV tag $TAG"
+docker build -t metabrainz/listenbrainz:$TAG -f Dockerfile.prod --build-arg deploy_env=$ENV . && \
     docker push metabrainz/listenbrainz:$TAG
