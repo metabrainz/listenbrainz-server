@@ -9,13 +9,9 @@ import ujson
 import logging
 import time
 
-while True:
-    try:
-        from listenbrainz import config
-        break
-    except ImportError:
-        print("Cannot import config.py. Waiting and retrying...")
-        time.sleep(2)
+from listenbrainz.utils import safely_import_config
+
+safely_import_config()
 
 from listenbrainz.listen import Listen
 from time import time, sleep
