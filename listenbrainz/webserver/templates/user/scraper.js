@@ -462,7 +462,7 @@ function updateLatestImportTimeOnLB() {
                 var final_msg = "<i class='fa fa-check'></i> Import finished<br>";
                 final_msg += "<span><a href={{ profile_url }}>Close and go to your ListenBrainz profile</a></span><br>";
                 final_msg += "<span style='font-size:8pt'>Successfully submitted " + countReceived + " listens to ListenBrainz."
-                    + " Please note that some of these listens might be duplicates leading to a lower listen count on LB.</span></br>";
+                    + " Please note that some of these listens might be duplicates leading to a lower listen count on ListenBrainz.</span></br>";
 
                 // if the count received is different from the api count, show a message accordingly
                 // also don't show this message if it's an incremental import, because countReceived

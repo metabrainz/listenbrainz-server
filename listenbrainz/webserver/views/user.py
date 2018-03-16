@@ -1,18 +1,18 @@
-
+import listenbrainz.db.stats as db_stats
+import listenbrainz.db.user as db_user
 import urllib
-from time import time
+import ujson
 
-from flask import Blueprint, render_template, request, url_for, Response, redirect, current_app
+from flask import Blueprint, render_template, request, url_for, Response, redirect, flash, current_app, jsonify
 from flask_login import current_user, login_required
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
-from werkzeug.exceptions import NotFound, BadRequest
-
-import listenbrainz.config as config
-import listenbrainz.db.user as db_user
 from listenbrainz import webserver
+from listenbrainz.webserver import flash
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver.redis_connection import _redis
+import time
+from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
 
 LISTENS_PER_PAGE = 25
 
@@ -30,8 +30,8 @@ def lastfmscraper(user_name):
         raise NotFound
     scraper = render_template(
         "user/scraper.js",
-        base_url="{}/1/submit-listens".format(config.API_URL),
-        import_url="{}/1/latest-import".format(config.API_URL),
+        base_url="{}/1/submit-listens".format(current_app.config['API_URL']),
+        import_url="{}/1/latest-import".format(current_app.config['API_URL']),
         user_token=user_token,
         lastfm_username=lastfm_username,
         # need to escape user_name here because other wise jinja doesn't handle usernames with backslashes correctly
@@ -67,17 +67,17 @@ def profile(user_name):
         try:
             max_ts = int(max_ts)
         except ValueError:
-            raise BadRequest("Incorrect timestamp argument max_ts:" % request.args.get("max_ts"))
+            raise BadRequest("Incorrect timestamp argument max_ts: %s" % request.args.get("max_ts"))
 
     min_ts = request.args.get("min_ts")
     if min_ts is not None:
         try:
             min_ts = int(min_ts)
         except ValueError:
-            raise BadRequest("Incorrect timestamp argument min_ts:" % request.args.get("min_ts"))
+            raise BadRequest("Incorrect timestamp argument min_ts: %s" % request.args.get("min_ts"))
 
-    if max_ts == None and min_ts == None:
-        max_ts = int(time())
+    if max_ts is None and min_ts is None:
+        max_ts = int(time.time())
 
     args = {}
     if max_ts:
@@ -120,6 +120,12 @@ def profile(user_name):
             }
             listens.insert(0, listen)
 
+    user_stats = db_stats.get_user_artists(user.id)
+    try:
+        artist_count = int(user_stats['artist']['count'])
+    except (KeyError, TypeError):
+        artist_count = None
+
     return render_template(
         "user/profile.html",
         user=user,
@@ -129,6 +135,41 @@ def profile(user_name):
         spotify_uri=_get_spotify_uri_for_listens(listens),
         have_listen_count=have_listen_count,
         listen_count=format(int(listen_count), ",d"),
+        artist_count=format(artist_count, ",d") if artist_count else None,
+        section='listens'
+    )
+
+
+@user_bp.route("/<user_name>/artists")
+def artists(user_name):
+    """ Show the top artists for the user. These users must have been already
+        calculated using Google BigQuery. If the stats are not present, we
+        redirect to the user page with a message.
+    """
+
+    try:
+        user = _get_user(user_name)
+        data = db_stats.get_user_artists(user.id)
+    except DatabaseException as e:
+        current_app.logger.error('Error while getting top artist page for user %s: %s', user.musicbrainz_id, str(e))
+        raise
+
+    # if no data, flash a message and return to profile page
+    if data is None:
+        msg = ('No data calculated for user %s yet. ListenBrainz only calculates statistics for'
+        ' recently active users. If %s has logged in recently, they\'ve already been added to'
+        ' the stats calculation queue. Please wait until the next statistics calculation batch is finished'
+        ' or request stats calculation from your info page.') % (user_name, user_name)
+
+        flash.error(msg)
+        return redirect(url_for('user.profile', user_name=user_name))
+
+    top_artists = data['artist']['all_time']
+    return render_template(
+        "user/artists.html",
+        user=user,
+        data=ujson.dumps(top_artists),
+        section='artists'
     )
 
 
@@ -148,7 +189,7 @@ def _get_spotify_uri_for_listens(listens):
 
     def get_track_id_from_listen(listen):
         additional_info = listen["track_metadata"]["additional_info"]
-        if "spotify_id" in additional_info:
+        if "spotify_id" in additional_info and additional_info["spotify_id"] is not None:
             return additional_info["spotify_id"].rsplit('/', 1)[-1]
         else:
             return None

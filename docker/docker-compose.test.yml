@@ -1,4 +1,9 @@
 version: "2"
+
+# IMPORTANT NOTE: Volume paths mounted on containers are relative to the
+# directory that this file is in (`docker/`) and so probably need to start with
+# `../` to refer to a directory in the main code checkout
+
 services:
 
   db:
@@ -20,8 +25,6 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.6.5
-    volumes:
-      - ./docker/data/rabbitmq:/var/lib/rabbitmq
     ports:
       - "5672:5672"
 
@@ -30,8 +33,10 @@ services:
       context: ..
       dockerfile: Dockerfile
     command: py.test
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: '/code/credentials/bigquery-credentials.json'
     volumes:
-      - ..:/code/listenbrainz
+      - ..:/code/listenbrainz:z
     depends_on:
       - redis
       - db

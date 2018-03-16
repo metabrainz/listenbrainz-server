@@ -1,15 +1,15 @@
 # coding=utf-8
 
-from listenbrainz.db.testing import DatabaseTestCase
 import logging
-from datetime import datetime
-from listenbrainz.listenstore.tests.util import generate_data, to_epoch
-from listenbrainz.listenstore import MIN_ID, RedisListenStore
-from listenbrainz.webserver.redis_connection import init_redis_connection
-from redis.connection import Connection
-import random
 import ujson
+
+from redis.connection import Connection
+
 import listenbrainz.db.user as db_user
+from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.listenstore import MIN_ID
+from listenbrainz.listenstore.tests.util import generate_data
+from listenbrainz.webserver.redis_connection import init_redis_connection
 
 
 class TestRedisListenStore(DatabaseTestCase):
@@ -28,7 +28,7 @@ class TestRedisListenStore(DatabaseTestCase):
 
     def _create_test_data(self):
         self.log.info("Inserting test data...")
-        self.listen = generate_data(self.testuser_id, MIN_ID + 1, 1)[0]
+        self.listen = generate_data(self.testuser_id,'test', MIN_ID + 1, 1)[0]
         listen = self.listen.to_json()
         self._redis.redis.setex('playing_now' + ':' + str(listen['user_id']),
                                 ujson.dumps(listen).encode('utf-8'), self.config.PLAYING_NOW_MAX_DURATION)

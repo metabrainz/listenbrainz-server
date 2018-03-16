@@ -8,15 +8,17 @@ from flask import url_for
 import listenbrainz.db.user as db_user
 import time
 import json
-from listenbrainz import config
 from influxdb import InfluxDBClient
+
+from listenbrainz import config
 
 class InfluxWriterTestCase(IntegrationTestCase):
 
     def setUp(self):
         super(InfluxWriterTestCase, self).setUp()
-        self.ls = InfluxListenStore({ 'REDIS_HOST' : config.REDIS_HOST,
-                             'REDIS_PORT' : config.REDIS_PORT,
+        self.ls = InfluxListenStore({ 'REDIS_HOST': config.REDIS_HOST,
+                             'REDIS_PORT': config.REDIS_PORT,
+                             'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
                              'INFLUX_HOST': config.INFLUX_HOST,
                              'INFLUX_PORT': config.INFLUX_PORT,
                              'INFLUX_DB_NAME': config.INFLUX_DB_NAME})

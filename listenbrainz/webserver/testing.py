@@ -1,11 +1,16 @@
 import flask_testing
+import os
+
 from listenbrainz.webserver import create_app, create_api_compat_app
 
 
 class ServerTestCase(flask_testing.TestCase):
 
     def create_app(self):
-        app = create_app()
+        app = create_app(config_path=os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            '..', 'test_config.py'
+        ))
         app.config['TESTING'] = True
         return app
 
@@ -18,6 +23,9 @@ class ServerTestCase(flask_testing.TestCase):
 class APICompatServerTestCase(flask_testing.TestCase):
 
     def create_app(self):
-        app = create_api_compat_app()
+        app = create_api_compat_app(config_path=os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            '..', 'test_config.py'
+        ))
         app.config['TESTING'] = True
         return app

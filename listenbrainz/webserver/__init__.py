@@ -1,13 +1,18 @@
 import os
 import pprint
 import sys
-
-from flask import Flask, current_app
-from listenbrainz.webserver.scheduler import ScheduledJobs
+from time import sleep
 from shutil import copyfile
+
+from brainzutils.flask import CustomFlask
 
 API_PREFIX = '/1'
 
+# Check to see if we're running under a docker deployment. If so, don't second guess
+# the config file setup and just wait for the correct configuration to be generated.
+deploy_env = os.environ.get('DEPLOY_ENV', '')
+
+CONSUL_CONFIG_FILE_RETRY_COUNT = 10
 API_LISTENED_AT_ALLOWED_SKEW = 60 * 60 # allow a skew of 1 hour in listened_at submissions
 
 def create_influx(app):
@@ -18,31 +23,56 @@ def create_influx(app):
         'INFLUX_DB_NAME': app.config['INFLUX_DB_NAME'],
         'REDIS_HOST': app.config['REDIS_HOST'],
         'REDIS_PORT': app.config['REDIS_PORT'],
+        'REDIS_NAMESPACE': app.config['REDIS_NAMESPACE'],
     })
+
 
 def create_redis(app):
     from listenbrainz.webserver.redis_connection import init_redis_connection
     init_redis_connection(app.logger, app.config['REDIS_HOST'], app.config['REDIS_PORT'])
 
+
 def create_rabbitmq(app):
     from listenbrainz.webserver.rabbitmq_connection import init_rabbitmq_connection
     init_rabbitmq_connection(app)
 
-def schedule_jobs(app):
-    """ Init all the scheduled jobs """
-    app.scheduledJobs = ScheduledJobs(app.config)
 
-
-def gen_app():
+def gen_app(config_path=None, debug=None):
     """ Generate a Flask app for LB with all configurations done and connections established.
 
     In the Flask app returned, blueprints are not registered.
     """
-    app = Flask(__name__)
+    app = CustomFlask(
+        import_name=__name__,
+        use_flask_uuid=True,
+    )
 
-    # Configuration
-    from listenbrainz import config
-    app.config.from_object(config)
+    print("Starting metabrainz service with %s environment." % deploy_env);
+
+    # Load configuration files: If we're running under a docker deployment, wait until
+    config_file = os.path.join( os.path.dirname(os.path.realpath(__file__)), '..', 'config.py' )
+    if deploy_env:
+        print("Checking if consul template generated config file exists: %s" % config_file)
+        for i in range(CONSUL_CONFIG_FILE_RETRY_COUNT):
+            if not os.path.exists(config_file):
+                sleep(1)
+
+        if not os.path.exists(config_file):
+            print("No configuration file generated yet. Retried %d times, exiting." % CONSUL_CONFIG_FILE_RETRY_COUNT);
+            sys.exit(-1)
+
+        print("loading consul config file %s)" % config_file)
+        app.config.from_pyfile(config_file)
+
+    else:
+        app.config.from_pyfile(config_file)
+
+    if debug is not None:
+        app.debug = debug
+
+    # initialize Flask-DebugToolbar if the debug option is True
+    if app.debug and app.config['SECRET_KEY']:
+        app.init_debug_toolbar()
 
     # Output config values and some other info
     print('Configuration values are as follows: ')
@@ -54,8 +84,11 @@ def gen_app():
         print('Unable to retrieve git commit. Error: %s', str(e))
 
     # Logging
-    from listenbrainz.webserver.loggers import init_loggers
-    init_loggers(app)
+    app.init_loggers(
+        file_config=app.config.get('LOG_FILE'),
+        email_config=app.config.get('LOG_EMAIL'),
+        sentry_config=app.config.get('LOG_SENTRY')
+    )
 
     # Redis connection
     create_redis(app)
@@ -96,21 +129,21 @@ def gen_app():
     return app
 
 
-def create_app():
+def create_app(config_path=None, debug=None):
 
-    app = gen_app()
+    app = gen_app(config_path=config_path, debug=debug)
     _register_blueprints(app)
     return app
 
 
-def create_api_compat_app():
+def create_api_compat_app(config_path=None, debug=None):
     """ Creates application for the AudioScrobbler API.
 
     The AudioScrobbler API v1.2 requires special views for the root URL so we
     need to create a different app and only register the api_compat blueprints
     """
 
-    app = gen_app()
+    app = gen_app(config_path=config_path, debug=debug)
 
     from listenbrainz.webserver.views.api_compat import api_bp as api_compat_bp
     from listenbrainz.webserver.views.api_compat_deprecated import api_compat_old_bp
@@ -131,11 +164,15 @@ def create_app_rtfd():
     packages (like MessyBrainz), so we have to ignore these initialization
     steps. Only blueprints/views are needed to render documentation.
     """
-    app = Flask(__name__)
+    app = CustomFlask(
+        import_name=__name__,
+        use_flask_uuid=True,
+    )
 
-    copyfile("../listenbrainz/config.py.sample", "../listenbrainz/config.py")
-    from listenbrainz import config
-    app.config.from_object(config)
+    app.config.from_pyfile(os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        '..', 'rtd_config.py'
+    ))
 
     _register_blueprints(app)
     return app
