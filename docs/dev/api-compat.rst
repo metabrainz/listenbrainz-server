@@ -48,7 +48,7 @@ For development
     $ sudo /etc/init.d/dns-clean start
     $ sudo /etc/init.d/networking restart
 
-#. Register an application on MusicBrainz with the following Callback URL ``http://<HOSTURL>/login/musicbrainz/post`` and update the received MusicBrainz Client ID and Client Secret in custom_config.py of ListenBrainz. ``HOSTURL`` should be as per the settings of the server. Example: ``localhost``
+#. Register an application on MusicBrainz with the following Callback URL ``http://<HOSTURL>/login/musicbrainz/post`` and update the received MusicBrainz Client ID and Client Secret in config.py of ListenBrainz. ``HOSTURL`` should be as per the settings of the server. Example: ``localhost``
 
 #. In Audacious, go to File > Settings > Plugins > Scrobbler2.0 and enable it. Now open its settings and then authenticate.
 
