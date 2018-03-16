@@ -11,7 +11,7 @@ from listenbrainz.webserver import flash
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver.redis_connection import _redis
-from time import time
+import time
 from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
 
 LISTENS_PER_PAGE = 25
@@ -67,17 +67,17 @@ def profile(user_name):
         try:
             max_ts = int(max_ts)
         except ValueError:
-            raise BadRequest("Incorrect timestamp argument max_ts:" % request.args.get("max_ts"))
+            raise BadRequest("Incorrect timestamp argument max_ts: %s" % request.args.get("max_ts"))
 
     min_ts = request.args.get("min_ts")
     if min_ts is not None:
         try:
             min_ts = int(min_ts)
         except ValueError:
-            raise BadRequest("Incorrect timestamp argument min_ts:" % request.args.get("min_ts"))
+            raise BadRequest("Incorrect timestamp argument min_ts: %s" % request.args.get("min_ts"))
 
-    if max_ts == None and min_ts == None:
-        max_ts = int(time())
+    if max_ts is None and min_ts is None:
+        max_ts = int(time.time())
 
     args = {}
     if max_ts:
