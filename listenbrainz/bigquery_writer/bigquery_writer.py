@@ -17,12 +17,7 @@ from oauth2client.client import GoogleCredentials
 from redis import Redis
 from time import time, sleep
 
-
-from listenbrainz import default_config as config
-try:
-    from listenbrainz import custom_config as config
-except ImportError:
-    pass
+from listenbrainz import config as config
 
 
 SUBMIT_CHUNK_SIZE = 1000 # the number of listens to send to BQ in one batch
