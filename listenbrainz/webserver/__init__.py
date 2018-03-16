@@ -181,7 +181,6 @@ def create_app_rtfd():
     app = CustomFlask(
         import_name=__name__,
         use_flask_uuid=True,
-        use_debug_toolbar=False,
     )
 
     app.config.from_pyfile(os.path.join(
