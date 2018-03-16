@@ -23,8 +23,9 @@
       user token:
     </p>
 
-    <div class="well">
-      {{ user.auth_token }}
+    <div class="form-inline form-group">
+      <input class="form-control" id="auth-token" type="text" size="36" value="{{ user.auth_token }}" readonly>
+      <button class="btn btn-info btn-sm glyphicon glyphicon-copy" id="copy-token" title="Copy token to clipboard"></button>
     </div>
 
     <p>If you want to reset your token, click below</p>
@@ -56,4 +57,9 @@
 
   </div>
 
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ url_for('static', filename='js/info.js') }}"></script>
 {% endblock %}
