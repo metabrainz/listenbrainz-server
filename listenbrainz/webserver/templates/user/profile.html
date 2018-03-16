@@ -2,14 +2,33 @@
 
 {% block profile_content %}
 
-    <img src="{{ url_for('static', filename='img/musicbrainz-16.svg') }}" />
-    <b><a href="https://musicbrainz.org/user/{{ user.musicbrainz_id }}">See profile on MusicBrainz</a></b>
+    <div style="margin-top:20px">
+    	<img src="{{ url_for('static', filename='img/musicbrainz-16.svg') }}" />
+    	<b><a href="https://musicbrainz.org/user/{{ user.musicbrainz_id }}">See profile on MusicBrainz</a></b>
+    </div>
 
-    {% if have_listen_count %}
-      <h3> Listen Count: {{ listen_count }}  </h3>
-    {% else %}
-      We were not able to get listen count for {{ user.musicbrainz_id }} due to an error. Please reload to try again.
-    {% endif %}
+  <h3> Statistics </h3>
+
+  <div class="row">
+    <div class="col-md-8">
+    <table class="table table-border table-condensed table-striped">
+        <tbody>
+      {% if listen_count %}
+      <tr>
+        <td>Listen count</td>
+        <td>{{ listen_count }}</td>
+      </tr>
+      {% endif %}
+
+      {% if artist_count %}
+      <tr>
+        <td>Artist count</td>
+        <td>{{ artist_count }}</td>
+      </tr>
+      {% endif %}
+    </table>
+    </div>
+  </div>
 
     <h3>Recent listens</h3>
 

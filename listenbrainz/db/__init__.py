@@ -6,9 +6,11 @@ import time
 import psycopg2
 
 # This value must be incremented after schema changes on replicated tables!
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 engine = None
+
+DUMP_DEFAULT_THREAD_COUNT = 4
 
 
 def init_db_connection(connect_str):

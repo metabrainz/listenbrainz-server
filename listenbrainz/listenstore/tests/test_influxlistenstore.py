@@ -1,43 +1,60 @@
 # coding=utf-8
 
-from listenbrainz.db.testing import DatabaseTestCase
-import logging
-from datetime import datetime
-from listenbrainz.listenstore.tests.util import create_test_data_for_influxlistenstore
-from listenbrainz.listen import Listen
-from listenbrainz.listenstore import InfluxListenStore
-from listenbrainz.webserver.influx_connection import init_influx_connection
-from influxdb import InfluxDBClient
-import random
-import uuid
-from collections import OrderedDict
-from sqlalchemy import text
-import ujson
 import listenbrainz.db.user as db_user
-from listenbrainz import config
+import logging
+import os
+import subprocess
+import tarfile
+import tempfile
+import time
+import ujson
+
+from brainzutils import cache
+from datetime import datetime
+from collections import OrderedDict
+from influxdb import InfluxDBClient
+from listenbrainz.db.dump import SchemaMismatchException
+from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.listen import Listen
+from listenbrainz.listenstore import InfluxListenStore, LISTENS_DUMP_SCHEMA_VERSION
+from listenbrainz.listenstore.influx_listenstore import REDIS_INFLUX_USER_LISTEN_COUNT
+from listenbrainz.listenstore.tests.util import create_test_data_for_influxlistenstore, generate_data
+from listenbrainz.webserver.influx_connection import init_influx_connection
+from sqlalchemy import text
 from time import sleep
 
+from listenbrainz import config
 
 class TestInfluxListenStore(DatabaseTestCase):
+
+
+    def reset_influx_db(self):
+        """ Resets the entire influx db """
+        influx = InfluxDBClient(
+            host=config.INFLUX_HOST,
+            port=config.INFLUX_PORT,
+            database=config.INFLUX_DB_NAME
+        )
+        influx.query('DROP DATABASE %s' % config.INFLUX_DB_NAME)
+        influx.query('CREATE DATABASE %s' % config.INFLUX_DB_NAME)
+
 
     def setUp(self):
         super(TestInfluxListenStore, self).setUp()
         self.log = logging.getLogger(__name__)
 
         # In order to do counting correctly, we need a clean DB to start with
-        influx = InfluxDBClient(host=config.INFLUX_HOST, port=config.INFLUX_PORT, database=config.INFLUX_DB_NAME)
-        influx.query('''drop database %s''' % config.INFLUX_DB_NAME)
-        influx.query('''create database %s''' % config.INFLUX_DB_NAME)
+        self.reset_influx_db()
 
         self.logstore = init_influx_connection(self.log, {
             'REDIS_HOST': config.REDIS_HOST,
             'REDIS_PORT': config.REDIS_PORT,
+            'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
             'INFLUX_HOST': config.INFLUX_HOST,
             'INFLUX_PORT': config.INFLUX_PORT,
             'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
         })
         self.testuser_id = db_user.create("test")
-        user = db_user.get(self.testuser_id)
         self.testuser_name = db_user.get(self.testuser_id)['musicbrainz_id']
 
     def tearDown(self):
@@ -77,13 +94,13 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.assertEqual(len(self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1399999999)), count)
 
     def test_fetch_listens_0(self):
-        count = self._create_test_data(self.testuser_name)
+        self._create_test_data(self.testuser_name)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000000, limit=1)
         self.assertEqual(len(listens), 1)
         self.assertEqual(listens[0].ts_since_epoch, 1400000050)
 
     def test_fetch_listens_1(self):
-        count = self._create_test_data(self.testuser_name)
+        self._create_test_data(self.testuser_name)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000000)
         self.assertEqual(len(listens), 4)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
@@ -92,14 +109,14 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
 
     def test_fetch_listens_2(self):
-        count = self._create_test_data(self.testuser_name)
+        self._create_test_data(self.testuser_name)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000100)
         self.assertEqual(len(listens), 2)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
 
     def test_fetch_listens_3(self):
-        count = self._create_test_data(self.testuser_name)
+        self._create_test_data(self.testuser_name)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
@@ -117,8 +134,199 @@ class TestInfluxListenStore(DatabaseTestCase):
     def test_fetch_listens_escaped(self):
         user = db_user.get_or_create('i have a\\weird\\user, name"\n')
         user_name = user['musicbrainz_id']
-        count = self._create_test_data(user_name)
+        self._create_test_data(user_name)
         listens = self.logstore.fetch_listens(user_name=user_name, from_ts=1400000100)
         self.assertEquals(len(listens), 2)
         self.assertEquals(listens[0].ts_since_epoch, 1400000200)
         self.assertEquals(listens[1].ts_since_epoch, 1400000150)
+
+
+    def test_dump_listens(self):
+        self._create_test_data(self.testuser_name)
+        temp_dir = tempfile.mkdtemp()
+        dump = self.logstore.dump_listens(
+            location=temp_dir,
+        )
+        self.assertTrue(os.path.isfile(dump))
+
+
+    def test_import_listens(self):
+        count = self._create_test_data(self.testuser_name)
+        sleep(1)
+        temp_dir = tempfile.mkdtemp()
+        dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+        )
+        sleep(1)
+        self.assertTrue(os.path.isfile(dump_location))
+        self.reset_influx_db()
+        sleep(1)
+        self.logstore.import_listens_dump(dump_location)
+        sleep(1)
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
+        self.assertEqual(len(listens), 5)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
+        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[3].ts_since_epoch, 1400000050)
+        self.assertEqual(listens[4].ts_since_epoch, 1400000000)
+
+    def test_dump_and_import_listens_escaped(self):
+        user = db_user.get_or_create('i have a\\weird\\user, na/me"\n')
+        count = self._create_test_data(user['musicbrainz_id'])
+        sleep(1)
+
+        count = self._create_test_data(self.testuser_name)
+        sleep(1)
+
+        temp_dir = tempfile.mkdtemp()
+        dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+        )
+        sleep(1)
+        self.assertTrue(os.path.isfile(dump_location))
+        self.reset_influx_db()
+
+        self.logstore.import_listens_dump(dump_location)
+        sleep(1)
+
+        listens = self.logstore.fetch_listens(user_name=user['musicbrainz_id'], to_ts=1400000300)
+        self.assertEqual(len(listens), 5)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
+        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[3].ts_since_epoch, 1400000050)
+        self.assertEqual(listens[4].ts_since_epoch, 1400000000)
+
+
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
+        self.assertEqual(len(listens), 5)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
+        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[3].ts_since_epoch, 1400000050)
+        self.assertEqual(listens[4].ts_since_epoch, 1400000000)
+
+
+    def test_import_dump_many_users(self):
+        for i in range(50):
+            db_user.create('user%d' % i)
+
+        temp_dir = tempfile.mkdtemp()
+        dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+        )
+        sleep(1)
+        self.assertTrue(os.path.isfile(dump_location))
+        self.reset_influx_db()
+
+        done = self.logstore.import_listens_dump(dump_location)
+        sleep(1)
+        self.assertEqual(done, len(db_user.get_all_users()))
+
+
+    def create_test_dump(self, archive_name, archive_path, schema_version=None, index=None):
+        """ Creates a test dump to test the import listens functionality.
+
+        Args:
+            archive_name (str): the name of the archive
+            archive_path (str): the full path to the archive
+            schema_version (int): the version of the schema to be written into SCHEMA_SEQUENCE
+                                  if not provided, the SCHEMA_SEQUENCE file is not added to the archive
+            index (dict): the index dict to be written into index.json
+                          if not provided, index.json is not added to the archive
+
+        Returns:
+            the full path to the archive created
+        """
+
+        temp_dir = tempfile.mkdtemp()
+        with open(archive_path, 'w') as archive:
+            pxz_command = ['pxz', '--compress']
+            pxz = subprocess.Popen(pxz_command, stdin=subprocess.PIPE, stdout=archive)
+
+            with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
+                if schema_version is not None:
+                    schema_version_path = os.path.join(temp_dir, 'SCHEMA_SEQUENCE')
+                    with open(schema_version_path, 'w') as f:
+                        f.write(str(schema_version))
+                    tar.add(schema_version_path,
+                            arcname=os.path.join(archive_name, 'SCHEMA_SEQUENCE'))
+
+                if index is not None:
+                    index_json_path = os.path.join(temp_dir, 'index.json')
+                    with open(index_json_path, 'w') as f:
+                        f.write(ujson.dumps({}))
+                    tar.add(index_json_path,
+                            arcname=os.path.join(archive_name, 'index.json'))
+
+            pxz.stdin.close()
+
+        return archive_path
+
+
+    def test_schema_mismatch_exception_for_dump_incorrect_schema(self):
+        """ Tests that SchemaMismatchException is raised when the schema of the dump is old """
+
+        # create a temp archive with incorrect SCHEMA_VERSION
+        temp_dir = tempfile.mkdtemp()
+        archive_name = 'temp_dump'
+        archive_path = os.path.join(temp_dir, archive_name + '.tar.xz')
+        archive_path = self.create_test_dump(
+            archive_name=archive_name,
+            archive_path=archive_path,
+            schema_version=LISTENS_DUMP_SCHEMA_VERSION - 1,
+            index={},
+        )
+        sleep(1)
+        with self.assertRaises(SchemaMismatchException):
+            self.logstore.import_listens_dump(archive_path)
+
+
+    def test_schema_mismatch_exception_for_dump_no_schema(self):
+        """ Tests that SchemaMismatchException is raised when there is no schema version in the archive """
+
+        temp_dir = tempfile.mkdtemp()
+        archive_name = 'temp_dump'
+        archive_path = os.path.join(temp_dir, archive_name + '.tar.xz')
+
+        archive_path = self.create_test_dump(
+            archive_name=archive_name,
+            archive_path=archive_path,
+            schema_version=None,
+            index={},
+        )
+
+        sleep(1)
+        with self.assertRaises(SchemaMismatchException):
+            self.logstore.import_listens_dump(archive_path)
+
+
+    def test_schema_mismatch_exception_for_dump_no_index(self):
+        """ Tests that SchemaMismatchException is raised when there is no index.json in the archive """
+
+        temp_dir = tempfile.mkdtemp()
+        archive_name = 'temp_dump'
+        archive_path = os.path.join(temp_dir, archive_name + '.tar.xz')
+
+        archive_path = self.create_test_dump(
+            archive_name=archive_name,
+            archive_path=archive_path,
+            schema_version=LISTENS_DUMP_SCHEMA_VERSION,
+            index=None,
+        )
+
+        sleep(1)
+        with self.assertRaises(SchemaMismatchException):
+            self.logstore.import_listens_dump(archive_path)
+
+
+    def test_listen_counts_in_cache(self):
+        count = self._create_test_data(self.testuser_name)
+        self.assertEqual(count, self.logstore.get_listen_count_for_user(self.testuser_name, need_exact=True))
+        user_key = '{}{}'.format(REDIS_INFLUX_USER_LISTEN_COUNT, self.testuser_name)
+        self.assertEqual(count, int(cache.get(user_key, decode=False)))
+
+        batch = generate_data(self.testuser_id, self.testuser_name, int(time.time()), 1)
+        self.logstore.insert(batch)
+        self.assertEqual(count + 1, int(cache.get(user_key, decode=False)))

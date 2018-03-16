@@ -1,4 +1,3 @@
-Flask == 0.10.1
 Flask-Testing == 0.4.2
 Flask-Login == 0.2.11
 Flask-WTF == 0.12
@@ -11,7 +10,6 @@ coverage == 3.7.1
 click == 4.1
 jsonschema == 2.5.1
 rauth == 0.7.1
-raven[flask] == 5.5.0
 setproctitle == 1.1.8
 markupsafe == 0.23
 blist == 1.3.6
@@ -19,11 +17,10 @@ pytest==2.9.1
 pytest-cov==2.2.1
 pytz==2016.6.1
 unittest2==1.1.0
-psycopg2 == 2.6.1
+psycopg2 == 2.7.3.2
 python-dateutil == 2.2
 ujson == 1.33
 redis == 2.10.3
-apscheduler == 3.1.0
 yattag == 1.6.0
 xmltodict == 0.10.2
 unittest2 == 1.1.0
@@ -32,3 +29,5 @@ requests == 2.13.0
 google-api-python-client==1.5.2
 pika == 0.11.0
 git+https://github.com/bninja/pika-pool.git@5b1d3b650395aed60d9995fbfd289de7e62fe8d5#egg=pika_pool
+git+https://github.com/metabrainz/messybrainz-server.git@production#egg=messybrainz
+git+https://github.com/metabrainz/brainzutils-python.git@v1.4.1

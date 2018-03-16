@@ -1,5 +1,7 @@
 FROM metabrainz/python:3.6
 
+ARG deploy_env
+
 ENV DOCKERIZE_VERSION v0.2.0
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
@@ -12,6 +14,8 @@ RUN apt-get update \
                        libffi-dev \
                        libssl-dev \
                        redis-tools \
+                       pxz \
+                       rsync \
     && rm -rf /var/lib/apt/lists/*
 
 
@@ -44,12 +48,27 @@ COPY . /code/listenbrainz
 WORKDIR /code/listenbrainz
 
 # Sometimes the local copy of config.py[c] gets in the way. Better nuke it to not conflict.
-RUN rm -f /code/listenbrainz/listenbrainz/config.py /code/listenbrainz/listenbrainz/config.pyc 
+RUN rm -f /code/listenbrainz/listenbrainz/config.py /code/listenbrainz/listenbrainz/config.pyc
+
+# create a user named listenbrainz for cron jobs and storing dump file backups
+RUN useradd --create-home --shell /bin/bash listenbrainz
+RUN mkdir /home/listenbrainz/backup /home/listenbrainz/ftp
+RUN chown -R listenbrainz:listenbrainz /home/listenbrainz/backup /home/listenbrainz/ftp
+
+# Add cron jobs
+ADD docker/crontab /etc/cron.d/lb-crontab
+RUN chmod 0644 /etc/cron.d/lb-crontab && crontab -u listenbrainz /etc/cron.d/lb-crontab
+RUN touch /var/log/stats.log /var/log/dump_create.log && chown listenbrainz:listenbrainz /var/log/stats.log /var/log/dump_create.log
+
+# Make sure the cron service doesn't start automagically
+# http://smarden.org/runit/runsv.8.html
+RUN touch /etc/service/cron/down
 
 # Node
 RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
 RUN apt-get install -y nodejs
-RUN npm install -g less less-plugin-clean-css
+RUN npm install -g less
+RUN npm install less-plugin-clean-css
 
 # Compile the CSS
 # Note: this will not persist because /code/listenbrainz is a volume
@@ -59,11 +78,11 @@ RUN lessc --clean-css listenbrainz/webserver/static/css/main.less > listenbrainz
 
 # Consul Template service is already set up with the base image.
 # Just need to copy the configuration.
-COPY ./docker/prod/consul-template.conf /etc/consul-template.conf
+COPY ./docker/consul-template.conf /etc/consul-template.conf
 
-COPY ./docker/prod/uwsgi/uwsgi.service /etc/service/uwsgi/run
+COPY ./docker/$deploy_env/uwsgi/uwsgi.service /etc/service/uwsgi/run
 RUN chmod 755 /etc/service/uwsgi/run
-COPY ./docker/prod/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
+COPY ./docker/$deploy_env/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
 COPY ./docker/prod/uwsgi/uwsgi-api-compat.ini /etc/uwsgi/uwsgi-api-compat.ini
 
 # setup a log dir
