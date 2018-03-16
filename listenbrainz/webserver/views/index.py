@@ -1,7 +1,8 @@
 
+#TODO(param): alphabetize these
+from brainzutils import cache
 from flask import Blueprint, render_template, current_app, redirect, url_for
 from flask_login import current_user
-from listenbrainz.webserver.redis_connection import _redis
 import os
 import subprocess
 import locale
@@ -10,8 +11,9 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz import webserver
 from listenbrainz.webserver.influx_connection import _influx
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
-from listenbrainz import config
 import pika
+import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
+
 
 index_bp = Blueprint('index', __name__)
 locale.setlocale(locale.LC_ALL, '')
@@ -21,7 +23,19 @@ CACHE_TIME = 10 * 60 # time in seconds we cache the stats
 
 @index_bp.route("/")
 def index():
-    return render_template("index/index.html")
+
+    # get total listen count
+    try:
+        listen_count = _influx.get_total_listen_count()
+    except Exception as e:
+        current_app.logger.error('Error while trying to get total listen count: %s', str(e))
+        listen_count = None
+
+
+    return render_template(
+        "index/index.html",
+        listen_count=listen_count,
+    )
 
 
 @index_bp.route("/import")
@@ -34,7 +48,12 @@ def import_data():
 
 @index_bp.route("/download")
 def downloads():
-    return render_template("index/downloads.html")
+    return redirect(url_for('index.data'))
+
+
+@index_bp.route("/data")
+def data():
+    return render_template("index/data.html")
 
 
 @index_bp.route("/contribute")
@@ -75,15 +94,12 @@ def current_status():
     incoming_len = -1
     unique_len = -1
     try:
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=config.RABBITMQ_HOST, port=config.RABBITMQ_PORT))
+        with rabbitmq_connection._rabbitmq.acquire() as connection:
+            queue = connection.channel.queue_declare(current_app.config['INCOMING_QUEUE'], durable=True)
+            incoming_len = queue.method.message_count
 
-        incoming_ch = connection.channel()
-        queue = incoming_ch.queue_declare('incoming', durable=True)
-        incoming_len = queue.method.message_count
-
-        unique_ch = connection.channel()
-        queue = unique_ch.queue_declare('unique', durable=True)
-        unique_len = queue.method.message_count
+            queue = connection.channel.queue_declare(current_app.config['UNIQUE_QUEUE'], durable=True)
+            unique_len = queue.method.message_count
 
     except (pika.exceptions.ConnectionClosed, AttributeError):
         pass
@@ -105,18 +121,18 @@ def current_status():
 
 
 def _get_user_count():
-    """ Gets user count from either the redis cache or from the database.
+    """ Gets user count from either the brainzutils cache or from the database.
         If not present in the cache, it makes a query to the db and stores the
         result in the cache for 10 minutes.
     """
-    redis_connection = _redis.redis
     user_count_key = "{}.{}".format(STATS_PREFIX, 'user_count')
-    if redis_connection.exists(user_count_key):
-        return redis_connection.get(user_count_key)
+    user_count = cache.get(user_count_key, decode=False)
+    if user_count:
+        return user_count
     else:
         try:
             user_count = db_user.get_user_count()
         except DatabaseException as e:
             raise
-        redis_connection.setex(user_count_key, user_count, CACHE_TIME)
+        cache.set(user_count_key, int(user_count), CACHE_TIME, encode=False)
         return user_count

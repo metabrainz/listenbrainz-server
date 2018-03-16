@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from listenbrainz import db
 from sqlalchemy import text
+
+from listenbrainz import db
 
 
 class User(object):

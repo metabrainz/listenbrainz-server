@@ -23,7 +23,6 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 import json
-import listenbrainz.config as config
 import listenbrainz.db.user as db_user
 
 from hashlib import md5
@@ -69,8 +68,8 @@ def handshake():
     return '\n'.join([
         'OK',
         session.sid,
-        '{}/np_1.2'.format(config.LASTFM_PROXY_URL),
-        '{}/protocol_1.2\n'.format(config.LASTFM_PROXY_URL)
+        '{}/np_1.2'.format(current_app.config['LASTFM_PROXY_URL']),
+        '{}/protocol_1.2\n'.format(current_app.config['LASTFM_PROXY_URL'])
     ])
 
 

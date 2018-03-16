@@ -6,6 +6,8 @@ ORDER_ASC = 1
 ORDER_TEXT = [ "DESC", "ASC" ]
 DEFAULT_LISTENS_PER_FETCH = 25
 
+LISTENS_DUMP_SCHEMA_VERSION = 1
+
 REDIS_USER_TIMESTAMPS = "user.%s.timestamps" # substitute user_name
 USER_CACHE_TIME = 3600 # in seconds. 1 hour
 
@@ -22,9 +24,7 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)s %(message)s')
 
 
-from listenbrainz.listenstore import postgres_listenstore
 from listenbrainz.listenstore import redis_listenstore
 from listenbrainz.listenstore import influx_listenstore
-PostgresListenStore = postgres_listenstore.PostgresListenStore
 RedisListenStore = redis_listenstore.RedisListenStore
 InfluxListenStore = influx_listenstore.InfluxListenStore

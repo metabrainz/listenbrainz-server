@@ -24,6 +24,7 @@ PG_ASYNC_LISTEN_COMMIT = False
 {{with index (service "listenbrainz-redis") 0}}
 REDIS_HOST = "{{.Address}}"
 REDIS_PORT = {{.Port}}
+REDIS_NAMESPACE = "listenbrainz"
 {{end}}
 {{end}}
 
@@ -44,6 +45,12 @@ RABBITMQ_PORT = {{.Port}}
 RABBITMQ_USERNAME = '''{{template "KEY" "rabbitmq_user"}}'''
 RABBITMQ_PASSWORD = '''{{template "KEY" "rabbitmq_pass"}}'''
 RABBITMQ_VHOST = '''{{template "KEY" "rabbitmq_vhost"}}'''
+INCOMING_EXCHANGE = '''{{template "KEY" "incoming_exchange"}}'''
+INCOMING_QUEUE = '''{{template "KEY" "incoming_queue"}}'''
+UNIQUE_EXCHANGE = '''{{template "KEY" "unique_exchange"}}'''
+UNIQUE_QUEUE = '''{{template "KEY" "unique_queue"}}'''
+STATS_EXCHANGE = '''{{template "KEY" "stats_exchange"}}'''
+STATS_QUEUE = '''{{template "KEY" "stats_queue"}}'''
 
 
 MUSICBRAINZ_CLIENT_ID = '''{{template "KEY" "musicbrainz/client_id"}}'''
@@ -73,3 +80,17 @@ UPLOAD_FOLDER = '''{{template "KEY" "upload_folder"}}'''
 
 API_URL = '''{{template "KEY" "api_url"}}'''
 LASTFM_PROXY_URL = '''{{template "KEY" "lastfm_proxy_url"}}'''
+
+
+# Sentry config
+LOG_SENTRY = {
+    'dsn': '''{{template "KEY" "sentry/dsn_private"}}''',
+    'environment': '''{{template "KEY" "sentry/environment"}}''',
+}
+SENTRY_DSN_PUBLIC = '''{{template "KEY" "sentry/dsn_public"}}'''
+
+
+# Stats
+STATS_ENTITY_LIMIT = 100 # the number of entities to calculate at max with BQ
+STATS_CALCULATION_LOGIN_TIME = 30 # users must have logged in to LB in the past 30 days for stats to be calculated
+STATS_CALCULATION_INTERVAL = 7 # stats are calculated every 7 days

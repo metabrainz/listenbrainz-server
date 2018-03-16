@@ -4,11 +4,27 @@
 *.pyc
 *.swp
 config.py
+custom_config.py
 *.log
 .cache
 env
 bigquery-credentials.json
 *.bak
 
-# Application data
-/docker/data
+# ListenBrainz application data
+docker/data
+
+# Virtualenv
+# http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
+.Python
+[Bb]in
+[Ii]nclude
+[Ll]ib
+[Ll]ib64
+[Ll]ocal
+[Mm]an
+[Ss]cripts
+pyvenv.cfg
+.venv
+pip-selfcheck.json
+

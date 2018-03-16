@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-import os
-import uuid
 import binascii
-import string
+import os
 import random
-from listenbrainz import db
+import string
+import uuid
+
 from sqlalchemy import text
+
+from listenbrainz import db
 from listenbrainz.db.lastfm_user import User
 
 

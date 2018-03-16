@@ -1,8 +1,11 @@
 # coding=utf-8
 
-
+import calendar
 import logging
+import time
+
 from listenbrainz.listenstore import ORDER_ASC, ORDER_DESC, DEFAULT_LISTENS_PER_FETCH
+
 
 class ListenStore(object):
     MAX_FETCH = 5000          # max batch size to fetch from the db
@@ -12,16 +15,20 @@ class ListenStore(object):
         self.log = logging.getLogger(__name__)
         self.log.setLevel(logging.INFO)
 
+
     def max_id(self):
         return int(self.MAX_FUTURE_SECONDS + calendar.timegm(time.gmtime()))
 
-    def fetch_listens_from_storage():
+
+    def fetch_listens_from_storage(self):
         """ Override this method in PostgresListenStore class """
         raise NotImplementedError()
 
-    def get_total_listen_count():
+
+    def get_total_listen_count(self):
         """ Return the total number of listens stored in the ListenStore """
         raise NotImplementedError()
+
 
     def get_listen_count_for_user(self, user_name, need_exact):
         """ Override this method in ListenStore implementation class
@@ -32,6 +39,31 @@ class ListenStore(object):
                         otherwise, can get from a cache also
         """
         raise NotImplementedError()
+
+
+    def dump_listens(self, location, dump_time, threads=None):
+        """ Override this method in the implementation class.
+
+        Args:
+            location (str): the directory where the listens dump archive should be created
+            dump_time (datetime): the time at which the data dump was started
+            threads (int): the number of threads to user for compression
+
+        Returns:
+            the path to the dump archive
+        """
+        raise NotImplementedError()
+
+
+    def import_listens_dump(self, archive_path, threads=None):
+        """ Override this method in the implementation class.
+
+        Args:
+            archive (str): the path to the listens dump .tar.xz archive to be imported
+            threads (int): the number of threads to be used for decompression (defaults to 1)
+        """
+        raise NotImplementedError()
+
 
     def fetch_listens(self, user_name, from_ts=None, to_ts=None, limit=DEFAULT_LISTENS_PER_FETCH):
         """ Check from_ts, to_ts, and limit for fetching listens

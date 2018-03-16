@@ -1,14 +1,16 @@
 
-from listenbrainz.db.testing import DatabaseTestCase
+import listenbrainz.db.user as db_user
 import logging
 from datetime import datetime
+from sqlalchemy import text
+
+
+from listenbrainz import config
+from listenbrainz import db
+from listenbrainz.db.lastfm_user import User
+from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.tests.utils import generate_data
 from listenbrainz.webserver.influx_connection import init_influx_connection
-from listenbrainz import db
-import listenbrainz.db.user as db_user
-from listenbrainz.db.lastfm_user import User
-from sqlalchemy import text
-from listenbrainz import config
 
 
 class TestAPICompatUserClass(DatabaseTestCase):
@@ -22,6 +24,7 @@ class TestAPICompatUserClass(DatabaseTestCase):
             'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
             'REDIS_HOST': config.REDIS_HOST,
             'REDIS_PORT': config.REDIS_PORT,
+            'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
         })
 
         # Create a user
@@ -32,7 +35,7 @@ class TestAPICompatUserClass(DatabaseTestCase):
                 SELECT *
                   FROM "user"
                  WHERE id = :id
-            """),{
+            """), {
                 "id": uid,
             })
             row = result.fetchone()
@@ -47,12 +50,12 @@ class TestAPICompatUserClass(DatabaseTestCase):
 
     def test_user_load_by_name(self):
         user = User.load_by_name(self.user.name)
-        assert isinstance(user, User) == True
+        self.assertTrue(isinstance(user, User))
         self.assertDictEqual(user.__dict__, self.user.__dict__)
 
     def test_user_load_by_id(self):
         user = User.load_by_id(self.user.id)
-        assert isinstance(user, User) == True
+        self.assertTrue(isinstance(user, User))
         self.assertDictEqual(user.__dict__, self.user.__dict__)
 
     def test_user_get_play_count(self):

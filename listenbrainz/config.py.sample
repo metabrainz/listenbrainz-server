@@ -1,4 +1,4 @@
-DEBUG = False  # set to False in production mode
+DEBUG = True # set to False in production mode
 
 SECRET_KEY = "CHANGE_ME"
 
@@ -23,6 +23,7 @@ PG_ASYNC_LISTEN_COMMIT = False
 # Redis
 REDIS_HOST = "redis"
 REDIS_PORT = 6379
+REDIS_NAMESPACE = "listenbrainz"
 
 # Influx DB (main listen store)
 INFLUX_HOST    = "influx"
@@ -35,6 +36,14 @@ RABBITMQ_PORT = 5672
 RABBITMQ_USERNAME = "guest"
 RABBITMQ_PASSWORD = "guest"
 RABBITMQ_VHOST = "/"
+
+# RabbitMQ exchanges and queues
+INCOMING_EXCHANGE = "incoming"
+INCOMING_QUEUE = "incoming"
+UNIQUE_EXCHANGE = "unique"
+UNIQUE_QUEUE = "unique"
+STATS_EXCHANGE = "stats"
+STATS_QUEUE = "stats"
 
 # MusicBrainz OAuth
 MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
@@ -51,6 +60,11 @@ WRITE_TO_BIGQUERY = False
 BIGQUERY_PROJECT_ID = "listenbrainz"
 BIGQUERY_DATASET_ID = "listenbrainz_test"
 BIGQUERY_TABLE_ID = "listen"
+
+# Stats
+STATS_ENTITY_LIMIT = 100 # the number of entities to calculate at max with BQ
+STATS_CALCULATION_LOGIN_TIME = 30 # users must have logged in to LB in the past 30 days for stats to be calculated
+STATS_CALCULATION_INTERVAL = 7 # stats are calculated every 7 days
 
 
 # Max time in seconds after which the playing_now stream will expire.
@@ -83,6 +97,5 @@ MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
 UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
 
 
-API_URL = 'https://api.listenbrainz.org' # this is used by the last.fm importer
-
+API_URL = 'https://api.listenbrainz.org'
 LASTFM_PROXY_URL = 'http://0.0.0.0:8080/'
