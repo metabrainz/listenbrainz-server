@@ -169,3 +169,16 @@ def connect_to_redis(host, port, log=print):
         except Exception as err:
             log("Cannot connect to redis: %s. Retrying in 3 seconds and trying again." % str(err))
             sleep(3)
+
+def safely_import_config():
+    """ 
+        Safely import config.py. If config.py is not found, wait 2 seconds and try again.
+    """
+
+    while True:
+        try:
+            from listenbrainz import config
+            break
+        except ImportError:
+            print("Cannot import config.py. Waiting and retrying...")
+            time.sleep(2)
