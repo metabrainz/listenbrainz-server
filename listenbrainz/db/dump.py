@@ -36,11 +36,7 @@ from listenbrainz import DUMP_LICENSE_FILE_PATH
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.utils import create_path, log_ioerrors
 
-from listenbrainz import default_config as config
-try:
-    from listenbrainz import custom_config as config
-except ImportError:
-    pass
+from listenbrainz import config
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

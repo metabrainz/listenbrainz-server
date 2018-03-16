@@ -9,11 +9,7 @@ import sys
 import time
 import ujson
 
-from listenbrainz import default_config as config
-try:
-    from listenbrainz import custom_config as config
-except ImportError:
-    pass
+from listenbrainz import config
 from listenbrainz import db
 from listenbrainz import stats
 

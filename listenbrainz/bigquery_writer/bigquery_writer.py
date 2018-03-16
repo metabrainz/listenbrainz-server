@@ -7,6 +7,11 @@ import os
 import pika
 import sys
 import ujson
+import time
+
+from listenbrainz.utils import safely_import_config
+
+safely_import_config()
 
 from googleapiclient import discovery
 from googleapiclient.errors import HttpError
@@ -17,12 +22,6 @@ from oauth2client.client import GoogleCredentials
 from redis import Redis
 from time import time, sleep
 
-
-from listenbrainz import default_config as config
-try:
-    from listenbrainz import custom_config as config
-except ImportError:
-    pass
 
 
 SUBMIT_CHUNK_SIZE = 1000 # the number of listens to send to BQ in one batch
