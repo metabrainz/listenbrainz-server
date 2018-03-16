@@ -25,7 +25,7 @@ import sqlalchemy
 import ujson
 
 from listenbrainz import db
-from listenbrainz import config as config
+from listenbrainz import config
 
 
 def insert_user_stats(user_id, artists, recordings, releases, artist_count):

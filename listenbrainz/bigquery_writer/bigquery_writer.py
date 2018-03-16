@@ -7,6 +7,15 @@ import os
 import pika
 import sys
 import ujson
+import time
+
+while True:
+    try:
+        from listenbrainz import config
+        break
+    except ImportError:
+        print("Cannot import config.py. Waiting and retrying...")
+        time.sleep(2)
 
 from googleapiclient import discovery
 from googleapiclient.errors import HttpError
@@ -17,7 +26,7 @@ from oauth2client.client import GoogleCredentials
 from redis import Redis
 from time import time, sleep
 
-from listenbrainz import config as config
+from listenbrainz import config
 
 
 SUBMIT_CHUNK_SIZE = 1000 # the number of listens to send to BQ in one batch

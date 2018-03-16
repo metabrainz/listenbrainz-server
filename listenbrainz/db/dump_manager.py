@@ -35,7 +35,7 @@ from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.utils import create_path
 from listenbrainz.webserver.influx_connection import init_influx_connection
 
-from listenbrainz import config as config
+from listenbrainz import config
 
 
 NUMBER_OF_DUMPS_TO_KEEP = 2

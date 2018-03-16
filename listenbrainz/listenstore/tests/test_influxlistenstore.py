@@ -23,7 +23,7 @@ from listenbrainz.webserver.influx_connection import init_influx_connection
 from sqlalchemy import text
 from time import sleep
 
-from listenbrainz import config as config
+from listenbrainz import config
 
 class TestInfluxListenStore(DatabaseTestCase):
 

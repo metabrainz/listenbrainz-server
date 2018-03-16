@@ -10,7 +10,7 @@ import time
 import json
 from influxdb import InfluxDBClient
 
-from listenbrainz import config as config
+from listenbrainz import config
 
 class InfluxWriterTestCase(IntegrationTestCase):
 

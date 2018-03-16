@@ -31,7 +31,7 @@ from listenbrainz.tests.integration import APICompatIntegrationTestCase
 from listenbrainz.webserver.views.api_compat_deprecated import _get_audioscrobbler_auth_token, _get_session, \
     _to_native_api
 
-from listenbrainz import config as config
+from listenbrainz import config
 
 
 class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):

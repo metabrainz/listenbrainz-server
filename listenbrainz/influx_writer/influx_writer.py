@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-
 import sys
 import os
 import pika
@@ -8,6 +7,16 @@ from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import ujson
 import logging
+import time
+
+while True:
+    try:
+        from listenbrainz import config
+        break
+    except ImportError:
+        print("Cannot import config.py. Waiting and retrying...")
+        time.sleep(2)
+
 from listenbrainz.listen import Listen
 from time import time, sleep
 from listenbrainz.listenstore import InfluxListenStore

@@ -9,7 +9,7 @@ import sys
 import time
 import ujson
 
-from listenbrainz import config as config
+from listenbrainz import config
 from listenbrainz import db
 from listenbrainz import stats
 
