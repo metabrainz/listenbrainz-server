@@ -69,7 +69,6 @@ class InfluxListenStore(ListenStore):
             user_key = '{}{}'.format(REDIS_INFLUX_USER_LISTEN_COUNT, user_name)
             count = cache.get(user_key, decode=False)
             if count:
-                self.log.error("Listen Count for user in cache: %s", count)
                 return int(count)
 
         try:
@@ -87,7 +86,6 @@ class InfluxListenStore(ListenStore):
         # put this value into brainzutils cache with an expiry time
         user_key = "{}{}".format(REDIS_INFLUX_USER_LISTEN_COUNT, user_name)
         cache.set(user_key, int(count), InfluxListenStore.USER_LISTEN_COUNT_CACHE_TIME, encode=False)
-        self.log.error('Set key %s to value %s in brainzutils cache', user_key, count)
         return int(count)
 
     def reset_listen_count(self, user_name):
@@ -215,9 +213,7 @@ class InfluxListenStore(ListenStore):
 
             cached_count = cache.get(user_key, decode=False)
             if cached_count:
-                self.log.error('incrementing key: %s, current value: %s', user_key, cached_count)
                 cache.increment(user_key)
-                self.log.error('after increment value: %s', cache.get(user_key, decode=False))
 
         # Invalidate cached data for user
         for user_name in user_names.keys():
