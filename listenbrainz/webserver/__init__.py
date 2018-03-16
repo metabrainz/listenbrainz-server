@@ -49,37 +49,23 @@ def gen_app(config_path=None, debug=None):
 
     print("Starting metabrainz service with %s environment." % deploy_env);
 
-    # Configuration
-    print("loading %s" % os.path.join( os.path.dirname(os.path.realpath(__file__)), '..', 'default_config.py'))
-    app.config.from_pyfile(os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        '..', 'default_config.py'
-    ))
-
     # Load configuration files: If we're running under a docker deployment, wait until
-    # the consul configuration has been copied to custom_config.py
-    custom_config = os.path.join( os.path.dirname(os.path.realpath(__file__)), '..', 'custom_config.py' )
+    config_file = os.path.join( os.path.dirname(os.path.realpath(__file__)), '..', 'config.py' )
     if deploy_env:
-        print("Checking if consul template generated config file exists: %s" % custom_config)
+        print("Checking if consul template generated config file exists: %s" % config_file)
         for i in range(CONSUL_CONFIG_FILE_RETRY_COUNT):
-            if not os.path.exists(custom_config):
+            if not os.path.exists(config_file):
                 sleep(1)
 
-        if not os.path.exists(custom_config):
+        if not os.path.exists(config_file):
             print("No configuration file generated yet. Retried %d times, exiting." % CONSUL_CONFIG_FILE_RETRY_COUNT);
             sys.exit(-1)
 
-        print("loading consul config file %s)" % os.path.join( os.path.dirname(os.path.realpath(__file__)), '..', 'custom_config.py'))
-        app.config.from_pyfile(custom_config)
+        print("loading consul config file %s)" % config_file)
+        app.config.from_pyfile(config_file)
 
     else:
-        print("loading custom config %s" % custom_config)
-        app.config.from_pyfile(custom_config, silent=True)
-
-    if config_path:
-        print("loading additional config %s" % config_path)
-        app.config.from_pyfile(config_path)
-
+        app.config.from_pyfile(config_file)
 
     if debug is not None:
         app.debug = debug
@@ -185,7 +171,7 @@ def create_app_rtfd():
 
     app.config.from_pyfile(os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
-        '..', 'default_config.py'
+        '..', 'rtd_config.py'
     ))
 
     _register_blueprints(app)

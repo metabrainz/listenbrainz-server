@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-
 import sys
 import os
 import pika
@@ -8,6 +7,12 @@ from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import ujson
 import logging
+import time
+
+from listenbrainz.utils import safely_import_config
+
+safely_import_config()
+
 from listenbrainz.listen import Listen
 from time import time, sleep
 from listenbrainz.listenstore import InfluxListenStore
