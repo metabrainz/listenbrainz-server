@@ -25,7 +25,6 @@
         <li><a href="{{ url_for('index.faq') }}">FAQ</a></li>
       </ul>
 
-      {# Not showing user stuff on error page with error code 500. If attempt to load user info fails there, page will not render. #}
       <ul class="nav navbar-nav navbar-right">
       <li class="import-link">
         <a href="{{ url_for('profile.import_data') }}">Import!</a>
