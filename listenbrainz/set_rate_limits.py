@@ -4,11 +4,7 @@ import sys
 from redis import Redis
 from listenbrainz.redis_keys import RATELIMIT_PER_TOKEN_KEY, RATELIMIT_PER_IP_KEY, RATELIMIT_WINDOW_KEY
 
-from listenbrainz import default_config as config
-try:
-    from listenbrainz import custom_config as config
-except ImportError:
-    pass
+from listenbrainz import config
 
 # Yes, I could use getoptgetargparsewtfbbw, but then I would spend 20 mimnutes re-learning the stupid syntax.
 # Or, I could just do it myself in the space of seconds.

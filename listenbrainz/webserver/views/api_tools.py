@@ -1,16 +1,18 @@
-import sys
-import uuid
-from werkzeug.exceptions import InternalServerError, ServiceUnavailable, BadRequest
-from flask import current_app
-import ujson
+import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
+import listenbrainz.webserver.redis_connection as redis_connection
 import pika
 import pika.exceptions
-from pika_pool import Overflow as PikaPoolOverflow, Timeout as PikaPoolTimeout
+import sys
+import time
+import ujson
+import uuid
 
-from listenbrainz.webserver.external import messybrainz
-import listenbrainz.webserver.redis_connection as redis_connection
-import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
+from flask import current_app
+from pika_pool import Overflow as PikaPoolOverflow, Timeout as PikaPoolTimeout
 from listenbrainz.listen import Listen
+from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
+from listenbrainz.webserver.external import messybrainz
+from werkzeug.exceptions import InternalServerError, ServiceUnavailable, BadRequest
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
 MAX_LISTEN_SIZE = 10240
@@ -68,28 +70,13 @@ def _send_listens_to_queue(listen_type, listens):
             submit.append(listen)
 
     if submit:
-        try:
-            with rabbitmq_connection._rabbitmq.acquire() as cxn:
-                cxn.channel.exchange_declare(exchange=current_app.config['INCOMING_EXCHANGE'], exchange_type='fanout')
-                cxn.channel.queue_declare(current_app.config['INCOMING_QUEUE'], durable=True)
-                cxn.channel.basic_publish(
-                    exchange=current_app.config['INCOMING_EXCHANGE'],
-                    routing_key='',
-                    body=ujson.dumps(submit),
-                    properties=pika.BasicProperties(delivery_mode = 2, ),
-                )
-        except pika.exceptions.ConnectionClosed as e:
-            current_app.logger.error("Connection to rabbitmq closed while trying to publish: %s" % str(e))
-            raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
-        except PikaPoolOverflow:
-            current_app.logger.error("Cannot acquire pika channel. Increase number of available channels.")
-            raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
-        except PikaPoolTimeout as e:
-            current_app.logger.error("Cannot publish to rabbitmq channel -- timeout: %s" % str(e))
-            raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
-        except Exception as e:
-            current_app.logger.error("Cannot publish to rabbitmq channel: %s / %s" % (type(e).__name__, str(e)))
-            raise ServiceUnavailable("Cannot submit listens to queue, please try again later.")
+        publish_data_to_queue(
+            data=submit,
+            exchange=current_app.config['INCOMING_EXCHANGE'],
+            queue=current_app.config['INCOMING_QUEUE'],
+            error_msg='Cannot submit listens to queue, please try again later.',
+        )
+
 
 def validate_listen(listen, listen_type):
     """Make sure that required keys are present, filled out and not too large."""
@@ -106,6 +93,12 @@ def validate_listen(listen, listen_type):
         if 'listened_at' in listen and 'track_metadata' in listen and len(listen) > 2:
             log_raise_400("JSON document may only contain listened_at and "
                            "track_metadata top level keys", listen)
+
+        # if timestamp is too high, raise BadRequest
+        # in order to make up for possible clock skew, we allow
+        # timestamps to be one hour ahead of server time
+        if not is_valid_timestamp(listen['listened_at']):
+            log_raise_400("Value for key listened_at is too high.", listen)
 
     elif listen_type == LISTEN_TYPE_PLAYING_NOW:
         if 'listened_at' in listen:
@@ -291,6 +284,7 @@ def log_raise_400(msg, data=""):
     current_app.logger.debug("BadRequest: %s\nJSON: %s" % (msg, data))
     raise BadRequest(msg)
 
+
 def verify_mbid_validity(listen, key, multi):
     """ Verify that mbid(s) present in listen with key `key` is valid.
 
@@ -307,3 +301,49 @@ def verify_mbid_validity(listen, key, multi):
     for item in items:
         if not is_valid_uuid(item):
             log_raise_400("%s MBID format invalid." % (key, ), listen)
+
+
+def is_valid_timestamp(ts):
+    """ Returns True if the timestamp passed is in the API's
+    allowed range of timestamps, False otherwise
+
+    Args:
+        ts (int): the timestamp to be checked for validity
+
+    Returns:
+        bool: True if timestamp is valid, False otherwise
+    """
+    return ts <= int(time.time()) + API_LISTENED_AT_ALLOWED_SKEW
+
+
+def publish_data_to_queue(data, exchange, queue, error_msg):
+    """ Publish specified data to the specified queue.
+
+    Args:
+        data: the data to be published
+        exchange (str): the name of the exchange
+        queue (str): the name of the queue
+        error_msg (str): the error message to be returned in case of an error
+    """
+    try:
+        with rabbitmq_connection._rabbitmq.acquire() as cxn:
+            cxn.channel.exchange_declare(exchange=exchange, exchange_type='fanout')
+            cxn.channel.queue_declare(queue, durable=True)
+            cxn.channel.basic_publish(
+                exchange=exchange,
+                routing_key='',
+                body=ujson.dumps(data),
+                properties=pika.BasicProperties(delivery_mode=2, ),
+            )
+    except pika.exceptions.ConnectionClosed as e:
+        current_app.logger.error("Connection to rabbitmq closed while trying to publish: %s" % str(e))
+        raise ServiceUnavailable(error_msg)
+    except PikaPoolOverflow:
+        current_app.logger.error("Cannot acquire pika channel. Increase number of available channels.")
+        raise ServiceUnavailable(error_msg)
+    except PikaPoolTimeout as e:
+        current_app.logger.error("Cannot publish to rabbitmq channel -- timeout: %s" % str(e))
+        raise ServiceUnavailable(error_msg)
+    except Exception as e:
+        current_app.logger.error("Cannot publish to rabbitmq channel: %s / %s" % (type(e).__name__, str(e)))
+        raise ServiceUnavailable(error_msg)

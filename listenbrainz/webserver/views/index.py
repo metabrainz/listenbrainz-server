@@ -1,8 +1,8 @@
 
 #TODO(param): alphabetize these
+from brainzutils import cache
 from flask import Blueprint, render_template, current_app, redirect, url_for
 from flask_login import current_user
-from listenbrainz.webserver.redis_connection import _redis
 import os
 import subprocess
 import locale
@@ -95,12 +95,10 @@ def current_status():
     unique_len = -1
     try:
         with rabbitmq_connection._rabbitmq.acquire() as connection:
-            incoming_ch = connection.channel()
-            queue = incoming_ch.queue_declare(current_app.config['INCOMING_QUEUE'], durable=True)
+            queue = connection.channel.queue_declare(current_app.config['INCOMING_QUEUE'], durable=True)
             incoming_len = queue.method.message_count
 
-            unique_ch = connection.channel()
-            queue = unique_ch.queue_declare(current_app.config['UNIQUE_QUEUE'], durable=True)
+            queue = connection.channel.queue_declare(current_app.config['UNIQUE_QUEUE'], durable=True)
             unique_len = queue.method.message_count
 
     except (pika.exceptions.ConnectionClosed, AttributeError):
@@ -123,18 +121,18 @@ def current_status():
 
 
 def _get_user_count():
-    """ Gets user count from either the redis cache or from the database.
+    """ Gets user count from either the brainzutils cache or from the database.
         If not present in the cache, it makes a query to the db and stores the
         result in the cache for 10 minutes.
     """
-    redis_connection = _redis.redis
     user_count_key = "{}.{}".format(STATS_PREFIX, 'user_count')
-    if redis_connection.exists(user_count_key):
-        return redis_connection.get(user_count_key)
+    user_count = cache.get(user_count_key, decode=False)
+    if user_count:
+        return user_count
     else:
         try:
             user_count = db_user.get_user_count()
         except DatabaseException as e:
             raise
-        redis_connection.setex(user_count_key, user_count, CACHE_TIME)
+        cache.set(user_count_key, int(user_count), CACHE_TIME, encode=False)
         return user_count

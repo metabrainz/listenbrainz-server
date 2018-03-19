@@ -1,0 +1,29 @@
+{{- define "KEY" -}}
+    {{ key (printf "docker-server-configs/LB/create-dumps-config.json/%s" .) }}
+{{- end -}}
+#!/bin/bash
+
+DUMP_THREADS="{{template "KEY" "dump_threads"}}"
+
+# Where to back things up to, who should own the backup files, and what mode
+# those files should have.
+# The backups include a full database export
+BACKUP_DIR="{{template "KEY" "backup_dir"}}"
+BACKUP_USER=listenbrainz
+BACKUP_GROUP=listenbrainz
+BACKUP_DIR_MODE=700
+BACKUP_FILE_MODE=600
+
+# Same but for the files that need to copied to the FTP server,
+# for public consumption
+FTP_DIR="{{template "KEY" "ftp_dir"}}"
+FTP_USER=listenbrainz
+FTP_GROUP=listenbrainz
+FTP_DIR_MODE=755
+FTP_FILE_MODE=644
+
+# rsync to FTP server configuration
+RSYNC_FULLEXPORT_HOST="{{template "KEY" "rsync_fullexport_host"}}"
+RSYNC_FULLEXPORT_PORT="{{template "KEY" "rsync_fullexport_port"}}"
+RSYNC_FULLEXPORT_DIR="$FTP_DIR/fullexport"
+RSYNC_FULLEXPORT_KEY='/home/listenbrainz/.ssh/rsync-listenbrainz-dumps-full'
