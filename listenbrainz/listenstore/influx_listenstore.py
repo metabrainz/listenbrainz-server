@@ -10,11 +10,11 @@ import shutil
 import ujson
 import uuid
 
+from brainzutils import cache
 from collections import defaultdict
 from datetime import datetime
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
-from redis import Redis
 
 from listenbrainz import DUMP_LICENSE_FILE_PATH
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
@@ -25,7 +25,7 @@ from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, \
     USER_CACHE_TIME, REDIS_USER_TIMESTAMPS, LISTENS_DUMP_SCHEMA_VERSION
 from listenbrainz.utils import quote, get_escaped_measurement_name, get_measurement_name, get_influx_query_timestamp, \
     convert_influx_nano_to_python_time, convert_python_time_to_nano_int, convert_to_unix_timestamp, \
-    create_path, log_ioerrors
+    create_path, log_ioerrors, init_cache
 
 REDIS_INFLUX_USER_LISTEN_COUNT = "ls.listencount."  # append username
 COUNT_RETENTION_POLICY = "one_week"
@@ -47,13 +47,13 @@ class InfluxListenStore(ListenStore):
 
     def __init__(self, conf):
         ListenStore.__init__(self, conf)
-        self.redis = Redis(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], decode_responses=True)
-        self.redis.ping()
         self.influx = InfluxDBClient(host=conf['INFLUX_HOST'], port=conf['INFLUX_PORT'], database=conf['INFLUX_DB_NAME'])
+        # Initialize brainzutils cache
+        init_cache(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], namespace=conf['REDIS_NAMESPACE'])
 
     def get_listen_count_for_user(self, user_name, need_exact=False):
         """Get the total number of listens for a user. The number of listens comes from
-           a redis cache unless an exact number is asked for.
+           brainzutils cache unless an exact number is asked for.
 
         Args:
             user_name: the user to get listens for
@@ -61,9 +61,13 @@ class InfluxListenStore(ListenStore):
         """
 
         if not need_exact:
-            # check if the user's listen count is already in redis
+            # check if the user's listen count is already in cache
             # if already present return it directly instead of calculating it again
-            count = self.redis.get(REDIS_INFLUX_USER_LISTEN_COUNT + user_name)
+            # decode is set to False as we have not encoded the value when we set it
+            # in brainzutils cache as we need to call increment operation which requires
+            # an integer value
+            user_key = '{}{}'.format(REDIS_INFLUX_USER_LISTEN_COUNT, user_name)
+            count = cache.get(user_key, decode=False)
             if count:
                 return int(count)
 
@@ -79,9 +83,9 @@ class InfluxListenStore(ListenStore):
         except (KeyError, StopIteration):
             count = 0
 
-        # put this value into redis with an expiry time
+        # put this value into brainzutils cache with an expiry time
         user_key = "{}{}".format(REDIS_INFLUX_USER_LISTEN_COUNT, user_name)
-        self.redis.setex(user_key, count, InfluxListenStore.USER_LISTEN_COUNT_CACHE_TIME)
+        cache.set(user_key, int(count), InfluxListenStore.USER_LISTEN_COUNT_CACHE_TIME, encode=False)
         return int(count)
 
     def reset_listen_count(self, user_name):
@@ -117,14 +121,14 @@ class InfluxListenStore(ListenStore):
 
         return None
 
-    def get_total_listen_count(self, cache=True):
+    def get_total_listen_count(self, cache_value=True):
         """ Returns the total number of listens stored in the ListenStore.
-            First checks the redis cache for the value, if not present there
-            makes a query to the db and caches it in redis.
+            First checks the brainzutils cache for the value, if not present there
+            makes a query to the db and caches it in brainzutils cache.
         """
 
-        if cache:
-            count = self.redis.get(InfluxListenStore.REDIS_INFLUX_TOTAL_LISTEN_COUNT)
+        if cache_value:
+            count = cache.get(InfluxListenStore.REDIS_INFLUX_TOTAL_LISTEN_COUNT, decode=False)
             if count:
                 return int(count)
 
@@ -160,15 +164,20 @@ class InfluxListenStore(ListenStore):
         except StopIteration:
             pass
 
-        if cache:
-            self.redis.setex(InfluxListenStore.REDIS_INFLUX_TOTAL_LISTEN_COUNT, count, InfluxListenStore.TOTAL_LISTEN_COUNT_CACHE_TIME)
+        if cache_value:
+            cache.set(
+                InfluxListenStore.REDIS_INFLUX_TOTAL_LISTEN_COUNT,
+                int(count),
+                InfluxListenStore.TOTAL_LISTEN_COUNT_CACHE_TIME,
+                encode=False,
+            )
         return count
 
     def get_timestamps_for_user(self, user_name):
-        """ Return the max_ts and min_ts for a given user and cache the result in redis
+        """ Return the max_ts and min_ts for a given user and cache the result in brainzutils cache
         """
 
-        tss = self.redis.get(REDIS_USER_TIMESTAMPS % user_name)
+        tss = cache.get(REDIS_USER_TIMESTAMPS % user_name)
         if tss:
             (min_ts, max_ts) = tss.split(",")
             min_ts = int(min_ts)
@@ -180,7 +189,7 @@ class InfluxListenStore(ListenStore):
             query = 'SELECT last(artist_msid) FROM ' + get_escaped_measurement_name(user_name)
             max_ts = self._select_single_timestamp(query, get_measurement_name(user_name))
 
-            self.redis.setex(REDIS_USER_TIMESTAMPS % user_name, "%d,%d" % (min_ts, max_ts), USER_CACHE_TIME)
+            cache.set(REDIS_USER_TIMESTAMPS % user_name, "%d,%d" % (min_ts, max_ts), USER_CACHE_TIME)
 
         return min_ts, max_ts
 
@@ -198,15 +207,17 @@ class InfluxListenStore(ListenStore):
             self.log.error("Cannot write data to influx. (write_points returned False)")
 
         # If we reach this point, we were able to write the listens to the InfluxListenStore.
-        # So update the listen counts of the users cached in redis.
+        # So update the listen counts of the users cached in brainzutils cache.
         for data in submit:
             user_key = "{}{}".format(REDIS_INFLUX_USER_LISTEN_COUNT, data['fields']['user_name'])
-            if self.redis.exists(user_key):
-                self.redis.incr(user_key)
+
+            cached_count = cache.get(user_key, decode=False)
+            if cached_count:
+                cache.increment(user_key)
 
         # Invalidate cached data for user
         for user_name in user_names.keys():
-            self.redis.delete(REDIS_USER_TIMESTAMPS % user_name)
+            cache.delete(REDIS_USER_TIMESTAMPS % user_name)
 
         if len(listens):
             # Enter a measurement to count items inserted

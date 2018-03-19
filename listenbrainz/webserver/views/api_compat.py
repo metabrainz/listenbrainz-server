@@ -275,45 +275,70 @@ def record_listens(request, data):
     # With corrections than the original submitted listen.
     doc, tag, text = Doc().tagtext()
     with tag('lfm', status='ok'):
-        with tag('nowplaying' if listen_type == 'playing_now' else 'scrobbles'):
-
-            for origL, augL in zip(list(lookup.values()), augmented_listens):
-                corr = defaultdict(lambda: '0')
-
-                track = augL['track_metadata']['track_name']
-                if origL['track'] != augL['track_metadata']['track_name']:
-                    corr['track'] = '1'
-
-                artist = augL['track_metadata']['artist_name']
-                if origL['artist'] != augL['track_metadata']['artist_name']:
-                    corr['artist'] = '1'
-
-                ts = augL['listened_at']
-
-                albumArtist = artist
-                if origL.get('albumArtist', origL['artist']) != artist:
-                    corr['albumArtist'] = '1'
-
-                album = augL['track_metadata'].get('release_name', '')
-                if origL.get('album', '') != album:
-                    corr['album'] = '1'
-
-                with tag('scrobble'):
-                    with tag('track', corrected=corr['track']):
-                        text(track)
-                    with tag('artist', corrected=corr['artist']):
-                        text(artist)
-                    with tag('album', corrected=corr['album']):
-                        text(album)
-                    with tag('albumArtist', corrected=corr['albumArtist']):
-                        text(albumArtist)
-                    with tag('timestamp'):
-                        text(ts)
-                    with tag('ignoredMessage', code="0"):
-                        text('')
+        if listen_type == 'playing_now':
+            doc.asis(create_response_for_single_listen(list(lookup.values())[0], augmented_listens[0], listen_type))
+        else:
+            accepted_listens = len(lookup.values())
+            # Currently LB accepts all the listens and ignores none
+            with tag('scrobbles', accepted=accepted_listens, ignored='0'):
+                for original_listen, augmented_listen in zip(list(lookup.values()), augmented_listens):
+                    doc.asis(create_response_for_single_listen(original_listen, augmented_listen, listen_type))
 
     return format_response('<?xml version="1.0" encoding="utf-8"?>\n' + yattag.indent(doc.getvalue()),
                            output_format)
+
+
+def create_response_for_single_listen(original_listen, augmented_listen, listen_type):
+    """Create XML response for a single listen.
+
+    Args:
+        original_listen (dict): Original submitted listen.
+        augmented_listen (dict): Augmented(corrected) listen.
+        listen_type (string): Type of listen ('playing_now' or 'listens').
+
+    Returns:
+        XML response for a single listen.
+        If listen is of type 'playing_now' response is as described in following link
+        https://www.last.fm/api/show/track.updateNowPlaying
+        Otherwise response is as described in following link
+        https://www.last.fm/api/show/track.scrobble .
+    """
+    corrected = defaultdict(lambda: '0')
+
+    track = augmented_listen['track_metadata']['track_name']
+    if original_listen['track'] != augmented_listen['track_metadata']['track_name']:
+        corrected['track'] = '1'
+
+    artist = augmented_listen['track_metadata']['artist_name']
+    if original_listen['artist'] != augmented_listen['track_metadata']['artist_name']:
+        corrected['artist'] = '1'
+
+    ts = augmented_listen['listened_at']
+
+    albumArtist = artist
+    if original_listen.get('albumArtist', original_listen['artist']) != artist:
+        corrected['albumArtist'] = '1'
+
+    album = augmented_listen['track_metadata'].get('release_name', '')
+    if original_listen.get('album', '') != album:
+        corrected['album'] = '1'
+
+    doc, tag, text = Doc().tagtext()
+    with tag('nowplaying' if listen_type == 'playing_now' else 'scrobble'):
+        with tag('track', corrected=corrected['track']):
+            text(track)
+        with tag('artist', corrected=corrected['artist']):
+            text(artist)
+        with tag('album', corrected=corrected['album']):
+            text(album)
+        with tag('albumArtist', corrected=corrected['albumArtist']):
+            text(albumArtist)
+        with tag('timestamp'):
+            text(ts)
+        with tag('ignoredMessage', code="0"):
+            text('')
+
+    return doc.getvalue()
 
 
 def format_response(data, format="xml"):

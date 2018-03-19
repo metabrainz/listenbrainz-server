@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-
 import sys
 import os
 import pika
@@ -8,6 +7,12 @@ from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import ujson
 import logging
+import time
+
+from listenbrainz.utils import safely_import_config
+
+safely_import_config()
+
 from listenbrainz.listen import Listen
 from time import time, sleep
 from listenbrainz.listenstore import InfluxListenStore
@@ -75,10 +80,10 @@ class InfluxWriterSubscriber(ListenWriter):
                 failure_count += 1
                 if failure_count >= retries:
                     break
-                sleep(ERROR_RETRY_DELAY)
+                sleep(self.ERROR_RETRY_DELAY)
             except ConnectionError as e:
                 self.log.error("Cannot write data to listenstore: %s. Sleep." % str(e))
-                sleep(ERROR_RETRY_DELAY)
+                sleep(self.ERROR_RETRY_DELAY)
 
         # if we get here, we failed on trying to write the data
         if len(data) == 1:
@@ -89,7 +94,7 @@ class InfluxWriterSubscriber(ListenWriter):
                 return 1
             except (InfluxDBServerError, InfluxDBClientError, ValueError, ConnectionError) as e:
                 self.log.error("Unable to insert bad listen to listenstore: %s" % str(e))
-                if DUMP_JSON_WITH_ERRORS:
+                if self.DUMP_JSON_WITH_ERRORS:
                     self.log.error("Was writing the following data:")
                     influx_dict = data[0].to_influx(get_measurement_name(data[0].user_name))
                     self.log.error(ujson.dumps(influx_dict))
@@ -116,6 +121,11 @@ class InfluxWriterSubscriber(ListenWriter):
 
             t = int(listen['listened_at'])
             user_name = listen['user_name']
+
+            # if the timestamp is illegal, don't use it for ranges
+            if t.bit_length() > 32:
+                self.log.error("timestamp %d is too large." % t)
+                continue
 
             if user_name not in users:
                 users[user_name] = {
@@ -226,8 +236,9 @@ class InfluxWriterSubscriber(ListenWriter):
 
         while True:
             try:
-                self.ls = InfluxListenStore({ 'REDIS_HOST' : self.config.REDIS_HOST,
-                                              'REDIS_PORT' : self.config.REDIS_PORT,
+                self.ls = InfluxListenStore({ 'REDIS_HOST': self.config.REDIS_HOST,
+                                              'REDIS_PORT': self.config.REDIS_PORT,
+                                              'REDIS_NAMESPACE': self.config.REDIS_NAMESPACE,
                                               'INFLUX_HOST': self.config.INFLUX_HOST,
                                               'INFLUX_PORT': self.config.INFLUX_PORT,
                                               'INFLUX_DB_NAME': self.config.INFLUX_DB_NAME})
@@ -235,7 +246,7 @@ class InfluxWriterSubscriber(ListenWriter):
                 break
             except Exception as err:
                 self.log.error("Cannot connect to influx: %s. Retrying in 2 seconds and trying again." % str(err))
-                sleep(ERROR_RETRY_DELAY)
+                sleep(self.ERROR_RETRY_DELAY)
 
         while True:
             try:
@@ -244,7 +255,7 @@ class InfluxWriterSubscriber(ListenWriter):
                 break
             except Exception as err:
                 self.log.error("Cannot connect to redis: %s. Retrying in 2 seconds and trying again." % str(err))
-                sleep(ERROR_RETRY_DELAY)
+                sleep(self.ERROR_RETRY_DELAY)
 
         while True:
             self.connect_to_rabbitmq()

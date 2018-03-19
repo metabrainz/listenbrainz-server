@@ -1,4 +1,4 @@
-DEBUG = False  # set to False in production mode
+DEBUG = False # set to False in production mode
 
 SECRET_KEY = "CHANGE_ME"
 
@@ -23,6 +23,7 @@ PG_ASYNC_LISTEN_COMMIT = False
 # Redis
 REDIS_HOST = "redis"
 REDIS_PORT = 6379
+REDIS_NAMESPACE = "listenbrainz"
 
 # Influx DB (main listen store)
 INFLUX_HOST    = "influx"
@@ -41,6 +42,8 @@ INCOMING_EXCHANGE = "incoming"
 INCOMING_QUEUE = "incoming"
 UNIQUE_EXCHANGE = "unique"
 UNIQUE_QUEUE = "unique"
+STATS_EXCHANGE = "stats"
+STATS_QUEUE = "stats"
 
 # MusicBrainz OAuth
 MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
@@ -76,10 +79,8 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 #LOG_EMAIL_TOPIC = "ListenBrainz Webserver Failure"
 #LOG_EMAIL_RECIPIENTS = []  # List of email addresses (strings)
 
-#LOG_SENTRY = {
-#    "dsn": "YOUR_SENTRY_DSN",
-#    "level": "WARNING",  # optional
-#}
+#LOG_SENTRY_ENABLED = True
+#SENTRY_DSN = ""
 
 
 # MISCELLANEOUS
@@ -95,7 +96,5 @@ MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
 # The path must be absolute path
 UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
 
-
-API_URL = 'https://api.listenbrainz.org' # this is used by the last.fm importer
-
+API_URL = 'https://api.listenbrainz.org'
 LASTFM_PROXY_URL = 'http://0.0.0.0:8080/'

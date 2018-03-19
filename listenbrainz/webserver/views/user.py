@@ -5,12 +5,13 @@ import ujson
 
 from flask import Blueprint, render_template, request, url_for, Response, redirect, flash, current_app, jsonify
 from flask_login import current_user, login_required
+from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from listenbrainz import webserver
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver.redis_connection import _redis
-from time import time
+import time
 from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
 
 LISTENS_PER_PAGE = 25
@@ -66,17 +67,17 @@ def profile(user_name):
         try:
             max_ts = int(max_ts)
         except ValueError:
-            raise BadRequest("Incorrect timestamp argument max_ts:" % request.args.get("max_ts"))
+            raise BadRequest("Incorrect timestamp argument max_ts: %s" % request.args.get("max_ts"))
 
     min_ts = request.args.get("min_ts")
     if min_ts is not None:
         try:
             min_ts = int(min_ts)
         except ValueError:
-            raise BadRequest("Incorrect timestamp argument min_ts:" % request.args.get("min_ts"))
+            raise BadRequest("Incorrect timestamp argument min_ts: %s" % request.args.get("min_ts"))
 
-    if max_ts == None and min_ts == None:
-        max_ts = int(time())
+    if max_ts is None and min_ts is None:
+        max_ts = int(time.time())
 
     args = {}
     if max_ts:
@@ -134,7 +135,8 @@ def profile(user_name):
         spotify_uri=_get_spotify_uri_for_listens(listens),
         have_listen_count=have_listen_count,
         listen_count=format(int(listen_count), ",d"),
-        artist_count=format(artist_count, ",d") if artist_count else None
+        artist_count=format(artist_count, ",d") if artist_count else None,
+        section='listens'
     )
 
 
@@ -156,7 +158,8 @@ def artists(user_name):
     if data is None:
         msg = ('No data calculated for user %s yet. ListenBrainz only calculates statistics for'
         ' recently active users. If %s has logged in recently, they\'ve already been added to'
-        ' the stats calculation queue. Please wait until the next statistics calculation batch is finished.') % (user_name, user_name)
+        ' the stats calculation queue. Please wait until the next statistics calculation batch is finished'
+        ' or request stats calculation from your info page.') % (user_name, user_name)
 
         flash.error(msg)
         return redirect(url_for('user.profile', user_name=user_name))
@@ -166,6 +169,7 @@ def artists(user_name):
         "user/artists.html",
         user=user,
         data=ujson.dumps(top_artists),
+        section='artists'
     )
 
 
@@ -185,7 +189,7 @@ def _get_spotify_uri_for_listens(listens):
 
     def get_track_id_from_listen(listen):
         additional_info = listen["track_metadata"]["additional_info"]
-        if "spotify_id" in additional_info:
+        if "spotify_id" in additional_info and additional_info["spotify_id"] is not None:
             return additional_info["spotify_id"].rsplit('/', 1)[-1]
         else:
             return None

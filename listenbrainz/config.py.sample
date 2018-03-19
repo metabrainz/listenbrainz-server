@@ -23,6 +23,7 @@ PG_ASYNC_LISTEN_COMMIT = False
 # Redis
 REDIS_HOST = "redis"
 REDIS_PORT = 6379
+REDIS_NAMESPACE = "listenbrainz"
 
 # Influx DB (main listen store)
 INFLUX_HOST    = "influx"
@@ -41,6 +42,8 @@ INCOMING_EXCHANGE = "incoming"
 INCOMING_QUEUE = "incoming"
 UNIQUE_EXCHANGE = "unique"
 UNIQUE_QUEUE = "unique"
+STATS_EXCHANGE = "stats"
+STATS_QUEUE = "stats"
 
 # MusicBrainz OAuth
 MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"

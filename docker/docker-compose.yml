@@ -5,28 +5,27 @@ version: "2"
 # `../` to refer to a directory in the main code checkout
 
 volumes:
-  dbvolume:
+  postgres:
+  redis:
+  influxdb:
+  rabbitmq:
 
 services:
 
   db:
     image: postgres:9.5.3
     volumes:
-      - ./dbvolume:/var/lib/postgresql/data:z
-    ports:
-      - "15432:5432"
+      - postgres:/var/lib/postgresql/data:z
 
   redis:
     image: redis:3.2.1
     volumes:
-      - ./data/redis:/data:z
-    ports:
-      - "6379:6379"
+      - redis:/data:z
 
   influx:
     image: influxdb:1.2.4
     volumes:
-      - ./data/influxdb:/var/lib/influxdb:z
+      - influxdb:/var/lib/influxdb:z
     environment:
       INFLUXDB_REPORTING_DISABLED: 'true'
       INFLUXDB_META_LOGGING_ENABLED: 'false'
@@ -36,16 +35,10 @@ services:
       INFLUXDB_HTTP_LOG_ENABLED: 'true'
       INFLUXDB_CONTINUOUS_QUERIES_LOG_ENABLED: 'false'
 
-    ports:
-      - "8086:8086"
-      - "8083:8083"
-
   rabbitmq:
     image: rabbitmq:3.6.5
     volumes:
-      - ./data/rabbitmq:/var/lib/rabbitmq:z
-    ports:
-      - "5672:5672"
+      - rabbitmq:/var/lib/rabbitmq:z
 
   web:
     build:
@@ -77,21 +70,20 @@ services:
       - rabbitmq
 
   influx_writer:
-    build:
-      context: ..
-      dockerfile: Dockerfile
+    image: web
     command: python3 -m "listenbrainz.influx_writer.influx_writer"
+    volumes:
+      - ..:/code/listenbrainz:z
     depends_on:
       - redis
       - influx
       - rabbitmq
 
   bigquery:
-    build:
-      context: ..
-      dockerfile: Dockerfile
+    image: web
     volumes:
       - ../credentials:/code/credentials:z
+      - ..:/code/listenbrainz:z
     environment:
       GOOGLE_APPLICATION_CREDENTIALS: '/code/credentials/bigquery-credentials.json'
     command: python3 -m "listenbrainz.bigquery_writer.bigquery_writer"
@@ -99,12 +91,12 @@ services:
       - redis
       - rabbitmq
 
-  scheduler:
+  stats_calculator:
     image: web
-    command: cron && tail -f /var/log/cron.log
+    command: python -m "listenbrainz.stats.stats_calculator"
     volumes:
       - ../credentials:/code/credentials:z
-      - ..:/code/listenbrainz
+      - ..:/code/listenbrainz:z
     environment:
       GOOGLE_APPLICATION_CREDENTIALS: '/code/credentials/bigquery-credentials.json'
     depends_on:

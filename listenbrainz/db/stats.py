@@ -25,6 +25,7 @@ import sqlalchemy
 import ujson
 
 from listenbrainz import db
+from listenbrainz import config
 
 
 def insert_user_stats(user_id, artists, recordings, releases, artist_count):
@@ -125,7 +126,7 @@ def get_user_artists(user_id):
             {
                 'all_time': all time artist listen counts for the user
                             calculated by listenbrainz.stats.user.get_top_artists
-                'artist_count': the total number of artists this user has listened to
+                'count': the total number of artists this user has listened to
                                 calculated by listenbrainz.stats.user.get_artist_count
             }
 
@@ -161,3 +162,28 @@ def get_all_user_stats(user_id):
     """
 
     return get_user_stats(user_id, 'artist, recording, release')
+
+
+def valid_stats_exist(user_id):
+    """ Returns True if statistics for a user have been calculated in
+    the last week, and are present in the db
+
+    Args:
+        user_id (int): the row ID of the user
+
+    Returns:
+        bool value signifying if valid stats exist for the user in the db
+    """
+
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+                SELECT user_id
+                  FROM statistics.user
+                 WHERE user_id = :user_id
+                   AND last_updated >= NOW() - INTERVAL ':x days'
+            """), {
+                'user_id': user_id,
+                'x': config.STATS_CALCULATION_INTERVAL,
+            })
+        row = result.fetchone()
+        return True if row is not None else False

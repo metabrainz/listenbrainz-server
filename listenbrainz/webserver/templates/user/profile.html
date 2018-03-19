@@ -2,9 +2,10 @@
 
 {% block profile_content %}
 
-    <img src="{{ url_for('static', filename='img/musicbrainz-16.svg') }}" />
-    <b><a href="https://musicbrainz.org/user/{{ user.musicbrainz_id }}">See profile on MusicBrainz</a></b>
-
+    <div style="margin-top:20px">
+    	<img src="{{ url_for('static', filename='img/musicbrainz-16.svg') }}" />
+    	<b><a href="https://musicbrainz.org/user/{{ user.musicbrainz_id }}">See profile on MusicBrainz</a></b>
+    </div>
 
   <h3> Statistics </h3>
 
