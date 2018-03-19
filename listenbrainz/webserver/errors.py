@@ -54,7 +54,13 @@ class CompatError(object):
 def init_error_handlers(app):
 
     def error_wrapper(template, error, code):
-        resp = make_response(render_template(template, error=error, code=code))
+        # We want to hide the user menu even if the user is logged in when the
+        # error is HTTP500
+        hide_navbar_user_menu = code == 500
+
+        resp = make_response(render_template(template,
+                                             error=error,
+                                             hide_navbar_user_menu=hide_navbar_user_menu))
         resp.headers['Access-Control-Allow-Origin'] = '*'
         return resp, code
 
