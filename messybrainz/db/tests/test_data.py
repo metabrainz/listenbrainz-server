@@ -28,6 +28,12 @@ recording = {
     'title': 'Pretty Sweet',
 }
 
+recording_diff_case = {
+    'artist': 'FRANK OCEAN',
+    'release': 'BLoNd',
+    'title': 'PReTtY SWEET',
+}
+
 class DataTestCase(DatabaseTestCase):
 
     def test_get_id_from_meta_hash(self):
@@ -68,3 +74,12 @@ class DataTestCase(DatabaseTestCase):
         with db.engine.connect() as connection:
             release_msid = data.add_release(connection, 'The College Dropout')
             self.assertEqual(release_msid, data.get_release(connection, 'The College Dropout'))
+
+
+    def test_add_recording_different_cases(self):
+        """ Tests that recordings with only case differences get the same MessyBrainz ID.
+        """
+        with db.engine.connect() as connection:
+            msid1 = data.submit_recording(connection, recording)
+            msid2 = str(data.get_id_from_recording(connection, recording_diff_case))
+            self.assertEqual(msid1, msid2)
