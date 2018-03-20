@@ -1,12 +1,14 @@
+from unittest import mock
+
 from flask import url_for
+from flask_login import login_required, AnonymousUserMixin
 from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
 
 import listenbrainz.db.user as db_user
+import listenbrainz.webserver.login
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.webserver import create_app
 from listenbrainz.webserver.testing import ServerTestCase
-
-from unittest import mock
 
 
 class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
@@ -134,8 +136,9 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         mock_user_get.assert_called_with(user['id'])
 
     @mock.patch('listenbrainz.db.user.get')
-    def test_menu_logged_in_error_dont_show(self, mock_user_get):
-        """ If the user is logged in, if we show a 500 error, do not show the user menu"""
+    def test_menu_logged_in_error_dont_show_no_user(self, mock_user_get):
+        """ If the user is logged in, if we show a 500 error, do not show the user menu
+            Don't query the database to get a current_user for the template context"""
         @self.app.route('/page_that_returns_500')
         def view500():
             raise InternalServerError('error')
@@ -150,3 +153,32 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertIn('Sign in', data)
         self.assertIn('Import!', data)
         mock_user_get.assert_not_called()
+        self.assertIsInstance(self.get_context_variable('current_user'), AnonymousUserMixin)
+
+    @mock.patch('listenbrainz.db.user.get')
+    def test_menu_logged_in_error_dont_show_user_loaded(self, mock_user_get):
+        """ If the user is logged in, if we show a 500 error, do not show the user menu
+        If the user has previously been loaded in the view, check that it's not
+        loaded while rendering the template"""
+
+        user = db_user.get_or_create('iliekcomputers')
+        mock_user_get.return_value = user
+
+        @self.app.route('/page_that_returns_500')
+        @login_required
+        def view500():
+            # flask-login user is loaded during @login_required, so check that the db has been queried
+            mock_user_get.assert_called_with(user['id'])
+            raise InternalServerError('error')
+
+        self.temporary_login(user['id'])
+        resp = self.client.get('/page_that_returns_500')
+        data = resp.data.decode('utf-8')
+        # item not in user menu
+        self.assertNotIn('Your Listens', data)
+        self.assertIn('Sign in', data)
+        self.assertIn('Import!', data)
+        # Even after rendering the template, the database has only been queried once (before the exception)
+        mock_user_get.assert_called_once()
+        self.assertIsInstance(self.get_context_variable('current_user'), listenbrainz.webserver.login.User)
+

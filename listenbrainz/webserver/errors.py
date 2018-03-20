@@ -1,4 +1,4 @@
-from flask import render_template, make_response, jsonify, request
+from flask import render_template, make_response, jsonify, request, has_request_context, _request_ctx_stack, current_app
 from yattag import Doc
 import yattag
 import ujson
@@ -54,9 +54,16 @@ class CompatError(object):
 def init_error_handlers(app):
 
     def error_wrapper(template, error, code):
-        # We want to hide the user menu even if the user is logged in when the
-        # error is HTTP500
-        hide_navbar_user_menu = code == 500
+        hide_navbar_user_menu = False
+        if code == 500:
+            # On an HTTP500 page we want to make sure we don't do any more database queries
+            # in case the error was caused by an un-rolled-back database exception.
+            # flask-login will do a query to add `current_user` to the template if it's not
+            # already in the request context, so we override it with AnonymousUser to prevent it from doing so
+            # Ideally we wouldn't do this, and we would catch and roll back all database exceptions
+            if has_request_context() and not hasattr(_request_ctx_stack.top, 'user'):
+                _request_ctx_stack.top.user = current_app.login_manager.anonymous_user()
+            hide_navbar_user_menu = True
 
         resp = make_response(render_template(template,
                                              error=error,
