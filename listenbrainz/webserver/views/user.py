@@ -194,11 +194,10 @@ def _get_spotify_uri_for_listens(listens):
         else:
             return None
 
-    track_ids = [get_track_id_from_listen(l) for l in listens]
-    track_ids = [t_id for t_id in track_ids if t_id]
+    track_id = get_track_id_from_listen(listens[0])
 
-    if track_ids:
-        return "spotify:trackset:Recent listens:" + ",".join(track_ids)
+    if track_id:
+        return "spotify:track:" + track_id
     else:
         return None
 
