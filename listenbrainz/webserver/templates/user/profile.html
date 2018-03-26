@@ -98,7 +98,7 @@
 
         {% if spotify_uri %}
           <div class="col-md-4 text-right">
-            <iframe id="player" frameborder="0" allowtransparency="true"
+            <iframe id="player" frameborder="0" allowtransparency="true" allow="encrypted-media"
                     src="https://embed.spotify.com/?uri={{ spotify_uri }}&theme=white"></iframe>
           </div>
         {% endif %}
