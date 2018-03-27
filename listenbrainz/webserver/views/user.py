@@ -194,7 +194,9 @@ def _get_spotify_uri_for_listens(listens):
         else:
             return None
 
-    track_id = get_track_id_from_listen(listens[0])
+    track_id = None
+    if len(listens):
+        track_id = get_track_id_from_listen(listens[0])
 
     if track_id:
         return "spotify:track:" + track_id
