@@ -24,8 +24,8 @@
       We need to know your Last.fm username:
       <div class="well">
         <form onsubmit="return lastfm_import();">
-          <input id = "lastfm_input" type="text" name="lastfm_username" size="30" placeholder="Last.fm Username">
-          <input type="submit" value="Import now!">
+          <input id="lastfm_input" type="text" name="lastfm_username" size="30" placeholder="Last.fm Username">
+          <input id="import_button" type="submit" value="Import now!">
         </form>
       </div>
 
@@ -57,5 +57,18 @@
       xhr.send();
       return false;
     }
+  </script>
+  <script type="text/javascript">
+    //disables the import button when no username is entered
+    $(document).ready(function() {
+      $("#import_button").prop("disabled", true);
+      $("#lastfm_input").on("input", function() {
+        if($("#lastfm_input").val() == "") {
+          $("#import_button").prop("disabled", true);
+        } else {
+          $("#import_button").prop("disabled", false);
+        }
+      });
+    });
   </script>
 {% endblock %}
