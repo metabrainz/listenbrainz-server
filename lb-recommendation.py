@@ -82,7 +82,7 @@ if __name__ == "__main__":
     num_users = playcounts.values().map(lambda r: r[0]).distinct().count()
     num_recordings = playcounts.values().map(lambda r: r[1]).distinct().count()
 
-    print("=== Got %d playcounts from %d users on %d recordings." % (num_playcounts, num_users, num_recordings))
+    print("==== Got %d playcounts from %d users on %d recordings." % (num_playcounts, num_users, num_recordings))
 
     # split playcounts into train (60%), validation (20%), and test (20%) based on the 
     # last digit of the timestamp, add user_playcounts to train, and cache them
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     for rank, lmbda, numIter in itertools.product(ranks, lambdas, numIters):
         model = ALS.train(training, rank, numIter, lmbda)
         validationRmse = compute_rmse(model, validation, numValidation)
-        print("RMSE (validation) = %f for the model trained with " % validationRmse + \
+        print("==== RMSE (validation) = %f for the model trained with " % validationRmse + \
               "rank = %d, lambda = %.1f, and numIter = %d." % (rank, lmbda, numIter))
         if (validationRmse < bestValidationRmse):
             bestModel = model
