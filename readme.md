@@ -8,6 +8,8 @@ Install required modules:
 
 pip3 install -r requirements.txt
 
+apt-get install default-jdk scala
+
 
 invoke with:
 
