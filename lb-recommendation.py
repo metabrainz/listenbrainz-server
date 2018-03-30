@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# I've been working from this page:
+# https://github.com/dennyglee/databricks/blob/master/notebooks/Users/denny%40databricks.com/content/Movie%20Recommendations%20with%20MLlib.py
+
 import sys
 import ujson
 import itertools
@@ -119,6 +122,7 @@ if __name__ == "__main__":
             bestLambda = lmbda
             bestNumIter = numIter
 
+    ###### NOT TESTED/DEBUGGED BELOW THIS
     test_rmse = compute_rmse(bestModel, test, num_test)
 
     # evaluate the best model on the test set
@@ -130,6 +134,7 @@ if __name__ == "__main__":
     baseline_rmse = sqrt(test.map(lambda x: (mean_rating - x[2]) ** 2).reduce(add) / num_test)
     improvement = (baseline_rmse - test_rmse) / baseline_rmse * 100
     print("The best model improves the baseline by %.2f" % (improvement) + "%.")
+
 
     # make personalized recommendations
 
