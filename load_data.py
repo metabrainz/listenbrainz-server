@@ -50,6 +50,7 @@ def load_listenbrainz_dump(directory, sc):
                     bytes_read += len(line)
                     listen = json.loads(line)
                     listen["user_name"] = user['user_name']
+                    listen = (listen["user_name"], listen["listened_at"], listen["recording_msid"], listen["track_metadata"]["track_name"], json.dumps(listen["track_metadata"]))
                     listens.append(listen)
                     if len(listens) > IMPORT_CHUNK_SIZE:
                         listens_rdd = listens_rdd.union(sc.parallelize(listens))
@@ -66,16 +67,12 @@ def load_listenbrainz_dump(directory, sc):
     return users_rdd, listens_rdd
 
 
-def prepare_user_data():
-    """ Returns an RDD that is of the form (user_id, user_name)
+def prepare_recording_data(listens_rdd):
     """
-    raise NotImplementedError
-
-
-def prepare_recording_data():
-    """ Returns an RDD of the form (recording_id, recording_name)
+    Returns an RDD of the form (recording_id: (recording_msid, track_name))
     """
-    raise NotImplementedError
+    recordings_rdd = listens_rdd.map(lambda r: (r[2], r[3])).distinct().zipWithIndex().map(lambda r: (r[1], r[0]))
+    return recordings_rdd
 
 
 def prepare_listen_counts():
@@ -83,11 +80,13 @@ def prepare_listen_counts():
     """
     raise NotImplementedError
 
+
 def get_listen_counts_for_user(user_id):
     """ returns rdd for a user's recording play counts
     (user_id = specified user id, recording_id, play_count)
     """
     raise NotImplementedError
+
 
 if __name__ == '__main__':
     conf = SparkConf() \
@@ -97,3 +96,4 @@ if __name__ == '__main__':
 
     directory = sys.argv[1]
     users_rdd, listens_rdd = load_listenbrainz_dump(directory, sc)
+    recordings_rdd = prepare_recording_data(listens_rdd)
