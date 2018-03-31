@@ -137,15 +137,22 @@ if __name__ == "__main__":
 
 
     # make personalized recommendations
-
-    user_recording_ids = set([x[1] for x in user_playcounts])
-    candidates = sc.parallelize([m for m in movies if m not in user_recording_ids])
-    predictions = bestModel.predictAll(candidates.map(lambda x: (0, x))).collect()
+    print('Doing recommendations now...')
+    user_recording_ids = user_playcounts.values().map(lambda x: x[1])
+    print("Number of user recordings: %d" % user_recording_ids.count())
+    all_recording_ids = playcounts.values().map(lambda x: x[1]).distinct()
+    print("Number of recordings: %d" % all_recording_ids.count())
+    candidates = all_recording_ids.subtract(user_recording_ids)
+    print("Number of candidates: %d" % candidates.count())
+    current_user_id = user_playcounts.values().first()[0]
+    print('user id = %d' % current_user_id)
+    predictions = bestModel.predictAll(candidates.map(lambda x: (current_user_id, x))).collect()
     recommendations = sorted(predictions, key=lambda x: x[2], reverse=True)[:50]
 
-    print("Movies recommended for you:")
-    for i in xrange(len(recommendations)):
-        print("%2d: %s" % (i + 1, movies[recommendations[i][1]])).encode('ascii', 'ignore')
+    print("recordings recommended for you:")
+    for i in range(len(recommendations)):
+        print("%2d: %s " % (i + 1, recordings.lookup(recommendations[i][1])))
+
 
     # clean up
     sc.stop()
