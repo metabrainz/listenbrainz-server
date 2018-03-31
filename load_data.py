@@ -3,10 +3,16 @@ import os
 import sys
 from collections import defaultdict
 from pyspark import SparkConf, SparkContext
+from pyspark.sql import SparkSession, Row
 
 
 IMPORT_CHUNK_SIZE = 100000
-WRITE_RDDS_TO_DISK = False
+WRITE_RDDS_TO_DISK = True
+
+spark = SparkSession \
+        .builder \
+        .appName("LB recommender") \
+        .getOrCreate()
 
 
 def load_listenbrainz_dump(directory, sc):
@@ -18,8 +24,8 @@ def load_listenbrainz_dump(directory, sc):
         sc: The SparkContext object.
 
     Returns:
-        users_rdd: RDD containing user info (user_id, user_name).
-        listens_rdd: RDD containing ALL listens with user-names.
+        users_df: DataFrame containing user info (user_id, user_name).
+        listens_df: DataFrame containing ALL listens with user-names.
     """
     listens_rdd = sc.parallelize([])
     users = list()
@@ -32,7 +38,7 @@ def load_listenbrainz_dump(directory, sc):
             'offset': info['offset'],
             'size': info['size'],
         })
-        users.append((i, user))
+        users.append((i+1, user))
 
     users_rdd = sc.parallelize(users)
 
@@ -50,7 +56,6 @@ def load_listenbrainz_dump(directory, sc):
                     bytes_read += len(line)
                     listen = json.loads(line)
                     listen["user_name"] = user['user_name']
-                    listen = (listen["user_name"], listen["listened_at"], listen["recording_msid"], listen["track_metadata"]["track_name"], json.dumps(listen["track_metadata"]))
                     listens.append(listen)
                     if len(listens) > IMPORT_CHUNK_SIZE:
                         listens_rdd = listens_rdd.union(sc.parallelize(listens))
@@ -59,41 +64,69 @@ def load_listenbrainz_dump(directory, sc):
                         listens_rdd = listens_rdd.union(sc.parallelize(listens))
 
                 print('Import of user %s done!' % user['user_name'])
+
     if WRITE_RDDS_TO_DISK:
         users_rdd.saveAsTextFile(os.path.join('data', 'users_rdd'))
         listens_rdd.saveAsTextFile(os.path.join('data', 'listens_rdd'))
-    listens_rdd.persist()
-    users_rdd.persist()
-    return users_rdd, listens_rdd
+
+    listens_rdd = listens_rdd.map(lambda listen: Row(
+        listened_at=listen["listened_at"],
+        recording_msid=listen["recording_msid"],
+        track_name=listen["track_metadata"]["track_name"],
+        user_name=listen["user_name"],
+    ))
+
+    users_rdd = users_rdd.map(lambda user: Row(
+        user_id=user[0],
+        user_name=user[1],
+    ))
+
+    listens_df = spark.createDataFrame(listens_rdd)
+    users_df = spark.createDataFrame(users_rdd)
+    return users_df, listens_df
 
 
-def prepare_recording_data(listens_rdd):
+def prepare_recording_data(listens_df):
     """
     Returns an RDD of the form (recording_id: (recording_msid, track_name))
     """
-    recordings_rdd = listens_rdd.map(lambda r: (r[2], r[3])).distinct().zipWithIndex().map(lambda r: (r[1], r[0]))
-    return recordings_rdd
+    recordings_rdd = listens_df.rdd.map(lambda r: (r["recording_msid"], r["track_name"])).distinct().zipWithIndex()
+    recordings_rdd = recordings_rdd.map(lambda recording: Row(
+        recording_id = recording[1],
+        recording_msid = recording[0][0],
+        track_name = recording[0][1],
+    ))
+    recordings_df = spark.createDataFrame(recordings_rdd)
+    return recordings_df
 
 
-def prepare_listen_counts():
-    """ calculates ratings, returns rdd of the form (user_id, recording_id, play_count)
-    """
-    raise NotImplementedError
+def get_all_play_counts(listens_df, users_df, recordings_df):
 
-
-def get_listen_counts_for_user(user_id):
-    """ returns rdd for a user's recording play counts
-    (user_id = specified user id, recording_id, play_count)
-    """
-    raise NotImplementedError
+    listens_df.createOrReplaceTempView('listen')
+    users_df.createOrReplaceTempView('user')
+    recordings_df.createOrReplaceTempView('recording')
+    playcounts_df = spark.sql("""
+        SELECT user_id,
+               recording_id,
+               count(recording_id) as count
+          FROM listen
+    INNER JOIN user
+            ON listen.user_name = user.user_name
+    INNER JOIN recording
+            ON recording.recording_msid = listen.recording_msid
+      GROUP BY user_id, recording_id
+      ORDER BY user_id
+    """)
+    return playcounts_df
 
 
 if __name__ == '__main__':
     conf = SparkConf() \
       .setAppName("LB recommender") \
       .set("spark.executor.memory", "1g")
-    sc = SparkContext(conf=conf)
+    sc = spark.sparkContext
 
     directory = sys.argv[1]
-    users_rdd, listens_rdd = load_listenbrainz_dump(directory, sc)
-    recordings_rdd = prepare_recording_data(listens_rdd)
+    users_df, listens_df = load_listenbrainz_dump(directory, sc)
+    recordings_df = prepare_recording_data(listens_df)
+    playcounts_df = get_all_play_counts(listens_df, users_df, recordings_df)
