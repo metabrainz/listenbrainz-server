@@ -111,7 +111,7 @@ if __name__ == "__main__":
     bestNumIter = -1
 
     for rank, lmbda, numIter in itertools.product(ranks, lambdas, numIters):
-        model = ALS.train(training, rank, numIter, lmbda)
+        model = ALS.trainImplicit(training, rank, numIter, lmbda)
         validationRmse = compute_rmse(model, validation, numValidation)
         print("==== RMSE (validation) = %f for the model trained with " % validationRmse + \
               "rank = %d, lambda = %.1f, and numIter = %d." % (rank, lmbda, numIter))
