@@ -1,0 +1,29 @@
+{% extends 'user/base.html' %}
+
+
+{% block profile_content %}
+
+  <h3> Recommendations </h3>
+
+  <p>Click on the button below to generate a fresh music recommendation based on your listens!</p>
+  <div class="btn-container">
+    <button class="btn btn-info btn-lg" id="generate-recommendation">Generate Recommendation</button>
+
+    <div id="recommendation">
+      <div id="spinner">
+        <span class="fas fa-spinner fa-spin"></span>
+      </div>
+      <p id="status" class="small">Analyzing listen data…</p>
+      <div id="done">
+        <a>Click here to reveal our personal music recommendation for you</a>
+      </div>
+      <iframe id="video" width="720" height="405" src="https://www.youtube-nocookie.com/embed/Gc2u6AFImn8?enablejsapi=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js" integrity="sha384-SlE991lGASHoBfWbelyBPLsUlwY1GwNDJo3jSJO04KZ33K2bwfV9YBauFfnzvynJ" crossorigin="anonymous"></script>
+   <script src="{{ url_for('static', filename='js/recommendations.js') }}"></script>
+{% endblock %}
