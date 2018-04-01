@@ -16,7 +16,7 @@ def prepare_user_data(directory):
     """
     with open(os.path.join(directory, 'index.json')) as f:
         index = json.load(f)
-    users = [(i + 1, user) for i, user in enumerate(index)]
+    users = [(i, user) for i, user in enumerate(index)]
     users_rdd = sc.parallelize(users).map(lambda user: Row(
         user_id=user[0],
         user_name=user[1],
