@@ -112,9 +112,10 @@ if __name__ == "__main__":
     bestRank = 0
     bestLambda = -1.0
     bestNumIter = -1
-
+    alpha = 1.0 # controls baseline confidence growth
+    
     for rank, lmbda, numIter in itertools.product(ranks, lambdas, numIters):
-        model = ALS.trainImplicit(training, rank, numIter, lmbda)
+        model = ALS.trainImplicit(training, rank, iterations=numIter, lambda_=lmbda, alpha=alpha)
         validationRmse = compute_rmse(model, validation, numValidation)
         print("    RMSE (validation) = %f for the model trained with " % validationRmse + \
               "rank = %d, lambda = %.1f, and numIter = %d." % (rank, lmbda, numIter))
