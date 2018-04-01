@@ -69,23 +69,26 @@ if __name__ == "__main__":
     # set up environment
     conf = SparkConf() \
       .setAppName("LB recommender") \
-      .set("spark.executor.memory", "1g")
+      .set("spark.executor.memory", "29g")
     sc = SparkContext(conf=conf)
 
     # load personal playcounts
+    print("Load playcounts...")
     user_playcounts = sc.textFile(sys.argv[3]).map(parse_playcount)
     
     # playcounts is an RDD of (last digit of timestamp, (user_name, recording_id, play_count))
     playcounts = sc.textFile(sys.argv[1]).map(parse_playcount)
 
     # movies is an RDD of (movieId, movieTitle)
+    print("Load recording ids...")
     recordings = sc.textFile(sys.argv[2]).map(parse_recording)
 
+    print("Calculate statistics...")
     num_playcounts = playcounts.count()
     num_users = playcounts.values().map(lambda r: r[0]).distinct().count()
     num_recordings = playcounts.values().map(lambda r: r[1]).distinct().count()
 
-    print("==== Got %d playcounts from %d users on %d recordings." % (num_playcounts, num_users, num_recordings))
+    print("Loaded %d playcounts from %d users on %d recordings." % (num_playcounts, num_users, num_recordings))
 
     # split playcounts into train (60%), validation (20%), and test (20%) based on the 
     # last digit of the timestamp, add user_playcounts to train, and cache them
@@ -97,7 +100,7 @@ if __name__ == "__main__":
     numValidation = validation.count()
     num_test = test.count()
 
-    print("=== Training: %d, validation: %d, test: %d" % (numTraining, numValidation, num_test))
+    print("Training: %d, validation: %d, test: %d" % (numTraining, numValidation, num_test))
 
     # train models and evaluate them on the validation set
 
@@ -113,7 +116,7 @@ if __name__ == "__main__":
     for rank, lmbda, numIter in itertools.product(ranks, lambdas, numIters):
         model = ALS.trainImplicit(training, rank, numIter, lmbda)
         validationRmse = compute_rmse(model, validation, numValidation)
-        print("==== RMSE (validation) = %f for the model trained with " % validationRmse + \
+        print("    RMSE (validation) = %f for the model trained with " % validationRmse + \
               "rank = %d, lambda = %.1f, and numIter = %d." % (rank, lmbda, numIter))
         if (validationRmse < bestValidationRmse):
             bestModel = model
@@ -122,7 +125,6 @@ if __name__ == "__main__":
             bestLambda = lmbda
             bestNumIter = numIter
 
-    ###### NOT TESTED/DEBUGGED BELOW THIS
     test_rmse = compute_rmse(bestModel, test, num_test)
 
     # evaluate the best model on the test set
