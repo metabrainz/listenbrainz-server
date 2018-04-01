@@ -7,7 +7,7 @@ from pyspark.sql import SparkSession, Row
 
 
 IMPORT_CHUNK_SIZE = 100000
-WRITE_RDDS_TO_DISK = True
+WRITE_RDDS_TO_DISK = False
 
 spark = SparkSession \
         .builder \
