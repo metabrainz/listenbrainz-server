@@ -2,17 +2,12 @@ import json
 import os
 import sys
 from collections import defaultdict
-from pyspark import SparkConf, SparkContext
-from pyspark.sql import SparkSession, Row
-
+from pyspark import SparkConf
+from pyspark.sql import Row
+from setup import spark, sc
 
 IMPORT_CHUNK_SIZE = 100000
 WRITE_RDDS_TO_DISK = False
-
-spark = SparkSession \
-        .builder \
-        .appName("LB recommender") \
-        .getOrCreate()
 
 
 def load_listenbrainz_dump(directory, sc):
@@ -121,10 +116,6 @@ def get_all_play_counts(listens_df, users_df, recordings_df):
 
 
 if __name__ == '__main__':
-    conf = SparkConf() \
-      .setAppName("LB recommender") \
-      .set("spark.executor.memory", "1g")
-    sc = spark.sparkContext
 
     # dump_directory is the directory with uncompressed LB dump files
     # df_directory is the directory where it is planned to store dataframes
@@ -136,11 +127,7 @@ if __name__ == '__main__':
     playcounts_df = get_all_play_counts(listens_df, users_df, recordings_df)
 
     # persist all dfs
-    users_df.write.option("path", df_directory).saveAsTable('user')
-    listens_df.write.option("path", df_directory).saveAsTable('listen')
-    recordings_df.write.option("path", df_directory).saveAsTable('recording')
-    playcounts_df.write.option("path", df_directory).saveAsTable('playcount')
-
-    # Example code to read persistent tables into DataFrames
-    # listens_df_from_file = spark.table('listen')
-    # print(listens_df_from_file.count())
+    users_df.write.format("parquet").save(os.path.join(df_directory, "user.parquet"))
+    listens_df.write.format("parquet").save(os.path.join(df_directory, "listen.parquet"))
+    recordings_df.write.format("parquet").save(os.path.join(df_directory, "recording.parquet"))
+    playcounts_df.write.format("parquet").save(os.path.join(df_directory, "playcount.parquet"))
