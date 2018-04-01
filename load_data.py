@@ -126,7 +126,21 @@ if __name__ == '__main__':
       .set("spark.executor.memory", "1g")
     sc = spark.sparkContext
 
-    directory = sys.argv[1]
-    users_df, listens_df = load_listenbrainz_dump(directory, sc)
+    # dump_directory is the directory with uncompressed LB dump files
+    # df_directory is the directory where it is planned to store dataframes
+    dump_directory = sys.argv[1]
+    df_directory = sys.argv[2]
+
+    users_df, listens_df = load_listenbrainz_dump(dump_directory, sc)
     recordings_df = prepare_recording_data(listens_df)
     playcounts_df = get_all_play_counts(listens_df, users_df, recordings_df)
+
+    # persist all dfs
+    users_df.write.option("path", df_directory).saveAsTable('user')
+    listens_df.write.option("path", df_directory).saveAsTable('listen')
+    recordings_df.write.option("path", df_directory).saveAsTable('recording')
+    playcounts_df.write.option("path", df_directory).saveAsTable('playcount')
+
+    # Example code to read persistent tables into DataFrames
+    # listens_df_from_file = spark.table('listen')
+    # print(listens_df_from_file.count())
