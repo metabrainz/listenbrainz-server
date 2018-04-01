@@ -11,3 +11,9 @@ def load_listens_df(directory):
 
 def load_playcounts_df(directory):
     return load_df(directory, 'playcount')
+
+def load_users_df(directory):
+    return load_df(directory, 'user')
+
+def load_recordings_df(directory):
+    return load_df(directory, 'recording')
