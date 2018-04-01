@@ -1,72 +1,52 @@
+import ujson
 import json
 import os
 import sys
 from collections import defaultdict
-from pyspark import SparkConf, SparkContext
-from pyspark.sql import SparkSession, Row
-
+from pyspark import SparkConf
+from pyspark.sql import Row
+from setup import spark, sc
 
 IMPORT_CHUNK_SIZE = 100000
 WRITE_RDDS_TO_DISK = False
 
-spark = SparkSession \
-        .builder \
-        .appName("LB recommender") \
-        .getOrCreate()
+
+def prepare_user_data(directory):
+    """ Returns a dataframe with user data, columns are (user_id, user_name)
+    """
+    with open(os.path.join(directory, 'index.json')) as f:
+        index = json.load(f)
+    users = [(i, user) for i, user in enumerate(index)]
+    users_rdd = sc.parallelize(users).map(lambda user: Row(
+        user_id=user[0],
+        user_name=user[1],
+    ))
+    users_df = spark.createDataFrame(users_rdd)
+    return users_df
 
 
-def load_listenbrainz_dump(directory, sc):
+
+def load_listenbrainz_dump(directory):
     """
     Reads files from an uncompressed ListenBrainz dump and creates user and listens RDDs.
 
     Args:
         directory: Path of the directory containing the LB dump files.
-        sc: The SparkContext object.
 
     Returns:
-        users_df: DataFrame containing user info (user_id, user_name).
         listens_df: DataFrame containing ALL listens with user-names.
     """
+
     listens_rdd = sc.parallelize([])
     users = list()
     with open(os.path.join(directory, 'index.json')) as f:
         index = json.load(f)
-    file_contents = defaultdict(list)
-    for i, (user, info) in enumerate(index.items()):
-        file_contents[info['file_name']].append({
-            'user_name': user,
-            'offset': info['offset'],
-            'size': info['size'],
-        })
-        users.append((i+1, user))
-
-    users_rdd = sc.parallelize(users)
-
-    for file_name in file_contents:
-        file_contents[file_name] = sorted(file_contents[file_name], key=lambda x: x['offset'])
+    files = set([info['file_name'] for _, info in index.items()])
+    for file_name in files:
         file_path = os.path.join(directory, 'listens', file_name[0], file_name[0:2], '%s.listens' % file_name)
-        with open(file_path, 'r') as f:
-            for user in file_contents[file_name]:
-                print('Importing user %s...' % user['user_name'])
-                assert(f.tell() == user['offset'])
-                bytes_read = 0
-                listens = []
-                while bytes_read < user['size']:
-                    line = f.readline()
-                    bytes_read += len(line)
-                    listen = json.loads(line)
-                    listen["user_name"] = user['user_name']
-                    listens.append(listen)
-                    if len(listens) > IMPORT_CHUNK_SIZE:
-                        listens_rdd = listens_rdd.union(sc.parallelize(listens))
-                        listens = []
-                    if len(listens) > 0:
-                        listens_rdd = listens_rdd.union(sc.parallelize(listens))
-
-                print('Import of user %s done!' % user['user_name'])
+        listens_rdd = listens_rdd.union(sc.textFile(file_path).map(ujson.loads))
 
     if WRITE_RDDS_TO_DISK:
-        users_rdd.saveAsTextFile(os.path.join('data', 'users_rdd'))
         listens_rdd.saveAsTextFile(os.path.join('data', 'listens_rdd'))
 
     listens_rdd = listens_rdd.map(lambda listen: Row(
@@ -75,15 +55,8 @@ def load_listenbrainz_dump(directory, sc):
         track_name=listen["track_metadata"]["track_name"],
         user_name=listen["user_name"],
     ))
-
-    users_rdd = users_rdd.map(lambda user: Row(
-        user_id=user[0],
-        user_name=user[1],
-    ))
-
     listens_df = spark.createDataFrame(listens_rdd)
-    users_df = spark.createDataFrame(users_rdd)
-    return users_df, listens_df
+    return listens_df
 
 
 def prepare_recording_data(listens_df):
@@ -121,26 +94,19 @@ def get_all_play_counts(listens_df, users_df, recordings_df):
 
 
 if __name__ == '__main__':
-    conf = SparkConf() \
-      .setAppName("LB recommender") \
-      .set("spark.executor.memory", "1g")
-    sc = spark.sparkContext
 
     # dump_directory is the directory with uncompressed LB dump files
     # df_directory is the directory where it is planned to store dataframes
     dump_directory = sys.argv[1]
     df_directory = sys.argv[2]
 
-    users_df, listens_df = load_listenbrainz_dump(dump_directory, sc)
+    users_df = prepare_user_data(dump_directory)
+    listens_df = load_listenbrainz_dump(dump_directory)
     recordings_df = prepare_recording_data(listens_df)
     playcounts_df = get_all_play_counts(listens_df, users_df, recordings_df)
 
     # persist all dfs
-    users_df.write.option("path", df_directory).saveAsTable('user')
-    listens_df.write.option("path", df_directory).saveAsTable('listen')
-    recordings_df.write.option("path", df_directory).saveAsTable('recording')
-    playcounts_df.write.option("path", df_directory).saveAsTable('playcount')
-
-    # Example code to read persistent tables into DataFrames
-    # listens_df_from_file = spark.table('listen')
-    # print(listens_df_from_file.count())
+    users_df.write.format("parquet").save(os.path.join(df_directory, "user.parquet"))
+    listens_df.write.format("parquet").save(os.path.join(df_directory, "listen.parquet"))
+    recordings_df.write.format("parquet").save(os.path.join(df_directory, "recording.parquet"))
+    playcounts_df.write.format("parquet").save(os.path.join(df_directory, "playcount.parquet"))
