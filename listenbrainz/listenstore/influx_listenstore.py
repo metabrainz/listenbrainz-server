@@ -390,6 +390,7 @@ class InfluxListenStore(ListenStore):
             rows_added = 0
             for row in result.get_points(get_measurement_name(username)):
                 listen = Listen.from_influx(row).to_api()
+                listen['user_name'] = username
                 try:
                     bytes_written += fileobj.write(ujson.dumps(listen))
                     bytes_written += fileobj.write('\n')
