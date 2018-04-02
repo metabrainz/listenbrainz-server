@@ -173,24 +173,6 @@ def artists(user_name):
     )
 
 
-@user_bp.route("/<user_name>/recommendations")
-def recommendations(user_name):
-    """ Generate a random recommendation for the user.
-    """
-
-    try:
-        user = _get_user(user_name)
-    except DatabaseException as e:
-        current_app.logger.error('Error while getting top artist page for user %s: %s', user.musicbrainz_id, str(e))
-        raise
-
-    return render_template(
-        "user/recommendations.html",
-        user=user,
-        section='recommendations'
-    )
-
-
 def _get_user(user_name):
     """ Get current username """
     if current_user.is_authenticated() and \
