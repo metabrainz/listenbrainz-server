@@ -74,16 +74,16 @@ def init_test_db(force=False):
     db.init_db_engine(config.POSTGRES_ADMIN_URI)
     if force:
         exit_code = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'drop_test_db.sql'))
-        if not res:
+        if not exit_code:
             raise Exception('Failed to drop existing database and user! Exit code: %i' % exit_code)
 
     print('Creating database and user for testing...')
     exit_code = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_test_db.sql'))
-    if not res:
+    if not exit_code:
         raise Exception('Failed to create new database and user! Exit code: %i' % exit_code)
 
     exit_code = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'))
-    if not res:
+    if not exit_code:
         raise Exception('Failed to create database extensions! Exit code: %i' % exit_code)
 
     db.init_db_engine(config.TEST_SQLALCHEMY_DATABASE_URI)
