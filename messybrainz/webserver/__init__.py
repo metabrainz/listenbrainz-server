@@ -70,13 +70,7 @@ def create_app(debug=None, config_path=None):
     app.register_blueprint(index_bp)
     app.register_blueprint(api_bp)
 
-    @app.before_request
-    def before_request():
-        db.init_db_engine(app.config['SQLALCHEMY_DATABASE_URI'])
-
-    @app.teardown_request
-    def teardown_request(exception):
-        pass
+    db.init_db_engine(app.config['SQLALCHEMY_DATABASE_URI'])
 
     return app
 
