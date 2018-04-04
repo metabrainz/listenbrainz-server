@@ -242,6 +242,10 @@ class APITestCase(IntegrationTestCase):
         self.assertListEqual(sent_additional_info['work_mbids'], received_additional_info['work_mbids'])
         self.assertListEqual(sent_additional_info['artist_mbids'], received_additional_info['artist_mbids'])
 
+        self.assertNotIn('track_name', sent_additional_info)
+        self.assertNotIn('artist_name', sent_additional_info)
+        self.assertNotIn('release_name', sent_additional_info)
+
 
     def test_latest_import(self):
         """ Test for api.latest_import """
