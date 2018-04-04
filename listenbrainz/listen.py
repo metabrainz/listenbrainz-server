@@ -30,7 +30,7 @@ class Listen(object):
     """ Represents a listen object """
 
     # keys in additional_info that we support explicitly and are not superfluous
-    SUPPORTED_KEYS = [
+    SUPPORTED_KEYS = (
         'artist_mbids',
         'release_group_mbid',
         'release_mbid',
@@ -44,7 +44,15 @@ class Listen(object):
         'artist_msid',
         'release_msid',
         'recording_msid',
-    ]
+    )
+
+    TOP_LEVEL_KEYS = (
+        'time',
+        'user_name',
+        'artist_name',
+        'track_name',
+        'release_name',
+    )
 
     def __init__(self, user_id=None, user_name=None, timestamp=None, artist_msid=None, release_msid=None,
                  recording_msid=None, dedup_tag=0, data=None):
@@ -108,7 +116,6 @@ class Listen(object):
         data = {
             'release_msid': row.get('release_msid'),
             'release_mbid': row.get('release_mbid'),
-            'release_name': row.get('release_name'),
             'recording_mbid': row.get('recording_mbid'),
             'release_group_mbid': row.get('release_group_mbid'),
             'artist_mbids': convert_comma_seperated_string_to_list(row.get('artist_mbids', '')),
@@ -125,9 +132,7 @@ class Listen(object):
         # Also, we need to make sure that we don't add fields like time, user_name etc. into
         # the additional_info.
         for key, value in row.items():
-            if key not in data and \
-               key not in ['time', 'user_name', 'recording_msid', 'artist_mbids', 'tags'] and \
-               value is not None:
+            if key not in data and key not in Listen.TOP_LEVEL_KEYS and value is not None:
                 data[key] = value
 
         return cls(
