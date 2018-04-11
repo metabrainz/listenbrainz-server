@@ -100,13 +100,21 @@ if __name__ == '__main__':
     dump_directory = sys.argv[1]
     df_directory = sys.argv[2]
 
+    print("Preparing user data...")
     users_df = prepare_user_data(dump_directory)
+    print("Load data dump...")
     listens_df = load_listenbrainz_dump(dump_directory)
+    print("Prepare recording dump...")
     recordings_df = prepare_recording_data(listens_df)
+    print("Get playcounts...")
     playcounts_df = get_all_play_counts(listens_df, users_df, recordings_df)
 
     # persist all dfs
+    print("Persist users...")
     users_df.write.format("parquet").save(os.path.join(df_directory, "user.parquet"))
+    print("Persist listens...")
     listens_df.write.format("parquet").save(os.path.join(df_directory, "listen.parquet"))
+    print("Persist recordings...")
     recordings_df.write.format("parquet").save(os.path.join(df_directory, "recording.parquet"))
+    print("Persist playcounts...")
     playcounts_df.write.format("parquet").save(os.path.join(df_directory, "playcount.parquet"))

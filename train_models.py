@@ -37,7 +37,7 @@ def split_data(directory):
 
 def train(training_data, validation_data, num_validation, ranks, lambdas, iterations):
     best_model = None
-    alpha = 1.0 # controls baseline confidence growth
+    alpha = 3.0 # controls baseline confidence growth
 
     for rank, lmbda, iteration in itertools.product(ranks, lambdas, iterations):
         print('Training model with rank = %.2f, lambda = %.2f, iterations = %d...' % (rank, lmbda, iteration))
