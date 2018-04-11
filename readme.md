@@ -17,8 +17,9 @@ apt-get install default-jdk scala
 Install spark (download 2.3.0 tgz for hadoop and unzip in /usr/local/spark
 
 
-To run the script:
-==================
+To run the scripts:
+===================
 
-spark-submit --driver-memory 15g lb-recommendation.py data/listens_2017_playcounts.json listens_2017_recording_id.json user_playcounts_rob.json
+spark-submit --master spark://195.201.112.36:7077 --executor-memory=29g `pwd`/<script> <args>
 
+spark-submit --master spark://195.201.112.36:7077 --executor-memory=29g `pwd`/train_models.py df models
