@@ -1,7 +1,6 @@
 #!/bin/bash
 
 SRC=${BASH_SOURCE%/*}
-#source "$SRC/constants.sh"
 
 PG_HEALTH_CHECK_BINARY=$(readlink -f $SRC/../postgres-health-check/postgres-health-check)
 
@@ -152,21 +151,6 @@ END_HEREDOC
             -retry-join=$CONSUL_SERVER2 \
             -retry-join=$CONSUL_SERVER3 \
             -server
-}
-
-        --memory='8g' \
-        --memory-swap='16g' \
-        --name $CONTAINER_NAME \
-        --publish ${PORT_LIST[$DEPLOY_ENV.musicbrainz-website]}:5000 \
-        --restart unless-stopped \
-        --volume $STATIC_VOLUME_NAME:/home/musicbrainz/musicbrainz-server/root/static/build/ \
-        $OPTIONS \
-        metabrainz/musicbrainz-website:$BRANCH
-
-    add_ssh_private_key \
-        'rsync-staticbrainz-mb' \
-        'musicbrainz' \
-        "$CONTAINER_NAME"
 }
 
 start_registrator() {
