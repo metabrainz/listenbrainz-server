@@ -1,7 +1,8 @@
 #!/bin/sh
 
-if [ "$#" -ne 1 ]; then
-    echo "  Usage: setup-node.sh <master ip> <swarm token>"
+if [ "$#" -ne 2 ]; then
+    echo "Usage: setup-node.sh <master ip> <swarm token>"
+    exit
 fi
 
 MASTER_IP=$1
@@ -17,3 +18,5 @@ cd docker-helpers
 ./docker_install_xenial.sh
 
 docker swarm join --token $SWARM_TOKEN $MASTER_IP:2377
+
+reboot
