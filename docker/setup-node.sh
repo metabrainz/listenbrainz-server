@@ -1,5 +1,12 @@
 #!/bin/sh
 
+if [ "$#" -ne 1 ]; then
+    echo "  Usage: setup-node.sh <master ip> <swarm token>"
+fi
+
+MASTER_IP=$1
+SWARM_TOKEN=$2
+
 # Install docker, the MetaBrainz way
 apt-get update
 apt-get -y install \
@@ -8,3 +15,5 @@ apt-get -y install \
 git clone https://github.com/metabrainz/docker-helpers.git
 cd docker-helpers
 ./docker_install_xenial.sh
+
+docker swarm join --token $SWARM_TOKEN $MASTER_IP:2377
