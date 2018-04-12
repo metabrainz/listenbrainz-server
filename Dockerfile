@@ -14,4 +14,4 @@ RUN mkdir /rec
 WORKDIR /rec
 COPY . /rec
 
-CMD /usr/local/spark/sbin/start-slave.sh spark://rec-master.listenbrainz.org:7077
+CMD /rec/docker/worker-entry-script.py
