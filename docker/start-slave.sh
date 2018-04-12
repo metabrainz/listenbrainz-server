@@ -1,16 +1,7 @@
 #!/bin/sh
 
-if [ "$#" -ne 1 ]; then
-    echo "  Usage: start-node.sh <master ip>"
-fi
+echo "wait for $MASTER_IP to start."
 
-MASTER_IP=$1
+export SPARK_NO_DAEMONIZE=1
 
-# start the spark worker container
-docker pull metabrainz/spark-worker
-docker run \
-   --name spark-worker \
-   --restart=unless-stopped \
-   -d \
-   --env MASTER_IP="$MASTER_IP" \
-   metabrainz/spark-worker
+dockerize -wait tcp://${MASTER_IP}:7077 /usr/local/spark/sbin/start-slave.sh spark://${MASTER_IP}:7077

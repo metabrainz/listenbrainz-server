@@ -1,6 +1,5 @@
 FROM airdock/oracle-jdk:jdk-8u112
 
-
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     scala \
@@ -20,5 +19,4 @@ RUN mkdir /rec
 WORKDIR /rec
 COPY . /rec
 
-CMD ["sh", "-c", "dockerize", "-wait", "echo tcp://${MASTER_IP}:7077",
-    "/usr/local/spark/sbin/start-slave.sh", "echo spark://${MASTER_IP}:7077"]
+CMD /rec/docker/start-slave.sh
