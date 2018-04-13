@@ -8,14 +8,28 @@ fi
 MASTER_IP=$1
 SWARM_TOKEN=$2
 
-# Install docker, the MetaBrainz way
-apt-get update
-apt-get -y install \
-    apt-transport-https
+ufw --force enable
+ufw allow 22/tcp
+ufw allow 2377/tcp
+ufw allow 4789
+ufw allow 7946/udp
 
-git clone https://github.com/metabrainz/docker-helpers.git
-cd docker-helpers
-./docker_install_xenial.sh
+apt-get update
+apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    software-properties-common
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+
+apt-get update
+apt-get install -y docker-ce
+
 
 docker swarm join --token $SWARM_TOKEN $MASTER_IP:2377
 
