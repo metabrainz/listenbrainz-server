@@ -11,8 +11,8 @@ SWARM_TOKEN=$2
 ufw --force enable
 ufw allow 22/tcp
 ufw allow 2377/tcp
-ufw allow 4789
-ufw allow 7946/udp
+ufw allow 4789/udp
+ufw allow 7946
 
 apt-get update
 apt-get install -y \

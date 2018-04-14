@@ -4,7 +4,8 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     scala \
     wget \
-    net-tools
+    net-tools \
+    dnsutils
 
 RUN cd /usr/local && \
     wget http://apache.rediris.es/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz && \
