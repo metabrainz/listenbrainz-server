@@ -20,4 +20,4 @@ RUN mkdir /rec
 WORKDIR /rec
 COPY . /rec
 
-CMD /rec/docker/start-slave.sh
+CMD dockerize -wait tcp://spark-master:7077 -timeout 9999s /usr/local/spark/sbin/start-slave.sh spark://spark-master:7077

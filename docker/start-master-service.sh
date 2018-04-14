@@ -11,4 +11,5 @@ docker service create --replicas 1 \
     -p 7077:7077 \
     -p 6066:6066 \
     -p 8080:8080 \
+    --env SPARK_NO_DAEMONIZE=1 \
     metabrainz/spark-master
