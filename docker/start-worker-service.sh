@@ -11,5 +11,5 @@ docker service create \
     --replicas $REPLICAS \
     --name spark-workers \
     --network spark-network \
-    --env MASTER_IP=195.201.112.36 \
+    --env SPARK_NO_DAEMONIZE=1 \
     metabrainz/spark-worker

@@ -15,4 +15,4 @@ RUN mkdir /rec
 WORKDIR /rec
 COPY . /rec
 
-CMD /rec/docker/start-master.sh
+CMD /usr/local/spark/sbin/start-master.sh
