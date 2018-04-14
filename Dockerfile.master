@@ -3,7 +3,8 @@ FROM airdock/oracle-jdk:jdk-8u112
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     scala \
-    wget
+    wget \
+    net-tools
 
 RUN cd /usr/local && \
     wget http://apache.rediris.es/spark/spark-2.3.0/spark-2.3.0-bin-hadoop2.7.tgz && \
