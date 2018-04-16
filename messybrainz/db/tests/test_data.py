@@ -27,12 +27,18 @@ recording = {
     'artist': 'Frank Ocean',
     'release': 'Blond',
     'title': 'Pretty Sweet',
+    'additional_info': {
+        'key1': 'Value1',
+    },
 }
 
 recording_diff_case = {
     'artist': 'FRANK OCEAN',
     'release': 'BLoNd',
     'title': 'PReTtY SWEET',
+    'additional_info': {
+        'key1': 'VaLue1',
+    },
 }
 
 class DataTestCase(DatabaseTestCase):
@@ -92,9 +98,11 @@ class DataTestCase(DatabaseTestCase):
 
     def test_convert_to_messybrainz_json(self):
         transformed_json = data.convert_to_messybrainz_json(recording, transform=True)
-        self.assertEqual(json.loads(transformed_json)['artist'], recording['artist'].lower())
-        self.assertEqual(json.loads(transformed_json)['release'], recording['release'].lower())
-        self.assertEqual(json.loads(transformed_json)['title'], recording['title'].lower())
+        result = json.loads(transformed_json)
+        self.assertEqual(result['artist'], recording['artist'].lower())
+        self.assertEqual(result['release'], recording['release'].lower())
+        self.assertEqual(result['title'], recording['title'].lower())
+        self.assertEqual(result['additional_info']['key1'], recording['additional_info']['key1'].lower())
 
         non_transformed_json = data.convert_to_messybrainz_json(recording, transform=False)
         self.assertDictEqual(json.loads(non_transformed_json), recording)
