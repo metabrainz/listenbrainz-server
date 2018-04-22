@@ -119,13 +119,13 @@ class BigQueryWriter(ListenWriter):
             listens (list): a list of listens
             Each listen must be of the following format:
                 {
-                    'user_name': MusicBrainz ID of the user
-                    'listened_at': unix timestamp of the listen
+                    'user_name': MusicBrainz ID of the user,
+                    'listened_at': unix timestamp of the listen,
+                    'recording_msid': the MessyBrainz ID of the recording,
                     'track_metadata': {
                         'artist_msid': MessyBrainz ID of the artist,
                         'artist_name': Name of the artist,
                         'track_name': the name of the track,
-                        'recording_msid': the MessyBrainz ID of the recording,
                     }
                 }
 
