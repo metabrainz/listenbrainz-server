@@ -121,7 +121,6 @@ def push_to_bigquery(listens, table_name):
     Returns:
         int: the number of listens pushed to Google BigQuery
     """
-    print('Pushing %d listens to table %s' % (len(listens), table_name))
     payload = {
         'rows': BigQueryWriter().convert_to_bigquery_payload(listens)
     }
@@ -154,9 +153,10 @@ def push_listens(user_name, table_name, start_year, end_year):
     Returns:
         int: the number of listens pushed to Google BigQuery
     """
-    print('Pushing listens to table %s for user %s' % (table_name, user_name))
     offset = 0
     count = 0
+    job_start_time = time.time()
+    t0 = job_start_time
     while True:
         listens = get_listens_batch(
             user_name,
@@ -168,6 +168,13 @@ def push_listens(user_name, table_name, start_year, end_year):
             break
         count += push_to_bigquery(listens, table_name)
         offset += CHUNK_SIZE
+        if time.time() - t0 > 5:
+            print('User %s - table %s: %d listens done ' % (user_name, table_name, count))
+            t0 = time.time()
+
+    if count > 0:
+        print('Total of %d listens pushed for user %s in table %s in %.2f secs (%.2f listens/sec)' % (
+            count, user_name, table_name, time.time() - job_start_time, count / (time.time() - job_start_time)))
     return count
 
 
@@ -230,12 +237,18 @@ def main():
     init_influx_connection()
     init_bigquery_connection()
     create_all_tables()
-    count = 0
-    for user in db_user.get_all_users():
-        count += push_listens(user['musicbrainz_id'], 'before_2002', start_year=1970, end_year=2002)
+    users = db_user.get_all_users()
+    listen_count = 0
+    user_count = 0
+    for user in users:
+        print('Begin pushing listens for user %s...' % user['musicbrainz_id'])
+        listen_count += push_listens(user['musicbrainz_id'], 'before_2002', start_year=1970, end_year=2002)
         for year in range(2002, 2019):
-            count += push_listens(user['musicbrainz_id'], table_name=str(year), start_year=year, end_year=year+1)
-    print('A total of %d listens restreamed to Google BigQuery' % count)
+            listen_count += push_listens(user['musicbrainz_id'], table_name=str(year), start_year=year, end_year=year+1)
+        user_count += 1
+        print('Listens of %d users pushed, %d users remain...' % (user_count, len(users) - user_count))
+        print('%d listens pushed to Google BigQuery!' % listen_count)
+    print('A total of %d listens restreamed to Google BigQuery' % listen_count)
 
 
 if __name__ == '__main__':
