@@ -1,19 +1,25 @@
+""" This script takes all listens in the ListenBrainz influx database and
+submits them to Google BigQuery.
 """
-basic idea is do as much stuff as possible in influx
 
-1. create tables dynamically
-2. for each user:
-        get listens of each year in influx query
-        submit them in batches
+# listenbrainz-server - Server for the ListenBrainz project
+#
+# Copyright (C) 2018 MetaBrainz Foundation Inc.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-
-need to think about table names
-
-last.fm started in 2002, so don't need tables before that, put everything
-earlier than that into a bad_data table
-
-
-"""
 import json
 import listenbrainz.config as config
 import listenbrainz.db as db
@@ -32,14 +38,13 @@ from listenbrainz.listen import Listen
 
 CHUNK_SIZE = 1000
 
-total_listens_pushed = 0
-
-
 influx = None
 bigquery = None
 
 
 def init_influx_connection():
+    """ Initializes the connection to the Influx database.
+    """
     global influx
     influx = InfluxDBClient(
         host=config.INFLUX_HOST,
@@ -49,18 +54,32 @@ def init_influx_connection():
 
 
 def init_bigquery_connection():
-    """ Initiates the connection to Google BigQuery """
+    """ Initiates the connection to Google BigQuery.
+    """
     global bigquery
     bigquery = create_bigquery_object()
 
 
 def convert_to_influx_timestamp(year):
+    """ Returns the timestamp for the first second of the specified year in
+    the format that influx accepts.
+    """
     ts = datetime(year, 1, 1, 0, 0, 0).strftime('%s')
     return utils.get_influx_query_timestamp(ts)
 
 
 def get_listens_batch(user_name, start_year, end_year, offset=0):
-    print('%s - %d - %d - %d' % (user_name, start_year, end_year, offset))
+    """ Get a batch of listens for the specified user.
+
+    Args:
+        user_name (str): the MusicBrainz ID of the user
+        start_year (int): the first year in the time range for which listens are to be returned
+        end_year (int): the last year in the time range (exclusive)
+        offset (int): the offset used to identify which batch of listens to return
+
+    Returns:
+        a list of listens in ListenBrainz API format
+    """
     condition = 'time >= %s AND time < %s' % (convert_to_influx_timestamp(start_year), convert_to_influx_timestamp(end_year))
     query = """SELECT *
                  FROM {measurement_name}
@@ -80,7 +99,7 @@ def get_listens_batch(user_name, start_year, end_year, offset=0):
             result = influx.query(query)
             break
         except Exception as e:
-            #TODO: add logs
+            print('Error while getting listens from influx: %s' % str(e))
             time.sleep(3)
 
     listens = []
@@ -93,6 +112,15 @@ def get_listens_batch(user_name, start_year, end_year, offset=0):
 
 
 def push_to_bigquery(listens, table_name):
+    """ Push a list of listens to the specified table in Google BigQuery
+
+    Args:
+        listens: the list of listens to be pushed to Google BigQuery
+        table_name: the name of the table in which listens are to be inserted
+
+    Returns:
+        int: the number of listens pushed to Google BigQuery
+    """
     print('Pushing %d listens to table %s' % (len(listens), table_name))
     payload = {
         'rows': BigQueryWriter().convert_to_bigquery_payload(listens)
@@ -114,7 +142,18 @@ def push_to_bigquery(listens, table_name):
     return len(listens)
 
 
-def push_listens(user_name, table_name, start_year=None, end_year=None):
+def push_listens(user_name, table_name, start_year, end_year):
+    """ Push all listens in a particular time range to the specified table in Google BigQuery
+
+    Args:
+        user_name (str): the MusicBrainz ID of the user
+        table_name (str): the name of the table into which listens are to be inserted
+        start_year (int): the beginning year of the time range (inclusive)
+        end_year (int): the end year of the time range (exclusive)
+
+    Returns:
+        int: the number of listens pushed to Google BigQuery
+    """
     print('Pushing listens to table %s for user %s' % (table_name, user_name))
     offset = 0
     count = 0
@@ -133,13 +172,16 @@ def push_listens(user_name, table_name, start_year=None, end_year=None):
 
 
 def load_fields():
+    """ Returns the fields in the ListenBrainz Google BigQuery schema
+    """
     schema_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'admin', 'bigquery')
     with open(os.path.join(schema_dir, 'listen-schema.json')) as f:
         return json.load(f)
 
 
 def create_table(table_name):
-    print('Trying to create table %s' % table_name)
+    """ Create a table with specified name in Google BigQuery.
+    """
     try:
         result = bigquery.tables().get(
             projectId=config.BIGQUERY_PROJECT_ID,
@@ -174,7 +216,11 @@ def create_table(table_name):
 
 
 def create_all_tables():
-    create_table('before_2002')
+    """ Create all Google BigQuery tables.
+
+    Note: This function does nothing if tables are already present in the dataset
+    """
+    create_table('before_2002') # extra table for listens before Last.FM (should be bad data)
     for year in range(2002, 2019):
         create_table(str(year))
 
