@@ -186,7 +186,7 @@ def load_fields():
         return json.load(f)
 
 
-def create_table(table_name):
+def create_table(table_name, reset=True):
     """ Create a table with specified name in Google BigQuery.
     """
     try:
@@ -196,8 +196,16 @@ def create_table(table_name):
             tableId=table_name,
         ).execute(num_retries=5)
         if 'creationTime' in result:
-            print('Table %s already present and created in BigQuery, returning...' % table_name)
-            return
+            print('Table %s already present in BigQuery...' % table_name)
+            if reset:
+                print('Deleting table...')
+                bigquery.tables().delete(
+                    projectId=config.BIGQUERY_PROJECT_ID,
+                    datasetId=config.BIGQUERY_DATASET_ID,
+                    tableId=table_name,
+                ).execute(num_retries=5)
+            else:
+                return
     except HttpError as e:
         if e.resp.status != 404:
             print('Error while getting information for table %s...' % table_name)
@@ -222,21 +230,21 @@ def create_table(table_name):
     print('Table %s created!' % table_name)
 
 
-def create_all_tables():
+def create_all_tables(reset=True):
     """ Create all Google BigQuery tables.
 
     Note: This function does nothing if tables are already present in the dataset
     """
-    create_table('before_2002') # extra table for listens before Last.FM (should be bad data)
+    create_table('before_2002', reset=reset) # extra table for listens before Last.FM (should be bad data)
     for year in range(2002, 2019):
-        create_table(str(year))
+        create_table(str(year), reset=reset)
 
 
 def main():
     db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
     init_influx_connection()
     init_bigquery_connection()
-    create_all_tables()
+    create_all_tables(reset=True)
     users = db_user.get_all_users()
     listen_count = 0
     user_count = 0
