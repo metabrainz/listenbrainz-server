@@ -13,8 +13,11 @@ from listenbrainz.utils import safely_import_config
 
 safely_import_config()
 
+from collections import defaultdict
+from datetime import datetime
 from googleapiclient import discovery
 from googleapiclient.errors import HttpError
+from listenbrainz import LAST_FM_FOUNDING_YEAR, INVALID_LISTENS_BIGQUERY_TABLE_NAME
 from listenbrainz.listen_writer import ListenWriter
 from listenbrainz.bigquery import create_bigquery_object
 from listenbrainz.bigquery import NoCredentialsVariableException, NoCredentialsFileException
@@ -62,26 +65,29 @@ class BigQueryWriter(ListenWriter):
 
         t0 = time()
 
-        # convert the data to BQ format and send
-        body = {
-            'rows': self.bq_data,
-        }
-        while True:
-            try:
-                ret = self.bigquery.tabledata().insertAll(
-                    projectId=self.config.BIGQUERY_PROJECT_ID,
-                    datasetId=self.config.BIGQUERY_DATASET_ID,
-                    tableId=self.config.BIGQUERY_TABLE_ID,
-                    body=body).execute(num_retries=5)
-                break
-            except HttpError as e:
-                self.log.error("Submit to BigQuery failed: %s. Retrying in 3 seconds." % str(e))
-            except Exception as e:
-                self.log.error("Unknown exception on submit to BigQuery failed: %s. Retrying in 3 seconds." % str(e))
-                if self.DUMP_JSON_WITH_ERRORS:
-                    self.log.error(json.dumps(body, indent=3))
+        payloads = self.group_rows_by_table(self.bq_data)
 
-            sleep(self.ERROR_RETRY_DELAY)
+        # for each table, convert to bigquery payload format and submit
+        for table, data in payloads.items():
+            body = {
+                'rows': data,
+            }
+            while True:
+                try:
+                    ret = self.bigquery.tabledata().insertAll(
+                        projectId=self.config.BIGQUERY_PROJECT_ID,
+                        datasetId=self.config.BIGQUERY_DATASET_ID,
+                        tableId=table,
+                        body=body).execute(num_retries=5)
+                    break
+                except HttpError as e:
+                    self.log.error("Submit to BigQuery failed: %s. Retrying in 3 seconds." % str(e))
+                except Exception as e:
+                    self.log.error("Unknown exception on submit to BigQuery failed: %s. Retrying in 3 seconds." % str(e))
+                    if self.DUMP_JSON_WITH_ERRORS:
+                        self.log.error(json.dumps(body, indent=3))
+
+                sleep(self.ERROR_RETRY_DELAY)
 
 
         # now that data has been sent, acknowledge all delivery tags for listens in
@@ -110,6 +116,33 @@ class BigQueryWriter(ListenWriter):
         # reset back to normal
         self.bq_data = []
         self.delivery_tags = []
+
+
+    def group_rows_by_table(self, rows):
+        """ Groups rows to be sent to Google BigQuery by the table into which
+        they're supposed to be written.
+
+        Args:
+            rows: a list of rows to be sent to BigQuery, should be of the form
+                  {
+                    'json': {
+                        'listened_at': <ts>
+                    },
+                    'insertId': the unique insertId of the listen,
+                  }
+
+        Returns:
+            a defaultdict object keyed by table name containing a list of rows
+            for each table name
+        """
+        payloads = defaultdict(list)
+        for row in rows:
+            year = datetime.fromtimestamp(row['json']['listened_at']).year
+            if year < LAST_FM_FOUNDING_YEAR: # last.fm was founded in 2002, all listens before that are invalid
+                payloads[INVALID_LISTENS_BIGQUERY_TABLE_NAME].append(row)
+            else:
+                payloads[str(year)].append(row)
+        return payloads
 
 
     def convert_to_bigquery_payload(self, listens):
