@@ -71,7 +71,12 @@ def create(location, threads):
     create_path(dump_path)
     db_dump.dump_postgres_db(dump_path, time_now, threads)
     ls.dump_listens(dump_path, time_now, threads)
-    write_hashes(dump_path)
+    try:
+        write_hashes(dump_path)
+    except IOError as e:
+        print('Unable to create hash files! Error: %s' % str(e))
+        return
+    print('Dumps created and hashes written at %s' % dump_path)
 
 
 @cli.command()
