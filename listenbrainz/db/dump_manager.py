@@ -26,6 +26,7 @@ import logging
 import os
 import re
 import shutil
+import subprocess
 import sys
 
 from datetime import datetime
@@ -70,6 +71,12 @@ def create(location, threads):
     create_path(dump_path)
     db_dump.dump_postgres_db(dump_path, time_now, threads)
     ls.dump_listens(dump_path, time_now, threads)
+    try:
+        write_hashes(dump_path)
+    except IOError as e:
+        log.error('Unable to create hash files! Error: %s', str(e))
+        return
+    log.info('Dumps created and hashes written at %s' % dump_path)
 
 
 @cli.command()
@@ -160,3 +167,22 @@ def _cleanup_dumps(location):
 
     print('Deleted %d old exports, kept %d exports!' % (remove_count, keep_count))
     return keep_count, remove_count
+
+
+def write_hashes(location):
+    """ Create hash files for each file in the given dump location
+
+    Args:
+        location (str): the path in which the dump archive files are present
+    """
+    for file in os.listdir(location):
+        try:
+            with open(os.path.join(location, '{}.md5'.format(file)), 'w') as f:
+                md5sum = subprocess.check_output(['md5sum', os.path.join(location, file)]).decode('utf-8').split()[0]
+                f.write(md5sum)
+            with open(os.path.join(location, '{}.sha256'.format(file)), 'w') as f:
+                sha256sum = subprocess.check_output(['sha256sum', os.path.join(location, file)]).decode('utf-8').split()[0]
+                f.write(sha256sum)
+        except IOError as e:
+            log.error('IOError while trying to write hash files for file %s: %s', file, str(e))
+            raise
