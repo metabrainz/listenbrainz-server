@@ -534,6 +534,7 @@ class InfluxListenStore(ListenStore):
 
             pxz.stdin.close()
 
+        pxz.wait()
         self.log.info('ListenBrainz listen dump done!')
         self.log.info('Dump present at %s!', archive_path)
         return archive_path
