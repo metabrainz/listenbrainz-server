@@ -165,7 +165,7 @@ def _cleanup_dumps(location):
 
 
 def write_hashes(location):
-    """ Create MD5 hash files for each file in the given dump location
+    """ Create hash files for each file in the given dump location
 
     Args:
         location (str): the path in which the dump archive files are present
