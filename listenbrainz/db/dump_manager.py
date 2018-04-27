@@ -26,6 +26,7 @@ import logging
 import os
 import re
 import shutil
+import subprocess
 import sys
 
 from datetime import datetime
@@ -70,6 +71,7 @@ def create(location, threads):
     create_path(dump_path)
     db_dump.dump_postgres_db(dump_path, time_now, threads)
     ls.dump_listens(dump_path, time_now, threads)
+    write_hashes(dump_path)
 
 
 @cli.command()
@@ -160,3 +162,15 @@ def _cleanup_dumps(location):
 
     print('Deleted %d old exports, kept %d exports!' % (remove_count, keep_count))
     return keep_count, remove_count
+
+
+def write_hashes(location):
+    """ Create MD5 hash files for each file in the given dump location
+
+    Args:
+        location (str): the path in which the dump archive files are present
+    """
+    for file in os.listdir(location):
+        with open(os.path.join(location, '{}.md5'.format(file)), 'w') as f:
+            md5sum = subprocess.check_output(['md5sum', os.path.join(location, file)]).decode('utf-8').split()[0]
+            f.write(md5sum)
