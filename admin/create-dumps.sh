@@ -91,10 +91,14 @@ PUBLIC_DUMP_RULE=`printf "include listenbrainz-public-dump-%s.tar.xz" $DUMP_TIME
 echo "$PUBLIC_DUMP_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
 PUBLIC_DUMP_MD5_RULE=`printf "include listenbrainz-public-dump-%s.tar.xz.md5" $DUMP_TIMESTAMP`
 echo "$PUBLIC_DUMP_MD5_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
+PUBLIC_DUMP_SHA256_RULE=`printf "include listenbrainz-public-dump-%s.tar.xz.sha256" $DUMP_TIMESTAMP`
+echo "$PUBLIC_DUMP_SHA256_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
 LISTENS_DUMP_RULE=`printf "include listenbrainz-listens-dump-%s.tar.xz" $DUMP_TIMESTAMP`
 echo "$LISTENS_DUMP_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
 LISTENS_DUMP_MD5_RULE=`printf "include listenbrainz-listens-dump-%s.tar.xz.md5" $DUMP_TIMESTAMP`
 echo "$LISTENS_DUMP_MD5_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
+LISTENS_DUMP_SHA256_RULE=`printf "include listenbrainz-listens-dump-%s.tar.xz.sha256" $DUMP_TIMESTAMP`
+echo "$LISTENS_DUMP_SHA256_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
 EXCLUDE_RULE="exclude *"
 echo "$EXCLUDE_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
 

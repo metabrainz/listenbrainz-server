@@ -174,3 +174,6 @@ def write_hashes(location):
         with open(os.path.join(location, '{}.md5'.format(file)), 'w') as f:
             md5sum = subprocess.check_output(['md5sum', os.path.join(location, file)]).decode('utf-8').split()[0]
             f.write(md5sum)
+        with open(os.path.join(location, '{}.sha256'.format(file)), 'w') as f:
+            sha256sum = subprocess.check_output(['sha256sum', os.path.join(location, file)]).decode('utf-8').split()[0]
+            f.write(sha256sum)
