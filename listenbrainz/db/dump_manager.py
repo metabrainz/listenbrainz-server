@@ -74,9 +74,9 @@ def create(location, threads):
     try:
         write_hashes(dump_path)
     except IOError as e:
-        print('Unable to create hash files! Error: %s' % str(e))
+        log.error('Unable to create hash files! Error: %s', str(e))
         return
-    print('Dumps created and hashes written at %s' % dump_path)
+    log.info('Dumps created and hashes written at %s' % dump_path)
 
 
 @cli.command()
@@ -184,5 +184,5 @@ def write_hashes(location):
                 sha256sum = subprocess.check_output(['sha256sum', os.path.join(location, file)]).decode('utf-8').split()[0]
                 f.write(sha256sum)
         except IOError as e:
-            print('IOError while trying to write hash files for file %s: %s' % (file, str(e)))
+            log.error('IOError while trying to write hash files for file %s: %s', file, str(e))
             raise
