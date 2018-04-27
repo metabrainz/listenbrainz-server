@@ -171,9 +171,13 @@ def write_hashes(location):
         location (str): the path in which the dump archive files are present
     """
     for file in os.listdir(location):
-        with open(os.path.join(location, '{}.md5'.format(file)), 'w') as f:
-            md5sum = subprocess.check_output(['md5sum', os.path.join(location, file)]).decode('utf-8').split()[0]
-            f.write(md5sum)
-        with open(os.path.join(location, '{}.sha256'.format(file)), 'w') as f:
-            sha256sum = subprocess.check_output(['sha256sum', os.path.join(location, file)]).decode('utf-8').split()[0]
-            f.write(sha256sum)
+        try:
+            with open(os.path.join(location, '{}.md5'.format(file)), 'w') as f:
+                md5sum = subprocess.check_output(['md5sum', os.path.join(location, file)]).decode('utf-8').split()[0]
+                f.write(md5sum)
+            with open(os.path.join(location, '{}.sha256'.format(file)), 'w') as f:
+                sha256sum = subprocess.check_output(['sha256sum', os.path.join(location, file)]).decode('utf-8').split()[0]
+                f.write(sha256sum)
+        except IOError as e:
+            print('IOError while trying to write hash files for file %s: %s' % (file, str(e)))
+            raise
