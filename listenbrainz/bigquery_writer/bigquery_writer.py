@@ -19,7 +19,7 @@ from googleapiclient import discovery
 from googleapiclient.errors import HttpError
 from listenbrainz import LAST_FM_FOUNDING_YEAR, INVALID_LISTENS_BIGQUERY_TABLE_NAME
 from listenbrainz.listen_writer import ListenWriter
-from listenbrainz.bigquery import create_bigquery_object
+from listenbrainz.bigquery import create_bigquery_object, create_bigquery_table, get_list_of_tables
 from listenbrainz.bigquery import NoCredentialsVariableException, NoCredentialsFileException
 from oauth2client.client import GoogleCredentials
 from redis import Redis
@@ -69,6 +69,14 @@ class BigQueryWriter(ListenWriter):
 
         # for each table, convert to bigquery payload format and submit
         for table, data in payloads.items():
+
+            # if table not already created in BQ, create it
+            if table not in self.table_names:
+                self.log.info('Creating table %s...', table)
+                create_bigquery_table(self.bigquery, table, force=True)
+                self.log.info('Table %s created!', table)
+                self.table_names[table] = 1
+
             body = {
                 'rows': data,
             }
@@ -250,6 +258,13 @@ class BigQueryWriter(ListenWriter):
         except (NoCredentialsFileException, NoCredentialsVariableException):
             self.log.error("Credential File not present or invalid! Sleeping...")
             sleep(1000)
+
+        self.table_names = get_list_of_tables(
+            self.bigquery,
+            project_id=self.config.BIGQUERY_PROJECT_ID,
+            dataset_id=self.config.BIGQUERY_DATASET_ID,
+            log=self.log.error,
+        )
 
         while True:
             try:

@@ -244,6 +244,36 @@ def create_bigquery_table(bigquery, table_name, force=False):
     print('Table %s created!' % table_name)
 
 
+def get_list_of_tables(bigquery, project_id, dataset_id, log=print):
+    """ Returns all table names present in specified BigQuery dataset.
+
+    Args:
+        bigquery: bigquery object created via listenbrainz.bigquery.create_bigquery_object
+        project_id (str): the name of the BigQuery project
+        dataset_id (str): the name of the BigQuery dataset
+        log: the function to use to log errors
+
+    Returns:
+        A dict containing each table present in the dataset as a key
+        (using dict for fast lookup)
+    """
+    try:
+        data = bigquery.tables().list(
+            projectId=project_id,
+            datasetId=dataset_id,
+        ).execute(num_retries=5)
+    except HttpError as e:
+        log('Error while retrieving table names from bigquery: %s' % str(e))
+        raise
+
+    table_names = {}
+    for table in data['tables']:
+        table_name = table['tableReference']['tableId']
+        table_names[table_name] = 1
+
+    return table_names
+
+
 # Exceptions
 class BigQueryException(Exception):
     pass
