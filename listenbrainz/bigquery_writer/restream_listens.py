@@ -178,73 +178,10 @@ def push_listens(user_name, table_name, start_year, end_year):
     return count
 
 
-def load_fields():
-    """ Returns the fields in the ListenBrainz Google BigQuery schema
-    """
-    schema_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'admin', 'bigquery')
-    with open(os.path.join(schema_dir, 'listen-schema.json')) as f:
-        return json.load(f)
-
-
-def create_table(table_name, reset=True):
-    """ Create a table with specified name in Google BigQuery.
-    """
-    try:
-        result = bigquery.tables().get(
-            projectId=config.BIGQUERY_PROJECT_ID,
-            datasetId=config.BIGQUERY_DATASET_ID,
-            tableId=table_name,
-        ).execute(num_retries=5)
-        if 'creationTime' in result:
-            print('Table %s already present in BigQuery...' % table_name)
-            if reset:
-                print('Deleting table...')
-                bigquery.tables().delete(
-                    projectId=config.BIGQUERY_PROJECT_ID,
-                    datasetId=config.BIGQUERY_DATASET_ID,
-                    tableId=table_name,
-                ).execute(num_retries=5)
-            else:
-                return
-    except HttpError as e:
-        if e.resp.status != 404:
-            print('Error while getting information for table %s...' % table_name)
-            raise
-
-    creation_request_body = {
-        'tableReference': {
-            'projectId': config.BIGQUERY_PROJECT_ID,
-            'datasetId': config.BIGQUERY_DATASET_ID,
-            'tableId': table_name,
-        },
-        'schema': {
-            'fields': load_fields()
-        },
-    }
-
-    response = bigquery.tables().insert(
-        projectId=config.BIGQUERY_PROJECT_ID,
-        datasetId=config.BIGQUERY_DATASET_ID,
-        body=creation_request_body,
-    ).execute(num_retries=5)
-    print('Table %s created!' % table_name)
-
-
-def create_all_tables(reset=True):
-    """ Create all Google BigQuery tables.
-
-    Note: This function does nothing if tables are already present in the dataset
-    """
-    create_table('before_2002', reset=reset) # extra table for listens before Last.FM (should be bad data)
-    for year in range(2002, 2019):
-        create_table(str(year), reset=reset)
-
-
 def main():
     db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
     init_influx_connection()
     init_bigquery_connection()
-    create_all_tables(reset=True)
     users = db_user.get_all_users()
     listen_count = 0
     user_count = 0
