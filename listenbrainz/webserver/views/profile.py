@@ -99,7 +99,9 @@ def import_data():
     """ Displays the import page to user, giving various options """
 
     # Return error if LASTFM_API_KEY is not given in config.py
-    if 'LASTFM_API_KEY' not in current_app.config or current_app.config['LASTFM_API_KEY'] == "":
+    if 'LASTFM_API_KEY' not in current_app.config or \
+        current_app.config['LASTFM_API_KEY'] == "" or \
+        current_app.config['LASTFM_API_KEY'] == "USE_LASTFM_API_KEY":
         return NotFound("LASTFM_API_KEY not specified.")
 
     return render_template(
