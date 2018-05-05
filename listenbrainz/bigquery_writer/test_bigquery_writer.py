@@ -18,7 +18,11 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+import datetime
+import random
 import unittest
+
+from collections import defaultdict
 from listenbrainz.bigquery_writer.bigquery_writer import BigQueryWriter
 
 class BigQueryWriterTestCase(unittest.TestCase):
@@ -96,3 +100,43 @@ class BigQueryWriterTestCase(unittest.TestCase):
             'recording_mbid': 'c4625cbf-f5a8-46d9-baa5-ba8c3b9127bc',
             'tags': 'rnb,pop',
         })
+
+
+    def test_group_rows_by_table(self):
+
+        # create some random data with listens from different years
+        # and keep track of number of listens for each table in row_count
+        listen = {
+            'user_name': 'iliekcomputers',
+            'recording_msid': '868f2a3e-c97a-416e-82ee-5a0f74015aa8',
+            'track_metadata': {
+                'artist_name': 'Charles Mingus',
+                'track_name': 'Boogie Stop Shuffle',
+                'release_name': 'Mingus Ah Um',
+                'additional_info': {
+                    'artist_msid': '934194e1-0005-4f89-b59f-9995c7bfc3de',
+                },
+            }
+        }
+
+        listens = []
+        row_count = defaultdict(lambda: 0)
+        for year in range(1970, 2002):
+            copy = listen.copy()
+            copy['listened_at'] = int(datetime.datetime(year, 1, 1).strftime('%s'))
+            listens.append(copy)
+            row_count['before_2002'] += 1
+
+        for year in range(2002, 2019):
+            for count in range(random.randint(1, 5)):
+                copy = listen.copy()
+                copy['listened_at'] = int(datetime.datetime(year, 1, 1).strftime('%s'))
+                listens.append(copy)
+                row_count[str(year)] += 1
+
+        # now group the data by tables and check that it is grouped correctly
+        rows = self.bqwriter.convert_to_bigquery_payload(listens)
+        grouped_rows = self.bqwriter.group_rows_by_table(rows)
+        self.assertIsInstance(grouped_rows, defaultdict)
+        for table in grouped_rows:
+            self.assertEqual(row_count[table], len(grouped_rows[table]))
