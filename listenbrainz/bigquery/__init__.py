@@ -191,6 +191,59 @@ def run_query(bigquery, query, parameters=None, dml=False):
             return format_results(data)
 
 
+def _load_fields():
+    """ returns the fields in the listenbrainz google bigquery schema
+    """
+    schema_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'admin', 'bigquery')
+    with open(os.path.join(schema_dir, 'listen-schema.json')) as f:
+        return json.load(f)
+
+
+def create_bigquery_table(bigquery, table_name, force=False):
+    """ create a table with specified name in google bigquery.
+    """
+    try:
+        result = bigquery.tables().get(
+            projectId=config.BIGQUERY_PROJECT_ID,
+            datasetId=config.BIGQUERY_DATASET_ID,
+            tableId=table_name,
+        ).execute(num_retries=5)
+        if 'creationTime' in result:
+            print('Table %s already present in BigQuery...' % table_name)
+            if force:
+                print('Deleting table...')
+                bigquery.tables().delete(
+                    projectId=config.BIGQUERY_PROJECT_ID,
+                    datasetId=config.BIGQUERY_DATASET_ID,
+                    tableId=table_name,
+                ).execute(num_retries=5)
+            else:
+                print('Moving ahead...')
+                return
+    except googleapiclient.errors.HttpError as e:
+        if e.resp.status != 404:
+            print('Error while getting information for table %s...' % table_name)
+            raise
+
+    creation_request_body = {
+        'tableReference': {
+            'projectId': config.BIGQUERY_PROJECT_ID,
+            'datasetId': config.BIGQUERY_DATASET_ID,
+            'tableId': table_name,
+        },
+        'schema': {
+            'fields': _load_fields()
+        },
+    }
+
+    response = bigquery.tables().insert(
+        projectId=config.BIGQUERY_PROJECT_ID,
+        datasetId=config.BIGQUERY_DATASET_ID,
+        body=creation_request_body,
+    ).execute(num_retries=5)
+    print('Table %s created!' % table_name)
+
+
 # Exceptions
 class BigQueryException(Exception):
     pass

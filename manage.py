@@ -10,7 +10,8 @@ from listenbrainz import config
 from listenbrainz import db
 from listenbrainz import stats
 from listenbrainz import webserver
-from listenbrainz.bigquery import create_bigquery_object
+from listenbrainz import LAST_FM_FOUNDING_YEAR, INVALID_LISTENS_BIGQUERY_TABLE_NAME
+from listenbrainz.bigquery import create_bigquery_object, create_bigquery_table
 from urllib.parse import urlsplit
 from werkzeug.serving import run_simple
 
@@ -197,67 +198,15 @@ def init_influx():
     print("Done!")
 
 
-def _load_fields():
-    """ Returns the fields in the ListenBrainz Google BigQuery schema
-    """
-    schema_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'bigquery')
-    with open(os.path.join(schema_dir, 'listen-schema.json')) as f:
-        return json.load(f)
-
-
-def _create_table(bigquery, table_name, force=True):
-    """ Create a table with specified name in Google BigQuery.
-    """
-    try:
-        result = bigquery.tables().get(
-            projectId=config.BIGQUERY_PROJECT_ID,
-            datasetId=config.BIGQUERY_DATASET_ID,
-            tableId=table_name,
-        ).execute(num_retries=5)
-        if 'creationTime' in result:
-            print('Table %s already present in BigQuery...' % table_name)
-            if force:
-                print('Deleting table...')
-                bigquery.tables().delete(
-                    projectId=config.BIGQUERY_PROJECT_ID,
-                    datasetId=config.BIGQUERY_DATASET_ID,
-                    tableId=table_name,
-                ).execute(num_retries=5)
-            else:
-                return
-    except HttpError as e:
-        if e.resp.status != 404:
-            print('Error while getting information for table %s...' % table_name)
-            raise
-
-    creation_request_body = {
-        'tableReference': {
-            'projectId': config.BIGQUERY_PROJECT_ID,
-            'datasetId': config.BIGQUERY_DATASET_ID,
-            'tableId': table_name,
-        },
-        'schema': {
-            'fields': _load_fields()
-        },
-    }
-
-    response = bigquery.tables().insert(
-        projectId=config.BIGQUERY_PROJECT_ID,
-        datasetId=config.BIGQUERY_DATASET_ID,
-        body=creation_request_body,
-    ).execute(num_retries=5)
-    print('Table %s created!' % table_name)
-
-
 @cli.command()
 @click.option("-f", "--force", is_flag=True, help="Drop existing tables in BigQuery")
 def init_bigquery(force):
     """ Initializes BigQuery dataset and creates required tables.
     """
     bigquery = create_bigquery_object()
-    _create_table(bigquery, 'before_2002', force=force) # extra table for listens before Last.FM (should be bad data)
-    for year in range(2002, datetime.today().year + 1):
-        _create_table(bigquery, str(year), force=force)
+    create_bigquery_table(bigquery, INVALID_LISTENS_BIGQUERY_TABLE_NAME, force=force) # extra table for listens before Last.FM (should be bad data)
+    for year in range(LAST_FM_FOUNDING_YEAR, datetime.today().year + 1):
+        create_bigquery_table(bigquery, str(year), force=force)
 
 
 # Add other commands here
