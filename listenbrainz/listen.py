@@ -1,7 +1,8 @@
 # coding=utf-8
+import calendar
+import time
 
 from datetime import datetime
-import calendar
 from listenbrainz.utils import escape, convert_to_unix_timestamp
 
 def flatten_dict(d, seperator='', parent_key=''):
@@ -206,6 +207,7 @@ class Listen(object):
                 'tracknumber': self.data['additional_info'].get('tracknumber', ''),
                 'isrc': self.data['additional_info'].get('isrc', ''),
                 'spotify_id': self.data['additional_info'].get('spotify_id', ''),
+                'inserted_timestamp': int(time.time()),
             }
         }
 
