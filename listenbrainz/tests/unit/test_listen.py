@@ -28,7 +28,8 @@ class ListenTestCase(unittest.TestCase):
             "user_name": "iliekcomputers",
             "we_dict_now.hello": "afb",
             "we_dict_now.we_nested_now.hi": "312",
-            "tags": "sing, song"
+            "tags": "sing, song",
+            "inserted_timestamp": 1525557084,
         }
 
         listen = Listen.from_influx(influx_row)
@@ -65,6 +66,9 @@ class ListenTestCase(unittest.TestCase):
         self.assertNotIn('artist_name', listen.data['additional_info'])
         self.assertNotIn('release_name', listen.data['additional_info'])
 
+        self.assertEqual(listen.inserted_timestamp, influx_row['inserted_timestamp'])
+        self.assertNotIn('inserted_timestamp', listen.data)
+
 
     def test_to_influx(self):
         listen = Listen(
@@ -86,7 +90,7 @@ class ListenTestCase(unittest.TestCase):
 
         # Make sure every value that we don't explicitly support is a string
         for key in data['fields']:
-            if key not in Listen.SUPPORTED_KEYS:
+            if key not in Listen.SUPPORTED_KEYS and key not in Listen.PRIVATE_KEYS:
                 self.assertIsInstance(data['fields'][key], str)
 
         # Check values
@@ -98,3 +102,5 @@ class ListenTestCase(unittest.TestCase):
         self.assertEqual(data['fields']['recording_msid'], listen.recording_msid)
         self.assertEqual(data['fields']['track_name'], listen.data['track_name'])
         self.assertEqual(data['fields']['artist_name'], listen.data['artist_name'])
+
+        self.assertIn('inserted_timestamp', data['fields'])
