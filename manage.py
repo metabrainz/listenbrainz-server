@@ -1,5 +1,8 @@
 from messybrainz import db
+from messybrainz.fetch_artist_mbids import fetch_artist_mbids_for_all_recording_mbids
 from messybrainz.webserver import create_app
+from sqlalchemy import text
+
 import subprocess
 import os
 import click
@@ -93,6 +96,33 @@ def init_test_db(force=False):
     db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
     db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
 
+    print("Done!")
+
+
+@cli.command()
+@click.option("--reset", "-r", is_flag=True, help="Clear the table and add MBIDs again.")
+def fetch_artist_mbids(reset=False):
+    """ Fetches artist MBIDs from the musicbrainz database for the recording MBIDs
+        in the recording_json table submitted while submitting a listen.
+        If reset flag is set to true the recording_artist table is first truncated
+        and the whole process starts from scratch.
+        In the end it prints to the console the total recording MBIDs it processed and
+        the total recording MBIDs it added to the recording_artist table.
+    """
+
+    if reset:
+        db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
+        with db.engine.begin() as connection:
+            query = text("""TRUNCATE TABLE recording_artist""")
+            try:
+                connection.execute(query)
+            except sqlalchemy.exc.ProgrammingError as e:
+                print("Error: {}".format(e))
+
+    result = fetch_artist_mbids_for_all_recording_mbids()
+
+    print("Total recording MBIDs processed: {0}.".format(result[0]))
+    print("Total recording MBIDs added to table: {0}.".format(result[1]))
     print("Done!")
 
 
