@@ -10,5 +10,6 @@ DROP TABLE IF EXISTS artist_credit_cluster  CASCADE;
 DROP TABLE IF EXISTS artist_credit_redirect CASCADE;
 DROP TABLE IF EXISTS release_cluster        CASCADE;
 DROP TABLE IF EXISTS release_redirect       CASCADE;
+DROP TABLE IF EXISTS recording_artist       CASCADE;
 
 COMMIT;
