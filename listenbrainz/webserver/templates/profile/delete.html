@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete account - ListenBrainz{% endblock %}
+
+{% block content %}
+  <h3 class="page-title">Delete your account</h3>
+  <p>Are you sure you want to delete your ListenBrainz account? </p>
+
+  <p>
+    Once deleted, all your ListenBrainz data will be removed PERMANENTLY and will not be recoverable.
+  </p>
+
+  <form method="post">
+    <input type="hidden" name="token" value="{{ token }}">
+    <button id="btn-delete-user" class="btn btn-info btn-lg" style="width: 200px">Yes, delete it.</button>
+  </form>
+
+{% endblock %}
+
