@@ -330,3 +330,40 @@ class TestInfluxListenStore(DatabaseTestCase):
         batch = generate_data(self.testuser_id, self.testuser_name, int(time.time()), 1)
         self.logstore.insert(batch)
         self.assertEqual(count + 1, int(cache.get(user_key, decode=False)))
+
+
+    def test_delete_listens(self):
+        count = self._create_test_data(self.testuser_name)
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
+        self.assertEqual(len(listens), 5)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
+        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[3].ts_since_epoch, 1400000050)
+        self.assertEqual(listens[4].ts_since_epoch, 1400000000)
+
+        self.logstore.delete(self.testuser_name)
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
+        self.assertEqual(len(listens), 0)
+
+    def test_delete_listens_no_measurement(self):
+        user = db_user.get_or_create('user_with_no_measurement')
+        self.logstore.delete(user['musicbrainz_id'])
+        listens = self.logstore.fetch_listens(user_name=user['musicbrainz_id'], to_ts=1400000300)
+        self.assertEqual(len(listens), 0)
+
+
+    def test_delete_listens_escaped(self):
+        user = db_user.get_or_create('i have a\\weird\\user, na/me"\n')
+        count = self._create_test_data(user['musicbrainz_id'])
+        listens = self.logstore.fetch_listens(user_name=user['musicbrainz_id'], to_ts=1400000300)
+        self.assertEqual(len(listens), 5)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
+        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[3].ts_since_epoch, 1400000050)
+        self.assertEqual(listens[4].ts_since_epoch, 1400000000)
+
+        self.logstore.delete(user['musicbrainz_id'])
+        listens = self.logstore.fetch_listens(user_name=user['musicbrainz_id'], to_ts=1400000300)
+        self.assertEqual(len(listens), 0)
