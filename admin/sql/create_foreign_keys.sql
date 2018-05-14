@@ -18,4 +18,6 @@ ALTER TABLE statistics.user
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
+ALTER TABLE spotify ADD CONSTRAINT spotify_user_id_foreign_key FOREIGN KEY (user_id) REFERENCES "user" (id);
+
 COMMIT;

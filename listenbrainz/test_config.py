@@ -54,6 +54,10 @@ MUSICBRAINZ_CLIENT_SECRET = "CLIENT_SECRET"
 LASTFM_API_URL = "https://ws.audioscrobbler.com/2.0/"
 LASTFM_API_KEY = "USE_LASTFM_API_KEY"
 
+# Spotify OAuth
+SPOTIFY_CLIENT_ID = ""
+SPOTIFY_CLIENT_SECRET = ""
+
 # BigQuery support
 # Enable/disable support. If enabled, the Application Credentials must reside in
 # bigquery-credentials.json in the top level directory.
