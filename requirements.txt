@@ -32,3 +32,4 @@ pika == 0.11.0
 git+https://github.com/bninja/pika-pool.git@5b1d3b650395aed60d9995fbfd289de7e62fe8d5#egg=pika_pool
 git+https://github.com/metabrainz/messybrainz-server.git@production#egg=messybrainz
 git+https://github.com/metabrainz/brainzutils-python.git@v1.3.0
+spotipy == 2.4.4

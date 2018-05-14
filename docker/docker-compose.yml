@@ -86,6 +86,16 @@ services:
       - influx
       - rabbitmq
 
+  spotify_reader:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    command: python3 -m "listenbrainz.spotify_scraper.spotify_read_listens"
+    depends_on:
+      - redis
+      - influx
+      - rabbitmq
+
   bigquery:
     build:
       context: ..
