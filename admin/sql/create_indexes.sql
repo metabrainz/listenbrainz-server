@@ -9,6 +9,8 @@ CREATE UNIQUE INDEX token_api_key_ndx_token ON api_compat.token (token, api_key)
 CREATE UNIQUE INDEX sid_ndx_session ON api_compat.session (sid);
 CREATE UNIQUE INDEX sid_api_key_ndx_session ON api_compat.session (sid, api_key);
 
+CREATE UNIQUE INDEX user_id_ndx_spotify ON spotify (user_id);
+
 CREATE UNIQUE INDEX user_id_ndx_user_stats ON statistics.user (user_id);
 CREATE UNIQUE INDEX msid_ndx_artist_stats ON statistics.artist (msid);
 CREATE UNIQUE INDEX msid_ndx_release_stats ON statistics.release (msid);
