@@ -11,6 +11,7 @@ from listenbrainz.webserver import create_app
 from listenbrainz.webserver.testing import ServerTestCase
 
 
+
 class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
 
     def setUp(self):
@@ -190,3 +191,11 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         mock_user_get.assert_called_once()
         self.assertIsInstance(self.get_context_variable('current_user'), listenbrainz.webserver.login.User)
 
+    @mock.patch('listenbrainz.webserver.views.index._authorize_mb_user_deleter')
+    def test_mb_user_deleter(self, mock_authorize):
+        user1 = db_user.create(1, 'iliekcomputers')
+        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_id='iliekcomputers'))
+        self.assert200(r)
+
+        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_id='thisuserdoesnotexist'))
+        self.assert404(r)

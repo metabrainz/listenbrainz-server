@@ -1,15 +1,19 @@
 
 #TODO(param): alphabetize these
 from brainzutils import cache
-from flask import Blueprint, render_template, current_app, redirect, url_for, request
+from flask import Blueprint, render_template, current_app, redirect, url_for, request, jsonify
 from flask_login import current_user, login_required
+from werkzeug.exceptions import Unauthorized
+from requests.exceptions import HTTPError
 import os
 import subprocess
+import requests
 import locale
 import listenbrainz.db.user as db_user
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz import webserver
 from listenbrainz.webserver.influx_connection import _influx
+from listenbrainz.webserver.views.profile import delete_user
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import pika
 import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
@@ -140,6 +144,35 @@ def gdpr_notice():
         else:
             flash.error('You must agree to or decline our terms')
             return render_template('index/gdpr.html', next=request.args.get('next'))
+
+
+@index_bp.route('/delete-user/<musicbrainz_id>')
+def mb_user_deleter(musicbrainz_id):
+    _authorize_mb_user_deleter(request.args.get('auth_token', ''))
+    delete_user(musicbrainz_id)
+    return jsonify({'status': 'ok'}), 200
+
+
+def _authorize_mb_user_deleter(auth_token):
+    query_url = 'https://musicbrainz.org/oauth2/userinfo'
+    headers = {'Authorization': 'Bearer {}'.format(auth_token)}
+    r = requests.get(query_url, headers=headers)
+    try:
+        r.raise_for_status()
+    except HTTPError:
+        raise Unauthorized('Not authorized to use this view')
+
+    data = {}
+    try:
+        data = r.json()
+    except ValueError:
+        raise Unauthorized('Not authorized to use this view')
+
+    try:
+        if data['sub'] != 'UserDeleter' or data['metabrainz_user_id'] != 2007538:
+            raise Unauthorized('Not authorized to use this view')
+    except KeyError:
+        raise Unauthorized('Not authorized to use this view')
 
 
 def _get_user_count():
