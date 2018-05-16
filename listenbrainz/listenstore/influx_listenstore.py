@@ -653,3 +653,35 @@ class InfluxListenStore(ListenStore):
             self.log.error('Error while writing listens to influx, '
                 'write_points returned False')
             time.sleep(3)
+
+
+    def delete(self, musicbrainz_id):
+        """ Delete all listens for user with specified MusicBrainz ID.
+
+        Note: this method tries to delete the user 5 times before giving up.
+
+        Args:
+            musicbrainz_id (str): the MusicBrainz ID of the user
+
+        Raises: Exception if unable to delete the user in 5 retries
+        """
+        for _ in range(5):
+            try:
+                self.influx.drop_measurement(get_measurement_name(musicbrainz_id))
+                break
+            except InfluxDBClientError as e:
+                # influxdb-python raises client error if measurement isn't found
+                # so we have to handle that case.
+                if 'measurement not found' in e.content:
+                    return
+                else:
+                    self.log.error('Error in influx client while dropping user %s: %s', musicbrainz_id, str(e))
+                    time.sleep(3)
+            except InfluxDBServerError as e:
+                self.log.error('Error in influx server while dropping user %s: %s', musicbrainz_id, str(e))
+                time.sleep(3)
+            except Exception as e:
+                self.log.error('Error while trying to drop user %s: %s', musicbrainz_id, str(e))
+                time.sleep(3)
+        else:
+            raise Exception("Couldn't delete user with MusicBrainz ID: %s" % musicbrainz_id)

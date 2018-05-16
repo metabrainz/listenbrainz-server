@@ -15,7 +15,9 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.stats.utils import construct_stats_queue_key
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.redis_connection import _redis
+from listenbrainz.webserver.influx_connection import _influx
 from listenbrainz.webserver.utils import sizeof_readable
+from listenbrainz.webserver.views.user import _get_user
 from listenbrainz.webserver.views.api_tools import convert_backup_to_native_format, insert_payload, validate_listen, \
     LISTEN_TYPE_IMPORT, publish_data_to_queue
 from os import path, makedirs
@@ -242,3 +244,48 @@ def request_stats():
         _redis.redis.set(construct_stats_queue_key(current_user.musicbrainz_id), 'queued')
         flash.info('You have been added to the stats calculation queue! Please check back later.')
     return redirect(url_for('profile.info'))
+
+
+@profile_bp.route('/delete', methods=['GET', 'POST'])
+@login_required
+def delete():
+    """ Delete currently logged-in user from ListenBrainz.
+
+    If POST request, this view checks for the correct authorization token and
+    deletes the user. If deletion is successful, redirects to home page, else
+    flashes an error and redirects to user's info page.
+
+    If GET request, this view renders a page asking the user to confirm
+    that they wish to delete their ListenBrainz account.
+    """
+    if request.method == 'POST':
+        if request.form.get('token') == current_user.auth_token:
+            try:
+                delete_user(current_user.musicbrainz_id)
+            except Exception as e:
+                flash.error('Error while deleting user %s, please try again later.' % current_user.musicbrainz_id)
+                return redirect(url_for('profile.info'))
+            return redirect(url_for('index.index'))
+        else:
+            flash.error('Cannot delete user due to error during authentication, please try again later.')
+            return redirect('profile.info')
+    else:
+        return render_template('profile/delete.html', token=current_user.auth_token)
+
+
+def delete_user(musicbrainz_id):
+    """ Delete a user from ListenBrainz completely.
+    First, drops the user's influx measurement and then deletes her from the
+    database.
+
+    Args:
+        musicbrainz_id (str): the MusicBrainz ID of the user
+
+    Raises:
+        NotFound if user isn't present in the database
+    """
+
+    #TODO(param): delete user's listens from Google BigQuery
+    user = _get_user(musicbrainz_id)
+    _influx.delete(user.musicbrainz_id)
+    db_user.delete(user.id)
