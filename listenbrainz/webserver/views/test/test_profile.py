@@ -108,3 +108,14 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
         response = self.client.get(url_for('profile.request_stats'), follow_redirects=True)
         self.assertStatus(response, 200)
         self.assertIn('please wait until the next interval', str(response.data))
+
+
+    def test_delete(self):
+        self.temporary_login(self.user['id'])
+        r = self.client.get(url_for('profile.delete'))
+        self.assert200(r)
+
+        r = self.client.post(url_for('profile.delete'), data={'token': self.user['auth_token']})
+        self.assertRedirects(r, '/')
+        user = db_user.get(self.user['id'])
+        self.assertIsNone(user)

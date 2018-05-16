@@ -292,3 +292,25 @@ def get_all_users(columns=None):
             """.format(columns=', '.join(columns))))
 
         return [dict(row) for row in result]
+
+
+def delete(id):
+    """ Delete the user with specified row ID from the database.
+
+    Note: this deletes all statistics and api_compat sessions and tokens
+    associated with the user also.
+
+    Args:
+        id (int): the row ID of the listenbrainz user
+    """
+    with db.engine.connect() as connection:
+        try:
+            connection.execute(sqlalchemy.text("""
+                DELETE FROM "user"
+                      WHERE id = :id
+                """), {
+                    'id': id,
+                })
+        except sqlalchemy.exc.ProgrammingError as err:
+            logger.error(err)
+            raise DatabaseException("Couldn't delete user: %s" % str(err))
