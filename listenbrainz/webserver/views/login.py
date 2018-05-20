@@ -1,18 +1,27 @@
 
-from flask import Blueprint, request, redirect, render_template, url_for, session
+from flask import Blueprint, current_app, request, redirect, render_template, url_for, session
 from flask_login import login_user, logout_user, login_required
 from listenbrainz.webserver.login import login_forbidden, provider
 from listenbrainz.webserver import flash
+from werkzeug.exceptions import BadRequest
 import listenbrainz.db.user as db_user
 import time
 
 login_bp = Blueprint('login', __name__)
 
 
-@login_bp.route('/')
+@login_bp.route('/', methods=['GET', 'POST'])
 @login_forbidden
 def index():
-    return render_template('login/login.html')
+    if request.method == 'GET':
+        return render_template('login/login.html')
+    elif request.method == 'POST':
+        if request.form.get('gdpr-options') == 'agree':
+            return redirect(url_for('login.musicbrainz', next=request.form.get('next', '')))
+        elif request.form.get('gdpr-options') == 'disagree':
+            return redirect(url_for('login.musicbrainz', next=url_for('profile.info')))
+        else:
+            raise BadRequest('No response to GDPR notice')
 
 
 @login_bp.route('/musicbrainz')
