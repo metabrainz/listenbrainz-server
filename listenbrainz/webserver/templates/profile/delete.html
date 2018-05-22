@@ -13,13 +13,11 @@
   <p> Note: you can export your ListenBrainz data before deleting your account. </p>
 
   <form action="{{url_for("profile.export_data")}}" method='POST'>
-    <input type="hidden" name="user_name" value="{{ user.musicbrainz_id }}" />
-    <input type="hidden" name="secret" value="{{ secret }}" />
     <button class="btn btn-warning btn-lg" type="submit" style="width: 250px">Export my listens.</button>
   </form>
 
   <form method="post">
-    <input type="hidden" name="token" value="{{ token }}">
+    <input type="hidden" name="token" value="{{ user.auth_token }}">
     <button id="btn-delete-user" class="btn btn-danger btn-lg" style="width: 250px">Delete my account.</button>
   </form>
 {% endblock %}
