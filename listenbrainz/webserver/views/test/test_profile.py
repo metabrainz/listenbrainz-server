@@ -13,7 +13,9 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
         ServerTestCase.setUp(self)
         DatabaseTestCase.setUp(self)
         self.user = db_user.get_or_create('iliekcomputers')
+        db_user.agree_to_gdpr(self.user['musicbrainz_id'])
         self.weirduser = db_user.get_or_create('weird\\user name')
+        db_user.agree_to_gdpr(self.weirduser['musicbrainz_id'])
 
     def tearDown(self):
         ServerTestCase.tearDown(self)
