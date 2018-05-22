@@ -4,7 +4,6 @@ import pika
 import time
 
 from datetime import datetime
-from hashlib import sha256
 from redis import Redis
 
 INFLUX_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
@@ -183,8 +182,3 @@ def safely_import_config():
         except ImportError:
             print("Cannot import config.py. Waiting and retrying...")
             time.sleep(2)
-
-
-def construct_secret(user_name, secret_key):
-    user_string = '{}{}'.format(user_name, secret_key)
-    return sha256(user_string.encode('utf-8')).hexdigest()

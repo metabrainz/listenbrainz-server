@@ -11,18 +11,10 @@ import time
 login_bp = Blueprint('login', __name__)
 
 
-@login_bp.route('/', methods=['GET', 'POST'])
+@login_bp.route('/')
 @login_forbidden
 def index():
-    if request.method == 'GET':
-        return render_template('login/login.html')
-    elif request.method == 'POST':
-        if request.form.get('gdpr-options') == 'agree':
-            return redirect(url_for('login.musicbrainz', next=request.form.get('next', '')))
-        elif request.form.get('gdpr-options') == 'disagree':
-            return redirect(url_for('login.musicbrainz', next=url_for('login.delete')))
-        else:
-            raise BadRequest('No response to GDPR notice')
+    return render_template('login/login.html')
 
 
 @login_bp.route('/musicbrainz')
@@ -54,13 +46,3 @@ def logout():
     logout_user()
     session.clear()
     return redirect(url_for('index.index'))
-
-
-@login_bp.route('/delete/')
-@login_required
-def delete():
-    secret =  construct_secret(current_user.musicbrainz_id, current_app.config['SECRET_KEY'])
-    musicbrainz_id = current_user.musicbrainz_id
-    logout_user()
-    session.clear()
-    return redirect(url_for('user.delete', user_name=musicbrainz_id, secret=secret))

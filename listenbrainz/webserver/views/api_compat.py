@@ -9,6 +9,7 @@ import yattag
 from flask import Blueprint, request, render_template
 from flask_login import login_required, current_user
 from listenbrainz.webserver.external import messybrainz
+from listenbrainz.webserver.login import gdpr_acceptance_required
 from listenbrainz.webserver.rate_limiter import ratelimit
 from listenbrainz.webserver.errors import InvalidAPIUsage, CompatError
 import xmltodict
@@ -26,6 +27,7 @@ api_bp = Blueprint('api_compat', __name__)
 @api_bp.route('/api/auth/', methods=['GET'])
 @ratelimit()
 @login_required
+@gdpr_acceptance_required
 def api_auth():
     """ Renders the token activation page.
     """
@@ -40,6 +42,7 @@ def api_auth():
 @api_bp.route('/api/auth/', methods=['POST'])
 @ratelimit()
 @login_required
+@gdpr_acceptance_required
 def api_auth_approve():
     """ Authenticate the user token provided.
     """

@@ -1,14 +1,15 @@
 
 #TODO(param): alphabetize these
 from brainzutils import cache
-from flask import Blueprint, render_template, current_app, redirect, url_for
-from flask_login import current_user
+from flask import Blueprint, render_template, current_app, redirect, url_for, request
+from flask_login import current_user, login_required
 import os
 import subprocess
 import locale
 import listenbrainz.db.user as db_user
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz import webserver
+from listenbrainz.webserver.login import gdpr_acceptance_required
 from listenbrainz.webserver.influx_connection import _influx
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import pika
@@ -22,6 +23,7 @@ STATS_PREFIX = 'listenbrainz.stats' # prefix used in key to cache stats
 CACHE_TIME = 10 * 60 # time in seconds we cache the stats
 
 @index_bp.route("/")
+@gdpr_acceptance_required
 def index():
 
     # get total listen count
@@ -39,6 +41,7 @@ def index():
 
 
 @index_bp.route("/import")
+@gdpr_acceptance_required
 def import_data():
     if current_user.is_authenticated():
         return redirect(url_for("profile.import_data"))
@@ -47,46 +50,55 @@ def import_data():
 
 
 @index_bp.route("/download")
+@gdpr_acceptance_required
 def downloads():
     return redirect(url_for('index.data'))
 
 
 @index_bp.route("/data")
+@gdpr_acceptance_required
 def data():
     return render_template("index/data.html")
 
 
 @index_bp.route("/contribute")
+@gdpr_acceptance_required
 def contribute():
     return render_template("index/contribute.html")
 
 
 @index_bp.route("/goals")
+@gdpr_acceptance_required
 def goals():
     return render_template("index/goals.html")
 
 
 @index_bp.route("/faq")
+@gdpr_acceptance_required
 def faq():
     return render_template("index/faq.html")
 
 
 @index_bp.route("/api-docs")
+@gdpr_acceptance_required
 def api_docs():
     return render_template("index/api-docs.html")
 
 
 @index_bp.route("/lastfm-proxy")
+@gdpr_acceptance_required
 def proxy():
     return render_template("index/lastfm-proxy.html")
 
 
 @index_bp.route("/roadmap")
+@gdpr_acceptance_required
 def roadmap():
     return render_template("index/roadmap.html")
 
 
 @index_bp.route("/current-status")
+@gdpr_acceptance_required
 def current_status():
 
     load = "%.2f %.2f %.2f" % os.getloadavg()
@@ -118,6 +130,25 @@ def current_status():
         unique_len=format(int(unique_len), ",d"),
         user_count=format(int(user_count), ",d"),
     )
+
+
+@index_bp.route('/agree-to-terms', methods=['GET', 'POST'])
+@login_required
+def gdpr_notice():
+    if request.method == 'GET':
+        return render_template('index/gdpr.html', next=request.args.get('next'))
+    elif request.method == 'POST':
+        if request.form.get('gdpr-options') == 'agree':
+            try:
+                db_user.agree_to_gdpr(current_user.musicbrainz_id)
+            except DatabaseException as e:
+                flash.error('Could not store agreement to GDPR terms')
+            next = request.form.get('next')
+            if next:
+                return redirect(next)
+            return redirect(url_for('index.index'))
+        elif request.form.get('gdpr-options') == 'disagree':
+            return redirect(url_for('profile.delete'))
 
 
 def _get_user_count():
