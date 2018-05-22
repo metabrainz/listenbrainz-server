@@ -176,15 +176,17 @@ def artists(user_name):
 
 @user_bp.route("/<user_name>/delete", methods=['GET', 'POST'])
 def delete(user_name):
-    def _authenticate_secret(musicbrainz_id, secret):
-        if construct_secret(musicbrainz_id, current_app.config['SECRET_KEY']) != secret:
-            raise BadRequest('Invalid Secret for user %s' % musicbrainz_id)
-
     user = _get_user(user_name)
     if request.method == 'GET':
         received_secret = request.args.get('secret')
-        _authenticate_secret(user.musicbrainz_id, received_secret)
-        return render_template('profile/delete.html', user_name=user.musicbrainz_id, token=user.auth_token)
+        if construct_secret(user.musicbrainz_id, current_app.config['SECRET_KEY']) != received_secret:
+            raise BadRequest('Incorrect secret for user %s' % user.musicbrainz_id)
+        return render_template(
+            'profile/delete.html',
+            user=user,
+            token=user.auth_token,
+            secret=received_secret,
+        )
     elif request.method == 'POST':
         try:
             delete_user(user.musicbrainz_id)

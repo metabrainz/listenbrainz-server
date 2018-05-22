@@ -2,7 +2,6 @@
 {% block title %}Export for "{{ user.musicbrainz_id }}" - ListenBrainz{% endblock %}
 
 {% block content %}
-  {% if current_user.is_authenticated() and current_user == user %}
     <h3>Export from ListenBrainz</h3>
     <p>
       <strong> Notes about the ListenBrainz export process : </strong>
@@ -12,8 +11,9 @@
     </p>
     <p>
       <form action="{{url_for("profile.export_data")}}" method='POST'>
+        <input type="hidden" name="user_name" value="{{ user.musicbrainz_id }}" />
+        <input type="hidden" name="secret" value="{{ secret }}" />
         <button class="btn btn-warning btn-lg" type="submit">Download</button>
       </form>
     </p>
-  {% endif %}
 {% endblock %}
