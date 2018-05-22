@@ -1,4 +1,4 @@
-from flask import redirect, url_for
+from flask import redirect, url_for, current_app, request
 from flask_login import LoginManager, UserMixin, current_user
 from functools import wraps
 import listenbrainz.db.user as db_user
@@ -8,11 +8,12 @@ login_manager.login_view = 'login.index'
 
 
 class User(UserMixin):
-    def __init__(self, id, created, musicbrainz_id, auth_token):
+    def __init__(self, id, created, musicbrainz_id, auth_token, gdpr_agreed):
         self.id = id
         self.created = created
         self.musicbrainz_id = musicbrainz_id
         self.auth_token = auth_token
+        self.gdpr_agreed = gdpr_agreed
 
     @classmethod
     def from_dbrow(cls, user):
@@ -21,6 +22,7 @@ class User(UserMixin):
             created=user['created'],
             musicbrainz_id=user['musicbrainz_id'],
             auth_token=user['auth_token'],
+            gdpr_agreed=user['gdpr_agreed'],
         )
 
 @login_manager.user_loader
@@ -39,4 +41,13 @@ def login_forbidden(f):
             return redirect(url_for('index.index'))
         return f(*args, **kwargs)
 
+    return decorated
+
+
+def gdpr_acceptance_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if current_user.is_authenticated() and current_user.gdpr_agreed is None:
+            return redirect(url_for('index.gdpr_notice', next=request.full_path))
+        return f(*args, **kwargs)
     return decorated

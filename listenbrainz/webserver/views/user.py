@@ -10,7 +10,7 @@ from listenbrainz import webserver
 from listenbrainz.utils import construct_secret
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.login import User
+from listenbrainz.webserver.login import User, gdpr_acceptance_required
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.influx_connection import _influx
 import time
@@ -46,6 +46,7 @@ def lastfmscraper(user_name):
 
 
 @user_bp.route("/<user_name>")
+@gdpr_acceptance_required
 def profile(user_name):
     # Which database to use to showing user listens.
     db_conn = webserver.influx_connection._influx
@@ -143,6 +144,7 @@ def profile(user_name):
 
 
 @user_bp.route("/<user_name>/artists")
+@gdpr_acceptance_required
 def artists(user_name):
     """ Show the top artists for the user. These users must have been already
         calculated using Google BigQuery. If the stats are not present, we
@@ -173,29 +175,6 @@ def artists(user_name):
         data=ujson.dumps(top_artists),
         section='artists'
     )
-
-@user_bp.route("/<user_name>/delete", methods=['GET', 'POST'])
-def delete(user_name):
-    user = _get_user(user_name)
-    if request.method == 'GET':
-        received_secret = request.args.get('secret')
-        if construct_secret(user.musicbrainz_id, current_app.config['SECRET_KEY']) != received_secret:
-            raise BadRequest('Incorrect secret for user %s' % user.musicbrainz_id)
-        return render_template(
-            'profile/delete.html',
-            user=user,
-            token=user.auth_token,
-            secret=received_secret,
-        )
-    elif request.method == 'POST':
-        try:
-            delete_user(user.musicbrainz_id)
-            flash.success('Successfully deleted the account of user %s!' % user.musicbrainz_id)
-        except Exception as e:
-            current_app.logger.error(str(e))
-            flash.error('Error while deleting user %s, please try again later.' % user.musicbrainz_id)
-        return redirect(url_for('index.index'))
-
 
 def _get_user(user_name):
     """ Get current username """
