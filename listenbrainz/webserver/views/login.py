@@ -1,6 +1,7 @@
 
 from flask import Blueprint, current_app, request, redirect, render_template, url_for, session
-from flask_login import login_user, logout_user, login_required
+from flask_login import login_user, logout_user, login_required, current_user
+from listenbrainz.utils import construct_secret
 from listenbrainz.webserver.login import login_forbidden, provider
 from listenbrainz.webserver import flash
 from werkzeug.exceptions import BadRequest
@@ -19,7 +20,7 @@ def index():
         if request.form.get('gdpr-options') == 'agree':
             return redirect(url_for('login.musicbrainz', next=request.form.get('next', '')))
         elif request.form.get('gdpr-options') == 'disagree':
-            return redirect(url_for('login.musicbrainz', next=url_for('profile.info')))
+            return redirect(url_for('login.musicbrainz', next=url_for('login.delete')))
         else:
             raise BadRequest('No response to GDPR notice')
 
@@ -53,3 +54,13 @@ def logout():
     logout_user()
     session.clear()
     return redirect(url_for('index.index'))
+
+
+@login_bp.route('/delete/')
+@login_required
+def delete():
+    secret =  construct_secret(current_user.musicbrainz_id, current_app.config['SECRET_KEY'])
+    musicbrainz_id = current_user.musicbrainz_id
+    logout_user()
+    session.clear()
+    return redirect(url_for('user.delete', user_name=musicbrainz_id, secret=secret))

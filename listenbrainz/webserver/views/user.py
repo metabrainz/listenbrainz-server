@@ -7,10 +7,12 @@ from flask import Blueprint, render_template, request, url_for, Response, redire
 from flask_login import current_user, login_required
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from listenbrainz import webserver
+from listenbrainz.utils import construct_secret
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver.redis_connection import _redis
+from listenbrainz.webserver.influx_connection import _influx
 import time
 from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
 
@@ -172,6 +174,26 @@ def artists(user_name):
         section='artists'
     )
 
+@user_bp.route("/<user_name>/delete", methods=['GET', 'POST'])
+def delete(user_name):
+    def _authenticate_secret(musicbrainz_id, secret):
+        if construct_secret(musicbrainz_id, current_app.config['SECRET_KEY']) != secret:
+            raise BadRequest('Invalid Secret for user %s' % musicbrainz_id)
+
+    user = _get_user(user_name)
+    if request.method == 'GET':
+        received_secret = request.args.get('secret')
+        _authenticate_secret(user.musicbrainz_id, received_secret)
+        return render_template('profile/delete.html', user_name=user.musicbrainz_id, token=user.auth_token)
+    elif request.method == 'POST':
+        try:
+            delete_user(user.musicbrainz_id)
+            flash.success('Successfully deleted the account of user %s!' % user.musicbrainz_id)
+        except Exception as e:
+            current_app.logger.error(str(e))
+            flash.error('Error while deleting user %s, please try again later.' % user.musicbrainz_id)
+        return redirect(url_for('index.index'))
+
 
 def _get_user(user_name):
     """ Get current username """
@@ -203,3 +225,19 @@ def _get_spotify_uri_for_listens(listens):
         return None
 
 
+def delete_user(musicbrainz_id):
+    """ Delete a user from ListenBrainz completely.
+    First, drops the user's influx measurement and then deletes her from the
+    database.
+
+    Args:
+        musicbrainz_id (str): the MusicBrainz ID of the user
+
+    Raises:
+        NotFound if user isn't present in the database
+    """
+
+    #TODO(param): delete user's listens from Google BigQuery
+    user = _get_user(musicbrainz_id)
+    _influx.delete(user.musicbrainz_id)
+    db_user.delete(user.id)

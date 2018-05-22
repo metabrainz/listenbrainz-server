@@ -17,7 +17,7 @@ from listenbrainz.webserver import flash
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.influx_connection import _influx
 from listenbrainz.webserver.utils import sizeof_readable
-from listenbrainz.webserver.views.user import _get_user
+from listenbrainz.webserver.views.user import delete_user
 from listenbrainz.webserver.views.api_tools import convert_backup_to_native_format, insert_payload, validate_listen, \
     LISTEN_TYPE_IMPORT, publish_data_to_queue
 from os import path, makedirs
@@ -273,19 +273,3 @@ def delete():
         return render_template('profile/delete.html', token=current_user.auth_token)
 
 
-def delete_user(musicbrainz_id):
-    """ Delete a user from ListenBrainz completely.
-    First, drops the user's influx measurement and then deletes her from the
-    database.
-
-    Args:
-        musicbrainz_id (str): the MusicBrainz ID of the user
-
-    Raises:
-        NotFound if user isn't present in the database
-    """
-
-    #TODO(param): delete user's listens from Google BigQuery
-    user = _get_user(musicbrainz_id)
-    _influx.delete(user.musicbrainz_id)
-    db_user.delete(user.id)
