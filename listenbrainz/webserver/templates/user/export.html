@@ -11,8 +11,6 @@
     </p>
     <p>
       <form action="{{url_for("profile.export_data")}}" method='POST'>
-        <input type="hidden" name="user_name" value="{{ user.musicbrainz_id }}" />
-        <input type="hidden" name="secret" value="{{ secret }}" />
         <button class="btn btn-warning btn-lg" type="submit">Download</button>
       </form>
     </p>

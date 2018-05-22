@@ -7,7 +7,6 @@ from flask import Blueprint, render_template, request, url_for, Response, redire
 from flask_login import current_user, login_required
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from listenbrainz import webserver
-from listenbrainz.utils import construct_secret
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.login import User, gdpr_acceptance_required
