@@ -17,7 +17,7 @@ from listenbrainz.webserver import flash
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.influx_connection import _influx
 from listenbrainz.webserver.utils import sizeof_readable
-from listenbrainz.webserver.views.user import delete_user
+from listenbrainz.webserver.views.user import delete_user, _get_user
 from listenbrainz.webserver.views.api_tools import convert_backup_to_native_format, insert_payload, validate_listen, \
     LISTEN_TYPE_IMPORT, publish_data_to_queue
 from os import path, makedirs
@@ -116,19 +116,27 @@ def import_data():
 
 
 @profile_bp.route("/export", methods=["GET", "POST"])
-@login_required
 def export_data():
     """ Exporting the data to json """
+    user = None
+    secret = ''
+    if current_user.is_authenticated():
+        user = current_user
+    else:
+        user_name = request.args.get('user_name') if request.method == 'GET' else request.form.get('user_name')
+        user = _get_user(user_name)
+        secret = request.args.get('secret') if request.method == 'GET' else request.form.get('secret')
+
     if request.method == "POST":
         db_conn = webserver.create_influx(current_app)
-        filename = current_user.musicbrainz_id + "_lb-" + datetime.today().strftime('%Y-%m-%d') + ".json"
+        filename = user.musicbrainz_id + "_lb-" + datetime.today().strftime('%Y-%m-%d') + ".json"
 
         # fetch all listens for the user from listenstore by making repeated queries to
         # listenstore until we get all the data
         to_ts = int(time())
         listens = []
         while True:
-            batch = db_conn.fetch_listens(current_user.musicbrainz_id, to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
+            batch = db_conn.fetch_listens(user.musicbrainz_id, to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
             if not batch:
                 break
             listens.extend(batch)
@@ -150,7 +158,7 @@ def export_data():
         response.mimetype = "text/json"
         return response
     else:
-        return render_template("user/export.html", user=current_user)
+        return render_template("user/export.html", user=user, secret=secret)
 
 
 @profile_bp.route("/upload", methods=['GET', 'POST'])
@@ -270,6 +278,11 @@ def delete():
             flash.error('Cannot delete user due to error during authentication, please try again later.')
             return redirect('profile.info')
     else:
-        return render_template('profile/delete.html', token=current_user.auth_token)
+        return render_template(
+            'profile/delete.html',
+            user=current_user,
+            token=current_user.auth_token,
+            secret='',
+        )
 
 
