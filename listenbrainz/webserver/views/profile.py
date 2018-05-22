@@ -155,7 +155,7 @@ def export_data():
         response.mimetype = "text/json"
         return response
     else:
-        return render_template("user/export.html")
+        return render_template("user/export.html", user=current_user)
 
 
 @profile_bp.route("/upload", methods=['GET', 'POST'])
