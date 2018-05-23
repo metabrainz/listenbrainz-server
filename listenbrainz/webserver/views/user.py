@@ -11,6 +11,7 @@ from listenbrainz.webserver import flash
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver.redis_connection import _redis
+from listenbrainz.webserver.influx_connection import _influx
 import time
 from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
 
@@ -172,7 +173,6 @@ def artists(user_name):
         section='artists'
     )
 
-
 def _get_user(user_name):
     """ Get current username """
     if current_user.is_authenticated() and \
@@ -203,3 +203,19 @@ def _get_spotify_uri_for_listens(listens):
         return None
 
 
+def delete_user(musicbrainz_id):
+    """ Delete a user from ListenBrainz completely.
+    First, drops the user's influx measurement and then deletes her from the
+    database.
+
+    Args:
+        musicbrainz_id (str): the MusicBrainz ID of the user
+
+    Raises:
+        NotFound if user isn't present in the database
+    """
+
+    #TODO(param): delete user's listens from Google BigQuery
+    user = _get_user(musicbrainz_id)
+    _influx.delete(user.musicbrainz_id)
+    db_user.delete(user.id)

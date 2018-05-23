@@ -56,7 +56,7 @@ def update_token(id):
             raise
 
 
-USER_GET_COLUMNS = ['id', 'created', 'musicbrainz_id', 'auth_token', 'last_login', 'latest_import']
+USER_GET_COLUMNS = ['id', 'created', 'musicbrainz_id', 'auth_token', 'last_login', 'latest_import', 'gdpr_agreed']
 
 
 def get(id):
@@ -314,3 +314,23 @@ def delete(id):
         except sqlalchemy.exc.ProgrammingError as err:
             logger.error(err)
             raise DatabaseException("Couldn't delete user: %s" % str(err))
+
+
+def agree_to_gdpr(musicbrainz_id):
+    """ Update the gdpr_agreed column for user with specified MusicBrainz ID with current time.
+
+    Args:
+        musicbrainz_id (str): the MusicBrainz ID of the user
+    """
+    with db.engine.connect() as connection:
+        try:
+            connection.execute(sqlalchemy.text("""
+                UPDATE "user"
+                   SET gdpr_agreed = NOW()
+                 WHERE LOWER(musicbrainz_id) = LOWER(:mb_id)
+                """), {
+                    'mb_id': musicbrainz_id,
+                })
+        except sqlalchemy.exc.ProgrammingError as err:
+            logger.error(err)
+            raise DatabaseException("Couldn't update gdpr agreement for user: %s" % str(err))
