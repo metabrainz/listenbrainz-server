@@ -9,7 +9,6 @@ import locale
 import listenbrainz.db.user as db_user
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz import webserver
-from listenbrainz.webserver.login import gdpr_acceptance_required
 from listenbrainz.webserver.influx_connection import _influx
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import pika
@@ -23,7 +22,6 @@ STATS_PREFIX = 'listenbrainz.stats' # prefix used in key to cache stats
 CACHE_TIME = 10 * 60 # time in seconds we cache the stats
 
 @index_bp.route("/")
-@gdpr_acceptance_required
 def index():
 
     # get total listen count
@@ -41,7 +39,6 @@ def index():
 
 
 @index_bp.route("/import")
-@gdpr_acceptance_required
 def import_data():
     if current_user.is_authenticated():
         return redirect(url_for("profile.import_data"))
@@ -50,55 +47,46 @@ def import_data():
 
 
 @index_bp.route("/download")
-@gdpr_acceptance_required
 def downloads():
     return redirect(url_for('index.data'))
 
 
 @index_bp.route("/data")
-@gdpr_acceptance_required
 def data():
     return render_template("index/data.html")
 
 
 @index_bp.route("/contribute")
-@gdpr_acceptance_required
 def contribute():
     return render_template("index/contribute.html")
 
 
 @index_bp.route("/goals")
-@gdpr_acceptance_required
 def goals():
     return render_template("index/goals.html")
 
 
 @index_bp.route("/faq")
-@gdpr_acceptance_required
 def faq():
     return render_template("index/faq.html")
 
 
 @index_bp.route("/api-docs")
-@gdpr_acceptance_required
 def api_docs():
     return render_template("index/api-docs.html")
 
 
 @index_bp.route("/lastfm-proxy")
-@gdpr_acceptance_required
 def proxy():
     return render_template("index/lastfm-proxy.html")
 
 
 @index_bp.route("/roadmap")
-@gdpr_acceptance_required
 def roadmap():
     return render_template("index/roadmap.html")
 
 
 @index_bp.route("/current-status")
-@gdpr_acceptance_required
 def current_status():
 
     load = "%.2f %.2f %.2f" % os.getloadavg()

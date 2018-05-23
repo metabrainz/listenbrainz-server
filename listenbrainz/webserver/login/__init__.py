@@ -42,12 +42,3 @@ def login_forbidden(f):
         return f(*args, **kwargs)
 
     return decorated
-
-
-def gdpr_acceptance_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if current_user.is_authenticated() and current_user.gdpr_agreed is None:
-            return redirect(url_for('index.gdpr_notice', next=request.full_path))
-        return f(*args, **kwargs)
-    return decorated

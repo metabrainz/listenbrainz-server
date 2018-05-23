@@ -9,7 +9,7 @@ from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from listenbrainz import webserver
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.decorators import crossdomain
-from listenbrainz.webserver.login import User, gdpr_acceptance_required
+from listenbrainz.webserver.login import User
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.influx_connection import _influx
 import time
@@ -45,7 +45,6 @@ def lastfmscraper(user_name):
 
 
 @user_bp.route("/<user_name>")
-@gdpr_acceptance_required
 def profile(user_name):
     # Which database to use to showing user listens.
     db_conn = webserver.influx_connection._influx
@@ -143,7 +142,6 @@ def profile(user_name):
 
 
 @user_bp.route("/<user_name>/artists")
-@gdpr_acceptance_required
 def artists(user_name):
     """ Show the top artists for the user. These users must have been already
         calculated using Google BigQuery. If the stats are not present, we
