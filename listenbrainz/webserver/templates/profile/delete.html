@@ -4,16 +4,21 @@
 
 {% block content %}
   <h3 class="page-title">Delete your account</h3>
-  <p>Are you sure you want to delete your ListenBrainz account? </p>
+  <p>Hi {{ user.musicbrainz_id }}, are you sure you want to delete your ListenBrainz account? </p>
 
   <p>
     Once deleted, all your ListenBrainz data will be removed PERMANENTLY and will not be recoverable.
   </p>
 
-  <form method="post">
-    <input type="hidden" name="token" value="{{ token }}">
-    <button id="btn-delete-user" class="btn btn-info btn-lg" style="width: 200px">Yes, delete it.</button>
+  <p> Note: you can export your ListenBrainz data before deleting your account. </p>
+
+  <form action="{{url_for("profile.export_data")}}" method='POST'>
+    <button class="btn btn-warning btn-lg" type="submit" style="width: 250px">Export my listens.</button>
   </form>
 
+  <form method="post">
+    <input type="hidden" name="token" value="{{ user.auth_token }}">
+    <button id="btn-delete-user" class="btn btn-danger btn-lg" style="width: 250px">Delete my account.</button>
+  </form>
 {% endblock %}
 

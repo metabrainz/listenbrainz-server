@@ -1,8 +1,8 @@
 
 #TODO(param): alphabetize these
 from brainzutils import cache
-from flask import Blueprint, render_template, current_app, redirect, url_for
-from flask_login import current_user
+from flask import Blueprint, render_template, current_app, redirect, url_for, request
+from flask_login import current_user, login_required
 import os
 import subprocess
 import locale
@@ -118,6 +118,25 @@ def current_status():
         unique_len=format(int(unique_len), ",d"),
         user_count=format(int(user_count), ",d"),
     )
+
+
+@index_bp.route('/agree-to-terms', methods=['GET', 'POST'])
+@login_required
+def gdpr_notice():
+    if request.method == 'GET':
+        return render_template('index/gdpr.html', next=request.args.get('next'))
+    elif request.method == 'POST':
+        if request.form.get('gdpr-options') == 'agree':
+            try:
+                db_user.agree_to_gdpr(current_user.musicbrainz_id)
+            except DatabaseException as e:
+                flash.error('Could not store agreement to GDPR terms')
+            next = request.form.get('next')
+            if next:
+                return redirect(next)
+            return redirect(url_for('index.index'))
+        elif request.form.get('gdpr-options') == 'disagree':
+            return redirect(url_for('profile.delete'))
 
 
 def _get_user_count():
