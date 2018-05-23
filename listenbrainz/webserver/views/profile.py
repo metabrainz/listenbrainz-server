@@ -263,6 +263,7 @@ def delete():
             try:
                 delete_user(current_user.musicbrainz_id)
             except Exception as e:
+                current_app.logger.error('Error while deleting %s: %s', current_user.musicbrainz_id, str(e))
                 flash.error('Error while deleting user %s, please try again later.' % current_user.musicbrainz_id)
                 return redirect(url_for('profile.info'))
             return redirect(url_for('index.index'))
