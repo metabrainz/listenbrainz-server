@@ -1,9 +1,8 @@
 
-from flask import Blueprint, current_app, request, redirect, render_template, url_for, session
-from flask_login import login_user, logout_user, login_required, current_user
+from flask import Blueprint, request, redirect, render_template, url_for, session
+from flask_login import login_user, logout_user, login_required
 from listenbrainz.webserver.login import login_forbidden, provider
 from listenbrainz.webserver import flash
-from werkzeug.exceptions import BadRequest
 import listenbrainz.db.user as db_user
 import time
 
