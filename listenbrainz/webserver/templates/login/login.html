@@ -8,9 +8,22 @@
   <p>To sign in, use your MusicBrainz account, and authorize ListenBrainz to access your profile data.</p>
 
   <div class="well bg-danger" style="max-width: 600px; margin: 0 auto;">
-      <p class="text-danger">Important!</p>
+      <p class="text-danger" style="font-size: 16pt;">Important!</p>
       <p>
-        By creating a ListenBrainz account, you grant the MetaBrainz Foundation permission to process your listen history (not your personal data from your profile) into data dumps we make publicly available under the <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0 license</a> and into other tools such as music recommendation engines. If after creating an account you change your mind about processing your listening history, you will need to request to delete your ListenBrainz account.
+        By signing into ListenBrainz, you grant the MetaBrainz Foundation permission to include your listening history
+        in data dumps we make publicly available under the
+        <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0 license</a>. None of your private information
+        from your user profile will be included in these data dumps.
+      </p>
+      <p>
+        Furthermore, you grant the MetaBrainz Foundation permission to process your listening history and include it
+        in new open source tools such as recommendation engines that the ListenBrainz project is building. For details
+        on processing your listening history, please see our <a href="https://metabrainz.org/gdpr">GDPR compliance
+        statement</a>.
+      <p>
+      </p>
+        If after creating an account you change your mind about processing your listening history, you will need to
+        <a href="{{ url_for('login.musicbrainz')}}">delete your ListenBrainz account</a>.
       </p>
   </div>
   <br/>
