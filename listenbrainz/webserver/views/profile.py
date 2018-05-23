@@ -14,7 +14,6 @@ from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.stats.utils import construct_stats_queue_key
 from listenbrainz.webserver import flash
-from listenbrainz.webserver.login import gdpr_acceptance_required
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.influx_connection import _influx
 from listenbrainz.webserver.utils import sizeof_readable
@@ -33,7 +32,6 @@ EXPORT_FETCH_COUNT = 5000
 
 @profile_bp.route("/resettoken", methods=["GET", "POST"])
 @login_required
-@gdpr_acceptance_required
 def reset_token():
     if request.method == "POST":
         token = request.form.get("token")
@@ -57,7 +55,6 @@ def reset_token():
 
 @profile_bp.route("/resetlatestimportts", methods=["GET", "POST"])
 @login_required
-@gdpr_acceptance_required
 def reset_latest_import_timestamp():
     if request.method == "POST":
         token = request.form.get("token")
@@ -81,7 +78,6 @@ def reset_latest_import_timestamp():
 
 @profile_bp.route("/")
 @login_required
-@gdpr_acceptance_required
 def info():
 
     # check if user is in stats calculation queue or if valid stats already exist
@@ -101,7 +97,6 @@ def info():
 
 @profile_bp.route("/import")
 @login_required
-@gdpr_acceptance_required
 def import_data():
     """ Displays the import page to user, giving various options """
 
@@ -160,7 +155,6 @@ def export_data():
 
 @profile_bp.route("/upload", methods=['GET', 'POST'])
 @login_required
-@gdpr_acceptance_required
 def upload():
     if request.method == 'POST':
         try:
@@ -224,7 +218,6 @@ def upload():
 
 @profile_bp.route('/request-stats', methods=['GET'])
 @login_required
-@gdpr_acceptance_required
 def request_stats():
     """ Check if the current user's statistics have been calculated and if not,
         put them in the stats queue for stats_calculator.
@@ -281,4 +274,3 @@ def delete():
             'profile/delete.html',
             user=current_user,
         )
-
