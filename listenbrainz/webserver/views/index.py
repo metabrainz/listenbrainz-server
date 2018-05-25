@@ -137,6 +137,9 @@ def gdpr_notice():
             return redirect(url_for('index.index'))
         elif request.form.get('gdpr-options') == 'disagree':
             return redirect(url_for('profile.delete'))
+        else:
+            flash.error('You must agree to or decline our terms')
+            return render_template('index/gdpr.html', next=request.args.get('next'))
 
 
 def _get_user_count():
