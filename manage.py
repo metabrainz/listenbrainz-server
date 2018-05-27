@@ -14,6 +14,8 @@ try:
     import messybraiz.custom_config as config
 except ImportError:
     pass
+from messybrainz.create_recording_clusters import create_recording_clusters
+
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'sql')
 
@@ -99,6 +101,16 @@ def init_test_db(force=False):
     db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
 
     print("Done!")
+
+@cli.command()
+@click.option("--reset", "-r", is_flag=True, help="Drop existing database and user.")
+def create_recording_clusters_for_mbids(reset=False):
+    db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
+    clusters_modified, clusters_add_to_redirect, num_msid_processed = create_recording_clusters(reset)
+    print("Clusters modified: {0}.".format(clusters_modified))
+    print("Clusters add to redirect table: {0}.".format(clusters_add_to_redirect))
+    print("Number of MSIDs processed: {0}.".format(num_msid_processed))
+    print ("Done!")
 
 
 @cli.command()
