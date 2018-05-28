@@ -17,15 +17,15 @@ from brainzutils.musicbrainz_db.exceptions import NoDataFoundException
 from messybrainz import db
 from messybrainz import data
 from sqlalchemy import text
+import uuid
 
 
-def check_valid_uuid(s):
-    """ Checks if the recording MBID is in the valid format or not.
-        Returns True if its a valid UUID else returns False.
-    """
-    if re.match(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', s):
+# lifted from AcousticBrainz
+def is_valid_uuid(u):
+    try:
+        u = uuid.UUID(u)
         return True
-    else:
+    except ValueError:
         return False
 
 
@@ -102,7 +102,7 @@ def fetch_artist_mbids_for_all_recording_mbids(reset=False):
         num_recording_mbids_added = 0
         num_recording_mbids_processed = recording_mbids.rowcount
         for recording_mbid in recording_mbids:
-            if check_valid_uuid(recording_mbid[0]):
+            if is_valid_uuid(recording_mbid[0]):
                 if not is_recording_mbid_present(recording_mbid[0]):
                     result = fetch_artist_mbids(recording_mbid[0])
                     if result:
