@@ -110,16 +110,7 @@ def fetch_artist_mbids(reset=False):
         the total recording MBIDs it added to the recording_artist table.
     """
 
-    if reset:
-        db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
-        with db.engine.begin() as connection:
-            query = text("""TRUNCATE TABLE recording_artist""")
-            try:
-                connection.execute(query)
-            except sqlalchemy.exc.ProgrammingError as e:
-                print("Error: {}".format(e))
-
-    result = fetch_artist_mbids_for_all_recording_mbids()
+    result = fetch_artist_mbids_for_all_recording_mbids(reset)
 
     print("Total recording MBIDs processed: {0}.".format(result[0]))
     print("Total recording MBIDs added to table: {0}.".format(result[1]))
