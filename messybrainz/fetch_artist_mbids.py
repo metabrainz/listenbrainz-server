@@ -12,10 +12,10 @@ try:
 except ImportError:
     pass
 
-from brainzutils import cache
 from brainzutils import musicbrainz_db
 from brainzutils.musicbrainz_db.exceptions import NoDataFoundException
 from messybrainz import db
+from messybrainz import data
 from sqlalchemy import text
 
 
@@ -82,7 +82,7 @@ def fetch_artist_mbids(recording_mbid):
     return result
 
 
-def fetch_artist_mbids_for_all_recording_mbids():
+def fetch_artist_mbids_for_all_recording_mbids(reset=False):
     """ Fetches artist MBIDs from the musicbrainz database for the recording MBIDs
         in the recording_json table submitted while submitting a listen.
         Returns the number of recording MBIDs that were processed and number of
@@ -91,26 +91,20 @@ def fetch_artist_mbids_for_all_recording_mbids():
     # Init databases
     db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
     musicbrainz_db.init_db_engine(config.MB_DATABASE_URI)
-    # Init cache
-    try:
-        cache.init(host=config.REDIS_HOST, port=config.REDIS_PORT, namespace=config.REDIS_NAMESPACE)
-    except KeyError as e:
-        logging.error("Redis is not defined in config file. Error: {}".format(e))
-        raise
+
+    if reset:
+        query = text("""TRUNCATE TABLE recording_artist""")
+        connection.execute(query)
 
     # Get a list of all distinct recording MBIDs from recording_json table
     with db.engine.begin() as connection:
-        query = text("""SELECT DISTINCT data ->> 'recording_mbid' AS recording_mbid
-                        FROM recording_json
-                        WHERE data ->> 'recording_mbid' IS NOT NULL""")
-        result = connection.execute(query)
-
+        recording_mbids = data.fetch_distinct_recording_mbids(connection)
         num_recording_mbids_added = 0
-        num_recording_mbids_processed = result.rowcount
-        for row in result:
-            if check_valid_uuid(row[0]):
-                if not is_recording_mbid_present(row[0]):
-                    result = fetch_artist_mbids(row[0])
+        num_recording_mbids_processed = recording_mbids.rowcount
+        for recording_mbid in recording_mbids:
+            if check_valid_uuid(recording_mbid[0]):
+                if not is_recording_mbid_present(recording_mbid[0]):
+                    result = fetch_artist_mbids(recording_mbid[0])
                     if result:
                         num_recording_mbids_added += 1
 
