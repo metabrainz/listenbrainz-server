@@ -23,7 +23,7 @@ def is_valid_uuid(u):
 
 def insert_artist_mbids(connection, recording_mbid, artist_mbids):
     """ Inserts the artist_mbids corresponding to the recording_mbids
-        into the recording_artist table.
+        into the recording_artist_join table.
     """
 
     for artist_mbid in artist_mbids:
@@ -39,7 +39,7 @@ def insert_artist_mbids(connection, recording_mbid, artist_mbids):
 
 def is_recording_mbid_present(connection, recording_mbid):
     """
-        Check if recording MBID is already present in recording_artist table.
+        Check if recording MBID is already present in recording_artist_join table.
         Returns True if recording MBID is present else False is returned.
     """
 
@@ -60,7 +60,7 @@ def is_recording_mbid_present(connection, recording_mbid):
 
 def fetch_and_store_artist_mbids(connection, recording_mbid):
     """ Fetches artist MBIDs from the MusicBrainz database for the recording MBID.
-        And inserts the artist MBIDs into the recording_artist table.
+        And inserts the artist MBIDs into the recording_artist_join table.
     """
 
     recording = mb_recording.get_recording_by_mbid(recording_mbid, includes=['artists'])
@@ -76,7 +76,7 @@ def fetch_and_store_artist_mbids_for_all_recording_mbids(reset=False):
     """ Fetches artist MBIDs from the musicbrainz database for the recording MBIDs
         in the recording_json table submitted while submitting a listen.
         Returns the number of recording MBIDs that were processed and number of
-        recording MBIDs that were added to the recording_artist table.
+        recording MBIDs that were added to the recording_artist_join table.
     """
 
     with db.engine.begin() as connection:
