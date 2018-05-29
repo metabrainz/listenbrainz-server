@@ -1,6 +1,7 @@
 from messybrainz import db
-from messybrainz.fetch_artist_mbids import fetch_artist_mbids_for_all_recording_mbids
+from messybrainz.fetch_artist_mbids import fetch_and_store_artist_mbids_for_all_recording_mbids
 from messybrainz.webserver import create_app
+from brainzutils import musicbrainz_db
 from sqlalchemy import text
 
 import subprocess
@@ -101,7 +102,7 @@ def init_test_db(force=False):
 
 @cli.command()
 @click.option("--reset", "-r", is_flag=True, help="Clear the table and add MBIDs again.")
-def fetch_artist_mbids(reset=False):
+def fetch_and_store_artist_mbids(reset=False):
     """ Fetches artist MBIDs from the musicbrainz database for the recording MBIDs
         in the recording_json table submitted while submitting a listen.
         If reset flag is set to true the recording_artist table is first truncated
@@ -110,10 +111,14 @@ def fetch_artist_mbids(reset=False):
         the total recording MBIDs it added to the recording_artist table.
     """
 
-    result = fetch_artist_mbids_for_all_recording_mbids(reset)
+    # Init databases
+    db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
+    musicbrainz_db.init_db_engine(config.MB_DATABASE_URI)
 
-    print("Total recording MBIDs processed: {0}.".format(result[0]))
-    print("Total recording MBIDs added to table: {0}.".format(result[1]))
+    num_recording_mbids_processed, num_recording_mbids_added = fetch_and_store_artist_mbids_for_all_recording_mbids(reset)
+
+    print("Total recording MBIDs processed: {0}.".format(num_recording_mbids_processed))
+    print("Total recording MBIDs added to table: {0}.".format(num_recording_mbids_added))
     print("Done!")
 
 
