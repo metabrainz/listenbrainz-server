@@ -60,23 +60,16 @@ def is_recording_mbid_present(connection, recording_mbid):
 
 def fetch_and_store_artist_mbids(connection, recording_mbid):
     """ Fetches artist MBIDs from the MusicBrainz database for the recording MBID.
-        And inserts the artist MBIDs into the recording_artist table. It returns
-        True if it inserted the data into the recording_artist table. In case the
-        corresponding MBID was not found in musicbrainz_db it returns false.
+        And inserts the artist MBIDs into the recording_artist table.
     """
 
-    try :
-        recording = mb_recording.get_recording_by_mbid(recording_mbid, includes=['artists'])
-    except NoDataFoundException:
-        return False
+    recording = mb_recording.get_recording_by_mbid(recording_mbid, includes=['artists'])
 
     artist_mbids = []
     for artist in recording['artists']:
         artist_mbids.append(artist['id'])
 
     insert_artist_mbids(connection, recording_mbid, artist_mbids)
-
-    return True
 
 
 def fetch_and_store_artist_mbids_for_all_recording_mbids(reset=False):
@@ -97,8 +90,10 @@ def fetch_and_store_artist_mbids_for_all_recording_mbids(reset=False):
         for recording_mbid in recording_mbids:
             if is_valid_uuid(recording_mbid[0]):
                 if not is_recording_mbid_present(connection, recording_mbid[0]):
-                    result = fetch_and_store_artist_mbids(connection, recording_mbid[0])
-                    if result:
+                    try:
+                        fetch_and_store_artist_mbids(connection, recording_mbid[0])
                         num_recording_mbids_added += 1
+                    except NoDataFoundException:
+                        pass
 
         return num_recording_mbids_processed, num_recording_mbids_added
