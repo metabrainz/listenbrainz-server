@@ -27,8 +27,8 @@ def insert_artist_mbids(connection, recording_mbid, artist_mbids):
     """
 
     for artist_mbid in artist_mbids:
-        query = text("""INSERT INTO recording_artist (recording_mbid, artist_mbid)
-                             VALUES (:recording_mbid, :artist_mbid)
+        query = text("""INSERT INTO recording_artist_join (recording_mbid, artist_mbid, updated)
+                             VALUES (:recording_mbid, :artist_mbid, now())
         """)
 
         result = connection.execute(query, {
@@ -44,7 +44,7 @@ def is_recording_mbid_present(connection, recording_mbid):
     """
 
     query = text("""SELECT recording_mbid
-                      FROM recording_artist
+                      FROM recording_artist_join
                      WHERE recording_mbid = :recording_mbid
     """)
 
@@ -88,7 +88,7 @@ def fetch_and_store_artist_mbids_for_all_recording_mbids(reset=False):
 
     with db.engine.begin() as connection:
         if reset:
-            query = text("""TRUNCATE TABLE recording_artist""")
+            query = text("""TRUNCATE TABLE recording_artist_join""")
             connection.execute(query)
 
         recording_mbids = data.fetch_distinct_recording_mbids(connection)

@@ -18,6 +18,6 @@ CREATE UNIQUE INDEX cluster_id_ndx_release_cluster ON release_cluster (cluster_i
 CREATE INDEX name_ndx_artist_credit ON artist_credit (name);
 CREATE INDEX title_ndx_release ON release (title);
 
-CREATE INDEX mbid_ndx_recording ON recording_artist (recording_mbid);
+CREATE INDEX mbid_ndx_recording ON recording_artist_join (recording_mbid);
 
 COMMIT;
