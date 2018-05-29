@@ -64,9 +64,10 @@ CREATE TABLE release_cluster (
   updated     TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
-CREATE TABLE recording_artist (
+CREATE TABLE recording_artist_join (
   recording_mbid UUID NOT NULL,
-  artist_mbid UUID NOT NULL
+  artist_mbid UUID NOT NULL,
+  updated TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 COMMIT;
