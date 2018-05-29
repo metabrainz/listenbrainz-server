@@ -16,15 +16,14 @@ def insert_artist_mbids(connection, recording_mbid, artist_mbids):
         into the recording_artist_join table.
     """
 
-    for artist_mbid in artist_mbids:
-        query = text("""INSERT INTO recording_artist_join (recording_mbid, artist_mbid, updated)
-                             VALUES (:recording_mbid, :artist_mbid, now())
-        """)
+    query = text("""INSERT INTO recording_artist_join (recording_mbid, artist_mbid, updated)
+                         VALUES (:recording_mbid, :artist_mbid, now())""")
 
-        result = connection.execute(query, {
-        "recording_mbid": recording_mbid,
-        "artist_mbid": artist_mbid,
-        })
+    values = [
+        {"recording_mbid": recording_mbid, "artist_mbid": artist_mbid} for artist_mbid in artist_mbids
+    ]
+
+    connection.execute(query, values)
 
 
 def fetch_and_store_artist_mbids(connection, recording_mbid):
