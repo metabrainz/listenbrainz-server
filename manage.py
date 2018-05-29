@@ -105,10 +105,10 @@ def init_test_db(force=False):
 def fetch_and_store_artist_mbids(reset=False):
     """ Fetches artist MBIDs from the musicbrainz database for the recording MBIDs
         in the recording_json table submitted while submitting a listen.
-        If reset flag is set to true the recording_artist table is first truncated
+        If reset flag is set to true the recording_artist_join table is first truncated
         and the whole process starts from scratch.
         In the end it prints to the console the total recording MBIDs it processed and
-        the total recording MBIDs it added to the recording_artist table.
+        the total recording MBIDs it added to the recording_artist_join table.
     """
 
     # Init databases
