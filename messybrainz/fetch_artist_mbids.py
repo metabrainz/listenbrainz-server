@@ -60,7 +60,15 @@ def fetch_recording_mbids_not_in_recording_artist_join(connection):
     return result
 
 
-def fetch_and_store_artist_mbids_for_all_recording_mbids(reset=False):
+def truncate_recording_artist_join():
+    """Truncates the table recording_artist_join."""
+
+    with db.engine.begin() as connection:
+        query = text("""TRUNCATE TABLE recording_artist_join""")
+        connection.execute(query)
+
+
+def fetch_and_store_artist_mbids_for_all_recording_mbids():
     """ Fetches artist MBIDs from the musicbrainz database for the recording MBIDs
         in the recording_json table submitted while submitting a listen.
         Returns the number of recording MBIDs that were processed and number of
@@ -68,10 +76,6 @@ def fetch_and_store_artist_mbids_for_all_recording_mbids(reset=False):
     """
 
     with db.engine.begin() as connection:
-        if reset:
-            query = text("""TRUNCATE TABLE recording_artist_join""")
-            connection.execute(query)
-
         recording_mbids = fetch_recording_mbids_not_in_recording_artist_join(connection)
         num_recording_mbids_added = 0
         num_recording_mbids_processed = recording_mbids.rowcount
