@@ -106,12 +106,14 @@ def init_test_db(force=False):
 
 @cli.command()
 def create_recording_clusters_for_mbids():
+    """Creates clusters for recording using recording MBIDs present in 
+       recording_json table.
+    """
     db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
     try:
-        clusters_modified, clusters_add_to_redirect, num_msid_processed = create_recording_clusters()
+        clusters_modified, clusters_add_to_redirect = create_recording_clusters()
         print("Clusters modified: {0}.".format(clusters_modified))
         print("Clusters add to redirect table: {0}.".format(clusters_add_to_redirect))
-        print("Number of MSIDs processed: {0}.".format(num_msid_processed))
         print ("Done!")
     except Exception as error:
         print("While creating recording clusters. An error occured: {0}".format(error))
