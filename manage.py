@@ -114,11 +114,14 @@ def fetch_and_store_artist_mbids(reset=False):
     db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
     musicbrainz_db.init_db_engine(config.MB_DATABASE_URI)
 
-    num_recording_mbids_processed, num_recording_mbids_added = fetch_and_store_artist_mbids_for_all_recording_mbids()
-
-    print("Total recording MBIDs processed: {0}.".format(num_recording_mbids_processed))
-    print("Total recording MBIDs added to table: {0}.".format(num_recording_mbids_added))
-    print("Done!")
+    try:
+        num_recording_mbids_processed, num_recording_mbids_added = fetch_and_store_artist_mbids_for_all_recording_mbids()
+        print("Total recording MBIDs processed: {0}.".format(num_recording_mbids_processed))
+        print("Total recording MBIDs added to table: {0}.".format(num_recording_mbids_added))
+        print("Done!")
+    except Exception as error:
+        print("Unable to fetch artist MBIDs. An error occured: {0}".format(error))
+        raise
 
 
 @cli.command()

@@ -46,13 +46,12 @@ def fetch_recording_mbids_not_in_recording_artist_join(connection):
         those recording MBIDs.
     """
 
-    query = text("""SELECT DISTINCT data ->> 'recording_mbid'
-                               FROM recording_json
-                              WHERE data ->> 'recording_mbid' NOT IN (
-                                  SELECT DISTINCT recording_mbid::text
-                                             FROM recording_artist_join
-                              )
-                                AND data ->> 'recording_mbid' IS NOT NULL
+    query = text("""SELECT DISTINCT rj.data ->> 'recording_mbid'
+                               FROM recording_json AS rj
+                          LEFT JOIN recording_artist_join AS raj
+                                 ON (rj.data ->> 'recording_mbid')::uuid = raj.recording_mbid
+                              WHERE rj.data ->> 'recording_mbid' IS NOT NULL
+                                AND raj.recording_mbid IS NULL
     """)
 
     result = connection.execute(query)
@@ -84,6 +83,10 @@ def fetch_and_store_artist_mbids_for_all_recording_mbids():
                 fetch_and_store_artist_mbids(connection, recording_mbid[0])
                 num_recording_mbids_added += 1
             except NoDataFoundException:
+                # While submitting recordings we don't check if the recording MBID
+                # exists in MusicBrainz database. So, this exception can get raised if
+                # recording MBID doesnot exist in MusicBrainz database and we tried to
+                # query for it.
                 pass
 
         return num_recording_mbids_processed, num_recording_mbids_added
