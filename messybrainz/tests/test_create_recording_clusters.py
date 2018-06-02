@@ -5,8 +5,6 @@ from messybrainz import data
 from messybrainz.testing import DatabaseTestCase
 from messybrainz.create_recording_clusters import fetch_distinct_recording_mbids,\
                                                 fetch_gids_for_recording_mbid,\
-                                                is_recording_cluster_present_in_recording_redirect,\
-                                                is_recording_cluster_present_in_recording_cluster,\
                                                 link_recording_mbid_to_recording_msid,\
                                                 insert_recording_cluster,\
                                                 create_recording_clusters
@@ -77,41 +75,6 @@ class CreateRecordingClustersTestCase(DatabaseTestCase):
             self.assertSetEqual(gid_fetched, gid_from_data)
 
 
-    def test_is_recording_cluster_present_in_recording_redirect(self):
-        """Tests if proper value is returned if an ID is present in recording_redirect table."""
-
-        recording = {
-            "artist": "Jay‐Z & Beyoncé",
-            "title": "'03 Bonnie & Clyde",
-            "recording_mbid": "5465ca86-3881-4349-81b2-6efbd3a59451"
-        }
-        submit_listens([recording])
-        mbid = recording["recording_mbid"]
-        with db.engine.begin() as connection:
-            gids = fetch_gids_for_recording_mbid(connection, mbid)
-            insert_recording_cluster(connection, gids[0], gids)
-            link_recording_mbid_to_recording_msid(connection, gids[0], mbid)
-            result = is_recording_cluster_present_in_recording_redirect(connection, gids[0], mbid)
-            self.assertTrue(result)
-
-
-    def test_is_recording_cluster_present_in_recording_cluster(self):
-        """Tests if proper value is returned if an ID is present in recording_cluster table."""
-
-        recording = {
-            "artist": "Jay‐Z & Beyoncé",
-            "title": "'03 Bonnie & Clyde",
-            "recording_mbid": "5465ca86-3881-4349-81b2-6efbd3a59451"
-        }
-        submit_listens([recording])
-        mbid = recording["recording_mbid"]
-        with db.engine.begin() as connection:
-            gids = fetch_gids_for_recording_mbid(connection, mbid)
-            insert_recording_cluster(connection, gids[0], gids)
-            result = is_recording_cluster_present_in_recording_cluster(connection, gids[0], gids[0])
-            self.assertTrue(result)
-
-
     def test_link_recording_mbid_to_recording_msid(self):
         """Tests if MBIDs are linked to MSIDs correctly."""
 
@@ -124,11 +87,11 @@ class CreateRecordingClustersTestCase(DatabaseTestCase):
         mbid = recording["recording_mbid"]
         with db.engine.begin() as connection:
             msid = data.get_id_from_recording(connection, recording)
-            result = is_recording_cluster_present_in_recording_redirect(connection, msid, mbid)
-            self.assertFalse(result)
+            result = data.get_recording_cluster_id_using_recording_mbid(connection, mbid)
+            self.assertIsNone(result)
             link_recording_mbid_to_recording_msid(connection, msid, mbid)
-            result = is_recording_cluster_present_in_recording_redirect(connection, msid, mbid)
-            self.assertTrue(result)
+            result = data.get_recording_cluster_id_using_recording_mbid(connection, mbid)
+            self.assertEqual(msid, result)
 
 
     def test_insert_recording_cluster(self):
@@ -150,15 +113,9 @@ class CreateRecordingClustersTestCase(DatabaseTestCase):
 
         with db.engine.begin() as connection:
             recording_gids = fetch_gids_for_recording_mbid(connection, '5465ca86-3881-4349-81b2-6efbd3a59451')
-            result = is_recording_cluster_present_in_recording_cluster(connection, recording_gids[0], recording_gids[0])
-            self.assertFalse(result)
-            result = is_recording_cluster_present_in_recording_cluster(connection, recording_gids[0], recording_gids[1])
-            self.assertFalse(result)
             insert_recording_cluster(connection, recording_gids[0], recording_gids)
-            result = is_recording_cluster_present_in_recording_cluster(connection, recording_gids[0], recording_gids[0])
-            self.assertTrue(result)
-            result = is_recording_cluster_present_in_recording_cluster(connection, recording_gids[0], recording_gids[1])
-            self.assertTrue(result)
+            recording_gids = fetch_gids_for_recording_mbid(connection, '5465ca86-3881-4349-81b2-6efbd3a59451')
+            self.assertEqual(len(recording_gids), 0)
 
 
     def test_create_recording_clusters(self):
@@ -168,16 +125,14 @@ class CreateRecordingClustersTestCase(DatabaseTestCase):
         submit_listens(msb_listens)
 
         # Create clusters with empty recording_cluster, recording_redirect tables.
-        clusters_modified, clusters_add_to_redirect, num_msid_processed = create_recording_clusters(reset=True)
+        clusters_modified, clusters_add_to_redirect = create_recording_clusters()
         self.assertEqual(clusters_modified, 4)
         self.assertEqual(clusters_add_to_redirect, 4)
-        self.assertEqual(num_msid_processed, 7)
 
         # Create clusters again to make sure duplication of data does not take place.
-        clusters_modified, clusters_add_to_redirect, num_msid_processed = create_recording_clusters(reset=False)
+        clusters_modified, clusters_add_to_redirect = create_recording_clusters()
         self.assertEqual(clusters_modified, 0)
         self.assertEqual(clusters_add_to_redirect, 0)
-        self.assertEqual(num_msid_processed, 7)
 
         # Add new recordings and create clusters again.
         recording_1 = {
@@ -193,7 +148,6 @@ class CreateRecordingClustersTestCase(DatabaseTestCase):
         }
         submit_listens([recording_1, recording_2])
 
-        clusters_modified, clusters_add_to_redirect, num_msid_processed = create_recording_clusters(reset=False)
+        clusters_modified, clusters_add_to_redirect = create_recording_clusters()
         self.assertEqual(clusters_modified, 2)
         self.assertEqual(clusters_add_to_redirect, 1)
-        self.assertEqual(num_msid_processed, 9)
