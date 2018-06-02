@@ -103,14 +103,20 @@ def init_test_db(force=False):
 
     print("Done!")
 
+
 @cli.command()
 def create_recording_clusters_for_mbids():
     db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
-    clusters_modified, clusters_add_to_redirect, num_msid_processed = create_recording_clusters()
-    print("Clusters modified: {0}.".format(clusters_modified))
-    print("Clusters add to redirect table: {0}.".format(clusters_add_to_redirect))
-    print("Number of MSIDs processed: {0}.".format(num_msid_processed))
-    print ("Done!")
+    try:
+        clusters_modified, clusters_add_to_redirect, num_msid_processed = create_recording_clusters()
+        print("Clusters modified: {0}.".format(clusters_modified))
+        print("Clusters add to redirect table: {0}.".format(clusters_add_to_redirect))
+        print("Number of MSIDs processed: {0}.".format(num_msid_processed))
+        print ("Done!")
+    except Exception as error:
+        print("While creating recording clusters. An error occured: {0}".format(error))
+        raise
+
 
 @cli.command()
 def truncate_recording_cluster_and_redirect():
