@@ -159,13 +159,14 @@ def is_recording_cluster_present_in_recording_cluster(connection, cluster_id, gi
     return False
 
 
-def truncate_tables(connection):
+def truncate_tables():
     """Truncates recording_cluster and recording_redirect tables."""
 
-    query = text("TRUNCATE TABLE recording_cluster")
-    connection.execute(query)
-    query = text("TRUNCATE TABLE recording_redirect")
-    connection.execute(query)
+    with db.engine.begin() as connection:
+        query = text("TRUNCATE TABLE recording_cluster")
+        connection.execute(query)
+        query = text("TRUNCATE TABLE recording_redirect")
+        connection.execute(query)
 
 
 def msid_processed(connection):
@@ -177,7 +178,7 @@ def msid_processed(connection):
     return num_msid[0]
 
 
-def create_recording_clusters(reset=False):
+def create_recording_clusters():
     """Creates clusters for recording mbids present in the recording_json table.
 
     Args:
@@ -193,8 +194,6 @@ def create_recording_clusters(reset=False):
     clusters_add_to_redirect = 0
     num_msid_processed = 0
     with db.engine.begin() as connection:
-        if reset:
-            truncate_tables(connection)
         recording_mbids = fetch_distinct_recording_mbids(connection) 
         for recording_mbid in recording_mbids:
             if is_valid_uuid(recording_mbid[0]):

@@ -14,7 +14,8 @@ try:
     import messybraiz.custom_config as config
 except ImportError:
     pass
-from messybrainz.create_recording_clusters import create_recording_clusters
+from messybrainz.create_recording_clusters import create_recording_clusters,\
+                                                truncate_tables
 
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'sql')
@@ -103,14 +104,20 @@ def init_test_db(force=False):
     print("Done!")
 
 @cli.command()
-@click.option("--reset", "-r", is_flag=True, help="Drop existing database and user.")
-def create_recording_clusters_for_mbids(reset=False):
+def create_recording_clusters_for_mbids():
     db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
-    clusters_modified, clusters_add_to_redirect, num_msid_processed = create_recording_clusters(reset)
+    clusters_modified, clusters_add_to_redirect, num_msid_processed = create_recording_clusters()
     print("Clusters modified: {0}.".format(clusters_modified))
     print("Clusters add to redirect table: {0}.".format(clusters_add_to_redirect))
     print("Number of MSIDs processed: {0}.".format(num_msid_processed))
     print ("Done!")
+
+@cli.command()
+def truncate_recording_cluster_and_redirect():
+    """Truncate recording_cluster and recording_redirect tables."""
+    db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
+    truncate_tables()
+    print("recording_cluster and recording_redirect table truncated.")
 
 
 @cli.command()
