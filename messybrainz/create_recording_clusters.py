@@ -34,15 +34,14 @@ def fetch_gids_for_recording_mbid(connection, recording_mbid):
         List of gids.
     """
 
-    query = text("""SELECT gid
-                      FROM recording_json
-                      JOIN recording
-                        ON recording_json.id = recording.data
-                     WHERE recording_json.data ->> 'recording_mbid' = :recording_mbid
-                       AND gid
-                    NOT IN ( SELECT recording_gid
-                               FROM recording_cluster
-                    )
+    query = text("""SELECT r.gid
+                      FROM recording_json AS rj
+                      JOIN recording AS r
+                        ON rj.id = r.data
+                 LEFT JOIN recording_cluster AS rc
+                        ON r.gid = rc.recording_gid
+                     WHERE rj.data ->> 'recording_mbid' = :recording_mbid
+                       AND rc.recording_gid IS NULL
     """)
     gids = connection.execute(query, {
         "recording_mbid": recording_mbid,
