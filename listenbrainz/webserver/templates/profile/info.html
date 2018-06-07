@@ -6,6 +6,13 @@
   <div id="user-profile">
     <h2 class="page-title">{{ user.musicbrainz_id }}</h2>
 
+    <h3> Delete your account </h3>
+
+    <p>
+      <a href="{{ url_for("profile.delete") }}" style="color: white;"><span class="btn btn-info btn-lg" style="width: 300px">Delete your account</span></a>
+    </p>
+
+    <h3> Reset Last.FM Import timestamp </h3>
     <p>
       If you think that a partial import has somehow missed some listens, you may reset your previous
       import timestamp. This will cause your next import to be a complete import which should add any
