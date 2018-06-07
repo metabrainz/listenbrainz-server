@@ -1,11 +1,9 @@
 {% extends 'base.html' %}
 
-{% block title %}Sign in - ListenBrainz{% endblock %}
+{% block title %}Agree to Terms - ListenBrainz{% endblock %}
 
 {% block content %}
-  <h2 class="page-title">Sign in</h2>
-
-  <p>To sign in, use your MusicBrainz account, and authorize ListenBrainz to access your profile data.</p>
+  <h2 class="page-title">Agree to General Data Protection Regulations</h2>
 
   <div class="well bg-danger" style="max-width: 600px; margin: 0 auto;">
       <p class="text-danger" style="font-size: 16pt;">Important!</p>
@@ -22,13 +20,20 @@
         statement</a>.
       <p>
       </p>
-        If after creating an account you change your mind about processing your listening history, you will need to
+        If you change your mind about processing your listening history, you will need to
         <a href="{{ url_for('login.musicbrainz')}}">delete your ListenBrainz account</a>.
       </p>
-  </div>
-  <br/>
-  <div class="well" style="max-width: 600px; margin: 0 auto;">
-    <a href="{{ url_for('login.musicbrainz', next=request.args.get('next')) }}"
-       class="btn btn-primary btn-lg btn-block">Sign in with MusicBrainz</a>
-  </div>
+
+    <form method="POST">
+      <input type="radio" id="gdpr-agree" name="gdpr-options" value="agree" required> OK, I agree<br/>
+      <input type="radio" id="gdpr-disagree" name="gdpr-options" value="disagree" required> No, take me to the account deletion page<br/>
+      {% if request.args.get('next') %}
+        <input type="hidden" name="next" value="{{ request.args.get('next') }}"/>
+      {% endif %}
+    </div>
+    <br/>
+    <div class="well" style="max-width: 600px; margin: 0 auto;">
+      <button type="submit" class="btn btn-primary btn-lg btn-block">Submit choice!</a>
+    </div>
+  </form>
 {% endblock %}

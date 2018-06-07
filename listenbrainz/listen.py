@@ -1,7 +1,8 @@
 # coding=utf-8
+import calendar
+import time
 
 from datetime import datetime
-import calendar
 from listenbrainz.utils import escape, convert_to_unix_timestamp
 
 def flatten_dict(d, seperator='', parent_key=''):
@@ -29,6 +30,11 @@ def flatten_dict(d, seperator='', parent_key=''):
 class Listen(object):
     """ Represents a listen object """
 
+    # keys that we use ourselves for private usage
+    PRIVATE_KEYS = (
+        'inserted_timestamp',
+    )
+
     # keys in additional_info that we support explicitly and are not superfluous
     SUPPORTED_KEYS = (
         'artist_mbids',
@@ -55,7 +61,7 @@ class Listen(object):
     )
 
     def __init__(self, user_id=None, user_name=None, timestamp=None, artist_msid=None, release_msid=None,
-                 recording_msid=None, dedup_tag=0, data=None):
+                 recording_msid=None, dedup_tag=0, inserted_timestamp=None, data=None):
         self.user_id = user_id
         self.user_name = user_name
 
@@ -75,6 +81,7 @@ class Listen(object):
         self.release_msid = release_msid
         self.recording_msid = recording_msid
         self.dedup_tag = dedup_tag
+        self.inserted_timestamp = inserted_timestamp
         if data is None:
             self.data = {'additional_info': {}}
         else:
@@ -132,7 +139,7 @@ class Listen(object):
         # Also, we need to make sure that we don't add fields like time, user_name etc. into
         # the additional_info.
         for key, value in row.items():
-            if key not in data and key not in Listen.TOP_LEVEL_KEYS and value is not None:
+            if key not in data and key not in Listen.TOP_LEVEL_KEYS + Listen.PRIVATE_KEYS and value is not None:
                 data[key] = value
 
         return cls(
@@ -141,6 +148,7 @@ class Listen(object):
             artist_msid=row.get('artist_msid'),
             recording_msid=row.get('recording_msid'),
             release_msid=row.get('release_msid'),
+            inserted_timestamp=row.get('inserted_timestamp'),
             data={
                 'additional_info': data,
                 'artist_name': row.get('artist_name'),
@@ -206,6 +214,7 @@ class Listen(object):
                 'tracknumber': self.data['additional_info'].get('tracknumber', ''),
                 'isrc': self.data['additional_info'].get('isrc', ''),
                 'spotify_id': self.data['additional_info'].get('spotify_id', ''),
+                'inserted_timestamp': int(time.time()),
             }
         }
 
@@ -216,6 +225,8 @@ class Listen(object):
 
         # add the user generated keys present in additional info to fields
         for key, value in self.data['additional_info'].items():
+            if key in Listen.PRIVATE_KEYS:
+                continue
             if key not in Listen.SUPPORTED_KEYS:
                 data['fields'][key] = escape(str(value))
 
