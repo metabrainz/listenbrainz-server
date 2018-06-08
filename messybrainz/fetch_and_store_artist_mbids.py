@@ -1,5 +1,3 @@
-# Script to fetch artist MBIDs from MusicBrainz Database using
-# the recording MBIDs in the MessyBrainz database.
 
 import brainzutils.musicbrainz_db.recording as mb_recording
 import json
@@ -43,7 +41,7 @@ def fetch_and_store_artist_mbids(connection, recording_mbid):
 def fetch_recording_mbids_not_in_recording_artist_join(connection):
     """ Fetches recording MBIDs that are present in recording_json table
         but are not present in recording_artist_join table and returns
-        those recording MBIDs.
+        a list of those recording MBIDs.
     """
 
     query = text("""SELECT DISTINCT rj.data ->> 'recording_mbid'
@@ -56,7 +54,7 @@ def fetch_recording_mbids_not_in_recording_artist_join(connection):
 
     result = connection.execute(query)
 
-    return result
+    return list(result.fetchall()[0])
 
 
 def truncate_recording_artist_join():
@@ -77,10 +75,10 @@ def fetch_and_store_artist_mbids_for_all_recording_mbids():
     with db.engine.begin() as connection:
         recording_mbids = fetch_recording_mbids_not_in_recording_artist_join(connection)
         num_recording_mbids_added = 0
-        num_recording_mbids_processed = recording_mbids.rowcount
+        num_recording_mbids_processed = len(recording_mbids)
         for recording_mbid in recording_mbids:
             try:
-                fetch_and_store_artist_mbids(connection, recording_mbid[0])
+                fetch_and_store_artist_mbids(connection, recording_mbid)
                 num_recording_mbids_added += 1
             except NoDataFoundException:
                 # While submitting recordings we don't check if the recording MBID
