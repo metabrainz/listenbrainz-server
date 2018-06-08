@@ -3,7 +3,7 @@ import logging
 import uuid
 
 from hashlib import sha256
-from messybrainz import exceptions
+from messybrainz.db import exceptions
 from sqlalchemy import text
 
 
