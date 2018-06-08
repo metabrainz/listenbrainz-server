@@ -18,8 +18,8 @@
 
 
 from messybrainz import db
-from messybrainz import data
-from messybrainz.testing import DatabaseTestCase
+from messybrainz.db import data
+from messybrainz.db.testing import DatabaseTestCase
 
 
 recording = {
