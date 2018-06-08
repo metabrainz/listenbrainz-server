@@ -27,7 +27,7 @@ except ImportError:
     pass
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'admin', 'sql')
-TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'testdata')
+TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'testdata')
 
 
 class DatabaseTestCase(unittest.TestCase):

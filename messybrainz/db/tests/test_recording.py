@@ -7,7 +7,8 @@ from messybrainz.db.recording import fetch_distinct_recording_mbids,\
                                     fetch_gids_for_recording_mbid,\
                                     link_recording_mbid_to_recording_msid,\
                                     insert_recording_cluster,\
-                                    create_recording_clusters
+                                    create_recording_clusters,\
+                                    get_recording_cluster_id_using_recording_mbid
 
 
 class RecordingTestCase(DatabaseTestCase):
@@ -87,10 +88,10 @@ class RecordingTestCase(DatabaseTestCase):
         mbid = recording["recording_mbid"]
         with db.engine.begin() as connection:
             msid = data.get_id_from_recording(connection, recording)
-            result = data.get_recording_cluster_id_using_recording_mbid(connection, mbid)
+            result = get_recording_cluster_id_using_recording_mbid(connection, mbid)
             self.assertIsNone(result)
             link_recording_mbid_to_recording_msid(connection, msid, mbid)
-            result = data.get_recording_cluster_id_using_recording_mbid(connection, mbid)
+            result = get_recording_cluster_id_using_recording_mbid(connection, mbid)
             self.assertEqual(msid, result)
 
 
