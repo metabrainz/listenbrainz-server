@@ -128,8 +128,12 @@ def fetch_and_store_artist_mbids(reset=False):
 def truncate_recording_artist_join_table():
     """Truncate table recording_artist_join."""
     db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
-    truncate_recording_artist_join()
-    print("Table recording_artist_join truncated.")
+    try:
+        truncate_recording_artist_join()
+        print("Table recording_artist_join truncated.")
+    except Exception as error:
+        print("An error occured while truncating tables: {0}".format(error))
+        raise
 
 
 if __name__ == '__main__':
