@@ -124,8 +124,12 @@ def create_recording_clusters_for_mbids():
 def truncate_recording_cluster_and_redirect():
     """Truncate recording_cluster and recording_redirect tables."""
     db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
-    truncate_tables()
-    print("recording_cluster and recording_redirect table truncated.")
+    try:
+        truncate_tables()
+        print("recording_cluster and recording_redirect table truncated.")
+    except Exception as error:
+        print("An error occured while truncating recording_cluster and recording_redirect: {0}".format(error))
+        raise
 
 
 @cli.command()
