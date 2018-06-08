@@ -14,7 +14,7 @@ try:
     import messybraiz.custom_config as config
 except ImportError:
     pass
-from messybrainz.create_recording_clusters import create_recording_clusters,\
+from messybrainz.recording import create_recording_clusters,\
                                                 truncate_tables
 
 

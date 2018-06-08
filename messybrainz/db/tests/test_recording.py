@@ -1,16 +1,16 @@
 import json
 from messybrainz import submit_listens_and_sing_me_a_sweet_song as submit_listens
 from messybrainz import db
-from messybrainz import data
-from messybrainz.testing import DatabaseTestCase
-from messybrainz.create_recording_clusters import fetch_distinct_recording_mbids,\
-                                                fetch_gids_for_recording_mbid,\
-                                                link_recording_mbid_to_recording_msid,\
-                                                insert_recording_cluster,\
-                                                create_recording_clusters
+from messybrainz.db import data
+from messybrainz.db.testing import DatabaseTestCase
+from messybrainz.db.recording import fetch_distinct_recording_mbids,\
+                                    fetch_gids_for_recording_mbid,\
+                                    link_recording_mbid_to_recording_msid,\
+                                    insert_recording_cluster,\
+                                    create_recording_clusters
 
 
-class CreateRecordingClustersTestCase(DatabaseTestCase):
+class RecordingTestCase(DatabaseTestCase):
     def _load_test_data(self, filename):
         """Loads data for tests from a given JSON file name."""
 
