@@ -240,26 +240,3 @@ def link_recording_to_recording_id(connection, msid, mbid):
         "cluster_id": msid,
         "mbid": mbid,
     })
-
-
-def get_recording_cluster_id_using_recording_mbid(connection, recording_mbid):
-    """Returns cluster_id for a required recording MBID.
-
-    Args:
-        connection: the sqlalchemy db connection to be used to execute queries
-        recording_mbid (UUID): recording MBID for the cluster.
-
-    Returns:
-        cluster_id (UUID): MSID that represents the cluster if it exists else None.
-    """
-
-    query = text("""SELECT recording_cluster_id
-                      FROM recording_redirect
-                     WHERE recording_mbid = :recording_mbid""")
-
-    cluster_id = connection.execute(query, {"recording_mbid": recording_mbid})
-
-    if cluster_id.rowcount:
-        return cluster_id.fetchone()['recording_cluster_id']
-    else:
-        return None
