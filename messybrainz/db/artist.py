@@ -5,7 +5,7 @@ import json
 from brainzutils import musicbrainz_db
 from brainzutils.musicbrainz_db.exceptions import NoDataFoundException
 from messybrainz import db
-from messybrainz import data
+from messybrainz.db import data
 from sqlalchemy import text
 
 

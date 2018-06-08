@@ -1,5 +1,5 @@
 from messybrainz import db
-from messybrainz.fetch_and_store_artist_mbids import truncate_recording_artist_join,\
+from messybrainz.db.artist import truncate_recording_artist_join,\
                                                 fetch_and_store_artist_mbids_for_all_recording_mbids
 from messybrainz.webserver import create_app
 from brainzutils import musicbrainz_db
