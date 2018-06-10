@@ -17,14 +17,16 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+from listenbrainz import bigquery
 from listenbrainz import config
 from listenbrainz import stats
 
 
-def get_top_recordings(musicbrainz_id, time_interval=None):
+def get_top_recordings(bigquery_connection, musicbrainz_id, time_interval=None):
     """ Get top recordings of user with given MusicBrainz ID over a particular time interval
 
         Args:
+            bigquery_connection: the bigquery connection object
             musicbrainz_id (str): The MusicBrainz ID of the user
             time_interval  (str): Interval in the BigQuery interval format
                                   which can be seen here:
@@ -81,13 +83,15 @@ def get_top_recordings(musicbrainz_id, time_interval=None):
         },
     ]
 
-    return stats.run_query(query, parameters)
+    return bigquery.run_query(bigquery_connection, query, parameters)
 
-def get_top_artists(musicbrainz_id, time_interval=None):
+def get_top_artists(bigquery_connection, musicbrainz_id, time_interval=None):
     """ Get top artists for user with given MusicBrainz ID over a particular period of time
 
-        Args: musicbrainz_id (str): the MusicBrainz ID of the user
-              time_interval  (str): the time interval over which top artists should be returned
+        Args:
+            bigquery_connection: the bigquery connection object
+            musicbrainz_id (str): the MusicBrainz ID of the user
+            time_interval  (str): the time interval over which top artists should be returned
                                     (defaults to all time)
 
         Returns: A sorted list of dicts with the following structure
@@ -131,14 +135,16 @@ def get_top_artists(musicbrainz_id, time_interval=None):
         }
     ]
 
-    return stats.run_query(query, parameters)
+    return bigquery.run_query(bigquery_connection, query, parameters)
 
 
-def get_artist_count(musicbrainz_id, time_interval=None):
+def get_artist_count(bigquery_connection, musicbrainz_id, time_interval=None):
     """ Get artist count for user with given MusicBrainz ID over a particular period of time
 
-        Args: musicbrainz_id (str): the MusicBrainz ID of the user
-              time_interval  (str): the time interval over which artist count should be returned
+        Args:
+            bigquery_connection: the bigquery connection object
+            musicbrainz_id (str): the MusicBrainz ID of the user
+            time_interval  (str): the time interval over which artist count should be returned
                                     (defaults to all time)
 
         Returns: artist_count (int): total number of artists listened to by the user in that
@@ -167,14 +173,14 @@ def get_artist_count(musicbrainz_id, time_interval=None):
         }
     ]
 
-    return stats.run_query(query, parameters)[0]['artist_count']
+    return bigquery.run_query(bigquery_connection, query, parameters)[0]['artist_count']
 
 
-
-def get_top_releases(musicbrainz_id, time_interval=None):
+def get_top_releases(bigquery_connection, musicbrainz_id, time_interval=None):
     """ Get top releases for user with given MusicBrainz ID over a particular period of time
 
-        Args: musicbrainz_id (str): the MusicBrainz ID of the user
+        Args: bigquery_connection: the bigquery connection object
+              musicbrainz_id (str): the MusicBrainz ID of the user
               time_interval  (str): the time interval over which top releases should be returned
                                     (defaults to all time)
 
@@ -225,5 +231,5 @@ def get_top_releases(musicbrainz_id, time_interval=None):
         }
     ]
 
-    return stats.run_query(query, parameters)
+    return bigquery.run_query(bigquery_connection, query, parameters)
 
