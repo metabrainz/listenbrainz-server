@@ -1,4 +1,4 @@
-""" This module contains unit tests for the stats_calculator module.
+""" This module contains unit tests for the bigquery_job_runner module.
 """
 
 # listenbrainz-server - Server for the ListenBrainz project.
@@ -27,23 +27,24 @@ import unittest
 from listenbrainz import stats
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.stats.exceptions import NoCredentialsVariableException, NoCredentialsFileException
-from listenbrainz.stats.stats_calculator import StatsCalculator
+from listenbrainz.bigquery_job_runner.bigquery_job_runner import BigQueryJobRunner
 from listenbrainz.webserver import create_app
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 
-class StatsCalculatorTestCase(DatabaseTestCase):
+class BigQueryJobRunnerTestCase(DatabaseTestCase):
 
     def setUp(self):
-        super(StatsCalculatorTestCase, self).setUp()
+        super(BigQueryJobRunnerTestCase, self).setUp()
         self.app = create_app() # create a flask app for config purposes
-        self.sc = StatsCalculator()
+        self.sc = BigQueryJobRunner()
+        self.sc.bigquery = MagicMock()
         self.user = db_user.get_or_create('stats_calculator_test_user')
 
-    @patch('listenbrainz.stats.user.get_top_recordings', side_effect=lambda x: {})
-    @patch('listenbrainz.stats.user.get_top_artists', side_effect=lambda x: {})
-    @patch('listenbrainz.stats.user.get_top_releases', side_effect=lambda x: {})
-    @patch('listenbrainz.stats.user.get_artist_count', side_effect=lambda x: 1)
+    @patch('listenbrainz.stats.user.get_top_recordings', side_effect=lambda x, y: {})
+    @patch('listenbrainz.stats.user.get_top_artists', side_effect=lambda x, y: {})
+    @patch('listenbrainz.stats.user.get_top_releases', side_effect=lambda x, y: {})
+    @patch('listenbrainz.stats.user.get_artist_count', side_effect=lambda x, y: 1)
     def test_calculate_stats_for_user(self, get_top_recordings, get_top_artists, get_top_releases, get_artist_count):
         # invalid user data
         self.assertFalse(self.sc.calculate_stats_for_user({}))

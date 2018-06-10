@@ -1,4 +1,5 @@
-""" This script runs perpetually and calculates stats for entities
+""" This script runs perpetually and performs BigQuery jobs
+like deleting users, calculating statistics from jobs
 in the relevant RabbitMQ queue.
 """
 
@@ -27,11 +28,12 @@ import pika
 import time
 import ujson
 
-from listenbrainz import db, stats, utils
+from listenbrainz import bigquery, db, stats, utils
+from listenbrainz.bigquery.user import delete_user
 from listenbrainz.stats.utils import construct_stats_queue_key
 from listenbrainz.webserver import create_app
 
-class StatsCalculator:
+class BigQueryJobRunner:
     def __init__(self):
         self.app = create_app(debug=True) # creating a flask app for config values
 
@@ -57,15 +59,19 @@ class StatsCalculator:
 
 
     def callback(self, ch, method, properties, body):
-        """ Handle the data received from the queue and calculate stats accordingly.
+        """ Handle the data received from the queue and work accordingly.
         """
         data = ujson.loads(body)
 
-        entity_type = data.get('type', '')
-        if entity_type == 'user':
+        job_type = data.get('type', '')
+        if job_type == 'user':
             done = self.calculate_stats_for_user(data)
             if done:
                 self.redis.set(construct_stats_queue_key(data['musicbrainz_id']), 'done')
+        elif job_type == 'delete.user':
+            self.log.info('Deleting user %s from BigQuery', data['musicbrainz_id'])
+            delete_user(self.bigquery, data['musicbrainz_id'])
+            self.log.info('Deletion complete!')
         else:
             self.log.info('Cannot recognize the type of entity in queue, ignoring...')
             return
@@ -104,22 +110,23 @@ class StatsCalculator:
 
         try:
             self.log.info('Calculating statistics for user %s...', user['musicbrainz_id'])
-            recordings = stats_user.get_top_recordings(user['musicbrainz_id'])
+            recordings = stats_user.get_top_recordings(self.bigquery, user['musicbrainz_id'])
             self.log.info('Top recordings for user %s done!', user['musicbrainz_id'])
 
-            artists = stats_user.get_top_artists(user['musicbrainz_id'])
+            artists = stats_user.get_top_artists(self.bigquery, user['musicbrainz_id'])
             self.log.info('Top artists for user %s done!', user['musicbrainz_id'])
 
-            releases = stats_user.get_top_releases(user['musicbrainz_id'])
+            releases = stats_user.get_top_releases(self.bigquery, user['musicbrainz_id'])
             self.log.info('Top releases for user %s done!', user['musicbrainz_id'])
 
-            artist_count = stats_user.get_artist_count(user['musicbrainz_id'])
+            artist_count = stats_user.get_artist_count(self.bigquery, user['musicbrainz_id'])
             self.log.info('Artist count for user %s done!', user['musicbrainz_id'])
 
         except Exception as e:
             self.log.error('Unable to calculate stats for user %s. :(', user['musicbrainz_id'])
+            self.log.error('Error: %s', str(e))
             self.log.error('Giving up for now...')
-            return False
+            raise
 
         self.log.info('Inserting calculated stats for user %s into db', user['musicbrainz_id'])
         while True:
@@ -144,9 +151,9 @@ class StatsCalculator:
 
 
     def start(self):
-        """ Starts the stats calculator. This should run perpetually,
-            monitor the stats rabbitmq queue and calculate stats for
-            entities that it receives from the queue.
+        """ Starts the job runner. This should run perpetually,
+            monitor the bigquery jobs rabbitmq queue and perform tasks for
+            entries in the queue.
         """
 
         # if no bigquery support, sleep
@@ -155,7 +162,7 @@ class StatsCalculator:
                 time.sleep(10000)
 
         self.log.info('Connecting to Google BigQuery...')
-        stats.init_bigquery_connection()
+        self.bigquery = bigquery.create_bigquery_object()
         self.log.info('Connected!')
 
         self.log.info('Connecting to database...')
@@ -170,8 +177,8 @@ class StatsCalculator:
             self.init_rabbitmq_connection()
             self.incoming_ch = utils.create_channel_to_consume(
                 connection=self.connection,
-                exchange=self.app.config['STATS_EXCHANGE'],
-                queue=self.app.config['STATS_QUEUE'],
+                exchange=self.app.config['BIGQUERY_EXCHANGE'],
+                queue=self.app.config['BIGQUERY_QUEUE'],
                 callback_function=self.callback,
             )
             self.log.info('Stats calculator started!')
@@ -186,5 +193,5 @@ class StatsCalculator:
 
 
 if __name__ == '__main__':
-    sc = StatsCalculator()
-    sc.start()
+    jr = BigQueryJobRunner()
+    jr.start()
