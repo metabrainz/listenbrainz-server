@@ -240,4 +240,3 @@ def link_recording_to_recording_id(connection, msid, mbid):
         "cluster_id": msid,
         "mbid": mbid,
     })
-
