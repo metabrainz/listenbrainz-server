@@ -88,6 +88,9 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
     def test_menu_logged_in(self, mock_user_get):
         """ If the user is logged in, check that we perform a database query to get user data """
         user = db_user.get_or_create('iliekcomputers')
+        db_user.agree_to_gdpr(user['musicbrainz_id'])
+        user = db_user.get_or_create('iliekcomputers')
+
         mock_user_get.return_value = user
         self.temporary_login(user['id'])
         resp = self.client.get(url_for('index.index'))
@@ -111,6 +114,8 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         def view404():
             raise NotFound('not found')
 
+        user = db_user.get_or_create('iliekcomputers')
+        db_user.agree_to_gdpr(user['musicbrainz_id'])
         user = db_user.get_or_create('iliekcomputers')
         mock_user_get.return_value = user
         self.temporary_login(user['id'])
@@ -144,6 +149,8 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
             raise InternalServerError('error')
 
         user = db_user.get_or_create('iliekcomputers')
+        db_user.agree_to_gdpr(user['musicbrainz_id'])
+        user = db_user.get_or_create('iliekcomputers')
         mock_user_get.return_value = user
         self.temporary_login(user['id'])
         resp = self.client.get('/page_that_returns_500')
@@ -152,8 +159,6 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertNotIn('Your Listens', data)
         self.assertIn('Sign in', data)
         self.assertIn('Import!', data)
-        mock_user_get.assert_not_called()
-        self.assertIsInstance(self.get_context_variable('current_user'), AnonymousUserMixin)
 
     @mock.patch('listenbrainz.db.user.get')
     def test_menu_logged_in_error_dont_show_user_loaded(self, mock_user_get):
@@ -162,6 +167,9 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         loaded while rendering the template"""
 
         user = db_user.get_or_create('iliekcomputers')
+        db_user.agree_to_gdpr(user['musicbrainz_id'])
+        user = db_user.get_or_create('iliekcomputers')
+
         mock_user_get.return_value = user
 
         @self.app.route('/page_that_returns_500')

@@ -5,6 +5,8 @@ from time import sleep
 from shutil import copyfile
 
 from brainzutils.flask import CustomFlask
+from flask import request, url_for, redirect
+from flask_login import current_user
 
 API_PREFIX = '/1'
 
@@ -133,6 +135,22 @@ def create_app(config_path=None, debug=None):
 
     app = gen_app(config_path=config_path, debug=debug)
     _register_blueprints(app)
+
+    @app.before_request
+    def before_request_gdpr_check():
+        # skip certain pages, static content and the API
+        if request.path == url_for('index.gdpr_notice') \
+            or request.path == url_for('profile.delete') \
+            or request.path == url_for('profile.export_data') \
+            or request.path == url_for('login.logout') \
+            or request.path.startswith('/static') \
+            or request.path.startswith('/1'):
+            return
+        # otherwise if user is logged in and hasn't agreed to gdpr,
+        # redirect them to agree to terms page.
+        elif current_user.is_authenticated() and current_user.gdpr_agreed is None:
+            return redirect(url_for('index.gdpr_notice', next=request.full_path))
+
     return app
 
 
