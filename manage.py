@@ -1,5 +1,10 @@
 from messybrainz import db
+from messybrainz.db.artist import truncate_recording_artist_join,\
+                                                fetch_and_store_artist_mbids_for_all_recording_mbids
 from messybrainz.webserver import create_app
+from brainzutils import musicbrainz_db
+from sqlalchemy import text
+
 import subprocess
 import os
 import click
@@ -94,6 +99,41 @@ def init_test_db(force=False):
     db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
 
     print("Done!")
+
+
+@cli.command()
+def fetch_and_store_artist_mbids(reset=False):
+    """ Fetches artist MBIDs from the musicbrainz database for the recording MBIDs
+        in the recording_json table submitted while submitting a listen. It fetches
+        only the artist MBIDs for the recordings MBIDs which are not in recording_artist_join
+        table. In the end it prints to the console the total recording MBIDs it processed
+        and the total recording MBIDs it added to the recording_artist_join table.
+    """
+
+    # Init databases
+    db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
+    musicbrainz_db.init_db_engine(config.MB_DATABASE_URI)
+
+    try:
+        num_recording_mbids_processed, num_recording_mbids_added = fetch_and_store_artist_mbids_for_all_recording_mbids()
+        print("Total recording MBIDs processed: {0}.".format(num_recording_mbids_processed))
+        print("Total recording MBIDs added to table: {0}.".format(num_recording_mbids_added))
+        print("Done!")
+    except Exception as error:
+        print("Unable to fetch artist MBIDs. An error occured: {0}".format(error))
+        raise
+
+
+@cli.command()
+def truncate_recording_artist_join_table():
+    """Truncate table recording_artist_join."""
+    db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
+    try:
+        truncate_recording_artist_join()
+        print("Table recording_artist_join truncated.")
+    except Exception as error:
+        print("An error occured while truncating tables: {0}".format(error))
+        raise
 
 
 if __name__ == '__main__':
