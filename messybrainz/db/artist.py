@@ -24,18 +24,12 @@ def insert_artist_mbids(connection, recording_mbid, artist_mbids):
     connection.execute(query, values)
 
 
-def fetch_and_store_artist_mbids(connection, recording_mbid):
+def fetch_artist_mbids(connection, recording_mbid):
     """ Fetches artist MBIDs from the MusicBrainz database for the recording MBID.
-        And inserts the artist MBIDs into the recording_artist_join table.
     """
 
     recording = mb_recording.get_recording_by_mbid(recording_mbid, includes=['artists'])
-
-    artist_mbids = []
-    for artist in recording['artists']:
-        artist_mbids.append(artist['id'])
-
-    insert_artist_mbids(connection, recording_mbid, artist_mbids)
+    return [artist['id'] for artist in recording['artists']]
 
 
 def fetch_recording_mbids_not_in_recording_artist_join(connection):
@@ -54,7 +48,7 @@ def fetch_recording_mbids_not_in_recording_artist_join(connection):
 
     result = connection.execute(query)
 
-    return list(result.fetchall()[0])
+    return [mbid[0] for mbid in result]
 
 
 def truncate_recording_artist_join():
@@ -63,6 +57,25 @@ def truncate_recording_artist_join():
     with db.engine.begin() as connection:
         query = text("""TRUNCATE TABLE recording_artist_join""")
         connection.execute(query)
+
+
+def get_artist_mbids_for_recording_mbid(connection, recording_mbid):
+    """Returns list of artist MBIDs for a corresponding recording MBID
+       in recording_artist_join table if recording MBID exists else None
+       is returned.
+    """
+
+    query = text("""SELECT artist_mbid
+                      FROM recording_artist_join
+                     WHERE recording_mbid = :recording_mbid
+    """)
+
+    result = connection.execute(query, {"recording_mbid": recording_mbid})
+
+    if result.rowcount:
+        return [artist_mbid[0] for artist_mbid in result]
+    else:
+        return None
 
 
 def fetch_and_store_artist_mbids_for_all_recording_mbids():
@@ -78,7 +91,8 @@ def fetch_and_store_artist_mbids_for_all_recording_mbids():
         num_recording_mbids_processed = len(recording_mbids)
         for recording_mbid in recording_mbids:
             try:
-                fetch_and_store_artist_mbids(connection, recording_mbid)
+                artist_mbids = fetch_artist_mbids(connection, recording_mbid)
+                insert_artist_mbids(connection, recording_mbid, artist_mbids)
                 num_recording_mbids_added += 1
             except NoDataFoundException:
                 # While submitting recordings we don't check if the recording MBID
