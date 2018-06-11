@@ -27,6 +27,7 @@ except ImportError:
     pass
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'admin', 'sql')
+TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'testdata')
 
 
 class DatabaseTestCase(unittest.TestCase):
@@ -60,3 +61,12 @@ class DatabaseTestCase(unittest.TestCase):
 
     def drop_tables(self):
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'drop_tables.sql'))
+
+
+    def path_to_data_file(self, file_name):
+        """ Returns the path of the test data file relative to listenbrainz/db/testing.py.
+
+            Args:
+                file_name: the name of the data file
+        """
+        return os.path.join(TEST_DATA_PATH, file_name)
