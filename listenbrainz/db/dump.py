@@ -269,6 +269,7 @@ def _create_dump(location, dump_type, tables, dump_time, threads=DUMP_DEFAULT_TH
 
         pxz.stdin.close()
 
+    pxz.wait()
     return archive_path
 
 
