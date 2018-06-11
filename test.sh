@@ -119,10 +119,12 @@ if [ $DB_EXISTS -eq 1 -a $DB_RUNNING -eq 1 ]; then
     # If no containers, run setup then run tests, then bring down
     build
     bring_up_db
-    setup
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                   run --rm messybrainz py.test
+                   run --rm messybrainz dockerize \
+                    -wait tcp://db:5432 -timeout 60s \
+                    -wait tcp://redis:6379 -timeout 60s \
+                    py.test
     dcdown
 else
     # Else, we have containers, just run tests
