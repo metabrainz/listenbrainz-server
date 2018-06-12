@@ -11,14 +11,15 @@ def insert_recording_cluster(connection, cluster_id, recording_gids):
         recording_gids (list): the list of MSIDs will form a cluster.
     """
 
-    query = text("""INSERT INTO recording_cluster (cluster_id, recording_gid, updated)
-                         VALUES (:cluster_id, :recording_gid, now())
-    """)
-
     values = [
         {"cluster_id": cluster_id, "recording_gid": recording_gid} for recording_gid in recording_gids
     ]
-    connection.execute(query, values)
+
+    connection.execute(text("""
+        INSERT INTO recording_cluster (cluster_id, recording_gid, updated)
+             VALUES (:cluster_id, :recording_gid, now())
+    """), values
+    )
 
 
 def fetch_gids_for_recording_mbid(connection, recording_mbid):
@@ -33,19 +34,19 @@ def fetch_gids_for_recording_mbid(connection, recording_mbid):
         List of gids.
     """
 
-    query = text("""SELECT r.gid
-                      FROM recording_json AS rj
-                      JOIN recording AS r
-                        ON rj.id = r.data
-                 LEFT JOIN recording_cluster AS rc
-                        ON r.gid = rc.recording_gid
-                     WHERE rj.data ->> 'recording_mbid' = :recording_mbid
-                       AND rc.recording_gid IS NULL
-    """)
-    gids = connection.execute(query, {
+    gids = connection.execute(text("""
+        SELECT r.gid
+          FROM recording_json AS rj
+          JOIN recording AS r
+            ON rj.id = r.data
+     LEFT JOIN recording_cluster AS rc
+            ON r.gid = rc.recording_gid
+         WHERE rj.data ->> 'recording_mbid' = :recording_mbid
+           AND rc.recording_gid IS NULL
+    """), {
         "recording_mbid": recording_mbid,
-        }
-    )
+    })
+
     return [gid[0] for gid in gids]
 
 
@@ -60,15 +61,15 @@ def fetch_distinct_recording_mbids(connection):
         recording_mbids.
     """
 
-    query = text("""SELECT DISTINCT rj.data ->> 'recording_mbid'
-                               FROM recording_json AS rj
-                          LEFT JOIN recording_cluster AS rc
-                                 ON (rj.data ->> 'recording_mbid')::uuid = rc.recording_gid
-                              WHERE rj.data ->> 'recording_mbid' IS NOT NULL
-                                AND rc.recording_gid IS NULL
-    """)
+    recording_mbids = connection.execute(text("""
+        SELECT DISTINCT rj.data ->> 'recording_mbid'
+                   FROM recording_json AS rj
+              LEFT JOIN recording_cluster AS rc
+                     ON (rj.data ->> 'recording_mbid')::uuid = rc.recording_gid
+                  WHERE rj.data ->> 'recording_mbid' IS NOT NULL
+                    AND rc.recording_gid IS NULL
+    """))
 
-    recording_mbids = connection.execute(query)
     return [recording_mbid[0] for recording_mbid in recording_mbids]
 
 
@@ -81,10 +82,10 @@ def link_recording_mbid_to_recording_msid(connection, cluster_id, mbid):
         mbid: mbid for the cluster.
     """
 
-    query = text("""INSERT INTO recording_redirect (recording_cluster_id, recording_mbid)
-                         VALUES (:cluster_id, :mbid)
-                """)
-    connection.execute(query, {
+    connection.execute(text("""
+        INSERT INTO recording_redirect (recording_cluster_id, recording_mbid)
+             VALUES (:cluster_id, :mbid)
+    """), {
         "cluster_id": cluster_id,
         "mbid": mbid,
     })
@@ -94,10 +95,8 @@ def truncate_recording_cluster_and_recording_redirect_table():
     """Truncates recording_cluster and recording_redirect tables."""
 
     with db.engine.begin() as connection:
-        query = text("TRUNCATE TABLE recording_cluster")
-        connection.execute(query)
-        query = text("TRUNCATE TABLE recording_redirect")
-        connection.execute(query)
+        connection.execute(text("""TRUNCATE TABLE recording_cluster"""))
+        connection.execute(text("""TRUNCATE TABLE recording_redirect"""))
 
 
 def get_recording_cluster_id_using_recording_mbid(connection, recording_mbid):
@@ -111,11 +110,13 @@ def get_recording_cluster_id_using_recording_mbid(connection, recording_mbid):
         cluster_id (UUID): MSID that represents the cluster if it exists else None.
     """
 
-    query = text("""SELECT recording_cluster_id
-                      FROM recording_redirect
-                     WHERE recording_mbid = :recording_mbid""")
-
-    cluster_id = connection.execute(query, {"recording_mbid": recording_mbid})
+    cluster_id = connection.execute(text("""
+        SELECT recording_cluster_id
+          FROM recording_redirect
+         WHERE recording_mbid = :recording_mbid
+    """), {
+        "recording_mbid": recording_mbid
+    })
 
     if cluster_id.rowcount:
         return cluster_id.fetchone()['recording_cluster_id']
