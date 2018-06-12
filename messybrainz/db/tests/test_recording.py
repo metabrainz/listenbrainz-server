@@ -39,14 +39,9 @@ class RecordingTestCase(DatabaseTestCase):
             'cad174ad-d683-4858-a205-7bdc4175fff7',
         }
         with db.engine.begin() as connection:
-            recording_mbids = fetch_distinct_recording_mbids(connection)
-            self.assertEqual(recording_mbids.rowcount, 3)
-
-            recording_mbids_fetched = set()
-            for recording_mbid in recording_mbids:
-                recording_mbids_fetched.add(str(recording_mbid[0]))
-
-            self.assertSetEqual(recording_mbids_submitted, recording_mbids_fetched)
+            recording_mbids_fetched = fetch_distinct_recording_mbids(connection)
+            self.assertEqual(len(recording_mbids_fetched), 3)
+            self.assertSetEqual(recording_mbids_submitted, set(recording_mbids_fetched))
 
 
     def test_fetch_gids_for_recording_mbid(self):
