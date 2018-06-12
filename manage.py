@@ -15,7 +15,7 @@ try:
 except ImportError:
     pass
 from messybrainz.db.recording import create_recording_clusters,\
-                                                truncate_tables
+                                    truncate_recording_cluster_and_recording_redirect_table
 
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'sql')
@@ -125,7 +125,7 @@ def truncate_recording_cluster_and_redirect():
     """Truncate recording_cluster and recording_redirect tables."""
     db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
     try:
-        truncate_tables()
+        truncate_recording_cluster_and_recording_redirect_table()
         print("recording_cluster and recording_redirect table truncated.")
     except Exception as error:
         print("An error occured while truncating recording_cluster and recording_redirect: {0}".format(error))

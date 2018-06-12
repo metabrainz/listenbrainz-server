@@ -90,7 +90,7 @@ def link_recording_mbid_to_recording_msid(connection, cluster_id, mbid):
     })
 
 
-def truncate_tables():
+def truncate_recording_cluster_and_recording_redirect_table():
     """Truncates recording_cluster and recording_redirect tables."""
 
     with db.engine.begin() as connection:
