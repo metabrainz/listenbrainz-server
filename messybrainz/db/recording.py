@@ -69,7 +69,7 @@ def fetch_distinct_recording_mbids(connection):
     """)
 
     recording_mbids = connection.execute(query)
-    return recording_mbids
+    return [recording_mbid[0] for recording_mbid in recording_mbids]
 
 
 def link_recording_mbid_to_recording_msid(connection, cluster_id, mbid):
@@ -136,12 +136,12 @@ def create_recording_clusters():
     with db.engine.begin() as connection:
         recording_mbids = fetch_distinct_recording_mbids(connection)
         for recording_mbid in recording_mbids:
-            gids = fetch_gids_for_recording_mbid(connection, recording_mbid[0])
+            gids = fetch_gids_for_recording_mbid(connection, recording_mbid)
             if gids:
-                cluster_id = get_recording_cluster_id_using_recording_mbid(connection, recording_mbid[0])
+                cluster_id = get_recording_cluster_id_using_recording_mbid(connection, recording_mbid)
                 if not cluster_id:
                     cluster_id = gids[0]
-                    link_recording_mbid_to_recording_msid(connection, cluster_id, recording_mbid[0])
+                    link_recording_mbid_to_recording_msid(connection, cluster_id, recording_mbid)
                     clusters_add_to_redirect +=1
                 insert_recording_cluster(connection, cluster_id, gids)
                 clusters_modified += 1
