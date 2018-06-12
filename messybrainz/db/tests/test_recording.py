@@ -4,7 +4,7 @@ from messybrainz import db
 from messybrainz.db import data
 from messybrainz.db.testing import DatabaseTestCase
 from messybrainz.db.recording import fetch_distinct_recording_mbids,\
-                                    fetch_gids_for_recording_mbid,\
+                                    fetch_unclustered_gids_for_recording_mbid,\
                                     link_recording_mbid_to_recording_msid,\
                                     insert_recording_cluster,\
                                     create_recording_clusters,\
@@ -44,9 +44,12 @@ class RecordingTestCase(DatabaseTestCase):
             self.assertSetEqual(recording_mbids_submitted, set(recording_mbids_fetched))
 
 
-    def test_fetch_gids_for_recording_mbid(self):
+    def test_fetch_unclustered_gids_for_recording_mbid(self):
         """Tests if gids are correctly fetched."""
 
+        # recording_1 and recording_2 differ in the name of artist
+        # for recording_1 artist has join phrase '&' and for recording_2
+        # artist has join phrase 'and'
         recording_1 = {
             "artist": "Jay‐Z & Beyoncé",
             "title": "'03 Bonnie & Clyde",
@@ -62,7 +65,7 @@ class RecordingTestCase(DatabaseTestCase):
         submit_listens([recording_2])
 
         with db.engine.begin() as connection:
-            gids = fetch_gids_for_recording_mbid(connection, '5465ca86-3881-4349-81b2-6efbd3a59451')
+            gids = fetch_unclustered_gids_for_recording_mbid(connection, '5465ca86-3881-4349-81b2-6efbd3a59451')
             gid_fetched = set(gids)
             gid_from_data = set([data.get_id_from_recording(connection, recording_1),
                 data.get_id_from_recording(connection, recording_2),
@@ -108,9 +111,9 @@ class RecordingTestCase(DatabaseTestCase):
         submit_listens([recording_2])
 
         with db.engine.begin() as connection:
-            recording_gids = fetch_gids_for_recording_mbid(connection, '5465ca86-3881-4349-81b2-6efbd3a59451')
+            recording_gids = fetch_unclustered_gids_for_recording_mbid(connection, '5465ca86-3881-4349-81b2-6efbd3a59451')
             insert_recording_cluster(connection, recording_gids[0], recording_gids)
-            recording_gids = fetch_gids_for_recording_mbid(connection, '5465ca86-3881-4349-81b2-6efbd3a59451')
+            recording_gids = fetch_unclustered_gids_for_recording_mbid(connection, '5465ca86-3881-4349-81b2-6efbd3a59451')
             self.assertEqual(len(recording_gids), 0)
 
 
@@ -131,6 +134,9 @@ class RecordingTestCase(DatabaseTestCase):
         self.assertEqual(clusters_add_to_redirect, 0)
 
         # Add new recordings and create clusters again.
+        # recording_1 is a completely new recording and recording_2
+        # should be clustered with a cluster_id already in the recording_cluster
+        # table.
         recording_1 = {
             "artist": "Memphis Minnie",
             "title": "Banana Man Blues",

@@ -22,7 +22,7 @@ def insert_recording_cluster(connection, cluster_id, recording_gids):
     )
 
 
-def fetch_gids_for_recording_mbid(connection, recording_mbid):
+def fetch_unclustered_gids_for_recording_mbid(connection, recording_mbid):
     """Fetches the gids corresponding to a recording_mbid that are
        not present in recording_cluster table.
 
@@ -58,7 +58,7 @@ def fetch_distinct_recording_mbids(connection):
         connection: the sqlalchemy db connection to be used to execute queries
 
     Returns:
-        recording_mbids.
+        recording_mbids(list): list of recording MBIDs.
     """
 
     recording_mbids = connection.execute(text("""
@@ -137,7 +137,7 @@ def create_recording_clusters():
     with db.engine.begin() as connection:
         recording_mbids = fetch_distinct_recording_mbids(connection)
         for recording_mbid in recording_mbids:
-            gids = fetch_gids_for_recording_mbid(connection, recording_mbid)
+            gids = fetch_unclustered_gids_for_recording_mbid(connection, recording_mbid)
             if gids:
                 cluster_id = get_recording_cluster_id_using_recording_mbid(connection, recording_mbid)
                 if not cluster_id:
