@@ -45,13 +45,13 @@ def init_db(force):
     """
     db.init_db_engine(config.POSTGRES_ADMIN_URI)
     if force:
-        res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'drop_db.sql'))
-        if not res:
+        exit_code = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'drop_db.sql'))
+        if not exit_code:
             raise Exception('Failed to drop existing database and user! Exit code: %i' % exit_code)
 
     print('Creating user and a database...')
-    res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_db.sql'))
-    if not res:
+    exit_code = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_db.sql'))
+    if not exit_code:
         raise Exception('Failed to create new database and user! Exit code: %i' % exit_code)
 
     print('Creating database extensions...')
