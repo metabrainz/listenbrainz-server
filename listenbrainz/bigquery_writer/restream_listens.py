@@ -37,6 +37,8 @@ from listenbrainz.bigquery_writer.bigquery_writer import BigQueryWriter
 from listenbrainz.listen import Listen
 
 CHUNK_SIZE = 1000
+START_TIMESTAMP = None
+
 
 influx = None
 bigquery = None
@@ -58,6 +60,14 @@ def init_bigquery_connection():
     """
     global bigquery
     bigquery = create_bigquery_object()
+
+
+def mark_restream_start_time():
+    t = int(time.time())
+    with open('restream_start_timestamp', 'w') as f:
+        f.write(str(t))
+    global START_TIMESTAMP
+    START_TIMESTAMP = t
 
 
 def convert_to_influx_timestamp(year):
@@ -104,6 +114,14 @@ def get_listens_batch(user_name, start_year, end_year, offset=0):
 
     listens = []
     for row in result.get_points(utils.get_measurement_name(user_name)):
+        try:
+            inserted_time = utils.convert_to_unix_timestamp(row['inserted_timestamp'])
+        except (KeyError, TypeError):
+            inserted_time = 0
+
+        if inserted_time > START_TIMESTAMP:
+            continue
+
         listen = Listen.from_influx(row).to_api()
         listen['user_name'] = user_name
         listens.append(listen)
@@ -182,17 +200,17 @@ def main():
     db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
     init_influx_connection()
     init_bigquery_connection()
+    mark_restream_start_time()
     users = db_user.get_all_users()
     listen_count = 0
-    user_count = 0
     for user in users:
-        print('Begin pushing listens for user %s...' % user['musicbrainz_id'])
         listen_count += push_listens(user['musicbrainz_id'], 'before_2002', start_year=1970, end_year=2002)
-        for year in range(2002, 2019):
+    print('All listens before 2002 done!')
+    for year in range(2002, 2019):
+        for user in users:
             listen_count += push_listens(user['musicbrainz_id'], table_name=str(year), start_year=year, end_year=year+1)
-        user_count += 1
-        print('Listens of %d users pushed, %d users remain...' % (user_count, len(users) - user_count))
-        print('%d listens pushed to Google BigQuery!' % listen_count)
+        print('All listens for year %d done!' % year)
+
     print('A total of %d listens restreamed to Google BigQuery' % listen_count)
 
 
