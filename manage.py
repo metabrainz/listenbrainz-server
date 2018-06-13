@@ -69,6 +69,9 @@ def init_db(force):
         print('Creating indexes...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
 
+        print('Creating functions...')
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_functions.sql'))
+
     print("Done!")
 
 
@@ -100,6 +103,7 @@ def init_test_db(force=False):
     db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_primary_keys.sql'))
     db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
     db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
+    db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_functions.sql'))
 
     print("Done!")
 
