@@ -1,6 +1,8 @@
 from messybrainz import db
 from messybrainz.db.artist import truncate_recording_artist_join,\
-                                                fetch_and_store_artist_mbids_for_all_recording_mbids
+                                fetch_and_store_artist_mbids_for_all_recording_mbids,\
+                                create_artist_credit_clusters,\
+                                truncate_artist_credit_cluster_and_redirect_tables
 from messybrainz.webserver import create_app
 from brainzutils import musicbrainz_db
 from sqlalchemy import text
@@ -168,6 +170,42 @@ def truncate_recording_artist_join_table():
         print("Table recording_artist_join truncated.")
     except Exception as error:
         print("An error occured while truncating tables: {0}".format(error))
+        raise
+
+
+@cli.command()
+def create_artist_credit_clusters_for_mbids():
+    """Creates clusters for artist_credits using artist MBIDs present in
+       recording_json table.
+    """
+    db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
+    try:
+        clusters_modified, clusters_add_to_redirect = create_artist_credit_clusters()
+        print("Clusters modified: {0}.".format(clusters_modified))
+        print("Clusters add to redirect table: {0}.".format(clusters_add_to_redirect))
+        print ("Done!")
+    except Exception as error:
+        print("While creating artist_credit clusters. An error occured: {0}".format(error))
+        raise
+
+
+@cli.command()
+def truncate_artist_credit_cluster_and_redirect():
+    """Truncate artist_credit_cluster, artist_credit_redirect, and
+       artist_credit_redirect_array tables.
+    """
+
+    db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
+    try:
+        truncate_artist_credit_cluster_and_redirect_tables()
+        print("artist_credit_cluster, artist_credit_redirect, and"
+            "artist_credit_redirect_array tables truncated."
+        )
+
+    except Exception as error:
+        print("An error occured while truncating artist_credit_cluster,"
+            "artist_credit_redirect, and artist_credit_redirect_array: {0}".format(error)
+        )
         raise
 
 
