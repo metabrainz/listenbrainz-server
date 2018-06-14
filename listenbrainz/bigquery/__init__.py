@@ -45,9 +45,6 @@ def get_parameters_dict(parameters):
         Returns: A list of dictionaries that can be passed to the API call
     """
 
-    if not parameters:
-        return None
-
     bq_params = []
     for param in parameters:
         # construct parameter dict
@@ -121,7 +118,7 @@ def run_query(bigquery, query, parameters=None, dml=False):
             "datasetId": config.BIGQUERY_DATASET_ID,
         },
         "useLegacySql": False,
-        "queryParameters": get_parameters_dict(parameters),
+        "queryParameters": get_parameters_dict(parameters) if parameters else [],
         "query": query,
     }
 
