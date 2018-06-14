@@ -70,6 +70,16 @@ def _send_listens_to_queue(listen_type, listens):
             submit.append(listen)
 
     if submit:
+        # check if rabbitmq connection exists or not
+        # and if not then try to connect
+        if rabbitmq_connection._rabbitmq is None:
+            try:
+                rabbitmq_connection.init_rabbitmq_connection(current_app)
+                current_app.logger.error('Connection to RabbitMQ established!')
+            except ConnectionError as e:
+                current_app.logger.error('Cannot connect to RabbitMQ: %s' % str(e))
+                raise ServiceUnavailable('Cannot submit listens to queue, please try again later.')
+
         publish_data_to_queue(
             data=submit,
             exchange=current_app.config['INCOMING_EXCHANGE'],
