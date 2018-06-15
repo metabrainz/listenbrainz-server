@@ -334,3 +334,25 @@ def agree_to_gdpr(musicbrainz_id):
         except sqlalchemy.exc.ProgrammingError as err:
             logger.error(err)
             raise DatabaseException("Couldn't update gdpr agreement for user: %s" % str(err))
+
+
+def update_musicbrainz_row_id(musicbrainz_id, musicbrainz_row_id):
+    """ Update the musicbrainz_row_id column for user with specified MusicBrainz username.
+
+    Args:
+        musicbrainz_id (str): the MusicBrainz ID (username) of the user
+        musicbrainz_row_id (int): the MusicBrainz row ID of the user
+    """
+    with db.engine.connect() as connection:
+        try:
+            connection.execute(sqlalchemy.text("""
+                UPDATE "user"
+                   SET musicbrainz_row_id = :musicbrainz_row_id
+                 WHERE LOWER(musicbrainz_id) = LOWER(:mb_id)
+                """), {
+                    'musicbrainz_row_id': musicbrainz_row_id,
+                    'mb_id': musicbrainz_id,
+                })
+        except sqlalchemy.exc.ProgrammingError as err:
+            logger.error(err)
+            raise DatabaseException("Couldn't update musicbrainz row id for user: %s" % str(err))
