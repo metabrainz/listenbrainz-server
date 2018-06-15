@@ -11,6 +11,8 @@ def import_musicbrainz_rows(musicbrainz_db_uri):
     with musicbrainz_db.engine.connect() as mb_connection:
         with db.engine.connect() as connection:
             for user in users:
+                if user['musicbrainz_row_id'] is not None:
+                    continue
                 name = user['musicbrainz_id']
                 result = mb_connection.execute(sqlalchemy.text("""
                         SELECT id
