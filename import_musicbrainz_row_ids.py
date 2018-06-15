@@ -28,15 +28,15 @@ def import_musicbrainz_rows(musicbrainz_db_uri):
                     print('No user with specified username in the MusicBrainz db: %s' % name)
                     continue
 
-                    connection.execute(sqlalchemy.text("""
-                            UPDATE "user"
-                               SET musicbrainz_row_id = :musicbrainz_row_id
-                             WHERE id = :id
-                        """), {
-                            'musicbrainz_row_id': musicbrainz_row_id,
-                            'id': user['id'],
-                        })
-                    print('Inserted row_id %d for user %s' % (musicbrainz_row_id, name))
+                connection.execute(sqlalchemy.text("""
+                        UPDATE "user"
+                           SET musicbrainz_row_id = :musicbrainz_row_id
+                         WHERE id = :id
+                    """), {
+                        'musicbrainz_row_id': musicbrainz_row_id,
+                        'id': user['id'],
+                    })
+                print('Inserted row_id %d for user %s' % (musicbrainz_row_id, name))
 
 
 if __name__ == '__main__':
