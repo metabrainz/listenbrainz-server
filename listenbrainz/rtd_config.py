@@ -42,8 +42,8 @@ INCOMING_EXCHANGE = "incoming"
 INCOMING_QUEUE = "incoming"
 UNIQUE_EXCHANGE = "unique"
 UNIQUE_QUEUE = "unique"
-STATS_EXCHANGE = "stats"
-STATS_QUEUE = "stats"
+BIGQUERY_EXCHANGE = "bigquery"
+BIGQUERY_QUEUE = "bigquery"
 
 # MusicBrainz OAuth
 MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"

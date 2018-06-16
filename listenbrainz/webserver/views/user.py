@@ -12,6 +12,7 @@ from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.influx_connection import _influx
+from listenbrainz.webserver.views.api_tools import publish_data_to_queue
 import time
 from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
 
@@ -216,7 +217,15 @@ def delete_user(musicbrainz_id):
         NotFound if user isn't present in the database
     """
 
-    #TODO(param): delete user's listens from Google BigQuery
     user = _get_user(musicbrainz_id)
     _influx.delete(user.musicbrainz_id)
+    publish_data_to_queue(
+        data={
+            'type': 'delete.user',
+            'musicbrainz_id': musicbrainz_id,
+        },
+        exchange=current_app.config['BIGQUERY_EXCHANGE'],
+        queue=current_app.config['BIGQUERY_QUEUE'],
+        error_msg='Could not put user %s into queue for deletion, please try again later' % musicbrainz_id,
+    )
     db_user.delete(user.id)
