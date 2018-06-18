@@ -38,7 +38,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
 
     def setUp(self):
         super(APICompatDeprecatedTestCase, self).setUp()
-        self.user = db_user.get_or_create('apicompatoldtestuser')
+        self.user = db_user.get_or_create(1, 'apicompatoldtestuser')
         self.ls = InfluxListenStore({
             'REDIS_HOST': config.REDIS_HOST,
             'REDIS_PORT': config.REDIS_PORT,

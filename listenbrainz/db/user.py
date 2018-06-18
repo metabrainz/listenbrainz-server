@@ -14,10 +14,11 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def create(musicbrainz_id):
+def create(musicbrainz_row_id, musicbrainz_id):
     """Create a new user.
 
     Args:
+        musicbrainz_row_id (int): the MusicBrainz row ID of the user
         musicbrainz_id (str): MusicBrainz username of a user.
 
     Returns:
@@ -25,12 +26,13 @@ def create(musicbrainz_id):
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            INSERT INTO "user" (musicbrainz_id, auth_token)
-                 VALUES (:mb_id, :token)
+            INSERT INTO "user" (musicbrainz_id, musicbrainz_row_id, auth_token)
+                 VALUES (:mb_id, :mb_row_id, :token)
               RETURNING id
         """), {
             "mb_id": musicbrainz_id,
             "token": str(uuid.uuid4()),
+            "mb_row_id": musicbrainz_row_id,
         })
         return result.fetchone()["id"]
 
@@ -153,10 +155,11 @@ def get_user_count():
             raise
 
 
-def get_or_create(musicbrainz_id):
+def get_or_create(musicbrainz_row_id, musicbrainz_id):
     """Get user with a specified MusicBrainz ID, or create if there's no account.
 
     Args:
+        musicbrainz_row_id (int): the MusicBrainz row ID of the user
         musicbrainz_id (str): MusicBrainz username of a user.
 
     Returns:
@@ -168,10 +171,10 @@ def get_or_create(musicbrainz_id):
             "auth_token": <authentication token>,
         }
     """
-    user = get_by_mb_id(musicbrainz_id)
+    user = get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id=musicbrainz_id)
     if not user:
-        create(musicbrainz_id)
-        user = get_by_mb_id(musicbrainz_id)
+        create(musicbrainz_row_id, musicbrainz_id)
+        user = get_by_mb_row_id(musicbrainz_row_id)
     return user
 
 
@@ -356,3 +359,35 @@ def update_musicbrainz_row_id(musicbrainz_id, musicbrainz_row_id):
         except sqlalchemy.exc.ProgrammingError as err:
             logger.error(err)
             raise DatabaseException("Couldn't update musicbrainz row id for user: %s" % str(err))
+
+
+def get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id=None):
+    """ Get user with specified MusicBrainz row id.
+
+    Note: this function also optionally takes a MusicBrainz username to fall back on
+    if no user with specified MusicBrainz row ID is found.
+
+     Args:
+        musicbrainz_row_id (int): the MusicBrainz row ID of the user
+        musicbrainz_id (str): the MusicBrainz username of the user
+
+    Returns: a dict representing the user if found, else None.
+    """
+    filter_str = ''
+    filter_data = {}
+    if musicbrainz_id:
+        filter_str = 'OR LOWER(musicbrainz_id) = LOWER(:musicbrainz_id) AND musicbrainz_row_id IS NULL'
+        filter_data['musicbrainz_id'] = musicbrainz_id
+
+    filter_data['musicbrainz_row_id'] = musicbrainz_row_id
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT {columns}
+              FROM "user"
+             WHERE musicbrainz_row_id = :musicbrainz_row_id
+             {optional_filter}
+        """.format(columns=','.join(USER_GET_COLUMNS), optional_filter=filter_str)), filter_data)
+
+        if result.rowcount:
+            return result.fetchone()
+        return None
