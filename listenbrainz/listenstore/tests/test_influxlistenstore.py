@@ -54,7 +54,7 @@ class TestInfluxListenStore(DatabaseTestCase):
             'INFLUX_PORT': config.INFLUX_PORT,
             'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
         })
-        self.testuser_id = db_user.create("test")
+        self.testuser_id = db_user.create(1, "test")
         self.testuser_name = db_user.get(self.testuser_id)['musicbrainz_id']
 
     def tearDown(self):
@@ -132,7 +132,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.assertEqual(count, listen_count)
 
     def test_fetch_listens_escaped(self):
-        user = db_user.get_or_create('i have a\\weird\\user, name"\n')
+        user = db_user.get_or_create(2, 'i have a\\weird\\user, name"\n')
         user_name = user['musicbrainz_id']
         self._create_test_data(user_name)
         listens = self.logstore.fetch_listens(user_name=user_name, from_ts=1400000100)
@@ -172,7 +172,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
 
     def test_dump_and_import_listens_escaped(self):
-        user = db_user.get_or_create('i have a\\weird\\user, na/me"\n')
+        user = db_user.get_or_create(3, 'i have a\\weird\\user, na/me"\n')
         count = self._create_test_data(user['musicbrainz_id'])
         sleep(1)
 
@@ -210,7 +210,7 @@ class TestInfluxListenStore(DatabaseTestCase):
 
     def test_import_dump_many_users(self):
         for i in range(50):
-            db_user.create('user%d' % i)
+            db_user.create(i, 'user%d' % i)
 
         temp_dir = tempfile.mkdtemp()
         dump_location = self.logstore.dump_listens(
@@ -347,14 +347,14 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.assertEqual(len(listens), 0)
 
     def test_delete_listens_no_measurement(self):
-        user = db_user.get_or_create('user_with_no_measurement')
+        user = db_user.get_or_create(12, 'user_with_no_measurement')
         self.logstore.delete(user['musicbrainz_id'])
         listens = self.logstore.fetch_listens(user_name=user['musicbrainz_id'], to_ts=1400000300)
         self.assertEqual(len(listens), 0)
 
 
     def test_delete_listens_escaped(self):
-        user = db_user.get_or_create('i have a\\weird\\user, na/me"\n')
+        user = db_user.get_or_create(213, 'i have a\\weird\\user, na/me"\n')
         count = self._create_test_data(user['musicbrainz_id'])
         listens = self.logstore.fetch_listens(user_name=user['musicbrainz_id'], to_ts=1400000300)
         self.assertEqual(len(listens), 5)

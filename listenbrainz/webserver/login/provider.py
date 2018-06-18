@@ -31,7 +31,8 @@ def get_user():
     }, decoder=lambda b: ujson.loads(b.decode("utf-8")))
     data = s.get('oauth2/userinfo').json()
     musicbrainz_id = data.get('sub')
-    user = db_user.get_or_create(musicbrainz_id)
+    musicbrainz_row_id = data.get('metabrainz_user_id')
+    user = db_user.get_or_create(musicbrainz_row_id, musicbrainz_id)
     if user:
         if not user['musicbrainz_row_id']:
             db_user.update_musicbrainz_row_id(musicbrainz_id, data['metabrainz_user_id'])
