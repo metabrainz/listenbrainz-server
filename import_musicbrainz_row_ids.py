@@ -5,6 +5,16 @@ import listenbrainz.db.user as db_user
 import sqlalchemy
 
 
+def deleted_from_mb(connection, musicbrainz_id):
+    result = connection.execute(sqlalchemy.text("""
+        SELECT name
+          FROM old_editor_name
+         WHERE name = :name"""), {
+             'name': musicbrainz_id,
+        })
+    return result.rowcount > 0
+
+
 def import_musicbrainz_rows(musicbrainz_db_uri, dry_run=True):
     musicbrainz_db.init_db_engine(musicbrainz_db_uri)
     db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
@@ -12,6 +22,7 @@ def import_musicbrainz_rows(musicbrainz_db_uri, dry_run=True):
     import_count = 0
     already_imported = 0
     not_found = 0
+    deleted = 0
     with musicbrainz_db.engine.connect() as mb_connection:
         with db.engine.connect() as connection:
             for user in users:
@@ -30,9 +41,11 @@ def import_musicbrainz_rows(musicbrainz_db_uri, dry_run=True):
                 if result.rowcount > 0:
                     musicbrainz_row_id = result.fetchone()['id']
                     import_count += 1
-                    print("hello")
                 else:
                     print('No user with specified username in the MusicBrainz db: %s' % name)
+                    if deleted_from_mb(mb_connection, name):
+                        print('User %s has been deleted.' % name)
+                        deleted += 1
                     not_found += 1
                     continue
 
@@ -50,6 +63,7 @@ def import_musicbrainz_rows(musicbrainz_db_uri, dry_run=True):
     print('Total number of ListenBrainz users with already imported row ids: %d' % already_imported)
     print('Total number of ListenBrainz users whose row ids can be imported: %d' % import_count)
     print('Total number of ListenBrainz users not found in MusicBrainz: %d' % not_found)
+    print('Total number of ListenBrainz users deleted from MusicBrainz: %d' % deleted)
 
 
 if __name__ == '__main__':
