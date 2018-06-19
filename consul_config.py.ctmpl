@@ -17,7 +17,7 @@ POSTGRES_ADMIN_URI="postgresql://postgres@{{.Address}}:{{.Port}}/template1"
 
 
 {{if service "pgbouncer-slave"}}
-{{with index (service "pgbouncer-slave) 0}}
+{{with index (service "pgbouncer-slave") 0}}
 MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrainz_db'
 {{end}}
 {{else if service "pgbouncer-master"}}
