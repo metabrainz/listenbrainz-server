@@ -5,14 +5,21 @@ import listenbrainz.db.user as db_user
 import sqlalchemy
 
 
-def deleted_from_mb(connection, musicbrainz_id):
-    result = connection.execute(sqlalchemy.text("""
-        SELECT name
-          FROM old_editor_name
-         WHERE name = :name"""), {
-             'name': musicbrainz_id,
-        })
-    return result.rowcount > 0
+def fix_username_for_exceptions():
+    with db.engine.connect() as connection:
+        # 2106 - Fée Deuspi
+        connection.execute(sqlalchemy.text("""
+            UPDATE "user"
+               SET musicbrainz_id = 'Fée Deuspi'
+             WHERE id = 2106
+            """))
+
+        # 243 - ClæpsHydra
+        connection.execute(sqlalchemy.text("""
+            UPDATE "user"
+               SET musicbrainz_id = 'ClæpsHydra'
+             WHERE id = 243
+            """))
 
 
 def import_musicbrainz_rows(musicbrainz_db_uri, dry_run=True):
@@ -23,6 +30,7 @@ def import_musicbrainz_rows(musicbrainz_db_uri, dry_run=True):
     already_imported = 0
     not_found = 0
     deleted = 0
+    fix_username_for_exceptions()
     with musicbrainz_db.engine.connect() as mb_connection:
         with db.engine.connect() as connection:
             for user in users:
@@ -43,9 +51,6 @@ def import_musicbrainz_rows(musicbrainz_db_uri, dry_run=True):
                     import_count += 1
                 else:
                     print('No user with specified username in the MusicBrainz db: %s' % name)
-                    if deleted_from_mb(mb_connection, name):
-                        print('User %s has been deleted.' % name)
-                        deleted += 1
                     not_found += 1
                     continue
 
