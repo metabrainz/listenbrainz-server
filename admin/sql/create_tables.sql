@@ -11,6 +11,7 @@ CREATE TABLE "user" (
   musicbrainz_row_id INTEGER
 );
 ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_id_key UNIQUE (musicbrainz_id);
+ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_row_id_key UNIQUE (musicbrainz_row_id);
 
 CREATE TABLE api_compat.token (
      id               SERIAL,
