@@ -209,7 +209,7 @@ class TestInfluxListenStore(DatabaseTestCase):
 
 
     def test_import_dump_many_users(self):
-        for i in range(50):
+        for i in range(2, 52):
             db_user.create(i, 'user%d' % i)
 
         temp_dir = tempfile.mkdtemp()
