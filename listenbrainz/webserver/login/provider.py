@@ -30,8 +30,12 @@ def get_user():
         'redirect_uri': url_for('login.musicbrainz_post', _external=True)
     }, decoder=lambda b: ujson.loads(b.decode("utf-8")))
     data = s.get('oauth2/userinfo').json()
-    user = db_user.get_or_create(data.get('sub'))
+    musicbrainz_id = data.get('sub')
+    musicbrainz_row_id = data.get('metabrainz_user_id')
+    user = db_user.get_or_create(musicbrainz_row_id, musicbrainz_id)
     if user:
+        if not user['musicbrainz_row_id']:
+            db_user.update_musicbrainz_row_id(musicbrainz_id, data['metabrainz_user_id'])
         return User.from_dbrow(user)
     else:
         return None

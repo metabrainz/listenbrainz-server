@@ -81,7 +81,7 @@ class DumpTestCase(DatabaseTestCase):
     def test_import_postgres_db(self):
 
         # create a user
-        db_user.create('test_user')
+        db_user.create(1, 'test_user')
         user_count = db_user.get_user_count()
         self.assertEqual(user_count, 1)
 
@@ -107,7 +107,7 @@ class DumpTestCase(DatabaseTestCase):
 
 
     def test_dump_postgres_db_table_entries(self):
-        db_user.create('test_user')
+        db_user.create(1, 'test_user')
         timestamp = datetime.today()
         location = db_dump.dump_postgres_db(self.tempdir, dump_time=timestamp)
         dump_entries = db_dump.get_dump_entries()

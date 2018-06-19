@@ -15,6 +15,17 @@ POSTGRES_ADMIN_URI="postgresql://postgres@{{.Address}}:{{.Port}}/template1"
 {{end}}
 {{end}}
 
+
+{{if service "pgbouncer-slave"}}
+{{with index (service "pgbouncer-slave) 0}}
+MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrainz_db'
+{{end}}
+{{else if service "pgbouncer-master"}}
+{{with index (service "pgbouncer-master") 0}}
+MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrainz_db'
+{{end}}
+{{end}}
+
 # Not currently used
 MAX_POSTGRES_LISTEN_HISTORY = "-1"
 PG_QUERY_TIMEOUT = "3000"
@@ -94,3 +105,6 @@ SENTRY_DSN_PUBLIC = '''{{template "KEY" "sentry/dsn_public"}}'''
 STATS_ENTITY_LIMIT = 100 # the number of entities to calculate at max with BQ
 STATS_CALCULATION_LOGIN_TIME = 30 # users must have logged in to LB in the past 30 days for stats to be calculated
 STATS_CALCULATION_INTERVAL = 7 # stats are calculated every 7 days
+
+
+MUSICBRAINZ_IMPORT_DRY_RUN = True
