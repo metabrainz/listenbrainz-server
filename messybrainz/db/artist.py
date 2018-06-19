@@ -376,8 +376,8 @@ def create_artist_credit_clusters_for_anomalies(connection):
     artist_credits_left = fetch_artist_credits_left_to_cluster(connection)
     for artist_credit_mbids in artist_credits_left:
         artist_gids = get_artist_gids_from_recording_json_using_mbids(connection, artist_credit_mbids)
-        for artist_gid in artist_gids:
-            cluster_id = get_cluster_id_using_msid(connection, artist_gid)
+        cluster_ids = {get_cluster_id_using_msid(connection, artist_gid) for artist_gid in artist_gids}
+        for cluster_id in cluster_ids:
             link_artist_mbids_to_artist_credit_cluster_id(connection, cluster_id, artist_credit_mbids)
             clusters_add_to_redirect += 1
 
