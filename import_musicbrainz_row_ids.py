@@ -79,7 +79,9 @@ def import_musicbrainz_rows(musicbrainz_db_uri, dry_run=True):
     already_imported = 0
     not_found = 0
     deleted = 0
-    fix_username_for_exceptions()
+
+    if not dry_run:
+        fix_username_for_exceptions()
     with musicbrainz_db.engine.connect() as mb_connection:
         with db.engine.connect() as connection:
             for user in users:
