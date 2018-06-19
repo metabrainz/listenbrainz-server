@@ -3,6 +3,7 @@ from messybrainz.db.artist import truncate_recording_artist_join,\
                                 fetch_and_store_artist_mbids_for_all_recording_mbids,\
                                 create_artist_credit_clusters,\
                                 truncate_artist_credit_cluster_and_redirect_tables
+from messybrainz.db import release
 from messybrainz.webserver import create_app
 from brainzutils import musicbrainz_db
 from sqlalchemy import text
@@ -197,6 +198,21 @@ def create_artist_credit_clusters_for_mbids(verbose=False):
         logging.info("Done!")
     except Exception as error:
         logging.error("While creating artist_credit clusters. An error occured: {0}".format(error))
+
+
+@cli.command()
+def create_release_clusters_for_mbids():
+    """Creates clusters for release using release MBIDs present in
+       recording_json table.
+    """
+    db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
+    try:
+        clusters_modified, clusters_add_to_redirect = release.create_release_clusters()
+        print("Clusters modified: {0}.".format(clusters_modified))
+        print("Clusters add to redirect table: {0}.".format(clusters_add_to_redirect))
+        print ("Done!")
+    except Exception as error:
+        print("While creating release clusters. An error occured: {0}".format(error))
         raise
 
 
@@ -214,6 +230,17 @@ def truncate_artist_credit_cluster_and_redirect():
         logging.error("An error occured while truncating artist_credit_cluster"
             "and artist_credit_redirect table: {0}".format(error)
         )
+
+
+@cli.command()
+def truncate_release_cluster_and_redirect():
+    """Truncate release_cluster and release_redirect tables."""
+    db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
+    try:
+        release.truncate_release_cluster_and_release_redirect_table()
+        print("release_cluster and release_redirect table truncated.")
+    except Exception as error:
+        print("An error occured while truncating release_cluster and release_redirect: {0}".format(error))
         raise
 
 
