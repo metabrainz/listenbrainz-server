@@ -64,7 +64,7 @@ def import_musicbrainz_rows(musicbrainz_db_uri, dry_run=True):
     with musicbrainz_db.engine.connect() as mb_connection:
         with db.engine.connect() as connection:
             for user in users:
-                if user['musicbrainz_row_id'] is not None:
+                if user.get('musicbrainz_row_id') is not None:
                     already_imported += 1
                     continue
                 name = user['musicbrainz_id']
@@ -81,11 +81,12 @@ def import_musicbrainz_rows(musicbrainz_db_uri, dry_run=True):
                     import_count += 1
                 else:
                     print('No user with specified username in the MusicBrainz db: %s' % name)
-                    print('Deleting user %s' % name)
-                    try:
-                        delete_user(user)
-                    except NotFound:
-                        print('User %s not found in LB...' % name)
+                    if not dry_run:
+                        print('Deleting user %s' % name)
+                        try:
+                            delete_user(user)
+                        except NotFound:
+                            print('User %s not found in LB...' % name)
                     not_found += 1
                     continue
 
@@ -99,6 +100,7 @@ def import_musicbrainz_rows(musicbrainz_db_uri, dry_run=True):
                             'id': user['id'],
                         })
                     print('Inserted row_id %d for user %s' % (musicbrainz_row_id, name))
+
     print('Total number of ListenBrainz users: %d' % len(users))
     print('Total number of ListenBrainz users with already imported row ids: %d' % already_imported)
     print('Total number of ListenBrainz users whose row ids can be imported: %d' % import_count)
