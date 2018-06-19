@@ -1,8 +1,24 @@
-from listenbrainz import config, db
+from listenbrainz import db
 from brainzutils import musicbrainz_db
+from listenbrainz.webserver import create_app
+from listenbrainz.webserver.views.api_tools import publish_data_to_queue
+from listenbrainz.listenstore import InfluxListenStore
+from listenbrainz.webserver.influx_connection import init_influx_connection
+from werkzeug.exceptions import NotFound
 
 import listenbrainz.db.user as db_user
+import logging
 import sqlalchemy
+
+app = create_app()
+influx = init_influx_connection(logging, {
+            'REDIS_HOST': app.config['REDIS_HOST'],
+            'REDIS_PORT': app.config['REDIS_PORT'],
+            'REDIS_NAMESPACE': app.config['REDIS_NAMESPACE'],
+            'INFLUX_HOST': app.config['INFLUX_HOST'],
+            'INFLUX_PORT': app.config['INFLUX_PORT'],
+            'INFLUX_DB_NAME': app.config['INFLUX_DB_NAME'],
+        })
 
 
 def fix_username_for_exceptions():
@@ -22,9 +38,23 @@ def fix_username_for_exceptions():
             """))
 
 
+def delete_user(user):
+    influx.delete(user['musicbrainz_id'])
+    publish_data_to_queue(
+        data={
+            'type': 'delete.user',
+            'musicbrainz_id': user['musicbrainz_id'],
+        },
+        exchange=app.config['BIGQUERY_EXCHANGE'],
+        queue=app.config['BIGQUERY_QUEUE'],
+        error_msg='Could not upt user %s into queue for bq deletion.' % user['musicbrainz_id'],
+    )
+    db_user.delete(user['id'])
+
+
 def import_musicbrainz_rows(musicbrainz_db_uri, dry_run=True):
     musicbrainz_db.init_db_engine(musicbrainz_db_uri)
-    db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
+    db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
     users = db_user.get_all_users()
     import_count = 0
     already_imported = 0
@@ -51,6 +81,11 @@ def import_musicbrainz_rows(musicbrainz_db_uri, dry_run=True):
                     import_count += 1
                 else:
                     print('No user with specified username in the MusicBrainz db: %s' % name)
+                    print('Deleting user %s' % name)
+                    try:
+                        delete_user(user)
+                    except NotFound:
+                        print('User %s not found in LB...' % name)
                     not_found += 1
                     continue
 
@@ -72,4 +107,7 @@ def import_musicbrainz_rows(musicbrainz_db_uri, dry_run=True):
 
 
 if __name__ == '__main__':
-    import_musicbrainz_rows(config.MB_DATABASE_URI, dry_run=config.MUSICBRAINZ_IMPORT_DRY_RUN)
+    import_musicbrainz_rows(
+        app.config['MB_DATABASE_URI'],
+        dry_run=app.config['MUSICBRAINZ_IMPORT_DRY_RUN'],
+    )
