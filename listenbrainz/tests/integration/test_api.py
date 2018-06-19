@@ -235,6 +235,16 @@ class APITestCase(IntegrationTestCase):
         self.assertEqual(sent_additional_info['other_stuff'], received_additional_info['other_stuff'])
         self.assertEqual(sent_additional_info['nested']['info'], received_additional_info['nested.info'])
         self.assertEqual(str(sent_additional_info['release_type']), received_additional_info['release_type'])
+        self.assertEqual(sent_additional_info['spotify_id'], received_additional_info['spotify_id'])
+        self.assertEqual(sent_additional_info['isrc'], received_additional_info['isrc'])
+        self.assertEqual(sent_additional_info['tracknumber'], received_additional_info['tracknumber'])
+        self.assertEqual(sent_additional_info['release_group_mbid'], received_additional_info['release_group_mbid'])
+        self.assertListEqual(sent_additional_info['work_mbids'], received_additional_info['work_mbids'])
+        self.assertListEqual(sent_additional_info['artist_mbids'], received_additional_info['artist_mbids'])
+
+        self.assertNotIn('track_name', sent_additional_info)
+        self.assertNotIn('artist_name', sent_additional_info)
+        self.assertNotIn('release_name', sent_additional_info)
 
 
     def test_latest_import(self):
@@ -291,3 +301,14 @@ class APITestCase(IntegrationTestCase):
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
         self.assertEqual('artist_name must be a single string.', response.json['error'])
+
+    def test_too_high_timestamps(self):
+        """ Tests for timestamps greater than current time """
+
+        with open(self.path_to_data_file('timestamp_in_ns.json'), 'r') as f:
+            payload = json.load(f)
+        payload['listened_at'] = int(time.time()) * 10**9
+        response = self.send_data(payload)
+        self.assert400(response)
+        self.assertEqual(response.json['code'], 400)
+        self.assertEqual('Value for key listened_at is too high.', response.json['error'])

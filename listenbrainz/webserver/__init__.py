@@ -5,6 +5,8 @@ from time import sleep
 from shutil import copyfile
 
 from brainzutils.flask import CustomFlask
+from flask import request, url_for, redirect
+from flask_login import current_user
 
 API_PREFIX = '/1'
 
@@ -13,6 +15,7 @@ API_PREFIX = '/1'
 deploy_env = os.environ.get('DEPLOY_ENV', '')
 
 CONSUL_CONFIG_FILE_RETRY_COUNT = 10
+API_LISTENED_AT_ALLOWED_SKEW = 60 * 60 # allow a skew of 1 hour in listened_at submissions
 
 def create_influx(app):
     from listenbrainz.webserver.influx_connection import init_influx_connection
@@ -22,6 +25,7 @@ def create_influx(app):
         'INFLUX_DB_NAME': app.config['INFLUX_DB_NAME'],
         'REDIS_HOST': app.config['REDIS_HOST'],
         'REDIS_PORT': app.config['REDIS_PORT'],
+        'REDIS_NAMESPACE': app.config['REDIS_NAMESPACE'],
     })
 
 
@@ -43,45 +47,34 @@ def gen_app(config_path=None, debug=None):
     app = CustomFlask(
         import_name=__name__,
         use_flask_uuid=True,
-        use_debug_toolbar=True,
     )
 
     print("Starting metabrainz service with %s environment." % deploy_env);
 
-    # Configuration
-    print("loading %s" % os.path.join( os.path.dirname(os.path.realpath(__file__)), '..', 'default_config.py'))
-    app.config.from_pyfile(os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        '..', 'default_config.py'
-    ))
-
     # Load configuration files: If we're running under a docker deployment, wait until
-    # the consul configuration has been copied to custom_config.py
-    custom_config = os.path.join( os.path.dirname(os.path.realpath(__file__)), '..', 'custom_config.py' )
+    config_file = os.path.join( os.path.dirname(os.path.realpath(__file__)), '..', 'config.py' )
     if deploy_env:
-        print("Checking if consul template generated config file exists: %s" % custom_config)
+        print("Checking if consul template generated config file exists: %s" % config_file)
         for i in range(CONSUL_CONFIG_FILE_RETRY_COUNT):
-            if not os.path.exists(custom_config):
+            if not os.path.exists(config_file):
                 sleep(1)
 
-        if not os.path.exists(custom_config):
+        if not os.path.exists(config_file):
             print("No configuration file generated yet. Retried %d times, exiting." % CONSUL_CONFIG_FILE_RETRY_COUNT);
             sys.exit(-1)
 
-        print("loading consul config file %s)" % os.path.join( os.path.dirname(os.path.realpath(__file__)), '..', 'custom_config.py'))
-        app.config.from_pyfile(custom_config)
+        print("loading consul config file %s)" % config_file)
+        app.config.from_pyfile(config_file)
 
     else:
-        print("loading custom config %s" % custom_config)
-        app.config.from_pyfile(custom_config, silent=True)
-
-    if config_path:
-        print("loading additional config %s" % config_path)
-        app.config.from_pyfile(config_path)
-
+        app.config.from_pyfile(config_file)
 
     if debug is not None:
         app.debug = debug
+
+    # initialize Flask-DebugToolbar if the debug option is True
+    if app.debug and app.config['SECRET_KEY']:
+        app.init_debug_toolbar()
 
     # Output config values and some other info
     print('Configuration values are as follows: ')
@@ -142,6 +135,22 @@ def create_app(config_path=None, debug=None):
 
     app = gen_app(config_path=config_path, debug=debug)
     _register_blueprints(app)
+
+    @app.before_request
+    def before_request_gdpr_check():
+        # skip certain pages, static content and the API
+        if request.path == url_for('index.gdpr_notice') \
+            or request.path == url_for('profile.delete') \
+            or request.path == url_for('profile.export_data') \
+            or request.path == url_for('login.logout') \
+            or request.path.startswith('/static') \
+            or request.path.startswith('/1'):
+            return
+        # otherwise if user is logged in and hasn't agreed to gdpr,
+        # redirect them to agree to terms page.
+        elif current_user.is_authenticated() and current_user.gdpr_agreed is None:
+            return redirect(url_for('index.gdpr_notice', next=request.full_path))
+
     return app
 
 
@@ -176,12 +185,11 @@ def create_app_rtfd():
     app = CustomFlask(
         import_name=__name__,
         use_flask_uuid=True,
-        use_debug_toolbar=True,
     )
 
     app.config.from_pyfile(os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
-        '..', 'default_config.py'
+        '..', 'rtd_config.py'
     ))
 
     _register_blueprints(app)

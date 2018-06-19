@@ -97,7 +97,7 @@ configuration.
 
 .. code-block:: bash
 
-    cp listenbrainz/custom_config.py.sample listenbrainz/custom_config.py
+    cp listenbrainz/config.py.sample listenbrainz/config.py
 
 Next, open the file with your favorite text editor and look for this section.
 
@@ -110,6 +110,25 @@ Next, open the file with your favorite text editor and look for this section.
 Update the strings with your client ID and secret. After doing this, your
 ListenBrainz development environment is able to authenticate and log in from
 your MusicBrainz login.
+
+Also, in order for the Last.FM import to work, you should also update your
+Last.FM API key in this file. Look for the following section in the file.
+
+.. code-block:: yaml
+
+    # Lastfm API
+    LASTFM_API_URL = "https://ws.audioscrobbler.com/2.0/"
+    LASTFM_API_KEY = "USE_LASTFM_API_KEY"
+
+Update the Last.FM API key with your key. After doing this, your
+ListenBrainz development environment is able to import your listens from Last.FM.
+
+In case you don't have a Last.FM API key, you can get it from `Last.FM API page`_.
+
+You also need to update the ``API_URL`` field value to ``http://localhost``.
+
+
+.. _Last.FM API page: https://last.fm/api
 
 
 Initialize ListenBrainz containers

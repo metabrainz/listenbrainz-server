@@ -1,8 +1,8 @@
 
 #TODO(param): alphabetize these
-from flask import Blueprint, render_template, current_app, redirect, url_for
-from flask_login import current_user
-from listenbrainz.webserver.redis_connection import _redis
+from brainzutils import cache
+from flask import Blueprint, render_template, current_app, redirect, url_for, request
+from flask_login import current_user, login_required
 import os
 import subprocess
 import locale
@@ -95,12 +95,10 @@ def current_status():
     unique_len = -1
     try:
         with rabbitmq_connection._rabbitmq.acquire() as connection:
-            incoming_ch = connection.channel()
-            queue = incoming_ch.queue_declare(current_app.config['INCOMING_QUEUE'], durable=True)
+            queue = connection.channel.queue_declare(current_app.config['INCOMING_QUEUE'], durable=True)
             incoming_len = queue.method.message_count
 
-            unique_ch = connection.channel()
-            queue = unique_ch.queue_declare(current_app.config['UNIQUE_QUEUE'], durable=True)
+            queue = connection.channel.queue_declare(current_app.config['UNIQUE_QUEUE'], durable=True)
             unique_len = queue.method.message_count
 
     except (pika.exceptions.ConnectionClosed, AttributeError):
@@ -122,19 +120,41 @@ def current_status():
     )
 
 
+@index_bp.route('/agree-to-terms', methods=['GET', 'POST'])
+@login_required
+def gdpr_notice():
+    if request.method == 'GET':
+        return render_template('index/gdpr.html', next=request.args.get('next'))
+    elif request.method == 'POST':
+        if request.form.get('gdpr-options') == 'agree':
+            try:
+                db_user.agree_to_gdpr(current_user.musicbrainz_id)
+            except DatabaseException as e:
+                flash.error('Could not store agreement to GDPR terms')
+            next = request.form.get('next')
+            if next:
+                return redirect(next)
+            return redirect(url_for('index.index'))
+        elif request.form.get('gdpr-options') == 'disagree':
+            return redirect(url_for('profile.delete'))
+        else:
+            flash.error('You must agree to or decline our terms')
+            return render_template('index/gdpr.html', next=request.args.get('next'))
+
+
 def _get_user_count():
-    """ Gets user count from either the redis cache or from the database.
+    """ Gets user count from either the brainzutils cache or from the database.
         If not present in the cache, it makes a query to the db and stores the
         result in the cache for 10 minutes.
     """
-    redis_connection = _redis.redis
     user_count_key = "{}.{}".format(STATS_PREFIX, 'user_count')
-    if redis_connection.exists(user_count_key):
-        return redis_connection.get(user_count_key)
+    user_count = cache.get(user_count_key, decode=False)
+    if user_count:
+        return user_count
     else:
         try:
             user_count = db_user.get_user_count()
         except DatabaseException as e:
             raise
-        redis_connection.setex(user_count_key, user_count, CACHE_TIME)
+        cache.set(user_count_key, int(user_count), CACHE_TIME, encode=False)
         return user_count

@@ -1,9 +1,21 @@
+from unittest import mock
 
-from listenbrainz.webserver.testing import ServerTestCase
 from flask import url_for
+from flask_login import login_required, AnonymousUserMixin
+from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
+
+import listenbrainz.db.user as db_user
+import listenbrainz.webserver.login
+from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.webserver import create_app
+from listenbrainz.webserver.testing import ServerTestCase
 
 
-class IndexViewsTestCase(ServerTestCase):
+class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
+
+    def setUp(self):
+        ServerTestCase.setUp(self)
+        DatabaseTestCase.setUp(self)
 
     def test_index(self):
         resp = self.client.get(url_for('index.index'))
@@ -45,3 +57,136 @@ class IndexViewsTestCase(ServerTestCase):
     def test_lastfm_proxy(self):
         resp = self.client.get(url_for('index.proxy'))
         self.assert200(resp)
+
+    def test_flask_debugtoolbar(self):
+        """ Test if flask debugtoolbar is loaded correctly
+
+        Creating an app with default config so that debug is True
+        and SECRET_KEY is defined.
+        """
+        app = create_app(debug=True)
+        client = app.test_client()
+        resp = client.get('/data')
+        self.assert200(resp)
+        self.assertIn('flDebug', str(resp.data))
+
+    def test_current_status(self):
+        resp = self.client.get(url_for('index.current_status'))
+        self.assert200(resp)
+
+    @mock.patch('listenbrainz.db.user.get')
+    def test_menu_not_logged_in(self, mock_user_get):
+        resp = self.client.get(url_for('index.index'))
+        data = resp.data.decode('utf-8')
+        self.assertIn('Sign in', data)
+        self.assertIn('Import!', data)
+        # item in user menu doesn't exist
+        self.assertNotIn('Your Listens', data)
+        mock_user_get.assert_not_called()
+
+    @mock.patch('listenbrainz.db.user.get')
+    def test_menu_logged_in(self, mock_user_get):
+        """ If the user is logged in, check that we perform a database query to get user data """
+        user = db_user.get_or_create('iliekcomputers')
+        db_user.agree_to_gdpr(user['musicbrainz_id'])
+        user = db_user.get_or_create('iliekcomputers')
+
+        mock_user_get.return_value = user
+        self.temporary_login(user['id'])
+        resp = self.client.get(url_for('index.index'))
+        data = resp.data.decode('utf-8')
+
+        # username (menu header)
+        self.assertIn('iliekcomputers', data)
+        self.assertIn('Import!', data)
+        # item in user menu
+        self.assertIn('Your Listens', data)
+        mock_user_get.assert_called_with(user['id'])
+
+    @mock.patch('listenbrainz.db.user.get')
+    def test_menu_logged_in_error_show(self, mock_user_get):
+        """ If the user is logged in, if we show a 400 or 404 error, show the user menu"""
+        @self.app.route('/page_that_returns_400')
+        def view400():
+            raise BadRequest('bad request')
+
+        @self.app.route('/page_that_returns_404')
+        def view404():
+            raise NotFound('not found')
+
+        user = db_user.get_or_create('iliekcomputers')
+        db_user.agree_to_gdpr(user['musicbrainz_id'])
+        user = db_user.get_or_create('iliekcomputers')
+        mock_user_get.return_value = user
+        self.temporary_login(user['id'])
+        resp = self.client.get('/page_that_returns_400')
+        data = resp.data.decode('utf-8')
+        self.assert400(resp)
+
+        # username (menu header)
+        self.assertIn('iliekcomputers', data)
+        self.assertIn('Import!', data)
+        # item in user menu
+        self.assertIn('Your Listens', data)
+        mock_user_get.assert_called_with(user['id'])
+
+        resp = self.client.get('/page_that_returns_404')
+        data = resp.data.decode('utf-8')
+        self.assert404(resp)
+        # username (menu header)
+        self.assertIn('iliekcomputers', data)
+        self.assertIn('Import!', data)
+        # item in user menu
+        self.assertIn('Your Listens', data)
+        mock_user_get.assert_called_with(user['id'])
+
+    @mock.patch('listenbrainz.db.user.get')
+    def test_menu_logged_in_error_dont_show_no_user(self, mock_user_get):
+        """ If the user is logged in, if we show a 500 error, do not show the user menu
+            Don't query the database to get a current_user for the template context"""
+        @self.app.route('/page_that_returns_500')
+        def view500():
+            raise InternalServerError('error')
+
+        user = db_user.get_or_create('iliekcomputers')
+        db_user.agree_to_gdpr(user['musicbrainz_id'])
+        user = db_user.get_or_create('iliekcomputers')
+        mock_user_get.return_value = user
+        self.temporary_login(user['id'])
+        resp = self.client.get('/page_that_returns_500')
+        data = resp.data.decode('utf-8')
+        # item not in user menu
+        self.assertNotIn('Your Listens', data)
+        self.assertIn('Sign in', data)
+        self.assertIn('Import!', data)
+
+    @mock.patch('listenbrainz.db.user.get')
+    def test_menu_logged_in_error_dont_show_user_loaded(self, mock_user_get):
+        """ If the user is logged in, if we show a 500 error, do not show the user menu
+        If the user has previously been loaded in the view, check that it's not
+        loaded while rendering the template"""
+
+        user = db_user.get_or_create('iliekcomputers')
+        db_user.agree_to_gdpr(user['musicbrainz_id'])
+        user = db_user.get_or_create('iliekcomputers')
+
+        mock_user_get.return_value = user
+
+        @self.app.route('/page_that_returns_500')
+        @login_required
+        def view500():
+            # flask-login user is loaded during @login_required, so check that the db has been queried
+            mock_user_get.assert_called_with(user['id'])
+            raise InternalServerError('error')
+
+        self.temporary_login(user['id'])
+        resp = self.client.get('/page_that_returns_500')
+        data = resp.data.decode('utf-8')
+        # item not in user menu
+        self.assertNotIn('Your Listens', data)
+        self.assertIn('Sign in', data)
+        self.assertIn('Import!', data)
+        # Even after rendering the template, the database has only been queried once (before the exception)
+        mock_user_get.assert_called_once()
+        self.assertIsInstance(self.get_context_variable('current_user'), listenbrainz.webserver.login.User)
+

@@ -6,6 +6,7 @@ services:
   - docker
 
 install:
+  - cp listenbrainz/rtd_config.py listenbrainz/config.py
   # Build the unit test docker-compose project
   - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test build
   - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test run --rm listenbrainz
@@ -16,10 +17,6 @@ install:
        python3 manage.py init_msb_db --create-db &&
        python3 manage.py init_influx"
   - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test stop
-
-  # This file seemes to cause permission problems somehow, not sure how, leading
-  # to errors in building the other containers. So remove it.
-  - sudo rm docker/data/rabbitmq/.erlang.cookie
 
   # Build the integration test docker-compose project
   - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int build

@@ -8,6 +8,7 @@ services:
 
   db:
     image: postgres:9.5.3
+    command: postgres -F
 
   redis:
     image: redis:3.2.1
@@ -27,7 +28,7 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    command: python3 -m "listenbrainz.influx-writer.influx-writer"
+    command: python3 -m "listenbrainz.influx_writer.influx_writer"
     depends_on:
       - redis
       - influx
@@ -36,14 +37,12 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    command: python3 -m "listenbrainz.bigquery-writer.bigquery-writer"
+    command: python3 -m "listenbrainz.bigquery_writer.bigquery_writer"
     links:
       - redis
 
   rabbitmq:
     image: rabbitmq:3.6.5
-    volumes:
-      - ./data/rabbitmq:/var/lib/rabbitmq:z
     ports:
       - "5672:5672"
 

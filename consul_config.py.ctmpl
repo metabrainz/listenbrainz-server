@@ -24,6 +24,7 @@ PG_ASYNC_LISTEN_COMMIT = False
 {{with index (service "listenbrainz-redis") 0}}
 REDIS_HOST = "{{.Address}}"
 REDIS_PORT = {{.Port}}
+REDIS_NAMESPACE = "listenbrainz"
 {{end}}
 {{end}}
 
@@ -48,6 +49,8 @@ INCOMING_EXCHANGE = '''{{template "KEY" "incoming_exchange"}}'''
 INCOMING_QUEUE = '''{{template "KEY" "incoming_queue"}}'''
 UNIQUE_EXCHANGE = '''{{template "KEY" "unique_exchange"}}'''
 UNIQUE_QUEUE = '''{{template "KEY" "unique_queue"}}'''
+STATS_EXCHANGE = '''{{template "KEY" "stats_exchange"}}'''
+STATS_QUEUE = '''{{template "KEY" "stats_queue"}}'''
 
 
 MUSICBRAINZ_CLIENT_ID = '''{{template "KEY" "musicbrainz/client_id"}}'''

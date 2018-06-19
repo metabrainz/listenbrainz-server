@@ -5,11 +5,7 @@ from datetime import datetime
 from sqlalchemy import text
 
 
-from listenbrainz import default_config as config
-try:
-    from listenbrainz import custom_config as config
-except ImportError:
-    pass
+from listenbrainz import config
 from listenbrainz import db
 from listenbrainz.db.lastfm_user import User
 from listenbrainz.db.testing import DatabaseTestCase
@@ -28,6 +24,7 @@ class TestAPICompatUserClass(DatabaseTestCase):
             'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
             'REDIS_HOST': config.REDIS_HOST,
             'REDIS_PORT': config.REDIS_PORT,
+            'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
         })
 
         # Create a user

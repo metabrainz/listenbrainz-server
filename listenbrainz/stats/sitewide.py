@@ -21,17 +21,16 @@ This module contains functions to run queries for sitewide statistics
 on Google BigQuery.
 """
 
+from listenbrainz import bigquery
+from listenbrainz import config
 from listenbrainz import stats
 
-from listenbrainz import default_config as config
-try:
-    from listenbrainz import custom_config as config
-except ImportError:
-    pass
 
-
-def get_artist_count():
+def get_artist_count(bigquery_connection):
     """ Calculates the total number of artists submitted to ListenBrainz.
+
+        Args:
+            bigquery_connection: the bigquery connection object
 
         Returns:
             artist_count (int)
@@ -44,4 +43,4 @@ def get_artist_count():
                 table_id=config.BIGQUERY_TABLE_ID,
             )
 
-    return stats.run_query(query)[0]['artist_count']
+    return bigquery.run_query(bigquery_connection, query)[0]['artist_count']
