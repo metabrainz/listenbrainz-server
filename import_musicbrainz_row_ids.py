@@ -21,7 +21,7 @@ influx = init_influx_connection(logging, {
         })
 
 
-def fix_username_for_exceptions():
+def update_row_ids_for_exceptions():
     with brainzutils.musicbrainz_db.connect() as mb_connection:
         with db.engine.connect() as connection:
             # 2106 - Fée Deuspi
@@ -81,7 +81,7 @@ def import_musicbrainz_rows(musicbrainz_db_uri, dry_run=True):
     deleted = 0
 
     if not dry_run:
-        fix_username_for_exceptions()
+        update_row_ids_for_exceptions()
     with musicbrainz_db.engine.connect() as mb_connection:
         with db.engine.connect() as connection:
             for user in users:
