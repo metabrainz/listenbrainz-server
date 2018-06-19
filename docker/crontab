@@ -3,7 +3,7 @@ PYTHONPATH=/usr/local/lib/python36.zip:/usr/local/lib/python3.6:/usr/local/lib/p
 GOOGLE_APPLICATION_CREDENTIALS=/code/listenbrainz/credentials/bigquery-credentials.json
 
 # Statistics calculation via Google BigQuery
-0 0 * * 0 /usr/local/bin/python /code/listenbrainz/manage.py stats calculate >> /var/log/stats.log 2>&1
+0 0 * * 1 /usr/local/bin/python /code/listenbrainz/manage.py stats populate_queue>> /var/log/stats.log 2>&1
 
 # Data dumps creation for backup and public use
-15 0 1 * * /usr/local/bin/python /code/listenbrainz/manage.py dump create >> /var/log/dump_create.log 2>&1
+4 0 1,15 * * /code/listenbrainz/admin/create-dumps.sh >> /var/log/dump_create.log 2>&1

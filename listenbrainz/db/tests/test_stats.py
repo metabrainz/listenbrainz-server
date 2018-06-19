@@ -87,3 +87,8 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         self.assertListEqual(result['recording']['all_time'], data_inserted['user_recordings'])
         self.assertGreater(int(result['last_updated'].strftime('%s')), 0)
 
+    def test_valid_stats_exist(self):
+        self.assertFalse(db_stats.valid_stats_exist(self.user['id']))
+        self.insert_test_data()
+        self.assertTrue(db_stats.valid_stats_exist(self.user['id']))
+

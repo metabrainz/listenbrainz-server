@@ -1,4 +1,4 @@
-DEBUG = False  # set to False in production mode
+DEBUG = False # set to False in production mode
 
 SECRET_KEY = "CHANGE_ME"
 
@@ -23,6 +23,7 @@ PG_ASYNC_LISTEN_COMMIT = False
 # Redis
 REDIS_HOST = "redis"
 REDIS_PORT = 6379
+REDIS_NAMESPACE = "listenbrainz"
 
 # Influx DB (main listen store)
 INFLUX_HOST    = "influx"

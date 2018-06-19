@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import listenbrainz.db.user as db_user
+import listenbrainz.db.stats as db_stats
 import sqlalchemy
 import time
 import ujson
@@ -162,3 +163,24 @@ class UserTestCase(DatabaseTestCase):
             for column in db_user.USER_GET_COLUMNS:
                 if column != 'id':
                     self.assertNotIn(column, user)
+
+    def test_delete(self):
+        user_id = db_user.create('frank')
+
+        user = db_user.get(user_id)
+        self.assertIsNotNone(user)
+        db_stats.insert_user_stats(
+            user_id=user_id,
+            artists={},
+            recordings={},
+            releases={},
+            artist_count=2,
+        )
+        user_stats = db_stats.get_all_user_stats(user_id)
+        self.assertIsNotNone(user_stats)
+
+        db_user.delete(user_id)
+        user = db_user.get(user_id)
+        self.assertIsNone(user)
+        user_stats = db_stats.get_all_user_stats(user_id)
+        self.assertIsNone(user_stats)

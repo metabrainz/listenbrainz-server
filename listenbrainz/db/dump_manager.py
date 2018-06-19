@@ -24,6 +24,9 @@ import click
 import listenbrainz.db.dump as db_dump
 import logging
 import os
+import re
+import shutil
+import subprocess
 import sys
 
 from datetime import datetime
@@ -33,11 +36,10 @@ from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.utils import create_path
 from listenbrainz.webserver.influx_connection import init_influx_connection
 
-import listenbrainz.default_config as config
-try:
-    import listenbrainz.custom_config as config
-except ImportError:
-    pass
+from listenbrainz import config
+
+
+NUMBER_OF_DUMPS_TO_KEEP = 2
 
 log = logging.getLogger(__name__)
 
@@ -59,6 +61,7 @@ def create(location, threads):
     ls = init_influx_connection(log,  {
         'REDIS_HOST': config.REDIS_HOST,
         'REDIS_PORT': config.REDIS_PORT,
+        'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
         'INFLUX_HOST': config.INFLUX_HOST,
         'INFLUX_PORT': config.INFLUX_PORT,
         'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
@@ -68,6 +71,12 @@ def create(location, threads):
     create_path(dump_path)
     db_dump.dump_postgres_db(dump_path, time_now, threads)
     ls.dump_listens(dump_path, time_now, threads)
+    try:
+        write_hashes(dump_path)
+    except IOError as e:
+        log.error('Unable to create hash files! Error: %s', str(e))
+        return
+    log.info('Dumps created and hashes written at %s' % dump_path)
 
 
 @cli.command()
@@ -100,6 +109,7 @@ def import_dump(private_archive, public_archive, listen_archive, threads):
     ls = init_influx_connection(log,  {
         'REDIS_HOST': config.REDIS_HOST,
         'REDIS_PORT': config.REDIS_PORT,
+        'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
         'INFLUX_HOST': config.INFLUX_HOST,
         'INFLUX_PORT': config.INFLUX_PORT,
         'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
@@ -119,3 +129,60 @@ def import_dump(private_archive, public_archive, listen_archive, threads):
     except Exception as e:
         log.error('Unexpected error while importing data: %s', str(e))
         raise
+
+
+@cli.command()
+@click.argument('location', type=str)
+def delete_old_dumps(location):
+    _cleanup_dumps(location)
+
+
+def _cleanup_dumps(location):
+    """ Delete old dumps while keeping the latest two dumps in the specified directory
+
+    Args:
+        location (str): the dir which needs to be cleaned up
+
+    Returns:
+        (int, int): the number of dumps remaining, the number of dumps deleted
+    """
+    dump_re = re.compile('listenbrainz-dump-[0-9]*-[0-9]*')
+    dumps = [x for x in sorted(os.listdir(location), reverse=True) if dump_re.match(x)]
+    if not dumps:
+        print('No dumps present in specified directory!')
+        return
+
+    keep = dumps[0:NUMBER_OF_DUMPS_TO_KEEP]
+    keep_count = 0
+    for dump in keep:
+        print('Keeping %s...' % dump)
+        keep_count += 1
+
+    remove = dumps[NUMBER_OF_DUMPS_TO_KEEP:]
+    remove_count = 0
+    for dump in remove:
+        print('Removing %s...' % dump)
+        shutil.rmtree(os.path.join(location, dump))
+        remove_count += 1
+
+    print('Deleted %d old exports, kept %d exports!' % (remove_count, keep_count))
+    return keep_count, remove_count
+
+
+def write_hashes(location):
+    """ Create hash files for each file in the given dump location
+
+    Args:
+        location (str): the path in which the dump archive files are present
+    """
+    for file in os.listdir(location):
+        try:
+            with open(os.path.join(location, '{}.md5'.format(file)), 'w') as f:
+                md5sum = subprocess.check_output(['md5sum', os.path.join(location, file)]).decode('utf-8').split()[0]
+                f.write(md5sum)
+            with open(os.path.join(location, '{}.sha256'.format(file)), 'w') as f:
+                sha256sum = subprocess.check_output(['sha256sum', os.path.join(location, file)]).decode('utf-8').split()[0]
+                f.write(sha256sum)
+        except IOError as e:
+            log.error('IOError while trying to write hash files for file %s: %s', file, str(e))
+            raise

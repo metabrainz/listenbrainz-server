@@ -31,11 +31,7 @@ from listenbrainz.tests.integration import APICompatIntegrationTestCase
 from listenbrainz.webserver.views.api_compat_deprecated import _get_audioscrobbler_auth_token, _get_session, \
     _to_native_api
 
-from listenbrainz import default_config as config
-try:
-    from listenbrainz import custom_config as config
-except ImportError:
-    pass
+from listenbrainz import config
 
 
 class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
@@ -44,8 +40,9 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         super(APICompatDeprecatedTestCase, self).setUp()
         self.user = db_user.get_or_create('apicompatoldtestuser')
         self.ls = InfluxListenStore({
-            'REDIS_HOST' : config.REDIS_HOST,
-            'REDIS_PORT' : config.REDIS_PORT,
+            'REDIS_HOST': config.REDIS_HOST,
+            'REDIS_PORT': config.REDIS_PORT,
+            'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
             'INFLUX_HOST': config.INFLUX_HOST,
             'INFLUX_PORT': config.INFLUX_PORT,
             'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
@@ -218,6 +215,12 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
         # add track name and remove timestamp
         data['t[0]'] = 'Saamne Ye Kaun Aya'
         del data['i[0]']
+        r = self.client.post(url_for('api_compat_old.submit_listens'), data=data)
+        self.assert400(r)
+        self.assertEqual(r.data.decode('utf-8').split()[0], 'FAILED')
+
+        # re-add a timestamp in ns
+        data['i[0]'] = int(time.time()) * 10**9
         r = self.client.post(url_for('api_compat_old.submit_listens'), data=data)
         self.assert400(r)
         self.assertEqual(r.data.decode('utf-8').split()[0], 'FAILED')
