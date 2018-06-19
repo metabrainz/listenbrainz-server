@@ -39,7 +39,7 @@ class BigQueryJobRunnerTestCase(DatabaseTestCase):
         self.app = create_app() # create a flask app for config purposes
         self.sc = BigQueryJobRunner()
         self.sc.bigquery = MagicMock()
-        self.user = db_user.get_or_create('stats_calculator_test_user')
+        self.user = db_user.get_or_create(21, 'stats_calculator_test_user')
 
     @patch('listenbrainz.stats.user.get_top_recordings', side_effect=lambda x, y: {})
     @patch('listenbrainz.stats.user.get_top_artists', side_effect=lambda x, y: {})

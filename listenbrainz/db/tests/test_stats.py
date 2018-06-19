@@ -12,7 +12,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
 
     def setUp(self):
         DatabaseTestCase.setUp(self)
-        self.user = db_user.get_or_create('stats_user')
+        self.user = db_user.get_or_create(1, 'stats_user')
 
 
     def test_insert_user_stats(self):

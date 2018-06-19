@@ -13,7 +13,7 @@ class APITestCase(IntegrationTestCase):
 
     def setUp(self):
         super(APITestCase, self).setUp()
-        self.user = db_user.get_or_create('testuserpleaseignore')
+        self.user = db_user.get_or_create(1, 'testuserpleaseignore')
 
     def test_get_listens(self):
         """ Test to make sure that the api sends valid listens on get requests.

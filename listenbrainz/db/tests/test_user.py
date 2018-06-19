@@ -13,11 +13,29 @@ from listenbrainz.db.testing import DatabaseTestCase
 class UserTestCase(DatabaseTestCase):
 
     def test_create(self):
-        user_id = db_user.create("izzy_cheezy")
+        user_id = db_user.create(0, "izzy_cheezy")
         self.assertIsNotNone(db_user.get(user_id))
 
+    def test_get_by_musicbrainz_row_id(self):
+        user_id = db_user.create(0, 'frank')
+        user = db_user.get_by_mb_row_id(0)
+        self.assertEqual(user['id'], user_id)
+        user = db_user.get_by_mb_row_id(0, musicbrainz_id='frank')
+        self.assertEqual(user['id'], user_id)
+        with db.engine.connect() as connection:
+            connection.execute(sqlalchemy.text("""
+                UPDATE "user"
+                   SET musicbrainz_row_id = NULL
+                 WHERE id = :user_id
+                 """), {
+                     'user_id': user_id,
+                })
+        user = db_user.get_by_mb_row_id(0, musicbrainz_id='frank')
+        self.assertIsNotNone(user)
+        self.assertEqual(user['id'], user_id)
+
     def test_update_token(self):
-        user = db_user.get_or_create('testuserplsignore')
+        user = db_user.get_or_create(1, 'testuserplsignore')
         old_token = user['auth_token']
         db_user.update_token(user['id'])
         user = db_user.get_by_mb_id('testuserplsignore')
@@ -26,7 +44,7 @@ class UserTestCase(DatabaseTestCase):
     def test_update_last_login(self):
         """ Tests db.user.update_last_login """
 
-        user = db_user.get_or_create('testlastloginuser')
+        user = db_user.get_or_create(2, 'testlastloginuser')
 
         # set the last login value of the user to 0
         with db.engine.connect() as connection:
@@ -48,7 +66,7 @@ class UserTestCase(DatabaseTestCase):
         self.assertGreater(int(user['last_login'].strftime('%s')), 0)
 
     def test_update_latest_import(self):
-        user = db_user.get_or_create('updatelatestimportuser')
+        user = db_user.get_or_create(3, 'updatelatestimportuser')
         self.assertEqual(int(user['latest_import'].strftime('%s')), 0)
 
         val = int(time.time())
@@ -57,7 +75,7 @@ class UserTestCase(DatabaseTestCase):
         self.assertEqual(int(user['latest_import'].strftime('%s')), val)
 
     def test_increase_latest_import(self):
-        user = db_user.get_or_create('testlatestimportuser')
+        user = db_user.get_or_create(4, 'testlatestimportuser')
 
         val = int(time.time())
         db_user.increase_latest_import(user['musicbrainz_id'], val)
@@ -78,7 +96,7 @@ class UserTestCase(DatabaseTestCase):
         # create two users, set one's last_login
         # to a very old value and one's last_login
         # to now and then call the function
-        user1 = db_user.get_or_create('recentuser1')
+        user1 = db_user.get_or_create(5, 'recentuser1')
         with db.engine.connect() as connection:
             connection.execute(sqlalchemy.text("""
                 UPDATE "user"
@@ -88,7 +106,7 @@ class UserTestCase(DatabaseTestCase):
                     'musicbrainz_id': 'recentuser1'
                 })
 
-        user2 = db_user.get_or_create('recentuser2')
+        user2 = db_user.get_or_create(6, 'recentuser2')
         with db.engine.connect() as connection:
             connection.execute(sqlalchemy.text("""
                 UPDATE "user"
@@ -122,7 +140,7 @@ class UserTestCase(DatabaseTestCase):
         self.assertListEqual(users_with_uncalculated_stats, [])
 
     def test_reset_latest_import(self):
-        user = db_user.get_or_create('resetlatestimportuser')
+        user = db_user.get_or_create(7, 'resetlatestimportuser')
         self.assertEqual(int(user['latest_import'].strftime('%s')), 0)
 
         val = int(time.time())
@@ -139,10 +157,10 @@ class UserTestCase(DatabaseTestCase):
 
         users = db_user.get_all_users()
         self.assertEqual(len(users), 0)
-        db_user.create('user1')
+        db_user.create(8, 'user1')
         users = db_user.get_all_users()
         self.assertEqual(len(users), 1)
-        db_user.create('user2')
+        db_user.create(9, 'user2')
         users = db_user.get_all_users()
         self.assertEqual(len(users), 2)
 
@@ -165,7 +183,7 @@ class UserTestCase(DatabaseTestCase):
                     self.assertNotIn(column, user)
 
     def test_delete(self):
-        user_id = db_user.create('frank')
+        user_id = db_user.create(10, 'frank')
 
         user = db_user.get(user_id)
         self.assertIsNotNone(user)

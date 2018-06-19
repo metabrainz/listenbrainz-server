@@ -87,9 +87,9 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
     @mock.patch('listenbrainz.db.user.get')
     def test_menu_logged_in(self, mock_user_get):
         """ If the user is logged in, check that we perform a database query to get user data """
-        user = db_user.get_or_create('iliekcomputers')
+        user = db_user.get_or_create(1, 'iliekcomputers')
         db_user.agree_to_gdpr(user['musicbrainz_id'])
-        user = db_user.get_or_create('iliekcomputers')
+        user = db_user.get_or_create(1, 'iliekcomputers')
 
         mock_user_get.return_value = user
         self.temporary_login(user['id'])
@@ -114,9 +114,9 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         def view404():
             raise NotFound('not found')
 
-        user = db_user.get_or_create('iliekcomputers')
+        user = db_user.get_or_create(1, 'iliekcomputers')
         db_user.agree_to_gdpr(user['musicbrainz_id'])
-        user = db_user.get_or_create('iliekcomputers')
+        user = db_user.get_or_create(1, 'iliekcomputers')
         mock_user_get.return_value = user
         self.temporary_login(user['id'])
         resp = self.client.get('/page_that_returns_400')
@@ -148,9 +148,9 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         def view500():
             raise InternalServerError('error')
 
-        user = db_user.get_or_create('iliekcomputers')
+        user = db_user.get_or_create(1, 'iliekcomputers')
         db_user.agree_to_gdpr(user['musicbrainz_id'])
-        user = db_user.get_or_create('iliekcomputers')
+        user = db_user.get_or_create(1, 'iliekcomputers')
         mock_user_get.return_value = user
         self.temporary_login(user['id'])
         resp = self.client.get('/page_that_returns_500')
@@ -166,9 +166,9 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         If the user has previously been loaded in the view, check that it's not
         loaded while rendering the template"""
 
-        user = db_user.get_or_create('iliekcomputers')
+        user = db_user.get_or_create(1, 'iliekcomputers')
         db_user.agree_to_gdpr(user['musicbrainz_id'])
-        user = db_user.get_or_create('iliekcomputers')
+        user = db_user.get_or_create(1, 'iliekcomputers')
 
         mock_user_get.return_value = user
 
