@@ -22,17 +22,6 @@ class UserTestCase(DatabaseTestCase):
         self.assertEqual(user['id'], user_id)
         user = db_user.get_by_mb_row_id(0, musicbrainz_id='frank')
         self.assertEqual(user['id'], user_id)
-        with db.engine.connect() as connection:
-            connection.execute(sqlalchemy.text("""
-                UPDATE "user"
-                   SET musicbrainz_row_id = NULL
-                 WHERE id = :user_id
-                 """), {
-                     'user_id': user_id,
-                })
-        user = db_user.get_by_mb_row_id(0, musicbrainz_id='frank')
-        self.assertIsNotNone(user)
-        self.assertEqual(user['id'], user_id)
 
     def test_update_token(self):
         user = db_user.get_or_create(1, 'testuserplsignore')
