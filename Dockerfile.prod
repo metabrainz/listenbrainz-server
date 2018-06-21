@@ -67,7 +67,7 @@ RUN touch /etc/service/cron/down
 # Node
 RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
 RUN apt-get install -y nodejs
-RUN npm install -g less
+RUN npm install -g less@2.7.2
 RUN npm install less-plugin-clean-css
 
 # Compile the CSS

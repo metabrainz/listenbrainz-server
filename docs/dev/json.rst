@@ -93,15 +93,19 @@ Fetching listen JSON
 The JSON documents returned from our API look like the following::
 
     {
-      "count": 25,
-      "payload": [
+      "payload": {
+        "count": 25,
+        "user_id": "-- the MusicBrainz ID of the user --",
+        "listens": [
           "-- listen data here ---"
-      ]
+        ]
+      }
     }
 
 The number of listens in the document are returned by the top-level ``count``
-element. The other element is the ``payload`` element. This contains the listen
-JSON elements (described above).
+element. The ``user_id`` element contains the MusicBrainz ID of the user whose listens are
+being returned. The other element is the ``listens`` element. This is a list which contains
+the listen JSON elements (described above).
 
 
 Payload JSON details
