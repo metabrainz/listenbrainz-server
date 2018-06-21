@@ -3,7 +3,7 @@
 from brainzutils import cache
 from flask import Blueprint, render_template, current_app, redirect, url_for, request, jsonify
 from flask_login import current_user, login_required
-from werkzeug.exceptions import Unauthorized
+from werkzeug.exceptions import Unauthorized, NotFound
 from requests.exceptions import HTTPError
 import os
 import subprocess
@@ -13,7 +13,7 @@ import listenbrainz.db.user as db_user
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz import webserver
 from listenbrainz.webserver.influx_connection import _influx
-from listenbrainz.webserver.views.profile import delete_user
+from listenbrainz.webserver.views.user import delete_user
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import pika
 import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
@@ -146,10 +146,13 @@ def gdpr_notice():
             return render_template('index/gdpr.html', next=request.args.get('next'))
 
 
-@index_bp.route('/delete-user/<musicbrainz_id>')
-def mb_user_deleter(musicbrainz_id):
-    _authorize_mb_user_deleter(request.args.get('auth_token', ''))
-    delete_user(musicbrainz_id)
+@index_bp.route('/delete-user/<int:musicbrainz_row_id>')
+def mb_user_deleter(musicbrainz_row_id):
+    _authorize_mb_user_deleter(request.args.get('access_token', ''))
+    user = db_user.get_by_mb_row_id(musicbrainz_row_id)
+    if user is None:
+        raise NotFound('Could not find user with MusicBrainz Row ID: %d' % musicbrainz_row_id)
+    delete_user(user['musicbrainz_id'])
     return jsonify({'status': 'ok'}), 200
 
 
