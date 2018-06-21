@@ -22,7 +22,7 @@ influx = init_influx_connection(logging, {
 
 
 def update_row_ids_for_exceptions():
-    with brainzutils.musicbrainz_db.connect() as mb_connection:
+    with musicbrainz_db.engine.connect() as mb_connection:
         with db.engine.connect() as connection:
             # 2106 - Fée Deuspi
             result = mb_connection.execute(sqlalchemy.text("""
@@ -71,10 +71,9 @@ def delete_user(user):
     db_user.delete(user['id'])
 
 
-def import_musicbrainz_rows(musicbrainz_db_uri, dry_run=True):
+def import_musicbrainz_rows(musicbrainz_db_uri, dry_run=True, delete=False):
     musicbrainz_db.init_db_engine(musicbrainz_db_uri)
     db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
-    users = db_user.get_all_users()
     import_count = 0
     already_imported = 0
     not_found = 0
@@ -82,6 +81,7 @@ def import_musicbrainz_rows(musicbrainz_db_uri, dry_run=True):
 
     if not dry_run:
         update_row_ids_for_exceptions()
+    users = db_user.get_all_users()
     with musicbrainz_db.engine.connect() as mb_connection:
         with db.engine.connect() as connection:
             for user in users:
@@ -102,7 +102,7 @@ def import_musicbrainz_rows(musicbrainz_db_uri, dry_run=True):
                     import_count += 1
                 else:
                     print('No user with specified username in the MusicBrainz db: %s' % name)
-                    if not dry_run:
+                    if delete:
                         print('Deleting user %s' % name)
                         try:
                             delete_user(user)
@@ -133,4 +133,5 @@ if __name__ == '__main__':
     import_musicbrainz_rows(
         app.config['MB_DATABASE_URI'],
         dry_run=app.config['MUSICBRAINZ_IMPORT_DRY_RUN'],
+        delete=False,
     )
