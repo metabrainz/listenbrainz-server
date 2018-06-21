@@ -18,8 +18,8 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
     def setUp(self):
         ServerTestCase.setUp(self)
         DatabaseTestCase.setUp(self)
-        self.user = db_user.get_or_create('iliekcomputers')
-        self.weirduser = db_user.get_or_create('weird\\user name')
+        self.user = db_user.get_or_create(1, 'iliekcomputers')
+        self.weirduser = db_user.get_or_create(2, 'weird\\user name')
 
         self.log = logging.getLogger(__name__)
         self.influx = InfluxDBClient(

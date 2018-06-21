@@ -28,7 +28,7 @@ class TestAPICompatUserClass(DatabaseTestCase):
         })
 
         # Create a user
-        uid = db_user.create("test_api_compat_user")
+        uid = db_user.create(1, "test_api_compat_user")
         self.assertIsNotNone(db_user.get(uid))
         with db.engine.connect() as connection:
             result = connection.execute(text("""

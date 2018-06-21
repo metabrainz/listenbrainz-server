@@ -8,6 +8,7 @@ services:
 
   db:
     image: postgres:9.5.3
+    command: postgres -F
 
   redis:
     image: redis:3.2.1

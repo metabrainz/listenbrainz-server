@@ -61,6 +61,10 @@ class ListenTestCase(unittest.TestCase):
         self.assertEqual(listen.release_msid, influx_row['release_msid'])
         self.assertEqual(listen.recording_msid, influx_row['recording_msid'])
 
+        # make sure additional info does not contain stuff like artist names, track names
+        self.assertNotIn('track_name', listen.data['additional_info'])
+        self.assertNotIn('artist_name', listen.data['additional_info'])
+        self.assertNotIn('release_name', listen.data['additional_info'])
 
     def test_to_influx(self):
         listen = Listen(

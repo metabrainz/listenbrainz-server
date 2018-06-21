@@ -1,7 +1,8 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 import os
 from listenbrainz import stats
+from listenbrainz import bigquery
 from listenbrainz.stats.exceptions import NoCredentialsVariableException, NoCredentialsFileException
 
 from listenbrainz import config
@@ -79,7 +80,7 @@ class StatsTestCase(unittest.TestCase):
             }
         ]
 
-        modified_params = stats.get_parameters_dict(params)
+        modified_params = bigquery.get_parameters_dict(params)
 
         self.assertIsInstance(modified_params, list)
         self.assertEqual(len(modified_params), 1)
@@ -92,17 +93,17 @@ class StatsTestCase(unittest.TestCase):
 
     def test_format_results(self):
         data = bigquery_responses['done']
-        formatted_data = stats.format_results(data)
+        formatted_data = bigquery.format_results(data)
         self.assertEqual(len(formatted_data), 2)
         self.assertEqual(formatted_data[0]['artist_name'], data['rows'][0]['f'][0]['v'])
         self.assertEqual(formatted_data[0]['artist_msid'], data['rows'][0]['f'][1]['v'])
         self.assertEqual(formatted_data[1]['artist_name'], data['rows'][1]['f'][0]['v'])
         self.assertEqual(formatted_data[1]['artist_msid'], data['rows'][1]['f'][1]['v'])
 
-    @patch.object(stats, 'bigquery')
-    def test_run_query_done(self, mock_bigquery):
+    def test_run_query_done(self):
         """ Test run_query when the result is directly returned by the first api call to bigquery.jobs.query """
 
+        mock_bigquery = MagicMock()
         # set the value returned by call to bigquery to a response which signifies completed query
         mock_bigquery.jobs.return_value.query.return_value.execute.return_value = bigquery_responses['done']
 
@@ -118,5 +119,5 @@ class StatsTestCase(unittest.TestCase):
             'value': 'testuser'
         }]
 
-        result = stats.run_query(query, parameters)
+        result = bigquery.run_query(mock_bigquery, query, parameters)
         self.assertListEqual(result, expected_results['done'])
