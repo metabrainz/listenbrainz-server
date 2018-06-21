@@ -60,8 +60,8 @@ INCOMING_EXCHANGE = '''{{template "KEY" "incoming_exchange"}}'''
 INCOMING_QUEUE = '''{{template "KEY" "incoming_queue"}}'''
 UNIQUE_EXCHANGE = '''{{template "KEY" "unique_exchange"}}'''
 UNIQUE_QUEUE = '''{{template "KEY" "unique_queue"}}'''
-STATS_EXCHANGE = '''{{template "KEY" "stats_exchange"}}'''
-STATS_QUEUE = '''{{template "KEY" "stats_queue"}}'''
+BIGQUERY_EXCHANGE = '''{{template "KEY" "bigquery_exchange"}}'''
+BIGQUERY_QUEUE = '''{{template "KEY" "bigquery_queue"}}'''
 
 
 MUSICBRAINZ_CLIENT_ID = '''{{template "KEY" "musicbrainz/client_id"}}'''
