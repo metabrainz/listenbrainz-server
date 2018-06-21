@@ -121,11 +121,11 @@ if [ $DB_EXISTS -eq 1 -a $DB_RUNNING -eq 1 ]; then
     setup
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                   run --rm listenbrainz py.test
+                   run --rm listenbrainz py.test "$@"
     dcdown
 else
     # Else, we have containers, just run tests
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                   run --rm listenbrainz py.test
+                   run --rm listenbrainz py.test "$@"
 fi

@@ -36,7 +36,7 @@ class Listen(object):
     )
 
     # keys in additional_info that we support explicitly and are not superfluous
-    SUPPORTED_KEYS = [
+    SUPPORTED_KEYS = (
         'artist_mbids',
         'release_group_mbid',
         'release_mbid',
@@ -50,7 +50,7 @@ class Listen(object):
         'artist_msid',
         'release_msid',
         'recording_msid',
-    ]
+    )
 
     TOP_LEVEL_KEYS = (
         'time',
@@ -123,7 +123,6 @@ class Listen(object):
         data = {
             'release_msid': row.get('release_msid'),
             'release_mbid': row.get('release_mbid'),
-            'release_name': row.get('release_name'),
             'recording_mbid': row.get('recording_mbid'),
             'release_group_mbid': row.get('release_group_mbid'),
             'artist_mbids': convert_comma_seperated_string_to_list(row.get('artist_mbids', '')),

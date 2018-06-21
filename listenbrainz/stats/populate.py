@@ -43,7 +43,7 @@ def push_users_to_queue(channel, force=False):
         }
 
         channel.basic_publish(
-            exchange=config.STATS_EXCHANGE,
+            exchange=config.BIGQUERY_EXCHANGE,
             routing_key='',
             body=ujson.dumps(data),
             properties=pika.BasicProperties(delivery_mode = 2,),
@@ -63,7 +63,7 @@ def push_entities_to_queue(force=False):
         virtual_host=config.RABBITMQ_VHOST,
     )
     channel = rabbitmq_connection.channel()
-    channel.exchange_declare(exchange=config.STATS_EXCHANGE, exchange_type='fanout')
+    channel.exchange_declare(exchange=config.BIGQUERY_EXCHANGE, exchange_type='fanout')
     push_users_to_queue(channel, force)
 
 

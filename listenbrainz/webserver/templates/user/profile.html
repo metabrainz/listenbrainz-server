@@ -68,6 +68,9 @@
                       {% endif %}
                   </td>
                   <td>
+                      {% if spotify_uri %}
+                        <span class="fab fa-spotify"></span>
+                      {% endif %}
                       {% if listen.track_metadata.additional_info.recording_mbid %}
                         <a href="http://musicbrainz.org/recording/{{ listen.track_metadata.additional_info.recording_mbid }}">
                       {% endif %}
@@ -95,7 +98,7 @@
 
         {% if spotify_uri %}
           <div class="col-md-4 text-right">
-            <iframe id="player" frameborder="0" allowtransparency="true"
+            <iframe id="player" frameborder="0" allowtransparency="true" allow="encrypted-media"
                     src="https://embed.spotify.com/?uri={{ spotify_uri }}&theme=white"></iframe>
           </div>
         {% endif %}
@@ -103,4 +106,9 @@
 
     {% endif %}
 
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js" integrity="sha384-SlE991lGASHoBfWbelyBPLsUlwY1GwNDJo3jSJO04KZ33K2bwfV9YBauFfnzvynJ" crossorigin="anonymous"></script>
 {% endblock %}

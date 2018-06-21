@@ -13,7 +13,7 @@ class APITestCase(IntegrationTestCase):
 
     def setUp(self):
         super(APITestCase, self).setUp()
-        self.user = db_user.get_or_create('testuserpleaseignore')
+        self.user = db_user.get_or_create(1, 'testuserpleaseignore')
 
     def test_get_listens(self):
         """ Test to make sure that the api sends valid listens on get requests.
@@ -241,6 +241,10 @@ class APITestCase(IntegrationTestCase):
         self.assertEqual(sent_additional_info['release_group_mbid'], received_additional_info['release_group_mbid'])
         self.assertListEqual(sent_additional_info['work_mbids'], received_additional_info['work_mbids'])
         self.assertListEqual(sent_additional_info['artist_mbids'], received_additional_info['artist_mbids'])
+
+        self.assertNotIn('track_name', sent_additional_info)
+        self.assertNotIn('artist_name', sent_additional_info)
+        self.assertNotIn('release_name', sent_additional_info)
 
 
     def test_latest_import(self):
