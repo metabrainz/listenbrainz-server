@@ -53,6 +53,7 @@ PUBLIC_TABLES = {
         'id',
         'created',
         'musicbrainz_id',
+        'musicbrainz_row_id',
         # the following are dummy values for columns that we do not want to
         # dump in the public dump
         '\'\'', # auth token
@@ -105,6 +106,8 @@ PRIVATE_TABLES = {
         'auth_token',
         'last_login',
         'latest_import',
+        'musicbrainz_row_id',
+        'gdpr_agreed',
     ),
     'api_compat.token': (
         'id',
