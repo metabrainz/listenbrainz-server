@@ -148,6 +148,19 @@ def gdpr_notice():
 
 @index_bp.route('/delete-user/<int:musicbrainz_row_id>')
 def mb_user_deleter(musicbrainz_row_id):
+    """ This endpoint is used by MusicBrainz to delete accounts once they
+    are deleted on MusicBrainz too.
+
+    See https://tickets.metabrainz.org/browse/MBS-9680 for details.
+
+    Args: musicbrainz_row_id (int): the MusicBrainz row ID of the user to be deleted.
+
+    Returns: 200 if the user has been successfully found and deleted from LB
+
+    Raises:
+        NotFound if the user is not found in the LB database
+        Unauthorized if the MusicBrainz access token provided with the query is invalid
+    """
     _authorize_mb_user_deleter(request.args.get('access_token', ''))
     user = db_user.get_by_mb_row_id(musicbrainz_row_id)
     if user is None:
