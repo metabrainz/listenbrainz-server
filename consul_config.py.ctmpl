@@ -91,6 +91,7 @@ UPLOAD_FOLDER = '''{{template "KEY" "upload_folder"}}'''
 
 API_URL = '''{{template "KEY" "api_url"}}'''
 LASTFM_PROXY_URL = '''{{template "KEY" "lastfm_proxy_url"}}'''
+MUSICBRAINZ_OAUTH_URL = 'https://musicbrainz.org/oauth2/userinfo'
 
 
 # Sentry config

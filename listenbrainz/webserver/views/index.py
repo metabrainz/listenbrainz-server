@@ -170,9 +170,8 @@ def mb_user_deleter(musicbrainz_row_id):
 
 
 def _authorize_mb_user_deleter(auth_token):
-    query_url = 'https://musicbrainz.org/oauth2/userinfo'
     headers = {'Authorization': 'Bearer {}'.format(auth_token)}
-    r = requests.get(query_url, headers=headers)
+    r = requests.get(current_app.config['MUSICBRAINZ_OAUTH_URL'], headers=headers)
     try:
         r.raise_for_status()
     except HTTPError:
@@ -185,6 +184,8 @@ def _authorize_mb_user_deleter(auth_token):
         raise Unauthorized('Not authorized to use this view')
 
     try:
+        # 2007538 is the row ID of the `UserDeleter` account that is
+        # authorized to access the `delete-user` endpoint
         if data['sub'] != 'UserDeleter' or data['metabrainz_user_id'] != 2007538:
             raise Unauthorized('Not authorized to use this view')
     except KeyError:
