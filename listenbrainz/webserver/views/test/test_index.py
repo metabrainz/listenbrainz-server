@@ -222,6 +222,10 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         user1 = db_user.create(1, 'iliekcomputers')
         r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assert200(r)
+        mock_requests_get.assert_called_with(
+            'https://musicbrainz.org/oauth2/userinfo',
+            headers={'Authorization': 'Bearer 132'},
+        )
         mock_delete_user.assert_called_with('iliekcomputers')
 
     @mock.patch('listenbrainz.webserver.views.index.requests.get')
