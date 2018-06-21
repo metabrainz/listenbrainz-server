@@ -192,10 +192,14 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertIsInstance(self.get_context_variable('current_user'), listenbrainz.webserver.login.User)
 
     @mock.patch('listenbrainz.webserver.views.index._authorize_mb_user_deleter')
-    def test_mb_user_deleter(self, mock_authorize):
+    @mock.patch('listenbrainz.webserver.views.index.delete_user')
+    def test_mb_user_deleter(self, mock_delete_user, mock_authorize_mb_user_deleter):
         user1 = db_user.create(1, 'iliekcomputers')
-        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_id='iliekcomputers'))
+        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assert200(r)
+        mock_authorize_mb_user_deleter.assert_called_with('132')
 
-        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_id='thisuserdoesnotexist'))
+        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=2, access_token='312421'))
         self.assert404(r)
+        mock_authorize_mb_user_deleter.assert_called_with('312421')
+        mock_delete_user.assert_called_once_with('iliekcomputers')
