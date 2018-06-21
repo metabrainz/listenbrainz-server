@@ -12,21 +12,20 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+from shutil import copyfile
 import sys
 import os
-import shlex
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('..'))
 
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #needs_sphinx = '1.0'
 
-sys.path.append(os.path.abspath('..'))
 from listenbrainz import webserver
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -54,7 +53,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'ListenBrainz'
-copyright = u'2017, MetaBrainz Foundation'
+copyright = u'2017-2018, MetaBrainz Foundation'
 author = u'MetaBrainz Foundation'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -295,3 +294,9 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+# -- Configuration for ListenBrainz environment ---------------------------
+
+# Ensure a config file is present to prevent import problems in some classes
+if os.path.isfile('../listenbrainz/config.py') is False:
+    copyfile('../listenbrainz/config.py.sample', '../listenbrainz/config.py')

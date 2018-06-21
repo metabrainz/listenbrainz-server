@@ -18,7 +18,7 @@ class TestRedisListenStore(DatabaseTestCase):
         super(TestRedisListenStore, self).setUp()
         self.log = logging.getLogger(__name__)
         self._redis = init_redis_connection(self.log, self.config.REDIS_HOST, self.config.REDIS_PORT)
-        self.testuser_id = db_user.create("test")
+        self.testuser_id = db_user.create(1, "test")
         self._create_test_data()
 
     def tearDown(self):

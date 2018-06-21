@@ -19,7 +19,7 @@ class TestAPICompatTokenClass(DatabaseTestCase):
         self.log = logging.getLogger(__name__)
 
         # Create a user
-        uid = db_user.create("test")
+        uid = db_user.create(1, "test")
         self.assertIsNotNone(db_user.get(uid))
         with db.engine.connect() as connection:
             result = connection.execute(text('SELECT * FROM "user" WHERE id = :id'),

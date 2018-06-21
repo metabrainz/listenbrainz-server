@@ -91,9 +91,9 @@ services:
       - redis
       - rabbitmq
 
-  stats_calculator:
+  bigquery_job_runner:
     image: web
-    command: python -m "listenbrainz.stats.stats_calculator"
+    command: python -m "listenbrainz.bigquery_job_runner.bigquery_job_runner"
     volumes:
       - ../credentials:/code/credentials:z
       - ..:/code/listenbrainz:z

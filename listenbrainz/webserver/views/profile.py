@@ -237,8 +237,8 @@ def request_stats():
         }
         publish_data_to_queue(
             data=data,
-            exchange=current_app.config['STATS_EXCHANGE'],
-            queue=current_app.config['STATS_QUEUE'],
+            exchange=current_app.config['BIGQUERY_EXCHANGE'],
+            queue=current_app.config['BIGQUERY_QUEUE'],
             error_msg='Could not put user %s into statistics calculation queue, please try again later',
         )
         _redis.redis.set(construct_stats_queue_key(current_user.musicbrainz_id), 'queued')
