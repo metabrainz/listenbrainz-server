@@ -1,0 +1,5 @@
+BEGIN;
+
+ALTER TABLE "user" ALTER COLUMN musicbrainz_row_id SET NOT NULL;
+
+COMMIT;
