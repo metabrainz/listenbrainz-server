@@ -21,21 +21,40 @@ influx = init_influx_connection(logging, {
         })
 
 
-def fix_username_for_exceptions():
-    with db.engine.connect() as connection:
-        # 2106 - Fée Deuspi
-        connection.execute(sqlalchemy.text("""
-            UPDATE "user"
-               SET musicbrainz_id = 'Fée Deuspi'
-             WHERE id = 2106
-            """))
+def update_row_ids_for_exceptions():
+    with brainzutils.musicbrainz_db.connect() as mb_connection:
+        with db.engine.connect() as connection:
+            # 2106 - Fée Deuspi
+            result = mb_connection.execute(sqlalchemy.text("""
+                SELECT id
+                  FROM editor
+                 WHERE name = 'Fée Deuspi'
+                """))
 
-        # 243 - ClæpsHydra
-        connection.execute(sqlalchemy.text("""
-            UPDATE "user"
-               SET musicbrainz_id = 'ClæpsHydra'
-             WHERE id = 243
-            """))
+            mb_row_id = result.fetchone()['id']
+            connection.execute(sqlalchemy.text("""
+                UPDATE "user"
+                   SET musicbrainz_row_id = :mb_row_id
+                 WHERE id = 2106
+                """), {
+                    'mb_row_id': mb_row_id,
+                })
+
+            # 243 - ClæpsHydra
+            result = mb_connection.execute(sqlalchemy.text("""
+                SELECT id
+                  FROM editor
+                 WHERE name = 'ClæpsHydra'
+                """))
+
+            mb_row_id = result.fetchone()['id']
+            connection.execute(sqlalchemy.text("""
+                UPDATE "user"
+                   SET musicbrainz_row_id = :mb_row_id
+                 WHERE id = 243
+                """), {
+                    'mb_row_id': mb_row_id,
+                })
 
 
 def delete_user(user):
@@ -60,7 +79,9 @@ def import_musicbrainz_rows(musicbrainz_db_uri, dry_run=True):
     already_imported = 0
     not_found = 0
     deleted = 0
-    fix_username_for_exceptions()
+
+    if not dry_run:
+        update_row_ids_for_exceptions()
     with musicbrainz_db.engine.connect() as mb_connection:
         with db.engine.connect() as connection:
             for user in users:
