@@ -115,7 +115,7 @@ def update_token(user_id, token):
     return token
 
 
-def get_all_users_to_update():
+def get_active_users_to_process():
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT user_id
