@@ -132,3 +132,26 @@ def get_active_users_to_process():
           ORDER BY last_updated ASC
         """))
         return [dict(row) for row in result.fetchall()]
+
+
+def get_token_for_user(user_id):
+    """Gets token for user with specified User ID if user has already authenticated.
+
+    Args:
+        user_id (int): the ListenBrainz row ID of the user
+
+    Returns:
+        token: the user token if it exists, None otherwise
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT user_token
+              FROM spotify
+             WHERE user_id = :user_id
+            """), {
+                'user_id': user_id,
+            })
+
+        if result.rowcount > 0:
+            return result.fetchone()['user_token']
+        return None
