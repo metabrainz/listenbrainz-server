@@ -7,24 +7,6 @@ from flask import current_app, url_for
 import spotipy.oauth2
 
 
-class Spotify:
-    def __init__(self, user_id, user_token, token_expires, refresh_token,
-                 last_updated, active, update_error):
-        self.user_id = user_id
-        self.user_token = user_token
-        self.token_expires = token_expires
-        self.refresh_token = refresh_token
-        self.last_updated = last_updated
-        self.active = active
-        self.update_error = update_error
-
-    @staticmethod
-    def from_dbrow(row):
-        return Spotify(row['user_id'], row['user_token'], row['token_expires'],
-                       row['refresh_token'], row['last_updated'],
-                       row['active'], row['update_error'])
-
-
 def _get_spotify_oauth():
     client_id = current_app.config['SPOTIFY_CLIENT_ID']
     client_secret = current_app.config['SPOTIFY_CLIENT_SECRET']
