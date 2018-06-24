@@ -80,9 +80,9 @@ services:
       - rabbitmq
 
   spotify_reader:
-    build:
-      context: ..
-      dockerfile: Dockerfile
+    image: web
+    volumes:
+      - ..:/code/listenbrainz:z
     command: python3 -m "listenbrainz.spotify_updater.spotify_read_listens"
     depends_on:
       - redis
