@@ -7,8 +7,7 @@ import datetime
 
 
 class Spotify:
-    # TODO: include musicbrainz id (username)
-    def __init__(self, user_id, user_token, token_expires, refresh_token,
+    def __init__(self, user_id, musicbrainz_id, user_token, token_expires, refresh_token,
                  last_updated, active, update_error_message):
         self.user_id = user_id
         self.user_token = user_token
@@ -17,6 +16,7 @@ class Spotify:
         self.last_updated = last_updated
         self.active = active
         self.update_error_message = update_error_message
+        self.musicbrainz_id = musicbrainz_id
 
     def get_spotipy_client(self):
         return spotipy.Spotify(auth=self.user_token)
@@ -28,20 +28,22 @@ class Spotify:
 
     @property
     def token_expired(self):
-        print(self.token_expires)
         now = datetime.datetime.utcnow()
         now = now.replace(tzinfo=pytz.UTC)
         return now >= self.token_expires
 
     @staticmethod
     def from_dbrow(row):
-        return Spotify(user_id=row['user_id'],
-                       user_token=row['user_token'],
-                       token_expires=row['token_expires'],
-                       refresh_token=row['refresh_token'],
-                       last_updated=row['last_updated'],
-                       active=row['active'],
-                       update_error_message=row['update_error'])
+        return Spotify(
+           user_id=row['user_id'],
+           user_token=row['user_token'],
+           token_expires=row['token_expires'],
+           refresh_token=row['refresh_token'],
+           last_updated=row['last_updated'],
+           active=row['active'],
+           update_error_message=row['update_error'],
+           musicbrainz_id=row['musicbrainz_id'],
+        )
 
     def __str__(self):
         return "<Spotify(user:%s)>" % self.user_id
