@@ -22,9 +22,10 @@ class SpotifyDomainTestCase(ServerTestCase):
                 update_error_message=None,
             )
 
+    @mock.patch('listenbrainz.domain.spotify.db_spotify.get_user')
     @mock.patch('listenbrainz.domain.spotify.get_spotify_oauth')
     @mock.patch('listenbrainz.domain.spotify.db_spotify.update_token')
-    def test_refresh_user_token(self, mock_update_token, mock_get_spotify_oauth):
+    def test_refresh_user_token(self, mock_update_token, mock_get_spotify_oauth, mock_get_user):
         expires_at = int(time.time()) + 3600
         mock_get_spotify_oauth.return_value.refresh_access_token.return_value = {
             'access_token': 'tokentoken',
@@ -39,6 +40,7 @@ class SpotifyDomainTestCase(ServerTestCase):
             'refreshtokentoken',
             expires_at,
         )
+        mock_get_user.assert_called_with(self.spotify_user.user_id)
 
     def test_get_spotify_oauth(self):
         func_oauth = spotify.get_spotify_oauth()
