@@ -41,7 +41,7 @@ class Spotify:
                        refresh_token=row['refresh_token'],
                        last_updated=row['last_updated'],
                        active=row['active'],
-                       update_error_message=row['update_error_message'])
+                       update_error_message=row['update_error'])
 
     def __str__(self):
         return "<Spotify(user:%s)>" % self.user_id
