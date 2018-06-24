@@ -76,11 +76,9 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         old_spotify_user = db_spotify.get_user(self.user['id'])
         db_spotify.update_token(
             user_id=self.user['id'],
-            token={
-                'access_token':'testtoken',
-                'refresh_token': 'refreshtesttoken',
-                'expires_at': int(time.time()),
-            },
+            access_token='testtoken',
+            refresh_token='refreshtesttoken',
+            expires_at=int(time.time()),
         )
         spotify_user = db_spotify.get_user(self.user['id'])
         self.assertEqual(spotify_user['user_token'], 'testtoken')

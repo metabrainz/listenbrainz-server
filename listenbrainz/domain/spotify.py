@@ -55,8 +55,7 @@ def refresh_user_token(spotify_user):
     access_token = new_token['access_token']
     refresh_token = new_token['refresh_token']
     expires_at = new_token['expires_at']
-    new_token = db_spotify.update_token(spotify_user.user_id, access_token, refresh_token, expires_at)
-    return new_token
+    db_spotify.update_token(spotify_user.user_id, access_token, refresh_token, expires_at)
 
 
 def get_spotify_oauth():
