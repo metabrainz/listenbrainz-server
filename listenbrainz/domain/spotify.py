@@ -48,10 +48,14 @@ class Spotify:
     def __str__(self):
         return "<Spotify(user:%s)>" % self.user_id
 
-# TODO: All documentation for these
 # TODO: Tests
 
 def refresh_user_token(spotify_user):
+    """ Refreshes the user token for the given spotify user.
+
+    Args:
+        spotify_user (domain.spotify.Spotify): the user whose token is to be refreshed
+    """
     auth = get_spotify_oauth()
     new_token = auth.refresh_access_token(spotify_user.refresh_token)
     access_token = new_token['access_token']
@@ -61,6 +65,8 @@ def refresh_user_token(spotify_user):
 
 
 def get_spotify_oauth():
+    """ Returns a spotipy OAuth instance that can be used to authenticate with spotify.
+    """
     client_id = current_app.config['SPOTIFY_CLIENT_ID']
     client_secret = current_app.config['SPOTIFY_CLIENT_SECRET']
     scope = 'user-read-recently-played'
@@ -71,12 +77,24 @@ def get_spotify_oauth():
 
 
 def get_user(user_id):
+    """ Returns a Spotify instance corresponding to the specified LB row ID.
+    If the user_id is not present in the spotify table, returns None
+
+    Args:
+        user_id (int): the ListenBrainz row ID of the user
+    """
     row = db_spotify.get_user(user_id)
     if row:
         return Spotify.from_dbrow(row)
+    return None
 
 
 def delete_spotify(user_id):
+    """ Delete user entry for user with specified ListenBrainz user ID.
+
+    Args:
+        user_id (int): the ListenBrainz row ID of the user
+    """
     db_spotify.delete_spotify(user_id)
 
 
@@ -96,8 +114,24 @@ def create_spotify(user_id, spot_access_token):
 
 
 def get_active_users_to_process():
+    """ Returns a list of Spotify user instances that need their Spotify listens imported.
+    """
     return [Spotify.from_dbrow(row) for row in db_spotify.get_active_users_to_process()]
 
 
 def update_last_updated(user_id, success=True, error_message=None):
-    db_spotify.update_last_updated(user_id, success, error_message)
+    """ Update the last_update field for user with specified user ID.
+    Also, set the user as active or inactive depending on whether their listens
+    were imported without error.
+
+    If there was an error, add the error to the db.
+
+    Args:
+        user_id (int): the ListenBrainz row ID of the user
+        success (bool): flag representing whether the last import was successful or not.
+        error_message (str): the user-friendly error message to be displayed.
+    """
+    if error_message:
+        db_spotify.add_update_error(user_id, error_message)
+    else:
+        db_spotify.update_last_updated(user_id, success)
