@@ -54,6 +54,9 @@ def refresh_user_token(spotify_user):
 
     Args:
         spotify_user (domain.spotify.Spotify): the user whose token is to be refreshed
+
+    Returns:
+        user (domain.spotify.Spotify): the same user with updated tokens
     """
     auth = get_spotify_oauth()
     new_token = auth.refresh_access_token(spotify_user.refresh_token)
@@ -61,6 +64,7 @@ def refresh_user_token(spotify_user):
     refresh_token = new_token['refresh_token']
     expires_at = new_token['expires_at']
     db_spotify.update_token(spotify_user.user_id, access_token, refresh_token, expires_at)
+    return get_user(spotify_user.user_id)
 
 
 def get_spotify_oauth():
@@ -134,3 +138,13 @@ def update_last_updated(user_id, success=True, error_message=None):
         db_spotify.add_update_error(user_id, error_message)
     else:
         db_spotify.update_last_updated(user_id, success)
+
+
+class SpotifyImporterException(Exception):
+    pass
+
+class SpotifyListenBrainzError(Exception):
+    pass
+
+class SpotifyAPIError(Exception):
+    pass
