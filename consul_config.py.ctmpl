@@ -118,3 +118,5 @@ MUSICBRAINZ_IMPORT_DRY_RUN = True
 ADMINS = [
     {{template "KEY_ARRAY" "admins"}}
 ]
+
+SQLALCHEMY_TRACK_MODIFICATIONS = False
