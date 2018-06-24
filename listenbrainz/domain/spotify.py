@@ -48,7 +48,6 @@ class Spotify:
     def __str__(self):
         return "<Spotify(user:%s)>" % self.user_id
 
-# TODO: Tests
 
 def refresh_user_token(spotify_user):
     """ Refreshes the user token for the given spotify user.
