@@ -100,21 +100,19 @@ def update_last_updated(user_id, success=True):
         })
 
 
-def update_token(user_id, token):
+def update_token(user_id, access_token, refresh_token, expires_at):
     """ Update token for user with specified LB user ID.
 
     Args:
         user_id (int): the ListenBrainz row ID of the user
-        token (dict): a dict containing the following keys
-                      {
-                        'access_token': the new access token,
-                        'refresh_token': the new token used to refresh access tokens,
-                        'expires_at': the unix timestamp at which the access token expires
-                      }
+        access_token (str): the new access token,
+        refresh_token (str): the new token used to refresh access tokens,
+        expires_at (int): the unix timestamp at which the access token expires
+
     Returns:
-        the new token
+        the new token in dict form
     """
-    token_expires = _expires_at_to_datetime(token["expires_at"])
+    token_expires = _expires_at_to_datetime(expires_at)
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
             UPDATE spotify
@@ -123,13 +121,11 @@ def update_token(user_id, token):
                  , token_expires = :token_expires
              WHERE user_id = :user_id
         """), {
-            "user_token": token["access_token"],
-            "refresh_token": token["refresh_token"],
+            "user_token": access_token,
+            "refresh_token": refresh_token,
             "token_expires": token_expires,
             "user_id": user_id
         })
-        token["user_id"] = user_id
-    return token
 
 
 def get_active_users_to_process():
