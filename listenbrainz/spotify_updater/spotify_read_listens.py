@@ -220,8 +220,9 @@ def main():
         while True:
             t = time.time()
             success, failure = process_all_spotify_users()
-            current_app.logger.info('All %d users in batch have been processed.', success + failure)
-            current_app.logger.info('Total time taken: %.2f s, average time per user: %.2f s.', time.time() - t, (time.time() - t) / (success + failure))
+            if success + failure > 0:
+                current_app.logger.info('All %d users in batch have been processed.', success + failure)
+                current_app.logger.info('Total time taken: %.2f s, average time per user: %.2f s.', time.time() - t, (time.time() - t) / (success + failure))
             time.sleep(10)
 
 
