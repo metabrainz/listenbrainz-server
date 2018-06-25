@@ -82,6 +82,7 @@ def get_user_recently_played(user):
     """
     retries = 10
     delay = 1
+    tried_to_refresh_token = False
 
     while retries > 0:
         try:
@@ -109,13 +110,13 @@ def get_user_recently_played(user):
                 # In that case, try to refresh the token, if there is an error even while refreshing
                 # give up and report to the user.
                 # We only try to refresh the token once, if we still get 401 after that, we give up.
-                if unauthorized_count == 0:
+                if not tried_to_refresh_token:
                     try:
                         user = spotify.refresh_user_token(user)
                     except SpotifyError as err:
                         raise spotify.SpotifyAPIError('Could not authenticate with Spotify, please unlink and link your account again.')
 
-                    unauthorized_count += 1
+                    tried_to_refresh_token = True
                 else:
                     raise spotify.SpotifyAPIError('Could not authenticate with Spotify, please unlink and link your account again.')
 
@@ -138,9 +139,6 @@ def process_one_user(user):
         user = spotify.refresh_user_token(user)
 
     listenbrainz_user = db_user.get(user.user_id)
-    retries = 10
-    unauthorized_count = 0
-
     try:
         recently_played = get_user_recently_played(user)
     except (spotify.SpotifyListenBrainzError, spotify.SpotifyAPIError) as e:
