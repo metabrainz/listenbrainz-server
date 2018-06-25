@@ -684,4 +684,8 @@ class InfluxListenStore(ListenStore):
                 self.log.error('Error while trying to drop user %s: %s', musicbrainz_id, str(e))
                 time.sleep(3)
         else:
-            raise Exception("Couldn't delete user with MusicBrainz ID: %s" % musicbrainz_id)
+            raise InfluxListenStoreException("Couldn't delete user with MusicBrainz ID: %s" % musicbrainz_id)
+
+
+class InfluxListenStoreException(Exception):
+    pass
