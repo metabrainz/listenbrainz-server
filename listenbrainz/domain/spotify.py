@@ -46,7 +46,7 @@ class Spotify:
         )
 
     def __str__(self):
-        return "<Spotify(user:%s)>" % self.user_id
+        return "<Spotify(user:%s): %s>" % (self.user_id, self.musicbrainz_id)
 
 
 def refresh_user_token(spotify_user):
