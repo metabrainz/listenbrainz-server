@@ -123,12 +123,17 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertIsNone(user)
 
 
+    @patch('listenbrainz.webserver.views.profile.spotify.delete_spotify')
     @patch('listenbrainz.webserver.views.profile.spotify.get_spotify_oauth')
-    def test_connect_spotify(self, mock_get_spotify_oauth):
+    def test_connect_spotify(self, mock_get_spotify_oauth, mock_delete_spotify):
         mock_get_spotify_oauth.return_value.get_authorize_url.return_value = 'someurl'
         self.temporary_login(self.user['id'])
         r = self.client.get(url_for('profile.connect_spotify'))
         self.assert200(r)
+
+        r = self.client.post(url_for('profile.connect_spotify'), data={'delete': 'yes'})
+        self.assert200(r)
+        mock_delete_spotify.assert_called_once_with(self.user['id'])
 
 
     @patch('listenbrainz.webserver.views.profile.spotify.get_spotify_oauth')
