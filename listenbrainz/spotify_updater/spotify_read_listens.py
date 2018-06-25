@@ -119,6 +119,12 @@ def get_user_recently_played(user):
                     tried_to_refresh_token = True
                 else:
                     raise spotify.SpotifyAPIError('Could not authenticate with Spotify, please unlink and link your account again.')
+        except Exception as e:
+            retries -= 1
+            current_app.logger.error('Unexpected error while getting listens: %s', str(e), exc_info=True)
+            if retries == 0:
+                raise spotify.SpotifyListenBrainzError('Unexpected error while getting listens: %s' % str(e))
+
 
     return recently_played
 
@@ -187,6 +193,9 @@ def process_all_spotify_users():
         current_app.logger.error('Cannot get list of users due to error %s', str(e), exc_info=True)
         return 0, 0
 
+    if not users:
+        return 0, 0
+
     success = 0
     failure = 0
     for u in users:
@@ -206,6 +215,10 @@ def process_all_spotify_users():
         except spotify.SpotifyListenBrainzError as e:
             current_app.logger.critical('spotify_reader could not import listens: %s', str(e), exc_info=True)
             failure += 1
+        except Exception as e:
+            current_app.logger.critical('spotify_reader could not import listens: %s', str(e), exc_info=True)
+            failure += 1
+
         current_app.logger.info('Took a total of %.2f seconds to process user %s', time.time() - t, str(u))
 
     current_app.logger.info('Processed %d users successfully!', success)
