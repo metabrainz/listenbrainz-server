@@ -74,13 +74,13 @@ class SpotifyDomainTestCase(ServerTestCase):
         self.assertEqual(user.error_message, 'oops')
 
     @mock.patch('listenbrainz.domain.spotify.db_spotify.delete_spotify')
-    def test_delete_spotify(self, mock_delete):
-        spotify.delete_spotify(1)
+    def test_remove_user(self, mock_delete):
+        spotify.remove_user(1)
         mock_delete.assert_called_with(1)
 
     @mock.patch('listenbrainz.domain.spotify.db_spotify.create_spotify')
-    def test_create_spotify(self, mock_create):
-        spotify.create_spotify(1, {
+    def test_add_new_user(self, mock_create):
+        spotify.add_new_user(1, {
             'access_token': 'access-token',
             'refresh_token': 'refresh-token',
             'expires_at': 312,
