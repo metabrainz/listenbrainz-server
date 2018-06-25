@@ -57,6 +57,13 @@ CREATE TABLE recording_redirect (
 );
 ALTER TABLE recording_redirect ADD CONSTRAINT recording_redirect_uniq UNIQUE (recording_cluster_id, recording_mbid);
 
+CREATE TABLE recording_release_join (
+  recording_mbid UUID NOT NULL,
+  release_mbid   UUID NOT NULL,
+  release_name   TEXT NOT NULL,
+  updated TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE release (
   gid   UUID NOT NULL,
   title TEXT NOT NULL,
