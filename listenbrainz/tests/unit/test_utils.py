@@ -18,8 +18,10 @@
 
 import listenbrainz.utils as utils
 import pika
+import time
 import unittest
 
+from datetime import datetime
 from listenbrainz.webserver import create_app
 
 class ListenBrainzUtilsTestCase(unittest.TestCase):
@@ -45,3 +47,9 @@ class ListenBrainzUtilsTestCase(unittest.TestCase):
         )
         self.assertIsNotNone(ch)
         self.assertIsInstance(ch, pika.adapters.blocking_connection.BlockingChannel)
+
+    def test_unix_timestamp_to_datetime(self):
+        t = int(time.time())
+        x = utils.unix_timestamp_to_datetime(t)
+        self.assertIsInstance(x, datetime)
+        self.assertEqual(int(x.strftime('%s')), t)
