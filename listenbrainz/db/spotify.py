@@ -32,7 +32,7 @@ def create_spotify(user_id, user_token, refresh_token, token_expires_ts):
     token_expires = _expires_at_to_datetime(token_expires_ts)
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            INSERT INTO spotify (user_id, user_token, refresh_token, token_expires)
+            INSERT INTO spotify_auth (user_id, user_token, refresh_token, token_expires)
                  VALUES (:user_id, :user_token, :refresh_token, :token_expires)
             """), {
                 "user_id": user_id,
@@ -50,7 +50,7 @@ def delete_spotify(user_id):
     """
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            DELETE FROM spotify
+            DELETE FROM spotify_auth
                   WHERE user_id = :user_id
         """), {
             "user_id": user_id
@@ -67,14 +67,14 @@ def add_update_error(user_id, error_message):
 
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            UPDATE spotify
+            UPDATE spotify_auth
                SET last_updated = now()
                  , active = 'f'
-                 , update_error = :update_error
+                 , error_message = :error_message
               WHERE user_id = :user_id
         """), {
             "user_id": user_id,
-            "update_error": error_message
+            "error_message": error_message
         })
 
 
@@ -90,7 +90,7 @@ def update_last_updated(user_id, success=True):
     """
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            UPDATE spotify
+            UPDATE spotify_auth
                SET last_updated = now()
                  , active = :active
               WHERE user_id = :user_id
@@ -115,7 +115,7 @@ def update_token(user_id, access_token, refresh_token, expires_at):
     token_expires = _expires_at_to_datetime(expires_at)
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            UPDATE spotify
+            UPDATE spotify_auth
                SET user_token = :user_token
                  , refresh_token = :refresh_token
                  , token_expires = :token_expires
@@ -141,11 +141,11 @@ def get_active_users_to_process():
                  , token_expires
                  , token_expires < now() as token_expired
                  , active
-                 , update_error
-              FROM spotify
+                 , error_message
+              FROM spotify_auth
               JOIN "user"
-                ON "user".id = spotify.user_id
-             WHERE spotify.active = 't'
+                ON "user".id = spotify_auth.user_id
+             WHERE spotify_auth.active = 't'
           ORDER BY last_updated ASC
         """))
         return [dict(row) for row in result.fetchall()]
@@ -163,7 +163,7 @@ def get_token_for_user(user_id):
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT user_token
-              FROM spotify
+              FROM spotify_auth
              WHERE user_id = :user_id
             """), {
                 'user_id': user_id,
@@ -190,10 +190,10 @@ def get_user(user_id):
                  , token_expires
                  , token_expires < now() as token_expired
                  , active
-                 , update_error
-              FROM spotify
+                 , error_message
+              FROM spotify_auth
               JOIN "user"
-                ON "user".id = spotify.user_id
+                ON "user".id = spotify_auth.user_id
              WHERE user_id = :user_id
             """), {
                 'user_id': user_id,

@@ -19,7 +19,7 @@ class SpotifyDomainTestCase(ServerTestCase):
                 refresh_token='old-refresh-token',
                 last_updated=None,
                 active=True,
-                update_error_message=None,
+                error_message=None,
             )
 
     @mock.patch('listenbrainz.domain.spotify.db_spotify.get_user')
@@ -60,7 +60,7 @@ class SpotifyDomainTestCase(ServerTestCase):
             'refresh_token': 'refresh-refresh-refresh',
             'last_updated': None,
             'active': True,
-            'update_error': 'oops',
+            'error_message': 'oops',
         }
 
         user = spotify.get_user(1)
@@ -71,7 +71,7 @@ class SpotifyDomainTestCase(ServerTestCase):
         self.assertEqual(user.token_expires, t)
         self.assertEqual(user.last_updated, None)
         self.assertEqual(user.active, True)
-        self.assertEqual(user.update_error_message, 'oops')
+        self.assertEqual(user.error_message, 'oops')
 
     @mock.patch('listenbrainz.domain.spotify.db_spotify.delete_spotify')
     def test_delete_spotify(self, mock_delete):
@@ -99,7 +99,7 @@ class SpotifyDomainTestCase(ServerTestCase):
                 'refresh_token': 'refresh-refresh-refresh',
                 'last_updated': None,
                 'active': True,
-                'update_error': 'oops',
+                'error_message': 'oops',
             },
             {
                 'user_id': 2,
@@ -109,7 +109,7 @@ class SpotifyDomainTestCase(ServerTestCase):
                 'refresh_token': 'refresh-refresh-refresh321',
                 'last_updated': None,
                 'active': True,
-                'update_error': 'oops2',
+                'error_message': 'oops2',
             },
         ]
 
