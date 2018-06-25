@@ -100,11 +100,17 @@ def get_user_recently_played(user):
                 delay += 1
                 if retries == 0:
                     raise spotify.SpotifyListenBrainzError('Encountered a rate limit.')
-            elif e.http_status in (400, 403, 404) or (e.http_status >= 500 and e.http_status < 600):
+
+            elif e.http_status in (400, 403, 404):
+                current_app.logger.critical('Error from the Spotify API for user %s: %s', str(user), str(e), exc_info=True)
+                raise spotify.SpotifyAPIError('Error from the Spotify API while getting listens: %s', str(e))
+
+            elif e.http_status >= 500 and e.http_status < 600:
                 # these errors are not our fault, most probably. so just log them and retry.
                 current_app.logger.error('Error while trying to get listens for user %s: %s', str(user), str(e), exc_info=True)
                 if retries == 0:
                     raise spotify.SpotifyAPIError('Error from the spotify API while getting listens: %s', str(e))
+
             elif e.http_status == 401:
                 # if we get 401 Unauthorized from Spotify, that means our token might have expired.
                 # In that case, try to refresh the token, if there is an error even while refreshing
@@ -117,6 +123,7 @@ def get_user_recently_played(user):
                         raise spotify.SpotifyAPIError('Could not authenticate with Spotify, please unlink and link your account again.')
 
                     tried_to_refresh_token = True
+
                 else:
                     raise spotify.SpotifyAPIError('Could not authenticate with Spotify, please unlink and link your account again.')
         except Exception as e:
@@ -124,7 +131,6 @@ def get_user_recently_played(user):
             current_app.logger.error('Unexpected error while getting listens: %s', str(e), exc_info=True)
             if retries == 0:
                 raise spotify.SpotifyListenBrainzError('Unexpected error while getting listens: %s' % str(e))
-
 
     return recently_played
 
