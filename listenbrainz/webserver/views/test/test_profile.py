@@ -134,10 +134,11 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
     @patch('listenbrainz.webserver.views.profile.spotify.get_spotify_oauth')
     @patch('listenbrainz.webserver.views.profile.spotify.create_spotify')
     def test_spotify_callback(self, mock_create, mock_get_spotify_oauth):
+        expire_time = int(time.time())
         mock_get_spotify_oauth.return_value.get_access_token.return_value = {
             'access_token': 'token',
             'refresh_token': 'refresh',
-            'expires_at': int(time.time()) + 3600,
+            'expires_at': expire_time,
         }
         self.temporary_login(self.user['id'])
         r = self.client.get(url_for('profile.connect_spotify_callback', code='code'))
@@ -147,7 +148,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
         mock_create.assert_called_once_with(self.user['id'], {
             'access_token': 'token',
             'refresh_token': 'refresh',
-            'expires_at': int(time.time()) + 3600,
+            'expires_at': expire_time,
         })
 
         r = self.client.get(url_for('profile.connect_spotify_callback'))
