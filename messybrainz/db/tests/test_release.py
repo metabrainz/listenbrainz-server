@@ -3,6 +3,7 @@ from messybrainz import submit_listens_and_sing_me_a_sweet_song as submit_listen
 from messybrainz import db
 from messybrainz.db import data
 from messybrainz.db.testing import DatabaseTestCase
+from messybrainz.db import release
 from messybrainz.db.release import fetch_unclustered_distinct_release_mbids,\
                                     fetch_unclustered_gids_for_release_mbid,\
                                     link_release_mbid_to_release_msid,\
@@ -16,6 +17,7 @@ from messybrainz.db.release import fetch_unclustered_distinct_release_mbids,\
                                     get_release_mbids_using_msid,\
                                     create_release_clusters_for_anomalies,\
                                     get_recordings_metadata_using_release_mbid
+from unittest.mock import patch
 from uuid import UUID
 
 
@@ -422,3 +424,220 @@ class ReleaseTestCase(DatabaseTestCase):
         with db.engine.begin() as connection:
             recordings = get_recordings_metadata_using_release_mbid(connection, recording_1["release_mbid"])
             self.assertDictEqual(recording_1, recordings[0])
+
+
+    @patch('messybrainz.db.release.fetch_releases_from_musicbrainz_db')
+    def test_fetch_recording_mbids_not_in_recording_release_join(self, mock_fetch_releases):
+        """Tests if recording MBIDs that are not in recording_release_join table
+           are fetched correctly.
+        """
+        msb_listens = self._load_test_data("recordings_for_fetch_releases.json")
+        submit_listens(msb_listens)
+
+        recording_mbids_submitted = {"4a9818ba-5963-4761-864f-7d96841053d2",
+            "2977432b-f1a2-4c37-b60f-bac1ce4e0961",
+            "5465ca86-3881-4349-81b2-6efbd3a59451",
+        }
+
+        recording_1 = {
+            "artist": "Syreeta",
+            "title": "She's Leaving Home",
+            "recording_mbid": "9ed38583-437f-4186-8183-9c31ffa2c116"
+        }
+
+        mock_fetch_releases.side_effect = [
+            [
+                {'id': '6e18c5c8-e487-4f83-9ea6-281c574933b9', 'name': 'The Blueprint 3'},
+                {'id': '2829f1bc-b097-31f3-9fbc-00b4f7228a52', 'name': 'The Blueprint 3'},
+                {'id': '95ff991b-7af3-42bb-9979-470ec2bd3741', 'name': 'The Blueprint 3 [Soul Assassin Special Edition]'},
+                {'id': '5e782ae3-602b-48b7-99be-de6bcffa4aba', 'name': 'The Hits Collection, Volume 1'},
+                {'id': '0996e292-5cb4-476b-be04-640eeecca646', 'name': 'The Blueprint 3'},
+                {'id': '7ebaaa95-e316-3b20-8819-7e4ca648c135', 'name': 'The Hits Collection, Volume 1'},
+                {'id': '74465497-af1a-40f2-8998-3f837a8d29ba', 'name': 'The Blueprint 3'},
+                {'id': '5b94f201-0343-4728-a851-05f5abff2495', 'name': 'The Blueprint 3'},
+                {'id': '4a441628-2e4d-4032-825f-6bdf4aee382e', 'name': 'The Hits Collection, Volume 1'}
+            ],
+            [
+                {'id': '8f0c9315-6f65-4098-98a8-765e447c6d78', 'name': "Wouldn't You Like to..."}
+            ],
+            [
+                {'id': 'f1183a86-36d2-4f1f-ab8f-6f965dc0b033', 'name': 'The Hits Collection Volume One'},
+                {'id': '7111c8bc-8549-4abc-8ab9-db13f65b4a55', 'name': 'Blueprint 2.1'},
+                {'id': '3c535d03-2fcc-467a-8d47-34b3250b8211', 'name': 'The Hits Collection Volume One'},
+                {'id': '0ff452e3-c306-4082-b0dc-223725f4fbbf', 'name': 'The Blueprint²: The Gift & The Curse'},
+                {'id': '801678aa-5d30-4342-8227-e9618f164cca', 'name': 'The Blueprint²: The Gift & The Curse'},
+                {'id': '5e782ae3-602b-48b7-99be-de6bcffa4aba', 'name': 'The Hits Collection, Volume 1'},
+                {'id': '4f41108c-db36-4616-8614-f504fdef287a', 'name': 'Blueprint 2.1'},
+                {'id': '89f64145-2f75-41d1-831a-517b785ed75a', 'name': "The Blueprint Collector's Edition"},
+                {'id': '7ebaaa95-e316-3b20-8819-7e4ca648c135', 'name': 'The Hits Collection, Volume 1'},
+                {'id': '77a74b85-0ae0-338f-aaca-4f36cd394f88', 'name': 'Blueprint 2.1'},
+                {'id': 'd75e103c-5ef4-4146-ae81-e27d19dc7fc4', 'name': "The Blueprint Collector's Edition"},
+                {'id': '2c5e4198-24cf-3c95-a16e-83be8e877dfa', 'name': 'The Blueprint²: The Gift & The Curse'},
+                {'id': '4a441628-2e4d-4032-825f-6bdf4aee382e', 'name': 'The Hits Collection, Volume 1'}
+            ],
+            [
+                {'id': '5f7853be-1f7a-4850-b0b8-2333d6b0318f', 'name': "Syreeta"}
+            ]
+        ]
+
+        with db.engine.begin() as connection:
+            mbids = release.fetch_recording_mbids_not_in_recording_release_join(connection)
+            self.assertSetEqual(recording_mbids_submitted, set(mbids))
+            release.fetch_and_store_releases_for_all_recording_mbids()
+            mbids = release.fetch_recording_mbids_not_in_recording_release_join(connection)
+            self.assertListEqual(mbids, [])
+
+            submit_listens([recording_1])
+            mbids = release.fetch_recording_mbids_not_in_recording_release_join(connection)
+            self.assertEqual(recording_1['recording_mbid'], mbids[0])
+
+            release.fetch_and_store_releases_for_all_recording_mbids()
+            mbids = release.fetch_recording_mbids_not_in_recording_release_join(connection)
+            self.assertListEqual(mbids, [])
+
+
+    @patch('messybrainz.db.release.fetch_releases_from_musicbrainz_db')
+    def test_insert_releases_to_recording_release_join(self, mock_fetch_releases):
+        """Tests if releases are correctly inserted into recording_release_join table."""
+
+        recording_mbid = "5465ca86-3881-4349-81b2-6efbd3a59451"
+        mock_fetch_releases.return_value = [
+            {'id': 'f1183a86-36d2-4f1f-ab8f-6f965dc0b033', 'name': 'The Hits Collection Volume One'},
+            {'id': '7111c8bc-8549-4abc-8ab9-db13f65b4a55', 'name': 'Blueprint 2.1'},
+            {'id': '3c535d03-2fcc-467a-8d47-34b3250b8211', 'name': 'The Hits Collection Volume One'},
+            {'id': '0ff452e3-c306-4082-b0dc-223725f4fbbf', 'name': 'The Blueprint²: The Gift & The Curse'},
+            {'id': '801678aa-5d30-4342-8227-e9618f164cca', 'name': 'The Blueprint²: The Gift & The Curse'},
+            {'id': '5e782ae3-602b-48b7-99be-de6bcffa4aba', 'name': 'The Hits Collection, Volume 1'},
+            {'id': '4f41108c-db36-4616-8614-f504fdef287a', 'name': 'Blueprint 2.1'},
+            {'id': '89f64145-2f75-41d1-831a-517b785ed75a', 'name': "The Blueprint Collector's Edition"},
+            {'id': '7ebaaa95-e316-3b20-8819-7e4ca648c135', 'name': 'The Hits Collection, Volume 1'},
+            {'id': '77a74b85-0ae0-338f-aaca-4f36cd394f88', 'name': 'Blueprint 2.1'},
+            {'id': 'd75e103c-5ef4-4146-ae81-e27d19dc7fc4', 'name': "The Blueprint Collector's Edition"},
+            {'id': '2c5e4198-24cf-3c95-a16e-83be8e877dfa', 'name': 'The Blueprint²: The Gift & The Curse'},
+            {'id': '4a441628-2e4d-4032-825f-6bdf4aee382e', 'name': 'The Hits Collection, Volume 1'}
+        ]
+        with db.engine.begin() as connection:
+            releases_fetched = release.fetch_releases_from_musicbrainz_db(connection, recording_mbid)
+            release.insert_releases_to_recording_release_join(connection, recording_mbid, releases_fetched)
+            releases_from_join = release.get_releases_for_recording_mbid(connection, recording_mbid)
+
+            releases_fetched = {(UUID(release['id']), release['name']) for release in releases_fetched}
+            self.assertSetEqual(releases_fetched, set(releases_from_join))
+
+
+
+    @patch('messybrainz.db.release.fetch_releases_from_musicbrainz_db')
+    def test_get_releases_for_recording_mbid(self, mock_fetch_releases):
+        """Tests if recording_mbids store artist_mbids correctly."""
+
+        recording_mbid = "5465ca86-3881-4349-81b2-6efbd3a59451"
+        mock_fetch_releases.return_value = [
+            {'id': 'f1183a86-36d2-4f1f-ab8f-6f965dc0b033', 'name': 'The Hits Collection Volume One'},
+            {'id': '7111c8bc-8549-4abc-8ab9-db13f65b4a55', 'name': 'Blueprint 2.1'},
+            {'id': '3c535d03-2fcc-467a-8d47-34b3250b8211', 'name': 'The Hits Collection Volume One'},
+            {'id': '0ff452e3-c306-4082-b0dc-223725f4fbbf', 'name': 'The Blueprint²: The Gift & The Curse'},
+            {'id': '801678aa-5d30-4342-8227-e9618f164cca', 'name': 'The Blueprint²: The Gift & The Curse'},
+            {'id': '5e782ae3-602b-48b7-99be-de6bcffa4aba', 'name': 'The Hits Collection, Volume 1'},
+            {'id': '4f41108c-db36-4616-8614-f504fdef287a', 'name': 'Blueprint 2.1'},
+            {'id': '89f64145-2f75-41d1-831a-517b785ed75a', 'name': "The Blueprint Collector's Edition"},
+            {'id': '7ebaaa95-e316-3b20-8819-7e4ca648c135', 'name': 'The Hits Collection, Volume 1'},
+            {'id': '77a74b85-0ae0-338f-aaca-4f36cd394f88', 'name': 'Blueprint 2.1'},
+            {'id': 'd75e103c-5ef4-4146-ae81-e27d19dc7fc4', 'name': "The Blueprint Collector's Edition"},
+            {'id': '2c5e4198-24cf-3c95-a16e-83be8e877dfa', 'name': 'The Blueprint²: The Gift & The Curse'},
+            {'id': '4a441628-2e4d-4032-825f-6bdf4aee382e', 'name': 'The Hits Collection, Volume 1'}
+        ]
+
+        with db.engine.begin() as connection:
+            releases_from_join = release.get_releases_for_recording_mbid(connection, recording_mbid)
+            self.assertIsNone(releases_from_join)
+
+            releases_fetched = release.fetch_releases_from_musicbrainz_db(connection, recording_mbid)
+            release.insert_releases_to_recording_release_join(connection, recording_mbid, releases_fetched)
+            releases_from_join = release.get_releases_for_recording_mbid(connection, recording_mbid)
+
+            releases_fetched = {(UUID(release['id']), release['name']) for release in releases_fetched}
+            self.assertSetEqual(releases_fetched, set(releases_from_join))
+
+
+    @patch('messybrainz.db.release.fetch_releases_from_musicbrainz_db')
+    def test_fetch_and_store_releases_for_all_recording_mbids(self, mock_fetch_releases):
+        """Test if releases are fetched and stored correctly for all recording MBIDs
+           not in recording_release_join table.
+        """
+
+        msb_listens = self._load_test_data("recordings_for_fetch_releases.json")
+        submit_listens(msb_listens)
+
+        recording_mbids_submitted = {"4a9818ba-5963-4761-864f-7d96841053d2",
+            "2977432b-f1a2-4c37-b60f-bac1ce4e0961",
+            "5465ca86-3881-4349-81b2-6efbd3a59451",
+        }
+
+        recording_1 = {
+            "artist": "Syreeta",
+            "title": "She's Leaving Home",
+            "recording_mbid": "9ed38583-437f-4186-8183-9c31ffa2c116"
+        }
+
+        releases_fetched = [
+            [
+                {'id': '8f0c9315-6f65-4098-98a8-765e447c6d78', 'name': "Wouldn't You Like to..."}
+            ],
+            [
+                {'id': 'f1183a86-36d2-4f1f-ab8f-6f965dc0b033', 'name': 'The Hits Collection Volume One'},
+                {'id': '7111c8bc-8549-4abc-8ab9-db13f65b4a55', 'name': 'Blueprint 2.1'},
+                {'id': '3c535d03-2fcc-467a-8d47-34b3250b8211', 'name': 'The Hits Collection Volume One'},
+                {'id': '0ff452e3-c306-4082-b0dc-223725f4fbbf', 'name': 'The Blueprint²: The Gift & The Curse'},
+                {'id': '801678aa-5d30-4342-8227-e9618f164cca', 'name': 'The Blueprint²: The Gift & The Curse'},
+                {'id': '5e782ae3-602b-48b7-99be-de6bcffa4aba', 'name': 'The Hits Collection, Volume 1'},
+                {'id': '4f41108c-db36-4616-8614-f504fdef287a', 'name': 'Blueprint 2.1'},
+                {'id': '89f64145-2f75-41d1-831a-517b785ed75a', 'name': "The Blueprint Collector's Edition"},
+                {'id': '7ebaaa95-e316-3b20-8819-7e4ca648c135', 'name': 'The Hits Collection, Volume 1'},
+                {'id': '77a74b85-0ae0-338f-aaca-4f36cd394f88', 'name': 'Blueprint 2.1'},
+                {'id': 'd75e103c-5ef4-4146-ae81-e27d19dc7fc4', 'name': "The Blueprint Collector's Edition"},
+                {'id': '2c5e4198-24cf-3c95-a16e-83be8e877dfa', 'name': 'The Blueprint²: The Gift & The Curse'},
+                {'id': '4a441628-2e4d-4032-825f-6bdf4aee382e', 'name': 'The Hits Collection, Volume 1'}
+            ],
+            [
+                {'id': '6e18c5c8-e487-4f83-9ea6-281c574933b9', 'name': 'The Blueprint 3'},
+                {'id': '2829f1bc-b097-31f3-9fbc-00b4f7228a52', 'name': 'The Blueprint 3'},
+                {'id': '95ff991b-7af3-42bb-9979-470ec2bd3741', 'name': 'The Blueprint 3 [Soul Assassin Special Edition]'},
+                {'id': '5e782ae3-602b-48b7-99be-de6bcffa4aba', 'name': 'The Hits Collection, Volume 1'},
+                {'id': '0996e292-5cb4-476b-be04-640eeecca646', 'name': 'The Blueprint 3'},
+                {'id': '7ebaaa95-e316-3b20-8819-7e4ca648c135', 'name': 'The Hits Collection, Volume 1'},
+                {'id': '74465497-af1a-40f2-8998-3f837a8d29ba', 'name': 'The Blueprint 3'},
+                {'id': '5b94f201-0343-4728-a851-05f5abff2495', 'name': 'The Blueprint 3'},
+                {'id': '4a441628-2e4d-4032-825f-6bdf4aee382e', 'name': 'The Hits Collection, Volume 1'}
+            ],
+            [
+                {'id': '5f7853be-1f7a-4850-b0b8-2333d6b0318f', 'name': "Syreeta"}
+            ]
+        ]
+
+        mock_fetch_releases.side_effect = releases_fetched
+
+        with db.engine.begin() as connection:
+            release.fetch_and_store_releases_for_all_recording_mbids()
+            # Using sets for assertions because we can get multiple artist MBIDs for a
+            # single recording MBID, but the order of retrieval is not known.
+            releases_fetched = [
+                [tuple([UUID(release['id']), release['name']]) for release in releases] 
+                for releases in releases_fetched
+            ]
+
+            releases = release.get_releases_for_recording_mbid(connection, "2977432b-f1a2-4c37-b60f-bac1ce4e0961")
+            self.assertSetEqual(set(releases), set(releases_fetched[0]))
+
+            releases = release.get_releases_for_recording_mbid(connection, "5465ca86-3881-4349-81b2-6efbd3a59451")
+            self.assertSetEqual(set(releases), set(releases_fetched[1]))
+
+            releases = release.get_releases_for_recording_mbid(connection, "4a9818ba-5963-4761-864f-7d96841053d2")
+            self.assertSetEqual(set(releases), set(releases_fetched[2]))
+
+            releases = release.get_releases_for_recording_mbid(connection, "9ed38583-437f-4186-8183-9c31ffa2c116")
+            self.assertIsNone(releases)
+
+            submit_listens([recording_1])
+            release.fetch_and_store_releases_for_all_recording_mbids()
+            releases = release.get_releases_for_recording_mbid(connection, "9ed38583-437f-4186-8183-9c31ffa2c116")
+            self.assertSetEqual(set(releases), set(releases_fetched[3]))
