@@ -27,11 +27,6 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
             token_expires_ts=int(time.time()),
         )
 
-    def test_expires_at_to_datetime(self):
-        t = int(time.time())
-        x = db_spotify._expires_at_to_datetime(t)
-        self.assertIsInstance(x, datetime)
-        self.assertEqual(int(x.strftime('%s')), t)
 
     def test_create_spotify(self):
         db_user.create(2, 'spotify')
@@ -84,6 +79,14 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(spotify_user['user_token'], 'testtoken')
         self.assertEqual(spotify_user['refresh_token'], 'refreshtesttoken')
 
+    def test_update_latest_listened_at(self):
+        old_spotify_user = db_spotify.get_user(self.user['id'])
+        self.assertIsNone(old_spotify_user['latest_listened_at'])
+        t = int(time.time())
+        db_spotify.update_latest_listened_at(self.user['id'], t)
+        spotify_user = db_spotify.get_user(self.user['id'])
+        self.assertEqual(t, int(spotify_user['latest_listened_at'].strftime('%s')))
+
     def test_get_active_users_to_process(self):
         db_user.create(2, 'newspotifyuser')
         db_spotify.create_spotify(
@@ -97,7 +100,25 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(users[0]['user_id'], 1)
         self.assertEqual(users[1]['user_id'], 2)
 
+        # check order, the users should be sorted by latest_listened_at timestamp
+        db_user.create(3, 'newnewspotifyuser')
+        db_spotify.create_spotify(
+            user_id=3,
+            user_token='tokentoken',
+            refresh_token='newrefresh_token',
+            token_expires_ts=int(time.time()),
+        )
+        t = int(time.time())
+        db_spotify.update_latest_listened_at(2, t + 20)
+        db_spotify.update_latest_listened_at(1, t + 10)
+        users = db_spotify.get_active_users_to_process()
+        self.assertEqual(len(users), 3)
+        self.assertEqual(users[0]['user_id'], 2)
+        self.assertEqual(users[1]['user_id'], 1)
+        self.assertEqual(users[2]['user_id'], 3)
+
         db_spotify.add_update_error(2, 'something broke')
+        db_spotify.add_update_error(3, 'oops.')
         users = db_spotify.get_active_users_to_process()
         self.assertEqual(len(users), 1)
         self.assertEqual(users[0]['user_id'], 1)

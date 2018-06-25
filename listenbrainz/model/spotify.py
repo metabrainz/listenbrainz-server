@@ -11,6 +11,7 @@ class Spotify(db.Model):
     token_expires = db.Column(db.DateTime(timezone=True))
     refresh_token = db.Column(db.String, nullable=False)
     last_updated = db.Column(db.DateTime(timezone=True))
+    latest_listened_at = db.Column(db.DateTime(timezone=True))
     active = db.Column(db.Boolean, default=True)
     error_message = db.Column(db.String)
 
@@ -22,12 +23,14 @@ class SpotifyAdminView(AdminModelView):
         'token_expires',
         'refresh_token',
         'last_updated',
+        'latest_listened_at',
         'active',
         'error_message',
     ]
     column_list = [
         'user_id',
         'token_expires',
+        'latest_listened_at',
         'last_updated',
         'active',
         'error_message',
@@ -42,6 +45,7 @@ class SpotifyAdminView(AdminModelView):
 
     column_filters = [
         'active',
+        'latest_listened_at',
         'last_updated',
         'token_expires',
     ]

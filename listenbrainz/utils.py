@@ -1,6 +1,7 @@
 import errno
 import os
 import pika
+import pytz
 import time
 
 from datetime import datetime
@@ -182,3 +183,15 @@ def safely_import_config():
         except ImportError:
             print("Cannot import config.py. Waiting and retrying...")
             time.sleep(2)
+
+
+def unix_timestamp_to_datetime(timestamp):
+    """ Converts expires_at timestamp received from Spotify to a datetime object
+
+    Args:
+        timestamp (int): the unix timestamp to be converted to datetime
+
+    Returns:
+        A datetime object with timezone UTC corresponding to the provided timestamp
+    """
+    return datetime.utcfromtimestamp(timestamp).replace(tzinfo=pytz.UTC)

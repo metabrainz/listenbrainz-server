@@ -1,22 +1,10 @@
-from listenbrainz import db
+from listenbrainz import db, utils
 import sqlalchemy
 from listenbrainz.db.exceptions import DatabaseException
 from datetime import datetime
 import pytz
 from flask import current_app, url_for
 import spotipy.oauth2
-
-
-def _expires_at_to_datetime(timestamp):
-    """ Converts expires_at timestamp received from Spotify to a datetime object
-
-    Args:
-        timestamp (int): the unix timestamp to be converted to datetime
-
-    Returns:
-        A datetime object with timezone UTC corresponding to the provided timestamp
-    """
-    return datetime.utcfromtimestamp(timestamp).replace(tzinfo=pytz.UTC)
 
 
 def create_spotify(user_id, user_token, refresh_token, token_expires_ts):
@@ -29,7 +17,7 @@ def create_spotify(user_id, user_token, refresh_token, token_expires_ts):
         refresh_token (str): the token used to refresh Spotify access tokens once they expire
         token_expires_ts (int): the unix timestamp at which the user_token will expire
     """
-    token_expires = _expires_at_to_datetime(token_expires_ts)
+    token_expires = utils.unix_timestamp_to_datetime(token_expires_ts)
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
             INSERT INTO spotify_auth (user_id, user_token, refresh_token, token_expires)
@@ -96,8 +84,27 @@ def update_last_updated(user_id, success=True):
               WHERE user_id = :user_id
         """), {
             "user_id": user_id,
-            "active": success
+            "active": success,
         })
+
+
+def update_latest_listened_at(user_id, timestamp):
+    """ Update the timestamp of the last listen imported for the user with
+    specified LB user ID.
+
+    Args:
+        user_id (int): the ListenBrainz row ID of the user
+        timestamp (int): the unix timestamp of the latest listen imported for the user
+    """
+    with db.engine.connect() as connection:
+        connection.execute(sqlalchemy.text("""
+            UPDATE spotify_auth
+               SET latest_listened_at = :timestamp
+             WHERE user_id = :user_id
+            """), {
+                'user_id': user_id,
+                'timestamp': utils.unix_timestamp_to_datetime(timestamp),
+            })
 
 
 def update_token(user_id, access_token, refresh_token, expires_at):
@@ -112,7 +119,7 @@ def update_token(user_id, access_token, refresh_token, expires_at):
     Returns:
         the new token in dict form
     """
-    token_expires = _expires_at_to_datetime(expires_at)
+    token_expires = utils.unix_timestamp_to_datetime(expires_at)
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
             UPDATE spotify_auth
@@ -138,6 +145,7 @@ def get_active_users_to_process():
                  , user_token
                  , refresh_token
                  , last_updated
+                 , latest_listened_at
                  , token_expires
                  , token_expires < now() as token_expired
                  , active
@@ -146,7 +154,7 @@ def get_active_users_to_process():
               JOIN "user"
                 ON "user".id = spotify_auth.user_id
              WHERE spotify_auth.active = 't'
-          ORDER BY last_updated ASC
+          ORDER BY latest_listened_at DESC NULLS LAST
         """))
         return [dict(row) for row in result.fetchall()]
 
@@ -187,6 +195,7 @@ def get_user(user_id):
                  , user_token
                  , refresh_token
                  , last_updated
+                 , latest_listened_at
                  , token_expires
                  , token_expires < now() as token_expired
                  , active
