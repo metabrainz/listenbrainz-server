@@ -12,6 +12,7 @@ from flask import Blueprint, render_template, request, url_for, redirect, curren
 from flask_login import current_user, login_required
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz.listenstore.influx_listenstore import InfluxListenStoreException
 from listenbrainz.stats.utils import construct_stats_queue_key
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.redis_connection import _redis
