@@ -1,5 +1,7 @@
+from brainzutils.musicbrainz_db.exceptions import NoDataFoundException
 from messybrainz import db
 from sqlalchemy import text
+import brainzutils.musicbrainz_db.release as mb_release
 import messybrainz.db.common as db_common
 
 
@@ -19,6 +21,26 @@ def insert_release_cluster(connection, cluster_id, release_gids):
     connection.execute(text("""
         INSERT INTO release_cluster (cluster_id, release_gid, updated)
              VALUES (:cluster_id, :release_gid, now())
+        """), values
+        )
+
+
+def insert_releases_to_recording_release_join(connection, recording_mbid, releases):
+    """ Inserts the releases corresponding to the recording_mbid
+        into the recording_release_join table.
+    """
+
+    values = [
+        {
+            "recording_mbid": recording_mbid,
+            "release_mbid": release['id'],
+            "release_name": release['name'],
+        } for release in releases
+    ]
+
+    connection.execute(text("""
+        INSERT INTO recording_release_join (recording_mbid, release_mbid, release_name, updated)
+             VALUES (:recording_mbid, :release_mbid, :release_name, now())
     """), values
     )
 
@@ -285,3 +307,83 @@ def create_release_clusters():
         create_release_clusters_without_considering_anomalies,
         create_release_clusters_for_anomalies,
     )
+
+
+def fetch_releases_from_musicbrainz_db(connection, recording_mbid):
+    """ Fetches releases from the MusicBrainz database for the recording MBID
+        and returns a list of releases which consists a dict with release MBID 
+        and release name.
+    """
+
+    return mb_release.get_releases_using_recording_mbid(recording_mbid)
+
+
+def fetch_recording_mbids_not_in_recording_release_join(connection):
+    """ Fetches recording MBIDs that are present in recording_json table
+        but are not present in recording_release_join table and returns
+        a list of those recording MBIDs.
+    """
+
+    result = connection.execute(text("""
+        SELECT DISTINCT recj.data ->> 'recording_mbid'
+                   FROM recording_json AS recj
+              LEFT JOIN recording_release_join AS rrj
+                     ON (recj.data ->> 'recording_mbid')::uuid = rrj.recording_mbid
+                  WHERE recj.data ->> 'recording_mbid' IS NOT NULL
+                    AND rrj.recording_mbid IS NULL
+    """))
+
+    return [mbid[0] for mbid in result]
+
+
+def truncate_recording_release_join():
+    """Truncates the table recording_release_join."""
+
+    with db.engine.begin() as connection:
+        connection.execute(text("""TRUNCATE TABLE recording_release_join"""))
+
+
+def get_releases_for_recording_mbid(connection, recording_mbid):
+    """Returns list of releases for a corresponding recording MBID
+       in recording_release_join table if recording MBID exists else None
+       is returned.
+    """
+
+    result = connection.execute(text("""
+        SELECT release_mbid, release_name
+          FROM recording_release_join
+         WHERE recording_mbid = :recording_mbid
+    """), {"recording_mbid": recording_mbid}
+    )
+
+    if result.rowcount:
+        return [(r['release_mbid'], r['release_name']) for r in result]
+    else:
+        return None
+
+
+def fetch_and_store_releases_for_all_recording_mbids():
+    """ Fetches releases from the musicbrainz database for the recording MBIDs
+        in the recording_json table submitted while submitting a listen.
+        Returns the number of recording MBIDs that were processed and number of
+        recording MBIDs that were added to the recording_release_join table.
+    """
+
+    with db.engine.begin() as connection:
+        recording_mbids = fetch_recording_mbids_not_in_recording_release_join(connection)
+        num_recording_mbids_added = 0
+        num_recording_mbids_processed = len(recording_mbids)
+        for recording_mbid in recording_mbids:
+            try:
+                releases = fetch_releases_from_musicbrainz_db(connection, recording_mbid)
+                insert_releases_to_recording_release_join(connection, recording_mbid, releases)
+                num_recording_mbids_added += 1
+            except NoDataFoundException:
+                # While submitting recordings we don't check if the recording MBID
+                # exists in MusicBrainz database. So, this exception can get raised if
+                # recording MBID doesnot exist in MusicBrainz database and we tried to
+                # query for it. Or in case of standalone recordings we will get no releases
+                # for a given recording MBID.
+                pass
+
+        return num_recording_mbids_processed, num_recording_mbids_added
