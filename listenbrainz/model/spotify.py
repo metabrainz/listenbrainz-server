@@ -4,7 +4,7 @@ from listenbrainz.webserver.admin import AdminModelView
 
 
 class Spotify(db.Model):
-    __tablename__ = 'spotify'
+    __tablename__ = 'spotify_auth'
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True)
     user_token = db.Column(db.String, nullable=False)
@@ -12,7 +12,7 @@ class Spotify(db.Model):
     refresh_token = db.Column(db.String, nullable=False)
     last_updated = db.Column(db.DateTime(timezone=True))
     active = db.Column(db.Boolean, default=True)
-    update_error = db.Column(db.String)
+    error_message = db.Column(db.String)
 
 
 class SpotifyAdminView(AdminModelView):
@@ -23,14 +23,14 @@ class SpotifyAdminView(AdminModelView):
         'refresh_token',
         'last_updated',
         'active',
-        'update_error',
+        'error_message',
     ]
     column_list = [
         'user_id',
         'token_expires',
         'last_updated',
         'active',
-        'update_error',
+        'error_message',
         'user_token',
         'refresh_token',
     ]
