@@ -57,7 +57,7 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         db_spotify.add_update_error(self.user['id'], 'test error message')
         spotify_user = db_spotify.get_user(self.user['id'])
         self.assertFalse(spotify_user['active'])
-        self.assertEqual(spotify_user['update_error'], 'test error message')
+        self.assertEqual(spotify_user['error_message'], 'test error message')
         self.assertIsNotNone(spotify_user['last_updated'])
 
     def test_update_last_updated(self):

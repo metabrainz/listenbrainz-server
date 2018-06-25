@@ -8,14 +8,14 @@ import datetime
 
 class Spotify:
     def __init__(self, user_id, musicbrainz_id, user_token, token_expires, refresh_token,
-                 last_updated, active, update_error_message):
+                 last_updated, active, error_message):
         self.user_id = user_id
         self.user_token = user_token
         self.token_expires = token_expires
         self.refresh_token = refresh_token
         self.last_updated = last_updated
         self.active = active
-        self.update_error_message = update_error_message
+        self.error_message = error_message
         self.musicbrainz_id = musicbrainz_id
 
     def get_spotipy_client(self):
@@ -41,7 +41,7 @@ class Spotify:
            refresh_token=row['refresh_token'],
            last_updated=row['last_updated'],
            active=row['active'],
-           update_error_message=row['update_error'],
+           error_message=row['error_message'],
            musicbrainz_id=row['musicbrainz_id'],
         )
 
