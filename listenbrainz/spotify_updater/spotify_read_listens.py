@@ -88,7 +88,7 @@ def get_user_recently_played(user):
         try:
             recently_played = user.get_spotipy_client()._get("me/player/recently-played", limit=50)
             break
-        except SpotifyError as e:
+        except SpotifyException as e:
             retries -= 1
             if e.http_status == 429:
                 # Rate Limit Problems -- the client handles these, but it can still give up
