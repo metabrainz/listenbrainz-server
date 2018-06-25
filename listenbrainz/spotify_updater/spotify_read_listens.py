@@ -101,7 +101,7 @@ def get_user_recently_played(user):
                     raise spotify.SpotifyListenBrainzError('Encountered a rate limit.')
             elif e.http_status in (400, 403, 404) or (e.http_status >= 500 and e.http_status < 600):
                 # these errors are not our fault, most probably. so just log them and retry.
-                current_app.logger.error('Error while trying to get listens for user %s: %s', str(user), str(e))
+                current_app.logger.error('Error while trying to get listens for user %s: %s', str(user), str(e), exc_info=True)
                 if retries == 0:
                     raise spotify.SpotifyAPIError('Error from the spotify API while getting listens: %s', str(e))
             elif e.http_status == 401:
@@ -142,12 +142,9 @@ def process_one_user(user):
     unauthorized_count = 0
 
     try:
-        recently_played = get_user_recently_played()
-    except (SpotifyListenBrainzError, SpotifyAPIError) as e:
+        recently_played = get_user_recently_played(user)
+    except (spotify.SpotifyListenBrainzError, spotify.SpotifyAPIError) as e:
         raise
-
-    with open('recently_played.json', 'w') as f:
-        f.write(json.dumps(recently_played, indent=3))
 
     # convert listens to ListenBrainz format and validate them
     listens = []
@@ -158,7 +155,7 @@ def process_one_user(user):
                 validate_listen(listen, LISTEN_TYPE_IMPORT)
                 listens.append(listen)
             except BadRequest:
-                current_app.logger.error('Could not validate listen for user %s: %s', str(user), json.dumps(listen, indent=3))
+                current_app.logger.error('Could not validate listen for user %s: %s', str(user), json.dumps(listen, indent=3), exc_info=True)
                 # TODO: api_utils exposes werkzeug exceptions, if it's a more generic module it shouldn't be web-specific
 
     # try to submit listens to ListenBrainz
@@ -189,8 +186,9 @@ def process_all_spotify_users():
     try:
         users = spotify.get_active_users_to_process()
     except DatabaseException as e:
-        current_app.logger.error('Cannot get list of users due to error %s', str(e))
-        return 0
+        current_app.logger.error('Cannot get list of users due to error %s', str(e), exc_info=True)
+        return 0, 0
+
     success = 0
     failure = 0
     for u in users:
@@ -208,7 +206,7 @@ def process_all_spotify_users():
             )
             failure += 1
         except spotify.SpotifyListenBrainzError as e:
-            current_app.logger.critical('spotify_reader could not import listens: %s', str(e))
+            current_app.logger.critical('spotify_reader could not import listens: %s', str(e), exc_info=True)
             failure += 1
         current_app.logger.info('Took a total of %.2f seconds to process user %s', time.time() - t, str(u))
 
@@ -220,7 +218,7 @@ def process_all_spotify_users():
 def main():
     app = listenbrainz.webserver.create_app()
     with app.app_context():
-        current_app.logger.error('Spotify Reader started...')
+        current_app.logger.info('Spotify Reader started...')
         while True:
             t = time.time()
             success, failure = process_all_spotify_users()
