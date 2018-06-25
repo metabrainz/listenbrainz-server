@@ -120,3 +120,9 @@ class SpotifyDomainTestCase(ServerTestCase):
         self.assertIsInstance(lst[1], spotify.Spotify)
         self.assertEqual(lst[0].user_id, 1)
         self.assertEqual(lst[1].user_id, 2)
+
+    @mock.patch('listenbrainz.domain.spotify.db_spotify.update_latest_listened_at')
+    def test_update_latest_listened_at(self, mock_update_listened_at):
+        t = int(time.time())
+        spotify.update_latest_listened_at(1, t)
+        mock_update_listened_at.assert_called_once_with(1, t)
