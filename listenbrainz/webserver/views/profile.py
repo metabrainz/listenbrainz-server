@@ -286,7 +286,7 @@ def delete():
 @login_required
 def connect_spotify():
     if request.method == 'POST' and request.form.get('delete') == 'yes':
-        spotify.delete_spotify(current_user.id)
+        spotify.remove_user(current_user.id)
         flash.success('Your Spotify account has been unlinked')
 
     user = spotify.get_user(current_user.id)
@@ -312,7 +312,7 @@ def connect_spotify_callback():
 
     try:
         token = sp_oauth.get_access_token(code)
-        spotify.create_spotify(current_user.id, token)
+        spotify.add_new_user(current_user.id, token)
         flash.success('Successfully authenticated with Spotify!')
     except spotipy.oauth2.SpotifyOauthError as e:
         current_app.logger.error('Unable to authenticate with Spotify: %s', str(e), exc_info=True)

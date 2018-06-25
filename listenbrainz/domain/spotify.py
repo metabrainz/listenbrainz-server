@@ -92,7 +92,7 @@ def get_user(user_id):
     return None
 
 
-def delete_spotify(user_id):
+def remove_user(user_id):
     """ Delete user entry for user with specified ListenBrainz user ID.
 
     Args:
@@ -101,7 +101,7 @@ def delete_spotify(user_id):
     db_spotify.delete_spotify(user_id)
 
 
-def create_spotify(user_id, spot_access_token):
+def add_new_user(user_id, spot_access_token):
     """Create a spotify row for a user based on OAuth access tokens
 
     Args:
