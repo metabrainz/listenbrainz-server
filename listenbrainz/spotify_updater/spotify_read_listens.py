@@ -169,6 +169,7 @@ def process_one_user(user):
                 current_app.logger.error('Could not validate listen for user %s: %s', str(user), json.dumps(listen, indent=3), exc_info=True)
                 # TODO: api_utils exposes werkzeug exceptions, if it's a more generic module it shouldn't be web-specific
 
+    latest_listened_at = max(listen['listened_at'] for listen in listens)
     # try to submit listens to ListenBrainz
     retries = 10
     while retries >= 0:
@@ -184,6 +185,7 @@ def process_one_user(user):
                 raise spotify.SpotifyListenBrainzError('ISE while trying to import listens: %s', str(e))
 
     # we've succeeded so update the last_updated field for this user
+    spotify.update_latest_listened_at(user.user_id, latest_listened_at)
     spotify.update_last_updated(user.user_id)
 
 

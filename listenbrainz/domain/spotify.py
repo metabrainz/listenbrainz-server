@@ -140,6 +140,16 @@ def update_last_updated(user_id, success=True, error_message=None):
         db_spotify.update_last_updated(user_id, success)
 
 
+def update_latest_listened_at(user_id, timestamp):
+    """ Update the latest_listened_at field for user with specified ListenBrainz user ID.
+
+    Args:
+        user_id (int): the ListenBrainz row ID of the user
+        timestamp (int): the unix timestamp of the latest listen imported for the user
+    """
+    db_spotify.update_latest_listened_at(user_id, timestamp)
+
+
 class SpotifyImporterException(Exception):
     pass
 
