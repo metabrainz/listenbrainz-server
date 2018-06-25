@@ -153,6 +153,7 @@ def process_one_user(user):
     # convert listens to ListenBrainz format and validate them
     listens = []
     if 'items' in recently_played:
+        current_app.logger.info('Received %d listens from Spotify for %s', len(recently_played['items']),  str(user))
         for item in recently_played['items']:
             listen = _convert_spotify_play_to_listen(item)
             try:
@@ -166,7 +167,9 @@ def process_one_user(user):
     retries = 10
     while retries >= 0:
         try:
+            current_app.logger.info('Submitting %d listens for user %s', len(listens), str(user))
             insert_payload(listens, listenbrainz_user, listen_type=LISTEN_TYPE_IMPORT)
+            current_app.logger.info('Submitted!')
             break
         except (InternalServerError, ServiceUnavailable) as e:
             retries -= 1
