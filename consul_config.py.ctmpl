@@ -2,6 +2,11 @@
     {{ key (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .) }}
 {{- end -}}
 
+{{- define "KEY_ARRAY" -}}
+    {{- range $index, $element := (key (printf "docker-server-configs/MeB/config.%s.json/%s" (env "DEPLOY_ENV") .) | parseJSON) -}}
+        "{{.}}",
+    {{- end -}}
+{{- end -}}
 
 DEBUG = False
 
@@ -109,3 +114,9 @@ STATS_CALCULATION_INTERVAL = 7 # stats are calculated every 7 days
 
 
 MUSICBRAINZ_IMPORT_DRY_RUN = True
+
+ADMINS = [
+    {{template "KEY_ARRAY" "admins"}}
+]
+
+SQLALCHEMY_TRACK_MODIFICATIONS = False

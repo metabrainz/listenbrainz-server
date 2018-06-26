@@ -10,9 +10,13 @@ import zipfile
 from datetime import datetime
 from flask import Blueprint, render_template, request, url_for, redirect, current_app, make_response
 from flask_login import current_user, login_required
+import spotipy.oauth2
+from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
+from werkzeug.utils import secure_filename
+
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz.listenstore.influx_listenstore import InfluxListenStoreException
+from listenbrainz.domain import spotify
 from listenbrainz.stats.utils import construct_stats_queue_key
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.redis_connection import _redis
@@ -276,3 +280,42 @@ def delete():
             'profile/delete.html',
             user=current_user,
         )
+
+
+@profile_bp.route('/connect-spotify', methods=['GET', 'POST'])
+@login_required
+def connect_spotify():
+    if request.method == 'POST' and request.form.get('delete') == 'yes':
+        spotify.remove_user(current_user.id)
+        flash.success('Your Spotify account has been unlinked')
+
+    user = spotify.get_user(current_user.id)
+    spotify_url = None
+    if not user:
+        sp_oauth = spotify.get_spotify_oauth()
+        spotify_url = sp_oauth.get_authorize_url()
+
+    return render_template(
+        'user/spotify.html',
+        account=user,
+        spotify_login_url=spotify_url
+    )
+
+
+@profile_bp.route('/connect-spotify/callback')
+@login_required
+def connect_spotify_callback():
+    code = request.args.get('code')
+    if not code:
+        raise BadRequest('missing code')
+    sp_oauth = spotify.get_spotify_oauth()
+
+    try:
+        token = sp_oauth.get_access_token(code)
+        spotify.add_new_user(current_user.id, token)
+        flash.success('Successfully authenticated with Spotify!')
+    except spotipy.oauth2.SpotifyOauthError as e:
+        current_app.logger.error('Unable to authenticate with Spotify: %s', str(e), exc_info=True)
+        flash.warn('Unable to authenticate with Spotify (error {})'.format(e.args[0]))
+
+    return redirect(url_for('profile.connect_spotify'))
