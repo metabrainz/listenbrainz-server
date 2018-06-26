@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Link spotify account - ListenBrainz{% endblock %}
+
+{% block content %}
+  <div id="user-profile">
+    <h2 class="page-title">Link Spotify Account</h2>
+
+    <p>
+      If you link your spotify account with ListenBrainz then we will automatically
+      add the songs that you listen to to your ListenBrainz account.
+      We only ask permission to read your recently listened songs.
+    </p>
+
+    {% if account %}
+       <p>Your account is linked. Click the button below to unlink it</p>
+       <form method="POST">
+         <input type="hidden" name="delete" value="yes" />
+         <input class="btn btn-primary btn-lg" type="submit" value="Unlink" />
+       </form>
+    {% else %}
+      <p><a href="{{ spotify_login_url }}">Log in with Spotify.</a></p>
+    {% endif %}
+
+  </div>
+{% endblock %}

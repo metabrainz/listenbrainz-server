@@ -121,3 +121,40 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertRedirects(r, '/')
         user = db_user.get(self.user['id'])
         self.assertIsNone(user)
+
+
+    @patch('listenbrainz.webserver.views.profile.spotify.remove_user')
+    @patch('listenbrainz.webserver.views.profile.spotify.get_spotify_oauth')
+    def test_connect_spotify(self, mock_get_spotify_oauth, mock_remove_user):
+        mock_get_spotify_oauth.return_value.get_authorize_url.return_value = 'someurl'
+        self.temporary_login(self.user['id'])
+        r = self.client.get(url_for('profile.connect_spotify'))
+        self.assert200(r)
+
+        r = self.client.post(url_for('profile.connect_spotify'), data={'delete': 'yes'})
+        self.assert200(r)
+        mock_remove_user.assert_called_once_with(self.user['id'])
+
+
+    @patch('listenbrainz.webserver.views.profile.spotify.get_spotify_oauth')
+    @patch('listenbrainz.webserver.views.profile.spotify.add_new_user')
+    def test_spotify_callback(self, mock_add_new_user, mock_get_spotify_oauth):
+        expire_time = int(time.time())
+        mock_get_spotify_oauth.return_value.get_access_token.return_value = {
+            'access_token': 'token',
+            'refresh_token': 'refresh',
+            'expires_at': expire_time,
+        }
+        self.temporary_login(self.user['id'])
+        r = self.client.get(url_for('profile.connect_spotify_callback', code='code'))
+        self.assertStatus(r, 302)
+        mock_get_spotify_oauth.assert_called_once()
+        mock_get_spotify_oauth.return_value.get_access_token.assert_called_once_with('code')
+        mock_add_new_user.assert_called_once_with(self.user['id'], {
+            'access_token': 'token',
+            'refresh_token': 'refresh',
+            'expires_at': expire_time,
+        })
+
+        r = self.client.get(url_for('profile.connect_spotify_callback'))
+        self.assert400(r)

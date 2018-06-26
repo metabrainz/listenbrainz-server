@@ -136,6 +136,21 @@ def create_app(config_path=None, debug=None):
     app = gen_app(config_path=config_path, debug=debug)
     _register_blueprints(app)
 
+    # Admin views
+    from listenbrainz import model
+    model.db.init_app(app)
+
+    from flask_admin import Admin
+    from listenbrainz.webserver.admin.views import HomeView
+    admin = Admin(app, index_view=HomeView(name='Home'), template_mode='bootstrap3')
+    from listenbrainz.model import Spotify as SpotifyModel
+    from listenbrainz.model import User as UserModel
+    from listenbrainz.model.spotify import SpotifyAdminView
+    from listenbrainz.model.user import UserAdminView
+    admin.add_view(UserAdminView(UserModel, model.db.session, endpoint='user_model'))
+    admin.add_view(SpotifyAdminView(SpotifyModel, model.db.session, endpoint='spotify_model'))
+
+
     @app.before_request
     def before_request_gdpr_check():
         # skip certain pages, static content and the API
