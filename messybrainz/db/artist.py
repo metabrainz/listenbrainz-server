@@ -1,7 +1,5 @@
 
 import brainzutils.musicbrainz_db.recording as mb_recording
-import json
-import uuid
 
 from brainzutils import musicbrainz_db
 from brainzutils.musicbrainz_db.exceptions import NoDataFoundException
@@ -232,7 +230,8 @@ def get_artist_cluster_id_using_artist_mbids(connection, artist_credit_mbids):
 def fetch_artist_credits_left_to_cluster(connection):
     """ Returns array of artist_mbids for the artist MBIDs that
         were not clustered after executing the first phase of clustering.
-        These are anomalies.
+        These are anomalies (A single MSID pointing to multiple MBIDs arrays
+        in artist_credit_redirect table).
     """
 
     # convert_json_array_to_sorted_uuid_array is a custom function for implementation
@@ -324,7 +323,8 @@ def get_artist_mbids_using_msid(connection, artist_msid):
 
 
 def create_artist_credit_clusters_without_considering_anomalies(connection):
-    """Creates cluster for artist_credit without considering anamolies.
+    """Creates cluster for artist_credit without considering anomalies (A single MSID
+       pointing to multiple MBIDs arrays in artist_credit_redirect table).
 
     Args:
         connection: the sqlalchemy db connection to be used to execute queries.
@@ -352,7 +352,8 @@ def create_artist_credit_clusters_without_considering_anomalies(connection):
 
 
 def create_artist_credit_clusters_for_anomalies(connection):
-    """Creates artist_credit clusters for the anomalies.
+    """Creates artist_credit clusters for the anomalies (A single MSID
+       pointing to multiple MBIDs arrays in artist_credit_redirect table).
 
     Args:
         connection: the sqlalchemy db connection to be used to execute queries

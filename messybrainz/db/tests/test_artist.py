@@ -214,7 +214,7 @@ class ArtistTestCase(DatabaseTestCase):
 
 
     def test_link_artist_mbids_to_artist_credit_cluster_id(self):
-        """Tests if artist MBIDs are linked to correctly. Links are created in
+        """Tests if artist MBIDs are linked to cluster correctly. Links are created in
            artist_credit_redirect table.
         """
 
@@ -402,7 +402,8 @@ class ArtistTestCase(DatabaseTestCase):
 
 
     def test_create_artist_credit_clusters_without_considering_anomalies(self):
-        """Tests if clusters are created without considering anomalies are
+        """Tests if clusters created without considering anomalies (A single
+           MSID pointing to multiple MBIDs arrays in artist_credit_redirect table)
            are correctly formed.
         """
 
@@ -458,7 +459,10 @@ class ArtistTestCase(DatabaseTestCase):
 
 
     def test_create_artist_credit_clusters_for_anomalies(self):
-        """Tests if clusters are created correctly for the anomalies."""
+        """Tests if clusters are created correctly for the anomalies
+           (A single MSID pointing to multiple MBIDs arrays in
+           artist_credit_redirect table).
+        """
 
         msb_listens = self._load_test_data("recordings_for_testing_artist_clusters.json")
         submit_listens(msb_listens)
