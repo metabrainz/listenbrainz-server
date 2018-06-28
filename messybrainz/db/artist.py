@@ -182,13 +182,14 @@ def fetch_unclustered_gids_for_artist_credit_mbids(connection, artist_credit_mbi
 
     Args:
         connection: the sqlalchemy db connection to be used to execute queries
-        artist_credit_mbids (list): a list of sorted artist MBIDs for which
-                                      gids are to be fetched.
+        artist_credit_mbids (list): a list of artist MBIDs for which gids are to be fetched.
+                                    The list is first sorted and then query is done.
 
     Returns:
         gids(list): List of gids.
     """
 
+    artist_credit_mbids.sort()
     # convert_json_array_to_sorted_uuid_array is a custom function for implementation
     # details check admin/sql/create_functions.sql
     gids = connection.execute(text("""
