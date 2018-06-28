@@ -191,20 +191,16 @@ def create_artist_credit_clusters_for_mbids():
 
 @cli.command()
 def truncate_artist_credit_cluster_and_redirect():
-    """Truncate artist_credit_cluster, artist_credit_redirect, and
-       artist_credit_redirect_array tables.
-    """
+    """Truncate artist_credit_cluster and artist_credit_redirect table."""
 
     db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
     try:
         truncate_artist_credit_cluster_and_redirect_tables()
-        print("artist_credit_cluster, artist_credit_redirect, and"
-            "artist_credit_redirect_array tables truncated."
-        )
+        print("artist_credit_cluster and artist_credit_redirect table truncated.")
 
     except Exception as error:
-        print("An error occured while truncating artist_credit_cluster,"
-            "artist_credit_redirect, and artist_credit_redirect_array: {0}".format(error)
+        print("An error occured while truncating artist_credit_cluster"
+            "and artist_credit_redirect table: {0}".format(error)
         )
         raise
 
