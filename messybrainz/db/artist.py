@@ -142,31 +142,20 @@ def link_artist_mbids_to_artist_credit_cluster_id(connection, cluster_id, artist
     """
 
     connection.execute(text("""
-        INSERT INTO artist_credit_redirect_array (artist_credit_cluster_id, artist_mbids_array)
+        INSERT INTO artist_credit_redirect (artist_credit_cluster_id, artist_mbids_array)
              VALUES (:cluster_id, array_sort(:artist_credit_mbids))
     """), {
         "cluster_id": cluster_id,
         "artist_credit_mbids": artist_credit_mbids,
     })
 
-    values = [{"cluster_id": cluster_id, "mbid": mbid} for mbid in artist_credit_mbids]
-
-    connection.execute(text("""
-        INSERT INTO artist_credit_redirect (artist_credit_cluster_id, artist_mbid)
-             VALUES (:cluster_id, :mbid)
-    """), values
-    )
-
 
 def truncate_artist_credit_cluster_and_redirect_tables():
-    """Truncates artis_credit_cluster, artist_credit_redirect, and
-       artist_credit_redirect_array tables.
-    """
+    """Truncates artis_credit_cluster and artist_credit_redirect table."""
 
     with db.engine.begin() as connection:
         connection.execute(text("""TRUNCATE TABLE artist_credit_cluster"""))
         connection.execute(text("""TRUNCATE TABLE artist_credit_redirect"""))
-        connection.execute(text("""TRUNCATE TABLE artist_credit_redirect_array"""))
 
 
 def insert_artist_credit_cluster(connection, cluster_id, artist_credit_gids):
@@ -229,7 +218,7 @@ def get_artist_cluster_id_using_artist_mbids(connection, artist_credit_mbids):
     # details check admin/sql/create_functions.sql
     gid = connection.execute(text("""
         SELECT artist_credit_cluster_id
-          FROM artist_credit_redirect_array
+          FROM artist_credit_redirect
          WHERE artist_mbids_array = array_sort(:artist_credit_mbids)
     """), {
         "artist_credit_mbids": artist_credit_mbids,
@@ -253,10 +242,10 @@ def fetch_artist_credits_left_to_cluster(connection):
                    FROM recording as r
                    JOIN recording_json AS rj
                      ON r.data = rj.id
-              LEFT JOIN artist_credit_redirect_array AS acra
-                     ON convert_json_array_to_sorted_uuid_array(rj.data -> 'artist_mbids') = acra.artist_mbids_array
+              LEFT JOIN artist_credit_redirect AS acr
+                     ON convert_json_array_to_sorted_uuid_array(rj.data -> 'artist_mbids') = acr.artist_mbids_array
                   WHERE rj.data ->> 'artist_mbids' IS NOT NULL
-                    AND acra.artist_mbids_array IS NULL
+                    AND acr.artist_mbids_array IS NULL
     """))
 
     return [r[0] for r in result]
@@ -322,7 +311,7 @@ def get_artist_mbids_using_msid(connection, artist_msid):
     # details check admin/sql/create_functions.sql
     mbids = connection.execute(text("""
         SELECT artist_mbids_array
-          FROM artist_credit_redirect_array
+          FROM artist_credit_redirect
          WHERE artist_credit_cluster_id = :cluster_id
     """), {
         "cluster_id": cluster_id,

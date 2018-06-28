@@ -215,7 +215,7 @@ class ArtistTestCase(DatabaseTestCase):
 
     def test_link_artist_mbids_to_artist_credit_cluster_id(self):
         """Tests if artist MBIDs are linked to correctly. Links are created in
-           artist_credit_redirect and artist_credit_redirect_array tables.
+           artist_credit_redirect table.
         """
 
         recording_1 = {
