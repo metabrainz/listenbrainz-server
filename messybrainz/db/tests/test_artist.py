@@ -169,7 +169,7 @@ class ArtistTestCase(DatabaseTestCase):
             self.assertSetEqual(set(artist_mbids), set(artist_mbids_fetched[3]))
 
 
-    def test_fetch_distinct_artist_credit_mbids(self):
+    def test_fetch_unclustered_distinct_artist_credit_mbids(self):
         """Tests if artist_credit MBIDs are fetched correctly."""
 
         msb_listens = self._load_test_data("recordings_for_testing_artist_clusters.json")
@@ -193,12 +193,12 @@ class ArtistTestCase(DatabaseTestCase):
         }
 
         with db.engine.begin() as connection:
-            artist_credit_mbids = artist.fetch_distinct_artist_credit_mbids(connection)
+            artist_credit_mbids = artist.fetch_unclustered_distinct_artist_credit_mbids(connection)
             artist_credit_mbids = {tuple(artist_mbids) for artist_mbids in artist_credit_mbids}
             self.assertSetEqual(artist_mbids_submitted, artist_credit_mbids)
 
             artist.create_artist_credit_clusters()
-            artist_credit_mbids = artist.fetch_distinct_artist_credit_mbids(connection)
+            artist_credit_mbids = artist.fetch_unclustered_distinct_artist_credit_mbids(connection)
             self.assertListEqual(artist_credit_mbids, [])
 
             recording_1 = {
@@ -208,7 +208,7 @@ class ArtistTestCase(DatabaseTestCase):
                 "artist_mbids": ["ff748426-8873-4725-bdc7-c2b18b510d41"],
             }
             submit_listens([recording_1])
-            artist_credit_mbids = artist.fetch_distinct_artist_credit_mbids(connection)
+            artist_credit_mbids = artist.fetch_unclustered_distinct_artist_credit_mbids(connection)
             self.assertEqual(len(artist_credit_mbids), 1)
             self.assertListEqual([[UUID("ff748426-8873-4725-bdc7-c2b18b510d41")]], artist_credit_mbids)
 
@@ -227,7 +227,7 @@ class ArtistTestCase(DatabaseTestCase):
         submit_listens([recording_1])
 
         with db.engine.begin() as connection:
-            artist_mbids = artist.fetch_distinct_artist_credit_mbids(connection)
+            artist_mbids = artist.fetch_unclustered_distinct_artist_credit_mbids(connection)
             gids = artist.fetch_unclustered_gids_for_artist_credit_mbids(connection, artist_mbids[0])
             artist.link_artist_mbids_to_artist_credit_cluster_id(connection, gids[0], artist_mbids[0])
             cluster_id = artist.get_artist_cluster_id_using_artist_mbids(connection, artist_mbids[0])
@@ -256,7 +256,7 @@ class ArtistTestCase(DatabaseTestCase):
         submit_listens([recording_1, recording_2])
 
         with db.engine.begin() as connection:
-            artist_mbids = artist.fetch_distinct_artist_credit_mbids(connection)
+            artist_mbids = artist.fetch_unclustered_distinct_artist_credit_mbids(connection)
             gids = artist.fetch_unclustered_gids_for_artist_credit_mbids(connection, artist_mbids[0])
             self.assertEqual(len(gids), 2)
             artist.insert_artist_credit_cluster(connection, gids[0], gids)

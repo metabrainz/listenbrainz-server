@@ -103,7 +103,7 @@ def fetch_and_store_artist_mbids_for_all_recording_mbids():
         return num_recording_mbids_processed, num_recording_mbids_added
 
 
-def fetch_distinct_artist_credit_mbids(connection):
+def fetch_unclustered_distinct_artist_credit_mbids(connection):
     """Fetch all the distinct artist MBIDs we have in recording_json table
        but don't have their corresponding MSIDs in artist_credit_cluster table.
 
@@ -338,7 +338,7 @@ def create_artist_credit_clusters_without_considering_anomalies(connection):
     clusters_modified = 0
     clusters_add_to_redirect = 0
     with db.engine.begin() as connection:
-        distinct_artist_credit_mbids = fetch_distinct_artist_credit_mbids(connection)
+        distinct_artist_credit_mbids = fetch_unclustered_distinct_artist_credit_mbids(connection)
         for artist_credit_mbids in distinct_artist_credit_mbids:
             gids = fetch_unclustered_gids_for_artist_credit_mbids(connection, artist_credit_mbids)
             if gids:
