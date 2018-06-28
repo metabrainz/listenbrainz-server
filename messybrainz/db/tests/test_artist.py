@@ -286,9 +286,6 @@ class ArtistTestCase(DatabaseTestCase):
         submit_listens([recording_1, recording_2])
 
         with db.engine.begin() as connection:
-            # Order of MBIDs matter here. It must be sorted. In artist.create_artist_credit_clusters
-            # we get artist_credit_mbids from artist.fetch_distinct_artist_credit_mbids which returns
-            # sorted array of MBIDs, so there it does not matter.
             gids = artist.fetch_unclustered_gids_for_artist_credit_mbids(connection, [
                         UUID("859d0860-d480-4efd-970c-c05d5f1776b8"), UUID("f82bcf78-5b69-4622-a5ef-73800768d9ac")
                     ])
