@@ -1,6 +1,6 @@
 
 import brainzutils.musicbrainz_db.recording as mb_recording
-
+import messybrainz.db.common as db_common
 from brainzutils import musicbrainz_db
 from brainzutils.musicbrainz_db.exceptions import NoDataFoundException
 from messybrainz import db
@@ -335,21 +335,13 @@ def create_artist_credit_clusters_without_considering_anomalies(connection):
         clusters_add_to_redirect (int): number of clusters added to redirect table.
     """
 
-    clusters_modified = 0
-    clusters_add_to_redirect = 0
-    with db.engine.begin() as connection:
-        distinct_artist_credit_mbids = fetch_unclustered_distinct_artist_credit_mbids(connection)
-        for artist_credit_mbids in distinct_artist_credit_mbids:
-            gids = fetch_unclustered_gids_for_artist_credit_mbids(connection, artist_credit_mbids)
-            if gids:
-                cluster_id = get_artist_cluster_id_using_artist_mbids(connection, artist_credit_mbids)
-                if not cluster_id:
-                    cluster_id = gids[0]
-                    link_artist_mbids_to_artist_credit_cluster_id(connection, cluster_id, artist_credit_mbids)
-                    clusters_add_to_redirect +=1
-                insert_artist_credit_cluster(connection, cluster_id, gids)
-                clusters_modified += 1
-    return clusters_modified, clusters_add_to_redirect
+    return db_common.create_entity_clusters_without_considering_anomalies(connection,
+        fetch_unclustered_distinct_artist_credit_mbids,
+        fetch_unclustered_gids_for_artist_credit_mbids,
+        get_artist_cluster_id_using_artist_mbids,
+        link_artist_mbids_to_artist_credit_cluster_id,
+        insert_artist_credit_cluster
+    )
 
 
 def create_artist_credit_clusters_for_anomalies(connection):
@@ -362,17 +354,12 @@ def create_artist_credit_clusters_for_anomalies(connection):
     Returns:
         clusters_add_to_redirect (int): number of clusters added to redirect table.
     """
-
-    clusters_add_to_redirect = 0
-    artist_credits_left = fetch_artist_credits_left_to_cluster(connection)
-    for artist_credit_mbids in artist_credits_left:
-        artist_gids = get_artist_gids_from_recording_json_using_mbids(connection, artist_credit_mbids)
-        cluster_ids = {get_cluster_id_using_msid(connection, artist_gid) for artist_gid in artist_gids}
-        for cluster_id in cluster_ids:
-            link_artist_mbids_to_artist_credit_cluster_id(connection, cluster_id, artist_credit_mbids)
-            clusters_add_to_redirect += 1
-
-    return clusters_add_to_redirect
+    return db_common.create_entity_clusters_for_anomalies(connection,
+        fetch_artist_credits_left_to_cluster,
+        get_artist_gids_from_recording_json_using_mbids,
+        get_cluster_id_using_msid,
+        link_artist_mbids_to_artist_credit_cluster_id
+    )
 
 
 def create_artist_credit_clusters():
@@ -380,11 +367,10 @@ def create_artist_credit_clusters():
 
     Returns:
         clusters_modified (int): number of clusters modified.
-        clusters_add_to_redirect (int): number of clusters added to redirect table.
+        clusters_added_to_redirect (int): number of clusters added to redirect table.
     """
 
-    with db.engine.begin() as connection:
-        clusters_modified, clusters_add_to_redirect = create_artist_credit_clusters_without_considering_anomalies(connection)
-        clusters_add_to_redirect += create_artist_credit_clusters_for_anomalies(connection)
-
-    return clusters_modified, clusters_add_to_redirect
+    return db.common.create_entity_clusters(
+        create_artist_credit_clusters_without_considering_anomalies,
+        create_artist_credit_clusters_for_anomalies,
+    )
