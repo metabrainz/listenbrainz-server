@@ -20,6 +20,7 @@ class SpotifyDomainTestCase(ServerTestCase):
                 last_updated=None,
                 active=True,
                 error_message=None,
+                latest_listened_at=None,
             )
 
     @mock.patch('listenbrainz.domain.spotify.db_spotify.get_user')
@@ -61,6 +62,7 @@ class SpotifyDomainTestCase(ServerTestCase):
             'last_updated': None,
             'active': True,
             'error_message': 'oops',
+            'latest_listened_at': None,
         }
 
         user = spotify.get_user(1)
@@ -100,6 +102,7 @@ class SpotifyDomainTestCase(ServerTestCase):
                 'last_updated': None,
                 'active': True,
                 'error_message': 'oops',
+                'latest_listened_at': None,
             },
             {
                 'user_id': 2,
@@ -110,6 +113,7 @@ class SpotifyDomainTestCase(ServerTestCase):
                 'last_updated': None,
                 'active': True,
                 'error_message': 'oops2',
+                'latest_listened_at': None,
             },
         ]
 
