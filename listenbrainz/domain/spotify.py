@@ -22,10 +22,13 @@ class Spotify:
     def get_spotipy_client(self):
         return spotipy.Spotify(auth=self.user_token)
 
-    def nice_last_updated(self):
-        if not self.last_updated:
-            return 'never'
-        return self.last_updated
+    @property
+    def last_updated_iso(self):
+        return self.last_updated.isoformat() + "Z"
+
+    @property
+    def latest_listened_at_iso(self):
+        return self.latest_listened_at.isoformat() + "Z"
 
     @property
     def token_expired(self):
