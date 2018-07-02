@@ -10,6 +10,7 @@ from sqlalchemy import text
 import subprocess
 import os
 import click
+import logging
 
 import messybrainz.default_config as config
 try:
@@ -174,13 +175,23 @@ def truncate_recording_artist_join_table():
 
 
 @cli.command()
-def create_artist_credit_clusters_for_mbids():
+@click.option("--verbose", "-v", is_flag=True, help="Print debug information.")
+def create_artist_credit_clusters_for_mbids(verbose=False):
     """Creates clusters for artist_credits using artist MBIDs present in
        recording_json table.
     """
+
+    if verbose:
+        logging.basicConfig(format='%(message)s', level=logging.DEBUG)
+    else:
+        logging.basicConfig(format='%(message)s', level=logging.INFO)
+    logging.info("Creating artist_credit clusters...")
+
     db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
     try:
+        logging.debug("=" * 80)
         clusters_modified, clusters_add_to_redirect = create_artist_credit_clusters()
+        logging.debug("=" * 80)
         print("Clusters modified: {0}.".format(clusters_modified))
         print("Clusters add to redirect table: {0}.".format(clusters_add_to_redirect))
         print ("Done!")
