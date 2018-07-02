@@ -1,4 +1,5 @@
 from messybrainz import db
+import logging
 
 
 def create_entity_clusters(create_without_anomalies, create_with_anomalies):
@@ -50,15 +51,21 @@ def create_entity_clusters_for_anomalies(connection,
         clusters_add_to_redirect (int): number of clusters added to redirect table.
     """
 
+    logging.debug("Creating clusters for anomalies...")
     clusters_add_to_redirect = 0
     entities_left = fetch_entities_left_to_cluster(connection)
     for entity_mbid in entities_left:
+        logging.debug("-" * 80)
+        logging.debug("Cluster MBIDs:\n\t{0}".format(entity_mbid))
         entity_gids = get_entity_gids_from_recording_json_using_mbids(connection, entity_mbid)
         cluster_ids = {get_cluster_id_using_msid(connection, entity_gid) for entity_gid in entity_gids}
+        logging.debug("Cluster IDs:")
         for cluster_id in cluster_ids:
             link_entity_mbid_to_entity_cluster_id(connection, cluster_id, entity_mbid)
+            logging.debug("\t{0}".format(cluster_id))
             clusters_add_to_redirect += 1
 
+    logging.debug("\nClusters added to redirect table: {0}.".format(clusters_add_to_redirect))
     return clusters_add_to_redirect
 
 
@@ -91,17 +98,27 @@ def create_entity_clusters_without_considering_anomalies(connection,
         clusters_added_to_redirect (int): number of clusters added to redirect table.
     """
 
+    logging.debug("\nCreating clusters without considering anomalies...")
     clusters_modified = 0
     clusters_added_to_redirect = 0
     distinct_entity_mbids = fetch_unclustered_entity_mbids(connection)
     for entity_mbids in distinct_entity_mbids:
+        logging.debug("-" * 80)
+        logging.debug("Cluster MBIDs:\n\t{0}".format(entity_mbids))
         gids = fetch_unclustered_gids_for_entity_mbids(connection, entity_mbids)
         if gids:
             cluster_id = get_entity_cluster_id_using_entity_mbids(connection, entity_mbids)
             if not cluster_id:
                 cluster_id = gids[0]
+                logging.debug("Cluster ID:\n\t{0}".format(cluster_id))
                 link_entity_mbids_to_entity_cluster_id(connection, cluster_id, entity_mbids)
                 clusters_added_to_redirect +=1
             insert_entity_cluster(connection, cluster_id, gids)
+            logging.debug("Cluster gids:")
+            for gid in gids:
+                logging.debug("\t{0}".format(gid))
             clusters_modified += 1
+    logging.debug("\nClusters modified: {0}.".format(clusters_modified))
+    logging.debug("Clusters added to redirect table: {0}.\n".format(clusters_added_to_redirect))
+
     return clusters_modified, clusters_added_to_redirect
