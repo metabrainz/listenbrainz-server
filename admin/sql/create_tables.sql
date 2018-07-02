@@ -18,9 +18,9 @@ ALTER TABLE artist_credit_cluster ADD CONSTRAINT artist_credit_cluster_uniq UNIQ
 
 CREATE TABLE artist_credit_redirect (
   artist_credit_cluster_id UUID NOT NULL, -- FK to artist_credit_cluster.cluster_id
-  artist_mbid              UUID NOT NULL
+  artist_mbids_array       UUID[] NOT NULL
 );
-ALTER TABLE artist_credit_redirect ADD CONSTRAINT artist_credit_redirect_uniq UNIQUE (artist_credit_cluster_id, artist_mbid);
+ALTER TABLE artist_credit_redirect ADD CONSTRAINT artist_credit_redirect_artist_mbids_array_uniq UNIQUE (artist_mbids_array);
 
 CREATE TABLE recording (
   id         SERIAL,
