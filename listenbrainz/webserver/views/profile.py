@@ -298,6 +298,8 @@ def connect_spotify():
     return render_template(
         'user/spotify.html',
         account=user,
+        last_updated=user.last_updated_iso,
+        latest_listened_at=user.latest_listened_at_iso,
         spotify_login_url=spotify_url
     )
 
