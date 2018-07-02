@@ -51,7 +51,7 @@ def fetch_unclustered_gids_for_release_mbid(connection, release_mbid):
     return [gid[0] for gid in gids]
 
 
-def fetch_distinct_release_mbids(connection):
+def fetch_unclustered_distinct_release_mbids(connection):
     """Fetch all the distinct release MBIDs we have in recording_json table
        but don't have their corresponding MSIDs in release_cluster table.
 
@@ -230,7 +230,7 @@ def create_release_clusters_without_considering_anomalies(connection):
     """
 
     return db_common.create_entity_clusters_without_considering_anomalies(connection,
-        fetch_distinct_release_mbids,
+        fetch_unclustered_distinct_release_mbids,
         fetch_unclustered_gids_for_release_mbid,
         get_release_cluster_id_using_release_mbid,
         link_release_mbid_to_release_msid,

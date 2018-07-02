@@ -3,7 +3,7 @@ from messybrainz import submit_listens_and_sing_me_a_sweet_song as submit_listen
 from messybrainz import db
 from messybrainz.db import data
 from messybrainz.db.testing import DatabaseTestCase
-from messybrainz.db.release import fetch_distinct_release_mbids,\
+from messybrainz.db.release import fetch_unclustered_distinct_release_mbids,\
                                     fetch_unclustered_gids_for_release_mbid,\
                                     link_release_mbid_to_release_msid,\
                                     get_release_cluster_id_using_release_mbid,\
@@ -48,7 +48,7 @@ class ReleaseTestCase(DatabaseTestCase):
         return msb_listens
 
 
-    def test_fetch_distinct_release_mbids(self):
+    def test_fetch_unclustered_distinct_release_mbids(self):
         """Tests if release_mbids are correctly fetched from recording_json table."""
 
         msb_listens = self._load_test_data('recordings_for_release_clusters.json')
@@ -62,7 +62,7 @@ class ReleaseTestCase(DatabaseTestCase):
             '801678aa-5d30-4342-8227-e9618f164cca',
         }
         with db.engine.begin() as connection:
-            release_mbids_fetched = fetch_distinct_release_mbids(connection)
+            release_mbids_fetched = fetch_unclustered_distinct_release_mbids(connection)
             self.assertEqual(len(release_mbids_fetched), 7)
             self.assertSetEqual(release_mbids_submitted, set(release_mbids_fetched))
 
