@@ -34,7 +34,7 @@
       {% endif %}
 
       {% if not account.last_updated %}
-        <p>We haven't gotten around to importing your listens yet, please come back later!</p>
+        <p>We haven't gotten around to importing your listens yet, please check back later!</p>
       {% else %}
       <p>We imported your listens <abbr class="timeago" title="{{last_updated}}">{{last_updated}}</abbr> and the last song we imported was listened to <abbr class="timeago" title="{{latest_listened_at}}">{{latest_listened_at}}</abbr>.</p>
       {% endif %}
