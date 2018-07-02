@@ -1,5 +1,7 @@
 from messybrainz import db
 from sqlalchemy import text
+import messybrainz.db.common as db_common
+
 
 def insert_release_cluster(connection, cluster_id, release_gids):
     """Creates new cluster in the release_cluster table.
@@ -227,21 +229,13 @@ def create_release_clusters_without_considering_anomalies(connection):
         clusters_add_to_redirect (int): number of clusters added to redirect table.
     """
 
-    clusters_modified = 0
-    clusters_add_to_redirect = 0
-    release_mbids = fetch_distinct_release_mbids(connection)
-    for release_mbid in release_mbids:
-        gids = fetch_unclustered_gids_for_release_mbid(connection, release_mbid)
-        if gids:
-            cluster_id = get_release_cluster_id_using_release_mbid(connection, release_mbid)
-            if not cluster_id:
-                cluster_id = gids[0]
-                link_release_mbid_to_release_msid(connection, cluster_id, release_mbid)
-                clusters_add_to_redirect +=1
-            insert_release_cluster(connection, cluster_id, gids)
-            clusters_modified += 1
-
-    return clusters_modified, clusters_add_to_redirect
+    return db_common.create_entity_clusters_without_considering_anomalies(connection,
+        fetch_distinct_release_mbids,
+        fetch_unclustered_gids_for_release_mbid,
+        get_release_cluster_id_using_release_mbid,
+        link_release_mbid_to_release_msid,
+        insert_release_cluster
+    )
 
 
 def create_release_clusters_for_anomalies(connection):
@@ -255,16 +249,12 @@ def create_release_clusters_for_anomalies(connection):
         clusters_add_to_redirect (int): number of clusters added to redirect table.
     """
 
-    clusters_add_to_redirect = 0
-    release_left = fetch_release_left_to_cluster(connection)
-    for release_mbid in release_left:
-        release_gids = get_release_gids_from_recording_json_using_mbid(connection, release_mbid)
-        cluster_ids = {get_cluster_id_using_msid(connection, release_gid) for release_gid in release_gids}
-        for cluster_id in cluster_ids:
-            link_release_mbid_to_release_msid(connection, cluster_id, release_mbid)
-            clusters_add_to_redirect += 1
-
-    return clusters_add_to_redirect
+    return db_common.create_entity_clusters_for_anomalies(connection,
+        fetch_release_left_to_cluster,
+        get_release_gids_from_recording_json_using_mbid,
+        get_cluster_id_using_msid,
+        link_release_mbid_to_release_msid
+    )
 
 
 def create_release_clusters():
@@ -275,10 +265,7 @@ def create_release_clusters():
         clusters_add_to_redirect (int): number of clusters added to redirect table.
     """
 
-    clusters_modified = 0
-    clusters_add_to_redirect = 0
-    with db.engine.begin() as connection:
-        clusters_modified, clusters_add_to_redirect = create_release_clusters_without_considering_anomalies(connection)
-        clusters_add_to_redirect += create_release_clusters_for_anomalies(connection)
-
-    return clusters_modified, clusters_add_to_redirect
+    return db.common.create_entity_clusters(
+        create_release_clusters_without_considering_anomalies,
+        create_release_clusters_for_anomalies,
+    )
