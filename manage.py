@@ -192,11 +192,11 @@ def create_artist_credit_clusters_for_mbids(verbose=False):
         logging.debug("=" * 80)
         clusters_modified, clusters_add_to_redirect = create_artist_credit_clusters()
         logging.debug("=" * 80)
-        print("Clusters modified: {0}.".format(clusters_modified))
-        print("Clusters add to redirect table: {0}.".format(clusters_add_to_redirect))
-        print ("Done!")
+        logging.info("Clusters modified: {0}.".format(clusters_modified))
+        logging.info("Clusters add to redirect table: {0}.".format(clusters_add_to_redirect))
+        logging.info("Done!")
     except Exception as error:
-        print("While creating artist_credit clusters. An error occured: {0}".format(error))
+        logging.error("While creating artist_credit clusters. An error occured: {0}".format(error))
         raise
 
 
@@ -204,13 +204,14 @@ def create_artist_credit_clusters_for_mbids(verbose=False):
 def truncate_artist_credit_cluster_and_redirect():
     """Truncate artist_credit_cluster and artist_credit_redirect table."""
 
+    logging.basicConfig(format='%(message)s', level=logging.INFO)
     db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
     try:
         truncate_artist_credit_cluster_and_redirect_tables()
-        print("artist_credit_cluster and artist_credit_redirect table truncated.")
+        logging.info("artist_credit_cluster and artist_credit_redirect table truncated.")
 
     except Exception as error:
-        print("An error occured while truncating artist_credit_cluster"
+        logging.error("An error occured while truncating artist_credit_cluster"
             "and artist_credit_redirect table: {0}".format(error)
         )
         raise
