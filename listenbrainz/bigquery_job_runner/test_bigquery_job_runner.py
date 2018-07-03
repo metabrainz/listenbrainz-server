@@ -23,6 +23,7 @@ import os
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import unittest
+import json
 
 from listenbrainz import stats
 from listenbrainz.db.testing import DatabaseTestCase
@@ -63,3 +64,18 @@ class BigQueryJobRunnerTestCase(DatabaseTestCase):
         # now that we've inserted valid data and 7 days haven't passed,
         # calling the function should return false
         self.assertFalse(self.sc.calculate_stats_for_user(user))
+
+    def test_callback_error_bigquery(self):
+        """ Tests that even if stats calculator errors out, the message gets acked.
+        """
+        self.sc.calculate_stats_for_user = MagicMock()
+        self.sc.calculate_stats_for_user.side_effect = Exception
+        self.sc.incoming_ch = MagicMock()
+
+        self.sc.callback(MagicMock(), MagicMock(), MagicMock(), json.dumps({
+            'type': 'user',
+            'musicbrainz_id': 'param',
+        }))
+
+        self.sc.calculate_stats_for_user.assert_called_once()
+        self.sc.incoming_ch.basic_ack.assert_called_once()
