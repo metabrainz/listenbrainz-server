@@ -122,7 +122,8 @@ def run_query(bigquery, query, parameters=None, dml=False):
         "query": query,
     }
 
-    while True:
+    retries = 5
+    while retries > 0:
         try:
             response = bigquery.jobs().query(
                 projectId=config.BIGQUERY_PROJECT_ID,
@@ -135,8 +136,21 @@ def run_query(bigquery, query, parameters=None, dml=False):
             logger.error(str(e))
             if dml and '400' in str(e):
                 time.sleep(DML_STREAMING_ROWS_DELAY)
+                retries -= 1
             else:
                 raise
+
+            if retries == 0:
+                raise BigQueryException("Couldn't run the query provided due to error: %s" % str(e))
+
+        except Exception as e:
+            logger.error(str(e))
+            retries -= 1
+            if retries == 0:
+                raise BigQueryException("Couldn't run the query provided due to error: %s" % str(e))
+
+    if retries == 0:
+        raise BigQueryException("Couldn't run the query provided")
 
     job_reference = response['jobReference']
 

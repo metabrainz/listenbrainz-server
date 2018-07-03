@@ -65,7 +65,12 @@ class BigQueryJobRunner:
 
         job_type = data.get('type', '')
         if job_type == 'user':
-            done = self.calculate_stats_for_user(data)
+            try:
+                done = self.calculate_stats_for_user(data)
+            except Exception as e:
+                self.log.error('Could not calculate stats for user %s: %s', data['musicbrainz_id'], str(e))
+                done = False
+
             if done:
                 self.redis.set(construct_stats_queue_key(data['musicbrainz_id']), 'done')
         elif job_type == 'delete.user':
@@ -126,7 +131,7 @@ class BigQueryJobRunner:
             self.log.error('Unable to calculate stats for user %s. :(', user['musicbrainz_id'])
             self.log.error('Error: %s', str(e))
             self.log.error('Giving up for now...')
-            raise
+            raise bigquery.BigQueryException('Error while calculating statistics for user %s: %s' % (user['musicbrainz_id'], str(e)))
 
         self.log.info('Inserting calculated stats for user %s into db', user['musicbrainz_id'])
         while True:
