@@ -32,9 +32,9 @@ CREATE TABLE recording (
 );
 
 CREATE TABLE recording_artist_join (
-  recording_mbid UUID NOT NULL,
-  artist_mbid UUID NOT NULL,
-  updated TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+  recording_mbid        UUID NOT NULL,
+  artist_mbids_array    UUID[] NOT NULL,
+  updated               TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE recording_cluster (
