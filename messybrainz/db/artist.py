@@ -38,15 +38,14 @@ def fetch_recording_mbids_not_in_recording_artist_join(connection):
         a list of those recording MBIDs.
     """
 
-    query = text("""SELECT DISTINCT rj.data ->> 'recording_mbid'
-                               FROM recording_json AS rj
-                          LEFT JOIN recording_artist_join AS raj
-                                 ON (rj.data ->> 'recording_mbid')::uuid = raj.recording_mbid
-                              WHERE rj.data ->> 'recording_mbid' IS NOT NULL
-                                AND raj.recording_mbid IS NULL
-    """)
-
-    result = connection.execute(query)
+    result = connection.execute(text("""
+        SELECT DISTINCT rj.data ->> 'recording_mbid'
+                   FROM recording_json AS rj
+              LEFT JOIN recording_artist_join AS raj
+                     ON (rj.data ->> 'recording_mbid')::uuid = raj.recording_mbid
+                  WHERE rj.data ->> 'recording_mbid' IS NOT NULL
+                    AND raj.recording_mbid IS NULL
+    """))
 
     return [mbid[0] for mbid in result]
 
@@ -55,8 +54,7 @@ def truncate_recording_artist_join():
     """Truncates the table recording_artist_join."""
 
     with db.engine.begin() as connection:
-        query = text("""TRUNCATE TABLE recording_artist_join""")
-        connection.execute(query)
+        connection.execute(text("""TRUNCATE TABLE recording_artist_join"""))
 
 
 def get_artist_mbids_for_recording_mbid(connection, recording_mbid):
@@ -65,12 +63,13 @@ def get_artist_mbids_for_recording_mbid(connection, recording_mbid):
        is returned.
     """
 
-    query = text("""SELECT artist_mbids_array
-                      FROM recording_artist_join
-                     WHERE recording_mbid = :recording_mbid
-    """)
-
-    result = connection.execute(query, {"recording_mbid": recording_mbid})
+    result = connection.execute(text("""
+        SELECT artist_mbids_array
+          FROM recording_artist_join
+         WHERE recording_mbid = :recording_mbid
+    """), {
+        "recording_mbid": recording_mbid
+    })
 
     if result.rowcount:
         return result.fetchone()['artist_mbids_array']
