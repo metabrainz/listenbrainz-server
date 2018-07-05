@@ -6,6 +6,7 @@ from brainzutils.musicbrainz_db.exceptions import NoDataFoundException
 from messybrainz import db
 from messybrainz.db import data
 from sqlalchemy import text
+from uuid import UUID
 
 
 def insert_artist_mbids(connection, recording_mbid, artist_mbids):
@@ -13,14 +14,14 @@ def insert_artist_mbids(connection, recording_mbid, artist_mbids):
         into the recording_artist_join table.
     """
 
-    query = text("""INSERT INTO recording_artist_join (recording_mbid, artist_mbid, updated)
-                         VALUES (:recording_mbid, :artist_mbid, now())""")
-
-    values = [
-        {"recording_mbid": recording_mbid, "artist_mbid": artist_mbid} for artist_mbid in artist_mbids
-    ]
-
-    connection.execute(query, values)
+    artist_mbids.sort()
+    connection.execute(text("""
+        INSERT INTO recording_artist_join (recording_mbid, artist_mbids_array, updated)
+             VALUES (:recording_mbid, :artist_mbids, now())
+    """), {
+        "recording_mbid": recording_mbid,
+        "artist_mbids": artist_mbids
+    })
 
 
 def fetch_artist_mbids(connection, recording_mbid):
@@ -28,7 +29,7 @@ def fetch_artist_mbids(connection, recording_mbid):
     """
 
     recording = mb_recording.get_recording_by_mbid(recording_mbid, includes=['artists'])
-    return [artist['id'] for artist in recording['artists']]
+    return [UUID(artist['id']) for artist in recording['artists']]
 
 
 def fetch_recording_mbids_not_in_recording_artist_join(connection):
@@ -64,7 +65,7 @@ def get_artist_mbids_for_recording_mbid(connection, recording_mbid):
        is returned.
     """
 
-    query = text("""SELECT artist_mbid
+    query = text("""SELECT artist_mbids_array
                       FROM recording_artist_join
                      WHERE recording_mbid = :recording_mbid
     """)
@@ -72,7 +73,7 @@ def get_artist_mbids_for_recording_mbid(connection, recording_mbid):
     result = connection.execute(query, {"recording_mbid": recording_mbid})
 
     if result.rowcount:
-        return [artist_mbid[0] for artist_mbid in result]
+        return result.fetchone()['artist_mbids_array']
     else:
         return None
 
