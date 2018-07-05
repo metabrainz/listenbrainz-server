@@ -176,49 +176,50 @@ def truncate_recording_artist_join_table():
 
 
 @cli.command()
-@click.option("--verbose", "-v", is_flag=True, help="Print debug information.")
+@click.option("--verbose", "-v", default=0, help="Print debug information for given verbose level(0,1,2).")
 def create_artist_credit_clusters_for_mbids(verbose=False):
     """Creates clusters for artist_credits using artist MBIDs present in
        recording_json table.
     """
 
-    if verbose:
-        logging.basicConfig(format='%(message)s', level=logging.DEBUG)
-    else:
+    if verbose == 1:
         logging.basicConfig(format='%(message)s', level=logging.INFO)
-    logging.info("Creating artist_credit clusters...")
+    elif verbose == 2:
+        logging.basicConfig(format='%(message)s', level=logging.DEBUG)
+
+    print("Creating artist_credit clusters...")
 
     db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
     try:
         logging.debug("=" * 80)
         clusters_modified, clusters_add_to_redirect = create_artist_credit_clusters()
         logging.debug("=" * 80)
-        logging.info("Clusters modified: {0}.".format(clusters_modified))
-        logging.info("Clusters add to redirect table: {0}.".format(clusters_add_to_redirect))
-        logging.info("Done!")
+        print("Clusters modified: {0}.".format(clusters_modified))
+        print("Clusters add to redirect table: {0}.".format(clusters_add_to_redirect))
+        print("Done!")
     except Exception as error:
-        logging.error("While creating artist_credit clusters. An error occured: {0}".format(error))
+        print("While creating artist_credit clusters. An error occured: {0}".format(error))
 
 
 @cli.command()
-@click.option("--verbose", "-v", is_flag=True, help="Print debug information.")
-def create_release_clusters_for_mbids(verbose=False):
+@click.option("--verbose", "-v", default=0, help="Print debug information for given verbose level(0,1,2).")
+def create_release_clusters_for_mbids(verbose=False, detail=False):
     """Creates clusters for release using release MBIDs present in
        recording_json table.
     """
 
-    if verbose:
-        logging.basicConfig(format='%(message)s', level=logging.DEBUG)
-    else:
+    if verbose == 1:
         logging.basicConfig(format='%(message)s', level=logging.INFO)
+    elif verbose == 2:
+        logging.basicConfig(format='%(message)s', level=logging.DEBUG)
 
-    logging.info("Creating release clusters...")
+    print("Creating release clusters...")
 
     db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
     try:
-        logging.debug("=" * 80)
+        logging.info("=" * 80)
         clusters_modified, clusters_add_to_redirect = release.create_release_clusters()
-        logging.debug("=" * 80)
+        logging.info("=" * 80)
         print("Clusters modified: {0}.".format(clusters_modified))
         print("Clusters add to redirect table: {0}.".format(clusters_add_to_redirect))
         print ("Done!")
