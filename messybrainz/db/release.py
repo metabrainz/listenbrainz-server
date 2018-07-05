@@ -217,6 +217,20 @@ def get_release_mbids_using_msid(connection, release_msid):
     return None
 
 
+def get_recordings_metadata_using_release_mbid(connection, mbid):
+    """Returns the recording Metadata from recording_json table using release MBID."""
+
+    recordings = connection.execute(text("""
+        SELECT recording_json.data
+          FROM recording_json
+         WHERE (data ->> 'release_mbid')::uuid = :mbid
+    """), {
+        "mbid": mbid,
+    })
+
+    return [recording[0] for recording in recordings]
+
+
 def create_release_clusters_without_considering_anomalies(connection):
     """Creates clusters for release MBIDs present in the recording_json table
        without considering anomalies.
@@ -234,7 +248,8 @@ def create_release_clusters_without_considering_anomalies(connection):
         fetch_unclustered_gids_for_release_mbid,
         get_release_cluster_id_using_release_mbid,
         link_release_mbid_to_release_msid,
-        insert_release_cluster
+        insert_release_cluster,
+        get_recordings_metadata_using_release_mbid
     )
 
 
@@ -253,7 +268,8 @@ def create_release_clusters_for_anomalies(connection):
         fetch_release_left_to_cluster,
         get_release_gids_from_recording_json_using_mbid,
         get_cluster_id_using_msid,
-        link_release_mbid_to_release_msid
+        link_release_mbid_to_release_msid,
+        get_recordings_metadata_using_release_mbid
     )
 
 

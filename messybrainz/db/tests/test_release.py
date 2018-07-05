@@ -14,7 +14,8 @@ from messybrainz.db.release import fetch_unclustered_distinct_release_mbids,\
                                     create_release_clusters,\
                                     get_release_gids_from_recording_json_using_mbid,\
                                     get_release_mbids_using_msid,\
-                                    create_release_clusters_for_anomalies
+                                    create_release_clusters_for_anomalies,\
+                                    get_recordings_metadata_using_release_mbid
 from uuid import UUID
 
 
@@ -405,3 +406,19 @@ class ReleaseTestCase(DatabaseTestCase):
             clusters_modified, clusters_add_to_redirect = create_release_clusters()
             self.assertEqual(clusters_modified, 0)
             self.assertEqual(clusters_add_to_redirect, 0)
+
+
+    def test_get_recordings_metadata_using_release_mbid(self):
+        """ Tests if recordings metadata is fetched correctly using release MBID. """
+
+        recording_1 = {
+            "artist": "Jay‐Z & Beyoncé",
+            "title": "'03 Bonnie & Clyde",
+            "recording_mbid": "5465ca86-3881-4349-81b2-6efbd3a59451",
+            "release_mbid": "2c5e4198-24cf-3c95-a16e-83be8e877dfa",
+            "release": "The Blueprint\u00b2: The Gift and The Curse",
+        }
+        submit_listens([recording_1])
+        with db.engine.begin() as connection:
+            recordings = get_recordings_metadata_using_release_mbid(connection, recording_1["release_mbid"])
+            self.assertDictEqual(recording_1, recordings[0])

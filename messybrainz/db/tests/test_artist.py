@@ -598,3 +598,20 @@ class ArtistTestCase(DatabaseTestCase):
             self.assertListEqual(artist_mbids, [
                 [UUID("164f0d73-1234-4e2c-8743-d77bf2191051"), UUID("c2e49f7a-cd6f-48ca-8596-b03614ea4fe8")]
             ])
+
+
+    def test_get_recordings_metadata_using_artist_mbids(self):
+        """ Tests if recordings metadata is fetched correctly using artist MBIDs. """
+
+        recording_1 = {
+            "artist": "Jay‐Z & Beyoncé",
+            "artist_mbids": ["859d0860-d480-4efd-970c-c05d5f1776b8", "f82bcf78-5b69-4622-a5ef-73800768d9ac"],
+            "recording_mbid": "5465ca86-3881-4349-81b2-6efbd3a59451",
+            "title": "'03 Bonnie and Clyde",
+        }
+        submit_listens([recording_1])
+        with db.engine.begin() as connection:
+            recordings = artist.get_recordings_metadata_using_artist_mbids(connection,
+                [UUID("859d0860-d480-4efd-970c-c05d5f1776b8"), UUID("f82bcf78-5b69-4622-a5ef-73800768d9ac")],
+            )
+            self.assertDictEqual(recording_1, recordings[0])

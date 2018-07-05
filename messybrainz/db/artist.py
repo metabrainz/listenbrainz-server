@@ -323,6 +323,22 @@ def get_artist_mbids_using_msid(connection, artist_msid):
     return None
 
 
+def get_recordings_metadata_using_artist_mbids(connection, mbids):
+    """Returns the recording Metadata from recording_json table using artist MBIDs."""
+
+    # convert_json_array_to_sorted_uuid_array is a custom function for implementation
+    # details check admin/sql/create_functions.sql
+    recordings = connection.execute(text("""
+        SELECT recording_json.data
+          FROM recording_json
+         WHERE convert_json_array_to_sorted_uuid_array(data -> 'artist_mbids') = :mbids
+    """), {
+        "mbids": mbids,
+    })
+
+    return [recording[0] for recording in recordings]
+
+
 def create_artist_credit_clusters_without_considering_anomalies(connection):
     """Creates cluster for artist_credit without considering anomalies (A single MSID
        pointing to multiple MBIDs arrays in artist_credit_redirect table).
@@ -340,7 +356,8 @@ def create_artist_credit_clusters_without_considering_anomalies(connection):
         fetch_unclustered_gids_for_artist_credit_mbids,
         get_artist_cluster_id_using_artist_mbids,
         link_artist_mbids_to_artist_credit_cluster_id,
-        insert_artist_credit_cluster
+        insert_artist_credit_cluster,
+        get_recordings_metadata_using_artist_mbids
     )
 
 
@@ -358,7 +375,8 @@ def create_artist_credit_clusters_for_anomalies(connection):
         fetch_artist_credits_left_to_cluster,
         get_artist_gids_from_recording_json_using_mbids,
         get_cluster_id_using_msid,
-        link_artist_mbids_to_artist_credit_cluster_id
+        link_artist_mbids_to_artist_credit_cluster_id,
+        get_recordings_metadata_using_artist_mbids
     )
 
 
