@@ -141,7 +141,7 @@ def truncate_recording_cluster_and_redirect():
 
 
 @cli.command()
-def fetch_and_store_artist_mbids(reset=False):
+def fetch_and_store_artist_mbids():
     """ Fetches artist MBIDs from the musicbrainz database for the recording MBIDs
         in the recording_json table submitted while submitting a listen. It fetches
         only the artist MBIDs for the recordings MBIDs which are not in recording_artist_join
@@ -177,7 +177,7 @@ def truncate_recording_artist_join_table():
 
 @cli.command()
 @click.option("--verbose", "-v", default=0, help="Print debug information for given verbose level(0,1,2).")
-def create_artist_credit_clusters_for_mbids(verbose=False):
+def create_artist_credit_clusters_for_mbids(verbose=0):
     """Creates clusters for artist_credits using artist MBIDs present in
        recording_json table.
     """
@@ -203,7 +203,7 @@ def create_artist_credit_clusters_for_mbids(verbose=False):
 
 @cli.command()
 @click.option("--verbose", "-v", default=0, help="Print debug information for given verbose level(0,1,2).")
-def create_release_clusters_for_mbids(verbose=False, detail=False):
+def create_release_clusters_for_mbids(verbose=0):
     """Creates clusters for release using release MBIDs present in
        recording_json table.
     """
