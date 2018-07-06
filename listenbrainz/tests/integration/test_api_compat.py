@@ -51,7 +51,7 @@ class APICompatTestCase(APICompatIntegrationTestCase):
             'INFLUX_HOST': current_app.config['INFLUX_HOST'],
             'INFLUX_PORT': current_app.config['INFLUX_PORT'],
             'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
-        })
+        }, self.app.logger)
 
     def test_record_listen_now_playing(self):
         """ Tests if listen of type 'nowplaying' is recorded correctly
