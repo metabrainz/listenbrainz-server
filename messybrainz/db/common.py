@@ -30,7 +30,8 @@ def create_entity_clusters_for_anomalies(connection,
                                         fetch_entities_left_to_cluster,
                                         get_entity_gids_from_recording_json_using_mbids,
                                         get_cluster_id_using_msid,
-                                        link_entity_mbid_to_entity_cluster_id):
+                                        link_entity_mbid_to_entity_cluster_id,
+                                        get_recordings_metadata_using_entity_mbid):
     """Creates entity clusters for the anomalies (A single MSID pointing
        to multiple MBIDs in entity_redirect table).
 
@@ -51,21 +52,30 @@ def create_entity_clusters_for_anomalies(connection,
         clusters_add_to_redirect (int): number of clusters added to redirect table.
     """
 
-    logging.debug("Creating clusters for anomalies...")
+    logger = logging.getLogger(__name__)
+    logger_level = logger.getEffectiveLevel()
+
+    logger.info("Creating clusters for anomalies...")
     clusters_add_to_redirect = 0
     entities_left = fetch_entities_left_to_cluster(connection)
     for entity_mbid in entities_left:
-        logging.debug("-" * 80)
-        logging.debug("Cluster MBIDs:\n\t{0}".format(entity_mbid))
         entity_gids = get_entity_gids_from_recording_json_using_mbids(connection, entity_mbid)
         cluster_ids = {get_cluster_id_using_msid(connection, entity_gid) for entity_gid in entity_gids}
-        logging.debug("Cluster IDs:")
         for cluster_id in cluster_ids:
             link_entity_mbid_to_entity_cluster_id(connection, cluster_id, entity_mbid)
-            logging.debug("\t{0}".format(cluster_id))
             clusters_add_to_redirect += 1
+            logger.info("=" * 80)
+            logger.info("Cluster ID: {0}\n".format(cluster_id))
+            logger.info("Recordings:")
+            if logger_level >= logging.DEBUG:
+                recordings = get_recordings_metadata_using_entity_mbid(connection, entity_mbid)
+                if logger_level == logging.INFO:
+                    formatted_rec = _format_recordings(recordings)
+                else:
+                    formatted_rec = _format_recordings(recordings, uuids=True)
+                logger.info("{0}".format(formatted_rec))
 
-    logging.debug("\nClusters added to redirect table: {0}.".format(clusters_add_to_redirect))
+    logger.info("\nClusters added to redirect table: {0}.".format(clusters_add_to_redirect))
     return clusters_add_to_redirect
 
 
@@ -74,7 +84,8 @@ def create_entity_clusters_without_considering_anomalies(connection,
                                                         fetch_unclustered_gids_for_entity_mbids,
                                                         get_entity_cluster_id_using_entity_mbids,
                                                         link_entity_mbids_to_entity_cluster_id,
-                                                        insert_entity_cluster):
+                                                        insert_entity_cluster,
+                                                        get_recordings_metadata_using_entity_mbid):
     """Creates cluster for entity without considering anomalies (A single MSID pointing
        to multiple MBIDs in entity_redirect table).
 
@@ -98,27 +109,76 @@ def create_entity_clusters_without_considering_anomalies(connection,
         clusters_added_to_redirect (int): number of clusters added to redirect table.
     """
 
-    logging.debug("\nCreating clusters without considering anomalies...")
+    logger = logging.getLogger(__name__)
+    logger_level = logger.getEffectiveLevel()
+
+    logger.info("\nCreating clusters without considering anomalies...")
     clusters_modified = 0
     clusters_added_to_redirect = 0
     distinct_entity_mbids = fetch_unclustered_entity_mbids(connection)
     for entity_mbids in distinct_entity_mbids:
-        logging.debug("-" * 80)
-        logging.debug("Cluster MBIDs:\n\t{0}".format(entity_mbids))
         gids = fetch_unclustered_gids_for_entity_mbids(connection, entity_mbids)
         if gids:
             cluster_id = get_entity_cluster_id_using_entity_mbids(connection, entity_mbids)
             if not cluster_id:
                 cluster_id = gids[0]
-                logging.debug("Cluster ID:\n\t{0}".format(cluster_id))
                 link_entity_mbids_to_entity_cluster_id(connection, cluster_id, entity_mbids)
                 clusters_added_to_redirect +=1
             insert_entity_cluster(connection, cluster_id, gids)
-            logging.debug("Cluster gids:")
-            for gid in gids:
-                logging.debug("\t{0}".format(gid))
             clusters_modified += 1
-    logging.debug("\nClusters modified: {0}.".format(clusters_modified))
-    logging.debug("Clusters added to redirect table: {0}.\n".format(clusters_added_to_redirect))
+            logger.info("=" * 80)
+            logger.info("Cluster ID: {0}\n".format(cluster_id))
+            logger.info("Number of entity added to this cluster: {0}.\n".format(len(gids)))
+            logger.info("Recordings:")
+            if logger_level >= logging.DEBUG:
+                recordings = get_recordings_metadata_using_entity_mbid(connection, entity_mbids)
+                if logger_level == logging.INFO:
+                    formatted_rec = _format_recordings(recordings)
+                else:
+                    formatted_rec = _format_recordings(recordings, uuids=True)
+                logger.info("{0}".format(formatted_rec))
+    logger.info("\nClusters modified: {0}.".format(clusters_modified))
+    logger.info("Clusters added to redirect table: {0}.\n".format(clusters_added_to_redirect))
 
     return clusters_modified, clusters_added_to_redirect
+
+
+def _format_recordings(recordings, uuids=False):
+    """ Returns string of formatted recordings in a human readable format.
+            artist: <artist name>,
+            release: <release title>,
+            title: <recording title>,
+            artist_mbids : <artist_mbids>,
+            recording_mbids: <recording_mbids>,
+            release_mbids: <release_mbids>
+    """
+
+    formatted_recordings = []
+    for recording in recordings:
+        rec_dict = {
+            "artist" : recording["artist"],
+            "title" : recording["title"],
+            "release": recording.get("release", "")
+        }
+        if uuids:
+            rec_dict["artist_mbids"] = recording.get("artist_mbids", "")
+            rec_dict["recording_mbid"] = recording.get("recording_mbid", "")
+            rec_dict["release_mbid"] = recording.get("release_mbid", "")
+
+        formatted_recordings.append(rec_dict)
+
+    rec_str = ""
+    for rec in formatted_recordings:
+        rec_str += "\nartist: {0}\nrelease: {1}\ntitle: {2}\n".format(rec["artist"],
+                                                                rec.get("release", ""),
+                                                                rec["title"])
+        if uuids:
+            artist_mbids_str = ', '.join(rec.get("artist_mbids"))
+            rec_str += "artist_mbids: {0}\nrecording_mbid: {1}\nrelease_mbid: {2}\n".format(
+                                                                artist_mbids_str,
+                                                                rec.get("recording_mbid"),
+                                                                rec.get("release_mbid")
+            )
+        rec_str += "-" * 80
+
+    return rec_str
