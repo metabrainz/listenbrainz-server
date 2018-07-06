@@ -32,19 +32,12 @@ import tempfile
 import time
 
 from datetime import datetime
+from flask import current_app
 from listenbrainz import DUMP_LICENSE_FILE_PATH
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.utils import create_path, log_ioerrors
 
 from listenbrainz import config
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
 
 # this dict contains the tables dumped in public dump as keys
 # and a tuple of columns that should be dumped as values
@@ -138,54 +131,54 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
             a tuple: (path to private dump, path to public dump)
     """
 
-    logger.info('Beginning dump of PostgreSQL database...')
-    logger.info('dump path: %s', location)
+    current_app.logger.info('Beginning dump of PostgreSQL database...')
+    current_app.logger.info('dump path: %s', location)
 
 
-    logger.info('Creating dump of private data...')
+    current_app.logger.info('Creating dump of private data...')
     try:
         private_dump = create_private_dump(location, dump_time, threads)
     except IOError as e:
-        log_ioerrors(logger, e)
-        logger.info('Removing created files and giving up...')
+        current_app.logger.critical('IOError while creating private dump: %s', str(e), exc_info=True)
+        current_app.logger.info('Removing created files and giving up...')
         shutil.rmtree(location)
         return
     except Exception as e:
-        logger.error('Unable to create private db dump due to error %s', str(e))
-        logger.info('Removing created files and giving up...')
+        current_app.logger.critical('Unable to create private db dump due to error %s', str(e), exc_info=True)
+        current_app.logger.info('Removing created files and giving up...')
         shutil.rmtree(location)
         return
-    logger.info('Dump of private data created at %s!', private_dump)
+    current_app.logger.info('Dump of private data created at %s!', private_dump)
 
-    logger.info('Creating dump of public data...')
+    current_app.logger.info('Creating dump of public data...')
     try:
         public_dump = create_public_dump(location, dump_time, threads)
     except IOError as e:
-        log_ioerrors(logger, e)
-        logger.info('Removing created files and giving up...')
+        current_app.logger.critical('IOError while creating public dump: %s', str(e), exc_info=True)
+        current_app.logger.info('Removing created files and giving up...')
         shutil.rmtree(location)
         return
     except Exception as e:
-        logger.error('Unable to create public dump due to error %s', str(e))
-        logger.info('Removing created files and giving up...')
+        current_app.logger.critical('Unable to create public dump due to error %s', str(e), exc_info=True)
+        current_app.logger.info('Removing created files and giving up...')
         shutil.rmtree(location)
         return
 
-    logger.info('Dump of public data created at %s!', public_dump)
+    current_app.logger.info('Dump of public data created at %s!', public_dump)
 
 
-    logger.info('Creating a new entry in the data_dump table...')
+    current_app.logger.info('Creating a new entry in the data_dump table...')
     while True:
         try:
             dump_id = add_dump_entry(dump_time.strftime('%s'))
             break
         except Exception as e:
-            logger.error('Error while adding dump entry: %s', str(e))
+            current_app.logger.warn('Error while adding dump entry: %s, trying again...', str(e), exc_info=True)
             time.sleep(3)
 
-    logger.info('New entry with id %d added to data_dump table!', dump_id)
+    current_app.logger.info('New entry with id %d added to data_dump table!', dump_id)
 
-    logger.info('ListenBrainz PostgreSQL data dump created at %s!', location)
+    current_app.logger.info('ListenBrainz PostgreSQL data dump created at %s!', location)
     return private_dump, public_dump
 
 
@@ -235,10 +228,10 @@ def _create_dump(location, dump_type, tables, dump_time, threads=DUMP_DEFAULT_TH
                 tar.add(DUMP_LICENSE_FILE_PATH,
                         arcname=os.path.join(archive_name, "COPYING"))
             except IOError as e:
-                logger.error('IOError while adding dump metadata...')
+                current_app.logger.error('IOError while adding dump metadata: %s', str(e), exc_info=True)
                 raise
             except Exception as e:
-                logger.error('Exception while adding dump metadata: %s', str(e))
+                current_app.logger.error('Exception while adding dump metadata: %s', str(e), exc_info=True)
                 raise
 
 
@@ -258,10 +251,10 @@ def _create_dump(location, dump_type, tables, dump_time, threads=DUMP_DEFAULT_TH
                                 table_name=table,
                             )
                         except IOError as e:
-                            logger.error('IOError while copying table %s', table)
+                            current_app.logger.error('IOError while copying table %s', table, exc_info=True)
                             raise
                         except Exception as e:
-                            logger.error('Error while copying table %s: %s', table, str(e))
+                            current_app.logger.error('Error while copying table %s: %s', table, str(e), exc_info=True)
                             raise
                     transaction.rollback()
 
@@ -373,24 +366,24 @@ def import_postgres_dump(private_dump_archive_path=None, public_dump_archive_pat
     """
 
     if private_dump_archive_path:
-        logger.info('Importing private dump %s...', private_dump_archive_path)
+        current_app.logger.info('Importing private dump %s...', private_dump_archive_path)
         try:
             _import_dump(private_dump_archive_path, 'private', PRIVATE_TABLES, threads)
-            logger.info('Import of private dump %s done!', private_dump_archive_path)
+            current_app.logger.info('Import of private dump %s done!', private_dump_archive_path)
         except IOError as e:
-            log_ioerrors(logger, e)
+            current_app.logger.critical('IOError while importing private dump: %s', str(e), exc_info=True)
             raise
         except SchemaMismatchException as e:
-            logger.error('SchemaMismatchException: %s', str(e))
+            current_app.logger.critical('SchemaMismatchException: %s', str(e), exc_info=True)
             raise
         except Exception as e:
-            logger.error('Error while importing private dump: %s', str(e))
+            current_app.logger.critical('Error while importing private dump: %s', str(e), exc_info=True)
             raise
-        logger.info('Private dump %s imported!', private_dump_archive_path)
+        current_app.logger.info('Private dump %s imported!', private_dump_archive_path)
 
 
     if public_dump_archive_path:
-        logger.info('Importing public dump %s...', public_dump_archive_path)
+        current_app.logger.info('Importing public dump %s...', public_dump_archive_path)
 
         tables_to_import = PUBLIC_TABLES.copy()
         if private_dump_archive_path:
@@ -401,17 +394,17 @@ def import_postgres_dump(private_dump_archive_path=None, public_dump_archive_pat
 
         try:
             _import_dump(public_dump_archive_path, 'public', tables_to_import, threads)
-            logger.info('Import of Public dump %s done!', public_dump_archive_path)
+            current_app.logger.info('Import of Public dump %s done!', public_dump_archive_path)
         except IOError as e:
-            log_ioerrors(logger, e)
+            current_app.logger.critical('IOError while importing public dump: %s', str(e), exc_info=True)
             raise
         except SchemaMismatchException as e:
-            logger.error('SchemaMismatchException: %s', str(e))
+            current_app.logger.critical('SchemaMismatchException: %s', str(e), exc_info=True)
             raise
         except Exception as e:
-            logger.error('Error while importing public dump: %s', str(e))
+            current_app.logger.critical('Error while importing public dump: %s', str(e), exc_info=True)
             raise
-        logger.info('Public dump %s imported!', public_dump_archive_path)
+        current_app.logger.info('Public dump %s imported!', public_dump_archive_path)
 
 
 
@@ -445,28 +438,26 @@ def _import_dump(archive_path, dump_type, tables, threads=DUMP_DEFAULT_THREAD_CO
                                         'Please, get the latest version of the dump.'
                                         % (db.SCHEMA_VERSION, schema_seq))
                     else:
-                        logger.info('Schema version verified.')
+                        current_app.logger.info('Schema version verified.')
 
                 else:
                     if file_name in tables:
-                        logger.info('Importing data into %s table...', file_name)
+                        current_app.logger.info('Importing data into %s table...', file_name)
                         try:
                             cursor.copy_from(tar.extractfile(member), '%s' % file_name,
                                              columns=tables[file_name])
                             connection.commit()
                         except IOError as e:
-                            logger.error('IOError while extracting table %s: %s', file_name, str(e))
+                            current_app.logger.critical('IOError while extracting table %s: %s', file_name, str(e), exc_info=True)
                             raise
                         except Exception as e:
-                            logger.error('Exception while importing table %s', file_name)
-                            logger.error(str(e))
+                            current_app.logger.critical('Exception while importing table %s: %s', file_name, str(e), exc_info=True)
                             raise
 
-                        logger.info('Imported table %s', file_name)
+                        current_app.logger.info('Imported table %s', file_name)
     finally:
         connection.close()
-
-    pxz.stdout.close()
+        pxz.stdout.close()
 
 
 class SchemaMismatchException(Exception):

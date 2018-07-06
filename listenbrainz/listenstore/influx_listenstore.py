@@ -9,6 +9,7 @@ import time
 import shutil
 import ujson
 import uuid
+import json
 
 from brainzutils import cache
 from collections import defaultdict
@@ -45,8 +46,8 @@ class InfluxListenStore(ListenStore):
     TOTAL_LISTEN_COUNT_CACHE_TIME = 5 * 60
     USER_LISTEN_COUNT_CACHE_TIME = 10 * 60  # in seconds. 15 minutes
 
-    def __init__(self, conf):
-        ListenStore.__init__(self, conf)
+    def __init__(self, conf, logger):
+        super(InfluxListenStore, self).__init__(logger)
         self.influx = InfluxDBClient(host=conf['INFLUX_HOST'], port=conf['INFLUX_PORT'], database=conf['INFLUX_DB_NAME'])
         # Initialize brainzutils cache
         init_cache(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], namespace=conf['REDIS_NAMESPACE'])
@@ -74,7 +75,7 @@ class InfluxListenStore(ListenStore):
         try:
             results = self.influx.query('SELECT count(*) FROM ' + get_escaped_measurement_name(user_name))
         except (InfluxDBServerError, InfluxDBClientError) as e:
-            self.log.error("Cannot query influx: %s" % str(e))
+            self.log.error("Cannot query influx: %s" % str(e), exc_info=True)
             raise
 
         # get the number of listens from the json
@@ -100,7 +101,7 @@ class InfluxListenStore(ListenStore):
         try:
             results = self.influx.query(query)
         except Exception as err:
-            self.log.error("Cannot query influx: %s" % str(err))
+            self.log.error("Cannot query influx: %s" % str(err), exc_info=True)
             raise
 
         for result in results.get_points(measurement=measurement):
@@ -112,7 +113,7 @@ class InfluxListenStore(ListenStore):
         try:
             results = self.influx.query(query)
         except Exception as err:
-            self.log.error("Cannot query influx: %s" % str(err))
+            self.log.error("Cannot query influx: %s" % str(err), exc_info=True)
             raise
 
         for result in results.get_points(measurement=measurement):
@@ -138,7 +139,7 @@ class InfluxListenStore(ListenStore):
                                         ORDER BY time DESC
                                            LIMIT 1""" % (COUNT_MEASUREMENT_NAME, TIMELINE_COUNT_MEASUREMENT))
         except (InfluxDBServerError, InfluxDBClientError) as err:
-            self.log.error("Cannot query influx: %s" % str(err))
+            self.log.error("Cannot query influx: %s" % str(err), exc_info=True)
             raise
 
         try:
@@ -155,7 +156,7 @@ class InfluxListenStore(ListenStore):
                                             FROM "%s"
                                            WHERE time > %s""" % (COUNT_MEASUREMENT_NAME, TEMP_COUNT_MEASUREMENT, get_influx_query_timestamp(timestamp)))
         except (InfluxDBServerError, InfluxDBClientError) as err:
-            self.log.error("Cannot query influx: %s" % str(err))
+            self.log.error("Cannot query influx: %s" % str(err), exc_info=True)
             raise
 
         try:
@@ -204,7 +205,7 @@ class InfluxListenStore(ListenStore):
             submit.append(listen.to_influx(quote(listen.user_name)))
 
         if not self.influx.write_points(submit, time_precision='s'):
-            self.log.error("Cannot write data to influx. (write_points returned False)")
+            self.log.error("Cannot write data to influx. (write_points returned False), data=%s", json.dumps(submit, indent=3))
 
         # If we reach this point, we were able to write the listens to the InfluxListenStore.
         # So update the listen counts of the users cached in brainzutils cache.
@@ -234,7 +235,7 @@ class InfluxListenStore(ListenStore):
                 if not self.influx.write_points(submit):
                     self.log.error("Cannot write listen cound to influx. (write_points returned False)")
             except (InfluxDBServerError, InfluxDBClientError, ValueError) as err:
-                self.log.error("Cannot write data to influx: %s" % str(err))
+                self.log.error("Cannot write data to influx: %s, data: %s", str(err), json.dumps(submit, indent=3), exc_info=True)
                 raise
 
     def update_listen_counts(self):
@@ -249,7 +250,7 @@ class InfluxListenStore(ListenStore):
                                         ORDER BY time DESC
                                            LIMIT 1""" % (COUNT_MEASUREMENT_NAME, TIMELINE_COUNT_MEASUREMENT))
         except (InfluxDBServerError, InfluxDBClientError) as err:
-            self.log.error("Cannot query influx: %s" % str(err))
+            self.log.error("Cannot query influx: %s" % str(err), exc_info=True)
             raise
 
         try:
@@ -267,7 +268,7 @@ class InfluxListenStore(ListenStore):
                                         ORDER BY time DESC
                                            LIMIT 1""" % (COUNT_MEASUREMENT_NAME, TEMP_COUNT_MEASUREMENT))
         except (InfluxDBServerError, InfluxDBClientError) as err:
-            self.log.error("Cannot query influx: %s" % str(err))
+            self.log.error("Cannot query influx: %s" % str(err), exc_info=True)
             raise
 
         try:
@@ -283,7 +284,7 @@ class InfluxListenStore(ListenStore):
                                            WHERE time > %d and time <= %d""" % (COUNT_MEASUREMENT_NAME, TEMP_COUNT_MEASUREMENT,
                                        convert_python_time_to_nano_int(start_timestamp), convert_python_time_to_nano_int(end_timestamp)))
         except (InfluxDBServerError, InfluxDBClientError) as err:
-            self.log.error("Cannot query influx: %s" % str(err))
+            self.log.error("Cannot query influx: %s" % str(err), exc_info=True)
             raise
 
         try:
@@ -307,9 +308,9 @@ class InfluxListenStore(ListenStore):
 
         try:
             if not self.influx.write_points(submit):
-                self.log.error("Cannot write data to influx. (write_points returned False)")
+                self.log.error("Cannot write data to influx. (write_points returned False), data: %s", json.dumps(submit, indent=3))
         except (InfluxDBServerError, InfluxDBClientError, ValueError) as err:
-            self.log.error("Cannot update listen counts in influx: %s" % str(err))
+            self.log.error("Cannot update listen counts in influx: %s" % str(err), exc_info=True)
             raise
 
     def fetch_listens_from_storage(self, user_name, from_ts, to_ts, limit, order):
@@ -334,7 +335,7 @@ class InfluxListenStore(ListenStore):
         try:
             results = self.influx.query(query)
         except Exception as err:
-            self.log.error("Cannot query influx: %s" % str(err))
+            self.log.error("Cannot query influx while getting listens for user: %s: %s", user_name, str(err), exc_info=True)
             return []
 
         listens = []
@@ -383,8 +384,7 @@ class InfluxListenStore(ListenStore):
                     ))
                     break
                 except Exception as e:
-                    self.log.error('Error while getting listens for user %s', user['musicbrainz_id'])
-                    self.log.error(str(e))
+                    self.log.error('Error while getting listens to dump for user %s: %s', user['musicbrainz_id'], str(e), exc_info=True)
                     time.sleep(3)
 
             rows_added = 0
@@ -396,11 +396,10 @@ class InfluxListenStore(ListenStore):
                     bytes_written += fileobj.write('\n')
                     rows_added += 1
                 except IOError as e:
-                    log_ioerrors(self.log, e)
+                    self.log.critical('IOError while writing listens into file for user %s', username, exc_info=True)
                     raise
                 except Exception as e:
-                    self.log.error('Exception while creating json for user: %s', user['musicbrainz_id'])
-                    self.log.error(str(e))
+                    self.log.error('Exception while creating json for user %s: %s', user['musicbrainz_id'], str(e), exc_info=True)
                     raise
 
             listen_count += rows_added
@@ -469,10 +468,10 @@ class InfluxListenStore(ListenStore):
                             arcname=os.path.join(archive_name, 'COPYING'))
 
                 except IOError as e:
-                    log_ioerrors(self.log, e)
+                    self.log.critical('IOError while writing metadata dump files: %s', str(e), exc_info=True)
                     raise
                 except Exception as e:
-                    self.log.error('Exception while adding dump metadata: %s', str(e))
+                    self.log.error('Exception while adding dump metadata: %s', str(e), exc_info=True)
                     raise
 
                 listens_path = os.path.join(temp_dir, 'listens')
@@ -524,10 +523,10 @@ class InfluxListenStore(ListenStore):
                     tar.add(index_path,
                             arcname=os.path.join(archive_name, 'index.json'))
                 except IOError as e:
-                    log_ioerrors(self.log, e)
+                    self.log.critical('IOError while writing index.json to archive: %s', str(e), exc_info=True)
                     raise
                 except Exception as e:
-                    self.log.error('Exception while adding index file to archive: %s', str(e))
+                    self.log.error('Exception while adding index file to archive: %s', str(e), exc_info=True)
                     raise
 
                 # remove the temporary directory
@@ -650,8 +649,8 @@ class InfluxListenStore(ListenStore):
         """
 
         while not self.influx.write_points(points, time_precision='s'):
-            self.log.error('Error while writing listens to influx, '
-                'write_points returned False')
+            self.log.critical('Error while writing listens to influx, '
+                'write_points returned False, data %s', json.dumps(points, indent=3))
             time.sleep(3)
 
 
@@ -675,13 +674,13 @@ class InfluxListenStore(ListenStore):
                 if 'measurement not found' in e.content:
                     return
                 else:
-                    self.log.error('Error in influx client while dropping user %s: %s', musicbrainz_id, str(e))
+                    self.log.error('Error in influx client while dropping user %s: %s', musicbrainz_id, str(e), exc_info=True)
                     time.sleep(3)
             except InfluxDBServerError as e:
-                self.log.error('Error in influx server while dropping user %s: %s', musicbrainz_id, str(e))
+                self.log.error('Error in influx server while dropping user %s: %s', musicbrainz_id, str(e), exc_info=True)
                 time.sleep(3)
             except Exception as e:
-                self.log.error('Error while trying to drop user %s: %s', musicbrainz_id, str(e))
+                self.log.error('Error while trying to drop user %s: %s', musicbrainz_id, str(e), exc_info=True)
                 time.sleep(3)
         else:
             raise InfluxListenStoreException("Couldn't delete user with MusicBrainz ID: %s" % musicbrainz_id)
