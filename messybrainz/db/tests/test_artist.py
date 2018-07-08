@@ -40,6 +40,34 @@ class ArtistTestCase(DatabaseTestCase):
         return msb_listens
 
 
+    def _add_mbids_to_recording_artist_join(self):
+        """ Adds artist MBIDs to recording_artist_join table for recording MBIDs."""
+
+        recording_mbids_submitted = ["5465ca86-3881-4349-81b2-6efbd3a59451",
+            "9475f8ef-e785-4b9f-a8c2-03ceb817553e",
+            "cad174ad-d683-4858-a205-7bdc4175fff7",
+            "6ba092ae-aaf7-4154-b987-9eb9d05f8616",
+            "9ed38583-437f-4186-8183-9c31ffa2c116",
+        ]
+
+        artist_mbids_fetched = [
+            ["859d0860-d480-4efd-970c-c05d5f1776b8", "f82bcf78-5b69-4622-a5ef-73800768d9ac"],
+            ["f82bcf78-5b69-4622-a5ef-73800768d9ac"],
+            ["f82bcf78-5b69-4622-a5ef-73800768d9ac"],
+            ["bc1b5c95-e6d6-46b5-957a-5e8908b02c1e"],
+            ["5cfeec75-f6e2-439c-946d-5317334cdc6c"],
+        ]
+
+        artist_mbids_fetched = [
+            [UUID(artist_mbid) for artist_mbid in artist_mbids]
+            for artist_mbids in artist_mbids_fetched
+        ]
+
+        with db.engine.begin() as connection:
+            for recording_mbid, artist_mbids in zip(recording_mbids_submitted, artist_mbids_fetched):
+                artist.insert_artist_mbids(connection, recording_mbid, artist_mbids)
+
+
     @patch('messybrainz.db.artist.fetch_artist_mbids')
     def test_fetch_recording_mbids_not_in_recording_artist_join(self, mock_fetch_artist_mbids):
         """Tests if recording MBIDs that are not in recording_artist_join table
@@ -624,3 +652,359 @@ class ArtistTestCase(DatabaseTestCase):
                 [UUID("859d0860-d480-4efd-970c-c05d5f1776b8"), UUID("f82bcf78-5b69-4622-a5ef-73800768d9ac")],
             )
             self.assertDictEqual(recording_1, recordings[0])
+
+
+    def test_fetch_unclustered_artist_mbids_using_recording_artist_join(self):
+        """ Tests if artist MBIDs are fetched correctly using recording_artist_join table."""
+
+        self._add_mbids_to_recording_artist_join()
+        msb_listens = self._load_test_data("recordings_for_clustering_using_fetched_artist_mbids.json")
+        submit_listens(msb_listens)
+        # Create clusters using already present artist MBIDs in recordings
+        artist.create_artist_credit_clusters()
+
+        # Distinct artist MBIDs for Jay-Z, Jay\u2010Z & Beyonc\u00e9, and Lil’ Kim
+        artist_mbids_submitted = [
+                ["859d0860-d480-4efd-970c-c05d5f1776b8", "f82bcf78-5b69-4622-a5ef-73800768d9ac"],
+                ["f82bcf78-5b69-4622-a5ef-73800768d9ac"],
+                ["bc1b5c95-e6d6-46b5-957a-5e8908b02c1e"],
+        ]
+
+        artist_mbids_submitted = [
+                [UUID(artist_mbid) for artist_mbid in artist_mbids]
+                for artist_mbids in artist_mbids_submitted
+        ]
+
+        artist_mbids_submitted = {tuple(artist_mbids) for artist_mbids in artist_mbids_submitted}
+
+        with db.engine.begin() as connection:
+            artist_mbids_fetched = artist.fetch_unclustered_artist_mbids_using_recording_artist_join(connection)
+            artist_mbids_fetched = {tuple(artist_mbids) for artist_mbids in artist_mbids_fetched}
+            self.assertSetEqual(artist_mbids_fetched, artist_mbids_submitted)
+
+
+    def test_fetch_unclustered_gids_for_artist_mbids_using_recording_artist_join(self):
+        """ Tests if unclustered gids are fetched using artist
+            MBIDs correctly using recording_artist_join table.
+        """
+
+        self._add_mbids_to_recording_artist_join()
+        msb_listens = self._load_test_data("recordings_for_clustering_using_fetched_artist_mbids.json")
+        submit_listens(msb_listens)
+
+        with db.engine.begin() as connection:
+            gids = artist.fetch_unclustered_gids_for_artist_mbids_using_recording_artist_join(connection, [
+                        UUID("859d0860-d480-4efd-970c-c05d5f1776b8"), UUID("f82bcf78-5b69-4622-a5ef-73800768d9ac")
+                    ])
+            gids_from_data = set([
+                UUID(data.get_artist_credit(connection, "Jay‐Z & Beyoncé")),
+                UUID(data.get_artist_credit(connection, "Jay‐Z and Beyoncé"))
+            ])
+            self.assertSetEqual(set(gids), gids_from_data)
+
+
+    def test_fetch_artist_mbids_left_to_cluster_from_recording_artist_join(self):
+        """ Tests if artist MBIDs left to add to artist_credit_redirect table are
+            fetched correctly.
+        """
+
+        # The recordings for artist 'James Morrison' represents anomaly
+        # as two James Morrison exist with different artist MBIDs
+        recording_1 = {
+            "artist": "James Morrison",
+            "recording_mbid": "71fdb968-48c1-4406-a1f1-9dd2e9e37e0c",
+            "title": "6 Weeks",
+        }
+
+        recording_2 = {
+            "artist": "James Morrison",
+            "recording_mbid": "181d63e7-5ed3-4c6c-9018-dad36128d7a7",
+            "title": "A Brush With Bunj",
+        }
+
+        submit_listens([recording_1, recording_2])
+
+        with db.engine.begin() as connection:
+            artist.insert_artist_mbids(connection,
+                recording_1["recording_mbid"],
+                [UUID("88a8d8a9-7c9b-4f7b-8700-7f0f7a503688")]
+            )
+            artist.insert_artist_mbids(connection,
+                recording_2["recording_mbid"],
+                [UUID("b49a9595-3576-44bb-8ac0-e26d3f5b42ff")]
+            )
+            artist.create_clusters_using_fetched_artist_mbids_without_anomalies(connection)
+
+            artist_left = artist.fetch_artist_mbids_left_to_cluster_from_recording_artist_join(connection)
+            self.assertEqual(len(artist_left), 1)
+
+            # 'James Morrison' with artist MBID '88a8d8a9-7c9b-4f7b-8700-7f0f7a503688'
+            # was clustered in the first phase without considering anomalies.
+            self.assertListEqual(artist_left, [[UUID("b49a9595-3576-44bb-8ac0-e26d3f5b42ff")]])
+
+
+    def test_get_artist_gids_from_recording_using_mbids_and_recording_artist_join(self):
+        """ Tests if artist gids are correctly fetched from recording table using
+            artist MBIDs.
+        """
+
+        self._add_mbids_to_recording_artist_join()
+        msb_listens = self._load_test_data("recordings_for_clustering_using_fetched_artist_mbids.json")
+        submit_listens(msb_listens)
+
+        with db.engine.begin() as connection:
+            mbids = [
+                        UUID("859d0860-d480-4efd-970c-c05d5f1776b8"),
+                        UUID("f82bcf78-5b69-4622-a5ef-73800768d9ac"),
+                    ]
+            gids = set(artist.get_artist_gids_from_recording_using_mbids_and_recording_artist_join(connection, mbids))
+            gids_from_data = set([
+                UUID(data.get_artist_credit(connection, "Jay‐Z & Beyoncé")),
+                UUID(data.get_artist_credit(connection, "Jay‐Z and Beyoncé"))
+            ])
+
+            self.assertSetEqual(gids, gids_from_data)
+
+
+    def test_create_clusters_using_fetched_artist_mbids_without_anomalies(self):
+        """ Tests if artist clusters are created correctly without considering anomalies."""
+
+        msb_listens = self._load_test_data("recordings_for_clustering_using_fetched_artist_mbids.json")
+        submit_listens(msb_listens)
+        self._add_mbids_to_recording_artist_join()
+
+        # The recordings for artist 'James Morrison' represents anomaly
+        # as two James Morrison exist with different artist MBIDs
+        recording_1 = {
+            "artist": "James Morrison",
+            "recording_mbid": "71fdb968-48c1-4406-a1f1-9dd2e9e37e0c",
+            "title": "6 Weeks",
+        }
+
+        recording_2 = {
+            "artist": "James Morrison",
+            "recording_mbid": "181d63e7-5ed3-4c6c-9018-dad36128d7a7",
+            "title": "A Brush With Bunj",
+        }
+
+        submit_listens([recording_1, recording_2])
+
+        clusters_modified, clusters_add_to_redirect = artist.create_artist_credit_clusters()
+        self.assertEqual(clusters_modified, 1)
+        self.assertEqual(clusters_add_to_redirect, 1)
+
+        with db.engine.begin() as connection:
+            # 'Syreeta' form one cluster as recording contains artist MBIDs
+            gid_from_data = UUID(data.get_artist_credit(connection, "Syreeta"))
+            artist_mbids = artist.get_artist_mbids_using_msid(connection, gid_from_data)
+            self.assertListEqual(artist_mbids, [[UUID("5cfeec75-f6e2-439c-946d-5317334cdc6c")]])
+
+            artist.insert_artist_mbids(connection,
+                recording_1["recording_mbid"],
+                [UUID("88a8d8a9-7c9b-4f7b-8700-7f0f7a503688")]
+            )
+            artist.insert_artist_mbids(connection,
+                recording_2["recording_mbid"],
+                [UUID("b49a9595-3576-44bb-8ac0-e26d3f5b42ff")]
+            )
+
+            clusters_modified, clusters_add_to_redirect = artist.create_clusters_using_fetched_artist_mbids_without_anomalies(connection)
+            self.assertEqual(clusters_modified, 4)
+            self.assertEqual(clusters_add_to_redirect, 4)
+
+            # 'Jay-Z & Beyonce' and 'Jay-Z and Beyonce' form one cluster
+            gid_from_data = UUID(data.get_artist_credit(connection, "Jay‐Z & Beyoncé"))
+            artist_mbids_1 = artist.get_artist_mbids_using_msid(connection, gid_from_data)
+            cluster_id_1 = artist.get_cluster_id_using_msid(connection, gid_from_data)
+            gid_from_data = UUID(data.get_artist_credit(connection, "Jay‐Z and Beyoncé"))
+            artist_mbids_2 = artist.get_artist_mbids_using_msid(connection, gid_from_data)
+            cluster_id_2 = artist.get_cluster_id_using_msid(connection, gid_from_data)
+            self.assertListEqual(artist_mbids_1, artist_mbids_2)
+            self.assertEqual(cluster_id_1, cluster_id_2)
+
+            # 'Lil' Kim' form one cluster
+            gid_from_data = UUID(data.get_artist_credit(connection, "Lil’ Kim"))
+            artist_mbids = artist.get_artist_mbids_using_msid(connection, gid_from_data)
+            self.assertListEqual(artist_mbids, [[UUID("bc1b5c95-e6d6-46b5-957a-5e8908b02c1e")]])
+
+            # 'Jay-Z', JAY-Z, JAY_Z and 'Jay_Z' form one cluster
+            gid_from_data = UUID(data.get_artist_credit(connection, "JAY-Z"))
+            artist_mbids_1 = artist.get_artist_mbids_using_msid(connection, gid_from_data)
+            cluster_id_1 = artist.get_cluster_id_using_msid(connection, gid_from_data)
+            gid_from_data = UUID(data.get_artist_credit(connection, "JAY_Z"))
+            artist_mbids_2 = artist.get_artist_mbids_using_msid(connection, gid_from_data)
+            cluster_id_2 = artist.get_cluster_id_using_msid(connection, gid_from_data)
+            gid_from_data = UUID(data.get_artist_credit(connection, "Jay‐Z"))
+            artist_mbids_3 = artist.get_artist_mbids_using_msid(connection, gid_from_data)
+            cluster_id_3 = artist.get_cluster_id_using_msid(connection, gid_from_data)
+            gid_from_data = UUID(data.get_artist_credit(connection, "Jay_Z"))
+            artist_mbids_4 = artist.get_artist_mbids_using_msid(connection, gid_from_data)
+            cluster_id_4 = artist.get_cluster_id_using_msid(connection, gid_from_data)
+            self.assertListEqual(artist_mbids_1, artist_mbids_2)
+            self.assertListEqual(artist_mbids_2, artist_mbids_3)
+            self.assertListEqual(artist_mbids_3, artist_mbids_4)
+            self.assertEqual(cluster_id_1, cluster_id_2)
+            self.assertEqual(cluster_id_2, cluster_id_3)
+            self.assertEqual(cluster_id_3, cluster_id_4)
+
+            # 'James Morrison' with artist MBID '88a8d8a9-7c9b-4f7b-8700-7f0f7a503688'
+            # is clustered as before no artist_credit_gid exists with this artist_credit
+            # in artist_credit_cluster before this is inserted.
+            gid_from_data = UUID(data.get_artist_credit(connection, "James Morrison"))
+            artist_mbids = artist.get_artist_mbids_using_msid(connection, gid_from_data)
+            self.assertListEqual(artist_mbids, [[UUID("88a8d8a9-7c9b-4f7b-8700-7f0f7a503688")]])
+
+
+    def test_create_clusters_using_fetched_artist_mbids_for_anomalies(self):
+        """ Tests if artist clusters are correctly formed for anomalies."""
+
+        msb_listens = self._load_test_data("recordings_for_clustering_using_fetched_artist_mbids.json")
+        submit_listens(msb_listens)
+        self._add_mbids_to_recording_artist_join()
+
+        # The recordings for artist 'James Morrison' represents anomaly
+        # as two James Morrison exist with different artist MBIDs
+        recording_1 = {
+            "artist": "James Morrison",
+            "recording_mbid": "71fdb968-48c1-4406-a1f1-9dd2e9e37e0c",
+            "title": "6 Weeks",
+        }
+
+        recording_2 = {
+            "artist": "James Morrison",
+            "recording_mbid": "181d63e7-5ed3-4c6c-9018-dad36128d7a7",
+            "title": "A Brush With Bunj",
+        }
+
+        submit_listens([recording_1, recording_2])
+
+        clusters_modified, clusters_add_to_redirect = artist.create_artist_credit_clusters()
+        self.assertEqual(clusters_modified, 1)
+        self.assertEqual(clusters_add_to_redirect, 1)
+
+        with db.engine.begin() as connection:
+            artist.insert_artist_mbids(connection,
+                recording_1["recording_mbid"],
+                [UUID("88a8d8a9-7c9b-4f7b-8700-7f0f7a503688")]
+            )
+            artist.insert_artist_mbids(connection,
+                recording_2["recording_mbid"],
+                [UUID("b49a9595-3576-44bb-8ac0-e26d3f5b42ff")]
+            )
+
+            clusters_modified, clusters_add_to_redirect = artist.create_clusters_using_fetched_artist_mbids_without_anomalies(connection)
+            self.assertEqual(clusters_modified, 4)
+            self.assertEqual(clusters_add_to_redirect, 4)
+
+            # Before clustering anomalies
+            # 'James Morrison' with artist MBID '88a8d8a9-7c9b-4f7b-8700-7f0f7a503688'
+            # is clustered as before no artist_credit_gid exists with this artist_credit
+            # in artist_credit_cluster before this is inserted.
+            gid_from_data = UUID(data.get_artist_credit(connection, "James Morrison"))
+            artist_mbids = artist.get_artist_mbids_using_msid(connection, gid_from_data)
+            self.assertListEqual(artist_mbids, [[UUID("88a8d8a9-7c9b-4f7b-8700-7f0f7a503688")]])
+
+            clusters_add_to_redirect = artist.create_clusters_using_fetched_artist_mbids_for_anomalies(connection)
+            self.assertEqual(clusters_add_to_redirect, 1)
+
+            # After clustering anomalies
+            # 'James Morrison' with artist MBID 'b49a9595-3576-44bb-8ac0-e26d3f5b42ff'
+            # is clustered
+            gid_from_data = UUID(data.get_artist_credit(connection, "James Morrison"))
+            artist_mbids = artist.get_artist_mbids_using_msid(connection, gid_from_data)
+            self.assertListEqual(artist_mbids, [
+                [UUID("88a8d8a9-7c9b-4f7b-8700-7f0f7a503688")], [UUID("b49a9595-3576-44bb-8ac0-e26d3f5b42ff")]
+            ])
+
+
+    def test_create_clusters_using_fetched_artist_mbids(self):
+        """ Tests if clusters are created correctly using
+            artist MBIDs from recording_artist_join table.
+        """
+
+        msb_listens = self._load_test_data("recordings_for_clustering_using_fetched_artist_mbids.json")
+        submit_listens(msb_listens)
+        self._add_mbids_to_recording_artist_join()
+
+        # The recordings for artist 'James Morrison' represents anomaly
+        # as two James Morrison exist with different artist MBIDs
+        recording_1 = {
+            "artist": "James Morrison",
+            "recording_mbid": "71fdb968-48c1-4406-a1f1-9dd2e9e37e0c",
+            "title": "6 Weeks",
+        }
+        recording_2 = {
+            "artist": "James Morrison",
+            "recording_mbid": "181d63e7-5ed3-4c6c-9018-dad36128d7a7",
+            "title": "A Brush With Bunj",
+        }
+
+        submit_listens([recording_1, recording_2])
+
+        clusters_modified, clusters_add_to_redirect = artist.create_artist_credit_clusters()
+        self.assertEqual(clusters_modified, 1)
+        self.assertEqual(clusters_add_to_redirect, 1)
+
+        with db.engine.begin() as connection:
+            # 'Syreeta' form one cluster as recording contains artist MBIDs
+            gid_from_data = UUID(data.get_artist_credit(connection, "Syreeta"))
+            artist_mbids = artist.get_artist_mbids_using_msid(connection, gid_from_data)
+            self.assertListEqual(artist_mbids, [[UUID("5cfeec75-f6e2-439c-946d-5317334cdc6c")]])
+
+            artist.insert_artist_mbids(connection,
+                recording_1["recording_mbid"],
+                [UUID("88a8d8a9-7c9b-4f7b-8700-7f0f7a503688")]
+            )
+            artist.insert_artist_mbids(connection,
+                recording_2["recording_mbid"],
+                [UUID("b49a9595-3576-44bb-8ac0-e26d3f5b42ff")]
+            )
+
+        clusters_modified, clusters_add_to_redirect = artist.create_clusters_using_fetched_artist_mbids()
+        self.assertEqual(clusters_modified, 4)
+        self.assertEqual(clusters_add_to_redirect, 5)
+
+        with db.engine.begin() as connection:
+            # 'Jay-Z & Beyonce' and 'Jay-Z and Beyonce' form one cluster
+            gid_from_data = UUID(data.get_artist_credit(connection, "Jay‐Z & Beyoncé"))
+            artist_mbids_1 = artist.get_artist_mbids_using_msid(connection, gid_from_data)
+            cluster_id_1 = artist.get_cluster_id_using_msid(connection, gid_from_data)
+            gid_from_data = UUID(data.get_artist_credit(connection, "Jay‐Z and Beyoncé"))
+            artist_mbids_2 = artist.get_artist_mbids_using_msid(connection, gid_from_data)
+            cluster_id_2 = artist.get_cluster_id_using_msid(connection, gid_from_data)
+            self.assertListEqual(artist_mbids_1, artist_mbids_2)
+            self.assertEqual(cluster_id_1, cluster_id_2)
+
+            # 'Lil' Kim' form one cluster
+            gid_from_data = UUID(data.get_artist_credit(connection, "Lil’ Kim"))
+            artist_mbids = artist.get_artist_mbids_using_msid(connection, gid_from_data)
+            self.assertListEqual(artist_mbids, [[UUID("bc1b5c95-e6d6-46b5-957a-5e8908b02c1e")]])
+
+            # 'Jay-Z', JAY-Z, JAY_Z and 'Jay_Z' form one cluster
+            gid_from_data = UUID(data.get_artist_credit(connection, "JAY-Z"))
+            artist_mbids_1 = artist.get_artist_mbids_using_msid(connection, gid_from_data)
+            cluster_id_1 = artist.get_cluster_id_using_msid(connection, gid_from_data)
+            gid_from_data = UUID(data.get_artist_credit(connection, "JAY_Z"))
+            artist_mbids_2 = artist.get_artist_mbids_using_msid(connection, gid_from_data)
+            cluster_id_2 = artist.get_cluster_id_using_msid(connection, gid_from_data)
+            gid_from_data = UUID(data.get_artist_credit(connection, "Jay‐Z"))
+            artist_mbids_3 = artist.get_artist_mbids_using_msid(connection, gid_from_data)
+            cluster_id_3 = artist.get_cluster_id_using_msid(connection, gid_from_data)
+            gid_from_data = UUID(data.get_artist_credit(connection, "Jay_Z"))
+            artist_mbids_4 = artist.get_artist_mbids_using_msid(connection, gid_from_data)
+            cluster_id_4 = artist.get_cluster_id_using_msid(connection, gid_from_data)
+            self.assertListEqual(artist_mbids_1, artist_mbids_2)
+            self.assertListEqual(artist_mbids_2, artist_mbids_3)
+            self.assertListEqual(artist_mbids_3, artist_mbids_4)
+            self.assertEqual(cluster_id_1, cluster_id_2)
+            self.assertEqual(cluster_id_2, cluster_id_3)
+            self.assertEqual(cluster_id_3, cluster_id_4)
+
+            # 'James Morrison' with artist MBID '88a8d8a9-7c9b-4f7b-8700-7f0f7a503688'
+            # and 'James Morrison' with artist MBID 'b49a9595-3576-44bb-8ac0-e26d3f5b42ff'
+            # form a cluster
+            gid_from_data = UUID(data.get_artist_credit(connection, "James Morrison"))
+            artist_mbids = artist.get_artist_mbids_using_msid(connection, gid_from_data)
+            self.assertListEqual(artist_mbids, [
+                [UUID("88a8d8a9-7c9b-4f7b-8700-7f0f7a503688")], [UUID("b49a9595-3576-44bb-8ac0-e26d3f5b42ff")]
+            ])
