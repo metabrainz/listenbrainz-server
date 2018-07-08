@@ -392,3 +392,161 @@ def create_artist_credit_clusters():
         create_artist_credit_clusters_without_considering_anomalies,
         create_artist_credit_clusters_for_anomalies,
     )
+
+
+def fetch_unclustered_artist_mbids_using_recording_artist_join(connection):
+    """ Fetches artist MBIDs from recording_artist_join table that don't
+        have corresponding MSID in artsit_credit_cluster table.
+
+    Args:
+        connection: the sqlalchemy db connection to be used to execute queries
+
+    Returns:
+        artist_mbids(list): returns the list of artist MBIDs.
+    """
+
+    artist_mbids = connection.execute(text("""
+        SELECT DISTINCT raj.artist_mbids_array
+                   FROM recording_json AS rj
+                   JOIN recording_artist_join AS raj
+                     ON (rj.data ->> 'recording_mbid')::uuid = raj.recording_mbid
+                   JOIN recording AS r
+                     ON r.data = rj.id
+              LEFT JOIN artist_credit_cluster AS acc
+                     ON r.artist = acc.artist_credit_gid
+                  WHERE acc.artist_credit_gid IS NULL
+    """))
+
+    return [artist_mbid[0] for artist_mbid in artist_mbids]
+
+
+def fetch_unclustered_gids_for_artist_mbids_using_recording_artist_join(connection, artist_mbids):
+    """Fetches the gids corresponding to artist_mbid that are
+       not present in artist_credit_cluster table.
+
+    Args:
+        connection: the sqlalchemy db connection to be used to execute queries
+        artist_mbids (list): a list of artist MBIDs for which gids are to be fetched.
+
+    Returns:
+        gids(list): List of gids.
+    """
+
+    artist_mbids.sort()
+    gids = connection.execute(text("""
+        SELECT DISTINCT r.artist
+                   FROM recording_json AS rj
+                   JOIN recording_artist_join AS raj
+                     ON (rj.data ->> 'recording_mbid')::uuid = raj.recording_mbid
+                   JOIN recording AS r
+                     ON rj.id = r.data
+              LEFT JOIN artist_credit_cluster AS acc
+                     ON r.artist = acc.artist_credit_gid
+                  WHERE :artist_mbids = raj.artist_mbids_array
+                    AND acc.artist_credit_gid IS NULL
+    """), {
+        "artist_mbids": artist_mbids,
+    })
+
+    return [gid[0] for gid in gids]
+
+
+def fetch_artist_mbids_left_to_cluster_from_recording_artist_join(connection):
+    """ Returns array of artist_mbids for the artist MBIDs that
+        were not clustered after executing the first phase of clustering using
+        fetched artist MBIDs. These are anomalies (A single MSID pointing to
+        multiple MBIDs arrays in artist_credit_redirect table).
+    """
+
+    result = connection.execute(text("""
+        SELECT DISTINCT raj.artist_mbids_array
+                   FROM recording AS r
+                   JOIN recording_json AS rj
+                     ON r.data = rj.id
+                   JOIN recording_artist_join AS raj
+                     ON (rj.data ->> 'recording_mbid')::uuid = raj.recording_mbid
+              LEFT JOIN artist_credit_redirect AS acr
+                     ON raj.artist_mbids_array = acr.artist_mbids_array
+                  WHERE acr.artist_mbids_array IS NULL
+    """))
+
+    return [r[0] for r in result]
+
+
+def get_artist_gids_from_recording_using_mbids_and_recording_artist_join(connection, artist_mbids):
+    """ Returns artist gids from recording table using artist MBIDs and
+        recording_artist_join table using a given list of artist MBIDs.
+    """
+
+    artist_mbids.sort()
+    result = connection.execute(text("""
+        SELECT DISTINCT r.artist
+                   FROM recording AS r
+                   JOIN recording_json AS rj
+                     ON r.data = rj.id
+                   JOIN recording_artist_join AS raj
+                     ON (rj.data ->> 'recording_mbid')::uuid = raj.recording_mbid
+                  WHERE :artist_mbids = raj.artist_mbids_array
+    """), {
+        "artist_mbids": artist_mbids,
+    })
+
+    return [artist_gid[0] for artist_gid in result]
+
+
+def create_clusters_using_fetched_artist_mbids_without_anomalies(connection):
+    """Creates cluster for artist_credit without considering anomalies (A single MSID
+       pointing to multiple MBIDs arrays in artist_credit_redirect table). Using fetched
+       artist MBIDs from recording_artist_join table.
+
+    Args:
+        connection: the sqlalchemy db connection to be used to execute queries.
+
+    Returns:
+        clusters_modified (int): number of clusters modified.
+        clusters_add_to_redirect (int): number of clusters added to redirect table.
+    """
+    return db.common.create_entity_clusters_without_considering_anomalies(connection,
+        fetch_unclustered_artist_mbids_using_recording_artist_join,
+        fetch_unclustered_gids_for_artist_mbids_using_recording_artist_join,
+        get_artist_cluster_id_using_artist_mbids,
+        link_artist_mbids_to_artist_credit_cluster_id,
+        insert_artist_credit_cluster,
+        get_recordings_metadata_using_artist_mbids,
+    )
+
+
+def create_clusters_using_fetched_artist_mbids_for_anomalies(connection):
+    """Creates artist_credit clusters for the anomalies (A single MSID
+       pointing to multiple MBIDs arrays in artist_credit_redirect table).
+       Using fetched artist MBIDs from recording_artist_join table.
+
+    Args:
+        connection: the sqlalchemy db connection to be used to execute queries
+
+    Returns:
+        clusters_add_to_redirect (int): number of clusters added to redirect table.
+    """
+
+    return db_common.create_entity_clusters_for_anomalies(connection,
+        fetch_artist_mbids_left_to_cluster_from_recording_artist_join,
+        get_artist_gids_from_recording_using_mbids_and_recording_artist_join,
+        get_cluster_id_using_msid,
+        link_artist_mbids_to_artist_credit_cluster_id,
+        get_recordings_metadata_using_artist_mbids
+    )
+
+
+def create_clusters_using_fetched_artist_mbids():
+    """ Creates clusters using the artist_mbids fetched from recording_artist_join
+        table.
+
+    Returns:
+        clusters_modified (int): number of clusters modified.
+        clusters_added_to_redirect (int): number of clusters added to redirect table.
+    """
+
+    return db.common.create_entity_clusters(
+        create_clusters_using_fetched_artist_mbids_without_anomalies,
+        create_clusters_using_fetched_artist_mbids_for_anomalies,
+    )
