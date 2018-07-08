@@ -3,6 +3,7 @@ from messybrainz.db.artist import truncate_recording_artist_join,\
                                 fetch_and_store_artist_mbids_for_all_recording_mbids,\
                                 create_artist_credit_clusters,\
                                 truncate_artist_credit_cluster_and_redirect_tables
+from messybrainz.db import artist
 from messybrainz.db import release
 from messybrainz.webserver import create_app
 from brainzutils import musicbrainz_db
@@ -298,6 +299,32 @@ def truncate_recording_release_join_table():
     except Exception as error:
         print("An error occured while truncating recording_release_join table: {0}".format(error))
         raise
+
+
+@cli.command()
+@click.option("--verbose", "-v", default=0, help="Print debug information for given verbose level(0,1,2).")
+def create_clusters_using_fetched_artist_mbids(verbose=0):
+    """Creates clusters for artist_credits using artist MBIDs fetched from MusicBrainz
+       database and stored in recording_artist_join table.
+    """
+
+    if verbose == 1:
+        logging.basicConfig(format='%(message)s', level=logging.INFO)
+    elif verbose == 2:
+        logging.basicConfig(format='%(message)s', level=logging.DEBUG)
+
+    print("Creating artist_credit clusters...")
+
+    db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
+    try:
+        logging.debug("=" * 80)
+        clusters_modified, clusters_add_to_redirect = artist.create_clusters_using_fetched_artist_mbids()
+        logging.debug("=" * 80)
+        print("Clusters modified: {0}.".format(clusters_modified))
+        print("Clusters add to redirect table: {0}.".format(clusters_add_to_redirect))
+        print("Done!")
+    except Exception as error:
+        print("While creating artist_credit clusters using fetched artist MBIDs. An error occured: {0}".format(error))
 
 
 if __name__ == '__main__':

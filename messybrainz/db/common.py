@@ -66,6 +66,13 @@ def create_entity_clusters_for_anomalies(connection,
             clusters_add_to_redirect += 1
             logger.info("=" * 80)
             logger.info("Cluster ID: {0}\n".format(cluster_id))
+            if logger_level == logging.DEBUG:
+                if isinstance(entity_mbid, list):
+                    mbids_str_list = [str(mbid) for mbid in entity_mbid]
+                    mbids_str = ', '.join(mbids_str_list)
+                else:
+                    mbids_str = str(entity_mbid)
+                logger.debug("Cluster MBID: {0}\n".format(mbids_str))
             logger.info("Recordings:")
             if logger_level >= logging.DEBUG:
                 recordings = get_recordings_metadata_using_entity_mbid(connection, entity_mbid)
@@ -128,6 +135,13 @@ def create_entity_clusters_without_considering_anomalies(connection,
             clusters_modified += 1
             logger.info("=" * 80)
             logger.info("Cluster ID: {0}\n".format(cluster_id))
+            if logger_level == logging.DEBUG:
+                if isinstance(entity_mbids, list):
+                    mbids_str_list = [str(mbid) for mbid in entity_mbids]
+                    mbids_str = ', '.join(mbids_str_list)
+                else:
+                    mbids_str = str(entity_mbids)
+                logger.debug("Cluster MBID: {0}\n".format(mbids_str))
             logger.info("Number of entity added to this cluster: {0}.\n".format(len(gids)))
             logger.info("Recordings:")
             if logger_level >= logging.DEBUG:
