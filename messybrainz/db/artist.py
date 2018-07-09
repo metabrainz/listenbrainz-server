@@ -473,7 +473,7 @@ def fetch_artist_mbids_left_to_cluster_from_recording_artist_join(connection):
     return [r[0] for r in result]
 
 
-def get_artist_gids_from_recording_using_mbids_and_recording_artist_join(connection, artist_mbids):
+def get_gids_from_recording_using_fetched_artist_mbids(connection, artist_mbids):
     """ Returns artist gids from recording table using artist MBIDs and
         recording_artist_join table using a given list of artist MBIDs.
     """
@@ -530,7 +530,7 @@ def create_clusters_using_fetched_artist_mbids_for_anomalies(connection):
 
     return db_common.create_entity_clusters_for_anomalies(connection,
         fetch_artist_mbids_left_to_cluster_from_recording_artist_join,
-        get_artist_gids_from_recording_using_mbids_and_recording_artist_join,
+        get_gids_from_recording_using_fetched_artist_mbids,
         get_cluster_id_using_msid,
         link_artist_mbids_to_artist_credit_cluster_id,
         get_recordings_metadata_using_artist_mbids

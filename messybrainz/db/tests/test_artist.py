@@ -743,7 +743,7 @@ class ArtistTestCase(DatabaseTestCase):
             self.assertListEqual(artist_left, [[UUID("b49a9595-3576-44bb-8ac0-e26d3f5b42ff")]])
 
 
-    def test_get_artist_gids_from_recording_using_mbids_and_recording_artist_join(self):
+    def test_get_gids_from_recording_using_fetched_artist_mbids(self):
         """ Tests if artist gids are correctly fetched from recording table using
             artist MBIDs.
         """
@@ -757,7 +757,7 @@ class ArtistTestCase(DatabaseTestCase):
                         UUID("859d0860-d480-4efd-970c-c05d5f1776b8"),
                         UUID("f82bcf78-5b69-4622-a5ef-73800768d9ac"),
                     ]
-            gids = set(artist.get_artist_gids_from_recording_using_mbids_and_recording_artist_join(connection, mbids))
+            gids = set(artist.get_gids_from_recording_using_fetched_artist_mbids(connection, mbids))
             gids_from_data = set([
                 UUID(data.get_artist_credit(connection, "Jay‐Z & Beyoncé")),
                 UUID(data.get_artist_credit(connection, "Jay‐Z and Beyoncé"))
