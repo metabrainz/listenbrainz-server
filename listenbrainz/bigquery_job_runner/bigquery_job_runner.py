@@ -28,6 +28,7 @@ import pika
 import time
 import ujson
 
+from flask import current_app
 from listenbrainz import bigquery, db, stats, utils
 from listenbrainz.bigquery.user import delete_user
 from listenbrainz.stats.utils import construct_stats_queue_key
@@ -35,11 +36,7 @@ from listenbrainz.webserver import create_app
 
 class BigQueryJobRunner:
     def __init__(self):
-        self.app = create_app(debug=True) # creating a flask app for config values
-
-        self.log = logging.getLogger(__name__)
-        logging.basicConfig()
-        self.log.setLevel(logging.INFO)
+        self.app = create_app() # creating a flask app for config values and logging to Sentry
 
 
     def init_rabbitmq_connection(self):
@@ -49,12 +46,12 @@ class BigQueryJobRunner:
         to connect to RabbitMQ
         """
         self.connection = utils.connect_to_rabbitmq(
-            username=self.app.config['RABBITMQ_USERNAME'],
-            password=self.app.config['RABBITMQ_PASSWORD'],
-            host=self.app.config['RABBITMQ_HOST'],
-            port=self.app.config['RABBITMQ_PORT'],
-            virtual_host=self.app.config['RABBITMQ_VHOST'],
-            error_logger=self.log.error,
+            username=current_app.config['RABBITMQ_USERNAME'],
+            password=current_app.config['RABBITMQ_PASSWORD'],
+            host=current_app.config['RABBITMQ_HOST'],
+            port=current_app.config['RABBITMQ_PORT'],
+            virtual_host=current_app.config['RABBITMQ_VHOST'],
+            error_logger=current_app.logger.error,
         )
 
 
@@ -156,40 +153,41 @@ class BigQueryJobRunner:
             entries in the queue.
         """
 
-        # if no bigquery support, sleep
-        if not self.app.config['WRITE_TO_BIGQUERY']:
+        with self.app.app_context():
+            # if no bigquery support, sleep
+            if not current_app.config['WRITE_TO_BIGQUERY']:
+                while True:
+                    time.sleep(10000)
+
+            self.log.info('Connecting to Google BigQuery...')
+            self.bigquery = bigquery.create_bigquery_object()
+            self.log.info('Connected!')
+
+            self.log.info('Connecting to database...')
+            db.init_db_connection(current_app.config['SQLALCHEMY_DATABASE_URI'])
+            self.log.info('Connected!')
+
+            self.log.info('Connecting to redis...')
+            self.redis = utils.connect_to_redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'], log=current_app.logger.error)
+            self.log.info('Connected!')
+
             while True:
-                time.sleep(10000)
+                self.init_rabbitmq_connection()
+                self.incoming_ch = utils.create_channel_to_consume(
+                    connection=self.connection,
+                    exchange=current_app.config['BIGQUERY_EXCHANGE'],
+                    queue=current_app.config['BIGQUERY_QUEUE'],
+                    callback_function=self.callback,
+                )
+                self.log.info('Stats calculator started!')
+                try:
+                    self.incoming_ch.start_consuming()
+                except pika.exceptions.ConnectionClosed:
+                    current_app.logger.warning("Connection to rabbitmq closed. Re-opening.")
+                    self.connection = None
+                    continue
 
-        self.log.info('Connecting to Google BigQuery...')
-        self.bigquery = bigquery.create_bigquery_object()
-        self.log.info('Connected!')
-
-        self.log.info('Connecting to database...')
-        db.init_db_connection(self.app.config['SQLALCHEMY_DATABASE_URI'])
-        self.log.info('Connected!')
-
-        self.log.info('Connecting to redis...')
-        self.redis = utils.connect_to_redis(host=self.app.config['REDIS_HOST'], port=self.app.config['REDIS_PORT'], log=self.log.error)
-        self.log.info('Connected!')
-
-        while True:
-            self.init_rabbitmq_connection()
-            self.incoming_ch = utils.create_channel_to_consume(
-                connection=self.connection,
-                exchange=self.app.config['BIGQUERY_EXCHANGE'],
-                queue=self.app.config['BIGQUERY_QUEUE'],
-                callback_function=self.callback,
-            )
-            self.log.info('Stats calculator started!')
-            try:
-                self.incoming_ch.start_consuming()
-            except pika.exceptions.ConnectionClosed:
-                self.log.info("Connection to rabbitmq closed. Re-opening.")
-                self.connection = None
-                continue
-
-            self.connection.close()
+                self.connection.close()
 
 
 if __name__ == '__main__':
