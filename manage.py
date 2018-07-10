@@ -258,7 +258,9 @@ def truncate_release_cluster_and_redirect():
         raise
 
 
-def fetch_and_store_releases():
+@cli.command()
+@click.option("--verbose", "-v", is_flag=True, help="Print debug information.")
+def fetch_and_store_releases(verbose=False):
     """ Fetches releases from the musicbrainz database for the recording MBIDs
         in the recording_json table submitted while submitting a listen. It fetches
         only the releases for the recordings MBIDs which are not in recording_release_join
@@ -266,12 +268,18 @@ def fetch_and_store_releases():
         and the total recording MBIDs it added to the recording_release_join table.
     """
 
+    print("Fetching release for recording MBIDs...")
+    if verbose:
+        logging.basicConfig(format='%(message)s', level=logging.DEBUG)
+
     # Init databases
     db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
     musicbrainz_db.init_db_engine(config.MB_DATABASE_URI)
 
     try:
+        logging.debug("=" * 80)
         num_recording_mbids_processed, num_recording_mbids_added = release.fetch_and_store_releases_for_all_recording_mbids()
+        logging.debug("=" * 80)
         print("Total recording MBIDs processed: {0}.".format(num_recording_mbids_processed))
         print("Total recording MBIDs added to table: {0}.".format(num_recording_mbids_added))
         print("Done!")

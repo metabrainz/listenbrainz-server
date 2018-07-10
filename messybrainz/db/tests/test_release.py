@@ -549,7 +549,7 @@ class ReleaseTestCase(DatabaseTestCase):
 
         with db.engine.begin() as connection:
             releases_from_join = release.get_releases_for_recording_mbid(connection, recording_mbid)
-            self.assertIsNone(releases_from_join)
+            self.assertListEqual(releases_from_join, [])
 
             releases_fetched = release.fetch_releases_from_musicbrainz_db(connection, recording_mbid)
             release.insert_releases_to_recording_release_join(connection, recording_mbid, releases_fetched)
@@ -635,7 +635,7 @@ class ReleaseTestCase(DatabaseTestCase):
             self.assertSetEqual(set(releases), set(releases_fetched[2]))
 
             releases = release.get_releases_for_recording_mbid(connection, "9ed38583-437f-4186-8183-9c31ffa2c116")
-            self.assertIsNone(releases)
+            self.assertListEqual(releases, [])
 
             submit_listens([recording_1])
             release.fetch_and_store_releases_for_all_recording_mbids()

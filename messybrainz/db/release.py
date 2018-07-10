@@ -2,6 +2,7 @@ from brainzutils.musicbrainz_db.exceptions import NoDataFoundException
 from messybrainz import db
 from sqlalchemy import text
 import brainzutils.musicbrainz_db.release as mb_release
+import logging
 import messybrainz.db.common as db_common
 
 
@@ -345,8 +346,8 @@ def truncate_recording_release_join():
 
 def get_releases_for_recording_mbid(connection, recording_mbid):
     """Returns list of releases for a corresponding recording MBID
-       in recording_release_join table if recording MBID exists else None
-       is returned.
+       in recording_release_join table if recording MBID exists else
+       empty list is returned.
     """
 
     result = connection.execute(text("""
@@ -356,10 +357,7 @@ def get_releases_for_recording_mbid(connection, recording_mbid):
     """), {"recording_mbid": recording_mbid}
     )
 
-    if result.rowcount:
-        return [(r['release_mbid'], r['release_name']) for r in result]
-    else:
-        return None
+    return [(r['release_mbid'], r['release_name']) for r in result]
 
 
 def fetch_and_store_releases_for_all_recording_mbids():
@@ -369,6 +367,9 @@ def fetch_and_store_releases_for_all_recording_mbids():
         recording MBIDs that were added to the recording_release_join table.
     """
 
+    logger = logging.getLogger(__name__)
+    logger_level = logger.getEffectiveLevel()
+
     with db.engine.begin() as connection:
         recording_mbids = fetch_recording_mbids_not_in_recording_release_join(connection)
         num_recording_mbids_added = 0
@@ -376,6 +377,14 @@ def fetch_and_store_releases_for_all_recording_mbids():
         for recording_mbid in recording_mbids:
             try:
                 releases = fetch_releases_from_musicbrainz_db(connection, recording_mbid)
+                if logger_level == logging.DEBUG:
+                    logger.debug("Recording MBID: {0}".format(recording_mbid))
+                    logger.debug("Releases fetched:")
+                    logger.debug("\t\tRelease MBID\t\t\t Release Name")
+                    logger.debug("-" * 80)
+                    for release in releases:
+                        logger.debug("{0} : {1}".format(release["id"], release["name"]))
+                    logger.debug("-" * 80)
                 insert_releases_to_recording_release_join(connection, recording_mbid, releases)
                 num_recording_mbids_added += 1
             except NoDataFoundException:
