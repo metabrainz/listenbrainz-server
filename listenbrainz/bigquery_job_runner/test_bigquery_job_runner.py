@@ -45,7 +45,8 @@ class BigQueryJobRunnerTestCase(DatabaseTestCase):
     @patch('listenbrainz.stats.user.get_top_artists', side_effect=lambda x, y: {})
     @patch('listenbrainz.stats.user.get_top_releases', side_effect=lambda x, y: {})
     @patch('listenbrainz.stats.user.get_artist_count', side_effect=lambda x, y: 1)
-    def test_calculate_stats_for_user(self, get_top_recordings, get_top_artists, get_top_releases, get_artist_count):
+    @patch('listenbrainz.bigquery_job_runner.bigquery_job_runner.current_app') # mocking current_app so that test doesn't need to run in app context
+    def test_calculate_stats_for_user(self, mock_current_app, get_top_recordings, get_top_artists, get_top_releases, get_artist_count):
         # invalid user data
         self.assertFalse(self.sc.calculate_stats_for_user({}))
 

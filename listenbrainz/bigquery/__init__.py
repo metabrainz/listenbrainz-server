@@ -3,6 +3,7 @@ import logging
 import os
 import time
 
+from flask import current_app
 from googleapiclient import discovery
 from googleapiclient.errors import HttpError
 from listenbrainz import config
@@ -12,18 +13,16 @@ APP_CREDENTIALS_FILE = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')
 JOB_COMPLETION_CHECK_DELAY = 5
 DML_STREAMING_ROWS_DELAY = 30
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 def create_bigquery_object():
     """ Initiates the connection to Google BigQuery. Returns a BigQuery object. """
 
     if not APP_CREDENTIALS_FILE:
-        logger.error("The GOOGLE_APPLICATIONS_CREDENTIALS variable is undefined, cannot connect to BigQuery")
+        current_app.logger.error("The GOOGLE_APPLICATIONS_CREDENTIALS variable is undefined, cannot connect to BigQuery")
         raise NoCredentialsVariableException
 
     if not os.path.exists(APP_CREDENTIALS_FILE):
-        logger.error("The BigQuery credentials file does not exist, cannot connect to BigQuery")
+        current_app.logger.error("The BigQuery credentials file does not exist, cannot connect to BigQuery")
         raise NoCredentialsFileException
 
     credentials = GoogleCredentials.get_application_default()
@@ -71,7 +70,7 @@ def wait_for_completion(projectId, jobId):
         try:
             job = bigquery.jobs().get(projectId=projectId, jobId=jobId).execute(num_retries=5)
         except googleapiclient.errors.HttpError as err:
-            logger.error("HttpError while waiting for completion of job: {}".format(err))
+            current_app.logger.error("HttpError while waiting for completion of job: {}".format(err), exc_info=True)
             time.sleep(JOB_COMPLETION_CHECK_DELAY)
             continue
 
@@ -114,8 +113,8 @@ def run_query(bigquery, query, parameters=None, dml=False):
         "kind": "bigquery#queryRequest",
         "parameterMode": "NAMED",
         "default_dataset": {
-            "projectId": config.BIGQUERY_PROJECT_ID,
-            "datasetId": config.BIGQUERY_DATASET_ID,
+            "projectId": current_app.config['BIGQUERY_PROJECT_ID'],
+            "datasetId": current_app.config['BIGQUERY_DATASET_ID'],
         },
         "useLegacySql": False,
         "queryParameters": get_parameters_dict(parameters) if parameters else [],
@@ -132,7 +131,7 @@ def run_query(bigquery, query, parameters=None, dml=False):
             # BigQuery does not allow deletion of rows which may be
             # in the streaming buffer, so if an error is returned
             # because of that, sleep and try again.
-            logger.error(str(e))
+            current_app.logger.error('HttpError while running query %s: %s', query, str(e), exc_info=True)
             if dml and '400' in str(e):
                 time.sleep(DML_STREAMING_ROWS_DELAY)
             else:
@@ -162,7 +161,7 @@ def run_query(bigquery, query, parameters=None, dml=False):
                 first_page = bigquery.jobs().getQueryResults(**job_reference).execute(num_retries=5)
                 break
             except googleapiclient.errors.HttpError as err:
-                logger.error("HttpError when getting first page after completion of job: {}".format(err))
+                current_app.logger.error("HttpError when getting first page after completion of job: {}".format(err), exc_info=True)
                 time.sleep(JOB_COMPLETION_CHECK_DELAY)
 
 
@@ -181,7 +180,7 @@ def run_query(bigquery, query, parameters=None, dml=False):
         try:
             query_result = bigquery.jobs().getQueryResults(pageToken=prev_token, **job_reference).execute(num_retries=5)
         except googleapiclient.errors.HttpError as err:
-            logger.error("HttpError when getting query results: {}".format(err))
+            current_app.logger.error("HttpError when getting query results: {}".format(err), exc_info=True)
             continue
 
         data['rows'].extend(query_result['rows'])
