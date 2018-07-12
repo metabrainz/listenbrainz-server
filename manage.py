@@ -199,6 +199,7 @@ def create_artist_credit_clusters_for_mbids(verbose=0):
         print("Done!")
     except Exception as error:
         print("While creating artist_credit clusters. An error occured: {0}".format(error))
+        raise
 
 
 @cli.command()
@@ -242,6 +243,7 @@ def truncate_artist_credit_cluster_and_redirect():
         logging.error("An error occured while truncating artist_credit_cluster"
             "and artist_credit_redirect table: {0}".format(error)
         )
+        raise
 
 
 @cli.command()
@@ -253,6 +255,48 @@ def truncate_release_cluster_and_redirect():
         print("release_cluster and release_redirect table truncated.")
     except Exception as error:
         print("An error occured while truncating release_cluster and release_redirect: {0}".format(error))
+        raise
+
+
+@cli.command()
+@click.option("--verbose", "-v", is_flag=True, help="Print debug information.")
+def fetch_and_store_releases(verbose=False):
+    """ Fetches releases from the musicbrainz database for the recording MBIDs
+        in the recording_json table submitted while submitting a listen. It fetches
+        only the releases for the recordings MBIDs which are not in recording_release_join
+        table. In the end it prints to the console the total recording MBIDs it processed
+        and the total recording MBIDs it added to the recording_release_join table.
+    """
+
+    print("Fetching release for recording MBIDs...")
+    if verbose:
+        logging.basicConfig(format='%(message)s', level=logging.DEBUG)
+
+    # Init databases
+    db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
+    musicbrainz_db.init_db_engine(config.MB_DATABASE_URI)
+
+    try:
+        logging.debug("=" * 80)
+        num_recording_mbids_processed, num_recording_mbids_added = release.fetch_and_store_releases_for_all_recording_mbids()
+        logging.debug("=" * 80)
+        print("Total recording MBIDs processed: {0}.".format(num_recording_mbids_processed))
+        print("Total recording MBIDs added to table: {0}.".format(num_recording_mbids_added))
+        print("Done!")
+    except Exception as error:
+        print("Unable to fetch releases. An error occured: {0}".format(error))
+        raise
+
+
+@cli.command()
+def truncate_recording_release_join_table():
+    """Truncate table recording_release_join."""
+    db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
+    try:
+        release.truncate_recording_release_join()
+        print("Table recording_release_join truncated.")
+    except Exception as error:
+        print("An error occured while truncating recording_release_join table: {0}".format(error))
         raise
 
 
