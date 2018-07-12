@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch
 from listenbrainz.listen_writer import ListenWriter
+from listenbrainz.webserver import create_app
 
 class ListenWriterTestCase(unittest.TestCase):
 
@@ -12,25 +13,21 @@ class ListenWriterTestCase(unittest.TestCase):
     def test_verify_hosts_in_config(self, mock_sleep):
         """ Test for the _verify_hosts_in_config method """
 
-        config1 = self.lwriter.config
-        config2 = self.lwriter.config
+        app1 = create_app()
+        app2 = create_app()
 
-        if hasattr(config1, "REDIS_HOST"):
-            delattr(config1, "REDIS_HOST")
-
-        self.lwriter.config = config1
+        if "REDIS_HOST" in app1.config:
+            app1.config.pop("REDIS_HOST")
 
         with self.assertRaises(SystemExit) as s:
-            self.lwriter._verify_hosts_in_config()
+            with app1.app_context():
+                self.lwriter._verify_hosts_in_config()
+                self.assertEqual(s.exception.code, -1)
 
-        self.assertEqual(s.exception.code, -1)
-
-        if hasattr(config2, "RABBITMQ_HOST"):
-            delattr(config2, "RABBITMQ_HOST")
-
-        self.lwriter.config = config2
+        if "RABBITMQ_HOST" in app2.config:
+            app2.config.pop("RABBITMQ_HOST")
 
         with self.assertRaises(SystemExit) as s:
-            self.lwriter._verify_hosts_in_config()
-
-        self.assertEqual(s.exception.code, -1)
+            with app2.app_context():
+                self.lwriter._verify_hosts_in_config()
+                self.assertEqual(s.exception.code, -1)
