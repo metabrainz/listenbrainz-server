@@ -36,7 +36,11 @@ def create_redis(app):
 
 def create_rabbitmq(app):
     from listenbrainz.webserver.rabbitmq_connection import init_rabbitmq_connection
-    init_rabbitmq_connection(app)
+    try:
+        init_rabbitmq_connection(app)
+    except ConnectionError as e:
+        app.logger.error('Could not connect to RabbitMQ: %s', str(e))
+        return
 
 
 def gen_app(config_path=None, debug=None):

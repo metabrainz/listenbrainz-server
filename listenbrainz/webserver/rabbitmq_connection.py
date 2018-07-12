@@ -14,10 +14,11 @@ def init_rabbitmq_connection(app):
     """
     global _rabbitmq
 
+    if _rabbitmq is not None:
+        return
+
     if "RABBITMQ_HOST" not in app.config:
-        app.logger.error("RabbitMQ host:port not defined. Sleeping 2 seconds, and exiting.")
-        sleep(2)
-        sys.exit(-1)
+        raise ConnectionError("Cannot connect to RabbitMQ: host and port not defined")
 
     connection_parameters = pika.ConnectionParameters(
         host=app.config['RABBITMQ_HOST'],
@@ -34,3 +35,4 @@ def init_rabbitmq_connection(app):
         recycle=3600,
         stale=45,
     )
+    app.logger.info('Connection to RabbitMQ established!')
