@@ -62,7 +62,7 @@ $ docker-compose -f docker/docker-compose.dev.yml run -v $DUMPS_DIR:/home/musicb
 
 You can also use the smaller sample dumps available at http://ftp.musicbrainz.org/pub/musicbrainz/data/sample/
 to set up the MusicBrainz database. However, note that these dumps are .tar.xz
-dumps while AcousticBrainz currently only supports import of .tar.bz2 dumps.
+dumps while MessyBrainz currently only supports import of .tar.bz2 dumps.
 So, a decompression of the sample dumps and recompression into .tar.bz2 dumps
 will be needed. This can be done using the following command:
 
