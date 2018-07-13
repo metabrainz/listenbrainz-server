@@ -3,7 +3,7 @@
 {{- end -}}
 
 {{- define "KEY_ARRAY" -}}
-    {{- range $index, $element := (key (printf "docker-server-configs/MeB/config.%s.json/%s" (env "DEPLOY_ENV") .) | parseJSON) -}}
+    {{- range $index, $element := (key (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .) | parseJSON) -}}
         "{{.}}",
     {{- end -}}
 {{- end -}}
