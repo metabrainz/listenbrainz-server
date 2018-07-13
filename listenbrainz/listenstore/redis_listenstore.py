@@ -11,8 +11,8 @@ from listenbrainz.listenstore import ListenStore, MIN_ID
 
 
 class RedisListenStore(ListenStore):
-    def __init__(self, conf):
-        ListenStore.__init__(self, conf)
+    def __init__(self, log, conf):
+        super(RedisListenStore, self).__init__(log)
         self.log.info('Connecting to redis: %s:%s', conf['REDIS_HOST'], conf['REDIS_PORT'])
         self.redis = Redis(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], decode_responses=True)
 

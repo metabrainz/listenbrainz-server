@@ -242,7 +242,7 @@ class InfluxWriterSubscriber(ListenWriter):
                         'INFLUX_HOST': current_app.config['INFLUX_HOST'],
                         'INFLUX_PORT': current_app.config['INFLUX_PORT'],
                         'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
-                    })
+                    }, logger=current_app.logger)
                     self.influx = InfluxDBClient(
                         host=current_app.config['INFLUX_HOST'],
                         port=current_app.config['INFLUX_PORT'],

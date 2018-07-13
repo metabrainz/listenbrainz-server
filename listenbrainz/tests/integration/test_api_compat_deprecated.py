@@ -46,7 +46,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
             'INFLUX_HOST': config.INFLUX_HOST,
             'INFLUX_PORT': config.INFLUX_PORT,
             'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
-        })
+        }, self.app.logger)
 
 
     def handshake(self, user_name, auth_token, timestamp):
