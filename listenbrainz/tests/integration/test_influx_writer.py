@@ -21,7 +21,7 @@ class InfluxWriterTestCase(IntegrationTestCase):
                              'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
                              'INFLUX_HOST': config.INFLUX_HOST,
                              'INFLUX_PORT': config.INFLUX_PORT,
-                             'INFLUX_DB_NAME': config.INFLUX_DB_NAME})
+                             'INFLUX_DB_NAME': config.INFLUX_DB_NAME}, self.app.logger)
 
     def send_listen(self, user, filename):
         with open(self.path_to_data_file(filename)) as f:
