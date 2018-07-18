@@ -494,6 +494,24 @@ def get_gids_from_recording_using_fetched_artist_mbids(connection, artist_mbids)
     return [artist_gid[0] for artist_gid in result]
 
 
+def get_recordings_metadata_using_artist_mbids_and_recording_artist_join(connection, mbids):
+    """ Returns the recording Metadata from recording_json table using artist MBIDs and
+        recording_artist_join.
+    """
+
+    recordings = connection.execute(text("""
+        SELECT rj.data
+          FROM recording_json AS rj
+          JOIN recording_artist_join AS raj
+            ON (rj.data ->> 'recording_mbid')::uuid = raj.recording_mbid
+         WHERE raj.artist_mbids_array = :mbids
+    """), {
+        "mbids": mbids,
+    })
+
+    return [recording[0] for recording in recordings]
+
+
 def create_clusters_using_fetched_artist_mbids_without_anomalies(connection):
     """Creates cluster for artist_credit without considering anomalies (A single MSID
        pointing to multiple MBIDs arrays in artist_credit_redirect table). Using fetched
@@ -512,7 +530,7 @@ def create_clusters_using_fetched_artist_mbids_without_anomalies(connection):
         get_artist_cluster_id_using_artist_mbids,
         link_artist_mbids_to_artist_credit_cluster_id,
         insert_artist_credit_cluster,
-        get_recordings_metadata_using_artist_mbids,
+        get_recordings_metadata_using_artist_mbids_and_recording_artist_join,
     )
 
 
@@ -533,7 +551,7 @@ def create_clusters_using_fetched_artist_mbids_for_anomalies(connection):
         get_gids_from_recording_using_fetched_artist_mbids,
         get_cluster_id_using_msid,
         link_artist_mbids_to_artist_credit_cluster_id,
-        get_recordings_metadata_using_artist_mbids
+        get_recordings_metadata_using_artist_mbids_and_recording_artist_join
     )
 
 

@@ -766,6 +766,26 @@ class ArtistTestCase(DatabaseTestCase):
             self.assertSetEqual(gids, gids_from_data)
 
 
+    def test_get_recordings_metadata_using_artist_mbids_and_recording_artist_join(self):
+        """ Tests if recordings metadata is correctly fetched using artist MBIDs and
+            recording_artist_join table.
+        """
+
+        recording_1 = {
+            "artist": "Jay‐Z & Beyoncé",
+            "recording_mbid": "5465ca86-3881-4349-81b2-6efbd3a59451",
+            "title": "'03 Bonnie and Clyde",
+        }
+        submit_listens([recording_1])
+        self._add_mbids_to_recording_artist_join()
+
+        with db.engine.begin() as connection:
+            recordings = artist.get_recordings_metadata_using_artist_mbids_and_recording_artist_join(connection,
+                [UUID("859d0860-d480-4efd-970c-c05d5f1776b8"), UUID("f82bcf78-5b69-4622-a5ef-73800768d9ac")],
+            )
+            self.assertDictEqual(recording_1, recordings[0])
+
+
     def test_create_clusters_using_fetched_artist_mbids_without_anomalies(self):
         """ Tests if artist clusters are created correctly without considering anomalies."""
 
