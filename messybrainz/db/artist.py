@@ -16,7 +16,7 @@ def insert_artist_mbids(connection, recording_mbid, artist_mbids):
 
     artist_mbids.sort()
     connection.execute(text("""
-        INSERT INTO recording_artist_join (recording_mbid, artist_mbids_array, updated)
+        INSERT INTO recording_artist_join (recording_mbid, artist_mbids, updated)
              VALUES (:recording_mbid, :artist_mbids, now())
     """), {
         "recording_mbid": recording_mbid,
@@ -64,7 +64,7 @@ def get_artist_mbids_for_recording_mbid(connection, recording_mbid):
     """
 
     result = connection.execute(text("""
-        SELECT artist_mbids_array
+        SELECT artist_mbids
           FROM recording_artist_join
          WHERE recording_mbid = :recording_mbid
     """), {
@@ -72,7 +72,7 @@ def get_artist_mbids_for_recording_mbid(connection, recording_mbid):
     })
 
     if result.rowcount:
-        return result.fetchone()['artist_mbids_array']
+        return result.fetchone()['artist_mbids']
     else:
         return None
 
@@ -140,7 +140,7 @@ def link_artist_mbids_to_artist_credit_cluster_id(connection, cluster_id, artist
     """
 
     connection.execute(text("""
-        INSERT INTO artist_credit_redirect (artist_credit_cluster_id, artist_mbids_array)
+        INSERT INTO artist_credit_redirect (artist_credit_cluster_id, artist_mbids)
              VALUES (:cluster_id, array_sort(:artist_credit_mbids))
     """), {
         "cluster_id": cluster_id,
@@ -218,7 +218,7 @@ def get_artist_cluster_id_using_artist_mbids(connection, artist_credit_mbids):
     gid = connection.execute(text("""
         SELECT artist_credit_cluster_id
           FROM artist_credit_redirect
-         WHERE artist_mbids_array = array_sort(:artist_credit_mbids)
+         WHERE artist_mbids = array_sort(:artist_credit_mbids)
     """), {
         "artist_credit_mbids": artist_credit_mbids,
     })
@@ -243,9 +243,9 @@ def fetch_artist_credits_left_to_cluster(connection):
                    JOIN recording_json AS rj
                      ON r.data = rj.id
               LEFT JOIN artist_credit_redirect AS acr
-                     ON convert_json_array_to_sorted_uuid_array(rj.data -> 'artist_mbids') = acr.artist_mbids_array
+                     ON convert_json_array_to_sorted_uuid_array(rj.data -> 'artist_mbids') = acr.artist_mbids
                   WHERE rj.data ->> 'artist_mbids' IS NOT NULL
-                    AND acr.artist_mbids_array IS NULL
+                    AND acr.artist_mbids IS NULL
     """))
 
     return [r[0] for r in result]
@@ -310,7 +310,7 @@ def get_artist_mbids_using_msid(connection, artist_msid):
     # array_sort is a custom function for implementation
     # details check admin/sql/create_functions.sql
     mbids = connection.execute(text("""
-        SELECT artist_mbids_array
+        SELECT artist_mbids
           FROM artist_credit_redirect
          WHERE artist_credit_cluster_id = :cluster_id
     """), {
@@ -406,7 +406,7 @@ def fetch_unclustered_artist_mbids_using_recording_artist_join(connection):
     """
 
     artist_mbids = connection.execute(text("""
-        SELECT DISTINCT raj.artist_mbids_array
+        SELECT DISTINCT raj.artist_mbids
                    FROM recording_json AS rj
                    JOIN recording_artist_join AS raj
                      ON (rj.data ->> 'recording_mbid')::uuid = raj.recording_mbid
@@ -442,7 +442,7 @@ def fetch_unclustered_gids_for_artist_mbids_using_recording_artist_join(connecti
                      ON rj.id = r.data
               LEFT JOIN artist_credit_cluster AS acc
                      ON r.artist = acc.artist_credit_gid
-                  WHERE :artist_mbids = raj.artist_mbids_array
+                  WHERE :artist_mbids = raj.artist_mbids
                     AND acc.artist_credit_gid IS NULL
     """), {
         "artist_mbids": artist_mbids,
@@ -459,15 +459,15 @@ def fetch_artist_mbids_left_to_cluster_from_recording_artist_join(connection):
     """
 
     result = connection.execute(text("""
-        SELECT DISTINCT raj.artist_mbids_array
+        SELECT DISTINCT raj.artist_mbids
                    FROM recording AS r
                    JOIN recording_json AS rj
                      ON r.data = rj.id
                    JOIN recording_artist_join AS raj
                      ON (rj.data ->> 'recording_mbid')::uuid = raj.recording_mbid
               LEFT JOIN artist_credit_redirect AS acr
-                     ON raj.artist_mbids_array = acr.artist_mbids_array
-                  WHERE acr.artist_mbids_array IS NULL
+                     ON raj.artist_mbids = acr.artist_mbids
+                  WHERE acr.artist_mbids IS NULL
     """))
 
     return [r[0] for r in result]
@@ -486,7 +486,7 @@ def get_gids_from_recording_using_fetched_artist_mbids(connection, artist_mbids)
                      ON r.data = rj.id
                    JOIN recording_artist_join AS raj
                      ON (rj.data ->> 'recording_mbid')::uuid = raj.recording_mbid
-                  WHERE :artist_mbids = raj.artist_mbids_array
+                  WHERE :artist_mbids = raj.artist_mbids
     """), {
         "artist_mbids": artist_mbids,
     })
@@ -504,7 +504,7 @@ def get_recordings_metadata_using_artist_mbids_and_recording_artist_join(connect
           FROM recording_json AS rj
           JOIN recording_artist_join AS raj
             ON (rj.data ->> 'recording_mbid')::uuid = raj.recording_mbid
-         WHERE raj.artist_mbids_array = :mbids
+         WHERE raj.artist_mbids = :mbids
     """), {
         "mbids": mbids,
     })
