@@ -47,6 +47,7 @@ def create_entity_clusters_for_anomalies(connection,
                                                                 an entity MBID.
         get_cluster_id_using_msid(function): Gets the cluster ID for a given MSID.
         link_entity_mbid_to_entity_cluster_id(function): Links the entity mbid to the cluster_id.
+        get_recordings_metadata_using_entity_mbid(function): gets recordings metadata using given MBID.
 
     Returns:
         clusters_add_to_redirect (int): number of clusters added to redirect table.
@@ -110,6 +111,7 @@ def create_entity_clusters_without_considering_anomalies(connection,
         link_entity_mbids_to_entity_cluster_id (function): Links the entity mbid to the cluster_id.
         insert_entity_cluster (function): Creates a cluster with given cluster_id in the
                                         entity_cluster table.
+        get_recordings_metadata_using_entity_mbid(function): gets recordings metadata using given MBID.
 
     Returns:
         clusters_modified (int): number of clusters modified.
