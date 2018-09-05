@@ -84,7 +84,7 @@ class DumpTestCase(DatabaseTestCase):
 
         # create a user
         with self.app.app_context():
-            db_user.create(1, 'test_user')
+            one_id = db_user.create(1, 'test_user')
             user_count = db_user.get_user_count()
             self.assertEqual(user_count, 1)
 
@@ -107,6 +107,8 @@ class DumpTestCase(DatabaseTestCase):
             db_dump.import_postgres_dump(private_dump, public_dump, threads=2)
             user_count = db_user.get_user_count()
             self.assertEqual(user_count, 1)
+            two_id = db_user.create(2, 'vnskprk')
+            self.assertGreater(two_id, one_id)
 
 
     def test_dump_postgres_db_table_entries(self):
