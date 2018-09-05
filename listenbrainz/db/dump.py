@@ -459,6 +459,58 @@ def _import_dump(archive_path, dump_type, tables, threads=DUMP_DEFAULT_THREAD_CO
         connection.close()
         pxz.stdout.close()
 
+    try:
+        _update_sequences()
+    except Exception as e:
+        current_app.logger.critical('Exception while trying to update sequences: %s', str(e), exc_info=True)
+        raise
+
+
+def _update_sequence(seq_name, table_name):
+    """ Update the specified sequence's value to the maximum value of ID in the table.
+
+    Args:
+        seq_name (str): the name of the sequence to be updated.
+        table_name (str): the name of the table from which the maximum value is to be retrieved
+    """
+    with db.engine.connect() as connection:
+        connection.execute(sqlalchemy.text("""
+            SELECT setval('{seq_name}', max(id))
+              FROM {table_name}
+        """.format(seq_name=seq_name, table_name=table_name)))
+
+
+def _update_sequences():
+    """ Update all sequences to the maximum value of id in the table.
+    """
+    # user_id_seq
+    current_app.logger.info('Updating user_id_seq...')
+    _update_sequence('user_id_seq', '"user"')
+
+    # token_id_seq
+    current_app.logger.info('Updating token_id_seq...')
+    _update_sequence('api_compat.token_id_seq', 'api_compat.token')
+
+    # session_id_seq
+    current_app.logger.info('Updating session_id_seq...')
+    _update_sequence('api_compat.session_id_seq', 'api_compat.session')
+
+    # artist_id_seq
+    current_app.logger.info('Updating artist_id_seq...')
+    _update_sequence('statistics.artist_id_seq', 'statistics.artist')
+
+    # release_id_seq
+    current_app.logger.info('Updating release_id_seq...')
+    _update_sequence('statistics.release_id_seq', 'statistics.release')
+
+    # recording_id_seq
+    current_app.logger.info('Updating recording_id_seq...')
+    _update_sequence('statistics.recording_id_seq', 'statistics.recording')
+
+    # data_dump_id_seq
+    current_app.logger.info('Updating data_dump_id_seq...')
+    _update_sequence('data_dump_id_seq', 'data_dump')
+
 
 class SchemaMismatchException(Exception):
     pass
