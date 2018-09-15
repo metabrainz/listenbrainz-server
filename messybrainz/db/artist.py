@@ -44,6 +44,7 @@ def fetch_recording_mbids_not_in_recording_artist_join(connection):
               LEFT JOIN recording_artist_join AS raj
                      ON (rj.data ->> 'recording_mbid')::uuid = raj.recording_mbid
                   WHERE rj.data ->> 'recording_mbid' IS NOT NULL
+                    AND rj.data ->> 'recording_mbid' != ''
                     AND raj.recording_mbid IS NULL
     """))
 
