@@ -42,7 +42,7 @@ def fetch_recording_mbids_not_in_recording_artist_join(connection):
         SELECT DISTINCT rj.data ->> 'recording_mbid'
                    FROM recording_json AS rj
               LEFT JOIN recording_artist_join AS raj
-                     ON (rj.data ->> 'recording_mbid')::uuid = raj.recording_mbid
+                     ON rj.data ->> 'recording_mbid' = (raj.recording_mbid)::text
                   WHERE rj.data ->> 'recording_mbid' IS NOT NULL
                     AND rj.data ->> 'recording_mbid' != ''
                     AND raj.recording_mbid IS NULL
@@ -410,7 +410,7 @@ def fetch_unclustered_artist_mbids_using_recording_artist_join(connection):
         SELECT DISTINCT raj.artist_mbids
                    FROM recording_json AS rj
                    JOIN recording_artist_join AS raj
-                     ON (rj.data ->> 'recording_mbid')::uuid = raj.recording_mbid
+                     ON (rj.data ->> 'recording_mbid') = (raj.recording_mbid)::text
                    JOIN recording AS r
                      ON r.data = rj.id
               LEFT JOIN artist_credit_cluster AS acc
@@ -438,7 +438,7 @@ def fetch_unclustered_gids_for_artist_mbids_using_recording_artist_join(connecti
         SELECT DISTINCT r.artist
                    FROM recording_json AS rj
                    JOIN recording_artist_join AS raj
-                     ON (rj.data ->> 'recording_mbid')::uuid = raj.recording_mbid
+                     ON (rj.data ->> 'recording_mbid') = (raj.recording_mbid)::text
                    JOIN recording AS r
                      ON rj.id = r.data
               LEFT JOIN artist_credit_cluster AS acc
@@ -465,7 +465,7 @@ def fetch_artist_mbids_left_to_cluster_from_recording_artist_join(connection):
                    JOIN recording_json AS rj
                      ON r.data = rj.id
                    JOIN recording_artist_join AS raj
-                     ON (rj.data ->> 'recording_mbid')::uuid = raj.recording_mbid
+                     ON (rj.data ->> 'recording_mbid') = (raj.recording_mbid)::text
               LEFT JOIN artist_credit_redirect AS acr
                      ON raj.artist_mbids = acr.artist_mbids
                   WHERE acr.artist_mbids IS NULL
@@ -486,7 +486,7 @@ def get_gids_from_recording_using_fetched_artist_mbids(connection, artist_mbids)
                    JOIN recording_json AS rj
                      ON r.data = rj.id
                    JOIN recording_artist_join AS raj
-                     ON (rj.data ->> 'recording_mbid')::uuid = raj.recording_mbid
+                     ON rj.data ->> 'recording_mbid' = (raj.recording_mbid)::text
                   WHERE :artist_mbids = raj.artist_mbids
     """), {
         "artist_mbids": artist_mbids,
@@ -504,7 +504,7 @@ def get_recordings_metadata_using_artist_mbids_and_recording_artist_join(connect
         SELECT rj.data
           FROM recording_json AS rj
           JOIN recording_artist_join AS raj
-            ON (rj.data ->> 'recording_mbid')::uuid = raj.recording_mbid
+            ON rj.data ->> 'recording_mbid' = (raj.recording_mbid)::text
          WHERE raj.artist_mbids = :mbids
     """), {
         "mbids": mbids,
