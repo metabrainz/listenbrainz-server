@@ -188,6 +188,8 @@ def create_artist_credit_clusters_for_mbids(verbose='WARNING'):
             logging.basicConfig(format='%(message)s', level=logging.INFO)
         elif verbose == 'DEBUG':
             logging.basicConfig(format='%(message)s', level=logging.DEBUG)
+        else:
+            print("Invalid logging level specified. Using default logging level(WARNING).")
 
         print("Creating artist_credit clusters...")
 
@@ -302,21 +304,23 @@ def truncate_recording_release_join_table():
 
 
 @cli.command()
-@click.option("--verbose", "-v", default=0, help="Print debug information for given verbose level(0,1,2).")
-def create_clusters_using_fetched_artist_mbids(verbose=0):
+@click.option("--verbose", "-v", default="WARNING", help="Print debug information for given verbose level(WARNING, INFO, DEBUG).")
+def create_clusters_using_fetched_artist_mbids(verbose="WARNING"):
     """Creates clusters for artist_credits using artist MBIDs fetched from MusicBrainz
        database and stored in recording_artist_join table.
     """
 
-    if verbose == 1:
-        logging.basicConfig(format='%(message)s', level=logging.INFO)
-    elif verbose == 2:
-        logging.basicConfig(format='%(message)s', level=logging.DEBUG)
-
-    print("Creating artist_credit clusters...")
-
-    db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
     try:
+        if verbose == "INFO":
+            logging.basicConfig(format='%(message)s', level=logging.INFO)
+        elif verbose == "DEBUG":
+            logging.basicConfig(format='%(message)s', level=logging.DEBUG)
+        elif verbose != "WARNING":
+            print("Invalid logging level specified. Using default logging level(WARNING).")
+
+        print("Creating artist_credit clusters...")
+        db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
+
         logging.debug("=" * 80)
         clusters_modified, clusters_add_to_redirect = artist.create_clusters_using_fetched_artist_mbids()
         logging.debug("=" * 80)
