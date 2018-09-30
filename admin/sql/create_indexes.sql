@@ -19,5 +19,6 @@ CREATE INDEX name_ndx_artist_credit ON artist_credit (name);
 CREATE INDEX title_ndx_release ON release (title);
 
 CREATE INDEX recording_mbid_ndx_recording_artist_join ON recording_artist_join (recording_mbid);
+CREATE INDEX artsit_mbids_ndx_recording_artist_join ON recording_artist_join (artist_mbids);
 
 COMMIT;
