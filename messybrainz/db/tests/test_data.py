@@ -97,12 +97,10 @@ class DataTestCase(DatabaseTestCase):
             self.assertDictEqual(result['payload'], recording)
 
     def test_convert_to_messybrainz_json(self):
-        transformed_json = data.convert_to_messybrainz_json(recording, transform=True)
+        sorted_keys, transformed_json = data.convert_to_messybrainz_json(recording)
         result = json.loads(transformed_json)
         self.assertEqual(result['artist'], recording['artist'].lower())
         self.assertEqual(result['release'], recording['release'].lower())
         self.assertEqual(result['title'], recording['title'].lower())
         self.assertEqual(result['additional_info']['key1'], recording['additional_info']['key1'].lower())
-
-        non_transformed_json = data.convert_to_messybrainz_json(recording, transform=False)
-        self.assertDictEqual(json.loads(non_transformed_json), recording)
+        self.assertDictEqual(json.loads(sorted_keys), recording)
