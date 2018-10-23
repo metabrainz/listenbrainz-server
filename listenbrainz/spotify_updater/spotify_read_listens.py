@@ -3,6 +3,9 @@ import time
 import listenbrainz.webserver
 import json
 
+from listenbrainz.utils import safely_import_config
+safely_import_config()
+
 from dateutil import parser
 from flask import current_app
 from listenbrainz.domain import spotify
