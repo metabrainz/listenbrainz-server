@@ -169,6 +169,10 @@ def process_one_user(user):
                 current_app.logger.error('Could not validate listen for user %s: %s', str(user), json.dumps(listen, indent=3), exc_info=True)
                 # TODO: api_utils exposes werkzeug exceptions, if it's a more generic module it shouldn't be web-specific
 
+    # if we don't have any new listens, return
+    if len(listens) == 0:
+        return
+
     latest_listened_at = max(listen['listened_at'] for listen in listens)
     # try to submit listens to ListenBrainz
     retries = 10
