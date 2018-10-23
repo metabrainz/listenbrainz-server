@@ -8,7 +8,7 @@ from sqlalchemy.sql import text
 
 def get_id_from_meta_hash(connection, data):
     meta = {"artist": data["artist"], "release": data["release"]}
-    meta_json = convert_to_messybrainz_json(meta, transform=True)
+    _, meta_json = convert_to_messybrainz_json(meta)
     meta_sha256 = sha256(meta_json.encode("utf-8")).hexdigest()
 
     query = text("""SELECT s.gid
@@ -57,7 +57,7 @@ def add_release(connection, release):
     return gid
 
 def get_id_from_recording(connection, data):
-    data_json = convert_to_messybrainz_json(data, transform=True)
+    _, data_json = convert_to_messybrainz_json(data)
     data_sha256 = sha256(data_json.encode("utf-8")).hexdigest()
 
     query = text("""SELECT s.gid
@@ -72,14 +72,12 @@ def get_id_from_recording(connection, data):
         return None
 
 def submit_recording(connection, data):
-    sha256_json = convert_to_messybrainz_json(data, transform=True)
+    data_json, sha256_json = convert_to_messybrainz_json(data)
     data_sha256 = sha256(sha256_json.encode("utf-8")).hexdigest()
-    data_json = convert_to_messybrainz_json(data, transform=False)
 
     meta = {"artist": data["artist"], "title": data["title"]}
-    meta_sha256_json = convert_to_messybrainz_json(meta, transform=True)
+    meta_json, meta_sha256_json = convert_to_messybrainz_json(meta)
     meta_sha256 = sha256(meta_sha256_json.encode("utf-8")).hexdigest()
-    meta_json = convert_to_messybrainz_json(meta, transform=False)
 
     artist = get_artist_credit(connection, data["artist"])
     if not artist:
@@ -145,31 +143,16 @@ def link_recording_to_recording_id(connection, msid, mbid):
                                   "mbid": mbid})
 
 
-def convert_to_messybrainz_json(data, transform=False):
+def convert_to_messybrainz_json(data):
     """ Converts the specified data dict into JSON strings, while
     applying MessyBrainz' transformations which include (if needed)
         * sorting by keys
         * lowercasing all values
     Args:
         data (dict): the dict to be converted into MessyBrainz JSON
-        transform (bool): a bool flag specifying whether MessyBrainz transformations
-                          should be applied
     Returns:
-        str: the MessyBrainz JSON after transformations
+        serialized (str): the MessyBrainz JSON with sorted keys
+        serialized_lowercase(str): the MessyBrainz JSON with sorted keys and lowercase everything
     """
-    def lower(d):
-        """ Lower cases all values in the specified dict.
-        """
-        result = {}
-        for key, value in d.items():
-            if isinstance(value, str):
-                result[key] = value.lower()
-            elif isinstance(value, dict):
-                result[key] = lower(value)
-            else:
-                result[key] = value
-        return result
-    final_data = data
-    if transform:
-        final_data = lower(data)
-    return json.dumps(final_data, sort_keys=True, separators=(',', ':'))
+    serialized = json.dumps(data, sort_keys=True, separators=(',', ':'))
+    return serialized, serialized.lower()
