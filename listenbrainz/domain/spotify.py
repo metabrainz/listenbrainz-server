@@ -24,10 +24,14 @@ class Spotify:
 
     @property
     def last_updated_iso(self):
+        if self.last_updated is None:
+            return None
         return self.last_updated.isoformat() + "Z"
 
     @property
     def latest_listened_at_iso(self):
+        if self.latest_listened_at is None:
+            return None
         return self.latest_listened_at.isoformat() + "Z"
 
     @property

@@ -23,6 +23,10 @@ class SpotifyDomainTestCase(ServerTestCase):
                 latest_listened_at=None,
             )
 
+    def test_none_values_for_last_updated_and_latest_listened_at(self):
+        self.assertIsNone(self.spotify_user.last_updated_iso)
+        self.assertIsNone(self.spotify_user.latest_listened_at_iso)
+
     @mock.patch('listenbrainz.domain.spotify.db_spotify.get_user')
     @mock.patch('listenbrainz.domain.spotify.get_spotify_oauth')
     @mock.patch('listenbrainz.domain.spotify.db_spotify.update_token')
