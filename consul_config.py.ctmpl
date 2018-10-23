@@ -119,4 +119,8 @@ ADMINS = [
     {{template "KEY_ARRAY" "admins"}}
 ]
 
+# SPOTIFY
+SPOTIFY_CLIENT_ID = '''{{template "KEY" "spotify/client_id"}}'''
+SPOTIFY_CLIENT_SECRET = '''{{template "KEY" "spotify/client_secret"}}'''
+
 SQLALCHEMY_TRACK_MODIFICATIONS = False
