@@ -16,6 +16,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA)
 
+import json
 
 from messybrainz import db
 from messybrainz.db import data
@@ -26,6 +27,18 @@ recording = {
     'artist': 'Frank Ocean',
     'release': 'Blond',
     'title': 'Pretty Sweet',
+    'additional_info': {
+        'key1': 'Value1',
+    },
+}
+
+recording_diff_case = {
+    'artist': 'FRANK OCEAN',
+    'release': 'BLoNd',
+    'title': 'PReTtY SWEET',
+    'additional_info': {
+        'key1': 'VaLue1',
+    },
 }
 
 class DataTestCase(DatabaseTestCase):
@@ -68,3 +81,26 @@ class DataTestCase(DatabaseTestCase):
         with db.engine.connect() as connection:
             release_msid = data.add_release(connection, 'The College Dropout')
             self.assertEqual(release_msid, data.get_release(connection, 'The College Dropout'))
+
+    def test_add_recording_different_cases(self):
+        """ Tests that recordings with only case differences get the same MessyBrainz ID.
+        """
+        with db.engine.connect() as connection:
+            msid1 = data.submit_recording(connection, recording)
+            msid2 = str(data.get_id_from_recording(connection, recording_diff_case))
+            self.assertEqual(msid1, msid2)
+
+    def test_load_recording(self):
+        with db.engine.connect() as connection:
+            recording_msid = data.submit_recording(connection, recording)
+            result = data.load_recording(connection, recording_msid)
+            self.assertDictEqual(result['payload'], recording)
+
+    def test_convert_to_messybrainz_json(self):
+        sorted_keys, transformed_json = data.convert_to_messybrainz_json(recording)
+        result = json.loads(transformed_json)
+        self.assertEqual(result['artist'], recording['artist'].lower())
+        self.assertEqual(result['release'], recording['release'].lower())
+        self.assertEqual(result['title'], recording['title'].lower())
+        self.assertEqual(result['additional_info']['key1'], recording['additional_info']['key1'].lower())
+        self.assertDictEqual(json.loads(sorted_keys), recording)
