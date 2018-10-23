@@ -255,5 +255,5 @@ def convert_to_messybrainz_json(data):
         serialized_lowercase(str): the MessyBrainz JSON with sorted keys and lowercase everything
 
     """
-    serialized = json.dumps(final_data, sort_keys=True, separators=(',', ':'))
+    serialized = json.dumps(data, sort_keys=True, separators=(',', ':'))
     return serialized, serialized.lower()
