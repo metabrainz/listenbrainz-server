@@ -103,5 +103,10 @@ UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
 
 API_URL = 'https://api.listenbrainz.org'
 
+# SPOTIFY
+SPOTIFY_CLIENT_ID = ''
+SPOTIFY_CLIENT_SECRET = ''
+SPOTIFY_CALLBACK_URL = 'http://0.0.0.0/profile/connect-spotify/callback'
+
 LASTFM_PROXY_URL = 'http://0.0.0.0:8080/'
 MUSICBRAINZ_OAUTH_URL = 'https://musicbrainz.org/oauth2/userinfo'
