@@ -24,7 +24,8 @@
                     "track_mbid": "3ad754b9-1af2-4743-8ee5-d91ba4c82f0f",
                     "work_mbids": ["ac4f356f-23e5-40ab-990e-da7e34b65d6e", "ac3a827c-ad58-4624-9aa4-ecfffc56d8fe"],
                     "tracknumber": "7",
-                    "isrc": "isrc"
+                    "isrc": "isrc",
+                    "non_official_list": ["hi", "hello"]
                 }
             }
         }

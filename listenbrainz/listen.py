@@ -1,6 +1,7 @@
 # coding=utf-8
 import calendar
 import time
+import ujson
 
 from datetime import datetime
 from listenbrainz.utils import escape, convert_to_unix_timestamp
@@ -140,6 +141,10 @@ class Listen(object):
         # the additional_info.
         for key, value in row.items():
             if key not in data and key not in Listen.TOP_LEVEL_KEYS + Listen.PRIVATE_KEYS and value is not None:
+                try:
+                    value = ujson.loads(value)
+                except (ValueError, TypeError):
+                    pass
                 data[key] = value
 
         return cls(
@@ -228,7 +233,7 @@ class Listen(object):
             if key in Listen.PRIVATE_KEYS:
                 continue
             if key not in Listen.SUPPORTED_KEYS:
-                data['fields'][key] = escape(str(value))
+                data['fields'][key] = ujson.dumps(value)
 
         return data
 
