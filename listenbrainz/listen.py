@@ -2,6 +2,7 @@
 import calendar
 import time
 import ujson
+import yaml
 
 from datetime import datetime
 from listenbrainz.utils import escape, convert_to_unix_timestamp
@@ -143,8 +144,22 @@ class Listen(object):
             if key not in data and key not in Listen.TOP_LEVEL_KEYS + Listen.PRIVATE_KEYS and value is not None:
                 try:
                     value = ujson.loads(value)
+                    data[key] = value
+                    continue
                 except (ValueError, TypeError):
                     pass
+
+                # there are some lists in the database that were converted to string
+                # via str(list) so they can't be loaded via json.
+                # Example: "['Blank & Jones']"
+                # However, yaml parses them safely and correctly
+                try:
+                    value = yaml.safe_load(value)
+                    data[key] = value
+                    continue
+                except ValueError:
+                    pass
+
                 data[key] = value
 
         return cls(
