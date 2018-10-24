@@ -11,6 +11,7 @@ from flask import current_app
 from listenbrainz.domain import spotify
 from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, LISTEN_TYPE_IMPORT
 from listenbrainz.db import user as db_user
+from listenbrainz.db.exceptions import DatabaseException
 from spotipy import SpotifyException
 from werkzeug.exceptions import BadRequest, InternalServerError, ServiceUnavailable
 
