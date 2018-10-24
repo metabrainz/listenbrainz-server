@@ -39,7 +39,7 @@ def _convert_spotify_play_to_listen(play):
         'spotify_artist_ids': [a['external_urls']['spotify'] for a in artists],
         'artist_names': [a['name'] for a in artists],
         'listening_from': 'spotify',
-        'disc_number': track['disc_number'],
+        'discnumber': track['disc_number'],
         'duration_ms': track['duration_ms'],
         'spotify_album_id': track['album']['external_urls']['spotify'],
         # Named 'release_*' because 'release_name' is an official name in the docs
