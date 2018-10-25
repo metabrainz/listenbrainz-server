@@ -110,6 +110,7 @@ ADMINS = []
 # SPOTIFY
 SPOTIFY_CLIENT_ID = ''
 SPOTIFY_CLIENT_SECRET = ''
+SPOTIFY_CALLBACK_URL = 'http://0.0.0.0/profile/connect-spotify/callback'
 
 # This is set to False to stop a warning from flask_sqlalchemy.
 # We do not use this feature at all, so it is safe to set to False.
