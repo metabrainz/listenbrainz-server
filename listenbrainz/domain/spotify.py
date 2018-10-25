@@ -1,5 +1,5 @@
 import pytz
-from flask import current_app, url_for
+from flask import current_app
 import spotipy.oauth2
 
 from listenbrainz.db import spotify as db_spotify
@@ -82,9 +82,7 @@ def get_spotify_oauth():
     client_id = current_app.config['SPOTIFY_CLIENT_ID']
     client_secret = current_app.config['SPOTIFY_CLIENT_SECRET']
     scope = 'user-read-recently-played'
-    redirect_url = url_for(
-            'profile.connect_spotify_callback',
-            _external=True)
+    redirect_url = current_app.config['SPOTIFY_CALLBACK_URL']
     return spotipy.oauth2.SpotifyOAuth(client_id, client_secret, redirect_uri=redirect_url, scope=scope)
 
 
