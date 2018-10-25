@@ -142,6 +142,12 @@ section of the file.
     SPOTIFY_CLIENT_ID = ''
     SPOTIFY_CLIENT_SECRET = ''
 
+.. note::
+
+    The hostname on the callback URL must be the same as the host you use to
+    access your development server. If you use something other than ``localhost``, you
+    should update the ``SPOTIFY_CALLBACK_URL`` field accordingly.
+
 .. _Last.FM API page: https://last.fm/api
 
 .. _Spotify Developer Dashboard: https://developer.spotify.com/dashboard/applications
