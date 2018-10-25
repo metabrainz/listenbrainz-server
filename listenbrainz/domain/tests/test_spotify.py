@@ -51,7 +51,7 @@ class SpotifyDomainTestCase(ServerTestCase):
         func_oauth = spotify.get_spotify_oauth()
         self.assertEqual(func_oauth.client_id, current_app.config['SPOTIFY_CLIENT_ID'])
         self.assertEqual(func_oauth.client_secret, current_app.config['SPOTIFY_CLIENT_SECRET'])
-        self.assertEqual(func_oauth.redirect_uri, 'http://0.0.0.0/profile/connect-spotify/callback')
+        self.assertEqual(func_oauth.redirect_uri, 'http://localhost/profile/connect-spotify/callback')
         self.assertEqual(func_oauth.scope, 'user-read-recently-played')
 
     @mock.patch('listenbrainz.domain.spotify.db_spotify.get_user')
