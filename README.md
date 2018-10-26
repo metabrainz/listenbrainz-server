@@ -54,7 +54,7 @@ This must display the path of your folder containing the database dumps. The fol
 3. Then import the database dumps by this command:
 
 ```
-$ docker-compose -f docker/docker-compose.dev.yml run -v $DUMPS_DIR:/home/musicbrainz/dumps \
+$ docker-compose -f docker/docker-compose.yml run -v $DUMPS_DIR:/home/musicbrainz/dumps \
      -v $PWD/data/mbdata:/var/lib/postgresql/data/pgdata musicbrainz_db
 ```
 
