@@ -158,69 +158,6 @@ def export_data():
         return render_template("user/export.html", user=current_user)
 
 
-@profile_bp.route("/upload", methods=['GET', 'POST'])
-@login_required
-def upload():
-    if request.method == 'POST':
-        try:
-            f = request.files['file']
-            if f.filename == '':
-                flash.warning('No file selected.')
-                return redirect(request.url)
-        except RequestEntityTooLarge:
-            raise RequestEntityTooLarge('Maximum filesize upload limit exceeded. File must be <=' +
-                                        sizeof_readable(current_app.config['MAX_CONTENT_LENGTH']))
-        except:
-            raise InternalServerError("Something went wrong. Could not upload the file")
-
-        # Check upload folder
-        if 'UPLOAD_FOLDER' not in current_app.config:
-            raise InternalServerError("Could not upload the file. Upload folder not specified")
-        upload_path = path.join(path.abspath(current_app.config['UPLOAD_FOLDER']), current_user.musicbrainz_id)
-        if not path.isdir(upload_path):
-            makedirs(upload_path)
-
-        # Write to a file
-        filename = path.join(upload_path, secure_filename(f.filename))
-        f.save(filename)
-
-        if not zipfile.is_zipfile(filename):
-            raise BadRequest('Not a valid zip file.')
-
-        success = failure = 0
-        regex = re.compile('json/scrobbles/scrobbles-*')
-        try:
-            zf = zipfile.ZipFile(filename, 'r')
-            files = zf.namelist()
-            # Iterate over file that match the regex
-            for f in [f for f in files if regex.match(f)]:
-                try:
-                    # Load listens file
-                    jsonlist = ujson.loads(zf.read(f))
-                    if not isinstance(jsonlist, list):
-                        raise ValueError
-                except ValueError:
-                    failure += 1
-                    continue
-
-                payload = convert_backup_to_native_format(jsonlist)
-                for listen in payload:
-                    validate_listen(listen, LISTEN_TYPE_IMPORT)
-                insert_payload(payload, current_user)
-                success += 1
-        except Exception:
-            raise BadRequest('Not a valid lastfm-backup-file.')
-        finally:
-            os.remove(filename)
-
-        # reset listen count for user
-        db_connection = webserver.influx_connection._influx
-        db_connection.reset_listen_count(current_user.musicbrainz_id)
-
-        flash.info('Congratulations! Your listens from %d files have been uploaded successfully.' % success)
-    return redirect(url_for("profile.import_data"))
-
-
 @profile_bp.route('/request-stats', methods=['GET'])
 @login_required
 def request_stats():
