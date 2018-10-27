@@ -74,6 +74,21 @@
             {% endif %}
             </tbody>
           </table>
+          <table class="table table-collapsed">
+            <thead>
+              <tr>
+                <th>Latest Listens</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% if latest_listens %}
+              <tr>
+                <td>Latest listens:
+                <td>{{ "{:,}".format(latest_listens) }}</td>
+              </tr>
+            {% endif %}
+            </tbody>
+          </table>
           <p style="text-align: center">
             <small>updated every 5 minutes</small><br />
             <small><a href="{{ url_for('index.current_status') }}">more on the current status page</a></small>

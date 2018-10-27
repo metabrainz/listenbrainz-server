@@ -17,13 +17,14 @@ from listenbrainz.webserver.views.user import delete_user
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import pika
 import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
+import listenbrainz.webserver.redis_connection as redis_connection
 
 
 index_bp = Blueprint('index', __name__)
 locale.setlocale(locale.LC_ALL, '')
 
-STATS_PREFIX = 'listenbrainz.stats' # prefix used in key to cache stats
-CACHE_TIME = 10 * 60 # time in seconds we cache the stats
+STATS_PREFIX = 'listenbrainz.stats'  # prefix used in key to cache stats
+CACHE_TIME = 10 * 60  # time in seconds we cache the stats
 
 @index_bp.route("/")
 def index():
@@ -34,11 +35,15 @@ def index():
     except Exception as e:
         current_app.logger.error('Error while trying to get total listen count: %s', str(e))
         listen_count = None
-
-
+    try:
+        latest_listens = redis_connection._redis.get_latest_listens()
+    except Exception as e:
+        current_app.logger.error('Error while trying to get 10 latest listens: %s', str(e))
+        latest_listens = None
     return render_template(
         "index/index.html",
         listen_count=listen_count,
+        latest_listens=latest_listens
     )
 
 

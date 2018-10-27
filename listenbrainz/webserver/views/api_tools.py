@@ -13,6 +13,7 @@ from listenbrainz.listen import Listen
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
 from listenbrainz.webserver.external import messybrainz
 from werkzeug.exceptions import InternalServerError, ServiceUnavailable, BadRequest
+from listenbrainz.webserver.redis_connection import _redis
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
 MAX_LISTEN_SIZE = 10240
@@ -31,7 +32,6 @@ DEFAULT_ITEMS_PER_GET = 25
 
 MAX_ITEMS_PER_MESSYBRAINZ_LOOKUP = 10
 
-
 # Define the values for types of listens
 LISTEN_TYPE_SINGLE = 1
 LISTEN_TYPE_IMPORT = 2
@@ -44,6 +44,7 @@ def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
     try:
         augmented_listens = _get_augmented_listens(payload, user, listen_type)
         _send_listens_to_queue(listen_type, augmented_listens)
+        redis._redis.store_latest_listens(payload)
     except (InternalServerError, ServiceUnavailable) as e:
         raise
     except Exception as e:
