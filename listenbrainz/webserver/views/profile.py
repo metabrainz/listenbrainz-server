@@ -23,7 +23,7 @@ from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.influx_connection import _influx
 from listenbrainz.webserver.utils import sizeof_readable
 from listenbrainz.webserver.views.user import delete_user, _get_user
-from listenbrainz.webserver.views.api_tools import convert_backup_to_native_format, insert_payload, validate_listen, \
+from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, \
     LISTEN_TYPE_IMPORT, publish_data_to_queue
 from os import path, makedirs
 from time import time
