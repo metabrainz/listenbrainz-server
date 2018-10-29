@@ -26,19 +26,23 @@ def init_rabbitmq_connection(app):
         credentials=pika.PlainCredentials(app.config['RABBITMQ_USERNAME'], app.config['RABBITMQ_PASSWORD']),
     )
 
-    _rabbitmq = RabbitMQConnectionPool(connection_parameters, 10)
+    _rabbitmq = RabbitMQConnectionPool(app.logger, connection_parameters, app.config['MAXIMUM_RABBITMQ_CONNECTIONS'])
     _rabbitmq.add()
     app.logger.error('Connection to RabbitMQ established!')
 
 
 class RabbitMQConnectionPool:
-    def __init__(self, connection_parameters, max_size):
+    def __init__(self, logger, connection_parameters, max_size):
+        self.log = logger
         self.connection_parameters = connection_parameters
         self.max_size = max_size
         self.queue = queue.Queue(maxsize=max_size)
 
     def add(self):
-        self.queue.put_nowait(self.create())
+        try:
+            self.queue.put_nowait(self.create())
+        except queue.Full:
+            self.log.error('Tried to add a new connection into a full queue...', exc_info=True)
 
     def get(self):
         while True:
@@ -56,6 +60,7 @@ class RabbitMQConnectionPool:
             if connection.is_open:
                 self.queue.put_nowait((connection, channel))
         except queue.Full:
+            self.log.error('Tried to put a connection into a full queue...', exc_info=True)
             connection.close()
 
     def create(self):
