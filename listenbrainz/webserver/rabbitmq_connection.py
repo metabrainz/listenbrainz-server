@@ -27,7 +27,7 @@ def init_rabbitmq_connection(app):
     )
 
     _rabbitmq = RabbitMQConnectionPool(connection_parameters, 10)
-    _rabbitmq.fill()
+    _rabbitmq.add()
     app.logger.error('Connection to RabbitMQ established!')
 
 
@@ -37,9 +37,8 @@ class RabbitMQConnectionPool:
         self.max_size = max_size
         self.queue = queue.Queue(maxsize=max_size)
 
-    def fill(self):
-        for _ in range(self.max_size):
-            self.queue.put_nowait(self.create())
+    def add(self):
+        self.queue.put_nowait(self.create())
 
     def get(self):
         while True:
@@ -50,7 +49,7 @@ class RabbitMQConnectionPool:
                 else:
                     return self.create()
             except queue.Empty:
-                self.fill()
+                self.add()
 
     def release(self, connection, channel):
         try:
@@ -58,7 +57,6 @@ class RabbitMQConnectionPool:
                 self.queue.put_nowait((connection, channel))
         except queue.Full:
             connection.close()
-
 
     def create(self):
         connection = pika.BlockingConnection(self.connection_parameters)
