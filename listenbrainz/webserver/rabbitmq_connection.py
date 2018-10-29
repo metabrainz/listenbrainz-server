@@ -1,7 +1,7 @@
 import sys
+import queue
 from time import sleep
 import pika
-import pika_pool
 import listenbrainz.utils as utils
 
 _rabbitmq = None
@@ -26,11 +26,41 @@ def init_rabbitmq_connection(app):
         credentials=pika.PlainCredentials(app.config['RABBITMQ_USERNAME'], app.config['RABBITMQ_PASSWORD']),
     )
 
-    _rabbitmq = pika_pool.QueuedPool(
-        create=lambda: pika.BlockingConnection(connection_parameters),
-        max_size=100,
-        max_overflow=10,
-        timeout=10,
-        recycle=3600,
-        stale=45,
-    )
+    _rabbitmq = RabbitMQConnectionPool(connection_parameters, 10)
+    _rabbitmq.fill()
+    app.logger.error('Connection to RabbitMQ established!')
+
+
+class RabbitMQConnectionPool:
+    def __init__(self, connection_parameters, max_size):
+        self.connection_parameters = connection_parameters
+        self.max_size = max_size
+        self.queue = queue.Queue(maxsize=max_size)
+
+    def fill(self):
+        for _ in range(self.max_size):
+            self.queue.put_nowait(self.create())
+
+    def get(self):
+        while True:
+            try:
+                connection, channel = self.queue.get_nowait()
+                if connection.is_open:
+                    return connection, channel
+                else:
+                    return self.create()
+            except queue.Empty:
+                self.fill()
+
+    def release(self, connection, channel):
+        try:
+            if connection.is_open:
+                self.queue.put_nowait((connection, channel))
+        except queue.Full:
+            connection.close()
+
+
+    def create(self):
+        connection = pika.BlockingConnection(self.connection_parameters)
+        channel = connection.channel()
+        return connection, channel
