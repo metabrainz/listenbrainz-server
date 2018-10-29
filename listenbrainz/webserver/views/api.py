@@ -187,7 +187,7 @@ def validate_token():
     """
     Check whether a User Token is a valid entry in the database.
 
-    In order to query this endpoint, send make a GET request to this endpoint.
+    In order to query this endpoint, send a GET request.
     A JSON response will be returned, with one of three codes.
 
     :statuscode 200: The user token is valid.
