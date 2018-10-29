@@ -252,34 +252,6 @@ def _messybrainz_lookup(listens):
     return augmented_listens
 
 
-def convert_backup_to_native_format(data):
-    """
-    Converts the imported listen-payload from the lastfm backup file
-    to the native payload format.
-    """
-    payload = []
-    for native_lis in data:
-        listen = {}
-        listen['track_metadata'] = {}
-        listen['track_metadata']['additional_info'] = {}
-
-        if 'timestamp' in native_lis and 'unixtimestamp' in native_lis['timestamp']:
-            listen['listened_at'] = native_lis['timestamp']['unixtimestamp']
-
-        if 'track' in native_lis:
-            if 'name' in native_lis['track']:
-                listen['track_metadata']['track_name'] = native_lis['track']['name']
-            if 'mbid' in native_lis['track']:
-                listen['track_metadata']['additional_info']['recording_mbid'] = native_lis['track']['mbid']
-            if 'artist' in native_lis['track']:
-                if 'name' in native_lis['track']['artist']:
-                    listen['track_metadata']['artist_name'] = native_lis['track']['artist']['name']
-                if 'mbid' in native_lis['track']['artist']:
-                    listen['track_metadata']['additional_info']['artist_mbids'] = [native_lis['track']['artist']['mbid']]
-        payload.append(listen)
-    return payload
-
-
 def log_raise_400(msg, data=""):
     """ Helper function for logging issues with request data and showing error page.
         Logs the message and data, raises BadRequest exception which shows 400 Bad
