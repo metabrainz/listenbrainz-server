@@ -199,12 +199,15 @@ def validate_token():
         raise BadRequest("You need to provide an Authorization token.")
     user = db_user.get_by_token(auth_token)
     if user is None:
-        raise Unauthorized("Token does not exist in database.")
-    return jsonify({
-        'code': 200,
-        'message': 'Token exists in database.'
-    })
-
+        return jsonify({
+            'code': 200,
+            'message': 'Token invalid.'
+        })
+    else:
+        return jsonify({
+            'code': 200,
+            'message': 'Token valid.'
+        })
 
 def _parse_int_arg(name, default=None):
     value = request.args.get(name)
