@@ -173,6 +173,7 @@ class Listen(object):
                 'additional_info': data,
                 'artist_name': row.get('artist_name'),
                 'track_name': row.get('track_name'),
+                'release_name': row.get('release_name'),
             }
         )
 

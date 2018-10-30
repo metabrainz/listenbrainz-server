@@ -1,7 +1,7 @@
 import sys
+import queue
 from time import sleep
 import pika
-import pika_pool
 import listenbrainz.utils as utils
 
 _rabbitmq = None
@@ -27,12 +27,62 @@ def init_rabbitmq_connection(app):
         credentials=pika.PlainCredentials(app.config['RABBITMQ_USERNAME'], app.config['RABBITMQ_PASSWORD']),
     )
 
-    _rabbitmq = pika_pool.QueuedPool(
-        create=lambda: pika.BlockingConnection(connection_parameters),
-        max_size=100,
-        max_overflow=10,
-        timeout=10,
-        recycle=3600,
-        stale=45,
-    )
+    _rabbitmq = RabbitMQConnectionPool(app.logger, connection_parameters, app.config['MAXIMUM_RABBITMQ_CONNECTIONS'])
+    _rabbitmq.add()
     app.logger.info('Connection to RabbitMQ established!')
+
+
+class RabbitMQConnectionPool:
+    def __init__(self, logger, connection_parameters, max_size):
+        self.log = logger
+        self.connection_parameters = connection_parameters
+        self.max_size = max_size
+        self.queue = queue.Queue(maxsize=max_size)
+
+    def add(self):
+        try:
+            self.queue.put_nowait(self.create())
+        except queue.Full:
+            self.log.error('Tried to add a new connection into a full queue...', exc_info=True)
+
+    def get(self):
+        while True:
+            try:
+                connection = self.queue.get_nowait()
+                if connection.is_open:
+                    return connection
+            except queue.Empty:
+                self.add()
+
+    def release(self, connection):
+        try:
+            if connection.is_open:
+                self.queue.put_nowait(connection)
+        except queue.Full:
+            self.log.error('Tried to put a connection into a full queue...', exc_info=True)
+            connection.close()
+
+    def create(self):
+        connection = pika.BlockingConnection(self.connection_parameters)
+        channel = connection.channel()
+        return RabbitMQConnection(connection, channel, self)
+
+
+class RabbitMQConnection:
+    def __init__(self, connection, channel, pool):
+        self.connection = connection
+        self.channel = channel
+        self.pool = pool
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.pool.release(self)
+
+    @property
+    def is_open(self):
+        return self.connection.is_open
+
+    def close(self):
+        self.connection.close()
