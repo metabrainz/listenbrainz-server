@@ -325,16 +325,16 @@ def publish_data_to_queue(data, exchange, queue, error_msg):
         error_msg (str): the error message to be returned in case of an error
     """
     try:
-        cxn, channel = rabbitmq_connection._rabbitmq.get()
-        channel.exchange_declare(exchange=exchange, exchange_type='fanout')
-        channel.queue_declare(queue, durable=True)
-        channel.basic_publish(
-            exchange=exchange,
-            routing_key='',
-            body=ujson.dumps(data),
-            properties=pika.BasicProperties(delivery_mode=2, ),
-        )
-        rabbitmq_connection._rabbitmq.release(cxn, channel)
+        with rabbitmq_connection._rabbitmq.get() as connection:
+            channel = connection.channel
+            channel.exchange_declare(exchange=exchange, exchange_type='fanout')
+            channel.queue_declare(queue, durable=True)
+            channel.basic_publish(
+                exchange=exchange,
+                routing_key='',
+                body=ujson.dumps(data),
+                properties=pika.BasicProperties(delivery_mode=2, ),
+            )
     except pika.exceptions.ConnectionClosed as e:
         current_app.logger.error("Connection to rabbitmq closed while trying to publish: %s" % str(e))
         raise ServiceUnavailable(error_msg)

@@ -47,18 +47,16 @@ class RabbitMQConnectionPool:
     def get(self):
         while True:
             try:
-                connection, channel = self.queue.get_nowait()
+                connection = self.queue.get_nowait()
                 if connection.is_open:
-                    return connection, channel
-                else:
-                    return self.create()
+                    return connection
             except queue.Empty:
                 self.add()
 
-    def release(self, connection, channel):
+    def release(self, connection):
         try:
             if connection.is_open:
-                self.queue.put_nowait((connection, channel))
+                self.queue.put_nowait(connection)
         except queue.Full:
             self.log.error('Tried to put a connection into a full queue...', exc_info=True)
             connection.close()
@@ -66,4 +64,24 @@ class RabbitMQConnectionPool:
     def create(self):
         connection = pika.BlockingConnection(self.connection_parameters)
         channel = connection.channel()
-        return connection, channel
+        return RabbitMQConnection(connection, channel, self)
+
+
+class RabbitMQConnection:
+    def __init__(self, connection, channel, pool):
+        self.connection = connection
+        self.channel = channel
+        self.pool = pool
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.pool.release(self)
+
+    @property
+    def is_open(self):
+        return self.connection.is_open
+
+    def close(self):
+        self.connection.close()
