@@ -190,7 +190,7 @@ def validate_token():
     In order to query this endpoint, send a GET request.
     A JSON response will be returned, with one of three codes.
 
-    :statuscode 200: The user token is (in)valid.
+    :statuscode 200: The user token is valid/invalid.
     :statuscode 400: No token was sent to the endpoint.
     """
     auth_token = request.args.get('token', '')
