@@ -190,9 +190,8 @@ def validate_token():
     In order to query this endpoint, send a GET request.
     A JSON response will be returned, with one of three codes.
 
-    :statuscode 200: The user token is valid.
+    :statuscode 200: The user token is (in)valid.
     :statuscode 400: No token was sent to the endpoint.
-    :statuscode 401: The user token is invalid (does not exist).
     """
     auth_token = request.args.get('token', '')
     if not auth_token:
