@@ -56,6 +56,9 @@ RABBITMQ_PORT = {{.Port}}
 RABBITMQ_USERNAME = '''{{template "KEY" "rabbitmq_user"}}'''
 RABBITMQ_PASSWORD = '''{{template "KEY" "rabbitmq_pass"}}'''
 RABBITMQ_VHOST = '''{{template "KEY" "rabbitmq_vhost"}}'''
+MAXIMUM_RABBITMQ_CONNECTIONS = 20
+
+
 INCOMING_EXCHANGE = '''{{template "KEY" "incoming_exchange"}}'''
 INCOMING_QUEUE = '''{{template "KEY" "incoming_queue"}}'''
 UNIQUE_EXCHANGE = '''{{template "KEY" "unique_exchange"}}'''

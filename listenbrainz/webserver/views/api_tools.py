@@ -8,7 +8,6 @@ import ujson
 import uuid
 
 from flask import current_app
-from pika_pool import Overflow as PikaPoolOverflow, Timeout as PikaPoolTimeout
 from listenbrainz.listen import Listen
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
 from listenbrainz.webserver.external import messybrainz
@@ -326,10 +325,11 @@ def publish_data_to_queue(data, exchange, queue, error_msg):
         error_msg (str): the error message to be returned in case of an error
     """
     try:
-        with rabbitmq_connection._rabbitmq.acquire() as cxn:
-            cxn.channel.exchange_declare(exchange=exchange, exchange_type='fanout')
-            cxn.channel.queue_declare(queue, durable=True)
-            cxn.channel.basic_publish(
+        with rabbitmq_connection._rabbitmq.get() as connection:
+            channel = connection.channel
+            channel.exchange_declare(exchange=exchange, exchange_type='fanout')
+            channel.queue_declare(queue, durable=True)
+            channel.basic_publish(
                 exchange=exchange,
                 routing_key='',
                 body=ujson.dumps(data),
