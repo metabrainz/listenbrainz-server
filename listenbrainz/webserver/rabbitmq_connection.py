@@ -28,7 +28,6 @@ def init_rabbitmq_connection(app):
     )
 
     _rabbitmq = RabbitMQConnectionPool(app.logger, connection_parameters, app.config['MAXIMUM_RABBITMQ_CONNECTIONS'])
-    _rabbitmq.add()
     app.logger.info('Connection to RabbitMQ established!')
 
 
