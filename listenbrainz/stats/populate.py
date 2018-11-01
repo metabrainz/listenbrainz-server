@@ -69,7 +69,7 @@ def push_entities_to_queue(force=False):
 
 cli = click.Group()
 
-@cli.command()
+@cli.command(name="populate_queue")
 @click.option('--force', '-f', is_flag=True, help='Force statistics calculation for ALL entities')
 def populate_queue(force):
     """ Populate the ListenBrainz stats calculation queue with entities
