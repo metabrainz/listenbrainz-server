@@ -176,7 +176,7 @@ def artists(user_name):
 
 def _get_user(user_name):
     """ Get current username """
-    if current_user.is_authenticated() and \
+    if current_user.is_authenticated and \
        current_user.musicbrainz_id == user_name:
         return current_user
     else:

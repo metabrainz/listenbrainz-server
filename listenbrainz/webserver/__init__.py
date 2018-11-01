@@ -167,7 +167,7 @@ def create_app(config_path=None, debug=None):
             return
         # otherwise if user is logged in and hasn't agreed to gdpr,
         # redirect them to agree to terms page.
-        elif current_user.is_authenticated() and current_user.gdpr_agreed is None:
+        elif current_user.is_authenticated and current_user.gdpr_agreed is None:
             return redirect(url_for('index.gdpr_notice', next=request.full_path))
 
     return app
