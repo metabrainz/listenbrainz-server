@@ -68,7 +68,17 @@ def refresh_user_token(spotify_user):
         user (domain.spotify.Spotify): the same user with updated tokens
     """
     auth = get_spotify_oauth()
-    new_token = auth.refresh_access_token(spotify_user.refresh_token)
+
+    retries = 5
+    new_token = None
+    while retries > 0:
+        new_token = auth.refresh_access_token(spotify_user.refresh_token)
+        if new_token is not None:
+            break
+        retries -= 1
+    if new_token is None:
+        raise SpotifyAPIError('Could not refresh API Token for Spotify user')
+
     access_token = new_token['access_token']
     refresh_token = new_token['refresh_token']
     expires_at = new_token['expires_at']
