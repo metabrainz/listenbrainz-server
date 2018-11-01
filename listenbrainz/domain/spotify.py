@@ -5,6 +5,8 @@ import spotipy.oauth2
 from listenbrainz.db import spotify as db_spotify
 import datetime
 
+SPOTIFY_API_RETRIES = 5
+
 
 class Spotify:
     def __init__(self, user_id, musicbrainz_id, user_token, token_expires, refresh_token,
@@ -69,11 +71,11 @@ def refresh_user_token(spotify_user):
     """
     auth = get_spotify_oauth()
 
-    retries = 5
+    retries = SPOTIFY_API_RETRIES
     new_token = None
     while retries > 0:
         new_token = auth.refresh_access_token(spotify_user.refresh_token)
-        if new_token is not None:
+        if new_token:
             break
         retries -= 1
     if new_token is None:
