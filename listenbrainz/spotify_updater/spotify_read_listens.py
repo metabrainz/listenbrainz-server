@@ -152,7 +152,11 @@ def process_one_user(user):
 
     """
     if user.token_expired:
-        user = spotify.refresh_user_token(user)
+        try:
+            user = spotify.refresh_user_token(user)
+        except spotify.SpotifyAPIError:
+            current_app.logger.error('Could not refresh user token from spotify', exc_info=True)
+            raise
 
     listenbrainz_user = db_user.get(user.user_id)
     try:
