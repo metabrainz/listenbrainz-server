@@ -5,6 +5,7 @@ from flask import current_app
 from listenbrainz.domain import spotify
 from listenbrainz.webserver.testing import ServerTestCase
 from unittest import mock
+from unittest.mock import MagicMock
 
 
 class SpotifyDomainTestCase(ServerTestCase):
@@ -134,3 +135,12 @@ class SpotifyDomainTestCase(ServerTestCase):
         t = int(time.time())
         spotify.update_latest_listened_at(1, t)
         mock_update_listened_at.assert_called_once_with(1, t)
+
+    @mock.patch('listenbrainz.domain.spotify.get_spotify_oauth')
+    def test_refresh_user_token_bad(self, mock_get_spotify_oauth):
+        mock_oauth = MagicMock()
+        mock_oauth.refresh_access_token.return_value = None
+        mock_get_spotify_oauth.return_value = mock_oauth
+
+        with self.assertRaises(spotify.SpotifyAPIError):
+            spotify.refresh_user_token(self.spotify_user)
