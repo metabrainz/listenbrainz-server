@@ -48,8 +48,7 @@ class RedisListenStore(ListenStore):
             self.log.error("The data can't be set due to: {}".format(str(e)))
 
     def get_latest_listens(self):
-        """ This module is used to get the datas that has been set in the redis
-            Please use this function instead of store_latest_listens
+        """ Return the latest ten listens that have been cached in the redis
+            listenstore
         """
-        return self.redis.get('latest_listens')
-
+        return self.redis.getrange('latest_listens', 0, 9)
