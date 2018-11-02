@@ -4,7 +4,7 @@
 
 {% block content %}
   <h2 class="page-title">Import to user {{ user.musicbrainz_id }}</h2>
-  {% if current_user.is_authenticated() and current_user == user %}
+  {% if current_user.is_authenticated and current_user == user %}
 
     <p>
         Most users will want to import from Last.fm directly.

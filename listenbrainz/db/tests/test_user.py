@@ -46,7 +46,7 @@ class UserTestCase(DatabaseTestCase):
             })
 
         user = db_user.get(user['id'])
-        self.assertEquals(int(user['last_login'].strftime('%s')), 0)
+        self.assertEqual(int(user['last_login'].strftime('%s')), 0)
 
         db_user.update_last_login(user['musicbrainz_id'])
         user = db_user.get_by_mb_id(user['musicbrainz_id'])
