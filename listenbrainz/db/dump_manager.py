@@ -78,7 +78,7 @@ def create(location, threads):
         current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
 
 
-@cli.command()
+@cli.command(name="import_dump")
 @click.option('--private-archive', '-pr', default=None)
 @click.option('--public-archive', '-pu', default=None)
 @click.option('--listen-archive', '-l', default=None)
@@ -131,7 +131,7 @@ def import_dump(private_archive, public_archive, listen_archive, threads):
             raise
 
 
-@cli.command()
+@cli.command(name="delete_old_dumps")
 @click.argument('location', type=str)
 def delete_old_dumps(location):
     _cleanup_dumps(location)
