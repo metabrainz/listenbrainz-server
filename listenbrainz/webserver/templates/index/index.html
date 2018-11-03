@@ -84,8 +84,8 @@
             <tbody>
             {% if latest_listens %}
               <tr>
-                <td>Latest listens:
-                <td>{{ "{:,}".format(latest_listens) }}</td>
+                  <td>{{ "{;.}".format(listen.artist_name) }}</td>
+                <td>{{ "{:,}".format(listen.track_name) }}</td>
               </tr>
             {% endif %}
             </tbody>

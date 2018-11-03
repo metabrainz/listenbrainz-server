@@ -51,4 +51,5 @@ class RedisListenStore(ListenStore):
         """ Return the latest ten listens that have been cached in the redis
             listenstore
         """
-        return self.redis.getrange('latest_listens', 0, 9)
+        data = self.redis.get('latest_listens')
+        ten_listens = list(data.keys())[10:]
