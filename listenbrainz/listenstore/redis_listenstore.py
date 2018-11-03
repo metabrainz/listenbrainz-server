@@ -53,3 +53,4 @@ class RedisListenStore(ListenStore):
         """
         data = self.redis.get('latest_listens')
         ten_listens = list(data.keys())[10:]
+        return ten_listens
