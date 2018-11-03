@@ -35,11 +35,18 @@ def index():
     except Exception as e:
         current_app.logger.error('Error while trying to get total listen count: %s', str(e))
         listen_count = None
+
     try:
         latest_listens = redis_connection._redis.get_latest_listens()
+        for listen in latest_listens:
+            latest_listens.append({
+                "track_metadata": listen.data
+            })
+
     except Exception as e:
         current_app.logger.error('Error while trying to get 10 latest listens: %s', str(e))
-        latest_listens = None
+        latest_listens=None
+
     return render_template(
         "index/index.html",
         listen_count=listen_count,
@@ -213,3 +220,4 @@ def _get_user_count():
             raise
         cache.set(user_count_key, int(user_count), CACHE_TIME, encode=False)
         return user_count
+
