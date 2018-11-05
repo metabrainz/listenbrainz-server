@@ -73,14 +73,14 @@ will be needed. This can be done using the following command:
 Keep in mind that this process is very time consuming, so make sure that you don't delete the ``data/mbdata`` directory accidently. Also make sure that you have about 25GB of free space to keep the MusicBrainz data.
 
 
+Now in order to initialize the database (create user, tables etc.) run these commands
+
+    $ docker-compose -f docker/docker-compose.yml -p messybrainz run --rm web bash -c "python3 manage.py init_db"
+
 Then, in order to download all the software and build and start the containers needed to run
 MessyBrainz, run the following command.
 
     $ ./develop.sh
-
-Now in order to initialize the database (create user, tables etc.) run these commands
-
-    $ docker-compose -f docker/docker-compose.yml -p messybrainz run --rm web bash -c "python3 manage.py init_db"
 
 Everything should be good to go now. You should be able to access the webserver at `http://localhost:8080`.
 
