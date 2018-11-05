@@ -131,7 +131,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         response2 = self.client.get(url_for('user.profile', user_name='IlieKcomPUteRs'))
         self.assert200(response1)
         self.assert200(response2)
-        self.assertEqual(response1.data.decode('utf-8'), response2.data.decode('utf-8'))
+        self.assertEqual(response1.data.decode('utf-8')[:100], response2.data.decode('utf-8')[:100])
 
     @mock.patch('listenbrainz.webserver.views.user.time')
     @mock.patch('listenbrainz.webserver.influx_connection._influx.fetch_listens')
