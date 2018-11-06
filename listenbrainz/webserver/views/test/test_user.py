@@ -128,10 +128,11 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self._create_test_data('iliekcomputers')
 
         response1 = self.client.get(url_for('user.profile', user_name='iliekcomputers'))
+        self.assertEqual(self.get_context_variable('user').musicbrainz_id, "iliekcomputers")
         response2 = self.client.get(url_for('user.profile', user_name='IlieKcomPUteRs'))
+        self.assertEqual(self.get_context_variable('user').musicbrainz_id, "iliekcomputers")
         self.assert200(response1)
         self.assert200(response2)
-        self.assertContext('user', self.user)
 
     @mock.patch('listenbrainz.webserver.views.user.time')
     @mock.patch('listenbrainz.webserver.influx_connection._influx.fetch_listens')
