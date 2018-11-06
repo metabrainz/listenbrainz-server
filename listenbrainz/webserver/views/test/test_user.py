@@ -38,12 +38,10 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
             'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
         })
 
-        db_user.get_or_create(1, 'iliekcomputers')
-        user = db_user.get_by_mb_id('iliekcomputers')
+        user = db_user.get_or_create(1, 'iliekcomputers')
         self.user = User.from_dbrow(user)
 
-        db_user.get_or_create(2, 'weird\\user name')
-        weirduser = db_user.get_by_mb_id('weird\\user name')
+        weirduser = db_user.get_or_create(2, 'weird\\user name')
         self.weirduser = User.from_dbrow(weirduser)
 
     def tearDown(self):
