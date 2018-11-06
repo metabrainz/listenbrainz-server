@@ -8,6 +8,7 @@ from influxdb import InfluxDBClient
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.listenstore.tests.util import create_test_data_for_influxlistenstore
 from listenbrainz.webserver.influx_connection import init_influx_connection
+from listenbrainz.webserver.login import User
 from listenbrainz.webserver.testing import ServerTestCase
 
 import listenbrainz.db.user as db_user
@@ -18,8 +19,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
     def setUp(self):
         ServerTestCase.setUp(self)
         DatabaseTestCase.setUp(self)
-        self.user = db_user.get_or_create(1, 'iliekcomputers')
-        self.weirduser = db_user.get_or_create(2, 'weird\\user name')
 
         self.log = logging.getLogger(__name__)
         self.influx = InfluxDBClient(
@@ -39,6 +38,14 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
             'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
         })
 
+        db_user.get_or_create(1, 'iliekcomputers')
+        user = db_user.get_by_mb_id('iliekcomputers')
+        self.user = User.from_dbrow(user)
+
+        db_user.get_or_create(2, 'weird\\user name')
+        weirduser = db_user.get_by_mb_id('weird\\user name')
+        self.weirduser = User.from_dbrow(weirduser)
+
     def tearDown(self):
         self.influx.query('''drop database %s''' % current_app.config['INFLUX_DB_NAME'])
         self.logstore = None
@@ -47,25 +54,25 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         DatabaseTestCase.tearDown(self)
 
     def test_user_page(self):
-        response = self.client.get(url_for('user.profile', user_name=self.user['musicbrainz_id']))
+        response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertContext('section', 'listens')
 
         # check that artist count is not shown if stats haven't been calculated yet
-        response = self.client.get(url_for('user.profile', user_name=self.user['musicbrainz_id']))
+        response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')
         self.assertContext('artist_count', None)
 
         # check that artist count is shown if stats have been calculated
         db_stats.insert_user_stats(
-            user_id=self.user['id'],
+            user_id=self.user.id,
             artists={},
             recordings={},
             releases={},
             artist_count=2,
         )
-        response = self.client.get(url_for('user.profile', user_name=self.user['musicbrainz_id']))
+        response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')
         self.assertContext('artist_count', '2')
@@ -73,9 +80,9 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
     def test_scraper_username(self):
         """ Tests that the username is correctly rendered in the last.fm importer """
         response = self.client.get(
-            url_for('user.lastfmscraper', user_name=self.user['musicbrainz_id']),
+            url_for('user.lastfmscraper', user_name=self.user.musicbrainz_id),
             query_string={
-                'user_token': self.user['auth_token'],
+                'user_token': self.user.auth_token,
                 'lastfm_username': 'dummy',
             }
         )
@@ -83,9 +90,9 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertIn('var user_name = "iliekcomputers";', response.data.decode('utf-8'))
 
         response = self.client.get(
-            url_for('user.lastfmscraper', user_name=self.weirduser['musicbrainz_id']),
+            url_for('user.lastfmscraper', user_name=self.weirduser.musicbrainz_id),
             query_string={
-                'user_token': self.weirduser['auth_token'],
+                'user_token': self.weirduser.auth_token,
                 'lastfm_username': 'dummy',
             }
         )
@@ -96,10 +103,10 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         """ Tests the artist stats view """
 
         # when no stats in db, it should redirect to the profile page
-        r = self.client.get(url_for('user.artists', user_name=self.user['musicbrainz_id']))
-        self.assertRedirects(r, url_for('user.profile', user_name=self.user['musicbrainz_id']))
+        r = self.client.get(url_for('user.artists', user_name=self.user.musicbrainz_id))
+        self.assertRedirects(r, url_for('user.profile', user_name=self.user.musicbrainz_id))
 
-        r = self.client.get(url_for('user.artists', user_name=self.user['musicbrainz_id']), follow_redirects=True)
+        r = self.client.get(url_for('user.artists', user_name=self.user.musicbrainz_id), follow_redirects=True)
         self.assert200(r)
         self.assertIn('No data calculated', r.data.decode('utf-8'))
 
@@ -108,14 +115,14 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
             artists = ujson.load(f)
 
         db_stats.insert_user_stats(
-            user_id=self.user['id'],
+            user_id=self.user.id,
             artists=artists,
             recordings={},
             releases={},
             artist_count=2,
         )
 
-        r = self.client.get(url_for('user.artists', user_name=self.user['musicbrainz_id']))
+        r = self.client.get(url_for('user.artists', user_name=self.user.musicbrainz_id))
         self.assert200(r)
         self.assertContext('section', 'artists')
 
@@ -128,9 +135,9 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self._create_test_data('iliekcomputers')
 
         response1 = self.client.get(url_for('user.profile', user_name='iliekcomputers'))
-        self.assertEqual(self.get_context_variable('user').musicbrainz_id, "iliekcomputers")
+        self.assertContext('user', self.user)
         response2 = self.client.get(url_for('user.profile', user_name='IlieKcomPUteRs'))
-        self.assertEqual(self.get_context_variable('user').musicbrainz_id, "iliekcomputers")
+        self.assertContext('user', self.user)
         self.assert200(response1)
         self.assert200(response2)
 
