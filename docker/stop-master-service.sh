@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker service rm spark-master 
+docker service rm spark-master hadoop-master
