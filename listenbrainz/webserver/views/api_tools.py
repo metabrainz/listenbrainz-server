@@ -316,14 +316,8 @@ def publish_data_to_queue(data, exchange, queue, error_msg):
                 properties=pika.BasicProperties(delivery_mode=2, ),
             )
     except pika.exceptions.ConnectionClosed as e:
-        current_app.logger.error("Connection to rabbitmq closed while trying to publish: %s" % str(e))
-        raise ServiceUnavailable(error_msg)
-    except PikaPoolOverflow:
-        current_app.logger.error("Cannot acquire pika channel. Increase number of available channels.")
-        raise ServiceUnavailable(error_msg)
-    except PikaPoolTimeout as e:
-        current_app.logger.error("Cannot publish to rabbitmq channel -- timeout: %s" % str(e))
+        current_app.logger.error("Connection to rabbitmq closed while trying to publish: %s" % str(e), exc_info=True)
         raise ServiceUnavailable(error_msg)
     except Exception as e:
-        current_app.logger.error("Cannot publish to rabbitmq channel: %s / %s" % (type(e).__name__, str(e)))
+        current_app.logger.error("Cannot publish to rabbitmq channel: %s / %s" % (type(e).__name__, str(e)), exc_info=True)
         raise ServiceUnavailable(error_msg)

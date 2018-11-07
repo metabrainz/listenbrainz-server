@@ -6,6 +6,9 @@ import listenbrainz.utils as utils
 
 _rabbitmq = None
 
+CONNECTION_RETRIES = 10
+TIME_BEFORE_RETRIES = 2
+
 def init_rabbitmq_connection(app):
     """Initialize the webserver rabbitmq connection.
 
@@ -28,6 +31,7 @@ def init_rabbitmq_connection(app):
     )
 
     _rabbitmq = RabbitMQConnectionPool(app.logger, connection_parameters, app.config['MAXIMUM_RABBITMQ_CONNECTIONS'])
+    _rabbitmq.add()
     app.logger.info('Connection to RabbitMQ established!')
 
 
@@ -62,9 +66,16 @@ class RabbitMQConnectionPool:
             connection.close()
 
     def create(self):
-        connection = pika.BlockingConnection(self.connection_parameters)
-        channel = connection.channel()
-        return RabbitMQConnection(connection, channel, self)
+        for attempt in range(CONNECTION_RETRIES):
+            try:
+                connection = pika.BlockingConnection(self.connection_parameters)
+                channel = connection.channel()
+                return RabbitMQConnection(connection, channel, self)
+            except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as e:
+                sleep(TIME_BEFORE_RETRIES)
+                if attempt == CONNECTION_RETRIES - 1: # if this is the last attempt
+                    self.log.critical('Unable to create a RabbitMQ connection: %s', str(e), exc_info=True)
+                    raise
 
 
 class RabbitMQConnection:
