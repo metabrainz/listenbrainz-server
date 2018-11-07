@@ -102,3 +102,5 @@ LASTFM_PROXY_URL = 'http://0.0.0.0:8080/'
 MUSICBRAINZ_OAUTH_URL = 'https://musicbrainz.org/oauth2/userinfo'
 SPOTIFY_CLIENT_ID = ''
 SPOTIFY_CLIENT_SECRET = ''
+
+ADMINS = ['iliekcomputers']

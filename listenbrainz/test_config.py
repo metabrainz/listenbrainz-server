@@ -111,3 +111,5 @@ SPOTIFY_CALLBACK_URL = 'http://localhost/profile/connect-spotify/callback'
 
 LASTFM_PROXY_URL = 'http://0.0.0.0:8080/'
 MUSICBRAINZ_OAUTH_URL = 'https://musicbrainz.org/oauth2/userinfo'
+
+ADMINS = ['iliekcomputers']
