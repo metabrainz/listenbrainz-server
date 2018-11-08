@@ -11,8 +11,8 @@ docker service create --replicas 1 \
     --env NODE_TYPE="master" \
     --network spark-network \
     --constraint 'node.labels.type == master' \
+    -p published=8088,target=8088 \
     -p 50070:50070 \
-    -p 8088:8088 \
     -p 9000:9000 \
     metabrainz/hadoop-yarn:beta
 
