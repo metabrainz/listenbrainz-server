@@ -11,9 +11,10 @@ docker service create --replicas 1 \
     --env NODE_TYPE="master" \
     --network spark-network \
     --constraint 'node.labels.type == master' \
+    -p published=8031,target=8031 \
     -p published=8088,target=8088 \
-    -p 50070:50070 \
-    -p 9000:9000 \
+    -p published=9000,target=9000 \
+    -p published=50070,target=50070 \
     metabrainz/hadoop-yarn:beta
 
 docker service create --replicas 1 \
@@ -21,8 +22,8 @@ docker service create --replicas 1 \
     --hostname spark-master \
     --network spark-network \
     --constraint 'node.labels.type == master' \
-    -p 7077:7077 \
-    -p 6066:6066 \
-    -p 8080:8080 \
+    -p published=7077,target=7077 \
+    -p published=6066,target=6066 \
+    -p published=8080,target=8080 \
     --env SPARK_NO_DAEMONIZE=1 \
     metabrainz/spark-master
