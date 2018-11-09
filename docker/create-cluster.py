@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
 import click
+from time import sleep
 
 
 from hetznercloud import HetznerCloudClientConfiguration, HetznerCloudClient, SERVER_TYPE_8CPU_32GB, IMAGE_UBUNTU_1804, SERVER_STATUS_RUNNING
 from config import API_KEY
 
 START_SCRIPT = """#!/bin/bash
-curl -fsSL https://github.com/metabrainz/listenbrainz-recommendation-playground/raw/master/docker/setup-node.sh > /root/setup-node.sh
+curl -fsSL https://github.com/metabrainz/listenbrainz-recommendation-playground/raw/master/docker/setup-worker-node.sh > /root/setup-node.sh
 bash /root/setup-node.sh %s %s > /root/setup.log
 """ % ("195.201.112.36", "SWMTKN-1-5r1rg5ncj6b5vei573gs6s6xhaqdxqywn6muzio0io6t4g4dyt-5blarcxq9d18yp5px58yfhwb7")
 
@@ -34,6 +35,7 @@ def start_cluster(count):
     for server, action in servers:
         server.wait_until_status_is(SERVER_STATUS_RUNNING) 
         print("   %s" % server.public_net_ipv4)
+        sleep(1)
 
     print("Done.")
 

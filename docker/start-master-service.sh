@@ -1,11 +1,6 @@
 #!/bin/bash
 
-# Before this runs, we need to also do these:
-#docker volume create hdfs-volume
-#docker run metabrainz/hadoop-yarn:beta /usr/local/hadoop/bin/hdfs namenode -format
-
-docker network create --attachable -d overlay spark-network
-docker node update --label-add type=master `hostname`
+# Before this runs, make sure to run set-master-node.sh
 
 docker service create --replicas 1 \
     --name hadoop-master \
