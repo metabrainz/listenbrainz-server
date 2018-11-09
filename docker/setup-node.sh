@@ -35,4 +35,8 @@ docker swarm join --token $SWARM_TOKEN $MASTER_IP:2377
 docker volume create hdfs-volume
 docker volume create spark-volume
 
+docker run \
+    --mount type=volume,source=hdfs-volume,destination=/home/hadoop/hdfs \
+    metabrainz/hadoop-yarn:beta /usr/local/hadoop/bin/hdfs namenode -format
+
 reboot
