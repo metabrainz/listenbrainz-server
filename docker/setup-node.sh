@@ -32,7 +32,7 @@ apt-get install -y docker-ce
 
 docker swarm join --token $SWARM_TOKEN $MASTER_IP:2377
 
-docker create volume hdfs-volume
-docker create volume spark-volume
+docker volume create hdfs-volume
+docker volume create spark-volume
 
 reboot

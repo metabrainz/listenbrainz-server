@@ -11,7 +11,7 @@ bash /root/setup-node.sh %s %s > /root/setup.log
 configuration = HetznerCloudClientConfiguration().with_api_key(API_KEY).with_api_version(1)
 client = HetznerCloudClient(configuration)
 
-NUM_SERVERS_TO_START = 4
+NUM_SERVERS_TO_START = 2
 servers = []
 for i in range(NUM_SERVERS_TO_START):
     server_a, create_action = client.servers().create(name="slave%03d" % i,
