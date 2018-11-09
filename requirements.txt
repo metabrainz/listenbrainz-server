@@ -1,3 +1,2 @@
-ujson
-pyspark
-numpy
+click==6.2
+hetznercloud==1.1.1
