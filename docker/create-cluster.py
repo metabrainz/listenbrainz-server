@@ -25,7 +25,6 @@ for i in range(NUM_SERVERS_TO_START):
 print("Servers created, waiting to start....")
 for server, action in servers:
     server.wait_until_status_is(SERVER_STATUS_RUNNING) 
-
-print("Servers ready. IP addresses:")
-for server, action in servers:
     print("   %s" % server.public_net_ipv4)
+
+print("Done.")
