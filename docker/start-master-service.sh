@@ -4,9 +4,7 @@
 #docker volume create hdfs-volume
 #docker run metabrainz/hadoop-yarn:beta /usr/local/hadoop/bin/hdfs namenode -format
 
-
 docker network create --attachable -d overlay spark-network
-
 docker node update --label-add type=master `hostname`
 
 docker service create --replicas 1 \
@@ -31,4 +29,5 @@ docker service create --replicas 1 \
     -p published=6066,target=6066,mode=host \
     -p published=8080,target=8080,mode=host \
     --env SPARK_NO_DAEMONIZE=1 \
+    --mount type=volume,source=spark-volume,destination=/home/hadoop/spark \
     metabrainz/spark-master

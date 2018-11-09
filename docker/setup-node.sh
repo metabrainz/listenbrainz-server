@@ -32,8 +32,10 @@ apt-get install -y docker-ce
 
 docker swarm join --token $SWARM_TOKEN $MASTER_IP:2377
 
-docker volume create hdfs-volume
-docker volume create spark-volume
+docker node update --label-add type=worker `hostname`
+
+docker volume create --driver local hdfs-volume
+docker volume create --driver local spark-volume
 
 docker run \
     --mount type=volume,source=hdfs-volume,destination=/home/hadoop/hdfs \
