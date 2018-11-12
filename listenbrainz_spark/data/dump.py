@@ -14,7 +14,7 @@ FORCE = True
 def copy_to_hdfs(archive):
     pxz_command = ['pxz', '--decompress', '--stdout', archive, '-T4']
     pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
-    hdfs_client = hdfs.Client(config.HDFS_NAMENODE_URI)
+    hdfs_client = hdfs.InsecureClient(config.HDFS_NAMENODE_URI, user='root')
     destination_path = os.path.join('/', 'data', 'listenbrainz')
     if FORCE:
         print('Removing data directory if present...')
