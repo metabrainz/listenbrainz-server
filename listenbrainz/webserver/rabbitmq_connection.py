@@ -19,12 +19,14 @@ def init_rabbitmq_connection(app):
     # if RabbitMQ config values are not in the config file, the app should
     # wait for them to come back. Consul will bring the values back into
     # config once the RabbitMQ service comes up.
-    while True:
+    for _ in range(CONNECTION_RETRIES):
         if "RABBITMQ_HOST" not in app.config:
             app.logger.critical("RabbitMQ host:port not defined. Sleeping 2 seconds and trying again...")
             sleep(2)
         else:
             break
+    else:
+        raise ConnectionError("RabbitMQ service is not up!")
 
     connection_parameters = pika.ConnectionParameters(
         host=app.config['RABBITMQ_HOST'],
