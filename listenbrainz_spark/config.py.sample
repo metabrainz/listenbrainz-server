@@ -1,0 +1,1 @@
+HDFS_NAMENODE_URI = 'http://namenode:50070'
