@@ -21,12 +21,10 @@ class RabbitMQConnectionPoolTestCase(TestCase):
             self.pool.log.critical.assert_called_once()
             self.assertEqual(self.mock_sleep.call_count, CONNECTION_RETRIES - 1)
 
-    @patch('listenbrainz.webserver.rabbitmq_connection.sleep')
-    def test_connection_error_when_rabbitmq_down(self, mock_sleep):
+    def test_connection_error_when_rabbitmq_down(self):
         # create an app with no RabbitMQ config
         # as will be the case when RabbitMQ is down in production
         app = Flask(__name__)
 
         with self.assertRaises(ConnectionError):
             init_rabbitmq_connection(app)
-            self.assertEqual(self.mock_sleep.call_count, CONNECTION_RETRIES - 1)
