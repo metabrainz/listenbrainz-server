@@ -99,7 +99,11 @@ def gen_app(config_path=None, debug=None):
     create_influx(app)
 
     # RabbitMQ connection
-    create_rabbitmq(app)
+    try:
+        create_rabbitmq(app)
+    except ConnectionError:
+        app.logger.critical("RabbitMQ service is not up!", exc_info=True)
+
 
     # Database connection
     from listenbrainz import db
