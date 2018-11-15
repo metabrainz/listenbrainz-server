@@ -20,7 +20,7 @@ def init_rabbitmq_connection(app):
     # raise an error. This is caught in create_app, so the app will continue running.
     # Consul will bring the values back into config once the RabbitMQ service comes up.
     if "RABBITMQ_HOST" not in app.config:
-        app.logger.critical("RabbitMQ host:port not defined. Sleeping 2 seconds and trying again...")
+        app.logger.critical("RabbitMQ host:port not defined, cannot create RabbitMQ connection...")
         raise ConnectionError("RabbitMQ service is not up!")
 
     connection_parameters = pika.ConnectionParameters(
