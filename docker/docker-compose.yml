@@ -1,0 +1,34 @@
+version: "2"
+
+# IMPORTANT NOTE: Volume paths mounted on containers are relative to the
+# directory that this file is in (`docker/`) and so probably need to start with
+# `../` to refer to a directory in the main code checkout
+
+volumes:
+  spark-master:
+  namenode:
+  spark-worker:
+  datanode:
+
+services:
+  spark-master:
+    image: metabrainz/spark-master
+    volumes:
+      - spark-master:/home/hadoop/spark:z
+
+  namenode:
+    image: metabrainz/hadoop-yarn:beta
+    command: hdfs namenode
+    volumes:
+      - namenode:/home/hadoop/hdfs:z
+
+  spark-worker:
+    image: metabrainz/spark-worker
+    volumes:
+      - spark-worker:/home/hadoop/spark:z
+
+  datanode:
+    image: metabrainz/hadoop-yarn:beta
+    command: hdfs datanode
+    volumes:
+      - datanode:/home/hadoop/hdfs:z
