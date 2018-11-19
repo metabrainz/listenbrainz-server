@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import listenbrainz.db.user as db_user
+import listenbrainz.db.spotify as db_spotify
 import listenbrainz.db.stats as db_stats
 import sqlalchemy
 import time
@@ -191,3 +192,15 @@ class UserTestCase(DatabaseTestCase):
         self.assertIsNone(user)
         user_stats = db_stats.get_all_user_stats(user_id)
         self.assertIsNone(user_stats)
+
+    def test_delete_when_spotify_import_activated(self):
+        user_id = db_user.create(11, 'kishore')
+        user = db_user.get(user_id)
+        self.assertIsNotNone(user)
+        db_spotify.create_spotify(user_id, 'user token', 'refresh token', 0)
+
+        db_user.delete(user_id)
+        user = db_user.get(user_id)
+        self.assertIsNone(user)
+        token = db_spotify.get_token_for_user(user_id)
+        self.assertIsNone(token)
