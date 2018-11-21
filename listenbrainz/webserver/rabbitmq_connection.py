@@ -1,4 +1,3 @@
-import sys
 import queue
 from time import sleep
 import pika
@@ -20,8 +19,12 @@ def init_rabbitmq_connection(app):
     if _rabbitmq is not None:
         return
 
+    # if RabbitMQ config values are not in the config file
+    # raise an error. This is caught in create_app, so the app will continue running.
+    # Consul will bring the values back into config once the RabbitMQ service comes up.
     if "RABBITMQ_HOST" not in app.config:
-        raise ConnectionError("Cannot connect to RabbitMQ: host and port not defined")
+        app.logger.critical("RabbitMQ host:port not defined, cannot create RabbitMQ connection...")
+        raise ConnectionError("RabbitMQ service is not up!")
 
     connection_parameters = pika.ConnectionParameters(
         host=app.config['RABBITMQ_HOST'],
@@ -92,7 +95,11 @@ class RabbitMQConnection:
 
     @property
     def is_open(self):
-        return self.connection.is_open
+        try:
+            self.connection.process_data_events()
+            return True
+        except pika.exceptions.ConnectionClosed as e:
+            return False
 
     def close(self):
         self.connection.close()
