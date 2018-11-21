@@ -92,7 +92,11 @@ class RabbitMQConnection:
 
     @property
     def is_open(self):
-        return self.connection.is_open
+        try:
+            self.connection.process_data_events()
+            return True
+        except pika.exceptions.ConnectionClosed as e:
+            return False
 
     def close(self):
         self.connection.close()
