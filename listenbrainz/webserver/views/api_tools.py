@@ -155,7 +155,7 @@ def is_valid_uuid(u):
     try:
         u = uuid.UUID(u)
         return True
-    except ValueError:
+    except (AttributeError, ValueError):
         return False
 
 
