@@ -34,3 +34,11 @@ services:
     command: hdfs datanode
     volumes:
       - datanode:/home/hadoop/hdfs:z
+
+  playground:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    command: sleep 1000000000
+    volumes:
+      - ..:/rec:z

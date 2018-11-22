@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if [[! -d "docker" ]]; then
+if [[ ! -d "docker" ]]; then
     echo "This script should be used from the top level dir of the listenbrainz-recommendation-playground"
     exit -1
 fi
