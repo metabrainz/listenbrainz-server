@@ -95,8 +95,9 @@ class RabbitMQConnection:
         try:
             self.connection.process_data_events()
             return True
-        except pika.exceptions.ConnectionClosed as e:
+        except (pika.exceptions.ConnectionClosed, FileNotFoundError, OSError) as e:
             return False
 
     def close(self):
-        self.connection.close()
+        if self.connection.is_open:
+            self.connection.close()
