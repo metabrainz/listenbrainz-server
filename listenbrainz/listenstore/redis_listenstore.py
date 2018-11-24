@@ -44,6 +44,7 @@ class RedisListenStore(ListenStore):
     def store_latest_listens(self, listens):
         try:
             all_listens = self.redis.set('latest_listens', listens)
+            # Todo: Change set into zadd (in simple, change string mode into sorted sets)
         except redis.exceptions.ConnectionError as e:
             self.log.error("The data can't be set due to: {}".format(str(e)))
 
@@ -51,6 +52,5 @@ class RedisListenStore(ListenStore):
         """ Return the latest ten listens that have been cached in the redis
             listenstore
         """
-        data = self.redis.get('latest_listens')
-        ten_listens = list(data.keys())[10:]
+        ten_listens = self.redis.zrank('latest_listens', 0, 9, withscores=True)
         return ten_listens

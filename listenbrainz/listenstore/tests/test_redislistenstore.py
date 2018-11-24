@@ -37,3 +37,4 @@ class TestRedisListenStore(DatabaseTestCase):
     def test_get_playing_now(self):
         playing_now = self._redis.get_playing_now(self.listen.user_id)
         assert playing_now is not None
+
