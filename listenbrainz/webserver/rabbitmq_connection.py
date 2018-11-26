@@ -130,7 +130,7 @@ class RabbitMQConnection:
             return False
 
     def recreate_channel(self):
-        self.channel = connection.channel()
+        self.channel = self.connection.channel()
 
     def close(self):
         if self.connection.is_open:
