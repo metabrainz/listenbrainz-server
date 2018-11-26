@@ -10,7 +10,7 @@ from listenbrainz.webserver.rabbitmq_connection import RabbitMQConnectionPool, C
 class RabbitMQConnectionPoolTestCase(TestCase):
 
     def setUp(self):
-        self.pool = RabbitMQConnectionPool(MagicMock(), MagicMock(), 10)
+        self.pool = RabbitMQConnectionPool(MagicMock(), MagicMock(), 10, 'test_exchange')
 
     @patch('listenbrainz.webserver.rabbitmq_connection.pika.BlockingConnection')
     @patch('listenbrainz.webserver.rabbitmq_connection.sleep')
