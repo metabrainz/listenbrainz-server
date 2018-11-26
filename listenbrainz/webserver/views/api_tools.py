@@ -44,7 +44,7 @@ def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
     try:
         augmented_listens = _get_augmented_listens(payload, user, listen_type)
         _send_listens_to_queue(listen_type, augmented_listens)
-        redis._redis.store_latest_listens(payload)
+        redis._redis.store_latest_listens("latest_listens", payload, user)
     except (InternalServerError, ServiceUnavailable) as e:
         raise
     except Exception as e:

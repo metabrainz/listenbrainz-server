@@ -38,3 +38,7 @@ class TestRedisListenStore(DatabaseTestCase):
         playing_now = self._redis.get_playing_now(self.listen.user_id)
         assert playing_now is not None
 
+    def test_store_latest_listens(self):
+        _create_test_data()
+        listens_to_redis = _redis.redis.zadd('latest_listens', self.listen, self.testuser_id)
+        assert listens_to_redis is not None 

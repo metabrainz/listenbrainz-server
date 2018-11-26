@@ -41,10 +41,11 @@ class RedisListenStore(ListenStore):
             self.log.error("Redis ping didn't work: {}".format(str(e)))
             raise
 
-    def store_latest_listens(self, listens):
+    def store_latest_listens(self, listens, user_id):
         try:
-            all_listens = self.redis.set('latest_listens', listens)
-            # Todo: Change set into zadd (in simple, change string mode into sorted sets)
+            data = ujson.loads(data)
+            self.redis.zadd('latest_listens', listens, user_id)
+            # Todo: Change set into zadd (in simple, change string mode into sorted sets) (done, i guess?)
         except redis.exceptions.ConnectionError as e:
             self.log.error("The data can't be set due to: {}".format(str(e)))
 
