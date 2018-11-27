@@ -30,17 +30,23 @@ def init_rabbitmq_connection(app):
         credentials=pika.PlainCredentials(app.config['RABBITMQ_USERNAME'], app.config['RABBITMQ_PASSWORD']),
     )
 
-    _rabbitmq = RabbitMQConnectionPool(app.logger, connection_parameters, app.config['MAXIMUM_RABBITMQ_CONNECTIONS'])
+    _rabbitmq = RabbitMQConnectionPool(
+            app.logger,
+            connection_parameters,
+            app.config['MAXIMUM_RABBITMQ_CONNECTIONS'],
+            app.config['INCOMING_EXCHANGE'],
+        )
     _rabbitmq.add()
     app.logger.info('Connection to RabbitMQ established!')
 
 
 class RabbitMQConnectionPool:
-    def __init__(self, logger, connection_parameters, max_size):
+    def __init__(self, logger, connection_parameters, max_size, exchange):
         self.log = logger
         self.connection_parameters = connection_parameters
         self.max_size = max_size
         self.queue = queue.Queue(maxsize=max_size)
+        self.exchange = exchange
 
     def add(self):
         try:
@@ -69,8 +75,7 @@ class RabbitMQConnectionPool:
         for attempt in range(CONNECTION_RETRIES):
             try:
                 connection = pika.BlockingConnection(self.connection_parameters)
-                channel = connection.channel()
-                return RabbitMQConnection(connection, channel, self)
+                return RabbitMQConnection(connection, self)
             except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as e:
                 sleep(TIME_BEFORE_RETRIES)
                 if attempt == CONNECTION_RETRIES - 1: # if this is the last attempt
@@ -79,24 +84,53 @@ class RabbitMQConnectionPool:
 
 
 class RabbitMQConnection:
-    def __init__(self, connection, channel, pool):
+    def __init__(self, connection, pool):
         self.connection = connection
-        self.channel = channel
+        self.channel = connection.channel()
         self.pool = pool
 
     def __enter__(self):
+        if not self.is_channel_open:
+            self.recreate_channel()
         return self
 
     def __exit__(self, type, value, traceback):
         self.pool.release(self)
 
     @property
+    def is_channel_open(self):
+        """ Checks if current channel is open or not.
+
+        Note: We cannot use channel.is_open because this is a BlockingChannel where the is_open
+        property is not trustworthy (https://github.com/pika/pika/issues/877)
+
+        So we check if an exchange exists each time, to check if the channel is ok. This exchange
+        is the exchange which houses incoming listens.
+
+        Returns:
+            bool: True if channel is open, False otherwise
+        """
+        try:
+            self.channel.exchange_declare(exchange=self.pool.exchange, exchange_type='fanout', passive=True)
+            return True
+        except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed, FileNotFoundError, OSError) as e:
+            return False
+
+    @property
     def is_open(self):
+        """ Checks if current connection is open or not.
+
+        Note: We're using process_data_events here instead of the is_open property because of
+        https://github.com/pika/pika/issues/877
+        """
         try:
             self.connection.process_data_events()
             return True
         except (pika.exceptions.ConnectionClosed, FileNotFoundError, OSError) as e:
             return False
+
+    def recreate_channel(self):
+        self.channel = self.connection.channel()
 
     def close(self):
         if self.connection.is_open:
