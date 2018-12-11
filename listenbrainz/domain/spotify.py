@@ -9,8 +9,8 @@ SPOTIFY_API_RETRIES = 5
 
 
 class Spotify:
-    def __init__(self, user_id, musicbrainz_id, user_token, token_expires, refresh_token,
-                 last_updated, active, error_message, latest_listened_at):
+    def __init__(self, user_id, musicbrainz_id, musicbrainz_row_id, user_token, token_expires,
+                 refresh_token, last_updated, active, error_message, latest_listened_at):
         self.user_id = user_id
         self.user_token = user_token
         self.token_expires = token_expires
@@ -20,6 +20,7 @@ class Spotify:
         self.error_message = error_message
         self.musicbrainz_id = musicbrainz_id
         self.latest_listened_at = latest_listened_at
+        self.musicbrainz_row_id = musicbrainz_row_id
 
     def get_spotipy_client(self):
         return spotipy.Spotify(auth=self.user_token)
@@ -53,6 +54,7 @@ class Spotify:
            active=row['active'],
            error_message=row['error_message'],
            musicbrainz_id=row['musicbrainz_id'],
+           musicbrainz_row_id=row['musicbrainz_row_id'],
            latest_listened_at=row['latest_listened_at'],
         )
 

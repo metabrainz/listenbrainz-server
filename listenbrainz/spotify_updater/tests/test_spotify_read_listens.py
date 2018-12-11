@@ -2,6 +2,8 @@ from unittest import TestCase
 import os
 import json
 from listenbrainz.spotify_updater import spotify_read_listens
+from listenbrainz.domain.spotify import Spotify
+from unittest.mock import patch
 
 
 class ConvertListensTestCase(TestCase):
@@ -69,3 +71,11 @@ class ConvertListensTestCase(TestCase):
         }
 
         self.assertDictEqual(listen, expected_listen)
+
+    @patch('listenbrainz.spotify_updater.spotify_read_listens.send_mail')
+    @patch('listenbrainz.spotify_updater.spotify_read_listens.mb_editor.get_editor_by_id')
+    def test_notify_user(self, mock_get_editor, mock_send_mail):
+        mock_get_editor.return_value = {'email': 'example@listenbrainz.org'}
+        spotify_read_listens.notify_error(musicbrainz_row_id=1, 'some random error')
+        mock_get_editor.assert_called_once_with(1)
+        mock_send_email.assert_called_once_with(recipients=['example@listenbrainz.org'])
