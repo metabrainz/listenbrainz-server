@@ -21,6 +21,7 @@ PG_QUERY_TIMEOUT = "3000"
 # Set to True to enable 'synchronous_commit' for Postgres. Default: False
 PG_ASYNC_LISTEN_COMMIT = False
 
+MUSICBRAINZ_DB_URI = ""
 
 # Redis
 REDIS_HOST = "redis"
@@ -133,3 +134,10 @@ SPOTIFY_CALLBACK_URL = 'http://localhost/profile/connect-spotify/callback'
 # We do not use this feature at all, so it is safe to set to False.
 # See https://stackoverflow.com/a/33790196 for more details.
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+TESTING = True # this flag is used by the mail module to check if mails need to be sent or not
+
+# Mail server
+SMTP_SERVER = 'listenbrainz-mail'
+SMTP_PORT = 25
+MAIL_FROM_DOMAIN = 'listenbrainz.org'
