@@ -24,14 +24,14 @@ def notify_error(musicbrainz_row_id, error):
 
     Args:
         musicbrainz_row_id (int): the MusicBrainz row ID of the user
-        error (str): the error encountered.
+        error (str): a description of the error encountered.
     """
     user_email = mb_editor.get_editor_by_id(musicbrainz_row_id)['email']
     text = ('Hi, we encountered an error while importing your listens from Spotify.'
             'The error was as follows: "%s" '
             'Please take a look at your profile page for more information.\n'
             '- The ListenBrainz Team') % (error)
-    send_email(
+    send_mail(
         subject='ListenBrainz Spotify Importer Error',
         text=text,
         recipients=[user_email],
