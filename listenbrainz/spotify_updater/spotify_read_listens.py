@@ -20,6 +20,12 @@ from brainzutils.musicbrainz_db import editor as mb_editor
 
 
 def notify_error(musicbrainz_row_id, error):
+    """ Notifies specified user via email about error during Spotify import.
+
+    Args:
+        musicbrainz_row_id (int): the MusicBrainz row ID of the user
+        error (str): the error encountered.
+    """
     user_email = mb_editor.get_editor_by_id(musicbrainz_row_id)['email']
     text = ('Hi, we encountered an error while importing your listens from Spotify.'
             'The error was as follows: "%s" '
@@ -250,13 +256,13 @@ def process_all_spotify_users():
                 success=False,
                 error_message=str(e),
             )
-            notify_error(u, str(e))
+            notify_error(u.musicbrainz_row_id, str(e))
             failure += 1
         except spotify.SpotifyListenBrainzError as e:
             current_app.logger.critical('spotify_reader could not import listens: %s', str(e), exc_info=True)
             failure += 1
         except Exception as e:
-            notify_error(u, str(e))
+            notify_error(u.musicbrainz_row_id, str(e))
             current_app.logger.critical('spotify_reader could not import listens: %s', str(e), exc_info=True)
             failure += 1
 
