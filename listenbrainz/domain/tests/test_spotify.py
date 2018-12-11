@@ -15,6 +15,7 @@ class SpotifyDomainTestCase(ServerTestCase):
         self.spotify_user = spotify.Spotify(
                 user_id=1,
                 musicbrainz_id='spotify_user',
+                musicbrainz_row_id=312,
                 user_token='old-token',
                 token_expires=int(time.time()),
                 refresh_token='old-refresh-token',
@@ -61,6 +62,7 @@ class SpotifyDomainTestCase(ServerTestCase):
         mock_db_get_user.return_value = {
             'user_id': 1,
             'musicbrainz_id': 'spotify_user',
+            'musicbrainz_row_id': 312,
             'user_token': 'token-token-token',
             'token_expires': t,
             'refresh_token': 'refresh-refresh-refresh',
@@ -101,6 +103,7 @@ class SpotifyDomainTestCase(ServerTestCase):
             {
                 'user_id': 1,
                 'musicbrainz_id': 'spotify_user',
+                'musicbrainz_row_id': 312,
                 'user_token': 'token-token-token',
                 'token_expires': t,
                 'refresh_token': 'refresh-refresh-refresh',
@@ -112,6 +115,7 @@ class SpotifyDomainTestCase(ServerTestCase):
             {
                 'user_id': 2,
                 'musicbrainz_id': 'spotify_user_2',
+                'musicbrainz_row_id': 321,
                 'user_token': 'token-token-token321',
                 'token_expires': t + 31,
                 'refresh_token': 'refresh-refresh-refresh321',

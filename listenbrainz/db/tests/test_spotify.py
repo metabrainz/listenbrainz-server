@@ -98,7 +98,9 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
         users = db_spotify.get_active_users_to_process()
         self.assertEqual(len(users), 2)
         self.assertEqual(users[0]['user_id'], 1)
+        self.assertEqual(users[0]['musicbrainz_row_id'], 1)
         self.assertEqual(users[1]['user_id'], 2)
+        self.assertEqual(users[1]['musicbrainz_row_id'], 2)
 
         # check order, the users should be sorted by latest_listened_at timestamp
         db_user.create(3, 'newnewspotifyuser')

@@ -14,6 +14,22 @@ from listenbrainz.db import user as db_user
 from listenbrainz.db.exceptions import DatabaseException
 from spotipy import SpotifyException
 from werkzeug.exceptions import BadRequest, InternalServerError, ServiceUnavailable
+from brainzutils.mail import send_mail
+from brainzutils import musicbrainz_db
+from brainzutils.musicbrainz_db import editor as mb_editor
+
+
+def notify_error(musicbrainz_row_id, error):
+    user_email = mb_editor.get_editor_by_id(musicbrainz_row_id)['email']
+    text = ('Hi, we encountered an error while importing your listens from Spotify.'
+            'The error was as follows: "%s" '
+            'Please take a look at your profile page for more information.\n'
+            '- The ListenBrainz Team') % (error)
+    send_email(
+        subject='ListenBrainz Spotify Importer Error',
+        text=text,
+        recipients=[user_email],
+    )
 
 
 def _convert_spotify_play_to_listen(play):
@@ -234,11 +250,13 @@ def process_all_spotify_users():
                 success=False,
                 error_message=str(e),
             )
+            notify_error(u, str(e))
             failure += 1
         except spotify.SpotifyListenBrainzError as e:
             current_app.logger.critical('spotify_reader could not import listens: %s', str(e), exc_info=True)
             failure += 1
         except Exception as e:
+            notify_error(u, str(e))
             current_app.logger.critical('spotify_reader could not import listens: %s', str(e), exc_info=True)
             failure += 1
 
@@ -252,6 +270,7 @@ def process_all_spotify_users():
 def main():
     app = listenbrainz.webserver.create_app()
     with app.app_context():
+        musicbrainz_db.init_db_engine(current_app.config['MUSICBRAINZ_DB_URI'])
         current_app.logger.info('Spotify Reader started...')
         while True:
             t = time.time()
