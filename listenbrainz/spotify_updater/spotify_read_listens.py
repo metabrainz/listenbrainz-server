@@ -262,7 +262,6 @@ def process_all_spotify_users():
             current_app.logger.critical('spotify_reader could not import listens: %s', str(e), exc_info=True)
             failure += 1
         except Exception as e:
-            notify_error(u.musicbrainz_row_id, str(e))
             current_app.logger.critical('spotify_reader could not import listens: %s', str(e), exc_info=True)
             failure += 1
 
