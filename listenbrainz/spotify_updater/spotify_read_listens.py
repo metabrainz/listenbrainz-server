@@ -273,7 +273,6 @@ def process_all_spotify_users():
 def main():
     app = listenbrainz.webserver.create_app()
     with app.app_context():
-        musicbrainz_db.init_db_engine(current_app.config['MUSICBRAINZ_DB_URI'])
         current_app.logger.info('Spotify Reader started...')
         while True:
             t = time.time()
