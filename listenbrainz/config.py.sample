@@ -11,8 +11,7 @@ MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@db:5
 
 POSTGRES_ADMIN_URI="postgresql://postgres@db/template1"
 POSTGRES_ADMIN_LB_URI = "postgresql://postgres@db/listenbrainz"
-
-MUSICBRAINZ_DB_URI = ""
+MB_DATABASE_URI = ""
 
 # Other postgres configuration options
 # Oldest listens which can be stored in the database, in days.
