@@ -254,7 +254,8 @@ def process_all_spotify_users():
                 success=False,
                 error_message=str(e),
             )
-            notify_error(u.musicbrainz_row_id, str(e))
+            if not current_app.config['TESTING']:
+                notify_error(u.musicbrainz_row_id, str(e))
             failure += 1
         except spotify.SpotifyListenBrainzError as e:
             current_app.logger.critical('spotify_reader could not import listens: %s', str(e), exc_info=True)
