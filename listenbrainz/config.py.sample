@@ -116,7 +116,8 @@ UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
 
 
 API_URL = 'https://api.listenbrainz.org'
-LASTFM_PROXY_URL = 'http://0.0.0.0:8080/'
+LASTFM_PROXY_URL = 'http://localhost:8080/'
+SERVER_ROOT_URL = 'http://localhost'
 MUSICBRAINZ_OAUTH_URL = 'https://musicbrainz.org/oauth2/userinfo'
 
 # Flask Debug redirect
