@@ -1,0 +1,10 @@
+Hi!
+
+We encountered an error while importing your listens from Spotify.
+The error was as follows: "{{error}}"
+
+Please take a look at your Spotify import page ({{link}})
+for more information.
+
+Best,
+The ListenBrainz Team
