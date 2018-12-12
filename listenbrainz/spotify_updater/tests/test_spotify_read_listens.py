@@ -80,7 +80,8 @@ class ConvertListensTestCase(TestCase):
     @patch('listenbrainz.spotify_updater.spotify_read_listens.mb_editor.get_editor_by_id')
     def test_notify_user(self, mock_get_editor, mock_send_mail):
         mock_get_editor.return_value = {'email': 'example@listenbrainz.org'}
-        spotify_read_listens.notify_error(musicbrainz_row_id=1, error='some random error')
+        with listenbrainz.webserver.create_app().app_context():
+            spotify_read_listens.notify_error(musicbrainz_row_id=1, error='some random error')
         mock_get_editor.assert_called_once_with(1)
         mock_send_mail.assert_called_once()
         self.assertListEqual(mock_send_mail.call_args[1]['recipients'], ['example@listenbrainz.org'])
