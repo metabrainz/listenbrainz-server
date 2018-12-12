@@ -33,6 +33,8 @@ def notify_error(musicbrainz_row_id, error):
         subject='ListenBrainz Spotify Importer Error',
         text=text,
         recipients=[user_email],
+        from_name='ListenBrainz',
+        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
     )
 
 
