@@ -107,7 +107,9 @@ class ConvertListensTestCase(TestCase):
                 latest_listened_at=None,
             ),
         ]
-        with listenbrainz.webserver.create_app().app_context():
+        app = listenbrainz.webserver.create_app()
+        app.config['TESTING'] = False
+        with app.app_context():
             spotify_read_listens.process_all_spotify_users()
             mock_notify_error.assert_called_once_with(312, 'api borked')
             mock_update.assert_called_once()
