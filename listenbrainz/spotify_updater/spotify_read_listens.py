@@ -7,7 +7,7 @@ from listenbrainz.utils import safely_import_config
 safely_import_config()
 
 from dateutil import parser
-from flask import current_app
+from flask import current_app, render_template
 from listenbrainz.domain import spotify
 from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, LISTEN_TYPE_IMPORT
 from listenbrainz.db import user as db_user
@@ -27,10 +27,8 @@ def notify_error(musicbrainz_row_id, error):
         error (str): a description of the error encountered.
     """
     user_email = mb_editor.get_editor_by_id(musicbrainz_row_id)['email']
-    text = ('Hi, we encountered an error while importing your listens from Spotify.'
-            'The error was as follows: "%s" '
-            'Please take a look at your profile page for more information.\n'
-            '- The ListenBrainz Team') % (error)
+    spotify_url = current_app.config['SERVER_ROOT_URL'] + '/profile/connect-spotify'
+    text = render_template('emails/spotify_import_error.txt', error=error, link=spotify_url)
     send_mail(
         subject='ListenBrainz Spotify Importer Error',
         text=text,
