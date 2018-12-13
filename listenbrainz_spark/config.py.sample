@@ -1,1 +1,3 @@
-HDFS_NAMENODE_URI = 'http://hadoop-master:9870'
+HDFS_HTTP_URI = 'http://hadoop-master:9870' # the URI of the http webclient for HDFS
+
+HDFS_CLUSTER_URI = 'hdfs://hadoop-master:9000' # the URI to be used with Spark
