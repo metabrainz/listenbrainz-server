@@ -10,7 +10,7 @@ from config import API_KEY
 START_SCRIPT = """#!/bin/bash
 curl -fsSL https://github.com/metabrainz/listenbrainz-recommendation-playground/raw/master/docker/setup-worker-node.sh > /root/setup-node.sh
 bash /root/setup-node.sh %s %s > /root/setup.log
-""" % ("195.201.112.36", "SWMTKN-1-5r1rg5ncj6b5vei573gs6s6xhaqdxqywn6muzio0io6t4g4dyt-5blarcxq9d18yp5px58yfhwb7")
+""" % ("95.216.198.20", "SWMTKN-1-0uvc7vwg7n272c4hefkuld6v14bnr860jiqnnb0y8fo4knpsl7-abzdygksxmxa0ltb4x9pjpa2b")
 
 @click.command()
 @click.option('--count', default=4, help='Number of workers to start.')
@@ -27,7 +27,7 @@ def start_cluster(count):
                 server_type=SERVER_TYPE_8CPU_32GB,
                 image=IMAGE_UBUNTU_1804, 
                 start_after_create=True,
-                ssh_keys=["robert", "zas"],
+                ssh_keys=["robert", "zas", "param"],
                 user_data=START_SCRIPT)
         servers.append((server_a, create_action))
 
