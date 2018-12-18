@@ -111,7 +111,7 @@ def copy_to_hdfs(archive, threads=4):
     print("Writing dataframes...")
     for year in range(LAST_FM_FOUNDING_YEAR, datetime.today().year + 1):
         for month_index in range(12):
-            print("Writing dataframe for year = %d, month = %d..." % (year, month_index + 1))
+            print("Writing dataframe for %d/%d..." % (month_index + 1, year))
             path = config.HDFS_CLUSTER_URI + os.path.join(destination_path, str(year), str(month_index + 1) + '.parquet')
             dataframes[year][month_index].write.format('parquet').save(path)
             print("Done!")
