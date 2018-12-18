@@ -12,7 +12,7 @@ from hdfs.util import HdfsError
 from listenbrainz_spark import spark, sc, hdfs_connection
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.schema import convert_listen_to_row, listen_schema
-from pyspark.sql.functions import year
+import pyspark.sql.functions as sql_functions
 
 FORCE = True
 
@@ -26,6 +26,58 @@ def _is_listens_file(filename):
         bool: True if the file contains listens, False otherwise
     """
     return filename.endswith('.listens')
+
+
+def _process_listens_file(dataframes, invalid_df, filename):
+    """ Process a file containing listens from the ListenBrainz dump and add listens to
+    appropriate dataframes.
+
+    Args:
+        dataframes (dict(list)): a dict with key being years and value being a list containing
+                                dataframes for each month of the year
+        invalid_df (dataframe): a dataframe containing invalid listens from the dump
+        filename (str): the file to be processed
+
+    Returns: (dataframes, invalid_df)
+            dataframes: a dict with the same format as the dataframes arg but containing listens from the
+                        new file
+            invalid_df (dataframe): dataframe containing invalid listens from the dump.
+    """
+
+    def listened_in_month(listened_at, year, month):
+        """ Filter to filter listen dataframes according to month and year.
+
+        Args:
+            listened_at: the listened_at column from a listens dataframe
+            year (int): the year needed
+            month (int): the month needed.
+        """
+        return (sql_functions.year(listened_at) == year) & (sql_functions.month(listened_at) == month)
+
+    def invalid(listened_at):
+        return sql_functions.year(listened_at) < LAST_FM_FOUNDING_YEAR
+
+    file_rdd = sc.textFile(filename).map(json.loads)
+    file_rdd.cache().count()
+    file_df = spark.createDataFrame(file_rdd.map(convert_listen_to_row), listen_schema)
+    processed_dfs = {}
+    for year in range(LAST_FM_FOUNDING_YEAR, datetime.today().year + 1):
+        if year not in processed_dfs:
+            processed_dfs[year] = [spark.createDataFrame(sc.emptyRDD(), listen_schema) for month in range(12)]
+
+        for month_index in range(12):
+            month = month_index + 1
+            month_df = file_df.filter(listened_in_month(file_df['listened_at'], year=year, month=month))
+            try:
+                current_df = dataframes[year][month_index]
+            except KeyError:
+                current_df = spark.createDataFrame(sc.emptyRDD(), listen_schema)
+
+            processed_dfs[year][month_index] = current_df.union(month_df)
+
+    file_invalid_df = file_df.filter(invalid(file_df['listened_at']))
+    processed_invalid_df = invalid_df.union(file_invalid_df)
+    return processed_dfs, processed_invalid_df
 
 
 def copy_to_hdfs(archive, threads=4):
@@ -43,39 +95,31 @@ def copy_to_hdfs(archive, threads=4):
         hdfs_connection.client.delete(destination_path, recursive=True)
         print('Done!')
 
-    print('Creating Listens RDD...')
-    listens_rdd = sc.parallelize([])
+    print('Creating Listen dataframes...')
+    dataframes = {}
+    invalid_df = spark.createDataFrame(sc.emptyRDD(), listen_schema)
     with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
         for member in tar:
             if member.isfile() and _is_listens_file(member.name):
                 print('Loading %s...' % member.name)
                 tar.extract(member)
-                listens_rdd = listens_rdd.union(sc.textFile(member.name).map(json.loads))
-                listens_rdd.cache().count()
-                print("Done!")
+                dataframes, invalid_df = _process_listens_file(dataframes, invalid_df, member.name)
                 os.remove(member.name)
-    print("Done!")
+                print("Done!")
+    print("Dataframes created!")
 
-    print("Creating Listens Dataframe...")
-    all_listens_df = spark.createDataFrame(listens_rdd.map(convert_listen_to_row), listen_schema)
-    print("Done!")
+    print("Writing dataframes...")
+    for year in range(LAST_FM_FOUNDING_YEAR, datetime.today().year + 1):
+        for month_index in range(12):
+            print("Writing dataframe for year = %d, month = %d..." % (year, month_index + 1))
+            path = config.HDFS_CLUSTER_URI + os.path.join(destination_path, str(year), str(month_index + 1) + '.parquet')
+            dataframes[year][month_index].write.format('parquet').save(path)
+            print("Done!")
+    print("Dataframes written!")
 
-    for need_year in range(LAST_FM_FOUNDING_YEAR, datetime.today().year + 1):
-        print("Creating dataframe for year %d..." % need_year)
-        year_listens_df = all_listens_df.filter(year(all_listens_df['listened_at']) == need_year)
-        print("Done!")
-
-        path = config.HDFS_CLUSTER_URI + os.path.join(destination_path, '%d.parquet' % need_year)
-        print("Writing dataframe for year %d to HDFS: %s" % (need_year, path))
-        year_listens_df.write.format('parquet').save(path)
-        print("Done!")
-
-    print("Creating dataframe for invalid listens...")
-    invalid_listens_df = all_listens_df.filter(year(all_listens_df['listened_at']) < LAST_FM_FOUNDING_YEAR)
-    print("Done!")
     path = config.HDFS_CLUSTER_URI + os.path.join(destination_path, 'invalid.parquet')
     print("Writing dataframe for invalid listens to HDFS: %s" % path)
-    invalid_listens_df.write.format('parquet').save(path)
+    invalid_df.write.format('parquet').save(path)
     print("Done!")
 
 
