@@ -10,7 +10,7 @@ REPLICAS=$1
 docker service create --replicas $REPLICAS \
     --env NODE_TYPE="worker" \
     --network spark-network \
-    --name yarn-workers \
+    --name hadoop-workers \
     --mount type=volume,source=hdfs-volume,destination=/home/hadoop/hdfs \
     metabrainz/hadoop-yarn:beta
 

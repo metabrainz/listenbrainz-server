@@ -4,7 +4,7 @@ import click
 from time import sleep
 
 
-from hetznercloud import HetznerCloudClientConfiguration, HetznerCloudClient, SERVER_TYPE_8CPU_32GB, IMAGE_UBUNTU_1804, SERVER_STATUS_RUNNING
+from hetznercloud import HetznerCloudClientConfiguration, HetznerCloudClient, SERVER_TYPE_8CPU_32GB, IMAGE_UBUNTU_1804, SERVER_STATUS_RUNNING, DATACENTER_HELSINKI_1
 from config import API_KEY
 
 START_SCRIPT = """#!/bin/bash
@@ -28,6 +28,7 @@ def start_cluster(count):
                 image=IMAGE_UBUNTU_1804, 
                 start_after_create=True,
                 ssh_keys=["robert", "zas", "param"],
+                datacenter=DATACENTER_HELSINKI_1,
                 user_data=START_SCRIPT)
         servers.append((server_a, create_action))
 

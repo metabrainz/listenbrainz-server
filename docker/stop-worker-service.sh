@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker service rm spark-workers yarn-workers
+docker service rm spark-workers hadoop-workers
