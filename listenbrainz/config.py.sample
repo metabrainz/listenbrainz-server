@@ -73,6 +73,9 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 
 # LOGGING
 
+# Uncomment any of the following logging stubs if you want to enable logging
+# during development. In general you shouldn't need to do this
+
 # LOG_FILE = {
 #    'filename': './logs/listenbrainz.txt',
 #    'max_bytes': 512 * 1024, # optional
