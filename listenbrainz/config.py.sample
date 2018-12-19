@@ -98,7 +98,6 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 #    'dsn':'',
 #    'environment': 'development',
 # }
-# SENTRY_DSN_PUBLIC = ''
 
 
 # MISCELLANEOUS
