@@ -58,8 +58,8 @@ def _process_listens_file(dataframes, invalid_df, filename):
         return sql_functions.year(listened_at) < LAST_FM_FOUNDING_YEAR
 
     file_rdd = sc.textFile(filename).map(json.loads)
-    file_rdd.cache().count()
     file_df = spark.createDataFrame(file_rdd.map(convert_listen_to_row), listen_schema)
+    file_df.cache().count()
     processed_dfs = {}
     for year in range(LAST_FM_FOUNDING_YEAR, datetime.today().year + 1):
         if year not in processed_dfs:
