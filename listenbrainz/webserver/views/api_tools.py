@@ -57,11 +57,7 @@ def _send_listens_to_queue(listen_type, listens):
             try:
                 expire_time = listen["track_metadata"]["additional_info"].get("duration",
                                     current_app.config['PLAYING_NOW_MAX_DURATION'])
-                redis_connection._redis.redis.setex(
-                    'playing_now:{}'.format(listen['user_id']),
-                    ujson.dumps(listen).encode('utf-8'),
-                    expire_time
-                )
+                redis_connection._redis.put_playing_now(listen['user_id'], listen, expire_time)
             except Exception as e:
                 current_app.logger.error("Redis rpush playing_now write error: " + str(e))
                 raise ServiceUnavailable("Cannot record playing_now at this time.")
