@@ -228,6 +228,7 @@ interfere with production databases.
 There are some other options can be inputted to the parameter of the unit tests.
 
 .. code-block:: bash
+
    ./test.sh -u # build and run the container, and load the database without running the tests.
    ./test.sh -s # stop all containers associated to the tests.
    ./test.sh -d # shutting down all containers associated to the tests.
