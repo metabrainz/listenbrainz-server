@@ -73,7 +73,7 @@ To register, visit the `MusicBrainz applications page`_. There, look for the
 option to `register`_ your application. Fill out the form with these three
 options.
 
-- **Name**: (any name you want and will recognize, e.g. 
+- **Name**: (any name you want and will recognize, e.g.
   ``listenbrainz-server-devel``)
 
 - **Type**: ``Web Application``
@@ -221,16 +221,19 @@ code.
 
    ./test.sh
 
-This builds and runs the containers needed for the tests. Each container does
-not use volumes that link to data outside of the containers, so it does not
-interfere with production databases.
+This builds and runs the containers needed for the tests. This script configures
+test-specific data volumes so that test data is isolated from your development
+data.
 
-There are some other options can be inputted to the parameter of the unit tests.
+To run tests faster, you can use some options to start up the test infrastructure
+once so that subsequent running of the tests is faster:
 
 .. code-block:: bash
-   ./test.sh -u # build and run the container, and load the database without running the tests.
-   ./test.sh -s # stop all containers associated to the tests.
-   ./test.sh -d # shutting down all containers associated to the tests.
+
+   ./test.sh -u # start up and initialise the database
+   ./test.sh    # run tests, do this as often as you need to
+   ./test.sh -s # stop test containers, but don't remove them
+   ./test.sh -d # stop and remove all test containers
 
 Also, run the **integration tests** for ListenBrainz.
 
