@@ -5,12 +5,16 @@ RUN apt-get update \
     scala \
     wget \
     net-tools \
-    dnsutils
+    dnsutils \
+    python3-dev \
+    python3-pip
 
 RUN cd /usr/local && \
     wget http://apache.rediris.es/spark/spark-2.3.1/spark-2.3.1-bin-hadoop2.7.tgz && \
     tar xzf spark-2.3.1-bin-hadoop2.7.tgz && \
     ln -s spark-2.3.1-bin-hadoop2.7 spark
+
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
 
 RUN mkdir /rec
 WORKDIR /rec
