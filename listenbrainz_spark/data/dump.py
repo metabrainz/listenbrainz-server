@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import subprocess
 import tarfile
 import tempfile
@@ -59,7 +60,6 @@ def _process_listens_file(dataframes, invalid_df, filename):
 
     file_rdd = sc.textFile(filename).map(json.loads)
     file_df = spark.createDataFrame(file_rdd.map(convert_listen_to_row), listen_schema)
-    file_df.cache().count()
     processed_dfs = {}
     for year in range(LAST_FM_FOUNDING_YEAR, datetime.today().year + 1):
         if year not in processed_dfs:
@@ -87,6 +87,7 @@ def copy_to_hdfs(archive, threads=4):
         archive (str): the path to the listens dump
         threads (int): the number of threads to use for decompression of the archive
     """
+    tmp_dump_dir = tempfile.mkdtemp()
     pxz_command = ['pxz', '--decompress', '--stdout', archive, '-T{}'.format(threads)]
     pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
     destination_path = os.path.join('/', 'data', 'listenbrainz')
@@ -103,7 +104,9 @@ def copy_to_hdfs(archive, threads=4):
             if member.isfile() and _is_listens_file(member.name):
                 print('Loading %s...' % member.name)
                 tar.extract(member)
-                dataframes, invalid_df = _process_listens_file(dataframes, invalid_df, member.name)
+                hdfs_tmp_path = os.path.join(tmp_dump_dir, member.name)
+                hdfs_connection.client.upload(hdfs_path=hdfs_tmp_path, local_path=member.name)
+                dataframes, invalid_df = _process_listens_file(dataframes, invalid_df, config.HDFS_CLUSTER_URI + hdfs_tmp_path)
                 os.remove(member.name)
                 print("Done!")
     print("Dataframes created!")
@@ -115,12 +118,18 @@ def copy_to_hdfs(archive, threads=4):
             path = config.HDFS_CLUSTER_URI + os.path.join(destination_path, str(year), str(month_index + 1) + '.parquet')
             dataframes[year][month_index].write.format('parquet').save(path)
             print("Done!")
+            print("Wrote %d listens!" % dataframes[year][month_index].count())
     print("Dataframes written!")
 
     path = config.HDFS_CLUSTER_URI + os.path.join(destination_path, 'invalid.parquet')
     print("Writing dataframe for invalid listens to HDFS: %s" % path)
     invalid_df.write.format('parquet').save(path)
+    print("Wrote %d listens!" % invalid_df.count())
     print("Done!")
+
+    print("Deleting temporary directories...")
+    hdfs_connection.client.delete(hdfs_tmp_path, recursive=True)
+    shutil.rmtree(tmp_dump_dir)
 
 
 def main(archive):
