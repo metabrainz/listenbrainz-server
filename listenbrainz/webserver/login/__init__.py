@@ -8,12 +8,16 @@ login_manager.login_view = 'login.index'
 
 
 class User(UserMixin):
-    def __init__(self, id, created, musicbrainz_id, auth_token, gdpr_agreed):
+    def __init__(self, id, created, musicbrainz_id, auth_token, gdpr_agreed, user_login_id):
         self.id = id
         self.created = created
         self.musicbrainz_id = musicbrainz_id
         self.auth_token = auth_token
         self.gdpr_agreed = gdpr_agreed
+        self.user_login_id = user_login_id
+
+    def get_id(self):
+        return self.user_login_id
 
     @classmethod
     def from_dbrow(cls, user):
@@ -23,11 +27,12 @@ class User(UserMixin):
             musicbrainz_id=user['musicbrainz_id'],
             auth_token=user['auth_token'],
             gdpr_agreed=user['gdpr_agreed'],
+            user_login_id=user['user_login_id'],
         )
 
 @login_manager.user_loader
-def load_user(user_id):
-    user = db_user.get(user_id)
+def load_user(user_login_id):
+    user = db_user.get_by_user_login_id(user_login_id)
     if user:
         return User.from_dbrow(user)
     else:
