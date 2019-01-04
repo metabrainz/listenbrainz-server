@@ -12,6 +12,7 @@ CREATE TABLE "user" (
 );
 ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_id_key UNIQUE (musicbrainz_id);
 ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_row_id_key UNIQUE (musicbrainz_row_id);
+ALTER TABLE "user" ADD COLUMN user_login_id VARCHAR;
 
 CREATE TABLE spotify_auth (
   user_id                   INTEGER NOT NULL, -- PK and FK to user.id

@@ -22,21 +22,21 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
         DatabaseTestCase.tearDown(self)
 
     def test_reset_import_timestamp_get(self):
-        self.temporary_login(self.user['id'])
+        self.temporary_login(self.user['user_login_id'])
         response = self.client.get(url_for('profile.reset_latest_import_timestamp'))
         self.assertTemplateUsed('profile/resetlatestimportts.html')
         self.assert200(response)
 
     def test_profile_view(self):
         """Tests the user info view and makes sure auth token is present there"""
-        self.temporary_login(self.user['id'])
+        self.temporary_login(self.user['user_login_id'])
         response = self.client.get(url_for('profile.info', user_name=self.user['musicbrainz_id']))
         self.assertTemplateUsed('profile/info.html')
         self.assert200(response)
         self.assertIn(self.user['auth_token'], response.data.decode('utf-8'))
 
     def test_reset_import_timestamp(self):
-        self.temporary_login(self.user['id'])
+        self.temporary_login(self.user['user_login_id'])
         val = int(time.time())
         db_user.update_latest_import(self.user['musicbrainz_id'], val)
 
@@ -53,7 +53,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertEqual(int(ts), 0)
 
     def test_reset_import_timestamp_post(self):
-        self.temporary_login(self.user['id'])
+        self.temporary_login(self.user['user_login_id'])
         val = int(time.time())
         db_user.update_latest_import(self.user['musicbrainz_id'], val)
 
@@ -78,7 +78,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
 
     @patch('listenbrainz.webserver.views.user.publish_data_to_queue')
     def test_delete(self, mock_publish_data_to_queue):
-        self.temporary_login(self.user['id'])
+        self.temporary_login(self.user['user_login_id'])
         r = self.client.get(url_for('profile.delete'))
         self.assert200(r)
 
@@ -93,7 +93,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
     @patch('listenbrainz.webserver.views.profile.spotify.get_spotify_oauth')
     def test_connect_spotify(self, mock_get_spotify_oauth, mock_remove_user):
         mock_get_spotify_oauth.return_value.get_authorize_url.return_value = 'someurl'
-        self.temporary_login(self.user['id'])
+        self.temporary_login(self.user['user_login_id'])
         r = self.client.get(url_for('profile.connect_spotify'))
         self.assert200(r)
 
@@ -110,7 +110,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             'refresh_token': 'refresh',
             'expires_in': 3600,
         }
-        self.temporary_login(self.user['id'])
+        self.temporary_login(self.user['user_login_id'])
         r = self.client.get(url_for('profile.connect_spotify_callback', code='code'))
         self.assertStatus(r, 302)
         mock_get_access_token.assert_called_once_with('code')

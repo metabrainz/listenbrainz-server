@@ -14,6 +14,7 @@ class User(db.Model):
     latest_import = db.Column(db.DateTime(timezone=True), default=lambda: datetime.fromutctimestamp(0))
     gdpr_agreed = db.Column(db.DateTime(timezone=True))
     musicbrainz_row_id = db.Column(db.Integer, nullable=False)
+    user_login_id = db.Column(db.String)
 
 class UserAdminView(AdminModelView):
     form_columns = [
@@ -29,6 +30,7 @@ class UserAdminView(AdminModelView):
         'gdpr_agreed',
         'last_login',
         'latest_import',
+        'user_login_id',
     ]
     column_searchable_list = [
         'id',

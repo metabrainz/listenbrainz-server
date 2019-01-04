@@ -26,13 +26,14 @@ def create(musicbrainz_row_id, musicbrainz_id):
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            INSERT INTO "user" (musicbrainz_id, musicbrainz_row_id, auth_token)
-                 VALUES (:mb_id, :mb_row_id, :token)
+            INSERT INTO "user" (musicbrainz_id, musicbrainz_row_id, auth_token, user_login_id)
+                 VALUES (:mb_id, :mb_row_id, :token, :login_id)
               RETURNING id
         """), {
             "mb_id": musicbrainz_id,
             "token": str(uuid.uuid4()),
             "mb_row_id": musicbrainz_row_id,
+            "login_id" : str(uuid.uuid4()),
         })
         return result.fetchone()["id"]
 
@@ -58,7 +59,7 @@ def update_token(id):
             raise
 
 
-USER_GET_COLUMNS = ['id', 'created', 'musicbrainz_id', 'auth_token', 'last_login', 'latest_import', 'gdpr_agreed', 'musicbrainz_row_id']
+USER_GET_COLUMNS = ['id', 'created', 'musicbrainz_id', 'auth_token', 'last_login', 'latest_import', 'gdpr_agreed', 'musicbrainz_row_id', 'user_login_id']
 
 
 def get(id):
@@ -82,6 +83,30 @@ def get(id):
               FROM "user"
              WHERE id = :id
         """.format(columns=','.join(USER_GET_COLUMNS))), {"id": id})
+        row = result.fetchone()
+        return dict(row) if row else None
+
+def get_by_user_login_id(login_id):
+    """Get user with a specified login ID.
+
+    Args:
+        id (int): login ID of a user.
+
+    Returns:
+        Dictionary with the following structure:
+        {
+            "id": <user id>,
+            "created": <account creation time>,
+            "musicbrainz_id": <MusicBrainz username>,
+            "auth_token": <authentication token>,
+        }
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT {columns}
+              FROM "user"
+             WHERE user_login_id = :user_login_id
+        """.format(columns=','.join(USER_GET_COLUMNS))), {"user_login_id": login_id})
         row = result.fetchone()
         return dict(row) if row else None
 
