@@ -59,7 +59,8 @@ def _process_listens_file(dataframes, invalid_df, filename):
         return sql_functions.year(listened_at) < LAST_FM_FOUNDING_YEAR
 
     file_rdd = sc.textFile(filename).map(json.loads)
-    file_df = spark.createDataFrame(file_rdd.map(convert_listen_to_row), listen_schema)
+    file_df = spark.createDataFrame(file_rdd.map(convert_listen_to_row), listen_schema).cache()
+    print("Listens in file: %d" % file_df.count())
     processed_dfs = {}
     for year in range(LAST_FM_FOUNDING_YEAR, datetime.today().year + 1):
         if year not in processed_dfs:
@@ -108,6 +109,7 @@ def copy_to_hdfs(archive, threads=4):
                 hdfs_connection.client.upload(hdfs_path=hdfs_tmp_path, local_path=member.name)
                 dataframes, invalid_df = _process_listens_file(dataframes, invalid_df, config.HDFS_CLUSTER_URI + hdfs_tmp_path)
                 os.remove(member.name)
+                hdfs_connection.client.delete(hdfs_tmp_path)
                 print("Done!")
     print("Dataframes created!")
 
@@ -128,7 +130,6 @@ def copy_to_hdfs(archive, threads=4):
     print("Done!")
 
     print("Deleting temporary directories...")
-    hdfs_connection.client.delete(hdfs_tmp_path, recursive=True)
     shutil.rmtree(tmp_dump_dir)
 
 
