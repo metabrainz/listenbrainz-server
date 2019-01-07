@@ -99,10 +99,12 @@ class Listen(object):
     @classmethod
     def from_json(cls, j):
         """Factory to make Listen() objects from a dict"""
+        if j['listened_at']:
+            j['listened_at']=datetime.utcfromtimestamp(float(j['listened_at']))
         return cls(
             user_id=j.get('user_id'),
             user_name=j.get('user_name', ''),
-            timestamp=datetime.utcfromtimestamp(float(j['listened_at'])),
+            timestamp=j['listened_at'],
             artist_msid=j['track_metadata']['additional_info'].get('artist_msid'),
             release_msid=j['track_metadata']['additional_info'].get('release_msid'),
             recording_msid=j.get('recording_msid'),
