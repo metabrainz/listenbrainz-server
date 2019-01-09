@@ -1,6 +1,5 @@
 import logging
 
-MIN_ID = 1033430400     # approx when audioscrobbler was created
 ORDER_DESC = 0
 ORDER_ASC = 1
 ORDER_TEXT = [ "DESC", "ASC" ]
