@@ -100,3 +100,37 @@ class ListenTestCase(unittest.TestCase):
         self.assertEqual(data['fields']['artist_name'], listen.data['artist_name'])
 
         self.assertIn('inserted_timestamp', data['fields'])
+
+
+    def test_from_json(self):
+        json_row = {
+                    "track_metadata": {
+                      "additional_info": {
+                        "release_mbid": "bf9e91ea-8029-4a04-a26a-224e00a83266",
+                        'release_msid': '4a3c7b15-323a-4e27-9801-0be47517ab85',
+                        'artist_msid': 'b2e47f94-c2e6-4a66-83f7-1eaf5949f049',
+                        "artist_mbids": [
+                          "db92a151-1ac2-438b-bc43-b82e149ddd50"
+                        ],
+                        "recording_mbid": "98255a8c-017a-4bc7-8dd6-1fa36124572b",
+                        "tags": [ "you", "just", "got", "rick rolled!"]
+                       },
+                       "artist_name": "Rick Astley",
+                       "track_name": "Never Gonna Give You Up",
+                       "release_name": "Whenever you need somebody"
+                      },
+                      'recording_msid': '1bf647b3-c8ba-487c-ae91-993de9ea944c',
+                      'user_id': 3,
+                      'user_name': 'Vansika Pareek'
+                    }
+
+        json_row.update({'listened_at': 123456})
+        listen = Listen.from_json(json_row) 
+
+        self.assertEqual(listen.timestamp, json_row['listened_at'])
+
+        del json_row['listened_at']
+        json_row.update({'playing_now': True})
+        listen = Listen.from_json(json_row)
+
+        self.assertEqual(listen.timestamp, 0)
