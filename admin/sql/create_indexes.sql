@@ -22,7 +22,7 @@ CREATE INDEX recording_mbid_ndx_recording_artist_join ON recording_artist_join (
 CREATE INDEX artsit_mbids_ndx_recording_artist_join ON recording_artist_join (artist_mbids);
 
 CREATE INDEX recording_mbid_ndx_recording_redirect ON recording_redirect (recording_mbid);
-CREATE INDEX artist_mbids_array_ndx_artist_credit_redirect ON artist_credit_redirect (artist_mbids_array);
+CREATE INDEX artist_mbids_array_ndx_artist_credit_redirect ON artist_credit_redirect (artist_mbids);
 CREATE INDEX release_mbid_ndx_recording_redirect ON release_redirect (release_mbid);
 
 CREATE INDEX recording_cluster_id_ndx_recording_redirect ON recording_redirect (recording_cluster_id);
