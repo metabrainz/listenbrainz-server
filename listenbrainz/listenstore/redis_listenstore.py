@@ -7,8 +7,7 @@ import redis
 from redis import Redis
 
 from listenbrainz.listen import Listen
-from listenbrainz.listenstore import ListenStore, MIN_ID
-
+from listenbrainz.listenstore import ListenStore
 
 class RedisListenStore(ListenStore):
     def __init__(self, log, conf):
@@ -30,7 +29,7 @@ class RedisListenStore(ListenStore):
         if not data:
             return None
         data = ujson.loads(data)
-        data.update({'listened_at': None})
+        data.update({'playing_now': True})
         return Listen.from_json(data)
 
     def check_connection(self):
