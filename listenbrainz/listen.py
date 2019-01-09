@@ -6,6 +6,7 @@ import yaml
 
 from datetime import datetime
 from listenbrainz.utils import escape, convert_to_unix_timestamp
+from flask import current_app
 
 def flatten_dict(d, seperator='', parent_key=''):
     """
@@ -99,7 +100,10 @@ class Listen(object):
     @classmethod
     def from_json(cls, j):
         """Factory to make Listen() objects from a dict"""
-        if j['listened_at']:
+
+        if 'playing_now' in j:
+            j.update({'listened_at': None})
+        else:
             j['listened_at']=datetime.utcfromtimestamp(float(j['listened_at']))
         return cls(
             user_id=j.get('user_id'),
