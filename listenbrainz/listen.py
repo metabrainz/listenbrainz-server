@@ -6,7 +6,6 @@ import yaml
 
 from datetime import datetime
 from listenbrainz.utils import escape, convert_to_unix_timestamp
-from flask import current_app
 
 def flatten_dict(d, seperator='', parent_key=''):
     """
@@ -77,8 +76,8 @@ class Listen(object):
                 self.timestamp = timestamp
                 self.ts_since_epoch = calendar.timegm(self.timestamp.utctimetuple())
             else:
-                self.timestamp = 0
-                self.ts_since_epoch = 0
+                self.timestamp = None
+                self.ts_since_epoch = None
 
         self.artist_msid = artist_msid
         self.release_msid = release_msid
