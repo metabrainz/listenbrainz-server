@@ -15,7 +15,7 @@ def generate_data(test_user_id, user_name, from_ts, num_records):
     test_data = []
     artist_msid = str(uuid.uuid4())
 
-    if (from_ts == None):  #check for playing now listens
+    if from_ts == None:  #check for playing now listens
         timestamp = None
     else:
         from_ts += 1   # Add one second
@@ -25,7 +25,7 @@ def generate_data(test_user_id, user_name, from_ts, num_records):
         item = Listen(
             user_name=user_name,
             user_id=test_user_id,
-            timestamp= timestamp,
+            timestamp=timestamp,
             artist_msid=artist_msid,
             recording_msid=str(uuid.uuid4()),
             data={
