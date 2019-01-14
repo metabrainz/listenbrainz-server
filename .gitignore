@@ -101,4 +101,4 @@ ENV/
 .mypy_cache/
 
 config.py
-docker/proxy/keys
+docker/tunnel/keys

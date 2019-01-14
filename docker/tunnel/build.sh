@@ -7,5 +7,4 @@
 #   $ ./push.sh [tag]
 
 TAG_PART=${1:-latest}
-docker build -t metabrainz/listenbrainz-gateway:$TAG_PART .
-#docker push metabrainz/listenbrainz-gateway:$TAG_PART
+docker build -t metabrainz/listenbrainz-tunnel:$TAG_PART .
