@@ -21,7 +21,7 @@ RUN echo "AllowTCPForwarding yes" >> /etc/ssh/sshd_config
 RUN echo "PermitOpen any" >> /etc/ssh/sshd_config
 
 COPY ssh_config .ssh/config
-COPY id_rsa.pub /tmp 
-RUN cat /tmp/id_rsa.pub >> .ssh/authorized_keys
+COPY keys/*.pub /tmp/ 
+RUN cat /tmp/*.pub >> .ssh/authorized_keys
 
 CMD [ "sh", "-c", "service ssh start; bash"]
