@@ -15,4 +15,5 @@ def init_spark_session(app_name):
             .config("spark.hadoop.dfs.datanode.use.datanode.hostname", "true") \
             .getOrCreate()
     context = session.sparkContext
+    context.setLogLevel("ERROR")
     sql_context = SQLContext(context)
