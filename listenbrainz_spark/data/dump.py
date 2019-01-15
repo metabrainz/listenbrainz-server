@@ -14,7 +14,7 @@ from datetime import datetime
 from hdfs.util import HdfsError
 from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
-from listenbrainz_spark.schema import convert_listen_to_row, listen_schema, convert_to_spark_row
+from listenbrainz_spark.schema import convert_listen_to_row, listen_schema, convert_to_spark_json
 import pyspark.sql.functions as sql_functions
 
 FORCE = True
@@ -40,7 +40,7 @@ def _process_listens_file(filename, tmp_dir):
     with hdfs_connection.client.read(filename, delimiter='\n') as f:
         for line in f:
             listen = json.loads(line)
-            timestamp = datetime.fromutctimestamp(listen['listened_at'])
+            timestamp = datetime.utcfromtimestamp(listen['listened_at'])
             year = timestamp.year
             month = timestamp.month
             json_data = convert_to_spark_json(listen)

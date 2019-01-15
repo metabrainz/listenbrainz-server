@@ -53,7 +53,7 @@ def convert_listen_to_row(listen):
 def convert_to_spark_json(listen):
     meta = listen['track_metadata']
     return {
-        'listened_at': str(datetime.fromtimestamp(listen['listened_at']),
+        'listened_at': str(datetime.fromtimestamp(listen['listened_at'])),
         'user_name': listen['user_name'],
         'artist_msid': meta['additional_info']['artist_msid'],
         'artist_name': meta['artist_name'],
