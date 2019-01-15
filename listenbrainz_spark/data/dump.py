@@ -4,6 +4,7 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
+import time
 import hdfs
 
 import listenbrainz_spark.config as config
@@ -58,9 +59,12 @@ def _process_listens_file(dataframes, invalid_df, filename):
     def invalid(listened_at):
         return sql_functions.year(listened_at) < LAST_FM_FOUNDING_YEAR
 
+    start_time = time.time()
     file_rdd = sc.textFile(filename).map(json.loads)
     file_df = spark.createDataFrame(file_rdd.map(convert_listen_to_row), listen_schema).cache()
-    print("Listens in file: %d" % file_df.count())
+    print("File loaded in %.2f seconds" % (time.time() - start_time))
+    listen_count = file_df.count()
+    print("Listens in file: %d" % listen_count)
     processed_dfs = {}
     for year in range(LAST_FM_FOUNDING_YEAR, datetime.today().year + 1):
         if year not in processed_dfs:
@@ -78,6 +82,8 @@ def _process_listens_file(dataframes, invalid_df, filename):
 
     file_invalid_df = file_df.filter(invalid(file_df['listened_at']))
     processed_invalid_df = invalid_df.union(file_invalid_df)
+    print("File processed in %.2f seconds" % (time.time() - start_time))
+    print("Listens / sec = %.2f" % (listen_count / (time.time() - start_time)))
     return processed_dfs, processed_invalid_df
 
 
@@ -100,6 +106,7 @@ def copy_to_hdfs(archive, threads=4):
     print('Creating Listen dataframes...')
     dataframes = {}
     invalid_df = spark.createDataFrame(sc.emptyRDD(), listen_schema)
+    file_count = 0
     with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
         for member in tar:
             if member.isfile() and _is_listens_file(member.name):
@@ -110,7 +117,8 @@ def copy_to_hdfs(archive, threads=4):
                 dataframes, invalid_df = _process_listens_file(dataframes, invalid_df, config.HDFS_CLUSTER_URI + hdfs_tmp_path)
                 os.remove(member.name)
                 hdfs_connection.client.delete(hdfs_tmp_path)
-                print("Done!")
+                file_count += 1
+                print("Done! Processed %d files." % file_count)
     print("Dataframes created!")
 
     print("Writing dataframes...")
