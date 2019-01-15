@@ -108,9 +108,10 @@ def copy_to_hdfs(archive, threads=8):
     dataframes = {}
     invalid_df = listenbrainz_spark.session.createDataFrame(listenbrainz_spark.context.emptyRDD(), listen_schema)
     file_count = 0
+    total_time = 0.0
     with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
         for member in tar:
-            if member.isfile() and _is_listens_file(member.name):
+            if member.isfile() and _is_listens_file(member.name) and file_count <= 10:
                 print('Loading %s...' % member.name)
                 t = time.time()
                 tar.extract(member)
@@ -120,17 +121,27 @@ def copy_to_hdfs(archive, threads=8):
                 os.remove(member.name)
                 hdfs_connection.client.delete(hdfs_tmp_path)
                 file_count += 1
-                print("Done! Processed %d files. Current file done in %.2f sec" % (file_count, time.time() - t))
+                time_taken = time.time() - t
+                print("Done! Processed %d files. Current file done in %.2f sec" % (file_count, time_take))
+                total_time += time_taken
+                average_time = total_time / file_count
+                print("Total time: %.2f, average time: %.2f" % (total_time, average_time)
     print("Dataframes created!")
 
     print("Writing dataframes...")
+    total_time = 0
+    file_count = 0
     for year in range(LAST_FM_FOUNDING_YEAR, datetime.today().year + 1):
         for month_index in range(12):
             t = time.time()
             print("Writing dataframe for %d/%d..." % (month_index + 1, year))
             path = config.HDFS_CLUSTER_URI + os.path.join(destination_path, str(year), str(month_index + 1) + '.parquet')
             dataframes[year][month_index].write.format('parquet').save(path)
-            print("Done in %.2f seconds!" % (time.time() - t))
+            time_taken = time.time() - t
+            print("Done in %.2f seconds!" % (time_taken))
+            total_time += time_taken
+            average_time = total_time / file_count
+            print("Total time: %.2f, average time: %.2f" % (total_time, average_time)
     print("Dataframes written!")
 
     path = config.HDFS_CLUSTER_URI + os.path.join(destination_path, 'invalid.parquet')
