@@ -37,7 +37,7 @@ def _process_listens_file(filename, tmp_dir):
     """
     start_time = time.time()
     unwritten_listens = {}
-    with hdfs_connection.client.read(filename, delimiter='\n') as f:
+    with open(filename) as f:
         for line in f:
             listen = json.loads(line)
             timestamp = datetime.utcfromtimestamp(listen['listened_at'])
@@ -93,11 +93,9 @@ def copy_to_hdfs(archive, threads=8):
                 print('Loading %s...' % member.name)
                 t = time.time()
                 tar.extract(member)
-                hdfs_tmp_path = os.path.join(tmp_dump_dir, member.name)
-                hdfs_connection.client.upload(hdfs_path=hdfs_tmp_path, local_path=member.name)
-                _process_listens_file(hdfs_tmp_path, tmp_dump_dir)
+                listenbrainz_spark.context.addFile(member.name)
+                _process_listens_file(member.name, tmp_dump_dir)
                 os.remove(member.name)
-                hdfs_connection.client.delete(hdfs_tmp_path)
                 file_count += 1
                 time_taken = time.time() - t
                 print("Done! Processed %d files. Current file done in %.2f sec" % (file_count, time_taken))
