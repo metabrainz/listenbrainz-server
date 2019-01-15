@@ -125,7 +125,7 @@ def copy_to_hdfs(archive, threads=8):
                 print("Done! Processed %d files. Current file done in %.2f sec" % (file_count, time_take))
                 total_time += time_taken
                 average_time = total_time / file_count
-                print("Total time: %.2f, average time: %.2f" % (total_time, average_time)
+                print("Total time: %.2f, average time: %.2f" % (total_time, average_time))
     print("Dataframes created!")
 
     print("Writing dataframes...")
@@ -141,7 +141,7 @@ def copy_to_hdfs(archive, threads=8):
             print("Done in %.2f seconds!" % (time_taken))
             total_time += time_taken
             average_time = total_time / file_count
-            print("Total time: %.2f, average time: %.2f" % (total_time, average_time)
+            print("Total time: %.2f, average time: %.2f" % (total_time, average_time))
     print("Dataframes written!")
 
     path = config.HDFS_CLUSTER_URI + os.path.join(destination_path, 'invalid.parquet')
