@@ -49,3 +49,20 @@ def convert_listen_to_row(listen):
         recording_mbid=meta['additional_info'].get('recording_mbid', ''),
         tags=meta['additional_info'].get('tags', []),
     )
+
+def convert_to_spark_json(listen):
+    meta = listen['track_metadata']
+    return {
+        'listened_at': str(datetime.fromtimestamp(listen['listened_at']),
+        'user_name': listen['user_name'],
+        'artist_msid': meta['additional_info']['artist_msid'],
+        'artist_name': meta['artist_name'],
+        'artist_mbids': meta['additional_info'].get('artist_mbids', []),
+        'release_msid': meta['additional_info'].get('release_msid', ''),
+        'release_name': meta.get('release_name', ''),
+        'release_mbid': meta['additional_info'].get('release_mbid', ''),
+        'track_name': meta['track_name'],
+        'recording_msid': listen['recording_msid'],
+        'recording_mbid': meta['additional_info'].get('recording_mbid', ''),
+        'tags': meta['additional_info'].get('tags', []),
+    }
