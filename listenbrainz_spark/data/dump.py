@@ -111,6 +111,7 @@ def copy_to_hdfs(archive, threads=4):
         for member in tar:
             if member.isfile() and _is_listens_file(member.name):
                 print('Loading %s...' % member.name)
+                t = time.time()
                 tar.extract(member)
                 hdfs_tmp_path = os.path.join(tmp_dump_dir, member.name)
                 hdfs_connection.client.upload(hdfs_path=hdfs_tmp_path, local_path=member.name)
@@ -118,24 +119,24 @@ def copy_to_hdfs(archive, threads=4):
                 os.remove(member.name)
                 hdfs_connection.client.delete(hdfs_tmp_path)
                 file_count += 1
-                print("Done! Processed %d files." % file_count)
+                print("Done! Processed %d files. Current file done in %.2f sec" % (file_count, time.time() - t))
     print("Dataframes created!")
 
     print("Writing dataframes...")
     for year in range(LAST_FM_FOUNDING_YEAR, datetime.today().year + 1):
         for month_index in range(12):
+            t = time.time()
             print("Writing dataframe for %d/%d..." % (month_index + 1, year))
             path = config.HDFS_CLUSTER_URI + os.path.join(destination_path, str(year), str(month_index + 1) + '.parquet')
             dataframes[year][month_index].write.format('parquet').save(path)
-            print("Done!")
-            print("Wrote %d listens!" % dataframes[year][month_index].count())
+            print("Done in %.2f seconds!" % (time.time() - t))
     print("Dataframes written!")
 
     path = config.HDFS_CLUSTER_URI + os.path.join(destination_path, 'invalid.parquet')
+    t = time.time()
     print("Writing dataframe for invalid listens to HDFS: %s" % path)
     invalid_df.write.format('parquet').save(path)
-    print("Wrote %d listens!" % invalid_df.count())
-    print("Done!")
+    print("Done in %.2f sec!" % (time.time() - t))
 
     print("Deleting temporary directories...")
     shutil.rmtree(tmp_dump_dir)
