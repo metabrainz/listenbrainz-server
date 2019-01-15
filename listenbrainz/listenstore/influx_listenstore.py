@@ -348,13 +348,14 @@ class InfluxListenStore(ListenStore):
         return listens
 
 
-    def dump_user(self, username, fileobj, dump_time):
+    def dump_user(self, username, fileobj, dump_time, spark_format=False):
         """ Dump specified user's listens into specified file object.
 
         Args:
             username (str): the MusicBrainz ID of the user whose listens are to be dumped
             fileobj (file): the file into which listens should be written
             dump_time (datetime): the time at which the specific data dump was initiated
+            spark_format (bool): dump files in Apache Spark friendly format if True, else full dumps
 
         Returns:
             int: the number of bytes this user's listens take in the dump file
@@ -389,7 +390,8 @@ class InfluxListenStore(ListenStore):
 
             rows_added = 0
             for row in result.get_points(get_measurement_name(username)):
-                listen = Listen.from_influx(row).to_api()
+                listen = Listen.from_influx(row)
+                listen = listen.to_api() if not spark_format else listen.to_spark()
                 listen['user_name'] = username
                 try:
                     bytes_written += fileobj.write(ujson.dumps(listen))
@@ -416,7 +418,7 @@ class InfluxListenStore(ListenStore):
         # hence return bytes_written - 1 as the size in the dump for this user
         return bytes_written - 1
 
-    def dump_listens(self, location, dump_time=datetime.today(), threads=DUMP_DEFAULT_THREAD_COUNT):
+    def dump_listens(self, location, dump_time=datetime.today(), threads=DUMP_DEFAULT_THREAD_COUNT, spark_format=False):
         """ Dumps all listens in the ListenStore into a .tar.xz archive.
 
         Files are created with UUIDs as names. Each file can contain listens for a number of users.
@@ -426,6 +428,7 @@ class InfluxListenStore(ListenStore):
             location: the directory where the listens dump archive should be created
             dump_time (datetime): the time at which the data dump was started
             threads (int): the number of threads to user for compression
+            spark_format (bool): dump files in Apache Spark friendly format if True, else full dumps
 
         Returns:
             the path to the dump archive
@@ -438,6 +441,8 @@ class InfluxListenStore(ListenStore):
         self.log.info('Total number of users: %d', len(users))
 
         archive_name = 'listenbrainz-listens-dump-{time}'.format(time=dump_time.strftime('%Y%m%d-%H%M%S'))
+        if spark_format:
+            archive_name = '{}-spark'.format(archive_name)
         archive_path = os.path.join(location, '{filename}.tar.xz'.format(filename=archive_name))
         with open(archive_path, 'w') as archive:
 
@@ -494,7 +499,7 @@ class InfluxListenStore(ListenStore):
 
                             username = users[next_user_id]['musicbrainz_id']
                             offset = f.tell()
-                            size = self.dump_user(username=username, fileobj=f, dump_time=dump_time)
+                            size = self.dump_user(username=username, fileobj=f, dump_time=dump_time, spark_format=spark_format)
                             index[username] = {
                                 'file_name': file_name,
                                 'offset': offset,

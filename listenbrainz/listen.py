@@ -253,6 +253,23 @@ class Listen(object):
 
         return data
 
+
+    def to_spark(self):
+        return {
+            'listened_at': str(self.timestamp),
+            'user_name': self.user_name,
+            'artist_msid': self.artist_msid,
+            'artist_name': self.data['artist_name'],
+            'artist_mbids': self.data['additional_info'].get('artist_mbids', []),
+            'release_msid': self.release_msid,
+            'release_name': self.data.get('release_name', ''),
+            'release_mbid': self.data['additional_info'].get('release_mbid', ''),
+            'track_name': self.data['track_name'],
+            'recording_msid': self.recording_msid,
+            'recording_mbid': self.data['additional_info'].get('recording_mbid', ''),
+            'tags': self.data['additional_info'].get('tags', []),
+        }
+
     def validate(self):
         return (self.user_id is not None and self.timestamp is not None and self.artist_msid is not None
                 and self.recording_msid is not None and self.data is not None)

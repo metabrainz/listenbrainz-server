@@ -69,13 +69,38 @@ def create(location, threads):
         dump_path = os.path.join(location, 'listenbrainz-dump-{time}'.format(time=time_now.strftime('%Y%m%d-%H%M%S')))
         create_path(dump_path)
         db_dump.dump_postgres_db(dump_path, time_now, threads)
-        ls.dump_listens(dump_path, time_now, threads)
+        ls.dump_listens(dump_path, time_now, threads, spark_format=False)
         try:
             write_hashes(dump_path)
         except IOError as e:
             current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
             return
         current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
+
+
+@cli.command()
+@click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'))
+@click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
+def create_spark_dump(location, threads):
+    with create_app().app_context():
+        ls = init_influx_connection(current_app.logger,  {
+            'REDIS_HOST': current_app.config['REDIS_HOST'],
+            'REDIS_PORT': current_app.config['REDIS_PORT'],
+            'REDIS_NAMESPACE': current_app.config['REDIS_NAMESPACE'],
+            'INFLUX_HOST': current_app.config['INFLUX_HOST'],
+            'INFLUX_PORT': current_app.config['INFLUX_PORT'],
+            'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
+        })
+        time_now = datetime.today()
+        dump_path = os.path.join(location, 'listenbrainz-spark-dump-{time}'.format(time=time_now.strftime('%Y%m%d-%H%M%S')))
+        create_path(dump_path)
+        ls.dump_listens(dump_path, time_now, threads, spark_format=True)
+        try:
+            write_hashes(dump_path)
+        except IOError as e:
+            current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
+            return
+        current_app.logger.info('Dump created and hash written at %s', dump_path)
 
 
 @cli.command(name="import_dump")
