@@ -157,7 +157,7 @@ class Listen(object):
                     value = yaml.safe_load(value)
                     data[key] = value
                     continue
-                except ValueError:
+                except (ValueError, yaml.scanner.ScannerError):
                     pass
 
                 data[key] = value
