@@ -10,6 +10,8 @@ import hdfs
 import listenbrainz_spark
 import listenbrainz_spark.config as config
 
+from listenbrainz_spark.utils import create_path
+
 from datetime import datetime
 from hdfs.util import HdfsError
 from listenbrainz_spark import hdfs_connection
@@ -58,10 +60,15 @@ def _process_listens_file(filename, tmp_dir):
 def write_listens(unwritten_listens, tmp_dir):
     for year in unwritten_listens:
         for month in unwritten_listens[year]:
+            directory = os.path.join(tmp_dir, 'json')
+            create_path(directory)
             if year < LAST_FM_FOUNDING_YEAR:
                 filename = os.path.join(tmp_dir, 'json', 'invalid.json')
             else:
+                directory = os.path.join(directory, str(year))
+                create_path(directory)
                 filename = os.path.join(tmp_dir, 'json', str(year), '{}.json'.format(str(month)))
+
             with open(filename, 'a') as f:
                 for listen in unwritten_listens[year][month]:
                     f.write(json.dumps(listen))
