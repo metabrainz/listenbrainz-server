@@ -14,7 +14,7 @@ from datetime import datetime
 from hdfs.util import HdfsError
 from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
-from listenbrainz_spark.schema import convert_listen_to_row, listen_schema
+from listenbrainz_spark.schema import convert_listen_to_row, listen_schema, convert_to_spark_row
 import pyspark.sql.functions as sql_functions
 
 FORCE = True
@@ -31,61 +31,42 @@ def _is_listens_file(filename):
     return filename.endswith('.listens')
 
 
-def _process_listens_file(dataframes, invalid_df, filename):
+def _process_listens_file(filename, tmp_dir):
     """ Process a file containing listens from the ListenBrainz dump and add listens to
     appropriate dataframes.
-
-    Args:
-        dataframes (dict(list)): a dict with key being years and value being a list containing
-                                dataframes for each month of the year
-        invalid_df (dataframe): a dataframe containing invalid listens from the dump
-        filename (str): the file to be processed
-
-    Returns: (dataframes, invalid_df)
-            dataframes: a dict with the same format as the dataframes arg but containing listens from the
-                        new file
-            invalid_df (dataframe): dataframe containing invalid listens from the dump.
     """
-
-    def listened_in_month(listened_at, year, month):
-        """ Filter to filter listen dataframes according to month and year.
-
-        Args:
-            listened_at: the listened_at column from a listens dataframe
-            year (int): the year needed
-            month (int): the month needed.
-        """
-        return (sql_functions.year(listened_at) == year) & (sql_functions.month(listened_at) == month)
-
-    def invalid(listened_at):
-        return sql_functions.year(listened_at) < LAST_FM_FOUNDING_YEAR
-
     start_time = time.time()
-    file_rdd = listenbrainz_spark.context.textFile(filename).map(json.loads)
-    file_df = listenbrainz_spark.session.createDataFrame(file_rdd.map(convert_listen_to_row), listen_schema).cache()
-    print("File loaded in %.2f seconds" % (time.time() - start_time))
-    listen_count = file_df.count()
-    print("Listens in file: %d" % listen_count)
-    processed_dfs = {}
-    for year in range(LAST_FM_FOUNDING_YEAR, datetime.today().year + 1):
-        if year not in processed_dfs:
-            processed_dfs[year] = [listenbrainz_spark.session.createDataFrame(listenbrainz_spark.context.emptyRDD(), listen_schema) for month in range(12)]
+    unwritten_listens = {}
+    with hdfs_connection.client.read(filename, delimiter='\n') as f:
+        for line in f:
+            listen = json.loads(line)
+            timestamp = datetime.fromutctimestamp(listen['listened_at'])
+            year = timestamp.year
+            month = timestamp.month
+            json_data = convert_to_spark_json(listen)
 
-        for month_index in range(12):
-            month = month_index + 1
-            month_df = file_df.filter(listened_in_month(file_df['listened_at'], year=year, month=month))
-            try:
-                current_df = dataframes[year][month_index]
-            except KeyError:
-                current_df = listenbrainz_spark.session.createDataFrame(listenbrainz_spark.context.emptyRDD(), listen_schema)
+            if year not in unwritten_listens:
+                unwritten_listens[year] = {}
+            if month not in unwritten_listens[year]:
+                unwritten_listens[year][month] = []
+            unwritten_listens[year][month].append(json_data)
 
-            processed_dfs[year][month_index] = current_df.union(month_df)
+    write_listens(unwritten_listens, tmp_dir)
+    print("File processed in %.2f seconds!" % (time.time() - start_time))
 
-    file_invalid_df = file_df.filter(invalid(file_df['listened_at']))
-    processed_invalid_df = invalid_df.union(file_invalid_df)
-    print("File processed in %.2f seconds" % (time.time() - start_time))
-    print("Listens / sec = %.2f" % (listen_count / (time.time() - start_time)))
-    return processed_dfs, processed_invalid_df
+
+def write_listens(unwritten_listens, tmp_dir):
+    for year in unwritten_listens:
+        for month in unwritten_listens[year]:
+            if year < LAST_FM_FOUNDING_YEAR:
+                filename = os.path.join(tmp_dir, 'json', 'invalid.json')
+            else:
+                filename = os.path.join(tmp_dir, 'json', str(year), '{}.json'.format(str(month)))
+            with open(filename, 'a') as f:
+                for listen in unwritten_listens[year][month]:
+                    f.write(json.dumps(listen))
+                    f.write("\n")
+            unwritten_listens[year][month] = []
 
 
 def copy_to_hdfs(archive, threads=8):
@@ -104,20 +85,17 @@ def copy_to_hdfs(archive, threads=8):
         hdfs_connection.client.delete(destination_path, recursive=True)
         print('Done!')
 
-    print('Creating Listen dataframes...')
-    dataframes = {}
-    invalid_df = listenbrainz_spark.session.createDataFrame(listenbrainz_spark.context.emptyRDD(), listen_schema)
     file_count = 0
     total_time = 0.0
     with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
         for member in tar:
-            if member.isfile() and _is_listens_file(member.name) and file_count <= 10:
+            if member.isfile() and _is_listens_file(member.name) and file_count <= 1:
                 print('Loading %s...' % member.name)
                 t = time.time()
                 tar.extract(member)
                 hdfs_tmp_path = os.path.join(tmp_dump_dir, member.name)
                 hdfs_connection.client.upload(hdfs_path=hdfs_tmp_path, local_path=member.name)
-                dataframes, invalid_df = _process_listens_file(dataframes, invalid_df, config.HDFS_CLUSTER_URI + hdfs_tmp_path)
+                _process_listens_file(hdfs_tmp_path, tmp_dump_dir)
                 os.remove(member.name)
                 hdfs_connection.client.delete(hdfs_tmp_path)
                 file_count += 1
@@ -126,7 +104,6 @@ def copy_to_hdfs(archive, threads=8):
                 total_time += time_taken
                 average_time = total_time / file_count
                 print("Total time: %.2f, average time: %.2f" % (total_time, average_time))
-    print("Dataframes created!")
 
     print("Writing dataframes...")
     total_time = 0
@@ -135,8 +112,11 @@ def copy_to_hdfs(archive, threads=8):
         for month_index in range(12):
             t = time.time()
             print("Writing dataframe for %d/%d..." % (month_index + 1, year))
-            path = config.HDFS_CLUSTER_URI + os.path.join(destination_path, str(year), str(month_index + 1) + '.parquet')
-            dataframes[year][month_index].write.format('parquet').save(path)
+            src_path = os.path.join(tmp_dump_dir, 'json', str(year), '{}.json'.format(str(month)))
+            df = listenbrainz_spark.session.read.json(src_path, schema=listen_schema)
+            dest_path = config.HDFS_CLUSTER_URI + os.path.join(destination_path, str(year), str(month_index + 1) + '.parquet')
+            df.write.format('parquet').save(dest_path)
+            os.remove(src_path)
             time_taken = time.time() - t
             print("Done in %.2f seconds!" % (time_taken))
             total_time += time_taken
@@ -144,10 +124,12 @@ def copy_to_hdfs(archive, threads=8):
             print("Total time: %.2f, average time: %.2f" % (total_time, average_time))
     print("Dataframes written!")
 
-    path = config.HDFS_CLUSTER_URI + os.path.join(destination_path, 'invalid.parquet')
-    t = time.time()
     print("Writing dataframe for invalid listens to HDFS: %s" % path)
-    invalid_df.write.format('parquet').save(path)
+    src_path = os.path.join(tmp_dump_dir, 'json', 'invalid.json')
+    t = time.time()
+    invalid_df = listenbrainz_spark.session.read.json(src_path, schema=listen_schema)
+    dest_path = config.HDFS_CLUSTER_URI + os.path.join(destination_path, 'invalid.parquet')
+    invalid_df.write.format('parquet').save(dest_path)
     print("Done in %.2f sec!" % (time.time() - t))
 
     print("Deleting temporary directories...")
