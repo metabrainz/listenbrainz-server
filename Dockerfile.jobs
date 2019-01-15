@@ -17,6 +17,8 @@ RUN cd /usr/local && \
     tar xzf spark-2.3.1-bin-hadoop2.7.tgz && \
     ln -s spark-2.3.1-bin-hadoop2.7 spark
 
+RUN apt-get install -y zip
+
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
 
 RUN mkdir /rec
