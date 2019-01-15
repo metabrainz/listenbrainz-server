@@ -1,14 +1,18 @@
 from pyspark import SparkContext
 from pyspark.sql import SparkSession, SQLContext
 
-spark = SparkSession \
-        .builder \
-        .appName("LB Spark Cluster") \
-        .config("spark.hadoop.dfs.client.use.datanode.hostname", "true") \
-        .config("spark.hadoop.dfs.datanode.use.datanode.hostname", "true") \
-        .config("spark.driver.memory", "20g") \
-        .config("spark.executor.memory", "20g") \
-        .getOrCreate()
 
-sc = spark.sparkContext
-sqlContext = SQLContext(sc)
+session = None
+context = None
+sql_context = None
+
+def init_spark_session(app_name):
+    global session, context, sql_context
+    session = SparkSession \
+            .builder \
+            .appName(app_name) \
+            .config("spark.hadoop.dfs.client.use.datanode.hostname", "true") \
+            .config("spark.hadoop.dfs.datanode.use.datanode.hostname", "true") \
+            .getOrCreate()
+    context = session.sparkContext
+    sql_context = SQLContext(context)

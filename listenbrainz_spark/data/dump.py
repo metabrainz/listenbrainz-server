@@ -7,11 +7,12 @@ import tempfile
 import time
 import hdfs
 
+import listenbrainz_spark
 import listenbrainz_spark.config as config
 
 from datetime import datetime
 from hdfs.util import HdfsError
-from listenbrainz_spark import spark, sc, hdfs_connection
+from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.schema import convert_listen_to_row, listen_schema
 import pyspark.sql.functions as sql_functions
@@ -60,15 +61,15 @@ def _process_listens_file(dataframes, invalid_df, filename):
         return sql_functions.year(listened_at) < LAST_FM_FOUNDING_YEAR
 
     start_time = time.time()
-    file_rdd = sc.textFile(filename).map(json.loads)
-    file_df = spark.createDataFrame(file_rdd.map(convert_listen_to_row), listen_schema).cache()
+    file_rdd = listenbrainz_spark.context.textFile(filename).map(json.loads)
+    file_df = listenbrainz_spark.session.createDataFrame(file_rdd.map(convert_listen_to_row), listen_schema).cache()
     print("File loaded in %.2f seconds" % (time.time() - start_time))
     listen_count = file_df.count()
     print("Listens in file: %d" % listen_count)
     processed_dfs = {}
     for year in range(LAST_FM_FOUNDING_YEAR, datetime.today().year + 1):
         if year not in processed_dfs:
-            processed_dfs[year] = [spark.createDataFrame(sc.emptyRDD(), listen_schema) for month in range(12)]
+            processed_dfs[year] = [listenbrainz_spark.session.createDataFrame(listenbrainz_spark.context.emptyRDD(), listen_schema) for month in range(12)]
 
         for month_index in range(12):
             month = month_index + 1
@@ -76,7 +77,7 @@ def _process_listens_file(dataframes, invalid_df, filename):
             try:
                 current_df = dataframes[year][month_index]
             except KeyError:
-                current_df = spark.createDataFrame(sc.emptyRDD(), listen_schema)
+                current_df = listenbrainz_spark.session.createDataFrame(listenbrainz_spark.context.emptyRDD(), listen_schema)
 
             processed_dfs[year][month_index] = current_df.union(month_df)
 
@@ -87,7 +88,7 @@ def _process_listens_file(dataframes, invalid_df, filename):
     return processed_dfs, processed_invalid_df
 
 
-def copy_to_hdfs(archive, threads=4):
+def copy_to_hdfs(archive, threads=8):
     """ Create Spark Dataframes from a listens dump and save it to HDFS.
 
     Args:
@@ -105,7 +106,7 @@ def copy_to_hdfs(archive, threads=4):
 
     print('Creating Listen dataframes...')
     dataframes = {}
-    invalid_df = spark.createDataFrame(sc.emptyRDD(), listen_schema)
+    invalid_df = listenbrainz_spark.session.createDataFrame(listenbrainz_spark.context.emptyRDD(), listen_schema)
     file_count = 0
     with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
         for member in tar:
@@ -142,7 +143,8 @@ def copy_to_hdfs(archive, threads=4):
     shutil.rmtree(tmp_dump_dir)
 
 
-def main(archive):
+def main(app_name, archive):
+    listenbrainz_spark.init_spark_session(app_name)
     hdfs_connection.init_hdfs(config.HDFS_HTTP_URI)
     print('Copying extracted dump to HDFS...')
     copy_to_hdfs(archive)
