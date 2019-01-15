@@ -122,7 +122,7 @@ def copy_to_hdfs(archive, threads=8):
                 hdfs_connection.client.delete(hdfs_tmp_path)
                 file_count += 1
                 time_taken = time.time() - t
-                print("Done! Processed %d files. Current file done in %.2f sec" % (file_count, time_take))
+                print("Done! Processed %d files. Current file done in %.2f sec" % (file_count, time_taken))
                 total_time += time_taken
                 average_time = total_time / file_count
                 print("Total time: %.2f, average time: %.2f" % (total_time, average_time))
