@@ -53,6 +53,9 @@ def convert_to_unix_timestamp(influx_row_time):
     dt = datetime.strptime(influx_row_time, INFLUX_TIME_FORMAT)
     return int(dt.strftime('%s'))
 
+def convert_influx_to_datetime(influx_row_time):
+    return datetime.strptime(influx_row_time, INFLUX_TIME_FORMAT)
+
 
 def convert_timestamp_to_influx_row_format(ts):
     return datetime.fromtimestamp(ts).strftime(INFLUX_TIME_FORMAT)
