@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "$#" -ne 1 ]; then
+if [ "$#" -eq 0 ]; then
     echo "Usage: run.sh <cmd_to_run> ..."
     exit
 fi
