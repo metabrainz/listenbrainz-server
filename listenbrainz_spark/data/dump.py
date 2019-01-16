@@ -21,7 +21,7 @@ import pyspark.sql.functions as sql_functions
 
 FORCE = True
 
-def _is_listens_file(filename):
+def _is_json_file(filename):
     """ Check if passed filename is a file which contains listens
 
     Args:
@@ -30,50 +30,26 @@ def _is_listens_file(filename):
     Returns:
         bool: True if the file contains listens, False otherwise
     """
-    return filename.endswith('.listens')
+    return filename.endswith('.json')
 
 
-def _process_listens_file(filename, tmp_dir):
+def _process_json_file(filename, data_dir):
     """ Process a file containing listens from the ListenBrainz dump and add listens to
     appropriate dataframes.
     """
     start_time = time.time()
-    unwritten_listens = {}
-    with open(filename) as f:
-        for line in f:
-            listen = json.loads(line)
-            timestamp = datetime.utcfromtimestamp(listen['listened_at'])
-            year = timestamp.year
-            month = timestamp.month
-            json_data = convert_to_spark_json(listen)
+    file_df = listenbrainz_spark.session.read.json(filename, schema=listen_schema)
 
-            if year not in unwritten_listens:
-                unwritten_listens[year] = {}
-            if month not in unwritten_listens[year]:
-                unwritten_listens[year][month] = []
-            unwritten_listens[year][month].append(json_data)
+    if filename.split('/')[-1] == 'invalid.json':
+        dest_path = os.path.join(data_dir, 'invalid.parquet')
+    else:
+        year = filename.split('/')[-2]
+        month = filename.split('/')[-1][0:-5]
+        dest_path = os.path.join(data_dir, year, '{}.parquet'.format(str(month)))
 
-    write_listens(unwritten_listens, tmp_dir)
+    print("Uploading to %s..." % dest_path)
+    file_df.write.format('parquet').save(config.HDFS_CLUSTER_URI + dest_path)
     print("File processed in %.2f seconds!" % (time.time() - start_time))
-
-
-def write_listens(unwritten_listens, tmp_dir):
-    for year in unwritten_listens:
-        for month in unwritten_listens[year]:
-            directory = os.path.join(tmp_dir, 'json')
-            create_path(directory)
-            if year < LAST_FM_FOUNDING_YEAR:
-                filename = os.path.join(tmp_dir, 'json', 'invalid.json')
-            else:
-                directory = os.path.join(directory, str(year))
-                create_path(directory)
-                filename = os.path.join(tmp_dir, 'json', str(year), '{}.json'.format(str(month)))
-
-            with open(filename, 'a') as f:
-                for listen in unwritten_listens[year][month]:
-                    f.write(json.dumps(listen))
-                    f.write("\n")
-            unwritten_listens[year][month] = []
 
 
 def copy_to_hdfs(archive, threads=8):
@@ -96,12 +72,11 @@ def copy_to_hdfs(archive, threads=8):
     total_time = 0.0
     with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
         for member in tar:
-            if member.isfile() and _is_listens_file(member.name) and file_count <= 1:
+            if member.isfile() and _is_json_file(member.name):
                 print('Loading %s...' % member.name)
                 t = time.time()
                 tar.extract(member)
-                listenbrainz_spark.context.addFile(member.name)
-                _process_listens_file(member.name, tmp_dump_dir)
+                _process_json_file(member.name, destination_path)
                 os.remove(member.name)
                 file_count += 1
                 time_taken = time.time() - t
@@ -109,36 +84,6 @@ def copy_to_hdfs(archive, threads=8):
                 total_time += time_taken
                 average_time = total_time / file_count
                 print("Total time: %.2f, average time: %.2f" % (total_time, average_time))
-
-    print("Writing dataframes...")
-    total_time = 0
-    file_count = 0
-    for year in range(LAST_FM_FOUNDING_YEAR, datetime.today().year + 1):
-        for month_index in range(12):
-            t = time.time()
-            print("Writing dataframe for %d/%d..." % (month_index + 1, year))
-            src_path = os.path.join(tmp_dump_dir, 'json', str(year), '{}.json'.format(str(month)))
-            df = listenbrainz_spark.session.read.json(src_path, schema=listen_schema)
-            dest_path = config.HDFS_CLUSTER_URI + os.path.join(destination_path, str(year), str(month_index + 1) + '.parquet')
-            df.write.format('parquet').save(dest_path)
-            os.remove(src_path)
-            time_taken = time.time() - t
-            print("Done in %.2f seconds!" % (time_taken))
-            total_time += time_taken
-            average_time = total_time / file_count
-            print("Total time: %.2f, average time: %.2f" % (total_time, average_time))
-    print("Dataframes written!")
-
-    print("Writing dataframe for invalid listens to HDFS: %s" % path)
-    src_path = os.path.join(tmp_dump_dir, 'json', 'invalid.json')
-    t = time.time()
-    invalid_df = listenbrainz_spark.session.read.json(src_path, schema=listen_schema)
-    dest_path = config.HDFS_CLUSTER_URI + os.path.join(destination_path, 'invalid.parquet')
-    invalid_df.write.format('parquet').save(dest_path)
-    print("Done in %.2f sec!" % (time.time() - t))
-
-    print("Deleting temporary directories...")
-    shutil.rmtree(tmp_dump_dir)
 
 
 def main(app_name, archive):
