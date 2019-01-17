@@ -80,6 +80,7 @@ def init_db(force, create_db):
         if not res:
             raise Exception('Failed to create new database and user! Exit code: %i' % res)
 
+        db.init_db_connection(config.POSTGRES_ADMIN_LB_URI)
         print('Creating database extensions...')
         res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'))
     # Don't raise an exception if the extension already exists
