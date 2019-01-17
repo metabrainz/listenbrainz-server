@@ -33,12 +33,13 @@ def _is_json_file(filename):
     return filename.endswith('.json')
 
 
-def _process_json_file(filename, data_dir):
+def _process_json_file(filename, data_dir, hdfs_path):
     """ Process a file containing listens from the ListenBrainz dump and add listens to
     appropriate dataframes.
     """
     start_time = time.time()
-    file_df = listenbrainz_spark.session.read.json(filename, schema=listen_schema)
+    file_df = listenbrainz_spark.session.read.json(config.HDFS_CLUSTER_URI + hdfs_path, schema=listen_schema).cache()
+    print("Processing %d listens..." % file_df.count())
 
     if filename.split('/')[-1] == 'invalid.json':
         dest_path = os.path.join(data_dir, 'invalid.parquet')
@@ -76,7 +77,10 @@ def copy_to_hdfs(archive, threads=8):
                 print('Loading %s...' % member.name)
                 t = time.time()
                 tar.extract(member)
-                _process_json_file(member.name, destination_path)
+                tmp_hdfs_path = os.path.join(tmp_dump_dir, member.name)
+                hdfs_connection.client.upload(hdfs_path=tmp_hdfs_path, local_path=member.name)
+                _process_json_file(member.name, destination_path, tmp_hdfs_path)
+                hdfs_connection.client.delete(tmp_hdfs_path)
                 os.remove(member.name)
                 file_count += 1
                 time_taken = time.time() - t
