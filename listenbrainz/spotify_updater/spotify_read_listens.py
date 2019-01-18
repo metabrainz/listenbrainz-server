@@ -9,7 +9,7 @@ safely_import_config()
 from dateutil import parser
 from flask import current_app, render_template
 from listenbrainz.domain import spotify
-from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, LISTEN_TYPE_IMPORT
+from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
 from listenbrainz.db import user as db_user
 from listenbrainz.db.exceptions import DatabaseException
 from spotipy import SpotifyException
@@ -38,20 +38,29 @@ def notify_error(musicbrainz_row_id, error):
     )
 
 
-def _convert_spotify_play_to_listen(play):
+def _convert_spotify_play_to_listen(play, listen_type):
     """ Converts data retrieved from the Spotify API into a listen.
 
     Args:
         play (dict): a dict that represents a listen retrieved from Spotify
+            , this should be an "item" from the spotify response.
+        listen_type: the type of the listen (import or playing_now)
 
     Returns:
         listen (dict): dict that can be submitted to ListenBrainz
     """
-    track = play['track']
-    album = track['album']
-    # Spotify provides microseconds, but we only give seconds to listenbrainz
-    listened_at = int(parser.parse(play['played_at']).timestamp())
+    if listen_type == LISTEN_TYPE_PLAYING_NOW:
+        track = play
+        listen = {}
+    else:
+        track = play['track']
+        # Spotify provides microseconds, but we only give seconds to listenbrainz
+        listen = {
+            'listened_at': int(parser.parse(play['played_at']).timestamp()),
+        }
 
+
+    album = track['album']
     artists = track['artists']
     album_artists = album['artists']
     artist_name = ', '.join([a['name'] for a in artists])
@@ -78,29 +87,24 @@ def _convert_spotify_play_to_listen(play):
     if spotify_url:
         additional['spotify_id'] = spotify_url
 
-    track_meta = {
+    listen['track_metadata'] = {
         'artist_name': artist_name,
         'track_name': track['name'],
         'release_name': album['name'],
         'additional_info': additional,
     }
-
-    return {
-        'listened_at': listened_at,
-        'track_metadata': track_meta,
-    }
+    return listen
 
 
-def get_user_recently_played(user):
-    """ Get recently played songs from Spotify for specified user.
-    This uses the 'me/player/recently-played' endpoint, which only allows us to get the last 50 plays
-    for one user.
+def make_api_request(user, endpoint, **kwargs):
+    """ Make an request to the Spotify API for particular user at specified endpoint with args.
 
     Args:
         user (spotify.Spotify): the user whose plays are to be imported.
+        endpoint (str): the Spotify API endpoint to which the request is to be made
 
     Returns:
-        the response from the spotify API consisting of the list of recently played songs.
+        the response from the spotify API
 
     Raises:
         spotify.SpotifyAPIError: if we encounter errors from the Spotify API.
@@ -112,7 +116,7 @@ def get_user_recently_played(user):
 
     while retries > 0:
         try:
-            recently_played = user.get_spotipy_client()._get("me/player/recently-played", limit=50)
+            recently_played = user.get_spotipy_client()._get(endpoint, **kwargs)
             break
         except SpotifyException as e:
             retries -= 1
@@ -161,6 +165,64 @@ def get_user_recently_played(user):
     return recently_played
 
 
+def get_user_recently_played(user):
+    """ Get tracks from the current user’s recently played tracks.
+    """
+    return make_api_request(user, 'me/player/recently-played', limit=50)
+
+
+def get_user_currently_playing(user):
+    """ Get the user's currently playing track.
+    """
+    return make_api_request(user, 'me/player/currently-playing')
+
+
+
+def submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_IMPORT):
+    """ Submit a batch of listens to ListenBrainz
+
+    Args:
+        listenbrainz_user (dict): the user whose listens are to be submitted
+        listens (list): a list of listens to be submitted
+        listen_type: the type of listen (single, import, playing_now)
+    """
+    username = listenbrainz_user['musicbrainz_id']
+    retries = 10
+    while retries >= 0:
+        try:
+            current_app.logger.debug('Submitting %d listens for user %s', len(listens), username)
+            insert_payload(listens, listenbrainz_user, listen_type=listen_type)
+            current_app.logger.debug('Submitted!')
+            break
+        except (InternalServerError, ServiceUnavailable) as e:
+            retries -= 1
+            current_app.logger.error('ISE while trying to import listens for %s: %s', username, str(e))
+            if retries == 0:
+                raise spotify.SpotifyListenBrainzError('ISE while trying to import listens: %s', str(e))
+
+
+def parse_and_validate_spotify_plays(plays, listen_type):
+    """ Converts and validates the listens received from the Spotify API.
+
+    Args:
+        plays: a list of items received from Spotify
+        listen_type: the type of the plays (import or playing now)
+
+    Returns:
+        a list of valid listens to submit to ListenBrainz
+    """
+    listens = []
+    for play in plays:
+        listen = _convert_spotify_play_to_listen(play, listen_type=listen_type)
+        try:
+            validate_listen(listen, listen_type)
+            listens.append(listen)
+        except BadRequest as e:
+            current_app.logger.error(str(e))
+            raise
+    return listens
+
+
 def process_one_user(user):
     """ Get recently played songs for this user and submit them to ListenBrainz.
 
@@ -181,42 +243,25 @@ def process_one_user(user):
             raise
 
     listenbrainz_user = db_user.get(user.user_id)
-    try:
-        recently_played = get_user_recently_played(user)
-    except (spotify.SpotifyListenBrainzError, spotify.SpotifyAPIError) as e:
-        raise
 
-    # convert listens to ListenBrainz format and validate them
-    listens = []
-    if 'items' in recently_played:
-        current_app.logger.debug('Received %d listens from Spotify for %s', len(recently_played['items']),  str(user))
-        for item in recently_played['items']:
-            listen = _convert_spotify_play_to_listen(item)
-            try:
-                validate_listen(listen, LISTEN_TYPE_IMPORT)
-                listens.append(listen)
-            except BadRequest:
-                current_app.logger.error('Could not validate listen for user %s: %s', str(user), json.dumps(listen, indent=3), exc_info=True)
-                # TODO: api_utils exposes werkzeug exceptions, if it's a more generic module it shouldn't be web-specific
+    currently_playing = get_user_currently_playing(user)
+    if currently_playing is not None and 'item' in currently_playing:
+        current_app.logger.debug('Received a currently playing track for %s', str(user))
+        listens = parse_and_validate_spotify_plays([currently_playing['item']], LISTEN_TYPE_PLAYING_NOW)
+        submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_PLAYING_NOW)
+
+
+    recently_played = get_user_recently_played(user)
+    if recently_played is not None and 'items' in recently_played:
+        listens = parse_and_validate_spotify_plays(recently_played['items'], LISTEN_TYPE_IMPORT)
+        current_app.logger.debug('Received %d tracks for %s', len(listens), str(user))
 
     # if we don't have any new listens, return
     if len(listens) == 0:
         return
 
     latest_listened_at = max(listen['listened_at'] for listen in listens)
-    # try to submit listens to ListenBrainz
-    retries = 10
-    while retries >= 0:
-        try:
-            current_app.logger.debug('Submitting %d listens for user %s', len(listens), str(user))
-            insert_payload(listens, listenbrainz_user, listen_type=LISTEN_TYPE_IMPORT)
-            current_app.logger.debug('Submitted!')
-            break
-        except (InternalServerError, ServiceUnavailable) as e:
-            retries -= 1
-            current_app.logger.info('ISE while trying to import listens for %s: %s', str(user), str(e))
-            if retries == 0:
-                raise spotify.SpotifyListenBrainzError('ISE while trying to import listens: %s', str(e))
+    submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_IMPORT)
 
     # we've succeeded so update the last_updated field for this user
     spotify.update_latest_listened_at(user.user_id, latest_listened_at)
