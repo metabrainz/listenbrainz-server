@@ -28,6 +28,11 @@ def flatten_dict(d, seperator='', parent_key=''):
             result.append((new_key, value))
     return dict(result)
 
+def convert_comma_seperated_string_to_list(string):
+    if not string:
+        return []
+    return [val for val in string.split(',')]
+
 
 class Listen(object):
     """ Represents a listen object """
@@ -120,10 +125,6 @@ class Listen(object):
         """ Factory to make Listen objects from an influx row
         """
 
-        def convert_comma_seperated_string_to_list(string):
-            if not string:
-                return []
-            return [val for val in string.split(',')]
 
         t = convert_to_unix_timestamp(row['time'])
 
@@ -162,7 +163,7 @@ class Listen(object):
                     value = yaml.safe_load(value)
                     data[key] = value
                     continue
-                except ValueError:
+                except (ValueError, yaml.scanner.ScannerError, yaml.parser.ParserError, Exception):
                     pass
 
                 data[key] = value
@@ -258,6 +259,8 @@ class Listen(object):
 
         return data
 
+
+
     def validate(self):
         return (self.user_id is not None and self.timestamp is not None and self.artist_msid is not None
                 and self.recording_msid is not None and self.data is not None)
@@ -272,3 +275,20 @@ class Listen(object):
     def __unicode__(self):
         return "<Listen: user_name: %s, time: %s, artist_msid: %s, release_msid: %s, recording_msid: %s, artist_name: %s, track_name: %s>" % \
                (self.user_name, self.ts_since_epoch, self.artist_msid, self.release_msid, self.recording_msid, self.data['artist_name'], self.data['track_name'])
+
+
+def convert_influx_row_to_spark_row(row):
+    return {
+        'listened_at': str(row['time']),
+        'user_name': row['user_name'],
+        'artist_msid': row['artist_msid'],
+        'artist_name': row['artist_name'],
+        'artist_mbids': convert_comma_seperated_string_to_list(row.get('artist_mbids', '')),
+        'release_msid': row.get('release_msid'),
+        'release_name': row.get('release_name', ''),
+        'release_mbid': row.get('release_mbid', ''),
+        'track_name': row['track_name'],
+        'recording_msid': row['recording_msid'],
+        'recording_mbid': row.get('recording_mbid', ''),
+        'tags': convert_comma_seperated_string_to_list(row.get('tags', [])),
+    }
