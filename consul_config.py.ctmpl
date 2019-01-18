@@ -132,8 +132,8 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 TESTING = False
 
-{{if service "listenbrainz.exim-relay"}}
-{{with index (service "listenbrainz.exim-relay") 0}}
+{{if service "listenbrainz-org.exim-relay"}}
+{{with index (service "listenbrainz-org.exim-relay") 0}}
 SMTP_SERVER = '''{{.Address}}'''
 STMP_PORT = {{.Port}}
 {{end}}
