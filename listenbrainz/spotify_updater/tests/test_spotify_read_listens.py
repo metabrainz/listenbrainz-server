@@ -6,6 +6,7 @@ import time
 
 from listenbrainz.domain.spotify import Spotify, SpotifyAPIError, SpotifyListenBrainzError
 from listenbrainz.spotify_updater import spotify_read_listens
+from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_IMPORT
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -17,7 +18,7 @@ class ConvertListensTestCase(TestCase):
     def test_parse_play_to_listen_no_isrc(self):
         data = json.load(open(os.path.join(self.DATA_DIR, 'spotify_play_no_isrc.json')))
 
-        listen = spotify_read_listens._convert_spotify_play_to_listen(data)
+        listen = spotify_read_listens._convert_spotify_play_to_listen(data, LISTEN_TYPE_IMPORT)
 
         expected_listen = {
             'listened_at': 1519241031,
@@ -49,7 +50,7 @@ class ConvertListensTestCase(TestCase):
         # If a spotify play record has many artists, make sure they are appended
         data = json.load(open(os.path.join(self.DATA_DIR, 'spotify_play_two_artists.json')))
 
-        listen = spotify_read_listens._convert_spotify_play_to_listen(data)
+        listen = spotify_read_listens._convert_spotify_play_to_listen(data, LISTEN_TYPE_IMPORT)
 
         expected_listen = {
             'listened_at': 1519240503,
