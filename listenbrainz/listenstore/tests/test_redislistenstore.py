@@ -26,10 +26,6 @@ class RedisListenStoreTestCase(DatabaseTestCase):
         Connection(self._redis.redis).disconnect()
         super(RedisListenStoreTestCase, self).tearDown()
 
-    def test_get_playing_now(self):
-        playing_now = self._redis.get_playing_now(self.listen.user_id)
-        assert playing_now is not None
-
     def test_get_and_put_playing_now(self):
         listen = {
             'user_id': self.testuser['id'],
