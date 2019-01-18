@@ -142,6 +142,7 @@ def get_active_users_to_process():
         result = connection.execute(sqlalchemy.text("""
             SELECT user_id
                  , "user".musicbrainz_id
+                 , "user".musicbrainz_row_id
                  , user_token
                  , refresh_token
                  , last_updated
@@ -192,6 +193,7 @@ def get_user(user_id):
         result = connection.execute(sqlalchemy.text("""
             SELECT user_id
                  , "user".musicbrainz_id
+                 , "user".musicbrainz_row_id
                  , user_token
                  , refresh_token
                  , last_updated
