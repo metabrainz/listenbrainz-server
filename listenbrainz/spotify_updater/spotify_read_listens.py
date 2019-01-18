@@ -7,13 +7,35 @@ from listenbrainz.utils import safely_import_config
 safely_import_config()
 
 from dateutil import parser
-from flask import current_app
+from flask import current_app, render_template
 from listenbrainz.domain import spotify
 from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, LISTEN_TYPE_IMPORT
 from listenbrainz.db import user as db_user
 from listenbrainz.db.exceptions import DatabaseException
 from spotipy import SpotifyException
 from werkzeug.exceptions import BadRequest, InternalServerError, ServiceUnavailable
+from brainzutils.mail import send_mail
+from brainzutils import musicbrainz_db
+from brainzutils.musicbrainz_db import editor as mb_editor
+
+
+def notify_error(musicbrainz_row_id, error):
+    """ Notifies specified user via email about error during Spotify import.
+
+    Args:
+        musicbrainz_row_id (int): the MusicBrainz row ID of the user
+        error (str): a description of the error encountered.
+    """
+    user_email = mb_editor.get_editor_by_id(musicbrainz_row_id)['email']
+    spotify_url = current_app.config['SERVER_ROOT_URL'] + '/profile/connect-spotify'
+    text = render_template('emails/spotify_import_error.txt', error=error, link=spotify_url)
+    send_mail(
+        subject='ListenBrainz Spotify Importer Error',
+        text=text,
+        recipients=[user_email],
+        from_name='ListenBrainz',
+        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
+    )
 
 
 def _convert_spotify_play_to_listen(play):
@@ -234,6 +256,8 @@ def process_all_spotify_users():
                 success=False,
                 error_message=str(e),
             )
+            if not current_app.config['TESTING']:
+                notify_error(u.musicbrainz_row_id, str(e))
             failure += 1
         except spotify.SpotifyListenBrainzError as e:
             current_app.logger.critical('spotify_reader could not import listens: %s', str(e), exc_info=True)

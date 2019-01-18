@@ -115,6 +115,10 @@ def gen_app(config_path=None, debug=None):
     from listenbrainz.webserver.external import messybrainz
     messybrainz.init_db_connection(app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
 
+    if app.config['MB_DATABASE_URI']:
+        from brainzutils import musicbrainz_db
+        musicbrainz_db.init_db_engine(app.config['MB_DATABASE_URI'])
+
     # OAuth
     from listenbrainz.webserver.login import login_manager, provider
     login_manager.init_app(app)
