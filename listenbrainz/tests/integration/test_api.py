@@ -4,6 +4,7 @@ import uuid
 
 from listenbrainz.tests.integration import IntegrationTestCase
 from flask import url_for
+from redis import Redis
 import listenbrainz.db.user as db_user
 import time
 import json
@@ -14,6 +15,10 @@ class APITestCase(IntegrationTestCase):
     def setUp(self):
         super(APITestCase, self).setUp()
         self.user = db_user.get_or_create(1, 'testuserpleaseignore')
+
+    def tearDown(self):
+        r = Redis(host=self.app.config['REDIS_HOST'], port=self.app.config['REDIS_PORT'])
+        r.flushall()
 
     def test_get_listens(self):
         """ Test to make sure that the api sends valid listens on get requests.
@@ -333,3 +338,28 @@ class APITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['code'], 200)
         self.assertEqual('Token valid.', response.json['message'])
+
+    def test_get_playing_now(self):
+        """ Test for valid submission and retrieval of listen_type 'playing_now'
+        """
+        r = self.client.get(url_for('api_v1.get_playing_now', user_name='thisuserdoesnotexist'))
+        self.assert404(r)
+
+        r = self.client.get(url_for('api_v1.get_playing_now', user_name=self.user['musicbrainz_id']))
+        self.assertEqual(r.json['payload']['count'], 0)
+        self.assertEqual(len(r.json['payload']['listens']), 0)
+
+        with open(self.path_to_data_file('valid_playing_now.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        r = self.client.get(url_for('api_v1.get_playing_now', user_name=self.user['musicbrainz_id']))
+        self.assertTrue(r.json['payload']['playing_now'])
+        self.assertEqual(r.json['payload']['count'], 1)
+        self.assertEqual(len(r.json['payload']['listens']), 1)
+        self.assertEqual(r.json['payload']['user_id'], self.user['musicbrainz_id'])
+        self.assertEqual(r.json['payload']['listens'][0]['track_metadata']['artist_name'], 'Kanye West')
+        self.assertEqual(r.json['payload']['listens'][0]['track_metadata']['release_name'], 'The Life of Pablo')
+        self.assertEqual(r.json['payload']['listens'][0]['track_metadata']['track_name'], 'Fade')
