@@ -169,7 +169,7 @@ def connect_to_redis(host, port, log=print):
             return redis
         except Exception as err:
             log("Cannot connect to redis: %s. Retrying in 3 seconds and trying again." % str(err))
-            sleep(3)
+            time.sleep(3)
 
 def safely_import_config():
     """ 
