@@ -316,3 +316,20 @@ class APITestCase(IntegrationTestCase):
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
         self.assertEqual('Value for key listened_at is too high.', response.json['error'])
+
+    def test_invalid_token_validation(self):
+        """Sends an invalid token to api.validate_token"""
+        url = url_for('api_v1.validate_token')
+        response = self.client.get(url, query_string = {"token":"invalidtoken"})
+        self.assert200(response)
+        self.assertEqual(response.json['code'], 200)
+        self.assertEqual('Token invalid.', response.json['message'])
+
+
+    def test_valid_token_validation(self):
+        """Sends a valid token to api.validate_token"""
+        url = url_for('api_v1.validate_token')
+        response = self.client.get(url, query_string = {"token":self.user['auth_token']})
+        self.assert200(response)
+        self.assertEqual(response.json['code'], 200)
+        self.assertEqual('Token valid.', response.json['message'])
