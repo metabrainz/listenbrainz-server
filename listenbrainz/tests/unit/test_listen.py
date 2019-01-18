@@ -100,3 +100,22 @@ class ListenTestCase(unittest.TestCase):
         self.assertEqual(data['fields']['artist_name'], listen.data['artist_name'])
 
         self.assertIn('inserted_timestamp', data['fields'])
+
+
+    def test_from_json(self):
+        json_row = {
+                    "track_metadata": {
+                      "additional_info": {}
+                      }
+                    }
+
+        json_row.update({'listened_at': 123456})
+        listen = Listen.from_json(json_row) 
+
+        self.assertEqual(listen.timestamp, json_row['listened_at'])
+
+        del json_row['listened_at']
+        json_row.update({'playing_now': True})
+        listen = Listen.from_json(json_row)
+
+        self.assertEqual(listen.timestamp, None)

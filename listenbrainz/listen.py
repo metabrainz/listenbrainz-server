@@ -76,8 +76,8 @@ class Listen(object):
                 self.timestamp = timestamp
                 self.ts_since_epoch = calendar.timegm(self.timestamp.utctimetuple())
             else:
-                self.timestamp = 0
-                self.ts_since_epoch = 0
+                self.timestamp = None
+                self.ts_since_epoch = None
 
         self.artist_msid = artist_msid
         self.release_msid = release_msid
@@ -99,10 +99,15 @@ class Listen(object):
     @classmethod
     def from_json(cls, j):
         """Factory to make Listen() objects from a dict"""
+
+        if 'playing_now' in j:
+            j.update({'listened_at': None})
+        else:
+            j['listened_at']=datetime.utcfromtimestamp(float(j['listened_at']))
         return cls(
             user_id=j.get('user_id'),
             user_name=j.get('user_name', ''),
-            timestamp=datetime.utcfromtimestamp(float(j['listened_at'])),
+            timestamp=j['listened_at'],
             artist_msid=j['track_metadata']['additional_info'].get('artist_msid'),
             release_msid=j['track_metadata']['additional_info'].get('release_msid'),
             recording_msid=j.get('recording_msid'),
