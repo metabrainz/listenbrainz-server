@@ -95,7 +95,7 @@ def get_spotify_oauth():
     """
     client_id = current_app.config['SPOTIFY_CLIENT_ID']
     client_secret = current_app.config['SPOTIFY_CLIENT_SECRET']
-    scope = 'user-read-recently-played'
+    scope = 'user-read-recently-played user-read-currently-playing'
     redirect_url = current_app.config['SPOTIFY_CALLBACK_URL']
     return spotipy.oauth2.SpotifyOAuth(client_id, client_secret, redirect_uri=redirect_url, scope=scope)
 
