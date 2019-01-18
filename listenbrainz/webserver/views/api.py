@@ -181,6 +181,33 @@ def latest_import():
         return jsonify({'status': 'ok'})
 
 
+@api_bp.route('/validate-token', methods=['GET'])
+@ratelimit()
+def validate_token():
+    """
+    Check whether a User Token is a valid entry in the database.
+
+    In order to query this endpoint, send a GET request.
+    A JSON response will be returned, with one of three codes.
+
+    :statuscode 200: The user token is valid/invalid.
+    :statuscode 400: No token was sent to the endpoint.
+    """
+    auth_token = request.args.get('token', '')
+    if not auth_token:
+        raise BadRequest("You need to provide an Authorization token.")
+    user = db_user.get_by_token(auth_token)
+    if user is None:
+        return jsonify({
+            'code': 200,
+            'message': 'Token invalid.'
+        })
+    else:
+        return jsonify({
+            'code': 200,
+            'message': 'Token valid.'
+        })
+
 def _parse_int_arg(name, default=None):
     value = request.args.get(name)
     if value:
