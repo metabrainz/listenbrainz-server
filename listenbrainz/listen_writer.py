@@ -2,7 +2,7 @@ import sys
 import listenbrainz.utils as utils
 
 import time
-from listenbrainz import config
+utils.safely_import_config()
 from flask import current_app
 
 
