@@ -37,4 +37,4 @@ if __name__ == "__main__":
     username = input('Please input the MusicBrainz ID of the user: ')
     timestamp = get_latest_import(username)
 
-    print("User {0} last imported on {1}".format(USERNAME, timestamp))
+    print("User {0} last imported on {1}".format(username, timestamp))
