@@ -134,7 +134,7 @@ def profile(user_name):
         listens=listens,
         previous_listen_ts=previous_listen_ts,
         next_listen_ts=next_listen_ts,
-        spotify_uri=_get_spotify_uri_for_listens(listens),
+        latest_spotify_uri=_get_spotify_uri_for_listens(listens),
         have_listen_count=have_listen_count,
         listen_count=format(int(listen_count), ",d"),
         artist_count=format(artist_count, ",d") if artist_count else None,
