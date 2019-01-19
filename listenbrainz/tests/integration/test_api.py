@@ -127,6 +127,44 @@ class APITestCase(IntegrationTestCase):
         r = self.client.get(url_for('user.profile', user_name=self.user['musicbrainz_id']))
         self.assertIn('Playing now', r.data.decode('utf-8'))
 
+    def test_playing_now_with_duration(self):
+        """ Test that playing now listens with durations expire
+        """
+        with open(self.path_to_data_file('playing_now_with_duration.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        r = self.client.get(url_for('api_v1.get_playing_now', user_name=self.user['musicbrainz_id']))
+        self.assertEqual(r.json['payload']['count'], 1)
+        self.assertEqual(r.json['payload']['listens'][0]['track_metadata']['track_name'], 'Fade')
+
+        time.sleep(1.1)
+
+        # should have expired by now
+        r = self.client.get(url_for('api_v1.get_playing_now', user_name=self.user['musicbrainz_id']))
+        self.assertEqual(r.json['payload']['count'], 0)
+
+    def test_playing_now_with_duration_ms(self):
+        """ Test that playing now submissions with duration_ms also expire
+        """
+        with open(self.path_to_data_file('playing_now_with_duration_ms.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        r = self.client.get(url_for('api_v1.get_playing_now', user_name=self.user['musicbrainz_id']))
+        self.assertEqual(r.json['payload']['count'], 1)
+        self.assertEqual(r.json['payload']['listens'][0]['track_metadata']['track_name'], 'Fade')
+
+        time.sleep(1.1)
+
+        # should have expired by now
+        r = self.client.get(url_for('api_v1.get_playing_now', user_name=self.user['musicbrainz_id']))
+        self.assertEqual(r.json['payload']['count'], 0)
+
     def test_playing_now_with_ts(self):
         """ Test for invalid submission of listen_type 'playing_now' which contains
             timestamp 'listened_at'
