@@ -145,7 +145,7 @@ def get_user_recently_played(user):
                 if not tried_to_refresh_token:
                     try:
                         user = spotify.refresh_user_token(user)
-                    except SpotifyError as err:
+                    except SpotifyException as err:
                         raise spotify.SpotifyAPIError('Could not authenticate with Spotify, please unlink and link your account again.')
 
                     tried_to_refresh_token = True
