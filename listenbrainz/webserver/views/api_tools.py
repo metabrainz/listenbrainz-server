@@ -55,8 +55,12 @@ def _send_listens_to_queue(listen_type, listens):
     for listen in listens:
         if listen_type == LISTEN_TYPE_PLAYING_NOW:
             try:
-                expire_time = listen["track_metadata"]["additional_info"].get("duration",
-                                    current_app.config['PLAYING_NOW_MAX_DURATION'])
+                if 'duration' in listen['track_metadata']['additional_info']:
+                    expire_time = listen['track_metadata']['additional_info']['duration']
+                elif 'duration_ms' in listen['track_metadata']['additional_info']:
+                    expire_time = listen['track_metadata']['additional_info']['duration_ms'] // 1000
+                else:
+                    expire_time = current_app.config['PLAYING_NOW_MAX_DURATION']
                 redis_connection._redis.put_playing_now(listen['user_id'], listen, expire_time)
             except Exception as e:
                 current_app.logger.error("Redis rpush playing_now write error: " + str(e))
