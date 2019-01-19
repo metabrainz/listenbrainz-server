@@ -26,14 +26,13 @@ def create(musicbrainz_row_id, musicbrainz_id):
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            INSERT INTO "user" (musicbrainz_id, musicbrainz_row_id, auth_token, user_login_id)
-                 VALUES (:mb_id, :mb_row_id, :token, :login_id)
+            INSERT INTO "user" (musicbrainz_id, musicbrainz_row_id, auth_token)
+                 VALUES (:mb_id, :mb_row_id, :token)
               RETURNING id
         """), {
             "mb_id": musicbrainz_id,
             "token": str(uuid.uuid4()),
             "mb_row_id": musicbrainz_row_id,
-            "login_id" : str(uuid.uuid4()),
         })
         return result.fetchone()["id"]
 
@@ -90,7 +89,7 @@ def get_by_user_login_id(login_id):
     """Get user with a specified login ID.
 
     Args:
-        id (int): login ID of a user.
+        id (UUID): login ID of a user.
 
     Returns:
         Dictionary with the following structure:
