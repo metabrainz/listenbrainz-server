@@ -136,9 +136,9 @@ class TestInfluxListenStore(DatabaseTestCase):
         user_name = user['musicbrainz_id']
         self._create_test_data(user_name)
         listens = self.logstore.fetch_listens(user_name=user_name, from_ts=1400000100)
-        self.assertEquals(len(listens), 2)
-        self.assertEquals(listens[0].ts_since_epoch, 1400000200)
-        self.assertEquals(listens[1].ts_since_epoch, 1400000150)
+        self.assertEqual(len(listens), 2)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
 
 
     def test_dump_listens(self):

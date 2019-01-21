@@ -55,13 +55,13 @@ def _send_listens_to_queue(listen_type, listens):
     for listen in listens:
         if listen_type == LISTEN_TYPE_PLAYING_NOW:
             try:
-                expire_time = listen["track_metadata"]["additional_info"].get("duration",
-                                    current_app.config['PLAYING_NOW_MAX_DURATION'])
-                redis_connection._redis.redis.setex(
-                    'playing_now:{}'.format(listen['user_id']),
-                    ujson.dumps(listen).encode('utf-8'),
-                    expire_time
-                )
+                if 'duration' in listen['track_metadata']['additional_info']:
+                    listen_timeout = listen['track_metadata']['additional_info']['duration']
+                elif 'duration_ms' in listen['track_metadata']['additional_info']:
+                    listen_timeout = listen['track_metadata']['additional_info']['duration_ms'] // 1000
+                else:
+                    listen_timeout = current_app.config['PLAYING_NOW_MAX_DURATION']
+                redis_connection._redis.put_playing_now(listen['user_id'], listen, listen_timeout)
             except Exception as e:
                 current_app.logger.error("Redis rpush playing_now write error: " + str(e))
                 raise ServiceUnavailable("Cannot record playing_now at this time.")
@@ -69,6 +69,14 @@ def _send_listens_to_queue(listen_type, listens):
             submit.append(listen)
 
     if submit:
+        # check if rabbitmq connection exists or not
+        # and if not then try to connect
+        try:
+            rabbitmq_connection.init_rabbitmq_connection(current_app)
+        except ConnectionError as e:
+            current_app.logger.error('Cannot connect to RabbitMQ: %s' % str(e))
+            raise ServiceUnavailable('Cannot submit listens to queue, please try again later.')
+
         publish_data_to_queue(
             data=submit,
             exchange=current_app.config['INCOMING_EXCHANGE'],
@@ -147,7 +155,7 @@ def is_valid_uuid(u):
     try:
         u = uuid.UUID(u)
         return True
-    except ValueError:
+    except (AttributeError, ValueError):
         return False
 
 
@@ -241,34 +249,6 @@ def _messybrainz_lookup(listens):
 
         augmented_listens.append(listen)
     return augmented_listens
-
-
-def convert_backup_to_native_format(data):
-    """
-    Converts the imported listen-payload from the lastfm backup file
-    to the native payload format.
-    """
-    payload = []
-    for native_lis in data:
-        listen = {}
-        listen['track_metadata'] = {}
-        listen['track_metadata']['additional_info'] = {}
-
-        if 'timestamp' in native_lis and 'unixtimestamp' in native_lis['timestamp']:
-            listen['listened_at'] = native_lis['timestamp']['unixtimestamp']
-
-        if 'track' in native_lis:
-            if 'name' in native_lis['track']:
-                listen['track_metadata']['track_name'] = native_lis['track']['name']
-            if 'mbid' in native_lis['track']:
-                listen['track_metadata']['additional_info']['recording_mbid'] = native_lis['track']['mbid']
-            if 'artist' in native_lis['track']:
-                if 'name' in native_lis['track']['artist']:
-                    listen['track_metadata']['artist_name'] = native_lis['track']['artist']['name']
-                if 'mbid' in native_lis['track']['artist']:
-                    listen['track_metadata']['additional_info']['artist_mbids'] = [native_lis['track']['artist']['mbid']]
-        payload.append(listen)
-    return payload
 
 
 def log_raise_400(msg, data=""):

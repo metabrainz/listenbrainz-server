@@ -1,3 +1,4 @@
+
 /*
  * listenbrainz-server - Server for the ListenBrainz project.
  *
@@ -153,7 +154,6 @@ function encodeScrobbles(jsonstr) {
         var scrobble = new Scrobble(rawScrobble);
         return scrobble.asJSONSerializable();
     }, scrobbles);
-
     var structure = {
         "listen_type" : "import",
         "payload"     : parsedScrobbles
@@ -257,13 +257,17 @@ function reportPageAndGetNext(response, page) {
     var struct = encodeScrobbles(response);
     submitQueue.push(struct);
     countReceived += struct['payload'].length;
-    if (struct['payload'][struct['payload'].length - 1]['listened_at'] < latestImportTime) {
-        previouslyDone = true;
-        stopPage = page;
-    }
-    if (!isSubmitActive){
-        isSubmitActive = true;
-        submitListens();
+    if (!struct.payload.length) 
+        pageDone();
+    else{
+        if (struct['payload'][struct['payload'].length - 1]['listened_at'] < latestImportTime) {
+            previouslyDone = true;
+            stopPage = page;
+        }
+        if (!isSubmitActive){
+            isSubmitActive = true;
+            submitListens();
+        }
     }
 
     getNextPagesIfSlots();
@@ -316,10 +320,6 @@ function updateRateLimitParameters(xhr) {
 function submitListens() {
 
     struct = submitQueue.shift()
-    if (!struct.payload.length) {
-        pageDone();
-        return;
-    }
 
     var delay = getRateLimitDelay();
 

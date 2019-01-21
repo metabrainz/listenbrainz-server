@@ -16,6 +16,9 @@ def init_rabbitmq_connection(app):
     """
     global _rabbitmq
 
+    if _rabbitmq is not None:
+        return
+
     # if RabbitMQ config values are not in the config file
     # raise an error. This is caught in create_app, so the app will continue running.
     # Consul will bring the values back into config once the RabbitMQ service comes up.

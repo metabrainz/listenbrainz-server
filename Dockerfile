@@ -15,7 +15,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # PostgreSQL client
-RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
+RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
 ENV PG_MAJOR 9.5
 RUN echo 'deb http://apt.postgresql.org/pub/repos/apt/ jessie-pgdg main' $PG_MAJOR > /etc/apt/sources.list.d/pgdg.list
 RUN apt-get update \
@@ -25,19 +25,19 @@ RUN apt-get update \
 RUN mkdir /code
 WORKDIR /code
 
-RUN pip3 install setuptools==36.0.1
+RUN pip3 install --no-cache-dir setuptools==36.0.1
 
 # MessyBrainz
 RUN git clone https://github.com/metabrainz/messybrainz-server.git messybrainz
 WORKDIR /code/messybrainz
-RUN pip3 install -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 RUN python3 setup.py install
 
 RUN mkdir /code/listenbrainz
 WORKDIR /code/listenbrainz
 
 COPY requirements.txt /code/listenbrainz/
-RUN pip3 install -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Now install our code, which may change frequently
 COPY . /code/listenbrainz/

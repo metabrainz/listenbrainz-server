@@ -7,6 +7,7 @@ from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz import webserver
 import listenbrainz.db.user as db_user
 from listenbrainz.webserver.rate_limiter import ratelimit
+import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET,\
     DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
 import time
@@ -125,6 +126,44 @@ def get_listens(user_name):
     }})
 
 
+@api_bp.route("/user/<user_name>/playing-now")
+@ratelimit()
+def get_playing_now(user_name):
+    """
+    Get the listen being played right now for user ``user_name``.
+
+    This endpoint returns a JSON document with a single listen in the same format as the ``/user/<user_name>/listens`` endpoint,
+    with one key difference, there will only be one listen returned at maximum and the listen will not contain a ``listened_at`` element.
+
+    The format for the JSON returned is defined in our :ref:`json-doc`.
+
+    :statuscode 200: Yay, you have data!
+    :resheader Content-Type: *application/json*
+    """
+
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise NotFound("Cannot find user: %s" % user_name)
+
+    playing_now_listen = redis_connection._redis.get_playing_now(user['id'])
+    listen_data = []
+    count = 0
+    if playing_now_listen:
+        count += 1
+        listen_data = [{
+            'track_metadata': playing_now_listen.data,
+        }]
+
+    return jsonify({
+        'payload': {
+            'count': count,
+            'user_id': user_name,
+            'playing_now': True,
+            'listens': listen_data,
+        },
+    })
+
+
 @api_bp.route('/latest-import', methods=['GET', 'POST', 'OPTIONS'])
 @crossdomain(headers='Authorization, Content-Type')
 @ratelimit()
@@ -180,6 +219,33 @@ def latest_import():
 
         return jsonify({'status': 'ok'})
 
+
+@api_bp.route('/validate-token', methods=['GET'])
+@ratelimit()
+def validate_token():
+    """
+    Check whether a User Token is a valid entry in the database.
+
+    In order to query this endpoint, send a GET request.
+    A JSON response will be returned, with one of three codes.
+
+    :statuscode 200: The user token is valid/invalid.
+    :statuscode 400: No token was sent to the endpoint.
+    """
+    auth_token = request.args.get('token', '')
+    if not auth_token:
+        raise BadRequest("You need to provide an Authorization token.")
+    user = db_user.get_by_token(auth_token)
+    if user is None:
+        return jsonify({
+            'code': 200,
+            'message': 'Token invalid.'
+        })
+    else:
+        return jsonify({
+            'code': 200,
+            'message': 'Token valid.'
+        })
 
 def _parse_int_arg(name, default=None):
     value = request.args.get(name)

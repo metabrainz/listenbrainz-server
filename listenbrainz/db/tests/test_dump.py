@@ -31,12 +31,14 @@ import tempfile
 
 from datetime import datetime
 from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.webserver import create_app
 
 class DumpTestCase(DatabaseTestCase):
 
     def setUp(self):
         super().setUp()
         self.tempdir = tempfile.mkdtemp()
+        self.app = create_app()
 
 
     def tearDown(self):
@@ -81,35 +83,39 @@ class DumpTestCase(DatabaseTestCase):
     def test_import_postgres_db(self):
 
         # create a user
-        db_user.create(1, 'test_user')
-        user_count = db_user.get_user_count()
-        self.assertEqual(user_count, 1)
+        with self.app.app_context():
+            one_id = db_user.create(1, 'test_user')
+            user_count = db_user.get_user_count()
+            self.assertEqual(user_count, 1)
 
-        # do a db dump and reset the db
-        private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir)
-        self.reset_db()
-        user_count = db_user.get_user_count()
-        self.assertEqual(user_count, 0)
+            # do a db dump and reset the db
+            private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir)
+            self.reset_db()
+            user_count = db_user.get_user_count()
+            self.assertEqual(user_count, 0)
 
-        # import the dump
-        db_dump.import_postgres_dump(private_dump, public_dump)
-        user_count = db_user.get_user_count()
-        self.assertEqual(user_count, 1)
+            # import the dump
+            db_dump.import_postgres_dump(private_dump, public_dump)
+            user_count = db_user.get_user_count()
+            self.assertEqual(user_count, 1)
 
-        # reset again, and use more threads to import
-        self.reset_db()
-        user_count = db_user.get_user_count()
-        self.assertEqual(user_count, 0)
+            # reset again, and use more threads to import
+            self.reset_db()
+            user_count = db_user.get_user_count()
+            self.assertEqual(user_count, 0)
 
-        db_dump.import_postgres_dump(private_dump, public_dump, threads=2)
-        user_count = db_user.get_user_count()
-        self.assertEqual(user_count, 1)
+            db_dump.import_postgres_dump(private_dump, public_dump, threads=2)
+            user_count = db_user.get_user_count()
+            self.assertEqual(user_count, 1)
+            two_id = db_user.create(2, 'vnskprk')
+            self.assertGreater(two_id, one_id)
 
 
     def test_dump_postgres_db_table_entries(self):
-        db_user.create(1, 'test_user')
-        timestamp = datetime.today()
-        location = db_dump.dump_postgres_db(self.tempdir, dump_time=timestamp)
-        dump_entries = db_dump.get_dump_entries()
-        self.assertEqual(len(dump_entries), 1)
-        self.assertEqual(dump_entries[0]['created'].strftime('%s'), timestamp.strftime('%s'))
+        with self.app.app_context():
+            db_user.create(1, 'test_user')
+            timestamp = datetime.today()
+            location = db_dump.dump_postgres_db(self.tempdir, dump_time=timestamp)
+            dump_entries = db_dump.get_dump_entries()
+            self.assertEqual(len(dump_entries), 1)
+            self.assertEqual(dump_entries[0]['created'].strftime('%s'), timestamp.strftime('%s'))
