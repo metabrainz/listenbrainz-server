@@ -8,7 +8,7 @@ from listenbrainz import webserver
 import listenbrainz.db.user as db_user
 from listenbrainz.webserver.rate_limiter import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
-from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET,\
+from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, is_valid_uuid, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET,\
     DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
 import time
 
@@ -235,7 +235,10 @@ def validate_token():
     auth_token = request.args.get('token', '')
     if not auth_token:
         raise BadRequest("You need to provide an Authorization token.")
-    user = db_user.get_by_token(auth_token)
+    if is_valid_uuid(auth_token):
+        user = db_user.get_by_token(auth_token)
+    else:
+        user = None
     if user is None:
         return jsonify({
             'code': 200,
@@ -266,8 +269,10 @@ def _validate_auth_header():
         auth_token = auth_token.split(" ")[1]
     except IndexError:
         raise Unauthorized("Provided Authorization header is invalid.")
-
-    user = db_user.get_by_token(auth_token)
+    if is_valid_uuid(auth_token):
+        user = db_user.get_by_token(auth_token)
+    else:
+        user = None
     if user is None:
         raise Unauthorized("Invalid authorization token.")
 

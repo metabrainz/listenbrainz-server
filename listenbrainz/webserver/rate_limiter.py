@@ -10,6 +10,7 @@ from flask import request, g
 from listenbrainz.webserver.redis_connection import _redis
 import listenbrainz.db.user as db_user
 from listenbrainz.redis_keys import RATELIMIT_PER_TOKEN_KEY, RATELIMIT_PER_IP_KEY, RATELIMIT_WINDOW_KEY
+from listenbrainz.webserver.views.api_tools import is_valid_uuid
 
 # Defaults
 RATELIMIT_PER_TOKEN_DEFAULT = 50
@@ -115,7 +116,10 @@ def get_rate_limit_data(request):
     auth_header = request.headers.get('Authorization')
     if auth_header:
         auth_token = auth_header[6:]
-        user = db_user.get_by_token(auth_token)
+        if is_valid_uuid(auth_token):
+            user = db_user.get_by_token(auth_token)
+        else:
+            user = None
         if user:
             values = get_per_token_limits()
             values['key'] = auth_token

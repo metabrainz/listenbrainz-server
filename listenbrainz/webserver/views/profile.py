@@ -5,6 +5,7 @@ import os
 import re
 import ujson
 import zipfile
+import uuid
 
 
 from datetime import datetime
@@ -39,7 +40,7 @@ EXPORT_FETCH_COUNT = 5000
 @login_required
 def reset_token():
     if request.method == "POST":
-        token = request.form.get("token")
+        token = uuid.UUID(request.form.get("token"))
         if token != current_user.auth_token:
             raise BadRequest("Can only reset token of currently logged in user")
         reset = request.form.get("reset")
@@ -62,7 +63,7 @@ def reset_token():
 @login_required
 def reset_latest_import_timestamp():
     if request.method == "POST":
-        token = request.form.get("token")
+        token = uuid.UUID(request.form.get("token"))
         if token != current_user.auth_token:
             raise BadRequest("Can only reset latest import timestamp of currently logged in user")
         reset = request.form.get("reset")
@@ -201,7 +202,7 @@ def delete():
     that they wish to delete their ListenBrainz account.
     """
     if request.method == 'POST':
-        if request.form.get('token') == current_user.auth_token:
+        if uuid.UUID(request.form.get("token")) == current_user.auth_token:
             try:
                 delete_user(current_user.musicbrainz_id)
             except Exception as e:

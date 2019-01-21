@@ -214,7 +214,5 @@ def _get_audioscrobbler_auth_token(lb_auth_token, timestamp):
         We use auth_token as password here, so users can just put their LB auth tokens
         as passwords in clients and it should work.
     """
-
-    token_md5 = md5(lb_auth_token.encode('utf-8')).hexdigest()
-    concatenated = '{}{}'.format(token_md5, timestamp)
+    concatenated = '{}{}'.format(lb_auth_token, timestamp)
     return md5(concatenated.encode('utf-8')).hexdigest()

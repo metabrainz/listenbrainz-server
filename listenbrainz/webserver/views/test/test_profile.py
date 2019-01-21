@@ -33,7 +33,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
         response = self.client.get(url_for('profile.info', user_name=self.user['musicbrainz_id']))
         self.assertTemplateUsed('profile/info.html')
         self.assert200(response)
-        self.assertIn(self.user['auth_token'], response.data.decode('utf-8'))
+        self.assertIn(str(self.user['auth_token']), response.data.decode('utf-8'))
 
     def test_reset_import_timestamp(self):
         self.temporary_login(self.user['id'])

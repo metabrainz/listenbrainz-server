@@ -26,12 +26,11 @@ def create(musicbrainz_row_id, musicbrainz_id):
     """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            INSERT INTO "user" (musicbrainz_id, musicbrainz_row_id, auth_token)
-                 VALUES (:mb_id, :mb_row_id, :token)
+            INSERT INTO "user" (musicbrainz_id, musicbrainz_row_id)
+                 VALUES (:mb_id, :mb_row_id)
               RETURNING id
         """), {
             "mb_id": musicbrainz_id,
-            "token": str(uuid.uuid4()),
             "mb_row_id": musicbrainz_row_id,
         })
         return result.fetchone()["id"]
@@ -50,7 +49,7 @@ def update_token(id):
                    SET auth_token = :token
                  WHERE id = :id
             """), {
-                "token": str(uuid.uuid4()),
+                "token": uuid.uuid4(),
                 "id": id
             })
         except DatabaseException as e:

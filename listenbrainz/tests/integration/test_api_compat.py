@@ -94,7 +94,7 @@ class APICompatTestCase(APICompatIntegrationTestCase):
         response = xmltodict.parse(r.data)
         self.assertEqual(response['lfm']['@status'], 'ok')
 
-        token = Token.load(response['lfm']['token'], api_key=self.lfm_user.api_key)
+        token = Token.load(response['lfm']['token'], api_key=str(self.lfm_user.api_key))
         self.assertIsNotNone(token)
 
     def test_get_session(self):
