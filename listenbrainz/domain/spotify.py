@@ -7,6 +7,8 @@ import datetime
 
 SPOTIFY_API_RETRIES = 5
 
+SPOTIFY_PERMISSIONS_SCOPE = 'user-read-currently-playing user-read-recently-played'
+
 
 class Spotify:
     def __init__(self, user_id, musicbrainz_id, musicbrainz_row_id, user_token, token_expires,
@@ -95,7 +97,7 @@ def get_spotify_oauth():
     """
     client_id = current_app.config['SPOTIFY_CLIENT_ID']
     client_secret = current_app.config['SPOTIFY_CLIENT_SECRET']
-    scope = 'user-read-recently-played'
+    scope = SPOTIFY_PERMISSIONS_SCOPE
     redirect_url = current_app.config['SPOTIFY_CALLBACK_URL']
     return spotipy.oauth2.SpotifyOAuth(client_id, client_secret, redirect_uri=redirect_url, scope=scope)
 
