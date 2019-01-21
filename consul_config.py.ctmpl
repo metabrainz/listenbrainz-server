@@ -135,7 +135,7 @@ TESTING = False
 {{if service "listenbrainz-org.exim-relay"}}
 {{with index (service "listenbrainz-org.exim-relay") 0}}
 SMTP_SERVER = '''{{.Address}}'''
-STMP_PORT = {{.Port}}
+SMTP_PORT = {{.Port}}
 {{end}}
 {{end}}
 
