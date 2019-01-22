@@ -1,6 +1,6 @@
-=======================================
+=======================
 ListenBrainz Data Dumps
-=======================================
+=======================
 
 
 ListenBrainz provides data dumps that you can import into your own server or
@@ -10,7 +10,7 @@ you may or may not require all of them.
 
 
 File Descriptions
-================
+=================
 
 A ListenBrainz data dump consists of two archives:
 

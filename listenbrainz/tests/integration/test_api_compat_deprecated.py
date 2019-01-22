@@ -38,7 +38,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
 
     def setUp(self):
         super(APICompatDeprecatedTestCase, self).setUp()
-        self.user = db_user.get_or_create('apicompatoldtestuser')
+        self.user = db_user.get_or_create(1, 'apicompatoldtestuser')
         self.ls = InfluxListenStore({
             'REDIS_HOST': config.REDIS_HOST,
             'REDIS_PORT': config.REDIS_PORT,
@@ -46,7 +46,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
             'INFLUX_HOST': config.INFLUX_HOST,
             'INFLUX_PORT': config.INFLUX_PORT,
             'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
-        })
+        }, self.app.logger)
 
 
     def handshake(self, user_name, auth_token, timestamp):

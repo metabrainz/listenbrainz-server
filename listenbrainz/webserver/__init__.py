@@ -36,7 +36,11 @@ def create_redis(app):
 
 def create_rabbitmq(app):
     from listenbrainz.webserver.rabbitmq_connection import init_rabbitmq_connection
-    init_rabbitmq_connection(app)
+    try:
+        init_rabbitmq_connection(app)
+    except ConnectionError as e:
+        app.logger.error('Could not connect to RabbitMQ: %s', str(e))
+        return
 
 
 def gen_app(config_path=None, debug=None):
@@ -99,13 +103,21 @@ def gen_app(config_path=None, debug=None):
     create_influx(app)
 
     # RabbitMQ connection
-    create_rabbitmq(app)
+    try:
+        create_rabbitmq(app)
+    except ConnectionError:
+        app.logger.critical("RabbitMQ service is not up!", exc_info=True)
+
 
     # Database connection
     from listenbrainz import db
     db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
     from listenbrainz.webserver.external import messybrainz
     messybrainz.init_db_connection(app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
+
+    if app.config['MB_DATABASE_URI']:
+        from brainzutils import musicbrainz_db
+        musicbrainz_db.init_db_engine(app.config['MB_DATABASE_URI'])
 
     # OAuth
     from listenbrainz.webserver.login import login_manager, provider
@@ -136,6 +148,21 @@ def create_app(config_path=None, debug=None):
     app = gen_app(config_path=config_path, debug=debug)
     _register_blueprints(app)
 
+    # Admin views
+    from listenbrainz import model
+    model.db.init_app(app)
+
+    from flask_admin import Admin
+    from listenbrainz.webserver.admin.views import HomeView
+    admin = Admin(app, index_view=HomeView(name='Home'), template_mode='bootstrap3')
+    from listenbrainz.model import Spotify as SpotifyModel
+    from listenbrainz.model import User as UserModel
+    from listenbrainz.model.spotify import SpotifyAdminView
+    from listenbrainz.model.user import UserAdminView
+    admin.add_view(UserAdminView(UserModel, model.db.session, endpoint='user_model'))
+    admin.add_view(SpotifyAdminView(SpotifyModel, model.db.session, endpoint='spotify_model'))
+
+
     @app.before_request
     def before_request_gdpr_check():
         # skip certain pages, static content and the API
@@ -148,7 +175,7 @@ def create_app(config_path=None, debug=None):
             return
         # otherwise if user is logged in and hasn't agreed to gdpr,
         # redirect them to agree to terms page.
-        elif current_user.is_authenticated() and current_user.gdpr_agreed is None:
+        elif current_user.is_authenticated and current_user.gdpr_agreed is None:
             return redirect(url_for('index.gdpr_notice', next=request.full_path))
 
     return app

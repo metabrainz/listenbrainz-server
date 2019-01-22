@@ -68,7 +68,7 @@
                       {% endif %}
                   </td>
                   <td>
-                      {% if spotify_uri %}
+                      {% if listen.track_metadata.additional_info.spotify_id %}
                         <span class="fab fa-spotify"></span>
                       {% endif %}
                       {% if listen.track_metadata.additional_info.recording_mbid %}
@@ -96,10 +96,10 @@
           </ul>
         </div>
 
-        {% if spotify_uri %}
+        {% if latest_spotify_uri %}
           <div class="col-md-4 text-right">
             <iframe id="player" frameborder="0" allowtransparency="true" allow="encrypted-media"
-                    src="https://embed.spotify.com/?uri={{ spotify_uri }}&theme=white"></iframe>
+                    src="https://embed.spotify.com/?uri={{ latest_spotify_uri }}&theme=white"></iframe>
           </div>
         {% endif %}
       </div>

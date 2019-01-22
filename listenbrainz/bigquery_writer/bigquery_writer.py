@@ -9,10 +9,9 @@ import sys
 import ujson
 import time
 
-from listenbrainz.utils import safely_import_config
+from listenbrainz.webserver import create_app
 
-safely_import_config()
-
+from flask import current_app
 from googleapiclient import discovery
 from googleapiclient.errors import HttpError
 from listenbrainz.listen_writer import ListenWriter
@@ -40,7 +39,6 @@ class BigQueryWriter(ListenWriter):
         super().__init__()
 
         self.channel = None
-        self.DUMP_JSON_WITH_ERRORS = True
 
         self.bq_data = []
         self.delivery_tags = []
@@ -69,17 +67,15 @@ class BigQueryWriter(ListenWriter):
         while True:
             try:
                 ret = self.bigquery.tabledata().insertAll(
-                    projectId=self.config.BIGQUERY_PROJECT_ID,
-                    datasetId=self.config.BIGQUERY_DATASET_ID,
-                    tableId=self.config.BIGQUERY_TABLE_ID,
+                    projectId=current_app.config['BIGQUERY_PROJECT_ID'],
+                    datasetId=current_app.config['BIGQUERY_DATASET_ID'],
+                    tableId=current_app.config['BIGQUERY_TABLE_ID'],
                     body=body).execute(num_retries=5)
                 break
             except HttpError as e:
-                self.log.error("Submit to BigQuery failed: %s. Retrying in 3 seconds." % str(e))
+                current_app.logger.error("Submit to BigQuery failed: %s. Retrying in 3 seconds. Data: %s", str(e), json.dumps(body, indent=3), exc_info=True)
             except Exception as e:
-                self.log.error("Unknown exception on submit to BigQuery failed: %s. Retrying in 3 seconds." % str(e))
-                if self.DUMP_JSON_WITH_ERRORS:
-                    self.log.error(json.dumps(body, indent=3))
+                current_app.logger.error("Exception while submitting data to BigQuery: %s. Retrying in 3 seconds. Data: %s", str(e), json.dumps(body, indent=3), exc_info=True)
 
             sleep(self.ERROR_RETRY_DELAY)
 
@@ -99,7 +95,7 @@ class BigQueryWriter(ListenWriter):
         # collect and occasionally print some stats
         time_taken = time() - t0
         self.total_inserts += len(self.bq_data)
-        self.log.info(
+        current_app.logger.info(
             'Inserted %d listens in %.1fs (%.2f listens/sec). Total %d rows.',
             len(self.bq_data),
             time_taken,
@@ -203,52 +199,60 @@ class BigQueryWriter(ListenWriter):
 
 
     def start(self):
-        self.log.info("bigquery-writer init")
+        app = create_app()
+        with app.app_context():
+            current_app.logger.info("bigquery-writer init")
 
-        self._verify_hosts_in_config()
+            self._verify_hosts_in_config()
 
-        # if we're not supposed to run, just sleep
-        if not self.config.WRITE_TO_BIGQUERY:
-            sleep(66666)
-            return
+            # if we're not supposed to run, just sleep
+            if not current_app.config['WRITE_TO_BIGQUERY']:
+                sleep(66666)
+                return
 
-        try:
-            self.bigquery = create_bigquery_object()
-        except (NoCredentialsFileException, NoCredentialsVariableException):
-            self.log.error("Credential File not present or invalid! Sleeping...")
-            sleep(1000)
-
-        while True:
             try:
-                self.redis = Redis(host=self.config.REDIS_HOST, port=self.config.REDIS_PORT)
-                self.redis.ping()
-                break
-            except Exception as err:
-                self.log.error("Cannot connect to redis: %s. Retrying in 3 seconds and trying again." % str(err))
-                sleep(self.ERROR_RETRY_DELAY)
+                self.bigquery = create_bigquery_object()
+            except NoCredentialsFileException as e:
+                current_app.logger.critical("BigQuery credential file not present! Sleeping...")
+                sleep(100000)
+            except NoCredentialsVariableException as e:
+                current_app.logger.critical("BigQuery credentials environment variable not set!")
+                sleep(100000)
 
-        while True:
-            self.connect_to_rabbitmq()
-            self.channel = self.connection.channel()
-            self.channel.exchange_declare(exchange=self.config.UNIQUE_EXCHANGE, exchange_type='fanout')
-            self.channel.queue_declare(self.config.UNIQUE_QUEUE, durable=True)
-            self.channel.queue_bind(exchange=self.config.UNIQUE_EXCHANGE, queue=self.config.UNIQUE_QUEUE)
-            self.channel.basic_consume(
-                lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self),
-                queue=self.config.UNIQUE_QUEUE,
-            )
-            self.channel.basic_qos(prefetch_count=PREFETCH_COUNT)
+            while True:
+                try:
+                    self.redis = Redis(
+                        host=current_app.config['REDIS_HOST'],
+                        port=current_app.config['REDIS_PORT'],
+                    )
+                    self.redis.ping()
+                    break
+                except Exception as err:
+                    current_app.logger.warn("Cannot connect to redis: %s. Retrying in 3 seconds and trying again." % str(err), exc_info=True)
+                    sleep(self.ERROR_RETRY_DELAY)
 
-            self.log.info("bigquery-writer started")
-            try:
-                self.channel.start_consuming()
-            except pika.exceptions.ConnectionClosed:
-                self.log.info("Connection to rabbitmq closed. Re-opening.")
-                self.connection = None
-                self.channel = None
-                continue
+            while True:
+                self.connect_to_rabbitmq()
+                self.channel = self.connection.channel()
+                self.channel.exchange_declare(exchange=current_app.config['UNIQUE_EXCHANGE'], exchange_type='fanout')
+                self.channel.queue_declare(current_app.config['UNIQUE_QUEUE'], durable=True)
+                self.channel.queue_bind(exchange=current_app.config['UNIQUE_EXCHANGE'], queue=current_app.config['UNIQUE_QUEUE'])
+                self.channel.basic_consume(
+                    lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self),
+                    queue=current_app.config['UNIQUE_QUEUE'],
+                )
+                self.channel.basic_qos(prefetch_count=PREFETCH_COUNT)
 
-            self.connection.close()
+                current_app.logger.info("bigquery-writer started")
+                try:
+                    self.channel.start_consuming()
+                except pika.exceptions.ConnectionClosed:
+                    current_app.logger.warn("Connection to rabbitmq closed. Re-opening.")
+                    self.connection = None
+                    self.channel = None
+                    continue
+
+                self.connection.close()
 
 
 if __name__ == "__main__":

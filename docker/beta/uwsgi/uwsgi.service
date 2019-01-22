@@ -17,13 +17,19 @@ then
     exec python3 -m listenbrainz.bigquery_writer.bigquery_writer
 fi
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-stats-calculator-beta" ]
+if [ "${CONTAINER_NAME}" = "listenbrainz-bigquery-job-runner-beta" ]
 then
     cd /code/listenbrainz
-    exec python3 -m listenbrainz.stats.stats_calculator
+    exec python3 -m listenbrainz.bigquery_job_runner.bigquery_job_runner
 fi
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-api-compat" ]
+if [ "${CONTAINER_NAME}" = "listenbrainz-spotify-reader-beta" ]
+then
+    cd /code/listenbrainz
+    exec python3 -m listenbrainz.spotify_updater.spotify_read_listens
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-api-compat-beta" ]
 then
     exec uwsgi /etc/uwsgi/uwsgi-api-compat.ini
 fi

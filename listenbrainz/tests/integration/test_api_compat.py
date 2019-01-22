@@ -36,7 +36,7 @@ class APICompatTestCase(APICompatIntegrationTestCase):
 
     def setUp(self):
         super(APICompatTestCase, self).setUp()
-        self.lb_user = db_user.get_or_create('apicompattestuser')
+        self.lb_user = db_user.get_or_create(1, 'apicompattestuser')
         self.lfm_user = User(
             self.lb_user['id'],
             self.lb_user['created'],
@@ -51,7 +51,7 @@ class APICompatTestCase(APICompatIntegrationTestCase):
             'INFLUX_HOST': current_app.config['INFLUX_HOST'],
             'INFLUX_PORT': current_app.config['INFLUX_PORT'],
             'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
-        })
+        }, self.app.logger)
 
     def test_record_listen_now_playing(self):
         """ Tests if listen of type 'nowplaying' is recorded correctly
