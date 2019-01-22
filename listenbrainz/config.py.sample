@@ -47,6 +47,8 @@ UNIQUE_EXCHANGE = "unique"
 UNIQUE_QUEUE = "unique"
 BIGQUERY_EXCHANGE = "bigquery"
 BIGQUERY_QUEUE = "bigquery"
+PLAYING_NOW_EXCHANGE = "playing_now"
+PLAYING_NOW_QUEUE = "playing_now"
 
 # MusicBrainz OAuth
 MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"

@@ -70,6 +70,8 @@ UNIQUE_EXCHANGE = '''{{template "KEY" "unique_exchange"}}'''
 UNIQUE_QUEUE = '''{{template "KEY" "unique_queue"}}'''
 BIGQUERY_EXCHANGE = '''{{template "KEY" "bigquery_exchange"}}'''
 BIGQUERY_QUEUE = '''{{template "KEY" "bigquery_queue"}}'''
+PLAYING_NOW_EXCHANGE = '''{{template "KEY" "playing_now_exchange"}}'''
+PLAYING_NOW_QUEUE = '''{{template "KEY" "playing_now_queue"}}'''
 
 
 MUSICBRAINZ_CLIENT_ID = '''{{template "KEY" "musicbrainz/client_id"}}'''

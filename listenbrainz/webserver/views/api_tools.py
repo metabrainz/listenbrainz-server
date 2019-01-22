@@ -62,6 +62,7 @@ def _send_listens_to_queue(listen_type, listens):
                 else:
                     listen_timeout = current_app.config['PLAYING_NOW_MAX_DURATION']
                 redis_connection._redis.put_playing_now(listen['user_id'], listen, listen_timeout)
+                submit.append(listen)
             except Exception as e:
                 current_app.logger.error("Redis rpush playing_now write error: " + str(e))
                 raise ServiceUnavailable("Cannot record playing_now at this time.")
@@ -77,10 +78,17 @@ def _send_listens_to_queue(listen_type, listens):
             current_app.logger.error('Cannot connect to RabbitMQ: %s' % str(e))
             raise ServiceUnavailable('Cannot submit listens to queue, please try again later.')
 
+        if listen_type == LISTEN_TYPE_PLAYING_NOW:
+           exchange = current_app.config['PLAYING_NOW_EXCHANGE']
+           queue = current_app.config['PLAYING_NOW_QUEUE']
+        else:
+            exchange = current_app.config['INCOMING_EXCHANGE']
+            queue = current_app.config['INCOMING_QUEUE']
+
         publish_data_to_queue(
             data=submit,
-            exchange=current_app.config['INCOMING_EXCHANGE'],
-            queue=current_app.config['INCOMING_QUEUE'],
+            exchange=exchange,
+            queue=queue,
             error_msg='Cannot submit listens to queue, please try again later.',
         )
 
