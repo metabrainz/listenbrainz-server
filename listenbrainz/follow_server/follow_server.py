@@ -24,6 +24,7 @@ socketio = SocketIO(app)
 
 @socketio.on('json')
 def handle_json(json):
+    current_app.logger.error('received json: %s' % str(json))
     print('received json: ' + str(json))
 
     try:
