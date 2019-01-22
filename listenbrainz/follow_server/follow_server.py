@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from flask import Flask
+from flask import Flask, current_app
 from flask_socketio import SocketIO, join_room, leave_room
 from werkzeug.exceptions import BadRequest
 import argparse
