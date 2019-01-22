@@ -43,17 +43,6 @@ def handle_json(json):
     for user in follow_list:
         join_room(user)
 
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="ListenBrainz Follow Server")
-    parser.add_argument("-d", "--debug", action="store_true",
-                        help="Turn on debugging mode to see stack traces on "
-                             "the error pages. This overrides 'DEBUG' value "
-                             "in config file.")
-    parser.add_argument("-t", "--host", default="0.0.0.0", type=str,
-                        help="Which interfaces to listen on. Default: 0.0.0.0.")
-    parser.add_argument("-p", "--port", default="8081", type=int,
-                        help="Which port to listen on. Default: 8081.")
-    args = parser.parse_args()
-    socketio.run(app, debug=True if args.debug else None,
-                    host=args.host, port=args.port)
+def run_follow_server(host='0.0.0.0', port=8081, debug=True):
+    socketio.run(app, debug=debug,
+                    host=host, port=port)

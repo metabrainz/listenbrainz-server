@@ -34,7 +34,7 @@ fi
 if [ "${CONTAINER_NAME}" = "listenbrainz-follow-dispatch-prod" ]
 then
     cd /code/listenbrainz
-    exec python3 -m listenbrainz.follow_dispatch.follow_dispatch
+    exec python manage.py run_follow_server -h 0.0.0.0 -p 8081
 fi
 
 echo "init script has no clue which service to start. Set env var CONTAINER_NAME!"
