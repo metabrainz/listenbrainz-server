@@ -1,8 +1,9 @@
-#!/usr/bin/env python
 from flask import Flask, current_app
-from flask_socketio import SocketIO, join_room, leave_room
+from flask_cors import CORS
+from flask_socketio import SocketIO, join_room, leave_room, emit
 from werkzeug.exceptions import BadRequest
 import argparse
+import json
 
 from listenbrainz.webserver import load_config
 from brainzutils.flask import CustomFlask
@@ -13,6 +14,7 @@ app = CustomFlask(
     use_flask_uuid=True,
 )
 load_config(app)
+CORS(app)
 
 # Error handling
 from listenbrainz.webserver.errors import init_error_handlers
@@ -24,21 +26,21 @@ app.init_loggers(
     email_config=app.config.get('LOG_EMAIL'),
     sentry_config=app.config.get('LOG_SENTRY')
 )
-
 socketio = SocketIO(app)
 
+
 @socketio.on('json')
-def handle_json(json):
-    current_app.logger.error('received json: %s' % str(json))
-    print('received json: ' + str(json))
+def handle_json(data):
+    current_app.logger.error('received json: %s' % str(data))
+    print('received json: ' + str(data))
 
     try:
-        user = json['user']
+        user = data['user']
     except KeyError:
         raise BadRequest("Missing key 'user'")
 
     try:
-        follow_list = json['follow']
+        follow_list = data['follow']
     except KeyError:
         raise BadRequest("Missing key 'follow'")
 
@@ -48,6 +50,17 @@ def handle_json(json):
     for user in follow_list:
         join_room(user)
 
+    d = {
+        'hi': '1',
+        'room': 'rob'
+    }
+
+    emit('new listen', json.dumps(d), room='rob')
+
+
+
 def run_follow_server(host='0.0.0.0', port=8081, debug=True):
+    fd = FollowDispatcher(app)
+    fd.start()
     socketio.run(app, debug=debug,
                     host=host, port=port)

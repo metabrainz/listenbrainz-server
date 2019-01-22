@@ -34,3 +34,4 @@ git+https://github.com/metabrainz/brainzutils-python.git@v1.8.0
 spotipy == 2.4.4
 pyyaml == 3.13
 eventlet == 0.24.1
+Flask-CORS == 3.0.7
