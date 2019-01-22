@@ -8,8 +8,8 @@ from flask import current_app
 
 class PlayerWriter:
 
-    def __init__(self):
-        self.app = listenbrainz.webserver.create_app()
+    def __init__(self, app):
+        self.app = app
 
     def callback_listen(self, channel, method, properties, body):
         x = json.loads(body)
@@ -71,7 +71,7 @@ class PlayerWriter:
                     time.sleep(3)
 
 def main():
-    PlayerWriter().run()
+    PlayerWriter(listenbrainz.webserver.create_app()).run()
 
 if __name__ == '__main__':
     main()
