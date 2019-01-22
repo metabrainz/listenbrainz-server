@@ -6,6 +6,7 @@ import argparse
 
 from listenbrainz.webserver import load_config
 from brainzutils.flask import CustomFlask
+from follow_dispatcher import FollowDispatcher
 
 app = CustomFlask(
     import_name=__name__,
