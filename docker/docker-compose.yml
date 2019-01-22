@@ -118,7 +118,7 @@ services:
     image: web
     volumes:
       - ..:/code/listenbrainz:z
-    command: python3 -m "listenbrainz.follow_server.follow_server"
+    command: python manage.py run_follow_server -h 0.0.0.0 -p 8081
     ports:
       - "8081:8081"
     depends_on:
