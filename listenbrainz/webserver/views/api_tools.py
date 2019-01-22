@@ -8,7 +8,6 @@ import ujson
 import uuid
 
 from flask import current_app
-from pika_pool import Overflow as PikaPoolOverflow, Timeout as PikaPoolTimeout
 from listenbrainz.listen import Listen
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
 from listenbrainz.webserver.external import messybrainz
@@ -56,13 +55,14 @@ def _send_listens_to_queue(listen_type, listens):
     for listen in listens:
         if listen_type == LISTEN_TYPE_PLAYING_NOW:
             try:
-                expire_time = listen["track_metadata"]["additional_info"].get("duration",
-                                    current_app.config['PLAYING_NOW_MAX_DURATION'])
-                redis_connection._redis.redis.setex(
-                    'playing_now:{}'.format(listen['user_id']),
-                    ujson.dumps(listen).encode('utf-8'),
-                    expire_time
-                )
+                if 'duration' in listen['track_metadata']['additional_info']:
+                    listen_timeout = listen['track_metadata']['additional_info']['duration']
+                elif 'duration_ms' in listen['track_metadata']['additional_info']:
+                    listen_timeout = listen['track_metadata']['additional_info']['duration_ms'] // 1000
+                else:
+                    listen_timeout = current_app.config['PLAYING_NOW_MAX_DURATION']
+                redis_connection._redis.put_playing_now(listen['user_id'], listen, listen_timeout)
+                submit.append(listen)
             except Exception as e:
                 current_app.logger.error("Redis rpush playing_now write error: " + str(e))
                 raise ServiceUnavailable("Cannot record playing_now at this time.")
@@ -70,10 +70,25 @@ def _send_listens_to_queue(listen_type, listens):
             submit.append(listen)
 
     if submit:
+        # check if rabbitmq connection exists or not
+        # and if not then try to connect
+        try:
+            rabbitmq_connection.init_rabbitmq_connection(current_app)
+        except ConnectionError as e:
+            current_app.logger.error('Cannot connect to RabbitMQ: %s' % str(e))
+            raise ServiceUnavailable('Cannot submit listens to queue, please try again later.')
+
+        if listen_type == LISTEN_TYPE_PLAYING_NOW:
+           exchange = current_app.config['PLAYING_NOW_EXCHANGE']
+           queue = current_app.config['PLAYING_NOW_QUEUE']
+        else:
+            exchange = current_app.config['INCOMING_EXCHANGE']
+            queue = current_app.config['INCOMING_QUEUE']
+
         publish_data_to_queue(
             data=submit,
-            exchange=current_app.config['INCOMING_EXCHANGE'],
-            queue=current_app.config['INCOMING_QUEUE'],
+            exchange=exchange,
+            queue=queue,
             error_msg='Cannot submit listens to queue, please try again later.',
         )
 
@@ -148,7 +163,7 @@ def is_valid_uuid(u):
     try:
         u = uuid.UUID(u)
         return True
-    except ValueError:
+    except (AttributeError, ValueError):
         return False
 
 
@@ -244,34 +259,6 @@ def _messybrainz_lookup(listens):
     return augmented_listens
 
 
-def convert_backup_to_native_format(data):
-    """
-    Converts the imported listen-payload from the lastfm backup file
-    to the native payload format.
-    """
-    payload = []
-    for native_lis in data:
-        listen = {}
-        listen['track_metadata'] = {}
-        listen['track_metadata']['additional_info'] = {}
-
-        if 'timestamp' in native_lis and 'unixtimestamp' in native_lis['timestamp']:
-            listen['listened_at'] = native_lis['timestamp']['unixtimestamp']
-
-        if 'track' in native_lis:
-            if 'name' in native_lis['track']:
-                listen['track_metadata']['track_name'] = native_lis['track']['name']
-            if 'mbid' in native_lis['track']:
-                listen['track_metadata']['additional_info']['recording_mbid'] = native_lis['track']['mbid']
-            if 'artist' in native_lis['track']:
-                if 'name' in native_lis['track']['artist']:
-                    listen['track_metadata']['artist_name'] = native_lis['track']['artist']['name']
-                if 'mbid' in native_lis['track']['artist']:
-                    listen['track_metadata']['additional_info']['artist_mbids'] = [native_lis['track']['artist']['mbid']]
-        payload.append(listen)
-    return payload
-
-
 def log_raise_400(msg, data=""):
     """ Helper function for logging issues with request data and showing error page.
         Logs the message and data, raises BadRequest exception which shows 400 Bad
@@ -326,24 +313,19 @@ def publish_data_to_queue(data, exchange, queue, error_msg):
         error_msg (str): the error message to be returned in case of an error
     """
     try:
-        with rabbitmq_connection._rabbitmq.acquire() as cxn:
-            cxn.channel.exchange_declare(exchange=exchange, exchange_type='fanout')
-            cxn.channel.queue_declare(queue, durable=True)
-            cxn.channel.basic_publish(
+        with rabbitmq_connection._rabbitmq.get() as connection:
+            channel = connection.channel
+            channel.exchange_declare(exchange=exchange, exchange_type='fanout')
+            channel.queue_declare(queue, durable=True)
+            channel.basic_publish(
                 exchange=exchange,
                 routing_key='',
                 body=ujson.dumps(data),
                 properties=pika.BasicProperties(delivery_mode=2, ),
             )
     except pika.exceptions.ConnectionClosed as e:
-        current_app.logger.error("Connection to rabbitmq closed while trying to publish: %s" % str(e))
-        raise ServiceUnavailable(error_msg)
-    except PikaPoolOverflow:
-        current_app.logger.error("Cannot acquire pika channel. Increase number of available channels.")
-        raise ServiceUnavailable(error_msg)
-    except PikaPoolTimeout as e:
-        current_app.logger.error("Cannot publish to rabbitmq channel -- timeout: %s" % str(e))
+        current_app.logger.error("Connection to rabbitmq closed while trying to publish: %s" % str(e), exc_info=True)
         raise ServiceUnavailable(error_msg)
     except Exception as e:
-        current_app.logger.error("Cannot publish to rabbitmq channel: %s / %s" % (type(e).__name__, str(e)))
+        current_app.logger.error("Cannot publish to rabbitmq channel: %s / %s" % (type(e).__name__, str(e)), exc_info=True)
         raise ServiceUnavailable(error_msg)

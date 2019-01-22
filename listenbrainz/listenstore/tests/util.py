@@ -15,12 +15,17 @@ def generate_data(test_user_id, user_name, from_ts, num_records):
     test_data = []
     artist_msid = str(uuid.uuid4())
 
-    for i in range(num_records):
+    if from_ts == None:  #check for playing now listens
+        timestamp = None
+    else:
         from_ts += 1   # Add one second
+        timestamp = datetime.utcfromtimestamp(from_ts)
+
+    for i in range(num_records):
         item = Listen(
             user_name=user_name,
             user_id=test_user_id,
-            timestamp=datetime.utcfromtimestamp(from_ts),
+            timestamp=timestamp,
             artist_msid=artist_msid,
             recording_msid=str(uuid.uuid4()),
             data={

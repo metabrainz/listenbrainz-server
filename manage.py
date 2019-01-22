@@ -11,7 +11,9 @@ from influxdb import InfluxDBClient
 
 from listenbrainz import config
 
-cli = click.Group()
+@click.group()
+def cli():
+    pass
 
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'sql')
 MSB_ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../messybrainz', 'admin', 'sql')
@@ -36,7 +38,7 @@ def runserver(host, port, debug=False):
     )
 
 
-@cli.command()
+@cli.command(name="run_api_compat_server")
 @click.option("--host", "-h", default="0.0.0.0", show_default=True)
 @click.option("--port", "-p", default=8080, show_default=True)
 @click.option("--debug", "-d", is_flag=True,
@@ -54,7 +56,7 @@ def run_api_compat_server(host, port, debug=False):
     )
 
 
-@cli.command()
+@cli.command(name="init_db")
 @click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
 @click.option("--create-db", is_flag=True, help="Create the database and user.")
 def init_db(force, create_db):
@@ -78,6 +80,7 @@ def init_db(force, create_db):
         if not res:
             raise Exception('Failed to create new database and user! Exit code: %i' % res)
 
+        db.init_db_connection(config.POSTGRES_ADMIN_LB_URI)
         print('Creating database extensions...')
         res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'))
     # Don't raise an exception if the extension already exists
@@ -97,35 +100,10 @@ def init_db(force, create_db):
         print('Creating indexes...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_indexes.sql'))
 
-
-@cli.command()
-@click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
-def init_test_db(force=False):
-    """Same as `init_db` command, but creates a database that will be used to
-    run tests and doesn't import data (no need to do that).
-
-    the `PG_CONNECT_TEST` variable must be defined in the config file.
-    """
-
-    db.init_db_connection(config.POSTGRES_ADMIN_URI)
-    if force:
-        res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'drop_test_db.sql'))
-        if not res:
-            raise Exception('Failed to drop existing database and user! Exit code: %i' % res)
-
-    print('Creating user and a database for testing...')
-    res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_test_db.sql'))
-    if not res:
-        raise Exception('Failed to create test user and database! Exit code: %i' % res)
-
-    res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_extensions.sql'))
-    # Don't raise an exception if the extension already exists
-    db.engine.dispose()
-
-    print("Done!")
+        print("Done!")
 
 
-@cli.command()
+@cli.command(name="init_msb_db")
 @click.option("--force", "-f", is_flag=True, help="Drop existing database and user.")
 @click.option("--create-db", is_flag=True, help="Skip creating database and user. Tables/indexes only.")
 def init_msb_db(force, create_db):
@@ -168,13 +146,16 @@ def init_msb_db(force, create_db):
     db.run_sql_script(os.path.join(MSB_ADMIN_SQL_DIR, 'create_primary_keys.sql'))
     db.run_sql_script(os.path.join(MSB_ADMIN_SQL_DIR, 'create_foreign_keys.sql'))
 
+    print('Creating functions...')
+    db.run_sql_script(os.path.join(MSB_ADMIN_SQL_DIR, 'create_functions.sql'))
+
     print('Creating indexes...')
     db.run_sql_script(os.path.join(MSB_ADMIN_SQL_DIR, 'create_indexes.sql'))
 
     print("Done!")
 
 
-@cli.command()
+@cli.command(name="init_influx")
 def init_influx():
     """ Initializes influx database. """
 

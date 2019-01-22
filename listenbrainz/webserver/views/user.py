@@ -7,6 +7,7 @@ from flask import Blueprint, render_template, request, url_for, Response, redire
 from flask_login import current_user, login_required
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from listenbrainz import webserver
+from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.login import User
@@ -134,7 +135,7 @@ def profile(user_name):
         listens=listens,
         previous_listen_ts=previous_listen_ts,
         next_listen_ts=next_listen_ts,
-        spotify_uri=_get_spotify_uri_for_listens(listens),
+        latest_spotify_uri=_get_spotify_uri_for_listens(listens),
         have_listen_count=have_listen_count,
         listen_count=format(int(listen_count), ",d"),
         artist_count=format(artist_count, ",d") if artist_count else None,
@@ -176,7 +177,7 @@ def artists(user_name):
 
 def _get_user(user_name):
     """ Get current username """
-    if current_user.is_authenticated() and \
+    if current_user.is_authenticated and \
        current_user.musicbrainz_id == user_name:
         return current_user
     else:

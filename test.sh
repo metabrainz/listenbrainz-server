@@ -30,7 +30,7 @@ fi
 
 
 function bring_up_db {
-    docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME up -d db influx redis
+    docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME up -d db influx redis rabbitmq
 }
 
 function setup {
@@ -38,6 +38,7 @@ function setup {
     # PostgreSQL Database initialization
     docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME run --rm listenbrainz dockerize -wait tcp://db:5432 -timeout 60s \
                   -wait tcp://influx:8086 -timeout 60s \
+                  -wait tcp://rabbitmq:5672 -timeout 60s \
                 bash -c "python3 manage.py init_db --create-db && \
                          python3 manage.py init_msb_db --create-db && \
                          python3 manage.py init_influx"

@@ -30,18 +30,16 @@ import subprocess
 import sys
 
 from datetime import datetime
+from flask import current_app
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from listenbrainz import db
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.utils import create_path
+from listenbrainz.webserver import create_app
 from listenbrainz.webserver.influx_connection import init_influx_connection
-
-from listenbrainz import config
 
 
 NUMBER_OF_DUMPS_TO_KEEP = 2
-
-log = logging.getLogger(__name__)
 
 cli = click.Group()
 
@@ -57,29 +55,55 @@ def create(location, threads):
             location (str): path to the directory where the dump should be made
             threads (int): the number of threads to be used while compression
     """
-    db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
-    ls = init_influx_connection(log,  {
-        'REDIS_HOST': config.REDIS_HOST,
-        'REDIS_PORT': config.REDIS_PORT,
-        'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
-        'INFLUX_HOST': config.INFLUX_HOST,
-        'INFLUX_PORT': config.INFLUX_PORT,
-        'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
-    })
-    time_now = datetime.today()
-    dump_path = os.path.join(location, 'listenbrainz-dump-{time}'.format(time=time_now.strftime('%Y%m%d-%H%M%S')))
-    create_path(dump_path)
-    db_dump.dump_postgres_db(dump_path, time_now, threads)
-    ls.dump_listens(dump_path, time_now, threads)
-    try:
-        write_hashes(dump_path)
-    except IOError as e:
-        log.error('Unable to create hash files! Error: %s', str(e))
-        return
-    log.info('Dumps created and hashes written at %s' % dump_path)
+    app = create_app()
+    with app.app_context():
+        ls = init_influx_connection(current_app.logger,  {
+            'REDIS_HOST': current_app.config['REDIS_HOST'],
+            'REDIS_PORT': current_app.config['REDIS_PORT'],
+            'REDIS_NAMESPACE': current_app.config['REDIS_NAMESPACE'],
+            'INFLUX_HOST': current_app.config['INFLUX_HOST'],
+            'INFLUX_PORT': current_app.config['INFLUX_PORT'],
+            'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
+        })
+        time_now = datetime.today()
+        dump_path = os.path.join(location, 'listenbrainz-dump-{time}'.format(time=time_now.strftime('%Y%m%d-%H%M%S')))
+        create_path(dump_path)
+        db_dump.dump_postgres_db(dump_path, time_now, threads)
+        ls.dump_listens(dump_path, time_now, threads, spark_format=False)
+        try:
+            write_hashes(dump_path)
+        except IOError as e:
+            current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
+            return
+        current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
 
 
 @cli.command()
+@click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'))
+@click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
+def create_spark_dump(location, threads):
+    with create_app().app_context():
+        ls = init_influx_connection(current_app.logger,  {
+            'REDIS_HOST': current_app.config['REDIS_HOST'],
+            'REDIS_PORT': current_app.config['REDIS_PORT'],
+            'REDIS_NAMESPACE': current_app.config['REDIS_NAMESPACE'],
+            'INFLUX_HOST': current_app.config['INFLUX_HOST'],
+            'INFLUX_PORT': current_app.config['INFLUX_PORT'],
+            'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
+        })
+        time_now = datetime.today()
+        dump_path = os.path.join(location, 'listenbrainz-spark-dump-{time}'.format(time=time_now.strftime('%Y%m%d-%H%M%S')))
+        create_path(dump_path)
+        ls.dump_listens(dump_path, time_now, threads, spark_format=True)
+        try:
+            write_hashes(dump_path)
+        except IOError as e:
+            current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
+            return
+        current_app.logger.info('Dump created and hash written at %s', dump_path)
+
+
+@cli.command(name="import_dump")
 @click.option('--private-archive', '-pr', default=None)
 @click.option('--public-archive', '-pu', default=None)
 @click.option('--listen-archive', '-l', default=None)
@@ -103,35 +127,36 @@ def import_dump(private_archive, public_archive, listen_archive, threads):
         print('You need to enter a path to the archive(s) to import!')
         sys.exit(1)
 
-    db.init_db_connection(config.SQLALCHEMY_DATABASE_URI)
-    db_dump.import_postgres_dump(private_archive, public_archive, threads)
+    app = create_app()
+    with app.app_context():
+        db_dump.import_postgres_dump(private_archive, public_archive, threads)
 
-    ls = init_influx_connection(log,  {
-        'REDIS_HOST': config.REDIS_HOST,
-        'REDIS_PORT': config.REDIS_PORT,
-        'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
-        'INFLUX_HOST': config.INFLUX_HOST,
-        'INFLUX_PORT': config.INFLUX_PORT,
-        'INFLUX_DB_NAME': config.INFLUX_DB_NAME,
-    })
+        ls = init_influx_connection(current_app.logger,  {
+            'REDIS_HOST': current_app.config['REDIS_HOST'],
+            'REDIS_PORT': current_app.config['REDIS_PORT'],
+            'REDIS_NAMESPACE': current_app.config['REDIS_NAMESPACE'],
+            'INFLUX_HOST': current_app.config['INFLUX_HOST'],
+            'INFLUX_PORT': current_app.config['INFLUX_PORT'],
+            'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
+        })
 
-    try:
-        ls.import_listens_dump(listen_archive, threads)
-    except IOError as e:
-        log.error('IOError while trying to import data into Influx: %s', str(e))
-        raise
-    except InfluxDBClientError as e:
-        log.error('Error while sending data to Influx: %s', str(e))
-        raise
-    except InfluxDBServerError as e:
-        log.error('InfluxDB Server Error while importing data: %s', str(e))
-        raise
-    except Exception as e:
-        log.error('Unexpected error while importing data: %s', str(e))
-        raise
+        try:
+            ls.import_listens_dump(listen_archive, threads)
+        except IOError as e:
+            current_app.logger.critical('IOError while trying to import data into Influx: %s', str(e), exc_info=True)
+            raise
+        except InfluxDBClientError as e:
+            current_app.logger.critical('Error while sending data to Influx: %s', str(e), exc_info=True)
+            raise
+        except InfluxDBServerError as e:
+            current_app.logger.critical('InfluxDB Server Error while importing data: %s', str(e), exc_info=True)
+            raise
+        except Exception as e:
+            current_app.logger.critical('Unexpected error while importing data: %s', str(e), exc_info=True)
+            raise
 
 
-@cli.command()
+@cli.command(name="delete_old_dumps")
 @click.argument('location', type=str)
 def delete_old_dumps(location):
     _cleanup_dumps(location)
@@ -184,5 +209,5 @@ def write_hashes(location):
                 sha256sum = subprocess.check_output(['sha256sum', os.path.join(location, file)]).decode('utf-8').split()[0]
                 f.write(sha256sum)
         except IOError as e:
-            log.error('IOError while trying to write hash files for file %s: %s', file, str(e))
+            current_app.logger.error('IOError while trying to write hash files for file %s: %s', file, str(e), exc_info=True)
             raise

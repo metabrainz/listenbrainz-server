@@ -7,9 +7,22 @@ CREATE TABLE "user" (
   auth_token     VARCHAR,
   last_login     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   latest_import  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT TIMESTAMP 'epoch',
-  gdpr_agreed    TIMESTAMP WITH TIME ZONE
+  gdpr_agreed    TIMESTAMP WITH TIME ZONE,
+  musicbrainz_row_id INTEGER NOT NULL
 );
 ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_id_key UNIQUE (musicbrainz_id);
+ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_row_id_key UNIQUE (musicbrainz_row_id);
+
+CREATE TABLE spotify_auth (
+  user_id                   INTEGER NOT NULL, -- PK and FK to user.id
+  user_token                VARCHAR NOT NULL,
+  token_expires             TIMESTAMP WITH TIME ZONE,
+  refresh_token             VARCHAR NOT NULL,
+  last_updated              TIMESTAMP WITH TIME ZONE,
+  latest_listened_at        TIMESTAMP WITH TIME ZONE,
+  active                    BOOLEAN DEFAULT TRUE,
+  error_message             VARCHAR
+);
 
 CREATE TABLE api_compat.token (
      id               SERIAL,

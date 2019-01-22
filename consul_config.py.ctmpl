@@ -2,6 +2,11 @@
     {{ key (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .) }}
 {{- end -}}
 
+{{- define "KEY_ARRAY" -}}
+    {{- range $index, $element := (key (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .) | parseJSON) -}}
+        "{{.}}",
+    {{- end -}}
+{{- end -}}
 
 DEBUG = False
 
@@ -12,6 +17,17 @@ SECRET_KEY = '''{{template "KEY" "secret_key"}}'''
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{{.Port}}/listenbrainz"
 MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@{{.Address}}:{{.Port}}/messybrainz"
 POSTGRES_ADMIN_URI="postgresql://postgres@{{.Address}}:{{.Port}}/template1"
+{{end}}
+{{end}}
+
+
+{{if service "pgbouncer-slave"}}
+{{with index (service "pgbouncer-slave") 0}}
+MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrainz_db'
+{{end}}
+{{else if service "pgbouncer-master"}}
+{{with index (service "pgbouncer-master") 0}}
+MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrainz_db'
 {{end}}
 {{end}}
 
@@ -45,12 +61,17 @@ RABBITMQ_PORT = {{.Port}}
 RABBITMQ_USERNAME = '''{{template "KEY" "rabbitmq_user"}}'''
 RABBITMQ_PASSWORD = '''{{template "KEY" "rabbitmq_pass"}}'''
 RABBITMQ_VHOST = '''{{template "KEY" "rabbitmq_vhost"}}'''
+MAXIMUM_RABBITMQ_CONNECTIONS = 20
+
+
 INCOMING_EXCHANGE = '''{{template "KEY" "incoming_exchange"}}'''
 INCOMING_QUEUE = '''{{template "KEY" "incoming_queue"}}'''
 UNIQUE_EXCHANGE = '''{{template "KEY" "unique_exchange"}}'''
 UNIQUE_QUEUE = '''{{template "KEY" "unique_queue"}}'''
-STATS_EXCHANGE = '''{{template "KEY" "stats_exchange"}}'''
-STATS_QUEUE = '''{{template "KEY" "stats_queue"}}'''
+BIGQUERY_EXCHANGE = '''{{template "KEY" "bigquery_exchange"}}'''
+BIGQUERY_QUEUE = '''{{template "KEY" "bigquery_queue"}}'''
+PLAYING_NOW_EXCHANGE = '''{{template "KEY" "playing_now_exchange"}}'''
+PLAYING_NOW_QUEUE = '''{{template "KEY" "playing_now_queue"}}'''
 
 
 MUSICBRAINZ_CLIENT_ID = '''{{template "KEY" "musicbrainz/client_id"}}'''
@@ -80,6 +101,8 @@ UPLOAD_FOLDER = '''{{template "KEY" "upload_folder"}}'''
 
 API_URL = '''{{template "KEY" "api_url"}}'''
 LASTFM_PROXY_URL = '''{{template "KEY" "lastfm_proxy_url"}}'''
+SERVER_ROOT_URL = '''{{template "KEY" "server_root_url"}}'''
+MUSICBRAINZ_OAUTH_URL = 'https://musicbrainz.org/oauth2/userinfo'
 
 
 # Sentry config
@@ -94,3 +117,28 @@ SENTRY_DSN_PUBLIC = '''{{template "KEY" "sentry/dsn_public"}}'''
 STATS_ENTITY_LIMIT = 100 # the number of entities to calculate at max with BQ
 STATS_CALCULATION_LOGIN_TIME = 30 # users must have logged in to LB in the past 30 days for stats to be calculated
 STATS_CALCULATION_INTERVAL = 7 # stats are calculated every 7 days
+
+
+MUSICBRAINZ_IMPORT_DRY_RUN = True
+
+ADMINS = [
+    {{template "KEY_ARRAY" "admins"}}
+]
+
+# SPOTIFY
+SPOTIFY_CLIENT_ID = '''{{template "KEY" "spotify/client_id"}}'''
+SPOTIFY_CLIENT_SECRET = '''{{template "KEY" "spotify/client_secret"}}'''
+SPOTIFY_CALLBACK_URL = '''{{template "KEY" "spotify/callback"}}'''
+
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+TESTING = False
+
+{{if service "listenbrainz-org.exim-relay"}}
+{{with index (service "listenbrainz-org.exim-relay") 0}}
+SMTP_SERVER = '''{{.Address}}'''
+SMTP_PORT = {{.Port}}
+{{end}}
+{{end}}
+
+MAIL_FROM_DOMAIN = '''{{template "KEY" "mail_from_domain"}}'''

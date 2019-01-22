@@ -1,14 +1,18 @@
 from unittest import mock
+from unittest.mock import MagicMock
 
 from flask import url_for
 from flask_login import login_required, AnonymousUserMixin
+from requests.exceptions import HTTPError
 from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
+from pika.exceptions import ConnectionClosed, ChannelClosed
 
 import listenbrainz.db.user as db_user
 import listenbrainz.webserver.login
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.webserver import create_app
 from listenbrainz.webserver.testing import ServerTestCase
+
 
 
 class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
@@ -74,6 +78,20 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         resp = self.client.get(url_for('index.current_status'))
         self.assert200(resp)
 
+    @mock.patch('listenbrainz.webserver.views.index.rabbitmq_connection')
+    def test_current_status_ise(self, mock_rabbitmq_connection_module):
+        mock_rabbitmq_connection_module._rabbitmq.get.side_effect = InternalServerError
+        r = self.client.get(url_for('index.current_status'))
+        self.assert500(r)
+
+        mock_rabbitmq_connection_module._rabbitmq.get.side_effect = ConnectionClosed
+        r = self.client.get(url_for('index.current_status'))
+        self.assert200(r)
+
+        mock_rabbitmq_connection_module._rabbitmq.get.side_effect = ConnectionClosed
+        r = self.client.get(url_for('index.current_status'))
+        self.assert200(r)
+
     @mock.patch('listenbrainz.db.user.get')
     def test_menu_not_logged_in(self, mock_user_get):
         resp = self.client.get(url_for('index.index'))
@@ -87,9 +105,9 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
     @mock.patch('listenbrainz.db.user.get')
     def test_menu_logged_in(self, mock_user_get):
         """ If the user is logged in, check that we perform a database query to get user data """
-        user = db_user.get_or_create('iliekcomputers')
+        user = db_user.get_or_create(1, 'iliekcomputers')
         db_user.agree_to_gdpr(user['musicbrainz_id'])
-        user = db_user.get_or_create('iliekcomputers')
+        user = db_user.get_or_create(1, 'iliekcomputers')
 
         mock_user_get.return_value = user
         self.temporary_login(user['id'])
@@ -114,9 +132,9 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         def view404():
             raise NotFound('not found')
 
-        user = db_user.get_or_create('iliekcomputers')
+        user = db_user.get_or_create(1, 'iliekcomputers')
         db_user.agree_to_gdpr(user['musicbrainz_id'])
-        user = db_user.get_or_create('iliekcomputers')
+        user = db_user.get_or_create(1, 'iliekcomputers')
         mock_user_get.return_value = user
         self.temporary_login(user['id'])
         resp = self.client.get('/page_that_returns_400')
@@ -148,9 +166,9 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         def view500():
             raise InternalServerError('error')
 
-        user = db_user.get_or_create('iliekcomputers')
+        user = db_user.get_or_create(1, 'iliekcomputers')
         db_user.agree_to_gdpr(user['musicbrainz_id'])
-        user = db_user.get_or_create('iliekcomputers')
+        user = db_user.get_or_create(1, 'iliekcomputers')
         mock_user_get.return_value = user
         self.temporary_login(user['id'])
         resp = self.client.get('/page_that_returns_500')
@@ -166,9 +184,9 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         If the user has previously been loaded in the view, check that it's not
         loaded while rendering the template"""
 
-        user = db_user.get_or_create('iliekcomputers')
+        user = db_user.get_or_create(1, 'iliekcomputers')
         db_user.agree_to_gdpr(user['musicbrainz_id'])
-        user = db_user.get_or_create('iliekcomputers')
+        user = db_user.get_or_create(1, 'iliekcomputers')
 
         mock_user_get.return_value = user
 
@@ -190,3 +208,90 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         mock_user_get.assert_called_once()
         self.assertIsInstance(self.get_context_variable('current_user'), listenbrainz.webserver.login.User)
 
+    @mock.patch('listenbrainz.webserver.views.index._authorize_mb_user_deleter')
+    @mock.patch('listenbrainz.webserver.views.index.delete_user')
+    def test_mb_user_deleter_valid_account(self, mock_delete_user, mock_authorize_mb_user_deleter):
+        user1 = db_user.create(1, 'iliekcomputers')
+        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
+        self.assert200(r)
+        mock_authorize_mb_user_deleter.assert_called_once_with('132')
+        mock_delete_user.assert_called_once_with('iliekcomputers')
+
+    @mock.patch('listenbrainz.webserver.views.index._authorize_mb_user_deleter')
+    @mock.patch('listenbrainz.webserver.views.index.delete_user')
+    def test_mb_user_deleter_not_found(self, mock_delete_user, mock_authorize_mb_user_deleter):
+        # no user in the db with musicbrainz_row_id = 2
+        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=2, access_token='312421'))
+        self.assert404(r)
+        mock_authorize_mb_user_deleter.assert_called_with('312421')
+        mock_delete_user.assert_not_called()
+
+    @mock.patch('listenbrainz.webserver.views.index.requests.get')
+    @mock.patch('listenbrainz.webserver.views.index.delete_user')
+    def test_mb_user_deleter_valid_access_token(self, mock_delete_user, mock_requests_get):
+        mock_requests_get.return_value = MagicMock()
+        mock_requests_get.return_value.json.return_value = {
+            'sub': 'UserDeleter',
+            'metabrainz_user_id': 2007538,
+        }
+        user1 = db_user.create(1, 'iliekcomputers')
+        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
+        self.assert200(r)
+        mock_requests_get.assert_called_with(
+            'https://musicbrainz.org/oauth2/userinfo',
+            headers={'Authorization': 'Bearer 132'},
+        )
+        mock_delete_user.assert_called_with('iliekcomputers')
+
+    @mock.patch('listenbrainz.webserver.views.index.requests.get')
+    @mock.patch('listenbrainz.webserver.views.index.delete_user')
+    def test_mb_user_deleter_invalid_access_tokens(self, mock_delete_user, mock_requests_get):
+        mock_requests_get.return_value = MagicMock()
+        mock_requests_get.return_value.json.return_value = {
+            'sub': 'UserDeleter',
+            'metabrainz_user_id': 2007531, # incorrect musicbrainz row id for UserDeleter
+        }
+        user1 = db_user.create(1, 'iliekcomputers')
+        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
+        self.assertStatus(r, 401)
+        mock_delete_user.assert_not_called()
+
+        # no sub value
+        mock_requests_get.return_value.json.return_value = {
+            'metabrainz_user_id': 2007538,
+        }
+        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
+        self.assertStatus(r, 401)
+        mock_delete_user.assert_not_called()
+
+        # no row id
+        mock_requests_get.return_value.json.return_value = {
+            'sub': 'UserDeleter',
+        }
+        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
+        self.assertStatus(r, 401)
+        mock_delete_user.assert_not_called()
+
+        # incorrect username
+        mock_requests_get.return_value.json.return_value = {
+            'sub': 'iliekcomputers',
+            'metabrainz_user_id': 2007538
+        }
+        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
+        self.assertStatus(r, 401)
+        mock_delete_user.assert_not_called()
+
+        # everything incorrect
+        mock_requests_get.return_value.json.return_value = {
+            'sub': 'iliekcomputers',
+            'metabrainz_user_id': 1,
+        }
+        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
+        self.assertStatus(r, 401)
+        mock_delete_user.assert_not_called()
+
+        # HTTPError while getting userinfo from MusicBrainz
+        mock_requests_get.return_value.raise_for_status.side_effect = HTTPError
+        r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
+        self.assertStatus(r, 401)
+        mock_delete_user.assert_not_called()

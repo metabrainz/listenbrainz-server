@@ -29,7 +29,7 @@
       <li class="import-link">
         <a href="{{ url_for('profile.import_data') }}">Import!</a>
       </li>
-      {% if hide_navbar_user_menu or not current_user or current_user.is_anonymous() %}
+      {% if hide_navbar_user_menu or not current_user or current_user.is_anonymous %}
         <li>
           <a href="{{ url_for('login.index') }}">Sign in</a>
         </li>

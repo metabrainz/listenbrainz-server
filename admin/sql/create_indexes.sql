@@ -14,4 +14,5 @@ CREATE UNIQUE INDEX msid_ndx_artist_stats ON statistics.artist (msid);
 CREATE UNIQUE INDEX msid_ndx_release_stats ON statistics.release (msid);
 CREATE UNIQUE INDEX msid_ndx_recording_stats ON statistics.recording (msid);
 
+CREATE INDEX latest_listened_at_spotify_auth ON spotify_auth (latest_listened_at DESC NULLS LAST);
 COMMIT;
