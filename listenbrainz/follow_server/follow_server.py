@@ -14,6 +14,10 @@ app = CustomFlask(
 )
 load_config(app)
 
+# Error handling
+from listenbrainz.webserver.errors import init_error_handlers
+init_error_handlers(app)
+
 # Logging
 app.init_loggers(
     file_config=app.config.get('LOG_FILE'),
