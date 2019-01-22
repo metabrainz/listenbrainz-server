@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from flask import Flask
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, join_room, leave_room
+from werkzeug.exceptions import BadRequest
 import argparse
 
 from listenbrainz.webserver import load_config
@@ -25,6 +26,22 @@ socketio = SocketIO(app)
 def handle_json(json):
     current_app.logger.error('received json: %s' % str(json))
     print('received json: ' + str(json))
+
+    try:
+        user = json['user']
+    except KeyError:
+        raise BadRequest("Missing key 'user'")
+
+    try:
+        follow_list = json['follow']
+    except KeyError:
+        raise BadRequest("Missing key 'follow'")
+
+    if len(follow_list) <= 0:
+        raise BadRequest("Follow list must have one or more users.")
+
+    for user in follow_list:
+        join_room(user)
 
 
 if __name__ == "__main__":
