@@ -2,13 +2,15 @@ import json
 import listenbrainz.webserver
 import pika
 import time
+import threading
 
 from flask import current_app
 
 
-class PlayerWriter:
+class FollowDispatcher(threading.Thread):
 
     def __init__(self, app):
+        threading.Thread.__init__(self)
         self.app = app
 
     def callback_listen(self, channel, method, properties, body):
@@ -69,9 +71,3 @@ class PlayerWriter:
                 except Exception as e:
                     current_app.logger.error("Error in PlayerWriter: %s", str(e), exc_info=True)
                     time.sleep(3)
-
-def main():
-    PlayerWriter(listenbrainz.webserver.create_app()).run()
-
-if __name__ == '__main__':
-    main()

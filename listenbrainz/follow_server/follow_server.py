@@ -6,6 +6,7 @@ import argparse
 
 from listenbrainz.webserver import load_config
 from brainzutils.flask import CustomFlask
+from follow_dispatcher import FollowDispatcher
 
 app = CustomFlask(
     import_name=__name__,
@@ -55,5 +56,9 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--port", default="8081", type=int,
                         help="Which port to listen on. Default: 8081.")
     args = parser.parse_args()
+
+    fd = FollowDispatcher(app)
+    fs.start()
+
     socketio.run(app, debug=True if args.debug else None,
                     host=args.host, port=args.port)
