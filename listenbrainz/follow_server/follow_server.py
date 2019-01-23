@@ -7,7 +7,7 @@ import json
 
 from listenbrainz.webserver import load_config
 from brainzutils.flask import CustomFlask
-from follow_dispatcher import FollowDispatcher
+from listenbrainz.follow_server.dispatcher import FollowDispatcher
 
 app = CustomFlask(
     import_name=__name__,
@@ -50,13 +50,15 @@ def handle_json(data):
     for user in follow_list:
         join_room(user)
 
-    d = {
-        'hi': '1',
-        'room': 'rob'
-    }
+@socketio.on('listen')
+def emit_new_listen(data):
+    current_app.logger.info('got new listen: %s', data)
+    emit('listen', data, room='rob') #TODO: fix the room name
 
-    emit('new listen', json.dumps(d), room='rob')
-
+@socketio.on('playing_now')
+def emit_new_playing_now(data):
+    current_app.logger.info('got new playing now: %s', data)
+    emit('playing_now', data, room='rob') #TODO: fix the room name
 
 
 def run_follow_server(host='0.0.0.0', port=8081, debug=True):
