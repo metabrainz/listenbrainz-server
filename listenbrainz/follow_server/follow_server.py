@@ -7,7 +7,7 @@ import json
 
 from listenbrainz.webserver import load_config
 from brainzutils.flask import CustomFlask
-from follow_dispatcher import FollowDispatcher
+from listenbrainz.follow_server.dispatcher import FollowDispatcher
 
 app = CustomFlask(
     import_name=__name__,
