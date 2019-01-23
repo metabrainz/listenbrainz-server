@@ -143,12 +143,9 @@ def profile(user_name):
         "listen_count" : format(int(listen_count), ",d"),
         "artist_count" : format(artist_count, ",d") if artist_count else None,
         "web_sockets_server_url" : current_app.config['WEBSOCKETS_SERVER_URL'],
-        "musicbrainz_logo_url" : url_for('static', filename='img/musicbrainz-16.svg'),
-        "user_profile_next_url": url_for("user.profile", user_name=user.musicbrainz_id, min_ts=previous_listen_ts),
-        "user_profile_prev_url": url_for("user.profile", user_name=user.musicbrainz_id, max_ts=next_listen_ts),
     }
 
-    return Response('<script id="props" type="application/json">' + ujson.dumps(props) + '</script>')
+    return render_template("user/profile.html", props=props, user=user)
 
 
 @user_bp.route("/<user_name>/artists")
