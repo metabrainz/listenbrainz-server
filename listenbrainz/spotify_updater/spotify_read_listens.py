@@ -276,7 +276,6 @@ def process_all_spotify_users():
             success: the number of users whose plays were successfully imported.
             failure: the number of users for whom we faced errors while importing.
     """
-    current_app.logger.info('Getting list of users to be processed...')
     try:
         users = spotify.get_active_users_to_process()
     except DatabaseException as e:
@@ -286,6 +285,7 @@ def process_all_spotify_users():
     if not users:
         return 0, 0
 
+    current_app.logger.info('Process %d users...' % len(users))
     success = 0
     failure = 0
     for u in users:
