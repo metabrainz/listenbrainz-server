@@ -21,9 +21,8 @@ class FollowDispatcher(threading.Thread):
             event_name = 'playing_now'
         else:
             event_name = 'listen'
-        with self.app.test_request_context('/'):
-            for listen in listens:
-                self.socketio.send(json.dumps(listen), room=listen['user_name'])
+        for listen in listens:
+            self.socketio.emit(event_name, json.dumps(listen), room=listen['user_name'])
 
 
     def callback_listen(self, channel, method, properties, body):
