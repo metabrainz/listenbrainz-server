@@ -129,19 +129,26 @@ def profile(user_name):
     except (KeyError, TypeError):
         artist_count = None
 
-    return render_template(
-        "user/profile.html",
-        user=user,
-        listens=listens,
-        previous_listen_ts=previous_listen_ts,
-        next_listen_ts=next_listen_ts,
-        latest_spotify_uri=_get_spotify_uri_for_listens(listens),
-        have_listen_count=have_listen_count,
-        listen_count=format(int(listen_count), ",d"),
-        artist_count=format(artist_count, ",d") if artist_count else None,
-        section='listens',
-        web_sockets_server_url=current_app.config['WEBSOCKETS_SERVER_URL'],
-    )
+    props = {
+        "user" : {
+            "id" : user.id,
+            "name" : user.musicbrainz_id,
+            "auth_token" : user.auth_token,
+        },
+        "listens" : listens,
+        "previous_listen_ts" : previous_listen_ts,
+        "next_listen_ts" : next_listen_ts,
+        "latest_spotify_uri" : _get_spotify_uri_for_listens(listens),
+        "have_listen_count" : have_listen_count,
+        "listen_count" : format(int(listen_count), ",d"),
+        "artist_count" : format(artist_count, ",d") if artist_count else None,
+        "web_sockets_server_url" : current_app.config['WEBSOCKETS_SERVER_URL'],
+        "musicbrainz_logo_url" : url_for('static', filename='img/musicbrainz-16.svg'),
+        "user_profile_next_url": url_for("user.profile", user_name=user.musicbrainz_id, min_ts=previous_listen_ts),
+        "user_profile_prev_url": url_for("user.profile", user_name=user.musicbrainz_id, max_ts=next_listen_ts),
+    }
+
+    return Response('<script id="props" type="application/json">' + ujson.dumps(props) + '</script>')
 
 
 @user_bp.route("/<user_name>/artists")
