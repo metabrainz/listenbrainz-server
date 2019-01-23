@@ -3,9 +3,10 @@ import listenbrainz.webserver
 import pika
 import time
 import threading
+import socketio
 
 from flask import current_app
-
+from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_PLAYING_NOW, LISTEN_TYPE_IMPORT
 
 class FollowDispatcher(threading.Thread):
 
@@ -13,14 +14,30 @@ class FollowDispatcher(threading.Thread):
         threading.Thread.__init__(self)
         self.app = app
 
+    def send_listens(self, listens, listen_type):
+        sio = socketio.Client()
+
+        @sio.on('connect')
+        def on_connect():
+            if listen_type == LISTEN_TYPE_PLAYING_NOW:
+                event_name = 'playing_now'
+            else:
+                event_name = 'listen'
+            for listen in listens:
+                sio.emit(event_name, json.dumps(listen))
+
+        sio.connect('http://localhost:8081') #TODO: fix this domain
+        sio.disconnect()
+
+
     def callback_listen(self, channel, method, properties, body):
-        x = json.loads(body)
-        current_app.logger.error("from callback listen: %s", json.dumps(x, indent=4))
+        listens = json.loads(body)
+        self.send_listens(listens, LISTEN_TYPE_IMPORT)
         channel.basic_ack(delivery_tag=method.delivery_tag)
 
     def callback_playing_now(self, channel, method, properties, body):
-        x = json.loads(body)
-        current_app.logger.error("From callback playing now: %s", json.dumps(x, indent=4))
+        listens = json.loads(body)
+        self.send_listens(listens, LISTEN_TYPE_PLAYING_NOW)
         channel.basic_ack(delivery_tag=method.delivery_tag)
 
     def create_and_bind_exchange_and_queue(self, channel, exchange, queue):

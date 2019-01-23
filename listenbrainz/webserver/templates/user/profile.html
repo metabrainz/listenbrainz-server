@@ -120,9 +120,15 @@
           socket.emit("json", {"user": "iliekcomputers", follow: ['rob']});
           console.log("Emitted!");
       });
-      socket.on('new listen', function(data) {
+      socket.on('listen', function(data) {
           data = JSON.parse(data)
           console.log(data)
       });
+      socket.on('playing_now', function(data) {
+          console.log("GOT PLAYING NOW!!")
+          data = JSON.parse(data)
+          console.log(data)
+      });
+
   </script>
 {% endblock %}
