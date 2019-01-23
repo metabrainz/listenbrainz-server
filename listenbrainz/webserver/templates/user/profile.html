@@ -117,12 +117,24 @@
       var socket = io.connect("{{ web_sockets_server_url }}");
       socket.on('connect', function() {
           console.log("Connected!");
-          socket.emit("json", {"user": "iliekcomputers", follow: ['rob']});
+          socket.emit("json", {"user": "iliekcomputers", follow: ['iliekcomputers']});
           console.log("Emitted!");
       });
-      socket.on('new listen', function(data) {
+      socket.on('listen', function(data) {
           data = JSON.parse(data)
           console.log(data)
       });
+      socket.on('playing_now', function(data) {
+          console.log("GOT PLAYING NOW!!")
+          data = JSON.parse(data)
+          console.log(data)
+      });
+      socket.on('message', function(data) {
+          console.log("GOT MESSAGE!!")
+          data = JSON.parse(data)
+          console.log(data)
+      });
+
+
   </script>
 {% endblock %}
