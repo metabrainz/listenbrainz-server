@@ -6,28 +6,24 @@ import threading
 import socketio
 
 from flask import current_app
+from flask_socketio import emit
 from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_PLAYING_NOW, LISTEN_TYPE_IMPORT
 
 class FollowDispatcher(threading.Thread):
 
-    def __init__(self, app):
+    def __init__(self, app, socketio):
         threading.Thread.__init__(self)
         self.app = app
+        self.socketio = socketio
 
     def send_listens(self, listens, listen_type):
-        sio = socketio.Client()
-
-        @sio.on('connect')
-        def on_connect():
-            if listen_type == LISTEN_TYPE_PLAYING_NOW:
-                event_name = 'playing_now'
-            else:
-                event_name = 'listen'
+        if listen_type == LISTEN_TYPE_PLAYING_NOW:
+            event_name = 'playing_now'
+        else:
+            event_name = 'listen'
+        with self.app.test_request_context('/'):
             for listen in listens:
-                sio.emit(event_name, json.dumps(listen))
-
-        sio.connect('http://localhost:8081') #TODO: fix this domain
-        sio.disconnect()
+                self.socketio.send(json.dumps(listen), room=listen['user_name'])
 
 
     def callback_listen(self, channel, method, properties, body):
