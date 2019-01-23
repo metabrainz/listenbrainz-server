@@ -7,104 +7,8 @@
     	<b><a href="https://musicbrainz.org/user/{{ user.musicbrainz_id }}">See profile on MusicBrainz</a></b>
     </div>
 
-  <h3> Statistics </h3>
-
-  <div class="row">
-    <div class="col-md-8">
-    <table class="table table-border table-condensed table-striped">
-        <tbody>
-      {% if listen_count %}
-      <tr>
-        <td>Listen count</td>
-        <td>{{ listen_count }}</td>
-      </tr>
-      {% endif %}
-
-      {% if artist_count %}
-      <tr>
-        <td>Artist count</td>
-        <td>{{ artist_count }}</td>
-      </tr>
-      {% endif %}
-    </table>
+    <div id="react-listens">
     </div>
-  </div>
-
-    <h3>Recent listens</h3>
-
-    {% if not listens %}
-      <p class="lead" style="text-align: center;">No listens. :(</p>
-      {# TODO(roman): Maybe add some info about importing listens if user
-                      is viewing their own page. #}
-    {% else %}
-
-      <div class="row">
-        <div class="col-md-8">
-          <table class="table table-condensed table-striped">
-            <thead>
-            <tr>
-              <th>artist</th>
-              <th>track</th>
-              <th>time</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for listen in listens %}
-              {% if listen.playing_now %}
-                <tr id="playing_now">
-                  <td>{{ listen.track_metadata.artist_name }}</td>
-                  <td>{{ listen.track_metadata.track_name }}</td>
-                  <td><span class="glyphicon glyphicon-play" aria-hidden="true"></span> Playing now</td>
-                </tr>
-              {% else %}
-                <tr>
-                  <td>
-                      {% if listen.track_metadata.additional_info.artist_mbids %}
-                        <a href="http://musicbrainz.org/artist/{{ listen.track_metadata.additional_info.artist_mbids[0] }}">
-                      {% endif %}
-                      {{ listen.track_metadata.artist_name }}
-                      {% if listen.track_metadata.additional_info.artist_mbids %}
-                        </a>
-                      {% endif %}
-                  </td>
-                  <td>
-                      {% if listen.track_metadata.additional_info.spotify_id %}
-                        <span class="fab fa-spotify"></span>
-                      {% endif %}
-                      {% if listen.track_metadata.additional_info.recording_mbid %}
-                        <a href="http://musicbrainz.org/recording/{{ listen.track_metadata.additional_info.recording_mbid }}">
-                      {% endif %}
-                      {{ listen.track_metadata.track_name }}
-                      {% if listen.track_metadata.additional_info.recording_mbid %}
-                        </a>
-                      {% endif %}
-                  </td>
-                  <td><abbr class="timeago" title="{{ listen.listened_at_iso }}">{{ listen.listened_at_iso }}</abbr></td>
-                </tr>
-              {% endif %}
-            {% endfor %}
-            </tbody>
-          </table>
-
-          <ul class="pager">
-            {% if previous_listen_ts %}
-              <li class="previous"><a href="{{ url_for("user.profile", user_name=user.musicbrainz_id, min_ts=previous_listen_ts) }}">&larr; Previous</a></li>
-            {% endif %}
-            {% if next_listen_ts %}
-              <li class="next"><a href="{{ url_for("user.profile", user_name=user.musicbrainz_id, max_ts=next_listen_ts) }}">Next &rarr;</a></li>
-            {% endif %}
-          </ul>
-        </div>
-
-        {% if latest_spotify_uri %}
-          <div class="col-md-4 text-right">
-            <iframe id="player" frameborder="0" allowtransparency="true" allow="encrypted-media"
-                    src="https://embed.spotify.com/?uri={{ latest_spotify_uri }}&theme=white"></iframe>
-          </div>
-        {% endif %}
-      </div>
-
-    {% endif %}
 
 {% endblock %}
 
@@ -117,24 +21,14 @@
       var socket = io.connect("{{ web_sockets_server_url }}");
       socket.on('connect', function() {
           console.log("Connected!");
-          socket.emit("json", {"user": "iliekcomputers", follow: ['iliekcomputers']});
+          socket.emit("json", {data: 'I\'m connected!'});
           console.log("Emitted!");
       });
-      socket.on('listen', function(data) {
-          data = JSON.parse(data)
-          console.log(data)
-      });
-      socket.on('playing_now', function(data) {
-          console.log("GOT PLAYING NOW!!")
-          data = JSON.parse(data)
-          console.log(data)
-      });
-      socket.on('message', function(data) {
-          console.log("GOT MESSAGE!!")
-          data = JSON.parse(data)
-          console.log(data)
-      });
-
-
   </script>
+  <script id="react-props" type="application/json">{{ props|safe }}</script>
+  <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <script src="{{ url_for('static', filename='js/profile.js') }}" type="text/babel"></script>
+  <script defer src="https://sdk.scdn.co/spotify-player.js" integrity="sha384-9+35Jl48gpiB6tCwoWpqdtwv584KTRdaUpt87P/4A19odvUlJVvmgQ2mAI2iIOkC" crossorigin="anonymous"></script>
 {% endblock %}
