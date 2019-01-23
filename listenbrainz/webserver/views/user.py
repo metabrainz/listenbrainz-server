@@ -142,6 +142,7 @@ def profile(user_name):
         "have_listen_count" : have_listen_count,
         "listen_count" : format(int(listen_count), ",d"),
         "artist_count" : format(artist_count, ",d") if artist_count else None,
+        "profile_url" : url_for('user.profile', user_name=user_name),
         "web_sockets_server_url" : current_app.config['WEBSOCKETS_SERVER_URL'],
     }
 
