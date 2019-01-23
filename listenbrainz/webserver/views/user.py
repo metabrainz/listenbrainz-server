@@ -1,5 +1,6 @@
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
+import listenbrainz.db.spotify as db_spotify
 import urllib
 import ujson
 
@@ -129,6 +130,8 @@ def profile(user_name):
     except (KeyError, TypeError):
         artist_count = None
 
+    spotify_access_token = db_spotify.get_token_for_user(user.id)
+
     props = {
         "user" : {
             "id" : user.id,
@@ -144,6 +147,7 @@ def profile(user_name):
         "artist_count" : format(artist_count, ",d") if artist_count else None,
         "profile_url" : url_for('user.profile', user_name=user_name),
         "web_sockets_server_url" : current_app.config['WEBSOCKETS_SERVER_URL'],
+        "spotify_access_token" : spotify_access_token,
     }
 
     return render_template("user/profile.html", props=ujson.dumps(props), user=user)
