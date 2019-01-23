@@ -13,14 +13,16 @@
 
 # Summary
 
-Start feature on a web socket based follow-list server.
+<!--
+    Update the checkbox with an [x] for the type of contribution you are making.
+-->
 
 * This is a…
-    * ( ) Bug fix
-    * (x) Feature addition
-    * ( ) Refactoring
-    * ( ) Minor / simple change (like a typo)
-    * ( ) Other
+    * [x] Bug fix
+    * [ ] Feature addition
+    * [ ] Refactoring
+    * [ ] Minor / simple change (like a typo)
+    * [ ] Other
 * **Describe this change in 1-2 sentences**:
 
 # Problem
