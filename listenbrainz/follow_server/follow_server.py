@@ -62,7 +62,7 @@ def emit_new_playing_now(data):
 
 
 def run_follow_server(host='0.0.0.0', port=8081, debug=True):
-    fd = FollowDispatcher(app)
+    fd = FollowDispatcher(app, socketio)
     fd.start()
     socketio.run(app, debug=debug,
                     host=host, port=port)
