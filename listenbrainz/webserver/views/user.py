@@ -145,7 +145,7 @@ def profile(user_name):
         "web_sockets_server_url" : current_app.config['WEBSOCKETS_SERVER_URL'],
     }
 
-    return render_template("user/profile.html", props=props, user=user)
+    return render_template("user/profile.html", props=ujson.dumps(props), user=user)
 
 
 @user_bp.route("/<user_name>/artists")
