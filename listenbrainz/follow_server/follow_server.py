@@ -1,5 +1,6 @@
 import eventlet
 eventlet.monkey_patch()
+
 from flask import Flask, current_app
 from flask_cors import CORS
 from flask_socketio import SocketIO, join_room, leave_room, emit
@@ -51,17 +52,6 @@ def handle_json(data):
 
     for user in follow_list:
         join_room(user)
-
-@socketio.on('listen')
-def emit_new_listen(data):
-    current_app.logger.info('got new listen: %s', data)
-    emit('listen', data, room='rob') #TODO: fix the room name
-
-@socketio.on('playing_now')
-def emit_new_playing_now(data):
-    current_app.logger.info('got new playing now: %s', data)
-    emit('playing_now', data, room='rob') #TODO: fix the room name
-
 
 def run_follow_server(host='0.0.0.0', port=8081, debug=True):
     fd = FollowDispatcher(app, socketio)

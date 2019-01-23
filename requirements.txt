@@ -35,4 +35,3 @@ spotipy == 2.4.4
 pyyaml == 3.13
 eventlet == 0.24.1
 Flask-CORS == 3.0.7
-python-socketio == 3.1.1

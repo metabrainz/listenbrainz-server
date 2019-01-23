@@ -3,10 +3,8 @@ import listenbrainz.webserver
 import pika
 import time
 import threading
-import socketio
 
 from flask import current_app
-from flask_socketio import emit
 from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_PLAYING_NOW, LISTEN_TYPE_IMPORT
 
 class FollowDispatcher(threading.Thread):
