@@ -1,5 +1,33 @@
 'use strict';
 
+function getSpotifyEmbedUriFromListen(listen){
+	
+	if(!listen || !listen.track_metadata || !listen.track_metadata.additional_info ||
+		typeof listen.track_metadata.additional_info.spotify_id !== "string"){
+		return null;
+	}
+	const spotifyId = listen.track_metadata.additional_info.spotify_id;
+	const spotify_track = spotifyId.split('https://open.spotify.com/')[1];
+	if(typeof spotify_track !== "string"){
+		return null;
+	}
+	return  spotifyId.replace("https://open.spotify.com/","https://open.spotify.com/embed/");
+}
+
+function getSpotifyUriFromListen(listen){
+	
+	if(!listen || !listen.track_metadata || !listen.track_metadata.additional_info ||
+		typeof listen.track_metadata.additional_info.spotify_id !== "string"){
+		return null;
+	}
+	const spotifyId = listen.track_metadata.additional_info.spotify_id;
+	const spotify_track = spotifyId.split('https://open.spotify.com/')[1];
+	if(typeof spotify_track !== "string"){
+		return null;
+	}
+	return "spotify:" + spotify_track.replace("/",":");
+}
+
 class SpotifyPlayer extends React.Component {
 
 	_spotifyPlayer;
@@ -24,23 +52,11 @@ class SpotifyPlayer extends React.Component {
 		this.isCurrentListen = this.isCurrentListen.bind(this);
 		window.onSpotifyWebPlaybackSDKReady = this.connectSpotifyPlayer.bind(this);
 	}
- 
-	
-	play_spotify_id(spotify_id){
-		if(typeof spotify_id !== "string"){
-			return;
-		}
-		const spotify_track = spotify_id.split('https://open.spotify.com/')[1];
-		if(typeof spotify_track !== "string"){
-			return;
-		}
-		const spotify_uri = "spotify:" + spotify_track.replace("/",":");
-		this.play_spotify_uri(spotify_uri);
-	}
 	
 	play_spotify_uri(spotify_uri){
 		if(!this._spotifyPlayer) {
-			console.error("Spotify player not initialized");
+			const error ="Spotify player not initialized. Please refresh the page";
+			this.setState({errorMessage:error});
 			return;
 		}
 		fetch(`https://api.spotify.com/v1/me/player/play?device_id=${this._spotifyPlayer._options.id}`, {
@@ -55,7 +71,7 @@ class SpotifyPlayer extends React.Component {
 
 play_listen(listen){
 	if(listen.track_metadata.additional_info.spotify_id){
-		this.play_spotify_id(listen.track_metadata.additional_info.spotify_id);
+		this.play_spotify_uri(getSpotifyUriFromListen(listen));
 		this.props.onCurrentListenChange(listen);
 	}
 };
@@ -94,7 +110,7 @@ playNextTrack(invert){
 }
 handleError(error){
 	console.error(error);
-	error = error.message ? error.message : error.toString ? error.toString() : JSON.parse(error);
+	error = error.message ? error.message : error;
 	this.setState({errorMessage: error});
 
 }
@@ -113,6 +129,8 @@ toggleDirection(){
 connectSpotifyPlayer() {
 	if(!this._accessToken){
 		console.error("No spotify acces_token");
+		const noTokenErrorMessage = <span>No Spotify access token. Please try to <a href="/profile/connect-spotify">link your account</a> and refresh this page</span>;
+		this.handleError(noTokenErrorMessage);
 		return;
 	}
 	this._spotifyPlayer = new window.Spotify.Player({
@@ -124,8 +142,9 @@ connectSpotifyPlayer() {
 	});
 	
 	// Error handling
+	const authErrorMessage = <span>Spotify authentication error. Please try to <a href="/profile/connect-spotify">relink your account</a> and refresh this page</span>
 	this._spotifyPlayer.on('initialization_error', this.handleError);
-	this._spotifyPlayer.on('authentication_error', this.handleError);
+	this._spotifyPlayer.on('authentication_error', error => this.handleError(authErrorMessage));
 	this._spotifyPlayer.on('account_error', this.handleError);
 	this._spotifyPlayer.on('playback_error', this.handleError);
 	
@@ -145,6 +164,7 @@ connectSpotifyPlayer() {
 			}
 		});
 	}
+
 	handlePlayerStateChanged({
 		paused,
 		position,
@@ -175,6 +195,7 @@ connectSpotifyPlayer() {
 	
 	render(){
 		const playerButtonStyle = {width: '24%'};
+
 		return (
 			<div className="col-md-4 sticky-top">
 			
@@ -221,19 +242,19 @@ connectSpotifyPlayer() {
 				</div>
 				
 				{this.state.errorMessage && 
-					(<div className="alert alert-danger" role="alert">
+					<div className="alert alert-danger" role="alert">
 						{this.state.errorMessage}
-					</div>)
+					</div>
 				}
-				<h3>Currently playing:</h3>
-				<div>
 				{this.state.currentSpotifyTrack && 
-					`${this.state.currentSpotifyTrack.name} – ${this.state.currentSpotifyTrack.artists.map(artist => artist.name).join(', ')}`
+					<div>
+						<h3>Currently playing:</h3>
+						{this.state.currentSpotifyTrack.name} – {this.state.currentSpotifyTrack.artists.map(artist => artist.name).join(', ')}
+					</div>
 				}
 				{this.props.currentListen && this.props.currentListen.user_name &&
-					`from ${this.props.currentListen.user_name}'s listens`
+					<div>from {this.props.currentListen.user_name}'s listens</div>
 				}
-				</div>
 			</div>
 			);
 		}
@@ -242,10 +263,13 @@ connectSpotifyPlayer() {
 	
 	
 	class RecentListens extends React.Component {
+		
+		spotifyListens = [];
 		constructor(props) {
 			super(props);
 			this.state = {
-				listens: props.listens || []
+				listens: props.listens || [],
+				currentListen : null
 			};
 			this.isCurrentListen = this.isCurrentListen.bind(this);
 			this.handleCurrentListenChange = this.handleCurrentListenChange.bind(this);
@@ -253,8 +277,16 @@ connectSpotifyPlayer() {
 		}
 		
 		playListen(listen){
-			this.spotifyPlayer.current && this.spotifyPlayer.current.play_listen(listen);
+			if(this.spotifyPlayer.current){
+				this.spotifyPlayer.current.play_listen(listen);
+				return;
+			} else {
+				// For fallback embedded player
+				this.setState({currentListen:listen});
+				return;
+			}
 		}
+		
 		handleCurrentListenChange(listen){
 			this.setState({currentListen:listen});
 		}
@@ -284,7 +316,17 @@ connectSpotifyPlayer() {
 			const spotifyListens = this.state.listens.filter(listen => listen.track_metadata
 					&& listen.track_metadata.additional_info
 					&& listen.track_metadata.additional_info.listening_from === "spotify"
-			);		
+			);
+
+			function getSpotifyEmbedSrc(){
+				if(this.state.currentListen) {
+					return getSpotifyEmbedUriFromListen(this.state.currentListen);
+				} else if(spotifyListens.length){
+					console.log(spotifyListens[0]);
+					return getSpotifyEmbedUriFromListen(spotifyListens[0]);
+				}
+				return null
+			}
 
 			return (
 				<div>
@@ -374,30 +416,40 @@ connectSpotifyPlayer() {
 						
 					}
 					</div>
-					<SpotifyPlayer
-						ref={this.spotifyPlayer}
-						listens={spotifyListens}
-						direction="down"
-						spotify_access_token= {this.props.spotify_access_token}
-						onCurrentListenChange={this.handleCurrentListenChange}
-						currentListen={this.state.currentListen}
-					/>
+					{ this.props.spotify_access_token ?
+						<SpotifyPlayer
+							ref={this.spotifyPlayer}
+							listens={spotifyListens}
+							direction="down"
+							spotify_access_token= {this.props.spotify_access_token}
+							onCurrentListenChange={this.handleCurrentListenChange}
+							currentListen={this.state.currentListen}
+						/> :
+						// Fallback embedded player
+						<div className="col-md-4 text-right">
+							<iframe src={getSpotifyEmbedSrc()} 
+								width="300" height="380" frameBorder="0" allowtransparency="true" allow="encrypted-media">
+							</iframe>
+						</div>
+					}
 					</div>
 					</div>
 					);
 				}
 			}
 			
-			let domContainer = document.querySelector('#react-listens');
-			let propsElement = document.getElementById('react-props');
-			let reactProps;
-			try{
-				reactProps = JSON.parse(propsElement.innerHTML);
-				console.log("props",reactProps);
-			}
-			catch(err){
-				console.error("Error parsing props:", err);
-			}
-			ReactDOM.render(<RecentListens {...reactProps}/>, domContainer);
+let domContainer = document.querySelector('#react-listens');
+let propsElement = document.getElementById('react-props');
+let reactProps;
+try{
+reactProps = JSON.parse(propsElement.innerHTML);
+console.log("props",reactProps);
+}
+catch(err){
+console.error("Error parsing props:", err);
+}
+ReactDOM.render(<RecentListens {...reactProps}/>, domContainer);
 			
-		
+window.onSpotifyWebPlaybackSDKReady = window.onSpotifyWebPlaybackSDKReady || console.log; 
+
+
