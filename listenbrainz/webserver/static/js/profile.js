@@ -362,10 +362,10 @@ connectSpotifyPlayer() {
 						</table>
 						
 						<ul className="pager">
-						<li className="previous" disabled={!this.props.previous_listen_ts}>
+						<li className="previous" className={!this.props.previous_listen_ts ? 'hidden' :''}>
 						<a href={`${this.props.profile_url}?min_ts=${this.props.previous_listen_ts}`}>&larr; Previous</a>
 						</li>
-						<li className="next" disabled={!this.props.next_listen_ts}>
+						<li className="next" disabled={!this.props.next_listen_ts ? 'hidden' : ''}>
 						<a href={`${this.props.profile_url}?max_ts=${this.props.next_listen_ts}`}>Next &rarr;</a>
 						</li>
 						</ul>
