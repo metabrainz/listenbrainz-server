@@ -21,8 +21,16 @@
       var socket = io.connect("{{ web_sockets_server_url }}");
       socket.on('connect', function() {
           console.log("Connected!");
-          socket.emit("json", {data: 'I\'m connected!'});
+          socket.emit("json", {user: '{{ user.musicbrainz_id }}', 'follow': ['{{ user.musicbrainz_id }}']});
           console.log("Emitted!");
+      });
+      socket.on('listen', function(data) {
+          console.log('New listen!');
+          console.log(data);
+      });
+      socket.on('playing_now', function(data) {
+          console.log('New now playing notification!')
+          console.log(data);
       });
   </script>
   <script id="react-props" type="application/json">{{ props|safe }}</script>
