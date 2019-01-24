@@ -10,7 +10,6 @@ class SpotifyPlayer extends React.Component {
 		this.state = { 
 			listens: props.listens,
 			currentSpotifyTrack: null,
-			currentListen: props.listens[0],
 			playerPaused:true,
 			errorMessage:null,
 			direction: props.direction || "down"
@@ -57,13 +56,13 @@ class SpotifyPlayer extends React.Component {
 play_listen(listen){
 	if(listen.track_metadata.additional_info.spotify_id){
 		this.play_spotify_id(listen.track_metadata.additional_info.spotify_id);
-		this.setState({currentListen: listen});
+		this.props.onCurrentListenChange(listen);
 	}
 };
 isCurrentListen(element) {
-	return this.state.currentListen
+	return this.props.currentListen
 		&& element.listened_at
-		&& element.listened_at === this.state.currentListen.listened_at;
+		&& element.listened_at === this.props.currentListen.listened_at;
 }
 playPreviousTrack(){
 	this.playNextTrack(true);
@@ -72,7 +71,7 @@ playNextTrack(invert){
 	if(this.state.listens.length === 0){
 		const error = "No Spotify listens to play. Maybe refresh the page?";
 		console.error(error);
-		this.setState({currentListen: null, errorMessage:error});
+		this.setState({errorMessage:error});
 
 		return;
 	}
@@ -87,11 +86,11 @@ playNextTrack(invert){
 	if(!nextListen){
 		const error = "No more listens, maybe wait some?";
 		console.error(error);
-		this.setState({currentListen: null, errorMessage:error});
+		this.setState({errorMessage:error});
 		return;
 	}
 	this.play_listen(nextListen);
-	this.setState({currentListen: nextListen, errorMessage:null});
+	this.setState({errorMessage:null});
 }
 handleError(error){
 	console.error(error);
@@ -231,8 +230,8 @@ connectSpotifyPlayer() {
 				{this.state.currentSpotifyTrack && 
 					`${this.state.currentSpotifyTrack.name} – ${this.state.currentSpotifyTrack.artists.map(artist => artist.name).join(', ')}`
 				}
-				{this.state.currentListen && this.state.currentListen.user_name &&
-					`from ${this.state.currentListen.user_name}'s listens`
+				{this.props.currentListen && this.props.currentListen.user_name &&
+					`from ${this.props.currentListen.user_name}'s listens`
 				}
 				</div>
 			</div>
@@ -245,13 +244,22 @@ connectSpotifyPlayer() {
 	class RecentListens extends React.Component {
 		constructor(props) {
 			super(props);
-			this.state = { listens: props.listens };
-			// this.playListen = this.playListen.bind(this);
+			this.state = {
+				listens: props.listens || []
+			};
+			this.isCurrentListen = this.isCurrentListen.bind(this);
+			this.handleCurrentListenChange = this.handleCurrentListenChange.bind(this);
 			this.spotifyPlayer = React.createRef();
 		}
 		
 		playListen(listen){
 			this.spotifyPlayer.current && this.spotifyPlayer.current.play_listen(listen);
+		}
+		handleCurrentListenChange(listen){
+			this.setState({currentListen:listen});
+		}
+		isCurrentListen(listen){
+			return this.state.currentListen && this.state.currentListen.listened_at === listen.listened_at;
 		}
 		
 		render() {
@@ -273,7 +281,11 @@ connectSpotifyPlayer() {
 				return listen.track_metadata.track_name;
 			}
 			
-			
+			const spotifyListens = this.state.listens.filter(listen => listen.track_metadata
+					&& listen.track_metadata.additional_info
+					&& listen.track_metadata.additional_info.listening_from === "spotify"
+			);		
+
 			return (
 				<div>
 				
@@ -327,7 +339,7 @@ connectSpotifyPlayer() {
 								)
 							} else {
 								return (
-									<tr key={index}>
+									<tr key={index} className={this.isCurrentListen(listen) ? 'info' : ''}>
 									<td>
 									{getArtistLink(listen)}
 									</td>
@@ -364,10 +376,12 @@ connectSpotifyPlayer() {
 					</div>
 					<SpotifyPlayer
 						ref={this.spotifyPlayer}
-						listens={this.state.listens}
+						listens={spotifyListens}
 						direction="down"
 						spotify_access_token= {this.props.spotify_access_token}
-						{...this.props}/>
+						onCurrentListenChange={this.handleCurrentListenChange}
+						currentListen={this.state.currentListen}
+					/>
 					</div>
 					</div>
 					);
@@ -386,6 +400,4 @@ connectSpotifyPlayer() {
 			}
 			ReactDOM.render(<RecentListens {...reactProps}/>, domContainer);
 			
-			
-			
-			
+		
