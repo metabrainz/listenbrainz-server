@@ -50,19 +50,34 @@ def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
     return augmented_listens
 
 
+def handle_playing_now(listen):
+    """ Check that the listen doesn't already exist in redis and put it in
+    there if it isn't.
+
+    Returns:
+        listen if new playing now listen, None otherwise
+    """
+    old_playing_now = redis_connection._redis.get_playing_now(listen['user_id'])
+    if old_playing_now and listen['recording_msid'] == old_playing_now.recording_msid:
+        return None
+    if 'duration' in listen['track_metadata']['additional_info']:
+        listen_timeout = listen['track_metadata']['additional_info']['duration']
+    elif 'duration_ms' in listen['track_metadata']['additional_info']:
+        listen_timeout = listen['track_metadata']['additional_info']['duration_ms'] // 1000
+    else:
+        listen_timeout = current_app.config['PLAYING_NOW_MAX_DURATION']
+    redis_connection._redis.put_playing_now(listen['user_id'], listen, listen_timeout)
+    return listen
+
+
 def _send_listens_to_queue(listen_type, listens):
     submit = []
     for listen in listens:
         if listen_type == LISTEN_TYPE_PLAYING_NOW:
             try:
-                if 'duration' in listen['track_metadata']['additional_info']:
-                    listen_timeout = listen['track_metadata']['additional_info']['duration']
-                elif 'duration_ms' in listen['track_metadata']['additional_info']:
-                    listen_timeout = listen['track_metadata']['additional_info']['duration_ms'] // 1000
-                else:
-                    listen_timeout = current_app.config['PLAYING_NOW_MAX_DURATION']
-                redis_connection._redis.put_playing_now(listen['user_id'], listen, listen_timeout)
-                submit.append(listen)
+                listen = handle_playing_now(listen)
+                if listen:
+                    submit.append(listen)
             except Exception as e:
                 current_app.logger.error("Redis rpush playing_now write error: " + str(e))
                 raise ServiceUnavailable("Cannot record playing_now at this time.")

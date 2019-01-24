@@ -145,11 +145,14 @@ def profile(user_name):
         "listen_count" : format(int(listen_count), ",d"),
         "artist_count" : format(artist_count, ",d") if artist_count else None,
         "profile_url" : url_for('user.profile', user_name=user_name),
-        "web_sockets_server_url" : current_app.config['WEBSOCKETS_SERVER_URL'],
         "spotify_access_token" : spotify_access_token,
     }
 
-    return render_template("user/profile.html", props=ujson.dumps(props), user=user, active_section='listens')
+    return render_template("user/profile.html", 
+        props=ujson.dumps(props), 
+        web_sockets_server_url=current_app.config['WEBSOCKETS_SERVER_URL'],
+        user=user, 
+        active_section='listens')
 
 
 @user_bp.route("/<user_name>/artists")
