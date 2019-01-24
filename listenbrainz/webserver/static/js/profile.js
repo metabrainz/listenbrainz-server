@@ -274,6 +274,7 @@ connectSpotifyPlayer() {
 			this.isCurrentListen = this.isCurrentListen.bind(this);
 			this.handleCurrentListenChange = this.handleCurrentListenChange.bind(this);
 			this.spotifyPlayer = React.createRef();
+			window.handleIncomingListen = this.receiveNewListen.bind(this);
 		}
 		
 		playListen(listen){
@@ -285,6 +286,18 @@ connectSpotifyPlayer() {
 				this.setState({currentListen:listen});
 				return;
 			}
+		}
+
+		receiveNewListen(newListen){
+			try {
+				newListen = JSON.parse(newListen);
+			} catch (error) {
+				console.error(error);
+			}
+			console.log(typeof newListen, newListen);
+			this.setState(prevState =>{
+				return { listens: [newListen, ...prevState.listens]}
+			})
 		}
 		
 		handleCurrentListenChange(listen){
@@ -388,7 +401,7 @@ connectSpotifyPlayer() {
 									<td>
 										{getTrackLink(listen)}
 									</td>
-									<td><abbr className="timeago" title={listen.listened_at_iso}>{ $.timeago(listen.listened_at_iso) }</abbr></td>
+									<td><abbr className="timeago" title={listen.listened_at_iso}>{ listen.listened_at_iso ? $.timeago(listen.listened_at_iso) : $.timeago(listen.listened_at*1000) }</abbr></td>
 									<td>{listen.track_metadata.additional_info.spotify_id &&
 										<button className="btn btn-default btn-sm" onClick={this.playListen.bind(this,listen)}>
 										<span className="fab fa-spotify"></span> Play
