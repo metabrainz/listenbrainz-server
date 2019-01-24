@@ -25,9 +25,11 @@
           console.log("Emitted!");
       });
       socket.on('listen', function(data) {
+          console.log('New listen!');
           console.log(data);
       });
       socket.on('playing_now', function(data) {
+          console.log('New now playing notification!')
           console.log(data);
       });
   </script>
