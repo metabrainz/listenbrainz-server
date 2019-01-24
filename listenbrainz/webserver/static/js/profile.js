@@ -318,7 +318,7 @@ connectSpotifyPlayer() {
 					&& listen.track_metadata.additional_info.listening_from === "spotify"
 			);
 
-			function getSpotifyEmbedSrc(){
+			const getSpotifyEmbedSrc = () => {
 				if(this.state.currentListen) {
 					return getSpotifyEmbedUriFromListen(this.state.currentListen);
 				} else if(spotifyListens.length){
