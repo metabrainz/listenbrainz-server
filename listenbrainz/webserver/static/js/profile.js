@@ -8,11 +8,20 @@ class SpotifyPlayer extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = { 
+			listens: props.listens,
 			currentSpotifyTrack: null,
-			currentListen: null,
+			playerPaused:true,
+			errorMessage:null,
+			direction: props.direction || "down"
 		};
 		this._accessToken = props.spotify_access_token;
 		this.playNextTrack = this.playNextTrack.bind(this);
+		this.playPreviousTrack = this.playPreviousTrack.bind(this);
+		this.togglePlay = this.togglePlay.bind(this);
+		this.toggleDirection = this.toggleDirection.bind(this);
+		this.handlePlayerStateChanged = this.handlePlayerStateChanged.bind(this);
+		this.handleError = this.handleError.bind(this);
+		this.isCurrentListen = this.isCurrentListen.bind(this);
 		window.onSpotifyWebPlaybackSDKReady = this.connectSpotifyPlayer.bind(this);
 	}
  
@@ -47,33 +56,58 @@ class SpotifyPlayer extends React.Component {
 play_listen(listen){
 	if(listen.track_metadata.additional_info.spotify_id){
 		this.play_spotify_id(listen.track_metadata.additional_info.spotify_id);
-		this.setState({currentListen: listen});
+		this.props.onCurrentListenChange(listen);
 	}
 };
 isCurrentListen(element) {
-  return element.listened_at === this.state.currentListen.listened_at;
+	return this.props.currentListen
+		&& element.listened_at
+		&& element.listened_at === this.props.currentListen.listened_at;
 }
-playNextTrack(){
-	if(this.props.nextListens.length === 0){
-		console.log("No listens, maybe wait some?");
-		this.setState({currentListen: null});
+playPreviousTrack(){
+	this.playNextTrack(true);
+}
+playNextTrack(invert){
+	if(this.state.listens.length === 0){
+		const error = "No Spotify listens to play. Maybe refresh the page?";
+		console.error(error);
+		this.setState({errorMessage:error});
+
 		return;
 	}
 	
-	const currentListenIndex = this.props.nextListens.findIndex(this.isCurrentListen.bind(this));
+	const currentListenIndex = this.state.listens.findIndex(this.isCurrentListen);
 	let nextListen;
-	if(this.props.direction === "up"){
-		nextListen = this.props.nextListens[currentListenIndex-1];
-	} else{
-		nextListen = this.props.nextListens[currentListenIndex+1];
+	if((this.state.direction === "up" && invert !== true) || invert === true){
+		nextListen = this.state.listens[currentListenIndex-1];
+	} else {
+		nextListen = this.state.listens[currentListenIndex+1];
 	}
 	if(!nextListen){
-		console.log("No more listens, maybe wait some?");
-		this.setState({currentListen: null});
+		const error = "No more listens, maybe wait some?";
+		console.error(error);
+		this.setState({errorMessage:error});
 		return;
 	}
 	this.play_listen(nextListen);
-	this.setState({currentListen: nextListen});
+	this.setState({errorMessage:null});
+}
+handleError(error){
+	console.error(error);
+	error = error.message ? error.message : error.toString ? error.toString() : JSON.parse(error);
+	this.setState({errorMessage: error});
+
+}
+
+async togglePlay(){
+	await this._spotifyPlayer.togglePlay();
+}
+
+toggleDirection(){
+	this.setState(prevState =>{
+		const direction = prevState.direction === "down"? "up" : "down";
+		return {direction: direction }
+	});
 }
 
 connectSpotifyPlayer() {
@@ -90,17 +124,17 @@ connectSpotifyPlayer() {
 	});
 	
 	// Error handling
-	this._spotifyPlayer.on('initialization_error', console.error);
-	this._spotifyPlayer.on('authentication_error', console.error);
-	this._spotifyPlayer.on('account_error', console.error);
-	this._spotifyPlayer.on('playback_error', console.error);
+	this._spotifyPlayer.on('initialization_error', this.handleError);
+	this._spotifyPlayer.on('authentication_error', this.handleError);
+	this._spotifyPlayer.on('account_error', this.handleError);
+	this._spotifyPlayer.on('playback_error', this.handleError);
 	
 	
 	this._spotifyPlayer.addListener('ready', ({ device_id }) => {
 		console.log('Spotify player connected with Device ID', device_id);
 	});
 	
-	this._spotifyPlayer.addListener('player_state_changed', this.handlePlayerStateChanged.bind(this));
+	this._spotifyPlayer.addListener('player_state_changed', this.handlePlayerStateChanged);
 	
 	this._spotifyPlayer.connect().then(success => {
 			if (success) {
@@ -121,36 +155,85 @@ connectSpotifyPlayer() {
 		console.log('Position in Song', position);
 		console.log('Duration of Song', duration);
 		console.log('Player paused?', paused);
-		// console.log("currentListen is same as nextListen?", currentListen.recording_msid === nextListens[0].recording_msid);
-		
+		// console.log("currentListen is same as nextListen?", currentListen.recording_msid === listens[0].recording_msid);
 		// How do we accurately detect the end of a song?
 		if(position === 0 && paused === true
-			// currentListen && currentListen.recording_msid === nextListens[0] && nextListens[0].recording_msid )
+			// currentListen && currentListen.recording_msid === listens[0] && listens[0].recording_msid )
 			) {
 				// Track finished, play next track
 				console.log("Detected Spotify end of track, playing next track")
 				this.playNextTrack();
 				return;
 			}
-			this.setState({currentSpotifyTrack: current_track});
+			this.setState({
+				currentSpotifyTrack: current_track,
+				playerPaused: paused
+			});
 	}
 		
 		
 	
 	render(){
+		const playerButtonStyle = {width: '24%'};
 		return (
-			<div className="col-md-4">
+			<div className="col-md-4 sticky-top">
 			
-			<button className="btn btn-sm btn-default" onClick={this.playNextTrack}><span className="fa fa-forward"></span> Next</button>
-			<h3>Currently playing:</h3>
-			<div>
-			{this.state.currentSpotifyTrack && 
-				`${this.state.currentSpotifyTrack.name} – ${this.state.currentSpotifyTrack.artists.map(artist => artist.name).join(', ')}`
-			}
-			{this.state.currentListen && this.state.currentListen.user_name &&
-				`from ${this.state.currentListen.user_name}'s listens`
-			}
-			</div>
+				<div className="btn-group" role="group" aria-label="Playback control" style={{witdh: '100%'}}>
+
+					<button className="btn btn-default"
+						onClick={this.playPreviousTrack}
+						style={playerButtonStyle}>
+						<span className="fa fa-backward"></span> Prev
+					</button>
+
+					<button className="btn btn-default"
+						onClick={this.togglePlay}
+						style={playerButtonStyle}>
+						<span className={`${this.state.playerPaused ? 'hidden' : ''}`}>
+							<span className="fa fa-pause"></span>
+						</span>
+						<span className={`${!this.state.playerPaused ? 'hidden' : ''}`}>
+							<span className="fa fa-play"></span>
+						</span>
+						&nbsp;&nbsp;
+						{!this.state.playerPaused ? 'Pause' : 'Play'}
+					</button>
+
+					<button className="btn btn-default"
+						onClick={this.toggleDirection}
+						style={playerButtonStyle}>
+							{this.state.direction}
+							&nbsp;&nbsp;
+							<span className={`${this.state.direction === 'up' ? 'hidden' : ''}`}>
+								<span className="fa fa-angle-double-down"></span>
+							</span>
+							<span className={`${this.state.direction === 'down' ? 'hidden' : ''}`}>
+								<span className="fa fa-angle-double-up"></span>
+							</span>
+					</button>
+
+					<button className="btn btn-default"
+						onClick={this.playNextTrack}
+						style={playerButtonStyle}>
+						Next <span className="fa fa-forward"></span>
+					</button>
+
+				</div>
+				
+				{this.state.errorMessage && 
+					(<div className="alert alert-danger" role="alert">
+						{this.state.errorMessage}
+					</div>)
+				}
+				<h3>Currently playing:</h3>
+				<div>
+				{this.state.currentSpotifyTrack && 
+					`${this.state.currentSpotifyTrack.name} – ${this.state.currentSpotifyTrack.artists.map(artist => artist.name).join(', ')}`
+				}
+				{this.props.currentListen && this.props.currentListen.user_name &&
+					`from ${this.props.currentListen.user_name}'s listens`
+				}
+				</div>
 			</div>
 			);
 		}
@@ -161,13 +244,22 @@ connectSpotifyPlayer() {
 	class RecentListens extends React.Component {
 		constructor(props) {
 			super(props);
-			this.state = { listens: props.listens };
-			// this.playListen = this.playListen.bind(this);
+			this.state = {
+				listens: props.listens || []
+			};
+			this.isCurrentListen = this.isCurrentListen.bind(this);
+			this.handleCurrentListenChange = this.handleCurrentListenChange.bind(this);
 			this.spotifyPlayer = React.createRef();
 		}
 		
 		playListen(listen){
 			this.spotifyPlayer.current && this.spotifyPlayer.current.play_listen(listen);
+		}
+		handleCurrentListenChange(listen){
+			this.setState({currentListen:listen});
+		}
+		isCurrentListen(listen){
+			return this.state.currentListen && this.state.currentListen.listened_at === listen.listened_at;
 		}
 		
 		render() {
@@ -189,7 +281,11 @@ connectSpotifyPlayer() {
 				return listen.track_metadata.track_name;
 			}
 			
-			
+			const spotifyListens = this.state.listens.filter(listen => listen.track_metadata
+					&& listen.track_metadata.additional_info
+					&& listen.track_metadata.additional_info.listening_from === "spotify"
+			);		
+
 			return (
 				<div>
 				
@@ -225,9 +321,10 @@ connectSpotifyPlayer() {
 					<table className="table table-condensed table-striped">
 					<thead>
 					<tr>
-					<th>artist</th>
-					<th>track</th>
-					<th>time</th>
+					<th>Artist</th>
+					<th>Track</th>
+					<th>Time</th>
+					<th>Play</th>
 					</tr>
 					</thead>
 					<tbody>
@@ -237,23 +334,24 @@ connectSpotifyPlayer() {
 								<tr id="playing_now" key={index}>
 								<td>{ listen.track_metadata.artist_name }</td>
 								<td>{ listen.track_metadata.track_name }</td>
-								<td><span className="glyphicon glyphicon-play" aria-hidden="true"></span> Playing now</td>
+								<td colspan="2"><span className="fab fa-spotify" aria-hidden="true"></span> Playing now</td>
 								</tr>
 								)
 							} else {
 								return (
-									<tr key={index}>
+									<tr key={index} className={this.isCurrentListen(listen) ? 'info' : ''}>
 									<td>
 									{getArtistLink(listen)}
 									</td>
 									<td>
-									{listen.track_metadata.additional_info.spotify_id &&
+										{getTrackLink(listen)}
+									</td>
+									<td><abbr className="timeago" title={listen.listened_at_iso}>{ $.timeago(listen.listened_at_iso) }</abbr></td>
+									<td>{listen.track_metadata.additional_info.spotify_id &&
 										<button className="btn btn-default btn-sm" onClick={this.playListen.bind(this,listen)}>
 										<span className="fab fa-spotify"></span> Play
 										</button>
-									} {getTrackLink(listen)}
-									</td>
-									<td><abbr className="timeago" title={listen.listened_at_iso}>{ $.timeago(listen.listened_at_iso) }</abbr></td>
+									}</td>
 									</tr>
 									)
 								}
@@ -278,10 +376,12 @@ connectSpotifyPlayer() {
 					</div>
 					<SpotifyPlayer
 						ref={this.spotifyPlayer}
-						nextListens={this.state.listens}
+						listens={spotifyListens}
 						direction="down"
 						spotify_access_token= {this.props.spotify_access_token}
-						{...this.props}/>
+						onCurrentListenChange={this.handleCurrentListenChange}
+						currentListen={this.state.currentListen}
+					/>
 					</div>
 					</div>
 					);
@@ -300,6 +400,4 @@ connectSpotifyPlayer() {
 			}
 			ReactDOM.render(<RecentListens {...reactProps}/>, domContainer);
 			
-			
-			
-			
+		
