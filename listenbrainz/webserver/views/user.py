@@ -149,7 +149,7 @@ def profile(user_name):
         "spotify_access_token" : spotify_access_token,
     }
 
-    return render_template("user/profile.html", props=ujson.dumps(props), user=user)
+    return render_template("user/profile.html", section="listens", props=ujson.dumps(props), user=user)
 
 
 @user_bp.route("/<user_name>/artists")
