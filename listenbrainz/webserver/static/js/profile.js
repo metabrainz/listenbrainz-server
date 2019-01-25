@@ -296,7 +296,7 @@ connectSpotifyPlayer() {
 			}
 			console.log(typeof newListen, newListen);
 			this.setState(prevState =>{
-				return { listens: [newListen, ...prevState.listens]}
+				return { listens: [newListen].concat(prevState.listens)}
 			})
 		}
 		
