@@ -275,6 +275,7 @@ connectSpotifyPlayer() {
 			this.handleCurrentListenChange = this.handleCurrentListenChange.bind(this);
 			this.spotifyPlayer = React.createRef();
 			window.handleIncomingListen = this.receiveNewListen.bind(this);
+			window.handleIncomingPlayingNow = this.receiveNewPlayingNow.bind(this);
 		}
 		
 		playListen(listen){
@@ -297,6 +298,20 @@ connectSpotifyPlayer() {
 			console.log(typeof newListen, newListen);
 			this.setState(prevState =>{
 				return { listens: [newListen].concat(prevState.listens)}
+			})
+		}
+		receiveNewPlayingNow(newPlayingNow){
+			try {
+				newPlayingNow = JSON.parse(newPlayingNow);
+			} catch (error) {
+				console.error(error);
+			}
+			newPlayingNow.playing_now = true;
+			console.log(typeof newPlayingNow, newPlayingNow);
+			this.setState(prevState =>{
+				const indexOfPreviousPlayingNow = prevState.listens.findIndex(listen => listen.playing_now);
+				prevState.listens.splice(indexOfPreviousPlayingNow, 1);
+				return { listens: [newPlayingNow].concat(prevState.listens)}
 			})
 		}
 		
@@ -339,7 +354,7 @@ connectSpotifyPlayer() {
 					return getSpotifyEmbedUriFromListen(spotifyListens[0]);
 				}
 				return null
-			}
+			};
 
 			return (
 				<div>
@@ -386,21 +401,22 @@ connectSpotifyPlayer() {
 					{this.state.listens.map((listen,index) => {
 						if (listen.playing_now) {
 							return (
-								<tr id="playing_now" key={index}>
-								<td>{ listen.track_metadata.artist_name }</td>
-								<td>{ listen.track_metadata.track_name }</td>
-								<td colspan="2"><span className="fab fa-spotify" aria-hidden="true"></span> Playing now</td>
+								<tr id="playing_now" key='playing_now'>
+								<td>{getArtistLink(listen)}</td>
+								<td>{getTrackLink(listen)}</td>
+								<td><span className="fab fa-spotify" aria-hidden="true"></span> Playing now</td>
+								<td>{listen.track_metadata.additional_info.spotify_id &&
+									<button className="btn btn-default btn-sm" onClick={this.playListen.bind(this,listen)}>
+									<span className="fab fa-spotify"></span> Play
+									</button>
+								}</td>
 								</tr>
 								)
 							} else {
 								return (
 									<tr key={index} className={this.isCurrentListen(listen) ? 'info' : ''}>
-									<td>
-									{getArtistLink(listen)}
-									</td>
-									<td>
-										{getTrackLink(listen)}
-									</td>
+									<td>{getArtistLink(listen)}</td>
+									<td>{getTrackLink(listen)}</td>
 									<td><abbr className="timeago" title={listen.listened_at_iso}>{ listen.listened_at_iso ? $.timeago(listen.listened_at_iso) : $.timeago(listen.listened_at*1000) }</abbr></td>
 									<td>{listen.track_metadata.additional_info.spotify_id &&
 										<button className="btn btn-default btn-sm" onClick={this.playListen.bind(this,listen)}>

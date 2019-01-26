@@ -34,10 +34,12 @@
           console.log('New listen!');
           window.handleIncomingListen
             && window.handleIncomingListen(data);
-      });
-      socket.on('playing_now', function(data) {
-          console.log('New now playing notification!')
-          console.log(data);
+        });
+        socket.on('playing_now', function(data) {
+            console.log('New now playing notification!')
+            // console.log(data);
+            window.handleIncomingPlayingNow
+              && window.handleIncomingPlayingNow(data);
       });
   </script>
 {% endblock %}
