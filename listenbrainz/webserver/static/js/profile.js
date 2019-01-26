@@ -138,7 +138,7 @@ connectSpotifyPlayer() {
 		getOAuthToken: callback => {
 			callback(this._accessToken);
 		},
-		volume: 1
+		volume: 0.7 // Careful with this, now…
 	});
 	
 	// Error handling
@@ -398,26 +398,15 @@ connectSpotifyPlayer() {
 					</tr>
 					</thead>
 					<tbody>
-					{this.state.listens.map((listen,index) => {
-						if (listen.playing_now) {
-							return (
-								<tr id="playing_now" key='playing_now'>
-								<td>{getArtistLink(listen)}</td>
-								<td>{getTrackLink(listen)}</td>
-								<td><span className="fab fa-spotify" aria-hidden="true"></span> Playing now</td>
-								<td>{listen.track_metadata.additional_info.spotify_id &&
-									<button className="btn btn-default btn-sm" onClick={this.playListen.bind(this,listen)}>
-									<span className="fab fa-spotify"></span> Play
-									</button>
-								}</td>
-								</tr>
-								)
-							} else {
+					{this.state.listens
+						.sort((a,b)=> a.playing_now ? -1 : b.playing_now ? 1 : 0) 
+						.map((listen,index) => {
+							if (listen.playing_now) {
 								return (
-									<tr key={index} className={this.isCurrentListen(listen) ? 'info' : ''}>
+									<tr id="playing_now" key='playing_now'>
 									<td>{getArtistLink(listen)}</td>
 									<td>{getTrackLink(listen)}</td>
-									<td><abbr className="timeago" title={listen.listened_at_iso}>{ listen.listened_at_iso ? $.timeago(listen.listened_at_iso) : $.timeago(listen.listened_at*1000) }</abbr></td>
+									<td><span className="fab fa-spotify" aria-hidden="true"></span> Playing now</td>
 									<td>{listen.track_metadata.additional_info.spotify_id &&
 										<button className="btn btn-default btn-sm" onClick={this.playListen.bind(this,listen)}>
 										<span className="fab fa-spotify"></span> Play
@@ -425,8 +414,21 @@ connectSpotifyPlayer() {
 									}</td>
 									</tr>
 									)
-								}
-							})
+								} else {
+									return (
+										<tr key={index} className={this.isCurrentListen(listen) ? 'info' : ''}>
+										<td>{getArtistLink(listen)}</td>
+										<td>{getTrackLink(listen)}</td>
+										<td><abbr className="timeago" title={listen.listened_at_iso}>{ listen.listened_at_iso ? $.timeago(listen.listened_at_iso) : $.timeago(listen.listened_at*1000) }</abbr></td>
+										<td>{listen.track_metadata.additional_info.spotify_id &&
+											<button className="btn btn-default btn-sm" onClick={this.playListen.bind(this,listen)}>
+											<span className="fab fa-spotify"></span> Play
+											</button>
+										}</td>
+										</tr>
+										)
+									}
+								})
 						}
 						
 						</tbody>
