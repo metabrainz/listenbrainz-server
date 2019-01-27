@@ -27,6 +27,23 @@ function getSpotifyUriFromListen(listen){
 	}
 	return "spotify:" + spotify_track.replace("/",":");
 }
+function millisecondsToHumanReadable(milliseconds)
+{
+	var seconds = milliseconds/1000;
+	var numyears = Math.floor(seconds / 31536000);
+	var numdays = Math.floor((seconds % 31536000) / 86400); 
+	var numhours = Math.floor(((seconds % 31536000) % 86400) / 3600);
+	var numminutes = Math.floor((((seconds % 31536000) % 86400) % 3600) / 60);
+	var numseconds = Math.floor((((seconds % 31536000) % 86400) % 3600) % 60);
+	var string="";
+	if(numyears) string += numyears + " y ";
+	if(numdays) string += numdays + " d ";
+	if(numhours) string += numhours + " h ";
+	if(numminutes) string += numminutes + " m ";
+	if(numseconds) string += numseconds + " s";
+
+	return string;
+}
 
 class SpotifyPlayer extends React.Component {
 
@@ -50,6 +67,7 @@ class SpotifyPlayer extends React.Component {
 		this.handlePlayerStateChanged = this.handlePlayerStateChanged.bind(this);
 		this.handleError = this.handleError.bind(this);
 		this.isCurrentListen = this.isCurrentListen.bind(this);
+		this.getAlbumArt = this.getAlbumArt.bind(this);
 		window.onSpotifyWebPlaybackSDKReady = this.connectSpotifyPlayer.bind(this);
 	}
 	
@@ -142,7 +160,7 @@ connectSpotifyPlayer() {
 	});
 	
 	// Error handling
-	const authErrorMessage = <span>Spotify authentication error. Please try to <a href="/profile/connect-spotify">relink your account</a> and refresh this page</span>
+	const authErrorMessage = <span>Spotify authentication error. Please try to refresh the page or <a href="/profile/connect-spotify">relink your Spotify account</a></span>
 	this._spotifyPlayer.on('initialization_error', this.handleError);
 	this._spotifyPlayer.on('authentication_error', error => this.handleError(authErrorMessage));
 	this._spotifyPlayer.on('account_error', this.handleError);
@@ -191,7 +209,20 @@ connectSpotifyPlayer() {
 			});
 	}
 		
-		
+	getAlbumArt(){
+		const track = this.state.currentSpotifyTrack;
+		if (!track || !track.album || !Array.isArray(track.album.images)){
+			return null
+		}
+		const sortedImages = track.album.images.sort((a,b)=>a.height > b.height ? -1 :1);
+		const containerStyles= {
+			border: "1px solid darkgrey",
+			padding: "4px",
+			borderRadius: "4px"
+		};
+		return sortedImages[0] &&
+		<div className="img-responsive" style={containerStyles}><img src={sortedImages[0].url} style={{width: "100%"}}/></div>;
+	}
 	
 	render(){
 		const playerButtonStyle = {width: '24%'};
@@ -252,8 +283,15 @@ connectSpotifyPlayer() {
 				}
 				{this.state.currentSpotifyTrack && 
 					<div>
-						<h3>Currently playing:</h3>
-						{this.state.currentSpotifyTrack.name} – {this.state.currentSpotifyTrack.artists.map(artist => artist.name).join(', ')}
+						<h4>Currently playing:</h4>
+						<h3 style={{borderBottom: "1px solid lightgrey"}}>
+							{this.state.currentSpotifyTrack.name}
+							{this.state.currentSpotifyTrack.duration_ms &&
+								<span className="small"> — {millisecondsToHumanReadable(this.state.currentSpotifyTrack.duration_ms)}</span>
+							}
+						</h3>
+						<p>{this.state.currentSpotifyTrack.artists.map(artist => artist.name).join(', ')}</p>
+						<div>{this.getAlbumArt()}</div>
 					</div>
 				}
 				{this.props.currentListen && this.props.currentListen.user_name &&
