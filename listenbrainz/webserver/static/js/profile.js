@@ -195,9 +195,13 @@ connectSpotifyPlayer() {
 	
 	render(){
 		const playerButtonStyle = {width: '24%'};
-
+		const stickyStyle = {
+			position: "-webkit-sticky",
+			position: "sticky",
+			top: 20
+		};
 		return (
-			<div className="col-md-4 sticky-top">
+			<div className="col-md-4" style={stickyStyle}>
 			
 				<div className="btn-group" role="group" aria-label="Playback control" style={{witdh: '100%'}}>
 
