@@ -23,10 +23,10 @@
   <script src="{{ url_for('static', filename='js/profile.js') }}" type="text/babel"></script>
   <script defer src="https://sdk.scdn.co/spotify-player.js" integrity="sha384-9+35Jl48gpiB6tCwoWpqdtwv584KTRdaUpt87P/4A19odvUlJVvmgQ2mAI2iIOkC" crossorigin="anonymous"></script>
   <script type="text/javascript" charset="utf-8">
-      console.log("Connecting!");
+      console.log("Connecting websocket!");
       var socket = io.connect("{{ web_sockets_server_url }}");
       socket.on('connect', function() {
-          console.log("Connected!");
+          console.log("Connected to websocket!");
           socket.emit("json", {user: '{{ user.musicbrainz_id }}', 'follow': ['{{ user.musicbrainz_id }}']});
           console.log("Emitted!");
       });
@@ -41,5 +41,9 @@
             window.handleIncomingPlayingNow
               && window.handleIncomingPlayingNow(data);
       });
+      window.emitFollowUsersList = function(userList){
+          console.log("Emitting user list to websockets:",userList);
+          socket.emit("json", {user: '{{ user.musicbrainz_id }}', 'follow': userList});
+      };
   </script>
 {% endblock %}
