@@ -158,7 +158,7 @@ connectSpotifyPlayer() {
 		},
 		volume: 0.7 // Careful with this, now…
 	});
-	
+
 	// Error handling
 	const authErrorMessage = <span>Spotify authentication error. Please try to refresh the page or <a href="/profile/connect-spotify">relink your Spotify account</a></span>
 	this._spotifyPlayer.on('initialization_error', this.handleError);
@@ -178,7 +178,7 @@ connectSpotifyPlayer() {
 				console.log('The Web Playback SDK successfully connected to Spotify!');
 			}
 			else {
-				console.log('Could not connect Web Playback SDK');
+				this.handleError('Could not connect Web Playback SDK');
 			}
 		});
 	}
@@ -215,25 +215,14 @@ connectSpotifyPlayer() {
 			return null
 		}
 		const sortedImages = track.album.images.sort((a,b)=>a.height > b.height ? -1 :1);
-		const containerStyles= {
-			border: "1px solid darkgrey",
-			padding: "4px",
-			borderRadius: "4px"
-		};
 		return sortedImages[0] &&
-		<div className="img-responsive" style={containerStyles}><img src={sortedImages[0].url} style={{width: "100%"}}/></div>;
+		<div className="img-responsive" className="thumbnail"><img src={sortedImages[0].url} style={{width: "100%"}}/></div>;
 	}
 	
 	render(){
 		const playerButtonStyle = {width: '24%'};
-		const stickyStyle = {
-			position: "-webkit-sticky",
-			position: "sticky",
-			top: 20
-		};
 		return (
-			<div className="col-md-4" style={stickyStyle}>
-			
+			<div>
 				<div className="btn-group" role="group" aria-label="Playback control" style={{witdh: '100%'}}>
 
 					<button className="btn btn-default"
@@ -311,7 +300,8 @@ connectSpotifyPlayer() {
 			super(props);
 			this.state = {
 				listens: props.listens || [],
-				currentListen : null
+				currentListen : null,
+				mode: props.mode === "follow" ? "follow" : "listens"
 			};
 			this.isCurrentListen = this.isCurrentListen.bind(this);
 			this.handleCurrentListenChange = this.handleCurrentListenChange.bind(this);
@@ -400,123 +390,196 @@ connectSpotifyPlayer() {
 
 			return (
 				<div>
-				
-				<div className="row">
-				<div className="col-md-8">
-				<h3> Statistics </h3>
-				<table className="table table-border table-condensed table-striped">
-				<tbody>
-				{this.props.listen_count && 
-					<tr>
-					<td>Listen count</td>
-					<td>{ this.props.listen_count }</td>
-					</tr>
-				}
-				{ this.props.artist_count &&
-					<tr>
-					<td>Artist count</td>
-					<td>{ this.props.artist_count }</td>
-					</tr>
-				}
-				</tbody>
-				</table>
-				</div>
-				</div>
-				<div className="row">
-				<h3>Recent listens</h3>
-				<div className="col-md-8">
-				
-				{ !this.state.listens.length ?
-					<p className="lead" style="text-align: center;">No listens :/</p> :
+					{this.state.mode === "listens" && <div className="row">
+						<div className="col-md-8">
+							<h3> Statistics </h3>
+							<table className="table table-border table-condensed table-striped">
+							<tbody>
+							{this.props.listen_count && 
+								<tr>
+								<td>Listen count</td>
+								<td>{ this.props.listen_count }</td>
+								</tr>
+							}
+							{ this.props.artist_count &&
+								<tr>
+								<td>Artist count</td>
+								<td>{ this.props.artist_count }</td>
+								</tr>
+							}
+							</tbody>
+							</table>
+						</div>
+					</div>
+					}
+					<div className="row">
+					<div className="col-md-8">
+					<h3>{this.state.mode === "listens" ? "Recent listens" : "Playlist"}</h3>
 					
-					<div >
-					<table className="table table-condensed table-striped">
-					<thead>
-					<tr>
-					<th>Artist</th>
-					<th>Track</th>
-					<th>Time</th>
-					<th>Play</th>
-					</tr>
-					</thead>
-					<tbody>
-					{this.state.listens
-						.sort((a,b)=> a.playing_now ? -1 : b.playing_now ? 1 : 0) 
-						.map((listen,index) => {
-							if (listen.playing_now) {
-								return (
-									<tr id="playing_now" key='playing_now'>
-									<td>{getArtistLink(listen)}</td>
-									<td>{getTrackLink(listen)}</td>
-									<td><span className="fab fa-spotify" aria-hidden="true"></span> Playing now</td>
-									<td>{listen.track_metadata.additional_info.spotify_id &&
-										<button className="btn btn-default btn-sm" onClick={this.playListen.bind(this,listen)}>
-										<span className="fab fa-spotify"></span> Play
-										</button>
-									}</td>
-									</tr>
-									)
-								} else {
-									return (
-										<tr key={index} className={this.isCurrentListen(listen) ? 'info' : ''}>
-										<td>{getArtistLink(listen)}</td>
-										<td>{getTrackLink(listen)}</td>
-										<td><abbr className="timeago" title={listen.listened_at_iso}>{ listen.listened_at_iso ? $.timeago(listen.listened_at_iso) : $.timeago(listen.listened_at*1000) }</abbr></td>
-										<td>{listen.track_metadata.additional_info.spotify_id &&
-											<button className="btn btn-default btn-sm" onClick={this.playListen.bind(this,listen)}>
-											<span className="fab fa-spotify"></span> Play
-											</button>
-										}</td>
-										</tr>
-										)
-									}
-								})
+					{ !this.state.listens.length ?
+						<p className="lead" style="text-align: center;">No listens :/</p> :
+						<div>
+							<table className="table table-condensed table-striped">
+							<thead>
+							<tr>
+							<th>Artist</th>
+							<th>Track</th>
+							<th>Time</th>
+							{this.state.mode === "follow" && <th>User</th>}
+							<th>Play</th>
+							</tr>
+							</thead>
+							<tbody>
+							{this.state.listens
+								.sort((a,b)=> a.playing_now ? -1 : b.playing_now ? 1 : 0) 
+								.map((listen,index) => {
+									if (listen.playing_now) {
+										return (
+											<tr id="playing_now" key='playing_now'>
+											<td>{getArtistLink(listen)}</td>
+											<td>{getTrackLink(listen)}</td>
+											<td><span className="fab fa-spotify" aria-hidden="true"></span> Playing now</td>
+											{this.state.mode === "follow" && <td>{listen.user_name}</td>}
+											<td>{listen.track_metadata.additional_info.spotify_id &&
+												<button className="btn btn-default btn-sm" onClick={this.playListen.bind(this,listen)}>
+												<span className="fab fa-spotify"></span> Play
+												</button>
+											}</td>
+											</tr>
+											)
+										} else {
+											return (
+												<tr key={index} className={this.isCurrentListen(listen) ? 'info' : ''}>
+												<td>{getArtistLink(listen)}</td>
+												<td>{getTrackLink(listen)}</td>
+												<td><abbr className="timeago" title={listen.listened_at_iso}>{ listen.listened_at_iso ? $.timeago(listen.listened_at_iso) : $.timeago(listen.listened_at*1000) }</abbr></td>
+												{this.state.mode === "follow" && <td>{listen.user_name}</td>}
+												<td>{listen.track_metadata.additional_info.spotify_id &&
+													<button className="btn btn-default btn-sm" onClick={this.playListen.bind(this,listen)}>
+													<span className="fab fa-spotify"></span> Play
+													</button>
+												}</td>
+												</tr>
+												)
+											}
+										})
+								}
+								
+								</tbody>
+								</table>
+							
+								<ul className="pager">
+									<li className="previous" className={!this.props.previous_listen_ts ? 'hidden' :''}>
+									<a href={`${this.props.profile_url}?min_ts=${this.props.previous_listen_ts}`}>&larr; Previous</a>
+									</li>
+									<li className="next" disabled={!this.props.next_listen_ts ? 'hidden' : ''}>
+									<a href={`${this.props.profile_url}?max_ts=${this.props.next_listen_ts}`}>Next &rarr;</a>
+									</li>
+								</ul>
+						</div>
+							
+							
 						}
-						
-						</tbody>
-						</table>
-						
-						<ul className="pager">
-						<li className="previous" className={!this.props.previous_listen_ts ? 'hidden' :''}>
-						<a href={`${this.props.profile_url}?min_ts=${this.props.previous_listen_ts}`}>&larr; Previous</a>
-						</li>
-						<li className="next" disabled={!this.props.next_listen_ts ? 'hidden' : ''}>
-						<a href={`${this.props.profile_url}?max_ts=${this.props.next_listen_ts}`}>Next &rarr;</a>
-						</li>
-						</ul>
+					</div>
+					<div className="col-md-4" style={{position: "-webkit-sticky",position: "sticky",top: 20}}>
+						{ this.props.spotify_access_token ?
+							<SpotifyPlayer
+								ref={this.spotifyPlayer}
+								listens={spotifyListens}
+								direction={this.state.mode === "follow" ? "up" : "down"}
+								spotify_access_token= {this.props.spotify_access_token}
+								onCurrentListenChange={this.handleCurrentListenChange}
+								currentListen={this.state.currentListen}
+							/> :
+							// Fallback embedded player
+							<div className="col-md-4 text-right">
+								<iframe src={getSpotifyEmbedSrc()} 
+									width="300" height="380" frameBorder="0" allowtransparency="true" allow="encrypted-media">
+								</iframe>
+							</div>
+						}
+						<hr/>
+						{this.state.mode === "follow" && <FollowUsers/>}
+					</div>
+				</div>
+			</div>);
+		}
+}
+
+class FollowUsers extends React.Component {
+	constructor(props){
+		super(props);
+		this.state = {
+			users: []
+		}
+		this.addUserToList = this.addUserToList.bind(this);
+	}
+
+	addUserToList(event){
+		event.preventDefault();
+		this.setState(prevState=>{
+			return {users: prevState.users.concat([this.textInput.value])}
+		},()=>{ this.textInput.value = ""});
+	}
+	removeUserFromList(index){
+		this.setState(prevState=>{
+			prevState.users.splice(index,1);
+			return {users: prevState.users}
+		});
+	}
+
+	render(){
+		const labelStyles = {
+			display: "inline-block",
+			padding: "0.3em 1.3em",
+			margin: "0.5em",
+			lineHeight: "2em",
+			borderRadius: "2em"
+		}
+		return (
+			<div className="panel panel-primary">
+				<div class="panel-heading">
+					<span style={{fontSize: "x-large"}}>Follow users</span>
+				</div>
+				<div class="panel-body">
+					<div className="text-muted">
+					Enter a username and add it to follow their listens in real time:
+					</div>
+					<div className="input-group">
+						<input type="text" className="form-control" placeholder="Username…"
+							ref={(input) => this.textInput = input}
+						/>
+						<span className="input-group-btn btn-primary">
+							<button className="btn btn-primary" type="button" onClick={this.addUserToList}>
+								<span className="fa fa-plus-circle" aria-hidden="true"></span> Add
+							</button>
+						</span>
+					</div>
+				</div>
+				<div className="panel-footer">
+					{this.state.users.map((user,index) => {
+						return (
+						<div key={user} className="label label-info" style={labelStyles}>
+							{user}&nbsp;&nbsp;
+							<button type="button" class="close" aria-label="Remove"
+							onClick={this.removeUserFromList.bind(this,index)}><span aria-hidden="true">&times;</span></button>
 						</div>
-						
-						
-					}
-					</div>
-					{ this.props.spotify_access_token ?
-						<SpotifyPlayer
-							ref={this.spotifyPlayer}
-							listens={spotifyListens}
-							direction="down"
-							spotify_access_token= {this.props.spotify_access_token}
-							onCurrentListenChange={this.handleCurrentListenChange}
-							currentListen={this.state.currentListen}
-						/> :
-						// Fallback embedded player
-						<div className="col-md-4 text-right">
-							<iframe src={getSpotifyEmbedSrc()} 
-								width="300" height="380" frameBorder="0" allowtransparency="true" allow="encrypted-media">
-							</iframe>
-						</div>
-					}
-					</div>
-					</div>
-					);
-				}
-			}
+						);
+					})}
+				</div>
+			</div>
+		);
+	}
+
+}
+
 			
 let domContainer = document.querySelector('#react-listens');
 let propsElement = document.getElementById('react-props');
 let reactProps;
 try{
 reactProps = JSON.parse(propsElement.innerHTML);
-console.log("props",reactProps);
+// console.log("props",reactProps);
 }
 catch(err){
 console.error("Error parsing props:", err);
