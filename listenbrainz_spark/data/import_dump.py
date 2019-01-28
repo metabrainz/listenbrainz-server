@@ -88,6 +88,8 @@ def copy_to_hdfs(archive, threads=8):
                 total_time += time_taken
                 average_time = total_time / file_count
                 print("Total time: %.2f, average time: %.2f" % (total_time, average_time))
+    hdfs_connection.client.delete(tmp_dump_dir, recursive=True)
+    shutil.rmtree(tmp_dump_dir)
 
 
 def main(app_name, archive):
