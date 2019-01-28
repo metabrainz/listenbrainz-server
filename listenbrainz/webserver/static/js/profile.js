@@ -353,6 +353,17 @@ connectSpotifyPlayer() {
 		isCurrentListen(listen){
 			return this.state.currentListen && this.state.currentListen.listened_at === listen.listened_at;
 		}
+		handleFollowUserListChange(users){
+			if(!Array.isArray(users)){
+				console.error("Expected array in handleFollowUserListChange, got", typeof users);
+				return;
+			}
+			if(typeof window.emitFollowUsersList !== "function"){
+				console.error("window.emitFollowUsersList is not a function, can't emit follow users list");
+				return;
+			}
+			window.emitFollowUsersList(users);
+		}
 		
 		render() {
 			const getArtistLink = listen => {
@@ -499,7 +510,9 @@ connectSpotifyPlayer() {
 							</div>
 						}
 						<hr/>
-						{this.state.mode === "follow" && <FollowUsers/>}
+						{this.state.mode === "follow" &&
+							<FollowUsers onUserListChange={this.handleFollowUserListChange}/>
+						}
 					</div>
 				</div>
 			</div>);
@@ -519,13 +532,16 @@ class FollowUsers extends React.Component {
 		event.preventDefault();
 		this.setState(prevState=>{
 			return {users: prevState.users.concat([this.textInput.value])}
-		},()=>{ this.textInput.value = ""});
+		},()=>{
+			this.textInput.value = "";
+			this.props.onUserListChange(this.state.users);
+		});
 	}
 	removeUserFromList(index){
 		this.setState(prevState=>{
 			prevState.users.splice(index,1);
 			return {users: prevState.users}
-		});
+		},() => {this.props.onUserListChange(this.state.users)});
 	}
 
 	render(){
