@@ -530,6 +530,10 @@ class FollowUsers extends React.Component {
 
 	addUserToList(event){
 		event.preventDefault();
+		if(this.textInput.value === "" ||
+			this.state.users.find(user => user === this.textInput.value)){
+			return;
+		}
 		this.setState(prevState=>{
 			return {users: prevState.users.concat([this.textInput.value])}
 		},()=>{
