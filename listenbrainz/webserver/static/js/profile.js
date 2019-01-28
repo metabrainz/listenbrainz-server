@@ -511,7 +511,8 @@ connectSpotifyPlayer() {
 						}
 						<hr/>
 						{this.state.mode === "follow" &&
-							<FollowUsers onUserListChange={this.handleFollowUserListChange}/>
+							<FollowUsers onUserListChange={this.handleFollowUserListChange}
+							initialList={this.props.follow_list}/>
 						}
 					</div>
 				</div>
@@ -523,7 +524,7 @@ class FollowUsers extends React.Component {
 	constructor(props){
 		super(props);
 		this.state = {
-			users: []
+			users: props.initialList || []
 		}
 		this.addUserToList = this.addUserToList.bind(this);
 	}

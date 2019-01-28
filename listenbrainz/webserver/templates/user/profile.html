@@ -27,7 +27,8 @@
       var socket = io.connect("{{ web_sockets_server_url }}");
       socket.on('connect', function() {
           console.log("Connected to websocket!");
-          socket.emit("json", {user: '{{ user.musicbrainz_id }}', 'follow': ['{{ user.musicbrainz_id }}']});
+          var followList = {{ follow_list|default("")|tojson }} || ['{{ user.musicbrainz_id }}'];
+          window.emitFollowUsersList(followList)
           console.log("Emitted!");
       });
       socket.on('listen', function(data) {
