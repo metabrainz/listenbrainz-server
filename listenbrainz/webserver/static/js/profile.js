@@ -577,6 +577,10 @@ class FollowUsers extends React.Component {
 	}
 
 	render(){
+		const noTopBottomPadding = {
+			paddingTop: 0,
+			paddingBottom: 0
+		};
 		return (
 			<div className="panel panel-primary">
 				<div className="panel-heading">
@@ -603,14 +607,14 @@ class FollowUsers extends React.Component {
 							<th colSpan="2" width="50px">Order</th>
 							<th>User</th>
 							<th width="50%">Listening now</th>
-							<th width="50px">Remove</th>
-							<th width="75px"></th>
+							<th width="25px"></th>
+							<th width="85px"></th>
 						</tr>
 					</thead>
 					<tbody>
 						{this.state.users.map((user,index) => {
 							return (
-							<tr key={user}>
+							<tr key={user} valign="middle">
 								<td>
 									{index + 1}
 								</td>
@@ -641,13 +645,13 @@ class FollowUsers extends React.Component {
 									</React.Fragment>
 								}
 								</td>
-								<td>
+								<td style={noTopBottomPadding}>
 									<button className="btn btn-danger" type="button" aria-label="Remove"
 										onClick={this.removeUserFromList.bind(this,index)}>
 										<span className="fa fa-trash-alt"></span>
 									</button>
 								</td>
-								<td>
+								<td style={noTopBottomPadding}>
 								{this.props.playingNow[user] &&
 									getSpotifyPlayButton(this.props.playingNow[user],this.props.playListen)
 								}
