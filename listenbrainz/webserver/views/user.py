@@ -133,18 +133,19 @@ def profile(user_name):
     spotify_access_token = db_spotify.get_token_for_user(user.id)
     props = {
         "user" : {
-            "id" : user.id,
-            "name" : user.musicbrainz_id,
-            "auth_token" : user.auth_token,
+            "id"               : user.id,
+            "name"             : user.musicbrainz_id,
+            "auth_token"       : user.auth_token,
         },
-        "listens" : listens,
-        "previous_listen_ts" : previous_listen_ts,
-        "next_listen_ts" : next_listen_ts,
-        "latest_spotify_uri" : _get_spotify_uri_for_listens(listens),
-        "have_listen_count" : have_listen_count,
-        "listen_count" : format(int(listen_count), ",d"),
-        "artist_count" : format(artist_count, ",d") if artist_count else None,
-        "profile_url" : url_for('user.profile', user_name=user_name),
+        "listens"              : listens,
+        "previous_listen_ts"   : previous_listen_ts,
+        "next_listen_ts"       : next_listen_ts,
+        "latest_spotify_uri"   : _get_spotify_uri_for_listens(listens),
+        "have_listen_count"    : have_listen_count,
+        "listen_count"         : format(int(listen_count), ",d"),
+        "artist_count"         : format(artist_count, ",d") if artist_count else None,
+        "profile_url"          : url_for('user.profile', user_name=user_name),
+        "mode"                 : "listens",
         "spotify_access_token" : spotify_access_token,
     }
 
