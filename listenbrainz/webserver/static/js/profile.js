@@ -45,6 +45,35 @@ function millisecondsToHumanReadable(milliseconds)
 	return string;
 }
 
+function getArtistLink(listen) {
+	if(listen.track_metadata.additional_info.artist_mbids && listen.track_metadata.additional_info.artist_mbids.length){
+		return (<a href={`http://musicbrainz.org/artist/${listen.track_metadata.additional_info.artist_mbids[0]}`}>
+		{listen.track_metadata.artist_name}
+		</a>);
+	}
+	return listen.track_metadata.artist_name
+}
+
+function getTrackLink(listen) {
+	if(listen.track_metadata.additional_info.recording_mbid) {
+		return (<a href={`http://musicbrainz.org/recording/${listen.track_metadata.additional_info.recording_mbid}`}>
+		{ listen.track_metadata.track_name }
+		</a>);
+	}
+	return listen.track_metadata.track_name;
+}
+
+function getSpotifyPlayButton(listen, onClickFunction) {
+	if(listen.track_metadata.additional_info.spotify_id) {
+		return (
+			<button className="btn btn-info btn-sm" onClick={onClickFunction.bind(listen)}>
+				<span className="fab fa-spotify"></span> Play
+			</button>
+		)
+	}
+	return null;
+}
+
 class SpotifyPlayer extends React.Component {
 
 	_spotifyPlayer;
@@ -366,23 +395,6 @@ connectSpotifyPlayer() {
 		}
 		
 		render() {
-			const getArtistLink = listen => {
-				if(listen.track_metadata.additional_info.artist_mbids && listen.track_metadata.additional_info.artist_mbids.length){
-					return (<a href={`http://musicbrainz.org/artist/${listen.track_metadata.additional_info.artist_mbids[0]}`}>
-					{listen.track_metadata.artist_name}
-					</a>);
-				}
-				return listen.track_metadata.artist_name
-			}
-			
-			const getTrackLink = listen => {
-				if(listen.track_metadata.additional_info.recording_mbid) {
-					return (<a href={`http://musicbrainz.org/recording/${listen.track_metadata.additional_info.recording_mbid}`}>
-					{ listen.track_metadata.track_name }
-					</a>);
-				}
-				return listen.track_metadata.track_name;
-			}
 			
 			const spotifyListens = this.state.listens.filter(listen => listen.track_metadata
 					&& listen.track_metadata.additional_info
@@ -428,7 +440,7 @@ connectSpotifyPlayer() {
 					<h3>{this.state.mode === "listens" ? "Recent listens" : "Playlist"}</h3>
 					
 					{ !this.state.listens.length ?
-						<p className="lead" style="text-align: center;">No listens :/</p> :
+						<p className="lead" className="text-center">No listens :/</p> :
 						<div>
 							<table className="table table-condensed table-striped">
 							<thead>
@@ -451,11 +463,7 @@ connectSpotifyPlayer() {
 											<td>{getTrackLink(listen)}</td>
 											<td><span className="fab fa-spotify" aria-hidden="true"></span> Playing now</td>
 											{this.state.mode === "follow" && <td>{listen.user_name}</td>}
-											<td>{listen.track_metadata.additional_info.spotify_id &&
-												<button className="btn btn-default btn-sm" onClick={this.playListen.bind(this,listen)}>
-												<span className="fab fa-spotify"></span> Play
-												</button>
-											}</td>
+											<td>{getSpotifyPlayButton(listen,this.playListen)}</td>
 											</tr>
 											)
 										} else {
@@ -465,11 +473,7 @@ connectSpotifyPlayer() {
 												<td>{getTrackLink(listen)}</td>
 												<td><abbr className="timeago" title={listen.listened_at_iso}>{ listen.listened_at_iso ? $.timeago(listen.listened_at_iso) : $.timeago(listen.listened_at*1000) }</abbr></td>
 												{this.state.mode === "follow" && <td>{listen.user_name}</td>}
-												<td>{listen.track_metadata.additional_info.spotify_id &&
-													<button className="btn btn-default btn-sm" onClick={this.playListen.bind(this,listen)}>
-													<span className="fab fa-spotify"></span> Play
-													</button>
-												}</td>
+												<td>{getSpotifyPlayButton(listen,this.playListen)}</td>
 												</tr>
 												)
 											}
@@ -479,6 +483,7 @@ connectSpotifyPlayer() {
 								</tbody>
 								</table>
 							
+								{this.state.mode === "listens" &&
 								<ul className="pager">
 									<li className="previous" className={!this.props.previous_listen_ts ? 'hidden' :''}>
 									<a href={`${this.props.profile_url}?min_ts=${this.props.previous_listen_ts}`}>&larr; Previous</a>
@@ -487,6 +492,7 @@ connectSpotifyPlayer() {
 									<a href={`${this.props.profile_url}?max_ts=${this.props.next_listen_ts}`}>Next &rarr;</a>
 									</li>
 								</ul>
+								}
 						</div>
 							
 							
