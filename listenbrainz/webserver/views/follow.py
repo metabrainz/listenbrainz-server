@@ -11,6 +11,7 @@ from werkzeug.exceptions import NotFound, BadRequest, InternalServerError
 
 follow_bp = Blueprint("follow", __name__)
 
+@follow_bp.route("/", defaults={'user_list': ""})
 @follow_bp.route("/<user_list>")
 def follow(user_list):
     """ 
