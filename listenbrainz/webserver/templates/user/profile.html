@@ -1,11 +1,15 @@
 {% extends 'user/base.html' %}
-
+<!-- 
+     this template now supports a mode argument that is either "listens" or "follow", since Mr_Monkey says that the
+     two pages will share a lot in common and that will make supporting these two pages easier. 
+-->
 {% block profile_content %}
 
     <div style="margin-top:20px">
     	<img src="{{ url_for('static', filename='img/musicbrainz-16.svg') }}" />
     	<b><a href="https://musicbrainz.org/user/{{ user.musicbrainz_id }}">See profile on MusicBrainz</a></b>
     </div>
+
 
     <div id="react-listens">
     </div>
