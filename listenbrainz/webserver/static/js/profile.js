@@ -330,10 +330,12 @@ connectSpotifyPlayer() {
 			this.state = {
 				listens: props.listens || [],
 				currentListen : null,
-				mode: props.mode === "follow" ? "follow" : "listens"
+				mode: props.mode === "follow" ? "follow" : "listens",
+				playingNowByUser: {}
 			};
 			this.isCurrentListen = this.isCurrentListen.bind(this);
 			this.handleCurrentListenChange = this.handleCurrentListenChange.bind(this);
+			this.playListen = this.playListen.bind(this);
 			this.spotifyPlayer = React.createRef();
 			window.handleIncomingListen = this.receiveNewListen.bind(this);
 			window.handleIncomingPlayingNow = this.receiveNewPlayingNow.bind(this);
@@ -368,8 +370,17 @@ connectSpotifyPlayer() {
 				console.error(error);
 			}
 			newPlayingNow.playing_now = true;
-			console.log(typeof newPlayingNow, newPlayingNow);
+
 			this.setState(prevState =>{
+				if(prevState.mode === "follow"){
+					const userName = newPlayingNow.user_name;
+					return {playingNowByUser: Object.assign(
+						{},
+						prevState.playingNowByUser,
+						{[userName]:newPlayingNow}
+						)
+					}
+				}
 				const indexOfPreviousPlayingNow = prevState.listens.findIndex(listen => listen.playing_now);
 				prevState.listens.splice(indexOfPreviousPlayingNow, 1);
 				return { listens: [newPlayingNow].concat(prevState.listens)}
@@ -435,6 +446,11 @@ connectSpotifyPlayer() {
 						</div>
 					</div>
 					}
+					{this.state.mode === "follow" &&
+						<FollowUsers onUserListChange={this.handleFollowUserListChange}
+						initialList={this.props.follow_list} playListen={this.playListen.bind(this)}
+						playingNow={this.state.playingNowByUser}/>
+					}
 					<div className="row">
 					<div className="col-md-8">
 					<h3>{this.state.mode === "listens" ? "Recent listens" : "Playlist"}</h3>
@@ -484,14 +500,14 @@ connectSpotifyPlayer() {
 								</table>
 							
 								{this.state.mode === "listens" &&
-								<ul className="pager">
-									<li className="previous" className={!this.props.previous_listen_ts ? 'hidden' :''}>
-									<a href={`${this.props.profile_url}?min_ts=${this.props.previous_listen_ts}`}>&larr; Previous</a>
-									</li>
-									<li className="next" disabled={!this.props.next_listen_ts ? 'hidden' : ''}>
-									<a href={`${this.props.profile_url}?max_ts=${this.props.next_listen_ts}`}>Next &rarr;</a>
-									</li>
-								</ul>
+									<ul className="pager">
+										<li className="previous" className={!this.props.previous_listen_ts ? 'hidden' :''}>
+										<a href={`${this.props.profile_url}?min_ts=${this.props.previous_listen_ts}`}>&larr; Previous</a>
+										</li>
+										<li className="next" disabled={!this.props.next_listen_ts ? 'hidden' : ''}>
+										<a href={`${this.props.profile_url}?max_ts=${this.props.next_listen_ts}`}>Next &rarr;</a>
+										</li>
+									</ul>
 								}
 						</div>
 							
@@ -515,11 +531,6 @@ connectSpotifyPlayer() {
 								</iframe>
 							</div>
 						}
-						<hr/>
-						{this.state.mode === "follow" &&
-							<FollowUsers onUserListChange={this.handleFollowUserListChange}
-							initialList={this.props.follow_list}/>
-						}
 					</div>
 				</div>
 			</div>);
@@ -533,6 +544,7 @@ class FollowUsers extends React.Component {
 			users: props.initialList || []
 		}
 		this.addUserToList = this.addUserToList.bind(this);
+		this.reorderUser = this.reorderUser.bind(this);
 	}
 
 	addUserToList(event){
@@ -555,23 +567,26 @@ class FollowUsers extends React.Component {
 		},() => {this.props.onUserListChange(this.state.users)});
 	}
 
+	reorderUser(currentIndex, targetIndex){
+		this.setState(prevState=>{
+			var element = prevState.users[currentIndex];
+			prevState.users.splice(currentIndex, 1);
+			prevState.users.splice(targetIndex, 0, element);
+			return {users: prevState.users}
+		});
+	}
+
 	render(){
-		const labelStyles = {
-			display: "inline-block",
-			padding: "0.3em 1.3em",
-			margin: "0.5em",
-			lineHeight: "2em",
-			borderRadius: "2em"
-		}
 		return (
 			<div className="panel panel-primary">
-				<div class="panel-heading">
+				<div className="panel-heading">
 					<span style={{fontSize: "x-large"}}>Follow users</span>
 				</div>
-				<div class="panel-body">
+				<div className="panel-body">
 					<div className="text-muted">
-					Enter a username and add it to follow their listens in real time:
+					Add a user to discover what they are listening to:
 					</div>
+					<hr/>
 					<div className="input-group">
 						<input type="text" className="form-control" placeholder="Username…"
 							ref={(input) => this.textInput = input}
@@ -582,17 +597,66 @@ class FollowUsers extends React.Component {
 							</button>
 						</span>
 					</div>
-				</div>
-				<div className="panel-footer">
-					{this.state.users.map((user,index) => {
-						return (
-						<div key={user} className="label label-info" style={labelStyles}>
-							{user}&nbsp;&nbsp;
-							<button type="button" class="close" aria-label="Remove"
-							onClick={this.removeUserFromList.bind(this,index)}><span aria-hidden="true">&times;</span></button>
-						</div>
-						);
-					})}
+					<table className="table table-condensed table-striped">
+					<thead>
+						<tr>
+							<th colSpan="2" width="50px">Order</th>
+							<th>User</th>
+							<th width="50%">Listening now</th>
+							<th width="50px">Remove</th>
+							<th width="75px"></th>
+						</tr>
+					</thead>
+					<tbody>
+						{this.state.users.map((user,index) => {
+							return (
+							<tr key={user}>
+								<td>
+									{index + 1}
+								</td>
+								<td>
+									<span className="btn-group btn-group-xs" role="group" aria-label="Reorder">
+										{index > 0 && 
+											<button className="btn btn-info"
+												onClick={this.reorderUser.bind(this,index,index-1)}>
+												<span className="fa fa-chevron-up"></span>
+											</button>
+										}
+										{index < this.state.users.length-1 && 
+											<button className="btn btn-info"
+												onClick={this.reorderUser.bind(this,index,index+1)}>
+												<span className="fa fa-chevron-down"></span>
+											</button>
+										}
+									</span>
+								</td>
+								<td>
+									{user}
+								</td>
+								<td>
+								{this.props.playingNow[user] &&
+									<React.Fragment>
+										{getTrackLink(this.props.playingNow[user])}
+										 <span className="small"> — {getArtistLink(this.props.playingNow[user])}</span>
+									</React.Fragment>
+								}
+								</td>
+								<td>
+									<button className="btn btn-danger" type="button" aria-label="Remove"
+										onClick={this.removeUserFromList.bind(this,index)}>
+										<span className="fa fa-trash-alt"></span>
+									</button>
+								</td>
+								<td>
+								{this.props.playingNow[user] &&
+									getSpotifyPlayButton(this.props.playingNow[user],this.props.playListen)
+								}
+								</td>
+							</tr>
+							);
+						})}
+					</tbody>
+					</table>
 				</div>
 			</div>
 		);
