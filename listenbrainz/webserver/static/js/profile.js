@@ -97,6 +97,7 @@ class SpotifyPlayer extends React.Component {
 		this.handleError = this.handleError.bind(this);
 		this.isCurrentListen = this.isCurrentListen.bind(this);
 		this.getAlbumArt = this.getAlbumArt.bind(this);
+		this.playListen = this.playListen.bind(this);
 		window.onSpotifyWebPlaybackSDKReady = this.connectSpotifyPlayer.bind(this);
 	}
 	
@@ -116,7 +117,7 @@ class SpotifyPlayer extends React.Component {
 	});
 };
 
-play_listen(listen){
+playListen(listen){
 	if(listen.track_metadata.additional_info.spotify_id){
 		this.play_spotify_uri(getSpotifyUriFromListen(listen));
 		this.props.onCurrentListenChange(listen);
@@ -152,7 +153,7 @@ playNextTrack(invert){
 		this.setState({errorMessage:error});
 		return;
 	}
-	this.play_listen(nextListen);
+	this.playListen(nextListen);
 	this.setState({errorMessage:null});
 }
 handleError(error){
@@ -343,7 +344,7 @@ connectSpotifyPlayer() {
 		
 		playListen(listen){
 			if(this.spotifyPlayer.current){
-				this.spotifyPlayer.current.play_listen(listen);
+				this.spotifyPlayer.current.playListen(listen);
 				return;
 			} else {
 				// For fallback embedded player
@@ -479,7 +480,7 @@ connectSpotifyPlayer() {
 											<td>{getTrackLink(listen)}</td>
 											<td><span className="fab fa-spotify" aria-hidden="true"></span> Playing now</td>
 											{this.state.mode === "follow" && <td>{listen.user_name}</td>}
-											<td>{getSpotifyPlayButton(listen,this.playListen)}</td>
+											<td>{getSpotifyPlayButton(listen,this.playListen.bind(this,listen))}</td>
 											</tr>
 											)
 										} else {
@@ -489,7 +490,7 @@ connectSpotifyPlayer() {
 												<td>{getTrackLink(listen)}</td>
 												<td><abbr className="timeago" title={listen.listened_at_iso}>{ listen.listened_at_iso ? $.timeago(listen.listened_at_iso) : $.timeago(listen.listened_at*1000) }</abbr></td>
 												{this.state.mode === "follow" && <td>{listen.user_name}</td>}
-												<td>{getSpotifyPlayButton(listen,this.playListen)}</td>
+												<td>{getSpotifyPlayButton(listen,this.playListen.bind(this,listen))}</td>
 												</tr>
 												)
 											}
@@ -653,7 +654,7 @@ class FollowUsers extends React.Component {
 								</td>
 								<td style={noTopBottomPadding}>
 								{this.props.playingNow[user] &&
-									getSpotifyPlayButton(this.props.playingNow[user],this.props.playListen)
+									getSpotifyPlayButton(this.props.playingNow[user],this.props.playListen.bind(this,this.props.playingNow[user]))
 								}
 								</td>
 							</tr>
