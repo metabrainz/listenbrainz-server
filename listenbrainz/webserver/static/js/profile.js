@@ -130,7 +130,6 @@ handleError(error){
 	console.error(error);
 	error = error.message ? error.message : error;
 	this.setState({errorMessage: error});
-
 }
 
 async togglePlay(){
@@ -205,7 +204,8 @@ connectSpotifyPlayer() {
 			}
 			this.setState({
 				currentSpotifyTrack: current_track,
-				playerPaused: paused
+				playerPaused: paused,
+				errorMessage: null
 			});
 	}
 		
