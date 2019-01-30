@@ -97,8 +97,8 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         resp = self.client.get(url_for('index.index'))
         data = resp.data.decode('utf-8')
         self.assertIn('Sign in', data)
+        self.assertIn('Import', data)
         # item in user menu doesn't exist
-        self.assertNotIn('Import', data)
         self.assertNotIn('My Listens', data)
         mock_user_get.assert_not_called()
 
@@ -175,7 +175,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         data = resp.data.decode('utf-8')
         # item not in user menu
         self.assertNotIn('My Listens', data)
-        self.assertIn('Sign in', data)
+        self.assertNotIn('Sign in', data)
         self.assertIn('Import', data)
 
     @mock.patch('listenbrainz.db.user.get')
@@ -200,10 +200,10 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.temporary_login(user['id'])
         resp = self.client.get('/page_that_returns_500')
         data = resp.data.decode('utf-8')
+        self.assertIn('Import', data)
         # item not in user menu
         self.assertNotIn('My Listens', data)
         self.assertNotIn('Sign in', data)
-        self.assertNotIn('Import', data)
         # Even after rendering the template, the database has only been queried once (before the exception)
         mock_user_get.assert_called_once()
         self.assertIsInstance(self.get_context_variable('current_user'), listenbrainz.webserver.login.User)
