@@ -186,6 +186,16 @@ Your development environment is now ready. Now, let's actually see ListenBrainz
 load locally!
 
 
+Install node dependencies
+-------------------------
+
+You also need to install some JavaScript dependencies.
+
+.. code-block:: bash
+
+    docker-compose -f docker/docker-compose.yml -p listenbrainz run --rm web npm install
+
+
 Run the magic script
 --------------------
 
