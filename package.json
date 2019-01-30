@@ -1,0 +1,19 @@
+{
+  "name": "listenbrainz",
+  "version": "1.0.0",
+  "description": "package.json for keeping track of node dependencies for ListenBrainz",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/metabrainz/listenbrainz-server.git"
+  },
+  "author": "MetaBrainz Foundation Inc.",
+  "license": "GPL-2.0-only",
+  "bugs": {
+    "url": "https://tickets.metabrainz.org/projects/LB"
+  },
+  "homepage": "https://listenbrainz.org",
+  "dependencies": {
+    "less": "^2.7.2",
+    "less-plugin-clean-css": "^1.5.1"
+  }
+}

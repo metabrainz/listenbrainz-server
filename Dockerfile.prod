@@ -65,10 +65,11 @@ RUN touch /var/log/stats.log /var/log/dump_create.log && chown listenbrainz:list
 RUN touch /etc/service/cron/down
 
 # Node
-RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
-RUN apt-get install -y nodejs
-RUN npm install -g less@2.7.2
-RUN npm install less-plugin-clean-css
+RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
+RUN apt-get install -y nodejs && rm -rf /var/lib/apt/lists/*
+COPY ./package.json /code/listenbrainz/
+COPY ./npm-shrinkwrap.json /code/listenbrainz/
+RUN npm install
 
 # Compile the CSS
 # Note: this will not persist because /code/listenbrainz is a volume
