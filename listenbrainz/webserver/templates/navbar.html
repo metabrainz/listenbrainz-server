@@ -17,11 +17,11 @@
     {#- Collect the nav links, forms, and other content for toggling -#}
     <div class="collapse navbar-collapse" id="lb-navbar-collapse">
       <ul class="nav navbar-nav">
-        {% if current_user or not current_user.is_anonymous %}
+        {% if current_user.is_authenticated %}
             <li><a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">My Listens</a></li>
             <li><a href="{{ url_for('follow.follow') }}">Follow</a></li>
+            <li><a href="{{ url_for('profile.import_data') }}">Import</a></li>
         {%- endif -%}
-        <li><a href="{{ url_for('profile.import_data') }}">Import</a></li>
 
         <li class="dropdown">
           <a class="dropdown-toggle" data-toggle="dropdown" href="#">
@@ -51,7 +51,7 @@
     </ul>
 
     <ul class="nav navbar-nav navbar-right">
-      {% if hide_navbar_user_menu or not current_user or current_user.is_anonymous %}
+      {% if hide_navbar_user_menu or not current_user.is_authenticated or current_user.is_anonymous %}
         <li>
           <a href="{{ url_for('login.index') }}">Sign in</a>
         </li>
