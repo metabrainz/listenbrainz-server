@@ -7,7 +7,7 @@ import datetime
 
 SPOTIFY_API_RETRIES = 5
 
-SPOTIFY_PERMISSIONS_SCOPE = 'user-read-currently-playing user-read-recently-played'
+SPOTIFY_PERMISSIONS_SCOPE = 'user-read-currently-playing streaming user-read-birthdate user-read-email user-read-private user-read-recently-played'
 
 
 class Spotify:

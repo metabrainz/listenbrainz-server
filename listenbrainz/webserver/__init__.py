@@ -42,16 +42,7 @@ def create_rabbitmq(app):
         app.logger.error('Could not connect to RabbitMQ: %s', str(e))
         return
 
-
-def gen_app(config_path=None, debug=None):
-    """ Generate a Flask app for LB with all configurations done and connections established.
-
-    In the Flask app returned, blueprints are not registered.
-    """
-    app = CustomFlask(
-        import_name=__name__,
-        use_flask_uuid=True,
-    )
+def load_config(app):
 
     print("Starting metabrainz service with %s environment." % deploy_env);
 
@@ -73,13 +64,6 @@ def gen_app(config_path=None, debug=None):
     else:
         app.config.from_pyfile(config_file)
 
-    if debug is not None:
-        app.debug = debug
-
-    # initialize Flask-DebugToolbar if the debug option is True
-    if app.debug and app.config['SECRET_KEY']:
-        app.init_debug_toolbar()
-
     # Output config values and some other info
     print('Configuration values are as follows: ')
     print(pprint.pformat(app.config, indent=4))
@@ -88,6 +72,25 @@ def gen_app(config_path=None, debug=None):
             print('Running on git commit: %s', git_version_file.read().strip())
     except IOError as e:
         print('Unable to retrieve git commit. Error: %s', str(e))
+
+
+def gen_app(config_path=None, debug=None):
+    """ Generate a Flask app for LB with all configurations done and connections established.
+
+    In the Flask app returned, blueprints are not registered.
+    """
+    app = CustomFlask(
+        import_name=__name__,
+        use_flask_uuid=True,
+    )
+
+    load_config(app)
+    if debug is not None:
+        app.debug = debug
+
+    # initialize Flask-DebugToolbar if the debug option is True
+    if app.debug and app.config['SECRET_KEY']:
+        app.init_debug_toolbar()
 
     # Logging
     app.init_loggers(
@@ -230,9 +233,11 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.api_compat import api_bp as api_bp_compat
     from listenbrainz.webserver.views.user import user_bp
     from listenbrainz.webserver.views.profile import profile_bp
+    from listenbrainz.webserver.views.follow import follow_bp
     app.register_blueprint(index_bp)
     app.register_blueprint(login_bp, url_prefix='/login')
     app.register_blueprint(user_bp, url_prefix='/user')
     app.register_blueprint(profile_bp, url_prefix='/profile')
+    app.register_blueprint(follow_bp, url_prefix='/follow')
     app.register_blueprint(api_bp, url_prefix=API_PREFIX)
     app.register_blueprint(api_bp_compat)

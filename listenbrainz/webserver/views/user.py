@@ -1,5 +1,6 @@
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
+import listenbrainz.db.spotify as db_spotify
 import urllib
 import ujson
 
@@ -129,18 +130,30 @@ def profile(user_name):
     except (KeyError, TypeError):
         artist_count = None
 
-    return render_template(
-        "user/profile.html",
-        user=user,
-        listens=listens,
-        previous_listen_ts=previous_listen_ts,
-        next_listen_ts=next_listen_ts,
-        latest_spotify_uri=_get_spotify_uri_for_listens(listens),
-        have_listen_count=have_listen_count,
-        listen_count=format(int(listen_count), ",d"),
-        artist_count=format(artist_count, ",d") if artist_count else None,
-        section='listens'
-    )
+    spotify_access_token = db_spotify.get_token_for_user(user.id)
+    props = {
+        "user" : {
+            "id"               : user.id,
+            "name"             : user.musicbrainz_id,
+            "auth_token"       : user.auth_token,
+        },
+        "listens"              : listens,
+        "previous_listen_ts"   : previous_listen_ts,
+        "next_listen_ts"       : next_listen_ts,
+        "latest_spotify_uri"   : _get_spotify_uri_for_listens(listens),
+        "have_listen_count"    : have_listen_count,
+        "listen_count"         : format(int(listen_count), ",d"),
+        "artist_count"         : format(artist_count, ",d") if artist_count else None,
+        "profile_url"          : url_for('user.profile', user_name=user_name),
+        "mode"                 : "listens",
+        "spotify_access_token" : spotify_access_token,
+    }
+
+    return render_template("user/profile.html", 
+        props=ujson.dumps(props), 
+        web_sockets_server_url=current_app.config['WEBSOCKETS_SERVER_URL'],
+        user=user, 
+        active_section='listens')
 
 
 @user_bp.route("/<user_name>/artists")
@@ -172,7 +185,7 @@ def artists(user_name):
         "user/artists.html",
         user=user,
         data=ujson.dumps(top_artists),
-        section='artists'
+        active_section='artists'
     )
 
 def _get_user(user_name):

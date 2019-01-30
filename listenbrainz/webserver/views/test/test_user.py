@@ -54,13 +54,14 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
     def test_user_page(self):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
-        self.assertContext('section', 'listens')
+        self.assertContext('active_section', 'listens')
 
         # check that artist count is not shown if stats haven't been calculated yet
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')
-        self.assertContext('artist_count', None)
+        props = ujson.loads(self.get_context_variable('props'))
+        self.assertIsNone(props['artist_count'])
 
         # check that artist count is shown if stats have been calculated
         db_stats.insert_user_stats(
@@ -73,7 +74,8 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')
-        self.assertContext('artist_count', '2')
+        props = ujson.loads(self.get_context_variable('props'))
+        self.assertEqual(props['artist_count'], '2')
 
     def test_scraper_username(self):
         """ Tests that the username is correctly rendered in the last.fm importer """
@@ -122,7 +124,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
 
         r = self.client.get(url_for('user.artists', user_name=self.user.musicbrainz_id))
         self.assert200(r)
-        self.assertContext('section', 'artists')
+        self.assertContext('active_section', 'artists')
 
     def _create_test_data(self, user_name):
         test_data = create_test_data_for_influxlistenstore(user_name)
