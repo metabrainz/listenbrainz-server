@@ -3,6 +3,7 @@ Flask-Testing == 0.7.1
 Flask-Login == 0.4.1
 Flask-WTF == 0.14
 Flask-SQLAlchemy == 2.3
+flask-socketio == 3.1.2
 Jinja2 == 2.10
 Werkzeug == 0.14.1
 SQLAlchemy == 1.2.5
@@ -32,3 +33,5 @@ git+https://github.com/metabrainz/messybrainz-server.git@production#egg=messybra
 git+https://github.com/metabrainz/brainzutils-python.git@v1.8.0
 spotipy == 2.4.4
 pyyaml == 3.13
+eventlet == 0.24.1
+Flask-CORS == 3.0.7

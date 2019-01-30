@@ -124,8 +124,10 @@ class APITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
-        r = self.client.get(url_for('user.profile', user_name=self.user['musicbrainz_id']))
-        self.assertIn('Playing now', r.data.decode('utf-8'))
+        r = self.client.get(url_for('api_v1.get_playing_now', user_name=self.user['musicbrainz_id']))
+        self.assert200(r)
+        self.assertEqual(r.json['payload']['count'], 1)
+
 
     def test_playing_now_with_duration(self):
         """ Test that playing now listens with durations expire

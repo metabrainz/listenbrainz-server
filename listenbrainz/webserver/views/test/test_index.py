@@ -97,9 +97,9 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         resp = self.client.get(url_for('index.index'))
         data = resp.data.decode('utf-8')
         self.assertIn('Sign in', data)
-        self.assertIn('Import!', data)
+        self.assertIn('Import', data)
         # item in user menu doesn't exist
-        self.assertNotIn('Your Listens', data)
+        self.assertNotIn('My Listens', data)
         mock_user_get.assert_not_called()
 
     @mock.patch('listenbrainz.db.user.get')
@@ -116,9 +116,9 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
 
         # username (menu header)
         self.assertIn('iliekcomputers', data)
-        self.assertIn('Import!', data)
+        self.assertIn('Import', data)
         # item in user menu
-        self.assertIn('Your Listens', data)
+        self.assertIn('My Listens', data)
         mock_user_get.assert_called_with(user['id'])
 
     @mock.patch('listenbrainz.db.user.get')
@@ -143,9 +143,9 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
 
         # username (menu header)
         self.assertIn('iliekcomputers', data)
-        self.assertIn('Import!', data)
+        self.assertIn('Import', data)
         # item in user menu
-        self.assertIn('Your Listens', data)
+        self.assertIn('My Listens', data)
         mock_user_get.assert_called_with(user['id'])
 
         resp = self.client.get('/page_that_returns_404')
@@ -153,9 +153,9 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assert404(resp)
         # username (menu header)
         self.assertIn('iliekcomputers', data)
-        self.assertIn('Import!', data)
+        self.assertIn('Import', data)
         # item in user menu
-        self.assertIn('Your Listens', data)
+        self.assertIn('My Listens', data)
         mock_user_get.assert_called_with(user['id'])
 
     @mock.patch('listenbrainz.db.user.get')
@@ -174,9 +174,9 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         resp = self.client.get('/page_that_returns_500')
         data = resp.data.decode('utf-8')
         # item not in user menu
-        self.assertNotIn('Your Listens', data)
-        self.assertIn('Sign in', data)
-        self.assertIn('Import!', data)
+        self.assertNotIn('My Listens', data)
+        self.assertNotIn('Sign in', data)
+        self.assertIn('Import', data)
 
     @mock.patch('listenbrainz.db.user.get')
     def test_menu_logged_in_error_dont_show_user_loaded(self, mock_user_get):
@@ -200,10 +200,10 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.temporary_login(user['id'])
         resp = self.client.get('/page_that_returns_500')
         data = resp.data.decode('utf-8')
+        self.assertIn('Import', data)
         # item not in user menu
-        self.assertNotIn('Your Listens', data)
-        self.assertIn('Sign in', data)
-        self.assertIn('Import!', data)
+        self.assertNotIn('My Listens', data)
+        self.assertNotIn('Sign in', data)
         # Even after rendering the template, the database has only been queried once (before the exception)
         mock_user_get.assert_called_once()
         self.assertIsInstance(self.get_context_variable('current_user'), listenbrainz.webserver.login.User)
