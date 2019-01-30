@@ -35,7 +35,6 @@ socketio = SocketIO(app)
 @socketio.on('json')
 def handle_json(data):
     current_app.logger.error('received json: %s' % str(data))
-    print('received json: ' + str(data))
 
     try:
         user = data['user']
