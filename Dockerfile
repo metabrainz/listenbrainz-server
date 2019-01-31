@@ -22,6 +22,10 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends postgresql-client-$PG_MAJOR \
     && rm -rf /var/lib/apt/lists/*
 
+# Node
+RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
+    apt-get install -y nodejs && rm -rf /var/lib/apt/lists/*
+
 RUN mkdir /code
 WORKDIR /code
 
