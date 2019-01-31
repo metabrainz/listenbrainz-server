@@ -83,7 +83,7 @@ class PlaybackControls extends React.Component {
 					{this.props.children ? this.props.children : 
 					<div className="noAlbumArt well text-center">No album art</div>}
 				</div>
-				<div className={`info ${(!this.props.children || this.props.playerPaused) && 'showControls'}`}>
+				<div className={`info ${(!this.props.children || this.props.playerPaused) ? 'showControls' : ''}`}>
 					<div className="currently-playing">
 						<h2 className="song-name">{this.props.trackName || '—'}</h2>
 						<h3 className="artist-name">{this.props.artistName}</h3>
