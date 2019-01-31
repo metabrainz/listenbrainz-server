@@ -14,6 +14,7 @@
   position: relative;
   margin: auto;
   width: 100%;
+  max-width: 500px;
   // min-height: 180px;
   border-radius: 5px;
   overflow: hidden;
@@ -73,15 +74,19 @@
       color: darken(@secondary, 10%);
       font-size: 1em;
     }
-    .next, .previous{
+    > *:not(.play){
       font-size: .8em;
     }
-    .play, .next, .previous {
+    > * {
       transition: all .5s ease;
       background: none;
       &:hover {
         color: lighten(@dark, 15%);
       }
+    }
+    .right{
+      position: absolute;
+      right: 10px;
     }
   }
   

@@ -79,7 +79,7 @@ class PlaybackControls extends React.Component {
 	render(){
 		return (
 			<div id="music-player" aria-label="Playback control">
-				<div className="album img-responsive">
+				<div className="album">
 					{this.props.children ? this.props.children : 
 					<div className="noAlbumArt well text-center">No album art</div>}
 				</div>
@@ -103,6 +103,16 @@ class PlaybackControls extends React.Component {
 						<div className="next btn btn-xs" onClick={this.props.playNextTrack}>
 							<i className="fas fa-fast-forward"></i>
 						</div>
+						{this.props.direction !== "hidden" &&
+							<div className="right btn btn-xs" onClick={this.props.toggleDirection}>
+								<span className={`${this.props.direction === "up"? 'hidden' : ''}`}>
+									<i className="fa fa-sort-amount-down"></i>
+								</span>
+								<span className={`${this.props.direction === "down" ? 'hidden' : ''}`}>
+									<i className="fa fa-sort-amount-up"></i>
+								</span>
+							</div>
+						}
 		 			</div>
 		 		</div>
 		 	</div>
