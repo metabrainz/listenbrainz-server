@@ -44,6 +44,13 @@ COPY ./requirements.txt .
 RUN pip3 install -r requirements.txt
 RUN pip3 install setuptools==36.0.1
 
+# Node
+RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
+    apt-get install -y nodejs && rm -rf /var/lib/apt/lists/*
+COPY ./package.json /code/listenbrainz/
+COPY ./package-lock.json /code/listenbrainz/
+RUN npm install
+
 COPY . /code/listenbrainz
 WORKDIR /code/listenbrainz
 
@@ -63,13 +70,6 @@ RUN touch /var/log/stats.log /var/log/dump_create.log && chown listenbrainz:list
 # Make sure the cron service doesn't start automagically
 # http://smarden.org/runit/runsv.8.html
 RUN touch /etc/service/cron/down
-
-# Node
-RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
-RUN apt-get install -y nodejs && rm -rf /var/lib/apt/lists/*
-COPY ./package.json /code/listenbrainz/
-COPY ./package-lock.json /code/listenbrainz/
-RUN npm install
 
 # Compile the CSS
 # Note: this will not persist because /code/listenbrainz is a volume

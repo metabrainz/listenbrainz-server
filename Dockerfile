@@ -23,8 +23,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Node
-RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
-RUN apt-get install -y nodejs && rm -rf /var/lib/apt/lists/*
+RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
+    apt-get install -y nodejs && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /code
 WORKDIR /code
