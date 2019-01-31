@@ -74,6 +74,42 @@ function getSpotifyPlayButton(listen, onClickFunction) {
 	return null;
 }
 
+class PlaybackControls extends React.Component {
+
+	render(){
+		return (
+			<div id="music-player" aria-label="Playback control">
+				<div className="album img-responsive">
+					{this.props.children ? this.props.children : 
+					<div className="noAlbumArt well text-center">No album art</div>}
+				</div>
+				<div className={`info ${(!this.props.children || this.props.playerPaused) && 'showControls'}`}>
+					<div className="currently-playing">
+						<h2 className="song-name">{this.props.trackName || '—'}</h2>
+						<h3 className="artist-name">{this.props.artistName}</h3>
+					</div>
+					<div className="controls">
+						<div className="previous btn btn-xs" onClick={this.props.playPreviousTrack}>
+							<i className="fas fa-fast-backward"></i>
+						</div>
+						<div className="play btn" onClick={this.props.togglePlay}>
+							<span className={`${this.props.playerPaused ? 'hidden' : ''}`}>
+								<i className="fa fa-2x fa-pause-circle"></i>
+							</span>
+							<span className={`${!this.props.playerPaused ? 'hidden' : ''}`}>
+								<i className="fa fa-2x fa-play-circle"></i>
+							</span>
+						</div>
+						<div className="next btn btn-xs" onClick={this.props.playNextTrack}>
+							<i className="fas fa-fast-forward"></i>
+						</div>
+		 			</div>
+		 		</div>
+		 	</div>
+		);
+	}
+}
+
 class SpotifyPlayer extends React.Component {
 
 	_spotifyPlayer;
@@ -163,7 +199,11 @@ handleError(error){
 }
 
 async togglePlay(){
-	await this._spotifyPlayer.togglePlay();
+	try {
+		await this._spotifyPlayer.togglePlay();
+	} catch (error) {
+		this.handleError(error);
+	}
 }
 
 toggleDirection(){
@@ -245,76 +285,31 @@ connectSpotifyPlayer() {
 			return null
 		}
 		const sortedImages = track.album.images.sort((a,b)=>a.height > b.height ? -1 :1);
-		return sortedImages[0] &&
-		<div className="img-responsive" className="thumbnail"><img src={sortedImages[0].url} style={{width: "100%"}}/></div>;
+		return sortedImages[0] && <img className="img-responsive" src={sortedImages[0].url}/>;
 	}
 	
 	render(){
-		const playerButtonStyle = {width: '24%'};
 		return (
 			<div>
-				<div className="btn-group" role="group" aria-label="Playback control" style={{witdh: '100%'}}>
-
-					<button className="btn btn-default"
-						onClick={this.playPreviousTrack}
-						style={playerButtonStyle}>
-						<span className="fa fa-backward"></span> Prev
-					</button>
-
-					<button className="btn btn-default"
-						onClick={this.togglePlay}
-						style={playerButtonStyle}>
-						<span className={`${this.state.playerPaused ? 'hidden' : ''}`}>
-							<span className="fa fa-pause"></span>
-						</span>
-						<span className={`${!this.state.playerPaused ? 'hidden' : ''}`}>
-							<span className="fa fa-play"></span>
-						</span>
-						&nbsp;&nbsp;
-						{!this.state.playerPaused ? 'Pause' : 'Play'}
-					</button>
-
-					<button className="btn btn-default"
-						onClick={this.toggleDirection}
-						style={playerButtonStyle}>
-							{this.state.direction}
-							&nbsp;&nbsp;
-							<span className={`${this.state.direction === 'up' ? 'hidden' : ''}`}>
-								<span className="fa fa-angle-double-down"></span>
-							</span>
-							<span className={`${this.state.direction === 'down' ? 'hidden' : ''}`}>
-								<span className="fa fa-angle-double-up"></span>
-							</span>
-					</button>
-
-					<button className="btn btn-default"
-						onClick={this.playNextTrack}
-						style={playerButtonStyle}>
-						Next <span className="fa fa-forward"></span>
-					</button>
-
-				</div>
+				<PlaybackControls
+					playPreviousTrack={this.playPreviousTrack}
+					playNextTrack={this.playNextTrack}
+					togglePlay={this.togglePlay}
+					playerPaused={this.state.playerPaused}
+					toggleDirection={this.toggleDirection}
+					direction={this.state.direction}
+					trackName={this.state.currentSpotifyTrack && this.state.currentSpotifyTrack.name}
+					artistName={this.state.currentSpotifyTrack && 
+						this.state.currentSpotifyTrack.artists.map(artist => artist.name).join(', ')
+					}
+				>
+					{this.getAlbumArt()}
+				</PlaybackControls>
 				
 				{this.state.errorMessage && 
 					<div className="alert alert-danger" role="alert">
 						{this.state.errorMessage}
 					</div>
-				}
-				{this.state.currentSpotifyTrack && 
-					<div>
-						<h4>Currently playing:</h4>
-						<h3 style={{borderBottom: "1px solid lightgrey"}}>
-							{this.state.currentSpotifyTrack.name}
-							{this.state.currentSpotifyTrack.duration_ms &&
-								<span className="small"> — {millisecondsToHumanReadable(this.state.currentSpotifyTrack.duration_ms)}</span>
-							}
-						</h3>
-						<p>{this.state.currentSpotifyTrack.artists.map(artist => artist.name).join(', ')}</p>
-						<div>{this.getAlbumArt()}</div>
-					</div>
-				}
-				{this.props.currentListen && this.props.currentListen.user_name &&
-					<div>from {this.props.currentListen.user_name}'s listens</div>
 				}
 			</div>
 			);
@@ -417,7 +412,7 @@ connectSpotifyPlayer() {
 				if(this.state.currentListen) {
 					return getSpotifyEmbedUriFromListen(this.state.currentListen);
 				} else if(spotifyListens.length){
-					console.log(spotifyListens[0]);
+					
 					return getSpotifyEmbedUriFromListen(spotifyListens[0]);
 				}
 				return null
