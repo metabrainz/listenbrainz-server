@@ -123,7 +123,8 @@ class PlaybackControls extends React.Component {
 class SpotifyPlayer extends React.Component {
 
 	_spotifyPlayer;
-	_accessToken; 
+	_accessToken;
+	_firstRun = true;
 
 	constructor(props) {
 		super(props);
@@ -192,7 +193,10 @@ playNextTrack(invert){
 	
 	const currentListenIndex = this.state.listens.findIndex(this.isCurrentListen);
 	let nextListen;
-	if((this.state.direction === "up" && invert !== true) || invert === true){
+	if(currentListenIndex === -1){
+		nextListen = this.state.direction === "up" ? this.state.listens[this.state.listens.length-1] : this.state.listens[0];
+	}
+	else if((this.state.direction === "up" && invert !== true) || invert === true){
 		nextListen = this.state.listens[currentListenIndex-1];
 	} else {
 		nextListen = this.state.listens[currentListenIndex+1];
@@ -315,6 +319,9 @@ connectSpotifyPlayer() {
 			playerPaused: paused,
 			errorMessage: null
 		});
+		if(this._firstRun){
+			this._firstRun = false;
+		}
 	}
 		
 	getAlbumArt(){
@@ -332,7 +339,7 @@ connectSpotifyPlayer() {
 				<PlaybackControls
 					playPreviousTrack={this.playPreviousTrack}
 					playNextTrack={this.playNextTrack}
-					togglePlay={this.togglePlay}
+					togglePlay={this._firstRun ? this.playNextTrack : this.togglePlay}
 					playerPaused={this.state.playerPaused}
 					toggleDirection={this.toggleDirection}
 					direction={this.state.direction}
