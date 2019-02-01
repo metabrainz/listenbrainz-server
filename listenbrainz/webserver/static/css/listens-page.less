@@ -39,28 +39,38 @@
   
   .currently-playing {
     text-align: center;
-    padding: 10px;
+    padding-top: 10px;
     background: fadeout(@white, 15%);
+    .song-name, .artist-name {
+      text-transform: uppercase;
+      font-weight: 400;
+      margin: 0;
+    }
+    
+    .song-name {
+      font-size: 1.2em;
+      letter-spacing: 2px;
+      color: @dark;
+    }
+    
+    .artist-name {
+      font-size: .8em;
+      letter-spacing: 1.5px;
+      color: lighten(@dark, 15%);
+      margin: 5px 0;
+    }
+    /** Progress **/
+    .progress {
+      height: 0.35em;
+      background-color: fadeout(@white,80%);
+    }
+
+    .progress-bar {
+      height: 100%;
+      background-color: @primary;
+    }
   }
   
-  .song-name, .artist-name {
-    text-transform: uppercase;
-    font-weight: 400;
-    margin: 0;
-  }
-  
-  .song-name {
-    font-size: 1.2em;
-    letter-spacing: 2px;
-    color: @dark;
-  }
-  
-  .artist-name {
-    font-size: .8em;
-    letter-spacing: 1.5px;
-    color: lighten(@dark, 15%);
-    margin-top: 5px;
-  }
   
   .controls {
     background: fadeout(@white, 40%);

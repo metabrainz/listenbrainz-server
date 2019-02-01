@@ -91,6 +91,9 @@ class PlaybackControls extends React.Component {
 					<div className="currently-playing">
 						<h2 className="song-name">{this.props.trackName || '—'}</h2>
 						<h3 className="artist-name">{this.props.artistName}</h3>
+						<div class="progress">
+							<div class="progress-bar" style={{width: `${this.props.progress_ms * 100 / this.props.duration_ms}%`}}></div>
+						</div>
 					</div>
 					<div className="controls">
 						<div className="left btn btn-xs"
@@ -145,8 +148,10 @@ class SpotifyPlayer extends React.Component {
 		this.state = { 
 			listens: props.listens,
 			currentSpotifyTrack: null,
-			playerPaused:true,
-			errorMessage:null,
+			playerPaused: true,
+			errorMessage: null,
+			progressMs: 0,
+			durationMs: 0,
 			direction: props.direction || "down"
 		};
 		this._accessToken = props.spotify_access_token;
@@ -329,6 +334,8 @@ connectSpotifyPlayer() {
 			return;
 		}
 		this.setState({
+			progressMs:position,
+			durationMs: duration,
 			currentSpotifyTrack: current_track,
 			playerPaused: paused,
 			errorMessage: null
@@ -361,6 +368,8 @@ connectSpotifyPlayer() {
 					artistName={this.state.currentSpotifyTrack && 
 						this.state.currentSpotifyTrack.artists.map(artist => artist.name).join(', ')
 					}
+					progress_ms={this.state.progressMs}
+					duration_ms={this.state.durationMs}
 				>
 					{this.getAlbumArt()}
 				</PlaybackControls>
