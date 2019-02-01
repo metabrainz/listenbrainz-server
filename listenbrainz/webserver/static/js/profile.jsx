@@ -677,7 +677,7 @@ class FollowUsers extends React.Component {
 					<tbody>
 						{this.state.users.map((user,index) => {
 							return (
-							<tr key={user} valign="middle">
+							<tr key={user} className={this.props.playingNow[user] && "playing_now"}>
 								<td>
 									{index + 1}
 								</td>
@@ -714,7 +714,7 @@ class FollowUsers extends React.Component {
 										<span className="fa fa-trash-alt"></span>
 									</button>
 								</td>
-								<td style={noTopBottomPadding} className="playButton">
+								<td className="playButton">
 								{this.props.playingNow[user] &&
 									getPlayButton(this.props.playingNow[user],this.props.playListen.bind(this,this.props.playingNow[user]))
 								}
