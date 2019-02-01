@@ -144,7 +144,9 @@ class SpotifyPlayer extends React.Component {
 		this.isCurrentListen = this.isCurrentListen.bind(this);
 		this.getAlbumArt = this.getAlbumArt.bind(this);
 		this.playListen = this.playListen.bind(this);
-		window.onSpotifyWebPlaybackSDKReady = this.connectSpotifyPlayer.bind(this);
+		this.disconnectSpotifyPlayer = this.disconnectSpotifyPlayer.bind(this);
+		this.connectSpotifyPlayer = this.connectSpotifyPlayer.bind(this);
+		window.onSpotifyWebPlaybackSDKReady = this.connectSpotifyPlayer;
 	}
 	
 	play_spotify_uri(spotify_uri){
@@ -167,6 +169,9 @@ playListen(listen){
 	if(listen.track_metadata.additional_info.spotify_id){
 		this.play_spotify_uri(getSpotifyUriFromListen(listen));
 		this.props.onCurrentListenChange(listen);
+	} else {
+		console.error("No Spotify ID for this listen :/");
+		this.handleError("Cannot play this song on Spotify");
 	}
 };
 isCurrentListen(element) {
@@ -182,7 +187,6 @@ playNextTrack(invert){
 		const error = "No Spotify listens to play. Maybe refresh the page?";
 		console.error(error);
 		this.setState({errorMessage:error});
-
 		return;
 	}
 	
@@ -193,16 +197,22 @@ playNextTrack(invert){
 	} else {
 		nextListen = this.state.listens[currentListenIndex+1];
 	}
+
 	if(!nextListen){
 		const error = "No more listens, maybe wait some?";
 		console.error(error);
 		this.setState({errorMessage:error});
 		return;
 	}
+
 	this.playListen(nextListen);
-	this.setState({errorMessage:null});
+	this.handleError(null);
 }
 handleError(error){
+	if(!error){
+		this.setState({errorMessage: null});
+		return;
+	}
 	console.error(error);
 	error = error.message ? error.message : error;
 	this.setState({errorMessage: error});
@@ -222,14 +232,33 @@ toggleDirection(){
 		return {direction: direction }
 	});
 }
+disconnectSpotifyPlayer(){
+	if(!this._spotifyPlayer){
+		return;
+	}
+	if(typeof this._spotifyPlayer.disconnect === "function"){
+		this._spotifyPlayer.disconnect();
+		this._spotifyPlayer.removeListener('initialization_error');
+		this._spotifyPlayer.removeListener('authentication_error');
+		this._spotifyPlayer.removeListener('account_error');
+		this._spotifyPlayer.removeListener('playback_error');
+		this._spotifyPlayer.removeListener('ready');
+		this._spotifyPlayer.removeListener('player_state_changed');
+	}
+	this._spotifyPlayer = null;
+	this.handleError(null);
+	this._firstRun = true;
+}
 
 connectSpotifyPlayer() {
+	this.disconnectSpotifyPlayer();
 	if(!this._accessToken){
 		console.error("No spotify acces_token");
 		const noTokenErrorMessage = <span>No Spotify access token. Please try to <a href="/profile/connect-spotify">link your account</a> and refresh this page</span>;
 		this.handleError(noTokenErrorMessage);
 		return;
 	}
+	
 	this._spotifyPlayer = new window.Spotify.Player({
 		name: 'ListenBrainz Player',
 		getOAuthToken: callback => {
@@ -239,22 +268,23 @@ connectSpotifyPlayer() {
 	});
 
 	// Error handling
-	const authErrorMessage = <span>Spotify authentication error. Please try to refresh the page or <a href="/profile/connect-spotify">relink your Spotify account</a></span>
+	const authErrorMessage = <span>Spotify authentication error. <br/><button onClick={this.connectSpotifyPlayer} className="btn btn-primary">Reconnect</button> or <a href="/profile/connect-spotify">relink your Spotify account</a></span>
 	this._spotifyPlayer.on('initialization_error', this.handleError);
 	this._spotifyPlayer.on('authentication_error', error => this.handleError(authErrorMessage));
 	this._spotifyPlayer.on('account_error', this.handleError);
 	this._spotifyPlayer.on('playback_error', this.handleError);
 	
-	
 	this._spotifyPlayer.addListener('ready', ({ device_id }) => {
 		console.log('Spotify player connected with Device ID', device_id);
+		this.handleError(null);
 	});
 	
 	this._spotifyPlayer.addListener('player_state_changed', this.handlePlayerStateChanged);
 	
 	this._spotifyPlayer.connect().then(success => {
-			if (success) {
+		if (success) {
 				console.log('The Web Playback SDK successfully connected to Spotify!');
+				this.handleError(null);
 			}
 			else {
 				this.handleError('Could not connect Web Playback SDK');
@@ -268,25 +298,23 @@ connectSpotifyPlayer() {
 		duration,
 		track_window: { current_track }
 	}) {
-		console.log('Currently Playing', current_track);
-		console.log('Position in Song', position);
-		console.log('Duration of Song', duration);
-		console.log('Player paused?', paused);
-		// console.log("currentListen is same as nextListen?", currentListen.recording_msid === listens[0].recording_msid);
+		console.debug('Currently Playing', current_track);
+		console.debug('Position in Song', position);
+		console.debug('Duration of Song', duration);
+		console.debug('Player paused?', paused);
+		
 		// How do we accurately detect the end of a song?
-		if(position === 0 && paused === true
-			// currentListen && currentListen.recording_msid === listens[0] && listens[0].recording_msid )
-			) {
-				// Track finished, play next track
-				console.log("Detected Spotify end of track, playing next track")
-				this.playNextTrack();
-				return;
-			}
-			this.setState({
-				currentSpotifyTrack: current_track,
-				playerPaused: paused,
-				errorMessage: null
-			});
+		if(position === 0 && paused === true) {
+			// Track finished, play next track
+			console.debug("Detected Spotify end of track, playing next track")
+			this.playNextTrack();
+			return;
+		}
+		this.setState({
+			currentSpotifyTrack: current_track,
+			playerPaused: paused,
+			errorMessage: null
+		});
 	}
 		
 	getAlbumArt(){
@@ -364,7 +392,7 @@ connectSpotifyPlayer() {
 			} catch (error) {
 				console.error(error);
 			}
-			console.log(typeof newListen, newListen);
+			console.debug(typeof newListen, newListen);
 			this.setState(prevState =>{
 				return { listens: [newListen].concat(prevState.listens)}
 			})
