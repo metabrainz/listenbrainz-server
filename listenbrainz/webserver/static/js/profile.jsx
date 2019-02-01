@@ -66,7 +66,7 @@ function getTrackLink(listen) {
 function getPlayButton(listen, onClickFunction) {
 	if(listen.track_metadata.additional_info.spotify_id) {
 		return (
-			<button className="btn btn-link" onClick={onClickFunction.bind(listen)}>
+			<button title="Play" className="btn btn-link" onClick={onClickFunction.bind(listen)}>
 				<i className="fas fa-play-circle fa-2x"></i>
 			</button>
 		)
@@ -76,6 +76,10 @@ function getPlayButton(listen, onClickFunction) {
 
 class PlaybackControls extends React.Component {
 
+	state = {
+		autoHideControls: true
+	}
+	
 	render(){
 		return (
 			<div id="music-player" aria-label="Playback control">
@@ -83,16 +87,26 @@ class PlaybackControls extends React.Component {
 					{this.props.children ? this.props.children : 
 					<div className="noAlbumArt">No album art</div>}
 				</div>
-				<div className={`info ${(!this.props.children || this.props.playerPaused) ? 'showControls' : ''}`}>
+				<div className={`info ${!this.state.autoHideControls || !this.props.children || this.props.playerPaused ? 'showControls' : ''}`}>
 					<div className="currently-playing">
 						<h2 className="song-name">{this.props.trackName || '—'}</h2>
 						<h3 className="artist-name">{this.props.artistName}</h3>
 					</div>
 					<div className="controls">
-						<div className="previous btn btn-xs" onClick={this.props.playPreviousTrack}>
+						<div className="left btn btn-xs"
+							title={`${this.state.autoHideControls ? 'Always show' : 'Autohide'} controls`}
+							onClick={()=>this.setState(state => ({autoHideControls: !state.autoHideControls}))}>
+							<span className={`${this.state.autoHideControls? 'hidden' : ''}`}>
+								<i className="fas fa-eye"></i>
+							</span>
+							<span className={`${!this.state.autoHideControls? 'hidden' : ''}`}>
+								<i className="fas fa-eye-slash"></i>
+							</span>
+						</div>
+						<div className="previous btn btn-xs" onClick={this.props.playPreviousTrack} title="Previous">
 							<i className="fas fa-fast-backward"></i>
 						</div>
-						<div className="play btn" onClick={this.props.togglePlay}>
+						<div className="play btn" onClick={this.props.togglePlay} title={`${this.props.playerPaused ? 'Play' : 'Pause'}`} >
 							<span className={`${this.props.playerPaused ? 'hidden' : ''}`}>
 								<i className="fa fa-2x fa-pause-circle"></i>
 							</span>
@@ -100,15 +114,15 @@ class PlaybackControls extends React.Component {
 								<i className="fa fa-2x fa-play-circle"></i>
 							</span>
 						</div>
-						<div className="next btn btn-xs" onClick={this.props.playNextTrack}>
+						<div className="next btn btn-xs" onClick={this.props.playNextTrack} title="Next">
 							<i className="fas fa-fast-forward"></i>
 						</div>
 						{this.props.direction !== "hidden" &&
-							<div className="right btn btn-xs" onClick={this.props.toggleDirection}>
-								<span className={`${this.props.direction === "up"? 'hidden' : ''}`}>
+							<div className="right btn btn-xs" onClick={this.props.toggleDirection} title={`Play ${this.props.direction === 'up'? 'down' : 'up'}`}>
+								<span className={`${this.props.direction === 'up'? 'hidden' : ''}`}>
 									<i className="fa fa-sort-amount-down"></i>
 								</span>
-								<span className={`${this.props.direction === "down" ? 'hidden' : ''}`}>
+								<span className={`${this.props.direction === 'down' ? 'hidden' : ''}`}>
 									<i className="fa fa-sort-amount-up"></i>
 								</span>
 							</div>
