@@ -107,25 +107,28 @@
 }
 
 
-#listens, .listens-table {
+.listens-table > tbody {
   
-  td {
-    vertical-align: middle;
-  }
-  .playing_now {
-    background-color: #fffcca ;
-  }
-  .playButton {
-    padding: 0;
-    & > * {
-      font-size: 1.2em;
-      padding-top: 0;
-      padding-bottom: 0;
-      opacity: 0;
-      transition: opacity .3s ease-in-out;
+  > tr {
+    &.playing_now {
+      background-color: #fffcca ;
     }
-  }
-  tr:hover > .playButton > *{
-    opacity: 1;
+    & > td {
+      vertical-align: middle;
+      &.playButton {
+        padding: 0;
+        & > * {
+          font-size: 1.2em;
+          padding-top: 0;
+          padding-bottom: 0;
+          opacity: 0;
+          transition: opacity .3s ease-in-out;
+        }
+      }
+    }
+
+    &:hover > td.playButton > *{
+      opacity: 1;
+    }
   }
 }
