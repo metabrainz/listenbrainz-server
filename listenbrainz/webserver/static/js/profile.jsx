@@ -63,11 +63,11 @@ function getTrackLink(listen) {
 	return listen.track_metadata.track_name;
 }
 
-function getSpotifyPlayButton(listen, onClickFunction) {
+function getPlayButton(listen, onClickFunction) {
 	if(listen.track_metadata.additional_info.spotify_id) {
 		return (
-			<button className="btn btn-info btn-sm" onClick={onClickFunction.bind(listen)}>
-				<span className="fab fa-spotify"></span> Play
+			<button className="btn btn-link" onClick={onClickFunction.bind(listen)}>
+				<i className="fas fa-play-circle fa-2x"></i>
 			</button>
 		)
 	}
@@ -81,7 +81,7 @@ class PlaybackControls extends React.Component {
 			<div id="music-player" aria-label="Playback control">
 				<div className="album">
 					{this.props.children ? this.props.children : 
-					<div className="noAlbumArt well text-center">No album art</div>}
+					<div className="noAlbumArt">No album art</div>}
 				</div>
 				<div className={`info ${(!this.props.children || this.props.playerPaused) ? 'showControls' : ''}`}>
 					<div className="currently-playing">
@@ -499,42 +499,38 @@ connectSpotifyPlayer() {
 					{ !this.state.listens.length ?
 						<p className="lead" className="text-center">No listens :/</p> :
 						<div>
-							<table className="table table-condensed table-striped">
+							<table className="table table-condensed table-striped" id="listens">
 							<thead>
 							<tr>
-							<th>Artist</th>
 							<th>Track</th>
+							<th>Artist</th>
 							<th>Time</th>
 							{this.state.mode === "follow" && <th>User</th>}
-							<th>Play</th>
+							<th></th>
 							</tr>
 							</thead>
 							<tbody>
 							{this.state.listens
 								.sort((a,b)=> a.playing_now ? -1 : b.playing_now ? 1 : 0) 
 								.map((listen,index) => {
-									if (listen.playing_now) {
-										return (
-											<tr id="playing_now" key='playing_now'>
-											<td>{getArtistLink(listen)}</td>
+									return (
+										<tr key={index} className={`listen ${this.isCurrentListen(listen) ? 'info' : ''} ${listen.playing_now ? 'playing_now' : ''}`}  >
 											<td>{getTrackLink(listen)}</td>
-											<td><span className="fab fa-spotify" aria-hidden="true"></span> Playing now</td>
-											{this.state.mode === "follow" && <td>{listen.user_name}</td>}
-											<td>{getSpotifyPlayButton(listen,this.playListen.bind(this,listen))}</td>
-											</tr>
-											)
-										} else {
-											return (
-												<tr key={index} className={this.isCurrentListen(listen) ? 'info' : ''}>
-												<td>{getArtistLink(listen)}</td>
-												<td>{getTrackLink(listen)}</td>
-												<td><abbr className="timeago" title={listen.listened_at_iso}>{ listen.listened_at_iso ? $.timeago(listen.listened_at_iso) : $.timeago(listen.listened_at*1000) }</abbr></td>
-												{this.state.mode === "follow" && <td>{listen.user_name}</td>}
-												<td>{getSpotifyPlayButton(listen,this.playListen.bind(this,listen))}</td>
-												</tr>
-												)
+											<td>{getArtistLink(listen)}</td>
+											{listen.playing_now ?
+												<td><span className="fab fa-spotify" aria-hidden="true"></span> Playing now</td>
+												:
+												<td>
+													<abbr className="timeago" title={listen.listened_at_iso}>
+													{listen.listened_at_iso ? $.timeago(listen.listened_at_iso) : $.timeago(listen.listened_at*1000) }
+													</abbr>
+												</td>
 											}
-										})
+											{this.state.mode === "follow" && <td>{listen.user_name}</td>}
+											<td className="playButton">{getPlayButton(listen,this.playListen.bind(this,listen))}</td>
+										</tr>
+										)
+									})
 								}
 								
 								</tbody>
@@ -694,7 +690,7 @@ class FollowUsers extends React.Component {
 								</td>
 								<td style={noTopBottomPadding}>
 								{this.props.playingNow[user] &&
-									getSpotifyPlayButton(this.props.playingNow[user],this.props.playListen.bind(this,this.props.playingNow[user]))
+									getPlayButton(this.props.playingNow[user],this.props.playListen.bind(this,this.props.playingNow[user]))
 								}
 								</td>
 							</tr>

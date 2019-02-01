@@ -6,11 +6,8 @@
 @dark: #053b47;
 @controlsHeight: 60px;
 
-@import url('https://fonts.googleapis.com/css?family=Questrial');
-@font: 'Questrial', sans-serif;
-
 #music-player {
-  background: @white;
+  background: @primary;
   position: relative;
   margin: auto;
   width: 100%;
@@ -35,6 +32,9 @@
   .noAlbumArt{
     min-height: 180px;
     margin: 0;
+    color: white;
+    text-align: center;
+    padding-top: 30px;
   }
   
   .currently-playing {
@@ -92,3 +92,26 @@
   
 }
 
+
+#listens {
+  
+  td {
+    vertical-align: middle;
+  }
+  .playing_now {
+    background-color: #fffcca ;
+  }
+  .playButton {
+    padding: 0;
+    & > * {
+      font-size: 1.2em;
+      padding-top: 0;
+      padding-bottom: 0;
+      opacity: 0;
+      transition: opacity .3s ease-in-out;
+    }
+  }
+  tr:hover > .playButton > *{
+    opacity: 1;
+  }
+}
