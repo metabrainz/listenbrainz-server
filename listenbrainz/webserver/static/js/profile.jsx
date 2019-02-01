@@ -522,7 +522,7 @@ connectSpotifyPlayer() {
 					{ !this.state.listens.length ?
 						<p className="lead" className="text-center">No listens :/</p> :
 						<div>
-							<table className="table table-condensed table-striped" id="listens">
+							<table className="table table-condensed table-striped listens-table" id="listens">
 							<thead>
 							<tr>
 							<th>Track</th>
@@ -644,7 +644,10 @@ class FollowUsers extends React.Component {
 		return (
 			<div className="panel panel-primary">
 				<div className="panel-heading">
-					<span style={{fontSize: "x-large"}}>Follow users</span>
+					<i class="fas fa-sitemap fa-2x fa-flip-vertical"></i>
+					<span style={{fontSize: "x-large", marginLeft: "0.55em", verticalAign: "middle"}}>
+						Follow users
+					</span>
 				</div>
 				<div className="panel-body">
 					<div className="text-muted">
@@ -661,7 +664,7 @@ class FollowUsers extends React.Component {
 							</button>
 						</span>
 					</div>
-					<table className="table table-condensed table-striped">
+					<table className="table table-condensed table-striped listens-table">
 					<thead>
 						<tr>
 							<th colSpan="2" width="50px">Order</th>
@@ -711,7 +714,7 @@ class FollowUsers extends React.Component {
 										<span className="fa fa-trash-alt"></span>
 									</button>
 								</td>
-								<td style={noTopBottomPadding}>
+								<td style={noTopBottomPadding} className="playButton">
 								{this.props.playingNow[user] &&
 									getPlayButton(this.props.playingNow[user],this.props.playListen.bind(this,this.props.playingNow[user]))
 								}
