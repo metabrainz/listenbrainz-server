@@ -75,7 +75,7 @@ RUN touch /etc/service/cron/down
 # Note: this will not persist because /code/listenbrainz is a volume
 # After bringing up a container, run this again inside the container
 # to compile the less files
-RUN lessc --clean-css listenbrainz/webserver/static/css/main.less > listenbrainz/webserver/static/css/main.css
+RUN /node_modules/less/bin/lessc --clean-css listenbrainz/webserver/static/css/main.less > listenbrainz/webserver/static/css/main.css
 
 # Consul Template service is already set up with the base image.
 # Just need to copy the configuration.
