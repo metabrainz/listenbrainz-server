@@ -9,8 +9,6 @@ import subprocess
 from urllib.parse import urlsplit
 from influxdb import InfluxDBClient
 
-from listenbrainz.utils import safely_import_config
-safely_import_config()
 
 @click.group()
 def cli():
@@ -78,7 +76,7 @@ def init_db(force, create_db):
     2. Primary keys and foreign keys are created.
     3. Indexes are created.
     """
-
+    from listenbrainz import config
     db.init_db_connection(config.POSTGRES_ADMIN_URI)
     if force:
         res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'drop_db.sql'))
@@ -125,7 +123,7 @@ def init_msb_db(force, create_db):
     2. Primary keys and foreign keys are created.
     3. Indexes are created.
     """
-
+    from listenbrainz import config
     db.init_db_connection(config.POSTGRES_ADMIN_URI)
     if force:
         res = db.run_sql_script_without_transaction(os.path.join(MSB_ADMIN_SQL_DIR, 'drop_db.sql'))
@@ -169,7 +167,7 @@ def init_msb_db(force, create_db):
 @cli.command(name="init_influx")
 def init_influx():
     """ Initializes influx database. """
-
+    from listenbrainz import config
     print("Connecting to Influx...")
     influx_client = InfluxDBClient(
         host=config.INFLUX_HOST,
