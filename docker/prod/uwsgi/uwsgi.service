@@ -31,10 +31,10 @@ then
     exec uwsgi /etc/uwsgi/uwsgi-api-compat.ini
 fi
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-follow-dispatch-prod" ]
+if [ "${CONTAINER_NAME}" = "listenbrainz-follow-dispatcher-prod" ]
 then
     cd /code/listenbrainz
-    exec python manage.py run_follow_server -h 0.0.0.0 -p 8081
+    exec python manage.py run_follow_server -h 0.0.0.0 -p 3031
 fi
 
 echo "init script has no clue which service to start. Set env var CONTAINER_NAME!"

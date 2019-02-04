@@ -34,10 +34,10 @@ then
     exec uwsgi /etc/uwsgi/uwsgi-api-compat.ini
 fi
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-follow-dispatch-beta" ]
+if [ "${CONTAINER_NAME}" = "listenbrainz-follow-dispatcher-beta" ]
 then
     cd /code/listenbrainz
-    exec python3 manage.py run_follow_server -h 0.0.0.0 -p 8081
+    exec python3 manage.py run_follow_server -h 0.0.0.0 -p 3031
 fi
 
 
