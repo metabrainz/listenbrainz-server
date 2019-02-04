@@ -9,7 +9,8 @@ import subprocess
 from urllib.parse import urlsplit
 from influxdb import InfluxDBClient
 
-from listenbrainz import config
+from listenbrainz.utils import safely_import_config
+safely_import_config()
 
 @click.group()
 def cli():
