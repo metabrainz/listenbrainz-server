@@ -1,12 +1,16 @@
 const path = require('path');
+const ManifestPlugin = require('webpack-manifest-plugin');
 
 module.exports = function(env){
   const isProd = env === "production";
+  const plugins = [
+      new ManifestPlugin()
+  ];
   return {
     mode: isProd ? "production" : "development",
     entry: './listenbrainz/webserver/js/profile.jsx',
     output: {
-      filename: 'main.js',
+      filename: isProd ? '[name].[contenthash].js' : '[name].js',
       path: path.resolve(__dirname, 'listenbrainz/webserver/static/js/dist')
     },
     module: {
@@ -14,6 +18,7 @@ module.exports = function(env){
         { test: [/\.js$/ , /\.jsx$/], exclude: /node_modules/, loader: "babel-loader" }
       ]
     },
+    plugins: plugins,
     watch: isProd ? false : true
 }
 };
