@@ -152,6 +152,7 @@ def profile(user_name):
 
     return render_template("user/profile.html", 
         props=ujson.dumps(props),
+        mode='listens',
         user=user, 
         active_section='listens')
 

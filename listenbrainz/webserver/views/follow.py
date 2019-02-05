@@ -50,6 +50,7 @@ def follow(user_list):
 
     return render_template("user/profile.html", 
         props=ujson.dumps(props),
+        mode='follow',
         user=current_user, 
         follow_list=follow_list,
         active_section='listens')
