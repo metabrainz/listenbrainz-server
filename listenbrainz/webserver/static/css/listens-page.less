@@ -1,0 +1,134 @@
+
+@primary: #08949b;
+@secondary: #0d696e;
+@white: #FFFFFF;
+@light: #C0CFB2;
+@dark: #053b47;
+@controlsHeight: 60px;
+
+#music-player {
+  background: @primary;
+  position: relative;
+  margin: auto;
+  width: 100%;
+  max-width: 500px;
+  // min-height: 180px;
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: 5px 5px 15px fadeout(@dark, 60%);
+  
+  .info {
+    width: 100%;
+    position: absolute;
+    transition: all .5s ease;
+  }
+  .info:not(.showControls){
+    bottom: -@controlsHeight;
+  }
+  &:hover .info, .info.showControls{
+    bottom:0;
+  }
+  
+  .noAlbumArt{
+    min-height: 180px;
+    margin: 0;
+    color: white;
+    text-align: center;
+    padding-top: 30px;
+  }
+  
+  .currently-playing {
+    text-align: center;
+    padding-top: 10px;
+    background: fadeout(@white, 15%);
+    .song-name, .artist-name {
+      text-transform: uppercase;
+      font-weight: 400;
+      margin: 0;
+    }
+    
+    .song-name {
+      font-size: 1.2em;
+      letter-spacing: 2px;
+      color: @dark;
+    }
+    
+    .artist-name {
+      font-size: .8em;
+      letter-spacing: 1.5px;
+      color: lighten(@dark, 15%);
+      margin: 5px 0;
+    }
+    /** Progress **/
+    .progress {
+      height: 0.35em;
+      background-color: fadeout(@white,80%);
+    }
+
+    .progress-bar {
+      height: 100%;
+      background-color: @primary;
+    }
+  }
+  
+  
+  .controls {
+    background: fadeout(@white, 40%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: @secondary;
+    font-size: 1.5em;
+    height: @controlsHeight;
+    .play {
+      color: darken(@secondary, 10%);
+      font-size: 1em;
+    }
+    > *:not(.play){
+      font-size: .8em;
+    }
+    > * {
+      transition: all .5s ease;
+      background: none;
+      &:hover {
+        color: lighten(@dark, 15%);
+      }
+    }
+    .right{
+      position: absolute;
+      right: 10px;
+    }
+    .left{
+      position: absolute;
+      left: 10px;
+    }
+  }
+  
+}
+
+
+.listens-table > tbody {
+  
+  > tr {
+    &.playing_now {
+      background-color: #fffcca ;
+    }
+    & > td {
+      vertical-align: middle;
+      &.playButton {
+        padding: 0;
+        & > * {
+          font-size: 1.2em;
+          padding-top: 0;
+          padding-bottom: 0;
+          opacity: 0;
+          transition: opacity .3s ease-in-out;
+        }
+      }
+    }
+
+    &:hover > td.playButton > *{
+      opacity: 1;
+    }
+  }
+}
