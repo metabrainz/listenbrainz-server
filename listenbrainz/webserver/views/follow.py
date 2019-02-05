@@ -48,7 +48,8 @@ def follow(user_list):
     }
 
     return render_template("user/profile.html", 
-        props=ujson.dumps(props), 
+        props=ujson.dumps(props),
+        mode='follow',
         web_sockets_server_url=current_app.config['WEBSOCKETS_SERVER_URL'],
         user=current_user, 
         follow_list=follow_list,
