@@ -508,7 +508,7 @@ class RecentListens extends React.Component {
 			return;
 		}
 		console.debug("Emitting user list to websockets:", userList);
-		this._socket.emit("json", {user: this.props.user.musicbrainz_id, 'follow': userList});
+		this._socket.emit("json", {user: this.props.user.name, 'follow': userList});
 	}
 
 	playListen(listen){
