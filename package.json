@@ -6,6 +6,12 @@
     "type": "git",
     "url": "git+https://github.com/metabrainz/listenbrainz-server.git"
   },
+  "scripts": {
+    "build:dev": "webpack --progress --colors",
+    "build:prod": "webpack -p --env production --progress --colors",
+    "build": "npm run build:dev",
+    "postinstall": "npm run build:prod"
+  },
   "author": "MetaBrainz Foundation Inc.",
   "license": "GPL-2.0-only",
   "bugs": {
@@ -14,6 +20,17 @@
   "homepage": "https://listenbrainz.org",
   "dependencies": {
     "less": "^2.7.2",
-    "less-plugin-clean-css": "^1.5.1"
+    "less-plugin-clean-css": "^1.5.1",
+    "react": "^16.7.0",
+    "react-dom": "^16.7.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.2.2",
+    "@babel/plugin-proposal-class-properties": "^7.3.0",
+    "@babel/preset-env": "^7.3.1",
+    "@babel/preset-react": "^7.0.0",
+    "babel-loader": "^8.0.5",
+    "webpack": "^4.29.0",
+    "webpack-cli": "^3.2.1"
   }
 }
