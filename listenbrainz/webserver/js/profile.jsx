@@ -450,7 +450,8 @@ class RecentListens extends React.Component {
 		this.state = {
 			listens: props.listens || [],
 			currentListen : null,
-			mode: props.mode === "follow" ? "follow" : "listens",
+      mode: props.mode === "follow" ? "follow" : "listens",
+      followList: props.follow_list || [],
 			playingNowByUser: {}
 		};
 		this.isCurrentListen = this.isCurrentListen.bind(this);
@@ -471,22 +472,15 @@ class RecentListens extends React.Component {
 		this._socket = io.connect(this.props.web_sockets_server_url);
 		this._socket.on('connect', () => {
 			console.debug("Connected to websocket!");
-		});
-		this._socket.once('connect', () => {
-			let initialList;
 			switch (this.state.mode) {
 				case "follow":
-					initialList = this.props.follow_list || [];
+          this.handleFollowUserListChange(this.state.followList);
 					break;
 				case "listens":
 				default:
-					initialList = [this.props.user.name];
+          this.handleFollowUserListChange([this.props.user.name]);
 					break;
 			}
-			if(!initialList.length){
-				return;
-			}
-			this.handleFollowUserListChange(initialList);
 		});
 		this._socket.on('listen', (data) => {
 			console.debug('New listen!');
@@ -502,13 +496,15 @@ class RecentListens extends React.Component {
 		if(!Array.isArray(userList)){
 			console.error("Expected array in handleFollowUserListChange, got", typeof userList);
 			return;
-		}
-		if(!this._socket){
-			this.connectWebsockets();
-			return;
-		}
-		console.debug("Emitting user list to websockets:", userList);
-		this._socket.emit("json", {user: this.props.user.name, 'follow': userList});
+    }
+    this.setState({followList: userList}, ()=>{
+      if(!this._socket){
+        this.connectWebsockets();
+        return;
+      }
+      console.debug("Emitting user list to websockets:", userList);
+      this._socket.emit("json", {user: this.props.user.name, 'follow': userList});
+    })
 	}
 
 	playListen(listen){
@@ -609,7 +605,7 @@ class RecentListens extends React.Component {
         }
         {this.state.mode === "follow" &&
           <FollowUsers onUserListChange={this.handleFollowUserListChange}
-            initialList={this.props.follow_list} playListen={this.playListen.bind(this)}
+            followList={this.state.followList} playListen={this.playListen.bind(this)}
             playingNow={this.state.playingNowByUser} />
         }
         <div className="row">
@@ -698,7 +694,7 @@ class FollowUsers extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      users: props.initialList || []
+      users: props.followList || []
     }
     this.addUserToList = this.addUserToList.bind(this);
     this.reorderUser = this.reorderUser.bind(this);
