@@ -150,7 +150,8 @@ def profile(user_name):
     }
 
     return render_template("user/profile.html", 
-        props=ujson.dumps(props), 
+        props=ujson.dumps(props),
+        mode='listens',
         web_sockets_server_url=current_app.config['WEBSOCKETS_SERVER_URL'],
         user=user, 
         active_section='listens')
