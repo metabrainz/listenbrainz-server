@@ -1,5 +1,8 @@
 'use strict';
 
+import React from 'react';
+import ReactDOM from 'react-dom';
+
 function getSpotifyEmbedUriFromListen(listen){
 	
 	if(!listen || !listen.track_metadata || !listen.track_metadata.additional_info ||
