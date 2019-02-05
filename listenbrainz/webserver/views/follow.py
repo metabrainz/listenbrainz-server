@@ -40,10 +40,6 @@ def follow(user_list):
         }
         spotify_access_token = ""
 
-    current_app.logger.error(user_data)
-    current_app.logger.error(follow_list)
-    current_app.logger.error(spotify_access_token)
-
     props = {
         "user"                 : user_data,
         "mode"                 : "follow",
