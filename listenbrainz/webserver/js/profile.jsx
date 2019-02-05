@@ -2,6 +2,8 @@
 
 import '../static/js/lib/spotify-player-sdk-1.6.0';
 
+import * as timeago from 'time-ago';
+
 import {getArtistLink, getPlayButton, getSpotifyEmbedUriFromListen, getTrackLink} from './utils.jsx';
 
 import {FollowUsers} from './follow-users.jsx';
@@ -205,8 +207,8 @@ class RecentListens extends React.Component {
                               <td><span className="fab fa-spotify" aria-hidden="true"></span> Playing now</td>
                               :
                               <td>
-                                <abbr className="timeago" title={listen.listened_at_iso}>
-                                  {listen.listened_at_iso ? $.timeago(listen.listened_at_iso) : $.timeago(listen.listened_at * 1000)}
+                                <abbr title={listen.listened_at_iso}>
+                                    {listen.listened_at_iso ? timeago.ago(listen.listened_at_iso) : timeago.ago(listen.listened_at * 1000)}
                                 </abbr>
                               </td>
                             }
