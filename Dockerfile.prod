@@ -54,6 +54,8 @@ RUN npm install
 COPY . /code/listenbrainz
 WORKDIR /code/listenbrainz
 
+RUN npm run build:prod
+
 # Sometimes the local copy of config.py[c] gets in the way. Better nuke it to not conflict.
 RUN rm -f /code/listenbrainz/listenbrainz/config.py /code/listenbrainz/listenbrainz/config.pyc
 
