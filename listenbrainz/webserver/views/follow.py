@@ -35,10 +35,14 @@ def follow(user_list):
     else:
         user_data = {
             "id"               : 0,
-            "name"             : uuid.uuid4(),
+            "name"             : uuid.uuid4().hex,
             "auth_token"       : "",
         }
         spotify_access_token = ""
+
+    current_app.logger.error(user_data)
+    current_app.logger.error(follow_list)
+    current_app.logger.error(spotify_access_token)
 
     props = {
         "user"                 : user_data,
