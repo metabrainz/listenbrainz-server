@@ -69,10 +69,7 @@ class FollowDispatcher(threading.Thread):
         with self.app.app_context():
             while True:
                 current_app.logger.info("Starting player writer...")
-                current_app.logger.info("Connecting to RabbitMQ...")
                 self.init_rabbitmq_connection()
-                current_app.logger.info("Done!")
-                current_app.logger.info("Started!")
                 try:
                     self.connection.ioloop.start()
                 except KeyboardInterrupt:
