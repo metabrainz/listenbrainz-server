@@ -1,7 +1,7 @@
 import eventlet
 eventlet.monkey_patch()
 
-from flask import Flask, current_app
+from flask import Flask, current_app, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, join_room, leave_room, emit, rooms
 from werkzeug.exceptions import BadRequest
@@ -50,6 +50,11 @@ def handle_json(data):
 
     current_rooms = rooms()
     for user in rooms():
+         
+        # Don't remove the user from its own room
+        if user == request.sid:
+            continue
+
         if user not in follow_list:
             leave_room(user)
 
