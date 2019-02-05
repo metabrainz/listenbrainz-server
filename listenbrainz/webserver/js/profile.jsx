@@ -1,7 +1,10 @@
 'use strict';
 
+import '../static/js/lib/spotify-player-sdk-1.6.0';
+
 import React from 'react';
 import ReactDOM from 'react-dom';
+import io from 'socket.io-client';
 
 function getSpotifyEmbedUriFromListen(listen){
 	
@@ -200,14 +203,14 @@ connectSpotifyPlayer() {
 	
 	
 	this._spotifyPlayer.addListener('ready', ({ device_id }) => {
-		console.log('Spotify player connected with Device ID', device_id);
+		console.debug('Spotify player connected with Device ID', device_id);
 	});
 	
 	this._spotifyPlayer.addListener('player_state_changed', this.handlePlayerStateChanged);
 	
 	this._spotifyPlayer.connect().then(success => {
 			if (success) {
-				console.log('The Web Playback SDK successfully connected to Spotify!');
+				console.debug('The Web Playback SDK successfully connected to Spotify!');
 			}
 			else {
 				this.handleError('Could not connect Web Playback SDK');
@@ -221,17 +224,17 @@ connectSpotifyPlayer() {
 		duration,
 		track_window: { current_track }
 	}) {
-		console.log('Currently Playing', current_track);
-		console.log('Position in Song', position);
-		console.log('Duration of Song', duration);
-		console.log('Player paused?', paused);
-		// console.log("currentListen is same as nextListen?", currentListen.recording_msid === listens[0].recording_msid);
+		console.debug('Currently Playing', current_track);
+		console.debug('Position in Song', position);
+		console.debug('Duration of Song', duration);
+		console.debug('Player paused?', paused);
+		// console.debug("currentListen is same as nextListen?", currentListen.recording_msid === listens[0].recording_msid);
 		// How do we accurately detect the end of a song?
 		if(position === 0 && paused === true
 			// currentListen && currentListen.recording_msid === listens[0] && listens[0].recording_msid )
 			) {
 				// Track finished, play next track
-				console.log("Detected Spotify end of track, playing next track")
+				console.debug("Detected Spotify end of track, playing next track")
 				this.playNextTrack();
 				return;
 			}
@@ -341,8 +344,58 @@ connectSpotifyPlayer() {
 			this.handleCurrentListenChange = this.handleCurrentListenChange.bind(this);
 			this.playListen = this.playListen.bind(this);
 			this.spotifyPlayer = React.createRef();
-			window.handleIncomingListen = this.receiveNewListen.bind(this);
-			window.handleIncomingPlayingNow = this.receiveNewPlayingNow.bind(this);
+			this.receiveNewListen = this.receiveNewListen.bind(this);
+			this.receiveNewPlayingNow = this.receiveNewPlayingNow.bind(this);
+			this.handleFollowUserListChange = this.handleFollowUserListChange.bind(this);
+			this.connectWebsockets = this.connectWebsockets.bind(this);
+		}
+
+		componentDidMount(){
+			this.connectWebsockets();
+		}
+
+		connectWebsockets(){
+			this._socket = io.connect(this.props.web_sockets_server_url);
+			this._socket.on('connect', () => {
+				console.debug("Connected to websocket!");
+			});
+			this._socket.once('connect', () => {
+				let initialList;
+				switch (this.state.mode) {
+					case "follow":
+						initialList = this.props.follow_list || [];
+						break;
+					case "listens":
+					default:
+						initialList = [this.props.user.name];
+						break;
+				}
+				if(!initialList.length){
+					return;
+				}
+				this.handleFollowUserListChange(initialList);
+			});
+			this._socket.on('listen', (data) => {
+				console.debug('New listen!');
+				this.receiveNewListen(data);
+			});
+			this._socket.on('playing_now', (data) => {
+				console.debug('New now playing notification!')
+				this.receiveNewPlayingNow(data);
+			});
+		}
+
+		handleFollowUserListChange(userList){
+			if(!Array.isArray(userList)){
+				console.error("Expected array in handleFollowUserListChange, got", typeof userList);
+				return;
+			}
+			if(!this._socket){
+				this.connectWebsockets();
+				return;
+			}
+			console.debug("Emitting user list to websockets:", userList);
+			this._socket.emit("json", {user: this.props.user.musicbrainz_id, 'follow': userList});
 		}
 		
 		playListen(listen){
@@ -362,7 +415,7 @@ connectSpotifyPlayer() {
 			} catch (error) {
 				console.error(error);
 			}
-			console.log(typeof newListen, newListen);
+			console.debug(typeof newListen, newListen);
 			this.setState(prevState =>{
 				return { listens: [newListen].concat(prevState.listens)}
 			})
@@ -397,17 +450,6 @@ connectSpotifyPlayer() {
 		isCurrentListen(listen){
 			return this.state.currentListen && this.state.currentListen.listened_at === listen.listened_at;
 		}
-		handleFollowUserListChange(users){
-			if(!Array.isArray(users)){
-				console.error("Expected array in handleFollowUserListChange, got", typeof users);
-				return;
-			}
-			if(typeof window.emitFollowUsersList !== "function"){
-				console.error("window.emitFollowUsersList is not a function, can't emit follow users list");
-				return;
-			}
-			window.emitFollowUsersList(users);
-		}
 		
 		render() {
 			
@@ -420,7 +462,6 @@ connectSpotifyPlayer() {
 				if(this.state.currentListen) {
 					return getSpotifyEmbedUriFromListen(this.state.currentListen);
 				} else if(spotifyListens.length){
-					console.log(spotifyListens[0]);
 					return getSpotifyEmbedUriFromListen(spotifyListens[0]);
 				}
 				return null
@@ -684,7 +725,5 @@ catch(err){
 console.error("Error parsing props:", err);
 }
 ReactDOM.render(<RecentListens {...reactProps}/>, domContainer);
-			
-window.onSpotifyWebPlaybackSDKReady = window.onSpotifyWebPlaybackSDKReady || console.log; 
 
 
