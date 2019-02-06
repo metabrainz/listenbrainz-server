@@ -7,7 +7,7 @@ from flask import current_app, url_for
 import spotipy.oauth2
 
 
-def create_spotify(user_id, user_token, refresh_token, token_expires_ts):
+def create_spotify(user_id, user_token, refresh_token, token_expires_ts, active=True):
     """ Add a row to the spotify table for specified user with corresponding
     Spotify tokens and information.
 
@@ -16,17 +16,19 @@ def create_spotify(user_id, user_token, refresh_token, token_expires_ts):
         user_token (str): the Spotify access token used to access the user's Spotify listens.
         refresh_token (str): the token used to refresh Spotify access tokens once they expire
         token_expires_ts (int): the unix timestamp at which the user_token will expire
+        active (bool): True if user wishes to import listens from Spotify, False otherwise
     """
     token_expires = utils.unix_timestamp_to_datetime(token_expires_ts)
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            INSERT INTO spotify_auth (user_id, user_token, refresh_token, token_expires)
-                 VALUES (:user_id, :user_token, :refresh_token, :token_expires)
+            INSERT INTO spotify_auth (user_id, user_token, refresh_token, token_expires, active)
+                 VALUES (:user_id, :user_token, :refresh_token, :token_expires, :active)
             """), {
                 "user_id": user_id,
                 "user_token": user_token,
                 "refresh_token": refresh_token,
                 "token_expires": token_expires,
+                "active": active,
             })
 
 

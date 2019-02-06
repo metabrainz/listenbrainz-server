@@ -6,11 +6,9 @@
   <div id="user-profile">
     <h2 class="page-title">Link Spotify Account</h2>
 
-    <p>
-      If you link your spotify account with ListenBrainz then we will automatically
-      add the songs that you listen to your ListenBrainz account.
-      We only ask permission to read your recently listened songs.
-    </p>
+    <p>ListenBrainz has two different integrations with Spotify. We provide users the ability to play music from Spotify on certain pages and the ability to import the songs that you listen to on Spotify automatically.</p>
+    <p>We ask permission to read your recently listened songs to import them and a few other permissions to be able to play music from Spotify on ListenBrainz. You can revoke these permissions whenever you want by unlinking your Spotify account.</p>
+    <p>We provide the choice of only opting in to any one of the features (or both).</p>
 
     {% if account %}
       <p>Your account is linked. Click the button below to unlink it</p>
@@ -29,7 +27,7 @@
 
       <h3>Activity Status</h3>
       {% if not account.active %}
-        <p>ListenBrainz is currently not importing your Spotify listens due to errors,
+        <p>ListenBrainz is currently not importing your Spotify listens. This may be due to errors,
         please unlink and link your Spotify account to try again.</p>
       {% endif %}
 
@@ -40,7 +38,9 @@
       {% endif %}
 
     {% else %}
-      <p><a href="{{ spotify_login_url }}">Log in with Spotify.</a></p>
+      <p><a href="{{ only_listen_url }}">Log in with Spotify (only listen to music).</a></p>
+      <p><a href="{{ only_import_url }}">Log in with Spotify (import listens).</a></p>
+      <p><a href="{{ both_url }}">Log in with Spotify (both).</a></p>
     {% endif %}
 
   </div>
