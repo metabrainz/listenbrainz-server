@@ -205,22 +205,33 @@ export class SpotifyPlayer extends React.Component {
       {
         console.log('The Web Playback SDK successfully connected to Spotify!');
         this.handleError(null);
-        fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+        return fetch('https://api.spotify.com/v1/me/player/currently-playing', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${this._accessToken}`
           },
-        })
-        .then(response => response.json())
-        .then(this.handleSpotifyAPICurrentlyPlaying)
-        .catch(this.handleError);
+        });
       }
       else
       {
-        this.handleError('Could not connect Web Playback SDK');
+        throw Error('Could not connect Web Playback SDK');
       }
-    });
+    })
+    .then(response => {
+      if(response.status === 202 || response.status === 204)
+      {
+        // Failure, no response body.
+        return;
+      }
+      return response.json().then(response => {
+        if (response.error) {
+          return this.handleError(response.error.message)
+        }
+        this.handleSpotifyAPIPlaybackStatus(response);
+      })
+    })
+    .catch(this.handleError);
   }
 
   handleSpotifyAPICurrentlyPlaying(currentlyPlaying) {
