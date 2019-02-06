@@ -227,17 +227,18 @@ def connect_spotify():
         flash.success('Your Spotify account has been unlinked')
 
     user = spotify.get_user(current_user.id)
-    spotify_url = None
-    if not user:
-        sp_oauth = spotify.get_spotify_oauth()
-        spotify_url = sp_oauth.get_authorize_url()
+    only_listen_sp_oauth = spotify.get_spotify_oauth(spotify.SPOTIFY_LISTEN_PERMISSIONS)
+    only_import_sp_oauth = spotify.get_spotify_oauth(spotify.SPOTIFY_IMPORT_PERMISSIONS)
+    both_sp_oauth = spotify.get_spotify_oauth(spotify.SPOTIFY_LISTEN_PERMISSIONS + spotify.SPOTIFY_IMPORT_PERMISSIONS)
 
     return render_template(
         'user/spotify.html',
         account=user,
         last_updated=user.last_updated_iso if user else None,
         latest_listened_at=user.latest_listened_at_iso if user else None,
-        spotify_login_url=spotify_url
+        only_listen_url=only_listen_sp_oauth.get_authorize_url(),
+        only_import_url=only_import_sp_oauth.get_authorize_url(),
+        both_url=both_sp_oauth.get_authorize_url(),
     )
 
 
@@ -247,10 +248,9 @@ def connect_spotify_callback():
     code = request.args.get('code')
     if not code:
         raise BadRequest('missing code')
-    sp_oauth = spotify.get_spotify_oauth()
 
     try:
-        token = sp_oauth.get_access_token(code)
+        token = spotify.get_access_token(code)
         spotify.add_new_user(current_user.id, token)
         flash.success('Successfully authenticated with Spotify!')
     except spotipy.oauth2.SpotifyOauthError as e:
