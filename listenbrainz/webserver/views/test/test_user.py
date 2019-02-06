@@ -52,8 +52,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         ServerTestCase.tearDown(self)
         DatabaseTestCase.tearDown(self)
 
-    @mock.patch('listenbrainz.webserver.views.user.db_spotify')
-    def test_user_page(self, mock_db_spotify):
+    def test_user_page(self):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertContext('active_section', 'listens')
@@ -79,8 +78,14 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         props = ujson.loads(self.get_context_variable('props'))
         self.assertEqual(props['artist_count'], '2')
         self.assertEqual(props['spotify_access_token'], '')
-        mock_db_spotify.assert_not_called()
 
+    @mock.patch('listenbrainz.webserver.views.user.db_spotify')
+    def test_spotify_token_access(self, mock_db_spotify):
+        response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
+        self.assert200(response)
+        self.assertTemplateUsed('user/profile.html')
+        props = ujson.loads(self.get_context_variable('props'))
+        self.assertEqual(props['spotify_access_token'], '')
 
         self.temporary_login(self.user.id)
         mock_db_spotify.get_token_for_user.return_value = None
@@ -88,7 +93,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assert200(response)
         props = ujson.loads(self.get_context_variable('props'))
         self.assertEqual(props['spotify_access_token'], '')
-
 
         mock_db_spotify.get_token_for_user.return_value = 'token'
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
