@@ -37,6 +37,9 @@ module.exports = function(env){
         }
       ]
     },
+    resolve: {
+        modules: ['/static/node_modules']
+    },
     plugins: plugins,
     watch: false
 }
