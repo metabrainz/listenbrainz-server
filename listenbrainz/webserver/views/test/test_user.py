@@ -39,6 +39,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         })
 
         user = db_user.get_or_create(1, 'iliekcomputers')
+        db_user.agree_to_gdpr(user['musicbrainz_id'])
         self.user = User.from_dbrow(user)
 
         weirduser = db_user.get_or_create(2, 'weird\\user name')
@@ -51,7 +52,8 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         ServerTestCase.tearDown(self)
         DatabaseTestCase.tearDown(self)
 
-    def test_user_page(self):
+    @mock.patch('listenbrainz.webserver.views.user.db_spotify')
+    def test_user_page(self, mock_db_spotify):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertContext('active_section', 'listens')
@@ -76,6 +78,31 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertTemplateUsed('user/profile.html')
         props = ujson.loads(self.get_context_variable('props'))
         self.assertEqual(props['artist_count'], '2')
+        self.assertEqual(props['spotify_access_token'], '')
+        mock_db_spotify.assert_not_called()
+
+
+        self.temporary_login(self.user.id)
+        mock_db_spotify.get_token_for_user.return_value = None
+        response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
+        self.assert200(response)
+        props = ujson.loads(self.get_context_variable('props'))
+        self.assertEqual(props['spotify_access_token'], '')
+
+
+        mock_db_spotify.get_token_for_user.return_value = 'token'
+        response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
+        self.assert200(response)
+        props = ujson.loads(self.get_context_variable('props'))
+        mock_db_spotify.get_token_for_user.assert_called_with(self.user.id)
+        self.assertEqual(props['spotify_access_token'], 'token')
+
+        response = self.client.get(url_for('user.profile', user_name=self.weirduser.musicbrainz_id))
+        self.assert200(response)
+        props = ujson.loads(self.get_context_variable('props'))
+        mock_db_spotify.get_token_for_user.assert_called_with(self.user.id)
+        self.assertEqual(props['spotify_access_token'], 'token')
+
 
     def test_scraper_username(self):
         """ Tests that the username is correctly rendered in the last.fm importer """
