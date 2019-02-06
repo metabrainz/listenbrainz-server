@@ -154,6 +154,7 @@ def create_app(config_path=None, debug=None):
     import listenbrainz.webserver.static_manager
     static_manager.read_manifest()
     app.context_processor(lambda: dict(get_static_path=static_manager.get_static_path))
+    app.static_folder = '/static'
 
     _register_blueprints(app)
 

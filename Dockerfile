@@ -43,8 +43,18 @@ WORKDIR /code/listenbrainz
 COPY requirements.txt /code/listenbrainz/
 RUN pip3 install --no-cache-dir -r requirements.txt
 
+RUN mkdir /static
+WORKDIR /static
+COPY package.json .
+COPY package-lock.json .
+RUN npm install
+
 # Now install our code, which may change frequently
 COPY . /code/listenbrainz/
+COPY webpack.config.js .
+RUN npm run build:dev
+COPY ./listenbrainz/webserver/static /static
+WORKDIR /code/listenbrainz
 
 # create a user named listenbrainz for storing dump file backups
 RUN useradd --create-home --shell /bin/bash listenbrainz
