@@ -1,7 +1,7 @@
 import os.path
 import json
 
-MANIFEST_PATH = os.path.join(os.path.dirname(__file__), "static", "js", "dist", "manifest.json")
+MANIFEST_PATH = os.path.join("/", "static", "js", "dist", "manifest.json")
 
 manifest_content = {}
 

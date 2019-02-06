@@ -47,14 +47,17 @@ RUN pip3 install setuptools==36.0.1
 # Node
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
     apt-get install -y nodejs && rm -rf /var/lib/apt/lists/*
-COPY ./package.json /code/listenbrainz/
-COPY ./package-lock.json /code/listenbrainz/
+RUN mkdir /static
+WORKDIR /static
+COPY ./package.json /static
+COPY ./package-lock.json /static
 RUN npm install
+COPY ./listenbrainz/webserver/static /static
 
 COPY . /code/listenbrainz
+RUN npm run build:prod
 WORKDIR /code/listenbrainz
 
-RUN npm run build:prod
 
 # Sometimes the local copy of config.py[c] gets in the way. Better nuke it to not conflict.
 RUN rm -f /code/listenbrainz/listenbrainz/config.py /code/listenbrainz/listenbrainz/config.pyc
