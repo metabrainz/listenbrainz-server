@@ -1,4 +1,3 @@
-import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import ujson
 from unittest import mock
@@ -12,7 +11,6 @@ from listenbrainz.webserver.login import User
 from listenbrainz.webserver.testing import ServerTestCase
 
 import listenbrainz.db.user as db_user
-import logging
 
 
 class FollowViewsTestCase(ServerTestCase, DatabaseTestCase):
@@ -20,15 +18,11 @@ class FollowViewsTestCase(ServerTestCase, DatabaseTestCase):
         ServerTestCase.setUp(self)
         DatabaseTestCase.setUp(self)
 
-        self.log = logging.getLogger(__name__)
-
         user = db_user.get_or_create(1, 'iliekcomputers')
         self.user = User.from_dbrow(user)
 
 
     def tearDown(self):
-        self.logstore = None
-
         ServerTestCase.tearDown(self)
         DatabaseTestCase.tearDown(self)
 
