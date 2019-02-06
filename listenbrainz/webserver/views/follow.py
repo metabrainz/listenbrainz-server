@@ -35,7 +35,7 @@ def follow(user_list):
     else:
         user_data = {
             "id"               : 0,
-            "name"             : uuid.uuid4(),
+            "name"             : uuid.uuid4().hex,
             "auth_token"       : "",
         }
         spotify_access_token = ""
