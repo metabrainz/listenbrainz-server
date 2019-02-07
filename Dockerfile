@@ -45,14 +45,9 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 
 RUN mkdir /static
 WORKDIR /static
-COPY package.json .
-COPY package-lock.json .
-RUN npm install
-
-# Now install our code, which may change frequently
+COPY package.json package-lock.json webpack.config.js /static/
 COPY . /code/listenbrainz/
-COPY webpack.config.js .
-RUN npm run build:dev
+RUN npm install && npm run build:dev && rm -r node_modules && rm package.json package-lock.json webpack.config.js
 COPY ./listenbrainz/webserver/static /static
 WORKDIR /code/listenbrainz
 
