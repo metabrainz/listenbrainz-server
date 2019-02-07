@@ -7,7 +7,7 @@
     "url": "git+https://github.com/metabrainz/listenbrainz-server.git"
   },
   "scripts": {
-    "build:dev": "webpack --progress --colors",
+    "build:dev": "webpack --colors",
     "build:prod": "webpack -p --env production --progress --colors",
     "build": "npm run build:dev",
     "postinstall": "npm run build:prod"
