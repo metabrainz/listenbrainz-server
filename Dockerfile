@@ -43,11 +43,6 @@ WORKDIR /code/listenbrainz
 COPY requirements.txt /code/listenbrainz/
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-RUN mkdir /static
-WORKDIR /static
-COPY package.json package-lock.json webpack.config.js ./listenbrainz/webserver/static  /static/
-RUN npm install && npm run build:dev
-
 COPY . /code/listenbrainz/
 WORKDIR /code/listenbrainz
 RUN rm -rf ./listenbrainz/webserver/static/
