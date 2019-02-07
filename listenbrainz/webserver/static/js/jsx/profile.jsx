@@ -1,6 +1,6 @@
 'use strict';
 
-import './lib/spotify-player-sdk-1.6.0';
+import '../lib/spotify-player-sdk-1.6.0';
 
 import * as timeago from 'time-ago';
 

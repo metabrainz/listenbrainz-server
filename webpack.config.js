@@ -10,7 +10,7 @@ module.exports = function(env){
   ];
   return {
     mode: isProd ? "production" : "development",
-    entry: '/static/js/profile.jsx',
+    entry: '/static/js/jsx/profile.jsx',
     output: {
       filename: isProd ? '[name].[contenthash].js' : '[name].js',
       path: '/static/js/dist'
