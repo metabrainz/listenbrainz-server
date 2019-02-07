@@ -49,15 +49,12 @@ RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
     apt-get install -y nodejs && rm -rf /var/lib/apt/lists/*
 RUN mkdir /static
 WORKDIR /static
-COPY . /code/listenbrainz
-COPY ./package.json ./package-lock.json ./webpack.config.js /static/
-COPY ./listenbrainz/webserver/static /static
-RUN npm install &&  \
-    npm run build:prod && \
-    ./node_modules/less/bin/lessc --clean-css /static/css/main.less > /static/css/main.css && \
-    rm -rf ./node_modules ~/.npm/cache && \
-    rm package.json package-lock.json webpack.config.js
+COPY package.json package-lock.json webpack.config.js ./listenbrainz/webserver/static /static/
+RUN npm install && npm run build:prod && ./node_modules/less/bin/lessc --clean-css /static/css/main.less > /static/css/main.css && \
+    rm -rf node_modules js/*.jsx *.json webpack.config.js && npm cache clean --force
 
+COPY . /code/listenbrainz
+RUN rm -rf /code/listenbrainz/listenbrainz/webserver/static/
 WORKDIR /code/listenbrainz
 
 

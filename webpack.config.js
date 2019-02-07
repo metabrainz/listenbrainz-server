@@ -10,7 +10,7 @@ module.exports = function(env){
   ];
   return {
     mode: isProd ? "production" : "development",
-    entry: '/code/listenbrainz/listenbrainz/webserver/js/profile.jsx',
+    entry: '/static/js/profile.jsx',
     output: {
       filename: isProd ? '[name].[contenthash].js' : '[name].js',
       path: '/static/js/dist'
