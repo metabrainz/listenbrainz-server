@@ -46,12 +46,11 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 RUN mkdir /static
 WORKDIR /static
 COPY package.json package-lock.json webpack.config.js ./listenbrainz/webserver/static  /static/
-RUN ls -la
 RUN npm install && npm run build:dev && rm -rf node_modules js/*.jsx *.json webpack.config.js && npm cache clean --force
 
 COPY . /code/listenbrainz/
-RUN rm -rf ./listenbrainz/webserver/static/
 WORKDIR /code/listenbrainz
+RUN rm -rf ./listenbrainz/webserver/static/
 
 # create a user named listenbrainz for storing dump file backups
 RUN useradd --create-home --shell /bin/bash listenbrainz
