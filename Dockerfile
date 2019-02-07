@@ -47,7 +47,7 @@ RUN mkdir /static
 WORKDIR /static
 COPY package.json package-lock.json webpack.config.js /static/
 COPY . /code/listenbrainz/
-RUN npm install && npm run build:dev && rm -r node_modules && rm package.json package-lock.json webpack.config.js
+RUN npm install && npm run build:dev && rm -rf node_modules ~/.npm/cache && rm package.json package-lock.json webpack.config.js
 COPY ./listenbrainz/webserver/static /static
 WORKDIR /code/listenbrainz
 

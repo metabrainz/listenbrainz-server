@@ -55,7 +55,7 @@ COPY ./listenbrainz/webserver/static /static
 RUN npm install &&  \
     npm run build:prod && \
     ./node_modules/less/bin/lessc --clean-css /static/css/main.less > /static/css/main.css && \
-    rm -rf ./node_modules && \
+    rm -rf ./node_modules ~/.npm/cache && \
     rm package.json package-lock.json webpack.config.js
 
 WORKDIR /code/listenbrainz
