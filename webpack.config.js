@@ -41,6 +41,6 @@ module.exports = function(env){
         modules: ['/code/node_modules', '/static/node_modules']
     },
     plugins: plugins,
-    watch: isProd ? true : false
+    watch: isProd ? false : true
 }
 };
