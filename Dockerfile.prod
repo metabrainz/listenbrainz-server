@@ -50,7 +50,7 @@ RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
 RUN mkdir /static
 WORKDIR /static
 COPY . /code/listenbrainz
-COPY ./package.json ./package-lock.json ./webpack.config.js /static
+COPY ./package.json ./package-lock.json ./webpack.config.js /static/
 COPY ./listenbrainz/webserver/static /static
 RUN npm install &&  \
     npm run build:prod && \
