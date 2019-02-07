@@ -43,9 +43,8 @@ WORKDIR /code/listenbrainz
 COPY requirements.txt /code/listenbrainz/
 RUN pip3 install --no-cache-dir -r requirements.txt
 
+# Now install our code, which may change frequently
 COPY . /code/listenbrainz/
-WORKDIR /code/listenbrainz
-RUN rm -rf ./listenbrainz/webserver/static/
 
 # create a user named listenbrainz for storing dump file backups
 RUN useradd --create-home --shell /bin/bash listenbrainz
