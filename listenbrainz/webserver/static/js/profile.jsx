@@ -1,6 +1,6 @@
 'use strict';
 
-import '../static/js/lib/spotify-player-sdk-1.6.0';
+import './lib/spotify-player-sdk-1.6.0';
 
 import * as timeago from 'time-ago';
 
@@ -13,7 +13,7 @@ import {SpotifyPlayer} from './spotify-player.jsx';
 import io from 'socket.io-client';
 
 class RecentListens extends React.Component {
-		
+
 	spotifyListens = [];
 	constructor(props) {
 		super(props);
