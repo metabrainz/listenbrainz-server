@@ -45,12 +45,12 @@ def follow(user_list):
         "mode"                 : "follow",
         "follow_list"          : follow_list,
         "spotify_access_token" : spotify_access_token,
+        "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
     }
 
     return render_template("user/profile.html", 
         props=ujson.dumps(props),
         mode='follow',
-        web_sockets_server_url=current_app.config['WEBSOCKETS_SERVER_URL'],
         user=current_user, 
         follow_list=follow_list,
         active_section='listens')
