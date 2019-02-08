@@ -42,3 +42,8 @@ services:
     command: sleep 1000000000
     volumes:
       - ..:/rec:z
+
+networks:
+  default:
+    external:
+      name: listenbrainz_default

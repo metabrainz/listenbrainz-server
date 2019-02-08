@@ -2,11 +2,12 @@ import sys
 import listenbrainz_spark
 import time
 from datetime import datetime  
+from listenbrainz_spark.RabbitMQ.rabbitmq_connection import SparkReader
 
 month = datetime.now().month
 year = datetime.now().year
 
-def get_total_listens(user_name, table):
+def get_artist_count(user_name, table):
     """ 
     Args:
         user_name: name of the user 
@@ -17,9 +18,8 @@ def get_total_listens(user_name, table):
     """
     t0 = time.time()
     query = listenbrainz_spark.sql_context.sql("""
-            SELECT count(artist_name) as cnt
-              FROM %s
-              where user_name = '%s'
+            SELECT count(*) as cnt
+              FROM (SELECT DISTINCT artist_name from %s where user_name = '%s')
         """ % (table, user_name))
     query_t0 = time.time()
     query.show()
@@ -58,7 +58,7 @@ def get_artists(user_name, table):
         artist['listen_count'] = row.cnt
         artist_stats.append(artist)
         artist = {}
-    count = get_total_listens(user_name, table)
+    count = get_artist_count(user_name, table)
     artist['artist_count'] = count
     artist['artist_stats'] = artist_stats
     return artist
@@ -178,6 +178,7 @@ def main(app_name):
     query_t0 = time.time()
     print("DataFrame loaded in %.2f s" % (query_t0 - t0))
     users = get_users(table)
+    obj = SparkReader()
     stats = []
     for user in users:
         user_data = {}
@@ -186,5 +187,6 @@ def main(app_name):
         user_data[user]['recordings'] = get_recordings(user, table)
         user_data[user]['releases'] = get_releases(user, table)
         stats.append(user_data)
-    print (stats)
+        obj.start(stats)
+        stats = []
         
