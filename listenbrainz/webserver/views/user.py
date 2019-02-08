@@ -130,7 +130,15 @@ def profile(user_name):
     except (KeyError, TypeError):
         artist_count = None
 
-    spotify_access_token = db_spotify.get_token_for_user(user.id)
+    if current_user.is_authenticated:
+        token = db_spotify.get_token_for_user(current_user.id)
+        if token:
+            spotify_access_token = token
+        else:
+            spotify_access_token = ''
+    else:
+        spotify_access_token = ''
+
     props = {
         "user" : {
             "id"               : user.id,
@@ -150,10 +158,10 @@ def profile(user_name):
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
     }
 
-    return render_template("user/profile.html", 
+    return render_template("user/profile.html",
         props=ujson.dumps(props),
         mode='listens',
-        user=user, 
+        user=user,
         active_section='listens')
 
 
