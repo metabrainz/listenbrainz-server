@@ -118,9 +118,9 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertIn('iliekcomputers', data)
         self.assertIn('Import', data)
         # item in user menu
-        
+
         self.assertIn('My Listens', data)
-        mock_user_get.assert_called_with(user['id'])
+        mock_user_get.assert_called_with(user['user_login_id'])
 
     @mock.patch('listenbrainz.db.user.get_by_user_login_id')
     def test_menu_logged_in_error_show(self, mock_user_get):
@@ -148,7 +148,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         # item in user menu
 
         self.assertIn('My Listens', data)
-        mock_user_get.assert_called_with(user['id'])
+        mock_user_get.assert_called_with(user['user_login_id'])
 
         resp = self.client.get('/page_that_returns_404')
         data = resp.data.decode('utf-8')
@@ -159,7 +159,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         # item in user menu
 
         self.assertIn('My Listens', data)
-        mock_user_get.assert_called_with(user['id'])
+        mock_user_get.assert_called_with(user['user_login_id'])
 
     @mock.patch('listenbrainz.db.user.get')
     def test_menu_logged_in_error_dont_show_no_user(self, mock_user_get):
