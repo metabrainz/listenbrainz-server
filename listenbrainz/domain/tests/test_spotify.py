@@ -20,9 +20,10 @@ class SpotifyDomainTestCase(ServerTestCase):
                 token_expires=int(time.time()),
                 refresh_token='old-refresh-token',
                 last_updated=None,
-                active=True,
+                record_listens=True,
                 error_message=None,
                 latest_listened_at=None,
+                permission='user-read-recently-played',
             )
 
     def test_none_values_for_last_updated_and_latest_listened_at(self):
@@ -38,6 +39,7 @@ class SpotifyDomainTestCase(ServerTestCase):
             'access_token': 'tokentoken',
             'refresh_token': 'refreshtokentoken',
             'expires_at': expires_at,
+            'scope': '',
         }
 
         spotify.refresh_user_token(self.spotify_user)
@@ -54,12 +56,24 @@ class SpotifyDomainTestCase(ServerTestCase):
         self.assertEqual(func_oauth.client_id, current_app.config['SPOTIFY_CLIENT_ID'])
         self.assertEqual(func_oauth.client_secret, current_app.config['SPOTIFY_CLIENT_SECRET'])
         self.assertEqual(func_oauth.redirect_uri, 'http://localhost/profile/connect-spotify/callback')
-        self.assertIn('user-read-currently-playing', func_oauth.scope)
+        self.assertIsNone(func_oauth.scope)
+
+        func_oauth = spotify.get_spotify_oauth(spotify.SPOTIFY_LISTEN_PERMISSIONS)
         self.assertIn('streaming', func_oauth.scope)
         self.assertIn('user-read-birthdate', func_oauth.scope)
         self.assertIn('user-read-email', func_oauth.scope)
         self.assertIn('user-read-private', func_oauth.scope)
+        self.assertNotIn('user-read-recently-played', func_oauth.scope)
+        self.assertNotIn('user-read-currently-playing', func_oauth.scope)
+
+        func_oauth = spotify.get_spotify_oauth(spotify.SPOTIFY_IMPORT_PERMISSIONS)
+        self.assertIn('user-read-currently-playing', func_oauth.scope)
         self.assertIn('user-read-recently-played', func_oauth.scope)
+        self.assertNotIn('streaming', func_oauth.scope)
+        self.assertNotIn('user-read-birthdate', func_oauth.scope)
+        self.assertNotIn('user-read-email', func_oauth.scope)
+        self.assertNotIn('user-read-private', func_oauth.scope)
+
 
     @mock.patch('listenbrainz.domain.spotify.db_spotify.get_user')
     def test_get_user(self, mock_db_get_user):
@@ -72,9 +86,10 @@ class SpotifyDomainTestCase(ServerTestCase):
             'token_expires': t,
             'refresh_token': 'refresh-refresh-refresh',
             'last_updated': None,
-            'active': True,
+            'record_listens': True,
             'error_message': 'oops',
             'latest_listened_at': None,
+            'permission': 'user-read-recently-played',
         }
 
         user = spotify.get_user(1)
@@ -84,7 +99,7 @@ class SpotifyDomainTestCase(ServerTestCase):
         self.assertEqual(user.user_token, 'token-token-token')
         self.assertEqual(user.token_expires, t)
         self.assertEqual(user.last_updated, None)
-        self.assertEqual(user.active, True)
+        self.assertEqual(user.record_listens, True)
         self.assertEqual(user.error_message, 'oops')
 
     @mock.patch('listenbrainz.domain.spotify.db_spotify.delete_spotify')
@@ -93,13 +108,16 @@ class SpotifyDomainTestCase(ServerTestCase):
         mock_delete.assert_called_with(1)
 
     @mock.patch('listenbrainz.domain.spotify.db_spotify.create_spotify')
-    def test_add_new_user(self, mock_create):
+    @mock.patch('listenbrainz.domain.spotify.time.time')
+    def test_add_new_user(self, mock_time, mock_create):
+        mock_time.return_value = 0
         spotify.add_new_user(1, {
             'access_token': 'access-token',
             'refresh_token': 'refresh-token',
-            'expires_at': 312,
+            'expires_in': 3600,
+            'scope': '',
         })
-        mock_create.assert_called_with(1, 'access-token', 'refresh-token', 312)
+        mock_create.assert_called_with(1, 'access-token', 'refresh-token', 3600, False, '')
 
     @mock.patch('listenbrainz.domain.spotify.db_spotify.get_active_users_to_process')
     def test_get_active_users(self, mock_get_active_users):
@@ -113,9 +131,10 @@ class SpotifyDomainTestCase(ServerTestCase):
                 'token_expires': t,
                 'refresh_token': 'refresh-refresh-refresh',
                 'last_updated': None,
-                'active': True,
+                'record_listens': True,
                 'error_message': 'oops',
                 'latest_listened_at': None,
+                'permission': 'user-read-recently-played',
             },
             {
                 'user_id': 2,
@@ -125,9 +144,10 @@ class SpotifyDomainTestCase(ServerTestCase):
                 'token_expires': t + 31,
                 'refresh_token': 'refresh-refresh-refresh321',
                 'last_updated': None,
-                'active': True,
+                'record_listens': True,
                 'error_message': 'oops2',
                 'latest_listened_at': None,
+                'permission': 'user-read-recently-played',
             },
         ]
 

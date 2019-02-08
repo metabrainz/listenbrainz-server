@@ -103,9 +103,10 @@ class ConvertListensTestCase(TestCase):
                 token_expires=int(time.time()),
                 refresh_token='refresh',
                 last_updated=None,
-                active=True,
+                record_listens=True,
                 error_message=None,
                 latest_listened_at=None,
+                permission='user-read-recently-played',
             ),
         ]
         app = listenbrainz.webserver.create_app()

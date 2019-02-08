@@ -1,4 +1,8 @@
+import base64
 import pytz
+import requests
+import six
+import time
 from flask import current_app
 import spotipy.oauth2
 
@@ -7,22 +11,33 @@ import datetime
 
 SPOTIFY_API_RETRIES = 5
 
-SPOTIFY_PERMISSIONS_SCOPE = 'user-read-currently-playing streaming user-read-birthdate user-read-email user-read-private user-read-recently-played'
+SPOTIFY_IMPORT_PERMISSIONS = (
+    'user-read-currently-playing',
+    'user-read-recently-played',
+)
 
+SPOTIFY_LISTEN_PERMISSIONS = (
+    'streaming',
+    'user-read-birthdate',
+    'user-read-email',
+    'user-read-private',
+)
 
 class Spotify:
     def __init__(self, user_id, musicbrainz_id, musicbrainz_row_id, user_token, token_expires,
-                 refresh_token, last_updated, active, error_message, latest_listened_at):
+                 refresh_token, last_updated, record_listens, error_message, latest_listened_at,
+                 permission):
         self.user_id = user_id
         self.user_token = user_token
         self.token_expires = token_expires
         self.refresh_token = refresh_token
         self.last_updated = last_updated
-        self.active = active
+        self.record_listens = record_listens
         self.error_message = error_message
         self.musicbrainz_id = musicbrainz_id
         self.latest_listened_at = latest_listened_at
         self.musicbrainz_row_id = musicbrainz_row_id
+        self.permission = permission
 
     def get_spotipy_client(self):
         return spotipy.Spotify(auth=self.user_token)
@@ -53,11 +68,12 @@ class Spotify:
            token_expires=row['token_expires'],
            refresh_token=row['refresh_token'],
            last_updated=row['last_updated'],
-           active=row['active'],
+           record_listens=row['record_listens'],
            error_message=row['error_message'],
            musicbrainz_id=row['musicbrainz_id'],
            musicbrainz_row_id=row['musicbrainz_row_id'],
            latest_listened_at=row['latest_listened_at'],
+           permission=row['permission'],
         )
 
     def __str__(self):
@@ -92,12 +108,14 @@ def refresh_user_token(spotify_user):
     return get_user(spotify_user.user_id)
 
 
-def get_spotify_oauth():
+def get_spotify_oauth(permissions=None):
     """ Returns a spotipy OAuth instance that can be used to authenticate with spotify.
+
+    Args: permissions ([str]): List of permissions needed by the OAuth instance
     """
     client_id = current_app.config['SPOTIFY_CLIENT_ID']
     client_secret = current_app.config['SPOTIFY_CLIENT_SECRET']
-    scope = SPOTIFY_PERMISSIONS_SCOPE
+    scope = ' '.join(permissions) if permissions else None
     redirect_url = current_app.config['SPOTIFY_CALLBACK_URL']
     return spotipy.oauth2.SpotifyOAuth(client_id, client_secret, redirect_uri=redirect_url, scope=scope)
 
@@ -134,9 +152,11 @@ def add_new_user(user_id, spot_access_token):
 
     access_token = spot_access_token['access_token']
     refresh_token = spot_access_token['refresh_token']
-    expires_at = spot_access_token['expires_at']
+    expires_at = int(time.time()) + spot_access_token['expires_in']
+    permissions = spot_access_token['scope']
+    active = SPOTIFY_IMPORT_PERMISSIONS[0] in permissions and SPOTIFY_IMPORT_PERMISSIONS[1] in permissions
 
-    db_spotify.create_spotify(user_id, access_token, refresh_token, expires_at)
+    db_spotify.create_spotify(user_id, access_token, refresh_token, expires_at, active, permissions)
 
 
 def get_active_users_to_process():
@@ -171,6 +191,42 @@ def update_latest_listened_at(user_id, timestamp):
         timestamp (int): the unix timestamp of the latest listen imported for the user
     """
     db_spotify.update_latest_listened_at(user_id, timestamp)
+
+
+def get_access_token(code):
+    """ Get a valid Spotify Access token given the code.
+
+    Returns:
+        a dict with the following keys
+        {
+            'access_token',
+            'token_type',
+            'scope',
+            'expires_in',
+            'refresh_token',
+        }
+
+    Note: We use this function instead of spotipy's implementation because there
+    is a bug in the spotipy code which leads to loss of the scope received from the
+    Spotify API.
+    """
+    OAUTH_TOKEN_URL = 'https://accounts.spotify.com/api/token'
+
+    def _make_authorization_headers(client_id, client_secret):
+        auth_header = base64.b64encode(six.text_type(client_id + ':' + client_secret).encode('ascii'))
+        return {'Authorization': 'Basic %s' % auth_header.decode('ascii')}
+
+    payload = {
+        'redirect_uri': current_app.config['SPOTIFY_CALLBACK_URL'],
+        'code': code,
+        'grant_type': 'authorization_code',
+    }
+
+    headers = _make_authorization_headers(current_app.config['SPOTIFY_CLIENT_ID'], current_app.config['SPOTIFY_CLIENT_SECRET'])
+    r = requests.post(OAUTH_TOKEN_URL, data=payload, headers=headers, verify=True)
+    if r.status_code != 200:
+        raise SpotifyListenBrainzError(r.reason)
+    return r.json()
 
 
 class SpotifyImporterException(Exception):
