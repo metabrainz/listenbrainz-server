@@ -47,14 +47,16 @@ RUN pip3 install setuptools==36.0.1
 # Node
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
     apt-get install -y nodejs && rm -rf /var/lib/apt/lists/*
-COPY ./package.json /code/listenbrainz/
-COPY ./package-lock.json /code/listenbrainz/
-RUN npm install
+RUN mkdir /static
+WORKDIR /static
+COPY package.json package-lock.json webpack.config.js ./listenbrainz/webserver/static /static/
+RUN npm install && npm run build:prod && ./node_modules/less/bin/lessc --clean-css /static/css/main.less > /static/css/main.css && \
+    rm -rf node_modules js/*.jsx *.json webpack.config.js && npm cache clean --force
 
 COPY . /code/listenbrainz
 WORKDIR /code/listenbrainz
+RUN rm -rf ./listenbrainz/webserver/static/
 
-RUN npm run build:prod
 
 # Sometimes the local copy of config.py[c] gets in the way. Better nuke it to not conflict.
 RUN rm -f /code/listenbrainz/listenbrainz/config.py /code/listenbrainz/listenbrainz/config.pyc
@@ -72,12 +74,6 @@ RUN touch /var/log/stats.log /var/log/dump_create.log && chown listenbrainz:list
 # Make sure the cron service doesn't start automagically
 # http://smarden.org/runit/runsv.8.html
 RUN touch /etc/service/cron/down
-
-# Compile the CSS
-# Note: this will not persist because /code/listenbrainz is a volume
-# After bringing up a container, run this again inside the container
-# to compile the less files
-RUN ./node_modules/less/bin/lessc --clean-css listenbrainz/webserver/static/css/main.less > listenbrainz/webserver/static/css/main.css
 
 # Consul Template service is already set up with the base image.
 # Just need to copy the configuration.
