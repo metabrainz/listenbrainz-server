@@ -48,6 +48,7 @@ services:
     image: web
     volumes:
       - ..:/code/listenbrainz:z
+      - ../listenbrainz/webserver/static:/static
     ports:
       - "80:80"
     depends_on:
@@ -101,19 +102,6 @@ services:
       - redis
       - rabbitmq
 
-  bigquery_job_runner:
-    image: web
-    command: python -m "listenbrainz.bigquery_job_runner.bigquery_job_runner"
-    volumes:
-      - ../credentials:/code/credentials:z
-      - ..:/code/listenbrainz:z
-    environment:
-      GOOGLE_APPLICATION_CREDENTIALS: '/code/credentials/bigquery-credentials.json'
-    depends_on:
-      - db
-      - rabbitmq
-      - web
-
   follow_server:
     image: web
     volumes:
@@ -124,3 +112,13 @@ services:
     depends_on:
       - redis
       - rabbitmq
+
+  static_builder:
+    build:
+      context: ..
+      dockerfile: Dockerfile.webpack
+    command: npm run build:dev
+    volumes:
+      - ..:/code/listenbrainz:z
+      - ../listenbrainz/webserver/static:/static:z
+

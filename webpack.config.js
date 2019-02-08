@@ -5,20 +5,40 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 module.exports = function(env){
   const isProd = env === "production";
   const plugins = [
-    new CleanWebpackPlugin(path.resolve(__dirname, 'listenbrainz/webserver/static/js/dist')),
+    new CleanWebpackPlugin('/static/js/dist'),
     new ManifestPlugin()
   ];
   return {
     mode: isProd ? "production" : "development",
-    entry: './listenbrainz/webserver/js/profile.jsx',
+    entry: '/static/js/jsx/profile.jsx',
     output: {
       filename: isProd ? '[name].[contenthash].js' : '[name].js',
-      path: path.resolve(__dirname, 'listenbrainz/webserver/static/js/dist')
+      path: '/static/js/dist'
     },
     module: {
       rules: [
-        { test: [/\.js$/ , /\.jsx$/], exclude: /node_modules/, loader: "babel-loader" }
+        {
+            test: [/\.js$/ , /\.jsx$/], exclude: /node_modules/, use: {
+                loader: "babel-loader",
+                options: {
+                    "presets": [[
+                          "@babel/preset-env",
+                          {
+                            "targets": {
+                              "node": "10",
+                              "browsers": [ "defaults" ]
+                            }
+                          }
+                        ],
+                        "@babel/preset-react"],
+                    "plugins": ["@babel/plugin-proposal-class-properties"]
+                }
+            }
+        }
       ]
+    },
+    resolve: {
+        modules: ['/code/node_modules', '/static/node_modules']
     },
     plugins: plugins,
     watch: isProd ? false : true
