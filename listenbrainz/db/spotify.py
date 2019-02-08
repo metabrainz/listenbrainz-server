@@ -7,7 +7,7 @@ from flask import current_app, url_for
 import spotipy.oauth2
 
 
-def create_spotify(user_id, user_token, refresh_token, token_expires_ts, active=True):
+def create_spotify(user_id, user_token, refresh_token, token_expires_ts, record_listens=True):
     """ Add a row to the spotify table for specified user with corresponding
     Spotify tokens and information.
 
@@ -16,19 +16,19 @@ def create_spotify(user_id, user_token, refresh_token, token_expires_ts, active=
         user_token (str): the Spotify access token used to access the user's Spotify listens.
         refresh_token (str): the token used to refresh Spotify access tokens once they expire
         token_expires_ts (int): the unix timestamp at which the user_token will expire
-        active (bool): True if user wishes to import listens from Spotify, False otherwise
+        record_listens (bool): True if user wishes to import listens from Spotify, False otherwise
     """
     token_expires = utils.unix_timestamp_to_datetime(token_expires_ts)
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            INSERT INTO spotify_auth (user_id, user_token, refresh_token, token_expires, active)
-                 VALUES (:user_id, :user_token, :refresh_token, :token_expires, :active)
+            INSERT INTO spotify_auth (user_id, user_token, refresh_token, token_expires, record_listens)
+                 VALUES (:user_id, :user_token, :refresh_token, :token_expires, :record_listens)
             """), {
                 "user_id": user_id,
                 "user_token": user_token,
                 "refresh_token": refresh_token,
                 "token_expires": token_expires,
-                "active": active,
+                "record_listens": record_listens,
             })
 
 
@@ -59,7 +59,7 @@ def add_update_error(user_id, error_message):
         connection.execute(sqlalchemy.text("""
             UPDATE spotify_auth
                SET last_updated = now()
-                 , active = 'f'
+                 , record_listens = 'f'
                  , error_message = :error_message
               WHERE user_id = :user_id
         """), {
@@ -82,11 +82,11 @@ def update_last_updated(user_id, success=True):
         connection.execute(sqlalchemy.text("""
             UPDATE spotify_auth
                SET last_updated = now()
-                 , active = :active
+                 , record_listens = :record_listens
               WHERE user_id = :user_id
         """), {
             "user_id": user_id,
-            "active": success,
+            "record_listens": success,
         })
 
 
@@ -151,12 +151,12 @@ def get_active_users_to_process():
                  , latest_listened_at
                  , token_expires
                  , token_expires < now() as token_expired
-                 , active
+                 , record_listens
                  , error_message
               FROM spotify_auth
               JOIN "user"
                 ON "user".id = spotify_auth.user_id
-             WHERE spotify_auth.active = 't'
+             WHERE spotify_auth.record_listens = 't'
           ORDER BY latest_listened_at DESC NULLS LAST
         """))
         return [dict(row) for row in result.fetchall()]
@@ -202,7 +202,7 @@ def get_user(user_id):
                  , latest_listened_at
                  , token_expires
                  , token_expires < now() as token_expired
-                 , active
+                 , record_listens
                  , error_message
               FROM spotify_auth
               JOIN "user"
