@@ -43,16 +43,16 @@ def insert_user_stats(user_id, artists, recordings, releases, artist_count):
 
     artist_stats = {
         'count': artist_count,
-        'all_time': artists,
+        'prev_month': artists,
     }
 
     recording_stats = {
-        'all_time': recordings,
+        'prev_month': recordings,
     }
 
 
     release_stats = {
-        'all_time': releases,
+        'prev_month': releases,
     }
 
 
