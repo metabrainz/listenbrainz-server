@@ -189,7 +189,7 @@ def artists(user_name):
         flash.error(msg)
         return redirect(url_for('user.profile', user_name=user_name))
 
-    top_artists = data['artist']['all_time']
+    top_artists = data['artist']['prev_month']
     return render_template(
         "user/artists.html",
         user=user,
