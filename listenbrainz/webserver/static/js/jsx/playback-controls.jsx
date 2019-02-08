@@ -12,7 +12,7 @@ function millisecondsToHumanReadable(milliseconds) {
   if (numdays) string += numdays + " d ";
   if (numhours) string += numhours + " h ";
   if (numminutes) string += numminutes + " m ";
-  if (numseconds) string += numseconds + " sssssssssssss";
+  if (numseconds) string += numseconds + " s";
 
   return string;
 }
