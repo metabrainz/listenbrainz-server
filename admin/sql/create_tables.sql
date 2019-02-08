@@ -20,8 +20,9 @@ CREATE TABLE spotify_auth (
   refresh_token             VARCHAR NOT NULL,
   last_updated              TIMESTAMP WITH TIME ZONE,
   latest_listened_at        TIMESTAMP WITH TIME ZONE,
-  active                    BOOLEAN DEFAULT TRUE,
-  error_message             VARCHAR
+  record_listens            BOOLEAN DEFAULT TRUE,
+  error_message             VARCHAR,
+  permission                VARCHAR NOT NULL
 );
 
 CREATE TABLE api_compat.token (
