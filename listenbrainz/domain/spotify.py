@@ -25,13 +25,13 @@ SPOTIFY_LISTEN_PERMISSIONS = (
 
 class Spotify:
     def __init__(self, user_id, musicbrainz_id, musicbrainz_row_id, user_token, token_expires,
-                 refresh_token, last_updated, active, error_message, latest_listened_at):
+                 refresh_token, last_updated, record_listens, error_message, latest_listened_at):
         self.user_id = user_id
         self.user_token = user_token
         self.token_expires = token_expires
         self.refresh_token = refresh_token
         self.last_updated = last_updated
-        self.active = active
+        self.record_listens = record_listens
         self.error_message = error_message
         self.musicbrainz_id = musicbrainz_id
         self.latest_listened_at = latest_listened_at
@@ -66,7 +66,7 @@ class Spotify:
            token_expires=row['token_expires'],
            refresh_token=row['refresh_token'],
            last_updated=row['last_updated'],
-           active=row['active'],
+           record_listens=row['record_listens'],
            error_message=row['error_message'],
            musicbrainz_id=row['musicbrainz_id'],
            musicbrainz_row_id=row['musicbrainz_row_id'],
