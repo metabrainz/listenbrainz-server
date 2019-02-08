@@ -106,6 +106,7 @@ class ConvertListensTestCase(TestCase):
                 record_listens=True,
                 error_message=None,
                 latest_listened_at=None,
+                permission='user-read-recently-played',
             ),
         ]
         app = listenbrainz.webserver.create_app()

@@ -197,7 +197,7 @@ class UserTestCase(DatabaseTestCase):
         user_id = db_user.create(11, 'kishore')
         user = db_user.get(user_id)
         self.assertIsNotNone(user)
-        db_spotify.create_spotify(user_id, 'user token', 'refresh token', 0)
+        db_spotify.create_spotify(user_id, 'user token', 'refresh token', 0, True, 'user-read-recently-played')
 
         db_user.delete(user_id)
         user = db_user.get(user_id)

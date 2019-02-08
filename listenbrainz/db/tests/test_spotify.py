@@ -25,6 +25,8 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
             user_token='token',
             refresh_token='refresh_token',
             token_expires_ts=int(time.time()),
+            record_listens=True,
+            permission='user-read-recently-played',
         )
 
 
@@ -35,6 +37,8 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
             user_token='token',
             refresh_token='refresh_token',
             token_expires_ts=int(time.time()),
+            record_listens=True,
+            permission='user-read-recently-played',
         )
         token = db_spotify.get_token_for_user(2)
         self.assertEqual(token, 'token')
@@ -94,6 +98,8 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
             user_token='token',
             refresh_token='refresh_token',
             token_expires_ts=int(time.time()),
+            record_listens=True,
+            permission='user-read-recently-played',
         )
         users = db_spotify.get_active_users_to_process()
         self.assertEqual(len(users), 2)
@@ -109,6 +115,8 @@ class SpotifyDatabaseTestCase(DatabaseTestCase):
             user_token='tokentoken',
             refresh_token='newrefresh_token',
             token_expires_ts=int(time.time()),
+            record_listens=True,
+            permission='user-read-recently-played',
         )
         t = int(time.time())
         db_spotify.update_latest_listened_at(2, t + 20)

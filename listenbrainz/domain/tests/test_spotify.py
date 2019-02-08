@@ -23,6 +23,7 @@ class SpotifyDomainTestCase(ServerTestCase):
                 record_listens=True,
                 error_message=None,
                 latest_listened_at=None,
+                permission='user-read-recently-played',
             )
 
     def test_none_values_for_last_updated_and_latest_listened_at(self):
@@ -88,6 +89,7 @@ class SpotifyDomainTestCase(ServerTestCase):
             'record_listens': True,
             'error_message': 'oops',
             'latest_listened_at': None,
+            'permission': 'user-read-recently-played',
         }
 
         user = spotify.get_user(1)
@@ -115,7 +117,7 @@ class SpotifyDomainTestCase(ServerTestCase):
             'expires_in': 3600,
             'scope': '',
         })
-        mock_create.assert_called_with(1, 'access-token', 'refresh-token', 3600, False)
+        mock_create.assert_called_with(1, 'access-token', 'refresh-token', 3600, False, '')
 
     @mock.patch('listenbrainz.domain.spotify.db_spotify.get_active_users_to_process')
     def test_get_active_users(self, mock_get_active_users):
@@ -132,6 +134,7 @@ class SpotifyDomainTestCase(ServerTestCase):
                 'record_listens': True,
                 'error_message': 'oops',
                 'latest_listened_at': None,
+                'permission': 'user-read-recently-played',
             },
             {
                 'user_id': 2,
@@ -144,6 +147,7 @@ class SpotifyDomainTestCase(ServerTestCase):
                 'record_listens': True,
                 'error_message': 'oops2',
                 'latest_listened_at': None,
+                'permission': 'user-read-recently-played',
             },
         ]
 

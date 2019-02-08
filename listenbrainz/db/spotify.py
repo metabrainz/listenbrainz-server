@@ -7,7 +7,7 @@ from flask import current_app, url_for
 import spotipy.oauth2
 
 
-def create_spotify(user_id, user_token, refresh_token, token_expires_ts, record_listens=True):
+def create_spotify(user_id, user_token, refresh_token, token_expires_ts, record_listens, permission):
     """ Add a row to the spotify table for specified user with corresponding
     Spotify tokens and information.
 
@@ -17,18 +17,20 @@ def create_spotify(user_id, user_token, refresh_token, token_expires_ts, record_
         refresh_token (str): the token used to refresh Spotify access tokens once they expire
         token_expires_ts (int): the unix timestamp at which the user_token will expire
         record_listens (bool): True if user wishes to import listens from Spotify, False otherwise
+        permission (str): the scope of the permissions granted to us by the user as a space seperated string
     """
     token_expires = utils.unix_timestamp_to_datetime(token_expires_ts)
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            INSERT INTO spotify_auth (user_id, user_token, refresh_token, token_expires, record_listens)
-                 VALUES (:user_id, :user_token, :refresh_token, :token_expires, :record_listens)
+            INSERT INTO spotify_auth (user_id, user_token, refresh_token, token_expires, record_listens, permission)
+                 VALUES (:user_id, :user_token, :refresh_token, :token_expires, :record_listens, :permission)
             """), {
                 "user_id": user_id,
                 "user_token": user_token,
                 "refresh_token": refresh_token,
                 "token_expires": token_expires,
                 "record_listens": record_listens,
+                "permission": permission,
             })
 
 
@@ -133,7 +135,7 @@ def update_token(user_id, access_token, refresh_token, expires_at):
             "user_token": access_token,
             "refresh_token": refresh_token,
             "token_expires": token_expires,
-            "user_id": user_id
+            "user_id": user_id,
         })
 
 
@@ -153,6 +155,7 @@ def get_active_users_to_process():
                  , token_expires < now() as token_expired
                  , record_listens
                  , error_message
+                 , permission
               FROM spotify_auth
               JOIN "user"
                 ON "user".id = spotify_auth.user_id
@@ -204,6 +207,7 @@ def get_user(user_id):
                  , token_expires < now() as token_expired
                  , record_listens
                  , error_message
+                 , permission
               FROM spotify_auth
               JOIN "user"
                 ON "user".id = spotify_auth.user_id
