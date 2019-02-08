@@ -25,7 +25,8 @@ SPOTIFY_LISTEN_PERMISSIONS = (
 
 class Spotify:
     def __init__(self, user_id, musicbrainz_id, musicbrainz_row_id, user_token, token_expires,
-                 refresh_token, last_updated, record_listens, error_message, latest_listened_at):
+                 refresh_token, last_updated, record_listens, error_message, latest_listened_at,
+                 permission):
         self.user_id = user_id
         self.user_token = user_token
         self.token_expires = token_expires
@@ -36,6 +37,7 @@ class Spotify:
         self.musicbrainz_id = musicbrainz_id
         self.latest_listened_at = latest_listened_at
         self.musicbrainz_row_id = musicbrainz_row_id
+        self.permission = permission
 
     def get_spotipy_client(self):
         return spotipy.Spotify(auth=self.user_token)
@@ -71,6 +73,7 @@ class Spotify:
            musicbrainz_id=row['musicbrainz_id'],
            musicbrainz_row_id=row['musicbrainz_row_id'],
            latest_listened_at=row['latest_listened_at'],
+           permission=row['permission'],
         )
 
     def __str__(self):
@@ -153,7 +156,7 @@ def add_new_user(user_id, spot_access_token):
     permissions = spot_access_token['scope']
     active = SPOTIFY_IMPORT_PERMISSIONS[0] in permissions and SPOTIFY_IMPORT_PERMISSIONS[1] in permissions
 
-    db_spotify.create_spotify(user_id, access_token, refresh_token, expires_at, active)
+    db_spotify.create_spotify(user_id, access_token, refresh_token, expires_at, active, permissions)
 
 
 def get_active_users_to_process():
