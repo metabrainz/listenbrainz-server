@@ -8,7 +8,8 @@ CREATE TABLE "user" (
   last_login     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   latest_import  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT TIMESTAMP 'epoch',
   gdpr_agreed    TIMESTAMP WITH TIME ZONE,
-  musicbrainz_row_id INTEGER NOT NULL
+  musicbrainz_row_id INTEGER NOT NULL,
+  user_login_id  UUID NOT NULL DEFAULT uuid_generate_v4()
 );
 ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_id_key UNIQUE (musicbrainz_id);
 ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_row_id_key UNIQUE (musicbrainz_row_id);
