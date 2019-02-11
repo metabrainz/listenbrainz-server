@@ -2,8 +2,10 @@ import sys
 import listenbrainz_spark
 import time
 from datetime import datetime  
-from listenbrainz_spark.RabbitMQ.rabbitmq_connection import SparkReader
+from listenbrainz_spark.stats_writer.stats_writer import StatsWriter
+from listenbrainz_spark import config
 
+LIMIT = 100
 month = datetime.now().month
 year = datetime.now().year
 
@@ -21,10 +23,10 @@ def get_artist_count(user_name, table):
             SELECT count(*) as cnt
               FROM (SELECT DISTINCT artist_name from %s where user_name = '%s')
         """ % (table, user_name))
+    count = query.collect()[0].cnt
     query_t0 = time.time()
-    query.show()
     print("Query to calculate listen count proccessed in %.2f s" % (query_t0 - t0))
-    return query.collect()[0].cnt
+    return count
 
 
 def get_artists(user_name, table):
@@ -44,11 +46,8 @@ def get_artists(user_name, table):
              WHERE user_name = '%s'
           GROUP BY artist_name, artist_msid, artist_mbids
           ORDER BY cnt DESC
-             LIMIT 20
-        """ % (table, user_name))
-    query_t0 = time.time()
-    print("Query to calculate artist stats proccessed in %.2f s" % (query_t0 - t0))
-    query.show()
+             LIMIT %s
+        """ % (table, user_name, LIMIT))
     artist_stats = []
     artist = {}
     for row in query.collect():
@@ -58,6 +57,8 @@ def get_artists(user_name, table):
         artist['listen_count'] = row.cnt
         artist_stats.append(artist)
         artist = {}
+    query_t0 = time.time()
+    print("Query to calculate artist stats proccessed in %.2f s" % (query_t0 - t0))
     count = get_artist_count(user_name, table)
     artist['artist_count'] = count
     artist['artist_stats'] = artist_stats
@@ -81,11 +82,8 @@ def get_recordings(user_name, table):
              WHERE user_name = '%s'
           GROUP BY track_name, recording_msid, recording_mbid
           ORDER BY cnt DESC
-             LIMIT 20
-        """ % (table, user_name))
-    query_t0 = time.time()
-    print("Query to calculate recording stats proccessed in %.2f s" % (query_t0 - t0))
-    query.show()
+             LIMIT %s
+        """ % (table, user_name, LIMIT))
     recording_stats = []
     for row in query.collect():
         recording = {}
@@ -94,6 +92,8 @@ def get_recordings(user_name, table):
         recording['recording_mbid'] = row.recording_mbid
         recording['listen_count'] = row.cnt
         recording_stats.append(recording)
+    query_t0 = time.time()
+    print("Query to calculate recording stats proccessed in %.2f s" % (query_t0 - t0))
     return recording_stats
 
 
@@ -114,11 +114,8 @@ def get_releases(user_name, table):
              WHERE user_name = '%s'
           GROUP BY release_name, release_msid, release_mbid
           ORDER BY cnt DESC
-             LIMIT 20
-        """ % (table, user_name))
-    query_t0 = time.time()
-    print("Query to calculate release stats proccessed in %.2f s" % (query_t0 - t0))
-    query.show()
+             LIMIT %s
+        """ % (table, user_name, LIMIT))
     release_stats = []
     for row in query.collect():
         release = {}
@@ -127,6 +124,8 @@ def get_releases(user_name, table):
         release['release_mbid'] = row.release_mbid
         release['listen_count'] = row.cnt
         release_stats.append(release)
+    query_t0 = time.time()
+    print("Query to calculate release stats proccessed in %.2f s" % (query_t0 - t0))
     return release_stats
 
 
@@ -143,9 +142,10 @@ def get_users(table):
         SELECT DISTINCT user_name
         FROM %s
         """ % table)
-    query_t0 = time.time()
     users = [row.user_name for row in query.collect()]
-    print("Query proccessed in %.2f s" % (query_t0 - t0))
+    query_t0 = time.time()
+    query.show()
+    print("Query to get list of users proccessed in %.2f s" % (query_t0 - t0))
     return users
 
 def main(app_name):
@@ -163,7 +163,7 @@ def main(app_name):
     prev_month = month - 1 if month > 1 else 12 
     curr_year = year if prev_month < 12 else year - 1 
     try:
-        df = listenbrainz_spark.sql_context.read.parquet('hdfs://hadoop-master:9000/data/listenbrainz/{}/{}.parquet'.format(curr_year, prev_month))
+        df = listenbrainz_spark.sql_context.read.parquet('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, curr_year, prev_month))
         print("Loading dataframe...")
     except:
         print ("No Listens for last month")
@@ -178,9 +178,10 @@ def main(app_name):
     query_t0 = time.time()
     print("DataFrame loaded in %.2f s" % (query_t0 - t0))
     users = get_users(table)
-    obj = SparkReader()
+    obj = StatsWriter()
     stats = []
     for user in users:
+        print (user)
         user_data = {}
         user_data[user] = {}
         user_data[user]['artists'] = get_artists(user, table)
