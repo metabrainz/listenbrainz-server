@@ -145,3 +145,7 @@ TESTING = True # this flag is used by the mail module to check if mails need to 
 SMTP_SERVER = 'listenbrainz-mail'
 SMTP_PORT = 25
 MAIL_FROM_DOMAIN = 'listenbrainz.org'
+
+# expiration of 'Remember me' cookie
+SESSION_REMEMBER_ME_DURATION = 365
+

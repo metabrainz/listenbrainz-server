@@ -102,7 +102,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertNotIn('My Listens', data)
         mock_user_get.assert_not_called()
 
-    @mock.patch('listenbrainz.db.user.get')
+    @mock.patch('listenbrainz.db.user.get_by_user_login_id')
     def test_menu_logged_in(self, mock_user_get):
         """ If the user is logged in, check that we perform a database query to get user data """
         user = db_user.get_or_create(1, 'iliekcomputers')
@@ -110,7 +110,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         user = db_user.get_or_create(1, 'iliekcomputers')
 
         mock_user_get.return_value = user
-        self.temporary_login(user['id'])
+        self.temporary_login(user['user_login_id'])
         resp = self.client.get(url_for('index.index'))
         data = resp.data.decode('utf-8')
 
@@ -118,10 +118,11 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertIn('iliekcomputers', data)
         self.assertIn('Import', data)
         # item in user menu
-        self.assertIn('My Listens', data)
-        mock_user_get.assert_called_with(user['id'])
 
-    @mock.patch('listenbrainz.db.user.get')
+        self.assertIn('My Listens', data)
+        mock_user_get.assert_called_with(user['user_login_id'])
+
+    @mock.patch('listenbrainz.db.user.get_by_user_login_id')
     def test_menu_logged_in_error_show(self, mock_user_get):
         """ If the user is logged in, if we show a 400 or 404 error, show the user menu"""
         @self.app.route('/page_that_returns_400')
@@ -136,7 +137,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         db_user.agree_to_gdpr(user['musicbrainz_id'])
         user = db_user.get_or_create(1, 'iliekcomputers')
         mock_user_get.return_value = user
-        self.temporary_login(user['id'])
+        self.temporary_login(user['user_login_id'])
         resp = self.client.get('/page_that_returns_400')
         data = resp.data.decode('utf-8')
         self.assert400(resp)
@@ -145,8 +146,9 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertIn('iliekcomputers', data)
         self.assertIn('Import', data)
         # item in user menu
+
         self.assertIn('My Listens', data)
-        mock_user_get.assert_called_with(user['id'])
+        mock_user_get.assert_called_with(user['user_login_id'])
 
         resp = self.client.get('/page_that_returns_404')
         data = resp.data.decode('utf-8')
@@ -155,8 +157,9 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertIn('iliekcomputers', data)
         self.assertIn('Import', data)
         # item in user menu
+
         self.assertIn('My Listens', data)
-        mock_user_get.assert_called_with(user['id'])
+        mock_user_get.assert_called_with(user['user_login_id'])
 
     @mock.patch('listenbrainz.db.user.get')
     def test_menu_logged_in_error_dont_show_no_user(self, mock_user_get):
@@ -170,7 +173,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         db_user.agree_to_gdpr(user['musicbrainz_id'])
         user = db_user.get_or_create(1, 'iliekcomputers')
         mock_user_get.return_value = user
-        self.temporary_login(user['id'])
+        self.temporary_login(user['user_login_id'])
         resp = self.client.get('/page_that_returns_500')
         data = resp.data.decode('utf-8')
         # item not in user menu
@@ -178,7 +181,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertNotIn('Sign in', data)
         self.assertIn('Import', data)
 
-    @mock.patch('listenbrainz.db.user.get')
+    @mock.patch('listenbrainz.db.user.get_by_user_login_id')
     def test_menu_logged_in_error_dont_show_user_loaded(self, mock_user_get):
         """ If the user is logged in, if we show a 500 error, do not show the user menu
         If the user has previously been loaded in the view, check that it's not
@@ -194,10 +197,10 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         @login_required
         def view500():
             # flask-login user is loaded during @login_required, so check that the db has been queried
-            mock_user_get.assert_called_with(user['id'])
+            mock_user_get.assert_called_with(user['user_login_id'])
             raise InternalServerError('error')
 
-        self.temporary_login(user['id'])
+        self.temporary_login(user['user_login_id'])
         resp = self.client.get('/page_that_returns_500')
         data = resp.data.decode('utf-8')
         self.assertIn('Import', data)

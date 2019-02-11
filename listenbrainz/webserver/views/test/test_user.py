@@ -87,7 +87,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         props = ujson.loads(self.get_context_variable('props'))
         self.assertEqual(props['spotify_access_token'], '')
 
-        self.temporary_login(self.user.id)
+        self.temporary_login(self.user.user_login_id)
         mock_db_spotify.get_token_for_user.return_value = None
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)

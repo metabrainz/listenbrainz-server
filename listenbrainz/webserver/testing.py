@@ -14,9 +14,9 @@ class ServerTestCase(flask_testing.TestCase):
         app.config['TESTING'] = True
         return app
 
-    def temporary_login(self, user_id):
+    def temporary_login(self, user_login_id):
         with self.client.session_transaction() as session:
-            session['user_id'] = user_id
+            session['user_id'] = user_login_id
             session['_fresh'] = True
 
 
