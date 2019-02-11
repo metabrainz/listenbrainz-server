@@ -5,7 +5,7 @@ import time
 import json
 import sys
 
-class SparkReader():
+class StatsWriter():
     def __init__(self):
         self.unique_ch = None
         self.ERROR_RETRY_DELAY = 3
@@ -13,11 +13,11 @@ class SparkReader():
     def connect_to_rabbitmq(self):
         """Creates a RabbitMQ connection object
         """
-        username = config.RABBITMQ['RABBITMQ_USERNAME']
-        password = config.RABBITMQ['RABBITMQ_PASSWORD']
-        host = config.RABBITMQ['RABBITMQ_HOST']
-        port = config.RABBITMQ['RABBITMQ_PORT']
-        virtual_host = config.RABBITMQ['RABBITMQ_VHOST']
+        username = config.RABBITMQ_USERNAME
+        password = config.RABBITMQ_PASSWORD
+        host = config.RABBITMQ_HOST
+        port = config.RABBITMQ_PORT
+        virtual_host = config.RABBITMQ_VHOST
 
         while True:
             try:
@@ -35,22 +35,12 @@ class SparkReader():
                 print(error_message.format(error=str(err), delay=self.ERROR_RETRY_DELAY))
                 time.sleep(self.ERROR_RETRY_DELAY)
 
-    def start(self, data):
+    def write(self, data):
         """Publish data to RabbitMQ
         """
-        if "RABBITMQ_HOST" not in config.RABBITMQ:
-            logging.critical("RabbitMQ service not defined. Sleeping {0} seconds and exiting.".format(self.ERROR_RETRY_DELAY))
-            time.sleep(self.ERROR_RETRY_DELAY)
-            sys.exit(-1)
-
         try:
-            self.connect_to_rabbitmq()
-            self.unique_ch = self.connection.channel()
-            self.unique_ch.exchange_declare(exchange=config.RABBITMQ['SPARK_EXCHANGE'], exchange_type='fanout')
-            self.unique_ch.queue_declare(queue=config.RABBITMQ['SPARK_QUEUE'], durable=True)
-            self.unique_ch.queue_bind(exchange=config.RABBITMQ['SPARK_EXCHANGE'], queue=config.RABBITMQ['SPARK_QUEUE'])
             self.unique_ch.basic_publish(
-                exchange=config.RABBITMQ['SPARK_EXCHANGE'],
+                exchange=config.SPARK_EXCHANGE,
                 routing_key='',
                 body=json.dumps(data),
                 properties=pika.BasicProperties(delivery_mode = 2,),
@@ -59,3 +49,22 @@ class SparkReader():
             logging.error("Connection to rabbitmq closed while trying to publish: %s" % str(e), exc_info=True)
         except Exception as e:
             logging.error("Cannot publish to rabbitmq channel: %s / %s" % (type(e).__name__, str(e)), exc_info=True)
+
+
+    def start(self, data):
+        """Establishes connection to RabbitMQ if not connected
+        """
+        if not config.RABBITMQ_HOST:
+            logging.critical("RabbitMQ service not defined. Sleeping {0} seconds and exiting.".format(self.ERROR_RETRY_DELAY))
+            time.sleep(self.ERROR_RETRY_DELAY)
+            sys.exit(-1)
+
+        if self.unique_ch:
+            self.write(data)
+        else:
+            self.connect_to_rabbitmq()
+            self.unique_ch = self.connection.channel()
+            self.unique_ch.exchange_declare(exchange=config.SPARK_EXCHANGE, exchange_type='fanout')
+            self.unique_ch.queue_declare(queue=config.SPARK_QUEUE, durable=True)
+            self.unique_ch.queue_bind(exchange=config.SPARK_EXCHANGE, queue=config.SPARK_QUEUE)
+            self.write(data)
