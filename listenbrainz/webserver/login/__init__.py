@@ -32,7 +32,11 @@ class User(UserMixin):
 
 @login_manager.user_loader
 def load_user(user_login_id):
-    user = db_user.get_by_user_login_id(user_login_id)
+    try:
+        user = db_user.get_by_user_login_id(user_login_id)
+    except Exception as e:
+        current_app.logger.error("Error while getting user by login ID: %s", str(e), exc_info=True)
+        return None
     if user:
         return User.from_dbrow(user)
     else:
