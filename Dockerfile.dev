@@ -1,4 +1,4 @@
-FROM airdock/oracle-jdk:jdk-8u112
+FROM airdock/oraclejdk:1.8
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -8,9 +8,9 @@ RUN apt-get update \
     dnsutils
 
 RUN cd /usr/local && \
-    wget http://apache.rediris.es/spark/spark-2.3.1/spark-2.3.1-bin-hadoop2.7.tgz && \
-    tar xzf spark-2.3.1-bin-hadoop2.7.tgz && \
-    ln -s spark-2.3.1-bin-hadoop2.7 spark
+    wget http://apache.rediris.es/spark/spark-2.3.2/spark-2.3.2-bin-hadoop2.7.tgz && \
+    tar xzf spark-2.3.2-bin-hadoop2.7.tgz && \
+    ln -s spark-2.3.2-bin-hadoop2.7 spark
 
 RUN apt-get install -y --no-install-recommends \
     python3-dev \
