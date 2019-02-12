@@ -1,25 +1,29 @@
 import sys
 import listenbrainz_spark
 import time
-from datetime import datetime  
+from collections import defaultdict
+from datetime import datetime
 from listenbrainz_spark.stats_writer.stats_writer import StatsWriter
 from listenbrainz_spark import config
+from listenbrainz_spark.stats import run_query
 
 LIMIT = 100
+USER_BATCH_SIZE = 100
 month = datetime.now().month
 year = datetime.now().year
 
+
 def get_artist_count(user_name, table):
-    """ 
+    """
     Args:
-        user_name: name of the user 
+        user_name: name of the user
         table: name of the temporary table
 
     Returns:
         count: listen_count of the previous month
     """
     t0 = time.time()
-    query = listenbrainz_spark.sql_context.sql("""
+    query = run_query("""
             SELECT count(*) as cnt
               FROM (SELECT DISTINCT artist_name from %s where user_name = '%s')
         """ % (table, user_name))
@@ -29,10 +33,10 @@ def get_artist_count(user_name, table):
     return count
 
 
-def get_artists(user_name, table):
-    """ 
+def get_artists(user_names, table):
+    """
     Args:
-        user_name: name of the user 
+        user_names ([str]): list of usernames
         table: name of the temporary table
 
     Returns:
@@ -40,35 +44,39 @@ def get_artists(user_name, table):
                of top 20 artists listened in the previous month
     """
     t0 = time.time()
-    query = listenbrainz_spark.sql_context.sql("""
-            SELECT artist_name, artist_msid, artist_mbids, count(artist_name) as cnt
-              FROM %s
-             WHERE user_name = '%s'
-          GROUP BY artist_name, artist_msid, artist_mbids
-          ORDER BY cnt DESC
-             LIMIT %s
-        """ % (table, user_name, LIMIT))
-    artist_stats = []
-    artist = {}
-    for row in query.collect():
-        artist['artist_name'] = row.artist_name
-        artist['artist_msid'] = row.artist_msid
-        artist['artist_mbids'] = row.artist_mbids
-        artist['listen_count'] = row.cnt
-        artist_stats.append(artist)
-        artist = {}
+    batch_df = listenbrainz_spark.sql_context.createDataFrame(listenbrainz_spark.context.emptyRDD())
+    for name in user_names:
+        query = run_query("""
+                SELECT user_name
+                     , artist_name
+                     , artist_msid
+                     , artist_mbids
+                     , count(artist_name) as cnt
+                  FROM %s
+                 WHERE user_name = '%s'
+              GROUP BY artist_name, artist_msid, artist_mbids
+              ORDER BY cnt DESC
+                 LIMIT %s
+            """ % (table, user_name, LIMIT))
+        batch_df = batch_df.union(query)
+    print("time taken to run all queries for %d users: %.2f" % (len(user_names), time.time() - t0))
+    data = defaultdict(list)
+    for row in batch_df.collect():
+        data[row.user_name].append({
+            'artist_name': row.artist_name,
+            'artist_msid': row.artist_msid,
+            'artist_mbids': row.artist_mbids,
+            'listen_count': row.cnt,
+        })
     query_t0 = time.time()
     print("Query to calculate artist stats proccessed in %.2f s" % (query_t0 - t0))
-    count = get_artist_count(user_name, table)
-    artist['artist_count'] = count
-    artist['artist_stats'] = artist_stats
-    return artist
+    return data
 
 
 def get_recordings(user_name, table):
-    """ 
+    """
     Args:
-        user_name: name of the user 
+        user_name: name of the user
         table: name of the temporary table
 
     Returns:
@@ -76,7 +84,7 @@ def get_recordings(user_name, table):
                             listened in the previous month
     """
     t0 = time.time()
-    query = listenbrainz_spark.sql_context.sql("""
+    query = run_query("""
             SELECT track_name, recording_msid, recording_mbid, count(track_name) as cnt
               FROM %s
              WHERE user_name = '%s'
@@ -100,7 +108,7 @@ def get_recordings(user_name, table):
 def get_releases(user_name, table):
     """
     Args:
-        user_name: name of the user 
+        user_name: name of the user
         table: name of the temporary table
 
     Returns:
@@ -108,7 +116,7 @@ def get_releases(user_name, table):
                             listened in the previous month
     """
     t0 = time.time()
-    query = listenbrainz_spark.sql_context.sql("""
+    query = run_query("""
             SELECT release_name, release_msid, release_mbid, count(release_name) as cnt
               FROM %s
              WHERE user_name = '%s'
@@ -130,7 +138,7 @@ def get_releases(user_name, table):
 
 
 def get_users(table):
-    """ DataFrame is registered as a temporary table 
+    """ DataFrame is registered as a temporary table
     Args:
         table : name of the temporary table
 
@@ -138,7 +146,7 @@ def get_users(table):
         users: list containing user names of all the users
     """
     t0 = time.time()
-    query = listenbrainz_spark.sql_context.sql("""
+    query = run_query("""
         SELECT DISTINCT user_name
         FROM %s
         """ % table)
@@ -151,17 +159,17 @@ def get_users(table):
 def main(app_name):
     """
     Args:
-        app_name: Application name to uniquely identify the submitted 
+        app_name: Application name to uniquely identify the submitted
                   application amongst other applications
 
     Returns:
         stats (list): list of dicts where each dict is a message/packet
-                    for RabbitMQ containing user stats 
+                    for RabbitMQ containing user stats
     """
     t0 = time.time()
     listenbrainz_spark.init_spark_session(app_name)
-    prev_month = month - 1 if month > 1 else 12 
-    curr_year = year if prev_month < 12 else year - 1 
+    prev_month = month - 1 if month > 1 else 12
+    curr_year = year if prev_month < 12 else year - 1
     try:
         df = listenbrainz_spark.sql_context.read.parquet('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, curr_year, prev_month))
         print("Loading dataframe...")
@@ -178,16 +186,18 @@ def main(app_name):
     query_t0 = time.time()
     print("DataFrame loaded in %.2f s" % (query_t0 - t0))
     users = get_users(table)
+    print("Number of users: %d" % len(users))
     obj = StatsWriter()
     stats = []
-    for user in users:
-        print (user)
-        user_data = {}
-        user_data[user] = {}
-        user_data[user]['artists'] = get_artists(user, table)
-        user_data[user]['recordings'] = get_recordings(user, table)
-        user_data[user]['releases'] = get_releases(user, table)
-        stats.append(user_data)
-        obj.start(stats)
-        stats = []
-        
+    while users:
+        t = time.time()
+        batch = users[:USER_BATCH_SIZE]
+        print("Doing a batch of %d users" % len(batch))
+        artists = get_artists(batch, table)
+        batch_data = defaultdict(dict)
+        for user in batch:
+            batch_data[user]['artists'] = artists[user]
+        print(json.dumps(batch_data, indent=4))
+        users = users[USER_BATCH_SIZE:]
+        print("total time taken by batch: %.2f" % (time.time() - t))
+
