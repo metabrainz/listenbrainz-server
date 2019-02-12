@@ -238,7 +238,7 @@ export class SpotifyPlayer extends React.Component {
         if (response.error) {
           return this.handleError(response.error.message)
         }
-        this.handleSpotifyAPIPlaybackStatus(response);
+        this.handleSpotifyAPICurrentlyPlaying(response);
       })
     })
     .catch(this.handleError);
