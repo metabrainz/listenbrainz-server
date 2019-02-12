@@ -44,7 +44,7 @@ def get_artists(user_names, table):
                of top 20 artists listened in the previous month
     """
     t0 = time.time()
-    batch_df = listenbrainz_spark.sql_context.createDataFrame(listenbrainz_spark.context.emptyRDD())
+    batch_df = None
     for name in user_names:
         query = run_query("""
                 SELECT user_name
@@ -58,7 +58,7 @@ def get_artists(user_names, table):
               ORDER BY cnt DESC
                  LIMIT %s
             """ % (table, user_name, LIMIT))
-        batch_df = batch_df.union(query)
+        batch_df = batch_df.union(query) if batch_df else query
     print("time taken to run all queries for %d users: %.2f" % (len(user_names), time.time() - t0))
     data = defaultdict(list)
     t = time.time()
