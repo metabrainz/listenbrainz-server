@@ -1,3 +1,5 @@
+import * as _isEqual from 'lodash.isequal';
+
 import {PlaybackControls} from './playback-controls.jsx';
 import React from 'react';
 
@@ -81,8 +83,7 @@ export class SpotifyPlayer extends React.Component {
   };
   isCurrentListen(element) {
     return this.props.currentListen
-      && element.listened_at
-      && element.listened_at === this.props.currentListen.listened_at;
+      && _isEqual(element,this.props.currentListen);
   }
   playPreviousTrack() {
     this.playNextTrack(true);
