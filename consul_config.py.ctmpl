@@ -144,3 +144,5 @@ SMTP_PORT = {{.Port}}
 
 MAIL_FROM_DOMAIN = '''{{template "KEY" "mail_from_domain"}}'''
 WEBSOCKETS_SERVER_URL = '''{{template "KEY" "websockets_server_url"}}'''
+
+SESSION_REMEMBER_ME_DURATION = 365
