@@ -201,7 +201,9 @@ class RecentListens extends React.Component {
                       .sort((a, b) => a.playing_now ? -1 : b.playing_now ? 1 : 0)
                       .map((listen, index) => {
                         return (
-                          <tr key={index} className={`listen ${this.isCurrentListen(listen) ? 'info' : ''} ${listen.playing_now ? 'playing_now' : ''}`}  >
+                          <tr key={index}
+                            onDoubleClick={this.playListen.bind(this, listen)}
+                            className={`listen ${this.isCurrentListen(listen) ? 'info' : ''} ${listen.playing_now ? 'playing_now' : ''}`}  >
                             <td>{getTrackLink(listen)}</td>
                             <td>{getArtistLink(listen)}</td>
                             {listen.playing_now ?
