@@ -61,7 +61,10 @@ def get_artists(user_names, table):
         batch_df = batch_df.union(query)
     print("time taken to run all queries for %d users: %.2f" % (len(user_names), time.time() - t0))
     data = defaultdict(list)
-    for row in batch_df.collect():
+    t = time.time()
+    rows = batch_df.collect()
+    print("time taken by collect call: %.2f" % (time.time() - t))
+    for row in rows:
         data[row.user_name].append({
             'artist_name': row.artist_name,
             'artist_msid': row.artist_msid,
