@@ -5,9 +5,7 @@ from datetime import datetime
 from listenbrainz_spark.stats_writer.stats_writer import StatsWriter
 from listenbrainz_spark import config
 
-LIMIT = 100
-month = datetime.now().month
-year = datetime.now().year
+STATS_ENTITY_LIMIT = 100
 
 def get_artist_count(user_name, table):
     """ 
@@ -20,8 +18,9 @@ def get_artist_count(user_name, table):
     """
     t0 = time.time()
     query = listenbrainz_spark.sql_context.sql("""
-            SELECT count(*) as cnt
-              FROM (SELECT DISTINCT artist_name from %s where user_name = '%s')
+            SELECT count(DISTINCT artist_name) as cnt
+              FROM %s 
+             WHERE user_name = '%s'
         """ % (table, user_name))
     count = query.collect()[0].cnt
     query_t0 = time.time()
@@ -41,28 +40,28 @@ def get_artists(user_name, table):
     """
     t0 = time.time()
     query = listenbrainz_spark.sql_context.sql("""
-            SELECT artist_name, artist_msid, artist_mbids, count(artist_name) as cnt
+            SELECT artist_name, artist_msid, artist_mbids, count(artist_msid) as cnt
               FROM %s
              WHERE user_name = '%s'
           GROUP BY artist_name, artist_msid, artist_mbids
           ORDER BY cnt DESC
              LIMIT %s
-        """ % (table, user_name, LIMIT))
+        """ % (table, user_name, STATS_ENTITY_LIMIT))
     artist_stats = []
-    artist = {}
     for row in query.collect():
+        artist = {}
         artist['artist_name'] = row.artist_name
         artist['artist_msid'] = row.artist_msid
         artist['artist_mbids'] = row.artist_mbids
         artist['listen_count'] = row.cnt
         artist_stats.append(artist)
-        artist = {}
     query_t0 = time.time()
     print("Query to calculate artist stats proccessed in %.2f s" % (query_t0 - t0))
     count = get_artist_count(user_name, table)
-    artist['artist_count'] = count
-    artist['artist_stats'] = artist_stats
-    return artist
+    artist_combined_data = {}
+    artist_combined_data['artist_count'] = count
+    artist_combined_data['artist_stats'] = artist_stats
+    return artist_combined_data
 
 
 def get_recordings(user_name, table):
@@ -77,13 +76,13 @@ def get_recordings(user_name, table):
     """
     t0 = time.time()
     query = listenbrainz_spark.sql_context.sql("""
-            SELECT track_name, recording_msid, recording_mbid, count(track_name) as cnt
+            SELECT track_name, recording_msid, recording_mbid, count(recording_msid) as cnt
               FROM %s
              WHERE user_name = '%s'
           GROUP BY track_name, recording_msid, recording_mbid
           ORDER BY cnt DESC
              LIMIT %s
-        """ % (table, user_name, LIMIT))
+        """ % (table, user_name, STATS_ENTITY_LIMIT))
     recording_stats = []
     for row in query.collect():
         recording = {}
@@ -109,13 +108,13 @@ def get_releases(user_name, table):
     """
     t0 = time.time()
     query = listenbrainz_spark.sql_context.sql("""
-            SELECT release_name, release_msid, release_mbid, count(release_name) as cnt
+            SELECT release_name, release_msid, release_mbid, count(release_msid) as cnt
               FROM %s
              WHERE user_name = '%s'
           GROUP BY release_name, release_msid, release_mbid
           ORDER BY cnt DESC
              LIMIT %s
-        """ % (table, user_name, LIMIT))
+        """ % (table, user_name, STATS_ENTITY_LIMIT))
     release_stats = []
     for row in query.collect():
         release = {}
@@ -139,8 +138,8 @@ def get_users(table):
     """
     t0 = time.time()
     query = listenbrainz_spark.sql_context.sql("""
-        SELECT DISTINCT user_name
-        FROM %s
+            SELECT DISTINCT user_name
+              FROM %s
         """ % table)
     users = [row.user_name for row in query.collect()]
     query_t0 = time.time()
@@ -160,6 +159,8 @@ def main(app_name):
     """
     t0 = time.time()
     listenbrainz_spark.init_spark_session(app_name)
+    month = datetime.now().month
+    year = datetime.now().year
     prev_month = month - 1 if month > 1 else 12 
     curr_year = year if prev_month < 12 else year - 1 
     try:
