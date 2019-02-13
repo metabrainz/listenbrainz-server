@@ -1,18 +1,19 @@
 BEGIN;
 
 CREATE TABLE "user" (
-  id             SERIAL,
-  created        TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  musicbrainz_id VARCHAR NOT NULL,
-  auth_token     VARCHAR,
-  last_login     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  latest_import  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT TIMESTAMP 'epoch',
-  gdpr_agreed    TIMESTAMP WITH TIME ZONE,
-  musicbrainz_row_id INTEGER NOT NULL,
-  user_login_id  UUID NOT NULL DEFAULT uuid_generate_v4()
+  id                    SERIAL,
+  created               TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  musicbrainz_id        VARCHAR NOT NULL,
+  auth_token            VARCHAR,
+  last_login            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  latest_import         TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT TIMESTAMP 'epoch',
+  gdpr_agreed           TIMESTAMP WITH TIME ZONE,
+  musicbrainz_row_id    INTEGER NOT NULL,
+  login_id              TEXT NOT NULL DEFAULT uuid_generate_v4()::text
 );
 ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_id_key UNIQUE (musicbrainz_id);
 ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_row_id_key UNIQUE (musicbrainz_row_id);
+ALTER TABLE "user" ADD CONSTRAINT user_login_id_key UNIQUE (login_id);
 
 CREATE TABLE spotify_auth (
   user_id                   INTEGER NOT NULL, -- PK and FK to user.id

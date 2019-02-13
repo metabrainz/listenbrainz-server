@@ -28,7 +28,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         Test for the user export of ListenBrainz data.
         """
         # test get requests to export view first
-        self.temporary_login(self.user['user_login_id'])
+        self.temporary_login(self.user['login_id'])
         resp = self.client.get(url_for('profile.export_data'))
         self.assert200(resp)
 

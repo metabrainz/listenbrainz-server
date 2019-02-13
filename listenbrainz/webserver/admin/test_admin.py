@@ -21,7 +21,7 @@ class AdminTestCase(ServerTestCase, DatabaseTestCase):
 
     def test_admin_views_when_authorized_logged_in(self):
         self.app.config['ADMINS'] = [self.authorized_user['musicbrainz_id']]
-        self.temporary_login(self.authorized_user['user_login_id'])
+        self.temporary_login(self.authorized_user['login_id'])
         # flask-admin seems to do a few redirects before going to the actual
         # final web page, so we have to follow redirects
         r = self.client.get('/admin', follow_redirects=True)
@@ -30,7 +30,7 @@ class AdminTestCase(ServerTestCase, DatabaseTestCase):
 
     def test_admin_views_when_unauthorized_logged_in(self):
         self.app.config['ADMINS'] = [self.authorized_user['musicbrainz_id']]
-        self.temporary_login(self.unauthorized_user['user_login_id'])
+        self.temporary_login(self.unauthorized_user['login_id'])
         r = self.client.get('/admin', follow_redirects=True)
         self.assert200(r)
         self.assertNotIn('BDFL Zone', r.data.decode('utf-8'))
