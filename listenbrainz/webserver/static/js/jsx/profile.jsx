@@ -2,6 +2,7 @@
 
 import '../lib/spotify-player-sdk-1.6.0';
 
+import * as _isEqual from 'lodash.isequal';
 import * as timeago from 'time-ago';
 
 import {getArtistLink, getPlayButton, getSpotifyEmbedUriFromListen, getTrackLink} from './utils.jsx';
@@ -127,7 +128,7 @@ class RecentListens extends React.Component {
 		this.setState({currentListen:listen});
 	}
 	isCurrentListen(listen){
-		return this.state.currentListen && this.state.currentListen.listened_at === listen.listened_at;
+		return this.state.currentListen && _isEqual(listen,this.state.currentListen);
 	}
 
 	render() {
@@ -200,7 +201,9 @@ class RecentListens extends React.Component {
                       .sort((a, b) => a.playing_now ? -1 : b.playing_now ? 1 : 0)
                       .map((listen, index) => {
                         return (
-                          <tr key={index} className={`listen ${this.isCurrentListen(listen) ? 'info' : ''} ${listen.playing_now ? 'playing_now' : ''}`}  >
+                          <tr key={index}
+                            onDoubleClick={this.playListen.bind(this, listen)}
+                            className={`listen ${this.isCurrentListen(listen) ? 'info' : ''} ${listen.playing_now ? 'playing_now' : ''}`}  >
                             <td>{getTrackLink(listen)}</td>
                             <td>{getArtistLink(listen)}</td>
                             {listen.playing_now ?
