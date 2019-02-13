@@ -12,7 +12,7 @@ REDIRECT_BASE_URL="https://www.apache.org/dyn/closer.cgi?action=download&filenam
 ARCHIVE_BASE_URL="https://archive.apache.org/dist/"
 
 echo "downloading $FILE_PATH from mirror"
-CODE=`wget --server-response -O $FILE_NAME "$REDIRECT_BASE_URL$FILE_PATH" 2>&1 | grep "  HTTP" | tail -1 | colrm 1 11 | colrm 4`
+CODE=`wget --server-response -O $FILE_NAME "$REDIRECT_BASE_URL$FILE_PATH" 2>&1 | tee /dev/fd/2 | grep "  HTTP" | tail -1 | colrm 1 11 | colrm 4`
 if [ "$CODE" = "200" ];
 then
     exit 0;
@@ -25,7 +25,7 @@ fi
 # If this becomes/is possible, please let us know how to do this! 
 
 echo "$FILE_PATH not found on mirror, trying archive: $ARCHIVE_BASE_URL$FILE_PATH"
-CODE=`wget --server-response -O $FILE_NAME "$ARCHIVE_BASE_URL$FILE_PATH" 2>&1 | grep "  HTTP" | tail -1 | colrm 1 11 | colrm 4`
+CODE=`wget --server-response -O $FILE_NAME "$ARCHIVE_BASE_URL$FILE_PATH" 2>&1 | tee /dev/fd/2 | grep "  HTTP" | tail -1 | colrm 1 11 | colrm 4`
 if [ "$CODE" = "200" ];
 then
     exit 0;
