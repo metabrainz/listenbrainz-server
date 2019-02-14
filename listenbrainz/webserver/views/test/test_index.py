@@ -298,3 +298,10 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assertStatus(r, 401)
         mock_delete_user.assert_not_called()
+
+
+    def test_recent_listens_page(self):
+
+        # This test is very rudimentary -- improve this once the improved react template is done
+        response = self.client.get(url_for('index.recent_listens'))
+        self.assert200(response)
