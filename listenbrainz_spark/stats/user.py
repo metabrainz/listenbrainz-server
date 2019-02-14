@@ -180,7 +180,6 @@ def main(app_name):
     print("DataFrame loaded in %.2f s" % (query_t0 - t0))
     users = get_users(table)
     obj = StatsWriter()
-    stats = []
     for user in users:
         print (user)
         user_data = {}
@@ -188,7 +187,5 @@ def main(app_name):
         user_data[user]['artists'] = get_artists(user, table)
         user_data[user]['recordings'] = get_recordings(user, table)
         user_data[user]['releases'] = get_releases(user, table)
-        stats.append(user_data)
-        obj.start(stats)
-        stats = []
+        obj.start(user_data)
         
