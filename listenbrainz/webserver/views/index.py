@@ -9,7 +9,9 @@ import os
 import subprocess
 import requests
 import locale
+import ujson
 import listenbrainz.db.user as db_user
+import listenbrainz.db.spotify as db_spotify
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz import webserver
 from listenbrainz.webserver import flash
@@ -138,10 +140,26 @@ def recent_listens():
                 "listened_at": listen.ts_since_epoch,
                 "listened_at_iso": listen.timestamp.isoformat() + "Z",
             })
-    return render_template(
-        "index/recent.html",
-        recent=recent
-    )
+
+    if current_user.is_authenticated:
+        token = db_spotify.get_token_for_user(current_user.id)
+        if token:
+            spotify_access_token = token
+        else:
+            spotify_access_token = ''
+    else:
+        spotify_access_token = ''
+
+    props = {
+        "listens"              : recent,
+        "mode"                 : "recent",
+        "spotify_access_token" : spotify_access_token,
+    }
+
+    return render_template("index/recent.html",
+        props=ujson.dumps(props),
+        mode='recent',
+        active_section='listens')
 
 
 
