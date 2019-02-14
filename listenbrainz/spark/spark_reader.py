@@ -1,3 +1,4 @@
+
 import json
 import logging
 import pika
@@ -34,17 +35,20 @@ class SparkReader:
 
 
     def callback(self, ch, method, properties, body):
-        """ Handle the data received from the queue and works accordingly.
+        """ Handle the data received from the queue and
+            insert into the database accordingly.
         """
         data = ujson.loads(body)
-        user_name = next(iter(data[0]))
-        user = db_user.get_by_mb_id(user_name)
-        artists = data[0][user_name]['artists']['artist_stats']
-        recordings = data[0][user_name]['recordings']
-        releases = data[0][user_name]['releases']
-        artist_count = data[0][user_name]['artists']['artist_count']
+        for key, value in data.items():
+            user = db_user.get_by_mb_id(key)
+            if not user:
+                return
+        artists = value['artists']['artist_stats']
+        recordings = value['recordings']
+        releases = value['releases']
+        artist_count = value['artists']['artist_count']
         db_stats.insert_user_stats(user['id'], artists, recordings, releases, artist_count)
-        print ("data for {} published".format(user_name))
+        current_app.logger.info("data for {} published".format(key))
 
         while True:
             try:
@@ -70,7 +74,6 @@ class SparkReader:
                 )
                 current_app.logger.info('Stats calculator started!')
                 try:
-                    print("consuming")
                     self.incoming_ch.start_consuming()
                 except pika.exceptions.ConnectionClosed:
                     current_app.logger.warning("Connection to rabbitmq closed. Re-opening.")
