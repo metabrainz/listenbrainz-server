@@ -5,7 +5,13 @@ import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 
 from listenbrainz.db.testing import DatabaseTestCase
+from datetime import datetime  
 
+month = datetime.now().month
+year = datetime.now().year
+prev_month = month - 1 if month > 1 else 12 
+curr_year = year if prev_month < 12 else year - 1 
+USER_STATS_KEY = '{}.{}'.format(curr_year, prev_month)
 
 class StatsDatabaseTestCase(DatabaseTestCase):
 
@@ -34,10 +40,10 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         )
 
         result = db_stats.get_all_user_stats(user_id=self.user['id'])
-        self.assertListEqual(result['artist']['prev_month'], artists)
+        self.assertListEqual(result['artist'][USER_STATS_KEY], artists)
         self.assertEqual(result['artist']['count'], 2)
-        self.assertListEqual(result['release']['prev_month'], releases)
-        self.assertListEqual(result['recording']['prev_month'], recordings)
+        self.assertListEqual(result['release'][USER_STATS_KEY], releases)
+        self.assertListEqual(result['recording'][USER_STATS_KEY], recordings)
         self.assertGreater(int(result['last_updated'].strftime('%s')), 0)
 
     def insert_test_data(self):
@@ -71,7 +77,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(data['artist']['count'], 2)
 
         data = db_stats.get_user_stats(self.user['id'], 'recording')
-        self.assertListEqual(data['recording']['prev_month'], data_inserted['user_recordings'])
+        self.assertListEqual(data['recording'][USER_STATS_KEY], data_inserted['user_recordings'])
 
     def test_get_user_artists(self):
         data_inserted = self.insert_test_data()
@@ -81,10 +87,10 @@ class StatsDatabaseTestCase(DatabaseTestCase):
     def test_get_all_user_stats(self):
         data_inserted = self.insert_test_data()
         result = db_stats.get_all_user_stats(self.user['id'])
-        self.assertListEqual(result['artist']['prev_month'], data_inserted['user_artists'])
+        self.assertListEqual(result['artist'][USER_STATS_KEY], data_inserted['user_artists'])
         self.assertEqual(result['artist']['count'], 2)
-        self.assertListEqual(result['release']['prev_month'], data_inserted['user_releases'])
-        self.assertListEqual(result['recording']['prev_month'], data_inserted['user_recordings'])
+        self.assertListEqual(result['release'][USER_STATS_KEY], data_inserted['user_releases'])
+        self.assertListEqual(result['recording'][USER_STATS_KEY], data_inserted['user_recordings'])
         self.assertGreater(int(result['last_updated'].strftime('%s')), 0)
 
     def test_valid_stats_exist(self):

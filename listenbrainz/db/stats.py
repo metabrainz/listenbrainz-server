@@ -26,6 +26,7 @@ import ujson
 
 from listenbrainz import db
 from listenbrainz import config
+from datetime import datetime  
 
 
 def insert_user_stats(user_id, artists, recordings, releases, artist_count):
@@ -41,18 +42,23 @@ def insert_user_stats(user_id, artists, recordings, releases, artist_count):
              artist_count (int): the total number of artists listened to by the user
     """
 
+    month = datetime.now().month
+    year = datetime.now().year
+    prev_month = month - 1 if month > 1 else 12 
+    curr_year = year if prev_month < 12 else year - 1 
+
     artist_stats = {
         'count': artist_count,
-        'prev_month': artists,
+        '{}.{}'.format(curr_year, prev_month): artists,
     }
 
     recording_stats = {
-        'prev_month': recordings,
+        '{}.{}'.format(curr_year, prev_month): recordings,
     }
 
 
     release_stats = {
-        'prev_month': releases,
+        '{}.{}'.format(curr_year, prev_month): releases,
     }
 
 
