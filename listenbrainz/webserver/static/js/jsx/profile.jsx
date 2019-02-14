@@ -21,7 +21,7 @@ class RecentListens extends React.Component {
 		this.state = {
 			listens: props.listens || [],
 			currentListen : null,
-      mode: props.mode === "follow" ? "follow" : "listens",
+      mode: props.mode,
       followList: props.follow_list || [],
 			playingNowByUser: {}
 		};
@@ -181,7 +181,7 @@ class RecentListens extends React.Component {
         }
         <div className="row">
           <div className="col-md-8">
-            <h3>{this.state.mode === "listens" ? "Recent listens" : "Playlist"}</h3>
+            <h3>{(this.state.mode === "listens" || this.state.mode === "recent" )? "Recent listens" : "Playlist"}</h3>
 
             {!this.state.listens.length ?
               <p className="lead" className="text-center">No listens :/</p> :
@@ -192,7 +192,7 @@ class RecentListens extends React.Component {
                       <th>Track</th>
                       <th>Artist</th>
                       <th>Time</th>
-                      {this.state.mode === "follow" && <th>User</th>}
+                      {this.state.mode === "follow" || this.state.mode === "recent" && <th>User</th>}
                       <th></th>
                     </tr>
                   </thead>
@@ -215,7 +215,7 @@ class RecentListens extends React.Component {
                                 </abbr>
                               </td>
                             }
-                            {this.state.mode === "follow" && <td>{listen.user_name}</td>}
+                            {this.state.mode === "follow" || this.state.mode === "recent" && <td>{listen.user_name}</td>}
                             <td className="playButton">{getPlayButton(listen, this.playListen.bind(this, listen))}</td>
                           </tr>
                         )
