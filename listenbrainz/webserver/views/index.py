@@ -14,6 +14,7 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz import webserver
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.influx_connection import _influx
+from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.views.user import delete_user
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import pika
@@ -25,6 +26,7 @@ locale.setlocale(locale.LC_ALL, '')
 
 STATS_PREFIX = 'listenbrainz.stats' # prefix used in key to cache stats
 CACHE_TIME = 10 * 60 # time in seconds we cache the stats
+NUMBER_OF_RECENT_LISTENS = 50
 
 @index_bp.route("/")
 def index():
@@ -123,6 +125,24 @@ def current_status():
         unique_len=unique_len_msg,
         user_count=user_count,
     )
+
+
+@index_bp.route("/recent")
+def recent_listens():
+
+    recent = []
+    for listen in _redis.get_recent_listens(NUMBER_OF_RECENT_LISTENS):
+        recent.append({
+                "track_metadata": listen.data,
+                "user_name" : listen.user_name,
+                "listened_at": listen.ts_since_epoch,
+                "listened_at_iso": listen.timestamp.isoformat() + "Z",
+            })
+    return render_template(
+        "index/recent.html",
+        recent=recent
+    )
+
 
 
 @index_bp.route('/agree-to-terms', methods=['GET', 'POST'])

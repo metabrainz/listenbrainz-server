@@ -11,7 +11,7 @@ from listenbrainz.listenstore import ListenStore
 class RedisListenStore(ListenStore):
 
     RECENT_LISTENS_KEY = "lb_recent_listens"
-    RECENT_LISTENS_MAX = 3
+    RECENT_LISTENS_MAX = 100
     RECENT_LISTENS_MAX_TIME_DIFFERENCE = 300
 
     def __init__(self, log, conf):
@@ -67,10 +67,9 @@ class RedisListenStore(ListenStore):
 
         recent = []
         for listen in unique:
-            if  abs(time() - listen['listened_at'].timestamp()) < RECENT_LISTENS_MAX_TIME_DIFFERENCE:
+            if  abs(time() - listen['listened_at'].timestamp()) < self.RECENT_LISTENS_MAX_TIME_DIFFERENCE:
                 listen['listened_at'] = listen['listened_at'].timestamp()
-                self.log.info(listen)
-                recent.append(listen)
+                recent.append(ujson.dumps(listen).encode('utf-8'))
 
         # Don't take this very seriously -- if it fails, really no big deal. Let is go.
         if recent:
@@ -78,8 +77,12 @@ class RedisListenStore(ListenStore):
             self.redis.ltrim(self.RECENT_LISTENS_KEY, -self.RECENT_LISTENS_MAX, -1)
 
 
-    def get_recent_listens(self, recent, max = RECENT_LISTENS_MAX):
+    def get_recent_listens(self, max = RECENT_LISTENS_MAX):
         """
             Get the max number of most recent listens
         """
-        return self.redis.lrange(self.RECENT_LISTENS_KEY, 0, max)
+        recent = []
+        for listen in self.redis.lrange(self.RECENT_LISTENS_KEY, 0, max):
+            recent.append(Listen.from_json(ujson.loads(listen)))
+
+        return recent

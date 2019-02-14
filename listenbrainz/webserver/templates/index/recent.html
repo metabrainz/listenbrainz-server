@@ -1,0 +1,34 @@
+{%- extends 'base.html' -%}
+{%- block title -%}Recent listens - ListenBrainz{%- endblock -%}
+{%- block content -%}
+
+  <h2 class="page-title">Recent listens</h2>
+
+  <table class="table table-border table-condensed table-striped">
+    <thead>
+      <tr>
+        <th>Track</th>
+        <th>Artist</th>
+        <th>Time</th>
+        <th>User</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for listen in recent %}
+      <tr>
+        <td>{{ listen.track_metadata.track_name }}</td>
+        <td>{{ listen.track_metadata.artist_name }}</td>
+        <td><abbr class="timeago" title="{{ listen.listened_at_iso }}">{{ listen.listened_at_iso }}</td>
+        <td>{{ listen.user_name }}</td>
+      </tr>
+    {% else %}
+       <tr>
+          <td></td>
+          <td>No recent listens. :(</td>
+          <td></td>
+       </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+{%- endblock -%}
