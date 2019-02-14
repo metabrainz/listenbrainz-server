@@ -111,7 +111,6 @@ class InfluxWriterSubscriber(ListenWriter):
     def write(self, listen_dicts):
         submit = []
         unique = []
-        unique = []
         duplicate_count = 0
         unique_count = 0
 
