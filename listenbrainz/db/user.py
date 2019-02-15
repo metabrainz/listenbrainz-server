@@ -58,7 +58,7 @@ def update_token(id):
             raise
 
 
-USER_GET_COLUMNS = ['id', 'created', 'musicbrainz_id', 'auth_token', 'last_login', 'latest_import', 'gdpr_agreed', 'musicbrainz_row_id', 'user_login_id']
+USER_GET_COLUMNS = ['id', 'created', 'musicbrainz_id', 'auth_token', 'last_login', 'latest_import', 'gdpr_agreed', 'musicbrainz_row_id', 'login_id']
 
 
 def get(id):
@@ -85,7 +85,8 @@ def get(id):
         row = result.fetchone()
         return dict(row) if row else None
 
-def get_by_user_login_id(login_id):
+
+def get_by_login_id(login_id):
     """Get user with a specified login ID.
 
     Args:
@@ -104,7 +105,7 @@ def get_by_user_login_id(login_id):
         result = connection.execute(sqlalchemy.text("""
             SELECT {columns}
               FROM "user"
-             WHERE user_login_id = :user_login_id
+             WHERE login_id = :user_login_id
         """.format(columns=','.join(USER_GET_COLUMNS))), {"user_login_id": login_id})
         row = result.fetchone()
         return dict(row) if row else None
