@@ -73,7 +73,7 @@ class RedisListenStore(ListenStore):
 
         # Don't take this very seriously -- if it fails, really no big deal. Let is go.
         if recent:
-            self.redis.rpush(self.RECENT_LISTENS_KEY, *recent)
+            self.redis.lpush(self.RECENT_LISTENS_KEY, *recent)
             self.redis.ltrim(self.RECENT_LISTENS_KEY, -self.RECENT_LISTENS_MAX, -1)
 
 
@@ -82,7 +82,7 @@ class RedisListenStore(ListenStore):
             Get the max number of most recent listens
         """
         recent = []
-        for listen in self.redis.lrange(self.RECENT_LISTENS_KEY, 0, max):
+        for listen in self.redis.lrange(self.RECENT_LISTENS_KEY, 0, max - 1):
             recent.append(Listen.from_json(ujson.loads(listen)))
 
         return recent
