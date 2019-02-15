@@ -1,3 +1,4 @@
+import ujson
 from unittest import mock
 from unittest.mock import MagicMock
 
@@ -302,6 +303,9 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
 
     def test_recent_listens_page(self):
 
-        # This test is very rudimentary -- improve this once the improved react template is done
         response = self.client.get(url_for('index.recent_listens'))
         self.assert200(response)
+        self.assertTemplateUsed('index/recent.html')
+        props = ujson.loads(self.get_context_variable('props'))
+        self.assertEqual(props['mode'], 'recent')
+        self.assertEqual(props['spotify_access_token'], '')
