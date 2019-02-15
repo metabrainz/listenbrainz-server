@@ -15,58 +15,60 @@ import io from 'socket.io-client';
 
 class RecentListens extends React.Component {
 
-	spotifyListens = [];
-	constructor(props) {
-		super(props);
-		this.state = {
-			listens: props.listens || [],
-			currentListen : null,
+  spotifyListens = [];
+  constructor(props) {
+    super(props);
+    this.state = {
+      listens: props.listens || [],
+      currentListen : null,
       mode: props.mode,
       followList: props.follow_list || [],
-			playingNowByUser: {}
-		};
-		this.isCurrentListen = this.isCurrentListen.bind(this);
-		this.handleCurrentListenChange = this.handleCurrentListenChange.bind(this);
-		this.playListen = this.playListen.bind(this);
-		this.spotifyPlayer = React.createRef();
-		this.receiveNewListen = this.receiveNewListen.bind(this);
-		this.receiveNewPlayingNow = this.receiveNewPlayingNow.bind(this);
-		this.handleFollowUserListChange = this.handleFollowUserListChange.bind(this);
-		this.connectWebsockets = this.connectWebsockets.bind(this);
-	}
+      playingNowByUser: {}
+    };
+    this.isCurrentListen = this.isCurrentListen.bind(this);
+    this.handleCurrentListenChange = this.handleCurrentListenChange.bind(this);
+    this.playListen = this.playListen.bind(this);
+    this.spotifyPlayer = React.createRef();
+    this.receiveNewListen = this.receiveNewListen.bind(this);
+    this.receiveNewPlayingNow = this.receiveNewPlayingNow.bind(this);
+    this.handleFollowUserListChange = this.handleFollowUserListChange.bind(this);
+    this.connectWebsockets = this.connectWebsockets.bind(this);
+  }
 
-	componentDidMount(){
-		this.connectWebsockets();
-	}
+  componentDidMount(){
+    if(this.state.mode === "listens" || this.state.mode === "follow"){
+      this.connectWebsockets();
+    }
+  }
 
-	connectWebsockets(){
-		this._socket = io.connect(this.props.web_sockets_server_url);
-		this._socket.on('connect', () => {
-			console.debug("Connected to websocket!");
-			switch (this.state.mode) {
-				case "follow":
+  connectWebsockets(){
+    this._socket = io.connect(this.props.web_sockets_server_url);
+    this._socket.on('connect', () => {
+      console.debug("Connected to websocket!");
+      switch (this.state.mode) {
+        case "follow":
           this.handleFollowUserListChange(this.state.followList);
-					break;
-				case "listens":
-				default:
+          break;
+        case "listens":
+        default:
           this.handleFollowUserListChange([this.props.user.name]);
-					break;
-			}
-		});
-		this._socket.on('listen', (data) => {
-			console.debug('New listen!');
-			this.receiveNewListen(data);
-		});
-		this._socket.on('playing_now', (data) => {
-			console.debug('New now playing notification!')
-			this.receiveNewPlayingNow(data);
-		});
-	}
+          break;
+      }
+    });
+    this._socket.on('listen', (data) => {
+      console.debug('New listen!');
+      this.receiveNewListen(data);
+    });
+    this._socket.on('playing_now', (data) => {
+      console.debug('New now playing notification!')
+      this.receiveNewPlayingNow(data);
+    });
+  }
 
-	handleFollowUserListChange(userList){
-		if(!Array.isArray(userList)){
-			console.error("Expected array in handleFollowUserListChange, got", typeof userList);
-			return;
+  handleFollowUserListChange(userList){
+    if(!Array.isArray(userList)){
+      console.error("Expected array in handleFollowUserListChange, got", typeof userList);
+      return;
     }
     this.setState({followList: userList}, ()=>{
       if(!this._socket){
@@ -76,62 +78,62 @@ class RecentListens extends React.Component {
       console.debug("Emitting user list to websockets:", userList);
       this._socket.emit("json", {user: this.props.user.name, 'follow': userList});
     })
-	}
+  }
 
-	playListen(listen){
-		if(this.spotifyPlayer.current){
-			this.spotifyPlayer.current.playListen(listen);
-			return;
-		} else {
-			// For fallback embedded player
-			this.setState({currentListen:listen});
-			return;
-		}
-	}
+  playListen(listen){
+    if(this.spotifyPlayer.current){
+      this.spotifyPlayer.current.playListen(listen);
+      return;
+    } else {
+      // For fallback embedded player
+      this.setState({currentListen:listen});
+      return;
+    }
+  }
 
-	receiveNewListen(newListen){
-		try {
-			newListen = JSON.parse(newListen);
-		} catch (error) {
-			console.error(error);
-		}
-		console.debug(typeof newListen, newListen);
-		this.setState(prevState =>{
-			return { listens: [newListen].concat(prevState.listens)}
-		})
-	}
-	receiveNewPlayingNow(newPlayingNow){
-		try {
-			newPlayingNow = JSON.parse(newPlayingNow);
-		} catch (error) {
-			console.error(error);
-		}
-		newPlayingNow.playing_now = true;
+  receiveNewListen(newListen){
+    try {
+      newListen = JSON.parse(newListen);
+    } catch (error) {
+      console.error(error);
+    }
+    console.debug(typeof newListen, newListen);
+    this.setState(prevState =>{
+      return { listens: [newListen].concat(prevState.listens)}
+    })
+  }
+  receiveNewPlayingNow(newPlayingNow){
+    try {
+      newPlayingNow = JSON.parse(newPlayingNow);
+    } catch (error) {
+      console.error(error);
+    }
+    newPlayingNow.playing_now = true;
 
-		this.setState(prevState =>{
-			if(prevState.mode === "follow"){
-				const userName = newPlayingNow.user_name;
-				return {playingNowByUser: Object.assign(
-					{},
-					prevState.playingNowByUser,
-					{[userName]:newPlayingNow}
-					)
-				}
-			}
-			const indexOfPreviousPlayingNow = prevState.listens.findIndex(listen => listen.playing_now);
-			prevState.listens.splice(indexOfPreviousPlayingNow, 1);
-			return { listens: [newPlayingNow].concat(prevState.listens)}
-		})
-	}
+    this.setState(prevState =>{
+      if(prevState.mode === "follow"){
+        const userName = newPlayingNow.user_name;
+        return {playingNowByUser: Object.assign(
+          {},
+          prevState.playingNowByUser,
+          {[userName]:newPlayingNow}
+          )
+        }
+      }
+      const indexOfPreviousPlayingNow = prevState.listens.findIndex(listen => listen.playing_now);
+      prevState.listens.splice(indexOfPreviousPlayingNow, 1);
+      return { listens: [newPlayingNow].concat(prevState.listens)}
+    })
+  }
 
-	handleCurrentListenChange(listen){
-		this.setState({currentListen:listen});
-	}
-	isCurrentListen(listen){
-		return this.state.currentListen && _isEqual(listen,this.state.currentListen);
-	}
+  handleCurrentListenChange(listen){
+    this.setState({currentListen:listen});
+  }
+  isCurrentListen(listen){
+    return this.state.currentListen && _isEqual(listen,this.state.currentListen);
+  }
 
-	render() {
+  render() {
 
     const spotifyListens = this.state.listens.filter(listen => listen.track_metadata
       && listen.track_metadata.additional_info
