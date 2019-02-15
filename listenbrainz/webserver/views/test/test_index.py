@@ -1,3 +1,4 @@
+import ujson
 from unittest import mock
 from unittest.mock import MagicMock
 
@@ -298,3 +299,13 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         r = self.client.get(url_for('index.mb_user_deleter', musicbrainz_row_id=1, access_token='132'))
         self.assertStatus(r, 401)
         mock_delete_user.assert_not_called()
+
+
+    def test_recent_listens_page(self):
+
+        response = self.client.get(url_for('index.recent_listens'))
+        self.assert200(response)
+        self.assertTemplateUsed('index/recent.html')
+        props = ujson.loads(self.get_context_variable('props'))
+        self.assertEqual(props['mode'], 'recent')
+        self.assertEqual(props['spotify_access_token'], '')

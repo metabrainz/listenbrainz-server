@@ -1,0 +1,15 @@
+{%- extends 'base.html' -%}
+{%- block title -%}Recent listens - ListenBrainz{%- endblock -%}
+{%- block content -%}
+
+  <div id="react-listens">
+  </div>
+
+{%- endblock -%}
+
+{% block scripts %}
+  {{ super() }}
+  <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js" integrity="sha384-SlE991lGASHoBfWbelyBPLsUlwY1GwNDJo3jSJO04KZ33K2bwfV9YBauFfnzvynJ" crossorigin="anonymous"></script>
+  <script id="react-props" type="application/json">{{ props|safe }}</script>
+  <script src="{{ get_static_path('main.js') }}" type="text/javascript"></script>
+{% endblock %}
