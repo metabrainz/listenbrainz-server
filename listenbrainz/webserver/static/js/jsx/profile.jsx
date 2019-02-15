@@ -36,7 +36,9 @@ class RecentListens extends React.Component {
 	}
 
 	componentDidMount(){
-		this.connectWebsockets();
+    if(this.state.mode === "listens" || this.state.mode === "follow"){
+      this.connectWebsockets();
+    }
 	}
 
 	connectWebsockets(){
