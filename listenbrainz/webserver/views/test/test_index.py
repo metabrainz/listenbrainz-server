@@ -102,7 +102,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertNotIn('My Listens', data)
         mock_user_get.assert_not_called()
 
-    @mock.patch('listenbrainz.db.user.get_by_user_login_id')
+    @mock.patch('listenbrainz.db.user.get_by_login_id')
     def test_menu_logged_in(self, mock_user_get):
         """ If the user is logged in, check that we perform a database query to get user data """
         user = db_user.get_or_create(1, 'iliekcomputers')
@@ -122,7 +122,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertIn('My Listens', data)
         mock_user_get.assert_called_with(user['login_id'])
 
-    @mock.patch('listenbrainz.db.user.get_by_user_login_id')
+    @mock.patch('listenbrainz.db.user.get_by_login_id')
     def test_menu_logged_in_error_show(self, mock_user_get):
         """ If the user is logged in, if we show a 400 or 404 error, show the user menu"""
         @self.app.route('/page_that_returns_400')
@@ -181,7 +181,7 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertNotIn('Sign in', data)
         self.assertIn('Import', data)
 
-    @mock.patch('listenbrainz.db.user.get_by_user_login_id')
+    @mock.patch('listenbrainz.db.user.get_by_login_id')
     def test_menu_logged_in_error_dont_show_user_loaded(self, mock_user_get):
         """ If the user is logged in, if we show a 500 error, do not show the user menu
         If the user has previously been loaded in the view, check that it's not

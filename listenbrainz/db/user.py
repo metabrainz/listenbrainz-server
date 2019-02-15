@@ -85,7 +85,8 @@ def get(id):
         row = result.fetchone()
         return dict(row) if row else None
 
-def get_by_user_login_id(login_id):
+
+def get_by_login_id(login_id):
     """Get user with a specified login ID.
 
     Args:
