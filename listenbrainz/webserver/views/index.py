@@ -9,11 +9,14 @@ import os
 import subprocess
 import requests
 import locale
+import ujson
 import listenbrainz.db.user as db_user
+import listenbrainz.db.spotify as db_spotify
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz import webserver
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.influx_connection import _influx
+from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.views.user import delete_user
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import pika
@@ -25,6 +28,7 @@ locale.setlocale(locale.LC_ALL, '')
 
 STATS_PREFIX = 'listenbrainz.stats' # prefix used in key to cache stats
 CACHE_TIME = 10 * 60 # time in seconds we cache the stats
+NUMBER_OF_RECENT_LISTENS = 50
 
 @index_bp.route("/")
 def index():
@@ -123,6 +127,40 @@ def current_status():
         unique_len=unique_len_msg,
         user_count=user_count,
     )
+
+
+@index_bp.route("/recent")
+def recent_listens():
+
+    recent = []
+    for listen in _redis.get_recent_listens(NUMBER_OF_RECENT_LISTENS):
+        recent.append({
+                "track_metadata": listen.data,
+                "user_name" : listen.user_name,
+                "listened_at": listen.ts_since_epoch,
+                "listened_at_iso": listen.timestamp.isoformat() + "Z",
+            })
+
+    if current_user.is_authenticated:
+        token = db_spotify.get_token_for_user(current_user.id)
+        if token:
+            spotify_access_token = token
+        else:
+            spotify_access_token = ''
+    else:
+        spotify_access_token = ''
+
+    props = {
+        "listens"              : recent,
+        "mode"                 : "recent",
+        "spotify_access_token" : spotify_access_token,
+    }
+
+    return render_template("index/recent.html",
+        props=ujson.dumps(props),
+        mode='recent',
+        active_section='listens')
+
 
 
 @index_bp.route('/agree-to-terms', methods=['GET', 'POST'])

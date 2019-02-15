@@ -8,11 +8,11 @@ from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import ujson
 import logging
-import time
 
 from listenbrainz.listen import Listen
 from time import time, sleep
 from listenbrainz.listenstore import InfluxListenStore
+from listenbrainz.listenstore import RedisListenStore
 from listenbrainz.utils import escape, get_measurement_name, get_escaped_measurement_name, \
                                get_influx_query_timestamp, convert_to_unix_timestamp, \
                                convert_timestamp_to_influx_row_format
@@ -27,6 +27,7 @@ from collections import defaultdict
 from listenbrainz.listen_writer import ListenWriter
 
 class InfluxWriterSubscriber(ListenWriter):
+
     def __init__(self):
         super().__init__()
 
@@ -34,6 +35,7 @@ class InfluxWriterSubscriber(ListenWriter):
         self.influx = None
         self.incoming_ch = None
         self.unique_ch = None
+        self.redis_listenstore = None
 
 
     def callback(self, ch, method, properties, body):
@@ -219,6 +221,9 @@ class InfluxWriterSubscriber(ListenWriter):
             except pika.exceptions.ConnectionClosed:
                 self.connect_to_rabbitmq()
 
+
+        self.redis_listenstore.update_recent_listens(unique)
+
         return True
 
 
@@ -257,6 +262,7 @@ class InfluxWriterSubscriber(ListenWriter):
                 try:
                     self.redis = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'], decode_responses=True)
                     self.redis.ping()
+                    self.redis_listenstore = RedisListenStore(current_app.logger, current_app.config)
                     break
                 except Exception as err:
                     current_app.logger.error("Cannot connect to redis: %s. Retrying in 2 seconds and trying again." % str(err), exc_info=True)
