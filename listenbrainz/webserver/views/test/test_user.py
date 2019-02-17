@@ -12,6 +12,7 @@ from listenbrainz.webserver.login import User
 from listenbrainz.webserver.testing import ServerTestCase
 
 import listenbrainz.db.user as db_user
+from listenbrainz import utils
 import logging
 
 
@@ -65,12 +66,14 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertIsNone(props['artist_count'])
 
         # check that artist count is shown if stats have been calculated
+        timestamp = utils.get_stats_calculation_timestamp()
         db_stats.insert_user_stats(
             user_id=self.user.id,
             artists={},
             recordings={},
             releases={},
             artist_count=2,
+            timestamp=timestamp,
         )
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
@@ -144,13 +147,15 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         # add some artist stats to the db
         with open(self.path_to_data_file('user_top_artists.json')) as f:
             artists = ujson.load(f)
-
+            
+        timestamp = utils.get_stats_calculation_timestamp()
         db_stats.insert_user_stats(
             user_id=self.user.id,
             artists=artists,
             recordings={},
             releases={},
             artist_count=2,
+            timestamp=timestamp,
         )
 
         r = self.client.get(url_for('user.artists', user_name=self.user.musicbrainz_id))

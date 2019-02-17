@@ -18,6 +18,7 @@ from listenbrainz.webserver.views.api_tools import publish_data_to_queue
 import time
 from datetime import datetime  
 from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
+from listenbrainz import utils
 
 LISTENS_PER_PAGE = 25
 
@@ -189,13 +190,8 @@ def artists(user_name):
 
         flash.error(msg)
         return redirect(url_for('user.profile', user_name=user_name))
-
-    month = datetime.now().month
-    year = datetime.now().year
-    prev_month = month - 1 if month > 1 else 12 
-    curr_year = year if prev_month < 12 else year - 1 
-    USER_STATS_KEY = '{}.{}'.format(curr_year, prev_month)
-    top_artists = data['artist'][USER_STATS_KEY]
+    timestamp = utils.get_stats_calculation_timestamp()
+    top_artists = data['artist'][timestamp]
     return render_template(
         "user/artists.html",
         user=user,
