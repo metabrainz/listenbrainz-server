@@ -25,11 +25,9 @@ import sqlalchemy
 import ujson
 
 from listenbrainz import db
-from listenbrainz import config
-from datetime import datetime  
+from listenbrainz import config 
 
-
-def insert_user_stats(user_id, artists, recordings, releases, artist_count):
+def insert_user_stats(user_id, artists, recordings, releases, artist_count, timestamp):
     """Inserts user stats calculated from Google BigQuery into the database.
 
        If stats are already present for some user, they are updated to the new
@@ -42,23 +40,18 @@ def insert_user_stats(user_id, artists, recordings, releases, artist_count):
              artist_count (int): the total number of artists listened to by the user
     """
 
-    month = datetime.now().month
-    year = datetime.now().year
-    prev_month = month - 1 if month > 1 else 12 
-    curr_year = year if prev_month < 12 else year - 1 
-
     artist_stats = {
         'count': artist_count,
-        '{}.{}'.format(curr_year, prev_month): artists,
+        timestamp: artists,
     }
 
     recording_stats = {
-        '{}.{}'.format(curr_year, prev_month): recordings,
+        timestamp: recordings,
     }
 
 
     release_stats = {
-        '{}.{}'.format(curr_year, prev_month): releases,
+        timestamp: releases,
     }
 
 
