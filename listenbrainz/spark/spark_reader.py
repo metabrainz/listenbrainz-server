@@ -14,7 +14,7 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz import config
 import sqlalchemy
 
-TEST_DATA_PATH = os.path.join('/code', 'listenbrainz', 'listenbrainz', 'testdata/')
+TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),'..', 'testdata')
 
 class SparkReader:
     def __init__(self):
@@ -98,3 +98,4 @@ class SparkReader:
 if __name__ == '__main__':
     sr = SparkReader()
     sr.start()
+
