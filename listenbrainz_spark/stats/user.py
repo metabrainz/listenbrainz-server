@@ -2,6 +2,7 @@ import sys
 import listenbrainz_spark
 import time
 from datetime import datetime  
+from dateutil.relativedelta import relativedelta
 from listenbrainz_spark.stats_writer.stats_writer import StatsWriter
 from listenbrainz_spark import config
 
@@ -159,12 +160,13 @@ def main(app_name):
     """
     t0 = time.time()
     listenbrainz_spark.init_spark_session(app_name)
-    month = datetime.now().month
-    year = datetime.now().year
-    prev_month = month - 1 if month > 1 else 12 
-    curr_year = year if prev_month < 12 else year - 1 
+    """For consistency, first date of every month would be 
+       used as a reference while calculating stats
+    """
+    t = datetime.utcnow().replace(day=1)
+    date = t + relativedelta(months=-1)
     try:
-        df = listenbrainz_spark.sql_context.read.parquet('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, curr_year, prev_month))
+        df = listenbrainz_spark.sql_context.read.parquet('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, date.year, date.month))
         print("Loading dataframe...")
     except:
         print ("No Listens for last month")
@@ -172,7 +174,10 @@ def main(app_name):
     df.printSchema()
     print(df.columns)
     print(df.count())
-    table = 'listens_{}_{}'.format(prev_month, curr_year)
+    """View names cannot contain hyphen.
+       listens-year-month is not allowed. 
+    """
+    table = 'listens_{}'.format(datetime.strftime(date, '%Y_%m')) 
     print(table)
     df.registerTempTable(table)
     print("Running Query...")
@@ -180,6 +185,9 @@ def main(app_name):
     print("DataFrame loaded in %.2f s" % (query_t0 - t0))
     users = get_users(table)
     obj = StatsWriter()
+    """Pythonic dates use hyphen as a seperator.
+    """
+    timestamp = datetime.strftime(date, '%Y-%m')
     for user in users:
         print (user)
         user_data = {}
@@ -187,5 +195,6 @@ def main(app_name):
         user_data[user]['artists'] = get_artists(user, table)
         user_data[user]['recordings'] = get_recordings(user, table)
         user_data[user]['releases'] = get_releases(user, table)
+        user_data[user]['timestamp'] = timestamp
         obj.start(user_data)
         
