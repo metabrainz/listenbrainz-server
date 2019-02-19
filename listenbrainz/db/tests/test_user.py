@@ -9,7 +9,6 @@ import ujson
 
 from listenbrainz import db
 from listenbrainz.db.testing import DatabaseTestCase
-from listenbrainz import utils
 
 
 class UserTestCase(DatabaseTestCase):
@@ -177,14 +176,13 @@ class UserTestCase(DatabaseTestCase):
 
         user = db_user.get(user_id)
         self.assertIsNotNone(user)
-        timestamp = utils.get_stats_calculation_timestamp()
         db_stats.insert_user_stats(
             user_id=user_id,
             artists={},
             recordings={},
             releases={},
             artist_count=2,
-            timestamp=timestamp,
+            yearmonth='2019-01',
         )
         user_stats = db_stats.get_all_user_stats(user_id)
         self.assertIsNotNone(user_stats)
