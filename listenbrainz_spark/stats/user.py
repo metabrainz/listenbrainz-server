@@ -55,11 +55,10 @@ def get_artists(table):
               FROM %s
           GROUP BY user_name, artist_name, artist_msid, artist_mbids
           ORDER BY cnt DESC
-             LIMIT %s
-        """ % (table, name, LIMIT))
+        """ % (table))
     data = defaultdict(list)
     t = time.time()
-    rows = batch_df.collect()
+    rows = query.collect()
     print("time taken by collect call: %.2f" % (time.time() - t))
     for row in rows:
         data[row.user_name].append({
@@ -190,5 +189,9 @@ def main(app_name):
     obj = StatsWriter()
     stats = []
     t = time.time()
-    artists = get_artists(batch, table)
-
+    artists = get_artists(table)
+    for username in artists:
+        if username == 'rob' or username == 'iliekcomputers':
+            print("for %s, num artists: %d" % (username, len(artists[username])))
+            if len(artists[username]) > 0:
+                print(json.dumps(artists[username][0]))
