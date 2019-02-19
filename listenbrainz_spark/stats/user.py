@@ -1,6 +1,8 @@
 import sys
 import listenbrainz_spark
 import time
+import json
+
 from collections import defaultdict
 from datetime import datetime
 from listenbrainz_spark.stats_writer.stats_writer import StatsWriter
@@ -8,7 +10,7 @@ from listenbrainz_spark import config
 from listenbrainz_spark.stats import run_query
 
 LIMIT = 100
-USER_BATCH_SIZE = 100
+USER_BATCH_SIZE = 500
 month = datetime.now().month
 year = datetime.now().year
 
@@ -54,11 +56,12 @@ def get_artists(user_names, table):
                      , count(artist_name) as cnt
                   FROM %s
                  WHERE user_name = '%s'
-              GROUP BY artist_name, artist_msid, artist_mbids
+              GROUP BY user_name, artist_name, artist_msid, artist_mbids
               ORDER BY cnt DESC
                  LIMIT %s
-            """ % (table, user_name, LIMIT))
+            """ % (table, name, LIMIT))
         batch_df = batch_df.union(query) if batch_df else query
+    batch_df.cache()
     print("time taken to run all queries for %d users: %.2f" % (len(user_names), time.time() - t0))
     data = defaultdict(list)
     t = time.time()
