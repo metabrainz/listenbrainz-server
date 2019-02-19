@@ -16,6 +16,7 @@ from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.influx_connection import _influx
 from listenbrainz.webserver.views.api_tools import publish_data_to_queue
 import time
+from datetime import datetime  
 from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
 
 LISTENS_PER_PAGE = 25
@@ -189,7 +190,9 @@ def artists(user_name):
         flash.error(msg)
         return redirect(url_for('user.profile', user_name=user_name))
 
-    top_artists = data['artist']['all_time']
+    data = data['artist']
+    yearmonth = data['top_month']['month']
+    top_artists = data['top_month']['artists']
     return render_template(
         "user/artists.html",
         user=user,

@@ -71,6 +71,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
             recordings={},
             releases={},
             artist_count=2,
+            yearmonth='2019-01',
         )
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
@@ -144,13 +145,14 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         # add some artist stats to the db
         with open(self.path_to_data_file('user_top_artists.json')) as f:
             artists = ujson.load(f)
-
+            
         db_stats.insert_user_stats(
             user_id=self.user.id,
             artists=artists,
             recordings={},
             releases={},
             artist_count=2,
+            yearmonth='2019-01',
         )
 
         r = self.client.get(url_for('user.artists', user_name=self.user.musicbrainz_id))
