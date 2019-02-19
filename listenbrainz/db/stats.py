@@ -27,8 +27,8 @@ import ujson
 from listenbrainz import db
 from listenbrainz import config 
 
-def insert_user_stats(user_id, artists, recordings, releases, artist_count, timestamp):
-    """Inserts user stats calculated from Google BigQuery into the database.
+def insert_user_stats(user_id, artists, recordings, releases, artist_count, yearmonth):
+    """Inserts user stats calculated from Spark into the database.
 
        If stats are already present for some user, they are updated to the new
        values passed.
@@ -38,20 +38,31 @@ def insert_user_stats(user_id, artists, recordings, releases, artist_count, time
              recordings (dict): the top recordings listened to by the user
              releases (dict): the top releases listened to by the user
              artist_count (int): the total number of artists listened to by the user
+             yearmonth (str): a string representing the month in which the stats were calculated, 
+                        for example '2019-01'
     """
 
     artist_stats = {
         'count': artist_count,
-        timestamp: artists,
+        'top_month': {
+            'artists': artists,
+            'month': yearmonth,
+        }
     }
 
     recording_stats = {
-        timestamp: recordings,
+        'top_month': {
+            'recordings': recordings,
+            'month': yearmonth,
+        },
     }
 
 
     release_stats = {
-        timestamp: releases,
+        'top_month': {
+            'releases': releases,
+            'month': yearmonth,
+        }
     }
 
 

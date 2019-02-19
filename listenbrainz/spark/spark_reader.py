@@ -4,7 +4,6 @@ import logging
 import pika
 import time
 import ujson
-import os
 
 from flask import current_app
 from listenbrainz import utils
@@ -14,13 +13,9 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz import config
 import sqlalchemy
 
-TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),'..', 'testdata')
-
 class SparkReader:
     def __init__(self):
         self.app = create_app() # creating a flask app for config values and logging to Sentry
-        self.FILE_SAVED = False
-
 
     def init_rabbitmq_connection(self):
         """ Initializes the connection to RabbitMQ.
@@ -37,12 +32,6 @@ class SparkReader:
             error_logger=current_app.logger.error,
         )
 
-    def create_testdata_file(self, data):
-        self.FILE_SAVED = True
-        filename = os.path.join(TEST_DATA_PATH, 'user_stats.json')
-        with open(filename,'w',encoding='utf-8') as f:
-            ujson.dump(data, f)
-
     def callback(self, ch, method, properties, body):
         """ Handle the data received from the queue and
             insert into the database accordingly.
@@ -52,14 +41,12 @@ class SparkReader:
             user = db_user.get_by_mb_id(username)
             if not user:
                 break
-            if not self.FILE_SAVED:
-                self.create_testdata_file(metadata)
             artists = metadata['artists']['artist_stats']
             recordings = metadata['recordings']
             releases = metadata['releases']
             artist_count = metadata['artists']['artist_count']
-            timestamp = metadata['timestamp']
-            db_stats.insert_user_stats(user['id'], artists, recordings, releases, artist_count, timestamp)
+            yearmonth = metadata['yearmonth']
+            db_stats.insert_user_stats(user['id'], artists, recordings, releases, artist_count, yearmonth)
             current_app.logger.info("data for {} published".format(username))
 
         while True:

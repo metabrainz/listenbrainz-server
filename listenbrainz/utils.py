@@ -3,15 +3,12 @@ import os
 import pika
 import pytz
 import time
-import ujson
 
 from datetime import datetime
 from redis import Redis
 
 INFLUX_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 INFLUX_TIME_FORMAT_NANO = "%Y-%m-%dT%H:%M:%S"
-
-TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)),'testdata')
 
 def escape(value):
     """ Escapes backslashes, quotes and new lines present in the string value
@@ -201,8 +198,4 @@ def unix_timestamp_to_datetime(timestamp):
     """
     return datetime.utcfromtimestamp(timestamp).replace(tzinfo=pytz.UTC)
 
-def get_stats_calculation_timestamp():
-    filename = os.path.join(TEST_DATA_PATH, 'user_stats.json')
-    with open(filename,'r',encoding='utf-8') as f:
-        data = ujson.load(f)
-        return data['timestamp']
+
