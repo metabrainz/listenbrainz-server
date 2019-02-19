@@ -25,7 +25,7 @@ def get_artist_count(user_name, table):
         """ % (table, user_name))
     count = query.collect()[0].cnt
     query_t0 = time.time()
-    print("Query to calculate listen count proccessed in %.2f s" % (query_t0 - t0))
+    print("Query to calculate listen count processed in %.2f s" % (query_t0 - t0))
     return count
 
 
@@ -57,7 +57,7 @@ def get_artists(user_name, table):
         artist['listen_count'] = row.cnt
         artist_stats.append(artist)
     query_t0 = time.time()
-    print("Query to calculate artist stats proccessed in %.2f s" % (query_t0 - t0))
+    print("Query to calculate artist stats processed in %.2f s" % (query_t0 - t0))
     count = get_artist_count(user_name, table)
     artist_combined_data = {}
     artist_combined_data['artist_count'] = count
@@ -93,7 +93,7 @@ def get_recordings(user_name, table):
         recording['listen_count'] = row.cnt
         recording_stats.append(recording)
     query_t0 = time.time()
-    print("Query to calculate recording stats proccessed in %.2f s" % (query_t0 - t0))
+    print("Query to calculate recording stats processed in %.2f s" % (query_t0 - t0))
     return recording_stats
 
 
@@ -125,7 +125,7 @@ def get_releases(user_name, table):
         release['listen_count'] = row.cnt
         release_stats.append(release)
     query_t0 = time.time()
-    print("Query to calculate release stats proccessed in %.2f s" % (query_t0 - t0))
+    print("Query to calculate release stats processed in %.2f s" % (query_t0 - t0))
     return release_stats
 
 
@@ -145,7 +145,7 @@ def get_users(table):
     users = [row.user_name for row in query.collect()]
     query_t0 = time.time()
     query.show()
-    print("Query to get list of users proccessed in %.2f s" % (query_t0 - t0))
+    print("Query to get list of users processed in %.2f s" % (query_t0 - t0))
     return users
 
 def main(app_name):
@@ -160,9 +160,6 @@ def main(app_name):
     """
     t0 = time.time()
     listenbrainz_spark.init_spark_session(app_name)
-    """For consistency, first date of every month would be 
-       used as a reference while calculating stats
-    """
     t = datetime.utcnow().replace(day=1)
     date = t + relativedelta(months=-1)
     try:
@@ -174,9 +171,6 @@ def main(app_name):
     df.printSchema()
     print(df.columns)
     print(df.count())
-    """View names cannot contain hyphen.
-       listens-year-month is not allowed. 
-    """
     table = 'listens_{}'.format(datetime.strftime(date, '%Y_%m')) 
     print(table)
     df.registerTempTable(table)
@@ -185,9 +179,7 @@ def main(app_name):
     print("DataFrame loaded in %.2f s" % (query_t0 - t0))
     users = get_users(table)
     obj = StatsWriter()
-    """Pythonic dates use hyphen as a seperator.
-    """
-    timestamp = datetime.strftime(date, '%Y-%m')
+    yearmonth = datetime.strftime(date, '%Y-%m')
     for user in users:
         print (user)
         user_data = {}
@@ -195,6 +187,6 @@ def main(app_name):
         user_data[user]['artists'] = get_artists(user, table)
         user_data[user]['recordings'] = get_recordings(user, table)
         user_data[user]['releases'] = get_releases(user, table)
-        user_data[user]['timestamp'] = timestamp
+        user_data[user]['yearmonth'] = yearmonth
         obj.start(user_data)
         
