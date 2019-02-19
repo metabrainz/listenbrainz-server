@@ -35,7 +35,7 @@ def get_artist_count(user_name, table):
     return count
 
 
-def get_artists(user_names, table):
+def get_artists(table):
     """
     Args:
         user_names ([str]): list of usernames
@@ -46,23 +46,17 @@ def get_artists(user_names, table):
                of top 20 artists listened in the previous month
     """
     t0 = time.time()
-    batch_df = None
-    for name in user_names:
-        query = run_query("""
-                SELECT user_name
-                     , artist_name
-                     , artist_msid
-                     , artist_mbids
-                     , count(artist_name) as cnt
-                  FROM %s
-                 WHERE user_name = '%s'
-              GROUP BY user_name, artist_name, artist_msid, artist_mbids
-              ORDER BY cnt DESC
-                 LIMIT %s
-            """ % (table, name, LIMIT))
-        batch_df = batch_df.union(query) if batch_df else query
-    batch_df.cache()
-    print("time taken to run all queries for %d users: %.2f" % (len(user_names), time.time() - t0))
+    query = run_query("""
+            SELECT user_name
+                 , artist_name
+                 , artist_msid
+                 , artist_mbids
+                 , count(artist_name) as cnt
+              FROM %s
+          GROUP BY user_name, artist_name, artist_msid, artist_mbids
+          ORDER BY cnt DESC
+             LIMIT %s
+        """ % (table, name, LIMIT))
     data = defaultdict(list)
     t = time.time()
     rows = batch_df.collect()
@@ -195,15 +189,6 @@ def main(app_name):
     print("Number of users: %d" % len(users))
     obj = StatsWriter()
     stats = []
-    while users:
-        t = time.time()
-        batch = users[:USER_BATCH_SIZE]
-        print("Doing a batch of %d users" % len(batch))
-        artists = get_artists(batch, table)
-        batch_data = defaultdict(dict)
-        for user in batch:
-            batch_data[user]['artists'] = artists[user]
-        print(json.dumps(batch_data, indent=4))
-        users = users[USER_BATCH_SIZE:]
-        print("total time taken by batch: %.2f" % (time.time() - t))
+    t = time.time()
+    artists = get_artists(batch, table)
 
