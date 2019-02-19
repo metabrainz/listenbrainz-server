@@ -12,7 +12,6 @@ from listenbrainz.db.testing import DatabaseTestCase
 
 
 class UserTestCase(DatabaseTestCase):
-
     def test_create(self):
         user_id = db_user.create(0, "izzy_cheezy")
         self.assertIsNotNone(db_user.get(user_id))
@@ -183,6 +182,7 @@ class UserTestCase(DatabaseTestCase):
             recordings={},
             releases={},
             artist_count=2,
+            yearmonth='2019-01',
         )
         user_stats = db_stats.get_all_user_stats(user_id)
         self.assertIsNotNone(user_stats)
