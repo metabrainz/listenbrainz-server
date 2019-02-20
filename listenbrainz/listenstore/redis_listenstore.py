@@ -45,8 +45,8 @@ class RedisListenStore(ListenStore):
         """
         self.redis.setex(
             'playing_now:{}'.format(user_id),
-            ujson.dumps(listen).encode('utf-8'),
-            expire_time
+            expire_time,
+            ujson.dumps(listen).encode('utf-8')
         )
 
     def check_connection(self):
