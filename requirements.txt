@@ -21,7 +21,7 @@ pytz==2018.7
 psycopg2-binary == 2.7.5
 python-dateutil == 2.7.5
 ujson == 1.35
-redis == 2.10.6
+redis == 3.2.0
 yattag == 1.10.0
 xmltodict == 0.11.0
 influxdb == 5.2.0
