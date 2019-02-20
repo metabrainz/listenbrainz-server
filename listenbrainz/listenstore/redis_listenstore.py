@@ -10,9 +10,8 @@ from listenbrainz.listenstore import ListenStore
 
 class RedisListenStore(ListenStore):
 
-    RECENT_LISTENS_KEY = "lb_recent_listens"
-    RECENT_LISTENS_MAX = 100
-    RECENT_LISTENS_MAX_TIME_DIFFERENCE = 300
+    RECENT_LISTENS_KEY = "lb_recent_sorted"
+    RECENT_LISTENS_MAX = 100 
 
     def __init__(self, log, conf):
         super(RedisListenStore, self).__init__(log)
@@ -46,8 +45,8 @@ class RedisListenStore(ListenStore):
         """
         self.redis.setex(
             'playing_now:{}'.format(user_id),
-            ujson.dumps(listen).encode('utf-8'),
-            expire_time,
+            time=expire_time,
+            value=ujson.dumps(listen).encode('utf-8')
         )
 
     def check_connection(self):
@@ -65,16 +64,19 @@ class RedisListenStore(ListenStore):
             is not a critical action, so if it fails, it fails. Let's live with it.
         """
 
-        recent = []
+        recent = {}
         for listen in unique:
-            if  abs(time() - listen['listened_at'].timestamp()) < self.RECENT_LISTENS_MAX_TIME_DIFFERENCE:
-                listen['listened_at'] = listen['listened_at'].timestamp()
-                recent.append(ujson.dumps(listen).encode('utf-8'))
+            listen['listened_at'] = listen['listened_at'].timestamp()
+            recent[ujson.dumps(listen).encode('utf-8')] = float(listen['listened_at'])
 
         # Don't take this very seriously -- if it fails, really no big deal. Let is go.
         if recent:
-            self.redis.lpush(self.RECENT_LISTENS_KEY, *recent)
-            self.redis.ltrim(self.RECENT_LISTENS_KEY, -self.RECENT_LISTENS_MAX, -1)
+            self.redis.zadd(self.RECENT_LISTENS_KEY, recent, nx=True)
+
+            # Don't prune the sorted list each time, but only when it reaches twice the desired size 
+            count = self.redis.zcard(self.RECENT_LISTENS_KEY) 
+            if count > (self.RECENT_LISTENS_MAX * 2):
+                self.redis.zpopmin(self.RECENT_LISTENS_KEY, count - self.RECENT_LISTENS_MAX - 1)
 
 
     def get_recent_listens(self, max = RECENT_LISTENS_MAX):
@@ -82,7 +84,7 @@ class RedisListenStore(ListenStore):
             Get the max number of most recent listens
         """
         recent = []
-        for listen in self.redis.lrange(self.RECENT_LISTENS_KEY, 0, max - 1):
+        for listen in self.redis.zrevrange(self.RECENT_LISTENS_KEY, 0, max - 1):
             recent.append(Listen.from_json(ujson.loads(listen)))
 
         return recent

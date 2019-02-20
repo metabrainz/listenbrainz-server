@@ -57,8 +57,8 @@ class InfluxWriterTestCase(IntegrationTestCase):
         listens = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
-        recent = self.rs.get_recent_listens()
-        self.assertEqual(len(recent), 5)
+        recent = self.rs.get_recent_listens(4)
+        self.assertEqual(len(recent), 4)
         self.assertIsInstance(recent[0], Listen)
 
 
