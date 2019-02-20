@@ -13,10 +13,11 @@ class RedisListenStore(ListenStore):
     RECENT_LISTENS_KEY = "lb_recent_sorted"
     RECENT_LISTENS_MAX = 100
 
-    def __init__(self, log, conf):
+    def __init__(self, log, conf, recent_listens_max=RECENT_LISTENS_MAX):
         super(RedisListenStore, self).__init__(log)
         self.log.info('Connecting to redis: %s:%s', conf['REDIS_HOST'], conf['REDIS_PORT'])
         self.redis = Redis(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], decode_responses=True)
+        self.recent_listens_max = recent_listens_max
 
     def get_playing_now(self, user_id):
         """ Return the current playing song of the user
@@ -69,13 +70,15 @@ class RedisListenStore(ListenStore):
             listen['listened_at'] = listen['listened_at'].timestamp()
             recent[ujson.dumps(listen).encode('utf-8')] = float(listen['listened_at'])
 
-        self.log.error(recent)
         # Don't take this very seriously -- if it fails, really no big deal. Let is go.
         if recent:
             self.redis.zadd(self.RECENT_LISTENS_KEY, recent, nx=True)
             count = self.redis.zcard(self.RECENT_LISTENS_KEY) 
-            if count > (self.RECENT_LISTENS_MAX * 2):
-                self.redis.zpopmin(self.RECENT_LISTENS_KEY, count - self.RECENT_LISTENS_MAX - 1)
+
+            # Don't clean up each time -- wait until we have twice the max allowable
+            # number of listens and then clean up
+            if count > (self.recent_listens_max * 2):
+                self.redis.zpopmin(self.RECENT_LISTENS_KEY, count - self.recent_listens_max - 1)
 
 
     def get_recent_listens(self, max = RECENT_LISTENS_MAX):
