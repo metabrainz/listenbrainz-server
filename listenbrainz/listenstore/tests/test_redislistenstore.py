@@ -50,7 +50,7 @@ class RedisListenStoreTestCase(DatabaseTestCase):
     def test_update_and_get_recent_listens(self):
 
         dt0 = datetime.datetime.now()
-        dt1 = dt0.replace(max(second=dt0.second + 1, 59))
+        dt1 = dt0.replace(second=(dt0.second + 1) % 60)
 
         recent = self._redis.get_recent_listens()
         self.assertEqual(recent, [])
