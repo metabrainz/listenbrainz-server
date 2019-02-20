@@ -4,6 +4,7 @@ import datetime
 import logging
 import time
 import ujson
+import uuid
 
 from redis.connection import Connection
 
@@ -12,6 +13,7 @@ from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.listen import Listen
 from listenbrainz.listenstore.tests.util import generate_data
 from listenbrainz.webserver.redis_connection import init_redis_connection
+from listenbrainz.listenstore.redis_listenstore import RedisListenStore
 
 
 class RedisListenStoreTestCase(DatabaseTestCase):
@@ -49,40 +51,30 @@ class RedisListenStoreTestCase(DatabaseTestCase):
 
     def test_update_and_get_recent_listens(self):
 
-        dt0 = datetime.datetime.now()
-        dt1 = dt0.replace(second=(dt0.second + 1) % 60)
-
         recent = self._redis.get_recent_listens()
         self.assertEqual(recent, [])
 
         listens = []
-        listens.append({
-            'user_id': self.testuser['id'],
-            'user_name': self.testuser['musicbrainz_id'],
-            'listened_at': dt0,
-            'track_metadata': {
-                'artist_name': 'The Dimwitted Hillbillies',
-                'track_name': 'Ice cream, guns and bling!',
-                'additional_info': {},
-            },
-        })
-        listens.append({
-            'user_id': self.testuser['id'],
-            'user_name': self.testuser['musicbrainz_id'],
-            'listened_at': dt1,
-            'track_metadata': {
-                'artist_name': 'The Dimwitted Hillbillies',
-                'track_name': 'White gas and sparklers are a great combo for toddlers!',
-                'additional_info': {},
-            },
-        })
-        self._redis.update_recent_listens(listens)
-
+        t = int(time.time())
+        for i in range(RedisListenStore.RECENT_LISTENS_MAX * 3):
+            listen = {
+                'user_id': self.testuser['id'],
+                'user_name': self.testuser['musicbrainz_id'],
+                'listened_at': datetime.datetime.fromtimestamp(t - i),
+                'track_metadata': {
+                    'artist_name': str(uuid.uuid4()),
+                    'track_name': str(uuid.uuid4()),
+                    'additional_info': {},
+                },
+            }
+            listens.append(listen)
+            self._redis.update_recent_listens([listen])
+      
         recent = self._redis.get_recent_listens()
-        self.assertEqual(len(recent), 2)
+        self.assertEqual(len(recent), RedisListenStore.RECENT_LISTENS_MAX)
         self.assertIsInstance(recent[0], Listen)
-        self.assertEqual(recent[0].timestamp, dt1)
-        self.assertEqual(recent[1].timestamp, dt0)
+        for i, r in enumerate(recent):
+            self.assertEqual(r.timestamp.timestamp(), listens[i]['listened_at'])
 
-        recent = self._redis.get_recent_listens(1)
-        self.assertEqual(len(recent), 1)
+        recent = self._redis.get_recent_listens(5)
+        self.assertEqual(len(recent), 5)
