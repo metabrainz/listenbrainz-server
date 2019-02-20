@@ -78,3 +78,5 @@ class RedisListenStoreTestCase(DatabaseTestCase):
 
         recent = self._redis.get_recent_listens(5)
         self.assertEqual(len(recent), 5)
+        for i, r in enumerate(recent):
+            self.assertEqual(r.timestamp.timestamp(), listens[i]['listened_at'])
