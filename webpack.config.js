@@ -26,12 +26,12 @@ module.exports = function(env){
                           {
                             "targets": {
                               "node": "10",
-                              "browsers": [ "defaults" ]
+                              "browsers": [ "> 0.2% and not dead", "firefox >= 44" ]
                             }
                           }
                         ],
                         "@babel/preset-react"],
-                    "plugins": ["@babel/plugin-proposal-class-properties"]
+                    "plugins": ["@babel/plugin-proposal-class-properties", "@babel/plugin-transform-runtime"]
                 }
             }
         }
