@@ -50,6 +50,7 @@ export class SpotifyPlayer extends React.Component {
     this.disconnectSpotifyPlayer = this.disconnectSpotifyPlayer.bind(this);
     this.connectSpotifyPlayer = this.connectSpotifyPlayer.bind(this);
     window.onSpotifyWebPlaybackSDKReady = this.connectSpotifyPlayer;
+    const spotyfyPlayerSDKLib = require('../lib/spotify-player-sdk-1.6.0');
   }
 
   play_spotify_uri(spotify_uri) {
