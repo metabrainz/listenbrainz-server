@@ -194,7 +194,7 @@ class RecentListens extends React.Component {
                       <th>Track</th>
                       <th>Artist</th>
                       <th>Time</th>
-                      {this.state.mode === "follow" || this.state.mode === "recent" && <th>User</th>}
+                      {(this.state.mode === "follow" || this.state.mode === "recent") && <th>User</th>}
                       <th></th>
                     </tr>
                   </thead>
@@ -217,7 +217,7 @@ class RecentListens extends React.Component {
                                 </abbr>
                               </td>
                             }
-                            {this.state.mode === "follow" || this.state.mode === "recent" && <td><a href={`/user/${listen.user_name}`}>{listen.user_name}</a></td>}
+                            {(this.state.mode === "follow" || this.state.mode === "recent") && <td><a href={`/user/${listen.user_name}`}>{listen.user_name}</a></td>}
                             <td className="playButton">{getPlayButton(listen, this.playListen.bind(this, listen))}</td>
                           </tr>
                         )
