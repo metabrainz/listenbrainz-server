@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div id="react-container">
+    </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js" integrity="sha384-SlE991lGASHoBfWbelyBPLsUlwY1GwNDJo3jSJO04KZ33K2bwfV9YBauFfnzvynJ" crossorigin="anonymous"></script>
+  <script id="react-props" type="application/json">{{ props|safe }}</script>
+{% endblock %}

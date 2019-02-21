@@ -266,7 +266,7 @@ class RecentListens extends React.Component {
 }
 
 
-let domContainer = document.querySelector('#react-listens');
+let domContainer = document.querySelector('#react-container');
 let propsElement = document.getElementById('react-props');
 let reactProps;
 try
