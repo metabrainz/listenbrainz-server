@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'base-react.html' %}
 
 {% block title %}User "{{ user.musicbrainz_id }}" - ListenBrainz{% endblock %}
 
@@ -14,14 +14,6 @@
     {% block profile_content %} {% endblock %}
 
   </div>
-{% endblock %}
 
-{% block scripts %}
   {{ super() }}
-  <script src="{{ url_for('static', filename='js/lib/jquery.timeago.js') }}"></script>
-  <script type="text/javascript">
-    $(document).ready(function() {
-      $("abbr.timeago").timeago();
-    });
-  </script>
 {% endblock %}

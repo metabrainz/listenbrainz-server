@@ -1,6 +1,6 @@
 {%- extends 'base-react.html' -%}
 
-{%- block title -%}Recent listens - ListenBrainz{%- endblock -%}
+{% block title %}Follow users {{ follow_list|join(', ') }} - ListenBrainz{% endblock %}
 
 {% block scripts %}
   {{ super() }}
