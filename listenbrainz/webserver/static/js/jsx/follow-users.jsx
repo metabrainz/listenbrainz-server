@@ -75,15 +75,15 @@ export class FollowUsers extends React.Component {
               <tr>
                 <th colSpan="2" width="50px">Order</th>
                 <th>User</th>
-                <th width="50%">Listening now</th>
-                <th width="25px"></th>
-                <th width="85px"></th>
+                <th>Listening now</th>
+                <th width="50px"></th>
+                <th width="65px"></th>
               </tr>
             </thead>
             <tbody>
               {this.state.users.map((user, index) => {
                 return (
-                  <tr key={user} className={this.props.playingNow[user] && "playing_now"}>
+                  <tr key={user} className={this.props.playingNow[user] && "playing_now"} onDoubleClick={this.props.playListen.bind(this, this.props.playingNow[user])}>
                     <td>
                       {index + 1}
                     </td>
@@ -114,16 +114,16 @@ export class FollowUsers extends React.Component {
                         </React.Fragment>
                       }
                     </td>
+                    <td className="playButton">
+                      {this.props.playingNow[user] &&
+                        getPlayButton(this.props.playingNow[user], this.props.playListen.bind(this, this.props.playingNow[user]))
+                      }
+                    </td>
                     <td style={noTopBottomPadding}>
                       <button className="btn btn-danger" type="button" aria-label="Remove"
                         onClick={this.removeUserFromList.bind(this, index)}>
                         <span className="fa fa-trash-alt"></span>
                       </button>
-                    </td>
-                    <td className="playButton">
-                      {this.props.playingNow[user] &&
-                        getPlayButton(this.props.playingNow[user], this.props.playListen.bind(this, this.props.playingNow[user]))
-                      }
                     </td>
                   </tr>
                 );

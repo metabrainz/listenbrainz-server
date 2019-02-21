@@ -193,7 +193,7 @@ class RecentListens extends React.Component {
                       <th>Artist</th>
                       <th>Time</th>
                       {(this.state.mode === "follow" || this.state.mode === "recent") && <th>User</th>}
-                      <th></th>
+                      <th width="50px"></th>
                     </tr>
                   </thead>
                   <tbody>
