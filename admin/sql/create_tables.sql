@@ -94,4 +94,18 @@ CREATE TABLE data_dump (
   created     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE follow_list (
+  id            SERIAL, -- PK
+  name          TEXT NOT NULL,
+  creator       INTEGER NOT NULL, -- FK to "user".id
+  private       BOOLEAN NOT NULL DEFAULT FALSE
+  created       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE follow_list_member (
+  list_id      INTEGER NOT NULL,
+  user_id      INTEGER NOT NULL,
+  added        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
 COMMIT;
