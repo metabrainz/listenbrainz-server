@@ -38,7 +38,7 @@ export function getPlayButton(listen, onClickFunction) {
   if (listen.track_metadata.additional_info.spotify_id)
   {
     return (
-      <button title="Play" className="btn btn-link" onClick={onClickFunction.bind(listen)}>
+      <button title="Play" className="btn-link" onClick={onClickFunction.bind(listen)}>
         <i className="fas fa-play-circle fa-2x"></i>
       </button>
     )
