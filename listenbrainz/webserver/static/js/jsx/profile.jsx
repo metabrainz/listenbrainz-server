@@ -1,7 +1,5 @@
 'use strict';
 
-import '../lib/spotify-player-sdk-1.6.0';
-
 import * as _isEqual from 'lodash.isequal';
 import * as timeago from 'time-ago';
 
