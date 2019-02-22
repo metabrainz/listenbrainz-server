@@ -29,14 +29,12 @@ def follow(user_list):
         user_data = {
             "id"               : current_user.id,
             "name"             : current_user.musicbrainz_id,
-            "auth_token"       : current_user.auth_token,
         }
         spotify_access_token = db_spotify.get_token_for_user(current_user.id)
     else:
         user_data = {
             "id"               : 0,
             "name"             : uuid.uuid4().hex,
-            "auth_token"       : "",
         }
         spotify_access_token = ""
 
