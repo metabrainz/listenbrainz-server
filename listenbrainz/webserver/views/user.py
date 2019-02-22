@@ -144,7 +144,6 @@ def profile(user_name):
         "user" : {
             "id"               : user.id,
             "name"             : user.musicbrainz_id,
-            "auth_token"       : user.auth_token,
         },
         "listens"              : listens,
         "previous_listen_ts"   : previous_listen_ts,
