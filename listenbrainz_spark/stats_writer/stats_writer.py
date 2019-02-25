@@ -36,7 +36,7 @@ class StatsWriter():
                 time.sleep(self.ERROR_RETRY_DELAY)
 
     def write(self, data):
-        """Publish data to RabbitMQ
+        """Publishes data to RabbitMQ
         """
         try:
             self.unique_ch.basic_publish(
@@ -45,26 +45,33 @@ class StatsWriter():
                 body=json.dumps(data),
                 properties=pika.BasicProperties(delivery_mode = 2,),
             )
-        except pika.exceptions.ConnectionClosed as e:
-            logging.error("Connection to rabbitmq closed while trying to publish: %s" % str(e), exc_info=True)
+            return True
+        except pika.exceptions.ConnectionClosed:
+            logging.error("Connection to rabbitmq closed while trying to publish. Re-opening.", exc_info=True)
+            return False
         except Exception as e:
-            logging.error("Cannot publish to rabbitmq channel: %s / %s" % (type(e).__name__, str(e)), exc_info=True)
-
+            logging.error("Cannot publish to rabbitmq channel: %s / %s. Trying to republish." % (type(e).__name__, str(e)), exc_info=True)
+            return False
 
     def start(self, data):
-        """Establishes connection to RabbitMQ if not connected
+        """Establishes connection to RabbitMQ if not connected. 
+           If connected, attempts to write to the queue. 
         """
         if not config.RABBITMQ_HOST:
             logging.critical("RabbitMQ service not defined. Sleeping {0} seconds and exiting.".format(self.ERROR_RETRY_DELAY))
             time.sleep(self.ERROR_RETRY_DELAY)
             sys.exit(-1)
 
-        if self.unique_ch:
-            self.write(data)
-        else:
-            self.connect_to_rabbitmq()
-            self.unique_ch = self.connection.channel()
-            self.unique_ch.exchange_declare(exchange=config.SPARK_EXCHANGE, exchange_type='fanout')
-            self.unique_ch.queue_declare(queue=config.SPARK_QUEUE, durable=True)
-            self.unique_ch.queue_bind(exchange=config.SPARK_EXCHANGE, queue=config.SPARK_QUEUE)
-            self.write(data)
+        while True:
+            if self.unique_ch:
+                if self.write(data):
+                    break
+                else:
+                    self.connection.close()
+                    self.unique_ch = None
+            else:
+                self.connect_to_rabbitmq()
+                self.unique_ch = self.connection.channel()
+                self.unique_ch.exchange_declare(exchange=config.SPARK_EXCHANGE, exchange_type='fanout')
+                self.unique_ch.queue_declare(queue=config.SPARK_QUEUE, durable=True)
+                self.unique_ch.queue_bind(exchange=config.SPARK_EXCHANGE, queue=config.SPARK_QUEUE)
