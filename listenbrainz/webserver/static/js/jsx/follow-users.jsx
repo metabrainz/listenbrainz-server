@@ -42,6 +42,9 @@ export class FollowUsers extends React.Component {
     });
   }
 
+  saveFollowList() {
+  }
+
   render() {
     const noTopBottomPadding = {
       paddingTop: 0,
@@ -53,12 +56,19 @@ export class FollowUsers extends React.Component {
           <i className="fas fa-sitemap fa-2x fa-flip-vertical"></i>
           <span style={{ fontSize: "x-large", marginLeft: "0.55em", verticalAign: "middle" }}>
             Follow users
-              </span>
+          </span>
         </div>
         <div className="panel-body">
-          <div className="text-muted">
-            Add a user to discover what they are listening to:
-              </div>
+          <div className="input-group">
+            <span className="text-muted">
+              Add a user to discover what they are listening to:
+            </span>
+            <span className="input-group-btn btn-primary">
+              <button className="btn btn-primary" type="button" onClick={this.addUserToList}>
+                <span className="fa fa-save" aria-hidden="true"></span> Save
+              </button>
+            </span>
+          </div>
           <hr />
           <div className="input-group">
             <input type="text" className="form-control" placeholder="Username…"
