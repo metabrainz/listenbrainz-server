@@ -6,7 +6,9 @@ export class FollowUsers extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      users: props.followList || []
+      users: props.followList || [],
+      listName: props.listName || "",
+      saveUrl: props.saveUrl || "https://listenbrainz.org/follow/save",
     }
     this.addUserToList = this.addUserToList.bind(this);
     this.reorderUser = this.reorderUser.bind(this);
@@ -26,6 +28,7 @@ export class FollowUsers extends React.Component {
       this.props.onUserListChange(this.state.users);
     });
   }
+
   removeUserFromList(index) {
     this.setState(prevState => {
       prevState.users.splice(index, 1);
@@ -42,7 +45,18 @@ export class FollowUsers extends React.Component {
     });
   }
 
-  saveFollowList() {
+  saveFollowList(event) {
+    // make a post request to the api and save the list
+    fetch(this.state.saveUrl, {
+      method: "POST",
+      body: {
+        "users": this.state.users,
+        "name": this.listName,
+      },
+    })
+    .then(response => response.json())
+    .catch(error => console.error("Error:", error))
+    .then(response => "Success: ", JSON.stringify(response));
   }
 
   render() {
@@ -57,6 +71,10 @@ export class FollowUsers extends React.Component {
           <span style={{ fontSize: "x-large", marginLeft: "0.55em", verticalAign: "middle" }}>
             Follow users
           </span>
+          <input type="text" placeholder="List Name…" style={{"float": "right"}}
+              ref={(input) => this.listName = input}
+           />
+
         </div>
         <div className="panel-body">
           <div className="input-group">
@@ -64,7 +82,7 @@ export class FollowUsers extends React.Component {
               Add a user to discover what they are listening to:
             </span>
             <span className="input-group-btn btn-primary">
-              <button className="btn btn-primary" type="button" onClick={this.addUserToList}>
+              <button className="btn btn-primary" type="button" onClick={this.saveFollowList}>
                 <span className="fa fa-save" aria-hidden="true"></span> Save
               </button>
             </span>
