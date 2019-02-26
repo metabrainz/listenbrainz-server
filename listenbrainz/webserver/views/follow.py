@@ -1,12 +1,9 @@
-import urllib
 import ujson
-import time
-import uuid
-from flask import Blueprint, render_template, request, url_for, Response, redirect, flash, current_app, jsonify
+import json
+from flask import Blueprint, render_template, request, current_app, jsonify
 from flask_login import current_user, login_required
-from listenbrainz import webserver
+from listenbrainz.webserver.decorators import auth_required
 import listenbrainz.db.spotify as db_spotify
-from werkzeug.exceptions import NotFound, BadRequest, InternalServerError
 
 
 follow_bp = Blueprint("follow", __name__)
@@ -41,12 +38,15 @@ def follow(user_list):
         'follow_list_name': 'follow-list',
     }
 
-    return render_template("index/follow.html",
+    return render_template(
+        "index/follow.html",
         props=ujson.dumps(props),
         mode='follow',
         user=current_user,
         follow_list=follow_list,
-        active_section='listens')
+        active_section='listens',
+    )
+
 
 @follow_bp.route("/save", methods=["POST"])
 @auth_required
