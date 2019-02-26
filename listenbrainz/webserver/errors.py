@@ -98,7 +98,7 @@ def init_error_handlers(app):
 
     @app.errorhandler(401)
     def unauthorized(error):
-        return handle_error(error, 401)
+        return json_error_wrapper(error, 401)
 
     @app.errorhandler(403)
     def forbidden(error):
