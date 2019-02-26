@@ -47,3 +47,11 @@ def follow(user_list):
         user=current_user,
         follow_list=follow_list,
         active_section='listens')
+
+#TODO: authentication
+@follow_bp.route("/save", methods=["POST"])
+def save_list():
+    current_app.logger.error("HIIIIIIIIIIIIIIII")
+    data = json.loads(request.get_data().decode("utf-8"))
+    return "HELLO"
+

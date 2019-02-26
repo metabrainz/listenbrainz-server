@@ -49,10 +49,10 @@ export class FollowUsers extends React.Component {
     // make a post request to the api and save the list
     fetch(this.state.saveUrl, {
       method: "POST",
-      body: {
+      body: JSON.stringify({
         "users": this.state.users,
         "name": this.state.listName,
-      },
+      }),
     })
     .then(response => response.json())
     .catch(error => console.error("Error:", error))
