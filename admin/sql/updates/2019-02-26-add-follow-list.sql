@@ -8,6 +8,8 @@ CREATE TABLE follow_list (
   created       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE follow_list ADD CONSTRAINT follow_list_name_creator_key UNIQUE (name, creator);
+
 CREATE TABLE follow_list_member (
   list_id      INTEGER NOT NULL,
   user_id      INTEGER NOT NULL,
