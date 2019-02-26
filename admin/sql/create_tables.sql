@@ -98,7 +98,7 @@ CREATE TABLE follow_list (
   id            SERIAL, -- PK
   name          TEXT NOT NULL,
   creator       INTEGER NOT NULL, -- FK to "user".id
-  private       BOOLEAN NOT NULL DEFAULT FALSE
+  private       BOOLEAN NOT NULL DEFAULT FALSE,
   created       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
