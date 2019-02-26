@@ -51,7 +51,7 @@ export class FollowUsers extends React.Component {
       method: "POST",
       body: {
         "users": this.state.users,
-        "name": this.listName,
+        "name": this.state.listName,
       },
     })
     .then(response => response.json())
@@ -72,7 +72,7 @@ export class FollowUsers extends React.Component {
             Follow users
           </span>
           <input type="text" placeholder="List Name…" style={{"float": "right"}}
-              ref={(input) => this.listName = input}
+              ref={(input) => this.state.listNameInput = input}
            />
 
         </div>
@@ -82,7 +82,7 @@ export class FollowUsers extends React.Component {
               Add a user to discover what they are listening to:
             </span>
             <span className="input-group-btn btn-primary">
-              <button className="btn btn-primary" type="button" onClick={this.saveFollowList}>
+              <button className="btn btn-primary" type="button" onClick={this.saveFollowList.bind(this)}>
                 <span className="fa fa-save" aria-hidden="true"></span> Save
               </button>
             </span>
