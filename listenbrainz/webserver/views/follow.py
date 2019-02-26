@@ -48,8 +48,8 @@ def follow(user_list):
         follow_list=follow_list,
         active_section='listens')
 
-#TODO: authentication
 @follow_bp.route("/save", methods=["POST"])
+@auth_required
 def save_list():
     current_app.logger.error("HIIIIIIIIIIIIIIII")
     data = json.loads(request.get_data().decode("utf-8"))

@@ -1,7 +1,19 @@
-from functools import update_wrapper
+from functools import update_wrapper, wraps
 from datetime import timedelta
 from flask import request, current_app, make_response
+from flask_login import current_user
+from werkzeug.exceptions import Unauthorized
 from six import string_types
+
+
+def auth_required(f):
+    @wraps
+    def decorated(*args, **kwargs):
+        if current_user.is_authenticated:
+            return f(*args, **kwargs)
+        else:
+            raise Unauthorized
+    return decorated
 
 
 def crossdomain(origin='*', methods=None, headers=None,
