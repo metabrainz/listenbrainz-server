@@ -88,7 +88,6 @@ CREATE TABLE statistics.recording (
 );
 ALTER TABLE statistics.recording ADD CONSTRAINT recording_stats_msid_uniq UNIQUE (msid);
 
-
 CREATE TABLE data_dump (
   id          SERIAL,
   created     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
@@ -101,6 +100,7 @@ CREATE TABLE follow_list (
   private       BOOLEAN NOT NULL DEFAULT FALSE,
   created       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
+ALTER TABLE follow_list ADD CONSTRAINT follow_list_name_key UNIQUE (name);
 
 CREATE TABLE follow_list_member (
   list_id      INTEGER NOT NULL,
