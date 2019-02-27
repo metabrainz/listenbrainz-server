@@ -1,11 +1,12 @@
 BEGIN;
 
 CREATE TABLE follow_list (
-  id            SERIAL, -- PK
-  name          TEXT NOT NULL,
-  creator       INTEGER NOT NULL, -- FK to "user".id
-  private       BOOLEAN NOT NULL DEFAULT FALSE,
-  created       TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+  id                SERIAL, -- PK
+  name              TEXT NOT NULL,
+  creator           INTEGER NOT NULL, -- FK to "user".id
+  private           BOOLEAN NOT NULL DEFAULT FALSE,
+  created           TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  last_listened     TIMESTAMP WITH TIME ZONE
 );
 
 ALTER TABLE follow_list ADD CONSTRAINT follow_list_name_creator_key UNIQUE (name, creator);
@@ -38,5 +39,6 @@ ALTER TABLE follow_list_member
     ON DELETE CASCADE;
 
 CREATE INDEX creator_ndx_follow_list ON follow_list (creator);
+CREATE INDEX last_listened_ndx_follow_list ON follow_list (last_listened DESC NULLS LAST);
 
 COMMIT;
