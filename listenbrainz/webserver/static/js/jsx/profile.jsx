@@ -65,13 +65,16 @@ class RecentListens extends React.Component {
   }
 
   sortListensByFollowUserRank(listens, userList){
+    if(userList.length <= 1){
+      return listens;
+    }
     const currentListenIndex = listens.indexOf(this.state.currentListen);
-    let notGonnaSort = [];
+    let ignoredPastListens = [];
     if(currentListenIndex !== -1){
-      notGonnaSort = listens.splice(currentListenIndex);
+      ignoredPastListens = listens.splice(currentListenIndex);
     }
     const sortFunction = (a, b) => userList.indexOf(b.user_name) - userList.indexOf(a.user_name)
-    return listens.sort(sortFunction).concat(notGonnaSort);
+    return listens.sort(sortFunction).concat(ignoredPastListens);
   }
 
   handleFollowUserListChange(userList, dontSendUpdate){
