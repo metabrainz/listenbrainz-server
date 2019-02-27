@@ -6,7 +6,7 @@ CREATE TABLE follow_list (
   creator           INTEGER NOT NULL, -- FK to "user".id
   private           BOOLEAN NOT NULL DEFAULT FALSE,
   created           TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  last_listened     TIMESTAMP WITH TIME ZONE
+  last_saved        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 ALTER TABLE follow_list ADD CONSTRAINT follow_list_name_creator_key UNIQUE (name, creator);
@@ -14,11 +14,12 @@ ALTER TABLE follow_list ADD CONSTRAINT follow_list_name_creator_key UNIQUE (name
 CREATE TABLE follow_list_member (
   list_id      INTEGER NOT NULL,
   user_id      INTEGER NOT NULL,
+  priority     INTEGER NOT NULL,
   added        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 ALTER TABLE follow_list ADD CONSTRAINT follow_list_pkey PRIMARY KEY (id);
-ALTER TABLE follow_list_member ADD CONSTRAINT follow_list_member_pkey PRIMARY KEY (list_id, user_id);
+ALTER TABLE follow_list_member ADD CONSTRAINT follow_list_member_pkey PRIMARY KEY (list_id, user_id, priority);
 
 ALTER TABLE follow_list
     ADD CONSTRAINT follow_list_user_id_foreign_key
@@ -39,6 +40,7 @@ ALTER TABLE follow_list_member
     ON DELETE CASCADE;
 
 CREATE INDEX creator_ndx_follow_list ON follow_list (creator);
-CREATE INDEX last_listened_ndx_follow_list ON follow_list (last_listened DESC NULLS LAST);
+CREATE INDEX last_saved_ndx_follow_list ON follow_list (last_saved DESC);
+CREATE INDEX priority_ndx_follow_list_member ON follow_list_member (priority DESC);
 
 COMMIT;

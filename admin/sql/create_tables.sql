@@ -99,13 +99,14 @@ CREATE TABLE follow_list (
   creator           INTEGER NOT NULL, -- FK to "user".id
   private           BOOLEAN NOT NULL DEFAULT FALSE,
   created           TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  last_listened     TIMESTAMP WITH TIME ZONE
+  last_saved        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 ALTER TABLE follow_list ADD CONSTRAINT follow_list_name_creator_key UNIQUE (name, creator);
 
 CREATE TABLE follow_list_member (
   list_id      INTEGER NOT NULL,
   user_id      INTEGER NOT NULL,
+  priority     INTEGER NOT NULL,
   added        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 

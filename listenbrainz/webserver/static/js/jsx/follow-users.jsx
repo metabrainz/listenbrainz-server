@@ -11,9 +11,14 @@ export class FollowUsers extends React.Component {
       listNameInput: {
           value: props.listName,
       },
+      listId: props.listId,
     }
     this.addUserToList = this.addUserToList.bind(this);
     this.reorderUser = this.reorderUser.bind(this);
+  }
+
+  updateListenedAndPlayListen() {
+
   }
 
   addUserToList(event) {
@@ -47,11 +52,6 @@ export class FollowUsers extends React.Component {
     });
   }
 
-  saveListenedAtAndPlayListen() {
-      //make request here
-      this.state.playListen()
-    }
-
   saveFollowList(event) {
     // make a post request to the api and save the list
     fetch(this.state.saveUrl, {
@@ -62,8 +62,14 @@ export class FollowUsers extends React.Component {
       }),
     })
     .then(response => response.json())
-    .catch(error => console.error("Error:", error))
-    .then(response => "Success: ", JSON.stringify(response));
+    .then(data => {
+      console.log("old list id = " + this.state.listId);
+      console.log(data);
+      this.setState(prevState => {
+        return {listId: data.list_id};
+      });
+      console.log("new list id = " + this.state.listId);
+    })
   }
 
   render() {
