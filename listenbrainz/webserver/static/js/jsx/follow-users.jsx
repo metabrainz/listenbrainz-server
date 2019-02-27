@@ -47,6 +47,11 @@ export class FollowUsers extends React.Component {
     });
   }
 
+  saveListenedAtAndPlayListen() {
+      //make request here
+      this.state.playListen()
+    }
+
   saveFollowList(event) {
     // make a post request to the api and save the list
     fetch(this.state.saveUrl, {

@@ -3,8 +3,8 @@ from listenbrainz import db
 
 def _create(connection, name, creator, private=False):
     result = connection.execute(sqlalchemy.text("""
-        INSERT INTO follow_list (name, creator, private)
-             VALUES (:name, :creator, :private)
+        INSERT INTO follow_list (name, creator, private, last_listened)
+             VALUES (:name, :creator, :private, NOW())
           RETURNING id
     """), {
         'name': name,
@@ -77,13 +77,36 @@ def save(name, creator, members, private=False):
     return list_id
 
 
-def get_follow_lists(user_id):
+def get_follow_lists(creator):
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT id, name, creator, private
               FROM follow_list
-             WHERE user_id = :user_id
+             WHERE creator = :creator
         """), {
-            'user_id': user_id,
+            'creator': creator,
         })
         return [dict(row) for row in result.fetchall()]
+
+
+def get_latest(creator):
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT id, name, creator, private
+              FROM follow_list
+             WHERE creator = :creator
+          ORDER BY last_listened DESC NULLS LAST
+             LIMIT 1
+        """), {
+            'creator': creator,
+        })
+        if result.rowcount == 0:
+            return None
+        row = result.fetchone()
+        return {
+            'id': row['id'],
+            'name': row['name'],
+            'creator': row['creator'],
+            'private': row['private'],
+            'members': _get_members(connection, row['id']),
+        }
