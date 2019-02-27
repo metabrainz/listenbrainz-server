@@ -26,6 +26,7 @@ class RecentListens extends React.Component {
     this.isCurrentListen = this.isCurrentListen.bind(this);
     this.handleCurrentListenChange = this.handleCurrentListenChange.bind(this);
     this.playListen = this.playListen.bind(this);
+    this.sortListensByFollowUserRank = this.sortListensByFollowUserRank.bind(this);
     this.spotifyPlayer = React.createRef();
     this.receiveNewListen = this.receiveNewListen.bind(this);
     this.receiveNewPlayingNow = this.receiveNewPlayingNow.bind(this);
@@ -63,12 +64,31 @@ class RecentListens extends React.Component {
     });
   }
 
-  handleFollowUserListChange(userList){
+  sortListensByFollowUserRank(listens, userList){
+    const currentListenIndex = listens.indexOf(this.state.currentListen);
+    let notGonnaSort = [];
+    if(currentListenIndex !== -1){
+      notGonnaSort = listens.splice(currentListenIndex);
+    }
+    const sortFunction = (a, b) => userList.indexOf(b.user_name) - userList.indexOf(a.user_name)
+    return listens.sort(sortFunction).concat(notGonnaSort);
+  }
+
+  handleFollowUserListChange(userList, dontSendUpdate){
     if(!Array.isArray(userList)){
       console.error("Expected array in handleFollowUserListChange, got", typeof userList);
       return;
     }
-    this.setState({followList: userList}, ()=>{
+    
+    this.setState(prevState => {
+      return {
+        followList: userList,
+        listens: this.sortListensByFollowUserRank(prevState.listens, userList)
+      }
+    }, ()=>{
+      if(dontSendUpdate){
+        return;
+      }
       if(!this._socket){
         this.connectWebsockets();
         return;
@@ -97,7 +117,7 @@ class RecentListens extends React.Component {
     }
     console.debug(typeof newListen, newListen);
     this.setState(prevState =>{
-      return { listens: [newListen].concat(prevState.listens)}
+      return { listens: this.sortListensByFollowUserRank([newListen].concat(prevState.listens), prevState.followList) }
     })
   }
   receiveNewPlayingNow(newPlayingNow){
