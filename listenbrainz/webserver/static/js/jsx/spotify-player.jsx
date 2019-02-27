@@ -27,7 +27,6 @@ export class SpotifyPlayer extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      listens: props.listens,
       currentSpotifyTrack: null,
       playerPaused: true,
       errorMessage: null,
@@ -50,7 +49,7 @@ export class SpotifyPlayer extends React.Component {
     this.disconnectSpotifyPlayer = this.disconnectSpotifyPlayer.bind(this);
     this.connectSpotifyPlayer = this.connectSpotifyPlayer.bind(this);
     window.onSpotifyWebPlaybackSDKReady = this.connectSpotifyPlayer;
-    const spotyfyPlayerSDKLib = require('../lib/spotify-player-sdk-1.6.0');
+    const spotifyPlayerSDKLib = require('../lib/spotify-player-sdk-1.6.0');
   }
 
   play_spotify_uri(spotify_uri) {
@@ -90,7 +89,7 @@ export class SpotifyPlayer extends React.Component {
     this.playNextTrack(true);
   }
   playNextTrack(invert) {
-    if (this.state.listens.length === 0)
+    if (this.props.listens.length === 0)
     {
       const error = "No Spotify listens to play. Maybe refresh the page?";
       console.error(error);
@@ -98,12 +97,12 @@ export class SpotifyPlayer extends React.Component {
       return;
     }
 
-    const currentListenIndex = this.state.listens.findIndex(this.isCurrentListen);
+    const currentListenIndex = this.props.listens.findIndex(this.isCurrentListen);
 
     let nextListenIndex;
     if (currentListenIndex === -1)
     {
-      nextListenIndex = this.state.direction === "up" ? this.state.listens.length - 1 : 0;
+      nextListenIndex = this.state.direction === "up" ? this.props.listens.length - 1 : 0;
     }
     else if (this.state.direction === "up")
     {
@@ -120,7 +119,7 @@ export class SpotifyPlayer extends React.Component {
       return;
     }
     
-    const nextListen = this.state.listens[nextListenIndex];
+    const nextListen = this.props.listens[nextListenIndex];
     if (!nextListen)
     {
       const error = "No more listens, maybe wait some?";
