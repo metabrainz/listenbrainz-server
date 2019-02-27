@@ -2,6 +2,7 @@ from flask import redirect, url_for, current_app, request
 from flask_login import LoginManager, UserMixin, current_user
 from functools import wraps
 import listenbrainz.db.user as db_user
+from werkzeug.exceptions import Unauthorized
 
 login_manager = LoginManager()
 login_manager.login_view = 'login.index'
@@ -48,6 +49,16 @@ def login_forbidden(f):
     def decorated(*args, **kwargs):
         if not current_user.is_anonymous:
             return redirect(url_for('index.index'))
+        return f(*args, **kwargs)
+
+    return decorated
+
+
+def auth_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not current_user.is_authenticated:
+            raise Unauthorized
         return f(*args, **kwargs)
 
     return decorated

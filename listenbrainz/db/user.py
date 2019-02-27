@@ -416,3 +416,22 @@ def get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id=None):
         if result.rowcount:
             return result.fetchone()
         return None
+
+
+def validate_usernames(musicbrainz_ids):
+    """ Check existence of users in the database and return those users which exist.
+
+    Args:
+        musicbrainz_ids ([str]): a list of usernames
+
+    Returns: list of users who exist in the database
+    """
+    with db.engine.connect() as connection:
+        r = connection.execute(sqlalchemy.text("""
+            SELECT {columns}
+              FROM "user"
+             WHERE LOWER(musicbrainz_id) IN :musicbrainz_ids
+        """.format(columns=','.join(USER_GET_COLUMNS))), {
+            'musicbrainz_ids': tuple(musicbrainz_id.lower() for musicbrainz_id in musicbrainz_ids),
+        })
+        return [dict(row) for row in r.fetchall()]
