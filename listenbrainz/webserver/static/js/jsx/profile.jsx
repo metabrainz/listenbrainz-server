@@ -24,6 +24,7 @@ class RecentListens extends React.Component {
       playingNowByUser: {},
       saveUrl: props.save_url || '',
       listName: props.follow_list_name || 'Untitled list',
+      listId: props.follow_list_id,
     };
     this.isCurrentListen = this.isCurrentListen.bind(this);
     this.handleCurrentListenChange = this.handleCurrentListenChange.bind(this);
@@ -180,7 +181,7 @@ class RecentListens extends React.Component {
           <FollowUsers onUserListChange={this.handleFollowUserListChange}
             followList={this.state.followList} playListen={this.playListen.bind(this)}
             playingNow={this.state.playingNowByUser} saveUrl={this.state.saveUrl}
-            listName={this.state.listName}/>
+            listName={this.state.listName} listId={this.state.listId}/>
         }
         <div className="row">
           <div className="col-md-8">

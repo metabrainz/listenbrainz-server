@@ -60,7 +60,7 @@ def save_list():
     users = data['users']
     users = db_user.validate_usernames(users)
     try:
-        db_follow_list.save(
+        list_id = db_follow_list.save(
             name=list_name,
             creator=current_user.id,
             members=[user['id'] for user in users],
@@ -70,4 +70,5 @@ def save_list():
     return jsonify({
         "code": 200,
         "message": "it worked!",
+        "list_id": list_id,
     })

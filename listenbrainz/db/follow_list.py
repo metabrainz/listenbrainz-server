@@ -3,8 +3,8 @@ from listenbrainz import db
 
 def _create(connection, name, creator, private=False):
     result = connection.execute(sqlalchemy.text("""
-        INSERT INTO follow_list (name, creator, private, last_listened)
-             VALUES (:name, :creator, :private, NOW())
+        INSERT INTO follow_list (name, creator, private)
+             VALUES (:name, :creator, :private)
           RETURNING id
     """), {
         'name': name,
@@ -16,26 +16,26 @@ def _create(connection, name, creator, private=False):
 
 def _add_users(connection, list_id, user_ids):
     connection.execute(sqlalchemy.text("""
-        INSERT INTO follow_list_member (list_id, user_id)
-             VALUES (:list_id, :user_id)
-    """), [{'list_id': list_id, 'user_id': user_id} for user_id in user_ids])
+        INSERT INTO follow_list_member (list_id, user_id, priority)
+             VALUES (:list_id, :user_id, :priority)
+    """), [{'list_id': list_id, 'user_id': user_id, 'priority': priority} for priority, user_id in enumerate(user_ids)])
 
 
-def _remove_users(connection, list_id, user_ids):
+def _remove_users(connection, list_id):
     connection.execute(sqlalchemy.text("""
         DELETE FROM follow_list_member
               WHERE list_id = :list_id
-                AND user_id IN :user_ids
-    """), {'list_id': list_id, 'user_ids': tuple(user_ids)})
+    """), {'list_id': list_id})
 
 
 def _get_members(connection, list_id):
     result = connection.execute(sqlalchemy.text("""
-        SELECT user_id, musicbrainz_id, created
+        SELECT user_id, musicbrainz_id, created, priority
           FROM follow_list_member
           JOIN "user"
             ON follow_list_member.user_id = "user".id
          WHERE list_id = :list_id
+      ORDER BY priority DESC
     """), {
         'list_id': list_id,
     })
@@ -59,21 +59,26 @@ def _get_by_creator_and_name(connection, creator, list_name):
         return None
 
 
+def _update_last_saved(connection, list_id):
+    connection.execute(sqlalchemy.text("""
+        UPDATE follow_list
+           SET last_saved = NOW()
+         WHERE id = :list_id
+    """), {
+        'list_id': list_id,
+    })
+
+
 def save(name, creator, members, private=False):
     with db.engine.begin() as connection:
         list_id = _get_by_creator_and_name(connection, creator, name)
-        if not list_id:
+        if list_id:
+            _update_last_saved(connection, list_id)
+            _remove_users(connection, list_id)
+        else:
             list_id = _create(connection, name, creator, private)
-
-        old_members = set(member['user_id'] for member in _get_members(connection, list_id))
-        members = set(members)
-        users_to_add = members - old_members
-        if users_to_add:
-            _add_users(connection, list_id, users_to_add)
-        users_to_remove = old_members - members
-        if users_to_remove:
-            _remove_users(connection, list_id, users_to_remove)
-
+        if members:
+            _add_users(connection, list_id, members)
     return list_id
 
 
@@ -95,7 +100,7 @@ def get_latest(creator):
             SELECT id, name, creator, private
               FROM follow_list
              WHERE creator = :creator
-          ORDER BY last_listened DESC NULLS LAST
+          ORDER BY last_saved DESC
              LIMIT 1
         """), {
             'creator': creator,
