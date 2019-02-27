@@ -59,14 +59,42 @@ def save_list():
     list_name = data['name']
     users = data['users']
     users = db_user.validate_usernames(users)
-    try:
-        list_id = db_follow_list.save(
-            name=list_name,
-            creator=current_user.id,
-            members=[user['id'] for user in users],
-        )
-    except Exception as e:
-        current_app.logger.error(str(e))
+    list_id = int(data['id'])
+    current_app.logger.error("list id: %d" % list_id)
+    if not list_id:
+        try:
+            list_id = db_follow_list.save(
+                name=list_name,
+                creator=current_user.id,
+                members=[user['id'] for user in users],
+            )
+        except DatabaseException as e:
+            #TODO: raise exceptions instead of returning jsonify
+            return jsonify({
+                'code': 403,
+                'message': 'List with same name already exists',
+            }), 403
+    else:
+
+        # do some validation
+        current_list = db_follow_list.get(list_id)
+        if current_list is None:
+            return jsonify({
+                'code': 404,
+                'message': 'List not found',
+            }), 404
+        if current_list['creator'] != current_user.id:
+            raise Unauthorized("Can only edit your own lists")
+
+        try:
+            db_follow_list.update(
+                list_id=list_id,
+                name=list_name,
+                members=[user['id'] for user in users],
+            )
+        except Exception as e:
+            current_app.logger.error(str(e))
+
     return jsonify({
         "code": 200,
         "message": "it worked!",

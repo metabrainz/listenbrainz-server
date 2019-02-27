@@ -8,16 +8,12 @@ export class FollowUsers extends React.Component {
     this.state = {
       users: props.followList || [],
       saveUrl: props.saveUrl || "https://listenbrainz.org/follow/save",
-      listNameInput: {
-          value: props.listName,
-      },
       listId: props.listId,
     }
     this.addUserToList = this.addUserToList.bind(this);
     this.reorderUser = this.reorderUser.bind(this);
-  }
-
-  updateListenedAndPlayListen() {
+    console.log("List ID: "+this.state.listId);
+    console.log("List name: "+this.state.listName);
 
   }
 
@@ -53,23 +49,33 @@ export class FollowUsers extends React.Component {
   }
 
   saveFollowList(event) {
-    // make a post request to the api and save the list
     fetch(this.state.saveUrl, {
       method: "POST",
       body: JSON.stringify({
         "users": this.state.users,
-        "name": this.state.listNameInput.value,
+        "name": this.nameInput.value,
+        "id": this.state.listId,
       }),
     })
     .then(response => response.json())
     .then(data => {
-      console.log("old list id = " + this.state.listId);
       console.log(data);
+      console.log("old List ID: " + this.state.listId);
       this.setState(prevState => {
         return {listId: data.list_id};
       });
-      console.log("new list id = " + this.state.listId);
+      console.log("new List ID: " + this.state.listId);
     })
+  }
+
+  newFollowList(event) {
+    this.setState(prevState => {
+      return {
+        users: [],
+        listId: null,
+     };
+    });
+    this.nameInput.value = "Untitled Follow List";
   }
 
   render() {
@@ -81,12 +87,12 @@ export class FollowUsers extends React.Component {
       <div className="panel panel-primary">
         <div className="panel-heading">
           <i className="fas fa-sitemap fa-2x fa-flip-vertical"></i>
-          <span style={{ fontSize: "x-large", marginLeft: "0.55em", verticalAign: "middle" }}>
+          <span style={{fontSize: "x-large", marginLeft: "0.55em", verticalAign: "middle" }}>
             Follow users
           </span>
-          <input type="text" placeholder="List Name…" style={{"float": "right"}}
-              ref={(input) => this.state.listNameInput = input}
-           />
+          <input type="text" placeholder={this.props.listName} style={{"float": "right"}}
+              ref={(input) => this.nameInput = input} />
+
 
         </div>
         <div className="panel-body">
@@ -95,10 +101,17 @@ export class FollowUsers extends React.Component {
               Add a user to discover what they are listening to:
             </span>
             <span className="input-group-btn btn-primary">
+              <button className="btn btn-primary" type="button" onClick={this.newFollowList.bind(this)}>
+                <span className="fa fa-plus" aria-hidden="true"></span> New List
+              </button>
+            </span>
+            <div style={{"width": "1px", "height": "100%"}}/>
+            <span className="input-group-btn btn-primary">
               <button className="btn btn-primary" type="button" onClick={this.saveFollowList.bind(this)}>
                 <span className="fa fa-save" aria-hidden="true"></span> Save
               </button>
             </span>
+
           </div>
           <hr />
           <div className="input-group">
