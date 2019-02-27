@@ -26,7 +26,7 @@ ALTER TABLE spotify_auth
 
 ALTER TABLE follow_list
     ADD CONSTRAINT follow_list_user_id_foreign_key
-    FOREIGN KEY (user_id)
+    FOREIGN KEY (creator)
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 

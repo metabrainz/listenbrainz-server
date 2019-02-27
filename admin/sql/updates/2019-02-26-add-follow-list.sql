@@ -21,7 +21,7 @@ ALTER TABLE follow_list_member ADD CONSTRAINT follow_list_member_pkey PRIMARY KE
 
 ALTER TABLE follow_list
     ADD CONSTRAINT follow_list_user_id_foreign_key
-    FOREIGN KEY (user_id)
+    FOREIGN KEY (creator)
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 

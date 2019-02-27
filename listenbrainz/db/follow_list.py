@@ -8,7 +8,7 @@ def _create(connection, name, creator, private=False):
           RETURNING id
     """), {
         'name': name,
-        'creator': user_id,
+        'creator': creator,
         'private': private,
     })
     return result.fetchone()['id']
@@ -23,10 +23,10 @@ def _add_users(connection, list_id, user_ids):
 
 def _remove_users(connection, list_id, user_ids):
     connection.execute(sqlalchemy.text("""
-        DELETE FROM follow_list_member (list_id, user_id)
+        DELETE FROM follow_list_member
               WHERE list_id = :list_id
                 AND user_id IN :user_ids
-    """), {'list_id': list_id, 'user_ids': tuple(user_ids))
+    """), {'list_id': list_id, 'user_ids': tuple(user_ids)})
 
 
 def _get_members(connection, list_id):
@@ -68,9 +68,11 @@ def save(name, creator, members, private=False):
         old_members = set(member['user_id'] for member in _get_members(connection, list_id))
         members = set(members)
         users_to_add = members - old_members
-        users_to_remove = old_list - members
-        _add_users(connection, list_id, users_to_add)
-        _remove_users(connection, list_id, users_to_remove)
+        if users_to_add:
+            _add_users(connection, list_id, users_to_add)
+        users_to_remove = old_members - members
+        if users_to_remove:
+            _remove_users(connection, list_id, users_to_remove)
 
     return list_id
 

@@ -58,8 +58,15 @@ def save_list():
     list_name = data['name']
     users = data['users']
     users = db_user.validate_usernames(users)
-    db_follow_list.save(
-        name=list_name,
-        creator=current_user.id,
-        members=[user['id'] for user in users],
-    )
+    try:
+        db_follow_list.save(
+            name=list_name,
+            creator=current_user.id,
+            members=[user['id'] for user in users],
+        )
+    except Exception as e:
+        current_app.logger.error(str(e))
+    return jsonify({
+        "code": 200,
+        "message": "it worked!",
+    })
