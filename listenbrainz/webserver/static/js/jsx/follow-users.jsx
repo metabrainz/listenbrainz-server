@@ -7,8 +7,10 @@ export class FollowUsers extends React.Component {
     super(props);
     this.state = {
       users: props.followList || [],
-      listName: props.listName || "",
       saveUrl: props.saveUrl || "https://listenbrainz.org/follow/save",
+      listNameInput: {
+          value: props.listName,
+      },
     }
     this.addUserToList = this.addUserToList.bind(this);
     this.reorderUser = this.reorderUser.bind(this);
@@ -51,7 +53,7 @@ export class FollowUsers extends React.Component {
       method: "POST",
       body: JSON.stringify({
         "users": this.state.users,
-        "name": this.state.listName,
+        "name": this.state.listNameInput.value,
       }),
     })
     .then(response => response.json())
