@@ -2,8 +2,10 @@ import ujson
 import json
 from flask import Blueprint, render_template, request, current_app, jsonify
 from flask_login import current_user, login_required
-from listenbrainz.webserver.decorators import auth_required
+from listenbrainz.webserver.login import auth_required
 import listenbrainz.db.spotify as db_spotify
+import listenbrainz.db.user as db_user
+import listenbrainz.db.follow_list as db_follow_list
 
 
 follow_bp = Blueprint("follow", __name__)
@@ -51,7 +53,13 @@ def follow(user_list):
 @follow_bp.route("/save", methods=["POST"])
 @auth_required
 def save_list():
-    current_app.logger.error("HIIIIIIIIIIIIIIII")
     data = json.loads(request.get_data().decode("utf-8"))
-    return "HELLO"
-
+    current_app.logger.error(data)
+    list_name = data['name']
+    users = data['users']
+    users = db_user.validate_usernames(users)
+    db_follow_list.save(
+        name=list_name,
+        creator=current_user.id,
+        members=[user['id'] for user in users],
+    )
