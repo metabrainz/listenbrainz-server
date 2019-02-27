@@ -39,7 +39,7 @@ export class FollowUsers extends React.Component {
       prevState.users.splice(currentIndex, 1);
       prevState.users.splice(targetIndex, 0, element);
       return { users: prevState.users }
-    });
+    }, () => { this.props.onUserListChange(this.state.users, true) });
   }
 
   render() {
