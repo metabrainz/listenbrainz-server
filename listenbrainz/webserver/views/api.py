@@ -175,7 +175,7 @@ def get_recent_listens_for_user_list(user_list):
     db_conn = webserver.create_influx(current_app)
     listens = db_conn.fetch_recent_listens_for_users(
         users,
-        limit=2
+        limit=limit
     )
     listen_data = []
     for listen in listens:
