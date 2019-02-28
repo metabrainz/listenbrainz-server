@@ -98,7 +98,7 @@ CREATE TABLE follow_list (
   name              TEXT NOT NULL,
   creator           INTEGER NOT NULL, -- FK to "user".id
   private           BOOLEAN NOT NULL DEFAULT FALSE,
-  member            INTEGER ARRAY DEFAULT ARRAY[]::INTEGER[], -- TODO: look into indexes
+  member            INTEGER ARRAY NOT NULL DEFAULT ARRAY[]::INTEGER[],
   created           TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   last_saved        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
