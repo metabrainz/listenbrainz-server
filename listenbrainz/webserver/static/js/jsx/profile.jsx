@@ -5,6 +5,7 @@ import * as timeago from 'time-ago';
 
 import {getArtistLink, getPlayButton, getSpotifyEmbedUriFromListen, getTrackLink} from './utils.jsx';
 
+import APIService from './api-service';
 import {FollowUsers} from './follow-users.jsx';
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -16,6 +17,7 @@ class RecentListens extends React.Component {
   spotifyListens = [];
   constructor(props) {
     super(props);
+
     this.state = {
       listens: props.listens || [],
       currentListen : null,
@@ -23,15 +25,19 @@ class RecentListens extends React.Component {
       followList: props.follow_list || [],
       playingNowByUser: {}
     };
-    this.isCurrentListen = this.isCurrentListen.bind(this);
-    this.handleCurrentListenChange = this.handleCurrentListenChange.bind(this);
+
+    this.connectWebsockets = this.connectWebsockets.bind(this);
     this.playListen = this.playListen.bind(this);
-    this.sortListensByFollowUserRank = this.sortListensByFollowUserRank.bind(this);
-    this.spotifyPlayer = React.createRef();
     this.receiveNewListen = this.receiveNewListen.bind(this);
     this.receiveNewPlayingNow = this.receiveNewPlayingNow.bind(this);
+    this.sortListensByFollowUserRank = this.sortListensByFollowUserRank.bind(this);
+    this.spotifyPlayer = React.createRef();
+    this.getRecentListensForFollowList = this.getRecentListensForFollowList.bind(this);
+    this.handleCurrentListenChange = this.handleCurrentListenChange.bind(this);
     this.handleFollowUserListChange = this.handleFollowUserListChange.bind(this);
-    this.connectWebsockets = this.connectWebsockets.bind(this);
+    this.isCurrentListen = this.isCurrentListen.bind(this);
+
+    this.APIService = new APIService(props.api_url || `${window.location.origin}/1`);
   }
 
   componentDidMount(){
@@ -123,6 +129,7 @@ class RecentListens extends React.Component {
       return { listens: this.sortListensByFollowUserRank([newListen].concat(prevState.listens), prevState.followList) }
     })
   }
+
   receiveNewPlayingNow(newPlayingNow){
     try {
       newPlayingNow = JSON.parse(newPlayingNow);
@@ -152,6 +159,16 @@ class RecentListens extends React.Component {
   }
   isCurrentListen(listen){
     return this.state.currentListen && _isEqual(listen,this.state.currentListen);
+  }
+
+  getRecentListensForFollowList(){
+    this.APIService.getRecentListensForUsers(this.state.followList)
+      .then(listens => 
+        this.setState(prevState =>{
+          return { listens: this.sortListensByFollowUserRank(listens, prevState.followList) }
+        })
+      )
+      .catch(console.error)
   }
 
   render() {
@@ -206,8 +223,17 @@ class RecentListens extends React.Component {
           <div className="col-md-8">
             <h3>{(this.state.mode === "listens" || this.state.mode === "recent" )? "Recent listens" : "Playlist"}</h3>
 
-            {!this.state.listens.length ?
-              <p className="lead" className="text-center">No listens :/</p> :
+            {!this.state.listens.length &&
+              <div className="lead text-center">
+                <p>No listens yet</p>
+                {this.state.mode === "follow" &&
+                  <div title="Load recent listens" className="btn btn-primary" onClick={this.getRecentListensForFollowList}>
+                    <i className="fas fa-list-ul"></i>&nbsp;&nbsp;Load recent listens
+                  </div>
+                }
+              </div>
+            }
+            {this.state.listens.length > 0 &&
               <div>
                 <table className="table table-condensed table-striped listens-table" id="listens">
                   <thead>
