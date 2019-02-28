@@ -9,12 +9,10 @@ export class FollowUsers extends React.Component {
       users: props.followList || [],
       saveUrl: props.saveUrl || "https://listenbrainz.org/follow/save",
       listId: props.listId,
+      listName: props.listName,
     }
     this.addUserToList = this.addUserToList.bind(this);
     this.reorderUser = this.reorderUser.bind(this);
-    console.log("List ID: "+this.state.listId);
-    console.log("List name: "+this.state.listName);
-
   }
 
   addUserToList(event) {
@@ -49,22 +47,26 @@ export class FollowUsers extends React.Component {
   }
 
   saveFollowList(event) {
+    var listName = this.state.listName;
+    if (this.nameInput.value != undefined && this.nameInput.value != "") {
+      listName = this.nameInput.value;
+    }
     fetch(this.state.saveUrl, {
       method: "POST",
       body: JSON.stringify({
         "users": this.state.users,
-        "name": this.nameInput.value,
+        "name": listName,
         "id": this.state.listId,
       }),
     })
     .then(response => response.json())
     .then(data => {
-      console.log(data);
-      console.log("old List ID: " + this.state.listId);
+      console.debug(data);
+      console.debug("old List ID: " + this.state.listId);
       this.setState(prevState => {
         return {listId: data.list_id};
       });
-      console.log("new List ID: " + this.state.listId);
+      console.debug("new List ID: " + this.state.listId);
     })
   }
 
