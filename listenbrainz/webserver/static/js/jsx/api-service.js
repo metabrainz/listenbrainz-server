@@ -11,6 +11,31 @@ export default class APIService {
     this.APIBaseURI = APIBaseURI;
   }
 
+  async getRecentListensForUsers(userNames, limit) {
+    let userNamesForQuery = userNames;
+    if (Array.isArray(userNames)){
+      userNamesForQuery = userNames.join(',');
+    }
+    else if(typeof userNames !== 'string') {
+      throw new SyntaxError(`Expected username or array of username strings, got ${typeof userNames} instead`);
+    }
+
+    let query = `${this.APIBaseURI}/users/${userNamesForQuery}/recent-listens`;
+
+    if(!isNil(limit) && isFinite(Number(limit))){
+      query += `?limit=${limit}`
+    }
+    
+    const response = await fetch(query, {
+      accept: 'application/json',
+      method: "GET"
+    })
+    this.checkStatus(response);
+    const result = await response.json();
+    
+    return result
+  }
+  
   async getListensForUser(userName, minTs, maxTs, count) {
     
     if(typeof userName !== 'string'){
