@@ -267,6 +267,8 @@ def process_one_user(user):
     spotify.update_latest_listened_at(user.user_id, latest_listened_at)
     spotify.update_last_updated(user.user_id)
 
+    return len(listens)
+
 
 def process_all_spotify_users():
     """ Get a batch of users to be processed and import their Spotify plays.

@@ -3,45 +3,20 @@ from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
 from flask import current_app
 
-def _create(connection, name, creator, private=False):
+import listenbrainz.db.user as db_user
+
+def _create(connection, name, creator, member, private=False):
     result = connection.execute(sqlalchemy.text("""
-        INSERT INTO follow_list (name, creator, private)
-             VALUES (:name, :creator, :private)
+        INSERT INTO follow_list (name, creator, private, member)
+             VALUES (:name, :creator, :private, :member)
           RETURNING id
     """), {
         'name': name,
         'creator': creator,
         'private': private,
+        'member': member,
     })
     return result.fetchone()['id']
-
-
-def _add_users(connection, list_id, user_ids):
-    connection.execute(sqlalchemy.text("""
-        INSERT INTO follow_list_member (list_id, user_id, priority)
-             VALUES (:list_id, :user_id, :priority)
-    """), [{'list_id': list_id, 'user_id': user_id, 'priority': priority} for priority, user_id in enumerate(user_ids[::-1])])
-
-
-def _remove_users(connection, list_id):
-    connection.execute(sqlalchemy.text("""
-        DELETE FROM follow_list_member
-              WHERE list_id = :list_id
-    """), {'list_id': list_id})
-
-
-def _get_members(connection, list_id):
-    result = connection.execute(sqlalchemy.text("""
-        SELECT user_id, musicbrainz_id, created, priority
-          FROM follow_list_member
-          JOIN "user"
-            ON follow_list_member.user_id = "user".id
-         WHERE list_id = :list_id
-      ORDER BY priority DESC
-    """), {
-        'list_id': list_id,
-    })
-    return [dict(row) for row in result.fetchall()]
 
 
 def _get_by_creator_and_name(connection, creator, list_name):
@@ -61,34 +36,20 @@ def _get_by_creator_and_name(connection, creator, list_name):
         return None
 
 
-def _update_name(connection, list_id, name):
-    connection.execute(sqlalchemy.text("""
-        UPDATE follow_list
-           SET last_saved = NOW(),
-               name = :name
-         WHERE id = :list_id
-    """), {
-        'list_id': list_id,
-        'name': name,
-    })
-
-
-def save(name, creator, members, private=False):
+def save(name, creator, member, private=False):
     with db.engine.begin() as connection:
         list_id = _get_by_creator_and_name(connection, creator, name)
         if list_id:
             raise DatabaseException("List already exists")
 
-        list_id = _create(connection, name, creator, private)
-        if members:
-            _add_users(connection, list_id, members)
+        list_id = _create(connection, name, creator, member, private)
     return list_id
 
 
 def get(list_id):
-    with db.engine.connect() as connection:
+    with db.engine.begin() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT id, name, creator, private, created, last_saved
+            SELECT id, name, creator, private, created, last_saved, member
               FROM follow_list
              WHERE id = :list_id
         """), {
@@ -98,15 +59,23 @@ def get(list_id):
             return None
         else:
             row = dict(result.fetchone())
+            row['member'] = db_user.get_users_in_order(row['member'])
             return row
 
 
-def update(list_id, name, members):
+def update(list_id, name, member):
     with db.engine.begin() as connection:
-        _update_name(connection, list_id, name)
-        _remove_users(connection, list_id)
-        if members:
-            _add_users(connection, list_id, members)
+        connection.execute(sqlalchemy.text("""
+            UPDATE follow_list
+               SET name = :name,
+                   member = :member,
+                   last_saved = NOW()
+             WHERE id = :list_id
+        """), {
+            'list_id': list_id,
+            'name': name,
+            'member': member,
+        })
 
 
 def get_follow_lists(creator):
@@ -124,7 +93,7 @@ def get_follow_lists(creator):
 def get_latest(creator):
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT id, name, creator, private
+            SELECT id, name, creator, private, member
               FROM follow_list
              WHERE creator = :creator
           ORDER BY last_saved DESC
@@ -140,5 +109,5 @@ def get_latest(creator):
             'name': row['name'],
             'creator': row['creator'],
             'private': row['private'],
-            'members': _get_members(connection, row['id']),
+            'member': db_user.get_users_in_order(row['member']),
         }
