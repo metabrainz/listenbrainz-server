@@ -154,6 +154,7 @@ def recent_listens():
         "listens"              : recent,
         "mode"                 : "recent",
         "spotify_access_token" : spotify_access_token,
+        "api_url"               : current_app.config['API_URL'],
     }
 
     return render_template("index/recent.html",
