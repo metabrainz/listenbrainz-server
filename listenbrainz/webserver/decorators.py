@@ -1,9 +1,8 @@
-from functools import update_wrapper, wraps
+from functools import update_wrapper
 from datetime import timedelta
 from flask import request, current_app, make_response
-from flask_login import current_user
-from werkzeug.exceptions import Unauthorized
 from six import string_types
+
 
 def crossdomain(origin='*', methods=None, headers=None,
                 max_age=21600, attach_to_all=True,
