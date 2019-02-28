@@ -59,9 +59,9 @@ def save_list():
     list_name = data['name']
     users = data['users']
     users = db_user.validate_usernames(users)
-    list_id = int(data['id'])
-    current_app.logger.error("list id: %d" % list_id)
-    if not list_id:
+    list_id = data['id']
+    if list_id is None:
+        # create a new list
         try:
             list_id = db_follow_list.save(
                 name=list_name,
@@ -86,14 +86,13 @@ def save_list():
         if current_list['creator'] != current_user.id:
             raise Unauthorized("Can only edit your own lists")
 
-        try:
-            db_follow_list.update(
-                list_id=list_id,
-                name=list_name,
-                members=[user['id'] for user in users],
-            )
-        except Exception as e:
-            current_app.logger.error(str(e))
+        # update the old list
+        db_follow_list.update(
+            list_id=list_id,
+            name=list_name,
+            members=[user['id'] for user in users],
+        )
+
 
     return jsonify({
         "code": 200,

@@ -1,5 +1,6 @@
 import sqlalchemy
 from listenbrainz import db
+from listenbrainz.db.exceptions import DatabaseException
 from flask import current_app
 
 def _create(connection, name, creator, private=False):
@@ -19,7 +20,7 @@ def _add_users(connection, list_id, user_ids):
     connection.execute(sqlalchemy.text("""
         INSERT INTO follow_list_member (list_id, user_id, priority)
              VALUES (:list_id, :user_id, :priority)
-    """), [{'list_id': list_id, 'user_id': user_id, 'priority': priority} for priority, user_id in enumerate(user_ids)])
+    """), [{'list_id': list_id, 'user_id': user_id, 'priority': priority} for priority, user_id in enumerate(user_ids[::-1])])
 
 
 def _remove_users(connection, list_id):
@@ -93,12 +94,10 @@ def get(list_id):
         """), {
             "list_id": list_id,
         })
-        current_app.logger.error(result.rowcount)
         if result.rowcount == 0:
             return None
         else:
             row = dict(result.fetchone())
-            current_app.logger.error(row)
             return row
 
 
