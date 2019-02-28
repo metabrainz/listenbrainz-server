@@ -204,3 +204,42 @@ class UserTestCase(DatabaseTestCase):
         self.assertIsNone(user)
         token = db_spotify.get_token_for_user(user_id)
         self.assertIsNone(token)
+
+
+    def test_validate_usernames(self):
+        db_user.create(11, 'eleven')
+        db_user.create(12, 'twelve')
+
+        users = db_user.validate_usernames(['eleven', 'twelve'])
+        self.assertEqual(len(users), 2)
+        self.assertEqual(users[0]['musicbrainz_id'], 'eleven')
+        self.assertEqual(users[1]['musicbrainz_id'], 'twelve')
+
+        users = db_user.validate_usernames(['twelve', 'eleven'])
+        self.assertEqual(len(users), 2)
+        self.assertEqual(users[0]['musicbrainz_id'], 'twelve')
+        self.assertEqual(users[1]['musicbrainz_id'], 'eleven')
+
+        users = db_user.validate_usernames(['twelve', 'eleven', 'thirteen'])
+        self.assertEqual(len(users), 2)
+        self.assertEqual(users[0]['musicbrainz_id'], 'twelve')
+        self.assertEqual(users[1]['musicbrainz_id'], 'eleven')
+
+    def test_get_users_in_order(self):
+        id1 = db_user.create(11, 'eleven')
+        id2 = db_user.create(12, 'twelve')
+
+        users = db_user.get_users_in_order([id1, id2])
+        self.assertEqual(len(users), 2)
+        self.assertEqual(users[0]['id'], id1)
+        self.assertEqual(users[1]['id'], id2)
+
+        users = db_user.get_users_in_order([id2, id1])
+        self.assertEqual(len(users), 2)
+        self.assertEqual(users[0]['id'], id2)
+        self.assertEqual(users[1]['id'], id1)
+
+        users = db_user.get_users_in_order([id2, id1, 213213132])
+        self.assertEqual(len(users), 2)
+        self.assertEqual(users[0]['id'], id2)
+        self.assertEqual(users[1]['id'], id1)
