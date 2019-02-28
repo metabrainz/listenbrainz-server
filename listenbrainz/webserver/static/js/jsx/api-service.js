@@ -33,7 +33,7 @@ export default class APIService {
     this.checkStatus(response);
     const result = await response.json();
     
-    return result
+    return result.payload.listens
   }
   
   async getListensForUser(userName, minTs, maxTs, count) {
@@ -68,7 +68,7 @@ export default class APIService {
     this.checkStatus(response);
     const result = await response.json();
     
-    return result
+    return result.payload.listens
   }
   
   checkStatus(response) {
@@ -78,7 +78,6 @@ export default class APIService {
     const error = new Error(`HTTP Error ${response.statusText}`);
     error.status = response.statusText;
     error.response = response;
-    console.log(error); // eslint-disable-line no-console
     throw error;
   }
 }
