@@ -356,7 +356,7 @@ class InfluxListenStore(ListenStore):
 
         # Quote single quote characters which could be used to mount an injection attack.
         # Sadly, influxdb does not provide a means to do this in the client library
-        query = 'SELECT LAST(*) FROM ' + ",".join(escaped_user_list)
+        query = 'SELECT username, * FROM ' + ",".join(escaped_user_list)
         query += " ORDER BY time DESC LIMIT " + str(limit)
         try:
             results = self.influx.query(query)
@@ -366,7 +366,8 @@ class InfluxListenStore(ListenStore):
 
         listens = []
         for user in user_list:
-            for result in results.get_points(): #measurement=get_measurement_name(user)):
+            for result in results.get_points(measurement=get_measurement_name(user)):
+                result['username'] = user
                 listens.append(Listen.from_influx(result))
 
         return listens
