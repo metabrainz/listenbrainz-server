@@ -66,7 +66,7 @@ class FollowViewsTestCase(ServerTestCase, DatabaseTestCase):
             '/follow/save',
             data=json.dumps({
                 'name': 'new list 1',
-                'users': ['iliekcomputers_2', 'iliekcomputers_3'],
+                'users': ['iliekcomputers_3', 'iliekcomputers_2'],
                 'id': list_id,
             }),
         )
@@ -77,4 +77,4 @@ class FollowViewsTestCase(ServerTestCase, DatabaseTestCase):
         props = json.loads(self.get_context_variable('props'))
         self.assertEqual(props['follow_list_id'], list_id)
         self.assertEqual(props['follow_list_name'], 'new list 1')
-        self.assertListEqual(props['follow_list'], ['iliekcomputers_2', 'iliekcomputers_3'])
+        self.assertListEqual(props['follow_list'], ['iliekcomputers_3', 'iliekcomputers_2'])

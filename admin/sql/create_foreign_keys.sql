@@ -30,16 +30,4 @@ ALTER TABLE follow_list
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
-ALTER TABLE follow_list_member
-    ADD CONSTRAINT follow_list_member_list_id_foreign_key
-    FOREIGN KEY (list_id)
-    REFERENCES follow_list (id)
-    ON DELETE CASCADE;
-
-ALTER TABLE follow_list_member
-    ADD CONSTRAINT follow_list_member_user_id_foreign_key
-    FOREIGN KEY (user_id)
-    REFERENCES "user" (id)
-    ON DELETE CASCADE;
-
 COMMIT;

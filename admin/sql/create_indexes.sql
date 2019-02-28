@@ -19,6 +19,5 @@ CREATE INDEX latest_listened_at_spotify_auth ON spotify_auth (latest_listened_at
 
 CREATE INDEX creator_ndx_follow_list ON follow_list (creator);
 CREATE INDEX last_saved_ndx_follow_list ON follow_list (last_saved DESC);
-CREATE INDEX priority_ndx_follow_list_member ON follow_list_member (priority DESC);
 
 COMMIT;

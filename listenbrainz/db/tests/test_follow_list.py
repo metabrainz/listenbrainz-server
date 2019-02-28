@@ -23,34 +23,17 @@ class FollowListTestCase(DatabaseTestCase):
         self.assertIsNone(uncreated_list)
 
         with db.engine.connect() as connection:
-            list_id = db_follow_list._create(connection, 'test follow list', self.main_user['id'])
+            list_id = db_follow_list._create(connection, 'test follow list', self.main_user['id'], [2, 3, 4])
         created_list = db_follow_list.get(list_id)
         self.assertEqual(created_list['id'], list_id)
         self.assertEqual(created_list['name'], 'test follow list')
         self.assertEqual(created_list['creator'], self.main_user['id'])
         self.assertIn('created', created_list)
         self.assertIn('last_saved', created_list)
+        self.assertEqual(len(created_list['member']), 3)
+        for index, user_id in enumerate(range(2, 5)):
+            self.assertEqual(created_list['member'][index]['id'], user_id)
 
-    def test_add_and_remove_users(self):
-
-        with db.engine.connect() as connection:
-            list_id = db_follow_list._create(connection, 'test follow list', self.main_user['id'])
-            members = db_follow_list._get_members(connection, list_id)
-            self.assertListEqual(members, [])
-
-            db_follow_list._add_users(connection, list_id, [2, 3, 4])
-            members = db_follow_list._get_members(connection, list_id)
-            self.assertEqual(len(members), 3)
-            self.assertEqual(members[0]['user_id'], 2)
-            self.assertEqual(members[0]['priority'], 2)
-            self.assertEqual(members[1]['user_id'], 3)
-            self.assertEqual(members[1]['priority'], 1)
-            self.assertEqual(members[2]['user_id'], 4)
-            self.assertEqual(members[2]['priority'], 0)
-
-            db_follow_list._remove_users(connection, list_id)
-            members = db_follow_list._get_members(connection, list_id)
-            self.assertListEqual(members, [])
 
     def test_save(self):
         list_id = db_follow_list.save('test follow list', self.main_user['id'], [2, 3, 4])
@@ -60,16 +43,9 @@ class FollowListTestCase(DatabaseTestCase):
         self.assertEqual(created_list['creator'], self.main_user['id'])
         self.assertIn('created', created_list)
         self.assertIn('last_saved', created_list)
-
-        with db.engine.connect() as connection:
-            members = db_follow_list._get_members(connection, list_id)
-            self.assertEqual(len(members), 3)
-            self.assertEqual(members[0]['user_id'], 2)
-            self.assertEqual(members[0]['priority'], 2)
-            self.assertEqual(members[1]['user_id'], 3)
-            self.assertEqual(members[1]['priority'], 1)
-            self.assertEqual(members[2]['user_id'], 4)
-            self.assertEqual(members[2]['priority'], 0)
+        self.assertEqual(len(created_list['member']), 3)
+        for index, user_id in enumerate(range(2, 5)):
+            self.assertEqual(created_list['member'][index]['id'], user_id)
 
         # try to save another list with same name for the same user
         with self.assertRaises(DatabaseException):
@@ -83,17 +59,9 @@ class FollowListTestCase(DatabaseTestCase):
         self.assertEqual(created_list['creator'], self.main_user['id'])
         old_created = created_list['created']
         old_saved = created_list['last_saved']
-
-
-        with db.engine.connect() as connection:
-            members = db_follow_list._get_members(connection, list_id)
-            self.assertEqual(len(members), 3)
-            self.assertEqual(members[0]['user_id'], 2)
-            self.assertEqual(members[0]['priority'], 2)
-            self.assertEqual(members[1]['user_id'], 3)
-            self.assertEqual(members[1]['priority'], 1)
-            self.assertEqual(members[2]['user_id'], 4)
-            self.assertEqual(members[2]['priority'], 0)
+        self.assertEqual(len(created_list['member']), 3)
+        for index, user_id in enumerate(range(2, 5)):
+            self.assertEqual(created_list['member'][index]['id'], user_id)
 
         db_follow_list.update(list_id, 'new name', [3, 4])
         updated_list = db_follow_list.get(list_id)
@@ -101,14 +69,9 @@ class FollowListTestCase(DatabaseTestCase):
         self.assertEqual(updated_list['name'], 'new name')
         self.assertEqual(updated_list['created'], old_created)
         self.assertGreater(updated_list['last_saved'], old_saved)
-
-        with db.engine.connect() as connection:
-            members = db_follow_list._get_members(connection, list_id)
-            self.assertEqual(len(members), 2)
-            self.assertEqual(members[0]['user_id'], 3)
-            self.assertEqual(members[0]['priority'], 1)
-            self.assertEqual(members[1]['user_id'], 4)
-            self.assertEqual(members[1]['priority'], 0)
+        self.assertEqual(len(updated_list['member']), 2)
+        for index, user_id in enumerate(range(3, 5)):
+            self.assertEqual(updated_list['member'][index]['id'], user_id)
 
 
     def test_get_latest(self):
