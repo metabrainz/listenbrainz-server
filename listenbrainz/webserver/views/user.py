@@ -156,6 +156,7 @@ def profile(user_name):
         "mode"                 : "listens",
         "spotify_access_token" : spotify_access_token,
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
+        "api_url"               : current_app.config['API_URL'],
     }
 
     return render_template("user/profile.html",

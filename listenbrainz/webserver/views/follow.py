@@ -32,11 +32,12 @@ def follow(user_list):
     }
     spotify_access_token = db_spotify.get_token_for_user(current_user.id)
     props = {
-        "user"                 : user_data,
-        "mode"                 : "follow",
-        "follow_list"          : follow_list,
-        "spotify_access_token" : spotify_access_token,
+        "user"                  : user_data,
+        "mode"                  : "follow",
+        "follow_list"           : follow_list,
+        "spotify_access_token"  : spotify_access_token,
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
+        "api_url"               : current_app.config['API_URL'],
     }
 
     return render_template("index/follow.html",
