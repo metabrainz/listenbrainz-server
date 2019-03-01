@@ -56,7 +56,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertContext('active_section', 'listens')
-        props = ujson.loads(self.get_context_variable('props'))
 
         # check that artist count is not shown if stats haven't been calculated yet
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
@@ -108,7 +107,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         props = ujson.loads(self.get_context_variable('props'))
         mock_db_spotify.get_token_for_user.assert_called_with(self.user.id)
         self.assertEqual(props['spotify_access_token'], 'token')
-
 
     def test_scraper_username(self):
         """ Tests that the username is correctly rendered in the last.fm importer """
