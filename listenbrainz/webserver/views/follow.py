@@ -90,7 +90,7 @@ def save_list():
                 'message': 'List not found',
             }), 404
         if current_list['creator'] != current_user.id:
-            raise Unauthorized("Can only edit your own lists")
+            raise Unauthorized("You can only edit your own lists.")
 
         # update the old list
         db_follow_list.update(
