@@ -8,7 +8,7 @@ export class FollowUsers extends React.Component {
     super(props);
     this.state = {
       users: props.followList || [],
-      saveUrl: props.saveUrl || window.location.origin + "/follow/save",
+      saveUrl: props.saveUrl || window.location.origin + "/1/follow/save",
       listId: props.listId,
       listName: props.listName,
     }
@@ -49,7 +49,7 @@ export class FollowUsers extends React.Component {
 
   saveFollowList(event) {
     var listName = this.state.listName;
-    if (!_.isNil(this.nameInput.value) && this.nameInput.value.length) {
+    if (!_isNil(this.nameInput.value) && this.nameInput.value.length) {
       listName = this.nameInput.value;
     }
     fetch(this.state.saveUrl, {
@@ -59,6 +59,7 @@ export class FollowUsers extends React.Component {
         "name": listName,
         "id": this.state.listId,
       }),
+      headers: {"Authorization": "Token " + this.props.creator.auth_token},
     })
     .then(response => {
         if (!response.ok) {

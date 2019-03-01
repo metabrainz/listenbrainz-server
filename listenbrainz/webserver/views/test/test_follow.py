@@ -34,7 +34,7 @@ class FollowViewsTestCase(ServerTestCase, DatabaseTestCase):
 
     def test_save_page(self):
         r = self.client.post(
-            '/follow/save',
+            '/1/follow/save',
             data=json.dumps({
                 'name': 'new list',
                 'users': ['iliekcomputers_2'],
@@ -42,57 +42,67 @@ class FollowViewsTestCase(ServerTestCase, DatabaseTestCase):
             }),
         )
         self.assert401(r)
+        self.assertEqual(r.json['code'], 401)
 
-        self.temporary_login(self.user['login_id'])
         r = self.client.post(
-            '/follow/save',
+            '/1/follow/save',
             data=json.dumps({
                 'name': 'new list',
                 'users': ['iliekcomputers_2'],
                 'id': None,
             }),
+            headers={"Authorization": "Token {token}".format(token=self.user['auth_token'])},
         )
         self.assert200(r)
         list_id = r.json['list_id']
 
         r = self.client.get(url_for('follow.follow'))
+        self.assertStatus(r, 302) # should redirect to login page
+
+        self.temporary_login(self.user['login_id'])
+        r = self.client.get(url_for('follow.follow'))
         self.assert200(r)
         props = json.loads(self.get_context_variable('props'))
+        self.assertEqual(props['user']['id'], self.user['id'])
         self.assertEqual(props['follow_list_id'], list_id)
         self.assertEqual(props['follow_list_name'], 'new list')
         self.assertListEqual(props['follow_list'], ['iliekcomputers_2'])
 
         r = self.client.post(
-            '/follow/save',
+            '/1/follow/save',
             data=json.dumps({
                 'name': 'new list 1',
                 'users': ['iliekcomputers_3', 'iliekcomputers_2'],
                 'id': list_id,
             }),
+            headers={"Authorization": "Token {token}".format(token=self.user['auth_token'])},
         )
         self.assert200(r)
 
         r = self.client.get(url_for('follow.follow'))
         self.assert200(r)
         props = json.loads(self.get_context_variable('props'))
+        self.assertEqual(props['user']['id'], self.user['id'])
         self.assertEqual(props['follow_list_id'], list_id)
         self.assertEqual(props['follow_list_name'], 'new list 1')
         self.assertListEqual(props['follow_list'], ['iliekcomputers_3', 'iliekcomputers_2'])
 
         # check for list with no users
         r = self.client.post(
-            '/follow/save',
+            '/1/follow/save',
             data=json.dumps({
                 'name': 'new list 1',
                 'users': [],
                 'id': list_id,
             }),
+            headers={"Authorization": "Token {token}".format(token=self.user['auth_token'])},
         )
         self.assert200(r)
 
         r = self.client.get(url_for('follow.follow'))
         self.assert200(r)
         props = json.loads(self.get_context_variable('props'))
+        self.assertEqual(props['user']['id'], self.user['id'])
         self.assertEqual(props['follow_list_id'], list_id)
         self.assertEqual(props['follow_list_name'], 'new list 1')
         self.assertListEqual(props['follow_list'], [])
