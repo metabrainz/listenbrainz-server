@@ -99,6 +99,9 @@ def profile(user_name):
             "listened_at_iso": listen.timestamp.isoformat() + "Z",
         })
 
+    latest_listen = db_conn.fetch_listens(user_name=user_name, limit=1, to_ts=int(time.time()))
+    latest_listen_ts = latest_listen[0].ts_since_epoch if len(latest_listen) > 0 else 0
+
     # Calculate if we need to show next/prev buttons
     previous_listen_ts = None
     next_listen_ts = None
@@ -142,19 +145,20 @@ def profile(user_name):
 
     props = {
         "user" : {
-            "id"               : user.id,
-            "name"             : user.musicbrainz_id,
+            "id": user.id,
+            "name": user.musicbrainz_id,
         },
-        "listens"              : listens,
-        "previous_listen_ts"   : previous_listen_ts,
-        "next_listen_ts"       : next_listen_ts,
-        "latest_spotify_uri"   : _get_spotify_uri_for_listens(listens),
-        "have_listen_count"    : have_listen_count,
-        "listen_count"         : format(int(listen_count), ",d"),
-        "artist_count"         : format(artist_count, ",d") if artist_count else None,
-        "profile_url"          : url_for('user.profile', user_name=user_name),
-        "mode"                 : "listens",
-        "spotify_access_token" : spotify_access_token,
+        "listens": listens,
+        "previous_listen_ts": previous_listen_ts,
+        "next_listen_ts": next_listen_ts,
+        "latest_listen_ts": latest_listen_ts,
+        "latest_spotify_uri": _get_spotify_uri_for_listens(listens),
+        "have_listen_count": have_listen_count,
+        "listen_count": format(int(listen_count), ",d"),
+        "artist_count": format(artist_count, ",d") if artist_count else None,
+        "profile_url": url_for('user.profile', user_name=user_name),
+        "mode": "listens",
+        "spotify_access_token": spotify_access_token,
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
     }
 

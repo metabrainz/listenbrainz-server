@@ -56,6 +56,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertContext('active_section', 'listens')
+        props = ujson.loads(self.get_context_variable('props'))
 
         # check that artist count is not shown if stats haven't been calculated yet
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
@@ -145,7 +146,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         # add some artist stats to the db
         with open(self.path_to_data_file('user_top_artists.json')) as f:
             artists = ujson.load(f)
-            
+
         db_stats.insert_user_stats(
             user_id=self.user.id,
             artists=artists,
@@ -182,23 +183,28 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         # If no parameter is given, use current time as the to_ts
         m_time.time.return_value = 1520946608
         self.client.get(url_for('user.profile', user_name='iliekcomputers'))
-        influx.assert_called_with('iliekcomputers', limit=25, to_ts=1520946608)
+        req_call = mock.call('iliekcomputers', limit=25, to_ts=1520946608)
+        influx.assert_has_calls([req_call])
         influx.reset_mock()
 
         # max_ts query param -> to_ts influx param
         self.client.get(url_for('user.profile', user_name='iliekcomputers'), query_string={'max_ts': 1520946000})
-        influx.assert_called_with('iliekcomputers', limit=25, to_ts=1520946000)
+        req_call = mock.call('iliekcomputers', limit=25, to_ts=1520946000)
+        influx.assert_has_calls([req_call])
         influx.reset_mock()
 
         # min_ts query param -> from_ts influx param
         self.client.get(url_for('user.profile', user_name='iliekcomputers'), query_string={'min_ts': 1520941000})
-        influx.assert_called_with('iliekcomputers', limit=25, from_ts=1520941000)
+        req_call = mock.call('iliekcomputers', limit=25, from_ts=1520941000)
+        influx.assert_has_calls([req_call])
         influx.reset_mock()
 
         # If max_ts and min_ts set, only max_ts is used
         self.client.get(url_for('user.profile', user_name='iliekcomputers'),
                         query_string={'min_ts': 1520941000, 'max_ts': 1520946000})
-        influx.assert_called_with('iliekcomputers', limit=25, to_ts=1520946000)
+        req_call = mock.call('iliekcomputers', limit=25, to_ts=1520946000)
+        influx.assert_has_calls([req_call])
+
 
     @mock.patch('listenbrainz.webserver.influx_connection._influx.fetch_listens')
     def test_ts_filters_errors(self, influx):
