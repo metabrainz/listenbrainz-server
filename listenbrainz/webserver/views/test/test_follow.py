@@ -106,3 +106,33 @@ class FollowViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertEqual(props['follow_list_id'], list_id)
         self.assertEqual(props['follow_list_name'], 'new list 1')
         self.assertListEqual(props['follow_list'], [])
+
+    def test_save_endpoint_bad_data(self):
+        self.temporary_login(self.user['login_id'])
+        r = self.client.post(
+            '/1/follow/save',
+            data=json.dumps({}),
+            headers={"Authorization": "Token {token}".format(token=self.user['auth_token'])},
+        )
+        self.assert400(r)
+
+        r = self.client.post(
+            '/1/follow/save',
+            data=json.dumps({'users': [], 'id': 1}),
+            headers={"Authorization": "Token {token}".format(token=self.user['auth_token'])},
+        )
+        self.assert400(r)
+
+        r = self.client.post(
+            '/1/follow/save',
+            data=json.dumps({'name': 'hello', 'id': 1}),
+            headers={"Authorization": "Token {token}".format(token=self.user['auth_token'])},
+        )
+        self.assert400(r)
+
+        r = self.client.post(
+            '/1/follow/save',
+            data=json.dumps({'name': 'hello', 'users': []}),
+            headers={"Authorization": "Token {token}".format(token=self.user['auth_token'])},
+        )
+        self.assert400(r)

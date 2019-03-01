@@ -19,9 +19,14 @@ def save_list():
     except ValueError as e:
         log_raise_400("Cannot parse JSON document: %s" % str(e), raw_data)
 
-    list_name = data['name']
-    members = db_user.validate_usernames(data['users'])
-    list_id = data['id']
+    try:
+        list_name = data['name']
+        list_id = data['id']
+        members = data['users']
+    except KeyError as e:
+        log_raise_400("JSON missing key: %s" % str(e))
+
+    members = db_user.validate_usernames(members)
     if list_id is None:
         # create a new list
         try:
