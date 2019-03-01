@@ -71,8 +71,9 @@ export class FollowUsers extends React.Component {
       console.debug("old List ID: " + this.state.listId);
       this.setState(prevState => {
         return {listId: data.list_id};
+      }, () => {
+          console.debug("new List ID: " + this.state.listId);
       });
-      console.debug("new List ID: " + this.state.listId);
     })
     .catch(error => {
         console.error(error);
