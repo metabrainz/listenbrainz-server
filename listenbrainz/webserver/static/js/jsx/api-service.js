@@ -8,6 +8,12 @@ export default class APIService {
     if(isNil(APIBaseURI) || !isString(APIBaseURI)){
       throw new SyntaxError(`Expected API base URI string, got ${typeof APIBaseURI} instead`)
     }
+    if(APIBaseURI.endsWith('/')){
+      APIBaseURI = APIBaseURI.substring(0, APIBaseURI.length-1);
+    }
+    if(!APIBaseURI.endsWith('/1')){
+      APIBaseURI += '/1';
+    }
     this.APIBaseURI = APIBaseURI;
   }
 
