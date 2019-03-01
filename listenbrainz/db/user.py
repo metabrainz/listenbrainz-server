@@ -430,7 +430,7 @@ def validate_usernames(musicbrainz_ids):
         r = connection.execute(sqlalchemy.text("""
             SELECT t.musicbrainz_id as musicbrainz_id, id
               FROM "user" u
-        RIGHT JOIN unnest(:musicbrainz_ids) WITH ORDINALITY t(musicbrainz_id, ord)
+        RIGHT JOIN unnest(:musicbrainz_ids ::text[]) WITH ORDINALITY t(musicbrainz_id, ord)
                 ON LOWER(u.musicbrainz_id) = t.musicbrainz_id
           ORDER BY t.ord
         """), {
@@ -444,7 +444,7 @@ def get_users_in_order(user_ids):
         r = connection.execute(sqlalchemy.text("""
             SELECT t.user_id as id, musicbrainz_id
               FROM "user" u
-        RIGHT JOIN unnest(:user_ids) WITH ORDINALITY t(user_id, ord)
+        RIGHT JOIN unnest(:user_ids ::int[]) WITH ORDINALITY t(user_id, ord)
                 ON u.id = t.user_id
           ORDER BY t.ord
         """), {
