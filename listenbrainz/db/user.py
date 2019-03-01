@@ -416,3 +416,38 @@ def get_by_mb_row_id(musicbrainz_row_id, musicbrainz_id=None):
         if result.rowcount:
             return result.fetchone()
         return None
+
+
+def validate_usernames(musicbrainz_ids):
+    """ Check existence of users in the database and return those users which exist in order.
+
+    Args:
+        musicbrainz_ids ([str]): a list of usernames
+
+    Returns: list of users who exist in the database
+    """
+    with db.engine.connect() as connection:
+        r = connection.execute(sqlalchemy.text("""
+            SELECT t.musicbrainz_id as musicbrainz_id, id
+              FROM "user" u
+        RIGHT JOIN unnest(:musicbrainz_ids ::text[]) WITH ORDINALITY t(musicbrainz_id, ord)
+                ON LOWER(u.musicbrainz_id) = t.musicbrainz_id
+          ORDER BY t.ord
+        """), {
+            'musicbrainz_ids': [musicbrainz_id.lower() for musicbrainz_id in musicbrainz_ids],
+        })
+        return [dict(row) for row in r.fetchall() if row['id'] is not None]
+
+
+def get_users_in_order(user_ids):
+    with db.engine.connect() as connection:
+        r = connection.execute(sqlalchemy.text("""
+            SELECT t.user_id as id, musicbrainz_id
+              FROM "user" u
+        RIGHT JOIN unnest(:user_ids ::int[]) WITH ORDINALITY t(user_id, ord)
+                ON u.id = t.user_id
+          ORDER BY t.ord
+        """), {
+            'user_ids': user_ids,
+        })
+        return [dict(row) for row in r.fetchall() if row['musicbrainz_id'] is not None]
