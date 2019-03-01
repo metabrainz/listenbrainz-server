@@ -29,6 +29,7 @@ def follow(user_list):
     user_data = {
         "id": current_user.id,
         "name": current_user.musicbrainz_id,
+        "auth_token": current_user.auth_token,
     }
     spotify_access_token = db_spotify.get_token_for_user(current_user.id)
     props = {
@@ -37,7 +38,7 @@ def follow(user_list):
         "follow_list": follow_list_members,
         "spotify_access_token": spotify_access_token,
         "web_sockets_server_url": current_app.config["WEBSOCKETS_SERVER_URL"],
-        "save_url": "http://0.0.0.0/follow/save", #TODO
+        "save_url": "{}/1/follow/save".format(current_app.config["API_URL"]),
         "follow_list_name": default_list["name"],
         "follow_list_id": default_list["id"] if "id" in default_list else None,
     }
@@ -50,57 +51,3 @@ def follow(user_list):
         follow_list=follow_list_members,
         active_section='listens',
     )
-
-
-@follow_bp.route("/save", methods=["POST"])
-@auth_required
-def save_list():
-    try:
-        data = json.loads(request.get_data().decode("utf-8"))
-    except ValueError:
-        return jsonify({
-            code: 400,
-            message: "Bad JSON data sent",
-        }), 400
-    list_name = data['name']
-    users = data['users']
-    users = db_user.validate_usernames(users)
-    list_id = data['id']
-    if list_id is None:
-        # create a new list
-        try:
-            list_id = db_follow_list.save(
-                name=list_name,
-                creator=current_user.id,
-                members=[user['id'] for user in users],
-            )
-        except DatabaseException as e:
-            #TODO: raise exceptions instead of returning jsonify
-            return jsonify({
-                'code': 403,
-                'message': 'List with same name already exists',
-            }), 403
-    else:
-
-        # do some validation
-        current_list = db_follow_list.get(list_id)
-        if current_list is None:
-            return jsonify({
-                'code': 404,
-                'message': 'List not found',
-            }), 404
-        if current_list['creator'] != current_user.id:
-            raise Unauthorized("You can only edit your own lists.")
-
-        # update the old list
-        db_follow_list.update(
-            list_id=list_id,
-            name=list_name,
-            members=[user['id'] for user in users],
-        )
-
-    return jsonify({
-        "code": 200,
-        "message": "it worked!",
-        "list_id": list_id,
-    })
