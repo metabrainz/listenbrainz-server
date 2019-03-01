@@ -1,12 +1,8 @@
 import ujson
-import json
-from flask import Blueprint, render_template, request, current_app, jsonify
+from flask import Blueprint, render_template, current_app
 from flask_login import current_user, login_required
-from listenbrainz.webserver.login import auth_required
-from listenbrainz.db.exceptions import DatabaseException
 import listenbrainz.db.follow_list as db_follow_list
 import listenbrainz.db.spotify as db_spotify
-import listenbrainz.db.user as db_user
 
 
 follow_bp = Blueprint("follow", __name__)

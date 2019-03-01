@@ -52,13 +52,3 @@ def login_forbidden(f):
         return f(*args, **kwargs)
 
     return decorated
-
-
-def auth_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if not current_user.is_authenticated:
-            raise Unauthorized
-        return f(*args, **kwargs)
-
-    return decorated
