@@ -14,12 +14,12 @@ def follow(user_list):
     """ Allow an LB user to follow the stream of one or more other LB users.
     """
     if user_list:
-        default_list = {'name': 'Untitled Follow List'}
+        default_list = {'name': ''}
         follow_list_members = [member.strip() for member in user_list.split(",") if member.strip()]
     else:
         default_list = db_follow_list.get_latest(creator=current_user.id)
         if not default_list:
-            default_list = {'name': 'Untitled Follow List', 'members': []}
+            default_list = {'name': '', 'members': []}
         follow_list_members = [member['musicbrainz_id'] for member in default_list['members']]
 
     user_data = {
