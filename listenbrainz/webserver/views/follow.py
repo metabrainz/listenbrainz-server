@@ -55,7 +55,13 @@ def follow(user_list):
 @follow_bp.route("/save", methods=["POST"])
 @auth_required
 def save_list():
-    data = json.loads(request.get_data().decode("utf-8"))
+    try:
+        data = json.loads(request.get_data().decode("utf-8"))
+    except ValueError:
+        return jsonify({
+            code: 400,
+            message: "Bad JSON data sent",
+        }), 400
     list_name = data['name']
     users = data['users']
     users = db_user.validate_usernames(users)
