@@ -30,9 +30,9 @@ class FollowListTestCase(DatabaseTestCase):
         self.assertEqual(created_list['creator'], self.main_user['id'])
         self.assertIn('created', created_list)
         self.assertIn('last_saved', created_list)
-        self.assertEqual(len(created_list['member']), 3)
+        self.assertEqual(len(created_list['members']), 3)
         for index, user_id in enumerate(range(2, 5)):
-            self.assertEqual(created_list['member'][index]['id'], user_id)
+            self.assertEqual(created_list['members'][index]['id'], user_id)
 
 
     def test_save(self):
@@ -43,9 +43,9 @@ class FollowListTestCase(DatabaseTestCase):
         self.assertEqual(created_list['creator'], self.main_user['id'])
         self.assertIn('created', created_list)
         self.assertIn('last_saved', created_list)
-        self.assertEqual(len(created_list['member']), 3)
+        self.assertEqual(len(created_list['members']), 3)
         for index, user_id in enumerate(range(2, 5)):
-            self.assertEqual(created_list['member'][index]['id'], user_id)
+            self.assertEqual(created_list['members'][index]['id'], user_id)
 
         # try to save another list with same name for the same user
         with self.assertRaises(DatabaseException):
@@ -59,9 +59,9 @@ class FollowListTestCase(DatabaseTestCase):
         self.assertEqual(created_list['creator'], self.main_user['id'])
         old_created = created_list['created']
         old_saved = created_list['last_saved']
-        self.assertEqual(len(created_list['member']), 3)
+        self.assertEqual(len(created_list['members']), 3)
         for index, user_id in enumerate(range(2, 5)):
-            self.assertEqual(created_list['member'][index]['id'], user_id)
+            self.assertEqual(created_list['members'][index]['id'], user_id)
 
         db_follow_list.update(list_id, 'new name', [3, 4])
         updated_list = db_follow_list.get(list_id)
@@ -69,9 +69,9 @@ class FollowListTestCase(DatabaseTestCase):
         self.assertEqual(updated_list['name'], 'new name')
         self.assertEqual(updated_list['created'], old_created)
         self.assertGreater(updated_list['last_saved'], old_saved)
-        self.assertEqual(len(updated_list['member']), 2)
+        self.assertEqual(len(updated_list['members']), 2)
         for index, user_id in enumerate(range(3, 5)):
-            self.assertEqual(updated_list['member'][index]['id'], user_id)
+            self.assertEqual(updated_list['members'][index]['id'], user_id)
 
 
     def test_get_latest(self):

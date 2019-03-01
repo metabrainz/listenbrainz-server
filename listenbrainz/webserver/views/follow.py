@@ -23,8 +23,8 @@ def follow(user_list):
     else:
         default_list = db_follow_list.get_latest(creator=current_user.id)
         if not default_list:
-            default_list = {'name': 'Untitled Follow List', 'member': []}
-        follow_list_members = [member['musicbrainz_id'] for member in default_list['member']]
+            default_list = {'name': 'Untitled Follow List', 'members': []}
+        follow_list_members = [member['musicbrainz_id'] for member in default_list['members']]
 
     user_data = {
         "id": current_user.id,
@@ -72,7 +72,7 @@ def save_list():
             list_id = db_follow_list.save(
                 name=list_name,
                 creator=current_user.id,
-                member=[user['id'] for user in users],
+                members=[user['id'] for user in users],
             )
         except DatabaseException as e:
             #TODO: raise exceptions instead of returning jsonify
@@ -96,7 +96,7 @@ def save_list():
         db_follow_list.update(
             list_id=list_id,
             name=list_name,
-            member=[user['id'] for user in users],
+            members=[user['id'] for user in users],
         )
 
     return jsonify({
