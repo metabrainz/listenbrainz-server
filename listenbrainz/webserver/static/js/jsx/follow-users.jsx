@@ -1,3 +1,5 @@
+import * as _isNil from 'lodash.isnil';
+
 import {getArtistLink, getPlayButton, getTrackLink} from './utils.jsx';
 
 import React from 'react';
@@ -6,7 +8,10 @@ export class FollowUsers extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      users: props.followList || []
+      users: props.followList || [],
+      saveUrl: props.saveUrl || window.location.origin + "/1/follow/save",
+      listId: props.listId,
+      listName: props.listName,
     }
     this.addUserToList = this.addUserToList.bind(this);
     this.reorderUser = this.reorderUser.bind(this);
@@ -26,6 +31,7 @@ export class FollowUsers extends React.Component {
       this.props.onUserListChange(this.state.users);
     });
   }
+
   removeUserFromList(index) {
     this.setState(prevState => {
       prevState.users.splice(index, 1);
@@ -42,6 +48,51 @@ export class FollowUsers extends React.Component {
     }, () => { this.props.onUserListChange(this.state.users, true) });
   }
 
+  saveFollowList(event) {
+    var listName = this.state.listName;
+    if (!_isNil(this.nameInput.value) && this.nameInput.value.length) {
+      listName = this.nameInput.value;
+    }
+    fetch(this.state.saveUrl, {
+      method: "POST",
+      body: JSON.stringify({
+        "users": this.state.users,
+        "name": listName,
+        "id": this.state.listId,
+      }),
+      headers: {"Authorization": "Token " + this.props.creator.auth_token},
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(response.statusText);
+        }
+        return response.json();
+    })
+    .then(data => {
+      console.debug(data);
+      console.debug("old List ID: " + this.state.listId);
+      this.setState(prevState => {
+        return {listId: data.list_id};
+      }, () => {
+          console.debug("new List ID: " + this.state.listId);
+      });
+    })
+    .catch(error => {
+        console.error(error);
+    });
+  }
+
+  newFollowList(event) {
+    this.setState(prevState => {
+      return {
+        users: [],
+        listId: null,
+        listName: null
+     };
+    });
+    this.nameInput.value = null;
+  }
+
   render() {
     const noTopBottomPadding = {
       paddingTop: 0,
@@ -51,85 +102,104 @@ export class FollowUsers extends React.Component {
       <div className="panel panel-primary">
         <div className="panel-heading">
           <i className="fas fa-sitemap fa-2x fa-flip-vertical"></i>
-          <span style={{ fontSize: "x-large", marginLeft: "0.55em", verticalAign: "middle" }}>
+          <span style={{fontSize: "x-large", marginLeft: "0.55em", verticalAign: "middle" }}>
             Follow users
-              </span>
+          </span>
         </div>
         <div className="panel-body">
-          <div className="text-muted">
-            Add a user to discover what they are listening to:
+            <span className="text-muted">
+                Add a user to discover what they are listening to:
+              </span>
+            <hr />
+            <div>
+              <div className="col-sm-6">
+                <div className="input-group">
+                  <span class="input-group-addon">Follow user</span>
+                  <input type="text" className="form-control" placeholder="Username…"
+                    ref={(input) => this.textInput = input}
+                  />
+                  <span className="input-group-btn">
+                    <button className="btn btn-primary" type="button" onClick={this.addUserToList} style={{lineHeight: "2em", marginTop: 0, marginBottom: 0}}>
+                      <span className="fa fa-plus-circle" aria-hidden="true"></span> Add
+                    </button>
+                  </span>
+                </div>
               </div>
-          <hr />
-          <div className="input-group">
-            <input type="text" className="form-control" placeholder="Username…"
-              ref={(input) => this.textInput = input}
-            />
-            <span className="input-group-btn btn-primary">
-              <button className="btn btn-primary" type="button" onClick={this.addUserToList}>
-                <span className="fa fa-plus-circle" aria-hidden="true"></span> Add
-              </button>
-            </span>
-          </div>
-          <table className="table table-condensed table-striped listens-table">
-            <thead>
-              <tr>
-                <th colSpan="2" width="50px">Order</th>
-                <th>User</th>
-                <th>Listening now</th>
-                <th width="50px"></th>
-                <th width="65px"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {this.state.users.map((user, index) => {
-                return (
-                  <tr key={user} className={this.props.playingNow[user] && "playing_now"} onDoubleClick={this.props.playListen.bind(this, this.props.playingNow[user])}>
-                    <td>
-                      {index + 1}
-                    </td>
-                    <td>
-                      <span className="btn-group btn-group-xs" role="group" aria-label="Reorder">
-                        {index > 0 &&
-                          <button className="btn btn-info"
-                            onClick={this.reorderUser.bind(this, index, index - 1)}>
-                            <span className="fa fa-chevron-up"></span>
-                          </button>
-                        }
-                        {index < this.state.users.length - 1 &&
-                          <button className="btn btn-info"
-                            onClick={this.reorderUser.bind(this, index, index + 1)}>
-                            <span className="fa fa-chevron-down"></span>
-                          </button>
-                        }
-                      </span>
-                    </td>
-                    <td>
-                      {user}
-                    </td>
-                    <td>
-                      {this.props.playingNow[user] &&
-                        <React.Fragment>
-                          {getTrackLink(this.props.playingNow[user])}
-                          <span className="small"> — {getArtistLink(this.props.playingNow[user])}</span>
-                        </React.Fragment>
-                      }
-                    </td>
-                    <td className="playButton">
-                      {this.props.playingNow[user] &&
-                        getPlayButton(this.props.playingNow[user], this.props.playListen.bind(this, this.props.playingNow[user]))
-                      }
-                    </td>
-                    <td style={noTopBottomPadding}>
-                      <button className="btn btn-danger" type="button" aria-label="Remove"
-                        onClick={this.removeUserFromList.bind(this, index)}>
-                        <span className="fa fa-trash-alt"></span>
+              <div className="col-sm-6">
+                <div className="input-group">
+                  <span class="input-group-addon">Save list</span>
+                  <input type="text" class="form-control" defaultValue={this.state.listName} placeholder="New list name" ref={(input) => this.nameInput = input} />
+                  <div class="input-group-btn">
+                    <button className="btn btn-primary" type="button" onClick={this.saveFollowList.bind(this)} style={{lineHeight: "2em", marginTop: 0, marginBottom: 0}}>
+                        <span className="fa fa-save" aria-hidden="true"></span> Save
                       </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    <button className="btn btn-danger" type="button" onClick={this.newFollowList.bind(this)} style={{lineHeight: "2em", marginTop: 0, marginBottom: 0}}>
+                      <span className="fa fa-times" aria-hidden="true"></span> Clear
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <table className="table table-condensed table-striped listens-table" style={{marginTop: "5em"}}>
+              <thead>
+                <tr>
+                  <th colSpan="2" width="50px">Order</th>
+                  <th>User</th>
+                  <th>Listening now</th>
+                  <th width="50px"></th>
+                  <th width="65px"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {this.state.users.map((user, index) => {
+                  return (
+                    <tr key={user} className={this.props.playingNow[user] && "playing_now"} onDoubleClick={this.props.playListen.bind(this, this.props.playingNow[user])}>
+                      <td>
+                        {index + 1}
+                      </td>
+                      <td>
+                        <span className="btn-group btn-group-xs" role="group" aria-label="Reorder">
+                          {index > 0 &&
+                            <button className="btn btn-info"
+                              onClick={this.reorderUser.bind(this, index, index - 1)}>
+                              <span className="fa fa-chevron-up"></span>
+                            </button>
+                          }
+                          {index < this.state.users.length - 1 &&
+                            <button className="btn btn-info"
+                              onClick={this.reorderUser.bind(this, index, index + 1)}>
+                              <span className="fa fa-chevron-down"></span>
+                            </button>
+                          }
+                        </span>
+                      </td>
+                      <td>
+                        {user}
+                      </td>
+                      <td>
+                        {this.props.playingNow[user] &&
+                          <React.Fragment>
+                            {getTrackLink(this.props.playingNow[user])}
+                            <span className="small"> — {getArtistLink(this.props.playingNow[user])}</span>
+                          </React.Fragment>
+                        }
+                      </td>
+                      <td className="playButton">
+                        {this.props.playingNow[user] &&
+                          getPlayButton(this.props.playingNow[user], this.props.playListen.bind(this, this.props.playingNow[user]))
+                        }
+                      </td>
+                      <td style={noTopBottomPadding}>
+                        <button className="btn btn-danger" type="button" aria-label="Remove"
+                          onClick={this.removeUserFromList.bind(this, index)}>
+                          <span className="fa fa-trash-alt"></span>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
         </div>
       </div>
     );
