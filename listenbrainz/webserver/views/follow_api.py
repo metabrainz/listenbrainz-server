@@ -3,6 +3,8 @@ import listenbrainz.db.follow_list as db_follow_list
 import listenbrainz.db.user as db_user
 
 from flask import Blueprint, request, jsonify
+from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz.webserver.rate_limiter import ratelimit
 from listenbrainz.webserver.views.api import _validate_auth_header
 from listenbrainz.webserver.views.api_tools import log_raise_400
 from werkzeug.exceptions import NotFound, Forbidden, Unauthorized
@@ -11,6 +13,8 @@ from listenbrainz.db.exceptions import DatabaseException
 follow_api_bp = Blueprint('follow_api_v1', __name__)
 
 @follow_api_bp.route("/save", methods=["POST", "OPTIONS"])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit
 def save_list():
     creator = _validate_auth_header()
     raw_data = request.get_data()
