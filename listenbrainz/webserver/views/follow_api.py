@@ -14,7 +14,7 @@ follow_api_bp = Blueprint('follow_api_v1', __name__)
 
 @follow_api_bp.route("/save", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
-@ratelimit
+@ratelimit()
 def save_list():
     creator = _validate_auth_header()
     raw_data = request.get_data()
