@@ -23,7 +23,7 @@ class RecentListens extends React.Component {
       followList: props.follow_list || [],
       playingNowByUser: {},
       saveUrl: props.save_url || '',
-      listName: props.follow_list_name || 'Untitled list',
+      listName: props.follow_list_name,
       listId: props.follow_list_id,
     };
     this.isCurrentListen = this.isCurrentListen.bind(this);
