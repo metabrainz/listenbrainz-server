@@ -7,7 +7,7 @@ export class FollowUsers extends React.Component {
     super(props);
     this.state = {
       users: props.followList || [],
-      saveUrl: props.saveUrl || "https://listenbrainz.org/follow/save",
+      saveUrl: props.saveUrl || window.location.origin + "/follow/save",
       listId: props.listId,
       listName: props.listName,
     }
