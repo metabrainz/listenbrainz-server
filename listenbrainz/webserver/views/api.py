@@ -1,4 +1,3 @@
-
 import ujson
 from flask import Blueprint, request, jsonify, current_app
 from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized, ServiceUnavailable, NotFound
@@ -168,9 +167,19 @@ def get_playing_now(user_name):
 @api_bp.route("/users/<user_list>/recent-listens")
 @ratelimit()
 def get_recent_listens_for_user_list(user_list):
+    """
+    Fetch the most recent listens for a comma separated list of users. Take care to properly HTTP escape
+    user names that contain commas!
+
+    :statuscode 200: Fetched listens successfully.
+    :statuscode 400: Your user list was incomplete or otherwise invalid.
+    :resheader Content-Type: *application/json*
+    """
 
     limit = _parse_int_arg("limit", 2)
     users = parse_user_list(user_list)
+    if not len(users):
+        raise BadRequest("user_list is empty or invalid.")
 
     db_conn = webserver.create_influx(current_app)
     listens = db_conn.fetch_recent_listens_for_users(
@@ -186,7 +195,6 @@ def get_recent_listens_for_user_list(user_list):
         'count': len(listen_data),
         'listens': listen_data,
     }})
-
 
 
 @api_bp.route('/latest-import', methods=['GET', 'POST', 'OPTIONS'])
