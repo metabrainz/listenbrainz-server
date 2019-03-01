@@ -15,7 +15,8 @@ export class FollowUsers extends React.Component {
     }
     this.addUserToList = this.addUserToList.bind(this);
     this.reorderUser = this.reorderUser.bind(this);
-    this.submitOnEnter = this.submitOnEnter.bind(this);
+    this.addFollowerOnEnter = this.addFollowerOnEnter.bind(this);
+    this.saveListOnEnter = this.saveListOnEnter.bind(this);
   }
 
   addUserToList(event) {
@@ -94,9 +95,15 @@ export class FollowUsers extends React.Component {
     this.nameInput.value = null;
   }
 
-  submitOnEnter(event) {
+  addFollowerOnEnter(event) {
     if(event.key === "Enter") {
-      this.addUserToList(event)
+      this.addUserToList(event);
+    }
+  }
+
+  saveListOnEnter(event) {
+    if(event.key === "Enter") {
+      this.saveFollowList(event);
     }
   }
 
@@ -124,7 +131,7 @@ export class FollowUsers extends React.Component {
                   <span className="input-group-addon">Follow user</span>
                   <input type="text" className="form-control" placeholder="Username…"
                     ref={(input) => this.textInput = input}
-                    onKeyPress={this.submitOnEnter}
+                    onKeyPress={this.addFollowerOnEnter}
                   />
                   <span className="input-group-btn">
                     <button className="btn btn-primary" type="button" onClick={this.addUserToList} style={{lineHeight: "2em", marginTop: 0, marginBottom: 0}}>
@@ -136,7 +143,9 @@ export class FollowUsers extends React.Component {
               <div className="col-sm-6">
                 <div className="input-group">
                   <span className="input-group-addon">Save list</span>
-                  <input type="text" className="form-control" defaultValue={this.state.listName} placeholder="New list name" ref={(input) => this.nameInput = input} />
+                  <input type="text" className="form-control" defaultValue={this.state.listName} placeholder="New list name" ref={(input) => this.nameInput = input} 
+                    onKeyPress={this.saveListOnEnter}
+                  />
                   <div className="input-group-btn">
                     <button className="btn btn-primary" type="button" onClick={this.saveFollowList.bind(this)} style={{lineHeight: "2em", marginTop: 0, marginBottom: 0}}>
                         <span className="fa fa-save" aria-hidden="true"></span> Save
