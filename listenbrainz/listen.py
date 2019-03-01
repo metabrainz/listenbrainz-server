@@ -270,7 +270,8 @@ class Listen(object):
         return self.timestamp
 
     def __repr__(self):
-        return str(self).encode("utf-8")
+        from pprint import pformat
+        return pformat(vars(self))
 
     def __unicode__(self):
         return "<Listen: user_name: %s, time: %s, artist_msid: %s, release_msid: %s, recording_msid: %s, artist_name: %s, track_name: %s>" % \

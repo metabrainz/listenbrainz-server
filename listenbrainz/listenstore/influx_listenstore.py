@@ -367,8 +367,9 @@ class InfluxListenStore(ListenStore):
         listens = []
         for user in user_list:
             for result in results.get_points(measurement=get_measurement_name(user)):
-                result['username'] = user
-                listens.append(Listen.from_influx(result))
+                l = Listen.from_influx(result)
+                l.data['user_name'] = user
+                listens.append(l)
 
         return listens
 
