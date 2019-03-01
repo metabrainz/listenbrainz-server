@@ -44,6 +44,9 @@ class RecentListens extends React.Component {
     if(this.state.mode === "listens" || this.state.mode === "follow"){
       this.connectWebsockets();
     }
+    if(this.state.mode === "follow" && !this.state.listens.length){
+      this.getRecentListensForFollowList();
+    }
   }
 
   connectWebsockets(){
@@ -88,8 +91,9 @@ class RecentListens extends React.Component {
       console.error("Expected array in handleFollowUserListChange, got", typeof userList);
       return;
     }
-    
+    let previousFollowList;
     this.setState(prevState => {
+      previousFollowList = prevState.followList;
       return {
         followList: userList,
         listens: this.sortListensByFollowUserRank(prevState.listens, userList)
@@ -104,6 +108,9 @@ class RecentListens extends React.Component {
       }
       console.debug("Emitting user list to websockets:", userList);
       this._socket.emit("json", {user: this.props.user.name, 'follow': userList});
+      if(_.difference(userList, previousFollowList)){
+        this.getRecentListensForFollowList();
+      }
     })
   }
 
@@ -162,6 +169,9 @@ class RecentListens extends React.Component {
   }
 
   getRecentListensForFollowList(){
+    if(!this.state.followList || !this.state.followList.length){
+      return
+    }
     this.APIService.getRecentListensForUsers(this.state.followList)
       .then(listens => 
         this.setState(prevState =>{
