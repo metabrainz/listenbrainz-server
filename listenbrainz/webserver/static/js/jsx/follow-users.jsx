@@ -87,7 +87,7 @@ export class FollowUsers extends React.Component {
         listId: null,
      };
     });
-    this.nameInput.value = "Untitled Follow List";
+    this.nameInput.value = null;
   }
 
   render() {
@@ -102,10 +102,8 @@ export class FollowUsers extends React.Component {
           <span style={{fontSize: "x-large", marginLeft: "0.55em", verticalAign: "middle" }}>
             Follow users
           </span>
-          <input type="text" placeholder={this.props.listName} style={{"float": "right"}}
-              ref={(input) => this.nameInput = input} />
-
-
+          <input type="text" placeholder="New list..." defaultValue={this.props.listName}
+              style={{"float": "right"}} ref={(input) => this.nameInput = input} />
         </div>
         <div className="panel-body">
           <div className="input-group">
