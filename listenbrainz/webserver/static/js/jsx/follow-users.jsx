@@ -1,5 +1,6 @@
 import {getArtistLink, getPlayButton, getTrackLink} from './utils.jsx';
 
+import * as _isNil from 'lodash.isnil';
 import React from 'react';
 
 export class FollowUsers extends React.Component {
@@ -48,7 +49,7 @@ export class FollowUsers extends React.Component {
 
   saveFollowList(event) {
     var listName = this.state.listName;
-    if (this.nameInput.value != undefined && this.nameInput.value != "") {
+    if (!_.isNil(this.nameInput.value) && this.nameInput.value.length) {
       listName = this.nameInput.value;
     }
     fetch(this.state.saveUrl, {
