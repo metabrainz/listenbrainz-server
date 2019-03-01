@@ -68,6 +68,9 @@ export class FollowUsers extends React.Component {
       });
       console.debug("new List ID: " + this.state.listId);
     })
+    .catch(error => {
+        console.error(error);
+    });
   }
 
   newFollowList(event) {
