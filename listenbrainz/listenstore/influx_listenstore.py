@@ -349,15 +349,18 @@ class InfluxListenStore(ListenStore):
 
 
     def fetch_recent_listens_for_users(self, user_list, limit = 2):
+        """ Fetch recent listens for a list of users, given a limit which applies per user. If you 
+            have a limit of 3 and 3 users you should get 9 listens if they are available.
+
+            user_list: A list containing the users for which you'd like to retrieve recent listens.
+            limit: the maximum number of listens for each user to fetch.
+        """
 
         escaped_user_list = []
         for user_name in user_list:
            escaped_user_list.append(get_escaped_measurement_name(user_name))
 
-        # Quote single quote characters which could be used to mount an injection attack.
-        # Sadly, influxdb does not provide a means to do this in the client library
-        query = 'SELECT username, * FROM ' + ",".join(escaped_user_list)
-        query += " ORDER BY time DESC LIMIT " + str(limit)
+        query = 'SELECT username, * FROM ' + ",".join(escaped_user_list) + " ORDER BY time DESC LIMIT " + str(limit)
         try:
             results = self.influx.query(query)
         except Exception as err:
@@ -368,6 +371,7 @@ class InfluxListenStore(ListenStore):
         for user in user_list:
             for result in results.get_points(measurement=get_measurement_name(user)):
                 l = Listen.from_influx(result)
+                # Set the user name where the UI stuff expects it to be
                 l.data['user_name'] = user
                 listens.append(l)
 
