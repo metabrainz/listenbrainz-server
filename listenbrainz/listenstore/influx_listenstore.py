@@ -347,6 +347,32 @@ class InfluxListenStore(ListenStore):
 
         return listens
 
+
+    def fetch_recent_listens_for_users(self, user_list, limit = 2):
+
+        escaped_user_list = []
+        for user_name in user_list:
+           escaped_user_list.append(get_escaped_measurement_name(user_name))
+
+        # Quote single quote characters which could be used to mount an injection attack.
+        # Sadly, influxdb does not provide a means to do this in the client library
+        query = 'SELECT username, * FROM ' + ",".join(escaped_user_list)
+        query += " ORDER BY time DESC LIMIT " + str(limit)
+        try:
+            results = self.influx.query(query)
+        except Exception as err:
+            self.log.error("Cannot query influx while getting listens for users: %s: %s", user_list, str(err), exc_info=True)
+            return []
+
+        listens = []
+        for user in user_list:
+            for result in results.get_points(measurement=get_measurement_name(user)):
+                result['username'] = user
+                listens.append(Listen.from_influx(result))
+
+        return listens
+
+
     def get_listens_batch_for_dump(self, username, dump_time, offset):
         # loop until we get this chunk of listens
         while True:

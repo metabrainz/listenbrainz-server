@@ -11,6 +11,18 @@ from werkzeug.exceptions import NotFound, BadRequest, InternalServerError
 
 follow_bp = Blueprint("follow", __name__)
 
+
+def parse_user_list(users):
+    user_list = []
+    for user in users.split(","):
+        user = user.strip()
+        if not user:
+            continue
+        user_list.append(user)
+
+    return user_list
+
+
 @follow_bp.route("/", defaults={'user_list': ""})
 @follow_bp.route("/<user_list>")
 @login_required
@@ -19,13 +31,7 @@ def follow(user_list):
         Allow an LB user to follow the stream of one or more other LB users.
     """
 
-    follow_list = []
-    for to_follow in user_list.split(","):
-        to_follow = to_follow.strip()
-        if not to_follow:
-            continue
-        follow_list.append(to_follow)
-
+    follow_list = parse_user_list(user_list)
     user_data = {
         "id"               : current_user.id,
         "name"             : current_user.musicbrainz_id,
