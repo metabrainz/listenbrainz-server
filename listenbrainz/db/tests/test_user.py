@@ -210,6 +210,9 @@ class UserTestCase(DatabaseTestCase):
         db_user.create(11, 'eleven')
         db_user.create(12, 'twelve')
 
+        users = db_user.validate_usernames([])
+        self.assertListEqual(users, [])
+
         users = db_user.validate_usernames(['eleven', 'twelve'])
         self.assertEqual(len(users), 2)
         self.assertEqual(users[0]['musicbrainz_id'], 'eleven')
@@ -228,6 +231,9 @@ class UserTestCase(DatabaseTestCase):
     def test_get_users_in_order(self):
         id1 = db_user.create(11, 'eleven')
         id2 = db_user.create(12, 'twelve')
+
+        users = db_user.get_users_in_order([])
+        self.assertListEqual(users, [])
 
         users = db_user.get_users_in_order([id1, id2])
         self.assertEqual(len(users), 2)
