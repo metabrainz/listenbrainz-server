@@ -15,6 +15,7 @@ export class FollowUsers extends React.Component {
     }
     this.addUserToList = this.addUserToList.bind(this);
     this.reorderUser = this.reorderUser.bind(this);
+    this.submitOnEnter = this.submitOnEnter.bind(this);
   }
 
   addUserToList(event) {
@@ -93,6 +94,12 @@ export class FollowUsers extends React.Component {
     this.nameInput.value = null;
   }
 
+  submitOnEnter(event) {
+    if(event.key === "Enter") {
+      this.addUserToList(event)
+    }
+  }
+
   render() {
     const noTopBottomPadding = {
       paddingTop: 0,
@@ -117,6 +124,7 @@ export class FollowUsers extends React.Component {
                   <span class="input-group-addon">Follow user</span>
                   <input type="text" className="form-control" placeholder="Username…"
                     ref={(input) => this.textInput = input}
+                    onKeyPress={this.submitOnEnter}
                   />
                   <span className="input-group-btn">
                     <button className="btn btn-primary" type="button" onClick={this.addUserToList} style={{lineHeight: "2em", marginTop: 0, marginBottom: 0}}>
