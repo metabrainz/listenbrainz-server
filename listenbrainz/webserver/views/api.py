@@ -4,6 +4,7 @@ from flask import Blueprint, request, jsonify, current_app
 from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized, ServiceUnavailable, NotFound
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz.webserver.views.follow import parse_user_list
 from listenbrainz import webserver
 import listenbrainz.db.user as db_user
 from listenbrainz.webserver.rate_limiter import ratelimit
@@ -162,6 +163,30 @@ def get_playing_now(user_name):
             'listens': listen_data,
         },
     })
+
+
+@api_bp.route("/users/<user_list>/recent-listens")
+@ratelimit()
+def get_recent_listens_for_user_list(user_list):
+
+    limit = _parse_int_arg("limit", 2)
+    users = parse_user_list(user_list)
+
+    db_conn = webserver.create_influx(current_app)
+    listens = db_conn.fetch_recent_listens_for_users(
+        users,
+        limit=limit
+    )
+    listen_data = []
+    for listen in listens:
+        listen_data.append(listen.to_api())
+
+    return jsonify({'payload': {
+        'user_list': user_list,
+        'count': len(listen_data),
+        'listens': listen_data,
+    }})
+
 
 
 @api_bp.route('/latest-import', methods=['GET', 'POST', 'OPTIONS'])
