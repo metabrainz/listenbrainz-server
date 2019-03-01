@@ -1,6 +1,7 @@
+import * as _isNil from 'lodash.isnil';
+
 import {getArtistLink, getPlayButton, getTrackLink} from './utils.jsx';
 
-import * as _isNil from 'lodash.isnil';
 import React from 'react';
 
 export class FollowUsers extends React.Component {
@@ -86,6 +87,7 @@ export class FollowUsers extends React.Component {
       return {
         users: [],
         listId: null,
+        listName: null
      };
     });
     this.nameInput.value = null;
@@ -103,98 +105,101 @@ export class FollowUsers extends React.Component {
           <span style={{fontSize: "x-large", marginLeft: "0.55em", verticalAign: "middle" }}>
             Follow users
           </span>
-          <input type="text" placeholder="New list..." defaultValue={this.props.listName}
-              style={{"float": "right"}} ref={(input) => this.nameInput = input} />
         </div>
         <div className="panel-body">
-          <div className="input-group">
             <span className="text-muted">
-              Add a user to discover what they are listening to:
-            </span>
-            <span className="input-group-btn btn-primary">
-              <button className="btn btn-primary" type="button" onClick={this.newFollowList.bind(this)}>
-                <span className="fa fa-plus" aria-hidden="true"></span> New List
-              </button>
-            </span>
-            <div style={{"width": "1px", "height": "100%"}}/>
-            <span className="input-group-btn btn-primary">
-              <button className="btn btn-primary" type="button" onClick={this.saveFollowList.bind(this)}>
-                <span className="fa fa-save" aria-hidden="true"></span> Save
-              </button>
-            </span>
-
-          </div>
-          <hr />
-          <div className="input-group">
-            <input type="text" className="form-control" placeholder="Username…"
-              ref={(input) => this.textInput = input}
-            />
-            <span className="input-group-btn btn-primary">
-              <button className="btn btn-primary" type="button" onClick={this.addUserToList}>
-                <span className="fa fa-plus-circle" aria-hidden="true"></span> Add
-              </button>
-            </span>
-          </div>
-          <table className="table table-condensed table-striped listens-table">
-            <thead>
-              <tr>
-                <th colSpan="2" width="50px">Order</th>
-                <th>User</th>
-                <th>Listening now</th>
-                <th width="50px"></th>
-                <th width="65px"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {this.state.users.map((user, index) => {
-                return (
-                  <tr key={user} className={this.props.playingNow[user] && "playing_now"} onDoubleClick={this.props.playListen.bind(this, this.props.playingNow[user])}>
-                    <td>
-                      {index + 1}
-                    </td>
-                    <td>
-                      <span className="btn-group btn-group-xs" role="group" aria-label="Reorder">
-                        {index > 0 &&
-                          <button className="btn btn-info"
-                            onClick={this.reorderUser.bind(this, index, index - 1)}>
-                            <span className="fa fa-chevron-up"></span>
-                          </button>
-                        }
-                        {index < this.state.users.length - 1 &&
-                          <button className="btn btn-info"
-                            onClick={this.reorderUser.bind(this, index, index + 1)}>
-                            <span className="fa fa-chevron-down"></span>
-                          </button>
-                        }
-                      </span>
-                    </td>
-                    <td>
-                      {user}
-                    </td>
-                    <td>
-                      {this.props.playingNow[user] &&
-                        <React.Fragment>
-                          {getTrackLink(this.props.playingNow[user])}
-                          <span className="small"> — {getArtistLink(this.props.playingNow[user])}</span>
-                        </React.Fragment>
-                      }
-                    </td>
-                    <td className="playButton">
-                      {this.props.playingNow[user] &&
-                        getPlayButton(this.props.playingNow[user], this.props.playListen.bind(this, this.props.playingNow[user]))
-                      }
-                    </td>
-                    <td style={noTopBottomPadding}>
-                      <button className="btn btn-danger" type="button" aria-label="Remove"
-                        onClick={this.removeUserFromList.bind(this, index)}>
-                        <span className="fa fa-trash-alt"></span>
+                Add a user to discover what they are listening to:
+              </span>
+            <hr />
+            <div>
+              <div className="col-sm-6">
+                <div className="input-group">
+                  <span class="input-group-addon">Follow user</span>
+                  <input type="text" className="form-control" placeholder="Username…"
+                    ref={(input) => this.textInput = input}
+                  />
+                  <span className="input-group-btn">
+                    <button className="btn btn-primary" type="button" onClick={this.addUserToList} style={{lineHeight: "2em", marginTop: 0, marginBottom: 0}}>
+                      <span className="fa fa-plus-circle" aria-hidden="true"></span> Add
+                    </button>
+                  </span>
+                </div>
+              </div>
+              <div className="col-sm-6">
+                <div className="input-group">
+                  <span class="input-group-addon">Save list</span>
+                  <input type="text" class="form-control" defaultValue={this.state.listName} placeholder="New list name" ref={(input) => this.nameInput = input} />
+                  <div class="input-group-btn">
+                    <button className="btn btn-primary" type="button" onClick={this.saveFollowList.bind(this)} style={{lineHeight: "2em", marginTop: 0, marginBottom: 0}}>
+                        <span className="fa fa-save" aria-hidden="true"></span> Save
                       </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    <button className="btn btn-danger" type="button" onClick={this.newFollowList.bind(this)} style={{lineHeight: "2em", marginTop: 0, marginBottom: 0}}>
+                      <span className="fa fa-times" aria-hidden="true"></span> Clear
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <table className="table table-condensed table-striped listens-table" style={{marginTop: "5em"}}>
+              <thead>
+                <tr>
+                  <th colSpan="2" width="50px">Order</th>
+                  <th>User</th>
+                  <th>Listening now</th>
+                  <th width="50px"></th>
+                  <th width="65px"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {this.state.users.map((user, index) => {
+                  return (
+                    <tr key={user} className={this.props.playingNow[user] && "playing_now"} onDoubleClick={this.props.playListen.bind(this, this.props.playingNow[user])}>
+                      <td>
+                        {index + 1}
+                      </td>
+                      <td>
+                        <span className="btn-group btn-group-xs" role="group" aria-label="Reorder">
+                          {index > 0 &&
+                            <button className="btn btn-info"
+                              onClick={this.reorderUser.bind(this, index, index - 1)}>
+                              <span className="fa fa-chevron-up"></span>
+                            </button>
+                          }
+                          {index < this.state.users.length - 1 &&
+                            <button className="btn btn-info"
+                              onClick={this.reorderUser.bind(this, index, index + 1)}>
+                              <span className="fa fa-chevron-down"></span>
+                            </button>
+                          }
+                        </span>
+                      </td>
+                      <td>
+                        {user}
+                      </td>
+                      <td>
+                        {this.props.playingNow[user] &&
+                          <React.Fragment>
+                            {getTrackLink(this.props.playingNow[user])}
+                            <span className="small"> — {getArtistLink(this.props.playingNow[user])}</span>
+                          </React.Fragment>
+                        }
+                      </td>
+                      <td className="playButton">
+                        {this.props.playingNow[user] &&
+                          getPlayButton(this.props.playingNow[user], this.props.playListen.bind(this, this.props.playingNow[user]))
+                        }
+                      </td>
+                      <td style={noTopBottomPadding}>
+                        <button className="btn btn-danger" type="button" aria-label="Remove"
+                          onClick={this.removeUserFromList.bind(this, index)}>
+                          <span className="fa fa-trash-alt"></span>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
         </div>
       </div>
     );
