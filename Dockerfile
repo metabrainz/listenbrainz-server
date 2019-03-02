@@ -1,6 +1,6 @@
-FROM metabrainz/python:3.6
+FROM metabrainz/python:3.7
 
-ENV DOCKERIZE_VERSION v0.2.0
+ENV DOCKERIZE_VERSION v0.6.1
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
@@ -28,8 +28,6 @@ RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
 
 RUN mkdir /code
 WORKDIR /code
-
-RUN pip3 install --no-cache-dir setuptools==36.0.1
 
 # MessyBrainz
 RUN git clone https://github.com/metabrainz/messybrainz-server.git messybrainz
