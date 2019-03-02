@@ -19,6 +19,7 @@ class APITestCase(IntegrationTestCase):
     def tearDown(self):
         r = Redis(host=self.app.config['REDIS_HOST'], port=self.app.config['REDIS_PORT'])
         r.flushall()
+        super(APITestCase, self).tearDown()
 
     def test_get_listens(self):
         """ Test to make sure that the api sends valid listens on get requests.
@@ -27,7 +28,8 @@ class APITestCase(IntegrationTestCase):
             payload = json.load(f)
 
         # send a listen
-        payload['payload'][0]['listened_at'] = int(time.time())
+        ts = int(time.time())
+        payload['payload'][0]['listened_at'] = ts
         response = self.send_data(payload)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
@@ -60,6 +62,9 @@ class APITestCase(IntegrationTestCase):
         self.assertTrue(is_valid_uuid(data['listens'][0]['recording_msid']))
         self.assertTrue(is_valid_uuid(data['listens'][0]['track_metadata']['additional_info']['artist_msid']))
         self.assertTrue(is_valid_uuid(data['listens'][0]['track_metadata']['additional_info']['release_msid']))
+
+        # check for latest listen timestamp
+        self.assertEqual(data['latest_listen_ts'], ts)
 
     def send_data(self, payload):
         """ Sends payload to api.submit_listen and return the response
