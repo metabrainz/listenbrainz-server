@@ -116,6 +116,14 @@ def get_listens(user_name):
     for listen in listens:
         listen_data.append(listen.to_api())
 
+    latest_listen = db_conn.fetch_listens(
+        user_name,
+        limit=1,
+        to_ts=max_ts,
+    )
+    latest_listen_ts = latest_listen[0].ts_since_epoch if len(latest_listen) > 0 else 0
+
+
     if min_ts:
         listen_data = listen_data[::-1]
 
@@ -123,6 +131,7 @@ def get_listens(user_name):
         'user_id': user_name,
         'count': len(listen_data),
         'listens': listen_data,
+        'latest_listen_ts': latest_listen_ts,
     }})
 
 
