@@ -140,6 +140,20 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
 
+    def test_fetch_recent_listens(self):
+        user = db_user.get_or_create(2, 'someuser')
+        user_name = user['musicbrainz_id']
+        self._create_test_data(user_name)
+
+        user2 = db_user.get_or_create(3, 'otheruser')
+        user_name2 = user['musicbrainz_id']
+        self._create_test_data(user_name2)
+
+        recent = self.logstore.fetch_recent_listens_for_users([user_name, user_name2], limit=1) 
+        self.assertEqual(len(recent), 2)
+
+        recent = self.logstore.fetch_recent_listens_for_users([user_name, user_name2]) 
+        self.assertEqual(len(recent), 4)
 
     def test_dump_listens(self):
         self._create_test_data(self.testuser_name)

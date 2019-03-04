@@ -1,8 +1,7 @@
-import * as _isNil from 'lodash.isnil';
-
 import {getArtistLink, getPlayButton, getTrackLink} from './utils.jsx';
 
 import React from 'react';
+import {isNil as _isNil} from 'lodash';
 
 export class FollowUsers extends React.Component {
   constructor(props) {
