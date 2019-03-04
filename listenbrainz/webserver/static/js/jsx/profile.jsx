@@ -108,7 +108,7 @@ class RecentListens extends React.Component {
       }
       console.debug("Emitting user list to websockets:", userList);
       this._socket.emit("json", {user: this.props.user.name, 'follow': userList});
-      if(_.difference(userList, previousFollowList)){
+      if(this.state.mode === "follow" && _.difference(userList, previousFollowList)){
         this.getRecentListensForFollowList();
       }
     })
@@ -169,7 +169,7 @@ class RecentListens extends React.Component {
   }
 
   getRecentListensForFollowList(){
-    if(!this.state.followList || !this.state.followList.length){
+    if(!this.state.followList.length){
       return
     }
     this.APIService.getRecentListensForUsers(this.state.followList)
