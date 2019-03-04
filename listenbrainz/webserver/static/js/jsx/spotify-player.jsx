@@ -1,7 +1,6 @@
-import * as _isEqual from 'lodash.isequal';
-
 import {PlaybackControls} from './playback-controls.jsx';
 import React from 'react';
+import {isEqual as _isEqual} from 'lodash';
 
 function getSpotifyUriFromListen(listen) {
   if (!listen || !listen.track_metadata || !listen.track_metadata.additional_info ||
