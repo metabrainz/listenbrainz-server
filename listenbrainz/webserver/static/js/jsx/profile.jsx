@@ -1,6 +1,5 @@
 'use strict';
 
-import * as _isEqual from 'lodash.isequal';
 import * as timeago from 'time-ago';
 
 import {getArtistLink, getPlayButton, getSpotifyEmbedUriFromListen, getTrackLink} from './utils.jsx';
@@ -10,6 +9,7 @@ import {FollowUsers} from './follow-users.jsx';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {SpotifyPlayer} from './spotify-player.jsx';
+import {isEqual as _isEqual} from 'lodash';
 import io from 'socket.io-client';
 
 class RecentListens extends React.Component {
