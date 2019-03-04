@@ -28,6 +28,7 @@ class RecentListens extends React.Component {
     };
     this.isCurrentListen = this.isCurrentListen.bind(this);
     this.handleCurrentListenChange = this.handleCurrentListenChange.bind(this);
+    this.handleSpotifyAccountError = this.handleSpotifyAccountError.bind(this);
     this.playListen = this.playListen.bind(this);
     this.sortListensByFollowUserRank = this.sortListensByFollowUserRank.bind(this);
     this.spotifyPlayer = React.createRef();
@@ -102,6 +103,9 @@ class RecentListens extends React.Component {
       console.debug("Emitting user list to websockets:", userList);
       this._socket.emit("json", {user: this.props.user.name, 'follow': userList});
     })
+  }
+  handleSpotifyAccountError(error){
+    this.setState({isSpotifyPremium: false})
   }
 
   playListen(listen){
@@ -268,13 +272,14 @@ class RecentListens extends React.Component {
             }
           </div>
           <div className="col-md-4" style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}>
-            {this.props.spotify_access_token ?
+            {this.props.spotify_access_token && this.state.isSpotifyPremium !== false ?
               <SpotifyPlayer
                 ref={this.spotifyPlayer}
                 listens={spotifyListens}
                 direction={this.state.mode === "follow" ? "up" : "down"}
                 spotify_access_token={this.props.spotify_access_token}
                 onCurrentListenChange={this.handleCurrentListenChange}
+                onAccountError={this.handleSpotifyAccountError}
                 currentListen={this.state.currentListen}
               /> :
               // Fallback embedded player
