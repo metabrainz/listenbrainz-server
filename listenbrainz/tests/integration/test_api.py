@@ -63,14 +63,16 @@ class APITestCase(IntegrationTestCase):
         self.assertTrue(is_valid_uuid(data['listens'][0]['track_metadata']['additional_info']['artist_msid']))
         self.assertTrue(is_valid_uuid(data['listens'][0]['track_metadata']['additional_info']['release_msid']))
 
+        # check for latest listen timestamp
+        self.assertEqual(data['latest_listen_ts'], ts)
+
+        # checkt that recent listens are fectched correctly
         url = url_for('api_v1.get_recent_listens_for_user_list', user_list = self.user['musicbrainz_id'])
         response = self.client.get(url, query_string = {'count': '1'})
         self.assert200(response)
         data = json.loads(response.data)['payload']
         self.assertEqual(data['count'], 2)
 
-        # check for latest listen timestamp
-        self.assertEqual(data['latest_listen_ts'], ts)
 
     def send_data(self, payload):
         """ Sends payload to api.submit_listen and return the response
