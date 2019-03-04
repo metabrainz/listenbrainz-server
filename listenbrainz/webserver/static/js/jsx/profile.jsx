@@ -30,15 +30,16 @@ class RecentListens extends React.Component {
     };
 
     this.connectWebsockets = this.connectWebsockets.bind(this);
+    this.getRecentListensForFollowList = this.getRecentListensForFollowList.bind(this);
+    this.handleCurrentListenChange = this.handleCurrentListenChange.bind(this);
+    this.handleFollowUserListChange = this.handleFollowUserListChange.bind(this);
+    this.handleSpotifyAccountError = this.handleSpotifyAccountError.bind(this);
+    this.isCurrentListen = this.isCurrentListen.bind(this);
     this.playListen = this.playListen.bind(this);
     this.receiveNewListen = this.receiveNewListen.bind(this);
     this.receiveNewPlayingNow = this.receiveNewPlayingNow.bind(this);
     this.sortListensByFollowUserRank = this.sortListensByFollowUserRank.bind(this);
     this.spotifyPlayer = React.createRef();
-    this.getRecentListensForFollowList = this.getRecentListensForFollowList.bind(this);
-    this.handleCurrentListenChange = this.handleCurrentListenChange.bind(this);
-    this.handleFollowUserListChange = this.handleFollowUserListChange.bind(this);
-    this.isCurrentListen = this.isCurrentListen.bind(this);
 
     this.APIService = new APIService(props.api_url || `${window.location.origin}/1`);
   }
@@ -115,6 +116,9 @@ class RecentListens extends React.Component {
         this.getRecentListensForFollowList();
       }
     })
+  }
+  handleSpotifyAccountError(error){
+    this.setState({isSpotifyPremium: false})
   }
 
   playListen(listen){
@@ -304,13 +308,14 @@ class RecentListens extends React.Component {
             }
           </div>
           <div className="col-md-4" style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}>
-            {this.props.spotify_access_token ?
+            {this.props.spotify_access_token && this.state.isSpotifyPremium !== false ?
               <SpotifyPlayer
                 ref={this.spotifyPlayer}
                 listens={spotifyListens}
                 direction={this.state.mode === "follow" ? "up" : "down"}
                 spotify_access_token={this.props.spotify_access_token}
                 onCurrentListenChange={this.handleCurrentListenChange}
+                onAccountError={this.handleSpotifyAccountError}
                 currentListen={this.state.currentListen}
               /> :
               // Fallback embedded player

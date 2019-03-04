@@ -66,7 +66,7 @@ export class SpotifyPlayer extends React.Component {
       },
     })
     .then(response =>{
-      if(response.status === 403){
+      if(response.status === 403 || response.status === 401){
         return this.handleAccountError(response.statusText);
       }
       if(!response.ok){
@@ -153,6 +153,9 @@ export class SpotifyPlayer extends React.Component {
     const errorMessage = 'Failed to validate Spotify premium account';
     console.error(errorMessage, error);
     this.setState({ accessToken: null, errorMessage });
+    if(typeof this.props.onAccountError === "function") {
+      this.props.onAccountError(error);
+    }
   }
 
   async togglePlay() {
