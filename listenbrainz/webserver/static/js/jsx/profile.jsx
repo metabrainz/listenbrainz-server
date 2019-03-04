@@ -28,7 +28,7 @@ class RecentListens extends React.Component {
       listName: props.follow_list_name,
       listId: props.follow_list_id,
     };
-
+    this.handleSpotifyAccountError = this.handleSpotifyAccountError.bind(this);
     this.connectWebsockets = this.connectWebsockets.bind(this);
     this.getRecentListensForFollowList = this.getRecentListensForFollowList.bind(this);
     this.handleCurrentListenChange = this.handleCurrentListenChange.bind(this);
