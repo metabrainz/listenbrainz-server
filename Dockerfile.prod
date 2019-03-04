@@ -1,8 +1,8 @@
-FROM metabrainz/python:3.6
+FROM metabrainz/python:3.7
 
 ARG deploy_env
 
-ENV DOCKERIZE_VERSION v0.2.0
+ENV DOCKERIZE_VERSION v0.6.1
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
@@ -27,7 +27,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends postgresql-client-$PG_MAJOR \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install uWSGI==2.0.13.1
+RUN pip3 install uWSGI==2.0.18
 
 RUN mkdir /code
 WORKDIR /code
@@ -43,7 +43,6 @@ RUN python3 setup.py install
 WORKDIR /code/listenbrainz
 COPY ./requirements.txt .
 RUN pip3 install -r requirements.txt
-RUN pip3 install setuptools==36.0.1
 
 # Node
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
