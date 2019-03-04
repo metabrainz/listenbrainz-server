@@ -17,7 +17,8 @@ export function getSpotifyEmbedUriFromListen(listen){
 export function getArtistLink(listen) {
   if (listen.track_metadata.additional_info.artist_mbids && listen.track_metadata.additional_info.artist_mbids.length)
   {
-    return (<a href={`http://musicbrainz.org/artist/${listen.track_metadata.additional_info.artist_mbids[0]}`}>
+    return (<a href={`http://musicbrainz.org/artist/${listen.track_metadata.additional_info.artist_mbids[0]}`}
+      target="_blank">
       {listen.track_metadata.artist_name}
     </a>);
   }
@@ -27,7 +28,8 @@ export function getArtistLink(listen) {
 export function getTrackLink(listen) {
   if (listen.track_metadata.additional_info.recording_mbid)
   {
-    return (<a href={`http://musicbrainz.org/recording/${listen.track_metadata.additional_info.recording_mbid}`}>
+    return (<a href={`http://musicbrainz.org/recording/${listen.track_metadata.additional_info.recording_mbid}`}
+      target="_blank">
       {listen.track_metadata.track_name}
     </a>);
   }
