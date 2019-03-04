@@ -43,3 +43,14 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assert200(resp)
         data = json.loads(resp.data)
         self.assertEqual(len(data), 3)
+
+    def test_user_page_latest_listen(self):
+        resp = self.send_listens()
+        self.assert200(resp)
+
+        time.sleep(1)
+
+        r = self.client.get(url_for('user.profile', user_name=self.user['musicbrainz_id']))
+        self.assert200(r)
+        props = json.loads(self.get_context_variable('props'))
+        self.assertEqual(props['latest_listen_ts'], 2)

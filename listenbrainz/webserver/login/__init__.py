@@ -2,6 +2,7 @@ from flask import redirect, url_for, current_app, request
 from flask_login import LoginManager, UserMixin, current_user
 from functools import wraps
 import listenbrainz.db.user as db_user
+from werkzeug.exceptions import Unauthorized
 
 login_manager = LoginManager()
 login_manager.login_view = 'login.index'
