@@ -165,6 +165,7 @@ def get_playing_now(user_name):
 
 
 @api_bp.route("/users/<user_list>/recent-listens")
+@crossdomain(headers='Authorization, Content-Type')
 @ratelimit()
 def get_recent_listens_for_user_list(user_list):
     """
