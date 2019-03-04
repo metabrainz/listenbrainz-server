@@ -199,6 +199,7 @@ class Listen(object):
             'track_metadata': track_metadata,
             'listened_at': self.ts_since_epoch,
             'recording_msid': self.recording_msid,
+            'user_name': self.user_name,
         }
 
         return data
