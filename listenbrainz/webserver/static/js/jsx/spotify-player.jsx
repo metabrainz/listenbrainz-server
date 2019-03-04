@@ -151,11 +151,11 @@ export class SpotifyPlayer extends React.Component {
   }
 
   handleAccountError(error) {
-    const errorMessage = 'Failed to validate Spotify premium account';
+    const errorMessage = 'Failed to validate Spotify account';
     console.error(errorMessage, error);
     this.setState({ accessToken: null, errorMessage });
     if(typeof this.props.onAccountError === "function") {
-      this.props.onAccountError(error);
+      this.props.onAccountError(`${errorMessage} ${error}`);
     }
   }
 
