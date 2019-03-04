@@ -46,6 +46,7 @@ def follow(user_list):
         "follow_list": follow_list_members,
         "spotify_access_token": spotify_access_token,
         "web_sockets_server_url": current_app.config["WEBSOCKETS_SERVER_URL"],
+        "api_url": current_app.config["API_URL"],
         "save_url": "{}/1/follow/save".format(current_app.config["API_URL"]),
         "follow_list_name": default_list["name"],
         "follow_list_id": default_list["id"] if "id" in default_list else None,
