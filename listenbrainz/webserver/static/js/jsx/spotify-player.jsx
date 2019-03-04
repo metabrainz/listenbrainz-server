@@ -199,7 +199,7 @@ export class SpotifyPlayer extends React.Component {
     if (!this.state.accessToken)
     {
       console.error("No spotify acces_token");
-      const noTokenErrorMessage = <span>No Spotify access token. Please try to <a href="/profile/connect-spotify">link your account</a> and refresh this page</span>;
+      const noTokenErrorMessage = <span>No Spotify access token. Please try to <a href="/profile/connect-spotify" target="_blank">link your account</a> and refresh this page</span>;
       this.handleError(noTokenErrorMessage);
       return;
     }
@@ -213,7 +213,7 @@ export class SpotifyPlayer extends React.Component {
     });
 
     // Error handling
-    const authErrorMessage = <span>Spotify authentication error. <br /><button onClick={this.connectSpotifyPlayer} className="btn btn-primary">Reconnect</button> or <a href="/profile/connect-spotify">relink your Spotify account</a></span>
+    const authErrorMessage = <span>Spotify authentication error. <br /><button onClick={this.connectSpotifyPlayer} className="btn btn-primary">Reconnect</button> or <a href="/profile/connect-spotify" target="_blank">relink your Spotify account</a></span>
     this._spotifyPlayer.on('initialization_error', this.handleError);
     this._spotifyPlayer.on('authentication_error', error => this.handleError(authErrorMessage));
     this._spotifyPlayer.on('account_error', this.handleAccountError);

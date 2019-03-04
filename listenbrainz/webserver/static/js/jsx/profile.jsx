@@ -282,7 +282,9 @@ class RecentListens extends React.Component {
                                 </abbr>
                               </td>
                             }
-                            {(this.state.mode === "follow" || this.state.mode === "recent") && <td><a href={`/user/${listen.user_name}`}>{listen.user_name}</a></td>}
+                            {(this.state.mode === "follow" || this.state.mode === "recent") &&
+                              <td><a href={`/user/${listen.user_name}`} target="_blank">{listen.user_name}</a></td>
+                            }
                             <td className="playButton">{getPlayButton(listen, this.playListen.bind(this, listen))}</td>
                           </tr>
                         )
