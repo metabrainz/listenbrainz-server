@@ -1,6 +1,6 @@
 import ujson
 from flask import Blueprint, request, jsonify, current_app
-from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized, ServiceUnavailable, NotFound
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.views.follow import parse_user_list
@@ -68,10 +68,10 @@ def submit_listen():
 
     try:
         insert_payload(payload, user, listen_type=_get_listen_type(data['listen_type']))
-    except ServiceUnavailable as e:
+    except APIServiceUnavailable as e:
         raise
     except Exception as e:
-        raise InternalServerError("Something went wrong. Please try again.")
+        raise APIInternalServerError("Something went wrong. Please try again.")
 
     return jsonify({'status': 'ok'})
 
@@ -152,7 +152,7 @@ def get_playing_now(user_name):
 
     user = db_user.get_by_mb_id(user_name)
     if user is None:
-        raise NotFound("Cannot find user: %s" % user_name)
+        raise APINotFound("Cannot find user: %s" % user_name)
 
     playing_now_listen = redis_connection._redis.get_playing_now(user['id'])
     listen_data = []
@@ -189,7 +189,7 @@ def get_recent_listens_for_user_list(user_list):
     limit = _parse_int_arg("limit", 2)
     users = parse_user_list(user_list)
     if not len(users):
-        raise BadRequest("user_list is empty or invalid.")
+        raise APIBadRequest("user_list is empty or invalid.")
 
     db_conn = webserver.create_influx(current_app)
     listens = db_conn.fetch_recent_listens_for_users(
@@ -241,7 +241,7 @@ def latest_import():
         user_name = request.args.get('user_name', '')
         user = db_user.get_by_mb_id(user_name)
         if user is None:
-            raise NotFound("Cannot find user: {user_name}".format(user_name=user_name))
+            raise APINotFound("Cannot find user: {user_name}".format(user_name=user_name))
         return jsonify({
                 'musicbrainz_id': user['musicbrainz_id'],
                 'latest_import': 0 if not user['latest_import'] else int(user['latest_import'].strftime('%s'))
@@ -252,13 +252,13 @@ def latest_import():
         try:
             ts = ujson.loads(request.get_data()).get('ts', 0)
         except ValueError:
-            raise BadRequest('Invalid data sent')
+            raise APIBadRequest('Invalid data sent')
 
         try:
             db_user.increase_latest_import(user['musicbrainz_id'], int(ts))
         except DatabaseException as e:
             current_app.logger.error("Error while updating latest import: {}".format(e))
-            raise InternalServerError('Could not update latest_import, try again')
+            raise APIInternalServerError('Could not update latest_import, try again')
 
         return jsonify({'status': 'ok'})
 
@@ -277,7 +277,7 @@ def validate_token():
     """
     auth_token = request.args.get('token', '')
     if not auth_token:
-        raise BadRequest("You need to provide an Authorization token.")
+        raise APIBadRequest("You need to provide an Authorization token.")
     user = db_user.get_by_token(auth_token)
     if user is None:
         return jsonify({
@@ -290,13 +290,20 @@ def validate_token():
             'message': 'Token valid.'
         })
 
+
+@api_bp.route('/refresh-spotify-token', methods=['POST'])
+@crossdomain(headers='Authorization, Content-Type')
+def refresh_spotify_token():
+    pass
+
+
 def _parse_int_arg(name, default=None):
     value = request.args.get(name)
     if value:
         try:
             return int(value)
         except ValueError:
-            raise BadRequest("Invalid %s argument: %s" % (name, value))
+            raise APIBadRequest("Invalid %s argument: %s" % (name, value))
     else:
         return default
 
@@ -304,15 +311,15 @@ def _parse_int_arg(name, default=None):
 def _validate_auth_header():
     auth_token = request.headers.get('Authorization')
     if not auth_token:
-        raise Unauthorized("You need to provide an Authorization header.")
+        raise APIUnauthorized("You need to provide an Authorization header.")
     try:
         auth_token = auth_token.split(" ")[1]
     except IndexError:
-        raise Unauthorized("Provided Authorization header is invalid.")
+        raise APIUnauthorized("Provided Authorization header is invalid.")
 
     user = db_user.get_by_token(auth_token)
     if user is None:
-        raise Unauthorized("Invalid authorization token.")
+        raise APIUnauthorized("Invalid authorization token.")
 
     return user
 

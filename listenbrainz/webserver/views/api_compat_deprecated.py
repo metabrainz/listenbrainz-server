@@ -196,7 +196,7 @@ def _get_session(session_id):
 
     session = Session.load(session_id)
     if session is None:
-        raise BadRequest
+        raise BadRequest("Session not found")
     return session
 
 
