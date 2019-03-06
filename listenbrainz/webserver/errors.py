@@ -3,9 +3,50 @@ from yattag import Doc
 import yattag
 import ujson
 import collections
-from listenbrainz.webserver import API_PREFIX
 
 LastFMError = collections.namedtuple('LastFMError', ['code', 'message'])
+
+class APIError(Exception):
+    def __init__(self, message, status_code, payload=None):
+        super(APIError, self).__init__()
+        self.message = message
+        self.status_code = status_code
+        self.payload = payload
+
+    def to_dict(self):
+        rv = dict(self.payload or ())
+        rv['code'] = self.status_code
+        rv['error'] = self.message
+        return rv
+
+    def __str__(self):
+        return self.message
+
+
+class APINotFound(APIError):
+    def __init__(self, message, payload=None):
+        super(APINotFound, self).__init__(message, 404, payload)
+
+
+class APIUnauthorized(APIError):
+    def __init__(self, message, payload=None):
+        super(APIUnauthorized, self).__init__(message, 401, payload)
+
+
+class APIBadRequest(APIError):
+    def __init__(self, message, payload=None):
+        super(APIBadRequest, self).__init__(message, 400, payload)
+
+
+class APIInternalServerError(APIError):
+    def __init__(self, message, payload=None):
+        super(APIInternalServerError, self).__init__(message, 500, payload)
+
+
+class APIServiceUnavailable(APIError):
+    def __init__(self, message, payload=None):
+        super(APIServiceUnavailable, self).__init__(message, 503, payload)
+
 
 # List of errors compatible with LastFM messages for API_compat.
 class CompatError(object):
@@ -71,12 +112,6 @@ def init_error_handlers(app):
         resp.headers['Access-Control-Allow-Origin'] = '*'
         return resp, code
 
-    def json_error_wrapper(error, code):
-        return jsonify({
-            'code': code,
-            'error': error.description,
-            }), code
-
     def handle_error(error, code):
         """ Returns appropriate error message on HTTP exceptions
 
@@ -87,10 +122,9 @@ def init_error_handlers(app):
                 A Response which will be a json error if request was made to the LB api and an html page
                 otherwise
         """
-        if request.path.startswith(API_PREFIX) or app.config.get('IS_API_COMPAT_APP', False):
-            return json_error_wrapper(error, code)
-        else:
-            return error_wrapper('errors/{code}.html'.format(code=code), error, code)
+        if current_app.config.get('IS_API_COMPAT_APP'):
+            return jsonify({'code': code, 'error': error.description}), code
+        return error_wrapper('errors/{code}.html'.format(code=code), error, code)
 
     @app.errorhandler(400)
     def bad_request(error):
@@ -98,7 +132,7 @@ def init_error_handlers(app):
 
     @app.errorhandler(401)
     def unauthorized(error):
-        return json_error_wrapper(error, 401)
+        return handle_error(error, 401)
 
     @app.errorhandler(403)
     def forbidden(error):
@@ -119,6 +153,10 @@ def init_error_handlers(app):
     @app.errorhandler(503)
     def service_unavailable(error):
         return handle_error(error, 503)
+
+    @app.errorhandler(APIError)
+    def api_error(error):
+        return jsonify(error.to_dict()), error.status_code
 
     # Handle error of API_compat
     @app.errorhandler(InvalidAPIUsage)

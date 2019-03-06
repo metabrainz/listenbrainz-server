@@ -11,7 +11,7 @@ from flask import current_app
 from listenbrainz.listen import Listen
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
 from listenbrainz.webserver.external import messybrainz
-from werkzeug.exceptions import InternalServerError, ServiceUnavailable, BadRequest
+from listenbrainz.webserver.errors import APIInternalServerError, APIServiceUnavailable, APIBadRequest
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
 MAX_LISTEN_SIZE = 10240
@@ -43,10 +43,11 @@ def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
     try:
         augmented_listens = _get_augmented_listens(payload, user, listen_type)
         _send_listens_to_queue(listen_type, augmented_listens)
-    except (InternalServerError, ServiceUnavailable) as e:
+    except (APIInternalServerError, APIServiceUnavailable) as e:
         raise
     except Exception as e:
-        print(e)
+        current_app.logger.error("Error while inserting payload: %s", str(e), exc_info=True)
+        raise APIInternalServerError("Something went wrong. Please try again.")
     return augmented_listens
 
 
@@ -80,7 +81,7 @@ def _send_listens_to_queue(listen_type, listens):
                     submit.append(listen)
             except Exception as e:
                 current_app.logger.error("Redis rpush playing_now write error: " + str(e))
-                raise ServiceUnavailable("Cannot record playing_now at this time.")
+                raise APIServiceUnavailable("Cannot record playing_now at this time.")
         else:
             submit.append(listen)
 
@@ -91,7 +92,7 @@ def _send_listens_to_queue(listen_type, listens):
             rabbitmq_connection.init_rabbitmq_connection(current_app)
         except ConnectionError as e:
             current_app.logger.error('Cannot connect to RabbitMQ: %s' % str(e))
-            raise ServiceUnavailable('Cannot submit listens to queue, please try again later.')
+            raise APIServiceUnavailable('Cannot submit listens to queue, please try again later.')
 
         if listen_type == LISTEN_TYPE_PLAYING_NOW:
            exchange = current_app.config['PLAYING_NOW_EXCHANGE']
@@ -236,7 +237,7 @@ def _messybrainz_lookup(listens):
     except messybrainz.exceptions.NoDataFoundException:
         return []
     except messybrainz.exceptions.ErrorAddingException as e:
-        raise ServiceUnavailable(str(e))
+        raise APIServiceUnavailable(str(e))
 
     augmented_listens = []
     for listen, messybrainz_resp in zip(listens, msb_responses['payload']):
@@ -250,7 +251,7 @@ def _messybrainz_lookup(listens):
             listen['track_metadata']['additional_info']['artist_msid'] = messybrainz_resp['artist_msid']
         except KeyError:
             current_app.logger.error("MessyBrainz did not return a proper set of ids")
-            raise InternalServerError
+            raise APIInternalServerError
 
         try:
             listen['track_metadata']['additional_info']['release_msid'] = messybrainz_resp['release_msid']
@@ -284,7 +285,7 @@ def log_raise_400(msg, data=""):
         data = ujson.dumps(data)
 
     current_app.logger.debug("BadRequest: %s\nJSON: %s" % (msg, data))
-    raise BadRequest(msg)
+    raise APIBadRequest(msg)
 
 
 def verify_mbid_validity(listen, key, multi):
@@ -340,7 +341,7 @@ def publish_data_to_queue(data, exchange, queue, error_msg):
             )
     except pika.exceptions.ConnectionClosed as e:
         current_app.logger.error("Connection to rabbitmq closed while trying to publish: %s" % str(e), exc_info=True)
-        raise ServiceUnavailable(error_msg)
+        raise APIServiceUnavailable(error_msg)
     except Exception as e:
         current_app.logger.error("Cannot publish to rabbitmq channel: %s / %s" % (type(e).__name__, str(e)), exc_info=True)
-        raise ServiceUnavailable(error_msg)
+        raise APIServiceUnavailable(error_msg)
