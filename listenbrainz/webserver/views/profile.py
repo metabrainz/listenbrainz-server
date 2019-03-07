@@ -1,6 +1,7 @@
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
+from listenbrainz.webserver.decorators import crossdomain
 import os
 import re
 import ujson
@@ -8,10 +9,11 @@ import zipfile
 
 
 from datetime import datetime
-from flask import Blueprint, render_template, request, url_for, redirect, current_app, make_response
+from flask import Blueprint, render_template, request, url_for, redirect, current_app, make_response, jsonify
 from flask_login import current_user, login_required
 import spotipy.oauth2
 from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
+from listenbrainz.webserver.errors import APIBadRequest, APIServiceUnavailable, APINotFound
 from werkzeug.utils import secure_filename
 
 from listenbrainz import webserver
@@ -19,6 +21,7 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain import spotify
 from listenbrainz.stats.utils import construct_stats_queue_key
 from listenbrainz.webserver import flash
+from listenbrainz.webserver.login import api_login_required
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.influx_connection import _influx
 from listenbrainz.webserver.utils import sizeof_readable
@@ -258,3 +261,23 @@ def connect_spotify_callback():
         flash.warn('Unable to authenticate with Spotify (error {})'.format(e.args[0]))
 
     return redirect(url_for('profile.connect_spotify'))
+
+
+@profile_bp.route('/refresh-spotify-token', methods=['GET'])
+@crossdomain()
+@api_login_required
+def refresh_spotify_token():
+    spotify_user = spotify.get_user(current_user.id)
+    if not spotify_user:
+        raise APINotFound("User has not authenticated to Spotify")
+    if spotify_user.token_expired:
+        try:
+            spotify_user = spotify.refresh_user_token(spotify_user)
+        except spotify.SpotifyAPIError:
+            raise APIServiceUnvailable("Cannot refresh Spotify token right now")
+
+    return jsonify({
+        'id': current_user.id,
+        'musicbrainz_id': current_user.musicbrainz_id,
+        'user_token': spotify_user.user_token,
+    })

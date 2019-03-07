@@ -3,6 +3,7 @@ from flask_login import LoginManager, UserMixin, current_user
 from functools import wraps
 import listenbrainz.db.user as db_user
 from werkzeug.exceptions import Unauthorized
+from listenbrainz.webserver.errors import APIUnauthorized
 
 login_manager = LoginManager()
 login_manager.login_view = 'login.index'
@@ -49,6 +50,16 @@ def login_forbidden(f):
     def decorated(*args, **kwargs):
         if not current_user.is_anonymous:
             return redirect(url_for('index.index'))
+        return f(*args, **kwargs)
+
+    return decorated
+
+
+def api_login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not current_user.is_authenticated:
+            raise APIUnauthorized("You must be logged in to access this endpoint")
         return f(*args, **kwargs)
 
     return decorated
