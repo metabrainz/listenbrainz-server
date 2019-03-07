@@ -87,7 +87,12 @@ class RecentListens extends React.Component {
       console.error("Trying to set sort method to unrecognized:",method);
       return;
     }
-    this.setState({sortBy: method});
+    this.setState({sortBy: method},()=>{
+      //Sort listens after changing sortBy
+      this.setState(prevState => {
+        return {listens: this.sortListens(prevState.listens, prevState)}
+      })
+    });
   }
 
   sortListens(listens, state){
@@ -285,19 +290,23 @@ class RecentListens extends React.Component {
         }
         <div className="row">
           <div className="col-md-8">
-            <h3>{(this.state.mode === "listens" || this.state.mode === "recent" )? "Recent listens" : "Playlist"}</h3>
+            {this.state.mode !== "listens" && 
+              <div className="dropdown pull-right">
+                <button className="btn btn-info dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                  Sort by {_.startCase(this.state.sortBy)}
+                  &nbsp;<span className="caret"></span>
+                </button>
+                <ul className="dropdown-menu" aria-labelledby="dropdownMenu1">
+                  <li><a onClick={this.setSortMethod.bind(this, "time")}>Time</a></li>
+                  <li><a onClick={this.setSortMethod.bind(this, "username")}>Username</a></li>
+                  {this.state.mode === "follow" &&
+                    <li><a onClick={this.setSortMethod.bind(this, "followList")}>Follow list</a></li>
+                  }
+                </ul>
+              </div>
+            }
 
-            <div className="dropdown pull-right">
-              <button className="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                Sort by
-                <span className="caret"></span>
-              </button>
-              <ul className="dropdown-menu" aria-labelledby="dropdownMenu1">
-                <li><a onClick={this.setSortMethod.bind(this, "time")}>Time</a></li>
-                {(this.state.mode === "follow" || this.state.mode === "recent" ) && <li><a onClick={this.setSortMethod.bind(this, "username")}>Username</a></li>}
-                {this.state.mode === "follow" && <li><a onClick={this.setSortMethod.bind(this, "followList")}>Follow list</a></li>}
-              </ul>
-            </div>
+            <h3>{(this.state.mode === "listens" || this.state.mode === "recent" )? "Recent listens" : "Playlist"}</h3>
 
             {!this.state.listens.length &&
               <div className="lead text-center">
