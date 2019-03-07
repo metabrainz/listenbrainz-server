@@ -2,14 +2,17 @@
 
 import * as timeago from 'time-ago';
 
+import { faListUl, faSort } from '@fortawesome/free-solid-svg-icons'
 import {getArtistLink, getPlayButton, getSpotifyEmbedUriFromListen, getTrackLink} from './utils.jsx';
 
 import APIService from './api-service';
 import {FollowUsers} from './follow-users.jsx';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {SpotifyPlayer} from './spotify-player.jsx';
 import {isEqual as _isEqual} from 'lodash';
+import { faSpotify } from '@fortawesome/free-brands-svg-icons'
 import io from 'socket.io-client';
 
 class RecentListens extends React.Component {
@@ -301,7 +304,7 @@ class RecentListens extends React.Component {
                 <p>No listens yet</p>
                 {this.state.mode === "follow" &&
                   <div title="Load recent listens" className="btn btn-primary" onClick={this.getRecentListensForFollowList}>
-                    <i className="fas fa-list-ul"></i>&nbsp;&nbsp;Load recent listens
+                    <FontAwesomeIcon icon={faListUl}/>&nbsp;&nbsp;Load recent listens
                   </div>
                 }
               </div>
@@ -313,8 +316,8 @@ class RecentListens extends React.Component {
                     <tr>
                       <th>Track</th>
                       <th>Artist</th>
-                      <th>Time</th>
-                      {(this.state.mode === "follow" || this.state.mode === "recent") && <th>User</th>}
+                      <th>Time {this.state.sortBy === "time" && <FontAwesomeIcon icon={faSort}/>}</th>
+                      {(this.state.mode === "follow" || this.state.mode === "recent") && <th>User {(this.state.sortBy === "username" || this.state.sortBy === "followList") && <FontAwesomeIcon icon={faSort}/>}</th>}
                       <th width="50px"></th>
                     </tr>
                   </thead>
@@ -329,7 +332,7 @@ class RecentListens extends React.Component {
                             <td>{getTrackLink(listen)}</td>
                             <td>{getArtistLink(listen)}</td>
                             {listen.playing_now ?
-                              <td><span className="fab fa-spotify" aria-hidden="true"></span> Playing now</td>
+                              <td><FontAwesomeIcon icon={faSpotify}/> Playing now</td>
                               :
                               <td>
                                 <abbr title={listen.listened_at_iso}>
