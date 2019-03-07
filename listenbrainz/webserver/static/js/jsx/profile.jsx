@@ -83,11 +83,12 @@ class RecentListens extends React.Component {
   }
 
   setSortMethod(method){
+    let safeMethod = method;
     if (["time","username","followList"].indexOf(method) === -1){
       console.error("Trying to set sort method to unrecognized:",method);
-      return;
+      safeMethod = "time";
     }
-    this.setState({sortBy: method},()=>{
+    this.setState({sortBy: safeMethod},()=>{
       //Sort listens after changing sortBy
       this.setState(prevState => {
         return {listens: this.sortListens(prevState.listens, prevState)}
@@ -124,10 +125,6 @@ class RecentListens extends React.Component {
           sortFunction = (a, b) => state.followList.indexOf(b.user_name) - state.followList.indexOf(a.user_name)
         }
         sortedListens = listensToSort.sort(sortFunction);
-      }
-      else {
-        console.error("Cannot sort with unrecognized method",state.sortBy);
-        return listens;
       }
 
       let reassembledListens;
