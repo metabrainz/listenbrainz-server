@@ -2,7 +2,6 @@
 
 import * as timeago from 'time-ago';
 
-import { faListUl, faSort } from '@fortawesome/free-solid-svg-icons'
 import {getArtistLink, getPlayButton, getSpotifyEmbedUriFromListen, getTrackLink} from './utils.jsx';
 
 import APIService from './api-service';
@@ -12,6 +11,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import {SpotifyPlayer} from './spotify-player.jsx';
 import {isEqual as _isEqual} from 'lodash';
+import { faListUl } from '@fortawesome/free-solid-svg-icons'
 import { faSpotify } from '@fortawesome/free-brands-svg-icons'
 import io from 'socket.io-client';
 
@@ -325,8 +325,10 @@ class RecentListens extends React.Component {
                     <tr>
                       <th>Track</th>
                       <th>Artist</th>
-                      <th>Time {this.state.sortBy === "time" && <FontAwesomeIcon icon={faSort}/>}</th>
-                      {(this.state.mode === "follow" || this.state.mode === "recent") && <th>User {(this.state.sortBy === "username" || this.state.sortBy === "followList") && <FontAwesomeIcon icon={faSort}/>}</th>}
+                      <th>Time</th>
+                      {(this.state.mode === "follow" || this.state.mode === "recent") &&
+                        <th>User</th>
+                      }
                       <th width="50px"></th>
                     </tr>
                   </thead>
