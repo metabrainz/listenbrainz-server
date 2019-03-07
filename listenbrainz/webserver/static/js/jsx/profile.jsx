@@ -27,6 +27,8 @@ class RecentListens extends React.Component {
       saveUrl: props.save_url || '',
       listName: props.follow_list_name,
       listId: props.follow_list_id,
+      direction: "down",
+      sortBy: props.mode === "follow" ? "followList" : "time"
     };
     this.handleSpotifyAccountError = this.handleSpotifyAccountError.bind(this);
     this.connectWebsockets = this.connectWebsockets.bind(this);
@@ -38,7 +40,7 @@ class RecentListens extends React.Component {
     this.playListen = this.playListen.bind(this);
     this.receiveNewListen = this.receiveNewListen.bind(this);
     this.receiveNewPlayingNow = this.receiveNewPlayingNow.bind(this);
-    this.sortListensByFollowUserRank = this.sortListensByFollowUserRank.bind(this);
+    this.sortListens = this.sortListens.bind(this);
     this.spotifyPlayer = React.createRef();
 
     this.APIService = new APIService(props.api_url || `${window.location.origin}/1`);
@@ -77,17 +79,57 @@ class RecentListens extends React.Component {
     });
   }
 
-  sortListensByFollowUserRank(listens, userList){
-    if(userList.length <= 1){
-      return listens;
+  setSortMethod(method){
+    if (["time","username","followList"].indexOf(method) === -1){
+      console.error("Trying to set sort method to unrecognized:",method);
+      return;
     }
-    const currentListenIndex = listens.indexOf(this.state.currentListen);
-    let ignoredPastListens = [];
-    if(currentListenIndex !== -1){
-      ignoredPastListens = listens.splice(currentListenIndex);
-    }
-    const sortFunction = (a, b) => userList.indexOf(b.user_name) - userList.indexOf(a.user_name)
-    return listens.sort(sortFunction).concat(ignoredPastListens);
+    this.setState({sortBy: method});
+  }
+
+  sortListens(listens, state){
+      const currentListenIndex = listens.indexOf(state.currentListen);
+      let listensToSort, sortedListens;
+      let pastListens = [];
+
+      if(currentListenIndex === -1){
+        listensToSort = listens;
+      } else if (state.direction === "down"){
+        listensToSort = listens.splice(currentListenIndex);
+        pastListens = listens;
+      }  else {
+        pastListens = listens.splice(currentListenIndex);
+        listensToSort = listens;
+      }
+
+      if (state.mode === "listens" || state.sortBy === "time") {
+        sortedListens = _.orderBy(listensToSort, "listened_at", "desc");
+      }
+      else if (state.sortBy === "username"){
+        sortedListens = _.sortBy(listensToSort, "user_name");
+      }
+      else if (state.sortBy === "followList") {
+        let sortFunction;
+        if (state.direction === "down"){
+          sortFunction = (a, b) => state.followList.indexOf(a.user_name) - state.followList.indexOf(b.user_name)
+        } else {
+          sortFunction = (a, b) => state.followList.indexOf(b.user_name) - state.followList.indexOf(a.user_name)
+        }
+        sortedListens = listensToSort.sort(sortFunction);
+      }
+      else {
+        console.error("Cannot sort with unrecognized method",state.sortBy);
+        return listens;
+      }
+
+      let reassembledListens;
+      if (state.direction === "down"){
+        reassembledListens = pastListens.concat(sortedListens);
+      } else {
+        reassembledListens = sortedListens.concat(pastListens);
+      }
+
+      return reassembledListens
   }
 
   handleFollowUserListChange(userList, dontSendUpdate){
@@ -100,7 +142,7 @@ class RecentListens extends React.Component {
       previousFollowList = prevState.followList;
       return {
         followList: userList,
-        listens: this.sortListensByFollowUserRank(prevState.listens, userList)
+        listens: this.sortListens(prevState.listens, prevState)
       }
     }, ()=>{
       if(dontSendUpdate){
@@ -140,7 +182,8 @@ class RecentListens extends React.Component {
     }
     console.debug(typeof newListen, newListen);
     this.setState(prevState =>{
-      return { listens: this.sortListensByFollowUserRank([newListen].concat(prevState.listens), prevState.followList) }
+      prevState.listens.push(newListen);
+      return { listens: this.sortListens(prevState.listens, prevState) }
     })
   }
 
@@ -182,7 +225,7 @@ class RecentListens extends React.Component {
     this.APIService.getRecentListensForUsers(this.state.followList)
       .then(listens => 
         this.setState(prevState =>{
-          return { listens: this.sortListensByFollowUserRank(listens, prevState.followList) }
+          return { listens: this.sortListens(listens, prevState) }
         })
       )
       .catch(console.error)
@@ -240,6 +283,18 @@ class RecentListens extends React.Component {
         <div className="row">
           <div className="col-md-8">
             <h3>{(this.state.mode === "listens" || this.state.mode === "recent" )? "Recent listens" : "Playlist"}</h3>
+
+            <div className="dropdown pull-right">
+              <button className="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                Sort by
+                <span className="caret"></span>
+              </button>
+              <ul className="dropdown-menu" aria-labelledby="dropdownMenu1">
+                <li><a onClick={this.setSortMethod.bind(this, "time")}>Time</a></li>
+                {(this.state.mode === "follow" || this.state.mode === "recent" ) && <li><a onClick={this.setSortMethod.bind(this, "username")}>Username</a></li>}
+                {this.state.mode === "follow" && <li><a onClick={this.setSortMethod.bind(this, "followList")}>Follow list</a></li>}
+              </ul>
+            </div>
 
             {!this.state.listens.length &&
               <div className="lead text-center">
@@ -314,7 +369,7 @@ class RecentListens extends React.Component {
               <SpotifyPlayer
                 ref={this.spotifyPlayer}
                 listens={spotifyListens}
-                direction={this.state.mode === "follow" ? "up" : "down"}
+                direction={this.state.direction}
                 spotify_access_token={this.props.spotify_access_token}
                 onCurrentListenChange={this.handleCurrentListenChange}
                 onAccountError={this.handleSpotifyAccountError}
