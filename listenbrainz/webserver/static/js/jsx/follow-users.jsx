@@ -1,5 +1,7 @@
+import { faChevronDown, faChevronUp, faPlusCircle, faSave, faSitemap, faTimes, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import {getArtistLink, getPlayButton, getTrackLink} from './utils.jsx';
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
 import {isNil as _isNil} from 'lodash';
 
@@ -114,7 +116,7 @@ export class FollowUsers extends React.Component {
     return (
       <div className="panel panel-primary">
         <div className="panel-heading">
-          <i className="fas fa-sitemap fa-2x fa-flip-vertical"></i>
+          <FontAwesomeIcon icon={faSitemap} size="2x" flip="vertical"/>
           <span style={{fontSize: "x-large", marginLeft: "0.55em", verticalAign: "middle" }}>
             Follow users
           </span>
@@ -134,7 +136,7 @@ export class FollowUsers extends React.Component {
                   />
                   <span className="input-group-btn">
                     <button className="btn btn-primary" type="button" onClick={this.addUserToList} style={{lineHeight: "2em", marginTop: 0, marginBottom: 0}}>
-                      <span className="fa fa-plus-circle" aria-hidden="true"></span> Add
+                      <FontAwesomeIcon icon={faPlusCircle}/> Add
                     </button>
                   </span>
                 </div>
@@ -147,10 +149,10 @@ export class FollowUsers extends React.Component {
                   />
                   <div className="input-group-btn">
                     <button className="btn btn-primary" type="button" onClick={this.saveFollowList.bind(this)} style={{lineHeight: "2em", marginTop: 0, marginBottom: 0}}>
-                        <span className="fa fa-save" aria-hidden="true"></span> Save
+                        <FontAwesomeIcon icon={faSave}/> Save
                       </button>
                     <button className="btn btn-danger" type="button" onClick={this.newFollowList.bind(this)} style={{lineHeight: "2em", marginTop: 0, marginBottom: 0}}>
-                      <span className="fa fa-times" aria-hidden="true"></span> Clear
+                      <FontAwesomeIcon icon={faTimes}/> Clear
                     </button>
                   </div>
                 </div>
@@ -178,13 +180,13 @@ export class FollowUsers extends React.Component {
                           {index > 0 &&
                             <button className="btn btn-info"
                               onClick={this.reorderUser.bind(this, index, index - 1)}>
-                              <span className="fa fa-chevron-up"></span>
+                              <FontAwesomeIcon icon={faChevronUp}/>
                             </button>
                           }
                           {index < this.state.users.length - 1 &&
                             <button className="btn btn-info"
                               onClick={this.reorderUser.bind(this, index, index + 1)}>
-                              <span className="fa fa-chevron-down"></span>
+                              <FontAwesomeIcon icon={faChevronDown}/>
                             </button>
                           }
                         </span>
@@ -208,7 +210,7 @@ export class FollowUsers extends React.Component {
                       <td style={noTopBottomPadding}>
                         <button className="btn btn-danger" type="button" aria-label="Remove"
                           onClick={this.removeUserFromList.bind(this, index)}>
-                          <span className="fa fa-trash-alt"></span>
+                          <FontAwesomeIcon icon={faTrashAlt}/>
                         </button>
                       </td>
                     </tr>

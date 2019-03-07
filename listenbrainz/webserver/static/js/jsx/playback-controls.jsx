@@ -1,5 +1,7 @@
-import React from 'react';
+import { faEye, faEyeSlash, faFastBackward, faFastForward, faPauseCircle, faPlayCircle, faSortAmountDown, faSortAmountUp } from '@fortawesome/free-solid-svg-icons'
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import React from 'react';
 function millisecondsToHumanReadable(milliseconds) {
   var seconds = milliseconds / 1000;
   var numyears = Math.floor(seconds / 31536000);
@@ -42,35 +44,20 @@ export class PlaybackControls extends React.Component {
             <div className="left btn btn-xs"
               title={`${this.state.autoHideControls ? 'Always show' : 'Autohide'} controls`}
               onClick={() => this.setState(state => ({ autoHideControls: !state.autoHideControls }))}>
-              <span className={`${this.state.autoHideControls ? 'hidden' : ''}`}>
-                <i className="fas fa-eye"></i>
-              </span>
-              <span className={`${!this.state.autoHideControls ? 'hidden' : ''}`}>
-                <i className="fas fa-eye-slash"></i>
-              </span>
+                <FontAwesomeIcon icon={this.state.autoHideControls ? faEyeSlash : faEye}/>
             </div>
             <div className="previous btn btn-xs" onClick={this.props.playPreviousTrack} title="Previous">
-              <i className="fas fa-fast-backward"></i>
+              <FontAwesomeIcon icon={faFastBackward}/>
             </div>
             <div className="play btn" onClick={this.props.togglePlay} title={`${this.props.playerPaused ? 'Play' : 'Pause'}`} >
-              <span className={`${this.props.playerPaused ? 'hidden' : ''}`}>
-                <i className="fa fa-2x fa-pause-circle"></i>
-              </span>
-              <span className={`${!this.props.playerPaused ? 'hidden' : ''}`}>
-                <i className="fa fa-2x fa-play-circle"></i>
-              </span>
+              <FontAwesomeIcon icon={this.props.playerPaused ? faPlayCircle : faPauseCircle} size="2x"/>
             </div>
             <div className="next btn btn-xs" onClick={this.props.playNextTrack} title="Next">
-              <i className="fas fa-fast-forward"></i>
+              <FontAwesomeIcon icon={faFastForward}/>
             </div>
             {this.props.direction !== "hidden" &&
               <div className="right btn btn-xs" onClick={this.props.toggleDirection} title={`Play ${this.props.direction === 'up' ? 'down' : 'up'}`}>
-                <span className={`${this.props.direction === 'up' ? 'hidden' : ''}`}>
-                  <i className="fa fa-sort-amount-down"></i>
-                </span>
-                <span className={`${this.props.direction === 'down' ? 'hidden' : ''}`}>
-                  <i className="fa fa-sort-amount-up"></i>
-                </span>
+                <FontAwesomeIcon icon={this.state.direction === 'up' ? faSortAmountUp : faSortAmountDown}/>
               </div>
             }
           </div>
