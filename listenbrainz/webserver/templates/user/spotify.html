@@ -6,10 +6,32 @@
   <div id="user-profile">
     <h2 class="page-title">Link Spotify Account</h2>
 
-    <p>ListenBrainz has two different integrations with Spotify. We provide users the ability to play music from Spotify on certain pages and the ability to import the songs that you listen to on Spotify automatically.</p>
-    <p>We ask permission to read your recently listened songs to import them and a few other permissions to be able to play music from Spotify on ListenBrainz. You can revoke these permissions whenever you want by unlinking your Spotify account.</p>
-    <p>We provide the choice of only opting in to any one of the features (or both).</p>
+    <p>
+       ListenBrainz integrates with Spotify to bring you two features:
+    </p>
+    
+    <ol>
+       <li>
+         <p><b>Record your listening history into ListenBrainz.</b></p>
+         <p>We will record your listening history permanently and make it available for others to view and explore.</p>
+       </li>
+       <li>
+         <p><b>Play music tracks from various ListenBrainz pages.</b></p>
+         <p>We are building a number of music discovery features on the ListenBrainz pages and allowing full length 
+         track playback allows you to use these features.</p>
+       </li>
+    </ol>
 
+    <p>
+    We encourage user to choose both of the options above for the best experience, but you may also choose only one option.
+    </p>
+
+    <h4>A note about permissions</h4>
+
+    <p>We provide users the ability to play music from Spotify on certain pages and the ability to import the songs that you listen to on Spotify automatically.</p>
+    <p>We ask permission to read your recently listened songs to import them and a few other permissions to be able to play music from Spotify on ListenBrainz. You can revoke these permissions whenever you want by unlinking your Spotify account.</p>
+
+    <h3>Account Linking Status</h3>
     {% if account %}
       <p>Your account is linked. Click the button below to unlink it</p>
       <form method="POST">
@@ -38,9 +60,12 @@
       {% endif %}
 
     {% else %}
-      <p><a href="{{ only_listen_url }}">Log in with Spotify (only listen to music, <i>requires a premium account</i>).</a></p>
-      <p><a href="{{ only_import_url }}">Log in with Spotify (import listens).</a></p>
-      <p><a href="{{ both_url }}">Log in with Spotify (both).</a></p>
+      <p>
+      Your account is currently not linked. To link your account, please choose one of the following:
+      </p>
+      <p><a href="{{ both_url }}" class="btn btn-primary btn-lg">Link my account to record listens and play music</a></p>
+      <p><a href="{{ only_listen_url }}" class="btn btn-primary btn-lg">Link my account to play music only</a></p>
+      <p><a href="{{ only_import_url }}" class="btn btn-primary btn-lg">Link my account to recording listens only</a></p>
     {% endif %}
 
   </div>
