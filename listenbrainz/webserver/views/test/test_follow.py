@@ -108,13 +108,13 @@ class FollowViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertListEqual(props['follow_list'], [])
 
     def test_save_endpoint_bad_data(self):
-        self.temporary_login(self.user['login_id'])
         r = self.client.post(
             '/1/follow/save',
             data=json.dumps({}),
             headers={"Authorization": "Token {token}".format(token=self.user['auth_token'])},
         )
         self.assert400(r)
+        self.assertEqual(r.json['code'], 400)
 
         r = self.client.post(
             '/1/follow/save',
@@ -122,6 +122,7 @@ class FollowViewsTestCase(ServerTestCase, DatabaseTestCase):
             headers={"Authorization": "Token {token}".format(token=self.user['auth_token'])},
         )
         self.assert400(r)
+        self.assertEqual(r.json['code'], 400)
 
         r = self.client.post(
             '/1/follow/save',
@@ -129,6 +130,7 @@ class FollowViewsTestCase(ServerTestCase, DatabaseTestCase):
             headers={"Authorization": "Token {token}".format(token=self.user['auth_token'])},
         )
         self.assert400(r)
+        self.assertEqual(r.json['code'], 400)
 
         r = self.client.post(
             '/1/follow/save',
@@ -136,3 +138,4 @@ class FollowViewsTestCase(ServerTestCase, DatabaseTestCase):
             headers={"Authorization": "Token {token}".format(token=self.user['auth_token'])},
         )
         self.assert400(r)
+        self.assertEqual(r.json['code'], 400)
