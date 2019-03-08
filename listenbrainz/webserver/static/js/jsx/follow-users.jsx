@@ -67,8 +67,10 @@ export class FollowUsers extends React.Component {
     })
     .then(response => {
         if (!response.ok) {
-            throw new Error(response.statusText);
+          this.props.newAlert('danger', 'Could not save list', response.statusText);
+          return;
         }
+        this.props.newAlert('success', 'Successfully saved list');
         return response.json();
     })
     .then(data => {
@@ -81,7 +83,8 @@ export class FollowUsers extends React.Component {
       });
     })
     .catch(error => {
-        console.error(error);
+      console.error(error);
+      this.props.newAlert('danger', 'Could not save list', error.message);
     });
   }
 

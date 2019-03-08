@@ -28,8 +28,6 @@ export class SpotifyPlayer extends React.Component {
       accessToken: props.spotify_access_token,
       currentSpotifyTrack: null,
       playerPaused: true,
-      errorMessage: null,
-      warningMessage: null,
       progressMs: 0,
       durationMs: 0,
       direction: props.direction || "down"
@@ -53,8 +51,7 @@ export class SpotifyPlayer extends React.Component {
   play_spotify_uri(spotify_uri) {
     if (!this._spotifyPlayer)
     {
-      const error = "Spotify player not initialized. Please refresh the page";
-      this.setState({ errorMessage: error });
+      this.handleError("Please refresh the page", "Spotify player not initialized.");
       return;
     }
     fetch(`https://api.spotify.com/v1/me/player/play?device_id=${this._spotifyPlayer._options.id}`, {
@@ -84,8 +81,7 @@ export class SpotifyPlayer extends React.Component {
       this.props.onCurrentListenChange(listen);
     } else
     {
-      console.error("No Spotify ID for this listen :/");
-      this.handleError("Cannot play this song on Spotify");
+      this.handleWarning("This song was not listened to on Spotify", "Cannot play this song");
     }
   };
   isCurrentListen(element) {
@@ -98,9 +94,7 @@ export class SpotifyPlayer extends React.Component {
   playNextTrack(invert) {
     if (this.props.listens.length === 0)
     {
-      const error = "No Spotify listens to play. Maybe refresh the page?";
-      console.error(error);
-      this.setState({ errorMessage: error });
+      this.handleWarning("You can try loading listens or refreshing the page", "No Spotify listens to play");
       return;
     }
 
@@ -120,39 +114,37 @@ export class SpotifyPlayer extends React.Component {
       nextListenIndex = invert === true ? (currentListenIndex - 1 || 0) : currentListenIndex + 1;
     }
     else {
-      const warning = "Unrecognised state. Please select a song to play.";
-      console.warning(warning);
-      this.setState({ warningMessage: warning });
+      this.handleWarning("Please select a song to play","Unrecognised state")
       return;
     }
     
     const nextListen = this.props.listens[nextListenIndex];
     if (!nextListen)
     {
-      const error = "No more listens, maybe wait some?";
-      console.error(error);
-      this.setState({ errorMessage: error });
+      this.handleWarning("You can try loading more listens or refreshing the page","No more Spotify listens to play");
       return;
     }
 
     this.playListen(nextListen);
-    this.handleError(null);
   }
-  handleError(error) {
+  handleError(error, title) {
     if (!error)
     {
-      this.setState({ errorMessage: null });
       return;
     }
     console.error(error);
     error = error.message ? error.message : error;
-    this.setState({ errorMessage: error });
+    this.props.newAlert('danger', title || 'Playback error', error);
+  }
+
+  handleWarning(message, title) {
+    console.debug(message);
+    this.props.newAlert('warning', title || 'Playback error', message);
   }
 
   handleAccountError(error) {
-    const errorMessage = 'Failed to validate Spotify account';
+    const errorMessage = 'Failed to validate Spotify account: ';
     console.error(errorMessage, error);
-    this.setState({ accessToken: null, errorMessage });
     if(typeof this.props.onAccountError === "function") {
       this.props.onAccountError(`${errorMessage} ${error}`);
     }
@@ -190,7 +182,6 @@ export class SpotifyPlayer extends React.Component {
       this._spotifyPlayer.removeListener('player_state_changed');
     }
     this._spotifyPlayer = null;
-    this.handleError(null);
     this._firstRun = true;
   }
 
@@ -198,9 +189,8 @@ export class SpotifyPlayer extends React.Component {
     this.disconnectSpotifyPlayer();
     if (!this.state.accessToken)
     {
-      console.error("No spotify acces_token");
-      const noTokenErrorMessage = <span>No Spotify access token. Please try to <a href="/profile/connect-spotify" target="_blank">link your account</a> and refresh this page</span>;
-      this.handleError(noTokenErrorMessage);
+      const noTokenErrorMessage = <span> Please try to <a href="/profile/connect-spotify" target="_blank">link your account</a> and refresh this page</span>;
+      this.handleError(noTokenErrorMessage, "No Spotify access token");
       return;
     }
 
@@ -213,15 +203,14 @@ export class SpotifyPlayer extends React.Component {
     });
 
     // Error handling
-    const authErrorMessage = <span>Spotify authentication error. <br /><button onClick={this.connectSpotifyPlayer} className="btn btn-primary">Reconnect</button> or <a href="/profile/connect-spotify" target="_blank">relink your Spotify account</a></span>
+    const authErrorMessage = <span><button onClick={this.connectSpotifyPlayer} className="btn btn-primary">Reconnect</button> or <a href="/profile/connect-spotify" target="_blank">relink your Spotify account</a></span>
     this._spotifyPlayer.on('initialization_error', this.handleError);
-    this._spotifyPlayer.on('authentication_error', error => this.handleError(authErrorMessage));
+    this._spotifyPlayer.on('authentication_error', error => this.handleError(authErrorMessage, "Spotify authentication error"));
     this._spotifyPlayer.on('account_error', this.handleAccountError);
     this._spotifyPlayer.on('playback_error', this.handleError);
 
     this._spotifyPlayer.addListener('ready', ({ device_id }) => {
       console.log('Spotify player connected with Device ID', device_id);
-      this.handleError(null);
     });
 
     this._spotifyPlayer.addListener('player_state_changed', this.handlePlayerStateChanged);
@@ -230,7 +219,6 @@ export class SpotifyPlayer extends React.Component {
       if (success)
       {
         console.log('The Web Playback SDK successfully connected to Spotify!');
-        this.handleError(null);
         return fetch('https://api.spotify.com/v1/me/player/currently-playing', {
           method: 'GET',
           headers: {
@@ -252,7 +240,7 @@ export class SpotifyPlayer extends React.Component {
       }
       return response.json().then(response => {
         if (response.error) {
-          return this.handleError(response.error.message)
+          return this.handleError(response.error)
         }
         this.handleSpotifyAPICurrentlyPlaying(response);
       })
@@ -261,12 +249,13 @@ export class SpotifyPlayer extends React.Component {
   }
 
   handleSpotifyAPICurrentlyPlaying(currentlyPlaying) {
+    if(currentlyPlaying.is_playing){
+      this.handleWarning('Using Spotify on this page will interrupt your current playback', "Spotify player");
+    }
     this.setState({
       progressMs: currentlyPlaying.progress_ms,
       durationMs: currentlyPlaying.item && currentlyPlaying.item.duration_ms,
       currentSpotifyTrack: currentlyPlaying.item,
-      errorMessage: null,
-      warningMessage: currentlyPlaying.is_playing ? 'Using Spotify on this page will interrupt your current playback' : ''
     });
   }
 
@@ -293,8 +282,7 @@ export class SpotifyPlayer extends React.Component {
       progressMs: position,
       durationMs: duration,
       currentSpotifyTrack: current_track,
-      playerPaused: paused,
-      errorMessage: null
+      playerPaused: paused
     });
     if (this._firstRun)
     {
@@ -331,17 +319,6 @@ export class SpotifyPlayer extends React.Component {
         >
           {this.getAlbumArt()}
         </PlaybackControls>
-
-        {this.state.errorMessage &&
-          <div className="alert alert-danger" role="alert">
-            {this.state.errorMessage}
-          </div>
-        }
-        {this.state.warningMessage &&
-          <div className="alert alert-warning" role="alert">
-            {this.state.warningMessage}
-          </div>
-        }
       </div>
     );
   }
