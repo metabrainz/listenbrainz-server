@@ -7,7 +7,7 @@ from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.rate_limiter import ratelimit
 from listenbrainz.webserver.views.api import _validate_auth_header
 from listenbrainz.webserver.views.api_tools import log_raise_400
-from werkzeug.exceptions import NotFound, Forbidden, Unauthorized
+from listenbrainz.webserver.errors import APINotFound, APIForbidden, APIUnauthorized
 from listenbrainz.db.exceptions import DatabaseException
 
 follow_api_bp = Blueprint('follow_api_v1', __name__)
@@ -40,15 +40,15 @@ def save_list():
                 members=[member['id'] for member in members],
             )
         except DatabaseException as e:
-            raise Forbidden("List with same name already exists.")
+            raise APIForbidden("List with same name already exists.")
     else:
 
         # do some validation
         current_list = db_follow_list.get(list_id)
         if current_list is None:
-            raise NotFound("List not found: %d" % list_id)
+            raise APINotFound("List not found: %d" % list_id)
         if current_list['creator'] != creator['id']:
-            raise Unauthorized("You can only edit your own lists.")
+            raise APIUnauthorized("You can only edit your own lists.")
 
         # update the old list
         db_follow_list.update(
