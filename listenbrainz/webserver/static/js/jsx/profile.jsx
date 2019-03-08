@@ -169,7 +169,7 @@ class RecentListens extends React.Component {
     })
   }
   handleSpotifyAccountError(error){
-    this.newAlert("error","Spotify account error", error);
+    this.newAlert("danger","Spotify account error", error);
     this.setState({isSpotifyPremium: false})
   }
 
@@ -238,7 +238,7 @@ class RecentListens extends React.Component {
           return { listens: this.sortListens(listens, prevState) }
         })
       )
-      .catch(error => this.newAlert('error', 'Could not recent listens', error));
+      .catch(error => this.newAlert('danger', 'Could not recent listens', error));
   }
 
   newAlert(type, headline, message) {
@@ -291,7 +291,7 @@ class RecentListens extends React.Component {
         <AlertList
           position="bottom-right"
           alerts={this.state.alerts}
-          timeout="10000"
+          timeout={8000}
           dismissTitle="Dismiss"
           onDismiss={this.onAlertDismissed}
         />
