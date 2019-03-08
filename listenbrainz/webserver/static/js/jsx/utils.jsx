@@ -1,3 +1,5 @@
+import { faPlayCircle } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react'; // jsx compiled to React.createElement
 
 export function getSpotifyEmbedUriFromListen(listen){
@@ -41,7 +43,7 @@ export function getPlayButton(listen, onClickFunction) {
   {
     return (
       <button title="Play" className="btn-link" onClick={onClickFunction.bind(listen)}>
-        <i className="fas fa-play-circle fa-2x"></i>
+        <FontAwesomeIcon icon={faPlayCircle}/>
       </button>
     )
   }
