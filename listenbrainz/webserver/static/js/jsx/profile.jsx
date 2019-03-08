@@ -242,30 +242,30 @@ class RecentListens extends React.Component {
   }
 
   newAlert(type, headline, message) {
-		const newAlert ={
-			id: (new Date()).getTime(),
-			type,
-			headline,
-			message
-		};
+    const newAlert ={
+      id: (new Date()).getTime(),
+      type,
+      headline,
+      message
+    };
 
-		this.setState({
-			alerts: [...this.state.alerts, newAlert]
-		});
+    this.setState({
+      alerts: [...this.state.alerts, newAlert]
+    });
   }
   onAlertDismissed(alert) {
-		const alerts = this.state.alerts;
+    const alerts = this.state.alerts;
 
-		// find the index of the alert that was dismissed
-		const idx = alerts.indexOf(alert);
+    // find the index of the alert that was dismissed
+    const idx = alerts.indexOf(alert);
 
-		if (idx >= 0) {
-			this.setState({
-				// remove the alert from the array
-				alerts: [...alerts.slice(0, idx), ...alerts.slice(idx + 1)]
-			});
-		}
-	}
+    if (idx >= 0) {
+      this.setState({
+        // remove the alert from the array
+        alerts: [...alerts.slice(0, idx), ...alerts.slice(idx + 1)]
+      });
+    }
+  }
 
   render() {
 
