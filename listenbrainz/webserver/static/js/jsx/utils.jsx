@@ -43,7 +43,7 @@ export function getPlayButton(listen, onClickFunction) {
   {
     return (
       <button title="Play" className="btn-link" onClick={onClickFunction.bind(listen)}>
-        <FontAwesomeIcon icon={faPlayCircle}/>
+        <FontAwesomeIcon size="2x" icon={faPlayCircle}/>
       </button>
     )
   }
