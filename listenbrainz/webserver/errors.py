@@ -48,6 +48,11 @@ class APIServiceUnavailable(APIError):
         super(APIServiceUnavailable, self).__init__(message, 503, payload)
 
 
+class APIForbidden(APIError):
+    def __init__(self, message, payload=None):
+        super(APIForbidden, self).__init__(message, 403, payload)
+
+
 # List of errors compatible with LastFM messages for API_compat.
 class CompatError(object):
     DOES_NOT_EXIST           = LastFMError(code = 1, message = "This error does not exist")
