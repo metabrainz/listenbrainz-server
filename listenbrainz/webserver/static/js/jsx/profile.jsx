@@ -287,7 +287,7 @@ class RecentListens extends React.Component {
         }
         <div className="row">
           <div className="col-md-8">
-            {this.state.mode !== "listens" && 
+            {this.state.mode === "follow" &&
               <div className="dropdown pull-right">
                 <button className="btn btn-info dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
                   Sort by {_.startCase(this.state.sortBy)}
@@ -296,9 +296,7 @@ class RecentListens extends React.Component {
                 <ul className="dropdown-menu" aria-labelledby="dropdownMenu1">
                   <li><a onClick={this.setSortMethod.bind(this, "time")}>Time</a></li>
                   <li><a onClick={this.setSortMethod.bind(this, "username")}>Username</a></li>
-                  {this.state.mode === "follow" &&
-                    <li><a onClick={this.setSortMethod.bind(this, "followList")}>Follow list</a></li>
-                  }
+                  <li><a onClick={this.setSortMethod.bind(this, "followList")}>Follow list</a></li>
                 </ul>
               </div>
             }
