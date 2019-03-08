@@ -5,6 +5,7 @@ import * as timeago from 'time-ago';
 import {getArtistLink, getPlayButton, getSpotifyEmbedUriFromListen, getTrackLink} from './utils.jsx';
 
 import APIService from './api-service';
+import { AlertList } from 'react-bs-notifier';
 import {FollowUsers} from './follow-users.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
@@ -22,6 +23,7 @@ class RecentListens extends React.Component {
     super(props);
 
     this.state = {
+      alerts: [],
       listens: props.listens || [],
       currentListen : null,
       mode: props.mode,
@@ -40,6 +42,8 @@ class RecentListens extends React.Component {
     this.handleFollowUserListChange = this.handleFollowUserListChange.bind(this);
     this.handleSpotifyAccountError = this.handleSpotifyAccountError.bind(this);
     this.isCurrentListen = this.isCurrentListen.bind(this);
+    this.newAlert = this.newAlert.bind(this);
+    this.onAlertDismissed = this.onAlertDismissed.bind(this);
     this.playListen = this.playListen.bind(this);
     this.receiveNewListen = this.receiveNewListen.bind(this);
     this.receiveNewPlayingNow = this.receiveNewPlayingNow.bind(this);
@@ -165,6 +169,7 @@ class RecentListens extends React.Component {
     })
   }
   handleSpotifyAccountError(error){
+    this.newAlert("error","Spotify account error", error);
     this.setState({isSpotifyPremium: false})
   }
 
@@ -233,8 +238,34 @@ class RecentListens extends React.Component {
           return { listens: this.sortListens(listens, prevState) }
         })
       )
-      .catch(console.error)
+      .catch(error => this.newAlert('error', 'Could not recent listens', error));
   }
+
+  newAlert(type, headline, message) {
+		const newAlert ={
+			id: (new Date()).getTime(),
+			type,
+			headline,
+			message
+		};
+
+		this.setState({
+			alerts: [...this.state.alerts, newAlert]
+		});
+  }
+  onAlertDismissed(alert) {
+		const alerts = this.state.alerts;
+
+		// find the index of the alert that was dismissed
+		const idx = alerts.indexOf(alert);
+
+		if (idx >= 0) {
+			this.setState({
+				// remove the alert from the array
+				alerts: [...alerts.slice(0, idx), ...alerts.slice(idx + 1)]
+			});
+		}
+	}
 
   render() {
 
@@ -257,6 +288,13 @@ class RecentListens extends React.Component {
 
     return (
       <div>
+        <AlertList
+          position="bottom-right"
+          alerts={this.state.alerts}
+          timeout="10000"
+          dismissTitle="Dismiss"
+          onDismiss={this.onAlertDismissed}
+        />
         {this.state.mode === "listens" && <div className="row">
           <div className="col-md-8">
             <h3> Statistics </h3>
@@ -283,7 +321,8 @@ class RecentListens extends React.Component {
           <FollowUsers onUserListChange={this.handleFollowUserListChange}
             followList={this.state.followList} playListen={this.playListen.bind(this)}
             playingNow={this.state.playingNowByUser} saveUrl={this.state.saveUrl}
-            listName={this.state.listName} listId={this.state.listId} creator={this.props.user}/>
+            listName={this.state.listName} listId={this.state.listId} creator={this.props.user}
+            newAlert={this.newAlert}/>
         }
         <div className="row">
           <div className="col-md-8">
@@ -385,6 +424,7 @@ class RecentListens extends React.Component {
                 onCurrentListenChange={this.handleCurrentListenChange}
                 onAccountError={this.handleSpotifyAccountError}
                 currentListen={this.state.currentListen}
+                newAlert={this.newAlert}
               /> :
               // Fallback embedded player
               <div className="col-md-4 text-right">
