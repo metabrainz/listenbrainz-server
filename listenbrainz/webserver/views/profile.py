@@ -263,7 +263,7 @@ def connect_spotify_callback():
     return redirect(url_for('profile.connect_spotify'))
 
 
-@profile_bp.route('/refresh-spotify-token', methods=['GET'])
+@profile_bp.route('/refresh-spotify-token', methods=['POST'])
 @crossdomain()
 @api_login_required
 def refresh_spotify_token():
@@ -274,7 +274,7 @@ def refresh_spotify_token():
         try:
             spotify_user = spotify.refresh_user_token(spotify_user)
         except spotify.SpotifyAPIError:
-            raise APIServiceUnvailable("Cannot refresh Spotify token right now")
+            raise APIServiceUnavailable("Cannot refresh Spotify token right now")
 
     return jsonify({
         'id': current_user.id,
