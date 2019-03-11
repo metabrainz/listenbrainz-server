@@ -32,18 +32,19 @@ export class SpotifyPlayer extends React.Component {
       durationMs: 0,
       direction: props.direction || "down"
     };
+    this.connectSpotifyPlayer = this.connectSpotifyPlayer.bind(this);
+    this.disconnectSpotifyPlayer = this.disconnectSpotifyPlayer.bind(this);
+    this.getAlbumArt = this.getAlbumArt.bind(this);
+    this.handleError = this.handleError.bind(this);
+    this.handlePlayerStateChanged = this.handlePlayerStateChanged.bind(this);
+    this.handleSpotifyAPICurrentlyPlaying = this.handleSpotifyAPICurrentlyPlaying.bind(this);
+    this.handleTokenError = this.handleTokenError.bind(this);
+    this.isCurrentListen = this.isCurrentListen.bind(this);
+    this.playListen = this.playListen.bind(this);
     this.playNextTrack = this.playNextTrack.bind(this);
     this.playPreviousTrack = this.playPreviousTrack.bind(this);
     this.togglePlay = this.togglePlay.bind(this);
     this.toggleDirection = this.toggleDirection.bind(this);
-    this.handlePlayerStateChanged = this.handlePlayerStateChanged.bind(this);
-    this.handleSpotifyAPICurrentlyPlaying = this.handleSpotifyAPICurrentlyPlaying.bind(this);
-    this.handleError = this.handleError.bind(this);
-    this.isCurrentListen = this.isCurrentListen.bind(this);
-    this.getAlbumArt = this.getAlbumArt.bind(this);
-    this.playListen = this.playListen.bind(this);
-    this.disconnectSpotifyPlayer = this.disconnectSpotifyPlayer.bind(this);
-    this.connectSpotifyPlayer = this.connectSpotifyPlayer.bind(this);
     window.onSpotifyWebPlaybackSDKReady = this.connectSpotifyPlayer;
     const spotifyPlayerSDKLib = require('../lib/spotify-player-sdk-1.6.0');
   }
@@ -63,7 +64,10 @@ export class SpotifyPlayer extends React.Component {
       },
     })
     .then(response =>{
-      if(response.status === 403 || response.status === 401){
+      if(response.status === 401){
+        return this.handleTokenError(response.statusText);
+      }
+      if(response.status === 403){
         return this.handleAccountError(response.statusText);
       }
       if(!response.ok){
@@ -142,6 +146,17 @@ export class SpotifyPlayer extends React.Component {
     this.props.newAlert('warning', title || 'Playback error', message);
   }
 
+  async handleTokenError(error) {
+    console.error(error);
+    try {
+      const userToken = await this.props.APIService.refreshSpotifyToken();
+      this.setState({accessToken: userToken},this.connectSpotifyPlayer);
+    } catch (err) {
+      this.handleError(err);
+    }
+    return;
+  }
+
   handleAccountError(error) {
     const errorMessage = 'Failed to validate Spotify account: ';
     console.error(errorMessage, error);
@@ -193,7 +208,6 @@ export class SpotifyPlayer extends React.Component {
       this.handleError(noTokenErrorMessage, "No Spotify access token");
       return;
     }
-
     this._spotifyPlayer = new window.Spotify.Player({
       name: 'ListenBrainz Player',
       getOAuthToken: callback => {
@@ -203,9 +217,8 @@ export class SpotifyPlayer extends React.Component {
     });
 
     // Error handling
-    const authErrorMessage = <span><button onClick={this.connectSpotifyPlayer} className="btn btn-primary">Reconnect</button> or <a href="/profile/connect-spotify" target="_blank">relink your Spotify account</a></span>
     this._spotifyPlayer.on('initialization_error', this.handleError);
-    this._spotifyPlayer.on('authentication_error', error => this.handleError(authErrorMessage, "Spotify authentication error"));
+    this._spotifyPlayer.on('authentication_error', this.handleTokenError);
     this._spotifyPlayer.on('account_error', this.handleAccountError);
     this._spotifyPlayer.on('playback_error', this.handleError);
 
@@ -259,12 +272,16 @@ export class SpotifyPlayer extends React.Component {
     });
   }
 
-  handlePlayerStateChanged({
-    paused,
-    position,
-    duration,
-    track_window: { current_track }
-  }) {
+  handlePlayerStateChanged(state) {
+    if(!state) {
+      return;
+    }
+    const {
+      paused,
+      position,
+      duration,
+      track_window: { current_track }
+    } = state;
     console.debug('Currently Playing', current_track);
     console.debug('Position in Song', position);
     console.debug('Duration of Song', duration);
