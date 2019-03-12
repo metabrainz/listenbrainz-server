@@ -1,6 +1,3 @@
-import eventlet
-eventlet.monkey_patch()
-
 from flask import Flask, current_app, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, join_room, leave_room, emit, rooms
@@ -29,7 +26,7 @@ app.init_loggers(
     email_config=app.config.get('LOG_EMAIL'),
     sentry_config=app.config.get('LOG_SENTRY')
 )
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode='gevent')
 
 
 @socketio.on('json')
