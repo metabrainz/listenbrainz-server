@@ -76,6 +76,13 @@ export default class APIService {
     
     return result.payload.listens
   }
+
+  async refreshSpotifyToken(){
+    const response = await fetch("/profile/refresh-spotify-token",{method:"POST"})
+    this.checkStatus(response);
+    const result = await response.json();
+    return result.user_token;
+  }
   
   checkStatus(response) {
     if (response.status >= 200 && response.status < 300) {

@@ -128,12 +128,12 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assert400(r)
 
     def test_spotify_refresh_token_logged_out(self):
-        r = self.client.get(url_for('profile.refresh_spotify_token'))
+        r = self.client.post(url_for('profile.refresh_spotify_token'))
         self.assert401(r)
 
     def test_spotify_refresh_token_no_token(self):
         self.temporary_login(self.user['login_id'])
-        r = self.client.get(url_for('profile.refresh_spotify_token'))
+        r = self.client.post(url_for('profile.refresh_spotify_token'))
         self.assert404(r)
 
     @patch('listenbrainz.webserver.views.profile.spotify.get_user')
@@ -155,7 +155,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             latest_listened_at=None,
             permission='user-read-recently-played',
         )
-        r = self.client.get(url_for('profile.refresh_spotify_token'))
+        r = self.client.post(url_for('profile.refresh_spotify_token'))
         self.assert200(r)
         mock_refresh_user_token.assert_not_called()
         self.assertDictEqual(r.json, {
@@ -187,7 +187,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
         mock_get_user.return_value = spotify_user
         spotify_user.user_token = 'new-token'
         mock_refresh_user_token.return_value = spotify_user
-        r = self.client.get(url_for('profile.refresh_spotify_token'))
+        r = self.client.post(url_for('profile.refresh_spotify_token'))
         self.assert200(r)
         mock_refresh_user_token.assert_called_once()
         self.assertDictEqual(r.json, {
