@@ -26,7 +26,7 @@ export class SpotifyPlayer extends React.Component {
     super(props);
     this.state = {
       accessToken: props.spotify_access_token,
-      currentSpotifyTrack: null,
+      currentSpotifyTrack: {},
       playerPaused: true,
       progressMs: 0,
       durationMs: 0,
@@ -42,6 +42,7 @@ export class SpotifyPlayer extends React.Component {
     this.isCurrentListen = this.isCurrentListen.bind(this);
     this.playListen = this.playListen.bind(this);
     this.playNextTrack = this.playNextTrack.bind(this);
+    this.debouncedPlayNextTrack = _.debounce(this.playNextTrack, 500, {leading:true, trailing:false});
     this.playPreviousTrack = this.playPreviousTrack.bind(this);
     this.togglePlay = this.togglePlay.bind(this);
     this.toggleDirection = this.toggleDirection.bind(this);
@@ -288,11 +289,13 @@ export class SpotifyPlayer extends React.Component {
     console.debug('Player paused?', paused);
 
     // How do we accurately detect the end of a song?
-    if (position === 0 && paused === true)
+    // From https://github.com/spotify/web-playback-sdk/issues/35#issuecomment-469834686
+    if (position === 0 && paused === true &&
+      _.has(state, "restrictions.disallow_resuming_reasons") && state.restrictions.disallow_resuming_reasons[0] === "not_paused")
     {
       // Track finished, play next track
       console.debug("Detected Spotify end of track, playing next track")
-      this.playNextTrack();
+      this.debouncedPlayNextTrack();
       return;
     }
     this.setState({
@@ -327,8 +330,8 @@ export class SpotifyPlayer extends React.Component {
           playerPaused={this.state.playerPaused}
           toggleDirection={this.toggleDirection}
           direction={this.state.direction}
-          trackName={this.state.currentSpotifyTrack && this.state.currentSpotifyTrack.name}
-          artistName={this.state.currentSpotifyTrack &&
+          trackName={this.state.currentSpotifyTrack.name}
+          artistName={this.state.currentSpotifyTrack.artists &&
             this.state.currentSpotifyTrack.artists.map(artist => artist.name).join(', ')
           }
           progress_ms={this.state.progressMs}

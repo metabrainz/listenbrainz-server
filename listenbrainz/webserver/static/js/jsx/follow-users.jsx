@@ -131,30 +131,30 @@ export class FollowUsers extends React.Component {
             <hr />
             <div>
               <div className="col-sm-6">
-                <div className="input-group">
+                <div className="input-group input-group-flex">
                   <span className="input-group-addon">Follow user</span>
                   <input type="text" className="form-control" placeholder="Username…"
                     ref={(input) => this.textInput = input}
                     onKeyPress={this.addFollowerOnEnter}
                   />
                   <span className="input-group-btn">
-                    <button className="btn btn-primary" type="button" onClick={this.addUserToList} style={{lineHeight: "2em", marginTop: 0, marginBottom: 0}}>
+                    <button className="btn btn-primary" type="button" onClick={this.addUserToList}>
                       <FontAwesomeIcon icon={faPlusCircle}/> Add
                     </button>
                   </span>
                 </div>
               </div>
               <div className="col-sm-6">
-                <div className="input-group">
+                <div className="input-group input-group-flex">
                   <span className="input-group-addon">Save list</span>
                   <input type="text" className="form-control" defaultValue={this.state.listName} placeholder="New list name" ref={(input) => this.nameInput = input} 
                     onKeyPress={this.saveListOnEnter}
                   />
                   <div className="input-group-btn">
-                    <button className="btn btn-primary" type="button" onClick={this.saveFollowList.bind(this)} style={{lineHeight: "2em", marginTop: 0, marginBottom: 0}}>
+                    <button className="btn btn-primary" type="button" onClick={this.saveFollowList.bind(this)}>
                         <FontAwesomeIcon icon={faSave}/> Save
                       </button>
-                    <button className="btn btn-danger" type="button" onClick={this.newFollowList.bind(this)} style={{lineHeight: "2em", marginTop: 0, marginBottom: 0}}>
+                    <button className="btn btn-danger" type="button" onClick={this.newFollowList.bind(this)}>
                       <FontAwesomeIcon icon={faTimes}/> Clear
                     </button>
                   </div>
