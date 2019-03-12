@@ -291,12 +291,6 @@ def validate_token():
         })
 
 
-@api_bp.route('/refresh-spotify-token', methods=['POST'])
-@crossdomain(headers='Authorization, Content-Type')
-def refresh_spotify_token():
-    pass
-
-
 def _parse_int_arg(name, default=None):
     value = request.args.get(name)
     if value:
