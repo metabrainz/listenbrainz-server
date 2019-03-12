@@ -115,7 +115,10 @@ class RecentListens extends React.Component {
         listensToSort = listens;
       }
 
-      if (state.mode === "listens" || state.sortBy === "time") {
+      if (state.mode === "follow" && state.sortBy === "time") {
+        sortedListens = _.orderBy(listensToSort, "listened_at", "asc");
+      }
+      else if (state.mode === "listens" || state.sortBy === "time") {
         sortedListens = _.orderBy(listensToSort, "listened_at", "desc");
       }
       else if (state.sortBy === "username"){
