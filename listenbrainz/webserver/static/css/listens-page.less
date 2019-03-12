@@ -132,3 +132,29 @@
     }
   }
 }
+
+.input-group-flex {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  width: 100%;
+  > *:not(.form-control) {
+    width: auto;
+    line-height: 1.4;
+  }
+  > .form-control {
+    flex: 1 1 120px;
+  }
+  > .input-group-btn {
+    flex: 1;
+    display: flex;
+    > .btn {
+      flex: 1 1 auto
+    }
+  }
+}
+
+.input-group > .input-group-btn > .btn {
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
