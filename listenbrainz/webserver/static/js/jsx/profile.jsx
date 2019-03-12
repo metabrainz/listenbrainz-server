@@ -415,6 +415,7 @@ class RecentListens extends React.Component {
           <div className="col-md-4" style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}>
             {this.props.spotify_access_token && this.state.isSpotifyPremium !== false ?
               <SpotifyPlayer
+                APIService={this.APIService}
                 ref={this.spotifyPlayer}
                 listens={spotifyListens}
                 direction={this.state.direction}
