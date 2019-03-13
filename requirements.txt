@@ -33,5 +33,5 @@ git+https://github.com/metabrainz/messybrainz-server.git@production#egg=messybra
 git+https://github.com/metabrainz/brainzutils-python.git@v1.8.0
 spotipy == 2.4.4
 pyyaml == 3.13
-eventlet == 0.24.1
+gevent == 1.4.0
 Flask-CORS == 3.0.7

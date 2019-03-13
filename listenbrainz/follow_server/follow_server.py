@@ -1,6 +1,3 @@
-import eventlet
-eventlet.monkey_patch()
-
 from flask import Flask, current_app, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, join_room, leave_room, emit, rooms
@@ -19,6 +16,8 @@ app = CustomFlask(
 load_config(app)
 CORS(app)
 
+
+
 # Error handling
 from listenbrainz.webserver.errors import init_error_handlers
 init_error_handlers(app)
@@ -30,7 +29,8 @@ app.init_loggers(
     sentry_config=app.config.get('LOG_SENTRY')
 )
 socketio = SocketIO(app)
-
+fd = FollowDispatcher(app, socketio)
+fd.start()
 
 @socketio.on('json')
 def handle_json(data):
@@ -64,7 +64,5 @@ def handle_json(data):
 
 
 def run_follow_server(host='0.0.0.0', port=8081, debug=True):
-    fd = FollowDispatcher(app, socketio)
-    fd.start()
     socketio.run(app, debug=debug,
         host=host, port=port)
