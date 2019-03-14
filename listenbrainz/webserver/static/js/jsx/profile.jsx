@@ -269,13 +269,6 @@ class RecentListens extends React.Component {
           </div>
         </div>
         }
-        {this.state.mode === "follow" &&
-          <FollowUsers onUserListChange={this.handleFollowUserListChange}
-            followList={this.state.followList} playListen={this.playListen.bind(this)}
-            playingNow={this.state.playingNowByUser} saveUrl={this.state.saveUrl}
-            listName={this.state.listName} listId={this.state.listId} creator={this.props.user}
-            newAlert={this.newAlert}/>
-        }
         <div className="row">
           <div className="col-md-8">
 
@@ -349,6 +342,14 @@ class RecentListens extends React.Component {
               </div>
 
 
+            }
+            <br/>
+            {this.state.mode === "follow" &&
+              <FollowUsers onUserListChange={this.handleFollowUserListChange}
+                followList={this.state.followList} playListen={this.playListen.bind(this)}
+                playingNow={this.state.playingNowByUser} saveUrl={this.state.saveUrl}
+                listName={this.state.listName} listId={this.state.listId} creator={this.props.user}
+                newAlert={this.newAlert}/>
             }
           </div>
           <div className="col-md-4" style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}>

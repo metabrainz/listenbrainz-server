@@ -109,17 +109,16 @@ export class FollowUsers extends React.Component {
     return (
       <div className="panel panel-primary">
         <div className="panel-heading">
-          <FontAwesomeIcon icon={faSitemap} size="2x" flip="vertical"/>
+          <FontAwesomeIcon icon={faSitemap} flip="vertical"/>
           <span style={{fontSize: "x-large", marginLeft: "0.55em", verticalAign: "middle" }}>
             Follow users
           </span>
         </div>
         <div className="panel-body">
-            <span className="text-muted">
-                Add a user to discover what they are listening to:
-              </span>
-            <hr />
-            <div>
+            <p className="text-muted">
+              Add a user to discover what they are listening to:
+            </p>
+            <div className="row">
               <div className="col-sm-6">
                 <div className="input-group input-group-flex">
                   <span className="input-group-addon">Follow user</span>
@@ -151,7 +150,8 @@ export class FollowUsers extends React.Component {
                 </div>
               </div>
             </div>
-            <table className="table table-condensed table-striped listens-table" style={{marginTop: "5em"}}>
+            <hr/>
+            <table className="table table-condensed table-striped listens-table">
               <thead>
                 <tr>
                   <th>User</th>
