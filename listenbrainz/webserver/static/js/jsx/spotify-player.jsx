@@ -53,8 +53,7 @@ export class SpotifyPlayer extends React.Component {
   play_spotify_uri(spotify_uri) {
     if (!this._spotifyPlayer)
     {
-      this.handleError("Please refresh the page", "Spotify player not initialized.");
-      return;
+      return this.connectSpotifyPlayer(this.play_spotify_uri.bind(this, spotify_uri));
     }
     fetch(`https://api.spotify.com/v1/me/player/play?device_id=${this._spotifyPlayer._options.id}`, {
       method: 'PUT',
@@ -66,10 +65,14 @@ export class SpotifyPlayer extends React.Component {
     })
     .then(response =>{
       if(response.status === 401){
-        return this.handleTokenError(response.statusText);
+        return this.handleTokenError(response.statusText, this.play_spotify_uri.bind(this, spotify_uri));
       }
       if(response.status === 403){
         return this.handleAccountError(response.statusText);
+      }
+      if(response.status === 404){ 
+        // Device not found
+        return this.connectSpotifyPlayer(this.play_spotify_uri.bind(this, spotify_uri));
       }
       if(!response.ok){
         return this.handleError(response.statusText);
@@ -147,11 +150,13 @@ export class SpotifyPlayer extends React.Component {
     this.props.newAlert('warning', title || 'Playback error', message);
   }
 
-  async handleTokenError(error) {
+  async handleTokenError(error, callbackFunction) {
     console.error(error);
     try {
       const userToken = await this.props.APIService.refreshSpotifyToken();
-      this.setState({accessToken: userToken},this.connectSpotifyPlayer);
+      this.setState({accessToken: userToken},()=>{
+        this.connectSpotifyPlayer(callbackFunction);
+      });
     } catch (err) {
       this.handleError(err);
     }
@@ -201,7 +206,7 @@ export class SpotifyPlayer extends React.Component {
     this._firstRun = true;
   }
 
-  connectSpotifyPlayer() {
+  connectSpotifyPlayer(callbackFunction) {
     this.disconnectSpotifyPlayer();
     if (!this.state.accessToken)
     {
@@ -211,8 +216,8 @@ export class SpotifyPlayer extends React.Component {
     }
     this._spotifyPlayer = new window.Spotify.Player({
       name: 'ListenBrainz Player',
-      getOAuthToken: callback => {
-        callback(this.state.accessToken);
+      getOAuthToken: authCallback => {
+        authCallback(this.state.accessToken);
       },
       volume: 0.7 // Careful with this, now…
     });
@@ -224,7 +229,10 @@ export class SpotifyPlayer extends React.Component {
     this._spotifyPlayer.on('playback_error', this.handleError);
 
     this._spotifyPlayer.addListener('ready', ({ device_id }) => {
-      console.log('Spotify player connected with Device ID', device_id);
+      console.debug('Spotify player connected with Device ID', device_id);
+      if(callbackFunction){
+        callbackFunction();
+      }
     });
 
     this._spotifyPlayer.addListener('player_state_changed', this.handlePlayerStateChanged);
@@ -232,7 +240,7 @@ export class SpotifyPlayer extends React.Component {
     this._spotifyPlayer.connect().then(success => {
       if (success)
       {
-        console.log('The Web Playback SDK successfully connected to Spotify!');
+        console.debug('The Web Playback SDK successfully connected to Spotify!');
         return fetch('https://api.spotify.com/v1/me/player/currently-playing', {
           method: 'GET',
           headers: {
@@ -277,6 +285,7 @@ export class SpotifyPlayer extends React.Component {
     if(!state) {
       return;
     }
+    console.debug('Spotify player state', state);
     const {
       paused,
       position,
@@ -339,6 +348,7 @@ export class SpotifyPlayer extends React.Component {
         >
           {this.getAlbumArt()}
         </PlaybackControls>
+        <div className='btn' onClick={this.disconnectSpotifyPlayer}>Sneaky disconnect for testing</div>
       </div>
     );
   }
