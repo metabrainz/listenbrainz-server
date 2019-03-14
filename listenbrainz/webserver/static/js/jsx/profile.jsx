@@ -32,8 +32,7 @@ class RecentListens extends React.Component {
       saveUrl: props.save_url || '',
       listName: props.follow_list_name,
       listId: props.follow_list_id,
-      direction: "down",
-      sortBy: props.mode === "follow" ? "followList" : "time"
+      direction: "down"
     };
     this.handleSpotifyAccountError = this.handleSpotifyAccountError.bind(this);
     this.connectWebsockets = this.connectWebsockets.bind(this);
@@ -47,7 +46,6 @@ class RecentListens extends React.Component {
     this.playListen = this.playListen.bind(this);
     this.receiveNewListen = this.receiveNewListen.bind(this);
     this.receiveNewPlayingNow = this.receiveNewPlayingNow.bind(this);
-    this.sortListens = this.sortListens.bind(this);
     this.spotifyPlayer = React.createRef();
 
     this.APIService = new APIService(props.api_url || `${window.location.origin}/1`);
@@ -86,64 +84,6 @@ class RecentListens extends React.Component {
     });
   }
 
-  setSortMethod(method){
-    let safeMethod = method;
-    if (["time","username","followList"].indexOf(method) === -1){
-      console.error("Trying to set sort method to unrecognized:",method);
-      safeMethod = "time";
-    }
-    this.setState({sortBy: safeMethod},()=>{
-      //Sort listens after changing sortBy
-      this.setState(prevState => {
-        return {listens: this.sortListens(prevState.listens, prevState)}
-      })
-    });
-  }
-
-  sortListens(listens, state){
-      const currentListenIndex = listens.indexOf(state.currentListen);
-      let listensToSort, sortedListens;
-      let pastListens = [];
-
-      if(currentListenIndex === -1){
-        listensToSort = listens;
-      } else if (state.direction === "down"){
-        listensToSort = listens.splice(currentListenIndex);
-        pastListens = listens;
-      }  else {
-        pastListens = listens.splice(currentListenIndex);
-        listensToSort = listens;
-      }
-
-      if (state.mode === "follow" && state.sortBy === "time") {
-        sortedListens = _.orderBy(listensToSort, "listened_at", "asc");
-      }
-      else if (state.mode === "listens" || state.sortBy === "time") {
-        sortedListens = _.orderBy(listensToSort, "listened_at", "desc");
-      }
-      else if (state.sortBy === "username"){
-        sortedListens = _.sortBy(listensToSort, "user_name");
-      }
-      else if (state.sortBy === "followList") {
-        let sortFunction;
-        if (state.direction === "down"){
-          sortFunction = (a, b) => state.followList.indexOf(a.user_name) - state.followList.indexOf(b.user_name)
-        } else {
-          sortFunction = (a, b) => state.followList.indexOf(b.user_name) - state.followList.indexOf(a.user_name)
-        }
-        sortedListens = listensToSort.sort(sortFunction);
-      }
-
-      let reassembledListens;
-      if (state.direction === "down"){
-        reassembledListens = pastListens.concat(sortedListens);
-      } else {
-        reassembledListens = sortedListens.concat(pastListens);
-      }
-
-      return reassembledListens
-  }
-
   handleFollowUserListChange(userList, dontSendUpdate){
     if(!Array.isArray(userList)){
       console.error("Expected array in handleFollowUserListChange, got", typeof userList);
@@ -153,8 +93,7 @@ class RecentListens extends React.Component {
     this.setState(prevState => {
       previousFollowList = prevState.followList;
       return {
-        followList: userList,
-        listens: this.sortListens(prevState.listens, prevState)
+        followList: userList
       }
     }, ()=>{
       if(dontSendUpdate){
@@ -195,8 +134,13 @@ class RecentListens extends React.Component {
     }
     console.debug(typeof newListen, newListen);
     this.setState(prevState =>{
-      prevState.listens.push(newListen);
-      return { listens: this.sortListens(prevState.listens, prevState) }
+      const listens = prevState.listens;
+      if (prevState.mode === "follow"){
+        listens.push(newListen);
+      } else {
+        listens.unshift(newListen);
+      }
+      return { listens }
     })
   }
 
@@ -236,12 +180,8 @@ class RecentListens extends React.Component {
       return
     }
     this.APIService.getRecentListensForUsers(this.state.followList)
-      .then(listens => 
-        this.setState(prevState =>{
-          return { listens: this.sortListens(listens, prevState) }
-        })
-      )
-      .catch(error => this.newAlert('danger', 'Could not recent listens', error));
+      .then(listens => this.setState({ listens}))
+      .catch(error => this.newAlert('danger', 'Could not get recent listens', error));
   }
 
   newAlert(type, headline, message) {
@@ -294,7 +234,7 @@ class RecentListens extends React.Component {
         <AlertList
           position="bottom-right"
           alerts={this.state.alerts}
-          timeout={8000}
+          timeout={15000}
           dismissTitle="Dismiss"
           onDismiss={this.onAlertDismissed}
         />
@@ -329,19 +269,6 @@ class RecentListens extends React.Component {
         }
         <div className="row">
           <div className="col-md-8">
-            {this.state.mode === "follow" &&
-              <div className="dropdown pull-right">
-                <button className="btn btn-info dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                  Sort by {_.startCase(this.state.sortBy)}
-                  &nbsp;<span className="caret"></span>
-                </button>
-                <ul className="dropdown-menu" aria-labelledby="dropdownMenu1">
-                  <li><a onClick={this.setSortMethod.bind(this, "time")}>Time</a></li>
-                  <li><a onClick={this.setSortMethod.bind(this, "username")}>Username</a></li>
-                  <li><a onClick={this.setSortMethod.bind(this, "followList")}>Follow list</a></li>
-                </ul>
-              </div>
-            }
 
             <h3>{(this.state.mode === "listens" || this.state.mode === "recent" )? "Recent listens" : "Playlist"}</h3>
 
