@@ -48,6 +48,8 @@ export class SpotifyPlayer extends React.Component {
     this.toggleDirection = this.toggleDirection.bind(this);
     window.onSpotifyWebPlaybackSDKReady = this.connectSpotifyPlayer;
     const spotifyPlayerSDKLib = require('../lib/spotify-player-sdk-1.6.0');
+    // ONLY FOR TESTING PURPOSES
+    window.disconnectSpotifyPlayer = this.disconnectSpotifyPlayer;
   }
 
   play_spotify_uri(spotify_uri) {
@@ -348,7 +350,6 @@ export class SpotifyPlayer extends React.Component {
         >
           {this.getAlbumArt()}
         </PlaybackControls>
-        <div className='btn' onClick={this.disconnectSpotifyPlayer}>Sneaky disconnect for testing</div>
       </div>
     );
   }
