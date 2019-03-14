@@ -21,10 +21,10 @@ class RecentListens extends React.Component {
   spotifyListens = [];
   constructor(props) {
     super(props);
-
+    const sortedListens = _.orderBy(props.listens || [], "listened_at", props.mode === "follow" ? "asc" : "desc");
     this.state = {
       alerts: [],
-      listens: props.listens || [],
+      listens: sortedListens || [],
       currentListen : null,
       mode: props.mode,
       followList: props.follow_list || [],
