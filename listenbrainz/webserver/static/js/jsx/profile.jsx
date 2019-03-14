@@ -21,10 +21,9 @@ class RecentListens extends React.Component {
   spotifyListens = [];
   constructor(props) {
     super(props);
-    const sortedListens = _.orderBy(props.listens || [], "listened_at", props.mode === "follow" ? "asc" : "desc");
     this.state = {
       alerts: [],
-      listens: sortedListens || [],
+      listens: props.listens || [],
       currentListen : null,
       mode: props.mode,
       followList: props.follow_list || [],
@@ -189,7 +188,7 @@ class RecentListens extends React.Component {
       return
     }
     this.APIService.getRecentListensForUsers(this.state.followList)
-      .then(listens => this.setState({ listens}))
+      .then(listens => this.setState({ listens:  _.orderBy(listens, "listened_at", "asc")}))
       .catch(error => this.newAlert('danger', 'Could not get recent listens', error));
   }
 
