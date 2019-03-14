@@ -135,6 +135,15 @@ class RecentListens extends React.Component {
     console.debug(typeof newListen, newListen);
     this.setState(prevState =>{
       const listens = prevState.listens;
+      // Crop listens array to 100 max
+      if(listens.length >= 100) {
+        if (prevState.mode === "follow"){
+          listens.shift();
+        } else {
+          listens.pop()
+        }
+      }
+
       if (prevState.mode === "follow"){
         listens.push(newListen);
       } else {
