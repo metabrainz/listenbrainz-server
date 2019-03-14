@@ -15,7 +15,6 @@ export class FollowUsers extends React.Component {
       listName: props.listName,
     }
     this.addUserToList = this.addUserToList.bind(this);
-    this.reorderUser = this.reorderUser.bind(this);
     this.addFollowerOnEnter = this.addFollowerOnEnter.bind(this);
     this.saveListOnEnter = this.saveListOnEnter.bind(this);
   }
@@ -40,15 +39,6 @@ export class FollowUsers extends React.Component {
       prevState.users.splice(index, 1);
       return { users: prevState.users }
     }, () => { this.props.onUserListChange(this.state.users) });
-  }
-
-  reorderUser(currentIndex, targetIndex) {
-    this.setState(prevState => {
-      var element = prevState.users[currentIndex];
-      prevState.users.splice(currentIndex, 1);
-      prevState.users.splice(targetIndex, 0, element);
-      return { users: prevState.users }
-    }, () => { this.props.onUserListChange(this.state.users, true) });
   }
 
   saveFollowList(event) {
@@ -164,7 +154,6 @@ export class FollowUsers extends React.Component {
             <table className="table table-condensed table-striped listens-table" style={{marginTop: "5em"}}>
               <thead>
                 <tr>
-                  <th colSpan="2" width="50px">Order</th>
                   <th>User</th>
                   <th>Listening now</th>
                   <th width="50px"></th>
@@ -175,25 +164,6 @@ export class FollowUsers extends React.Component {
                 {this.state.users.map((user, index) => {
                   return (
                     <tr key={user} className={this.props.playingNow[user] && "playing_now"} onDoubleClick={this.props.playListen.bind(this, this.props.playingNow[user])}>
-                      <td>
-                        {index + 1}
-                      </td>
-                      <td>
-                        <span className="btn-group btn-group-xs" role="group" aria-label="Reorder">
-                          {index > 0 &&
-                            <button className="btn btn-info"
-                              onClick={this.reorderUser.bind(this, index, index - 1)}>
-                              <FontAwesomeIcon icon={faChevronUp}/>
-                            </button>
-                          }
-                          {index < this.state.users.length - 1 &&
-                            <button className="btn btn-info"
-                              onClick={this.reorderUser.bind(this, index, index + 1)}>
-                              <FontAwesomeIcon icon={faChevronDown}/>
-                            </button>
-                          }
-                        </span>
-                      </td>
                       <td>
                         {user}
                       </td>
