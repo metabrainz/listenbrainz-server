@@ -21,6 +21,7 @@ export class SpotifyPlayer extends React.Component {
 
   _spotifyPlayer;
   _firstRun = true;
+  _playerStateTimerID = null;
 
   constructor(props) {
     super(props);
@@ -44,6 +45,8 @@ export class SpotifyPlayer extends React.Component {
     this.playNextTrack = this.playNextTrack.bind(this);
     this.debouncedPlayNextTrack = _.debounce(this.playNextTrack, 500, {leading:true, trailing:false});
     this.playPreviousTrack = this.playPreviousTrack.bind(this);
+    this.startPlayerStateTimer = this.startPlayerStateTimer.bind(this);
+    this.stopPlayerStateTimer = this.stopPlayerStateTimer.bind(this);
     this.togglePlay = this.togglePlay.bind(this);
     this.toggleDirection = this.toggleDirection.bind(this);
     window.onSpotifyWebPlaybackSDKReady = this.connectSpotifyPlayer;
@@ -190,6 +193,7 @@ export class SpotifyPlayer extends React.Component {
     });
   }
   disconnectSpotifyPlayer() {
+    this.stopPlayerStateTimer();
     if (!this._spotifyPlayer)
     {
       return;
@@ -235,6 +239,7 @@ export class SpotifyPlayer extends React.Component {
       if(callbackFunction){
         callbackFunction();
       }
+      this.startPlayerStateTimer()
     });
 
     this._spotifyPlayer.addListener('player_state_changed', this.handlePlayerStateChanged);
@@ -283,6 +288,15 @@ export class SpotifyPlayer extends React.Component {
     });
   }
 
+  startPlayerStateTimer() {
+    this._playerStateTimerID = setInterval(()=>{
+      this._spotifyPlayer.getCurrentState().then(this.handlePlayerStateChanged)
+    }, 200);
+  }
+  stopPlayerStateTimer() {
+    clearInterval(this._playerStateTimerID);
+    this._playerStateTimerID = null;
+  }
   handlePlayerStateChanged(state) {
     if(!state) {
       return;
@@ -294,11 +308,12 @@ export class SpotifyPlayer extends React.Component {
       duration,
       track_window: { current_track }
     } = state;
-    console.debug('Currently Playing', current_track);
-    console.debug('Position in Song', position);
-    console.debug('Duration of Song', duration);
-    console.debug('Player paused?', paused);
 
+    if(paused) {
+      this.stopPlayerStateTimer();
+    } else if (!this._playerStateTimerID){
+      this.startPlayerStateTimer();
+    }
     // How do we accurately detect the end of a song?
     // From https://github.com/spotify/web-playback-sdk/issues/35#issuecomment-469834686
     if (position === 0 && paused === true &&
