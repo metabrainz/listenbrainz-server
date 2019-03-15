@@ -354,7 +354,7 @@ class InfluxListenStore(ListenStore):
 
             user_list: A list containing the users for which you'd like to retrieve recent listens.
             limit: the maximum number of listens for each user to fetch.
-            max_age: Only return listens if the are no more than max_age seconds old. Default 3600 seconds
+            max_age: Only return listens if they are no more than max_age seconds old. Default 3600 seconds
         """
 
         escaped_user_list = []
