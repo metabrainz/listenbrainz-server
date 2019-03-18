@@ -18,9 +18,13 @@
 
 import listenbrainz.utils as utils
 import pika
+import time
 import unittest
+import uuid
 
+from datetime import datetime
 from listenbrainz.webserver import create_app
+from listenbrainz.webserver.views.api_tools import is_valid_uuid
 
 class ListenBrainzUtilsTestCase(unittest.TestCase):
 
@@ -45,3 +49,14 @@ class ListenBrainzUtilsTestCase(unittest.TestCase):
         )
         self.assertIsNotNone(ch)
         self.assertIsInstance(ch, pika.adapters.blocking_connection.BlockingChannel)
+
+    def test_unix_timestamp_to_datetime(self):
+        t = int(time.time())
+        x = utils.unix_timestamp_to_datetime(t)
+        self.assertIsInstance(x, datetime)
+        self.assertEqual(int(x.strftime('%s')), t)
+
+    def test_valid_uuid(self):
+        self.assertTrue(is_valid_uuid(str(uuid.uuid4())))
+        self.assertFalse(is_valid_uuid('hjjkghjk'))
+        self.assertFalse(is_valid_uuid(123))

@@ -6,28 +6,25 @@
     depending on your change. Keep or delete what is relevant for your change.
     Remember that it helps us review if you give more helpful info for us to
     understand your change.
-    
+
     Ensure that you've read through and followed the Contributing Guidelines, in
     ./github/CONTRIBUTING.md.
 -->
 
 # Summary
 
-<!--
-    Update the checkbox with an [x] for the type of contribution you are making.
--->
-
 * This is a…
-    * [x] Bug fix
-    * [ ] Feature addition
-    * [ ] Refactoring
-    * [ ] Minor / simple change (like a typo)
-    * [ ] Other
+    * ( ) Bug fix
+    * (x) Feature addition
+    * ( ) Refactoring
+    * ( ) Minor / simple change (like a typo)
+    * ( ) Other
+
 * **Describe this change in 1-2 sentences**:
 
 # Problem
 
-<!-- 
+<!--
     Anything that helps us understand why you are making this change goes here.
     What problem are you trying to fix? What does this change address?
 -->

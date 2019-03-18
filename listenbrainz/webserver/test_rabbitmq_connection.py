@@ -3,8 +3,10 @@ from unittest import TestCase
 from unittest.mock import patch, MagicMock
 from pika.exceptions import ConnectionClosed
 
+import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
 
 from listenbrainz.webserver.rabbitmq_connection import RabbitMQConnectionPool, CONNECTION_RETRIES, init_rabbitmq_connection
+
 
 
 class RabbitMQConnectionPoolTestCase(TestCase):
@@ -27,4 +29,5 @@ class RabbitMQConnectionPoolTestCase(TestCase):
         app = Flask(__name__)
 
         with self.assertRaises(ConnectionError):
+            rabbitmq_connection._rabbitmq = None
             init_rabbitmq_connection(app)

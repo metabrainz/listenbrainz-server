@@ -11,10 +11,9 @@ class ListenStore(object):
     MAX_FETCH = 5000          # max batch size to fetch from the db
     MAX_FUTURE_SECONDS = 600  # 10 mins in future - max fwd clock skew
 
-    def __init__(self, conf):
-        self.log = logging.getLogger(__name__)
-        self.log.setLevel(logging.INFO)
 
+    def __init__(self, logger):
+        self.log = logger
 
     def max_id(self):
         return int(self.MAX_FUTURE_SECONDS + calendar.timegm(time.gmtime()))

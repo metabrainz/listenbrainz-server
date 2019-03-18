@@ -11,7 +11,7 @@ from flask import current_app
 from listenbrainz.listen import Listen
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
 from listenbrainz.webserver.external import messybrainz
-from werkzeug.exceptions import InternalServerError, ServiceUnavailable, BadRequest
+from listenbrainz.webserver.errors import APIInternalServerError, APIServiceUnavailable, APIBadRequest
 
 #: Maximum overall listen size in bytes, to prevent egregious spamming.
 MAX_LISTEN_SIZE = 10240
@@ -43,11 +43,32 @@ def insert_payload(payload, user, listen_type=LISTEN_TYPE_IMPORT):
     try:
         augmented_listens = _get_augmented_listens(payload, user, listen_type)
         _send_listens_to_queue(listen_type, augmented_listens)
-    except (InternalServerError, ServiceUnavailable) as e:
+    except (APIInternalServerError, APIServiceUnavailable) as e:
         raise
     except Exception as e:
-        print(e)
+        current_app.logger.error("Error while inserting payload: %s", str(e), exc_info=True)
+        raise APIInternalServerError("Something went wrong. Please try again.")
     return augmented_listens
+
+
+def handle_playing_now(listen):
+    """ Check that the listen doesn't already exist in redis and put it in
+    there if it isn't.
+
+    Returns:
+        listen if new playing now listen, None otherwise
+    """
+    old_playing_now = redis_connection._redis.get_playing_now(listen['user_id'])
+    if old_playing_now and listen['recording_msid'] == old_playing_now.recording_msid:
+        return None
+    if 'duration' in listen['track_metadata']['additional_info']:
+        listen_timeout = listen['track_metadata']['additional_info']['duration']
+    elif 'duration_ms' in listen['track_metadata']['additional_info']:
+        listen_timeout = listen['track_metadata']['additional_info']['duration_ms'] // 1000
+    else:
+        listen_timeout = current_app.config['PLAYING_NOW_MAX_DURATION']
+    redis_connection._redis.put_playing_now(listen['user_id'], listen, listen_timeout)
+    return listen
 
 
 def _send_listens_to_queue(listen_type, listens):
@@ -55,24 +76,35 @@ def _send_listens_to_queue(listen_type, listens):
     for listen in listens:
         if listen_type == LISTEN_TYPE_PLAYING_NOW:
             try:
-                expire_time = listen["track_metadata"]["additional_info"].get("duration",
-                                    current_app.config['PLAYING_NOW_MAX_DURATION'])
-                redis_connection._redis.redis.setex(
-                    'playing_now:{}'.format(listen['user_id']),
-                    ujson.dumps(listen).encode('utf-8'),
-                    expire_time
-                )
+                listen = handle_playing_now(listen)
+                if listen:
+                    submit.append(listen)
             except Exception as e:
                 current_app.logger.error("Redis rpush playing_now write error: " + str(e))
-                raise ServiceUnavailable("Cannot record playing_now at this time.")
+                raise APIServiceUnavailable("Cannot record playing_now at this time.")
         else:
             submit.append(listen)
 
     if submit:
+        # check if rabbitmq connection exists or not
+        # and if not then try to connect
+        try:
+            rabbitmq_connection.init_rabbitmq_connection(current_app)
+        except ConnectionError as e:
+            current_app.logger.error('Cannot connect to RabbitMQ: %s' % str(e))
+            raise APIServiceUnavailable('Cannot submit listens to queue, please try again later.')
+
+        if listen_type == LISTEN_TYPE_PLAYING_NOW:
+           exchange = current_app.config['PLAYING_NOW_EXCHANGE']
+           queue = current_app.config['PLAYING_NOW_QUEUE']
+        else:
+            exchange = current_app.config['INCOMING_EXCHANGE']
+            queue = current_app.config['INCOMING_QUEUE']
+
         publish_data_to_queue(
             data=submit,
-            exchange=current_app.config['INCOMING_EXCHANGE'],
-            queue=current_app.config['INCOMING_QUEUE'],
+            exchange=exchange,
+            queue=queue,
             error_msg='Cannot submit listens to queue, please try again later.',
         )
 
@@ -147,7 +179,7 @@ def is_valid_uuid(u):
     try:
         u = uuid.UUID(u)
         return True
-    except ValueError:
+    except (AttributeError, ValueError):
         return False
 
 
@@ -205,7 +237,7 @@ def _messybrainz_lookup(listens):
     except messybrainz.exceptions.NoDataFoundException:
         return []
     except messybrainz.exceptions.ErrorAddingException as e:
-        raise ServiceUnavailable(str(e))
+        raise APIServiceUnavailable(str(e))
 
     augmented_listens = []
     for listen, messybrainz_resp in zip(listens, msb_responses['payload']):
@@ -219,7 +251,7 @@ def _messybrainz_lookup(listens):
             listen['track_metadata']['additional_info']['artist_msid'] = messybrainz_resp['artist_msid']
         except KeyError:
             current_app.logger.error("MessyBrainz did not return a proper set of ids")
-            raise InternalServerError
+            raise APIInternalServerError
 
         try:
             listen['track_metadata']['additional_info']['release_msid'] = messybrainz_resp['release_msid']
@@ -243,34 +275,6 @@ def _messybrainz_lookup(listens):
     return augmented_listens
 
 
-def convert_backup_to_native_format(data):
-    """
-    Converts the imported listen-payload from the lastfm backup file
-    to the native payload format.
-    """
-    payload = []
-    for native_lis in data:
-        listen = {}
-        listen['track_metadata'] = {}
-        listen['track_metadata']['additional_info'] = {}
-
-        if 'timestamp' in native_lis and 'unixtimestamp' in native_lis['timestamp']:
-            listen['listened_at'] = native_lis['timestamp']['unixtimestamp']
-
-        if 'track' in native_lis:
-            if 'name' in native_lis['track']:
-                listen['track_metadata']['track_name'] = native_lis['track']['name']
-            if 'mbid' in native_lis['track']:
-                listen['track_metadata']['additional_info']['recording_mbid'] = native_lis['track']['mbid']
-            if 'artist' in native_lis['track']:
-                if 'name' in native_lis['track']['artist']:
-                    listen['track_metadata']['artist_name'] = native_lis['track']['artist']['name']
-                if 'mbid' in native_lis['track']['artist']:
-                    listen['track_metadata']['additional_info']['artist_mbids'] = [native_lis['track']['artist']['mbid']]
-        payload.append(listen)
-    return payload
-
-
 def log_raise_400(msg, data=""):
     """ Helper function for logging issues with request data and showing error page.
         Logs the message and data, raises BadRequest exception which shows 400 Bad
@@ -281,7 +285,7 @@ def log_raise_400(msg, data=""):
         data = ujson.dumps(data)
 
     current_app.logger.debug("BadRequest: %s\nJSON: %s" % (msg, data))
-    raise BadRequest(msg)
+    raise APIBadRequest(msg)
 
 
 def verify_mbid_validity(listen, key, multi):
@@ -337,7 +341,7 @@ def publish_data_to_queue(data, exchange, queue, error_msg):
             )
     except pika.exceptions.ConnectionClosed as e:
         current_app.logger.error("Connection to rabbitmq closed while trying to publish: %s" % str(e), exc_info=True)
-        raise ServiceUnavailable(error_msg)
+        raise APIServiceUnavailable(error_msg)
     except Exception as e:
         current_app.logger.error("Cannot publish to rabbitmq channel: %s / %s" % (type(e).__name__, str(e)), exc_info=True)
-        raise ServiceUnavailable(error_msg)
+        raise APIServiceUnavailable(error_msg)

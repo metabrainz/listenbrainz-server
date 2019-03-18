@@ -17,37 +17,64 @@
     {#- Collect the nav links, forms, and other content for toggling -#}
     <div class="collapse navbar-collapse" id="lb-navbar-collapse">
       <ul class="nav navbar-nav">
-        <li><a href="{{ url_for('index.contribute') }}">Contribute</a></li>
-        <li><a href="{{ url_for('index.data') }}">Data</a></li>
-        <li><a href="{{ url_for('index.api_docs') }}">API Docs</a></li>
-        <li><a href="{{ url_for('index.roadmap') }}">Roadmap</a></li>
-        <li><a href="{{ url_for('index.goals') }}">Goals</a></li>
-        <li><a href="{{ url_for('index.faq') }}">FAQ</a></li>
-      </ul>
-
-      <ul class="nav navbar-nav navbar-right">
-      <li class="import-link">
-        <a href="{{ url_for('profile.import_data') }}">Import!</a>
-      </li>
-      {% if hide_navbar_user_menu or not current_user or current_user.is_anonymous() %}
-        <li>
-          <a href="{{ url_for('login.index') }}">Sign in</a>
-        </li>
-      {% else %}
+        {% if not hide_navbar_user_menu %}
+          {% if current_user.is_authenticated %}
+            <li><a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">My Listens</a></li>
+            <li><a href="{{ url_for('follow.follow') }}">Follow</a></li>
+          {% endif %}
+        {%- endif -%}
+        <li><a href="{{ url_for('index.recent_listens') }}">Recent</a></li>
+        <li><a href="{{ url_for('profile.import_data') }}">Import</a></li>
         <li class="dropdown">
           <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-            {{ current_user.musicbrainz_id }} <span class="caret"></span>
+             About<span class="caret"></span>
           </a>
           <ul class="dropdown-menu" role="menu">
-            <li><a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">Your Listens</a></li>
-            <li><a href="{{ url_for('profile.import_data') }}">Import listens</a></li>
-            <li><a href="{{ url_for('profile.export_data') }}">Export listens</a></li>
-            <li><a href="{{ url_for('profile.info') }}">Your Info</a></li>
-            <li><a href="{{ url_for('login.logout') }}">Sign out</a></li>
+              <li><a href="{{ url_for('index.faq') }}">FAQ</a></li>
+              <li><a href="{{ url_for('index.goals') }}">Goals</a></li>
+              <li><a href="{{ url_for('index.current_status') }}">Current status</a></li>
+              <li><a href="https://metabrainz.org/gdpr">GDPR compliance</a></li>
+              <li><a href="https://metabrainz.org/privacy">Privacy policy</a></li>
+              <li><a href="https://metabrainz.org">About MetaBrainz</a></li>
           </ul>
         </li>
-      {%- endif -%}
+
+        <li class="dropdown">
+          <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+             Contribute<span class="caret"></span>
+          </a>
+          <ul class="dropdown-menu" role="menu">
+            <li><a href="{{ url_for('index.contribute') }}">Contribute</a></li>
+            <li><a href="{{ url_for('index.data') }}">Data</a></li>
+            <li><a href="{{ url_for('index.api_docs') }}">API Docs</a></li>
+            <li><a href="{{ url_for('index.roadmap') }}">Roadmap</a></li>
+          </ul>
+        </li>
+    </ul>
+
+    {% if not hide_navbar_user_menu %}
+      <ul class="nav navbar-nav navbar-right">
+        {% if not current_user.is_authenticated or current_user.is_anonymous %}
+          <li>
+            <a href="{{ url_for('login.index') }}">Sign in</a>
+          </li>
+        {% else %}
+          <li class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+              {{ current_user.musicbrainz_id }} <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu" role="menu">
+              <li><a href="{{ url_for('user.profile', user_name=current_user.musicbrainz_id) }}">My Listens</a></li>
+              <li><a href="{{ url_for('profile.connect_spotify') }}">Connect Spotify</a></li>
+              <li><a href="{{ url_for('profile.import_data') }}">Import listens</a></li>
+              <li><a href="{{ url_for('profile.export_data') }}">Export listens</a></li>
+              <li><a href="{{ url_for('profile.info') }}">My profile</a></li>
+              <li><a href="{{ url_for('login.logout') }}">Sign out</a></li>
+            </ul>
+          </li>
+        {%- endif -%}
       </ul>
+    {% endif %}
     </div>
 
   </div>

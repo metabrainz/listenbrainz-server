@@ -1,6 +1,7 @@
 import errno
 import os
 import pika
+import pytz
 import time
 
 from datetime import datetime
@@ -8,7 +9,6 @@ from redis import Redis
 
 INFLUX_TIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 INFLUX_TIME_FORMAT_NANO = "%Y-%m-%dT%H:%M:%S"
-
 
 def escape(value):
     """ Escapes backslashes, quotes and new lines present in the string value
@@ -51,6 +51,9 @@ def convert_to_unix_timestamp(influx_row_time):
     """ Converts time retreived from influxdb into unix timestamp """
     dt = datetime.strptime(influx_row_time, INFLUX_TIME_FORMAT)
     return int(dt.strftime('%s'))
+
+def convert_influx_to_datetime(influx_row_time):
+    return datetime.strptime(influx_row_time, INFLUX_TIME_FORMAT)
 
 
 def convert_timestamp_to_influx_row_format(ts):
@@ -168,7 +171,7 @@ def connect_to_redis(host, port, log=print):
             return redis
         except Exception as err:
             log("Cannot connect to redis: %s. Retrying in 3 seconds and trying again." % str(err))
-            sleep(3)
+            time.sleep(3)
 
 def safely_import_config():
     """ 
@@ -182,3 +185,17 @@ def safely_import_config():
         except ImportError:
             print("Cannot import config.py. Waiting and retrying...")
             time.sleep(2)
+
+
+def unix_timestamp_to_datetime(timestamp):
+    """ Converts expires_at timestamp received from Spotify to a datetime object
+
+    Args:
+        timestamp (int): the unix timestamp to be converted to datetime
+
+    Returns:
+        A datetime object with timezone UTC corresponding to the provided timestamp
+    """
+    return datetime.utcfromtimestamp(timestamp).replace(tzinfo=pytz.UTC)
+
+

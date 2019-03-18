@@ -107,27 +107,35 @@ element. The ``user_id`` element contains the MusicBrainz ID of the user whose l
 being returned. The other element is the ``listens`` element. This is a list which contains
 the listen JSON elements (described above).
 
+The JSON document returned by the API endpoint for getting tracks being played right now
+is the same as above, except that it also contains the ``payload/playing_now`` element as a
+boolean set to True.
+
 
 Payload JSON details
 --------------------
 
-A minimal payload must include the ``listened_at``,
+A minimal payload must include
 ``track_metadata/artist_name`` and ``track_metadata/track_name`` elements::
 
     {
-      "listened_at": 1443521965,
       "track_metadata": {
         "artist_name": "Rick Astley",
         "track_name": "Never Gonna Give You Up",
       }
     }
 
-``artist_name`` and ``track_name`` elements must be simple strings, while the
-``listened_at`` element must be an integer.
+``artist_name`` and ``track_name`` elements must be simple strings.
+
+The payload will also include the ``listened_at`` element which must be an integer
+representing the Unix time when the track was listened to. The only exception to this
+rule is when the listen is being played right now and has been retrieved from the
+endpoint to get listens being played right now. The ``listened_at`` element will be
+absent for such listens.
 
 Add additional metadata you may have for a track to the ``additional_info``
 element. Any additional information allows us to better correlate your listen
-data to existing MusicBrainz-based data. If you have MusicBrainz IDs availble,
+data to existing MusicBrainz-based data. If you have MusicBrainz IDs available,
 submit them!
 
 The following optional elements may also be included in the ``track_metadata`` element:

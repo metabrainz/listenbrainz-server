@@ -100,7 +100,8 @@ class StatsTestCase(unittest.TestCase):
         self.assertEqual(formatted_data[1]['artist_name'], data['rows'][1]['f'][0]['v'])
         self.assertEqual(formatted_data[1]['artist_msid'], data['rows'][1]['f'][1]['v'])
 
-    def test_run_query_done(self):
+    @patch('listenbrainz.bigquery.current_app') # patching current_app so that test doesn't have to run in app context
+    def test_run_query_done(self, mock_current_app):
         """ Test run_query when the result is directly returned by the first api call to bigquery.jobs.query """
 
         mock_bigquery = MagicMock()

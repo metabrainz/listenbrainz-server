@@ -11,7 +11,7 @@ services:
     command: postgres -F
 
   redis:
-    image: redis:3.2.1
+    image: redis:5.0.3
 
   influx:
     image: influxdb:1.2.4

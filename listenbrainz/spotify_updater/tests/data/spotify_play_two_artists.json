@@ -1,0 +1,226 @@
+{
+  "track": {
+    "album": {
+      "album_type": "album",
+      "artists": [
+        {
+          "external_urls": {
+            "spotify": "https://open.spotify.com/artist/1OwarW4LEHnoep20ixRA0y"
+          },
+          "href": "https://api.spotify.com/v1/artists/1OwarW4LEHnoep20ixRA0y",
+          "id": "1OwarW4LEHnoep20ixRA0y",
+          "name": "Robert Plant",
+          "type": "artist",
+          "uri": "spotify:artist:1OwarW4LEHnoep20ixRA0y"
+        },
+        {
+          "external_urls": {
+            "spotify": "https://open.spotify.com/artist/5J6L7N6B4nI1M5cwa29mQG"
+          },
+          "href": "https://api.spotify.com/v1/artists/5J6L7N6B4nI1M5cwa29mQG",
+          "id": "5J6L7N6B4nI1M5cwa29mQG",
+          "name": "Alison Krauss",
+          "type": "artist",
+          "uri": "spotify:artist:5J6L7N6B4nI1M5cwa29mQG"
+        }
+      ],
+      "available_markets": [
+        "AD",
+        "AR",
+        "AT",
+        "AU",
+        "BE",
+        "BG",
+        "BO",
+        "BR",
+        "CA",
+        "CH",
+        "CL",
+        "CO",
+        "CR",
+        "CY",
+        "CZ",
+        "DE",
+        "DK",
+        "DO",
+        "EC",
+        "EE",
+        "ES",
+        "FI",
+        "FR",
+        "GB",
+        "GR",
+        "GT",
+        "HK",
+        "HN",
+        "HU",
+        "ID",
+        "IE",
+        "IS",
+        "IT",
+        "JP",
+        "LI",
+        "LT",
+        "LU",
+        "LV",
+        "MC",
+        "MT",
+        "MX",
+        "MY",
+        "NI",
+        "NL",
+        "NO",
+        "NZ",
+        "PA",
+        "PE",
+        "PH",
+        "PL",
+        "PT",
+        "PY",
+        "SE",
+        "SG",
+        "SK",
+        "SV",
+        "TR",
+        "TW",
+        "US",
+        "UY"
+      ],
+      "external_urls": {
+        "spotify": "https://open.spotify.com/album/3Z5nkL4z2Tsa3b79vv6LXb"
+      },
+      "href": "https://api.spotify.com/v1/albums/3Z5nkL4z2Tsa3b79vv6LXb",
+      "id": "3Z5nkL4z2Tsa3b79vv6LXb",
+      "images": [
+        {
+          "height": 640,
+          "url": "https://i.scdn.co/image/a96420ba42e4166c781fe8df32f9759556858f91",
+          "width": 640
+        },
+        {
+          "height": 300,
+          "url": "https://i.scdn.co/image/b16c22d69a38b9dd6dfac52e0ce8b40cc4c00041",
+          "width": 300
+        },
+        {
+          "height": 64,
+          "url": "https://i.scdn.co/image/b2b7d8628bca40067ad9ad8749c0ae0daf34a376",
+          "width": 64
+        }
+      ],
+      "name": "Raising Sand",
+      "type": "album",
+      "uri": "spotify:album:3Z5nkL4z2Tsa3b79vv6LXb"
+    },
+    "artists": [
+      {
+        "external_urls": {
+          "spotify": "https://open.spotify.com/artist/1OwarW4LEHnoep20ixRA0y"
+        },
+        "href": "https://api.spotify.com/v1/artists/1OwarW4LEHnoep20ixRA0y",
+        "id": "1OwarW4LEHnoep20ixRA0y",
+        "name": "Robert Plant",
+        "type": "artist",
+        "uri": "spotify:artist:1OwarW4LEHnoep20ixRA0y"
+      },
+      {
+        "external_urls": {
+          "spotify": "https://open.spotify.com/artist/5J6L7N6B4nI1M5cwa29mQG"
+        },
+        "href": "https://api.spotify.com/v1/artists/5J6L7N6B4nI1M5cwa29mQG",
+        "id": "5J6L7N6B4nI1M5cwa29mQG",
+        "name": "Alison Krauss",
+        "type": "artist",
+        "uri": "spotify:artist:5J6L7N6B4nI1M5cwa29mQG"
+      }
+    ],
+    "available_markets": [
+      "AD",
+      "AR",
+      "AT",
+      "AU",
+      "BE",
+      "BG",
+      "BO",
+      "BR",
+      "CA",
+      "CH",
+      "CL",
+      "CO",
+      "CR",
+      "CY",
+      "CZ",
+      "DE",
+      "DK",
+      "DO",
+      "EC",
+      "EE",
+      "ES",
+      "FI",
+      "FR",
+      "GB",
+      "GR",
+      "GT",
+      "HK",
+      "HN",
+      "HU",
+      "ID",
+      "IE",
+      "IS",
+      "IT",
+      "JP",
+      "LI",
+      "LT",
+      "LU",
+      "LV",
+      "MC",
+      "MT",
+      "MX",
+      "MY",
+      "NI",
+      "NL",
+      "NO",
+      "NZ",
+      "PA",
+      "PE",
+      "PH",
+      "PL",
+      "PT",
+      "PY",
+      "SE",
+      "SG",
+      "SK",
+      "SV",
+      "TR",
+      "TW",
+      "US",
+      "UY"
+    ],
+    "disc_number": 1,
+    "duration_ms": 243480,
+    "explicit": false,
+    "external_ids": {
+      "isrc": "USRO20707501"
+    },
+    "external_urls": {
+      "spotify": "https://open.spotify.com/track/6bnmRsdxYacqLSlS36EJT6"
+    },
+    "href": "https://api.spotify.com/v1/tracks/6bnmRsdxYacqLSlS36EJT6",
+    "id": "6bnmRsdxYacqLSlS36EJT6",
+    "name": "Rich Woman",
+    "popularity": 43,
+    "preview_url": "https://p.scdn.co/mp3-preview/d18a8fcf05e7816319d2de008f06de94ab4ff5e7?cid=eed29c47a7fa4cdf99c389d533105708",
+    "track_number": 1,
+    "type": "track",
+    "uri": "spotify:track:6bnmRsdxYacqLSlS36EJT6"
+  },
+  "context": {
+    "uri": "spotify:user:spotify:playlist:37i9dQZEVXcT0vULPoxsJt",
+    "external_urls": {
+      "spotify": "https://open.spotify.com/user/spotify/playlist/37i9dQZEVXcT0vULPoxsJt"
+    },
+    "href": "https://api.spotify.com/v1/users/spotify/playlists/37i9dQZEVXcT0vULPoxsJt",
+    "type": "playlist"
+  },
+  "played_at": "2018-02-21T19:15:03.665Z"
+}

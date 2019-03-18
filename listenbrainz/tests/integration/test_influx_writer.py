@@ -3,7 +3,9 @@ import sys
 import os
 import uuid
 from listenbrainz.tests.integration import IntegrationTestCase
+from listenbrainz.listen import Listen
 from listenbrainz.listenstore import InfluxListenStore
+from listenbrainz.listenstore import RedisListenStore
 from flask import url_for
 import listenbrainz.db.user as db_user
 import time
@@ -17,6 +19,12 @@ class InfluxWriterTestCase(IntegrationTestCase):
     def setUp(self):
         super(InfluxWriterTestCase, self).setUp()
         self.ls = InfluxListenStore({ 'REDIS_HOST': config.REDIS_HOST,
+                             'REDIS_PORT': config.REDIS_PORT,
+                             'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
+                             'INFLUX_HOST': config.INFLUX_HOST,
+                             'INFLUX_PORT': config.INFLUX_PORT,
+                             'INFLUX_DB_NAME': config.INFLUX_DB_NAME}, self.app.logger)
+        self.rs = RedisListenStore(self.app.logger, { 'REDIS_HOST': config.REDIS_HOST,
                              'REDIS_PORT': config.REDIS_PORT,
                              'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
                              'INFLUX_HOST': config.INFLUX_HOST,
@@ -49,6 +57,11 @@ class InfluxWriterTestCase(IntegrationTestCase):
         listens = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
         self.assertEqual(len(listens), 1)
 
+        recent = self.rs.get_recent_listens(4)
+        self.assertEqual(len(recent), 4)
+        self.assertIsInstance(recent[0], Listen)
+
+
     def test_dedup_user_special_characters(self):
 
         user = db_user.get_or_create(2, 'i have a\\weird\\user, name"\n')
@@ -64,6 +77,7 @@ class InfluxWriterTestCase(IntegrationTestCase):
         to_ts = int(time.time())
         listens = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
         self.assertEqual(len(listens), 1)
+
 
     def test_dedup_same_batch(self):
 
@@ -99,6 +113,7 @@ class InfluxWriterTestCase(IntegrationTestCase):
 
         listens = self.ls.fetch_listens(user2['musicbrainz_id'], to_ts=to_ts)
         self.assertEqual(len(listens), 1)
+
 
     def test_dedup_same_timestamp_different_tracks(self):
         """ Test to check that if there are two tracks w/ the same timestamp,

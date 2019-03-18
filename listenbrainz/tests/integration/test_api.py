@@ -4,6 +4,7 @@ import uuid
 
 from listenbrainz.tests.integration import IntegrationTestCase
 from flask import url_for
+from redis import Redis
 import listenbrainz.db.user as db_user
 import time
 import json
@@ -15,6 +16,11 @@ class APITestCase(IntegrationTestCase):
         super(APITestCase, self).setUp()
         self.user = db_user.get_or_create(1, 'testuserpleaseignore')
 
+    def tearDown(self):
+        r = Redis(host=self.app.config['REDIS_HOST'], port=self.app.config['REDIS_PORT'])
+        r.flushall()
+        super(APITestCase, self).tearDown()
+
     def test_get_listens(self):
         """ Test to make sure that the api sends valid listens on get requests.
         """
@@ -22,7 +28,8 @@ class APITestCase(IntegrationTestCase):
             payload = json.load(f)
 
         # send a listen
-        payload['payload'][0]['listened_at'] = int(time.time())
+        ts = int(time.time())
+        payload['payload'][0]['listened_at'] = ts
         response = self.send_data(payload)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
@@ -55,6 +62,17 @@ class APITestCase(IntegrationTestCase):
         self.assertTrue(is_valid_uuid(data['listens'][0]['recording_msid']))
         self.assertTrue(is_valid_uuid(data['listens'][0]['track_metadata']['additional_info']['artist_msid']))
         self.assertTrue(is_valid_uuid(data['listens'][0]['track_metadata']['additional_info']['release_msid']))
+
+        # check for latest listen timestamp
+        self.assertEqual(data['latest_listen_ts'], ts)
+
+        # checkt that recent listens are fectched correctly
+        url = url_for('api_v1.get_recent_listens_for_user_list', user_list = self.user['musicbrainz_id'])
+        response = self.client.get(url, query_string = {'count': '1'})
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        self.assertEqual(data['count'], 2)
+
 
     def send_data(self, payload):
         """ Sends payload to api.submit_listen and return the response
@@ -119,8 +137,48 @@ class APITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
-        r = self.client.get(url_for('user.profile', user_name=self.user['musicbrainz_id']))
-        self.assertIn('Playing now', r.data.decode('utf-8'))
+        r = self.client.get(url_for('api_v1.get_playing_now', user_name=self.user['musicbrainz_id']))
+        self.assert200(r)
+        self.assertEqual(r.json['payload']['count'], 1)
+
+
+    def test_playing_now_with_duration(self):
+        """ Test that playing now listens with durations expire
+        """
+        with open(self.path_to_data_file('playing_now_with_duration.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        r = self.client.get(url_for('api_v1.get_playing_now', user_name=self.user['musicbrainz_id']))
+        self.assertEqual(r.json['payload']['count'], 1)
+        self.assertEqual(r.json['payload']['listens'][0]['track_metadata']['track_name'], 'Fade')
+
+        time.sleep(1.1)
+
+        # should have expired by now
+        r = self.client.get(url_for('api_v1.get_playing_now', user_name=self.user['musicbrainz_id']))
+        self.assertEqual(r.json['payload']['count'], 0)
+
+    def test_playing_now_with_duration_ms(self):
+        """ Test that playing now submissions with duration_ms also expire
+        """
+        with open(self.path_to_data_file('playing_now_with_duration_ms.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        r = self.client.get(url_for('api_v1.get_playing_now', user_name=self.user['musicbrainz_id']))
+        self.assertEqual(r.json['payload']['count'], 1)
+        self.assertEqual(r.json['payload']['listens'][0]['track_metadata']['track_name'], 'Fade')
+
+        time.sleep(1.1)
+
+        # should have expired by now
+        r = self.client.get(url_for('api_v1.get_playing_now', user_name=self.user['musicbrainz_id']))
+        self.assertEqual(r.json['payload']['count'], 0)
 
     def test_playing_now_with_ts(self):
         """ Test for invalid submission of listen_type 'playing_now' which contains
@@ -237,13 +295,14 @@ class APITestCase(IntegrationTestCase):
         self.assertEqual(sent_additional_info['link2'], received_additional_info['link2'])
         self.assertEqual(sent_additional_info['other_stuff'], received_additional_info['other_stuff'])
         self.assertEqual(sent_additional_info['nested']['info'], received_additional_info['nested.info'])
-        self.assertEqual(str(sent_additional_info['release_type']), received_additional_info['release_type'])
+        self.assertListEqual(sent_additional_info['release_type'], received_additional_info['release_type'])
         self.assertEqual(sent_additional_info['spotify_id'], received_additional_info['spotify_id'])
         self.assertEqual(sent_additional_info['isrc'], received_additional_info['isrc'])
         self.assertEqual(sent_additional_info['tracknumber'], received_additional_info['tracknumber'])
         self.assertEqual(sent_additional_info['release_group_mbid'], received_additional_info['release_group_mbid'])
         self.assertListEqual(sent_additional_info['work_mbids'], received_additional_info['work_mbids'])
         self.assertListEqual(sent_additional_info['artist_mbids'], received_additional_info['artist_mbids'])
+        self.assertListEqual(sent_additional_info['non_official_list'], received_additional_info['non_official_list'])
 
         self.assertNotIn('track_name', sent_additional_info)
         self.assertNotIn('artist_name', sent_additional_info)
@@ -315,3 +374,45 @@ class APITestCase(IntegrationTestCase):
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
         self.assertEqual('Value for key listened_at is too high.', response.json['error'])
+
+    def test_invalid_token_validation(self):
+        """Sends an invalid token to api.validate_token"""
+        url = url_for('api_v1.validate_token')
+        response = self.client.get(url, query_string = {"token":"invalidtoken"})
+        self.assert200(response)
+        self.assertEqual(response.json['code'], 200)
+        self.assertEqual('Token invalid.', response.json['message'])
+
+
+    def test_valid_token_validation(self):
+        """Sends a valid token to api.validate_token"""
+        url = url_for('api_v1.validate_token')
+        response = self.client.get(url, query_string = {"token":self.user['auth_token']})
+        self.assert200(response)
+        self.assertEqual(response.json['code'], 200)
+        self.assertEqual('Token valid.', response.json['message'])
+
+    def test_get_playing_now(self):
+        """ Test for valid submission and retrieval of listen_type 'playing_now'
+        """
+        r = self.client.get(url_for('api_v1.get_playing_now', user_name='thisuserdoesnotexist'))
+        self.assert404(r)
+
+        r = self.client.get(url_for('api_v1.get_playing_now', user_name=self.user['musicbrainz_id']))
+        self.assertEqual(r.json['payload']['count'], 0)
+        self.assertEqual(len(r.json['payload']['listens']), 0)
+
+        with open(self.path_to_data_file('valid_playing_now.json'), 'r') as f:
+            payload = json.load(f)
+        response = self.send_data(payload)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        r = self.client.get(url_for('api_v1.get_playing_now', user_name=self.user['musicbrainz_id']))
+        self.assertTrue(r.json['payload']['playing_now'])
+        self.assertEqual(r.json['payload']['count'], 1)
+        self.assertEqual(len(r.json['payload']['listens']), 1)
+        self.assertEqual(r.json['payload']['user_id'], self.user['musicbrainz_id'])
+        self.assertEqual(r.json['payload']['listens'][0]['track_metadata']['artist_name'], 'Kanye West')
+        self.assertEqual(r.json['payload']['listens'][0]['track_metadata']['release_name'], 'The Life of Pablo')
+        self.assertEqual(r.json['payload']['listens'][0]['track_metadata']['track_name'], 'Fade')

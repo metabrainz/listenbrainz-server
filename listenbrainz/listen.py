@@ -1,6 +1,8 @@
 # coding=utf-8
 import calendar
 import time
+import ujson
+import yaml
 
 from datetime import datetime
 from listenbrainz.utils import escape, convert_to_unix_timestamp
@@ -25,6 +27,11 @@ def flatten_dict(d, seperator='', parent_key=''):
         else:
             result.append((new_key, value))
     return dict(result)
+
+def convert_comma_seperated_string_to_list(string):
+    if not string:
+        return []
+    return [val for val in string.split(',')]
 
 
 class Listen(object):
@@ -74,8 +81,8 @@ class Listen(object):
                 self.timestamp = timestamp
                 self.ts_since_epoch = calendar.timegm(self.timestamp.utctimetuple())
             else:
-                self.timestamp = 0
-                self.ts_since_epoch = 0
+                self.timestamp = None
+                self.ts_since_epoch = None
 
         self.artist_msid = artist_msid
         self.release_msid = release_msid
@@ -97,10 +104,15 @@ class Listen(object):
     @classmethod
     def from_json(cls, j):
         """Factory to make Listen() objects from a dict"""
+
+        if 'playing_now' in j:
+            j.update({'listened_at': None})
+        else:
+            j['listened_at']=datetime.utcfromtimestamp(float(j['listened_at']))
         return cls(
             user_id=j.get('user_id'),
             user_name=j.get('user_name', ''),
-            timestamp=datetime.utcfromtimestamp(float(j['listened_at'])),
+            timestamp=j['listened_at'],
             artist_msid=j['track_metadata']['additional_info'].get('artist_msid'),
             release_msid=j['track_metadata']['additional_info'].get('release_msid'),
             recording_msid=j.get('recording_msid'),
@@ -113,10 +125,6 @@ class Listen(object):
         """ Factory to make Listen objects from an influx row
         """
 
-        def convert_comma_seperated_string_to_list(string):
-            if not string:
-                return []
-            return [val for val in string.split(',')]
 
         t = convert_to_unix_timestamp(row['time'])
 
@@ -140,6 +148,24 @@ class Listen(object):
         # the additional_info.
         for key, value in row.items():
             if key not in data and key not in Listen.TOP_LEVEL_KEYS + Listen.PRIVATE_KEYS and value is not None:
+                try:
+                    value = ujson.loads(value)
+                    data[key] = value
+                    continue
+                except (ValueError, TypeError):
+                    pass
+
+                # there are some lists in the database that were converted to string
+                # via str(list) so they can't be loaded via json.
+                # Example: "['Blank & Jones']"
+                # However, yaml parses them safely and correctly
+                try:
+                    value = yaml.safe_load(value)
+                    data[key] = value
+                    continue
+                except (ValueError, yaml.scanner.ScannerError, yaml.parser.ParserError, Exception):
+                    pass
+
                 data[key] = value
 
         return cls(
@@ -173,6 +199,7 @@ class Listen(object):
             'track_metadata': track_metadata,
             'listened_at': self.ts_since_epoch,
             'recording_msid': self.recording_msid,
+            'user_name': self.user_name,
         }
 
         return data
@@ -229,9 +256,11 @@ class Listen(object):
             if key in Listen.PRIVATE_KEYS:
                 continue
             if key not in Listen.SUPPORTED_KEYS:
-                data['fields'][key] = escape(str(value))
+                data['fields'][key] = ujson.dumps(value)
 
         return data
+
+
 
     def validate(self):
         return (self.user_id is not None and self.timestamp is not None and self.artist_msid is not None
@@ -242,8 +271,26 @@ class Listen(object):
         return self.timestamp
 
     def __repr__(self):
-        return str(self).encode("utf-8")
+        from pprint import pformat
+        return pformat(vars(self))
 
     def __unicode__(self):
         return "<Listen: user_name: %s, time: %s, artist_msid: %s, release_msid: %s, recording_msid: %s, artist_name: %s, track_name: %s>" % \
                (self.user_name, self.ts_since_epoch, self.artist_msid, self.release_msid, self.recording_msid, self.data['artist_name'], self.data['track_name'])
+
+
+def convert_influx_row_to_spark_row(row):
+    return {
+        'listened_at': str(row['time']),
+        'user_name': row['user_name'],
+        'artist_msid': row['artist_msid'],
+        'artist_name': row['artist_name'],
+        'artist_mbids': convert_comma_seperated_string_to_list(row.get('artist_mbids', '')),
+        'release_msid': row.get('release_msid'),
+        'release_name': row.get('release_name', ''),
+        'release_mbid': row.get('release_mbid', ''),
+        'track_name': row['track_name'],
+        'recording_msid': row['recording_msid'],
+        'recording_mbid': row.get('recording_mbid', ''),
+        'tags': convert_comma_seperated_string_to_list(row.get('tags', [])),
+    }

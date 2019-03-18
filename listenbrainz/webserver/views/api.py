@@ -1,12 +1,13 @@
-
 import ujson
 from flask import Blueprint, request, jsonify, current_app
-from werkzeug.exceptions import BadRequest, InternalServerError, Unauthorized, ServiceUnavailable, NotFound
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz.webserver.views.follow import parse_user_list
 from listenbrainz import webserver
 import listenbrainz.db.user as db_user
 from listenbrainz.webserver.rate_limiter import ratelimit
+import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET,\
     DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
 import time
@@ -67,10 +68,10 @@ def submit_listen():
 
     try:
         insert_payload(payload, user, listen_type=_get_listen_type(data['listen_type']))
-    except ServiceUnavailable as e:
+    except APIServiceUnavailable as e:
         raise
     except Exception as e:
-        raise InternalServerError("Something went wrong. Please try again.")
+        raise APIInternalServerError("Something went wrong. Please try again.")
 
     return jsonify({'status': 'ok'})
 
@@ -115,11 +116,92 @@ def get_listens(user_name):
     for listen in listens:
         listen_data.append(listen.to_api())
 
+    latest_listen = db_conn.fetch_listens(
+        user_name,
+        limit=1,
+        to_ts=max_ts,
+    )
+    latest_listen_ts = latest_listen[0].ts_since_epoch if len(latest_listen) > 0 else 0
+
+
     if min_ts:
         listen_data = listen_data[::-1]
 
     return jsonify({'payload': {
         'user_id': user_name,
+        'count': len(listen_data),
+        'listens': listen_data,
+        'latest_listen_ts': latest_listen_ts,
+    }})
+
+
+@api_bp.route("/user/<user_name>/playing-now")
+@ratelimit()
+def get_playing_now(user_name):
+    """
+    Get the listen being played right now for user ``user_name``.
+
+    This endpoint returns a JSON document with a single listen in the same format as the ``/user/<user_name>/listens`` endpoint,
+    with one key difference, there will only be one listen returned at maximum and the listen will not contain a ``listened_at`` element.
+
+    The format for the JSON returned is defined in our :ref:`json-doc`.
+
+    :statuscode 200: Yay, you have data!
+    :resheader Content-Type: *application/json*
+    """
+
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APINotFound("Cannot find user: %s" % user_name)
+
+    playing_now_listen = redis_connection._redis.get_playing_now(user['id'])
+    listen_data = []
+    count = 0
+    if playing_now_listen:
+        count += 1
+        listen_data = [{
+            'track_metadata': playing_now_listen.data,
+        }]
+
+    return jsonify({
+        'payload': {
+            'count': count,
+            'user_id': user_name,
+            'playing_now': True,
+            'listens': listen_data,
+        },
+    })
+
+
+@api_bp.route("/users/<user_list>/recent-listens")
+@crossdomain(headers='Authorization, Content-Type')
+@ratelimit()
+def get_recent_listens_for_user_list(user_list):
+    """
+    Fetch the most recent listens for a comma separated list of users. Take care to properly HTTP escape
+    user names that contain commas!
+
+    :statuscode 200: Fetched listens successfully.
+    :statuscode 400: Your user list was incomplete or otherwise invalid.
+    :resheader Content-Type: *application/json*
+    """
+
+    limit = _parse_int_arg("limit", 2)
+    users = parse_user_list(user_list)
+    if not len(users):
+        raise APIBadRequest("user_list is empty or invalid.")
+
+    db_conn = webserver.create_influx(current_app)
+    listens = db_conn.fetch_recent_listens_for_users(
+        users,
+        limit=limit
+    )
+    listen_data = []
+    for listen in listens:
+        listen_data.append(listen.to_api())
+
+    return jsonify({'payload': {
+        'user_list': user_list,
         'count': len(listen_data),
         'listens': listen_data,
     }})
@@ -159,7 +241,7 @@ def latest_import():
         user_name = request.args.get('user_name', '')
         user = db_user.get_by_mb_id(user_name)
         if user is None:
-            raise NotFound("Cannot find user: {user_name}".format(user_name=user_name))
+            raise APINotFound("Cannot find user: {user_name}".format(user_name=user_name))
         return jsonify({
                 'musicbrainz_id': user['musicbrainz_id'],
                 'latest_import': 0 if not user['latest_import'] else int(user['latest_import'].strftime('%s'))
@@ -170,15 +252,43 @@ def latest_import():
         try:
             ts = ujson.loads(request.get_data()).get('ts', 0)
         except ValueError:
-            raise BadRequest('Invalid data sent')
+            raise APIBadRequest('Invalid data sent')
 
         try:
             db_user.increase_latest_import(user['musicbrainz_id'], int(ts))
         except DatabaseException as e:
             current_app.logger.error("Error while updating latest import: {}".format(e))
-            raise InternalServerError('Could not update latest_import, try again')
+            raise APIInternalServerError('Could not update latest_import, try again')
 
         return jsonify({'status': 'ok'})
+
+
+@api_bp.route('/validate-token', methods=['GET'])
+@ratelimit()
+def validate_token():
+    """
+    Check whether a User Token is a valid entry in the database.
+
+    In order to query this endpoint, send a GET request.
+    A JSON response will be returned, with one of three codes.
+
+    :statuscode 200: The user token is valid/invalid.
+    :statuscode 400: No token was sent to the endpoint.
+    """
+    auth_token = request.args.get('token', '')
+    if not auth_token:
+        raise APIBadRequest("You need to provide an Authorization token.")
+    user = db_user.get_by_token(auth_token)
+    if user is None:
+        return jsonify({
+            'code': 200,
+            'message': 'Token invalid.'
+        })
+    else:
+        return jsonify({
+            'code': 200,
+            'message': 'Token valid.'
+        })
 
 
 def _parse_int_arg(name, default=None):
@@ -187,7 +297,7 @@ def _parse_int_arg(name, default=None):
         try:
             return int(value)
         except ValueError:
-            raise BadRequest("Invalid %s argument: %s" % (name, value))
+            raise APIBadRequest("Invalid %s argument: %s" % (name, value))
     else:
         return default
 
@@ -195,15 +305,15 @@ def _parse_int_arg(name, default=None):
 def _validate_auth_header():
     auth_token = request.headers.get('Authorization')
     if not auth_token:
-        raise Unauthorized("You need to provide an Authorization header.")
+        raise APIUnauthorized("You need to provide an Authorization header.")
     try:
         auth_token = auth_token.split(" ")[1]
     except IndexError:
-        raise Unauthorized("Provided Authorization header is invalid.")
+        raise APIUnauthorized("Provided Authorization header is invalid.")
 
     user = db_user.get_by_token(auth_token)
     if user is None:
-        raise Unauthorized("Invalid authorization token.")
+        raise APIUnauthorized("Invalid authorization token.")
 
     return user
 

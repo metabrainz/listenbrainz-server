@@ -1,6 +1,6 @@
-FROM metabrainz/python:3.6
+FROM metabrainz/python:3.7
 
-ENV DOCKERIZE_VERSION v0.2.0
+ENV DOCKERIZE_VERSION v0.6.1
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
@@ -15,29 +15,31 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # PostgreSQL client
-RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
+RUN curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
 ENV PG_MAJOR 9.5
 RUN echo 'deb http://apt.postgresql.org/pub/repos/apt/ jessie-pgdg main' $PG_MAJOR > /etc/apt/sources.list.d/pgdg.list
 RUN apt-get update \
     && apt-get install -y --no-install-recommends postgresql-client-$PG_MAJOR \
     && rm -rf /var/lib/apt/lists/*
 
+# Node
+RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
+    apt-get install -y nodejs && rm -rf /var/lib/apt/lists/*
+
 RUN mkdir /code
 WORKDIR /code
-
-RUN pip3 install setuptools==36.0.1
 
 # MessyBrainz
 RUN git clone https://github.com/metabrainz/messybrainz-server.git messybrainz
 WORKDIR /code/messybrainz
-RUN pip3 install -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 RUN python3 setup.py install
 
 RUN mkdir /code/listenbrainz
 WORKDIR /code/listenbrainz
 
 COPY requirements.txt /code/listenbrainz/
-RUN pip3 install -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Now install our code, which may change frequently
 COPY . /code/listenbrainz/

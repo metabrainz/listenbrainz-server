@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import listenbrainz.db.user as db_user
+import listenbrainz.db.spotify as db_spotify
 import listenbrainz.db.stats as db_stats
 import sqlalchemy
 import time
@@ -11,7 +12,6 @@ from listenbrainz.db.testing import DatabaseTestCase
 
 
 class UserTestCase(DatabaseTestCase):
-
     def test_create(self):
         user_id = db_user.create(0, "izzy_cheezy")
         self.assertIsNotNone(db_user.get(user_id))
@@ -46,7 +46,7 @@ class UserTestCase(DatabaseTestCase):
             })
 
         user = db_user.get(user['id'])
-        self.assertEquals(int(user['last_login'].strftime('%s')), 0)
+        self.assertEqual(int(user['last_login'].strftime('%s')), 0)
 
         db_user.update_last_login(user['musicbrainz_id'])
         user = db_user.get_by_mb_id(user['musicbrainz_id'])
@@ -182,6 +182,7 @@ class UserTestCase(DatabaseTestCase):
             recordings={},
             releases={},
             artist_count=2,
+            yearmonth='2019-01',
         )
         user_stats = db_stats.get_all_user_stats(user_id)
         self.assertIsNotNone(user_stats)
@@ -191,3 +192,60 @@ class UserTestCase(DatabaseTestCase):
         self.assertIsNone(user)
         user_stats = db_stats.get_all_user_stats(user_id)
         self.assertIsNone(user_stats)
+
+    def test_delete_when_spotify_import_activated(self):
+        user_id = db_user.create(11, 'kishore')
+        user = db_user.get(user_id)
+        self.assertIsNotNone(user)
+        db_spotify.create_spotify(user_id, 'user token', 'refresh token', 0, True, 'user-read-recently-played')
+
+        db_user.delete(user_id)
+        user = db_user.get(user_id)
+        self.assertIsNone(user)
+        token = db_spotify.get_token_for_user(user_id)
+        self.assertIsNone(token)
+
+
+    def test_validate_usernames(self):
+        db_user.create(11, 'eleven')
+        db_user.create(12, 'twelve')
+
+        users = db_user.validate_usernames([])
+        self.assertListEqual(users, [])
+
+        users = db_user.validate_usernames(['eleven', 'twelve'])
+        self.assertEqual(len(users), 2)
+        self.assertEqual(users[0]['musicbrainz_id'], 'eleven')
+        self.assertEqual(users[1]['musicbrainz_id'], 'twelve')
+
+        users = db_user.validate_usernames(['twelve', 'eleven'])
+        self.assertEqual(len(users), 2)
+        self.assertEqual(users[0]['musicbrainz_id'], 'twelve')
+        self.assertEqual(users[1]['musicbrainz_id'], 'eleven')
+
+        users = db_user.validate_usernames(['twelve', 'eleven', 'thirteen'])
+        self.assertEqual(len(users), 2)
+        self.assertEqual(users[0]['musicbrainz_id'], 'twelve')
+        self.assertEqual(users[1]['musicbrainz_id'], 'eleven')
+
+    def test_get_users_in_order(self):
+        id1 = db_user.create(11, 'eleven')
+        id2 = db_user.create(12, 'twelve')
+
+        users = db_user.get_users_in_order([])
+        self.assertListEqual(users, [])
+
+        users = db_user.get_users_in_order([id1, id2])
+        self.assertEqual(len(users), 2)
+        self.assertEqual(users[0]['id'], id1)
+        self.assertEqual(users[1]['id'], id2)
+
+        users = db_user.get_users_in_order([id2, id1])
+        self.assertEqual(len(users), 2)
+        self.assertEqual(users[0]['id'], id2)
+        self.assertEqual(users[1]['id'], id1)
+
+        users = db_user.get_users_in_order([id2, id1, 213213132])
+        self.assertEqual(len(users), 2)
+        self.assertEqual(users[0]['id'], id2)
+        self.assertEqual(users[1]['id'], id1)

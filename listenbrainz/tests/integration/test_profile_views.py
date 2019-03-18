@@ -28,7 +28,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         Test for the user export of ListenBrainz data.
         """
         # test get requests to export view first
-        self.temporary_login(self.user['id'])
+        self.temporary_login(self.user['login_id'])
         resp = self.client.get(url_for('profile.export_data'))
         self.assert200(resp)
 
@@ -43,3 +43,14 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assert200(resp)
         data = json.loads(resp.data)
         self.assertEqual(len(data), 3)
+
+    def test_user_page_latest_listen(self):
+        resp = self.send_listens()
+        self.assert200(resp)
+
+        time.sleep(1)
+
+        r = self.client.get(url_for('user.profile', user_name=self.user['musicbrainz_id']))
+        self.assert200(r)
+        props = json.loads(self.get_context_variable('props'))
+        self.assertEqual(props['latest_listen_ts'], 2)
