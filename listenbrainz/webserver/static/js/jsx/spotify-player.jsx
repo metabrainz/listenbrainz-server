@@ -327,7 +327,7 @@ export class SpotifyPlayer extends React.Component {
     this.setState({
       progressMs: position,
       durationMs: duration,
-      currentSpotifyTrack: current_track,
+      currentSpotifyTrack: current_track || {},
       playerPaused: paused
     });
     if (this._firstRun)
