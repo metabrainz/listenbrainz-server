@@ -4,7 +4,7 @@
 
 {% block content %}
   <h2 class="page-title">Import to user {{ user.musicbrainz_id }}</h2>
-  {% if current_user.is_authenticated() and current_user == user %}
+  {% if current_user.is_authenticated and current_user == user %}
 
     <p>
         Most users will want to import from Last.fm directly.
@@ -29,17 +29,25 @@
         </form>
       </div>
 
-    <h3>Import a Last.fm backup file</h3>
+    <h3> Import from Spotify </h3>
 
-    <p>Import your listens from a Last.fm backup file (.zip)</p>
-    <div class="well">
-      <form action="upload" method="POST" enctype=multipart/form-data>
-        <input type="file" name="file">
-        </br>
-        <input type="submit" value="Upload">
-      </form>
-    </div>
-
+    <p>
+      ListenBrainz can automatically import songs from Spotify as you listen to them.
+    </p>
+    <p>
+      This is a beta feature and we're still testing code and ironing out bugs. Please make sure that the Spotify
+      import is not the only way you're archiving your listen history.
+    </p>
+    <p>
+      Importing the same listens from two different sources such as Last.FM and Spotify may cause the creation
+      of duplicates in your listen history. If you opt into our automatic Spotify import, please do not use the
+      Last.FM import or submit listens from other ListenBrainz clients. This is a temporary limitation while we
+      find better ways to deduplicate listens.
+    </p>
+    <p>
+      <a href={{ url_for('profile.connect_spotify') }}>Connect your Spotify account to ListenBrainz.</a>
+    </p>
+    
   {% endif %}
 {% endblock %}
 

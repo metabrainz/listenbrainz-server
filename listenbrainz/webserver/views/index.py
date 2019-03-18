@@ -1,15 +1,23 @@
 
 #TODO(param): alphabetize these
 from brainzutils import cache
-from flask import Blueprint, render_template, current_app, redirect, url_for, request
+from flask import Blueprint, render_template, current_app, redirect, url_for, request, jsonify
 from flask_login import current_user, login_required
+from werkzeug.exceptions import Unauthorized, NotFound
+from requests.exceptions import HTTPError
 import os
 import subprocess
+import requests
 import locale
+import ujson
 import listenbrainz.db.user as db_user
+import listenbrainz.db.spotify as db_spotify
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz import webserver
+from listenbrainz.webserver import flash
 from listenbrainz.webserver.influx_connection import _influx
+from listenbrainz.webserver.redis_connection import _redis
+from listenbrainz.webserver.views.user import delete_user
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import pika
 import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
@@ -20,6 +28,7 @@ locale.setlocale(locale.LC_ALL, '')
 
 STATS_PREFIX = 'listenbrainz.stats' # prefix used in key to cache stats
 CACHE_TIME = 10 * 60 # time in seconds we cache the stats
+NUMBER_OF_RECENT_LISTENS = 50
 
 @index_bp.route("/")
 def index():
@@ -40,7 +49,7 @@ def index():
 
 @index_bp.route("/import")
 def import_data():
-    if current_user.is_authenticated():
+    if current_user.is_authenticated:
         return redirect(url_for("profile.import_data"))
     else:
         return current_app.login_manager.unauthorized()
@@ -120,6 +129,41 @@ def current_status():
     )
 
 
+@index_bp.route("/recent")
+def recent_listens():
+
+    recent = []
+    for listen in _redis.get_recent_listens(NUMBER_OF_RECENT_LISTENS):
+        recent.append({
+                "track_metadata": listen.data,
+                "user_name" : listen.user_name,
+                "listened_at": listen.ts_since_epoch,
+                "listened_at_iso": listen.timestamp.isoformat() + "Z",
+            })
+
+    if current_user.is_authenticated:
+        token = db_spotify.get_token_for_user(current_user.id)
+        if token:
+            spotify_access_token = token
+        else:
+            spotify_access_token = ''
+    else:
+        spotify_access_token = ''
+
+    props = {
+        "listens"              : recent,
+        "mode"                 : "recent",
+        "spotify_access_token" : spotify_access_token,
+        "api_url"               : current_app.config['API_URL'],
+    }
+
+    return render_template("index/recent.html",
+        props=ujson.dumps(props),
+        mode='recent',
+        active_section='listens')
+
+
+
 @index_bp.route('/agree-to-terms', methods=['GET', 'POST'])
 @login_required
 def gdpr_notice():
@@ -140,6 +184,52 @@ def gdpr_notice():
         else:
             flash.error('You must agree to or decline our terms')
             return render_template('index/gdpr.html', next=request.args.get('next'))
+
+
+@index_bp.route('/delete-user/<int:musicbrainz_row_id>')
+def mb_user_deleter(musicbrainz_row_id):
+    """ This endpoint is used by MusicBrainz to delete accounts once they
+    are deleted on MusicBrainz too.
+
+    See https://tickets.metabrainz.org/browse/MBS-9680 for details.
+
+    Args: musicbrainz_row_id (int): the MusicBrainz row ID of the user to be deleted.
+
+    Returns: 200 if the user has been successfully found and deleted from LB
+
+    Raises:
+        NotFound if the user is not found in the LB database
+        Unauthorized if the MusicBrainz access token provided with the query is invalid
+    """
+    _authorize_mb_user_deleter(request.args.get('access_token', ''))
+    user = db_user.get_by_mb_row_id(musicbrainz_row_id)
+    if user is None:
+        raise NotFound('Could not find user with MusicBrainz Row ID: %d' % musicbrainz_row_id)
+    delete_user(user['musicbrainz_id'])
+    return jsonify({'status': 'ok'}), 200
+
+
+def _authorize_mb_user_deleter(auth_token):
+    headers = {'Authorization': 'Bearer {}'.format(auth_token)}
+    r = requests.get(current_app.config['MUSICBRAINZ_OAUTH_URL'], headers=headers)
+    try:
+        r.raise_for_status()
+    except HTTPError:
+        raise Unauthorized('Not authorized to use this view')
+
+    data = {}
+    try:
+        data = r.json()
+    except ValueError:
+        raise Unauthorized('Not authorized to use this view')
+
+    try:
+        # 2007538 is the row ID of the `UserDeleter` account that is
+        # authorized to access the `delete-user` endpoint
+        if data['sub'] != 'UserDeleter' or data['metabrainz_user_id'] != 2007538:
+            raise Unauthorized('Not authorized to use this view')
+    except KeyError:
+        raise Unauthorized('Not authorized to use this view')
 
 
 def _get_user_count():

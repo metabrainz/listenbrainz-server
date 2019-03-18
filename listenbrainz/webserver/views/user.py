@@ -1,5 +1,6 @@
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
+import listenbrainz.db.spotify as db_spotify
 import urllib
 import ujson
 
@@ -7,6 +8,7 @@ from flask import Blueprint, render_template, request, url_for, Response, redire
 from flask_login import current_user, login_required
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from listenbrainz import webserver
+from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.login import User
@@ -14,6 +16,7 @@ from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.influx_connection import _influx
 from listenbrainz.webserver.views.api_tools import publish_data_to_queue
 import time
+from datetime import datetime  
 from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
 
 LISTENS_PER_PAGE = 25
@@ -96,6 +99,9 @@ def profile(user_name):
             "listened_at_iso": listen.timestamp.isoformat() + "Z",
         })
 
+    latest_listen = db_conn.fetch_listens(user_name=user_name, limit=1, to_ts=int(time.time()))
+    latest_listen_ts = latest_listen[0].ts_since_epoch if len(latest_listen) > 0 else 0
+
     # Calculate if we need to show next/prev buttons
     previous_listen_ts = None
     next_listen_ts = None
@@ -128,18 +134,40 @@ def profile(user_name):
     except (KeyError, TypeError):
         artist_count = None
 
-    return render_template(
-        "user/profile.html",
+    if current_user.is_authenticated:
+        token = db_spotify.get_token_for_user(current_user.id)
+        if token:
+            spotify_access_token = token
+        else:
+            spotify_access_token = ''
+    else:
+        spotify_access_token = ''
+
+    props = {
+        "user" : {
+            "id": user.id,
+            "name": user.musicbrainz_id,
+        },
+        "listens": listens,
+        "previous_listen_ts": previous_listen_ts,
+        "next_listen_ts": next_listen_ts,
+        "latest_listen_ts": latest_listen_ts,
+        "latest_spotify_uri": _get_spotify_uri_for_listens(listens),
+        "have_listen_count": have_listen_count,
+        "listen_count": format(int(listen_count), ",d"),
+        "artist_count": format(artist_count, ",d") if artist_count else None,
+        "profile_url": url_for('user.profile', user_name=user_name),
+        "mode": "listens",
+        "spotify_access_token": spotify_access_token,
+        "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
+        "api_url"               : current_app.config['API_URL'],
+    }
+
+    return render_template("user/profile.html",
+        props=ujson.dumps(props),
+        mode='listens',
         user=user,
-        listens=listens,
-        previous_listen_ts=previous_listen_ts,
-        next_listen_ts=next_listen_ts,
-        spotify_uri=_get_spotify_uri_for_listens(listens),
-        have_listen_count=have_listen_count,
-        listen_count=format(int(listen_count), ",d"),
-        artist_count=format(artist_count, ",d") if artist_count else None,
-        section='listens'
-    )
+        active_section='listens')
 
 
 @user_bp.route("/<user_name>/artists")
@@ -166,17 +194,19 @@ def artists(user_name):
         flash.error(msg)
         return redirect(url_for('user.profile', user_name=user_name))
 
-    top_artists = data['artist']['all_time']
+    data = data['artist']
+    yearmonth = data['top_month']['month']
+    top_artists = data['top_month']['artists']
     return render_template(
         "user/artists.html",
         user=user,
         data=ujson.dumps(top_artists),
-        section='artists'
+        active_section='artists'
     )
 
 def _get_user(user_name):
     """ Get current username """
-    if current_user.is_authenticated() and \
+    if current_user.is_authenticated and \
        current_user.musicbrainz_id == user_name:
         return current_user
     else:

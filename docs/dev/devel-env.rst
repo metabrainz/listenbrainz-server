@@ -73,7 +73,7 @@ To register, visit the `MusicBrainz applications page`_. There, look for the
 option to `register`_ your application. Fill out the form with these three
 options.
 
-- **Name**: (any name you want and will recognize, e.g. 
+- **Name**: (any name you want and will recognize, e.g.
   ``listenbrainz-server-devel``)
 
 - **Type**: ``Web Application``
@@ -127,8 +127,30 @@ In case you don't have a Last.FM API key, you can get it from `Last.FM API page`
 
 You also need to update the ``API_URL`` field value to ``http://localhost``.
 
+We also have a Spotify importer script which imports listens from
+Spotify automatically using the Spotify API. In order to run this in your
+local development environment, you'll have to register an application on the
+`Spotify Developer Dashboard`_. Use ``http://localhost/profile/connect-spotify/callback``
+as the callback URL.
+
+After that, fill out the Spotify client ID and client secret in the following
+section of the file.
+
+.. code-block:: yaml
+
+    # SPOTIFY
+    SPOTIFY_CLIENT_ID = ''
+    SPOTIFY_CLIENT_SECRET = ''
+
+.. note::
+
+    The hostname on the callback URL must be the same as the host you use to
+    access your development server. If you use something other than ``localhost``, you
+    should update the ``SPOTIFY_CALLBACK_URL`` field accordingly.
 
 .. _Last.FM API page: https://last.fm/api
+
+.. _Spotify Developer Dashboard: https://developer.spotify.com/dashboard/applications
 
 
 Initialize ListenBrainz containers
@@ -162,6 +184,16 @@ proceeding, run these three commands to initialize the databases.
 
 Your development environment is now ready. Now, let's actually see ListenBrainz
 load locally!
+
+
+Install node dependencies
+-------------------------
+
+You also need to install some JavaScript dependencies.
+
+.. code-block:: bash
+
+    docker-compose -f docker/docker-compose.yml -p listenbrainz run --rm web npm install
 
 
 Run the magic script
@@ -199,9 +231,19 @@ code.
 
    ./test.sh
 
-This builds and runs the containers needed for the tests. Each container does
-not use volumes that link to data outside of the containers, so it does not
-interfere with production databases.
+This builds and runs the containers needed for the tests. This script configures
+test-specific data volumes so that test data is isolated from your development
+data.
+
+To run tests faster, you can use some options to start up the test infrastructure
+once so that subsequent running of the tests is faster:
+
+.. code-block:: bash
+
+   ./test.sh -u # start up and initialise the database
+   ./test.sh    # run tests, do this as often as you need to
+   ./test.sh -s # stop test containers, but don't remove them
+   ./test.sh -d # stop and remove all test containers
 
 Also, run the **integration tests** for ListenBrainz.
 

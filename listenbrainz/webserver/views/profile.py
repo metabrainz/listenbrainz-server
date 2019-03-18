@@ -1,6 +1,7 @@
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
+from listenbrainz.webserver.decorators import crossdomain
 import os
 import re
 import ujson
@@ -8,17 +9,24 @@ import zipfile
 
 
 from datetime import datetime
-from flask import Blueprint, render_template, request, url_for, redirect, current_app, make_response
+from flask import Blueprint, render_template, request, url_for, redirect, current_app, make_response, jsonify
 from flask_login import current_user, login_required
+import spotipy.oauth2
+from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
+from listenbrainz.webserver.errors import APIBadRequest, APIServiceUnavailable, APINotFound
+from werkzeug.utils import secure_filename
+
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz.domain import spotify
 from listenbrainz.stats.utils import construct_stats_queue_key
 from listenbrainz.webserver import flash
+from listenbrainz.webserver.login import api_login_required
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.influx_connection import _influx
 from listenbrainz.webserver.utils import sizeof_readable
 from listenbrainz.webserver.views.user import delete_user, _get_user
-from listenbrainz.webserver.views.api_tools import convert_backup_to_native_format, insert_payload, validate_listen, \
+from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, \
     LISTEN_TYPE_IMPORT, publish_data_to_queue
 from os import path, makedirs
 from time import time
@@ -153,69 +161,6 @@ def export_data():
         return render_template("user/export.html", user=current_user)
 
 
-@profile_bp.route("/upload", methods=['GET', 'POST'])
-@login_required
-def upload():
-    if request.method == 'POST':
-        try:
-            f = request.files['file']
-            if f.filename == '':
-                flash.warning('No file selected.')
-                return redirect(request.url)
-        except RequestEntityTooLarge:
-            raise RequestEntityTooLarge('Maximum filesize upload limit exceeded. File must be <=' +
-                                        sizeof_readable(current_app.config['MAX_CONTENT_LENGTH']))
-        except:
-            raise InternalServerError("Something went wrong. Could not upload the file")
-
-        # Check upload folder
-        if 'UPLOAD_FOLDER' not in current_app.config:
-            raise InternalServerError("Could not upload the file. Upload folder not specified")
-        upload_path = path.join(path.abspath(current_app.config['UPLOAD_FOLDER']), current_user.musicbrainz_id)
-        if not path.isdir(upload_path):
-            makedirs(upload_path)
-
-        # Write to a file
-        filename = path.join(upload_path, secure_filename(f.filename))
-        f.save(filename)
-
-        if not zipfile.is_zipfile(filename):
-            raise BadRequest('Not a valid zip file.')
-
-        success = failure = 0
-        regex = re.compile('json/scrobbles/scrobbles-*')
-        try:
-            zf = zipfile.ZipFile(filename, 'r')
-            files = zf.namelist()
-            # Iterate over file that match the regex
-            for f in [f for f in files if regex.match(f)]:
-                try:
-                    # Load listens file
-                    jsonlist = ujson.loads(zf.read(f))
-                    if not isinstance(jsonlist, list):
-                        raise ValueError
-                except ValueError:
-                    failure += 1
-                    continue
-
-                payload = convert_backup_to_native_format(jsonlist)
-                for listen in payload:
-                    validate_listen(listen, LISTEN_TYPE_IMPORT)
-                insert_payload(payload, current_user)
-                success += 1
-        except Exception:
-            raise BadRequest('Not a valid lastfm-backup-file.')
-        finally:
-            os.remove(filename)
-
-        # reset listen count for user
-        db_connection = webserver.influx_connection._influx
-        db_connection.reset_listen_count(current_user.musicbrainz_id)
-
-        flash.info('Congratulations! Your listens from %d files have been uploaded successfully.' % success)
-    return redirect(url_for("profile.import_data"))
-
-
 @profile_bp.route('/request-stats', methods=['GET'])
 @login_required
 def request_stats():
@@ -275,3 +220,64 @@ def delete():
             'profile/delete.html',
             user=current_user,
         )
+
+
+@profile_bp.route('/connect-spotify', methods=['GET', 'POST'])
+@login_required
+def connect_spotify():
+    if request.method == 'POST' and request.form.get('delete') == 'yes':
+        spotify.remove_user(current_user.id)
+        flash.success('Your Spotify account has been unlinked')
+
+    user = spotify.get_user(current_user.id)
+    only_listen_sp_oauth = spotify.get_spotify_oauth(spotify.SPOTIFY_LISTEN_PERMISSIONS)
+    only_import_sp_oauth = spotify.get_spotify_oauth(spotify.SPOTIFY_IMPORT_PERMISSIONS)
+    both_sp_oauth = spotify.get_spotify_oauth(spotify.SPOTIFY_LISTEN_PERMISSIONS + spotify.SPOTIFY_IMPORT_PERMISSIONS)
+
+    return render_template(
+        'user/spotify.html',
+        account=user,
+        last_updated=user.last_updated_iso if user else None,
+        latest_listened_at=user.latest_listened_at_iso if user else None,
+        only_listen_url=only_listen_sp_oauth.get_authorize_url(),
+        only_import_url=only_import_sp_oauth.get_authorize_url(),
+        both_url=both_sp_oauth.get_authorize_url(),
+    )
+
+
+@profile_bp.route('/connect-spotify/callback')
+@login_required
+def connect_spotify_callback():
+    code = request.args.get('code')
+    if not code:
+        raise BadRequest('missing code')
+
+    try:
+        token = spotify.get_access_token(code)
+        spotify.add_new_user(current_user.id, token)
+        flash.success('Successfully authenticated with Spotify!')
+    except spotipy.oauth2.SpotifyOauthError as e:
+        current_app.logger.error('Unable to authenticate with Spotify: %s', str(e), exc_info=True)
+        flash.warn('Unable to authenticate with Spotify (error {})'.format(e.args[0]))
+
+    return redirect(url_for('profile.connect_spotify'))
+
+
+@profile_bp.route('/refresh-spotify-token', methods=['POST'])
+@crossdomain()
+@api_login_required
+def refresh_spotify_token():
+    spotify_user = spotify.get_user(current_user.id)
+    if not spotify_user:
+        raise APINotFound("User has not authenticated to Spotify")
+    if spotify_user.token_expired:
+        try:
+            spotify_user = spotify.refresh_user_token(spotify_user)
+        except spotify.SpotifyAPIError:
+            raise APIServiceUnavailable("Cannot refresh Spotify token right now")
+
+    return jsonify({
+        'id': current_user.id,
+        'musicbrainz_id': current_user.musicbrainz_id,
+        'user_token': spotify_user.user_token,
+    })

@@ -18,7 +18,7 @@ services:
       - postgres:/var/lib/postgresql/data:z
 
   redis:
-    image: redis:3.2.1
+    image: redis:5.0.3
     volumes:
       - redis:/data:z
 
@@ -48,6 +48,7 @@ services:
     image: web
     volumes:
       - ..:/code/listenbrainz:z
+      - ../listenbrainz/webserver/static:/static
     ports:
       - "80:80"
     depends_on:
@@ -79,6 +80,16 @@ services:
       - influx
       - rabbitmq
 
+  spotify_reader:
+    image: web
+    volumes:
+      - ..:/code/listenbrainz:z
+    command: python3 -m "listenbrainz.spotify_updater.spotify_read_listens"
+    depends_on:
+      - redis
+      - influx
+      - rabbitmq
+
   bigquery:
     image: web
     volumes:
@@ -91,15 +102,23 @@ services:
       - redis
       - rabbitmq
 
-  bigquery_job_runner:
+  follow_server:
     image: web
-    command: python -m "listenbrainz.bigquery_job_runner.bigquery_job_runner"
     volumes:
-      - ../credentials:/code/credentials:z
       - ..:/code/listenbrainz:z
-    environment:
-      GOOGLE_APPLICATION_CREDENTIALS: '/code/credentials/bigquery-credentials.json'
+    command: python manage.py run_follow_server -h 0.0.0.0 -p 8081
+    ports:
+      - "8081:8081"
     depends_on:
-      - db
+      - redis
       - rabbitmq
-      - web
+
+  static_builder:
+    build:
+      context: ..
+      dockerfile: Dockerfile.webpack
+    command: npm run build:dev
+    volumes:
+      - ..:/code/listenbrainz:z
+      - ../listenbrainz/webserver/static:/static:z
+

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import json
 import sys
 import os
 import pika
@@ -7,19 +8,18 @@ from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import ujson
 import logging
-import time
-
-from listenbrainz.utils import safely_import_config
-
-safely_import_config()
 
 from listenbrainz.listen import Listen
 from time import time, sleep
 from listenbrainz.listenstore import InfluxListenStore
+from listenbrainz.listenstore import RedisListenStore
 from listenbrainz.utils import escape, get_measurement_name, get_escaped_measurement_name, \
                                get_influx_query_timestamp, convert_to_unix_timestamp, \
                                convert_timestamp_to_influx_row_format
 import listenbrainz.utils as utils
+
+from listenbrainz.webserver import create_app
+from flask import current_app
 from requests.exceptions import ConnectionError
 from redis import Redis
 from collections import defaultdict
@@ -27,6 +27,7 @@ from collections import defaultdict
 from listenbrainz.listen_writer import ListenWriter
 
 class InfluxWriterSubscriber(ListenWriter):
+
     def __init__(self):
         super().__init__()
 
@@ -34,6 +35,7 @@ class InfluxWriterSubscriber(ListenWriter):
         self.influx = None
         self.incoming_ch = None
         self.unique_ch = None
+        self.redis_listenstore = None
 
 
     def callback(self, ch, method, properties, body):
@@ -82,7 +84,7 @@ class InfluxWriterSubscriber(ListenWriter):
                     break
                 sleep(self.ERROR_RETRY_DELAY)
             except ConnectionError as e:
-                self.log.error("Cannot write data to listenstore: %s. Sleep." % str(e))
+                current_app.logger.error("Cannot write data to listenstore: %s. Sleep." % str(e), exc_info=True)
                 sleep(self.ERROR_RETRY_DELAY)
 
         # if we get here, we failed on trying to write the data
@@ -93,11 +95,9 @@ class InfluxWriterSubscriber(ListenWriter):
                 self.ls.insert(data)
                 return 1
             except (InfluxDBServerError, InfluxDBClientError, ValueError, ConnectionError) as e:
-                self.log.error("Unable to insert bad listen to listenstore: %s" % str(e))
-                if self.DUMP_JSON_WITH_ERRORS:
-                    self.log.error("Was writing the following data:")
-                    influx_dict = data[0].to_influx(get_measurement_name(data[0].user_name))
-                    self.log.error(ujson.dumps(influx_dict))
+                error_message = 'Unable to insert bad listen to listenstore: {error}, listen={json}'
+                influx_dict = data[0].to_influx(get_measurement_name(data[0].user_name))
+                current_app.logger.error(error_message.format(error=str(e), json=json.dumps(influx_dict, indent=3)), exc_info=True)
                 return 0
         else:
             slice_index = len(data) // 2
@@ -124,7 +124,7 @@ class InfluxWriterSubscriber(ListenWriter):
 
             # if the timestamp is illegal, don't use it for ranges
             if t.bit_length() > 32:
-                self.log.error("timestamp %d is too large." % t)
+                current_app.logger.error("timestamp %d is too large. listen: %s", t, json.dumps(listen, indent=3))
                 continue
 
             if user_name not in users:
@@ -163,7 +163,7 @@ class InfluxWriterSubscriber(ListenWriter):
                     results = self.influx.query(query)
                     break
                 except Exception as e:
-                    self.log.error("Cannot query influx: %s" % str(e))
+                    current_app.logger.warn('Could not query influx, trying again: %s', str(e), exc_info=True)
                     sleep(3)
 
             # collect all the timestamps for this given time range.
@@ -205,14 +205,14 @@ class InfluxWriterSubscriber(ListenWriter):
         submitted_count = self.insert_to_listenstore(submit)
         self.time += time() - t0
 
-        self.log.error("dups: %d, unique: %d, submitted: %d" % (duplicate_count, unique_count, submitted_count))
+        current_app.logger.info("dups: %d, unique: %d, submitted: %d" % (duplicate_count, unique_count, submitted_count))
         if not unique_count:
             return True
 
         while True:
             try:
                 self.unique_ch.basic_publish(
-                    exchange=self.config.UNIQUE_EXCHANGE,
+                    exchange=current_app.config['UNIQUE_EXCHANGE'],
                     routing_key='',
                     body=ujson.dumps(unique),
                     properties=pika.BasicProperties(delivery_mode = 2,),
@@ -221,70 +221,76 @@ class InfluxWriterSubscriber(ListenWriter):
             except pika.exceptions.ConnectionClosed:
                 self.connect_to_rabbitmq()
 
+
+        self.redis_listenstore.update_recent_listens(unique)
+
         return True
 
 
     def start(self):
-        self.log.info("influx-writer init")
+        app = create_app()
+        with app.app_context():
+            current_app.logger.info("influx-writer init")
+            self._verify_hosts_in_config()
 
-        self._verify_hosts_in_config()
-
-        if not hasattr(self.config, "INFLUX_HOST"):
-            self.log.error("Influx service not defined. Sleeping {0} seconds and exiting.".format(self.ERROR_RETRY_DELAY))
-            sleep(self.ERROR_RETRY_DELAY)
-            sys.exit(-1)
-
-        while True:
-            try:
-                self.ls = InfluxListenStore({ 'REDIS_HOST': self.config.REDIS_HOST,
-                                              'REDIS_PORT': self.config.REDIS_PORT,
-                                              'REDIS_NAMESPACE': self.config.REDIS_NAMESPACE,
-                                              'INFLUX_HOST': self.config.INFLUX_HOST,
-                                              'INFLUX_PORT': self.config.INFLUX_PORT,
-                                              'INFLUX_DB_NAME': self.config.INFLUX_DB_NAME})
-                self.influx = InfluxDBClient(host=self.config.INFLUX_HOST, port=self.config.INFLUX_PORT, database=self.config.INFLUX_DB_NAME)
-                break
-            except Exception as err:
-                self.log.error("Cannot connect to influx: %s. Retrying in 2 seconds and trying again." % str(err))
+            if "INFLUX_HOST" not in current_app.config:
+                current_app.logger.critical("Influx service not defined. Sleeping {0} seconds and exiting.".format(self.ERROR_RETRY_DELAY))
                 sleep(self.ERROR_RETRY_DELAY)
+                sys.exit(-1)
 
-        while True:
-            try:
-                self.redis = Redis(host=self.config.REDIS_HOST, port=self.config.REDIS_PORT, decode_responses=True)
-                self.redis.ping()
-                break
-            except Exception as err:
-                self.log.error("Cannot connect to redis: %s. Retrying in 2 seconds and trying again." % str(err))
-                sleep(self.ERROR_RETRY_DELAY)
+            while True:
+                try:
+                    self.ls = InfluxListenStore({
+                        'REDIS_HOST': current_app.config['REDIS_HOST'],
+                        'REDIS_PORT': current_app.config['REDIS_PORT'],
+                        'REDIS_NAMESPACE': current_app.config['REDIS_NAMESPACE'],
+                        'INFLUX_HOST': current_app.config['INFLUX_HOST'],
+                        'INFLUX_PORT': current_app.config['INFLUX_PORT'],
+                        'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
+                    }, logger=current_app.logger)
+                    self.influx = InfluxDBClient(
+                        host=current_app.config['INFLUX_HOST'],
+                        port=current_app.config['INFLUX_PORT'],
+                        database=current_app.config['INFLUX_DB_NAME'],
+                    )
+                    break
+                except Exception as err:
+                    current_app.logger.error("Cannot connect to influx: %s. Retrying in 2 seconds and trying again." % str(err), exc_info=True)
+                    sleep(self.ERROR_RETRY_DELAY)
 
-        while True:
-            self.connect_to_rabbitmq()
-            self.incoming_ch = self.connection.channel()
-            self.incoming_ch.exchange_declare(exchange=self.config.INCOMING_EXCHANGE, exchange_type='fanout')
-            self.incoming_ch.queue_declare(self.config.INCOMING_QUEUE, durable=True)
-            self.incoming_ch.queue_bind(exchange=self.config.INCOMING_EXCHANGE, queue=self.config.INCOMING_QUEUE)
-            self.incoming_ch.basic_consume(
-                lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self),
-                queue=self.config.INCOMING_QUEUE,
-            )
+            while True:
+                try:
+                    self.redis = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'], decode_responses=True)
+                    self.redis.ping()
+                    self.redis_listenstore = RedisListenStore(current_app.logger, current_app.config)
+                    break
+                except Exception as err:
+                    current_app.logger.error("Cannot connect to redis: %s. Retrying in 2 seconds and trying again." % str(err), exc_info=True)
+                    sleep(self.ERROR_RETRY_DELAY)
 
-            self.unique_ch = self.connection.channel()
-            self.unique_ch.exchange_declare(exchange=self.config.UNIQUE_EXCHANGE, exchange_type='fanout')
+            while True:
+                self.connect_to_rabbitmq()
+                self.incoming_ch = self.connection.channel()
+                self.incoming_ch.exchange_declare(exchange=current_app.config['INCOMING_EXCHANGE'], exchange_type='fanout')
+                self.incoming_ch.queue_declare(current_app.config['INCOMING_QUEUE'], durable=True)
+                self.incoming_ch.queue_bind(exchange=current_app.config['INCOMING_EXCHANGE'], queue=current_app.config['INCOMING_QUEUE'])
+                self.incoming_ch.basic_consume(
+                    lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self),
+                    queue=current_app.config['INCOMING_QUEUE'],
+                )
 
-            self.log.info("influx-writer started")
-            try:
-                self.incoming_ch.start_consuming()
-            except pika.exceptions.ConnectionClosed:
-                self.log.info("Connection to rabbitmq closed. Re-opening.")
-                self.connection = None
-                continue
+                self.unique_ch = self.connection.channel()
+                self.unique_ch.exchange_declare(exchange=current_app.config['UNIQUE_EXCHANGE'], exchange_type='fanout')
 
-            self.connection.close()
+                current_app.logger.info("influx-writer started")
+                try:
+                    self.incoming_ch.start_consuming()
+                except pika.exceptions.ConnectionClosed:
+                    current_app.logger.warn("Connection to rabbitmq closed. Re-opening.", exc_info=True)
+                    self.connection = None
+                    continue
 
-
-    def print_and_log_error(self, msg):
-        self.log.error(msg)
-        print(msg, file = sys.stderr)
+                self.connection.close()
 
 
 if __name__ == "__main__":

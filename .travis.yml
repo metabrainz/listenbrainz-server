@@ -1,12 +1,10 @@
-sudo: required
-
 language: python
 
 services:
   - docker
 
 install:
-  - cp listenbrainz/rtd_config.py listenbrainz/config.py
+  - cp listenbrainz/config.py.sample listenbrainz/config.py
   # Build the unit test docker-compose project
   - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test build
   - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test run --rm listenbrainz

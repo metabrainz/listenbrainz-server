@@ -36,18 +36,13 @@ def create_redis(app):
 
 def create_rabbitmq(app):
     from listenbrainz.webserver.rabbitmq_connection import init_rabbitmq_connection
-    init_rabbitmq_connection(app)
+    try:
+        init_rabbitmq_connection(app)
+    except ConnectionError as e:
+        app.logger.error('Could not connect to RabbitMQ: %s', str(e))
+        return
 
-
-def gen_app(config_path=None, debug=None):
-    """ Generate a Flask app for LB with all configurations done and connections established.
-
-    In the Flask app returned, blueprints are not registered.
-    """
-    app = CustomFlask(
-        import_name=__name__,
-        use_flask_uuid=True,
-    )
+def load_config(app):
 
     print("Starting metabrainz service with %s environment." % deploy_env);
 
@@ -69,13 +64,6 @@ def gen_app(config_path=None, debug=None):
     else:
         app.config.from_pyfile(config_file)
 
-    if debug is not None:
-        app.debug = debug
-
-    # initialize Flask-DebugToolbar if the debug option is True
-    if app.debug and app.config['SECRET_KEY']:
-        app.init_debug_toolbar()
-
     # Output config values and some other info
     print('Configuration values are as follows: ')
     print(pprint.pformat(app.config, indent=4))
@@ -84,6 +72,25 @@ def gen_app(config_path=None, debug=None):
             print('Running on git commit: %s', git_version_file.read().strip())
     except IOError as e:
         print('Unable to retrieve git commit. Error: %s', str(e))
+
+
+def gen_app(config_path=None, debug=None):
+    """ Generate a Flask app for LB with all configurations done and connections established.
+
+    In the Flask app returned, blueprints are not registered.
+    """
+    app = CustomFlask(
+        import_name=__name__,
+        use_flask_uuid=True,
+    )
+
+    load_config(app)
+    if debug is not None:
+        app.debug = debug
+
+    # initialize Flask-DebugToolbar if the debug option is True
+    if app.debug and app.config['SECRET_KEY']:
+        app.init_debug_toolbar()
 
     # Logging
     app.init_loggers(
@@ -110,6 +117,10 @@ def gen_app(config_path=None, debug=None):
     db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
     from listenbrainz.webserver.external import messybrainz
     messybrainz.init_db_connection(app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
+
+    if app.config['MB_DATABASE_URI']:
+        from brainzutils import musicbrainz_db
+        musicbrainz_db.init_db_engine(app.config['MB_DATABASE_URI'])
 
     # OAuth
     from listenbrainz.webserver.login import login_manager, provider
@@ -138,7 +149,29 @@ def gen_app(config_path=None, debug=None):
 def create_app(config_path=None, debug=None):
 
     app = gen_app(config_path=config_path, debug=debug)
+
+    # Static files
+    import listenbrainz.webserver.static_manager
+    static_manager.read_manifest()
+    app.context_processor(lambda: dict(get_static_path=static_manager.get_static_path))
+    app.static_folder = '/static'
+
     _register_blueprints(app)
+
+    # Admin views
+    from listenbrainz import model
+    model.db.init_app(app)
+
+    from flask_admin import Admin
+    from listenbrainz.webserver.admin.views import HomeView
+    admin = Admin(app, index_view=HomeView(name='Home'), template_mode='bootstrap3')
+    from listenbrainz.model import Spotify as SpotifyModel
+    from listenbrainz.model import User as UserModel
+    from listenbrainz.model.spotify import SpotifyAdminView
+    from listenbrainz.model.user import UserAdminView
+    admin.add_view(UserAdminView(UserModel, model.db.session, endpoint='user_model'))
+    admin.add_view(SpotifyAdminView(SpotifyModel, model.db.session, endpoint='spotify_model'))
+
 
     @app.before_request
     def before_request_gdpr_check():
@@ -152,7 +185,7 @@ def create_app(config_path=None, debug=None):
             return
         # otherwise if user is logged in and hasn't agreed to gdpr,
         # redirect them to agree to terms page.
-        elif current_user.is_authenticated() and current_user.gdpr_agreed is None:
+        elif current_user.is_authenticated and current_user.gdpr_agreed is None:
             return redirect(url_for('index.gdpr_notice', next=request.full_path))
 
     return app
@@ -207,9 +240,13 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.api_compat import api_bp as api_bp_compat
     from listenbrainz.webserver.views.user import user_bp
     from listenbrainz.webserver.views.profile import profile_bp
+    from listenbrainz.webserver.views.follow import follow_bp
+    from listenbrainz.webserver.views.follow_api import follow_api_bp
     app.register_blueprint(index_bp)
     app.register_blueprint(login_bp, url_prefix='/login')
     app.register_blueprint(user_bp, url_prefix='/user')
     app.register_blueprint(profile_bp, url_prefix='/profile')
+    app.register_blueprint(follow_bp, url_prefix='/follow')
     app.register_blueprint(api_bp, url_prefix=API_PREFIX)
+    app.register_blueprint(follow_api_bp, url_prefix=API_PREFIX+'/follow')
     app.register_blueprint(api_bp_compat)

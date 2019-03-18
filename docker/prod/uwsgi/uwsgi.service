@@ -31,5 +31,17 @@ then
     exec uwsgi /etc/uwsgi/uwsgi-api-compat.ini
 fi
 
+if [ "${CONTAINER_NAME}" = "listenbrainz-follow-dispatcher-prod" ]
+then
+    cd /code/listenbrainz
+    exec python manage.py run_follow_server -h 0.0.0.0 -p 3031
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-spotify-reader-prod" ]
+then
+    cd /code/listenbrainz
+    exec python3 -m listenbrainz.spotify_updater.spotify_read_listens
+fi
+
 
 echo "init script has no clue which service to start. Set env var CONTAINER_NAME!"

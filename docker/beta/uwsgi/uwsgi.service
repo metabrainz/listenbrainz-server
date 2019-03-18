@@ -23,9 +23,21 @@ then
     exec python3 -m listenbrainz.bigquery_job_runner.bigquery_job_runner
 fi
 
+if [ "${CONTAINER_NAME}" = "listenbrainz-spotify-reader-beta" ]
+then
+    cd /code/listenbrainz
+    exec python3 -m listenbrainz.spotify_updater.spotify_read_listens
+fi
+
 if [ "${CONTAINER_NAME}" = "listenbrainz-api-compat-beta" ]
 then
     exec uwsgi /etc/uwsgi/uwsgi-api-compat.ini
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-follow-dispatcher-beta" ]
+then
+    cd /code/listenbrainz
+    exec python3 manage.py run_follow_server -h 0.0.0.0 -p 3031
 fi
 
 

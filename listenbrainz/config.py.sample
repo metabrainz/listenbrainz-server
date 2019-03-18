@@ -10,6 +10,8 @@ SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@db:5432/listen
 MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@db:5432/messybrainz"
 
 POSTGRES_ADMIN_URI="postgresql://postgres@db/template1"
+POSTGRES_ADMIN_LB_URI = "postgresql://postgres@db/listenbrainz"
+MB_DATABASE_URI = ""
 
 # Other postgres configuration options
 # Oldest listens which can be stored in the database, in days.
@@ -43,8 +45,11 @@ INCOMING_EXCHANGE = "incoming"
 INCOMING_QUEUE = "incoming"
 UNIQUE_EXCHANGE = "unique"
 UNIQUE_QUEUE = "unique"
+FOLLOW_LIST_QUEUE = "follow_list"
 BIGQUERY_EXCHANGE = "bigquery"
 BIGQUERY_QUEUE = "bigquery"
+PLAYING_NOW_EXCHANGE = "playing_now"
+PLAYING_NOW_QUEUE = "playing_now"
 
 # MusicBrainz OAuth
 MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
@@ -73,15 +78,29 @@ PLAYING_NOW_MAX_DURATION = 10 * 60
 
 # LOGGING
 
-#LOG_FILE_ENABLED = True
-#LOG_FILE = "./listenbrainz.log"
+# Uncomment any of the following logging stubs if you want to enable logging
+# during development. In general you shouldn't need to do this
 
-#LOG_EMAIL_ENABLED = True
-#LOG_EMAIL_TOPIC = "ListenBrainz Webserver Failure"
-#LOG_EMAIL_RECIPIENTS = []  # List of email addresses (strings)
+# LOG_FILE = {
+#    'filename': './logs/listenbrainz.txt',
+#    'max_bytes': 512 * 1024, # optional
+#    'backup_count': 100, # optional
+# }
 
-#LOG_SENTRY_ENABLED = True
-#SENTRY_DSN = ""
+# LOG_EMAIL = {
+#    'mail_server': 'localhost',
+#    'mail_port': 25,
+#    'mail_from_host': 'listenbrainz.org',
+#    'log_email_recipients': [],
+#    'log_email_topic': 'ListenBrainz Error',
+#    'level': 'ERROR',
+# }
+
+# LOG_SENTRY = {
+#    'dsn':'',
+#    'environment': 'development',
+#    'level': 'ERROR',
+# }
 
 
 # MISCELLANEOUS
@@ -99,8 +118,34 @@ UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
 
 
 API_URL = 'https://api.listenbrainz.org'
-LASTFM_PROXY_URL = 'http://0.0.0.0:8080/'
+LASTFM_PROXY_URL = 'http://localhost:8080/'
+SERVER_ROOT_URL = 'http://localhost'
+WEBSOCKETS_SERVER_URL = 'http://localhost:8081'
+MUSICBRAINZ_OAUTH_URL = 'https://musicbrainz.org/oauth2/userinfo'
 
 # Flask Debug redirect
 # Set to True if you want Flask-Debug to intercept redirects
 DEBUG_TB_INTERCEPT_REDIRECTS = False
+
+ADMINS = []
+
+# SPOTIFY
+SPOTIFY_CLIENT_ID = ''
+SPOTIFY_CLIENT_SECRET = ''
+SPOTIFY_CALLBACK_URL = 'http://localhost/profile/connect-spotify/callback'
+
+# This is set to False to stop a warning from flask_sqlalchemy.
+# We do not use this feature at all, so it is safe to set to False.
+# See https://stackoverflow.com/a/33790196 for more details.
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+TESTING = True # this flag is used by the mail module to check if mails need to be sent or not
+
+# Mail server
+SMTP_SERVER = 'listenbrainz-mail'
+SMTP_PORT = 25
+MAIL_FROM_DOMAIN = 'listenbrainz.org'
+
+# expiration of 'Remember me' cookie
+SESSION_REMEMBER_ME_DURATION = 365
+

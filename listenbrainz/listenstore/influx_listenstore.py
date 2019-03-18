@@ -9,6 +9,7 @@ import time
 import shutil
 import ujson
 import uuid
+import json
 
 from brainzutils import cache
 from collections import defaultdict
@@ -19,13 +20,13 @@ from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from listenbrainz import DUMP_LICENSE_FILE_PATH
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db.dump import SchemaMismatchException
-from listenbrainz.listen import Listen
+from listenbrainz.listen import Listen, convert_influx_row_to_spark_row
 from listenbrainz.listenstore import ListenStore
 from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, \
     USER_CACHE_TIME, REDIS_USER_TIMESTAMPS, LISTENS_DUMP_SCHEMA_VERSION
 from listenbrainz.utils import quote, get_escaped_measurement_name, get_measurement_name, get_influx_query_timestamp, \
     convert_influx_nano_to_python_time, convert_python_time_to_nano_int, convert_to_unix_timestamp, \
-    create_path, log_ioerrors, init_cache
+    create_path, log_ioerrors, init_cache, convert_influx_to_datetime
 
 REDIS_INFLUX_USER_LISTEN_COUNT = "ls.listencount."  # append username
 COUNT_RETENTION_POLICY = "one_week"
@@ -45,8 +46,8 @@ class InfluxListenStore(ListenStore):
     TOTAL_LISTEN_COUNT_CACHE_TIME = 5 * 60
     USER_LISTEN_COUNT_CACHE_TIME = 10 * 60  # in seconds. 15 minutes
 
-    def __init__(self, conf):
-        ListenStore.__init__(self, conf)
+    def __init__(self, conf, logger):
+        super(InfluxListenStore, self).__init__(logger)
         self.influx = InfluxDBClient(host=conf['INFLUX_HOST'], port=conf['INFLUX_PORT'], database=conf['INFLUX_DB_NAME'])
         # Initialize brainzutils cache
         init_cache(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], namespace=conf['REDIS_NAMESPACE'])
@@ -74,7 +75,7 @@ class InfluxListenStore(ListenStore):
         try:
             results = self.influx.query('SELECT count(*) FROM ' + get_escaped_measurement_name(user_name))
         except (InfluxDBServerError, InfluxDBClientError) as e:
-            self.log.error("Cannot query influx: %s" % str(e))
+            self.log.error("Cannot query influx: %s" % str(e), exc_info=True)
             raise
 
         # get the number of listens from the json
@@ -100,7 +101,7 @@ class InfluxListenStore(ListenStore):
         try:
             results = self.influx.query(query)
         except Exception as err:
-            self.log.error("Cannot query influx: %s" % str(err))
+            self.log.error("Cannot query influx: %s" % str(err), exc_info=True)
             raise
 
         for result in results.get_points(measurement=measurement):
@@ -112,7 +113,7 @@ class InfluxListenStore(ListenStore):
         try:
             results = self.influx.query(query)
         except Exception as err:
-            self.log.error("Cannot query influx: %s" % str(err))
+            self.log.error("Cannot query influx: %s" % str(err), exc_info=True)
             raise
 
         for result in results.get_points(measurement=measurement):
@@ -138,7 +139,7 @@ class InfluxListenStore(ListenStore):
                                         ORDER BY time DESC
                                            LIMIT 1""" % (COUNT_MEASUREMENT_NAME, TIMELINE_COUNT_MEASUREMENT))
         except (InfluxDBServerError, InfluxDBClientError) as err:
-            self.log.error("Cannot query influx: %s" % str(err))
+            self.log.error("Cannot query influx: %s" % str(err), exc_info=True)
             raise
 
         try:
@@ -155,7 +156,7 @@ class InfluxListenStore(ListenStore):
                                             FROM "%s"
                                            WHERE time > %s""" % (COUNT_MEASUREMENT_NAME, TEMP_COUNT_MEASUREMENT, get_influx_query_timestamp(timestamp)))
         except (InfluxDBServerError, InfluxDBClientError) as err:
-            self.log.error("Cannot query influx: %s" % str(err))
+            self.log.error("Cannot query influx: %s" % str(err), exc_info=True)
             raise
 
         try:
@@ -204,7 +205,7 @@ class InfluxListenStore(ListenStore):
             submit.append(listen.to_influx(quote(listen.user_name)))
 
         if not self.influx.write_points(submit, time_precision='s'):
-            self.log.error("Cannot write data to influx. (write_points returned False)")
+            self.log.error("Cannot write data to influx. (write_points returned False), data=%s", json.dumps(submit, indent=3))
 
         # If we reach this point, we were able to write the listens to the InfluxListenStore.
         # So update the listen counts of the users cached in brainzutils cache.
@@ -234,7 +235,7 @@ class InfluxListenStore(ListenStore):
                 if not self.influx.write_points(submit):
                     self.log.error("Cannot write listen cound to influx. (write_points returned False)")
             except (InfluxDBServerError, InfluxDBClientError, ValueError) as err:
-                self.log.error("Cannot write data to influx: %s" % str(err))
+                self.log.error("Cannot write data to influx: %s, data: %s", str(err), json.dumps(submit, indent=3), exc_info=True)
                 raise
 
     def update_listen_counts(self):
@@ -249,7 +250,7 @@ class InfluxListenStore(ListenStore):
                                         ORDER BY time DESC
                                            LIMIT 1""" % (COUNT_MEASUREMENT_NAME, TIMELINE_COUNT_MEASUREMENT))
         except (InfluxDBServerError, InfluxDBClientError) as err:
-            self.log.error("Cannot query influx: %s" % str(err))
+            self.log.error("Cannot query influx: %s" % str(err), exc_info=True)
             raise
 
         try:
@@ -267,7 +268,7 @@ class InfluxListenStore(ListenStore):
                                         ORDER BY time DESC
                                            LIMIT 1""" % (COUNT_MEASUREMENT_NAME, TEMP_COUNT_MEASUREMENT))
         except (InfluxDBServerError, InfluxDBClientError) as err:
-            self.log.error("Cannot query influx: %s" % str(err))
+            self.log.error("Cannot query influx: %s" % str(err), exc_info=True)
             raise
 
         try:
@@ -283,7 +284,7 @@ class InfluxListenStore(ListenStore):
                                            WHERE time > %d and time <= %d""" % (COUNT_MEASUREMENT_NAME, TEMP_COUNT_MEASUREMENT,
                                        convert_python_time_to_nano_int(start_timestamp), convert_python_time_to_nano_int(end_timestamp)))
         except (InfluxDBServerError, InfluxDBClientError) as err:
-            self.log.error("Cannot query influx: %s" % str(err))
+            self.log.error("Cannot query influx: %s" % str(err), exc_info=True)
             raise
 
         try:
@@ -307,9 +308,9 @@ class InfluxListenStore(ListenStore):
 
         try:
             if not self.influx.write_points(submit):
-                self.log.error("Cannot write data to influx. (write_points returned False)")
+                self.log.error("Cannot write data to influx. (write_points returned False), data: %s", json.dumps(submit, indent=3))
         except (InfluxDBServerError, InfluxDBClientError, ValueError) as err:
-            self.log.error("Cannot update listen counts in influx: %s" % str(err))
+            self.log.error("Cannot update listen counts in influx: %s" % str(err), exc_info=True)
             raise
 
     def fetch_listens_from_storage(self, user_name, from_ts, to_ts, limit, order):
@@ -334,7 +335,7 @@ class InfluxListenStore(ListenStore):
         try:
             results = self.influx.query(query)
         except Exception as err:
-            self.log.error("Cannot query influx: %s" % str(err))
+            self.log.error("Cannot query influx while getting listens for user: %s: %s", user_name, str(err), exc_info=True)
             return []
 
         listens = []
@@ -347,6 +348,105 @@ class InfluxListenStore(ListenStore):
         return listens
 
 
+    def fetch_recent_listens_for_users(self, user_list, limit = 2, max_age = 3600):
+        """ Fetch recent listens for a list of users, given a limit which applies per user. If you 
+            have a limit of 3 and 3 users you should get 9 listens if they are available.
+
+            user_list: A list containing the users for which you'd like to retrieve recent listens.
+            limit: the maximum number of listens for each user to fetch.
+            max_age: Only return listens if they are no more than max_age seconds old. Default 3600 seconds
+        """
+
+        escaped_user_list = []
+        for user_name in user_list:
+           escaped_user_list.append(get_escaped_measurement_name(user_name))
+
+        query = "SELECT username, * FROM " + ",".join(escaped_user_list) 
+        query += " WHERE time > " + get_influx_query_timestamp(int(time.time()) - max_age)
+        query += " ORDER BY time DESC LIMIT " + str(limit)
+        try:
+            results = self.influx.query(query)
+        except Exception as err:
+            self.log.error("Cannot query influx while getting listens for users: %s: %s", user_list, str(err), exc_info=True)
+            return []
+
+        listens = []
+        for user in user_list:
+            for result in results.get_points(measurement=get_measurement_name(user)):
+                l = Listen.from_influx(result)
+                listens.append(l)
+
+        return listens
+
+
+    def get_listens_batch_for_dump(self, username, dump_time, offset):
+        # loop until we get this chunk of listens
+        while True:
+            try:
+                return self.influx.query("""
+                    SELECT *
+                      FROM {measurement}
+                     WHERE time <= {timestamp}
+                  ORDER BY time DESC
+                     LIMIT {limit}
+                    OFFSET {offset}
+                """.format(
+                    measurement=get_escaped_measurement_name(username),
+                    timestamp=get_influx_query_timestamp(dump_time.strftime('%s')),
+                    limit=DUMP_CHUNK_SIZE,
+                    offset=offset,
+                ))
+            except Exception as e:
+                self.log.error('Error while getting listens to dump for user %s: %s', username, str(e), exc_info=True)
+                time.sleep(3)
+
+
+    def write_spark_listens_to_disk(self, unwritten_listens, temp_dir):
+        for year in unwritten_listens:
+            for month in unwritten_listens[year]:
+                if year < 2002:
+                    directory = temp_dir
+                    filename = os.path.join(directory, 'invalid.json')
+                else:
+                    directory = os.path.join(temp_dir, str(year))
+                    filename = os.path.join(directory, '{}.json'.format(str(month)))
+                create_path(directory)
+                with open(filename, 'a') as f:
+                    f.write('\n'.join([ujson.dumps(listen) for listen in unwritten_listens[year][month]]))
+                    f.write('\n')
+
+    def dump_user_for_spark(self, username, dump_time, temp_dir):
+        t0 = time.time()
+        offset = 0
+        listen_count = 0
+
+        unwritten_listens = {}
+
+        while True:
+            result = self.get_listens_batch_for_dump(username, dump_time, offset)
+            rows_added = 0
+            for row in result.get_points(get_measurement_name(username)):
+                listen = convert_influx_row_to_spark_row(row)
+                timestamp = convert_influx_to_datetime(row['time'])
+
+                if timestamp.year not in unwritten_listens:
+                    unwritten_listens[timestamp.year] = {}
+                if timestamp.month not in unwritten_listens[timestamp.year]:
+                    unwritten_listens[timestamp.year][timestamp.month] = []
+
+                unwritten_listens[timestamp.year][timestamp.month].append(listen)
+                rows_added += 1
+
+            if rows_added == 0:
+                break
+
+            listen_count += rows_added
+            offset += DUMP_CHUNK_SIZE
+
+        self.write_spark_listens_to_disk(unwritten_listens, temp_dir)
+        self.log.info("%d listens for user %s dumped at %.2f listens / sec", listen_count, username, listen_count / (time.time() - t0))
+
+
     def dump_user(self, username, fileobj, dump_time):
         """ Dump specified user's listens into specified file object.
 
@@ -354,6 +454,7 @@ class InfluxListenStore(ListenStore):
             username (str): the MusicBrainz ID of the user whose listens are to be dumped
             fileobj (file): the file into which listens should be written
             dump_time (datetime): the time at which the specific data dump was initiated
+            spark_format (bool): dump files in Apache Spark friendly format if True, else full dumps
 
         Returns:
             int: the number of bytes this user's listens take in the dump file
@@ -365,28 +466,7 @@ class InfluxListenStore(ListenStore):
 
         # Get this user's listens in chunks
         while True:
-            # loop until we get this chunk of listens
-            while True:
-                try:
-                    result = self.influx.query("""
-                        SELECT *
-                          FROM {measurement}
-                         WHERE time <= {timestamp}
-                      ORDER BY time DESC
-                         LIMIT {limit}
-                        OFFSET {offset}
-                    """.format(
-                        measurement=get_escaped_measurement_name(username),
-                        timestamp=get_influx_query_timestamp(dump_time.strftime('%s')),
-                        limit=DUMP_CHUNK_SIZE,
-                        offset=offset,
-                    ))
-                    break
-                except Exception as e:
-                    self.log.error('Error while getting listens for user %s', user['musicbrainz_id'])
-                    self.log.error(str(e))
-                    time.sleep(3)
-
+            result = self.get_listens_batch_for_dump(username, dump_time, offset)
             rows_added = 0
             for row in result.get_points(get_measurement_name(username)):
                 listen = Listen.from_influx(row).to_api()
@@ -396,11 +476,10 @@ class InfluxListenStore(ListenStore):
                     bytes_written += fileobj.write('\n')
                     rows_added += 1
                 except IOError as e:
-                    log_ioerrors(self.log, e)
+                    self.log.critical('IOError while writing listens into file for user %s', username, exc_info=True)
                     raise
                 except Exception as e:
-                    self.log.error('Exception while creating json for user: %s', user['musicbrainz_id'])
-                    self.log.error(str(e))
+                    self.log.error('Exception while creating json for user %s: %s', username, str(e), exc_info=True)
                     raise
 
             listen_count += rows_added
@@ -417,7 +496,93 @@ class InfluxListenStore(ListenStore):
         # hence return bytes_written - 1 as the size in the dump for this user
         return bytes_written - 1
 
-    def dump_listens(self, location, dump_time=datetime.today(), threads=DUMP_DEFAULT_THREAD_COUNT):
+    def write_dump_metadata(self, archive_name, dump_time, temp_dir, tar):
+        try:
+            # add timestamp
+            timestamp_path = os.path.join(temp_dir, 'TIMESTAMP')
+            with open(timestamp_path, 'w') as f:
+                f.write(dump_time.isoformat(' '))
+            tar.add(timestamp_path,
+                    arcname=os.path.join(archive_name, 'TIMESTAMP'))
+
+            # add schema version
+            schema_version_path = os.path.join(temp_dir, 'SCHEMA_SEQUENCE')
+            with open(schema_version_path, 'w') as f:
+                f.write(str(LISTENS_DUMP_SCHEMA_VERSION))
+            tar.add(schema_version_path,
+                    arcname=os.path.join(archive_name, 'SCHEMA_SEQUENCE'))
+
+            # add copyright notice
+            tar.add(DUMP_LICENSE_FILE_PATH,
+                    arcname=os.path.join(archive_name, 'COPYING'))
+
+        except IOError as e:
+            self.log.critical('IOError while writing metadata dump files: %s', str(e), exc_info=True)
+            raise
+        except Exception as e:
+            self.log.error('Exception while adding dump metadata: %s', str(e), exc_info=True)
+            raise
+
+
+    def write_listens_full(self, listens_path, users, dump_time):
+        dump_complete = False
+        next_user_id = 0
+        index = {}
+        while not dump_complete:
+            file_name = str(uuid.uuid4())
+            # directory structure of the form "/%s/%02s/%s.listens" % (uuid[0], uuid[0:2], uuid)
+            directory = os.path.join(listens_path, file_name[0], file_name[0:2])
+            create_path(directory)
+            file_path = os.path.join(directory, '{uuid}.listens'.format(uuid=file_name))
+            with open(file_path, 'w') as f:
+                file_done = False
+                while next_user_id < len(users):
+                    if f.tell() > DUMP_FILE_SIZE_LIMIT:
+                        file_done = True
+                        break
+
+                    username = users[next_user_id]['musicbrainz_id']
+                    offset = f.tell()
+                    size = self.dump_user(username=username, fileobj=f, dump_time=dump_time)
+                    index[username] = {
+                        'file_name': file_name,
+                        'offset': offset,
+                        'size': size,
+                    }
+                    next_user_id += 1
+                    self.log.info("%d users done. Total: %d", next_user_id, len(users))
+
+                if file_done:
+                    continue
+
+                if next_user_id == len(users):
+                    dump_complete = True
+                    break
+
+        return index
+
+    def write_listens_for_spark(self, listens_path, users, dump_time):
+        for user in users:
+            self.dump_user_for_spark(user['musicbrainz_id'], dump_time, listens_path)
+
+    def write_dump_index_file(self, index, temp_dir, tar, archive_name):
+        # add index.json file to the archive
+        try:
+            index_path = os.path.join(temp_dir, 'index.json')
+            with open(index_path, 'w') as f:
+                f.write(ujson.dumps(index))
+            tar.add(index_path,
+                    arcname=os.path.join(archive_name, 'index.json'))
+        except IOError as e:
+            self.log.critical('IOError while writing index.json to archive: %s', str(e), exc_info=True)
+            raise
+        except Exception as e:
+            self.log.error('Exception while adding index file to archive: %s', str(e), exc_info=True)
+            raise
+
+
+
+    def dump_listens(self, location, dump_time=datetime.today(), threads=DUMP_DEFAULT_THREAD_COUNT, spark_format=False):
         """ Dumps all listens in the ListenStore into a .tar.xz archive.
 
         Files are created with UUIDs as names. Each file can contain listens for a number of users.
@@ -427,6 +592,7 @@ class InfluxListenStore(ListenStore):
             location: the directory where the listens dump archive should be created
             dump_time (datetime): the time at which the data dump was started
             threads (int): the number of threads to user for compression
+            spark_format (bool): dump files in Apache Spark friendly format if True, else full dumps
 
         Returns:
             the path to the dump archive
@@ -439,6 +605,8 @@ class InfluxListenStore(ListenStore):
         self.log.info('Total number of users: %d', len(users))
 
         archive_name = 'listenbrainz-listens-dump-{time}'.format(time=dump_time.strftime('%Y%m%d-%H%M%S'))
+        if spark_format:
+            archive_name = '{}-spark'.format(archive_name)
         archive_path = os.path.join(location, '{filename}.tar.xz'.format(filename=archive_name))
         with open(archive_path, 'w') as archive:
 
@@ -448,87 +616,20 @@ class InfluxListenStore(ListenStore):
             with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
 
                 temp_dir = tempfile.mkdtemp()
-
-                try:
-                    # add timestamp
-                    timestamp_path = os.path.join(temp_dir, 'TIMESTAMP')
-                    with open(timestamp_path, 'w') as f:
-                        f.write(dump_time.isoformat(' '))
-                    tar.add(timestamp_path,
-                            arcname=os.path.join(archive_name, 'TIMESTAMP'))
-
-                    # add schema version
-                    schema_version_path = os.path.join(temp_dir, 'SCHEMA_SEQUENCE')
-                    with open(schema_version_path, 'w') as f:
-                        f.write(str(LISTENS_DUMP_SCHEMA_VERSION))
-                    tar.add(schema_version_path,
-                            arcname=os.path.join(archive_name, 'SCHEMA_SEQUENCE'))
-
-                    # add copyright notice
-                    tar.add(DUMP_LICENSE_FILE_PATH,
-                            arcname=os.path.join(archive_name, 'COPYING'))
-
-                except IOError as e:
-                    log_ioerrors(self.log, e)
-                    raise
-                except Exception as e:
-                    self.log.error('Exception while adding dump metadata: %s', str(e))
-                    raise
+                self.write_dump_metadata(archive_name, dump_time, temp_dir, tar)
 
                 listens_path = os.path.join(temp_dir, 'listens')
-
-                dump_complete = False
-                next_user_id = 0
-                index = {}
-                while not dump_complete:
-                    file_name = str(uuid.uuid4())
-                    # directory structure of the form "/%s/%02s/%s.listens" % (uuid[0], uuid[0:2], uuid)
-                    directory = os.path.join(listens_path, file_name[0], file_name[0:2])
-                    create_path(directory)
-                    file_path = os.path.join(directory, '{uuid}.listens'.format(uuid=file_name))
-                    with open(file_path, 'w') as f:
-                        file_done = False
-                        while next_user_id < len(users):
-                            if f.tell() > DUMP_FILE_SIZE_LIMIT:
-                                file_done = True
-                                break
-
-                            username = users[next_user_id]['musicbrainz_id']
-                            offset = f.tell()
-                            size = self.dump_user(username=username, fileobj=f, dump_time=dump_time)
-                            index[username] = {
-                                'file_name': file_name,
-                                'offset': offset,
-                                'size': size,
-                            }
-                            next_user_id += 1
-
-                        if file_done:
-                            continue
-
-                        if next_user_id == len(users):
-                            dump_complete = True
-                            break
+                if spark_format:
+                    self.write_listens_for_spark(listens_path, users, dump_time)
+                else:
+                    index = self.write_listens_full(listens_path, users, dump_time)
+                    self.write_dump_index_file(index, temp_dir, tar, archive_name)
 
 
                 # add the listens directory to the archive
                 self.log.info('Got all listens, adding them to the archive...')
                 tar.add(listens_path,
                         arcname=os.path.join(archive_name, 'listens'))
-
-                # add index.json file to the archive
-                try:
-                    index_path = os.path.join(temp_dir, 'index.json')
-                    with open(index_path, 'w') as f:
-                        f.write(ujson.dumps(index))
-                    tar.add(index_path,
-                            arcname=os.path.join(archive_name, 'index.json'))
-                except IOError as e:
-                    log_ioerrors(self.log, e)
-                    raise
-                except Exception as e:
-                    self.log.error('Exception while adding index file to archive: %s', str(e))
-                    raise
 
                 # remove the temporary directory
                 shutil.rmtree(temp_dir)
@@ -650,8 +751,8 @@ class InfluxListenStore(ListenStore):
         """
 
         while not self.influx.write_points(points, time_precision='s'):
-            self.log.error('Error while writing listens to influx, '
-                'write_points returned False')
+            self.log.critical('Error while writing listens to influx, '
+                'write_points returned False, data %s', json.dumps(points, indent=3))
             time.sleep(3)
 
 
@@ -675,13 +776,17 @@ class InfluxListenStore(ListenStore):
                 if 'measurement not found' in e.content:
                     return
                 else:
-                    self.log.error('Error in influx client while dropping user %s: %s', musicbrainz_id, str(e))
+                    self.log.error('Error in influx client while dropping user %s: %s', musicbrainz_id, str(e), exc_info=True)
                     time.sleep(3)
             except InfluxDBServerError as e:
-                self.log.error('Error in influx server while dropping user %s: %s', musicbrainz_id, str(e))
+                self.log.error('Error in influx server while dropping user %s: %s', musicbrainz_id, str(e), exc_info=True)
                 time.sleep(3)
             except Exception as e:
-                self.log.error('Error while trying to drop user %s: %s', musicbrainz_id, str(e))
+                self.log.error('Error while trying to drop user %s: %s', musicbrainz_id, str(e), exc_info=True)
                 time.sleep(3)
         else:
-            raise Exception("Couldn't delete user with MusicBrainz ID: %s" % musicbrainz_id)
+            raise InfluxListenStoreException("Couldn't delete user with MusicBrainz ID: %s" % musicbrainz_id)
+
+
+class InfluxListenStoreException(Exception):
+    pass
