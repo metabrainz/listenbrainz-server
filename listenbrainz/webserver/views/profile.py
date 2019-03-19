@@ -280,4 +280,5 @@ def refresh_spotify_token():
         'id': current_user.id,
         'musicbrainz_id': current_user.musicbrainz_id,
         'user_token': spotify_user.user_token,
+        'permission': spotify_user.permission,
     })
