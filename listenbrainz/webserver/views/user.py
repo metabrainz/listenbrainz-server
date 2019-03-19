@@ -153,8 +153,7 @@ def profile(user_name):
         "artist_count": format(artist_count, ",d") if artist_count else None,
         "profile_url": url_for('user.profile', user_name=user_name),
         "mode": "listens",
-        "spotify_access_token": spotify_data.get("access_token", ""),
-        "spotify_permission": spotify_data.get("permission", ""),
+        "spotify": spotify_data,
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
         "api_url"               : current_app.config['API_URL'],
     }

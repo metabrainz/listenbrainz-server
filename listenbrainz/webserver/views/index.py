@@ -148,8 +148,7 @@ def recent_listens():
     props = {
         "listens": recent,
         "mode": "recent",
-        "spotify_access_token": spotify_user.get("access_token", ""),
-        "spotify_permission": spotify_user.get("permission", ""),
+        "spotify": spotify_user,
         "api_url": current_app.config["API_URL"],
     }
 
