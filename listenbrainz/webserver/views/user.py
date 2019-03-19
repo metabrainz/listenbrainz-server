@@ -190,8 +190,11 @@ def artists(user_name):
         return redirect(url_for('user.profile', user_name=user_name))
 
     data = data['artist']
-    yearmonth = data['top_month']['month']
-    top_artists = data['top_month']['artists']
+    if 'top_month' in data:
+        top_artists = data['top_month']['artists']
+    else:
+        top_artists = []
+
     return render_template(
         "user/artists.html",
         user=user,
