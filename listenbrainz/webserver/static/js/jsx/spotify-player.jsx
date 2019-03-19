@@ -26,13 +26,15 @@ export class SpotifyPlayer extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      accessToken: props.spotify_access_token,
+      accessToken: props.spotify_user.access_token,
+      permission: props.spotify_user.permission,
       currentSpotifyTrack: {},
       playerPaused: true,
       progressMs: 0,
       durationMs: 0,
       direction: props.direction || "down"
     };
+
     this.connectSpotifyPlayer = this.connectSpotifyPlayer.bind(this);
     this.disconnectSpotifyPlayer = this.disconnectSpotifyPlayer.bind(this);
     this.getAlbumArt = this.getAlbumArt.bind(this);
@@ -49,10 +51,19 @@ export class SpotifyPlayer extends React.Component {
     this.stopPlayerStateTimer = this.stopPlayerStateTimer.bind(this);
     this.togglePlay = this.togglePlay.bind(this);
     this.toggleDirection = this.toggleDirection.bind(this);
-    window.onSpotifyWebPlaybackSDKReady = this.connectSpotifyPlayer;
-    const spotifyPlayerSDKLib = require('../lib/spotify-player-sdk-1.6.0');
+    // Do an initial check of the spotify token permissions (scopes) before loading the SDK library
+    this.checkSpotifyToken(this.state.accessToken, this.state.permission).then(success => {
+      if(success){
+        window.onSpotifyWebPlaybackSDKReady = this.connectSpotifyPlayer;
+        const spotifyPlayerSDKLib = require('../lib/spotify-player-sdk-1.6.0');
+      }
+    })
     // ONLY FOR TESTING PURPOSES
     window.disconnectSpotifyPlayer = this.disconnectSpotifyPlayer;
+  }
+
+  componentWillUnmount() {
+    this.disconnectSpotifyPlayer();
   }
 
   play_spotify_uri(spotify_uri) {
@@ -86,6 +97,32 @@ export class SpotifyPlayer extends React.Component {
     })
     .catch(this.handleError);
   };
+
+  async checkSpotifyToken(accessToken, permission){
+
+    if(!accessToken || !permission){
+      this.handleAccountError(noTokenErrorMessage);
+      return false;
+    }
+    try {
+      const scopes = permission.split(" ");
+      const requiredScopes = ["streaming", "user-read-birthdate", "user-read-email", "user-read-private"];
+      for (var i in requiredScopes) {
+        if (!scopes.includes(requiredScopes[i])) {
+          if(typeof this.props.onPermissionError === "function") {
+            this.props.onPermissionError("Permission to play songs not granted");
+          }
+          return false;
+        }
+      }
+      return true;
+
+    } catch (error) {
+      this.handleError(error);
+      return false;
+    }
+
+  }
 
   playListen(listen) {
     if (listen.track_metadata.additional_info.spotify_id)
@@ -157,6 +194,9 @@ export class SpotifyPlayer extends React.Component {
 
   async handleTokenError(error, callbackFunction) {
     console.error(error);
+    if(error && error.message === "Invalid token scopes.") {
+      this.handleAccountError(error.message)
+    }
     try {
       const userToken = await this.props.APIService.refreshSpotifyToken();
       this.setState({accessToken: userToken},()=>{
@@ -169,10 +209,10 @@ export class SpotifyPlayer extends React.Component {
   }
 
   handleAccountError(error) {
-    const errorMessage = 'Failed to validate Spotify account: ';
-    console.error(errorMessage, error);
+    const errorMessage = <p>In order to play music, it is required that you link your Spotify Premium account.<br/>Please try to <a href="/profile/connect-spotify" target="_blank">link for "playing music" feature</a> and refresh this page</p>;
+    console.error('Failed to validate Spotify account', error);
     if(typeof this.props.onAccountError === "function") {
-      this.props.onAccountError(`${errorMessage} ${error}`);
+      this.props.onAccountError(errorMessage);
     }
   }
 
@@ -200,13 +240,13 @@ export class SpotifyPlayer extends React.Component {
     }
     if (typeof this._spotifyPlayer.disconnect === "function")
     {
-      this._spotifyPlayer.disconnect();
       this._spotifyPlayer.removeListener('initialization_error');
       this._spotifyPlayer.removeListener('authentication_error');
       this._spotifyPlayer.removeListener('account_error');
       this._spotifyPlayer.removeListener('playback_error');
       this._spotifyPlayer.removeListener('ready');
       this._spotifyPlayer.removeListener('player_state_changed');
+      this._spotifyPlayer.disconnect();
     }
     this._spotifyPlayer = null;
     this._firstRun = true;
@@ -214,12 +254,7 @@ export class SpotifyPlayer extends React.Component {
 
   connectSpotifyPlayer(callbackFunction) {
     this.disconnectSpotifyPlayer();
-    if (!this.state.accessToken)
-    {
-      const noTokenErrorMessage = <span> Please try to <a href="/profile/connect-spotify" target="_blank">link your account</a> and refresh this page</span>;
-      this.handleError(noTokenErrorMessage, "No Spotify access token");
-      return;
-    }
+
     this._spotifyPlayer = new window.Spotify.Player({
       name: 'ListenBrainz Player',
       getOAuthToken: authCallback => {
