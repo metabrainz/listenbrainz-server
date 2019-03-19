@@ -57,7 +57,7 @@ export class PlaybackControls extends React.Component {
             </div>
             {this.props.direction !== "hidden" &&
               <div className="right btn btn-xs" onClick={this.props.toggleDirection} title={`Play ${this.props.direction === 'up' ? 'down' : 'up'}`}>
-                <FontAwesomeIcon icon={this.state.direction === 'up' ? faSortAmountUp : faSortAmountDown}/>
+                <FontAwesomeIcon icon={this.props.direction === 'up' ? faSortAmountUp : faSortAmountDown}/>
               </div>
             }
           </div>
