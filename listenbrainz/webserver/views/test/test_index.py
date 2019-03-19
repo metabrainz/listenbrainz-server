@@ -308,5 +308,4 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertTemplateUsed('index/recent.html')
         props = ujson.loads(self.get_context_variable('props'))
         self.assertEqual(props['mode'], 'recent')
-        self.assertEqual(props['spotify_access_token'], '')
-        self.assertEqual(props['spotify_permission'], '')
+        self.assertDictEqual(props['spotify'], {})
