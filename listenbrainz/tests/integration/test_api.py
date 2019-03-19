@@ -70,6 +70,13 @@ class APITestCase(IntegrationTestCase):
         response = self.client.get(url, query_string = {'min_ts': int(time.time())})
         self.assert200(response)
 
+        # request with max_ts lesser than the timestamp of the submitted listen
+        # should not send back any listens, should report a good latest_listen timestamp
+        response = self.client.get(url, query_string = {'max_ts': ts - 2})
+        self.assert200(response)
+        self.assertListEqual(response.json['payload']['listens'], [])
+        self.assertEqual(response.json['payload']['latest_listen_ts'], ts)
+
 
         # checkt that recent listens are fectched correctly
         url = url_for('api_v1.get_recent_listens_for_user_list', user_list = self.user['musicbrainz_id'])
