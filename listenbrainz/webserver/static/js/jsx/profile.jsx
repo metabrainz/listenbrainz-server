@@ -33,12 +33,12 @@ class RecentListens extends React.Component {
       listId: props.follow_list_id,
       direction: "down"
     };
-    this.handleSpotifyAccountError = this.handleSpotifyAccountError.bind(this);
     this.connectWebsockets = this.connectWebsockets.bind(this);
     this.getRecentListensForFollowList = this.getRecentListensForFollowList.bind(this);
     this.handleCurrentListenChange = this.handleCurrentListenChange.bind(this);
     this.handleFollowUserListChange = this.handleFollowUserListChange.bind(this);
     this.handleSpotifyAccountError = this.handleSpotifyAccountError.bind(this);
+    this.handleSpotifyPermissionError = this.handleSpotifyPermissionError.bind(this);
     this.isCurrentListen = this.isCurrentListen.bind(this);
     this.newAlert = this.newAlert.bind(this);
     this.onAlertDismissed = this.onAlertDismissed.bind(this);
@@ -109,9 +109,15 @@ class RecentListens extends React.Component {
       }
     })
   }
+
   handleSpotifyAccountError(error){
     this.newAlert("danger","Spotify account error", error);
-    this.setState({isSpotifyPremium: false})
+    this.setState({canPlayMusic: false})
+  }
+
+  handleSpotifyPermissionError(error) {
+    console.error(error);
+    this.setState({canPlayMusic: false});
   }
 
   playListen(listen){
@@ -352,7 +358,7 @@ class RecentListens extends React.Component {
             }
           </div>
           <div className="col-md-4" style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}>
-            {this.props.spotify.access_token && this.state.isSpotifyPremium !== false ?
+            {this.props.spotify.access_token && this.state.canPlayMusic !== false ?
               <SpotifyPlayer
                 APIService={this.APIService}
                 ref={this.spotifyPlayer}
@@ -361,6 +367,7 @@ class RecentListens extends React.Component {
                 spotify={this.props.spotify}
                 onCurrentListenChange={this.handleCurrentListenChange}
                 onAccountError={this.handleSpotifyAccountError}
+                onPermissionError={this.handleSpotifyPermissionError}
                 currentListen={this.state.currentListen}
                 newAlert={this.newAlert}
               /> :

@@ -52,7 +52,7 @@ export class SpotifyPlayer extends React.Component {
     this.togglePlay = this.togglePlay.bind(this);
     this.toggleDirection = this.toggleDirection.bind(this);
     // Do an initial check of the spotify token permissions (scopes) before loading the SDK library
-    this.checkSpotifyToken(props.spotify_access_token).then(success =>{
+    this.checkSpotifyToken(this.state.accessToken, this.state.permission).then(success => {
       if(success){
         window.onSpotifyWebPlaybackSDKReady = this.connectSpotifyPlayer;
         const spotifyPlayerSDKLib = require('../lib/spotify-player-sdk-1.6.0');
@@ -98,38 +98,30 @@ export class SpotifyPlayer extends React.Component {
     .catch(this.handleError);
   };
 
-  async checkSpotifyToken(accessToken){
-    if(!accessToken){
-      {
-        this.handleAccountError(noTokenErrorMessage);
-        return false;
-      }
+  async checkSpotifyToken(accessToken, permission){
+
+    if(!accessToken || !permission){
+      this.handleAccountError(noTokenErrorMessage);
+      return false;
     }
     try {
-      const response = await fetch("https://api.spotify.com/v1/melody/v1/check_scope?scope=web-playback", {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': `Bearer ${accessToken}`
-        },
-      });
-      if(response.ok){
-        return true
+      const scopes = permission.split(" ");
+      const requiredScopes = ["streaming", "user-read-birthdate", "user-read-email", "user-read-private"];
+      for (var i in requiredScopes) {
+        if (!scopes.includes(requiredScopes[i])) {
+          if(typeof this.props.onPermissionError === "function") {
+            this.props.onPermissionError("Permission to play songs not granted");
+          }
+          return false;
+        }
       }
-      const body = await response.json();
-      
-      if(response.status === 401){
-        this.handleTokenError(body.error || response.statusText);
-      }
-      if(response.status === 403){
-        this.handleAccountError(body.error || response.statusText);
-      }
-      return false;
+      return true;
+
     } catch (error) {
-        this.handleError(error);
-        return false;
+      this.handleError(error);
+      return false;
     }
-    
+
   }
 
   playListen(listen) {
@@ -217,7 +209,7 @@ export class SpotifyPlayer extends React.Component {
   }
 
   handleAccountError(error) {
-    const errorMessage = <p>This functionnality requires you to link your Spotify Premium account.<br/>Please try to <a href="/profile/connect-spotify" target="_blank">link for "playing music" feature</a> and refresh this page</p>;
+    const errorMessage = <p>In order to play music, it is required that you link your Spotify Premium account.<br/>Please try to <a href="/profile/connect-spotify" target="_blank">link for "playing music" feature</a> and refresh this page</p>;
     console.error('Failed to validate Spotify account', error);
     if(typeof this.props.onAccountError === "function") {
       this.props.onAccountError(errorMessage);
