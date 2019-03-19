@@ -229,6 +229,21 @@ def get_access_token(code):
     return r.json()
 
 
+def get_user_dict(user_id):
+    """ Get spotify user details in the form of a dict
+
+    Args:
+        user_id (int): the row ID of the user in ListenBrainz
+    """
+    user = get_user(user_id)
+    if not user:
+        return {}
+    return {
+        'access_token': user.user_token,
+        'permission': user.permission,
+    }
+
+
 class SpotifyImporterException(Exception):
     pass
 
