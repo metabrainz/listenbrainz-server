@@ -59,26 +59,32 @@ def _convert_spotify_play_to_listen(play, listen_type):
             'listened_at': int(parser.parse(play['played_at']).timestamp()),
         }
 
+    if track is None:
+        return None
 
-    album = track['album']
-    artists = track['artists']
-    album_artists = album['artists']
-    artist_name = ', '.join([a['name'] for a in artists])
-    album_artist_name = ', '.join([a['name'] for a in album_artists])
+    album = track.get('album', {})
+    artists = track.get('artists', [])
+    album_artists = album.get('artists', [])
+    artist_name = ', '.join([a.get('name') for a in artists if a.get('name')])
+    album_artist_name = ', '.join([a.get('name') for a in album_artists if a.get('name')])
 
     additional = {
-        'tracknumber': track['track_number'],
-        'spotify_artist_ids': [a['external_urls']['spotify'] for a in artists],
-        'artist_names': [a['name'] for a in artists],
+        'tracknumber': track.get('track_number'),
+        'spotify_artist_ids': [
+            a.get('external_urls', {}).get('spotify') for a in artists if a.get('external_urls', {}).get('spotify')
+        ],
+        'artist_names': [a.get('name') for a in artists if a.get('name')],
         'listening_from': 'spotify',
-        'discnumber': track['disc_number'],
-        'duration_ms': track['duration_ms'],
-        'spotify_album_id': track['album']['external_urls']['spotify'],
+        'discnumber': track.get('disc_number'),
+        'duration_ms': track.get('duration_ms'),
+        'spotify_album_id': album.get('external_urls', {}).get('spotify'),
         # Named 'release_*' because 'release_name' is an official name in the docs
         'release_artist_name': album_artist_name,
-        'release_artist_names': [a['name'] for a in album_artists],
+        'release_artist_names': [a.get('name') for a in album_artists if a.get('name')],
         # Named 'album_*' because Spotify calls it album and this is spotify-specific
-        'spotify_album_artist_ids': [a['external_urls']['spotify'] for a in album_artists],
+        'spotify_album_artist_ids': [
+            a.get('external_urls', {}).get('spotify') for a in album_artists if a.get('external_urls', {}).get('spotify')
+        ],
     }
     isrc = track.get('external_ids', {}).get('isrc')
     spotify_url = track.get('external_urls', {}).get('spotify')
