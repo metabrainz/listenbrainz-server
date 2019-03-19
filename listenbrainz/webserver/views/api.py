@@ -93,6 +93,7 @@ def get_listens(user_name):
     :resheader Content-Type: *application/json*
     """
 
+    current_time = int(time.time())
     max_ts = _parse_int_arg("max_ts")
     min_ts = _parse_int_arg("min_ts")
 
@@ -103,7 +104,7 @@ def get_listens(user_name):
 
     # If none are given, start with now and go down
     if max_ts == None and min_ts == None:
-        max_ts = int(time.time())
+        max_ts = current_time
 
     db_conn = webserver.create_influx(current_app)
     listens = db_conn.fetch_listens(
@@ -119,7 +120,7 @@ def get_listens(user_name):
     latest_listen = db_conn.fetch_listens(
         user_name,
         limit=1,
-        to_ts=int(time.time()),
+        to_ts=current_time,
     )
     latest_listen_ts = latest_listen[0].ts_since_epoch if len(latest_listen) > 0 else 0
 
