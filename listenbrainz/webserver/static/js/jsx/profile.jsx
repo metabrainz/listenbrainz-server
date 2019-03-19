@@ -2,6 +2,7 @@
 
 import * as timeago from 'time-ago';
 
+import { faListUl, faMusic } from '@fortawesome/free-solid-svg-icons'
 import {getArtistLink, getPlayButton, getSpotifyEmbedUriFromListen, getTrackLink} from './utils.jsx';
 
 import APIService from './api-service';
@@ -12,8 +13,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import {SpotifyPlayer} from './spotify-player.jsx';
 import {isEqual as _isEqual} from 'lodash';
-import { faListUl } from '@fortawesome/free-solid-svg-icons'
-import { faSpotify } from '@fortawesome/free-brands-svg-icons'
 import io from 'socket.io-client';
 
 class RecentListens extends React.Component {
@@ -308,7 +307,7 @@ class RecentListens extends React.Component {
                             <td>{getTrackLink(listen)}</td>
                             <td>{getArtistLink(listen)}</td>
                             {listen.playing_now ?
-                              <td><FontAwesomeIcon icon={faSpotify}/> Playing now</td>
+                              <td><FontAwesomeIcon icon={faMusic}/> Playing now</td>
                               :
                               <td>
                                 <abbr title={listen.listened_at_iso}>
