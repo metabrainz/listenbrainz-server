@@ -364,7 +364,7 @@ class RecentListens extends React.Component {
                 ref={this.spotifyPlayer}
                 listens={spotifyListens}
                 direction={this.state.direction}
-                spotify={this.props.spotify}
+                spotify_user={this.props.spotify}
                 onCurrentListenChange={this.handleCurrentListenChange}
                 onAccountError={this.handleSpotifyAccountError}
                 onPermissionError={this.handleSpotifyPermissionError}
