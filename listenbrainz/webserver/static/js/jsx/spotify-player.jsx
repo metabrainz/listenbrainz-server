@@ -26,8 +26,8 @@ export class SpotifyPlayer extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      accessToken: props.spotify.access_token,
-      permission: props.spotify.permission,
+      accessToken: props.spotify_user.access_token,
+      permission: props.spotify_user.permission,
       currentSpotifyTrack: {},
       playerPaused: true,
       progressMs: 0,
