@@ -1,6 +1,5 @@
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
-import listenbrainz.db.spotify as db_spotify
 import urllib
 import ujson
 
@@ -9,6 +8,7 @@ from flask_login import current_user, login_required
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz.domain import spotify
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.login import User
@@ -134,14 +134,9 @@ def profile(user_name):
     except (KeyError, TypeError):
         artist_count = None
 
+    spotify_data = {}
     if current_user.is_authenticated:
-        token = db_spotify.get_token_for_user(current_user.id)
-        if token:
-            spotify_access_token = token
-        else:
-            spotify_access_token = ''
-    else:
-        spotify_access_token = ''
+        spotify_data = spotify.get_user_dict(current_user.id)
 
     props = {
         "user" : {
@@ -158,7 +153,8 @@ def profile(user_name):
         "artist_count": format(artist_count, ",d") if artist_count else None,
         "profile_url": url_for('user.profile', user_name=user_name),
         "mode": "listens",
-        "spotify_access_token": spotify_access_token,
+        "spotify_access_token": spotify_data.get("access_token", ""),
+        "spotify_permission": spotify_data.get("permission", ""),
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
         "api_url"               : current_app.config['API_URL'],
     }
