@@ -326,7 +326,7 @@ export class SpotifyPlayer extends React.Component {
   startPlayerStateTimer() {
     this._playerStateTimerID = setInterval(()=>{
       this._spotifyPlayer.getCurrentState().then(this.handlePlayerStateChanged)
-    }, 200);
+    }, 500);
   }
   stopPlayerStateTimer() {
     clearInterval(this._playerStateTimerID);
@@ -336,7 +336,6 @@ export class SpotifyPlayer extends React.Component {
     if(!state) {
       return;
     }
-    console.debug('Spotify player state', state);
     const {
       paused,
       position,
@@ -355,7 +354,8 @@ export class SpotifyPlayer extends React.Component {
       _.has(state, "restrictions.disallow_resuming_reasons") && state.restrictions.disallow_resuming_reasons[0] === "not_paused")
     {
       // Track finished, play next track
-      console.debug("Detected Spotify end of track, playing next track")
+      console.debug("Detected Spotify end of track, playing next track");
+      console.debug('Spotify player state', state);
       this.debouncedPlayNextTrack();
       return;
     }
