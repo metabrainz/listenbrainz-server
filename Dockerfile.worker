@@ -19,6 +19,8 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
 
 RUN mkdir /rec
 WORKDIR /rec
+COPY requirements.txt /rec/requirements.txt
+RUN pip3 install -r requirements.txt
 COPY . /rec
 
 RUN cd /usr/local && \
