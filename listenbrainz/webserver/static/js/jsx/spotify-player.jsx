@@ -326,7 +326,7 @@ export class SpotifyPlayer extends React.Component {
   startPlayerStateTimer() {
     this._playerStateTimerID = setInterval(()=>{
       this._spotifyPlayer.getCurrentState().then(this.handlePlayerStateChanged)
-    }, 200);
+    }, 500);
   }
   stopPlayerStateTimer() {
     clearInterval(this._playerStateTimerID);
@@ -336,7 +336,6 @@ export class SpotifyPlayer extends React.Component {
     if(!state) {
       return;
     }
-    console.debug('Spotify player state', state);
     const {
       paused,
       position,
@@ -351,11 +350,11 @@ export class SpotifyPlayer extends React.Component {
     }
     // How do we accurately detect the end of a song?
     // From https://github.com/spotify/web-playback-sdk/issues/35#issuecomment-469834686
-    if (position === 0 && paused === true &&
-      _.has(state, "restrictions.disallow_resuming_reasons") && state.restrictions.disallow_resuming_reasons[0] === "not_paused")
+    if (position === 0 && paused === true)
     {
       // Track finished, play next track
-      console.debug("Detected Spotify end of track, playing next track")
+      console.debug("Detected Spotify end of track, playing next track");
+      console.debug('Spotify player state', state);
       this.debouncedPlayNextTrack();
       return;
     }
