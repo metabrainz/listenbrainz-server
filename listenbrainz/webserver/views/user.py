@@ -167,8 +167,8 @@ def profile(user_name):
 
 @user_bp.route("/<user_name>/artists")
 def artists(user_name):
-    """ Show the top artists for the user. These users must have been already
-        calculated using Google BigQuery. If the stats are not present, we
+    """ Show the top artists for the user. These user stats must have been already
+        calculated.  If the stats are not present, we
         redirect to the user page with a message.
     """
 
