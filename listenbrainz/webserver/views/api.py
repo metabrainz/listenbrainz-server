@@ -77,6 +77,7 @@ def submit_listen():
 
 
 @api_bp.route("/user/<user_name>/listens")
+@crossdomain()
 @ratelimit()
 def get_listens(user_name):
     """
@@ -137,6 +138,7 @@ def get_listens(user_name):
 
 
 @api_bp.route("/user/<user_name>/playing-now")
+@crossdomain()
 @ratelimit()
 def get_playing_now(user_name):
     """
