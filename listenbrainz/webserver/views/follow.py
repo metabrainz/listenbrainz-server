@@ -1,8 +1,9 @@
 import ujson
 from flask import Blueprint, render_template, current_app
 from flask_login import current_user, login_required
+from listenbrainz.domain import spotify
+
 import listenbrainz.db.follow_list as db_follow_list
-import listenbrainz.db.spotify as db_spotify
 
 
 follow_bp = Blueprint("follow", __name__)
@@ -39,12 +40,12 @@ def follow(user_list):
         "name": current_user.musicbrainz_id,
         "auth_token": current_user.auth_token,
     }
-    spotify_access_token = db_spotify.get_token_for_user(current_user.id)
+    spotify_data = spotify.get_user_dict(current_user.id)
     props = {
         "user": user_data,
         "mode": "follow",
         "follow_list": follow_list_members,
-        "spotify_access_token": spotify_access_token,
+        "spotify": spotify_data,
         "web_sockets_server_url": current_app.config["WEBSOCKETS_SERVER_URL"],
         "api_url": current_app.config["API_URL"],
         "save_url": "{}/1/follow/save".format(current_app.config["API_URL"]),
