@@ -11,9 +11,9 @@ import requests
 import locale
 import ujson
 import listenbrainz.db.user as db_user
-import listenbrainz.db.spotify as db_spotify
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz import webserver
+from listenbrainz.domain import spotify
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.influx_connection import _influx
 from listenbrainz.webserver.redis_connection import _redis
@@ -141,20 +141,15 @@ def recent_listens():
                 "listened_at_iso": listen.timestamp.isoformat() + "Z",
             })
 
+    spotify_user = {}
     if current_user.is_authenticated:
-        token = db_spotify.get_token_for_user(current_user.id)
-        if token:
-            spotify_access_token = token
-        else:
-            spotify_access_token = ''
-    else:
-        spotify_access_token = ''
+        spotify_user = spotify.get_user_dict(current_user.id)
 
     props = {
-        "listens"              : recent,
-        "mode"                 : "recent",
-        "spotify_access_token" : spotify_access_token,
-        "api_url"               : current_app.config['API_URL'],
+        "listens": recent,
+        "mode": "recent",
+        "spotify": spotify_user,
+        "api_url": current_app.config["API_URL"],
     }
 
     return render_template("index/recent.html",
