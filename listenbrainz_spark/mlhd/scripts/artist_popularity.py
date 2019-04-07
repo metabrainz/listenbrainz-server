@@ -1,3 +1,4 @@
+import os
 import listenbrainz_spark
 
 from listenbrainz_spark import config
