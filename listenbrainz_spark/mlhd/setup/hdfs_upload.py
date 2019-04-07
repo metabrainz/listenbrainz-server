@@ -3,20 +3,37 @@ import os
 import shutil
 import subprocess
 import tempfile
+import time
 
 
 from listenbrainz_spark import hdfs_connection
 
 def process_tar_file(file_dir, file_name):
+    t0 = time.time()
     tmp_dir = tempfile.mkdtemp()
-    shutil.copy(src=os.path.join(file_dir, file_name), dst=os.path.join(tmp_dir, file_name))
-    subprocess.check_output(['tar', '-xf', os.path.join(tmp_dir, file_name)])
-    subprocess.check_output(['gunzip', os.path.join(tmp_dir, '*.gz')])
+    print("Extracting file %s..." % file_name)
+    subprocess.check_output(['tar', '-xf', os.path.join(file_dir, file_name), '-C', tmp_dir])
+    print(len(os.listdir(tmp_dir)))
+    print("Extracting listen files...")
+    te = time.time()
+    extracted = 0
+    for gz_file in os.listdir(tmp_dir):
+        if gz_file.endswith('.gz'):
+            subprocess.check_output(['gunzip', os.path.join(tmp_dir, gz_file)])
+            extracted += 1
+    print("extracted %d files in %.2f s" % (extracted, time.time() - te))
+    print("Uploading files to HDFS...")
+    uploaded = 0
+    tu = time.time()
+    hdfs_path = os.path.join('/data', 'mlhd', file_name.split('.')[0])
+    hdfs_connection.client.makedirs(hdfs_path)
     for listen_file in os.listdir(tmp_dir):
         if listen_file.endswith('.txt'):
-            hdfs_path = os.path.join('/data', 'mlhd', listen_file[0], listen_file[0:2], listen_file)
-            hdfs_connection.client.upload(hdfs_path=hdfs_path, local_path=os.path.join(tmp_dir, listen_file))
+            hdfs_connection.client.upload(hdfs_path=os.path.join(hdfs_path, listen_file), local_path=os.path.join(tmp_dir, listen_file))
+            uploaded += 1
+    print("uploaded %d files in %.2f s" % (uploaded, time.time() - tu))
     shutil.rmtree(tmp_dir)
+    print("file %s done in %.2f s!" % (file_name, time.time() - t0))
 
 
 def main(mlhd_dir):
