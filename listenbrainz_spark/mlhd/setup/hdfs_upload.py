@@ -8,6 +8,7 @@ import time
 
 from listenbrainz_spark import hdfs_connection
 
+
 def process_tar_file(file_dir, file_name):
     t0 = time.time()
     tmp_dir = tempfile.mkdtemp()
