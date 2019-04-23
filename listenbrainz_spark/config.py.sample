@@ -1,3 +1,11 @@
 HDFS_HTTP_URI = 'http://hadoop-master:9870' # the URI of the http webclient for HDFS
 
 HDFS_CLUSTER_URI = 'hdfs://hadoop-master:9000' # the URI to be used with Spark
+
+MAX_RETRIES = 5
+TIME_BEFORE_RETRIES = 4
+
+starting_month = 1
+ending_month = 12
+starting_year = 2017
+ending_year = 2019

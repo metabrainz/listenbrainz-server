@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Recommendations</title>
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+</style>
+</head>
+<body>
+	<center>
+		<h1>Recommendations generated for {{ num_users }} users on {{ date }}</h1>
+	</center>
+	<p><i>Total time lapsed in training model and generating recommendations: <b>{{ total_time }}s</b></i></p>
+	{% for row in recommendations -%}
+	<h4>Recommendations for {{ row[0] }} generated in {{ row[1] }}s</h4>
+	<table style="width:100%">
+		<tr>
+			{% for col in column -%}
+			<th>{{ col }}</th>
+			{% endfor -%}
+		</tr>
+		{% for recommended_recordings in row[2] -%}
+		<tr>
+			{% for entity in recommended_recordings -%}
+			<td>{{ entity }}</td>
+			{% endfor -%}
+		</tr>
+		{% endfor -%}
+	</table>
+	{% endfor -%}
+</body>
+</html>

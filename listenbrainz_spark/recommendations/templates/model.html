@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8"/>
+	<title>Model Information</title>
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+</style>
+</head>
+<body>
+	<center>
+		<h2>Model Information</h2>
+	</center>
+	<p>Collaborative filtering has been used to generate recommendations for users. From Listenbrainz data dump, <b>{{ total_listens }}</b> listens from <b>{{ lb_dump_time_window[0] }}</b> to <b>{{ lb_dump_time_window[1]}}</b> have been used to train, validate and test the model. Approximately, 65% data has been used to train the model, and the remaining data has been used to validate and test the model.</p>
+
+	<h4>Following are the parameters required to train the model</h4>
+	<ul>
+		<li><b>rank</b></li><p>This refers to the number of factors in our ALS model, that is,the number of hidden features in our low-rank approximation matrices. </p>
+		<li><b>lmbda</b></li><p>This parameter controls the regularization of our model.Thus, lambda controls over fitting.</p>
+		<li><b>iterations</b></li><p>This refers to the number of iterations to run.</p>
+		<li><b>alpha</b></li><p>The alpha parameter controls the baseline level of confidence weighting applied.A higher level of alpha tends to make the model more confident about the fact that missing data equates to no preference for the relevant user-item pair.</p>
+	</ul>
+	<p>The following table gives information about the parameters fed to the model in every iteration</p>
+	<p><b>Note</b>: <i>Here, iteration does not refer to the parameter "iteration", but the number of times the whole process of training is carried out.</p>
+	<table style="width:100%">
+		<tr>
+			<th>rank</th>
+			<th>lmbda</th>
+			<th>iterations</th>
+			<th>validation rmse</th>
+		</tr>
+		{% for row in model.training_metadata -%}
+		<tr>
+			{% for i in row -%}
+			<td>{{ i }}</td>
+			{% endfor -%}
+		</tr>
+		{% endfor -%}
+	</table>
+	<p>Value of alpha used is <b>3.0</b></p>
+	<p>Best model has error = <b>{{ model.best_model.error }}</b>, rank = <b>{{ model.best_model.rank }}</b>, lmbda = <b>{{ model.best_model.lmbda }}</b>, iteration = <b>{{ model.best_model.iteration}}</b>.</p>
+	<p>Best model trained in <b>{{ time }}</b> seconds</p>
+</body>
+</html>
