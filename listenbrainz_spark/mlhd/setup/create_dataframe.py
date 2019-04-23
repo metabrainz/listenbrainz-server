@@ -8,13 +8,8 @@ from listenbrainz_spark.mlhd.schema import tsv_schema
 
 
 def load_files(root_path):
-    df = None
-    for path in hdfs_connection.client.list(root_path):
-        files_path = config.HDFS_CLUSTER_URI + os.path.join(root_path, path, '*.txt')
-        print('New files: ', files_path)
-        files_df = listenbrainz_spark.session.read.csv(files_path, sep='\t', schema=tsv_schema, timestampFormat='s')
-        files_df.show()
-        df = df.union(files_df) if df else files_df
+    df = listenbrainz_spark.sql_context.read.format('avro').load(config.HDFS_CLUSTER_URI+root_path+'/*.avro')
+    df.show()
     return df
 
 

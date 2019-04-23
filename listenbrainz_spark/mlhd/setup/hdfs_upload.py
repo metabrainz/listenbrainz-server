@@ -40,8 +40,10 @@ def process_tar_file(file_dir, file_name):
 def main(mlhd_dir):
     hdfs_connection.init_hdfs(config.HDFS_HTTP_URI)
     for mlhd_file in os.listdir(mlhd_dir):
-        if mlhd_file.endswith('.tar'):
-            process_tar_file(mlhd_dir, mlhd_file)
+        if mlhd_file.endswith('.avro'):
+            print('Uploading ', mlhd_file)
+            hdfs_connection.client.upload(hdfs_path=os.path.join('/data/mlhd', mlhd_file), local_path=os.path.join(mlhd_dir, mlhd_file))
+            print('Done')
 
 
 if __name__ == '__main__':
