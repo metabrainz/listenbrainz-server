@@ -125,7 +125,7 @@ export class SpotifyPlayer extends React.Component {
   }
 
   playListen(listen) {
-    if (listen.track_metadata.additional_info.spotify_id)
+    if (_.get(listen,"track_metadata.additional_info.spotify_id"))
     {
       this.play_spotify_uri(getSpotifyUriFromListen(listen));
       this.props.onCurrentListenChange(listen);

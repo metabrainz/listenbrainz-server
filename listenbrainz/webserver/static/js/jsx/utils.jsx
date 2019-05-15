@@ -1,11 +1,10 @@
-import { faPlayCircle } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react'; // jsx compiled to React.createElement
+import { faPlayCircle } from '@fortawesome/free-solid-svg-icons'
 
 export function getSpotifyEmbedUriFromListen(listen){
 	
-	if(!listen || !listen.track_metadata || !listen.track_metadata.additional_info ||
-		typeof listen.track_metadata.additional_info.spotify_id !== "string"){
+	if( typeof _.get(listen,"track_metadata.additional_info.spotify_id") !== "string"){
 		return null;
 	}
 	const spotifyId = listen.track_metadata.additional_info.spotify_id;
@@ -17,29 +16,32 @@ export function getSpotifyEmbedUriFromListen(listen){
 }
 
 export function getArtistLink(listen) {
-  if (listen.track_metadata.additional_info.artist_mbids && listen.track_metadata.additional_info.artist_mbids.length)
+  const artistName = _.get(listen,"track_metadata.artist_name");
+  const firstArtist = _.first(_.get(listen,"track_metadata.additional_info.artist_mbids"));
+  if (firstArtist)
   {
-    return (<a href={`http://musicbrainz.org/artist/${listen.track_metadata.additional_info.artist_mbids[0]}`}
+    return (<a href={`http://musicbrainz.org/artist/${firstArtist}`}
       target="_blank">
-      {listen.track_metadata.artist_name}
+      {artistName}
     </a>);
   }
-  return listen.track_metadata.artist_name
+  return artistName;
 }
 
 export function getTrackLink(listen) {
-  if (listen.track_metadata.additional_info.recording_mbid)
+  const trackName = _.get(listen,"track_metadata.track_name");
+  if (_.get(listen,"track_metadata.additional_info.recording_mbid"))
   {
     return (<a href={`http://musicbrainz.org/recording/${listen.track_metadata.additional_info.recording_mbid}`}
       target="_blank">
-      {listen.track_metadata.track_name}
+      {trackName}
     </a>);
   }
-  return listen.track_metadata.track_name;
+  return trackName;
 }
 
 export function getPlayButton(listen, onClickFunction) {
-  if (listen.track_metadata.additional_info.spotify_id)
+  if (_.get(listen,"track_metadata.additional_info.spotify_id"))
   {
     return (
       <button title="Play" className="btn-link" onClick={onClickFunction.bind(listen)}>
