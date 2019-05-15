@@ -1,4 +1,4 @@
-git+https://github.com/metabrainz/brainzutils-python.git@v1.5.1
+git+https://github.com/metabrainz/brainzutils-python.git@v1.10.1
 Fabric == 1.10.2
 Flask-Testing == 0.4.2
 Flask-SQLAlchemy==2.0
