@@ -66,6 +66,48 @@ export class SpotifyPlayer extends React.Component {
     this.disconnectSpotifyPlayer();
   }
 
+  search_and_play_track(listen) {
+    const trackName = _.get(listen,"track_metadata.track_name");
+    const artistName = _.get(listen,"track_metadata.artist_name");
+    if (!trackName || !artistName)
+    {
+      return this.handleWarning("Not enough info to search on Spotify");
+    }
+    const queryString = `q=${trackName} artist:${artistName}&type=track`;
+    fetch(`https://api.spotify.com/v1/search?${encodeURI(queryString)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.state.accessToken}`
+      },
+    })
+    .then(response =>{
+      if(response.status === 401){
+        return this.handleTokenError(response.statusText, this.play_spotify_uri.bind(this, spotify_uri));
+      }
+      if(response.status === 403){
+        return this.handleAccountError(response.statusText);
+      }
+      if(!response.ok){
+        return this.handleError(response.statusText);
+      }
+      if(response.status === 200){ 
+        // Valid response
+        return response.json();
+      }
+      return;
+    })
+    .then(responseBody => {
+      const tracks = _.get(responseBody,"tracks.items");
+      if(!tracks || !tracks.length){
+        return this.handleWarning("No track found on Spotify");
+      }
+      this.play_spotify_uri(tracks[0].uri);
+      this.props.onCurrentListenChange(listen);
+    })
+    .catch(this.handleError);
+  }
+
   play_spotify_uri(spotify_uri) {
     if (!this._spotifyPlayer)
     {
@@ -131,7 +173,7 @@ export class SpotifyPlayer extends React.Component {
       this.props.onCurrentListenChange(listen);
     } else
     {
-      this.handleWarning("This song was not listened to on Spotify", "Cannot play this song");
+      this.search_and_play_track(listen);
     }
   };
   isCurrentListen(element) {
