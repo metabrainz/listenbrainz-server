@@ -274,7 +274,10 @@ export class SpotifyPlayer extends React.Component {
       if(callbackFunction){
         callbackFunction();
       }
-      this.startPlayerStateTimer()
+      this.startPlayerStateTimer();
+      if(window.fixSpotifyPlayerStyleIssue) {
+        window.fixSpotifyPlayerStyleIssue();
+      }
     });
 
     this._spotifyPlayer.addListener('player_state_changed', this.handlePlayerStateChanged);
@@ -401,5 +404,17 @@ export class SpotifyPlayer extends React.Component {
         </PlaybackControls>
       </div>
     );
+  }
+}
+
+// Fix for LB-447 (Player does not play any sound)
+// https://github.com/spotify/web-playback-sdk/issues/75#issuecomment-487325589
+window.fixSpotifyPlayerStyleIssue = function(){
+  const iframe = document.querySelector('iframe[src="https://sdk.scdn.co/embedded/index.html"]');
+  if (iframe) {
+    iframe.style.display = 'block';
+    iframe.style.position = 'absolute';
+    iframe.style.top = '-1000px';
+    iframe.style.left = '-1000px';
   }
 }
