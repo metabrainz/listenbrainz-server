@@ -71,12 +71,13 @@ export class SpotifyPlayer extends React.Component {
   search_and_play_track(listen) {
     const trackName = _.get(listen,"track_metadata.track_name");
     const artistName = _.get(listen,"track_metadata.artist_name");
-    if (!trackName || !artistName)
+    const releaseName = _.get(listen,"track_metadata.release_name");
+    if (!trackName)
     {
       return this.handleWarning("Not enough info to search on Spotify");
     }
     
-    searchForSpotifyTrack(this.state.accessToken, trackName, artistName)
+    searchForSpotifyTrack(this.state.accessToken, trackName, artistName, releaseName)
     .then(track => {
       // Track should be a Spotify track object:
       // https://developer.spotify.com/documentation/web-api/reference/object-model/#track-object-full
