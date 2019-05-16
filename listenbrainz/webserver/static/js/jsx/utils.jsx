@@ -14,7 +14,7 @@ export function getSpotifyEmbedUriFromListen(listen){
 	return  spotifyId.replace("https://open.spotify.com/","https://open.spotify.com/embed/");
 }
 
-export async function searchForSpotifyTrack(spotifyToken, trackName, artistName) {
+export async function searchForSpotifyTrack(spotifyToken, trackName, artistName, releaseName) {
   if(!spotifyToken) {
     throw new Error({status:403,message: "You need to connect to your Spotify account"});
   }
@@ -22,7 +22,11 @@ export async function searchForSpotifyTrack(spotifyToken, trackName, artistName)
     console.error("searchForSpotifyTrack was not passed a trackName, cannot proceed");
     return null;
   }
-  const queryString = `q="${trackName}" artist:${artistName}&type=track`;
+  const queryString = `q="${trackName}"
+    ${artistName &&  " artist:"+artistName}
+    ${releaseName &&  " album:"+releaseName}
+    &type=track`;
+    
   const response = await fetch(`https://api.spotify.com/v1/search?${encodeURI(queryString)}`, {
     method: 'GET',
     headers: {
