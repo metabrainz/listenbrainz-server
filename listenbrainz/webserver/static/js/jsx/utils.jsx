@@ -3,16 +3,43 @@ import React from 'react'; // jsx compiled to React.createElement
 import { faPlayCircle } from '@fortawesome/free-solid-svg-icons'
 
 export function getSpotifyEmbedUriFromListen(listen){
-	
-	if( typeof _.get(listen,"track_metadata.additional_info.spotify_id") !== "string"){
-		return null;
+  let spotifyId = _.get(listen,"track_metadata.additional_info.spotify_id")
+	if(typeof spotifyId !== "string"){
+      return null;
 	}
-	const spotifyId = listen.track_metadata.additional_info.spotify_id;
 	const spotify_track = spotifyId.split('https://open.spotify.com/')[1];
 	if(typeof spotify_track !== "string"){
 		return null;
 	}
 	return  spotifyId.replace("https://open.spotify.com/","https://open.spotify.com/embed/");
+}
+
+export async function searchForSpotifyTrack(spotifyToken, trackName, artistName) {
+  if(!spotifyToken) {
+    throw new Error({status:403,message: "You need to connect to your Spotify account"});
+  }
+  if(!trackName){
+    console.error("searchForSpotifyTrack was not passed a trackName, cannot proceed");
+    return null;
+  }
+  const queryString = `q="${trackName}" artist:${artistName}&type=track`;
+  const response = await fetch(`https://api.spotify.com/v1/search?${encodeURI(queryString)}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${spotifyToken}`
+    },
+  });
+  const responseBody = await response.json();
+  if (!response.ok) {
+    throw responseBody.error;
+  }
+  // Valid response
+  const tracks = _.get(responseBody,"tracks.items");
+    if(tracks && tracks.length){
+      return tracks[0];
+    }
+  return null;
 }
 
 export function getArtistLink(listen) {
@@ -41,13 +68,9 @@ export function getTrackLink(listen) {
 }
 
 export function getPlayButton(listen, onClickFunction) {
-  if (_.get(listen,"track_metadata.additional_info.spotify_id"))
-  {
-    return (
-      <button title="Play" className="btn-link" onClick={onClickFunction.bind(listen)}>
-        <FontAwesomeIcon size="2x" icon={faPlayCircle}/>
-      </button>
-    )
-  }
-  return null;
+  return (
+    <button title="Play" className="btn-link" onClick={onClickFunction.bind(listen)}>
+      <FontAwesomeIcon size="2x" icon={faPlayCircle}/>
+    </button>
+  )
 }
