@@ -89,11 +89,13 @@ export class SpotifyPlayer extends React.Component {
         </span>, "Found a match");
         return this.play_spotify_uri(track.uri);
       }
-      return this.handleWarning("Could not find track on Spotify");
+      this.handleWarning("Could not find track on Spotify");
+      this.playNextTrack();
     })
     .catch(errorObject => {
       if(errorObject.status === 401){
-        return this.handleTokenError(errorObject.message, this.play_spotify_uri.bind(this, spotify_uri));
+        // Handle token error and try again if fixed
+        return this.handleTokenError(errorObject.message, this.search_and_play_track.bind(this, listen));
       }
       if(errorObject.status === 403){
         return this.handleAccountError(errorObject.message);
@@ -117,6 +119,7 @@ export class SpotifyPlayer extends React.Component {
     })
     .then(response =>{
       if(response.status === 401){
+        // Handle token error and try again if fixed
         return this.handleTokenError(response.statusText, this.play_spotify_uri.bind(this, spotify_uri));
       }
       if(response.status === 403){
@@ -124,6 +127,7 @@ export class SpotifyPlayer extends React.Component {
       }
       if(response.status === 404){ 
         // Device not found
+        // Reconnect and try again
         return this.connectSpotifyPlayer(this.play_spotify_uri.bind(this, spotify_uri));
       }
       if(!response.ok){
@@ -161,10 +165,10 @@ export class SpotifyPlayer extends React.Component {
   }
 
   playListen(listen) {
+    this.props.onCurrentListenChange(listen);
     if (_.get(listen,"track_metadata.additional_info.spotify_id"))
     {
       this.play_spotify_uri(getSpotifyUriFromListen(listen));
-      this.props.onCurrentListenChange(listen);
     } else
     {
       this.search_and_play_track(listen);
