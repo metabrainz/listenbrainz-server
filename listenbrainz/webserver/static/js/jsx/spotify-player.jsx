@@ -1,6 +1,7 @@
 import {PlaybackControls} from './playback-controls.jsx';
 import React from 'react';
 import {isEqual as _isEqual} from 'lodash';
+import {searchForSpotifyTrack} from './utils.jsx';
 
 function getSpotifyUriFromListen(listen) {
   if (!listen || !listen.track_metadata || !listen.track_metadata.additional_info ||
@@ -47,6 +48,7 @@ export class SpotifyPlayer extends React.Component {
     this.playNextTrack = this.playNextTrack.bind(this);
     this.debouncedPlayNextTrack = _.debounce(this.playNextTrack, 500, {leading:true, trailing:false});
     this.playPreviousTrack = this.playPreviousTrack.bind(this);
+    this.search_and_play_track = this.search_and_play_track.bind(this);
     this.startPlayerStateTimer = this.startPlayerStateTimer.bind(this);
     this.stopPlayerStateTimer = this.stopPlayerStateTimer.bind(this);
     this.togglePlay = this.togglePlay.bind(this);
@@ -64,6 +66,40 @@ export class SpotifyPlayer extends React.Component {
 
   componentWillUnmount() {
     this.disconnectSpotifyPlayer();
+  }
+
+  search_and_play_track(listen) {
+    const trackName = _.get(listen,"track_metadata.track_name");
+    const artistName = _.get(listen,"track_metadata.artist_name");
+    const releaseName = _.get(listen,"track_metadata.release_name");
+    if (!trackName)
+    {
+      return this.handleWarning("Not enough info to search on Spotify");
+    }
+    
+    searchForSpotifyTrack(this.state.accessToken, trackName, artistName, releaseName)
+    .then(track => {
+      // Track should be a Spotify track object:
+      // https://developer.spotify.com/documentation/web-api/reference/object-model/#track-object-full
+      if(_.has(track, 'name') && _.has(track, 'id') && _.has(track, 'uri')) {
+        this.handleSuccess(
+        <span>
+          We found a matching track on Spotify:
+          <br/>{track.name} — <small>{track.artists.map(artist => artist.name).join(", ")}</small>
+        </span>, "Found a match");
+        return this.play_spotify_uri(track.uri);
+      }
+      return this.handleWarning("Could not find track on Spotify");
+    })
+    .catch(errorObject => {
+      if(errorObject.status === 401){
+        return this.handleTokenError(errorObject.message, this.play_spotify_uri.bind(this, spotify_uri));
+      }
+      if(errorObject.status === 403){
+        return this.handleAccountError(errorObject.message);
+      }
+      return this.handleError(errorObject.message);
+    });
   }
 
   play_spotify_uri(spotify_uri) {
@@ -125,13 +161,13 @@ export class SpotifyPlayer extends React.Component {
   }
 
   playListen(listen) {
-    if (listen.track_metadata.additional_info.spotify_id)
+    if (_.get(listen,"track_metadata.additional_info.spotify_id"))
     {
       this.play_spotify_uri(getSpotifyUriFromListen(listen));
       this.props.onCurrentListenChange(listen);
     } else
     {
-      this.handleWarning("This song was not listened to on Spotify", "Cannot play this song");
+      this.search_and_play_track(listen);
     }
   };
   isCurrentListen(element) {
@@ -190,6 +226,10 @@ export class SpotifyPlayer extends React.Component {
   handleWarning(message, title) {
     console.debug(message);
     this.props.newAlert('warning', title || 'Playback error', message);
+  }
+
+  handleSuccess(message, title) {
+    this.props.newAlert('success', title || 'Success', message);
   }
 
   async handleTokenError(error, callbackFunction) {
