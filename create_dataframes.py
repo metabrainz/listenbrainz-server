@@ -8,7 +8,7 @@ from listenbrainz_spark import config
 from pyspark.sql import Row, SparkSession
 from datetime import datetime
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.recommendations import train_models, recommend
+from listenbrainz_spark.recommendations import train_models, recommend, utils
 from time import sleep
 
 def prepare_user_data(table):
@@ -18,10 +18,9 @@ def prepare_user_data(table):
                   , row_number() over (ORDER BY "user_name") as user_id
              From (SELECT DISTINCT user_name FROM %s)
         """ % (table))
-    print("Number of rows in users df: ",users_df.count())
+    users_count = users_df.count()
     t = "%.2f" % (time.time() - t0)
-    print("Users data prepared in %ss" % (t))
-    return users_df
+    return users_df, t, users_count
 
 def prepare_listen_data(table):
     t0 = time.time()
@@ -32,10 +31,9 @@ def prepare_listen_data(table):
                  , user_name
              From %s
         """ % (table))
-    print("Number of rows in listens df:",listens_df.count())
+    listens_count = listens_df.count()
     t = "%.2f" % (time.time() - t0)
-    print("Listens data prepared in %ss" % (t))
-    return listens_df
+    return listens_df, t, listens_count
 
 def prepare_recording_data(table):
     t0 = time.time()
@@ -47,12 +45,12 @@ def prepare_recording_data(table):
                  , release_name
                  , release_msid
                  , row_number() over (ORDER BY "recording_msid") AS recording_id
-             From (SELECT DISTINCT recording_msid, track_name, artist_name, artist_msid, release_name, release_msid FROM %s)
+             From (SELECT DISTINCT recording_msid, track_name, artist_name, artist_msid, 
+                    release_name, release_msid FROM %s)
         """ % (table))
-    print("Number of rows in recording df:",recordings_df.count())
+    recordings_count = recordings_df.count()
     t = "%.2f" % (time.time() - t0)
-    print("Recording data prepared in %ss" % (t))
-    return recordings_df
+    return recordings_df, t, recordings_count
 
 def get_playcounts_data(listens_df, users_df, recordings_df):
     t0 = time.time()
@@ -71,14 +69,13 @@ def get_playcounts_data(listens_df, users_df, recordings_df):
       GROUP BY user_id, recording_id
       ORDER BY user_id
     """)
-    print("Number of rows in playcounts df:",playcounts_df.count())
+    playcounts_count = playcounts_df.count()
     t = "%.2f" % (time.time() - t0)
-    print("Playcount data prepared in %ss" % (t))
-    return playcounts_df
+    return playcounts_df, t, playcounts_count
 
 if __name__ == '__main__':
 
-    t0 = time.time()
+    ti = time.time()
     listenbrainz_spark.init_spark_session('Create_Dataframe')
     df = None
     for y in range(config.starting_year, config.ending_year + 1):
@@ -90,31 +87,42 @@ if __name__ == '__main__':
                 logging.error("Cannot read files from HDFS: %s / %s. Aborting." % (type(err).__name__, str(err)))
                 continue
 
-    df.printSchema()
-    print("Registering Dataframe...")
+    print("\nRegistering Dataframe...")
     date = datetime.utcnow()
     table = 'df_to_train_{}'.format(datetime.strftime(date, '%Y_%m_%d'))
     df.createOrReplaceTempView(table)
-    t = "%.2f" % (time.time() - t0)
+    t = "%.2f" % (time.time() - ti)
     print("Dataframe registered in %ss" % (t))
 
     print("Preparing user data...")
-    users_df = prepare_user_data(table)
+    users_df, users_time, users_count = prepare_user_data(table)
     print("Load data dump...")
-    listens_df = prepare_listen_data(table)
+    listens_df, listens_time, listens_count = prepare_listen_data(table)
     print("Prepare recording dump...")
-    recordings_df = prepare_recording_data(table)
+    recordings_df, recordings_time, recordings_count = prepare_recording_data(table)
     print("Get playcounts...")
-    playcounts_df = get_playcounts_data(listens_df, users_df, recordings_df)
-    lb_dump_time_window = ("{}-{}".format(config.starting_year, "%02d" % config.starting_month), "{}-{}".format(config.ending_year, "%02d" % config.ending_month))
+    playcounts_df, playcounts_time, playcounts_count = get_playcounts_data(listens_df, users_df, recordings_df)
+    lb_dump_time_window = ("{}-{}".format(config.starting_year, "%02d" % config.starting_month), 
+                    "{}-{}".format(config.ending_year, "%02d" % config.ending_month))
 
     for attempt in range(config.MAX_RETRIES):
         try:
-            train_models.main(playcounts_df, lb_dump_time_window)
+            bestmodel_id = train_models.main(playcounts_df)
             break
         except Exception as err:
             sleep(config.TIME_BEFORE_RETRIES)
             if attempt == config.MAX_RETRIES - 1:
                 raise SystemExit("%s.Aborting..." % (str(err)))
-            logging.error("Unable to train the model: %s. Retrying in %ss." % (type(err).__name__,config.TIME_BEFORE_RETRIES))
-    recommend.main(users_df, playcounts_df, recordings_df, t0)
+            logging.error("Unable to train the model: %s. Retrying in %ss." % (str(err),config.TIME_BEFORE_RETRIES))
+    recommend.main(users_df, playcounts_df, recordings_df, ti, bestmodel_id)
+
+    outputfile = 'Queries-%s.html' % (datetime.utcnow().strftime("%Y-%m-%d"))
+    context = {
+        'user' : {'time' : users_time, 'count' : users_count, 'schema' : users_df.schema.names},
+        'listen' : {'time' : listens_time, 'count' : listens_count},
+        'recording' : {'time' : recordings_time, 'count' : recordings_count},
+        'playcount' : {'time' : playcounts_time, 'count' : playcounts_count},
+        'lb_dump_time_window' : lb_dump_time_window,
+        'link' : 'Model-Info-%s.html' % (datetime.utcnow().strftime("%Y-%m-%d")),
+    }
+    utils.save_html(outputfile, context, 'queries.html')

@@ -15,26 +15,101 @@ td, th {
   text-align: left;
   padding: 8px;
 }
-
-tr:nth-child(even) {
-  background-color: #dddddd;
-}
 </style>
 </head>
 <body>
 	<center>
-		<h1>Recommendations generated for {{ num_users }} users on {{ date }}</h1>
+		<h1>Generating recommendations</h1>
 	</center>
-	<p><i>Total time lapsed in training model and generating recommendations: <b>{{ total_time }}s</b></i></p>
-	{% for row in recommendations -%}
-	<h4>Recommendations for {{ row[0] }} generated in {{ row[1] }}s</h4>
+	<p>recording-dataframe is converted to an RDD (recordings_map) where each row maps to (recording_id, info)  to be able to lookup for relevant information corresponding to recording_ids generated for a user. <blockquote>info ~ [track_name, recording_msid, artist_name, artist_msid, release_name, release_msid]</blockquote>From recordings_map a new RDD is created (all_recordings) containing only the recording_ids</p>
+	<p>recordings_map can be depicted as: </p>
+	<blockquote>
+		<p>(1, ['You are the reason', 'b34e1496-e898-4ebd-99e9-fff2d4fc98d2', 'Justin Nozuka' , 'f8471a38-0575-4dcf-b657-401377ad293c', 'Beautiful', 'b94a34da-5500-4203-b621-aca10b3cb9f0'])</p>
+		<p>(2, ['Sunflower', 'da3bc0a3-fd1c-4afd-a0de-e21f757fac43', 'Havana Black', '4859879e-d85a-441d-b2e5-12b42c2ea752', 'Family Collection 1987-2007', '2c5b73e4-d8ab-47d9-bb21-5e320cf347e9'])</p>
+		<p>(3, ['Stand by me', 'b9da2ed1-6291-4b05-9e5e-b87551a8e75f', 'Ben E. King', '837555ba-012e-45f1-9a9c-9628da13ee54', 'Billboard Presents: Family Friendship Classics', '0fede8ca-7b38-455b-bde3-8a098c43031'])</p>
+	</blockquote>
+	<p>Time taken to generate recordings_map is <b>{{ time.recordings_map }}s</b> and all_recordings is <b>{{ time.all_recordings }}s</b></p>
+	<p>all_recordings can be depicted as: </p>
+	<blockquote>
+		<p>(1)</p>
+		<p>(2)</p>
+		<p>(3)</p>
+	</blockquote>
+	<p>Model used to generate recommendations is <b>{{ best_model}}</b> i.e. best model. Time taken to load best model is <b>{{ time.load_model }}s</b></p>
+	<p>Sub-steps in generating recommendations for every user are as follows:</p>
+	<ul>
+		<li><p>A user-playcounts-dataframe is generated for every user, purpose of this dataframe is to get recording_ids of only those tracks that the user has ever listened. The schema for user-playcounts-dataframe is as follows:</p>
+		<table>
+		<tr>
+			<th>user_id</th>
+			<th>recording_id</th>
+			<th>count</th>
+		</tr>
+		<tr>
+			<td>1</td>
+			<td>1</td>
+			<td>2</td>
+		</tr>
+		</table>
+		<p>The user-playcounts-dataframe is converted to an RDD (user_recordings) containing only recording_ids. user_recordings can be depicted as: </p>
+		<blockquote>
+			(1)
+		</blockquote>
+		<p><i>Since 'rob' has listened to one track of the three tracks ever listened by any user and the recording_id of that track is 1</i></p>
+		</li>
+		<li>
+			<p>An RDD called candidate_recordngs is created by subtracting user_recordings from all_recordings, therefore candidate_recordings will contain recording_ids of only those tracks that the user has never listened to. This RDD would then be used to predict recommendations for a user ensuring only new tracks (tracks that are new for a user) are recommended to a user.</p>
+			<p>candidate_recordings can be depicted as: </p>
+			<blockquote>
+				<p>all_recordings - user_recordings ~</p>
+				<p>(2)</p>
+				<p>(3)</p>
+			</blockquote>
+		</li>
+		<li>
+			<p>candidate_recordings is fed to Spark's inbuilt function to predict tracks for users from the provided pool of recording_ids. The function returns recommended recording_ids. Let's say recording_id = 3 has been recommeded to 'rob'</p>
+		</li>
+		<li>
+			<p>The last step is to lookup for information corresponding to the recommended recording_id which can be retrieved using recordings_map. The following track would be recommended to 'rob': </p>
+			<blockquote>
+				<p>['Stand by me', 'b9da2ed1-6291-4b05-9e5e-b87551a8e75f', 'Ben E. King', '837555ba-012e-45f1-9a9c-9628da13ee54', 'Billboard Presents: Family Friendship Classics', '0fede8ca-7b38-455b-bde3-8a098c43031']</p>
+			</blockquote>
+		</li>
+	</ul>
+	<table>
+		<col width="150">
+		<tr>
+			<th>user name</th>
+			<th>user-playcounts</th>
+			<th>user_recordings</th>
+			<th>candidate_recordings</th>
+			<th>recommendations</th>
+			<th>lookup</th>
+		</tr>
+		{% for user_name, user in recommendations.items() -%}
+		<tr>
+			<td>{{ user_name }}</td>
+			<td>{{ user['user-playcounts-time'] }}s</td>
+			<td>{{ user['user-recordings-time'] }}s</td>
+			<td>{{ user['candidate-recordings-time'] }}s</td>
+			<td>{{ user['recommendations-time'] }}s</td>
+			<td>{{ user['lookup-time'] }}s</td>
+		</tr>
+		{% endfor -%}
+	</table>
+	<p><b>Note</b>: Total time lapsed in data collection, data preprocessing, model training and generating recommendations is <b>{{ total_time }}s</b></p>
+	<p>Following are the recommendations generated for the above listed users: </p>
+	{% for user_name, user in recommendations.items() -%}
+	<center>
+		<h2>Recommendations for <b>{{ user_name }}</b></h2>
+	</center>
 	<table style="width:100%">
 		<tr>
 			{% for col in column -%}
 			<th>{{ col }}</th>
 			{% endfor -%}
 		</tr>
-		{% for recommended_recordings in row[2] -%}
+		{% for recommended_recordings in user['recordings'] -%}
 		<tr>
 			{% for entity in recommended_recordings -%}
 			<td>{{ entity }}</td>
