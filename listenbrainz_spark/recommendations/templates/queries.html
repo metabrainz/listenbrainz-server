@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8"/>
+	<title>Data Collection</title>
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+</style>
+</head>
+<body>
+	<center>
+		<h2>Data Collection</h2>
+	</center>
+	<p>Listening history of users from the year 2005 is stored in HDFS and accounts to over 200 million listens. A listen in HDFS is stored as: </p>
+	<table>
+		<col width="150">
+		<col width="500">
+		<tr>
+			<th>Column</th>
+			<th>Description</th>
+		</tr>
+		<tr>
+			<td>artist_mbids</td>
+			<td>A list of MusicBrainz ID(s) of the artist(s) of the track</td>
+		</tr>
+		<tr>
+			<td>artist_msid</td>
+			<td>The MessyBrainz ID of the artist of the track</td>
+		</tr>
+		<tr>
+			<td>artist_name</td>
+			<td>The name of the artist of the track</td>
+		</tr>
+		<tr>
+			<td>listened_at</td>
+			<td>The timestamp at which the listening event happened</td>
+		</tr>
+		<tr>
+			<td>recording_mbid</td>
+			<td>The MusicBrainz ID of the track</td>
+		</tr>
+		<tr>
+			<td>recording_msid</td>
+			<td>The MessyBrainz ID of track</td>
+		</tr>
+		<tr>
+			<td>release_mbid</td>
+			<td>The MusicBrainz ID of the release to which the track belongs</td>
+		</tr>
+		<tr>
+			<td>release_msid</td>
+			<td>The MessyBrainz ID of the release to which the track belongs</td>
+		</tr>
+		<tr>
+			<td>release_name</td>
+			<td>The name of the release to which the track belongs</td>
+		</tr>
+		<tr>
+			<td>tags</td>
+			<td>A list of user defined tags to be associated with this track</td>
+		</tr>
+		<tr>
+			<td>track_name</td>
+			<td>The name of the track listened to</td>
+		</tr>
+		<tr>
+			<td>user_name</td>
+			<td>The name of the user</td>
+		</tr>
+	</table>
+	<p>The listening history is fed to Spark's inbuilt algorithm for collaborative filtering. Collaborative filtering is commonly used for recommender systems. This technique aims to fill in the missing entries of a user-item association matrix. Instead of using explicit preferences such as rating given by a user to an item, we use implicit feedback (Number of times a track has been listened to by a user). The first step is to collect relevant data to be able to preprocess it. The sub steps of data collection are as follows: </p>
+	<p><i><b>Note: </b>Listens from <b>{{ lb_dump_time_window[0] }}</b> to <b>{{ lb_dump_time_window[1] }}</b> have been fed to the recommender system. Total listens used to train, validate and test the model = {{ listen.count }}</i></p>
+	<ul>
+		<li><p>A user-dataframe is created to select distinct user names and assign each user a unique integer id. Query to create the user-dataframe takes <b>{{ user.time }}s</b> to process. There are <b>{{ user.count }}</b> rows in the dataframe. The schema for user-dataframe is as follows:</p>
+		<table>
+		<col width="150">
+		<tr>
+			<th>user_id</th>
+			<th>user_name</th>
+		</tr>
+		<tr>
+			<td>1</td>
+			<td>rob</td>
+		</tr>
+		<tr>
+			<td>2</td>
+			<td>iliekcomputers</td>
+		</tr>
+		<tr>
+			<td>3</td>
+			<td>Vansika Pareek</td>
+		</tr>
+		</table>
+		</li>
+		<li><p>A listen-dataframe is created to select all the listens from <b>{{ lb_dump_time_window[0] }}</b> to <b>{{ lb_dump_time_window[1] }}</b>. Query to create listen-dataframe takes <b>{{ listen.time }}s</b> to process. There are <b>{{ listen.count }}</b> rows in the dataframe. The schema for listen-dataframe is as follows:</p>
+		<table>
+		<col width="150">
+		<tr>
+			<th>listened_at</th>
+			<th>track_name</th>
+			<th>recording_msid</th>
+			<th>user_name</th>
+		</tr>
+		<tr>
+			<td>2017-01-31 16:52:22</td>
+			<td>You are the reason</td>
+			<td>b34e1496-e898-4ebd-99e9-fff2d4fc98d2</td>
+			<td>rob</td>
+		</tr>
+		<tr>
+			<td>2017-01-31 17:52:02</td>
+			<td>Sunflower</td>
+			<td>da3bc0a3-fd1c-4afd-a0de-e21f757fac43</td>
+			<td>iiekcomputers</td>
+		</tr>
+		<tr>
+			<td>2018-01-31 17:00:20</td>
+			<td>You are the reason</td>
+			<td>b34e1496-e898-4ebd-99e9-fff2d4fc98d2</td>
+			<td>rob</td>
+		</tr>
+		<tr>
+			<td>2017-01-3 14:00:10</td>
+			<td>Sunflower</td>
+			<td>da3bc0a3-fd1c-4afd-a0de-e21f757fac43</td>
+			<td>Vansika Pareek</td>
+		</tr>
+		<tr>
+			<td>2018-01-3 10:00:10</td>
+			<td>Stand by me</td>
+			<td>b9da2ed1-6291-4b05-9e5e-b87551a8e75f</td>
+			<td>iliekcomputers</td>
+		</tr>
+		</table>
+		</li>
+		</li>
+		<li><p>A recording-dataframe is created to select distinct recordings/tracks listened to and assign each recording a unique integer id along with other relevant information. Query to create recording-dataframe takes <b>{{ recording.time }}s</b> to process. There are <b>{{ recording.count }}</b> rows in the dataframe. The schema for recording-dataframe is as follows:</p>
+		<table>
+		<col width="150">
+		<tr>
+			<th>track_name</th>
+			<th>recording_msid</th>
+			<th>artist_name</th>
+			<th>artist_msid</th>
+			<th>release_name</th>
+			<th>release_msid</th>
+			<th>recording_id</th>
+		</tr>
+		<tr>
+			<td>You are the reason</td>
+			<td>b34e1496-e898-4ebd-99e9-fff2d4fc98d2</td>
+			<td>Justin Nozuka</td>
+			<td>f8471a38-0575-4dcf-b657-401377ad293c</td>
+			<td>Beautiful</td>
+			<td>b94a34da-5500-4203-b621-aca10b3cb9f0</td>
+			<td>1</td>
+		</tr>
+		<tr>
+			<td>Sunflower</td>
+			<td>da3bc0a3-fd1c-4afd-a0de-e21f757fac43</td>
+			<td>Havana Black</td>
+			<td>4859879e-d85a-441d-b2e5-12b42c2ea752</td>
+			<td>Family Collection 1987-2007</td>
+			<td>2c5b73e4-d8ab-47d9-bb21-5e320cf347e9</td>
+			<td>2</td>
+		</tr>
+		<tr>
+			<td>Stand by me</td>
+			<td>b9da2ed1-6291-4b05-9e5e-b87551a8e75f</td>
+			<td>Ben E. King</td>
+			<td>837555ba-012e-45f1-9a9c-9628da13ee54</td>
+			<td>Billboard Presents: Family Friendship Classics</td>
+			<td>0fede8ca-7b38-455b-bde3-8a098c430310</td>
+			<td>3</td>
+		</tr>
+		</table>
+		</li>
+		</li>
+		<li><p>Playcounts-dataframe is the output of the first step i.e. data collection. It is obtained by joining the above mentioned dataframes. Query to produce playcount-dataframe that contains recording ids of all the tracks that a user has listened to for all the users along with the listen count takes <b>{{ playcount.time }}s</b> to process. There are <b>{{ playcount.count }}</b> rows in the dataframe. The schema for listen-dataframe is as follows:</p>
+		<table>
+		<col width="150">
+		<tr>
+			<th>user_id</th>
+			<th>recording_id</th>
+			<th>count</th>
+		</tr>
+		<tr>
+			<td>1</td>
+			<td>1</td>
+			<td>2</td>
+		</tr>
+		<tr>
+			<td>2</td>
+			<td>2</td>
+			<td>1</td>
+		</tr>
+		<tr>
+			<td>3</td>
+			<td>2</td>
+			<td>1</td>
+		</tr>
+		<tr>
+			<td>2</td>
+			<td>3</td>
+			<td>1</td>
+		</tr>
+		</table>
+		</li>
+	</ul>
+	<p><i>The next step is to preprocess playcount dataframe and train our model</i>: <a href={{ link }}>click here</a></p>
+
+</body>
+</html>
