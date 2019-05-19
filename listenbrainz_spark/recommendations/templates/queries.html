@@ -78,10 +78,10 @@ td, th {
 			<td>The name of the user</td>
 		</tr>
 	</table>
-	<p>The listening history is fed to Spark's inbuilt algorithm for collaborative filtering. Collaborative filtering is commonly used for recommender systems. This technique aims to fill in the missing entries of a user-item association matrix. Instead of using explicit preferences such as rating given by a user to an item, we use implicit feedback (Number of times a track has been listened to by a user). The first step is to collect relevant data to be able to preprocess it. The sub steps of data collection are as follows: </p>
-	<p><i><b>Note: </b>Listens from <b>{{ lb_dump_time_window[0] }}</b> to <b>{{ lb_dump_time_window[1] }}</b> have been fed to the recommender system. Total listens used to train, validate and test the model = {{ listen.count }}</i></p>
+	<p>The listening history is fed to Spark's inbuilt algorithm for collaborative filtering. Collaborative filtering is commonly used for recommender systems. This technique aims to fill in the missing entries of a user-item association matrix. Instead of using explicit preferences such as rating given by a user to an item, we use implicit feedback (number of times a track has been listened to by a user). The first step is to collect relevant data to be able to preprocess it. The sub steps of data collection are as follows: </p>
+	<p><i><b>Note: </b>Listens from <b>{{ lb_dump_time_window[0] }}</b> to <b>{{ lb_dump_time_window[1] }}</b> have been fed to the recommender system. Total listens used to train, validate and test the model = <b>{{ listen.count }}</b></i></p>
 	<ul>
-		<li><p>A user-dataframe is created to select distinct user names and assign each user a unique integer id. Query to create the user-dataframe takes <b>{{ user.time }}s</b> to process. There are <b>{{ user.count }}</b> rows in the dataframe. The schema for user-dataframe is as follows:</p>
+		<li><p><b>users_df: </b>A user dataframe is created to select distinct user names and assign each user a unique integer id. Query to create the user dataframe takes <b>{{ user.time }}s</b> to process. There are <b>{{ user.count }}</b> rows in the dataframe. The schema for user dataframe is as follows:</p>
 		<table>
 		<col width="150">
 		<tr>
@@ -102,7 +102,7 @@ td, th {
 		</tr>
 		</table>
 		</li>
-		<li><p>A listen-dataframe is created to select all the listens from <b>{{ lb_dump_time_window[0] }}</b> to <b>{{ lb_dump_time_window[1] }}</b>. Query to create listen-dataframe takes <b>{{ listen.time }}s</b> to process. There are <b>{{ listen.count }}</b> rows in the dataframe. The schema for listen-dataframe is as follows:</p>
+		<li><p><b>listens_df: </b>A listen dataframe is created to select all the listens from <b>{{ lb_dump_time_window[0] }}</b> to <b>{{ lb_dump_time_window[1] }}</b>. Query to create listen dataframe takes <b>{{ listen.time }}s</b> to process. There are <b>{{ listen.count }}</b> rows in the dataframe. The schema for listen dataframe is as follows:</p>
 		<table>
 		<col width="150">
 		<tr>
@@ -144,7 +144,7 @@ td, th {
 		</table>
 		</li>
 		</li>
-		<li><p>A recording-dataframe is created to select distinct recordings/tracks listened to and assign each recording a unique integer id along with other relevant information. Query to create recording-dataframe takes <b>{{ recording.time }}s</b> to process. There are <b>{{ recording.count }}</b> rows in the dataframe. The schema for recording-dataframe is as follows:</p>
+		<li><p><b>recordings_df: </b>A recording dataframe is created to select distinct recordings/tracks listened to and assign each recording a unique integer id along with other relevant information(track_name, artist_name etc). Query to create recording dataframe takes <b>{{ recording.time }}s</b> to process. There are <b>{{ recording.count }}</b> rows in the dataframe. The schema for recording dataframe is as follows:</p>
 		<table>
 		<col width="150">
 		<tr>
@@ -186,7 +186,7 @@ td, th {
 		</table>
 		</li>
 		</li>
-		<li><p>Playcounts-dataframe is the output of the first step i.e. data collection. It is obtained by joining the above mentioned dataframes. Query to produce playcount-dataframe that contains recording ids of all the tracks that a user has listened to for all the users along with the listen count takes <b>{{ playcount.time }}s</b> to process. There are <b>{{ playcount.count }}</b> rows in the dataframe. The schema for listen-dataframe is as follows:</p>
+		<li><p><b>playcounts_df: </b>Playcounts dataframe is the output of the first step i.e. data collection. It is obtained by joining the above mentioned dataframes. Query to produce playcounts dataframe that contains recording ids of all the tracks that a user has listened to for all the users along with the listen count takes <b>{{ playcount.time }}s</b> to process. There are <b>{{ playcount.count }}</b> rows in the dataframe. The schema for playcounts dataframe is as follows:</p>
 		<table>
 		<col width="150">
 		<tr>
@@ -217,7 +217,7 @@ td, th {
 		</table>
 		</li>
 	</ul>
-	<p><i>The next step is to preprocess playcount dataframe and train our model</i>: <a href={{ link }}>click here</a></p>
+	<p><i>The next step is to preprocess playcounts dataframe and train our model</i>: <a href={{ link }}>click here</a></p>
 
 </body>
 </html>

@@ -99,7 +99,3 @@ def main(df):
     }
     utils.save_html(outputfile, context, 'model.html')
     return best_model_metadata['model_id']
-
-
-
-    
