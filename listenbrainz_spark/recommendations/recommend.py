@@ -28,7 +28,7 @@ def recommend_user(user_name, model, all_recordings, recordings_df):
     user_info = {}
     t0 = time.time()
     user_id = get_user_id(user_name)
-    t = "%.2f" % (time.time() - t0)
+    t = "%.2f" % ((time.time() - t0) / 60)
     user_info['get_user_id'] = t
 
     t0 = time.time()
@@ -39,32 +39,32 @@ def recommend_user(user_name, model, all_recordings, recordings_df):
           FROM playcount
          WHERE user_id = %d
     """ % user_id)
-    t = "%.2f" % (time.time() - t0)
+    t = "%.2f" % ((time.time() - t0) / 60)
     user_info['user-playcounts-time'] = t
 
     t0 = time.time()
     user_recordings = user_playcounts.rdd.map(lambda r: r['recording_id'])
-    user_recordings_count = user_recordings.count()
-    t = "%.2f" % (time.time() - t0)
+    user_recordings_count = "{:,}".format(user_recordings.count())
+    t = "%.2f" % ((time.time() - t0) / 60)
     user_info['user-recordings-time'] = t
     user_info['user-recordings-count'] = user_recordings_count
 
     t0 = time.time()
     candidate_recordings = all_recordings.subtract(user_recordings)
-    candidate_recordings_count = candidate_recordings.count()
-    t = "%.2f" % (time.time() - t0)
+    candidate_recordings_count = "{:,}".format(candidate_recordings.count())
+    t = "%.2f" % ((time.time() - t0) / 60)
     user_info['candidate-recordings-time'] = t
     user_info['candidate-recordings-count'] = candidate_recordings_count
 
     t0 = time.time()
     recommendations = model.predictAll(candidate_recordings.map(lambda recording: (user_id, recording))).takeOrdered(50, lambda product: -product.rating)
     recommended_recording_ids = [(recommendations[i].product) for i in range(len(recommendations))]
-    t = "%.2f" % (time.time() - t0)
+    t = "%.2f" % ((time.time() - t0) / 60)
     user_info['recommendations-time'] = t
 
     t0 = time.time()
     recommendations_df = recordings_df[recordings_df.recording_id.isin(recommended_recording_ids)].collect()
-    t = "%.2f" % (time.time() - t0)
+    t = "%.2f" % ((time.time() - t0) / 60)
     user_info['lookup-time'] = t
 
     recommended_recordings = []
@@ -83,8 +83,8 @@ def main(users_df, playcounts_df, recordings_df, ti, bestmodel_id):
 
     t0 = time.time()
     all_recordings = recordings_df.rdd.map(lambda r: r['recording_id'])
-    all_recordings_count = all_recordings.count()
-    t = "%.2f" % (time.time() - t0)
+    all_recordings_count = "{:,}".format(all_recordings.count())
+    t = "%.2f" % ((time.time() - t0) / 60)
     time_info['all_recordings'] = t
 
     date = datetime.utcnow().strftime("%Y-%m-%d")
@@ -95,7 +95,7 @@ def main(users_df, playcounts_df, recordings_df, ti, bestmodel_id):
         try:
             t0 = time.time()
             model = load_model(config.HDFS_CLUSTER_URI + path)
-            t = "%.2f" % (time.time() - t0)
+            t = "%.2f" % ((time.time() - t0) / 60)
             time_info['load_model'] = t
             break
         except Exception as err:
@@ -105,25 +105,31 @@ def main(users_df, playcounts_df, recordings_df, ti, bestmodel_id):
             logging.error("Unable to load model: %s.Retrying in %ss" % (str(err), config.TIME_BEFORE_RETRIES))
 
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'users.json')
+    ts = time.time()
     with open(path) as f:
         users = json.load(f)
         recommendations = {}
         for user_name in users['user_name']:
             try:
+                t0 = time.time()
                 user_info = recommend_user(user_name, model, all_recordings, recordings_df)
+                t = "%.2f" % ((time.time() - t0) / 60)
+                user_info['total-time'] = t
                 print("Recommendations for %s generated" % (user_name))
                 recommendations[user_name] = user_info
             except TypeError as err:
                 logging.error("%s: Invalid user name. User \"%s\" does not exist." % (type(err).__name__,user_name))
             except Exception as err:
                 logging.error("Recommendations for \"%s\" not generated.%s" % (user_name, str(err)))
+    t = "%.2f" % ((time.time() - ts) / 3600)
+    time_info['total_recommendation_time'] = t
 
     column = ('Track Name', 'Recording MSID', 'Artist Name', 'Artist MSID', 'Release Name', 'Release MSID')
     outputfile = 'Recommendations-%s.html' % (date)
     context = {
         'recommendations' : recommendations,
         'column' : column,
-        'total_time' : int(time.time() - ti),
+        'total_time' : "%.2f" % ((time.time() - ti) / 3600),
         'time' : time_info,
         'best_model' : bestmodel_id,
         'all_recordings_count' : all_recordings_count,

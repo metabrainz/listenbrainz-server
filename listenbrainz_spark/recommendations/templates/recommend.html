@@ -29,7 +29,8 @@ td, th {
 		<p>[ 2 ]</p>
 		<p>[ 3 ]</p>
 	</blockquote>
-	<p>Model used to generate recommendations is <b>{{ best_model }}</b> i.e. best model. Time taken to load best model is <b>{{ time.load_model }}s</b></p>
+	<p><i><b>Note: </b>recording_id are represented as [ x ] where x is an integer.</i></p>
+	<p>Model used to generate recommendations is <b>{{ best_model }}</b> i.e. best model. Time taken to load best model is <b>{{ time.load_model }}m</b></p>
 	<p>Sub-steps in generating recommendations for every user are as follows:</p>
 	<ul>
 		<li><p><b>get_user_id: </b>A query<b>(get_user_id)</b> is processed to get user id from the user name provided for whom the recommendations shall be generated.</p></li>
@@ -73,7 +74,7 @@ td, th {
 			</blockquote>
 		</li>
 	</ul>
-	<p>Following is the user wise information:</p>
+	<p>Following is the user wise time information:</p>
 	<table>
 		<col width="150">
 		<tr>
@@ -81,27 +82,42 @@ td, th {
 			<th>get_user_id</th>
 			<th>user_playcounts</th>
 			<th>user_recordings</th>
-			<th>user_recordings count</th>
 			<th>candidate_recordings</th>
-			<th>candidate_recordings count</th>
 			<th>recommendations</th>
 			<th>lookup</th>
+			<th>total time</th>
 		</tr>
 		{% for user_name, user in recommendations.items() -%}
 		<tr>
 			<td>{{ user_name }}</td>
-			<td>{{ user['get_user_id'] }}s</td>
-			<td>{{ user['user-playcounts-time'] }}s</td>
-			<td>{{ user['user-recordings-time'] }}s</td>
-			<td>{{ user['user-recordings-count'] }}</td>
-			<td>{{ user['candidate-recordings-time'] }}s</td>
-			<td>{{ user['candidate-recordings-count'] }}</td>
-			<td>{{ user['recommendations-time'] }}s</td>
-			<td>{{ user['lookup-time'] }}s</td>
+			<td>{{ user['get_user_id'] }}m</td>
+			<td>{{ user['user-playcounts-time'] }}m</td>
+			<td>{{ user['user-recordings-time'] }}m</td>
+			<td>{{ user['candidate-recordings-time'] }}m</td>
+			<td>{{ user['recommendations-time'] }}m</td>
+			<td>{{ user['lookup-time'] }}m</td>
+			<td>{{ user['total-time'] }}m</td>
 		</tr>
 		{% endfor -%}
 	</table>
-	<p><b>Note</b>: Total time lapsed in data collection, data preprocessing, model training and generating recommendations is <b>{{ total_time }}s</b></p>
+	<p>Following is the user wise count information:</p>
+	<table>
+		<col width="150">
+		<tr>
+			<th>user name</th>
+			<th>user_recordings count</th>
+			<th>candidate_recordings count</th>
+		</tr>
+		{% for user_name, user in recommendations.items() -%}
+		<tr>
+			<td>{{ user_name }}</td>
+			<td>{{ user['user-recordings-count'] }}</td>
+			<td>{{ user['candidate-recordings-count'] }}</td>
+		</tr>
+		{% endfor -%}
+	</table>
+	<p>Time taken in generating recommendations for all the above listed users: <b>{{ time.total_recommendation_time }}h</b></p>
+	<p><b>Note</b>: Total time lapsed in data collection, data preprocessing, model training and generating recommendations is <b>{{ total_time }}h</b></p>
 	<p>Following are the recommendations generated for the above listed users: </p>
 	{% for user_name, user in recommendations.items() -%}
 	<center>
