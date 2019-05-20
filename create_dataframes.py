@@ -18,8 +18,8 @@ def prepare_user_data(table):
                   , row_number() over (ORDER BY "user_name") as user_id
              From (SELECT DISTINCT user_name FROM %s)
         """ % (table))
-    users_count = users_df.count()
-    t = "%.2f" % (time.time() - t0)
+    users_count = "{:,}".format(users_df.count())
+    t = "%.2f" % ((time.time() - t0) / 60)
     return users_df, t, users_count
 
 def prepare_listen_data(table):
@@ -31,8 +31,8 @@ def prepare_listen_data(table):
                  , user_name
              From %s
         """ % (table))
-    listens_count = listens_df.count()
-    t = "%.2f" % (time.time() - t0)
+    listens_count = "{:,}".format(listens_df.count())
+    t = "%.2f" % ((time.time() - t0) / 60)
     return listens_df, t, listens_count
 
 def prepare_recording_data(table):
@@ -48,8 +48,8 @@ def prepare_recording_data(table):
              From (SELECT DISTINCT recording_msid, track_name, artist_name, artist_msid, 
                     release_name, release_msid FROM %s)
         """ % (table))
-    recordings_count = recordings_df.count()
-    t = "%.2f" % (time.time() - t0)
+    recordings_count = "{:,}".format(recordings_df.count())
+    t = "%.2f" % ((time.time() - t0) / 60)
     return recordings_df, t, recordings_count
 
 def get_playcounts_data(listens_df, users_df, recordings_df):
@@ -69,8 +69,8 @@ def get_playcounts_data(listens_df, users_df, recordings_df):
       GROUP BY user_id, recording_id
       ORDER BY user_id
     """)
-    playcounts_count = playcounts_df.count()
-    t = "%.2f" % (time.time() - t0)
+    playcounts_count = "{:,}".format(playcounts_df.count())
+    t = "%.2f" % ((time.time() - t0) / 60)
     return playcounts_df, t, playcounts_count
 
 if __name__ == '__main__':

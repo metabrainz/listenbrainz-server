@@ -44,11 +44,11 @@ def train(training_data, validation_data, num_validation, ranks, lambdas, iterat
     for rank, lmbda, iteration in itertools.product(ranks, lambdas, iterations):
         t0 = time.time()
         model = ALS.trainImplicit(training_data, rank, iterations=iteration, lambda_=lmbda, alpha=alpha)
-        mt = "%.2f" % (time.time() - t0)
+        mt = "%.2f" % ((time.time() - t0) / 60)
         model_id = 'listenbrainz-recommendation-model-{}'.format(uuid.uuid4())
         t0  =time.time()
         validation_rmse = compute_rmse(model, validation_data, num_validation)
-        vt = "%.2f" % (time.time() - t0)
+        vt = "%.2f" % ((time.time() - t0) / 60)
         model_metadata.append((model_id, mt, rank, "%.1f" % (lmbda), iteration, "%.2f" % (validation_rmse), vt))
         if best_model is None or validation_rmse < best_model.error:
             best_model = Model(model=model, error=validation_rmse, rank=rank, lmbda=lmbda, iteration=iteration, model_id=model_id, time=mt)
@@ -60,16 +60,18 @@ def main(df):
     time_info = {}
     t0 = time.time()
     training_data, validation_data, test_data = preprocess_data(df)
-    t = "%.2f" % (time.time() - t0)
+    t = "%.2f" % ((time.time() - t0) / 60)
     time_info['preprocessing'] = t
+
     num_training = training_data.count()
     num_validation = validation_data.count()
     num_test = test_data.count()
     print("Training model...")
+
     t0 = time.time()
     model, model_metadata, best_model_metadata = train(training_data, validation_data, num_validation, [8, 12], [0.1, 10.0], [10, 20])
-    t = "%.2f" % (time.time() - t0)
-    time_info['models'] = t
+    t = "%.2f" % ((time.time() - t0) / 3600)
+    models_training_time = t
 
     print("Saving model...")
     date = datetime.utcnow().strftime("%Y-%m-%d")
@@ -78,7 +80,7 @@ def main(df):
             t0 = time.time()
             path = os.path.join('/', 'data', 'listenbrainz', '{}'.format(best_model_metadata['model_id']))
             model.model.save(listenbrainz_spark.context, config.HDFS_CLUSTER_URI + path)
-            t = "%.2f" % (time.time() - t0)
+            t = "%.2f" % ((time.time() - t0) / 60)
             time_info['save_model'] = t
             break
         except Exception as err:
@@ -90,11 +92,12 @@ def main(df):
     outputfile = 'Model-Info-%s.html' % (date)
     context = {
         'time' : time_info,
-        'num_training' : num_training,
-        'num_validation' : num_validation,
-        'num_test' : num_test,
+        'num_training' : "{:,}".format(num_training),
+        'num_validation' : "{:,}".format(num_validation),
+        'num_test' : "{:,}".format(num_test),
         'models' : model_metadata,
         'best_model' : best_model_metadata,
+        'models_training_time' : models_training_time,
         'link' : 'Recommendations-%s.html' % (date)
     }
     utils.save_html(outputfile, context, 'model.html')
