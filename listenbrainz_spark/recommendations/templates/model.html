@@ -24,20 +24,32 @@ td, th {
 	<p>Sparks's inbuilt function to train a model takes an RDD of 'implicit preferences' given by users to some products, in the form of (userID (Int), productID (Int), preference (Double)) pairs. Here userID ~ user_id, productID ~ recording_id and preference ~ count as represented by rows in playcounts dataframe.</p>
 	<p>Playcounts dataframe is converetd to an RDD and each row is mapped to object of Rating class using <blockquote>Rating(user_id, recording_id, count)</blockquote></p>
 	<p>Preprocessing of playcounts dataframe takes <b>{{ time.preprocessing }}m</b>. Of the preprocessed data, approx. 66% ({{ num_training }}) listens have been used as training data, 17% ({{ num_validation }}) listens have been used as validation data and 17% ({{ num_test }}) listens have been used as test data. After preprocessing, training phase starts. From the models trained, the best one is selected to generate recommendations.</p>
-	
+	<p>Of all the trained models, the model with the least RMSE value is choosen to generate recommendations. The model will be referred to as <b>"best model"</b>.</p>
 
-	<h4>Following are the parameters required to train the model</h4>
-	<ul>
-		<li><b>rank</b></li><p>This refers to the number of factors in our ALS model, that is,the number of hidden features in our low-rank approximation matrices. A rank in the range of 10 to 200 is usually reasonable</p>
-		<li><b>lmbda</b></li><p>This parameter controls the regularization of our model.Thus, lambda controls over fitting.</p>
-		<li><b>iterations</b></li><p>This refers to the number of iterations to run(around 10 is often a good default).</p>
-		<li><b>alpha</b></li><p>The alpha parameter controls the baseline level of confidence weighting applied.A higher level of alpha tends to make the model more confident about the fact that missing data equates to no preference for the relevant user-item pair.</p>
-	</ul>
-	<p>Value of alpha used is <b>3.0</b></p>
-	<p>The Mean Squared Error (MSE) is a direct measure of the reconstruction error of the user-item rating matrix. It is defined as the sum of the squared errors divided by the number of observations. The squared error, in turn, is the square of the difference between the predicted rating for a given user-item pair and the actual rating.</p>
-	<p>Ratings are predicted for all the (user_id, recording_id) pairs in validation data, the predicted ratings are then subtracted with actual ratings and RMSE is calculated.</p>
-	<p>The following table gives information about the parameters fed to the model in every iteration</p>
-	<p><b>Note</b>: <i>Here, iteration does not refer to the parameter "iteration", but the number of times the whole process of training is carried out i.e. number of models trained.</p>
+	<p>Best model parameters are as follows: </p>
+	<table>
+		<tr>
+			<th>Bestmodel ID</th>
+			<th>Best model training time(min)</th>
+			<th>Best model rank</th>
+			<th>Best model lmbda</th>
+			<th>Best model iteration</th>
+			<th>Best model RMSE</th>
+			<th>Best model RMSE computation time(min)</th>			
+		</tr>
+		<tr>
+			<td>{{ best_model.model_id }}</td>
+			<td>{{ best_model.training_time }}</td>
+			<td>{{ best_model.rank }}</td>
+			<td>{{ best_model.lmbda }}</td>
+			<td>{{ best_model.iteration }}</td>
+			<td>{{ best_model.error }}</td>
+			<td>{{ best_model.rmse_time }}</td>
+		</tr>
+	</table>
+	<p>Best Model saved in <b>{{ time.save_model }}m</b></p>
+	<p>All the models trained in <b>{{ models_training_time }}h</b></p>
+	<p>The following table gives information about all the models trained</p>
 	<table style="width:100%">
 		<tr>
 			<th>model ID</th>
@@ -56,10 +68,16 @@ td, th {
 		</tr>
 		{% endfor -%}
 	</table>
-	<p>All the above listed models trained in <b>{{ models_training_time }}h</b></p>
-	<p>Best Model trained in <b>{{ best_model.time }}m</b></p>
-	<p>Best model has error = <b>{{ best_model.error }}</b>, rank = <b>{{ best_model.rank }}</b>, lmbda = <b>{{ best_model.lmbda }}</b>, iteration = <b>{{ best_model.iteration}}</b>, model ID = <b>{{ best_model.model_id}}</b></p>
-	<p>Best Model saved in <b>{{ time.save_model }}m</b></p>
-	<p><i>The final step is to generate recommendations using the best model: </i><a href={{ link }}>click here</a></p>
+	<h4>Following are the parameters required to train the model</h4>
+	<ul>
+		<li><b>rank</b></li><p>This refers to the number of factors in our ALS model, that is,the number of hidden features in our low-rank approximation matrices. A rank in the range of 10 to 200 is usually reasonable</p>
+		<li><b>lmbda</b></li><p>This parameter controls the regularization of our model.Thus, lambda controls over fitting.</p>
+		<li><b>iterations</b></li><p>This refers to the number of iterations to run(around 10 is often a good default).</p>
+		<li><b>alpha</b></li><p>The alpha parameter controls the baseline level of confidence weighting applied.A higher level of alpha tends to make the model more confident about the fact that missing data equates to no preference for the relevant user-item pair.</p>
+	</ul>
+	<p>Value of alpha used is <b>3.0</b></p>
+	<p>The Mean Squared Error (MSE) is a direct measure of the reconstruction error of the user-item rating matrix. It is defined as the sum of the squared errors divided by the number of observations. The squared error, in turn, is the square of the difference between the predicted rating for a given user-item pair and the actual rating.</p>
+	<p>Ratings are predicted for all the (user_id, recording_id) pairs in validation data, the predicted ratings are then subtracted with actual ratings and RMSE is calculated.</p>
+	<p><i><a href={{ next }}>Next</a></i></p><p><i><a href={{ prev }}>  Prev</a></i></p>
 </body>
 </html>
