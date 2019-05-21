@@ -8,7 +8,6 @@ import logging
 
 from pyspark.mllib.recommendation import MatrixFactorizationModel
 from listenbrainz_spark import config
-from datetime import datetime
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.recommendations import utils
 from time import sleep
@@ -76,7 +75,7 @@ def recommend_user(user_name, model, all_recordings, recordings_df):
     user_info['recordings'] = recommended_recordings
     return user_info
 
-def main(users_df, playcounts_df, recordings_df, ti, bestmodel_id):
+def main(users_df, playcounts_df, recordings_df, ti, bestmodel_id, model_html, recommendation_html):
     time_info = {}
     users_df.createOrReplaceTempView('user')
     playcounts_df.createOrReplaceTempView('playcount')
@@ -87,7 +86,6 @@ def main(users_df, playcounts_df, recordings_df, ti, bestmodel_id):
     t = "%.2f" % ((time.time() - t0) / 60)
     time_info['all_recordings'] = t
 
-    date = datetime.utcnow().strftime("%Y-%m-%d")
     path = os.path.join('/', 'data', 'listenbrainz', '{}'.format(bestmodel_id))
     
     print("Loading model...")
@@ -125,7 +123,6 @@ def main(users_df, playcounts_df, recordings_df, ti, bestmodel_id):
     time_info['total_recommendation_time'] = t
 
     column = ('Track Name', 'Recording MSID', 'Artist Name', 'Artist MSID', 'Release Name', 'Release MSID')
-    outputfile = 'Recommendations-%s.html' % (date)
     context = {
         'recommendations' : recommendations,
         'column' : column,
@@ -133,6 +130,7 @@ def main(users_df, playcounts_df, recordings_df, ti, bestmodel_id):
         'time' : time_info,
         'best_model' : bestmodel_id,
         'all_recordings_count' : all_recordings_count,
+        'prev' : model_html,
     }
-    utils.save_html(outputfile, context, 'recommend.html')
+    utils.save_html(recommendation_html, context, 'recommend.html')
     

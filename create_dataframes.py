@@ -3,6 +3,7 @@ import os
 import sys
 import logging
 import time
+import uuid
 
 from listenbrainz_spark import config
 from pyspark.sql import Row, SparkSession
@@ -105,24 +106,28 @@ if __name__ == '__main__':
     lb_dump_time_window = ("{}-{}".format(config.starting_year, "%02d" % config.starting_month), 
                     "{}-{}".format(config.ending_year, "%02d" % config.ending_month))
 
+    date = datetime.utcnow().strftime("%Y-%m-%d")
+    queries_html = 'Queries-%s-%s.html' % (uuid.uuid4(), date)
+    model_html = 'Model-%s-%s.html' % (uuid.uuid4(), date)
+    recommendation_html = 'Recommendations-%s-%s.html' % (uuid.uuid4(), date)
+
     for attempt in range(config.MAX_RETRIES):
         try:
-            bestmodel_id = train_models.main(playcounts_df)
+            bestmodel_id = train_models.main(playcounts_df, model_html, queries_html, recommendation_html)
             break
         except Exception as err:
             sleep(config.TIME_BEFORE_RETRIES)
             if attempt == config.MAX_RETRIES - 1:
                 raise SystemExit("%s.Aborting..." % (str(err)))
             logging.error("Unable to train the model: %s. Retrying in %ss." % (str(err),config.TIME_BEFORE_RETRIES))
-    recommend.main(users_df, playcounts_df, recordings_df, ti, bestmodel_id)
+    recommend.main(users_df, playcounts_df, recordings_df, ti, bestmodel_id, model_html, recommendation_html)
 
-    outputfile = 'Queries-%s.html' % (datetime.utcnow().strftime("%Y-%m-%d"))
     context = {
         'user' : {'time' : users_time, 'count' : users_count, 'schema' : users_df.schema.names},
         'listen' : {'time' : listens_time, 'count' : listens_count},
         'recording' : {'time' : recordings_time, 'count' : recordings_count},
         'playcount' : {'time' : playcounts_time, 'count' : playcounts_count},
         'lb_dump_time_window' : lb_dump_time_window,
-        'link' : 'Model-Info-%s.html' % (datetime.utcnow().strftime("%Y-%m-%d")),
+        'link' : model_html,
     }
-    utils.save_html(outputfile, context, 'queries.html')
+    utils.save_html(queries_html, context, 'queries.html')

@@ -12,12 +12,11 @@ from math import sqrt
 from operator import add
 from pyspark.mllib.recommendation import ALS, Rating
 from pyspark.sql import Row
-from datetime import datetime
 from listenbrainz_spark import config
 from listenbrainz_spark.recommendations import utils
 from time import sleep
 
-Model = namedtuple('Model', 'model error rank lmbda iteration model_id time')
+Model = namedtuple('Model', 'model error rank lmbda iteration model_id training_time rmse_time')
 
 def parse_dataset(row):
     return Rating(row['user_id'], row['recording_id'], row['count'])
@@ -51,12 +50,13 @@ def train(training_data, validation_data, num_validation, ranks, lambdas, iterat
         vt = "%.2f" % ((time.time() - t0) / 60)
         model_metadata.append((model_id, mt, rank, "%.1f" % (lmbda), iteration, "%.2f" % (validation_rmse), vt))
         if best_model is None or validation_rmse < best_model.error:
-            best_model = Model(model=model, error=validation_rmse, rank=rank, lmbda=lmbda, iteration=iteration, model_id=model_id, time=mt)
+            best_model = Model(model=model, error=validation_rmse, rank=rank, lmbda=lmbda, iteration=iteration, model_id=model_id, training_time=mt, rmse_time=vt)
     best_model_metadata = {'error': "%.2f" % (best_model.error), 'rank': best_model.rank, 'lmbda': best_model.lmbda, 
-                            'iteration': best_model.iteration, 'model_id': best_model.model_id, 'time' : best_model.time}
+                            'iteration': best_model.iteration, 'model_id': best_model.model_id, 'training_time' : best_model.training_time, 
+                                'rmse_time': best_model.rmse_time}
     return best_model, model_metadata, best_model_metadata
 
-def main(df):
+def main(df, model_html, queries_html, recommendation_html):
     time_info = {}
     t0 = time.time()
     training_data, validation_data, test_data = preprocess_data(df)
@@ -74,7 +74,6 @@ def main(df):
     models_training_time = t
 
     print("Saving model...")
-    date = datetime.utcnow().strftime("%Y-%m-%d")
     for attempt in range(config.MAX_RETRIES):
         try:
             t0 = time.time()
@@ -89,7 +88,6 @@ def main(df):
                 raise SystemExit("%s.Aborting..." % (str(err)))
             logging.error("Unable to save model: %s.Retrying in %ss" % (str(err), config.TIME_BEFORE_RETRIES))
     
-    outputfile = 'Model-Info-%s.html' % (date)
     context = {
         'time' : time_info,
         'num_training' : "{:,}".format(num_training),
@@ -98,7 +96,8 @@ def main(df):
         'models' : model_metadata,
         'best_model' : best_model_metadata,
         'models_training_time' : models_training_time,
-        'link' : 'Recommendations-%s.html' % (date)
+        'prev' : queries_html,
+        'next' : recommendation_html,
     }
-    utils.save_html(outputfile, context, 'model.html')
+    utils.save_html(model_html, context, 'model.html')
     return best_model_metadata['model_id']
