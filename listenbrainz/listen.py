@@ -221,6 +221,14 @@ class Listen(object):
             a dict with appropriate values of measurement, time, tags and fields
         """
 
+        if 'tracknumber' in self.data['additional_info']:
+            try:
+                tracknumber = int(self.data['additional_info']['tracknumber'])
+            except (ValueError, TypeError):
+                tracknumber = None
+        else:
+            tracknumber = None
+
         data = {
             'measurement' : measurement,
             'time' : self.ts_since_epoch,
@@ -239,7 +247,7 @@ class Listen(object):
                 'release_group_mbid': self.data['additional_info'].get('release_group_mbid', ''),
                 'track_mbid': self.data['additional_info'].get('track_mbid', ''),
                 'work_mbids': ','.join(self.data['additional_info'].get('work_mbids', [])),
-                'tracknumber': self.data['additional_info'].get('tracknumber', ''),
+                'tracknumber': tracknumber,
                 'isrc': self.data['additional_info'].get('isrc', ''),
                 'spotify_id': self.data['additional_info'].get('spotify_id', ''),
                 'inserted_timestamp': int(time.time()),
