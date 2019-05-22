@@ -13,14 +13,15 @@ from datetime import datetime
 
 def get_artists(table):
     """
+    Get artists information (artist_name, artist_msid etc) for every user 
+    ordered by listen count (number of times a user has listened to tracks 
+    which belong to a particular artist).
+
     Args:
-        table: name of the temporary table
+        table: name of the temporary table.
 
     Returns:
-        artists: A dict of dicts containing artists information of every user 
-            ordered by listen count (number of times a user has listened to 
-            tracks which belong to a particular artist).
-            The dict can be depicted as:
+        artists: A dict of dicts which can be depicted as:
                 {'user1' : {'artist_name' : 'xxxx', 'artist_msid' : 'xxxx',
                     'artist_mbids' : 'xxxx', 'count' : 'xxxx'}, 'user2' : {...}}
     """
@@ -50,14 +51,14 @@ def get_artists(table):
 
 def get_recordings(table):
     """
+    Get recordings information (recording_name, recording_mbid etc) for every user
+    ordered by listen count (number of times a user has listened to the track/recording).
+
     Args:
         table: name of the temporary table
 
     Returns:
-        recordings: A dict of dicts containing recordings information for every user
-            ordered by listen count (number of times a user has listened to the 
-            track/recording).
-            The dict can be depicted as:
+        recordings: A dict of dicts which can be depicted as:
                 {'user1' : {'track_name' : 'xxxx', 'recording_msid' : 'xxxx',
                     'recording_mbid' : 'xxxx', 'artist_name' : 'xxxx', 'artist_msid' : 
                     'xxxx', 'artist_mbids' : 'xxxx', 'release_name' : 'xxxx', 
@@ -102,14 +103,15 @@ def get_recordings(table):
 
 def get_releases(table):
     """
+    Get releases information (release_name, release_mbid etc) for every user
+    ordered by listen count (number of times a user has listened to tracks 
+    which belong to a particular release).
+
     Args:
         table: name of the temporary table
 
     Returns:
-        artists: A dict od dicts containing release information for every user 
-            ordered by listen count (number of times a user has listened to tracks 
-            which belong to a particular release).
-            The dict can be depicted as:
+        artists: A dict of dicts which can be depicted as:
                 {'user1' : {'release_name' : 'xxxx', 'release_msid' : 'xxxx',
                     'release_mbid' : 'xxxx', 'artist_name' : 'xxxx', 'artist_msdid' : 
                     'xxxx', 'artist_mbids' : 'xxxx', count' : 'xxxx'}, 'user2' : {...}}
@@ -145,11 +147,11 @@ def get_releases(table):
 
 def main(app_name):
     """
+    Calculate statistics of users for previous month.
+
     Args:
         app_name: Application name to uniquely identify the submitted
                   application amongst other applications
-
-        The script will be run to calculate stats for previous month.
 
     """
     t0 = time.time()
@@ -175,13 +177,12 @@ def main(app_name):
     print("DataFrame loaded in %.2f s" % (query_t0 - t0))
 
     data = defaultdict(dict)
-    """
-        data : Nested dict which can be depicted as:
-                {'user1' : {'artist' : {artists dict returned by func get_artists},
-                 'recordings' : {recordings dict returned by func get_recordings}, 
-                 'releases': {releases dict returned by func get_releasess}, 'yearmonth' : 
-                 'date when the stats were calculated'}, 'user2' : {...}} 
-    """
+    #data : Nested dict which can be depicted as:
+            #{'user1' : {'artist' : {artists dict returned by func get_artists},
+            #'recordings' : {recordings dict returned by func get_recordings}, 
+            #'releases': {releases dict returned by func get_releasess}, 'yearmonth' : 
+             #'date when the stats were calculated'}, 'user2' : {...}} 
+
     artist_data = get_artists(table)
     for user_name, artist_stats in artist_data.items():
         data[user_name]['artists'] = {
@@ -210,5 +211,4 @@ def main(app_name):
             print("Statistics of %s pushed to rabbitmq" % (user_name))
         except Exception as err:
             logging.error("Cannot publish statistics of %s to rabbitmq channel: %s / %s." % (user_name, type(err).__name__, str(err)), exc_info=True)
-            continue
-            
+            continue    
