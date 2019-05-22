@@ -84,7 +84,7 @@ class InfluxWriterSubscriber(ListenWriter):
                     break
                 sleep(self.ERROR_RETRY_DELAY)
             except InfluxDBClientError as e:
-                current_app.logger.error("Cannot write data because of ClientError, data = %s" % json.dumps(data, indent=4), exc_info=True)
+                current_app.logger.error("Cannot write data because of ClientError, data = %s" % str(data), exc_info=True)
                 return 0
             except ConnectionError as e:
                 current_app.logger.error("Cannot write data to listenstore: %s. Sleep." % str(e), exc_info=True)
