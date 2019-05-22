@@ -201,6 +201,9 @@ class InfluxListenStore(ListenStore):
         submit = []
         user_names = {}
         for listen in listens:
+            if listen.user_name == 'ovso':
+                continue
+
             user_names[listen.user_name] = 1
             submit.append(listen.to_influx(quote(listen.user_name)))
 
