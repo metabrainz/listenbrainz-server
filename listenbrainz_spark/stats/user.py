@@ -17,8 +17,12 @@ def get_artists(table):
         table: name of the temporary table
 
     Returns:
-        artists: list containing information of artists 
-                grouped by users
+        artists: A dict of dicts containing artists information of every user 
+            ordered by listen count (number of times a user has listened to 
+            tracks which belong to a particular artist).
+            The dict can be depicted as:
+                {'user1' : {'artist_name' : 'xxxx', 'artist_msid' : 'xxxx',
+                    'artist_mbids' : 'xxxx', 'count' : 'xxxx'}, 'user2' : {...}}
     """
     t0 = time.time()
     query = run_query("""
@@ -50,8 +54,15 @@ def get_recordings(table):
         table: name of the temporary table
 
     Returns:
-        recordings: list containing information of recordings
-                grouped by users
+        recordings: A dict of dicts containing recordings information for every user
+            ordered by listen count (number of times a user has listened to the 
+            track/recording).
+            The dict can be depicted as:
+                {'user1' : {'track_name' : 'xxxx', 'recording_msid' : 'xxxx',
+                    'recording_mbid' : 'xxxx', 'artist_name' : 'xxxx', 'artist_msid' : 
+                    'xxxx', 'artist_mbids' : 'xxxx', 'release_name' : 'xxxx', 
+                    'release_msid' : 'xxxx', 'release_mbid' : 'xxxx', 'count' : 'xxxx'},
+                     'user2' : {...}}
     """
     t0 = time.time()
     query = run_query("""
@@ -67,7 +78,8 @@ def get_recordings(table):
                  , release_mbid
                  , count(recording_msid) as cnt
               FROM %s
-          GROUP BY user_name, track_name, recording_msid, recording_mbid, artist_name, artist_msid, artist_mbids, release_name, release_msid, release_mbid
+          GROUP BY user_name, track_name, recording_msid, recording_mbid, artist_name, artist_msid, 
+                artist_mbids, release_name, release_msid, release_mbid
           ORDER BY cnt DESC
         """ % (table))
     rows = query.collect()
@@ -94,8 +106,13 @@ def get_releases(table):
         table: name of the temporary table
 
     Returns:
-        artists: list containing information of releases
-                grouped by users
+        artists: A dict od dicts containing release information for every user 
+            ordered by listen count (number of times a user has listened to tracks 
+            which belong to a particular release).
+            The dict can be depicted as:
+                {'user1' : {'release_name' : 'xxxx', 'release_msid' : 'xxxx',
+                    'release_mbid' : 'xxxx', 'artist_name' : 'xxxx', 'artist_msdid' : 
+                    'xxxx', 'artist_mbids' : 'xxxx', count' : 'xxxx'}, 'user2' : {...}}
     """
     t0 = time.time()
     query = run_query("""
@@ -131,42 +148,55 @@ def main(app_name):
     Args:
         app_name: Application name to uniquely identify the submitted
                   application amongst other applications
+
+        The script will be run to calculate stats for previous month.
+
     """
     t0 = time.time()
     try:
         listenbrainz_spark.init_spark_session(app_name)
     except Exception as err:
         logging.error("Cannot initialize spark session: %s / %s. Aborting." % (type(err).__name__, str(err)))
-        sys.exit(0)
+        sys.exit(-1)
     date = date_for_stats_calculation()
     try:
         df = listenbrainz_spark.sql_context.read.parquet('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, date.year, date.month))
         print("Loading dataframe...")
     except Exception as err:
         logging.error("Cannot read files from HDFS: %s / %s. Aborting." % (type(err).__name__, str(err)))
-        sys.exit(0)
+        sys.exit(-1)
     df.printSchema()
-    print(df.columns)
-    print(df.count())
+
     table = 'listens_{}'.format(datetime.strftime(date, '%Y_%m'))
     print(table)
     df.registerTempTable(table)
     print("Running Query...")
     query_t0 = time.time()
     print("DataFrame loaded in %.2f s" % (query_t0 - t0))
+
     data = defaultdict(dict)
+    """
+        data : Nested dict which can be depicted as:
+                {'user1' : {'artist' : {artists dict returned by func get_artists},
+                 'recordings' : {recordings dict returned by func get_recordings}, 
+                 'releases': {releases dict returned by func get_releasess}, 'yearmonth' : 
+                 'date when the stats were calculated'}, 'user2' : {...}} 
+    """
     artist_data = get_artists(table)
     for user_name, artist_stats in artist_data.items():
         data[user_name]['artists'] = {
             'artist_stats': artist_stats,
             'artist_count': len(artist_stats),
         }
+
     recording_data = get_recordings(table)
     for user_name, recording_stats in recording_data.items():
         data[user_name]['recordings'] = recording_stats
+
     release_data = get_releases(table)
     for user_name, release_stats in release_data.items():
         data[user_name]['releases'] = release_stats
+
     rabbbitmq_conn_obj = StatsWriter()
     yearmonth = datetime.strftime(date, '%Y-%m')
     for user_name, metadata in data.items():
@@ -175,5 +205,10 @@ def main(app_name):
             'type' : 'user',
             user_name : metadata,
         }
-        rabbbitmq_conn_obj.start(rabbitmq_data)
-    sys.exit(0)
+        try:
+            rabbbitmq_conn_obj.start(rabbitmq_data)
+            print("Statistics of %s pushed to rabbitmq" % (user_name))
+        except Exception as err:
+            logging.error("Cannot publish statistics of %s to rabbitmq channel: %s / %s." % (user_name, type(err).__name__, str(err)), exc_info=True)
+            continue
+            
