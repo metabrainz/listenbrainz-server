@@ -30,7 +30,7 @@ class StatsWriter():
                 )
                 self.connection =  pika.BlockingConnection(connection_parameters)
                 break
-            except Exception as err:
+            except:
                 error_message = "Cannot connect to RabbitMQ: {error}, retrying in {delay} seconds."
                 print(error_message.format(error=str(err), delay=self.ERROR_RETRY_DELAY))
                 time.sleep(self.ERROR_RETRY_DELAY)
@@ -48,9 +48,7 @@ class StatsWriter():
             return True
         except pika.exceptions.ConnectionClosed:
             logging.error("Connection to rabbitmq closed while trying to publish. Re-opening.", exc_info=True)
-            return False
-        except Exception as e:
-            logging.error("Cannot publish to rabbitmq channel: %s / %s. Trying to republish." % (type(e).__name__, str(e)), exc_info=True)
+        except:
             return False
 
     def start(self, data):
