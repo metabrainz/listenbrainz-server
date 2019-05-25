@@ -78,10 +78,45 @@ td, th {
 			<td>The name of the user</td>
 		</tr>
 	</table>
-	<p>The listening history is fed to Spark's inbuilt algorithm for collaborative filtering. Collaborative filtering is commonly used for recommender systems. This technique aims to fill in the missing entries of a user-item association matrix. Instead of using explicit preferences such as rating given by a user to an item, we use implicit feedback (number of times a track has been listened to by a user). The first step is to collect relevant data to be able to preprocess it. The sub steps of data collection are as follows: </p>
-	<p><i><b>Note: </b>Listens from <b>{{ lb_dump_time_window[0] }}</b> to <b>{{ lb_dump_time_window[1] }}</b> have been fed to the recommender system. Total listens used to train, validate and test the model = <b>{{ listen.count }}</b></i></p>
+	<p>ListenBrainz recommednation engine uses Apache Spark to train models using Spark's inbuilt algorithm for collaborative filtering to generate recommendations using its user's listening history. The size of listening data dump~ <b>16GB</b>. ListenBrainz uses a cluster of 4 nodes (computers) each with following specifications:</p>
+	<blockquote>
+		<p>CPU(s): 8</p>
+		<p>Thread(s) per core: 1</p>
+		<p>Core(s) per socket: 8</p>
+		<p>Socket(s): 1</p>
+		<p>Storage available: 250GB</p>
+		<p>Memory available: 32GB</p>
+	</blockquote>
+	<p>One of the nodes is the master and the remaining three are the workers. There are two executors on each worker. Here are the Spark configuration values: </p>
+	<blockquote>
+		<p>spark.scheduler.listenerbus.eventqueue.capacity: 100000</p>
+		<p>spark.cores.max: 21</p>
+		<p>spark.executor.cores: 3</p>
+		<p>spark.executor.memory: 8GB</p>
+		<p>spark.driver.memory: 8GB</p>
+		<p>spark.network.timeout: 240s</p>
+		<p>spark.driver.maxResultSize: 2GB</p>
+		<p>spark.executor.memoryOverhead: 2GB</p>
+		<p>spark.driver.memoryOverhead: 2GB</p>
+		<p>spark.default.parallelism: 54</p>
+	</blockquote>
+	<p>Collaborative filtering is commonly used for recommender systems. This technique aims to fill in the missing entries of a user-item association matrix. Instead of using explicit preferences such as rating given by a user to an item, we use implicit feedback (number of times a track has been listened to by a user). The first step is to collect relevant data to be able to preprocess it. The sub steps of data collection are as follows: </p>
+	<p><i><b>Note: </b>Listens from <b>{{ lb_dump_time_window[0] }}</b> to <b>{{ lb_dump_time_window[1] }}</b> have been fed to the recommender system.</i></p>
+	<table>
+		<tr>
+			<th>users_df time (min)</th>
+			<th>recordings_df time(min)</th>
+			<th>playcounts_df time (min)</th>
+		</tr>
+		<tr>
+			<td>{{ users_df_time }}</td>
+			<td>{{ recordings_df_time }}</td>
+			<td>{{ playcounts_df_time }}</td>
+		</tr>
+	</table>
+	<p>Total time lapsed in data collection: <b>{{ total_time }}m</b></p>
 	<ul>
-		<li><p><b>users_df: </b>A user dataframe is created to select distinct user names and assign each user a unique integer id. Query to create the user dataframe takes <b>{{ user.time }}m</b> to process. There are <b>{{ user.count }}</b> rows in the dataframe. The schema for user dataframe is as follows:</p>
+		<li><p><b>users_df: </b>A user dataframe is created to select distinct user names and assign each user a unique integer id. The schema for user dataframe is as follows:</p>
 		<table>
 		<col width="150">
 		<tr>
@@ -102,7 +137,7 @@ td, th {
 		</tr>
 		</table>
 		</li>
-		<li><p><b>listens_df: </b>A listen dataframe is created to select all the listens from <b>{{ lb_dump_time_window[0] }}</b> to <b>{{ lb_dump_time_window[1] }}</b>. Query to create listen dataframe takes <b>{{ listen.time }}m</b> to process. There are <b>{{ listen.count }}</b> rows in the dataframe. The schema for listen dataframe is as follows:</p>
+		<li><p><b>listens_df: </b>A listen dataframe is created to select all the listens from <b>{{ lb_dump_time_window[0] }}</b> to <b>{{ lb_dump_time_window[1] }}</b>. The schema for listen dataframe is as follows:</p>
 		<table>
 		<col width="150">
 		<tr>
@@ -144,7 +179,7 @@ td, th {
 		</table>
 		</li>
 		</li>
-		<li><p><b>recordings_df: </b>A recording dataframe is created to select distinct recordings/tracks listened to and assign each recording a unique integer id along with other relevant information(track_name, artist_name etc). Query to create recording dataframe takes <b>{{ recording.time }}m</b> to process. There are <b>{{ recording.count }}</b> rows in the dataframe. The schema for recording dataframe is as follows:</p>
+		<li><p><b>recordings_df: </b>A recording dataframe is created to select distinct recordings/tracks listened to and assign each recording a unique integer id along with other relevant information(track_name, artist_name etc). The schema for recording dataframe is as follows:</p>
 		<table>
 		<col width="150">
 		<tr>
@@ -186,7 +221,7 @@ td, th {
 		</table>
 		</li>
 		</li>
-		<li><p><b>playcounts_df: </b>Playcounts dataframe is the output of the first step i.e. data collection. It is obtained by joining the above mentioned dataframes. Query to produce playcounts dataframe that contains recording ids of all the tracks that a user has listened to for all the users along with the listen count takes <b>{{ playcount.time }}m</b> to process. There are <b>{{ playcount.count }}</b> rows in the dataframe. The schema for playcounts dataframe is as follows:</p>
+		<li><p><b>playcounts_df: </b>Playcounts dataframe is the output of the first step i.e. data collection. It is obtained by joining the above mentioned dataframes. The dataframe contains recording ids of all the distinct tracks that a user has listened to for all the users along with the listen count. The schema for playcounts dataframe is as follows:</p>
 		<table>
 		<col width="150">
 		<tr>
@@ -217,7 +252,6 @@ td, th {
 		</table>
 		</li>
 	</ul>
-	<p><i><a href={{ link }}>Next</a></i></p>
-
+	<p><i><b>Note: </b>Number of rows in a dataframe or number of elements in an RDD (count information) is not included because it leades to unnecessary computation time.</i></p>
 </body>
 </html>

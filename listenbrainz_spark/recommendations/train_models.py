@@ -13,8 +13,9 @@ from operator import add
 from pyspark.mllib.recommendation import ALS, Rating
 from pyspark.sql import Row
 from listenbrainz_spark import config
-from listenbrainz_spark.recommendations import utils
 from time import sleep
+from datetime import datetime
+from listenbrainz_spark.recommendations import utils
 
 Model = namedtuple('Model', 'model error rank lmbda iteration model_id training_time rmse_time')
 
@@ -56,28 +57,54 @@ def train(training_data, validation_data, num_validation, ranks, lambdas, iterat
                                 'rmse_time': best_model.rmse_time}
     return best_model, model_metadata, best_model_metadata
 
-def main(df, model_html, queries_html, recommendation_html):
+def main():
+    ti = time.time()
+    try:
+        listenbrainz_spark.init_spark_session('Train_Models')
+    except Exception as err:
+        raise SystemExit("Cannot initialize Spark Session: %s. Aborting..." % (str(err)))
+
+    try:
+        path = os.path.join('/', 'data', 'listenbrainz', 'recommendation-engine', 'dataframes', 'playcounts_df.parquet')
+        playcounts_df = listenbrainz_spark.sql_context.read.parquet(config.HDFS_CLUSTER_URI + path)
+    except Exception as err:
+        raise SystemExit("Cannot read dataframe from HDFS: %s. Aborting..." % (str(err)))
     time_info = {}
+    time_info['load_playcounts'] = "%.2f" % ((time.time() - ti) / 60)
+
     t0 = time.time()
-    training_data, validation_data, test_data = preprocess_data(df)
+    training_data, validation_data, test_data = preprocess_data(playcounts_df)
     t = "%.2f" % ((time.time() - t0) / 60)
     time_info['preprocessing'] = t
 
+    training_data.persist()
+    validation_data.persist()
     num_training = training_data.count()
     num_validation = validation_data.count()
     num_test = test_data.count()
     print("Training model...")
 
-    t0 = time.time()
-    model, model_metadata, best_model_metadata = train(training_data, validation_data, num_validation, [8, 12], [0.1, 10.0], [10, 20])
-    t = "%.2f" % ((time.time() - t0) / 3600)
-    models_training_time = t
+    for attempt in range(config.MAX_RETRIES):
+        try:
+            t0 = time.time()
+            model, model_metadata, best_model_metadata = train(training_data, validation_data, num_validation, [8, 12], [0.1, 10.0], [10, 20])
+            t = "%.2f" % ((time.time() - t0) / 3600)
+            models_training_time = t
+            break
+        except Exception as err:
+            sleep(config.TIME_BEFORE_RETRIES)
+            if attempt == config.MAX_RETRIES - 1:
+                raise SystemExit("%s.Aborting..." % (str(err)))
+            logging.error("Unable to train the model: %s. Retrying in %ss." % (str(err),config.TIME_BEFORE_RETRIES))
+
+    training_data.unpersist()
+    validation_data.unpersist()
 
     print("Saving model...")
     for attempt in range(config.MAX_RETRIES):
         try:
             t0 = time.time()
-            path = os.path.join('/', 'data', 'listenbrainz', '{}'.format(best_model_metadata['model_id']))
+            path = os.path.join('/', 'data', 'listenbrainz', 'recommendation-engine', 'best_model', '{}'.format(best_model_metadata['model_id']))
             model.model.save(listenbrainz_spark.context, config.HDFS_CLUSTER_URI + path)
             t = "%.2f" % ((time.time() - t0) / 60)
             time_info['save_model'] = t
@@ -88,6 +115,8 @@ def main(df, model_html, queries_html, recommendation_html):
                 raise SystemExit("%s.Aborting..." % (str(err)))
             logging.error("Unable to save model: %s.Retrying in %ss" % (str(err), config.TIME_BEFORE_RETRIES))
     
+    date = datetime.utcnow().strftime("%Y-%m-%d")
+    model_html = "Model-%s-%s.html" % (uuid.uuid4(), date)
     context = {
         'time' : time_info,
         'num_training' : "{:,}".format(num_training),
@@ -96,8 +125,14 @@ def main(df, model_html, queries_html, recommendation_html):
         'models' : model_metadata,
         'best_model' : best_model_metadata,
         'models_training_time' : models_training_time,
-        'prev' : queries_html,
-        'next' : recommendation_html,
+        'total_time' : "%.2f" % ((time.time() - ti) / 3600)
     }
+
     utils.save_html(model_html, context, 'model.html')
-    return best_model_metadata['model_id']
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recommendation-metadata.json')
+    with open(path, 'r') as f:
+        recommendation_metadata = json.load(f)
+        recommendation_metadata['best_model_id'] = best_model_metadata['model_id']
+
+    with open(path, 'w') as f:
+        json.dump(recommendation_metadata,f)

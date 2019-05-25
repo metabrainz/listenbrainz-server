@@ -1,5 +1,7 @@
 FROM airdock/oraclejdk:1.8
 
+RUN printf "deb http://archive.debian.org/debian/ jessie main\ndeb-src http://archive.debian.org/debian/ jessie main\ndeb http://security.debian.org jessie/updates main\ndeb-src http://security.debian.org jessie/updates main" > /etc/apt/sources.list
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     scala \
@@ -7,7 +9,8 @@ RUN apt-get update \
     net-tools \
     dnsutils \
     python3-dev \
-    python3-pip \
+    python3-pip \ 
+    python3-numpy \
     xz-utils \
     pxz \
     bsdmainutils
