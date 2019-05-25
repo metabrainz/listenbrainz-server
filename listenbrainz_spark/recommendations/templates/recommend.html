@@ -7,7 +7,6 @@
 table {
   font-family: arial, sans-serif;
   border-collapse: collapse;
-  width: 100%;
 }
 
 td, th {
@@ -21,21 +20,77 @@ td, th {
 	<center>
 		<h1>Generating recommendations</h1>
 	</center>
-	<p><b>all_recordings: </b>recordings_df which is a dataframe is used to create a new RDD called all_recordings which contains all the recording_ids as contained in recordings_df. Number of elements in all_recordings are equal to number of rows in recordings_df = <b>{{ all_recordings_count }}</b></p>
+	<p>Time taken to generate recommendations for each user:</p>
+	<table>
+		<tr>
+			<th>user name</th>
+			<th>total time taken to generate recommendations (min)</th>
+		</tr>
+		{% for user_name, user in recommendations.items() -%}
+		<tr>
+			<td>{{ user_name }}</td>
+			<td>{{ user['total-time'] }}m</td>
+		</tr>
+		{% endfor -%}
+	</table>
+	<p>Time taken in generating recommendations for all the above listed users: <b>{{ time.total_recommendation_time }}h</b></p>
+	<p><b>Note</b>: Total time lapsed data processing and generating recommendations is <b>{{ total_time }}h</b></p>
+	<p>Three dataframes namely, users_df, recordings_df, playcounts_df are loaded from HDFS in <b>{{ time.dataframes }}m</b></p>
+	<p>user_df can be depicted as:</p>
+	<table>
+		<col width="80">
+		<col width="80">
+		<tr>
+			<th>user_id</th>
+			<th>user_name</th>
+		</tr>
+	</table>
+	<p>recordings_df can be depicted as:</p>
+	<table>
+		<tr>
+			<th>track_name</th>
+			<th>recording_msid</th>
+			<th>artist_name</th>
+			<th>artist_msid</th>
+			<th>release_name</th>
+			<th>release_msid</th>
+			<th>recording_id</th>
+		</tr>
+	</table>
+	<p>playcounts_df can be depicted as :</p>
+	<table>
+		<col width="80">
+		<tr>
+			<th>user_id</th>
+			<th>recording_id</th>
+			<th>count</th>
+		</tr>
+	</table>
+	<p><b>all_recordings: </b>recordings_df (dataframe) is used to create a new dataframe called all_recordings which contains all the recording_ids as contained in recordings_df. Number of elements in all_recordings are equal to number of rows in recordings_df = <b>{{ all_recordings_count }}</b></p>
 	<p><i><b>Note: </b>As 'rows' are to dataframes similarily 'elements' are to RDDs</i></p>
 	<p>all_recordings can be depicted as: </p>
-	<blockquote>
-		<p>[ 1 ]</p>
-		<p>[ 2 ]</p>
-		<p>[ 3 ]</p>
-	</blockquote>
-	<p><i><b>Note: </b>recording_id are represented as [ x ] where x is an integer.</i></p>
+	<table>
+	<col width="80">
+		<tr>
+			<th>recording_id</th>
+		</tr>
+		<tr>
+			<td>1</td>
+		</tr>
+		<tr>
+			<td>2</td>
+		</tr>
+		<tr>
+			<td>3</td>
+		</tr>
+	</table>
 	<p>Model used to generate recommendations is <b>{{ best_model }}</b> i.e. best model. Time taken to load best model is <b>{{ time.load_model }}m</b></p>
 	<p>Sub-steps in generating recommendations for every user are as follows:</p>
 	<ul>
 		<li><p><b>get_user_id: </b>A query<b>(get_user_id)</b> is processed to get user id from the user name provided for whom the recommendations shall be generated.</p></li>
-		<li><b>user_playcounts: </b><p>From the user id retrieved a user-playcounts dataframe is generated for every user, purpose of this dataframe is to get recording_ids of only those tracks that the user has ever listened to. The schema for user-playcounts dataframe is as follows:</p>
+		<li><p><b>user_playcounts: </b>From the user id retrieved a user-playcounts dataframe is generated for every user, purpose of this dataframe is to get recording_ids of only those tracks that the user has ever listened to. The schema for user-playcounts dataframe is as follows:</p>
 		<table>
+		<col width="150">
 		<tr>
 			<th>user_id</th>
 			<th>recording_id</th>
@@ -47,22 +102,25 @@ td, th {
 			<td>2</td>
 		</tr>
 		</table>
-		</li>
-		<li><p><b>user_recordings: </b>The user-playcounts dataframe is used to create a new RDD called user_recordings which contains recording_ids of the tracks the user has ever listened to. user_recordings can be depicted as: </p>
-		<blockquote>
-			[ 1 ]
-		</blockquote>
 		<p><i>Since 'rob' has listened to one track of the three tracks ever listened by any user and the recording_id of that track is 1</i></p>
 		</li>
 		<li>
-			<p><b>candidate_recordings: </b>An RDD called candidate_recordngs is created by subtracting user_recordings from all_recordings, therefore candidate_recordings will contain recording_ids of only those tracks that the user has <b>never</b> listened to. This RDD would then be used to predict recommendations for a user ensuring only new tracks (tracks that are new to a user) are recommended to a user.</p>
+			<p><b>candidate_recordings: </b>A new dataframe called candidate_recordngs is created by subtracting user_recordings from all_recordings, therefore candidate_recordings will contain recording_ids of only those tracks that the user has <b>never</b> listened to.</p>
 			<p>candidate_recordings can be depicted as: </p>
-			<blockquote>
-				<p>all_recordings - user_recordings ~</p>
-				<p>[ 2 ]</p>
-				<p>[ 3 ]</p>
-			</blockquote>
+			<table>
+			<col width="150">
+				<tr>
+					<th>recording_id</th>
+				</tr>
+				<tr>
+					<td>2</td>
+				</tr>
+				<tr>
+					<td>3</td>
+				</tr>
+			</table>
 			<p><i>'rob' has never listened to tracks with recording ids as 2 and 3. Therefore, he will be recommedned tracks from amongst these two.</i></p>
+			<p>The candiate_recordings dataframe is later converted to an RDD. This RDD would then be used to predict recommendations for a user ensuring only new tracks (tracks that are new to a user) are recommended to a user</p>
 		</li>
 		<li>
 			<p><b>predictAll : </b>candidate_recordings is fed to Spark's inbuilt function 'predictAll' to predict tracks for users from the provided pool of recording_ids. The function returns recommended recording_ids. Let's say recording_id = 3 has been recommeded to 'rob'</p>
@@ -74,50 +132,6 @@ td, th {
 			</blockquote>
 		</li>
 	</ul>
-	<p>Following is the user wise time information:</p>
-	<table>
-		<col width="150">
-		<tr>
-			<th>user name</th>
-			<th>get_user_id</th>
-			<th>user_playcounts</th>
-			<th>user_recordings</th>
-			<th>candidate_recordings</th>
-			<th>recommendations</th>
-			<th>lookup</th>
-			<th>total time</th>
-		</tr>
-		{% for user_name, user in recommendations.items() -%}
-		<tr>
-			<td>{{ user_name }}</td>
-			<td>{{ user['get_user_id'] }}m</td>
-			<td>{{ user['user-playcounts-time'] }}m</td>
-			<td>{{ user['user-recordings-time'] }}m</td>
-			<td>{{ user['candidate-recordings-time'] }}m</td>
-			<td>{{ user['recommendations-time'] }}m</td>
-			<td>{{ user['lookup-time'] }}m</td>
-			<td>{{ user['total-time'] }}m</td>
-		</tr>
-		{% endfor -%}
-	</table>
-	<p>Following is the user wise count information:</p>
-	<table>
-		<col width="150">
-		<tr>
-			<th>user name</th>
-			<th>user_recordings count</th>
-			<th>candidate_recordings count</th>
-		</tr>
-		{% for user_name, user in recommendations.items() -%}
-		<tr>
-			<td>{{ user_name }}</td>
-			<td>{{ user['user-recordings-count'] }}</td>
-			<td>{{ user['candidate-recordings-count'] }}</td>
-		</tr>
-		{% endfor -%}
-	</table>
-	<p>Time taken in generating recommendations for all the above listed users: <b>{{ time.total_recommendation_time }}h</b></p>
-	<p><b>Note</b>: Total time lapsed in data collection, data preprocessing, model training and generating recommendations is <b>{{ total_time }}h</b></p>
 	<p>Following are the recommendations generated for the above listed users: </p>
 	{% for user_name, user in recommendations.items() -%}
 	<center>
@@ -138,6 +152,6 @@ td, th {
 		{% endfor -%}
 	</table>
 	{% endfor -%}
-	<p><i><a href={{ prev }}>Prev</a></i></p>
+	<p><i><b>Note: </b>Number of rows in a dataframe or number of elements in an RDD (count information) is not included because it leades to unnecessary computation time.</i></p>
 </body>
 </html>

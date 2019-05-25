@@ -1,4 +1,4 @@
-import os
+import os 
 from jinja2 import Environment, FileSystemLoader
 
 def save_html(filename, context, template):
@@ -9,4 +9,3 @@ def save_html(filename, context, template):
     with open(outputfile, 'w') as f:
         html = template_environment.get_template(template).render(context)
         f.write(html)
-    
