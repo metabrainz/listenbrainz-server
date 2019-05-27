@@ -67,6 +67,7 @@ def main():
     try:
         path = os.path.join('/', 'data', 'listenbrainz', 'recommendation-engine', 'dataframes', 'playcounts_df.parquet')
         playcounts_df = listenbrainz_spark.sql_context.read.parquet(config.HDFS_CLUSTER_URI + path)
+        playcounts_df.persist()
     except Exception as err:
         raise SystemExit("Cannot read dataframe from HDFS: %s. Aborting..." % (str(err)))
     time_info = {}
@@ -99,6 +100,7 @@ def main():
 
     training_data.unpersist()
     validation_data.unpersist()
+    playcounts_df.unpersist()
 
     print("Saving model...")
     for attempt in range(config.MAX_RETRIES):
