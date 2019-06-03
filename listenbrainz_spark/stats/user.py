@@ -170,11 +170,13 @@ def main(app_name):
     df.printSchema()
 
     table = 'listens_{}'.format(datetime.strftime(date, '%Y_%m'))
-    print(table)
-    df.registerTempTable(table)
-    print("Running Query...")
+    try:
+        df.registerTempTable(table)
+    except Exception as err:
+        logging.error("Cannot register dataframe: %s / %s. Aborting..." % (type(err).__name__, str(err)))
+        sys.exit(-1)
     query_t0 = time.time()
-    print("DataFrame loaded in %.2f s" % (query_t0 - t0))
+    print("DataFrame loaded and registered in %.2f s" % (query_t0 - t0))
 
     data = defaultdict(dict)
     #data : Nested dict which can be depicted as:
@@ -182,21 +184,32 @@ def main(app_name):
             #'recordings' : {recordings dict returned by func get_recordings}, 
             #'releases': {releases dict returned by func get_releasess}, 'yearmonth' : 
              #'date when the stats were calculated'}, 'user2' : {...}} 
+    try:
+        artist_data = get_artists(table)
+        for user_name, artist_stats in artist_data.items():
+            data[user_name]['artists'] = {
+                'artist_stats': artist_stats,
+                'artist_count': len(artist_stats),
+            }
+    except Exception as err:
+        logging.error("Problem in parsing artist data: %s / %s. Aborting..." % (type(err).__name__, str(err)))
+        sys.exit(-1)
 
-    artist_data = get_artists(table)
-    for user_name, artist_stats in artist_data.items():
-        data[user_name]['artists'] = {
-            'artist_stats': artist_stats,
-            'artist_count': len(artist_stats),
-        }
+    try:
+        recording_data = get_recordings(table)
+        for user_name, recording_stats in recording_data.items():
+            data[user_name]['recordings'] = recording_stats
+    except Exception as err:
+        logging.error("Problem in parsing recording data: %s / %s. Aborting..." % (type(err).__name__, str(err)))
+        sys.exit(-1)
 
-    recording_data = get_recordings(table)
-    for user_name, recording_stats in recording_data.items():
-        data[user_name]['recordings'] = recording_stats
-
-    release_data = get_releases(table)
-    for user_name, release_stats in release_data.items():
-        data[user_name]['releases'] = release_stats
+    try:
+        release_data = get_releases(table)
+        for user_name, release_stats in release_data.items():
+            data[user_name]['releases'] = release_stats
+    except Exception as err:
+        logging.error("Problem in parsing release data: %s / %s. Aborting..." % (type(err).__name__, str(err)))
+        sys.exit(-1)
 
     rabbbitmq_conn_obj = StatsWriter()
     yearmonth = datetime.strftime(date, '%Y-%m')
@@ -209,6 +222,9 @@ def main(app_name):
         try:
             rabbbitmq_conn_obj.start(rabbitmq_data)
             print("Statistics of %s pushed to rabbitmq" % (user_name))
+        except pika.exceptions.ConnectionClosed:
+            logging.error("Connection to rabbitmq closed while trying to publish: Statistics of %s not published" % (user_name))
+            continue
         except Exception as err:
             logging.error("Cannot publish statistics of %s to rabbitmq channel: %s / %s." % (user_name, type(err).__name__, str(err)), exc_info=True)
             continue    

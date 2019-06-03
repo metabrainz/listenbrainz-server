@@ -30,6 +30,9 @@ class StatsWriter():
                 )
                 self.connection =  pika.BlockingConnection(connection_parameters)
                 break
+            except pika.exceptions.AMQPChannelError as err:
+                logging.error("Caught a channel error: %s / %s, stopping..." % (type(err).__name__, str(err)))
+                break
             except Exception as err:
                 error_message = "Cannot connect to RabbitMQ: {error}, retrying in {delay} seconds."
                 print(error_message.format(error=str(err), delay=self.ERROR_RETRY_DELAY))
