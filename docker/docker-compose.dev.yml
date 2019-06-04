@@ -44,6 +44,6 @@ services:
       - ..:/rec:z
 
 networks:
-    default:
-        external:
-            name: listenbrainz_default
+  default:
+    external:
+      name: listenbrainz_default
