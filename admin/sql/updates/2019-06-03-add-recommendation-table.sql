@@ -1,7 +1,7 @@
 BEGIN;
 
 CREATE TABLE recommendation (
-	user_id 			INTEGER NOT NULL, --PK and FK to "user".id
+	user_id 		INTEGER NOT NULL, --PK and FK to "user".id
 	daily_delight 		JSONB,
 	listened_to 		BOOL DEFAULT FALSE,
 	last_updated 		TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()

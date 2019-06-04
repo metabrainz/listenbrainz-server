@@ -105,7 +105,7 @@ CREATE TABLE follow_list (
 ALTER TABLE follow_list ADD CONSTRAINT follow_list_name_creator_key UNIQUE (name, creator);
 
 CREATE TABLE recommendation (
-	user_id 			INTEGER NOT NULL, --PK and FK to "user".id
+	user_id 		INTEGER NOT NULL, --PK and FK to "user".id
     daily_delight 		JSONB,
 	listened_to 		BOOL DEFAULT FALSE,
 	last_updated 		TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
