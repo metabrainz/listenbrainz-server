@@ -28,7 +28,7 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
     && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
 COPY docker/apache-download.sh /apache-download.sh
-ENV SPARK_VERSION 2.3.1
+ENV SPARK_VERSION 2.4.1
 ENV HADOOP_VERSION 2.7
 RUN cd /usr/local && \
     /apache-download.sh spark/spark-$SPARK_VERSION/spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION.tgz && \
