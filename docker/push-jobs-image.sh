@@ -2,5 +2,5 @@
 
 cd "$(dirname "${BASH_SOURCE[0]}")/../"
 
-docker build -t metabrainz/listenbrainz-spark -f Dockerfile.jobs .
+docker build -t metabrainz/listenbrainz-spark --target metabrainz-spark-jobs .
 docker push metabrainz/listenbrainz-spark
