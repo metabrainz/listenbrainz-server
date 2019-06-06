@@ -5,13 +5,11 @@ import logging
 import time
 import uuid
 
-
+from pyspark.sql.utils import QueryExecutionException, AnalysisException, ParseException
 from listenbrainz_spark import config
-from pyspark.sql import Row, SparkSession
 from datetime import datetime
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.recommendations import utils
-from time import sleep
 
 def prepare_user_data(table):
     """ Prepare users dataframe to select distinct user names
@@ -111,8 +109,12 @@ def main():
     ti = time.time()
     try:
         listenbrainz_spark.init_spark_session('Create_Dataframe')
+    except AttributeError as err:
+        logging.error("Cannot initialize Spark Session: %s \n %s. Aborting..." % (type(err).__name__,str(err)), exc_info=True)
+        sys.exit(-1)
     except Exception as err:
-        raise SystemExit("Cannot initialize Spark Session: %s. Aborting..." % (str(err)))
+        logging.error("An error occurred: %s \n %s. Aborting..." % (type(err).__name__,str(err)), exc_info=True)
+        sys.exit(-1)
 
     df = None
     for y in range(config.STARTING_YEAR, config.ENDING_YEAR + 1):
@@ -120,8 +122,10 @@ def main():
             try:
                 month = listenbrainz_spark.sql_context.read.parquet('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, y, m))
                 df = df.union(month) if df else month
+            except AnalysisException as err:
+                logging.error("Cannot read files from HDFS: %s \n %s" % (type(err).__name__,str(err)))
             except Exception as err:
-                logging.error("Cannot read files from HDFS: %s / %s. Aborting." % (type(err).__name__, str(err)))
+                logging.error("An error occured while fecthing parquet: %s \n %s." % (type(err).__name__, str(err)))
                 continue
     if df is None:
         raise SystemExit("Parquet files containing listening history from {}-{} to {}-{} missing from HDFS".format(config.STARTING_YEAR, 
@@ -129,41 +133,79 @@ def main():
     
     print("\nRegistering Dataframe...")
     table = 'df_to_train_{}'.format(datetime.strftime(datetime.utcnow(), '%Y_%m_%d'))
-    df.createOrReplaceTempView(table)
+    try:
+        df.createOrReplaceTempView(table)
+    except Exception as err:
+        logging.error("Cannot register dataframe: %s \n %s. Aborting..." % (type(err).__name__, str(err)), exc_info=True)
+        sys.exit(-1)
     t = "%.2f" % (time.time() - ti)
-    print("Dataframe registered in %ss" % (t))
+    print("Files fectched from HDFS and dataframe registered in %ss" % (t))
 
-    users_df = prepare_user_data(table)
-    listens_df = prepare_listen_data(table)
-    recordings_df = prepare_recording_data(table)
-    playcounts_df = get_playcounts_data(listens_df, users_df, recordings_df)
+    dest_path = os.path.join('/', 'data', 'listenbrainz', 'recommendation-engine', 'dataframes')
 
     print("Preparing user data and saving to HDFS...")
-    t0 = time.time()
-    dest_path = os.path.join('/', 'data', 'listenbrainz', 'recommendation-engine', 'dataframes', 'users_df.parquet')
-    users_df.write.format('parquet').save(config.HDFS_CLUSTER_URI + dest_path, mode='overwrite')
+    try:
+        t0 = time.time()
+        users_df = prepare_user_data(table)
+        users_df.write.format('parquet').save(config.HDFS_CLUSTER_URI + dest_path  + '/users_df.parquet', mode='overwrite')
+    except QueryExecutionException as err:
+        logging.error("Failed to execute users query: %s \n %s. Aborting..." % (type(err).__name__, str(err)))
+        sys.exit(-1)
+    except AnalysisException as err:
+        logging.error("Failed to analyse users query plan: %s \n %s. Aborting..." % (type(err).__name__, str(err)))
+        sys.exit(-1)
+    except ParseException as err:
+        logging.error("Failed to parse SQL command: %s \n %s. Aborting..." % (type(err).__name__, str(err)))
+        sys.exit(-1)
+    except Exception as err:
+        logging.error("An error occurred. %s \n %s. Aborting" % (type(err).__name__, str(err)), exc_info=True)
+        sys.exit(-1)
     users_df_time = "%.2f" % ((time.time() - t0) / 60)
 
-    print("Preparing recordings dump and saving to HDFS...")
-    t0 = time.time()
-    dest_path = os.path.join('/', 'data', 'listenbrainz', 'recommendation-engine', 'dataframes', 'recordings_df.parquet')
-    recordings_df.write.format('parquet').save(config.HDFS_CLUSTER_URI + dest_path, mode='overwrite')
+    print("Preparing recordings data and saving to HDFS...")
+    try:
+        t0 = time.time()
+        recordings_df = prepare_recording_data(table)
+        recordings_df.write.format('parquet').save(config.HDFS_CLUSTER_URI + dest_path + '/recordings_df.parquet', mode='overwrite')
+    except QueryExecutionException as err:
+        logging.error("Failed to execute recordings query: %s \n %s. Aborting..." % (type(err).__name__, str(err)))
+        sys.exit(-1)
+    except AnalysisException as err:
+        logging.error("Failed to analyse recordings query plan: %s \n %s. Aborting..." % (type(err).__name__, str(err)))
+        sys.exit(-1)
+    except ParseException as err:
+        logging.error("Failed to parse SQL command: %s \n %s. Aborting..." % (type(err).__name__, str(err)))
+        sys.exit(-1)
+    except Exception as err:
+        logging.error("An error occurred. %s \n %s. Aborting..." % (type(err).__name__, str(err)), exc_info=True)
+        sys.exit(-1)
     recordings_df_time =  "%.2f" % ((time.time() - t0) / 60)
 
     print("Preparing listen data dump and playcounts, saving playcounts to HDFS...")
-    t0 = time.time()
-    dest_path = os.path.join('/', 'data', 'listenbrainz', 'recommendation-engine', 'dataframes', 'playcounts_df.parquet')
-    playcounts_df.write.format('parquet').save(config.HDFS_CLUSTER_URI + dest_path, mode='overwrite')
+    try:
+        t0 = time.time()
+        listens_df = prepare_listen_data(table)
+        playcounts_df = get_playcounts_data(listens_df, users_df, recordings_df)
+        playcounts_df.write.format('parquet').save(config.HDFS_CLUSTER_URI + dest_path + '/playcounts_df.parquet', mode='overwrite')
+    except QueryExecutionException as err:
+        logging.error("Failed to execute playcounts query: %s \n %s. Aborting..." % (type(err).__name__, str(err)))
+        sys.exit(-1)
+    except AnalysisException as err:
+        logging.error("Failed to analyse playcounts query plan: %s \n %s. Aborting..." % (type(err).__name__, str(err)))
+        sys.exit(-1)
+    except ParseException as err:
+        logging.error("Failed to parse SQL command: %s \n %s. Aborting..." % (type(err).__name__, str(err)))
+        sys.exit(-1)
+    except Exception as err:
+        logging.error("An error occurred. %s \n %s. Aborting..." % (type(err).__name__, str(err)), exc_info=True)
+        sys.exit(-1)
     playcounts_df_time = "%.2f" % ((time.time() - t0) / 60)
-
+    
     total_time = "%.2f" % ((time.time() - ti) / 60)
-
     lb_dump_time_window = ("{}-{}".format(config.STARTING_YEAR, "%02d" % config.STARTING_MONTH), 
                     "{}-{}".format(config.ENDING_YEAR, "%02d" % config.ENDING_MONTH))
-
     date = datetime.utcnow().strftime("%Y-%m-%d")
     queries_html = 'Queries-%s-%s.html' % (uuid.uuid4(), date)
-
     context = {
         'users_df_time' : users_df_time,
         'recordings_df_time' : recordings_df_time,
@@ -172,3 +214,4 @@ def main():
         'total_time' : total_time
     }
     utils.save_html(queries_html, context, 'queries.html')
+    
