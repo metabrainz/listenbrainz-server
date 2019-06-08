@@ -17,7 +17,5 @@ if __name__ == '__main__':
             print("No path to MLHD dump specified!")
             sys.exit(-1)
         hdfs_upload.main(path)
-    elif sys.argv[1] == 'create_dataframe':
-        create_dataframe.main()
     elif sys.argv[1] == 'artist_popularity':
         artist_popularity.main()
