@@ -22,8 +22,15 @@ def get_artists(table):
 
     Returns:
         artists: A dict of dicts which can be depicted as:
-                {'user1' : {'artist_name' : 'xxxx', 'artist_msid' : 'xxxx',
-                    'artist_mbids' : 'xxxx', 'count' : 'xxxx'}, 'user2' : {...}}
+                {
+                    'user1': {
+                        'artist_name' : 'xxxx',
+                        'artist_msid' : 'xxxx',
+                        'artist_mbids' : 'xxxx',
+                        'count' : 'xxxx'
+                    },
+                    'user2' : {...}
+                }
     """
     t0 = time.time()
     query = run_query("""
@@ -59,11 +66,21 @@ def get_recordings(table):
 
     Returns:
         recordings: A dict of dicts which can be depicted as:
-                {'user1' : {'track_name' : 'xxxx', 'recording_msid' : 'xxxx',
-                    'recording_mbid' : 'xxxx', 'artist_name' : 'xxxx', 'artist_msid' :
-                    'xxxx', 'artist_mbids' : 'xxxx', 'release_name' : 'xxxx',
-                    'release_msid' : 'xxxx', 'release_mbid' : 'xxxx', 'count' : 'xxxx'},
-                     'user2' : {...}}
+                {
+                    'user1' : {
+                        'track_name' : 'xxxx',
+                        'recording_msid' : 'xxxx',
+                        'recording_mbid' : 'xxxx',
+                        'artist_name' : 'xxxx',
+                        'artist_msid' : 'xxxx',
+                        'artist_mbids' : 'xxxx',
+                        'release_name' : 'xxxx',
+                        'release_msid' : 'xxxx',
+                        'release_mbid' : 'xxxx',
+                        'count' : 'xxxx'
+                    },
+                    'user2' : {...},
+                }
     """
     t0 = time.time()
     query = run_query("""
@@ -112,9 +129,18 @@ def get_releases(table):
 
     Returns:
         artists: A dict of dicts which can be depicted as:
-                {'user1' : {'release_name' : 'xxxx', 'release_msid' : 'xxxx',
-                    'release_mbid' : 'xxxx', 'artist_name' : 'xxxx', 'artist_msdid' :
-                    'xxxx', 'artist_mbids' : 'xxxx', count' : 'xxxx'}, 'user2' : {...}}
+                {
+                    'user1' : {
+                        'release_name' : 'xxxx',
+                        'release_msid' : 'xxxx',
+                        'release_mbid' : 'xxxx',
+                        'artist_name' : 'xxxx',
+                        'artist_msid' : 'xxxx',
+                        'artist_mbids' : 'xxxx',
+                        'count' : 'xxxx'
+                    },
+                    'user2' : {...},
+                }
     """
     t0 = time.time()
     query = run_query("""
@@ -178,12 +204,17 @@ def main():
     query_t0 = time.time()
     print("DataFrame loaded and registered in %.2f s" % (query_t0 - t0))
 
+    # data : Nested dict which can be depicted as:
+    # {
+    #   'user1' : {
+    #       'artist' : {artists dict returned by func get_artists},
+    #       'recordings' : {recordings dict returned by func get_recordings},
+    #       'releases': {releases dict returned by func get_releasess},
+    #       'yearmonth' : 'date when the stats were calculated'
+    #   },
+    #   'user2' : {...}
+    # }
     data = defaultdict(dict)
-    #data : Nested dict which can be depicted as:
-            #{'user1' : {'artist' : {artists dict returned by func get_artists},
-            #'recordings' : {recordings dict returned by func get_recordings},
-            #'releases': {releases dict returned by func get_releasess}, 'yearmonth' :
-             #'date when the stats were calculated'}, 'user2' : {...}}
     try:
         artist_data = get_artists(table)
         for user_name, artist_stats in artist_data.items():
