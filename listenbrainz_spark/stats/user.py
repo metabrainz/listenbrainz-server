@@ -3,6 +3,7 @@ import listenbrainz_spark
 import time
 import json
 import logging
+import pika
 
 from collections import defaultdict
 from listenbrainz_spark.stats_writer.stats_writer import StatsWriter
@@ -10,6 +11,8 @@ from listenbrainz_spark import config
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats import date_for_stats_calculation
 from datetime import datetime
+from pyspark.sql.utils import AnalysisException
+from py4j.protocol import Py4JJavaError
 
 def get_artists(table):
     """
@@ -187,10 +190,10 @@ def main():
         logging.error("Cannot initialize spark session: %s / %s. Aborting." % (type(err).__name__, str(err)))
         sys.exit(-1)
     date = date_for_stats_calculation()
+    logging.info("Loading dataframe...")
     try:
         df = listenbrainz_spark.sql_context.read.parquet('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, date.year, date.month))
-        print("Loading dataframe...")
-    except Exception as err:
+    except AnalysisException as err:
         logging.error("Cannot read files from HDFS: %s / %s. Aborting." % (type(err).__name__, str(err)))
         sys.exit(-1)
     df.printSchema()
@@ -198,11 +201,11 @@ def main():
     table = 'listens_{}'.format(datetime.strftime(date, '%Y_%m'))
     try:
         df.registerTempTable(table)
-    except Exception as err:
+    except AnalysisException as err:
         logging.error("Cannot register dataframe: %s / %s. Aborting..." % (type(err).__name__, str(err)))
         sys.exit(-1)
     query_t0 = time.time()
-    print("DataFrame loaded and registered in %.2f s" % (query_t0 - t0))
+    logging.info("DataFrame loaded and registered in %.2f s" % (query_t0 - t0))
 
     # data : Nested dict which can be depicted as:
     # {
@@ -217,30 +220,32 @@ def main():
     data = defaultdict(dict)
     try:
         artist_data = get_artists(table)
-        for user_name, artist_stats in artist_data.items():
-            data[user_name]['artists'] = {
-                'artist_stats': artist_stats,
-                'artist_count': len(artist_stats),
-            }
-    except Exception as err:
-        logging.error("Problem in parsing artist data: %s / %s. Aborting..." % (type(err).__name__, str(err)))
+    except Py4JJavaError as err:
+        logging.error("Problem in getting artist data: %s / %s. Aborting..." % (type(err).__name__, str(err)))
         sys.exit(-1)
 
+    for user_name, artist_stats in artist_data.items():
+        data[user_name]['artists'] = {
+            'artist_stats': artist_stats,
+            'artist_count': len(artist_stats),
+        }
     try:
         recording_data = get_recordings(table)
-        for user_name, recording_stats in recording_data.items():
-            data[user_name]['recordings'] = recording_stats
-    except Exception as err:
-        logging.error("Problem in parsing recording data: %s / %s. Aborting..." % (type(err).__name__, str(err)))
+    except Py4JJavaError as err:
+        logging.error("Problem in getting recording data: %s / %s. Aborting..." % (type(err).__name__, str(err)))
         sys.exit(-1)
+
+    for user_name, recording_stats in recording_data.items():
+        data[user_name]['recordings'] = recording_stats
 
     try:
         release_data = get_releases(table)
-        for user_name, release_stats in release_data.items():
-            data[user_name]['releases'] = release_stats
-    except Exception as err:
+    except Py4JJavaError as err:
         logging.error("Problem in parsing release data: %s / %s. Aborting..." % (type(err).__name__, str(err)))
         sys.exit(-1)
+
+    for user_name, release_stats in release_data.items():
+        data[user_name]['releases'] = release_stats
 
     rabbbitmq_conn_obj = StatsWriter()
     yearmonth = datetime.strftime(date, '%Y-%m')
@@ -252,7 +257,7 @@ def main():
         }
         try:
             rabbbitmq_conn_obj.start(rabbitmq_data)
-            print("Statistics of %s pushed to rabbitmq" % (user_name))
+            logging.info("Statistics of %s pushed to rabbitmq" % (user_name))
         except pika.exceptions.ConnectionClosed:
             logging.error("Connection to rabbitmq closed while trying to publish: Statistics of %s not published" % (user_name))
             continue
