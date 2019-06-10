@@ -5,12 +5,12 @@ if [ "$#" -eq 0 ]; then
     exit
 fi
 
-docker stop listenbrainz-jobs-param
-docker rm listenbrainz-jobs-param
+docker stop listenbrainz-jobs
+docker rm listenbrainz-jobs
 docker pull metabrainz/listenbrainz-spark:latest
 docker run \
     -v `pwd`:/rec \
     --network spark-network \
-    --name listenbrainz-jobs-param \
+    --name listenbrainz-jobs \
     metabrainz/listenbrainz-spark:latest \
     "$@"

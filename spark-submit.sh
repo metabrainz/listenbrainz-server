@@ -9,4 +9,3 @@ time ./run.sh /usr/local/spark/bin/spark-submit \
 	--driver-memory=6g \
 	--py-files listenbrainz_spark.zip \
 	"$@"
-
