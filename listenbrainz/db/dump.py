@@ -343,6 +343,7 @@ def get_dump_entries():
 
         return [dict(row) for row in result]
 
+
 def get_dump_entry(dump_id):
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
@@ -355,6 +356,7 @@ def get_dump_entry(dump_id):
         if result.rowcount > 0:
             return dict(result.fetchone())
         return None
+
 
 def import_postgres_dump(private_dump_archive_path=None, public_dump_archive_path=None, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Imports postgres dump created by dump_postgres_db present at location.

@@ -33,7 +33,15 @@ source admin/functions.sh
 
 TEMP_DIR="/home/listenbrainz/data/dumps"
 
-/usr/local/bin/python manage.py dump create -l $TEMP_DIR -t $DUMP_THREADS
+DUMP_TYPE=${1:-full}
+if [ $DUMP_TYPE == "full" ]; then
+    /usr/local/bin/python manage.py dump create_full -l $TEMP_DIR -t $DUMP_THREADS --last-dump-id
+elif [ $DUMP_TYPE == "incremental"] then
+    /usr/local/bin/python manage.py dump create_incremental -l $TEMP_DIR -t $DUMP_THREADS
+else
+    echo "Not sure what type of dump to create, exiting!"
+    exit 1
+fi
 
 DUMP_NAME=`ls $TEMP_DIR | sort -r | head -1`
 DUMP_TIMESTAMP=`echo $DUMP_NAME | awk -F '-' '{ printf "%s-%s", $3, $4 }'`
