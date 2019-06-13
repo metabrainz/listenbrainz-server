@@ -26,7 +26,7 @@ CREATE TABLE recording (
   id         SERIAL,
   gid        UUID    NOT NULL,
   data       INTEGER NOT NULL, -- FK to recording_json.id
-  artist     UUID    NOT NULL, -- FK to artist.gid
+  artist     UUID    NOT NULL, -- FK to artist_credit.gid
   release    UUID,             -- FK to release.gid
   submitted  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -46,7 +46,7 @@ ALTER TABLE recording_cluster ADD CONSTRAINT recording_cluster_uniq UNIQUE (clus
 
 CREATE TABLE recording_json (
   id          SERIAL,
-  data        JSON     NOT NULL,
+  data        JSONB    NOT NULL,
   data_sha256 CHAR(64) NOT NULL,
   meta_sha256 CHAR(64) NOT NULL
 );
