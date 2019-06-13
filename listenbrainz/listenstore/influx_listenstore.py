@@ -379,7 +379,7 @@ class InfluxListenStore(ListenStore):
         return listens
 
 
-    def get_listens_batch_for_dump(self, username, dump_time, offset):
+    def get_listens_batch_for_dump(self, username, end_time, offset):
         # loop until we get this chunk of listens
         while True:
             try:
@@ -392,13 +392,37 @@ class InfluxListenStore(ListenStore):
                     OFFSET {offset}
                 """.format(
                     measurement=get_escaped_measurement_name(username),
-                    timestamp=get_influx_query_timestamp(dump_time.strftime('%s')),
+                    timestamp=get_influx_query_timestamp(end_time.strftime('%s')),
                     limit=DUMP_CHUNK_SIZE,
                     offset=offset,
                 ))
             except Exception as e:
                 self.log.error('Error while getting listens to dump for user %s: %s', username, str(e), exc_info=True)
                 time.sleep(3)
+
+
+    def get_incremental_listens_batch(self, username, start_time, end_time, offset):
+        # loop until we get this chunk of listens
+        while True:
+            try:
+                return self.influx.query("""
+                    SELECT *
+                      FROM {measurement}
+                     WHERE inserted_timestamp > {start_timestamp}
+                       AND inserted_timestamp <= {end_timestamp}
+                  ORDER BY time DESC
+                     LIMIT {limit}
+                    OFFSET {offset}
+                """.format(
+                    measurement=get_escaped_measurement_name(username),
+                    start_timestamp=int(start_time.strftime('%s')),
+                    end_timestamp=int(end_time.strftime('%s')),
+                    limit=DUMP_CHUNK_SIZE,
+                    offset=offset,
+                ))
+            except Exception as e:
+                self.log.error('Error while getting listens to dump for user %s: %s', username, str(e), exc_info=True)
+                raise
 
 
     def write_spark_listens_to_disk(self, unwritten_listens, temp_dir):
@@ -415,7 +439,8 @@ class InfluxListenStore(ListenStore):
                     f.write('\n'.join([ujson.dumps(listen) for listen in unwritten_listens[year][month]]))
                     f.write('\n')
 
-    def dump_user_for_spark(self, username, dump_time, temp_dir):
+
+    def dump_user_for_spark(self, username, start_time, end_time, temp_dir):
         t0 = time.time()
         offset = 0
         listen_count = 0
@@ -423,7 +448,10 @@ class InfluxListenStore(ListenStore):
         unwritten_listens = {}
 
         while True:
-            result = self.get_listens_batch_for_dump(username, dump_time, offset)
+            if start_time == datetime.utcfromtimestamp(0):
+                result = self.get_listens_batch_for_dump(username, end_time, offset)
+            else:
+                result = self.get_incremental_listens_batch(username, start_time, end_time, offset)
             rows_added = 0
             for row in result.get_points(get_measurement_name(username)):
                 listen = convert_influx_row_to_spark_row(row)
@@ -447,14 +475,13 @@ class InfluxListenStore(ListenStore):
         self.log.info("%d listens for user %s dumped at %.2f listens / sec", listen_count, username, listen_count / (time.time() - t0))
 
 
-    def dump_user(self, username, fileobj, dump_time):
+    def dump_user(self, username, fileobj, start_time, end_time):
         """ Dump specified user's listens into specified file object.
 
         Args:
             username (str): the MusicBrainz ID of the user whose listens are to be dumped
             fileobj (file): the file into which listens should be written
-            dump_time (datetime): the time at which the specific data dump was initiated
-            spark_format (bool): dump files in Apache Spark friendly format if True, else full dumps
+            start_time and end_time (datetime): the range of time for which listens are to be dumped
 
         Returns:
             int: the number of bytes this user's listens take in the dump file
@@ -466,7 +493,11 @@ class InfluxListenStore(ListenStore):
 
         # Get this user's listens in chunks
         while True:
-            result = self.get_listens_batch_for_dump(username, dump_time, offset)
+            if start_time == datetime.utcfromtimestamp(0):
+                result = self.get_listens_batch_for_dump(username, end_time, offset)
+            else:
+                result = self.get_incremental_listens_batch(username, start_time, end_time, offset)
+
             rows_added = 0
             for row in result.get_points(get_measurement_name(username)):
                 listen = Listen.from_influx(row).to_api()
@@ -496,14 +527,27 @@ class InfluxListenStore(ListenStore):
         # hence return bytes_written - 1 as the size in the dump for this user
         return bytes_written - 1
 
-    def write_dump_metadata(self, archive_name, dump_time, temp_dir, tar):
+
+    def write_dump_metadata(self, archive_name, start_time, end_time, temp_dir, tar, full_dump=True):
         try:
-            # add timestamp
-            timestamp_path = os.path.join(temp_dir, 'TIMESTAMP')
-            with open(timestamp_path, 'w') as f:
-                f.write(dump_time.isoformat(' '))
-            tar.add(timestamp_path,
-                    arcname=os.path.join(archive_name, 'TIMESTAMP'))
+            if full_dump:
+                # add timestamp
+                timestamp_path = os.path.join(temp_dir, 'TIMESTAMP')
+                with open(timestamp_path, 'w') as f:
+                    f.write(end_time.isoformat(' '))
+                tar.add(timestamp_path,
+                        arcname=os.path.join(archive_name, 'TIMESTAMP'))
+            else:
+                start_timestamp_path = os.path.join(temp_dir, 'START_TIMESTAMP')
+                with open(start_timestamp_path, 'w') as f:
+                    f.write(start_time.isoformat(' '))
+                tar.add(start_timestamp_path,
+                        arcname=os.path.join(archive_name, 'START_TIMESTAMP'))
+                end_timestamp_path = os.path.join(temp_dir, 'END_TIMESTAMP')
+                with open(end_timestamp_path, 'w') as f:
+                    f.write(end_time.isoformat(' '))
+                tar.add(end_timestamp_path,
+                        arcname=os.path.join(archive_name, 'END_TIMESTAMP'))
 
             # add schema version
             schema_version_path = os.path.join(temp_dir, 'SCHEMA_SEQUENCE')
@@ -524,7 +568,7 @@ class InfluxListenStore(ListenStore):
             raise
 
 
-    def write_listens_full(self, listens_path, users, dump_time):
+    def write_listens_to_dump(self, listens_path, users, start_time, end_time):
         dump_complete = False
         next_user_id = 0
         index = {}
@@ -543,7 +587,7 @@ class InfluxListenStore(ListenStore):
 
                     username = users[next_user_id]['musicbrainz_id']
                     offset = f.tell()
-                    size = self.dump_user(username=username, fileobj=f, dump_time=dump_time)
+                    size = self.dump_user(username=username, fileobj=f, start_time=start_time, end_time=end_time)
                     index[username] = {
                         'file_name': file_name,
                         'offset': offset,
@@ -561,9 +605,11 @@ class InfluxListenStore(ListenStore):
 
         return index
 
-    def write_listens_for_spark(self, listens_path, users, dump_time):
+
+    def write_listens_for_spark(self, listens_path, users, start_time, end_time):
         for user in users:
-            self.dump_user_for_spark(user['musicbrainz_id'], dump_time, listens_path)
+            self.dump_user_for_spark(user['musicbrainz_id'], start_time, end_time, listens_path)
+
 
     def write_dump_index_file(self, index, temp_dir, tar, archive_name):
         # add index.json file to the archive
@@ -581,8 +627,8 @@ class InfluxListenStore(ListenStore):
             raise
 
 
-
-    def dump_listens(self, location, dump_time=datetime.today(), threads=DUMP_DEFAULT_THREAD_COUNT, spark_format=False):
+    def dump_listens(self, location, dump_id, start_time=datetime.utcfromtimestamp(0), end_time=datetime.now(),
+            threads=DUMP_DEFAULT_THREAD_COUNT, spark_format=False):
         """ Dumps all listens in the ListenStore into a .tar.xz archive.
 
         Files are created with UUIDs as names. Each file can contain listens for a number of users.
@@ -590,7 +636,9 @@ class InfluxListenStore(ListenStore):
 
         Args:
             location: the directory where the listens dump archive should be created
-            dump_time (datetime): the time at which the data dump was started
+            dump_id (int): the ID of the dump in the dump sequence
+            start_time and end_time (datetime): the time range for which listens should be dumped
+                start_time defaults to utc 0 (meaning a full dump) and end_time defaults to the current time
             threads (int): the number of threads to user for compression
             spark_format (bool): dump files in Apache Spark friendly format if True, else full dumps
 
@@ -604,9 +652,19 @@ class InfluxListenStore(ListenStore):
         users = db_user.get_all_users(columns=['id', 'musicbrainz_id'])
         self.log.info('Total number of users: %d', len(users))
 
-        archive_name = 'listenbrainz-listens-dump-{time}'.format(time=dump_time.strftime('%Y%m%d-%H%M%S'))
+        if start_time == datetime.utcfromtimestamp(0):
+            full_dump = True
+        else:
+            full_dump = False
+
+        archive_name = 'listenbrainz-listens-dump-{dump_id}-{time}'.format(dump_id=dump_id, time=end_time.strftime('%Y%m%d-%H%M%S'))
         if spark_format:
             archive_name = '{}-spark'.format(archive_name)
+
+        if full_dump:
+            archive_name = '{}-full'.format(archive_name)
+        else:
+            archive_name = '{}-incremental'.format(archive_name)
         archive_path = os.path.join(location, '{filename}.tar.xz'.format(filename=archive_name))
         with open(archive_path, 'w') as archive:
 
@@ -616,13 +674,13 @@ class InfluxListenStore(ListenStore):
             with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
 
                 temp_dir = tempfile.mkdtemp()
-                self.write_dump_metadata(archive_name, dump_time, temp_dir, tar)
+                self.write_dump_metadata(archive_name, start_time, end_time, temp_dir, tar, full_dump)
 
                 listens_path = os.path.join(temp_dir, 'listens')
                 if spark_format:
-                    self.write_listens_for_spark(listens_path, users, dump_time)
+                    self.write_listens_for_spark(listens_path, users, start_time, end_time)
                 else:
-                    index = self.write_listens_full(listens_path, users, dump_time)
+                    index = self.write_listens_to_dump(listens_path, users, start_time, end_time)
                     self.write_dump_index_file(index, temp_dir, tar, archive_name)
 
 
