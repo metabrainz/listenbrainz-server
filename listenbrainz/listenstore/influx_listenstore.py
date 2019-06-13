@@ -380,7 +380,12 @@ class InfluxListenStore(ListenStore):
 
 
     def get_listens_batch_for_dump(self, username, end_time, offset):
-        # loop until we get this chunk of listens
+        """ Get a batch of listens for the full dump.
+
+        This does not query the `inserted_timestamp` field because not all of the listens
+        in the production database have them, so for full dumps this query needs to be independent
+        of the the `inserted_timestamp` key.
+        """
         while True:
             try:
                 return self.influx.query("""
@@ -402,7 +407,10 @@ class InfluxListenStore(ListenStore):
 
 
     def get_incremental_listens_batch(self, username, start_time, end_time, offset):
-        # loop until we get this chunk of listens
+        """ Get a batch of listens for an incremental listen dump.
+
+        This uses the `inserted_timestamp` field to get listens.
+        """
         while True:
             try:
                 return self.influx.query("""
@@ -425,7 +433,13 @@ class InfluxListenStore(ListenStore):
                 raise
 
 
-    def write_spark_listens_to_disk(self, unwritten_listens, temp_dir):
+    def write_spark_listens_to_disk(self, listens, temp_dir):
+        """ Write all spark listens in year/month dir format to disk.
+
+        Args:
+            listens : the listens to be written into the disk
+            temp_dir: the dir into which listens should be written
+        """
         for year in unwritten_listens:
             for month in unwritten_listens[year]:
                 if year < 2002:
@@ -441,6 +455,13 @@ class InfluxListenStore(ListenStore):
 
 
     def dump_user_for_spark(self, username, start_time, end_time, temp_dir):
+        """ Dump listens for a particular user in the format for the ListenBrainz spark dump.
+
+        Args:
+            username (str): the MusicBrainz ID of the user
+            start_time and end_time (datetime): the range of time for the listens dump.
+            temp_dir (str): the dir to use to write files before adding to archive
+        """
         t0 = time.time()
         offset = 0
         listen_count = 0
@@ -448,7 +469,7 @@ class InfluxListenStore(ListenStore):
         unwritten_listens = {}
 
         while True:
-            if start_time == datetime.utcfromtimestamp(0):
+            if start_time == datetime.utcfromtimestamp(0): # if we need a full dump
                 result = self.get_listens_batch_for_dump(username, end_time, offset)
             else:
                 result = self.get_incremental_listens_batch(username, start_time, end_time, offset)
@@ -529,6 +550,15 @@ class InfluxListenStore(ListenStore):
 
 
     def write_dump_metadata(self, archive_name, start_time, end_time, temp_dir, tar, full_dump=True):
+        """ Write metadata files (schema version, timestamps, license) into the dump archive.
+
+        Args:
+            archive_name: the name of the archive
+            start_time and end_time: the time range of the dump
+            temp_dir: the directory to use for writing files before addition into the archive
+            tar (TarFile object): The tar file to add the files into
+            full_dump (bool): flag to specify whether the archive is a full dump or an incremental dump
+        """
         try:
             if full_dump:
                 # add timestamp
@@ -569,6 +599,13 @@ class InfluxListenStore(ListenStore):
 
 
     def write_listens_to_dump(self, listens_path, users, start_time, end_time):
+        """ Write listens into the ListenBrainz dump.
+
+        Args:
+            listens_path (str): the path where listens should be kept before adding to the archive
+            users (List[dict]): a list of all users
+            start_time and end_time: the range of time for which listens are to be dumped
+        """
         dump_complete = False
         next_user_id = 0
         index = {}
@@ -607,12 +644,28 @@ class InfluxListenStore(ListenStore):
 
 
     def write_listens_for_spark(self, listens_path, users, start_time, end_time):
+        """ Write listens into the ListenBrainz spark dump.
+
+        This is different from `write_listens_to_dump` because of the different format.
+
+        Args:
+            listens_path (str): the path where listens should be written before adding to the archive
+            users (List[dict]): A list of all users
+            start_time and end_time: the range of time for which listens are to be dumped
+        """
         for user in users:
             self.dump_user_for_spark(user['musicbrainz_id'], start_time, end_time, listens_path)
 
 
     def write_dump_index_file(self, index, temp_dir, tar, archive_name):
-        # add index.json file to the archive
+        """ Writes the ListenBrainz dump index file and adds it to the archive.
+
+        Args:
+            index (dict): the index to be written into the dump
+            temp_dir (str): the temp dir where all files should be created initially
+            tar (TarFile): the tarfile object into which the index file should be added
+            archive_name (str): the name of the dump archive
+        """
         try:
             index_path = os.path.join(temp_dir, 'index.json')
             with open(index_path, 'w') as f:
@@ -633,6 +686,9 @@ class InfluxListenStore(ListenStore):
 
         Files are created with UUIDs as names. Each file can contain listens for a number of users.
         An index.json file is used to save which file contains the listens of which users.
+
+        This creates an incremental dump if start_time is specified (with range start_time to end_time),
+        otherwise it creates a full dump with all listens.
 
         Args:
             location: the directory where the listens dump archive should be created
