@@ -48,7 +48,8 @@ cli = click.Group()
 @click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'))
 @click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
 @click.option('--dump-id', type=int, default=None)
-def create_full(location, threads, dump_id):
+@click.option('--last-dump-id', is_flag=True)
+def create_full(location, threads, dump_id, last_dump_id):
     """ Create a ListenBrainz data dump which includes a private dump, a statistics dump
         and a dump of the actual listens from InfluxDB
 
@@ -56,6 +57,7 @@ def create_full(location, threads, dump_id):
             location (str): path to the directory where the dump should be made
             threads (int): the number of threads to be used while compression
             dump_id (int): the ID of the ListenBrainz data dump
+            last_dump_id (bool): flag indicating whether to create a full dump from the last entry in the dump table
     """
     app = create_app()
     with app.app_context():
@@ -67,6 +69,13 @@ def create_full(location, threads, dump_id):
             'INFLUX_PORT': current_app.config['INFLUX_PORT'],
             'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
         })
+
+        if last_dump_id:
+            all_dumps = db_dump.get_dump_entries()
+            if len(all_dumps) == 0:
+                current_app.logger.error("Cannot create full dump with last dump's ID, no dump exists!")
+                sys.exit(-1)
+            dump_id = all_dumps[0]['id']
 
         if dump_id is None:
             end_time = datetime.now()
