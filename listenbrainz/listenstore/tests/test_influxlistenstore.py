@@ -165,8 +165,41 @@ class TestInfluxListenStore(DatabaseTestCase):
         temp_dir = tempfile.mkdtemp()
         dump = self.logstore.dump_listens(
             location=temp_dir,
+            dump_id=1,
         )
         self.assertTrue(os.path.isfile(dump))
+
+    def test_incremental_dump(self):
+        """ Dump and import listens
+        """
+        listens = generate_data(1, self.testuser_name, 1, 5) # generate 5 listens with ts 1-5
+        self.logstore.insert(listens)
+        sleep(1)
+        start_time = datetime.now()
+        sleep(1)
+        listens = generate_data(1, self.testuser_name, 6, 5) # generate 5 listens with ts 6-10
+        self.logstore.insert(listens)
+        sleep(1)
+        temp_dir = tempfile.mkdtemp()
+        dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            start_time=start_time,
+            end_time=datetime.now(),
+        )
+        sleep(1)
+        self.assertTrue(os.path.isfile(dump_location))
+        self.reset_influx_db()
+        sleep(1)
+        self.logstore.import_listens_dump(dump_location)
+        sleep(1)
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
+        self.assertEqual(len(listens), 5)
+        self.assertEqual(listens[0].ts_since_epoch, 10)
+        self.assertEqual(listens[1].ts_since_epoch, 9)
+        self.assertEqual(listens[2].ts_since_epoch, 8)
+        self.assertEqual(listens[3].ts_since_epoch, 7)
+        self.assertEqual(listens[4].ts_since_epoch, 6)
 
 
     def test_import_listens(self):
@@ -175,6 +208,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         temp_dir = tempfile.mkdtemp()
         dump_location = self.logstore.dump_listens(
             location=temp_dir,
+            dump_id=1,
         )
         sleep(1)
         self.assertTrue(os.path.isfile(dump_location))
@@ -201,6 +235,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         temp_dir = tempfile.mkdtemp()
         dump_location = self.logstore.dump_listens(
             location=temp_dir,
+            dump_id=1,
         )
         sleep(1)
         self.assertTrue(os.path.isfile(dump_location))
@@ -234,6 +269,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         temp_dir = tempfile.mkdtemp()
         dump_location = self.logstore.dump_listens(
             location=temp_dir,
+            dump_id=1,
         )
         sleep(1)
         self.assertTrue(os.path.isfile(dump_location))
