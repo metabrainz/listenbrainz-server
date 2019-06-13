@@ -653,8 +653,9 @@ class InfluxListenStore(ListenStore):
             users (List[dict]): A list of all users
             start_time and end_time: the range of time for which listens are to be dumped
         """
-        for user in users:
+        for i, user in enumerate(users):
             self.dump_user_for_spark(user['musicbrainz_id'], start_time, end_time, listens_path)
+            self.log.info("%d users done. Total: %d", i + 1, len(users))
 
 
     def write_dump_index_file(self, index, temp_dir, tar, archive_name):
