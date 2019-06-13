@@ -1,4 +1,7 @@
 """ This module contains data dump creation and import functions.
+
+Read more about the data dumps in our documentation here:
+https://listenbrainz.readthedocs.io/en/production/dev/listenbrainz-dumps.html
 """
 
 # listenbrainz-server - Server for the ListenBrainz project
