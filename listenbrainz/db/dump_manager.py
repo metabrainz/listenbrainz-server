@@ -39,7 +39,8 @@ from listenbrainz.webserver import create_app
 from listenbrainz.webserver.influx_connection import init_influx_connection
 
 
-NUMBER_OF_DUMPS_TO_KEEP = 2
+NUMBER_OF_FULL_DUMPS_TO_KEEP = 2
+NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP = 6
 
 cli = click.Group()
 
@@ -237,19 +238,29 @@ def _cleanup_dumps(location):
     Returns:
         (int, int): the number of dumps remaining, the number of dumps deleted
     """
-    dump_re = re.compile('listenbrainz-dump-[0-9]*-[0-9]*')
-    dumps = [x for x in sorted(os.listdir(location), reverse=True) if dump_re.match(x)]
-    if not dumps:
-        print('No dumps present in specified directory!')
-        return
+    full_dump_re = re.compile('listenbrainz-dump-[0-9]*-[0-9]*-[0-9]*-full')
+    full_dumps = [x for x in sorted(os.listdir(location), reverse=True) if full_dump_re.match(x)]
+    if not full_dumps:
+        print('No full dumps present in specified directory!')
+    else:
+        remove_dumps(location, full_dumps, NUMBER_OF_FULL_DUMPS_TO_KEEP)
 
-    keep = dumps[0:NUMBER_OF_DUMPS_TO_KEEP]
+    incremental_dump_re = re.compile('listenbrainz-dump-[0-9]*-[0-9]*-[0-9]*-incremental')
+    incremental_dumps = [x for x in sorted(os.listdir(location), reverse=True) if incremental_dump_re.match(x)]
+    if not incremental_dumps:
+        print('No full dumps present in specified directory!')
+    else:
+        remove_dumps(location, incremental_dumps, NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP)
+
+
+def remove_dumps(location, dumps, remaining_count):
+    keep = dumps[0:remaining_count]
     keep_count = 0
     for dump in keep:
         print('Keeping %s...' % dump)
         keep_count += 1
 
-    remove = dumps[NUMBER_OF_DUMPS_TO_KEEP:]
+    remove = dumps[remaining_count:]
     remove_count = 0
     for dump in remove:
         print('Removing %s...' % dump)
