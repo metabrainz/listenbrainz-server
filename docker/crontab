@@ -5,5 +5,8 @@ GOOGLE_APPLICATION_CREDENTIALS=/code/listenbrainz/credentials/bigquery-credentia
 # Statistics calculation via Google BigQuery
 0 0 * * 1 /usr/local/bin/python /code/listenbrainz/manage.py stats populate_queue>> /var/log/stats.log 2>&1
 
-# Data dumps creation for backup and public use
-4 0 1,15 * * /code/listenbrainz/admin/create-dumps.sh >> /var/log/dump_create.log 2>&1
+# Full Data dumps creation for backup and public use
+00 12 1,15 * * /code/listenbrainz/admin/create-dumps.sh full >> /var/log/dump_create.log 2>&1
+
+# Incremental listen data dumps at 00:00 every Sunday
+00 00 * * 0 /code/listenbrainz/admin/create-dumps.sh incrementeal >> /var/log/dump_create.log 2>&1
