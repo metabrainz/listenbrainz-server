@@ -1,5 +1,6 @@
 click==6.2
 hetznercloud==1.1.1
-hdfs==2.1.0
+hdfs == 2.1.0
+Jinja2 == 2.10
 pika==0.13.0
 python-dateutil==2.8.0

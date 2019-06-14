@@ -13,8 +13,8 @@ from datetime import datetime
 
 def get_artists(table):
     """
-    Get artists information (artist_name, artist_msid etc) for every user 
-    ordered by listen count (number of times a user has listened to tracks 
+    Get artists information (artist_name, artist_msid etc) for every user
+    ordered by listen count (number of times a user has listened to tracks
     which belong to a particular artist).
 
     Args:
@@ -60,8 +60,8 @@ def get_recordings(table):
     Returns:
         recordings: A dict of dicts which can be depicted as:
                 {'user1' : {'track_name' : 'xxxx', 'recording_msid' : 'xxxx',
-                    'recording_mbid' : 'xxxx', 'artist_name' : 'xxxx', 'artist_msid' : 
-                    'xxxx', 'artist_mbids' : 'xxxx', 'release_name' : 'xxxx', 
+                    'recording_mbid' : 'xxxx', 'artist_name' : 'xxxx', 'artist_msid' :
+                    'xxxx', 'artist_mbids' : 'xxxx', 'release_name' : 'xxxx',
                     'release_msid' : 'xxxx', 'release_mbid' : 'xxxx', 'count' : 'xxxx'},
                      'user2' : {...}}
     """
@@ -79,7 +79,7 @@ def get_recordings(table):
                  , release_mbid
                  , count(recording_msid) as cnt
               FROM %s
-          GROUP BY user_name, track_name, recording_msid, recording_mbid, artist_name, artist_msid, 
+          GROUP BY user_name, track_name, recording_msid, recording_mbid, artist_name, artist_msid,
                 artist_mbids, release_name, release_msid, release_mbid
           ORDER BY cnt DESC
         """ % (table))
@@ -104,7 +104,7 @@ def get_recordings(table):
 def get_releases(table):
     """
     Get releases information (release_name, release_mbid etc) for every user
-    ordered by listen count (number of times a user has listened to tracks 
+    ordered by listen count (number of times a user has listened to tracks
     which belong to a particular release).
 
     Args:
@@ -113,7 +113,7 @@ def get_releases(table):
     Returns:
         artists: A dict of dicts which can be depicted as:
                 {'user1' : {'release_name' : 'xxxx', 'release_msid' : 'xxxx',
-                    'release_mbid' : 'xxxx', 'artist_name' : 'xxxx', 'artist_msdid' : 
+                    'release_mbid' : 'xxxx', 'artist_name' : 'xxxx', 'artist_msdid' :
                     'xxxx', 'artist_mbids' : 'xxxx', count' : 'xxxx'}, 'user2' : {...}}
     """
     t0 = time.time()
@@ -145,7 +145,7 @@ def get_releases(table):
     print("Query to calculate release stats processed in %.2f s" % (time.time() - t0))
     return releases
 
-def main(app_name):
+def main():
     """
     Calculate statistics of users for previous month.
 
@@ -156,7 +156,7 @@ def main(app_name):
     """
     t0 = time.time()
     try:
-        listenbrainz_spark.init_spark_session(app_name)
+        listenbrainz_spark.init_spark_session('user')
     except Exception as err:
         logging.error("Cannot initialize spark session: %s / %s. Aborting." % (type(err).__name__, str(err)))
         sys.exit(-1)
@@ -181,9 +181,9 @@ def main(app_name):
     data = defaultdict(dict)
     #data : Nested dict which can be depicted as:
             #{'user1' : {'artist' : {artists dict returned by func get_artists},
-            #'recordings' : {recordings dict returned by func get_recordings}, 
-            #'releases': {releases dict returned by func get_releasess}, 'yearmonth' : 
-             #'date when the stats were calculated'}, 'user2' : {...}} 
+            #'recordings' : {recordings dict returned by func get_recordings},
+            #'releases': {releases dict returned by func get_releasess}, 'yearmonth' :
+             #'date when the stats were calculated'}, 'user2' : {...}}
     try:
         artist_data = get_artists(table)
         for user_name, artist_stats in artist_data.items():
@@ -227,4 +227,4 @@ def main(app_name):
             continue
         except Exception as err:
             logging.error("Cannot publish statistics of %s to rabbitmq channel: %s / %s." % (user_name, type(err).__name__, str(err)), exc_info=True)
-            continue    
+            continue
