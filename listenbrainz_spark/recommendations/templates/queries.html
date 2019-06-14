@@ -98,7 +98,7 @@ td, th {
 		<p>spark.driver.maxResultSize: 2GB</p>
 	</blockquote>
 	<p>Collaborative filtering is commonly used for recommender systems. This technique aims to fill in the missing entries of a user-item association matrix. Instead of using explicit preferences such as rating given by a user to an item, we use implicit feedback (number of times a track has been listened to by a user). The first step is to collect relevant data to be able to preprocess it. The sub steps of data collection are as follows: </p>
-	<p><i><b>Note: </b>Listens from <b>{{ lb_dump_time_window[0] }}</b> to <b>{{ lb_dump_time_window[1] }}</b> have been fed to the recommender system.</i></p>
+	<p><i><b>Note: </b>Listens from <b>{{ lb_dump_time_window[0] }}</b> to <b>{{ lb_dump_time_window[1] }}</b> have been fed to the recommender system from which listens of the following months are missing: <b>{{ missing_parquets }}</b></i></p>
 	<table>
 		<tr>
 			<th>users_df time (min)</th>
