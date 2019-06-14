@@ -31,7 +31,7 @@ DECLARE
     converted_array uuid[];
 BEGIN
     SELECT array_sort(array_agg(elements)::uuid[]) || ARRAY[]::uuid[] INTO converted_array
-    FROM json_array_elements_text($1) elements;
+    FROM jsonb_array_elements_text($1) elements;
     RETURN converted_array;
 END
 $converted_array$ LANGUAGE plpgsql IMMUTABLE;
