@@ -295,6 +295,7 @@ def validate_token():
             'code': 200,
             'message': 'Token valid.',
             'valid': True,
+            'user_name': user['musicbrainz_id'],
         })
 
 
