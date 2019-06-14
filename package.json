@@ -26,6 +26,7 @@
     "@fortawesome/free-solid-svg-icons": "^5.7.2",
     "@fortawesome/react-fontawesome": "^0.1.4",
     "less": "^2.7.2",
+    "clean-css": "^4.2.1",
     "less-plugin-clean-css": "^1.5.1",
     "lodash": "^4.17.11",
     "react": "^16.7.0",
