@@ -52,9 +52,6 @@ class InfluxListenStore(ListenStore):
         # Initialize brainzutils cache
         init_cache(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], namespace=conf['REDIS_NAMESPACE'])
 
-    def query(self, query):
-        return self.influx.query(query)
-
     def get_listen_count_for_user(self, user_name, need_exact=False):
         """Get the total number of listens for a user. The number of listens comes from
            brainzutils cache unless an exact number is asked for.
