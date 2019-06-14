@@ -24,4 +24,3 @@ if __name__ == '__main__':
         recommend.main()
     elif module_name == 'user':
         user.main()
-=======
