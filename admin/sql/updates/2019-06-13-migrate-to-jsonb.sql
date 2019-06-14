@@ -25,7 +25,7 @@ BEGIN
 END
 $sorted_array$ LANGUAGE plpgsql IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION convert_json_array_to_sorted_uuid_array(json)
+CREATE OR REPLACE FUNCTION convert_json_array_to_sorted_uuid_array(jsonb)
 RETURNS uuid[] AS $converted_array$
 DECLARE
     converted_array uuid[];
@@ -36,7 +36,7 @@ BEGIN
 END
 $converted_array$ LANGUAGE plpgsql IMMUTABLE;
 
-CREATE INDEX artist_mbid_array_ndx_recording_json ON recording_json (convert_json_array_to_sorted_uuid_array((data -> 'artist_mbids')::JSON));
+CREATE INDEX artist_mbid_array_ndx_recording_json ON recording_json (convert_json_array_to_sorted_uuid_array((data -> 'artist_mbids')));
 CREATE INDEX recording_mbid_ndx_recording_json ON recording_json ((data ->> 'recording_mbid'));
 CREATE INDEX artist_mbid_ndx_recording_json ON recording_json ((data ->> 'artist_mbids'));
 CREATE INDEX release_mbid_ndx_recording_json ON recording_json ((data ->> 'release_mbid'));
