@@ -1,4 +1,6 @@
 import sys
+import logging
+
 from listenbrainz_spark.recommendations import create_dataframes
 from listenbrainz_spark.recommendations import train_models
 from listenbrainz_spark.recommendations import recommend
@@ -7,6 +9,10 @@ if __name__ == '__main__':
     if len(sys.argv) != 2:
         print("Usage: manage.py <module_name>")
         sys.exit(-1)
+
+    # The root logger always defaults to WARNING level
+    # The level is changed from WARNING to INFO
+    logging.getLogger().setLevel(logging.INFO)
 
     module_name = sys.argv[1]
     if module_name == 'create_dataframes':
