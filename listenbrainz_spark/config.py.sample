@@ -2,6 +2,7 @@ HDFS_HTTP_URI = 'http://hadoop-master:9870' # the URI of the http webclient for 
 
 HDFS_CLUSTER_URI = 'hdfs://hadoop-master:9000' # the URI to be used with Spark
 
+#rabbitmq
 RABBITMQ_HOST = "rabbitmq"
 RABBITMQ_PORT = 5672
 RABBITMQ_USERNAME = "guest"
@@ -11,11 +12,16 @@ MAXIMUM_RABBITMQ_CONNECTIONS = 100
 SPARK_EXCHANGE = "spark"
 SPARK_QUEUE = "spark"
 
-MAX_RETRIES = 5
-TIME_BEFORE_RETRIES = 4
+# train model
+RANKS = [8, 12]
+LAMBDAS = [0.1, 10.0]
+ITERATIONS = [10, 20]
 
+# create dataframes
 STARTING_MONTH = 1
 ENDING_MONTH = 12
-
 STARTING_YEAR = 2017
 ENDING_YEAR = 2019
+
+# number of recommendations to generate
+RECOMMENDATION_LIMIT = 50
