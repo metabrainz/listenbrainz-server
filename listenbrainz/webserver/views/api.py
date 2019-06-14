@@ -287,12 +287,14 @@ def validate_token():
     if user is None:
         return jsonify({
             'code': 200,
-            'message': 'Token invalid.'
+            'message': 'Token invalid.',
+            'valid': False,
         })
     else:
         return jsonify({
             'code': 200,
-            'message': 'Token valid.'
+            'message': 'Token valid.',
+            'valid': True,
         })
 
 
