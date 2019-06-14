@@ -3,6 +3,7 @@ version: "2"
 services:
   db:
     image: postgres:9.5.3
+    command: postgres -F
 
   messybrainz:
     build:
