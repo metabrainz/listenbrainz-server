@@ -1,11 +1,20 @@
 BEGIN;
 
+SET search_path TO public;
+
 ALTER TABLE recording DROP CONSTRAINT recording_fk_recording_json;
 
 ALTER TABLE recording_json RENAME TO recording_json_tofix;
 
+CREATE TABLE recording_json (
+  id          SERIAL,
+  data        JSONB    NOT NULL,
+  data_sha256 CHAR(64) NOT NULL,
+  meta_sha256 CHAR(64) NOT NULL
+);
+
+INSERT INTO recording_json
 SELECT id, regexp_replace(data::text, '\\u0000', '', 'g')::JSONB AS data, data_sha256, meta_sha256 
-  INTO recording_json 
   FROM recording_json_tofix;
 
 ALTER TABLE recording_json
@@ -13,6 +22,7 @@ ALTER TABLE recording_json
   SET DATA TYPE jsonb
   USING data::jsonb;
 
+ALTER TABLE recording_json_tofix DROP CONSTRAINT recording_json_pkey;
 ALTER TABLE recording_json ADD CONSTRAINT recording_json_pkey PRIMARY KEY (id);
 
 CREATE OR REPLACE FUNCTION array_sort(uuid[])
@@ -36,6 +46,8 @@ BEGIN
 END
 $converted_array$ LANGUAGE plpgsql IMMUTABLE;
 
+CREATE UNIQUE INDEX data_sha256_ndx_recording_json ON recording_json (data_sha256);
+CREATE INDEX meta_sha256_ndx_recording_json ON recording_json (meta_sha256);
 CREATE INDEX artist_mbid_array_ndx_recording_json ON recording_json (convert_json_array_to_sorted_uuid_array((data -> 'artist_mbids')::JSON));
 CREATE INDEX recording_mbid_ndx_recording_json ON recording_json ((data ->> 'recording_mbid'));
 CREATE INDEX artist_mbid_ndx_recording_json ON recording_json ((data ->> 'artist_mbids'));
