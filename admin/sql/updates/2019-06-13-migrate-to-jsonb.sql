@@ -3,7 +3,6 @@ BEGIN;
 SET search_path TO public;
 
 ALTER TABLE recording DROP CONSTRAINT recording_fk_recording_json;
-
 ALTER TABLE recording_json RENAME TO recording_json_tofix;
 
 CREATE TABLE recording_json (
@@ -35,13 +34,13 @@ BEGIN
 END
 $sorted_array$ LANGUAGE plpgsql IMMUTABLE;
 
-CREATE OR REPLACE FUNCTION convert_json_array_to_sorted_uuid_array(json)
+CREATE OR REPLACE FUNCTION convert_json_array_to_sorted_uuid_array(jsonb)
 RETURNS uuid[] AS $converted_array$
 DECLARE
     converted_array uuid[];
 BEGIN
     SELECT array_sort(array_agg(elements)::uuid[]) || ARRAY[]::uuid[] INTO converted_array
-    FROM json_array_elements_text($1) elements;
+    FROM jsonb_array_elements_text($1) elements;
     RETURN converted_array;
 END
 $converted_array$ LANGUAGE plpgsql IMMUTABLE;
