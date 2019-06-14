@@ -38,12 +38,13 @@ services:
   playground:
     build:
       context: ..
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
+      target: metabrainz-spark-dev
     command: sleep 1000000000
     volumes:
       - ..:/rec:z
 
 networks:
-    default:
-        external:
-            name: listenbrainz_default
+  default:
+    external:
+      name: listenbrainz_default

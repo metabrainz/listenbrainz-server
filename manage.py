@@ -1,6 +1,7 @@
 import sys
 import logging
 
+from listenbrainz_spark.stats import user
 from listenbrainz_spark.recommendations import create_dataframes
 from listenbrainz_spark.recommendations import train_models
 from listenbrainz_spark.recommendations import recommend
@@ -21,3 +22,6 @@ if __name__ == '__main__':
         train_models.main()
     elif module_name == 'recommend':
         recommend.main()
+    elif module_name == 'user':
+        user.main()
+=======
