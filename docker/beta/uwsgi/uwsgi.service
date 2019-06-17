@@ -2,6 +2,9 @@
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-web-beta" ]
 then
+    rm -f /etc/service/cron/down
+    sv restart cron
+
     exec uwsgi /etc/uwsgi/uwsgi.ini
 fi
 
