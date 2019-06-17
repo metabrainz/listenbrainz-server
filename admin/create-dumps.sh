@@ -43,7 +43,7 @@ fi
 
 if [ $DUMP_TYPE == "full" ]; then
     /usr/local/bin/python manage.py dump create_full -l $TEMP_DIR/$SUB_DIR -t $DUMP_THREADS --last-dump-id
-elif [ $DUMP_TYPE == "incremental"] then
+elif [ $DUMP_TYPE == "incremental"]; then
     /usr/local/bin/python manage.py dump create_incremental -l $TEMP_DIR/$SUB_DIR -t $DUMP_THREADS
 else
     echo "Not sure what type of dump to create, exiting!"
