@@ -1,5 +1,6 @@
 """ This script should be used to replay user listens to fix bad data.
 """
+import abc
 import json
 import uuid
 
@@ -11,15 +12,21 @@ from listenbrainz.webserver.influx_connection import init_influx_connection
 from listenbrainz.listenstore.influx_listenstore import DUMP_CHUNK_SIZE
 
 
-class UserReplayer:
+class UserReplayer(abc.ABC):
     def __init__(self, user_name):
         self.user_name = user_name
         self.max_time = datetime.now()
         self.app = create_app()
 
 
-    def filter_function(self, row):
-        return row
+    @abc.abstractmethod
+    def filter(self, row):
+        """ Modify row as needed by the subclass
+
+        Returns:
+            row (dict): modified row as needed
+                or None if row needs to be removed
+        """
 
 
     def convert_to_influx_insert_format(self, row, measurement):
