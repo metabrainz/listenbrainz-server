@@ -91,7 +91,3 @@ class UserReplayer:
             current_app.logger.info("Removing temporary measurement...")
             self.ls.delete(new_measurement_name)
             current_app.logger.info("Done!")
-
-
-if __name__ == '__main__':
-    UserReplayer('iliekcomputers').start()
