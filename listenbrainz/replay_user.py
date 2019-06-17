@@ -28,13 +28,14 @@ class UserReplayer:
             'time': convert_to_unix_timestamp(row['time']),
         }
 
-        if 'dedup_tag' in row:
-            data['tags'] = {'dedup_tag': row['dedup_tag']}
+        data['fields'] = row
+        data['fields'].pop('time')
 
-        data['fields'] = {}
-        for field in row:
-            if field != 'time' and field != 'dedup_tag':
-                data['fields'][field] = row[field]
+        try:
+            dedup_tag = data['fields'].pop('dedup_tag')
+            data['tags'] = {'dedup_tag': dedup_tag}
+        except KeyError:
+            pass # no dedup tag, don't need to do anything
 
         return data
 
