@@ -191,6 +191,8 @@ import listenbrainz.stats.populate as populate
 cli.add_command(populate.cli, name="stats")
 import listenbrainz.db.dump_manager as dump_manager
 cli.add_command(dump_manager.cli, name="dump")
+import listenbrainz.listen_replay.cli as listen_replay
+cli.add_command(listen_replay.cli, name="replay")
 
 
 if __name__ == '__main__':
