@@ -394,6 +394,8 @@ class APITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['code'], 200)
         self.assertEqual('Token invalid.', response.json['message'])
+        self.assertFalse(response.json['valid'])
+        self.assertNotIn('user_name', response.json)
 
 
     def test_valid_token_validation(self):
@@ -403,6 +405,9 @@ class APITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['code'], 200)
         self.assertEqual('Token valid.', response.json['message'])
+        self.assertTrue(response.json['valid'])
+        self.assertEqual(response.json['user_name'], self.user['musicbrainz_id'])
+
 
     def test_get_playing_now(self):
         """ Test for valid submission and retrieval of listen_type 'playing_now'
