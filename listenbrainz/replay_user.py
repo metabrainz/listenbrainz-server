@@ -51,7 +51,6 @@ class UserReplayer:
                 count += 1
                 if apply_filter:
                     row = self.filter_function(row)
-                current_app.logger.info(json.dumps(row, indent=4))
                 if row:
                     rows.append(self.convert_to_influx_insert_format(row, quote(dest)))
             self.ls.write_points_to_db(rows)
