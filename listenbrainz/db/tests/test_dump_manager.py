@@ -33,17 +33,37 @@ class DumpManagerTestCase(unittest.TestCase):
 
 
     def test_cleanup_dumps(self):
-        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-20180312-000001'))
-        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-20180312-000002'))
-        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-20180312-000003'))
-        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-20180312-000004'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-1-20180312-000001-full'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-2-20180312-000002-full'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-3-20180312-000003-full'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-4-20180312-000004-full'))
+
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-1-20180312-000001-incremental'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-2-20180312-000002-incremental'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-3-20180312-000003-incremental'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-4-20180312-000004-incremental'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-5-20180312-000005-incremental'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-6-20180312-000006-incremental'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-7-20180312-000007-incremental'))
+
         create_path(os.path.join(self.tempdir, 'not-a-dump'))
 
         dump_manager._cleanup_dumps(self.tempdir)
 
         newdirs = os.listdir(self.tempdir)
-        self.assertNotIn('listenbrainz-dump-20180312-000001', newdirs)
-        self.assertNotIn('listenbrainz-dump-20180312-000002', newdirs)
-        self.assertIn('listenbrainz-dump-20180312-000003', newdirs)
-        self.assertIn('listenbrainz-dump-20180312-000003', newdirs)
+        self.assertNotIn('listenbrainz-dump-1-20180312-000001-full', newdirs)
+        self.assertNotIn('listenbrainz-dump-2-20180312-000002-full', newdirs)
+
+        self.assertIn('listenbrainz-dump-3-20180312-000003-full', newdirs)
+        self.assertIn('listenbrainz-dump-4-20180312-000004-full', newdirs)
+
+        self.assertNotIn('listenbrainz-dump-1-20180312-000001-incremental', newdirs)
+
+        self.assertIn('listenbrainz-dump-2-20180312-000002-incremental', newdirs)
+        self.assertIn('listenbrainz-dump-3-20180312-000003-incremental', newdirs)
+        self.assertIn('listenbrainz-dump-4-20180312-000004-incremental', newdirs)
+        self.assertIn('listenbrainz-dump-5-20180312-000005-incremental', newdirs)
+        self.assertIn('listenbrainz-dump-6-20180312-000006-incremental', newdirs)
+        self.assertIn('listenbrainz-dump-7-20180312-000007-incremental', newdirs)
+
         self.assertIn('not-a-dump', newdirs)

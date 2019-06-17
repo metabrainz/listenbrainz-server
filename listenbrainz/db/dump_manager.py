@@ -39,21 +39,26 @@ from listenbrainz.webserver import create_app
 from listenbrainz.webserver.influx_connection import init_influx_connection
 
 
-NUMBER_OF_DUMPS_TO_KEEP = 2
+NUMBER_OF_FULL_DUMPS_TO_KEEP = 2
+NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP = 6
 
 cli = click.Group()
 
 
-@cli.command()
+@cli.command(name="create_full")
 @click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'))
 @click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
-def create(location, threads):
+@click.option('--dump-id', type=int, default=None)
+@click.option('--last-dump-id', is_flag=True)
+def create_full(location, threads, dump_id, last_dump_id):
     """ Create a ListenBrainz data dump which includes a private dump, a statistics dump
         and a dump of the actual listens from InfluxDB
 
         Args:
             location (str): path to the directory where the dump should be made
             threads (int): the number of threads to be used while compression
+            dump_id (int): the ID of the ListenBrainz data dump
+            last_dump_id (bool): flag indicating whether to create a full dump from the last entry in the dump table
     """
     app = create_app()
     with app.app_context():
@@ -65,11 +70,73 @@ def create(location, threads):
             'INFLUX_PORT': current_app.config['INFLUX_PORT'],
             'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
         })
-        time_now = datetime.today()
-        dump_path = os.path.join(location, 'listenbrainz-dump-{time}'.format(time=time_now.strftime('%Y%m%d-%H%M%S')))
+
+        if last_dump_id:
+            all_dumps = db_dump.get_dump_entries()
+            if len(all_dumps) == 0:
+                current_app.logger.error("Cannot create full dump with last dump's ID, no dump exists!")
+                sys.exit(-1)
+            dump_id = all_dumps[0]['id']
+
+        if dump_id is None:
+            end_time = datetime.now()
+            dump_id = db_dump.add_dump_entry(int(end_time.strftime('%s')))
+        else:
+            dump_entry = db_dump.get_dump_entry(dump_id)
+            if dump_entry is None:
+                current_app.logger.error("No dump with ID %d found", dump_id)
+                sys.exit(-1)
+            end_time = dump_entry['created']
+
+        dump_path = os.path.join(location, 'listenbrainz-dump-{dump_id}-{time}-full'.format(dump_id=dump_id, time=end_time.strftime('%Y%m%d-%H%M%S')))
         create_path(dump_path)
-        db_dump.dump_postgres_db(dump_path, time_now, threads)
-        ls.dump_listens(dump_path, time_now, threads, spark_format=False)
+        db_dump.dump_postgres_db(dump_path, end_time, threads)
+        ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads, spark_format=False)
+        ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads, spark_format=True)
+        try:
+            write_hashes(dump_path)
+        except IOError as e:
+            current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
+            return
+        current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
+
+
+@cli.command(name="create_incremental")
+@click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'))
+@click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
+@click.option('--dump-id', type=int, default=None)
+def create_incremental(location, threads, dump_id):
+    app = create_app()
+    with app.app_context():
+        ls = init_influx_connection(current_app.logger,  {
+            'REDIS_HOST': current_app.config['REDIS_HOST'],
+            'REDIS_PORT': current_app.config['REDIS_PORT'],
+            'REDIS_NAMESPACE': current_app.config['REDIS_NAMESPACE'],
+            'INFLUX_HOST': current_app.config['INFLUX_HOST'],
+            'INFLUX_PORT': current_app.config['INFLUX_PORT'],
+            'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
+        })
+
+        if dump_id is None:
+            end_time = datetime.now()
+            dump_id = db_dump.add_dump_entry(int(end_time.strftime('%s')))
+        else:
+            dump_entry = db_dump.get_dump_entry(dump_id)
+            if dump_entry is None:
+                current_app.logger.error("No dump with ID %d found, exiting!", dump_id)
+                sys.exit(-1)
+            end_time = dump_entry['created']
+
+        prev_dump_entry = db_dump.get_dump_entry(dump_id - 1)
+        if prev_dump_entry is None: # incremental dumps must have a previous dump in the series
+            current_app.logger.error("Invalid dump ID %d, could not find previous dump", dump_id)
+            sys.exit(-1)
+        start_time = prev_dump_entry['created']
+        current_app.logger.info("Dumping data from %s to %s", start_time, end_time)
+        dump_path = os.path.join(location, 'listenbrainz-dump-{dump_id}-{time}-incremental'.format(dump_id=dump_id, time=end_time.strftime('%Y%m%d-%H%M%S')))
+        create_path(dump_path)
+        ls.dump_listens(dump_path, dump_id=dump_id, start_time=start_time, end_time=end_time, threads=threads, spark_format=False)
+        ls.dump_listens(dump_path, dump_id=dump_id, start_time=start_time, end_time=end_time, threads=threads, spark_format=True)
         try:
             write_hashes(dump_path)
         except IOError as e:
@@ -171,19 +238,29 @@ def _cleanup_dumps(location):
     Returns:
         (int, int): the number of dumps remaining, the number of dumps deleted
     """
-    dump_re = re.compile('listenbrainz-dump-[0-9]*-[0-9]*')
-    dumps = [x for x in sorted(os.listdir(location), reverse=True) if dump_re.match(x)]
-    if not dumps:
-        print('No dumps present in specified directory!')
-        return
+    full_dump_re = re.compile('listenbrainz-dump-[0-9]*-[0-9]*-[0-9]*-full')
+    full_dumps = [x for x in sorted(os.listdir(location), reverse=True) if full_dump_re.match(x)]
+    if not full_dumps:
+        print('No full dumps present in specified directory!')
+    else:
+        remove_dumps(location, full_dumps, NUMBER_OF_FULL_DUMPS_TO_KEEP)
 
-    keep = dumps[0:NUMBER_OF_DUMPS_TO_KEEP]
+    incremental_dump_re = re.compile('listenbrainz-dump-[0-9]*-[0-9]*-[0-9]*-incremental')
+    incremental_dumps = [x for x in sorted(os.listdir(location), reverse=True) if incremental_dump_re.match(x)]
+    if not incremental_dumps:
+        print('No full dumps present in specified directory!')
+    else:
+        remove_dumps(location, incremental_dumps, NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP)
+
+
+def remove_dumps(location, dumps, remaining_count):
+    keep = dumps[0:remaining_count]
     keep_count = 0
     for dump in keep:
         print('Keeping %s...' % dump)
         keep_count += 1
 
-    remove = dumps[NUMBER_OF_DUMPS_TO_KEEP:]
+    remove = dumps[remaining_count:]
     remove_count = 0
     for dump in remove:
         print('Removing %s...' % dump)
