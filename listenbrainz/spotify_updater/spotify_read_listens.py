@@ -64,9 +64,19 @@ def _convert_spotify_play_to_listen(play, listen_type):
 
     album = track.get('album', {})
     artists = track.get('artists', [])
-    album_artists = album.get('artists', [])
     artist_name = ', '.join([a.get('name') for a in artists if a.get('name')])
-    album_artist_name = ', '.join([a.get('name') for a in album_artists if a.get('name')])
+
+    album_artists = album.get('artists', [])
+    release_artist_names = []
+    spotify_album_artist_ids = []
+    for a in album_artists:
+        name = a.get('name')
+        if name is not None:
+            release_artist_names.append(name)
+        spotify_id = a.get('external_urls', {}).get('spotify')
+        if spotify_id is not None:
+            spotify_album_artist_ids.append(spotify_id)
+    album_artist_name = ', '.join(release_artist_names)
 
     additional = {
         'tracknumber': track.get('track_number'),
@@ -80,11 +90,9 @@ def _convert_spotify_play_to_listen(play, listen_type):
         'spotify_album_id': album.get('external_urls', {}).get('spotify'),
         # Named 'release_*' because 'release_name' is an official name in the docs
         'release_artist_name': album_artist_name,
-        'release_artist_names': [a.get('name') for a in album_artists if a.get('name')],
+        'release_artist_names': release_artist_names,
         # Named 'album_*' because Spotify calls it album and this is spotify-specific
-        'spotify_album_artist_ids': [
-            a.get('external_urls', {}).get('spotify') for a in album_artists if a.get('external_urls', {}).get('spotify')
-        ],
+        'spotify_album_artist_ids': spotify_album_artist_ids,
     }
     isrc = track.get('external_ids', {}).get('isrc')
     spotify_url = track.get('external_urls', {}).get('spotify')
