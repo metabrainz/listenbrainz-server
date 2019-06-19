@@ -169,6 +169,16 @@ class TestInfluxListenStore(DatabaseTestCase):
         )
         self.assertTrue(os.path.isfile(dump))
 
+    def test_dump_listens_spark_format(self):
+        self._create_test_data(self.testuser_name)
+        temp_dir = tempfile.mkdtemp()
+        dump = self.logstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            spark_format=True
+        )
+        self.assertTrue(os.path.isfile(dump))
+
     def test_incremental_dump(self):
         """ Dump and import listens
         """

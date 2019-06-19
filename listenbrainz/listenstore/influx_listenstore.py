@@ -440,8 +440,8 @@ class InfluxListenStore(ListenStore):
             listens : the listens to be written into the disk
             temp_dir: the dir into which listens should be written
         """
-        for year in unwritten_listens:
-            for month in unwritten_listens[year]:
+        for year in listens:
+            for month in listens[year]:
                 if year < 2002:
                     directory = temp_dir
                     filename = os.path.join(directory, 'invalid.json')
@@ -450,7 +450,7 @@ class InfluxListenStore(ListenStore):
                     filename = os.path.join(directory, '{}.json'.format(str(month)))
                 create_path(directory)
                 with open(filename, 'a') as f:
-                    f.write('\n'.join([ujson.dumps(listen) for listen in unwritten_listens[year][month]]))
+                    f.write('\n'.join([ujson.dumps(listen) for listen in listens[year][month]]))
                     f.write('\n')
 
 
