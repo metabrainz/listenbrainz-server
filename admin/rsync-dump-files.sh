@@ -45,5 +45,5 @@ retry rsync \
     -FF \
     --rsh "ssh -i $SSH_KEY -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $RSYNC_FULLEXPORT_PORT" \
     --verbose \
-    $SOURCE_DIR/ \
+    $SOURCE_DIR/* \
     brainz@$RSYNC_FULLEXPORT_HOST:./
