@@ -62,10 +62,19 @@ def _convert_spotify_play_to_listen(play, listen_type):
     if track is None:
         return None
 
-    album = track.get('album', {})
     artists = track.get('artists', [])
-    artist_name = ', '.join([a.get('name') for a in artists if a.get('name')])
+    artist_names = []
+    spotify_artist_ids = []
+    for a in artists:
+        name = a.get('name')
+        if name is not None:
+            artist_names.append(name)
+        spotify_id = a.get('external_urls', {}).get('spotify')
+        if spotify_id is not None:
+            spotify_artist_ids.append(spotify_id)
+    artist_name = ', '.join(artist_names)
 
+    album = track.get('album', {})
     album_artists = album.get('artists', [])
     release_artist_names = []
     spotify_album_artist_ids = []
@@ -80,10 +89,8 @@ def _convert_spotify_play_to_listen(play, listen_type):
 
     additional = {
         'tracknumber': track.get('track_number'),
-        'spotify_artist_ids': [
-            a.get('external_urls', {}).get('spotify') for a in artists if a.get('external_urls', {}).get('spotify')
-        ],
-        'artist_names': [a.get('name') for a in artists if a.get('name')],
+        'spotify_artist_ids': spotify_artist_ids,
+        'artist_names': artist_names,
         'listening_from': 'spotify',
         'discnumber': track.get('disc_number'),
         'duration_ms': track.get('duration_ms'),
