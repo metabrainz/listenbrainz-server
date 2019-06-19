@@ -120,7 +120,7 @@ add_rsync_include_rule $FTP_CURRENT_DUMP_DIR "listenbrainz-public-dump-$DUMP_TIM
 add_rsync_include_rule \
     $FTP_CURRENT_DUMP_DIR \
     "listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE.tar.xz"
-add rsync_include_rule \
+add_rsync_include_rule \
     $FTP_CURRENT_DUMP_DIR \
     "listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE-spark.tar.xz"
 
