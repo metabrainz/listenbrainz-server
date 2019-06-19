@@ -100,17 +100,17 @@ retry cp -a "$DUMP_DIR"/* "$FTP_CURRENT_DUMP_DIR"
 # create an explicit rsync filter for the new private dump in the
 # ftp folder
 touch "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
-PUBLIC_DUMP_RULE=`printf "include listenbrainz-public-dump-%s.tar.xz" $DUMP_TIMESTAMP`
+PUBLIC_DUMP_RULE="include listenbrainz-public-dump-$DUMP_TIMESTAMP.tar.xz"
 echo "$PUBLIC_DUMP_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
-PUBLIC_DUMP_MD5_RULE=`printf "include listenbrainz-public-dump-%s.tar.xz.md5" $DUMP_TIMESTAMP`
+PUBLIC_DUMP_MD5_RULE="include listenbrainz-public-dump-$DUMP_TIMESTAMP.tar.xz.md5"
 echo "$PUBLIC_DUMP_MD5_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
-PUBLIC_DUMP_SHA256_RULE=`printf "include listenbrainz-public-dump-%s.tar.xz.sha256" $DUMP_TIMESTAMP`
+PUBLIC_DUMP_SHA256_RULE="include listenbrainz-public-dump-$DUMP_TIMESTAMP.tar.xz.sha256"
 echo "$PUBLIC_DUMP_SHA256_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
-LISTENS_DUMP_RULE=`printf "include listenbrainz-listens-dump-%s-%s-%s.tar.xz" $DUMP_ID, $DUMP_TIMESTAMP, $DUMP_TYPE `
+LISTENS_DUMP_RULE="include listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE.tar.xz"
 echo "$LISTENS_DUMP_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
-LISTENS_DUMP_MD5_RULE=`printf "include listenbrainz-listens-dump-%s-%s-%s.tar.xz.md5" $DUMP_ID, $DUMP_TIMESTAMP, $DUMP_TYPE`
+LISTENS_DUMP_MD5_RULE="include listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE.tar.xz.md5"
 echo "$LISTENS_DUMP_MD5_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
-LISTENS_DUMP_SHA256_RULE=`printf "include listenbrainz-listens-dump-%s-%s-%s.tar.xz.sha256" $DUMP_ID, $DUMP_TIMESTAMP, $DUMP_TYPE`
+LISTENS_DUMP_SHA256_RULE="include listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE.tar.xz.sha256"
 echo "$LISTENS_DUMP_SHA256_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
 EXCLUDE_RULE="exclude *"
 echo "$EXCLUDE_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
