@@ -31,9 +31,12 @@ DUMP_TYPE=$1
 if [ $DUMP_TYPE == "full" ]; then
     SOURCE_DIR=$RSYNC_FULLEXPORT_DIR
     SSH_KEY=$RSYNC_FULLEXPORT_KEY
-else
+elif [ $DUMP_TYPE == "incremental" ]; then
     SOURCE_DIR=$RSYNC_INCREMENTAL_DIR
     SSH_KEY=$RSYNC_INCREMENTAL_KEY
+else
+    echo "Could not determine which directory (full or incremental) to copy over, exiting!"
+    exit 1
 fi
 
 retry rsync \
