@@ -27,6 +27,7 @@ class UserReplayer(abc.ABC):
             row (dict): modified row as needed
                 or None if row needs to be removed
         """
+        pass
 
 
     def convert_to_influx_insert_format(self, row, measurement):
