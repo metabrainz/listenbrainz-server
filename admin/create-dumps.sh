@@ -18,6 +18,21 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+
+function add_rsync_include_rule {
+    RULE_FILE=$1/.rsync-filter
+    FILE_NAME=$2
+    MAIN_FILE_RULE="include $FILE_NAME"
+    echo $MAIN_FILE_RULE >> $RULE_FILE
+
+    MD5_FILE_RULE="include $FILE_NAME.md5"
+    echo $MD5_FILE_RULE >> $RULE_FILE
+
+    SHA256_FILE_RULE="include $FILE_NAME.sha256"
+    echo $SHA256_FILE_RULE >> $RULE_FILE
+}
+
+
 echo "This script is being run by the following user: "; whoami
 
 # This is to help with disk space monitoring - run "df" before and after
@@ -100,20 +115,18 @@ retry cp -a "$DUMP_DIR"/* "$FTP_CURRENT_DUMP_DIR"
 # create an explicit rsync filter for the new private dump in the
 # ftp folder
 touch "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
-PUBLIC_DUMP_RULE=`printf "include listenbrainz-public-dump-%s.tar.xz" $DUMP_TIMESTAMP`
-echo "$PUBLIC_DUMP_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
-PUBLIC_DUMP_MD5_RULE=`printf "include listenbrainz-public-dump-%s.tar.xz.md5" $DUMP_TIMESTAMP`
-echo "$PUBLIC_DUMP_MD5_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
-PUBLIC_DUMP_SHA256_RULE=`printf "include listenbrainz-public-dump-%s.tar.xz.sha256" $DUMP_TIMESTAMP`
-echo "$PUBLIC_DUMP_SHA256_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
-LISTENS_DUMP_RULE=`printf "include listenbrainz-listens-dump-%s-%s-%s.tar.xz" $DUMP_ID, $DUMP_TIMESTAMP, $DUMP_TYPE `
-echo "$LISTENS_DUMP_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
-LISTENS_DUMP_MD5_RULE=`printf "include listenbrainz-listens-dump-%s-%s-%s.tar.xz.md5" $DUMP_ID, $DUMP_TIMESTAMP, $DUMP_TYPE`
-echo "$LISTENS_DUMP_MD5_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
-LISTENS_DUMP_SHA256_RULE=`printf "include listenbrainz-listens-dump-%s-%s-%s.tar.xz.sha256" $DUMP_ID, $DUMP_TIMESTAMP, $DUMP_TYPE`
-echo "$LISTENS_DUMP_SHA256_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
+
+add_rsync_include_rule $FTP_CURRENT_DUMP_DIR "listenbrainz-public-dump-$DUMP_TIMESTAMP.tar.xz"
+add_rsync_include_rule \
+    $FTP_CURRENT_DUMP_DIR \
+    "listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE.tar.xz"
+add_rsync_include_rule \
+    $FTP_CURRENT_DUMP_DIR \
+    "listenbrainz-listens-dump-$DUMP_ID-$DUMP_TIMESTAMP-$DUMP_TYPE-spark.tar.xz"
+
 EXCLUDE_RULE="exclude *"
 echo "$EXCLUDE_RULE" >> "$FTP_CURRENT_DUMP_DIR"/.rsync-filter
+cat $FTP_CURRENT_DUMP_DIR/.rsync-filter
 
 
 /usr/local/bin/python manage.py dump delete_old_dumps "$FTP_DIR"/$SUB_DIR
