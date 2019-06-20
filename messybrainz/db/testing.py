@@ -34,6 +34,7 @@ class DatabaseTestCase(unittest.TestCase):
 
     def setUp(self):
         db.init_db_engine(config.POSTGRES_ADMIN_URI)
+        self.drop_db()
         self.create_db()
         db.init_db_engine(config.SQLALCHEMY_DATABASE_URI)
         self.init_db()
@@ -62,6 +63,10 @@ class DatabaseTestCase(unittest.TestCase):
 
     def drop_tables(self):
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'drop_tables.sql'))
+
+
+    def drop_db(self):
+        db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'drop_db.sql'))
 
 
     def path_to_data_file(self, file_name):

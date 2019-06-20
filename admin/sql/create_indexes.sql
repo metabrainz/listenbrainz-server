@@ -32,7 +32,7 @@ CREATE INDEX release_cluster_id_ndx_recording_redirect ON release_redirect (rele
 CREATE INDEX recording_mbid_ndx_recording_json ON recording_json ((data ->> 'recording_mbid'));
 CREATE INDEX artist_mbid_ndx_recording_json ON recording_json ((data ->> 'artist_mbids'));
 CREATE INDEX release_mbid_ndx_recording_json ON recording_json ((data ->> 'release_mbid'));
-CREATE INDEX artist_mbid_array_ndx_recording_json ON recording_json (convert_json_array_to_sorted_uuid_array(data -> 'artist_mbids'));
+CREATE INDEX artist_mbid_array_ndx_recording_json ON recording_json (convert_json_array_to_sorted_uuid_array((data -> 'artist_mbids')));
 
 CREATE INDEX artist_ndx_recording ON recording (artist);
 CREATE INDEX release_ndx_recording ON recording (release);
