@@ -33,3 +33,15 @@ services:
       - "8080:8080"
     depends_on:
       - db
+      - musicbrainz_db
+      - redis
+
+  musicbrainz_db:
+    image: metabrainz/musicbrainz-test-database:schema-change-2017-q2
+    volumes:
+      - ../data/mbdata:/var/lib/postgresql/data/pgdata
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+      MB_IMPORT_DUMPS: "true"
+    ports:
+      - "5430:5432"

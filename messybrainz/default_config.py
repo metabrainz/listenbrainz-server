@@ -21,6 +21,8 @@ POSTGRES_ADMIN_URI="postgresql://postgres@db/template1"
 MUSICBRAINZ_USERAGENT = "messybrainz-server"
 MUSICBRAINZ_HOSTNAME = None
 
+# MusicBrainz Database
+MB_DATABASE_URI = "postgresql://musicbrainz:musicbrainz@musicbrainz_db:5432/musicbrainz_db"
 
 # CACHE
 REDIS_HOST = "redis"
