@@ -1,11 +1,16 @@
 import flask_testing
-from webserver import create_app
+import os
+
+from messybrainz.webserver import create_app
 
 
 class ServerTestCase(flask_testing.TestCase):
 
     def create_app(self):
-        app = create_app()
+        app = create_app(config_path=os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            '..', 'test_config.py'
+        ))
         app.config['TESTING'] = True
         return app
 

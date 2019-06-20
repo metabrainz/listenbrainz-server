@@ -1,0 +1,47 @@
+[
+    {
+        "artist": "Lil’ Kim",
+        "recording_mbid": "6ba092ae-aaf7-4154-b987-9eb9d05f8616",
+        "title": "Don't Mess With Me"
+    },
+    {
+        "artist": "Jay\u2010Z & Beyonc\u00e9",
+        "recording_mbid": "5465ca86-3881-4349-81b2-6efbd3a59451",
+        "title": "'03 Bonnie and Clyde"
+    },
+    {
+        "artist": "Jay‐Z",
+        "recording_mbid": "9475f8ef-e785-4b9f-a8c2-03ceb817553e",
+        "title": "Takeover"
+    },
+    {
+        "artist": "Jay_Z",
+        "recording_mbid": "9475f8ef-e785-4b9f-a8c2-03ceb817553e",
+        "title": "Takeover"
+    },
+    {
+        "artist": "JAY-Z",
+        "title": "Some People Hate",
+        "recording_mbid": "cad174ad-d683-4858-a205-7bdc4175fff7"
+    },
+    {
+        "artist": "JAY_Z",
+        "title": "Some People Hate",
+        "recording_mbid": "cad174ad-d683-4858-a205-7bdc4175fff7"
+    },
+    {
+        "artist": "Jay\u2010Z and Beyonc\u00e9",
+        "recording_mbid": "5465ca86-3881-4349-81b2-6efbd3a59451",
+        "title": "'03 Bonnie and Clyde"
+    },
+    {
+        "artist": "Syreeta",
+        "artist_mbids": [
+            "5cfeec75-f6e2-439c-946d-5317334cdc6c"
+        ],
+        "recording_mbid": "9ed38583-437f-4186-8183-9c31ffa2c116",
+        "release": "Syreeta",
+        "release_mbid": "5f7853be-1f7a-4850-b0b8-2333d6b0318f",
+        "title": "She's Leaving Home"
+    }
+]
