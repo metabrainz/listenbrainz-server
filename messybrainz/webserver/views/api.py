@@ -1,10 +1,10 @@
 import ujson
 from flask import Blueprint, request, Response
-from webserver.decorators import crossdomain, ip_filter
+from messybrainz.webserver.decorators import crossdomain, ip_filter
 from werkzeug.exceptions import BadRequest, NotFound
 
 import messybrainz
-import messybrainz.exceptions
+import messybrainz.db.exceptions
 import ujson
 
 api_bp = Blueprint('api', __name__)

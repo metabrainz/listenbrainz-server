@@ -3,12 +3,12 @@ version: "2"
 services:
   db:
     image: postgres:9.5.3
+    command: postgres -F
 
   messybrainz:
     build:
       context: ..
-      dockerfile: Dockerfile
-    command: bash -c "cd /code/messybrainz && pwd && ls -lR && cp config.py.sample config.py && py.test --junitxml=/data/test_report.xml --cov-report xml:/data/coverage.xml"
+      dockerfile: ./docker/Dockerfile.test
     image: web
     depends_on:
       - db
