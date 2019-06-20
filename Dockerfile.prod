@@ -43,7 +43,7 @@ RUN npm install -g less less-plugin-clean-css
 # Note: this will not persist because /code/listenbrainz is a volume
 # After bringing up a container, run this again inside the container
 # to compile the less files
-RUN lessc --clean-css webserver/static/css/main.less > webserver/static/css/main.css
+RUN lessc --clean-css messybrainz/webserver/static/css/main.less > messybrainz/webserver/static/css/main.css
 
 # Consul Template service is already set up with the base image.
 # Just need to copy the configuration.
