@@ -4,7 +4,8 @@ ListenBrainz Data Dumps
 
 
 ListenBrainz provides data dumps that you can import into your own server or
-use for other purposes. These data dumps are created regularly once a month.
+use for other purposes. The full data dumps are created twice a month
+and the incremental data dumps twice a week.
 Each dump contains a number of different files. Depending on your use cases,
 you may or may not require all of them.
 
@@ -12,11 +13,13 @@ you may or may not require all of them.
 File Descriptions
 =================
 
-A ListenBrainz data dump consists of two archives:
+A ListenBrainz data dump consists of three archives:
 
 #. ``listenbrainz-public-dump.tar.xz``
 
 #. ``listenbrainz-listens-dump.tar.xz``
+
+#. ``listenbrainz-listens-dump-spark.tar.xz``
 
 
 listenbrainz-public-dump.tar.xz
@@ -32,6 +35,14 @@ listenbrainz-listens-dump.tar.xz
 
 This is the core ListenBrainz data dump. This file contains all the listens
 submitted to ListenBrainz by its users.
+
+
+listenbrainz-listens-dump-spark.tar.xz
+--------------------------------------
+
+This is also a dump of the core ListenBrainz listen data. These dumps are
+made for consumption by the ListenBrainz Apache Spark cluster, formatting
+all listens into monthly JSON files that can easily be loaded into dataframes.
 
 
 Structure of the listens dump
@@ -67,3 +78,13 @@ Here is some example code to explain the mentioned way of parsing the listens du
 
 .. include:: ./dump_examples/read_listens_dump.py
    :code: python
+
+
+Incremental dumps
+=================
+
+ListenBrainz provides incremental data dumps that you can use to keep up to date with
+the ListenBrainz dataset without needing to download the full dumps everytime. These
+dumps have the same structure as the corresponding full dumps, but only contain
+data that has been submitted since the creation of the previous dump. We create
+incremental data dumps twice a week.
