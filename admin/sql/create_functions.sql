@@ -12,15 +12,15 @@ END
 $sorted_array$ LANGUAGE plpgsql IMMUTABLE;
 
 -- Returns an sorted UUID array for an input JSON array
-CREATE OR REPLACE FUNCTION convert_json_array_to_sorted_uuid_array(json)
+CREATE OR REPLACE FUNCTION convert_json_array_to_sorted_uuid_array(jsonb)
 RETURNS uuid[] AS $converted_array$
-DECLARE 
+DECLARE
     converted_array uuid[];
 BEGIN
-    SELECT array_sort(array_agg(elements)::uuid[]) || ARRAY[]::uuid[] INTO converted_array 
-    FROM json_array_elements_text($1) elements;
+    SELECT array_sort(array_agg(elements)::uuid[]) || ARRAY[]::uuid[] INTO converted_array
+    FROM jsonb_array_elements_text($1) elements;
     RETURN converted_array;
-END 
+END
 $converted_array$ LANGUAGE plpgsql IMMUTABLE;
 
 COMMIT;
