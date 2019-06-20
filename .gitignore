@@ -30,6 +30,7 @@ pip-delete-this-directory.txt
 
 # Configuration
 config.py
+custom_config.py
 
 # Other stuff
 ve

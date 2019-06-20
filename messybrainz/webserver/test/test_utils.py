@@ -1,5 +1,5 @@
-from webserver.testing import ServerTestCase
-from webserver import utils
+from messybrainz.webserver.testing import ServerTestCase
+from messybrainz.webserver import utils
 
 
 class UtilsTestCase(ServerTestCase):

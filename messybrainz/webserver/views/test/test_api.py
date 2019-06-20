@@ -1,5 +1,5 @@
 
-from webserver.testing import ServerTestCase
+from messybrainz.webserver.testing import ServerTestCase
 
 
 class APIViewsTestCase(ServerTestCase):

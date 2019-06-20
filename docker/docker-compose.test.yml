@@ -3,15 +3,13 @@ version: "2"
 services:
   db:
     image: postgres:9.5.3
+    command: postgres -F
 
   messybrainz:
     build:
       context: ..
-      dockerfile: Dockerfile
-    command: py.test
+      dockerfile: ./docker/Dockerfile.test
     image: web
-    volumes:
-      - ..:/code/messybrainz
     depends_on:
       - db
 
