@@ -14,7 +14,7 @@ setup(
     license='LICENSE.txt',
     description='python interface to the messybrainz database.',
     install_requires=[
-        "SQLAlchemy == 1.2.5"
+        "SQLAlchemy == 1.3.0"
     ],
     zip_safe=False
 )
