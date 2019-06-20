@@ -88,3 +88,10 @@ the ListenBrainz dataset without needing to download the full dumps everytime. T
 dumps have the same structure as the corresponding full dumps, but only contain
 data that has been submitted since the creation of the previous dump. We create
 incremental data dumps twice a week.
+
+The basic idea here is that dumps create a linear timeline of the dataset
+based on the time of submission of data. In order to use the incremental dumps,
+you must start with the latest full dump and then, applying all incremental dumps
+since will give you the latest data. The series is consistent, if you
+take a full dump and apply all incremental dumps since that full dump until the
+next full dump, you will have the same data as the next full dump.
