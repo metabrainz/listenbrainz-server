@@ -2,7 +2,7 @@ import click
 
 
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
-from listenbrainz.listen_replay.demo import DemoUserReplayer
+from listenbrainz.listen_replay.utils import DemoUserReplayer, TrackNumberUserFinder
 
 
 cli = click.Group()
@@ -21,4 +21,6 @@ def demo_user_replay(user_name):
         replayer.app.logger.error("Error while replaying listens: %s", str(e), exc_info=True)
         raise
 
-# add more commands here as needed
+@cli.command(name="find_bad_track_numbers")
+def find_bad_track_numbers():
+    print(TrackNumberUserFinder().find_users())

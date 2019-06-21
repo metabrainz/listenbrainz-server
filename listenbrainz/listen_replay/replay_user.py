@@ -1,11 +1,15 @@
-""" This script should be used to replay user listens to fix bad data.
+""" This module contains classes that will be helpful in finding users with
+bad data and replaying listens for those users.
 """
 import abc
 import json
+import listenbrainz.db.user as db_user
+import time
 import uuid
 
 from datetime import datetime
 from flask import current_app
+from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.utils import get_measurement_name, quote, convert_to_unix_timestamp
 from listenbrainz.webserver import create_app
 from listenbrainz.webserver.influx_connection import init_influx_connection
@@ -99,3 +103,37 @@ class UserReplayer(abc.ABC):
             current_app.logger.info("Removing temporary measurement...")
             self.ls.delete(new_measurement_name)
             current_app.logger.info("Done!")
+
+
+class UserFinder(abc.ABC):
+    """ Abstract class to find users based on a particular condition. """
+
+    def __init__(self):
+        self.app = create_app()
+
+    @abc.abstractmethod
+    def condition(self, user_name):
+        pass
+
+    def find_users(self):
+        with self.app.app_context():
+            current_app.logger.info("Connecting to Influx...")
+            self.ls = init_influx_connection(current_app.logger, {
+                'REDIS_HOST': current_app.config['REDIS_HOST'],
+                'REDIS_PORT': current_app.config['REDIS_PORT'],
+                'REDIS_NAMESPACE': current_app.config['REDIS_NAMESPACE'],
+                'INFLUX_HOST': current_app.config['INFLUX_HOST'],
+                'INFLUX_PORT': current_app.config['INFLUX_PORT'],
+                'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
+            })
+            current_app.logger.info("Done!")
+
+            while True:
+                try:
+                    users = db_user.get_all_users()
+                    break
+                except DatabaseError as e:
+                    current_app.logger.error('Error while getting users list: %s', str(e), exc_info=True)
+                    time.sleep(1)
+
+            return [user['musicbrainz_id'] for user in users if self.condition(user['musicbrainz_id'])]
