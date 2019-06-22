@@ -15,6 +15,8 @@ from listenbrainz.webserver import create_app
 from listenbrainz.webserver.influx_connection import init_influx_connection
 from listenbrainz.listenstore.influx_listenstore import DUMP_CHUNK_SIZE
 
+CONNECTION_RETRY_COUNT = 5
+
 
 class UserReplayer(abc.ABC):
     def __init__(self, user_name):
@@ -128,12 +130,15 @@ class UserFinder(abc.ABC):
             })
             current_app.logger.info("Done!")
 
-            while True:
+            for _ in range(CONNECTION_RETRY_COUNT):
                 try:
                     users = db_user.get_all_users()
                     break
                 except DatabaseError as e:
                     current_app.logger.error('Error while getting users list: %s', str(e), exc_info=True)
                     time.sleep(1)
+            else:
+                current_app.logger.critical("Cannot connect to PostgreSQL, exiting...")
+                raise DatabaseError("Cannot connect to PostgreSQL, exiting")
 
             return [user['musicbrainz_id'] for user in users if self.condition(user['musicbrainz_id'])]
