@@ -1,4 +1,5 @@
 import click
+import json
 
 
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
@@ -23,4 +24,5 @@ def demo_user_replay(user_name):
 
 @cli.command(name="find_bad_track_numbers")
 def find_bad_track_numbers():
-    print(TrackNumberUserFinder().find_users())
+    users = TrackNumberUserFinder().find_users()
+    print(json.dumps(users))
