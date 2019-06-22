@@ -119,7 +119,6 @@ class UserFinder(abc.ABC):
 
     def find_users(self):
         with self.app.app_context():
-            current_app.logger.info("Connecting to Influx...")
             self.ls = init_influx_connection(current_app.logger, {
                 'REDIS_HOST': current_app.config['REDIS_HOST'],
                 'REDIS_PORT': current_app.config['REDIS_PORT'],
@@ -128,7 +127,6 @@ class UserFinder(abc.ABC):
                 'INFLUX_PORT': current_app.config['INFLUX_PORT'],
                 'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
             })
-            current_app.logger.info("Done!")
 
             for _ in range(CONNECTION_RETRY_COUNT):
                 try:
