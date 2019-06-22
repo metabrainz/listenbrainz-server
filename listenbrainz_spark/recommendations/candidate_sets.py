@@ -59,8 +59,7 @@ def get_candidate_recording_ids(artists, user_id):
             FROM recording
          WHERE artist_name IN %s
     """ % (artists,))
-    candidate_recording_ids_df = df.withColumn('user_id', lit(user_id)) \
-    .select('user_id', 'recording_id')
+    candidate_recording_ids_df = df.withColumn('user_id', lit(user_id)).select('user_id', 'recording_id')
     return candidate_recording_ids_df
 
 def get_user_id(user_name):
@@ -93,7 +92,7 @@ def get_similar_artists_with_limit(df):
                     ['artist_name_1']
     """
     window = Window.partitionBy(df['artist_name_0']).orderBy(df['count'].desc())
-    df = df.select('*', row_number().over(window).alias('rank')).filter(col('rank') <=                                      config.SIMILAR_ARTISTS_LIMIT)
+    df = df.select('*', row_number().over(window).alias('rank')).filter(col('rank') <= config.SIMILAR_ARTISTS_LIMIT)
     similar_artists_df = df.select('artist_name_1')
     return similar_artists_df
 
@@ -128,9 +127,9 @@ def save_candidate_sets(top_artists_candidate_set_df, similar_artists_candidate_
             recommendations shall be generated. Dataframe columns can be depicted as:
                 ['user_id', 'recording_id']
     """
-    path = os.path.join(config.HDFS_CLUSTER_URI, 'data', 'listenbrainz', 'recommendation-engine',                           'candidate-set')
+    path = os.path.join(config.HDFS_CLUSTER_URI, 'data', 'listenbrainz', 'recommendation-engine', 'candidate-set')
     top_artists_candidate_set_df.write.format('parquet').save(path  + '/top_artists.parquet', mode='overwrite')
-    similar_artists_candidate_set_df.write.format('parquet').save(path + '/similar_artists.parquet',                        mode='overwrite')
+    similar_artists_candidate_set_df.write.format('parquet').save(path + '/similar_artists.parquet', mode='overwrite')
 
 def get_similar_artist_candidate_html(artist):
     """ Prepare similar artists dataframe which consists of top x (limit) artists similar
@@ -208,7 +207,8 @@ def main():
     try:
         listenbrainz_spark.init_spark_session('Candidate_set')
     except AttributeError as err:
-        logging.error('Cannot initialize Spark Session: {} \n {}. Aborting...'.format(type(err).__name__,str(err)),         exc_info=True)
+        logging.error('Cannot initialize Spark Session: {} \n {}. Aborting...'.format(type(err).__name__,
+            str(err)), exc_info=True)
         sys.exit(-1)
     except Exception as err:
         logging.error('An error occurred: {} \n {}. Aborting...'.format(type(err).__name__,str(err)), exc_info=True)
@@ -218,16 +218,19 @@ def main():
     for y in range(config.STARTING_YEAR, config.ENDING_YEAR + 1):
         for m in range(config.STARTING_MONTH, config.ENDING_MONTH + 1):
             try:
-                month = listenbrainz_spark.sql_context.read.parquet('{}/data/listenbrainz/{}/{}.parquet'.format(             config.HDFS_CLUSTER_URI, y, m))
+                month = listenbrainz_spark.sql_context.read.parquet('{}/data/listenbrainz/{}/{}.parquet'
+                    .format(config.HDFS_CLUSTER_URI, y, m))
                 listens_df = listens_df.union(month) if listens_df else month
             except AnalysisException as err:
                 logging.error('Cannot read parquet files from HDFS: {} \n {}'.format(type(err).__name__,str(err)))
                 continue
             except Exception as err:
-                logging.error('An error occured while fetching \"/data/listenbrainz/{}/{}.parquet\": {} \n {}.              Aborting...'.format(y, m, type(err).__name__, str(err)), exc_info=True)
+                logging.error('An error occured while fetching \"/data/listenbrainz/{}/{}.parquet\": {} \n {}. Aborting...'
+                    .format(y, m, type(err).__name__, str(err)), exc_info=True)
                 sys.exit(-1)
     if not listens_df:
-        raise SystemExit("Parquet files containing listening history from {}-{} to {}-{} missing from HDFS".format(         config.STARTING_YEAR, "%02d" % config.STARTING_MONTH, config.ENDING_YEAR, "%02d" % config.ENDING_MONTH))
+        raise SystemExit("Parquet files containing listening history from {}-{} to {}-{} missing from HDFS"
+            .format(config.STARTING_YEAR, "%02d" % config.STARTING_MONTH, config.ENDING_YEAR, "%02d" % config.ENDING_MONTH))
 
     artists_relation_df = None
     try:
@@ -238,7 +241,8 @@ def main():
             str(err)))
         sys.exit(-1)
     except Exception as err:
-        logging.error('An error occured while fecthing artist-artist relation: {} \n {}. Aborting...'.format(type(err)      .__name__, str(err)))
+        logging.error('An error occured while fecthing artist-artist relation: {} \n {}. Aborting...'.format(
+            type(err).__name__, str(err)))
         sys.exit(-1)
     if not artists_relation_df:
         raise SystemExit("Parquet file conatining artist-artist relation is missing from HDFS. Aborting...")
@@ -265,7 +269,8 @@ def main():
         logging.error('Cannot register dataframe: {} \n {}. Aborting...'.format(type(err).__name__, str(err)))
         sys.exit(-1)
     except Exception as err:
-        logging.error('An error occured while registering dataframe: {} \n {}. Aborting...'.format(type(err).__name__,      str(err)), exc_info=True)
+        logging.error('An error occured while registering dataframe: {} \n {}. Aborting...'.format(type(err).__name__,
+            str(err)), exc_info=True)
         sys.exit(-1)
     logging.info('Files fectched from HDFS and dataframes registered in {}s'.format('{:.2f}'.format(time() - ti)))
 
@@ -284,7 +289,8 @@ def main():
                 user_id = get_user_id(user_name)
                 top_artists_df = get_top_artists(user_name)
                 if not top_artists_df.take(1):
-                    logging.info('"{}" is either a new user or has empty listening history. Candidate sets cannot be generated'.format(user_name))
+                    logging.info('"{}" is either a new user or has empty listening history. Candidate sets cannot \
+                        be generated'.format(user_name))
                     continue
                 for row in top_artists_df.collect():
                     top_artists += (row.artist_name,)
@@ -295,7 +301,8 @@ def main():
                 else:
                     df = get_similar_artists_without_limit(top_artists)
                 if not df.take(1):
-                    logging.info('Candidate sets cannot be generated since no similar artists for any of the top artists found: \n{}'.format(top_artists))
+                    logging.info('Candidate sets cannot be generated since no similar artists for any of the \
+                        top artists found: \n{}'.format(top_artists))
                     continue
                 similar_artists_df = get_similar_artists_with_limit(df)
 
@@ -304,16 +311,19 @@ def main():
                 for row in top_artist_with_collab_df.collect():
                     top_artists_with_collab += (row.artist_name_0,)
                 if len(top_artists_with_collab) == 1:
-                    top_artists_recording_ids_df = get_candidate_recording_ids(tuple((top_artists_with_collab[0])),         user_id)
+                    top_artists_recording_ids_df = get_candidate_recording_ids(tuple((
+                        top_artists_with_collab[0])),user_id)
                 else:
                     top_artists_recording_ids_df = get_candidate_recording_ids(top_artists_with_collab, user_id)
                 top_artists_candidate_set_df = top_artists_candidate_set_df.union(top_artists_recording_ids_df) \
                     if top_artists_candidate_set_df else top_artists_recording_ids_df
 
                 # eliminate artists from similar artist who are a part of top artists
-                net_similar_artists_df = similar_artists_df.select('artist_name_1').subtract(top_artists_df.select(          'artist_name'))
+                net_similar_artists_df = similar_artists_df.select('artist_name_1').subtract(top_artists_df
+                    .select('artist_name'))
                 if not net_similar_artists_df.take(1):
-                    logging.info('Similar artists candidate set not generated for "{}" as similar artists are           equivalent to top artists for the user'.format(user_name))
+                    logging.info('Similar artists candidate set not generated for "{}" as similar artists \
+                        are equivalent to top artists for the user'.format(user_name))
                     continue
                 for row in net_similar_artists_df.collect():
                     similar_artists += (row.artist_name_1,)
@@ -321,7 +331,7 @@ def main():
                     similar_artists_recording_ids_df = get_candidate_recording_ids(tuple(similar_artists[0]), user_id)
                 else:
                     similar_artists_recording_ids_df = get_candidate_recording_ids(similar_artists, user_id)
-                similar_artists_candidate_set_df = similar_artists_candidate_set_df.union(                                  similar_artists_recording_ids_df) \
+                similar_artists_candidate_set_df = similar_artists_candidate_set_df.union(similar_artists_recording_ids_df) \
                     if similar_artists_candidate_set_df else similar_artists_recording_ids_df
 
                 if candidateHTML:
@@ -337,7 +347,8 @@ def main():
             except ParseException as err:
                 logging.error('Failed to parse SQL command: {} \n {}. Aborting...'.format(type(err).__name__, str(err)))
             except Exception as err:
-                logging.error('Candidate set for \"{}\" not generated. {} \n {}'.format(user_name, type(err).__name__,      str(err)), exc_info=True)
+                logging.error('Candidate set for \"{}\" not generated. {} \n {}'.format(user_name, type(err).__name__,
+                    str(err)), exc_info=True)
     try:
         save_candidate_sets(top_artists_candidate_set_df, similar_artists_candidate_set_df)
     except Py4JJavaError as err:
