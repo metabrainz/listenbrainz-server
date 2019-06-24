@@ -130,6 +130,7 @@ cat $FTP_CURRENT_DUMP_DIR/.rsync-filter
 
 
 /usr/local/bin/python manage.py dump delete_old_dumps "$FTP_DIR"/$SUB_DIR
+/usr/local/bin/python manage.py dump delete_old_dumps $BACKUP_DIR/$SUB_DIR
 
 # rsync to ftp folder taking care of the rules
 ./admin/rsync-dump-files.sh $DUMP_TYPE
