@@ -66,7 +66,7 @@ else
 fi
 
 
-DUMP_NAME=`ls $TEMP_DIR/$SUB_DIR | sort -r | head -1`
+DUMP_NAME=`ls -t $TEMP_DIR/$SUB_DIR | head -1`
 DUMP_TIMESTAMP=`echo $DUMP_NAME | awk -F '-' '{ printf "%s-%s", $4, $5 }'`
 DUMP_ID=`echo $DUMP_NAME | awk -F '-' '{ printf "%s", $3}'`
 echo "Dump created with timestamp $DUMP_TIMESTAMP"
