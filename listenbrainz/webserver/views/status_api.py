@@ -4,12 +4,12 @@ from listenbrainz.webserver.rate_limiter import ratelimit
 
 import listenbrainz.db.dump as db_dump
 
-dump_api_bp = Blueprint("dump_api_v1", __name__)
+status_api_bp = Blueprint("status_api_v1", __name__)
 
 
-@dump_api_bp.route("/get-info", methods=["GET"])
+@status_api_bp.route("/get-dump-info", methods=["GET"])
 @ratelimit()
-def get_info():
+def get_dump_info():
     """
     Get information about ListenBrainz data dumps.
     You need to pass the `id` parameter in a GET request to get data about that particular
@@ -18,6 +18,7 @@ def get_info():
     **Example response**:
 
     .. sourcecode:: json
+
         {
             "id": 1,
             "timestamp": "20190625-165900"

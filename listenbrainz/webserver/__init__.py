@@ -242,7 +242,7 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.profile import profile_bp
     from listenbrainz.webserver.views.follow import follow_bp
     from listenbrainz.webserver.views.follow_api import follow_api_bp
-    from listenbrainz.webserver.views.dump_api import dump_api_bp
+    from listenbrainz.webserver.views.status_api import status_api_bp
     app.register_blueprint(index_bp)
     app.register_blueprint(login_bp, url_prefix='/login')
     app.register_blueprint(user_bp, url_prefix='/user')
@@ -250,5 +250,5 @@ def _register_blueprints(app):
     app.register_blueprint(follow_bp, url_prefix='/follow')
     app.register_blueprint(api_bp, url_prefix=API_PREFIX)
     app.register_blueprint(follow_api_bp, url_prefix=API_PREFIX+'/follow')
-    app.register_blueprint(dump_api_bp, url_prefix=API_PREFIX+'/dump')
+    app.register_blueprint(status_api_bp, url_prefix=API_PREFIX+'/status')
     app.register_blueprint(api_bp_compat)
