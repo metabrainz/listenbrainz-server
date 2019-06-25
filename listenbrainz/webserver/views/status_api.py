@@ -24,7 +24,7 @@ def get_dump_info():
             "timestamp": "20190625-165900"
         }
 
-    :query id: *Required.* Integer specifying the ID of the dump
+    :query id: Integer specifying the ID of the dump, if not provided, the endpoint returns information about the latest data dump.
     :statuscode 200: You have data.
     :statuscode 400: You did not provide a valid dump ID. See error message for details.
     :statuscode 404: Dump with given ID does not exist.
@@ -33,15 +33,18 @@ def get_dump_info():
 
     dump_id = request.args.get("id")
     if dump_id is None:
-        raise APIBadRequest("You need to provide the `id` parameter.")
-    try:
-        dump_id = int(request.args.get("id"))
-    except ValueError:
-        raise APIBadRequest("The `id` parameter needs to be an integer.")
-
-    dump = db_dump.get_dump_entry(dump_id)
-    if dump is None:
-        raise APINotFound("No dump exists with ID: %d" % dump_id)
+        try:
+            dump = db_dump.get_dump_entries()[0] # return the latest dump
+        except IndexError:
+            raise APINotFound("No dump entry exists.")
+    else:
+        try:
+            dump_id = int(dump_id)
+        except ValueError:
+            raise APIBadRequest("The `id` parameter needs to be an integer.")
+        dump = db_dump.get_dump_entry(dump_id)
+        if dump is None:
+            raise APINotFound("No dump exists with ID: %d" % dump_id)
 
     return jsonify({
         "id": dump["id"],
