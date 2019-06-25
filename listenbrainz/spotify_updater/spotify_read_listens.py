@@ -152,7 +152,7 @@ def make_api_request(user, endpoint, **kwargs):
                 if retries == 0:
                     raise spotify.SpotifyListenBrainzError('Encountered a rate limit.')
 
-            elif e.http_status in (400, 403, 404):
+            elif e.http_status in (400, 403):
                 current_app.logger.critical('Error from the Spotify API for user %s: %s', str(user), str(e), exc_info=True)
                 raise spotify.SpotifyAPIError('Error from the Spotify API while getting listens: %s', str(e))
 
@@ -177,6 +177,10 @@ def make_api_request(user, endpoint, **kwargs):
 
                 else:
                     raise spotify.SpotifyAPIError('Could not authenticate with Spotify, please unlink and link your account again.')
+            elif e.http_status == 404:
+                current_app.logger.error("404 while trying to get listens for user %s", str(user), exc_info=True)
+                if retries == 0:
+                    raise spotify.SpotifyListenBrainzError("404 while trying to get listens for user %s" % str(user))
         except Exception as e:
             retries -= 1
             current_app.logger.error('Unexpected error while getting listens: %s', str(e), exc_info=True)
