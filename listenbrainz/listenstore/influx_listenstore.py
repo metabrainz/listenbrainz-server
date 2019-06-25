@@ -903,5 +903,20 @@ class InfluxListenStore(ListenStore):
             raise InfluxListenStoreException("Couldn't delete user with MusicBrainz ID: %s" % musicbrainz_id)
 
 
+    def query(self, query):
+        while True:
+            try:
+                return self.influx.query(query)
+            except InfluxDBClientError as e:
+                self.log.error("Client error while querying influx: %s", str(e), exc_info=True)
+                time.sleep(1)
+            except InfluxDBServerError as e:
+                self.log.error("Server error while querying influx: %s", str(e), exc_info=True)
+                time.sleep(1)
+            except Exception as e:
+                self.log.error("Error while querying influx: %s", str(e), exc_info=True)
+                time.sleep(1)
+
+
 class InfluxListenStoreException(Exception):
     pass
