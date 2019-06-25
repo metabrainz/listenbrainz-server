@@ -1,4 +1,4 @@
-version: "2"
+version: "3.4"
 
 # IMPORTANT NOTE: Volume paths mounted on containers are relative to the
 # directory that this file is in (`docker/`) and so probably need to start with
