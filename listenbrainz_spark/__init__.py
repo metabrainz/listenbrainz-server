@@ -13,6 +13,7 @@ def init_spark_session(app_name):
             .appName(app_name) \
             .config("spark.hadoop.dfs.client.use.datanode.hostname", "true") \
             .config("spark.hadoop.dfs.datanode.use.datanode.hostname", "true") \
+            .config("spark.jars.packages", "org.apache.spark:spark-avro_2.11:2.4.1") \
             .getOrCreate()
     context = session.sparkContext
     context.setLogLevel("ERROR")
