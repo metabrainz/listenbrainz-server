@@ -1,4 +1,4 @@
-version: "2"
+version: "3.4"
 
 # IMPORTANT NOTE: Volume paths mounted on containers are relative to the
 # directory that this file is in (`docker/`) and so probably need to start with
@@ -24,35 +24,27 @@ services:
       INFLUXDB_HTTP_LOG_ENABLED: 'true'
       INFLUXDB_CONTINUOUS_QUERIES_LOG_ENABLED: 'false'
 
-  influx_writer:
-    build:
-      context: ..
-      dockerfile: Dockerfile
-    command: python3 -m "listenbrainz.influx_writer.influx_writer"
-    depends_on:
-      - redis
-      - influx
-
-  bigquery:
-    build:
-      context: ..
-      dockerfile: Dockerfile
-    command: python3 -m "listenbrainz.bigquery_writer.bigquery_writer"
-    links:
-      - redis
-
-  rabbitmq:
-    image: rabbitmq:3.6.5
-    ports:
-      - "5672:5672"
-
   listenbrainz:
     build:
       context: ..
       dockerfile: Dockerfile
+      target: listenbrainz-dev
     command: py.test listenbrainz/tests/integration
+    image: listenbrainz
     depends_on:
       - redis
       - db
       - influx
       - rabbitmq
+
+  influx_writer:
+    image: listenbrainz
+    command: python3 -m "listenbrainz.influx_writer.influx_writer"
+    depends_on:
+      - redis
+      - influx
+
+  rabbitmq:
+    image: rabbitmq:3.6.5
+    ports:
+      - "5672:5672"
