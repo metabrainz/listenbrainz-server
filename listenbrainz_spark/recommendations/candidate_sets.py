@@ -10,12 +10,12 @@ from collections import defaultdict
 import listenbrainz_spark
 from listenbrainz_spark import config
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.recommendations import utils
+from listenbrainz_spark import utils
+from listenbrainz_spark.recommendations.utils import save_html
 from listenbrainz_spark.recommendations.recommend import get_user_id
 
 from pyspark.sql.functions import lit
-from py4j.protocol import Py4JJavaError
-from pyspark.sql.utils import AnalysisException
+from pyspark.sql.utils import AnalysisException, ParseException
 
 # Candidate Set HTML is generated if set to true.
 SAVE_CANDIDATE_HTML = True
@@ -37,9 +37,9 @@ def get_top_artists(user_name):
                  , artist_msid
                  , count(artist_msid) as count
               FROM listens_df
-             GROUP BY user_name, artist_name, artist_msid
-             HAVING user_name = "%s"
-             ORDER BY count DESC
+          GROUP BY user_name, artist_name, artist_msid
+            HAVING user_name = "%s"
+          ORDER BY count DESC
              LIMIT %s
     """ % (user_name, config.TOP_ARTISTS_LIMIT))
     return top_artists_df
@@ -78,41 +78,6 @@ def get_similar_artists_with_limit(artists):
     """ % (artists, artists, config.SIMILAR_ARTISTS_LIMIT))
     return similar_artists_df
 
-def get_similar_artists(top_artists_df, user_name):
-    """ Get similar artists dataframe.
-
-        Args:
-            top_artists_df (dataframe): Dataframe containing top artists of the user.
-            user_name (str): User name of the user.
-
-        Returns:
-            similar_artists_df (dataframe): Dataframe with columns as:
-                ['artist_name', 'similar_artist_name']
-
-        Raises:
-            Py4JJavaError if similar artists query cannot be parsed.
-    """
-    top_artists = ()
-    for row in top_artists_df.collect():
-        top_artists += (row.artist_name,)
-
-    try:
-        if len(top_artists) == 1:
-            # Handle tuple with single entity
-            similar_artists_df = get_similar_artists_with_limit(tuple(top_artists[0]))
-        else:
-            similar_artists_df = get_similar_artists_with_limit(top_artists)
-    except Py4JJavaError as err:
-        logging.error('An error occured while fetching similar artists for "{}". Candidate set for \
-            similar artists cannot be generated: {} \n {}.'.format(user_name, type(err).__name__, str(err)))
-        return False
-
-    if not similar_artists_df.take(1):
-        logging.info('No similar artists found for top artists listened to by "{}". All the top artists are with \
-            zero collaborations therefore no candidate set generated.'.format(user_name))
-        return None
-    return similar_artists_df
-
 def get_candidate_recording_ids(artists, user_id):
     """ Prepare dataframe of recording ids which belong to artists provided as argument.
 
@@ -132,6 +97,74 @@ def get_candidate_recording_ids(artists, user_id):
     candidate_recording_ids_df = df.withColumn('user_id', lit(user_id)).select('user_id', 'recording_id')
     return candidate_recording_ids_df
 
+def get_net_similar_artists():
+    """ Prepare dataframe consisting of similar artists which do not contain any of the
+        top artists.
+
+        Returns:
+            net_similar_artists_df (dataframe): Dataframe with column as:
+                ['similar_artist_name']
+    """
+    net_similar_artists_df = run_query("""
+        SELECT similar_artist_name
+          FROM similar_artist
+         WHERE similar_artist_name
+        NOT IN (
+            SELECT artist_name
+              FROM top_artist
+        )
+    """)
+    return net_similar_artists_df
+
+def get_top_artists_with_collab():
+    """ Prepare dataframe consisting of top artists with non zero collaborations.
+
+        Returns:
+            top_artists_with_collab_df (dataframe): Dataframe with column as:
+                ['artist_name']
+    """
+    top_artists_with_collab_df = run_query("""
+        SELECT DISTINCT artist_name
+          FROM similar_artist
+    """)
+    return top_artists_with_collab_df
+
+def get_similar_artists(top_artists_df, user_name):
+    """ Get similar artists dataframe.
+
+        Args:
+            top_artists_df (dataframe): Dataframe containing top artists of the user.
+            user_name (str): User name of the user.
+
+        Returns:
+            similar_artists_df (dataframe): Dataframe with columns as:
+                ['artist_name', 'similar_artist_name']
+    """
+    top_artists = ()
+    for row in top_artists_df.collect():
+        top_artists += (row.artist_name,)
+
+    try:
+        if len(top_artists) == 1:
+            # Handle tuple with single entity
+            similar_artists_df = get_similar_artists_with_limit(tuple(top_artists[0]))
+        else:
+            similar_artists_df = get_similar_artists_with_limit(top_artists)
+    except ParseException as err:
+        raise ParseException('Failed to parse similar artists query plan for "{}". Similar artists candidate set' \
+            ' cannot be generated: {} \n{}.'.format(user_name, type(err).__name__, str(err)), stackTrace=True)
+    except AnalysisException as err:
+        raise AnalysisException('Failed to analyse similar artists query for "{}". Similar artists candidate set' \
+            ' cannot be generated: {} \n{}.'.format(user_name, type(err).__name__, str(err)), stackTrace=True)
+
+    try:
+        similar_artists_df.take(1)[0]
+    except IndexError as err:
+        raise IndexError('No similar artists found for top artists listened to by "{}". All the top artists are with' \
+            ' zero collaborations therefore top artists and similar artists candidate set cannot be generated' \
+            .format(user_name))
+    return similar_artists_df
+
 def get_top_artists_recording_ids(similar_artist_df, user_name, user_id):
     """ Get recording ids of top artists.
 
@@ -143,14 +176,11 @@ def get_top_artists_recording_ids(similar_artist_df, user_name, user_id):
         Returns:
             top_artists_recordings_ids_df (dataframe): Dataframe with columns as:
                 ['user_id', 'recording_id']
-
-        Raises:
-            Py4JJavaError if candidate recording ids query cannot be parsed.
     """
 
     # top artists with collaborations not equal to zero.
     top_artists_with_collab = ()
-    top_artist_with_collab_df = similar_artist_df.select('artist_name').distinct()
+    top_artist_with_collab_df = get_top_artists_with_collab()
     for row in top_artist_with_collab_df.collect():
         top_artists_with_collab += (row.artist_name,)
 
@@ -160,10 +190,12 @@ def get_top_artists_recording_ids(similar_artist_df, user_name, user_id):
                 top_artists_with_collab[0])),user_id)
         else:
             top_artists_recording_ids_df = get_candidate_recording_ids(top_artists_with_collab, user_id)
-    except Py4JJavaError as err:
-        logging.error('An error occured while fetching recording ids of top artists for "{}". Candidate set \
-            cannot be generated: {} \n {}.'.format(user_name, type(err).__name__, str(err)))
-        return False
+    except ParseException as err:
+        raise ParseException('Failed to parse candidate recordings query plan for "{}". Top artists candidate set' \
+            ' cannot be generated: {} \n{}.'.format(user_name, type(err).__name__, str(err)), stackTrace=True)
+    except AnalysisException as err:
+        raise AnalysisException('Failed to analyse candidate recordings query for "{}". Top artists candidate set' \
+            ' cannot be generated: {} \n{}.'.format(user_name, type(err).__name__, str(err)), stackTrace=True)
     return top_artists_recording_ids_df
 
 def get_similar_artists_recording_ids(similar_artists_df, top_artists_df, user_name, user_id):
@@ -178,17 +210,16 @@ def get_similar_artists_recording_ids(similar_artists_df, top_artists_df, user_n
         Returns:
             similar_artists_recording_ids_df (dataframe): Dataframe with columns as:
                 ['user_id', 'recording_id']
-
-        Raises:
-            Py4JJavaError if candidate recording ids query cannot be parsed.
     """
     similar_artists = ()
     # eliminate artists from similar artists who are a part of top artists
-    similar_artists_df = similar_artists_df.select('similar_artist_name').subtract(top_artists_df.select('artist_name'))
-    if not similar_artists_df.take(1):
-        logging.info('Similar artists candidate set not generated for "{}" as similar artists \
-            are equivalent to top artists for the user'.format(user_name))
-        return False
+    similar_artists_df = get_net_similar_artists()
+    try:
+        similar_artists_df.take(1)[0]
+    except IndexError as err:
+        raise IndexError('Similar artists candidate set not generated for "{}" as similar artists are' \
+            ' equivalent to top artists for the user'.format(user_name))
+
     for row in similar_artists_df.collect():
         similar_artists += (row.similar_artist_name,)
 
@@ -197,10 +228,18 @@ def get_similar_artists_recording_ids(similar_artists_df, top_artists_df, user_n
             similar_artists_recording_ids_df = get_candidate_recording_ids(tuple(similar_artists[0]), user_id)
         else:
             similar_artists_recording_ids_df = get_candidate_recording_ids(similar_artists, user_id)
-    except Py4JJavaError as err:
-        logging.error('An error occured while fetching recording ids of similar artists for "{}". Candidate set \
-            cannot be generated: {} \n {}.'.format(user_name, type(err).__name__, str(err)))
-        return False
+    except ParseException as err:
+        raise ParseException('Failed to parse candidate recordings query plan for "{}". Similar artists candidate set' \
+            ' cannot be generated: {} \n{}.'.format(user_name, type(err).__name__, str(err)), stackTrace=True)
+    except AnalysisException as err:
+        raise AnalysisException('Failed to analyse candidate recordings query for "{}". Similar artists candidate set' \
+            ' cannot be generated: {} \n{}.'.format(user_name, type(err).__name__, str(err)), stackTrace=True)
+
+    try:
+        similar_artists_recording_ids_df.take(1)[0]
+    except IndexError as err:
+        raise IndexError('No recordings found associated to artists in similar artists set. Similar artists' \
+            ' candidate set cannot be generated for "{}": {} \n {}'.format(user_name, type(err).__name__, str(err)))
     return similar_artists_recording_ids_df
 
 def save_candidate_sets(top_artists_candidate_set_df, similar_artists_candidate_set_df):
@@ -241,7 +280,7 @@ def get_candidate_html_data(similar_artist_df, user_name):
                 }
     """
     artists = defaultdict(dict)
-    top_artist_with_collab_df = similar_artist_df.select('artist_name').distinct()
+    top_artist_with_collab_df = get_top_artists_with_collab()
     for row in top_artist_with_collab_df.collect():
         df = similar_artist_df.select('similar_artist_name').filter(similar_artist_df.artist_name == row.artist_name)
         artists[row.artist_name] = [row.similar_artist_name for row in df.collect()]
@@ -268,12 +307,18 @@ def save_candidate_html(user_data):
     context = {
         'user_data' : user_data
     }
-    utils.save_html(candidate_html, context, 'candidate.html')
+    save_html(candidate_html, context, 'candidate.html')
 
 def main():
     ti = time()
-    if not utils.initialize_spark_session('Candidate_set'):
-        raise SystemExit('Aborting...')
+    try:
+        listenbrainz_spark.init_spark_session('Candidate_set')
+    except AttributeError as err:
+        logging.error('{} \nAborting...'.format(err))
+        sys.exit(-1)
+    except Exception as err:
+        logging.error('{} \nAborting...'.format(err), exc_info=True)
+        sys.exit(-1)
 
     listens_df = None
     for y in range(config.STARTING_YEAR, config.ENDING_YEAR + 1):
@@ -295,27 +340,38 @@ def main():
             .format( config.ENDING_MONTH)))
 
     path = os.path.join(config.HDFS_CLUSTER_URI, 'data', 'listenbrainz', 'similar_artists','artist_artist_relations.parquet')
-    artists_relation_df = utils.read_files_from_HDFS(path)
-    if not artists_relation_df:
-        raise SystemExit('Aborting...')
+    try:
+        artists_relation_df = utils.read_files_from_HDFS(path)
+    except AnalysisException as err:
+        logging.error('{} \nAborting...'.format(err))
+        sys.exit(-1)
+    except Exception as err:
+        logging.error('{} \nAborting...'.format(err), exc_info=True)
+        sys.exit(-1)
 
     path = os.path.join(config.HDFS_CLUSTER_URI, 'data', 'listenbrainz', 'recommendation-engine', 'dataframes')
-    recordings_df = utils.read_files_from_HDFS(path + '/recordings_df.parquet')
-    if not recordings_df:
-        raise SystemExit('Aborting...')
-    users_df = utils.read_files_from_HDFS(path + '/users_df.parquet')
-    if not recordings_df:
-        raise SystemExit('Aborting...')
+    try:
+        recordings_df = utils.read_files_from_HDFS(path + '/recordings_df.parquet')
+        users_df = utils.read_files_from_HDFS(path + '/users_df.parquet')
+    except AnalysisException as err:
+        logging.error('{} \nAborting...'.format(err))
+        sys.exit(-1)
+    except Exception as err:
+        logging.error('{} \nAborting...'.format(err), exc_info=True)
+        sys.exit(-1)
 
     logging.info('Registering Dataframes...')
-    if not utils.register_dataframe(listens_df, 'listens_df'):
-        raise SystemExit('Aborting...')
-    if not utils.register_dataframe(recordings_df, 'recording'):
-        raise SystemExit('Aborting...')
-    if not utils.register_dataframe(users_df, 'user'):
-        raise SystemExit('Aborting...')
-    if not utils.register_dataframe(artists_relation_df, 'artists_relation'):
-        raise SystemExit('Aborting...')
+    try:
+        utils.register_dataframe(listens_df, 'listens_df')
+        utils.register_dataframe(recordings_df, 'recording')
+        utils.register_dataframe(users_df, 'user')
+        utils.register_dataframe(artists_relation_df, 'artists_relation')
+    except AnalysisException as err:
+        logging.error('{} \nAborting...'.format(err))
+        sys.exit(-1)
+    except Exception as err:
+        logging.error('{} \nAborting...'.format(err), exc_info=True)
+        sys.exit(-1)
     logging.info('Files fectched from HDFS and dataframes registered in {}s'.format('{:.2f}'.format(time() - ti)))
 
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'recommendation-metadata.json')
@@ -333,37 +389,76 @@ def main():
         except TypeError as err:
             logging.error('{}: Invalid user name. User "{}" does not exist.'.format(type(err).__name__,user_name))
             continue
-        except Py4JJavaError as err:
-            logging.error('An error occured while getting user id for "{}": {} \n {}.'.format(user_name,
-                type(err).__name__, str(err)))
+        except AnalysisException as err:
+            logging.error('Failed to analyse user id query for "{}". Candidate sets cannot be generated: {} \n{}' \
+                .format(user_name, type(err).__name__, str(err)))
+            continue
+        except ParseException as err:
+            logging.error('Failed to parse user id query plan for "{}". Candidate set cannot be generated: {} \n{}' \
+                .format(user_name, type(err).__name__, str(err)))
             continue
 
         try:
             top_artists_df = get_top_artists(user_name)
-        except Py4JJavaError as err:
-            logging.error('An error occured while fetching top artists for "{}". Top artists and similar \
-                artists candidate sets cannot be generated: {} / {}.'.format(user_name, type(err).__name__, str(err)))
+            top_artists_df.take(1)[0]
+        except IndexError as err:
+            logging.error('No top artists found, i.e. "{}" is either a new user or has empty listening history.' \
+                ' Candidate sets cannot be generated'.format(user_name))
+            continue
+        except AnalysisException as err:
+            logging.error('Failed to analyse top artists query for "{}". Candidate sets cannot be generated: {} \n{}' \
+                .format(user_name, type(err).__name__, str(err)))
+            continue
+        except ParseException as err:
+            logging.error('Failed to parse top artists query plan for "{}". Candidate sets cannot be generated: {} \n{}' \
+                .format(user_name, type(err).__name__, str(err)))
             continue
 
-        if not top_artists_df.take(1):
-            logging.info('"{}" is either a new user or has empty listening history. Top artists and similar \
-                artists candidate sets cannot be generated'.format(user_name))
+        try:
+            similar_artists_df = get_similar_artists(top_artists_df, user_name)
+        except IndexError as err:
+            logging.error(err)
+            continue
+        except AnalysisException as err:
+            logging.error(err)
+            continue
+        except ParseException as err:
+            logging.error(err)
             continue
 
-        similar_artists_df = get_similar_artists(top_artists_df, user_name)
-        if not similar_artists_df:
+        try:
+            utils.register_dataframe(similar_artists_df, 'similar_artist')
+            utils.register_dataframe(top_artists_df, 'top_artist')
+        except AnalysisException as err:
+            logging.error(err)
+        except Exception as err:
+            logging.error(err, exc_info=True)
+
+        try:
+            top_artists_recording_ids_df = get_top_artists_recording_ids(similar_artists_df, user_name, user_id)
+        except AnalysisException as err:
+            logging.error(err)
             continue
+        except ParseException as err:
+            logging.error(err)
+            continue
+        top_artists_candidate_set_df = top_artists_candidate_set_df.union(top_artists_recording_ids_df) \
+            if top_artists_candidate_set_df else top_artists_recording_ids_df
 
-        top_artists_recording_ids_df = get_top_artists_recording_ids(similar_artists_df, user_name, user_id)
-        if top_artists_recording_ids_df:
-            top_artists_candidate_set_df = top_artists_candidate_set_df.union(top_artists_recording_ids_df) \
-                if top_artists_candidate_set_df else top_artists_recording_ids_df
-
-        similar_artists_recording_ids_df = get_similar_artists_recording_ids(similar_artists_df, top_artists_df
-            , user_name, user_id)
-        if similar_artists_recording_ids_df:
-            similar_artists_candidate_set_df = similar_artists_candidate_set_df.union(similar_artists_recording_ids_df) \
-                if similar_artists_candidate_set_df else similar_artists_recording_ids_df
+        try:
+            similar_artists_recording_ids_df = get_similar_artists_recording_ids(similar_artists_df, top_artists_df
+                , user_name, user_id)
+        except IndexError as err:
+            logging.error(err)
+            continue
+        except AnalysisException as err:
+            logging.error(err)
+            continue
+        except ParseException as err:
+            logging.error(err)
+            continue
+        similar_artists_candidate_set_df = similar_artists_candidate_set_df.union(similar_artists_recording_ids_df) \
+            if similar_artists_candidate_set_df else similar_artists_recording_ids_df
 
         if SAVE_CANDIDATE_HTML:
             user_data[user_name]['artists'] = get_candidate_html_data(similar_artists_df, user_name)
@@ -372,11 +467,8 @@ def main():
 
     try:
         save_candidate_sets(top_artists_candidate_set_df, similar_artists_candidate_set_df)
-    except Py4JJavaError as err:
-        logging.error("Unable to save candidate sets: {} \n {}. Aborting...".format(type(err).__name__,str(err)))
-        sys.exit(-1)
     except Exception as err:
-        logging.error('An error occured while candidate sets: {} \n {}. Aborting...'.format(type(err).__name__,
+        logging.error('An error occured while saving candidate sets: {} \n {}. Aborting...'.format(type(err).__name__,
             str(err),exc_info=True))
         sys.exit(-1)
 
