@@ -29,7 +29,7 @@ docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME run --rm listenbrai
 
 
 echo "Bring containers up"
-docker-compose -f docker/docker-compose.integration.yml -p $COMPOSE_PROJECT_NAME up -d db influx redis influx_writer bigquery rabbitmq
+docker-compose -f docker/docker-compose.integration.yml -p $COMPOSE_PROJECT_NAME up -d db influx redis influx_writer rabbitmq
 
 echo "Start running tests"
 docker-compose -f docker/docker-compose.integration.yml \
