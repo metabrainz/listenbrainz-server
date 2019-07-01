@@ -44,7 +44,10 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 RUN useradd --create-home --shell /bin/bash listenbrainz
 
 
-# NOTE: The development image starts here
+###########################################
+# NOTE: The development image starts here #
+###########################################
+
 FROM listenbrainz-base as listenbrainz-dev
 ARG deploy_env
 COPY requirements_development.txt /code/listenbrainz
@@ -54,8 +57,10 @@ COPY ./docs/requirements.txt /code/listenbrainz/docs
 RUN pip3 install --no-cache-dir -r ./docs/requirements.txt
 COPY . /code/listenbrainz
 
+##########################################
+# NOTE: The production image starts here #
+##########################################
 
-# NOTE: The production image starts here
 FROM listenbrainz-base as listenbrainz-prod
 ARG deploy_env
 
@@ -80,9 +85,6 @@ COPY ./docker/prod/uwsgi/uwsgi-api-compat.ini /etc/uwsgi/uwsgi-api-compat.ini
 RUN mkdir /home/listenbrainz/backup /home/listenbrainz/ftp
 RUN chown -R listenbrainz:listenbrainz /home/listenbrainz/backup /home/listenbrainz/ftp
 
-# Now install our code, which may change frequently
-COPY . /code/listenbrainz/
-
 RUN mkdir /static
 WORKDIR /static
 
@@ -92,6 +94,9 @@ RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
 COPY package.json package-lock.json webpack.config.js ./listenbrainz/webserver/static /static/
 RUN npm install && npm run build:prod && ./node_modules/less/bin/lessc --clean-css /static/css/main.less > /static/css/main.css && \
     rm -rf node_modules js/*.jsx *.json webpack.config.js && npm cache clean --force
+
+# Now install our code, which may change frequently
+COPY . /code/listenbrainz/
 
 WORKDIR /code/listenbrainz
 RUN rm -rf ./listenbrainz/webserver/static/
