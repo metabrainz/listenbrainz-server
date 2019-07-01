@@ -21,8 +21,8 @@ def init_spark_session(app_name):
         context.setLogLevel("ERROR")
         sql_context = SQLContext(context)
     except AttributeError as err:
-        raise AttributeError(logging.error('Cannot initialize Spark session "{}": {} \n {}.'.format(app_name,
-            type(err).__name__, str(err))))
+        raise AttributeError('Cannot initialize Spark session "{}": {} \n {}.'.format(app_name, type(err).__name__,
+            str(err)))
     except Exception as err:
-        raise Exception(logging.error('An error occurred while initializing Spark session "{}": {} \n {}.'.format(
-            app_name, type(err).__name__, str(err)), exc_info=True))
+        raise Exception('An error occurred while initializing Spark session "{}": {} \n {}.'.format(app_name,
+            type(err).__name__, str(err)))

@@ -59,7 +59,8 @@ def get_similar_artists_with_limit(artists):
         SELECT top_similar_artists.artist_name
              , top_similar_artists.similar_artist_name
           FROM (
-            SELECT row_number() OVER (PARTITION BY similar_artists.artist_name ORDER BY similar_artists.count DESC)         AS rank, similar_artists.*
+            SELECT row_number() OVER (PARTITION BY similar_artists.artist_name ORDER BY similar_artists.count DESC)
+                AS rank, similar_artists.*
               FROM (
                 SELECT artist_name_0 as artist_name
                      , artist_name_1 as similar_artist_name
@@ -128,6 +129,23 @@ def get_top_artists_with_collab():
           FROM similar_artist
     """)
     return top_artists_with_collab_df
+
+def get_similar_artists_for_candidate_html(artist_name):
+    """ Prepare dataframe consisting of artists similar to given artist.
+
+        Args:
+            artist_name (str): Artist name of top artist.
+
+        Returns:
+            df (dataframe): Dataframe with column as:
+                ['similar_artist_name']
+    """
+    df = run_query("""
+        SELECT similar_artist_name
+          FROM similar_artist
+         WHERE artist_name = "%s"
+    """ % (artist_name))
+    return df
 
 def get_similar_artists(top_artists_df, user_name):
     """ Get similar artists dataframe.
@@ -282,7 +300,7 @@ def get_candidate_html_data(similar_artist_df, user_name):
     artists = defaultdict(dict)
     top_artist_with_collab_df = get_top_artists_with_collab()
     for row in top_artist_with_collab_df.collect():
-        df = similar_artist_df.select('similar_artist_name').filter(similar_artist_df.artist_name == row.artist_name)
+        df = get_similar_artists_for_candidate_html(row.artist_name)
         artists[row.artist_name] = [row.similar_artist_name for row in df.collect()]
     return artists
 
@@ -394,7 +412,7 @@ def main():
                 .format(user_name, type(err).__name__, str(err)))
             continue
         except ParseException as err:
-            logging.error('Failed to parse user id query plan for "{}". Candidate set cannot be generated: {} \n{}' \
+            logging.error('Failed to parse user id query plan for "{}". Candidate sets cannot be generated: {} \n{}' \
                 .format(user_name, type(err).__name__, str(err)))
             continue
 
@@ -431,8 +449,10 @@ def main():
             utils.register_dataframe(top_artists_df, 'top_artist')
         except AnalysisException as err:
             logging.error(err)
+            continue
         except Exception as err:
             logging.error(err, exc_info=True)
+            continue
 
         try:
             top_artists_recording_ids_df = get_top_artists_recording_ids(similar_artists_df, user_name, user_id)
