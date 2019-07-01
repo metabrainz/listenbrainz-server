@@ -644,7 +644,7 @@ class InfluxListenStore(ListenStore):
                 continue
 
             if next_user_id == len(users):
-                if not file_done:
+                if not file_done: # if this was the last user and file hasn't been added, add it
                     tar.add(tmp_file_path, arcname=archive_file_path)
                     os.remove(tmp_file_path)
                 dump_complete = True
