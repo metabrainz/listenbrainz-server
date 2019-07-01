@@ -44,10 +44,9 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 RUN useradd --create-home --shell /bin/bash listenbrainz
 
 
-###########################################
-# NOTE: The development image starts here #
-###########################################
-
+############################################
+# NOTE: The development image starts here. #
+############################################
 FROM listenbrainz-base as listenbrainz-dev
 ARG deploy_env
 COPY requirements_development.txt /code/listenbrainz
@@ -57,10 +56,10 @@ COPY ./docs/requirements.txt /code/listenbrainz/docs
 RUN pip3 install --no-cache-dir -r ./docs/requirements.txt
 COPY . /code/listenbrainz
 
-##########################################
-# NOTE: The production image starts here #
-##########################################
 
+###########################################
+# NOTE: The production image starts here. #
+###########################################
 FROM listenbrainz-base as listenbrainz-prod
 ARG deploy_env
 
