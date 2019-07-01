@@ -598,24 +598,29 @@ class InfluxListenStore(ListenStore):
             raise
 
 
-    def write_listens_to_dump(self, listens_path, users, start_time, end_time):
+    def write_listens_to_dump(self, listens_path, users, tar, archive_name, start_time, end_time):
         """ Write listens into the ListenBrainz dump.
 
         Args:
             listens_path (str): the path where listens should be kept before adding to the archive
             users (List[dict]): a list of all users
+            tar (TarFile obj): the tar obj to which listens should be added
+            archive_name (str): the name of the archive
             start_time and end_time: the range of time for which listens are to be dumped
         """
         dump_complete = False
         next_user_id = 0
         index = {}
         while not dump_complete:
-            file_name = str(uuid.uuid4())
+            file_uuid = str(uuid.uuid4())
+            file_name = file_uuid + '.listens'
             # directory structure of the form "/%s/%02s/%s.listens" % (uuid[0], uuid[0:2], uuid)
-            directory = os.path.join(listens_path, file_name[0], file_name[0:2])
-            create_path(directory)
-            file_path = os.path.join(directory, '{uuid}.listens'.format(uuid=file_name))
-            with open(file_path, 'w') as f:
+            file_directory = os.path.join(file_name[0], file_name[0:2])
+            tmp_directory = os.path.join(listens_path, file_directory)
+            create_path(tmp_directory)
+            tmp_file_path = os.path.join(tmp_directory, file_name)
+            archive_file_path = os.path.join(archive_name, 'listens', file_directory, file_name)
+            with open(tmp_file_path, 'w') as f:
                 file_done = False
                 while next_user_id < len(users):
                     if f.tell() > DUMP_FILE_SIZE_LIMIT:
@@ -626,19 +631,24 @@ class InfluxListenStore(ListenStore):
                     offset = f.tell()
                     size = self.dump_user(username=username, fileobj=f, start_time=start_time, end_time=end_time)
                     index[username] = {
-                        'file_name': file_name,
+                        'file_name': file_uuid,
                         'offset': offset,
                         'size': size,
                     }
                     next_user_id += 1
                     self.log.info("%d users done. Total: %d", next_user_id, len(users))
 
-                if file_done:
-                    continue
+            if file_done:
+                tar.add(tmp_file_path, arcname=archive_file_path)
+                os.remove(tmp_file_path)
+                continue
 
-                if next_user_id == len(users):
-                    dump_complete = True
-                    break
+            if next_user_id == len(users):
+                if not file_done:
+                    tar.add(tmp_file_path, arcname=archive_file_path)
+                    os.remove(tmp_file_path)
+                dump_complete = True
+                break
 
         return index
 
@@ -737,14 +747,8 @@ class InfluxListenStore(ListenStore):
                 if spark_format:
                     self.write_listens_for_spark(listens_path, users, start_time, end_time)
                 else:
-                    index = self.write_listens_to_dump(listens_path, users, start_time, end_time)
+                    index = self.write_listens_to_dump(listens_path, users, tar, archive_name, start_time, end_time)
                     self.write_dump_index_file(index, temp_dir, tar, archive_name)
-
-
-                # add the listens directory to the archive
-                self.log.info('Got all listens, adding them to the archive...')
-                tar.add(listens_path,
-                        arcname=os.path.join(archive_name, 'listens'))
 
                 # remove the temporary directory
                 shutil.rmtree(temp_dir)
