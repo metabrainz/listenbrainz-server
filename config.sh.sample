@@ -1,0 +1,6 @@
+#!/bin/bash
+
+SPARK_URI="spark://spark-master.spark-network:7077"
+EXECUTOR_COUNT=7
+EXECUTOR_MEMORY="3g"
+DRIVER_MEMORY="6g"
