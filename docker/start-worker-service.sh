@@ -5,6 +5,8 @@ if [ "$#" -ne 1 ]; then
     exit
 fi
 
+docker pull metabrainz/spark-worker
+
 REPLICAS=$1
 
 docker service create --replicas $REPLICAS \
