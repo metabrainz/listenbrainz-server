@@ -3,6 +3,7 @@
 import listenbrainz.db.user as db_user
 import logging
 import os
+import shutil
 import subprocess
 import tarfile
 import tempfile
@@ -168,6 +169,7 @@ class TestInfluxListenStore(DatabaseTestCase):
             dump_id=1,
         )
         self.assertTrue(os.path.isfile(dump))
+        shutil.rmtree(temp_dir)
 
     def test_dump_listens_spark_format(self):
         self._create_test_data(self.testuser_name)
@@ -178,6 +180,8 @@ class TestInfluxListenStore(DatabaseTestCase):
             spark_format=True
         )
         self.assertTrue(os.path.isfile(dump))
+        shutil.rmtree(temp_dir)
+
 
     def test_incremental_dump(self):
         """ Dump and import listens
@@ -210,6 +214,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.assertEqual(listens[2].ts_since_epoch, 8)
         self.assertEqual(listens[3].ts_since_epoch, 7)
         self.assertEqual(listens[4].ts_since_epoch, 6)
+        shutil.rmtree(temp_dir)
 
 
     def test_import_listens(self):
@@ -233,6 +238,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.assertEqual(listens[2].ts_since_epoch, 1400000100)
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
+        shutil.rmtree(temp_dir)
 
     def test_dump_and_import_listens_escaped(self):
         user = db_user.get_or_create(3, 'i have a\\weird\\user, na/me"\n')
@@ -270,6 +276,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.assertEqual(listens[2].ts_since_epoch, 1400000100)
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
+        shutil.rmtree(temp_dir)
 
 
     def test_import_dump_many_users(self):
@@ -288,6 +295,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         done = self.logstore.import_listens_dump(dump_location)
         sleep(1)
         self.assertEqual(done, len(db_user.get_all_users()))
+        shutil.rmtree(temp_dir)
 
 
     def create_test_dump(self, archive_name, archive_path, schema_version=None, index=None):
