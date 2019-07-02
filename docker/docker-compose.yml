@@ -1,4 +1,4 @@
-version: "2"
+version: "3.4"
 
 # IMPORTANT NOTE: Volume paths mounted on containers are relative to the
 # directory that this file is in (`docker/`) and so probably need to start with
@@ -44,6 +44,7 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
+      target: listenbrainz-dev
     command: python3 /code/listenbrainz/manage.py runserver -h 0.0.0.0 -p 80 -d
     image: web
     volumes:
@@ -116,7 +117,7 @@ services:
   static_builder:
     build:
       context: ..
-      dockerfile: Dockerfile.webpack
+      dockerfile: docker/Dockerfile.webpack
     command: npm run build:dev
     volumes:
       - ..:/code/listenbrainz:z
