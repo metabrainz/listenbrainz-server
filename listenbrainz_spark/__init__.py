@@ -3,12 +3,16 @@ import logging
 from pyspark import SparkContext
 from pyspark.sql import SparkSession, SQLContext
 
-
 session = None
 context = None
 sql_context = None
 
 def init_spark_session(app_name):
+    """ Initializes a Spark Session with the given application name.
+
+        Args:
+            app_name (str): Name of the Spark application. This will also occur in the Spark UI.
+    """
     global session, context, sql_context
     try:
         session = SparkSession \
@@ -21,8 +25,5 @@ def init_spark_session(app_name):
         context.setLogLevel("ERROR")
         sql_context = SQLContext(context)
     except AttributeError as err:
-        raise AttributeError('Cannot initialize Spark session "{}": {} \n {}.'.format(app_name, type(err).__name__,
-            str(err)))
-    except Exception as err:
-        raise Exception('An error occurred while initializing Spark session "{}": {} \n {}.'.format(app_name,
-            type(err).__name__, str(err)))
+        logging.error('Cannot initialize Spark session "{}": {} \n{}'.format(app_name, type(err).__name__, str(err)))
+        raise
