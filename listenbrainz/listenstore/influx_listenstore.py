@@ -716,7 +716,7 @@ class InfluxListenStore(ListenStore):
         self.log.info('Beginning dump of listens from InfluxDB...')
 
         self.log.info('Getting list of users whose listens are to be dumped...')
-        users = db_user.get_all_users(columns=['id', 'musicbrainz_id'])
+        users = db_user.get_all_users(columns=['id', 'musicbrainz_id'], created_before=end_time)
         self.log.info('Total number of users: %d', len(users))
 
         if start_time == datetime.utcfromtimestamp(0):
