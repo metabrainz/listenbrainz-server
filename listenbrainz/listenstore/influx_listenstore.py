@@ -691,7 +691,7 @@ class InfluxListenStore(ListenStore):
             raise
 
 
-    def dump_listens(self, location, dump_id, start_time=datetime.utcfromtimestamp(0), end_time=datetime.now(),
+    def dump_listens(self, location, dump_id, start_time=datetime.utcfromtimestamp(0), end_time=None,
             threads=DUMP_DEFAULT_THREAD_COUNT, spark_format=False):
         """ Dumps all listens in the ListenStore into a .tar.xz archive.
 
@@ -712,6 +712,9 @@ class InfluxListenStore(ListenStore):
         Returns:
             the path to the dump archive
         """
+
+        if end_time is None:
+            end_time = datetime.now()
 
         self.log.info('Beginning dump of listens from InfluxDB...')
 
