@@ -294,6 +294,7 @@ def get_all_users(created_before=None, columns=None):
 
         Args:
             columns: a list of columns to be returned for each user
+            created_before (datetime): only return users who were created before this timestamp, defaults to now
 
         Returns: if columns is None, A list of dicts of the following format for each user
             {
