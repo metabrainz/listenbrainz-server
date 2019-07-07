@@ -746,6 +746,7 @@ class InfluxListenStore(ListenStore):
                 listens_path = os.path.join(temp_dir, 'listens')
                 if spark_format:
                     self.write_listens_for_spark(listens_path, users, start_time, end_time)
+                    tar.add(listens_path, arcname=os.path.join(archive_name, 'listens'))
                 else:
                     index = self.write_listens_to_dump(listens_path, users, tar, archive_name, start_time, end_time)
                     self.write_dump_index_file(index, temp_dir, tar, archive_name)
