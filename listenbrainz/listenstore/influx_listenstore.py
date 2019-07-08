@@ -475,6 +475,14 @@ class InfluxListenStore(ListenStore):
                 result = self.get_incremental_listens_batch(username, start_time, end_time, offset)
             rows_added = 0
             for row in result.get_points(get_measurement_name(username)):
+
+                # make sure that listen was inserted in current dump's time range
+                # need to do this check in python, because influx doesn't
+                # do "IS NULL" operations and we have null inserted_timestamps from
+                # old data
+                if datetime.utcfromtimestamp(row.get('inserted_timestamp', 0)) > end_time:
+                    continue
+
                 listen = convert_influx_row_to_spark_row(row)
                 timestamp = convert_influx_to_datetime(row['time'])
 
@@ -521,6 +529,14 @@ class InfluxListenStore(ListenStore):
 
             rows_added = 0
             for row in result.get_points(get_measurement_name(username)):
+
+                # make sure that listen was inserted in current dump's time range
+                # need to do this check in python, because influx doesn't
+                # do "IS NULL" operations and we have null inserted_timestamps from
+                # old data
+                if datetime.utcfromtimestamp(row.get('inserted_timestamp', 0)) > end_time:
+                    continue
+
                 listen = Listen.from_influx(row).to_api()
                 listen['user_name'] = username
                 try:
