@@ -167,6 +167,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         dump = self.logstore.dump_listens(
             location=temp_dir,
             dump_id=1,
+            end_time=datetime.now(),
         )
         self.assertTrue(os.path.isfile(dump))
         shutil.rmtree(temp_dir)
@@ -177,7 +178,8 @@ class TestInfluxListenStore(DatabaseTestCase):
         dump = self.logstore.dump_listens(
             location=temp_dir,
             dump_id=1,
-            spark_format=True
+            spark_format=True,
+            end_time=datetime.now(),
         )
         self.assertTrue(os.path.isfile(dump))
         self.assert_spark_dump_contains_listens(dump, expected_count)
@@ -246,6 +248,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         dump_location = self.logstore.dump_listens(
             location=temp_dir,
             dump_id=1,
+            end_time=datetime.now(),
         )
         sleep(1)
         self.assertTrue(os.path.isfile(dump_location))
@@ -274,6 +277,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         dump_location = self.logstore.dump_listens(
             location=temp_dir,
             dump_id=1,
+            end_time=datetime.now(),
         )
         sleep(1)
         self.assertTrue(os.path.isfile(dump_location))
@@ -309,6 +313,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         dump_location = self.logstore.dump_listens(
             location=temp_dir,
             dump_id=1,
+            end_time=datetime.now(),
         )
         sleep(1)
         self.assertTrue(os.path.isfile(dump_location))
