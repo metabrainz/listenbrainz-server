@@ -256,6 +256,13 @@ class TestInfluxListenStore(DatabaseTestCase):
             dump_id=1,
             end_time=between_time,
         )
+        spark_dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            end_time=between_time,
+            spark_format=True,
+        )
+
         sleep(1)
         self.assertTrue(os.path.isfile(dump_location))
         self.reset_influx_db()
@@ -269,6 +276,8 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.assertEqual(listens[2].ts_since_epoch, 3)
         self.assertEqual(listens[3].ts_since_epoch, 2)
         self.assertEqual(listens[4].ts_since_epoch, 1)
+
+        self.assert_spark_dump_contains_listens(spark_dump_location, 5)
         shutil.rmtree(temp_dir)
 
     def test_full_dump_listen_with_no_insert_timestamp(self):
@@ -296,6 +305,12 @@ class TestInfluxListenStore(DatabaseTestCase):
             dump_id=1,
             end_time=datetime.now(),
         )
+        spark_dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            end_time=datetime.now(),
+            spark_format=True,
+        )
         self.assertTrue(os.path.isfile(dump_location))
         self.reset_influx_db()
         sleep(1)
@@ -303,6 +318,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         sleep(1)
         listens_from_influx = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
         self.assertEqual(len(listens_from_influx), 5)
+        self.assert_spark_dump_contains_listens(spark_dump_location, 5)
         shutil.rmtree(temp_dir)
 
     def test_incremental_dumps_listen_with_no_insert_timestamp(self):
@@ -331,6 +347,13 @@ class TestInfluxListenStore(DatabaseTestCase):
             start_time=t,
             end_time=datetime.now(),
         )
+        spark_dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            start_time=t,
+            end_time=datetime.now(),
+            spark_format=True,
+        )
         self.assertTrue(os.path.isfile(dump_location))
         self.reset_influx_db()
         sleep(1)
@@ -338,6 +361,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         sleep(1)
         listens_from_influx = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
         self.assertEqual(len(listens_from_influx), 1)
+        self.assert_spark_dump_contains_listens(spark_dump_location, 1)
         shutil.rmtree(temp_dir)
 
     def test_import_listens(self):
