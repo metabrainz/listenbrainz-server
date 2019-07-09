@@ -164,7 +164,7 @@ class UserTestCase(DatabaseTestCase):
                 self.assertIn(column, user)
 
         # check that only id is present if columns = ['id']
-        users = db_user.get_all_users(['id'])
+        users = db_user.get_all_users(columns=['id'])
         for user in users:
             self.assertIn('id', user)
             for column in db_user.USER_GET_COLUMNS:
