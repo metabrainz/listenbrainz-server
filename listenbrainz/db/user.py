@@ -1,10 +1,9 @@
-
 import logging
-
+import sqlalchemy
 import uuid
 
-import sqlalchemy
 
+from datetime import datetime
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz import config
@@ -290,11 +289,12 @@ def get_users_with_uncalculated_stats():
         return [dict(row) for row in result]
 
 
-def get_all_users(columns=None):
+def get_all_users(created_before=None, columns=None):
     """ Returns a list of all users in the database
 
         Args:
             columns: a list of columns to be returned for each user
+            created_before (datetime): only return users who were created before this timestamp, defaults to now
 
         Returns: if columns is None, A list of dicts of the following format for each user
             {
@@ -312,12 +312,18 @@ def get_all_users(columns=None):
     if columns is None:
         columns = USER_GET_COLUMNS
 
+    if created_before is None:
+        created_before = datetime.now()
+
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
                 SELECT {columns}
                   FROM "user"
+                 WHERE created <= :created
               ORDER BY id
-            """.format(columns=', '.join(columns))))
+            """.format(columns=', '.join(columns))),{
+                "created": created_before,
+            })
 
         return [dict(row) for row in result]
 
