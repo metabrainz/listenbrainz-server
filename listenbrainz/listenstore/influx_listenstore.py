@@ -453,7 +453,7 @@ class InfluxListenStore(ListenStore):
                     f.write('\n'.join([ujson.dumps(listen) for listen in listens[year][month]]))
                     f.write('\n')
 
-    def row_inserted_before(self, row, timestamp):
+    def row_inserted_before_or_equal(self, row, timestamp):
         """ Check that the influx row passed was inserted to influx before the specified timestamp
 
         Args:
@@ -496,7 +496,7 @@ class InfluxListenStore(ListenStore):
                 # need to do this check in python, because influx doesn't
                 # do "IS NULL" operations and we have null inserted_timestamps from
                 # old data
-                if not self.row_inserted_before(row, end_time):
+                if not self.row_inserted_before_or_equal(row, end_time):
                     continue
 
                 listen = convert_influx_row_to_spark_row(row)
@@ -550,7 +550,7 @@ class InfluxListenStore(ListenStore):
                 # need to do this check in python, because influx doesn't
                 # do "IS NULL" operations and we have null inserted_timestamps from
                 # old data
-                if not self.row_inserted_before(row, end_time):
+                if not self.row_inserted_before_or_equal(row, end_time):
                     continue
 
                 listen = Listen.from_influx(row).to_api()
