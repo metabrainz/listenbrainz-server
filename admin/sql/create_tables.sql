@@ -104,4 +104,11 @@ CREATE TABLE follow_list (
 );
 ALTER TABLE follow_list ADD CONSTRAINT follow_list_name_creator_key UNIQUE (name, creator);
 
+CREATE TABLE recommendation (
+    row_id                  SERIAL, --PK
+    user_id                 INTEGER NOT NULL, -- FK to "user".id
+    recording_msid          UUID NOT NULL,
+	last_used		        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
 COMMIT;
