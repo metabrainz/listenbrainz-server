@@ -349,7 +349,7 @@ class InfluxListenStore(ListenStore):
 
 
     def fetch_recent_listens_for_users(self, user_list, limit = 2, max_age = 3600):
-        """ Fetch recent listens for a list of users, given a limit which applies per user. If you 
+        """ Fetch recent listens for a list of users, given a limit which applies per user. If you
             have a limit of 3 and 3 users you should get 9 listens if they are available.
 
             user_list: A list containing the users for which you'd like to retrieve recent listens.
@@ -361,7 +361,7 @@ class InfluxListenStore(ListenStore):
         for user_name in user_list:
            escaped_user_list.append(get_escaped_measurement_name(user_name))
 
-        query = "SELECT username, * FROM " + ",".join(escaped_user_list) 
+        query = "SELECT username, * FROM " + ",".join(escaped_user_list)
         query += " WHERE time > " + get_influx_query_timestamp(int(time.time()) - max_age)
         query += " ORDER BY time DESC LIMIT " + str(limit)
         try:
@@ -749,6 +749,7 @@ class InfluxListenStore(ListenStore):
                 listens_path = os.path.join(temp_dir, 'listens')
                 if spark_format:
                     self.write_listens_for_spark(listens_path, users, start_time, end_time)
+                    tar.add(listens_path, arcname=os.path.join(archive_name, 'listens'))
                 else:
                     index = self.write_listens_to_dump(listens_path, users, tar, archive_name, start_time, end_time)
                     self.write_dump_index_file(index, temp_dir, tar, archive_name)
