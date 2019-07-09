@@ -20,6 +20,7 @@ from listenbrainz.listen import Listen
 from listenbrainz.listenstore import InfluxListenStore, LISTENS_DUMP_SCHEMA_VERSION
 from listenbrainz.listenstore.influx_listenstore import REDIS_INFLUX_USER_LISTEN_COUNT
 from listenbrainz.listenstore.tests.util import create_test_data_for_influxlistenstore, generate_data
+from listenbrainz.utils import quote
 from listenbrainz.webserver.influx_connection import init_influx_connection
 from sqlalchemy import text
 from time import sleep
@@ -167,6 +168,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         dump = self.logstore.dump_listens(
             location=temp_dir,
             dump_id=1,
+            end_time=datetime.now(),
         )
         self.assertTrue(os.path.isfile(dump))
         shutil.rmtree(temp_dir)
@@ -177,7 +179,8 @@ class TestInfluxListenStore(DatabaseTestCase):
         dump = self.logstore.dump_listens(
             location=temp_dir,
             dump_id=1,
-            spark_format=True
+            spark_format=True,
+            end_time=datetime.now(),
         )
         self.assertTrue(os.path.isfile(dump))
         self.assert_spark_dump_contains_listens(dump, expected_count)
@@ -238,6 +241,128 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.assert_spark_dump_contains_listens(spark_dump_location, 5)
         shutil.rmtree(temp_dir)
 
+    def test_time_range_full_dumps(self):
+        listens = generate_data(1, self.testuser_name, 1, 5) # generate 5 listens with ts 1-5
+        self.logstore.insert(listens)
+        sleep(1)
+        between_time = datetime.now()
+        sleep(1)
+        listens = generate_data(1, self.testuser_name, 6, 5) # generate 5 listens with ts 6-10
+        self.logstore.insert(listens)
+        sleep(1)
+        temp_dir = tempfile.mkdtemp()
+        dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            end_time=between_time,
+        )
+        spark_dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            end_time=between_time,
+            spark_format=True,
+        )
+
+        sleep(1)
+        self.assertTrue(os.path.isfile(dump_location))
+        self.reset_influx_db()
+        sleep(1)
+        self.logstore.import_listens_dump(dump_location)
+        sleep(1)
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
+        self.assertEqual(len(listens), 5)
+        self.assertEqual(listens[0].ts_since_epoch, 5)
+        self.assertEqual(listens[1].ts_since_epoch, 4)
+        self.assertEqual(listens[2].ts_since_epoch, 3)
+        self.assertEqual(listens[3].ts_since_epoch, 2)
+        self.assertEqual(listens[4].ts_since_epoch, 1)
+
+        self.assert_spark_dump_contains_listens(spark_dump_location, 5)
+        shutil.rmtree(temp_dir)
+
+    def test_full_dump_listen_with_no_insert_timestamp(self):
+        """ We have listens with no `inserted_timestamps` inside the production
+        database. This means that full dumps should always be able to dump these
+        listens as well. This is a test to test that.
+        """
+        listens = generate_data(1, self.testuser_name, 1, 5)
+
+        # insert these listens into influx without an insert_timestamp
+        influx_rows = [listen.to_influx(quote(self.testuser_name)) for listen in listens]
+        for row in influx_rows[1:]:
+            row['fields'].pop('inserted_timestamp')
+
+        t = datetime.now()
+        self.logstore.write_points_to_db(influx_rows)
+        sleep(1)
+        listens_from_influx = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
+        self.assertEqual(len(listens_from_influx), 5)
+
+        # full dump (with no start time) should contain these listens
+        temp_dir = tempfile.mkdtemp()
+        dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            end_time=datetime.now(),
+        )
+        spark_dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            end_time=datetime.now(),
+            spark_format=True,
+        )
+        self.assertTrue(os.path.isfile(dump_location))
+        self.reset_influx_db()
+        sleep(1)
+        self.logstore.import_listens_dump(dump_location)
+        sleep(1)
+        listens_from_influx = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
+        self.assertEqual(len(listens_from_influx), 5)
+        self.assert_spark_dump_contains_listens(spark_dump_location, 5)
+        shutil.rmtree(temp_dir)
+
+    def test_incremental_dumps_listen_with_no_insert_timestamp(self):
+        """ Incremental dumps should only consider listens that have
+        inserted_timestamps.
+        """
+        t = datetime.now()
+        sleep(1)
+        listens = generate_data(1, self.testuser_name, 1, 5)
+
+        # insert these listens into influx without an insert_timestamp
+        influx_rows = [listen.to_influx(quote(self.testuser_name)) for listen in listens]
+        for row in influx_rows[1:]:
+            row['fields'].pop('inserted_timestamp')
+
+        self.logstore.write_points_to_db(influx_rows)
+        sleep(1)
+        listens_from_influx = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
+        self.assertEqual(len(listens_from_influx), 5)
+
+        # incremental dump (with a start time) should not contain these listens
+        temp_dir = tempfile.mkdtemp()
+        dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            start_time=t,
+            end_time=datetime.now(),
+        )
+        spark_dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            start_time=t,
+            end_time=datetime.now(),
+            spark_format=True,
+        )
+        self.assertTrue(os.path.isfile(dump_location))
+        self.reset_influx_db()
+        sleep(1)
+        self.logstore.import_listens_dump(dump_location)
+        sleep(1)
+        listens_from_influx = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
+        self.assertEqual(len(listens_from_influx), 1)
+        self.assert_spark_dump_contains_listens(spark_dump_location, 1)
+        shutil.rmtree(temp_dir)
 
     def test_import_listens(self):
         count = self._create_test_data(self.testuser_name)
@@ -246,6 +371,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         dump_location = self.logstore.dump_listens(
             location=temp_dir,
             dump_id=1,
+            end_time=datetime.now(),
         )
         sleep(1)
         self.assertTrue(os.path.isfile(dump_location))
@@ -274,6 +400,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         dump_location = self.logstore.dump_listens(
             location=temp_dir,
             dump_id=1,
+            end_time=datetime.now(),
         )
         sleep(1)
         self.assertTrue(os.path.isfile(dump_location))
@@ -309,6 +436,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         dump_location = self.logstore.dump_listens(
             location=temp_dir,
             dump_id=1,
+            end_time=datetime.now(),
         )
         sleep(1)
         self.assertTrue(os.path.isfile(dump_location))

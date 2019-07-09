@@ -453,6 +453,22 @@ class InfluxListenStore(ListenStore):
                     f.write('\n'.join([ujson.dumps(listen) for listen in listens[year][month]]))
                     f.write('\n')
 
+    def row_inserted_before_or_equal(self, row, timestamp):
+        """ Check that the influx row passed was inserted to influx before the specified timestamp
+
+        Args:
+            row (dict): the influx row representing the listen
+            timestamp (datetime): the datetime against which the row is to be checked
+
+        Returns:
+            bool: True if row was inserted before timestamp, false otherwise
+                   (also True for all listens with no inserted_timestamp)
+        """
+        inserted_timestamp = row.get('inserted_timestamp')
+        if not inserted_timestamp:
+            inserted_timestamp = 0
+        return datetime.utcfromtimestamp(inserted_timestamp) <= timestamp
+
 
     def dump_user_for_spark(self, username, start_time, end_time, temp_dir):
         """ Dump listens for a particular user in the format for the ListenBrainz spark dump.
@@ -475,6 +491,14 @@ class InfluxListenStore(ListenStore):
                 result = self.get_incremental_listens_batch(username, start_time, end_time, offset)
             rows_added = 0
             for row in result.get_points(get_measurement_name(username)):
+
+                # make sure that listen was inserted in current dump's time range
+                # need to do this check in python, because influx doesn't
+                # do "IS NULL" operations and we have null inserted_timestamps from
+                # old data
+                if not self.row_inserted_before_or_equal(row, end_time):
+                    continue
+
                 listen = convert_influx_row_to_spark_row(row)
                 timestamp = convert_influx_to_datetime(row['time'])
 
@@ -521,6 +545,14 @@ class InfluxListenStore(ListenStore):
 
             rows_added = 0
             for row in result.get_points(get_measurement_name(username)):
+
+                # make sure that listen was inserted in current dump's time range
+                # need to do this check in python, because influx doesn't
+                # do "IS NULL" operations and we have null inserted_timestamps from
+                # old data
+                if not self.row_inserted_before_or_equal(row, end_time):
+                    continue
+
                 listen = Listen.from_influx(row).to_api()
                 listen['user_name'] = username
                 try:
