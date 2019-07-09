@@ -150,13 +150,13 @@ class TestInfluxListenStore(DatabaseTestCase):
         user_name2 = user['musicbrainz_id']
         self._create_test_data(user_name2)
 
-        recent = self.logstore.fetch_recent_listens_for_users([user_name, user_name2], limit=1, max_age=10000000000) 
+        recent = self.logstore.fetch_recent_listens_for_users([user_name, user_name2], limit=1, max_age=10000000000)
         self.assertEqual(len(recent), 2)
 
-        recent = self.logstore.fetch_recent_listens_for_users([user_name, user_name2], max_age=10000000000) 
+        recent = self.logstore.fetch_recent_listens_for_users([user_name, user_name2], max_age=10000000000)
         self.assertEqual(len(recent), 4)
 
-        recent = self.logstore.fetch_recent_listens_for_users([user_name], max_age = int(time.time()) - recent[0].ts_since_epoch + 1) 
+        recent = self.logstore.fetch_recent_listens_for_users([user_name], max_age = int(time.time()) - recent[0].ts_since_epoch + 1)
         self.assertEqual(len(recent), 1)
         self.assertEqual(recent[0].ts_since_epoch, 1400000200)
 
@@ -172,7 +172,7 @@ class TestInfluxListenStore(DatabaseTestCase):
         shutil.rmtree(temp_dir)
 
     def test_dump_listens_spark_format(self):
-        self._create_test_data(self.testuser_name)
+        expected_count = self._create_test_data(self.testuser_name)
         temp_dir = tempfile.mkdtemp()
         dump = self.logstore.dump_listens(
             location=temp_dir,
@@ -180,12 +180,24 @@ class TestInfluxListenStore(DatabaseTestCase):
             spark_format=True
         )
         self.assertTrue(os.path.isfile(dump))
+        self.assert_spark_dump_contains_listens(dump, expected_count)
         shutil.rmtree(temp_dir)
 
+    def assert_spark_dump_contains_listens(self, dump, expected_listen_count):
+        pxz_command = ['pxz', '--decompress', '--stdout', dump]
+        pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
+
+        listen_count = 0
+        with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
+            for member in tar:
+                file_name = member.name.split('/')[-1]
+                if file_name.endswith('.json'):
+                    for line in tar.extractfile(member).readlines():
+                        listen = ujson.loads(line)
+                        listen_count += 1
+        self.assertEqual(listen_count, expected_listen_count)
 
     def test_incremental_dump(self):
-        """ Dump and import listens
-        """
         listens = generate_data(1, self.testuser_name, 1, 5) # generate 5 listens with ts 1-5
         self.logstore.insert(listens)
         sleep(1)
@@ -201,8 +213,16 @@ class TestInfluxListenStore(DatabaseTestCase):
             start_time=start_time,
             end_time=datetime.now(),
         )
+        spark_dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            start_time=start_time,
+            end_time=datetime.now(),
+            spark_format=True,
+        )
         sleep(1)
         self.assertTrue(os.path.isfile(dump_location))
+        self.assertTrue(os.path.isfile(spark_dump_location))
         self.reset_influx_db()
         sleep(1)
         self.logstore.import_listens_dump(dump_location)
@@ -214,6 +234,8 @@ class TestInfluxListenStore(DatabaseTestCase):
         self.assertEqual(listens[2].ts_since_epoch, 8)
         self.assertEqual(listens[3].ts_since_epoch, 7)
         self.assertEqual(listens[4].ts_since_epoch, 6)
+
+        self.assert_spark_dump_contains_listens(spark_dump_location, 5)
         shutil.rmtree(temp_dir)
 
 
