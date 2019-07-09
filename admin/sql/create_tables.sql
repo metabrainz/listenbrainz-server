@@ -108,7 +108,7 @@ CREATE TABLE recommendation (
     row_id                  SERIAL, --PK
     user_id                 INTEGER NOT NULL, -- FK to "user".id
     recording_msid          UUID NOT NULL,
-	last_used		        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    last_used		     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 COMMIT;
