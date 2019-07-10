@@ -11,9 +11,9 @@ CREATE TABLE recommendations.recording (
 );
 
 --Create primary key
-ALTER TABLE recommendation ADD CONSTRAINT rec_pkey PRIMARY KEY (id);
+ALTER TABLE recommendations.recording ADD CONSTRAINT rec_pkey PRIMARY KEY (id);
 
 --Create foreign key
-ALTER TABLE recommendation ADD CONSTRAINT user_rec_user_id_foreign_key FOREIGN KEY (user_id) REFERENCES "user" (id);
+ALTER TABLE recommendations.recording ADD CONSTRAINT user_rec_user_id_foreign_key FOREIGN KEY (user_id) REFERENCES "user" (id);
 
 COMMIT;
