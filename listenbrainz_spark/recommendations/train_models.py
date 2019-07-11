@@ -169,15 +169,15 @@ def main():
     training_data, validation_data, test_data = preprocess_data(playcounts_df)
     time_['preprocessing'] = '{:.2f}'.format((time() - t0) / 60)
 
+    # Rdds that are used in model training iterative process are cached to improve performance.
+    # Caching large files may cause Out of Memory exception.
+    training_data.persist()
+    validation_data.persist()
+
+    # An action must be called for persist to evaluate.
     num_training = training_data.count()
     num_validation = validation_data.count()
     num_test = test_data.count()
-
-    # Rdds that are used in model training iterative process are cached to improve performance.
-    # Caching large files may cause Out of Memory exception.
-    # An action must be called for persist to evaluate.
-    training_data.persist()
-    validation_data.persist()
 
     logging.info('Training models...')
     t0 = time()
