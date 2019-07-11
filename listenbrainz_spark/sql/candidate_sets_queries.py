@@ -92,7 +92,7 @@ def get_net_similar_artists():
         top artists.
 
         Returns:
-            net_similar_artists_df (dataframe): Columns can be depicted as:
+            net_similar_artists_df (dataframe): Column can be depicted as:
                 [
                     'similar_artist_name'
                 ]

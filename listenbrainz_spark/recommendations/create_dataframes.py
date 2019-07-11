@@ -8,6 +8,7 @@ from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
 from listenbrainz_spark import config, utils
+from listenbrainz_spark.exceptions import SQLException
 from listenbrainz_spark.recommendations.utils import save_html
 from listenbrainz_spark.sql import create_dataframes_queries as sql
 
@@ -75,7 +76,7 @@ def main():
     t0 = time()
     try:
         users_df = sql.prepare_user_data(table)
-    except Exception as err:
+    except SQLException as err:
         logging.error('{}\nAborting...'.format(err))
         sys.exit(-1)
 
@@ -90,7 +91,7 @@ def main():
     t0 = time()
     try:
         recordings_df = sql.prepare_recording_data(table)
-    except Exception as err:
+    except SQLException as err:
         logging.error('{}\nAborting...'.format(err))
         sys.exit(-1)
 
@@ -105,7 +106,7 @@ def main():
     t0 = time()
     try:
         listens_df = sql.prepare_listen_data(table)
-    except Exception as err:
+    except SQLException as err:
         logging.error('{}\nAborting...'.format(err))
         sys.exit(-1)
 
@@ -123,7 +124,7 @@ def main():
     try:
         playcounts_df = sql.get_playcounts_data()
         playcounts_df.write.format('parquet').save(path + '/playcounts_df.parquet', mode='overwrite')
-    except Exception as err:
+    except SQLException as err:
         logging.error('{}\nAborting...'.format(err))
         sys.exit(-1)
 
