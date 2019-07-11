@@ -38,12 +38,12 @@ class StatsWriter():
                 print(error_message.format(error=str(err), delay=self.ERROR_RETRY_DELAY))
                 time.sleep(self.ERROR_RETRY_DELAY)
 
-    def write(self, data):
+    def write(self, data, exchange):
         """Publishes data to RabbitMQ
         """
         try:
             self.unique_ch.basic_publish(
-                exchange=config.SPARK_EXCHANGE,
+                exchange=exchange,
                 routing_key='',
                 body=json.dumps(data),
                 properties=pika.BasicProperties(delivery_mode = 2,),
@@ -54,9 +54,9 @@ class StatsWriter():
         except:
             return False
 
-    def start(self, data):
-        """Establishes connection to RabbitMQ if not connected. 
-           If connected, attempts to write to the queue. 
+    def start(self, data, exchange, queue):
+        """Establishes connection to RabbitMQ if not connected.
+           If connected, attempts to write to the queue.
         """
         if not config.RABBITMQ_HOST:
             logging.critical("RabbitMQ service not defined. Sleeping {0} seconds and exiting.".format(self.ERROR_RETRY_DELAY))
@@ -65,7 +65,7 @@ class StatsWriter():
 
         while True:
             if self.unique_ch:
-                if self.write(data):
+                if self.write(data, exchange):
                     break
                 else:
                     self.connection.close()
@@ -73,6 +73,6 @@ class StatsWriter():
             else:
                 self.connect_to_rabbitmq()
                 self.unique_ch = self.connection.channel()
-                self.unique_ch.exchange_declare(exchange=config.SPARK_EXCHANGE, exchange_type='fanout')
-                self.unique_ch.queue_declare(queue=config.SPARK_QUEUE, durable=True)
-                self.unique_ch.queue_bind(exchange=config.SPARK_EXCHANGE, queue=config.SPARK_QUEUE)
+                self.unique_ch.exchange_declare(exchange=exchange, exchange_type='fanout')
+                self.unique_ch.queue_declare(queue=queue, durable=True)
+                self.unique_ch.queue_bind(exchange=exchange, queue=queue)
