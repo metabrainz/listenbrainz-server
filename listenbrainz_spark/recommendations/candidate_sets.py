@@ -11,6 +11,7 @@ from py4j.protocol import Py4JJavaError
 import listenbrainz_spark
 from listenbrainz_spark import config, utils
 from listenbrainz_spark.sql import get_user_id
+from listenbrainz_spark.exceptions import SQLException
 from listenbrainz_spark.recommendations.utils import save_html
 from listenbrainz_spark.sql import candidate_sets_queries as sql
 
@@ -28,7 +29,9 @@ def get_similar_artists(top_artists_df, user_name):
 
         Returns:
             similar_artists_df (dataframe): Columns can be depicted as:
-                ['artist_name', 'similar_artist_name']
+                [
+                    'artist_name', 'similar_artist_name'
+                ]
     """
     top_artists = [row.artist_name for row in top_artists_df.collect()]
 
@@ -57,7 +60,9 @@ def get_top_artists_recording_ids(similar_artist_df, user_name, user_id):
 
         Returns:
             top_artists_recordings_ids_df (dataframe): Columns can be depicted as:
-                ['user_id', 'recording_id']
+                [
+                    'user_id', 'recording_id'
+                ]
     """
     # top artists with collaborations not equal to zero.
     top_artists_with_collab_df = sql.get_top_artists_with_collab()
@@ -244,7 +249,7 @@ def main():
         except TypeError as err:
             logging.error('{}: Invalid user name. User "{}" does not exist.'.format(type(err).__name__,user_name))
             continue
-        except Exception as err:
+        except SQLException as err:
             logging.error('User id for "{}" cannot be retrieved: {}\n{}'.format(user_name, type(err).__name__, str(err)))
             continue
 
@@ -255,7 +260,7 @@ def main():
             logging.error('{}\n{}\nNo top artists found, i.e. "{}" is either a new user or has empty listening history.' \
                 ' Candidate sets cannot be generated'.format(type(err).__name__, str(err), user_name))
             continue
-        except Exception as err:
+        except SQLException as err:
             logging.error('Top artists cannot be retrieved for "{}": {}\n{}'.format(user_name, type(err).__name__, str(err)))
             continue
 
@@ -263,7 +268,7 @@ def main():
             similar_artists_df = get_similar_artists(top_artists_df, user_name)
         except IndexError:
             continue
-        except Exception as err:
+        except SQLException as err:
             logging.error('Candidate sets not generated for "{}"\n{}'.format(user_name, err))
             continue
 
@@ -277,7 +282,7 @@ def main():
 
         try:
             top_artists_recording_ids_df = get_top_artists_recording_ids(similar_artists_df, user_name, user_id)
-        except Exception as err:
+        except SQLException as err:
             logging.error('Candidate sets could not be generated for "{}"\n{}'.format(user_name, err))
             continue
         top_artists_candidate_set_df = top_artists_candidate_set_df.union(top_artists_recording_ids_df) \
@@ -288,7 +293,7 @@ def main():
                 user_name, user_id)
         except IndexError:
             continue
-        except Exception as err:
+        except SQLException as err:
             logging.error('Candidate sets could not be generated for "{}"\n{}'.format(user_name, err))
             continue
         similar_artists_candidate_set_df = similar_artists_candidate_set_df.union(similar_artists_recording_ids_df) \
@@ -308,6 +313,6 @@ def main():
     if SAVE_CANDIDATE_HTML:
         try:
             save_candidate_html(user_data)
-        except Exception as err:
+        except SQLException as err:
             logging.error('Could not save candidate HTML\n{}'.format(err))
             sys.exit(-1)

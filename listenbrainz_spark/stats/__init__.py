@@ -1,6 +1,9 @@
-import listenbrainz_spark
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+
+import listenbrainz_spark
+from listenbrainz_spark.exceptions import SQLException
+
 from pyspark.sql.utils import *
 
 def run_query(query):
@@ -19,19 +22,19 @@ def run_query(query):
     try:
         processed_query = listenbrainz_spark.sql_context.sql(query)
     except AnalysisException as err:
-        raise Exception('{}. Failed to analyze SQL query plan for\n{}\n{}'.format(type(err).__name__, query, str(err)))
+        raise SQLException('{}. Failed to analyze SQL query plan for\n{}\n{}'.format(type(err).__name__, query, str(err)))
     except ParseException as err:
-        raise Exception('{}. Failed to parse SQL command\n{}\n{}'.format(type(err).__name__, query, str(err)))
+        raise SQLException('{}. Failed to parse SQL command\n{}\n{}'.format(type(err).__name__, query, str(err)))
     except IllegalArgumentException as err:
-        raise Exception('{}. Passed an illegal or inappropriate argument to\n{}\n{}'.format(type(err).__name__, query,
+        raise SQLException('{}. Passed an illegal or inappropriate argument to\n{}\n{}'.format(type(err).__name__, query,
             str(err)))
     except StreamingQueryException as err:
-        raise Exception('{}. Exception that stopped a :class:`StreamingQuery`\n{}\n{}'.format(type(err).__name__, query,
+        raise SQLException('{}. Exception that stopped a :class:`StreamingQuery`\n{}\n{}'.format(type(err).__name__, query,
             str(err)))
     except QueryExecutionException as err:
-        raise Exception('{}. Failed to execute a query{}\n{}'.format(type(err).__name__, query, str(err)))
+        raise SQLException('{}. Failed to execute a query{}\n{}'.format(type(err).__name__, query, str(err)))
     except UnknownException as err:
-        raise Exception('{}. An error occurred while executing{}\n{}'.format(type(err).__name__, query, str(err)))
+        raise SQLException('{}. An error occurred while executing{}\n{}'.format(type(err).__name__, query, str(err)))
     return processed_query
 
 def date_for_stats_calculation():
