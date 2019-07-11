@@ -104,10 +104,18 @@ CREATE TABLE follow_list (
 );
 ALTER TABLE follow_list ADD CONSTRAINT follow_list_name_creator_key UNIQUE (name, creator);
 
-CREATE TABLE recommendations.recording (
+CREATE TABLE recommendations.top_artist (
   id                  SERIAL, --PK
   user_id             INTEGER NOT NULL, -- FK to "user".id
-  msid                UUID NOT NULL,
+  recording_msid      UUID NOT NULL,
+  last_used           TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  created             TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE recommendations.similar_artist (
+  id                  SERIAL, --PK
+  user_id             INTEGER NOT NULL, -- FK to "user".id
+  recording_msid      UUID NOT NULL,
   last_used           TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   created             TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
