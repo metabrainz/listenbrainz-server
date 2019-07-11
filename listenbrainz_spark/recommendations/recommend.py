@@ -12,6 +12,7 @@ from py4j.protocol import Py4JJavaError
 import listenbrainz_spark
 from listenbrainz_spark import config, utils
 from listenbrainz_spark.sql import get_user_id
+from listenbrainz_spark.exceptions import SQLException
 from listenbrainz_spark.sql import recommend_queries as sql
 from listenbrainz_spark.recommendations.utils import save_html
 
@@ -148,7 +149,7 @@ def get_recommendations(user_names, recordings_df, model):
             recommendations[user_name] = user_recommendations
         except TypeError as err:
             logging.error('{}: Invalid user name. User "{}" does not exist.'.format(type(err).__name__,user_name))
-        except Exception as err:
+        except SQLException as err:
             logging.error('{}\nRecommendations for "{}" not generated'.format(err, user_name))
     return recommendations
 
