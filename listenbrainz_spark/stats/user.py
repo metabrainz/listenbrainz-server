@@ -256,7 +256,7 @@ def main():
             user_name : metadata,
         }
         try:
-            rabbbitmq_conn_obj.start(rabbitmq_data)
+            rabbbitmq_conn_obj.start(rabbitmq_data, config.SPARK_EXCHANGE, config.SPARK_QUEUE)
             logging.info("Statistics of %s pushed to rabbitmq" % (user_name))
         except pika.exceptions.ConnectionClosed:
             logging.error("Connection to rabbitmq closed while trying to publish: Statistics of %s not published" % (user_name))
