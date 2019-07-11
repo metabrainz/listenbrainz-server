@@ -13,7 +13,7 @@ import json
 
 from brainzutils import cache
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 
@@ -467,7 +467,7 @@ class InfluxListenStore(ListenStore):
         inserted_timestamp = row.get('inserted_timestamp')
         if not inserted_timestamp:
             inserted_timestamp = 0
-        return datetime.utcfromtimestamp(inserted_timestamp) <= timestamp
+        return datetime.fromtimestamp(inserted_timestamp, tz=timezone.utc) <= timestamp.replace(tzinfo=timezone.utc)
 
 
     def dump_user_for_spark(self, username, start_time, end_time, temp_dir):
