@@ -104,20 +104,27 @@ CREATE TABLE follow_list (
 );
 ALTER TABLE follow_list ADD CONSTRAINT follow_list_name_creator_key UNIQUE (name, creator);
 
-CREATE TABLE recommendations.top_artist (
-  id                  SERIAL, --PK
-  user_id             INTEGER NOT NULL, -- FK to "user".id
-  recording_msid      UUID NOT NULL,
-  last_used           TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  created             TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+CREATE TABLE recommendation.cf_recording (
+  id                  SERIAL, -- PK
+  user_id             INTEGER NOT NULL, --FK to "user".id
+  msid                UUID NOT NULL,
+  recommender_id      INTEGER, --FK to recommendation.recommender.id
+  type                recording_type,
+  created             TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE TABLE recommendations.similar_artist (
+CREATE TABLE recommendation.recommender (
   id                  SERIAL, --PK
-  user_id             INTEGER NOT NULL, -- FK to "user".id
-  recording_msid      UUID NOT NULL,
-  last_used           TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  created             TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+  repository          TEXT NOT NULL,
+  author_email        TEXT NOT NULL,
+  name                TEXT NOT NULL,
+  created             TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE recommendation.cf_recording_recommender_join(
+  last_used           TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  cf_recording_id     INTEGER, --FK to recommendation.cf_recording.id
+  recommender_id      INTEGER --FK to recommendation.recommender.id
 );
 
 COMMIT;
