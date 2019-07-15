@@ -5,4 +5,4 @@ EXECUTOR_COUNT=7
 EXECUTOR_MEMORY="3g"
 DRIVER_MEMORY="6g"
 
-CONTAINER_NAME = "listenbrainz-jobs-`whoami`"
+CONTAINER_NAME="listenbrainz-jobs-`whoami`"
