@@ -5,12 +5,14 @@ if [ "$#" -eq 0 ]; then
     exit
 fi
 
-docker stop listenbrainz-jobs
-docker rm listenbrainz-jobs
+source config.sh
+
+docker stop $CONTAINER_NAME
+docker rm $CONTAINER_NAME
 docker pull metabrainz/listenbrainz-spark:latest
 docker run \
     -v `pwd`:/rec \
     --network spark-network \
-    --name listenbrainz-jobs \
+    --name $CONTAINER_NAME \
     metabrainz/listenbrainz-spark:latest \
     "$@"
