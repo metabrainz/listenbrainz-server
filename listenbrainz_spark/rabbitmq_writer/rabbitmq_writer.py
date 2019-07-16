@@ -5,7 +5,7 @@ import time
 import json
 import sys
 
-class StatsWriter():
+class RabbitmqWriter():
     def __init__(self):
         self.unique_ch = None
         self.ERROR_RETRY_DELAY = 3
