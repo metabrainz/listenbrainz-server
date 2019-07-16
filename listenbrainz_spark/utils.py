@@ -1,6 +1,8 @@
 import os
+import sys
 import errno
 import logging
+import traceback
 from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
@@ -26,13 +28,9 @@ def register_dataframe(df, table_name):
     """
     try:
         df.createOrReplaceTempView(table_name)
-    except AnalysisException as err:
-        logging.error('Cannot register dataframe "{}": {} \n{}'.format(table_name, type(err).__name__, str(err)))
-        raise
-    except AttributeError as err:
-        logging.error('An error occurred while registering dataframe "{}": {} \n{}'.format(table_name,
-            type(err).__name__, str(err)))
-        raise
+    except Py4JJavaError as err:
+        raise Py4JJavaError('Cannot register dataframe "{}": {}\n'.format(table_name, type(err).__name__),
+            err.java_exception)
 
 def read_files_from_HDFS(path):
     """ Loads the dataframe stored at the given path in HDFS.
@@ -44,11 +42,11 @@ def read_files_from_HDFS(path):
         df = listenbrainz_spark.sql_context.read.parquet(path)
         return df
     except AnalysisException as err:
-        logging.error('Cannot read "{}" from HDFS: {} \n{}'.format(path, type(err).__name__, str(err)))
-        raise
-    except AttributeError as err:
-        logging.error('An error occurred while fetching "{}": {} \n{}'.format(path, type(err).__name__, str(err)))
-        raise
+        raise AnalysisException('Cannot read "{}" from HDFS: {}\n'.format(path, type(err).__name__),
+            stackTrace=traceback.format_exc())
+    except Py4JJavaError as err:
+        raise Py4JJavaError('An error occurred while fetching "{}": {}\n'.format(path, type(err).__name__),
+            err.java_exception)
 
 def get_listens():
     """ Loads all the listens listened to in a given time window from HDFS.
@@ -64,14 +62,8 @@ def get_listens():
     df = None
     for y in range(config.STARTING_YEAR, config.ENDING_YEAR + 1):
         for m in range(config.STARTING_MONTH, config.ENDING_MONTH + 1):
-            try:
-                month = read_files_from_HDFS('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, y, m))
-                df = df.union(month) if df else month
-            except AnalysisException:
-                continue
-            except AttributeError:
-                logging.info('Aborting...')
-                raise
+            month = read_files_from_HDFS('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, y, m))
+            df = df.union(month) if df else month
     return df
 
 def save_parquet(df, path):
@@ -84,5 +76,4 @@ def save_parquet(df, path):
     try:
         df.write.format('parquet').save(path, mode='overwrite')
     except Py4JJavaError as err:
-        logging.error('Cannot save parquet to {}: {}\n{}'.format(path, type(err).__name__, str(err.java_exception)))
-        raise
+        raise Py4JJavaError('Cannot save parquet to {}: {}\n'.format(path, type(err).__name__), err.java_exception)
