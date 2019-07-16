@@ -44,10 +44,9 @@ def get_similar_artists(top_artists_df, user_name):
     try:
         similar_artists_df.take(1)[0]
     except IndexError as err:
-        logging.error('{}\n{}\nNo similar artists found for top artists listened to by "{}". All the top artists are with' \
+        raise IndexError('{}\n{}\nNo similar artists found for top artists listened to by "{}". All the top artists are with' \
             ' zero collaborations therefore top artists and similar artists candidate set cannot be generated' \
             .format(type(err).__name__, str(err), user_name))
-        raise
     return similar_artists_df
 
 def get_top_artists_recording_ids(similar_artist_df, user_name, user_id):
@@ -95,9 +94,8 @@ def get_similar_artists_recording_ids(similar_artists_df, top_artists_df, user_n
     try:
         similar_artists_df.take(1)[0]
     except IndexError as err:
-        logging.error('{}\n{}\nSimilar artists candidate set not generated for "{}" as similar artists are' \
+        raise IndexError('{}\n{}\nSimilar artists candidate set not generated for "{}" as similar artists are' \
             ' equivalent to top artists for the user'.format(type(err).__name__, str(err), user_name))
-        raise
     similar_artists = [row.similar_artist_name for row in similar_artists_df.collect()]
 
     if len(similar_artists) == 1:
@@ -108,9 +106,8 @@ def get_similar_artists_recording_ids(similar_artists_df, top_artists_df, user_n
     try:
         similar_artists_recording_ids_df.take(1)[0]
     except IndexError as err:
-        logging.error('{}\n{}\nNo recordings found associated to artists in similar artists set. Similar artists' \
+        raise IndexError('{}\n{}\nNo recordings found associated to artists in similar artists set. Similar artists' \
             ' candidate set cannot be generated for "{}"'.format(type(err).__name__, str(err), user_name))
-        raise
     return similar_artists_recording_ids_df
 
 def save_candidate_sets(top_artists_candidate_set_df, similar_artists_candidate_set_df):
@@ -188,13 +185,17 @@ def main():
     ti = time()
     try:
         listenbrainz_spark.init_spark_session('Candidate_set')
-    except AttributeError:
-        logging.info('Aborting...')
+    except Py4JJavaError as err:
+        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
 
     try:
         listens_df = utils.get_listens()
-    except AttributeError:
+    except AnalysisException as err:
+        logging.error('{}\n{}\nAborting...'.format(str(err), err.stackTrace))
+        sys.exit(-1)
+    except Py4JJavaError as err:
+        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
 
     if not listens_df:
@@ -213,11 +214,11 @@ def main():
         path = os.path.join(config.HDFS_CLUSTER_URI, 'data', 'listenbrainz', 'recommendation-engine', 'dataframes')
         recordings_df = utils.read_files_from_HDFS(path + '/recordings_df.parquet')
         users_df = utils.read_files_from_HDFS(path + '/users_df.parquet')
-    except AnalysisException:
-        logging.info('Aborting...')
+    except AnalysisException as err:
+        logging.error('{}\n{}\nAborting...'.format(str(err), err.stackTrace))
         sys.exit(-1)
-    except AttributeError:
-        logging.info('Aborting...')
+    except Py4JJavaError as err:
+        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
 
     logging.info('Registering Dataframes...')
@@ -226,11 +227,8 @@ def main():
         utils.register_dataframe(recordings_df, 'recording')
         utils.register_dataframe(users_df, 'user')
         utils.register_dataframe(artists_relation_df, 'artists_relation')
-    except AnalysisException:
-        logging.info('Aborting...')
-        sys.exit(-1)
-    except AttributeError:
-        logging.info('Aborting...')
+    except Py4JJavaError as err:
+        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
     logging.info('Files fetched from HDFS and dataframes registered in {}s'.format('{:.2f}'.format(time() - ti)))
 
@@ -266,7 +264,8 @@ def main():
 
         try:
             similar_artists_df = get_similar_artists(top_artists_df, user_name)
-        except IndexError:
+        except IndexError as err:
+            logging.error('{}\nGenrating recommendations for next user'.format(err))
             continue
         except SQLException as err:
             logging.error('Candidate sets not generated for "{}"\n{}'.format(user_name, err))
@@ -275,9 +274,8 @@ def main():
         try:
             utils.register_dataframe(similar_artists_df, 'similar_artist')
             utils.register_dataframe(top_artists_df, 'top_artist')
-        except AnalysisException:
-            continue
-        except AttributeError:
+        except Py4JJavaError as err:
+            logging.error('{}\n{}'.format(str(err), err.java_exception))
             continue
 
         try:
@@ -291,7 +289,8 @@ def main():
         try:
             similar_artists_recording_ids_df = get_similar_artists_recording_ids(similar_artists_df, top_artists_df,
                 user_name, user_id)
-        except IndexError:
+        except IndexError as err:
+            logging.error('{}\nGenrating recommendations for next user'.format(err))
             continue
         except SQLException as err:
             logging.error('Candidate sets could not be generated for "{}"\n{}'.format(user_name, err))
@@ -306,8 +305,8 @@ def main():
 
     try:
         save_candidate_sets(top_artists_candidate_set_df, similar_artists_candidate_set_df)
-    except Py4JJavaError:
-        logging.error('Aborting...')
+    except Py4JJavaError as err:
+        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
 
     if SAVE_CANDIDATE_HTML:
