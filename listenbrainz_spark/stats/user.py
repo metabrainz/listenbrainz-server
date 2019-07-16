@@ -6,7 +6,7 @@ import logging
 import pika
 
 from collections import defaultdict
-from listenbrainz_spark.stats_writer.stats_writer import StatsWriter
+from listenbrainz_spark.rabbitmq_writer.rabbitmq_writer import RabbitmqWriter
 from listenbrainz_spark import config
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark.stats import date_for_stats_calculation
@@ -212,7 +212,7 @@ def main():
     #   'user1' : {
     #       'artist' : {artists dict returned by func get_artists},
     #       'recordings' : {recordings dict returned by func get_recordings},
-    #       'releases': {releases dict returned by func get_releasess},
+    #       'releases': {releases dict returned by func get_releases},
     #       'yearmonth' : 'date when the stats were calculated'
     #   },
     #   'user2' : {...}
@@ -247,7 +247,7 @@ def main():
     for user_name, release_stats in release_data.items():
         data[user_name]['releases'] = release_stats
 
-    rabbbitmq_conn_obj = StatsWriter()
+    rabbbitmq_conn_obj = RabbitmqWriter()
     yearmonth = datetime.strftime(date, '%Y-%m')
     for user_name, metadata in data.items():
         data[user_name]['yearmonth'] = yearmonth
