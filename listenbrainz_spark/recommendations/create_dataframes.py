@@ -38,7 +38,16 @@ def save_dataframe_html(users_df_time, recordings_df_time, playcounts_df_time, t
     save_html(queries_html, context, 'queries.html')
 
 def training_data_window():
-    # under the assumption that config.TRAIN_MODEL_WINDOW will always indicate months.
+    """  Prepare dataframe of listens of X months where X is a config value.
+
+        Returns:
+            training_df (dataframe): Columns can de depicted as:
+                [
+                    artist_mbids, artist_msid, artist_name, listened_at, recording_mbid,
+                    recording_msid, release_mbid, release_msid, release_name, tags, track_name, user_name
+                ]
+        Note: Under the assumption that config.TRAIN_MODEL_WINDOW will always indicate months.
+    """
     training_df = None
     m = config.TRAIN_MODEL_WINDOW
     while m > 0:

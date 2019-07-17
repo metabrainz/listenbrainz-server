@@ -22,6 +22,9 @@ ITERATIONS = [10, 20]
 # train model on X months data
 TRAIN_MODEL_WINDOW = 6
 
+# calculate stats on X months data
+STATS_CALCULATION_WINDOW = 1
+
 # number of recommendations to generate
 RECOMMENDATION_TOP_ARTIST_LIMIT = 30
 RECOMMENDATION_SIMILAR_ARTIST_LIMIT = 30
