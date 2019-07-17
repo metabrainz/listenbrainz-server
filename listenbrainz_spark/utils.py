@@ -50,7 +50,7 @@ def read_files_from_HDFS(path):
         logging.error('An error occurred while fetching "{}": {} \n{}'.format(path, type(err).__name__, str(err)))
         raise
 
-def get_listens():
+def get_listens(y, m1, m2):
     """ Loads all the listens listened to in a given time window from HDFS.
 
         Returns:
@@ -62,16 +62,16 @@ def get_listens():
                 ]
     """
     df = None
-    for y in range(config.STARTING_YEAR, config.ENDING_YEAR + 1):
-        for m in range(config.STARTING_MONTH, config.ENDING_MONTH + 1):
-            try:
-                month = read_files_from_HDFS('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, y, m))
-                df = df.union(month) if df else month
-            except AnalysisException:
-                continue
-            except AttributeError:
-                logging.info('Aborting...')
-                raise
+    for m in range(m1, m2):
+        try:
+            month = read_files_from_HDFS('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, y, m))
+            df = df.union(month) if df else month
+            print('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, y, m))
+        except AnalysisException:
+            continue
+        except AttributeError:
+            logging.info('Aborting...')
+            raise
     return df
 
 def save_parquet(df, path):
