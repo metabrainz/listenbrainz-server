@@ -189,7 +189,7 @@ def main():
     except Exception as err:
         logging.error("Cannot initialize spark session: %s / %s. Aborting." % (type(err).__name__, str(err)))
         sys.exit(-1)
-    date = adjusted_date(-1)
+    date = adjusted_date(-config.STATS_CALCULATION_WINDOW)
     logging.info("Loading dataframe...")
     try:
         df = listenbrainz_spark.sql_context.read.parquet('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, date.year, date.month))

@@ -53,6 +53,11 @@ def read_files_from_HDFS(path):
 def get_listens(y, m1, m2):
     """ Loads all the listens listened to in a given time window from HDFS.
 
+        Args:
+            y (int): Year to load parquets.
+            m1 (int): Load parquets from month m1.
+            m2 (int): Load parquets till month m2.
+
         Returns:
             df (dataframe): Dataframe with columns as:
                 [
@@ -66,7 +71,6 @@ def get_listens(y, m1, m2):
         try:
             month = read_files_from_HDFS('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, y, m))
             df = df.union(month) if df else month
-            print('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, y, m))
         except AnalysisException:
             continue
         except AttributeError:
