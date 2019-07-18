@@ -1,8 +1,9 @@
 #!/bin/bash
 
 SPARK_URI="spark://spark-master.spark-network:7077"
-EXECUTOR_COUNT=7
+LISTENERBUS_CAPACITY="100000"
+MAX_CORES="20"
+EXECUTOR_CORES="5"
 EXECUTOR_MEMORY="3g"
 DRIVER_MEMORY="6g"
-
 CONTAINER_NAME="listenbrainz-jobs-`whoami`"
