@@ -77,7 +77,7 @@ def recommend_user(user_name, model, recordings_df):
                     'track_name', 'recording_msid', 'artist_name', 'artist_msid', 'release_name',
                     'release_msid', 'recording_id'
                 ]
-
+                
         Returns:
             user_recommendations (dict): Dictionary can be depicted as:
                 {
@@ -198,8 +198,8 @@ def main():
     time_ = defaultdict(dict)
     try:
         listenbrainz_spark.init_spark_session('Recommendations')
-    except AttributeError:
-        logging.info('Aborting...')
+    except Py4JJavaError as err:
+        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
 
     try:
@@ -212,11 +212,11 @@ def main():
         path = os.path.join(config.HDFS_CLUSTER_URI, 'data', 'listenbrainz', 'recommendation-engine', 'candidate-set')
         top_artists_candidate_df = utils.read_files_from_HDFS(path + '/top_artists.parquet')
         similar_artists_candidate_df = utils.read_files_from_HDFS(path + '/similar_artists.parquet')
-    except AnalysisException:
-        logging.info('Aborting...')
+    except AnalysisException as err:
+        logging.error('{}\n{}\nAborting...'.format(str(err), err.stackTrace))
         sys.exit(-1)
-    except AttributeError:
-        logging.info('Aborting...')
+    except Py4JJavaError as err:
+        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
 
     try:
@@ -224,11 +224,8 @@ def main():
         utils.register_dataframe(top_artists_candidate_df, 'top_artist')
         utils.register_dataframe(similar_artists_candidate_df, 'similar_artist')
         utils.register_dataframe(recordings_df, 'recording')
-    except AnalysisException:
-        logging.info('Aborting...')
-        sys.exit(-1)
-    except AttributeError:
-        logging.info('Aborting...')
+    except Py4JJavaError as err:
+        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
 
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recommendation-metadata.json')
@@ -245,7 +242,7 @@ def main():
     try:
         model = load_model(config.HDFS_CLUSTER_URI + best_model_path)
     except Py4JJavaError as err:
-        logging.error('Unable to load model "{}": {} \n{}\nAborting...'.format(best_model_id, type(err).__name__,
+        logging.error('Unable to load model "{}": {}\n{}\nAborting...'.format(best_model_id, type(err).__name__,
             str(err.java_exception)))
         sys.exit(-1)
     time_['load_model'] = '{:.2f}'.format((time() - t0) / 60)

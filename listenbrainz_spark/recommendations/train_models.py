@@ -90,17 +90,14 @@ def train(training_data, validation_data, num_validation, ranks, lambdas, iterat
             model = ALS.trainImplicit(training_data, rank, iterations=iteration, lambda_=lmbda, alpha=alpha)
             model_id = 'listenbrainz-recommendation-model-{}'.format(uuid.uuid4())
         except Py4JJavaError as err:
-            logging.error('Unable to train model "{}": {} \n{}'.format(model_id, type(err).__name__,
-                str(err.java_exception)))
-            raise
+            raise Py4JJavaError('Unable to train model "{}": {}\n'.format(model_id, type(err).__name__), err.java_exception)
         mt = '{:.2f}'.format((time() - t0) / 60)
         t0 = time()
         try:
             validation_rmse = compute_rmse(model, validation_data, num_validation)
         except Py4JJavaError as err:
-            logging.error('Root Mean Squared Error for model "{}" not computed: {} \n{}'.format(model_id,
-                type(err).__name__, str(err.java_exception)))
-            raise
+            raise Py4JJavaError('Root Mean Squared Error for model "{}" not computed: {}\n'.format(model_id,
+                type(err).__name__), err.java_exception)
         vt = '{:.2f}'.format((time() - t0) / 60)
         model_metadata.append((model_id, mt, rank, '{:.1f}'.format(lmbda), iteration, "%.2f" % (validation_rmse), vt))
         if best_model is None or validation_rmse < best_model.error:
@@ -149,19 +146,19 @@ def main():
     time_ = defaultdict(dict)
     try:
         listenbrainz_spark.init_spark_session('Train Models')
-    except AttributeError:
-        logging.info('Aborting...')
+    except Py4JJavaError as err:
+        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
 
     try:
         path = os.path.join(config.HDFS_CLUSTER_URI, 'data', 'listenbrainz', 'recommendation-engine', 'dataframes',
             'playcounts_df.parquet')
         playcounts_df = utils.read_files_from_HDFS(path)
-    except AnalysisException:
-        logging.info('Aborting...')
+    except AnalysisException as err:
+        logging.error('{}\n{}\nAborting...'.format(str(err), err.stackTrace))
         sys.exit(-1)
-    except AttributeError:
-        logging.info('Aborting...')
+    except Py4JJavaError as err:
+        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
     time_['load_playcounts'] = '{:.2f}'.format((time() - ti) / 60)
 
@@ -184,8 +181,8 @@ def main():
     try:
         model, model_metadata, best_model_metadata = train(training_data, validation_data, num_validation, config.RANKS,
             config.LAMBDAS, config.ITERATIONS)
-    except Py4JJavaError:
-        logging.info('Aborting...')
+    except Py4JJavaError as err:
+        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
     models_training_time = '{:.2f}'.format((time() - t0) / 3600)
 
@@ -201,7 +198,7 @@ def main():
         model.model.save(listenbrainz_spark.context, config.HDFS_CLUSTER_URI + path)
     except Py4JJavaError as err:
         logging.error('Unable to save best model "{}": {} \n{}. Aborting...'.format(best_model_metadata['model_id'],
-            type(err).__name__,str(err.java_exception)))
+            type(err).__name__, str(err.java_exception)))
         sys.exit(-1)
     time_['save_model'] = '{:.2f}'.format((time() - t0) / 60)
 
