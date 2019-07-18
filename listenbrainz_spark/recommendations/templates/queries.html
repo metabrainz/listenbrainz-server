@@ -78,7 +78,7 @@ td, th {
 			<td>The name of the user</td>
 		</tr>
 	</table>
-	<p>ListenBrainz recommednation engine uses Apache Spark to train models using Spark's inbuilt algorithm for collaborative filtering to generate recommendations using its user's listening history. The size of listening data dump~ <b>16GB</b>. ListenBrainz uses a cluster of 4 nodes (computers) each with following specifications:</p>
+	<p>ListenBrainz recommendation engine uses Apache Spark to train models using Spark's inbuilt algorithm for collaborative filtering to generate recommendations using its user's listening history. The size of listening data dump~ <b>16GB</b>. ListenBrainz uses a cluster of 4 nodes (computers) each with following specifications:</p>
 	<blockquote>
 		<p>CPU(s): 8</p>
 		<p>Thread(s) per core: 1</p>
@@ -98,7 +98,7 @@ td, th {
 		<p>spark.driver.maxResultSize: 2GB</p>
 	</blockquote>
 	<p>Collaborative filtering is commonly used for recommender systems. This technique aims to fill in the missing entries of a user-item association matrix. Instead of using explicit preferences such as rating given by a user to an item, we use implicit feedback (number of times a track has been listened to by a user). The first step is to collect relevant data to be able to preprocess it. The sub steps of data collection are as follows: </p>
-	<p><i><b>Note: </b>Listens from <b>{{ lb_dump_time_window[0] }}</b> to <b>{{ lb_dump_time_window[1] }}</b> have been fed to the recommender system from which listens of the following months are missing: <b>{{ missing_parquets }}</b></i></p>
+	<p><i><b>Note: </b>Listens from <b>{{ lb_dump_time_window[0] }}</b> to <b>{{ lb_dump_time_window[1] }}</b> have been fed to the recommender system</i></p>
 	<table>
 		<tr>
 			<th>users_df time (min)</th>
@@ -249,6 +249,6 @@ td, th {
 		</table>
 		</li>
 	</ul>
-	<p><i><b>Note: </b>Number of rows in a dataframe or number of elements in an RDD (count information) is not included because it leades to unnecessary computation time.</i></p>
+	<p><i><b>Note: </b>Number of rows in a dataframe or number of elements in an RDD (count information) is not included because it may result unnecessary computation time.</i></p>
 </body>
 </html>
