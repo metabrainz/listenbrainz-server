@@ -66,13 +66,17 @@ def main():
     ti = time()
     try:
         listenbrainz_spark.init_spark_session('Create Dataframes')
-    except AttributeError:
-        logging.info('Aborting...')
+    except Py4JJavaError as err:
+        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
 
     try:
         df = training_data_window()
-    except AttributeError:
+    except AnalysisException as err:
+        logging.error('{}\n{}\nAborting...'.format(str(err), err.stackTrace))
+        sys.exit(-1)
+    except Py4JJavaError as err:
+        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
 
     if not df:
@@ -84,11 +88,8 @@ def main():
     table = 'df_to_train_{}'.format(datetime.strftime(datetime.utcnow(), '%Y_%m_%d'))
     try:
         utils.register_dataframe(df, table)
-    except AnalysisException:
-        logging.info('Aborting...')
-        sys.exit(-1)
-    except AttributeError:
-        logging.info('Aborting...')
+    except Py4JJavaError as err:
+        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
     logging.info('Files fetched from HDFS and dataframe registered in {}s'.format('{:.2f}'.format(time() - ti)))
 
@@ -104,8 +105,8 @@ def main():
 
     try:
         utils.save_parquet(users_df, path + '/users_df.parquet')
-    except Py4JJavaError:
-        logging.info('Could not save users dataframe. Aborting...')
+    except Py4JJavaError as err:
+        logging.error('Could not save users dataframe. {}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
     users_df_time = '{:.2f}'.format((time() - t0) / 60)
 
@@ -119,8 +120,8 @@ def main():
 
     try:
         utils.save_parquet(recordings_df, path + '/recordings_df.parquet')
-    except Py4JJavaError:
-        logging.info('Could not save recordings dataframe. Aborting...')
+    except Py4JJavaError as err:
+        logging.error('Could not save recordings dataframe. {}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
     recordings_df_time = '{:.2f}'.format((time() - t0) / 60)
 
@@ -136,11 +137,8 @@ def main():
         utils.register_dataframe(listens_df, 'listen')
         utils.register_dataframe(users_df, 'user')
         utils.register_dataframe(recordings_df, 'recording')
-    except AnalysisException:
-        logging.info('Aborting...')
-        sys.exit(-1)
-    except AttributeError:
-        logging.info('Aborting...')
+    except Py4JJavaError as err:
+        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
 
     try:
@@ -152,8 +150,8 @@ def main():
 
     try:
         utils.save_parquet(playcounts_df, path + '/playcounts_df.parquet')
-    except Py4JJavaError:
-        logging.info('Could not save playcounts dataframe. Aborting...')
+    except Py4JJavaError as err:
+        logging.error('Could not save playcounts dataframe. {}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
     playcounts_df_time = '{:.2f}'.format((time() - t0) / 60)
     total_time = '{:.2f}'.format((time() - ti) / 60)
