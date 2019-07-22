@@ -7,8 +7,8 @@ from datetime import datetime
 from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
+from listenbrainz_spark import stats
 from listenbrainz_spark import config, utils
-from listenbrainz_spark.stats import adjusted_date
 from listenbrainz_spark.exceptions import SQLException
 from listenbrainz_spark.recommendations.utils import save_html
 from listenbrainz_spark.sql import create_dataframes_queries as sql
@@ -49,17 +49,10 @@ def training_data_window():
         Note: Under the assumption that config.TRAIN_MODEL_WINDOW will always indicate months.
     """
     training_df = None
-    m = config.TRAIN_MODEL_WINDOW
-    while m > 0:
-        d = adjusted_date(-m)
-        if d.month + m > 12:
-            df = utils.get_listens(d.year, d.month, 13)
-            training_df = training_df.union(df) if training_df else df
-            m -= (13 - d.month)
-        else:
-            df = utils.get_listens(d.year, d.month, d.month + m)
-            training_df = training_df.union(df) if training_df else df
-            m -= (m - 1 + d.month)
+    # go to first of the current month and then decrement months
+    d1 = stats.replace_days(1)
+    d2 = stats.adjust_months(d1, -config.TRAIN_MODEL_WINDOW)
+    training_df = utils.get_listens(d2, d1)
     return training_df
 
 def main():

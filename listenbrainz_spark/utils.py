@@ -6,6 +6,7 @@ import traceback
 from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
+from listenbrainz_spark import stats
 from listenbrainz_spark import config
 from listenbrainz_spark.stats import run_query
 
@@ -48,7 +49,7 @@ def read_files_from_HDFS(path):
         raise Py4JJavaError('An error occurred while fetching "{}": {}\n'.format(path, type(err).__name__),
             err.java_exception)
 
-def get_listens(y, m1, m2):
+def get_listens(d1, d2):
     """ Loads all the listens listened to in a given time window from HDFS.
 
         Args:
@@ -65,9 +66,11 @@ def get_listens(y, m1, m2):
                 ]
     """
     df = None
-    for m in range(m1, m2):
-        month = read_files_from_HDFS('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, y, m))
+    while d1 < d2:
+        month = read_files_from_HDFS('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, d1.year, d1.month))
         df = df.union(month) if df else month
+        # incrementing months
+        d1 = stats.adjust_months(d1, 1)
     return df
 
 def save_parquet(df, path):

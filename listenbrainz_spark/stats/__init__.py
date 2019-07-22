@@ -37,7 +37,10 @@ def run_query(query):
         raise SQLException('{}. An error occurred while executing{}\n{}'.format(type(err).__name__, query, str(err)))
     return processed_query
 
-def adjusted_date(months):
-    t = datetime.utcnow().replace(day=1)
-    date = t + relativedelta(months=months)
+def replace_days(day):
+    date = datetime.utcnow().replace(day=day)
+    return date
+
+def adjust_months(date, months):
+    date = date + relativedelta(months=months)
     return date
