@@ -25,6 +25,9 @@ TRAIN_MODEL_WINDOW = 6
 # calculate stats on X months data
 STATS_CALCULATION_WINDOW = 1
 
+# generate recommendations after every X days
+RECOMMENDATION_GENERATION_WINDOW = 28
+
 # number of recommendations to generate
 RECOMMENDATION_TOP_ARTIST_LIMIT = 30
 RECOMMENDATION_SIMILAR_ARTIST_LIMIT = 30
