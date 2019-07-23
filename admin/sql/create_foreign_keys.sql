@@ -36,12 +36,6 @@ ALTER TABLE recommendation.cf_recording
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
-ALTER TABLE recommendation.cf_recording
-    ADD CONSTRAINT cf_recording_recommender_id_foreign_key
-    FOREIGN KEY (recommender_id)
-    REFERENCES recommendation.recommender (id)
-    ON DELETE CASCADE;
-
 ALTER TABLE recommendation.cf_recording_recommender_join
     ADD CONSTRAINT cf_recording_recommender_join_recommender_id_foreign_key
     FOREIGN KEY (recommender_id)
