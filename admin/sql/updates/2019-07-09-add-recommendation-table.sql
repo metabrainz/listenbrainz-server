@@ -6,7 +6,6 @@ CREATE TABLE recommendation.cf_recording (
   id                  SERIAL, -- PK
   user_id             INTEGER NOT NULL, --FK to "user".id
   msid                UUID NOT NULL,
-  recommender_id      INTEGER, --FK to recommendation.recommender.id
   type                recording_type,
   created             TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -20,7 +19,7 @@ CREATE TABLE recommendation.recommender (
 );
 
 CREATE TABLE recommendation.cf_recording_recommender_join(
-  last_used           TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  last_used           TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
   cf_recording_id     INTEGER, --FK to recommendation.cf_recording.id
   recommender_id      INTEGER --FK tol recommendation.recommender.id
 );
@@ -35,11 +34,6 @@ ALTER TABLE recommendation.cf_recording
     FOREIGN KEY (user_id)
     REFERENCES "user" (id)
     ON DELETE CASCADE;
-
-ALTER TABLE recommendation.cf_recording
-    ADD CONSTRAINT cf_recording_recommender_id_foreign_key
-    FOREIGN KEY (recommender_id)
-    REFERENCES recommendation.recommender (id);
 
 ALTER TABLE recommendation.cf_recording_recommender_join
     ADD CONSTRAINT cf_recording_recommender_join_recommender_id_foreign_key
