@@ -49,9 +49,12 @@ def create_training_data_from_window():
         Note: Under the assumption that config.TRAIN_MODEL_WINDOW will always indicate months.
     """
     training_df = None
-    current_date = datetime.utcnow()
-    adjusted_date = stats.adjust_months(current_date, -config.TRAIN_MODEL_WINDOW)
-    training_df = utils.get_listens(current_date, adjusted_date)
+    # we go back in time to some point from current date
+    # and from that point come back to the current date
+    # therefore, current date is where the traversal ends.
+    end_date = datetime.utcnow()
+    begin_date = stats.adjust_months(end_date, -config.TRAIN_MODEL_WINDOW)
+    training_df = utils.get_listens_for_date_range(begin_date, end_date)
     return training_df
 
 def main():
