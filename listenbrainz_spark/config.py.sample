@@ -2,13 +2,15 @@ HDFS_HTTP_URI = 'http://hadoop-master:9870' # the URI of the http webclient for 
 
 HDFS_CLUSTER_URI = 'hdfs://hadoop-master:9000' # the URI to be used with Spark
 
-#rabbitmq
+# rabbitmq
 RABBITMQ_HOST = "rabbitmq"
 RABBITMQ_PORT = 5672
 RABBITMQ_USERNAME = "guest"
 RABBITMQ_PASSWORD = "guest"
 RABBITMQ_VHOST = "/"
 MAXIMUM_RABBITMQ_CONNECTIONS = 100
+
+# rabbitmq exchange and queue for stats
 SPARK_EXCHANGE = "spark"
 SPARK_QUEUE = "spark"
 
@@ -17,11 +19,14 @@ RANKS = [8, 12]
 LAMBDAS = [0.1, 10.0]
 ITERATIONS = [10, 20]
 
-# create dataframes
-STARTING_MONTH = 1
-ENDING_MONTH = 12
-STARTING_YEAR = 2017
-ENDING_YEAR = 2019
+# train model on X months data
+TRAIN_MODEL_WINDOW = 6
+
+# calculate stats on X months data
+STATS_CALCULATION_WINDOW = 1
+
+# generate recommendations after every X days
+RECOMMENDATION_GENERATION_WINDOW = 28
 
 # number of recommendations to generate
 RECOMMENDATION_TOP_ARTIST_LIMIT = 30
