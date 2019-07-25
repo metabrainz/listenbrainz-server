@@ -6,6 +6,7 @@ import traceback
 from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
+from listenbrainz_spark import stats
 from listenbrainz_spark import config
 from listenbrainz_spark.stats import run_query
 
@@ -42,14 +43,18 @@ def read_files_from_HDFS(path):
         df = listenbrainz_spark.sql_context.read.parquet(path)
         return df
     except AnalysisException as err:
-        raise AnalysisException('Cannot read "{}" from HDFS: {}\n'.format(path, type(err).__name__),
+      raise AnalysisException('Cannot read "{}" from HDFS: {}\n'.format(path, type(err).__name__),
             stackTrace=traceback.format_exc())
     except Py4JJavaError as err:
         raise Py4JJavaError('An error occurred while fetching "{}": {}\n'.format(path, type(err).__name__),
             err.java_exception)
 
-def get_listens():
+def get_listens_for_date_range(begin_date, end_date):
     """ Loads all the listens listened to in a given time window from HDFS.
+
+        Args:
+            begin_date (datetime): Date to start fetching listens.
+            end_date (datetime): Date upto which listens should be fetched. Usually the current date.
 
         Returns:
             df (dataframe): Dataframe with columns as:
@@ -58,12 +63,15 @@ def get_listens():
                     'recording_msid', 'release_mbid', 'release_msid', 'release_name', 'tags',
                     'track_name', 'user_name'
                 ]
+        Note: Listens of current date will not be fetched.
     """
     df = None
-    for y in range(config.STARTING_YEAR, config.ENDING_YEAR + 1):
-        for m in range(config.STARTING_MONTH, config.ENDING_MONTH + 1):
-            month = read_files_from_HDFS('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, y, m))
-            df = df.union(month) if df else month
+    while begin_date < end_date:
+        month = read_files_from_HDFS('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, begin_date.year,
+            begin_date.month))
+        df = df.union(month) if df else month
+        # incrementing months
+        begin_date = stats.adjust_months(begin_date, 1)
     return df
 
 def save_parquet(df, path):

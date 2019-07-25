@@ -7,6 +7,7 @@ from datetime import datetime
 from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
+from listenbrainz_spark import stats
 from listenbrainz_spark import config, utils
 from listenbrainz_spark.exceptions import SQLException
 from listenbrainz_spark.recommendations.utils import save_html
@@ -26,18 +27,35 @@ def save_dataframe_html(users_df_time, recordings_df_time, playcounts_df_time, t
             playcounts_df_time (str): TIme taken to prepare and save playcounts dataframe.
             total_time (str): Time taken to execute the script.
     """
-    lb_dump_time_window = ('{}-{}'.format(config.STARTING_YEAR, '{:02d}'.format(config.STARTING_MONTH)),'{}-{}' \
-        .format(config.ENDING_YEAR, '{:02d}'.format(config.ENDING_MONTH)))
     date = datetime.utcnow().strftime('%Y-%m-%d')
     queries_html = 'Queries-{}-{}.html'.format(uuid.uuid4(), date)
     context = {
         'users_df_time' : users_df_time,
         'recordings_df_time' : recordings_df_time,
         'playcounts_df_time' : playcounts_df_time,
-        'lb_dump_time_window' : lb_dump_time_window,
         'total_time' : total_time
     }
     save_html(queries_html, context, 'queries.html')
+
+def create_training_data_from_window():
+    """  Prepare dataframe of listens of X months where X is a config value.
+
+        Returns:
+            training_df (dataframe): Columns can de depicted as:
+                [
+                    artist_mbids, artist_msid, artist_name, listened_at, recording_mbid,
+                    recording_msid, release_mbid, release_msid, release_name, tags, track_name, user_name
+                ]
+        Note: Under the assumption that config.TRAIN_MODEL_WINDOW will always indicate months.
+    """
+    training_df = None
+    # we go back in time to some point from current date
+    # and from that point come back to the current date
+    # therefore, current date is where the traversal ends.
+    end_date = datetime.utcnow()
+    begin_date = stats.adjust_months(end_date, -config.TRAIN_MODEL_WINDOW)
+    training_df = utils.get_listens_for_date_range(begin_date, end_date)
+    return training_df
 
 def main():
     ti = time()
@@ -48,7 +66,7 @@ def main():
         sys.exit(-1)
 
     try:
-        df = utils.get_listens()
+        df = create_training_data_from_window()
     except AnalysisException as err:
         logging.error('{}\n{}\nAborting...'.format(str(err), err.stackTrace))
         sys.exit(-1)
@@ -57,9 +75,8 @@ def main():
         sys.exit(-1)
 
     if not df:
-        logging.error('Parquet files containing listening history from {}-{} to {}-{} missing from HDFS' \
-        .format(config.STARTING_YEAR, '{:02d}'.format(config.STARTING_MONTH), config.ENDING_YEAR, '{:02d}' \
-        .format( config.ENDING_MONTH)))
+        logging.error('Parquet files containing listening history of past {} month(s) missing form HDFS'.format(
+            config.TRAIN_MODEL_WINDOW))
         sys.exit(-1)
 
     logging.info('Registering Dataframe...')
@@ -98,7 +115,7 @@ def main():
 
     try:
         utils.save_parquet(recordings_df, path + '/recordings_df.parquet')
-    except Py4JJavaError:
+    except Py4JJavaError as err:
         logging.error('Could not save recordings dataframe. {}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
     recordings_df_time = '{:.2f}'.format((time() - t0) / 60)

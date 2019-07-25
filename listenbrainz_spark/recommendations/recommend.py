@@ -77,7 +77,7 @@ def recommend_user(user_name, model, recordings_df):
                     'track_name', 'recording_msid', 'artist_name', 'artist_msid', 'release_name',
                     'release_msid', 'recording_id'
                 ]
-
+                
         Returns:
             user_recommendations (dict): Dictionary can be depicted as:
                 {

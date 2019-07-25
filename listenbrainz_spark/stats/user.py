@@ -8,8 +8,8 @@ import pika
 from collections import defaultdict
 from listenbrainz_spark.rabbitmq_writer.rabbitmq_writer import RabbitmqWriter
 from listenbrainz_spark import config
+from listenbrainz_spark import stats
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.stats import date_for_stats_calculation
 from datetime import datetime
 from pyspark.sql.utils import AnalysisException
 from py4j.protocol import Py4JJavaError
@@ -189,7 +189,8 @@ def main():
     except Exception as err:
         logging.error("Cannot initialize spark session: %s / %s. Aborting." % (type(err).__name__, str(err)))
         sys.exit(-1)
-    date = date_for_stats_calculation()
+    d = stats.replace_days(1)
+    date = stats.adjust_months(d, -config.STATS_CALCULATION_WINDOW)
     logging.info("Loading dataframe...")
     try:
         df = listenbrainz_spark.sql_context.read.parquet('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, date.year, date.month))
