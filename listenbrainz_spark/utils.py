@@ -49,13 +49,12 @@ def read_files_from_HDFS(path):
         raise Py4JJavaError('An error occurred while fetching "{}": {}\n'.format(path, type(err).__name__),
             err.java_exception)
 
-def get_listens(d1, d2):
+def get_listens(current_date, adjusted_date):
     """ Loads all the listens listened to in a given time window from HDFS.
 
         Args:
-            y (int): Year to load parquets.
-            m1 (int): Load parquets from month m1.
-            m2 (int): Load parquets till month m2.
+            current_date (datetime): Current date.
+            adjusted_date (datetime): Modified date.
 
         Returns:
             df (dataframe): Dataframe with columns as:
@@ -64,13 +63,15 @@ def get_listens(d1, d2):
                     'recording_msid', 'release_mbid', 'release_msid', 'release_name', 'tags',
                     'track_name', 'user_name'
                 ]
+        Note: Dataframe of current month would not be included.
     """
     df = None
-    while d1 < d2:
-        month = read_files_from_HDFS('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, d1.year, d1.month))
+    while adjusted_date < current_date:
+        month = read_files_from_HDFS('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, adjusted_date.year,
+            adjusted_date.month))
         df = df.union(month) if df else month
         # incrementing months
-        d1 = stats.adjust_months(d1, 1)
+        adjusted_date = stats.adjust_months(adjusted_date, 1)
     return df
 
 def save_parquet(df, path):
