@@ -37,7 +37,7 @@ def save_dataframe_html(users_df_time, recordings_df_time, playcounts_df_time, t
     }
     save_html(queries_html, context, 'queries.html')
 
-def training_data_window():
+def create_training_data_from_window():
     """  Prepare dataframe of listens of X months where X is a config value.
 
         Returns:
@@ -49,10 +49,9 @@ def training_data_window():
         Note: Under the assumption that config.TRAIN_MODEL_WINDOW will always indicate months.
     """
     training_df = None
-    # go to first of the current month and then decrement months
-    d1 = stats.replace_days(1)
-    d2 = stats.adjust_months(d1, -config.TRAIN_MODEL_WINDOW)
-    training_df = utils.get_listens(d2, d1)
+    current_date = datetime.utcnow()
+    adjusted_date = stats.adjust_months(current_date, -config.TRAIN_MODEL_WINDOW)
+    training_df = utils.get_listens(current_date, adjusted_date)
     return training_df
 
 def main():
@@ -64,7 +63,7 @@ def main():
         sys.exit(-1)
 
     try:
-        df = training_data_window()
+        df = create_training_data_from_window()
     except AnalysisException as err:
         logging.error('{}\n{}\nAborting...'.format(str(err), err.stackTrace))
         sys.exit(-1)
