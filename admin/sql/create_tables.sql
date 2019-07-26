@@ -15,17 +15,14 @@ ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_id_key UNIQUE (musicbrainz_id
 ALTER TABLE "user" ADD CONSTRAINT user_musicbrainz_row_id_key UNIQUE (musicbrainz_row_id);
 ALTER TABLE "user" ADD CONSTRAINT user_login_id_key UNIQUE (login_id);
 
-CREATE TABLE spotify_auth (
-  user_id                   INTEGER NOT NULL, -- PK and FK to user.id
-  user_token                VARCHAR NOT NULL,
-  token_expires             TIMESTAMP WITH TIME ZONE,
-  refresh_token             VARCHAR NOT NULL,
-  last_updated              TIMESTAMP WITH TIME ZONE,
-  latest_listened_at        TIMESTAMP WITH TIME ZONE,
-  record_listens            BOOLEAN DEFAULT TRUE,
-  error_message             VARCHAR,
-  permission                VARCHAR NOT NULL
+CREATE TABLE api_compat.session (
+    id        SERIAL,
+    user_id   INTEGER NOT NULL, -- FK to "user".id
+    sid       VARCHAR NOT NULL,
+    api_key   VARCHAR NOT NULL,
+    ts        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+ALTER TABLE api_compat.session ADD CONSTRAINT session_sid_uniq UNIQUE (sid);
 
 CREATE TABLE api_compat.token (
      id               SERIAL,
@@ -37,21 +34,62 @@ CREATE TABLE api_compat.token (
 ALTER TABLE api_compat.token ADD CONSTRAINT token_api_key_uniq UNIQUE (api_key);
 ALTER TABLE api_compat.token ADD CONSTRAINT token_token_uniq UNIQUE (token);
 
-CREATE TABLE api_compat.session (
-    id        SERIAL,
-    user_id   INTEGER NOT NULL, -- FK to "user".id
-    sid       VARCHAR NOT NULL,
-    api_key   VARCHAR NOT NULL,
-    ts        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE data_dump (
+  id          SERIAL,
+  created     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
-ALTER TABLE api_compat.session ADD CONSTRAINT session_sid_uniq UNIQUE (sid);
 
-CREATE TABLE statistics.user (
-    user_id                 INTEGER NOT NULL, -- PK and FK to "user".id
-    artist                  JSONB,
-    release                 JSONB,
-    recording               JSONB,
-    last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+CREATE TABLE follow_list (
+  id                SERIAL, -- PK
+  name              TEXT NOT NULL,
+  creator           INTEGER NOT NULL, -- FK to "user".id
+  private           BOOLEAN NOT NULL DEFAULT FALSE,
+  members           INTEGER ARRAY NOT NULL DEFAULT ARRAY[]::INTEGER[],
+  created           TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  last_saved        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+ALTER TABLE follow_list ADD CONSTRAINT follow_list_name_creator_key UNIQUE (name, creator);
+
+CREATE TABLE recommendation.cf_recording (
+  id                  SERIAL, -- PK
+  user_id             INTEGER NOT NULL, --FK to "user".id
+  recording_msid      UUID NOT NULL,
+  type                cf_recording_type,
+  created             TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE recommendation.recommender (
+  id                  SERIAL, --PK
+  user_id             INTEGER NOT NULL, --FK to "user".id, denotes user who wrote software for this recommender.
+  repository          TEXT NOT NULL,
+  name                TEXT NOT NULL,
+  created             TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE recommendation.recommender_session (
+  id                  SERIAL, --PK
+  recommender_id      INTEGER NOT NULL, --FK to recommendation.recommender.id
+  user_id             INTEGER NOT NULL, --FK to "user".id, user for whom the recommendations are generated.
+  created             TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  data                JSONB
+);
+
+CREATE TABLE recommendation.recording_session (
+  last_used           TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+  recording_msid      UUID NOT NULL,
+  session_id          INTEGER NOT NULL --FK to recommendation.recommender_session.id
+);
+
+CREATE TABLE spotify_auth (
+  user_id                   INTEGER NOT NULL, -- PK and FK to user.id
+  user_token                VARCHAR NOT NULL,
+  token_expires             TIMESTAMP WITH TIME ZONE,
+  refresh_token             VARCHAR NOT NULL,
+  last_updated              TIMESTAMP WITH TIME ZONE,
+  latest_listened_at        TIMESTAMP WITH TIME ZONE,
+  record_listens            BOOLEAN DEFAULT TRUE,
+  error_message             VARCHAR,
+  permission                VARCHAR NOT NULL
 );
 
 CREATE TABLE statistics.artist (
@@ -88,42 +126,12 @@ CREATE TABLE statistics.recording (
 );
 ALTER TABLE statistics.recording ADD CONSTRAINT recording_stats_msid_uniq UNIQUE (msid);
 
-CREATE TABLE data_dump (
-  id          SERIAL,
-  created     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE follow_list (
-  id                SERIAL, -- PK
-  name              TEXT NOT NULL,
-  creator           INTEGER NOT NULL, -- FK to "user".id
-  private           BOOLEAN NOT NULL DEFAULT FALSE,
-  members           INTEGER ARRAY NOT NULL DEFAULT ARRAY[]::INTEGER[],
-  created           TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-  last_saved        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);
-ALTER TABLE follow_list ADD CONSTRAINT follow_list_name_creator_key UNIQUE (name, creator);
-
-CREATE TABLE recommendation.cf_recording (
-  id                  SERIAL, -- PK
-  user_id             INTEGER NOT NULL, --FK to "user".id
-  msid                UUID NOT NULL,
-  type                recording_type,
-  created             TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TABLE recommendation.recommender (
-  id                  SERIAL, --PK
-  repository          TEXT NOT NULL,
-  author_email        TEXT NOT NULL,
-  name                TEXT NOT NULL,
-  created             TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TABLE recommendation.cf_recording_recommender_join(
-  last_used           TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
-  cf_recording_id     INTEGER, --FK to recommendation.cf_recording.id
-  recommender_id      INTEGER --FK to recommendation.recommender.id
+CREATE TABLE statistics.user (
+    user_id                 INTEGER NOT NULL, -- PK and FK to "user".id
+    artist                  JSONB,
+    release                 JSONB,
+    recording               JSONB,
+    last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 COMMIT;

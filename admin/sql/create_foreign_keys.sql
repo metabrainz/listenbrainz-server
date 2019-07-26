@@ -36,16 +36,22 @@ ALTER TABLE recommendation.cf_recording
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
-ALTER TABLE recommendation.cf_recording_recommender_join
-    ADD CONSTRAINT cf_recording_recommender_join_recommender_id_foreign_key
-    FOREIGN KEY (recommender_id)
-    REFERENCES recommendation.recommender (id)
+ALTER TABLE recommendation.recommender
+    ADD CONSTRAINT recommender_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
     ON DELETE CASCADE;
 
-ALTER TABLE recommendation.cf_recording_recommender_join
-    ADD CONSTRAINT cf_recording_recommender_join_cf_recording_id_foreign_key
-    FOREIGN KEY (cf_recording_id)
-    REFERENCES recommendation.cf_recording (id)
+ALTER TABLE recommendation.recording_session
+    ADD CONSTRAINT recording_session_recommender_session_foreign_key
+    FOREIGN KEY (session_id)
+    REFERENCES recommendation.recommender_session (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE recommendation.recommender_session
+    ADD CONSTRAINT recommender_session_recommender_foreign_key
+    FOREIGN KEY (recommender_id)
+    REFERENCES recommendation.recommender (id)
     ON DELETE CASCADE;
 
 COMMIT;

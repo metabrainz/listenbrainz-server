@@ -12,5 +12,6 @@ ALTER TABLE statistics.recording ADD CONSTRAINT stats_recording_pkey PRIMARY KEY
 
 ALTER TABLE recommendation.cf_recording ADD CONSTRAINT rec_cf_recording_pkey PRIMARY KEY (id);
 ALTER TABLE recommendation.recommender ADD CONSTRAINT rec_recommender_pkey PRIMARY KEY (id);
+ALTER TABLE recommendation.recommender_session ADD CONSTRAINT rec_recommender_session_pkey PRIMARY KEY (id);
 
 COMMIT;
