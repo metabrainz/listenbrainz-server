@@ -26,6 +26,7 @@ def create_influx(app):
         'REDIS_HOST': app.config['REDIS_HOST'],
         'REDIS_PORT': app.config['REDIS_PORT'],
         'REDIS_NAMESPACE': app.config['REDIS_NAMESPACE'],
+        'LISTEN_DUMP_TEMP_DIR_ROOT': app.config['LISTEN_DUMP_TEMP_DIR_ROOT'],
     })
 
 
