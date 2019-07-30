@@ -44,3 +44,7 @@ def replace_days(day):
 def adjust_months(date, months):
     date = date + relativedelta(months=months)
     return date
+
+def adjust_days(date, days):
+    date = date + relativedelta(days=days)
+    return date
