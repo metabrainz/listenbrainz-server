@@ -4,7 +4,7 @@ from listenbrainz_spark.stats import run_query
 from pyspark.sql.functions import lit
 
 def get_listens_for_X_days():
-  """ Prepare dataframe of listens of X days where X is  a config value.
+    """ Prepare dataframe of listens of X days where X is  a config value.
 
       Returns:
         df (dataframe): Columns can be depicted as:
@@ -15,14 +15,14 @@ def get_listens_for_X_days():
           ]
 
       Note: Listens of current day are not included.
-  """
-  df = run_query("""
+    """
+    df = run_query("""
       SELECT *
         FROM df
        WHERE listened_at >= to_timestamp(date_sub(current_timestamp, %s))
          AND listened_at < current_timestamp
-  """ % config.RECOMMENDATION_GENERATION_WINDOW)
-  return df
+    """ % config.RECOMMENDATION_GENERATION_WINDOW)
+    return df
 
 def get_top_artists(user_name):
     """ Prepare dataframe of top y (limit) artists listened to by the user where y

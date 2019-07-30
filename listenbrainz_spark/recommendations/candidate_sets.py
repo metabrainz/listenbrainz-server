@@ -35,7 +35,12 @@ def get_listens_for_rec_generation_window():
     df = None
     end_date = datetime.utcnow()
     begin_date = stats.adjust_days(end_date, -config.RECOMMENDATION_GENERATION_WINDOW)
-    df = utils.get_listens_for_rec_generation_winodw(begin_date, end_date)
+    # config.RECOMMENDATION_GENERATION_WINDOW should be less than 28 (considering leap year)
+    # otherwise the function may produce unexpected results (skip a few months data).
+    if end_date.month == begin_date.month:
+        df = utils.get_listens(df, end_date)
+    else:
+        df = utils.get_listens_for_rec_generation_winodw(begin_date, end_date)
     return df
 
 def get_similar_artists(top_artists_df, user_name):
