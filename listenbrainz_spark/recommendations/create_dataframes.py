@@ -16,7 +16,7 @@ from listenbrainz_spark.sql import create_dataframes_queries as sql
 from pyspark.sql.utils import AnalysisException
 
 # dataframe html is generated when set to true
-SAVE_DATAFRAME_HTML = True
+SAVE_DATAFRAME_HTML = False
 
 def save_dataframe_html(users_df_time, recordings_df_time, playcounts_df_time, total_time):
     """ Prepare and save dataframe HTML.
@@ -37,7 +37,7 @@ def save_dataframe_html(users_df_time, recordings_df_time, playcounts_df_time, t
     }
     save_html(queries_html, context, 'queries.html')
 
-def create_training_data_from_window():
+def get_listens_for_train_model_window():
     """  Prepare dataframe of listens of X months where X is a config value.
 
         Returns:
@@ -49,12 +49,11 @@ def create_training_data_from_window():
         Note: Under the assumption that config.TRAIN_MODEL_WINDOW will always indicate months.
     """
     training_df = None
-    # we go back in time to some point from current date
-    # and from that point come back to the current date
-    # therefore, current date is where the traversal ends.
+    # we go back in time to some point from current date and from that point come back to the current date
+    # by increasing one month at a time. Therefore, current date is where the traversal ends (end_date).
     end_date = datetime.utcnow()
     begin_date = stats.adjust_months(end_date, -config.TRAIN_MODEL_WINDOW)
-    training_df = utils.get_listens_for_date_range(begin_date, end_date)
+    training_df = utils.get_listens_for_train_model_window(begin_date, end_date)
     return training_df
 
 def main():
@@ -66,7 +65,7 @@ def main():
         sys.exit(-1)
 
     try:
-        df = create_training_data_from_window()
+        df = get_listens_for_train_model_window()
     except AnalysisException as err:
         logging.error('{}\n{}\nAborting...'.format(str(err), err.stackTrace))
         sys.exit(-1)
