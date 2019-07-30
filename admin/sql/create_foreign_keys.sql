@@ -30,4 +30,28 @@ ALTER TABLE follow_list
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
+ALTER TABLE recommendation.cf_recording
+    ADD CONSTRAINT cf_recording_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE recommendation.recommender
+    ADD CONSTRAINT recommender_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE recommendation.recording_session
+    ADD CONSTRAINT recording_session_recommender_session_foreign_key
+    FOREIGN KEY (session_id)
+    REFERENCES recommendation.recommender_session (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE recommendation.recommender_session
+    ADD CONSTRAINT recommender_session_recommender_foreign_key
+    FOREIGN KEY (recommender_id)
+    REFERENCES recommendation.recommender (id)
+    ON DELETE CASCADE;
+
 COMMIT;
