@@ -54,8 +54,8 @@ CREATE TABLE recommendation.cf_recording (
   id                  SERIAL, -- PK
   user_id             INTEGER NOT NULL, --FK to "user".id
   recording_msid      UUID NOT NULL,
-  type                cf_recording_type,
-  created             TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  type                cf_recording_type NOT NULL,
+  created             TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
 CREATE TABLE recommendation.recommender (
@@ -63,14 +63,14 @@ CREATE TABLE recommendation.recommender (
   user_id             INTEGER NOT NULL, --FK to "user".id, denotes user who wrote software for this recommender.
   repository          TEXT NOT NULL,
   name                TEXT NOT NULL,
-  created             TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  created             TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
 CREATE TABLE recommendation.recommender_session (
   id                  SERIAL, --PK
   recommender_id      INTEGER NOT NULL, --FK to recommendation.recommender.id
   user_id             INTEGER NOT NULL, --FK to "user".id, user for whom the recommendations are generated.
-  created             TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  created             TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
   data                JSONB
 );
 
