@@ -46,8 +46,6 @@ cd "$LB_SERVER_ROOT"
 source admin/config.sh
 source admin/functions.sh
 
-TEMP_DIR="/home/listenbrainz/data/dumps"
-
 DUMP_TYPE=${1:-full}
 
 if [ $DUMP_TYPE == "full" ]; then
