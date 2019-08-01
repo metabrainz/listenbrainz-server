@@ -190,7 +190,7 @@ def main():
         best_model_test_rmse = compute_rmse(model.model, test_data, num_test)
     except Py4JJavaError as err:
         logging.error('Root mean squared error for best model for test data not computed:{}\n{}\nAborting...'.format(
-            type(err).__name__, err.java_exception))
+            type(err).__name__, str(err.java_exception)))
         sys.exit(-1)
 
     # Cached data must be cleared to avoid OOM.
