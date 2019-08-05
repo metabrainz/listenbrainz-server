@@ -174,6 +174,13 @@ def get_releases(table):
     print("Query to calculate release stats processed in %.2f s" % (time.time() - t0))
     return releases
 
+def date_to_calculate_stats():
+    curr_date = datetime.utcnow()
+    # shift to the first of the month
+    shifted_date = stats.replace_days(date, 1)
+    date = stats.adjust_months(shifted_date, config.STATS_CALCULATION_WINDOW)
+    return date
+
 def main():
     """
     Calculate statistics of users for previous month.
@@ -189,8 +196,8 @@ def main():
     except Exception as err:
         logging.error("Cannot initialize spark session: %s / %s. Aborting." % (type(err).__name__, str(err)))
         sys.exit(-1)
-    d = stats.replace_days(1)
-    date = stats.adjust_months(d, -config.STATS_CALCULATION_WINDOW)
+
+    date = date_to_calculate_stats()
     logging.info("Loading dataframe...")
     try:
         df = listenbrainz_spark.sql_context.read.parquet('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, date.year, date.month))

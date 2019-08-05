@@ -22,7 +22,7 @@ from pyspark.sql.utils import AnalysisException, ParseException
 SAVE_CANDIDATE_HTML = True
 
 def get_listens_for_rec_generation_window():
-    """ Prepare dataframe of listens of X days where X is a config value.
+    """ Prepare dataframe of listens of X days to generate recommendations. Here X is a config value.
 
         Returns:
             df (dataframe): Columns can de depicted as:
@@ -30,17 +30,13 @@ def get_listens_for_rec_generation_window():
                     artist_mbids, artist_msid, artist_name, listened_at, recording_mbid,
                     recording_msid, release_mbid, release_msid, release_name, tags, track_name, user_name
                 ]
-        Note: Under the assumption that config.RECOMMENDATION_GENERATION_WINDOW will always indicate days.
     """
     df = None
-    end_date = datetime.utcnow()
-    begin_date = stats.adjust_days(end_date, -config.RECOMMENDATION_GENERATION_WINDOW)
-    # config.RECOMMENDATION_GENERATION_WINDOW should be less than 28 (considering leap year)
-    # otherwise the function may produce unexpected results (skip a few months data).
-    if end_date.month == begin_date.month:
-        df = utils.get_listens(df, end_date)
-    else:
-        df = utils.get_listens_for_rec_generation_winodw(begin_date, end_date)
+    to_date = datetime.utcnow()
+    from_date = stats.adjust_days(to_date, config.RECOMMENDATION_GENERATION_WINDOW)
+    # shift to the first of the month
+    from_date = stats.replace_days(from_date, 1)
+    df = utils.get_listens(from_date, to_date)
     return df
 
 def get_similar_artists(top_artists_df, user_name):

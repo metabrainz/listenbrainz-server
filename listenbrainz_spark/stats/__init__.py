@@ -37,14 +37,20 @@ def run_query(query):
         raise SQLException('{}. An error occurred while executing{}\n{}'.format(type(err).__name__, query, str(err)))
     return processed_query
 
-def replace_days(day):
-    date = datetime.utcnow().replace(day=day)
+def replace_days(date, day):
+    date = date.replace(day=day)
     return date
 
-def adjust_months(date, months):
-    date = date + relativedelta(months=months)
+def adjust_months(date, months, shift_backwards=True):
+    if shift_backwards:
+        date = date + relativedelta(months=-months)
+    else:
+        date = date + relativedelta(months=months)
     return date
 
-def adjust_days(date, days):
-    date = date + relativedelta(days=days)
+def adjust_days(date, days, shift_backwards=True):
+    if shift_backwards:
+        date = date + relativedelta(days=-days)
+    else:
+        date = date + relativedelta(days=days)
     return date
