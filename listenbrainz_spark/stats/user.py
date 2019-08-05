@@ -175,6 +175,11 @@ def get_releases(table):
     return releases
 
 def date_to_calculate_stats():
+    """ Get date to calculate statistics usually over a month but not necessarily.
+
+        Returns:
+            date (datetime): Date to calculate user statistics.
+    """
     curr_date = datetime.utcnow()
     # shift to the first of the month
     shifted_date = stats.replace_days(date, 1)
