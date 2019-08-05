@@ -65,9 +65,6 @@ def main():
 
     try:
         df = get_listens_for_training_model_window()
-    except AnalysisException as err:
-        logging.error('{}\n{}\nAborting...'.format(str(err), err.stackTrace))
-        sys.exit(-1)
     except Py4JJavaError as err:
         logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
