@@ -49,17 +49,12 @@ def read_files_from_HDFS(path):
         raise Py4JJavaError('An error occurred while fetching "{}": {}\n'.format(path, type(err).__name__),
             err.java_exception)
 
-def get_listens(df, date):
-    """ Fetch listens of the date and append with the dataframe, both passed as arguments.
+def get_listens(from_date, to_date):
+    """ Prepare dataframe of months falling between from_date and to_date (both inclusive).
 
         Args:
-            df (dataframe): None or with columns as:
-                [
-                    'artist_mbids', 'artist_msid', 'artist_name', 'listened_at', 'recording_mbid'
-                    'recording_msid', 'release_mbid', 'release_msid', 'release_name', 'tags',
-                    'track_name', 'user_name'
-                ]
-            date (datetime): Date for which listens are to be fetched.
+            from_date (datetime): Date from which start fetching listens.
+            to_date (datetime): Date upto which fetch listens.
 
         Returns:
             df (dataframe): Columns can be depicted as:
@@ -68,55 +63,16 @@ def get_listens(df, date):
                     'recording_msid', 'release_mbid', 'release_msid', 'release_name', 'tags',
                     'track_name', 'user_name'
                 ]
-    """
-    month = read_files_from_HDFS('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, date.year, date.month))
-    df = df.union(month) if df else month
-    return df
-
-def get_listens_for_train_model_window(begin_date, end_date):
-    """ Load listens listened to in a given time window from HDFS.
-
-        Args:
-            begin_date (datetime): Date to start fetching listens.
-            end_date (datetime): Date upto which listens should be fetched. Usually the current date.
-
-        Returns:
-            df (dataframe): Columns can be depicted as:
-                [
-                    'artist_mbids', 'artist_msid', 'artist_name', 'listened_at', 'recording_mbid'
-                    'recording_msid', 'release_mbid', 'release_msid', 'release_name', 'tags',
-                    'track_name', 'user_name'
-                ]
-        Note: Listens of current month will not be fetched.
     """
     df = None
-    while begin_date < end_date:
-        df = get_listens(df, begin_date)
-        # incrementing months
-        begin_date = stats.adjust_months(begin_date, 1)
-    return df
-
-def get_listens_for_rec_generation_winodw(begin_date, end_date):
-    """ Load listens listenend to in a given time window from HDFS.
-
-        Args:
-            begin_date (datetime): Date to start fetching listens.
-            end_date (datetime): Date upto which listens should be fetched. Usually the current date.
-
-        Returns:
-            df (dataframe): Columns can be depicted as:
-                [
-                    'artist_mbids', 'artist_msid', 'artist_name', 'listened_at', 'recording_mbid'
-                    'recording_msid', 'release_mbid', 'release_msid', 'release_name', 'tags',
-                    'track_name', 'user_name'
-                ]
-        Note: Listens of current month will be fetched.
-    """
-    df = None
-    while begin_date <= end_date:
-        df = get_listens(df, begin_date)
-        # incrementing days
-        begin_date = stats.adjust_days(begin_date, config.RECOMMENDATION_GENERATION_WINDOW)
+    while from_date <= to_date:
+        month = read_files_from_HDFS('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, from_date.year, from_date.month))
+        print('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, from_date.year, from_date.month))
+        df = df.union(month) if df else month
+        # go to the next month of from_date
+        from_date = stats.adjust_days(from_date, config.STEPS_TO_REACH_NEXT_MONTH, shift_backwards=False)
+        # shift to the first of the month
+        from_date = stats.replace_days(from_date, 1)
     return df
 
 def save_parquet(df, path):
