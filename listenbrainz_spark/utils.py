@@ -66,9 +66,11 @@ def get_listens(from_date, to_date):
     """
     df = None
     while from_date <= to_date:
-        month = read_files_from_HDFS('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, from_date.year, from_date.month))
-        print('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, from_date.year, from_date.month))
-        df = df.union(month) if df else month
+        try:
+            month = read_files_from_HDFS('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, from_date.year, from_date.month))
+            df = df.union(month) if df else month
+        except AnalysisException as err:
+            logging.error('{}\nTrying to fetch listens for next date.'format(str(err)))
         # go to the next month of from_date
         from_date = stats.adjust_days(from_date, config.STEPS_TO_REACH_NEXT_MONTH, shift_backwards=False)
         # shift to the first of the month
