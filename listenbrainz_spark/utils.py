@@ -49,7 +49,7 @@ def read_files_from_HDFS(path):
         raise Py4JJavaError('An error occurred while fetching "{}": {}\n'.format(path, type(err).__name__),
             err.java_exception)
 
-def get_listens(to_date, from_date):
+def get_listens(from_date, to_date):
     """ Prepare dataframe of months falling between from_date and to_date (both inclusive).
 
         Args:
@@ -69,7 +69,7 @@ def get_listens(to_date, from_date):
             raise ValueError()
     except ValueError as err:
         logging.error('{}: Data generation window is negative i.e. from_date (date from which start fetching listens)' \
-            ' is greater than to_date (date upto which fetch listens).\nAborting...{}'.format(type(err).__name__))
+            ' is greater than to_date (date upto which fetch listens).\nAborting...'.format(type(err).__name__))
         sys.exit(-1)
 
     df = None
