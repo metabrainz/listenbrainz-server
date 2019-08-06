@@ -96,8 +96,8 @@ def train(training_data, validation_data, num_validation, ranks, lambdas, iterat
         try:
             validation_rmse = compute_rmse(model, validation_data, num_validation)
         except Py4JJavaError as err:
-            raise Py4JJavaError('Root Mean Squared Error for model "{}" not computed: {}\n'.format(model_id,
-                type(err).__name__), err.java_exception)
+            raise Py4JJavaError('Root Mean Squared Error for model "{}" for validation data not computed: {}\n'.format(
+                model_id, type(err).__name__), err.java_exception)
         vt = '{:.2f}'.format((time() - t0) / 60)
         model_metadata.append((model_id, mt, rank, '{:.1f}'.format(lmbda), iteration, "%.2f" % (validation_rmse), vt))
         if best_model is None or validation_rmse < best_model.error:
@@ -185,6 +185,13 @@ def main():
         logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
     models_training_time = '{:.2f}'.format((time() - t0) / 3600)
+
+    try:
+        best_model_test_rmse = compute_rmse(model.model, test_data, num_test)
+    except Py4JJavaError as err:
+        logging.error('Root mean squared error for best model for test data not computed:{}\n{}\nAborting...'.format(
+            type(err).__name__, str(err.java_exception)))
+        sys.exit(-1)
 
     # Cached data must be cleared to avoid OOM.
     training_data.unpersist()
