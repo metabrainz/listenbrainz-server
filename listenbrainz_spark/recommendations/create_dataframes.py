@@ -16,7 +16,7 @@ from listenbrainz_spark.sql import create_dataframes_queries as sql
 from pyspark.sql.utils import AnalysisException
 
 # dataframe html is generated when set to true
-SAVE_DATAFRAME_HTML = True
+SAVE_DATAFRAME_HTML = False
 
 def save_dataframe_html(users_df_time, recordings_df_time, playcounts_df_time, total_time):
     """ Prepare and save dataframe HTML.
@@ -37,8 +37,8 @@ def save_dataframe_html(users_df_time, recordings_df_time, playcounts_df_time, t
     }
     save_html(queries_html, context, 'queries.html')
 
-def create_training_data_from_window():
-    """  Prepare dataframe of listens of X months where X is a config value.
+def get_listens_for_training_model_window():
+    """  Prepare dataframe of listens of X days to train. Here X is a config value.
 
         Returns:
             training_df (dataframe): Columns can de depicted as:
@@ -46,15 +46,13 @@ def create_training_data_from_window():
                     artist_mbids, artist_msid, artist_name, listened_at, recording_mbid,
                     recording_msid, release_mbid, release_msid, release_name, tags, track_name, user_name
                 ]
-        Note: Under the assumption that config.TRAIN_MODEL_WINDOW will always indicate months.
     """
     training_df = None
-    # we go back in time to some point from current date
-    # and from that point come back to the current date
-    # therefore, current date is where the traversal ends.
-    end_date = datetime.utcnow()
-    begin_date = stats.adjust_months(end_date, -config.TRAIN_MODEL_WINDOW)
-    training_df = utils.get_listens_for_date_range(begin_date, end_date)
+    to_date = datetime.utcnow()
+    from_date = stats.adjust_days(to_date, config.TRAIN_MODEL_WINDOW)
+    # shift to the first of the month
+    from_date = stats.replace_days(from_date, 1)
+    training_df = utils.get_listens(from_date, to_date)
     return training_df
 
 def main():
@@ -66,10 +64,7 @@ def main():
         sys.exit(-1)
 
     try:
-        df = create_training_data_from_window()
-    except AnalysisException as err:
-        logging.error('{}\n{}\nAborting...'.format(str(err), err.stackTrace))
-        sys.exit(-1)
+        df = get_listens_for_training_model_window()
     except Py4JJavaError as err:
         logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)

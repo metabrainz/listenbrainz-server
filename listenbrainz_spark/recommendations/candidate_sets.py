@@ -9,6 +9,7 @@ from collections import defaultdict
 from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
+from listenbrainz_spark import stats
 from listenbrainz_spark import config, utils
 from listenbrainz_spark.sql import get_user_id
 from listenbrainz_spark.exceptions import SQLException
@@ -19,6 +20,24 @@ from pyspark.sql.utils import AnalysisException, ParseException
 
 # Candidate Set HTML is generated if set to true.
 SAVE_CANDIDATE_HTML = True
+
+def get_listens_for_rec_generation_window():
+    """ Prepare dataframe of listens of X days to generate recommendations. Here X is a config value.
+
+        Returns:
+            df (dataframe): Columns can de depicted as:
+                [
+                    artist_mbids, artist_msid, artist_name, listened_at, recording_mbid,
+                    recording_msid, release_mbid, release_msid, release_name, tags, track_name, user_name
+                ]
+    """
+    df = None
+    to_date = datetime.utcnow()
+    from_date = stats.adjust_days(to_date, config.RECOMMENDATION_GENERATION_WINDOW)
+    # shift to the first of the month
+    from_date = stats.replace_days(from_date, 1)
+    df = utils.get_listens(from_date, to_date)
+    return df
 
 def get_similar_artists(top_artists_df, user_name):
     """ Get similar artists dataframe.
@@ -190,18 +209,23 @@ def main():
         sys.exit(-1)
 
     try:
-        listens_df = utils.get_listens()
-    except AnalysisException as err:
-        logging.error('{}\n{}\nAborting...'.format(str(err), err.stackTrace))
-        sys.exit(-1)
+        df = get_listens_for_rec_generation_window()
     except Py4JJavaError as err:
         logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
 
-    if not listens_df:
-        logging.error('Parquet files containing listening history from {}-{} to {}-{} missing from HDFS' \
-            .format(config.STARTING_YEAR, '{:02d}'.format(config.STARTING_MONTH), config.ENDING_YEAR, '{:02d}' \
-            .format( config.ENDING_MONTH)))
+    try:
+        utils.register_dataframe(df, 'df')
+    except Py4JJavaError as err:
+        logging.error('Cannot register dataframe containing listens of past {} days: {}\n{}\nAborting...'.format(
+            config.RECOMMENDATION_GENERATION_WINDOW, str(err), err.java_exception))
+        sys.exit(-1)
+
+    try:
+        listens_df = sql.get_listens_for_X_days()
+    except SQLException as err:
+        logging.error('Query to fetch listens of past {} days not executed: {}\n{}\nAborting...'.format(
+            config.RECOMMENDATION_GENERATION_WINDOW, type(err).__name__, str(err)))
         sys.exit(-1)
 
     try:
