@@ -49,29 +49,40 @@ def read_files_from_HDFS(path):
         raise Py4JJavaError('An error occurred while fetching "{}": {}\n'.format(path, type(err).__name__),
             err.java_exception)
 
-def get_listens_for_date_range(begin_date, end_date):
-    """ Loads all the listens listened to in a given time window from HDFS.
+def get_listens(from_date, to_date):
+    """ Prepare dataframe of months falling between from_date and to_date (both inclusive).
 
         Args:
-            begin_date (datetime): Date to start fetching listens.
-            end_date (datetime): Date upto which listens should be fetched. Usually the current date.
+            from_date (datetime): Date from which start fetching listens.
+            to_date (datetime): Date upto which fetch listens.
 
         Returns:
-            df (dataframe): Dataframe with columns as:
+            df (dataframe): Columns can be depicted as:
                 [
                     'artist_mbids', 'artist_msid', 'artist_name', 'listened_at', 'recording_mbid'
                     'recording_msid', 'release_mbid', 'release_msid', 'release_name', 'tags',
                     'track_name', 'user_name'
                 ]
-        Note: Listens of current date will not be fetched.
     """
+    try:
+        if to_date < from_date:
+            raise ValueError()
+    except ValueError as err:
+        logging.error('{}: Data generation window is negative i.e. from_date (date from which start fetching listens)' \
+            ' is greater than to_date (date upto which fetch listens).\nAborting...'.format(type(err).__name__))
+        sys.exit(-1)
+
     df = None
-    while begin_date < end_date:
-        month = read_files_from_HDFS('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, begin_date.year,
-            begin_date.month))
-        df = df.union(month) if df else month
-        # incrementing months
-        begin_date = stats.adjust_months(begin_date, 1)
+    while from_date <= to_date:
+        try:
+            month = read_files_from_HDFS('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, from_date.year, from_date.month))
+            df = df.union(month) if df else month
+        except AnalysisException as err:
+            logging.error('{}\nTrying to fetch listens for next date.'.format(str(err)))
+        # go to the next month of from_date
+        from_date = stats.adjust_days(from_date, config.STEPS_TO_REACH_NEXT_MONTH, shift_backwards=False)
+        # shift to the first of the month
+        from_date = stats.replace_days(from_date, 1)
     return df
 
 def save_parquet(df, path):
