@@ -4,6 +4,7 @@
 #!/bin/bash
 
 DUMP_THREADS="{{template "KEY" "dump_threads"}}"
+TEMP_DIR="{{template "KEY" "temp_dir"}}"
 
 # Where to back things up to, who should own the backup files, and what mode
 # those files should have.
