@@ -8,8 +8,6 @@
     {{- end -}}
 {{- end -}}
 
-import os
-
 DEBUG = False
 
 SECRET_KEY = '''{{template "KEY" "secret_key"}}'''
