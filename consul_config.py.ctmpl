@@ -146,3 +146,5 @@ MAIL_FROM_DOMAIN = '''{{template "KEY" "mail_from_domain"}}'''
 WEBSOCKETS_SERVER_URL = '''{{template "KEY" "websockets_server_url"}}'''
 
 SESSION_REMEMBER_ME_DURATION = 365
+
+LISTEN_DUMP_TEMP_DIR_ROOT = '''{{template "KEY" "listen_dump_temp_dir"}}'''

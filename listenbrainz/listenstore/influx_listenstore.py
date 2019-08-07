@@ -51,6 +51,7 @@ class InfluxListenStore(ListenStore):
         self.influx = InfluxDBClient(host=conf['INFLUX_HOST'], port=conf['INFLUX_PORT'], database=conf['INFLUX_DB_NAME'])
         # Initialize brainzutils cache
         init_cache(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], namespace=conf['REDIS_NAMESPACE'])
+        self.dump_temp_dir_root = conf.get('LISTEN_DUMP_TEMP_DIR_ROOT', tempfile.mkdtemp())
 
     def get_listen_count_for_user(self, user_name, need_exact=False):
         """Get the total number of listens for a user. The number of listens comes from
@@ -775,7 +776,8 @@ class InfluxListenStore(ListenStore):
 
             with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
 
-                temp_dir = tempfile.mkdtemp()
+                temp_dir = os.path.join(self.dump_temp_dir_root, str(uuid.uuid4()))
+                create_path(temp_dir)
                 self.write_dump_metadata(archive_name, start_time, end_time, temp_dir, tar, full_dump)
 
                 listens_path = os.path.join(temp_dir, 'listens')

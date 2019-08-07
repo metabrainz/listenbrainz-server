@@ -1,6 +1,7 @@
 #!/bin/bash
 
 DUMP_THREADS=4
+TEMP_DIR='/home/listenbrainz/data/dumps'
 
 # Where to back things up to, who should own the backup files, and what mode
 # those files should have.
