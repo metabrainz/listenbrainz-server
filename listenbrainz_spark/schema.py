@@ -27,12 +27,12 @@ model_metadata_schema = [
     StructField('end_date', TimestampType(), nullable=False), # Timestamp till when the listens have been used to train, validate and test the model.
     StructField('lmbda', FloatType(), nullable=False), # Controls over fitting.
     StructField('model_id', StringType(), nullable=False), # Model id or identification string.
-    StructField('rank', IntegerType(), nullable=False), # Number of hidden features in our low-rank approximation matrices.
     StructField('num_iterations', IntegerType(), nullable=False), # Number of iterations to run.
+    StructField('rank', IntegerType(), nullable=False), # Number of hidden features in our low-rank approximation matrices.
     StructField('test_data_count', IntegerType(), nullable=False), # Number of listens used to test the model.
     StructField('test_rmse', FloatType(), nullable=False), # Root mean squared error for test data.
+    StructField('total_listens', IntegerType(), nullable=False), # Summation of training data, validation data and test data.
     StructField('training_data_count', IntegerType(), nullable=False), # Number of listens used to train the model.
-    StructField('total_listens', IntegerType(), nullable=False), # Summation of training data, validation data and test data
     StructField('validation_data_count', IntegerType(), nullable=False), # Number of listens used to validate the model.
     StructField('validation_rmse', FloatType(), nullable=False), # Root mean squared error for validation data.
 ]
