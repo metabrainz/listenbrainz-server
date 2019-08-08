@@ -62,15 +62,7 @@ def create_full(location, threads, dump_id, last_dump_id):
     """
     app = create_app()
     with app.app_context():
-        ls = init_influx_connection(current_app.logger,  {
-            'REDIS_HOST': current_app.config['REDIS_HOST'],
-            'REDIS_PORT': current_app.config['REDIS_PORT'],
-            'REDIS_NAMESPACE': current_app.config['REDIS_NAMESPACE'],
-            'INFLUX_HOST': current_app.config['INFLUX_HOST'],
-            'INFLUX_PORT': current_app.config['INFLUX_PORT'],
-            'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
-        })
-
+        from listenbrainz.webserver.influx_connection import _influx as ls
         if last_dump_id:
             all_dumps = db_dump.get_dump_entries()
             if len(all_dumps) == 0:
@@ -108,15 +100,7 @@ def create_full(location, threads, dump_id, last_dump_id):
 def create_incremental(location, threads, dump_id):
     app = create_app()
     with app.app_context():
-        ls = init_influx_connection(current_app.logger,  {
-            'REDIS_HOST': current_app.config['REDIS_HOST'],
-            'REDIS_PORT': current_app.config['REDIS_PORT'],
-            'REDIS_NAMESPACE': current_app.config['REDIS_NAMESPACE'],
-            'INFLUX_HOST': current_app.config['INFLUX_HOST'],
-            'INFLUX_PORT': current_app.config['INFLUX_PORT'],
-            'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
-        })
-
+        from listenbrainz.webserver.influx_connection import _influx as ls
         if dump_id is None:
             end_time = datetime.now()
             dump_id = db_dump.add_dump_entry(int(end_time.strftime('%s')))
@@ -150,14 +134,7 @@ def create_incremental(location, threads, dump_id):
 @click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
 def create_spark_dump(location, threads):
     with create_app().app_context():
-        ls = init_influx_connection(current_app.logger,  {
-            'REDIS_HOST': current_app.config['REDIS_HOST'],
-            'REDIS_PORT': current_app.config['REDIS_PORT'],
-            'REDIS_NAMESPACE': current_app.config['REDIS_NAMESPACE'],
-            'INFLUX_HOST': current_app.config['INFLUX_HOST'],
-            'INFLUX_PORT': current_app.config['INFLUX_PORT'],
-            'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
-        })
+        from listenbrainz.webserver.influx_connection import _influx as ls
         time_now = datetime.today()
         dump_path = os.path.join(location, 'listenbrainz-spark-dump-{time}'.format(time=time_now.strftime('%Y%m%d-%H%M%S')))
         create_path(dump_path)
@@ -198,15 +175,7 @@ def import_dump(private_archive, public_archive, listen_archive, threads):
     with app.app_context():
         db_dump.import_postgres_dump(private_archive, public_archive, threads)
 
-        ls = init_influx_connection(current_app.logger,  {
-            'REDIS_HOST': current_app.config['REDIS_HOST'],
-            'REDIS_PORT': current_app.config['REDIS_PORT'],
-            'REDIS_NAMESPACE': current_app.config['REDIS_NAMESPACE'],
-            'INFLUX_HOST': current_app.config['INFLUX_HOST'],
-            'INFLUX_PORT': current_app.config['INFLUX_PORT'],
-            'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
-        })
-
+        from listenbrainz.webserver.influx_connection import _influx as ls
         try:
             ls.import_listens_dump(listen_archive, threads)
         except IOError as e:
