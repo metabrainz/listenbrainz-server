@@ -1,6 +1,6 @@
 from datetime import datetime
 from pyspark.sql import Row
-from pyspark.sql.types import StructField, StructType, ArrayType, StringType, TimestampType
+from pyspark.sql.types import StructField, StructType, ArrayType, StringType, TimestampType, FloatType, IntegerType
 
 
 # NOTE: please keep this schema definition alphabetized
@@ -19,12 +19,30 @@ listen_schema = [
     StructField('user_name', StringType(), nullable=False),
 ]
 
+model_metadata_schema = [
+    StructField('alpha', FloatType(), nullable=False), # Baseline level of confidence weighting applied.
+    StructField('begin_date', TimestampType(), nullable=False), # Timestamp from when listens have been used to train, validate and test the model.
+    StructField('created', TimestampType(), nullable=False), # Timestamp when the model is saved in HDFS.
+    StructField('deleted', TimestampType(), nullable=True), # Timestamp when the model is deleted from HDFS.
+    StructField('end_date', TimestampType(), nullable=False), # Timestamp till when the listens have been used to train, validate and test the model.
+    StructField('lambda', FloatType(), nullable=False), # Controls over fitting.
+    StructField('model_id', StringType(), nullable=False), # Model id or identification string.
+    StructField('num_iterations', IntegerType(), nullable=False), # Number of iterations to run.
+    StructField('rank', IntegerType(), nullable=False), # Number of hidden features in our low-rank approximation matrices.
+    StructField('test_data_count', IntegerType(), nullable=False), # Number of listens used to test the model.
+    StructField('test_rmse', FloatType(), nullable=False), # Root mean squared error for test data.
+    StructField('total_listens', IntegerType(), nullable=False), # Summation of training data, validation data and test data.
+    StructField('training_data_count', IntegerType(), nullable=False), # Number of listens used to train the model.
+    StructField('validation_data_count', IntegerType(), nullable=False), # Number of listens used to validate the model.
+    StructField('validation_rmse', FloatType(), nullable=False), # Root mean squared error for validation data.
+]
+
 # The field names of the schema need to be sorted, otherwise we get weird
 # errors due to type mismatches when creating DataFrames using the schema
 # Although, we try to keep it sorted in the actual definition itself, we
 # also sort it programmatically just in case
 listen_schema = StructType(sorted(listen_schema, key=lambda field: field.name))
-
+model_metadata_schema = StructType(sorted(model_metadata_schema, key=lambda field: field.name))
 
 def convert_listen_to_row(listen):
     """ Convert a listen to a pyspark.sql.Row object.
