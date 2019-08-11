@@ -10,6 +10,7 @@ from listenbrainz_spark import stats
 from listenbrainz_spark import config
 from listenbrainz_spark.stats import run_query
 
+from listenbrainz_spark import hdfs_connection
 from pyspark.sql.utils import AnalysisException
 
 def create_path(path):
@@ -96,3 +97,38 @@ def save_parquet(df, path):
         df.write.format('parquet').save(path, mode='overwrite')
     except Py4JJavaError as err:
         raise Py4JJavaError('Cannot save parquet to {}: {}\n'.format(path, type(err).__name__), err.java_exception)
+
+def create_dir(path):
+    """ Creates a directory in HDFS.
+
+        Args:
+            path (string): Path of the directory to be created.
+
+        Note: >> Caller is responsibe for initializing HDFS connection.
+              >> The function does not throw an error if the directory path already exists.
+    """
+    hdfs_connection.client.makedirs(path)
+
+def delete_dir(path):
+    """ Deletes a directory recursively from HDFS.
+
+        Args:
+            path (string): Path of the directory to be deleted.
+
+        Note: >> Caller is responsible for initializing HDFS connection.
+              >> Raises HdfsError if trying to delete a non-empty directory.
+                 For non-empty directory set recursive to 'True'.
+    """
+    hdfs_connection.client.delete(path, recursive=False)
+
+def get_status(path):
+    """ Checks the status of a directory in HDFS. The function throws HdfsError if the directory
+        does not exist otherwise returns a JSON. May be used to check if a directory exists or not.
+
+        Args:
+            path (string): Path of the directory to check status for.
+
+        Note: Caller is responsible for initializing HDFS connection.
+    """
+    status = hdfs_connection.client.status(path)
+    return status
