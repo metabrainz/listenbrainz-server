@@ -105,7 +105,7 @@ def create_dir(path):
             path (string): Path of the directory to be created.
 
         Note: >> Caller is responsibe for initializing HDFS connection.
-              >> The function do not throws an error if the directory already exists.
+              >> The function does not throw an error if the directory path already exists.
     """
     hdfs_connection.client.makedirs(path)
 
@@ -122,12 +122,13 @@ def delete_dir(path):
     hdfs_connection.client.delete(path, recursive=False)
 
 def get_status(path):
-    """ Checks the status of a directory in HDFS. May be used to check if a directory
-        exists or not.
+    """ Checks the status of a directory in HDFS. The function throws HdfsError if the directory
+        does not exist otherwise returns a JSON. May be used to check if a directory exists or not.
 
         Args:
             path (string): Path of the directory to check status for.
 
         Note: Caller is responsible for initializing HDFS connection.
     """
-    hdfs_connection.client.status(path)
+    status = hdfs_connection.client.status(path)
+    return status
