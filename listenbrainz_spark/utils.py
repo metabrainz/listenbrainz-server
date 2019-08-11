@@ -115,9 +115,11 @@ def delete_dir(path):
         Args:
             path (string): Path of the directory to be deleted.
 
-        Note: Caller is responsible for initializing HDFS connection.
+        Note: >> Caller is responsible for initializing HDFS connection.
+              >> Raises HdfsError if trying to delete a non-empty directory.
+                 For non-empty directory set recursive to 'True'.
     """
-    hdfs_connection.client.delete(path, recursive=True)
+    hdfs_connection.client.delete(path, recursive=False)
 
 def get_status(path):
     """ Checks the status of a directory in HDFS. May be used to check if a directory
