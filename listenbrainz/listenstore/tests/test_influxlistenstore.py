@@ -187,6 +187,10 @@ class TestInfluxListenStore(DatabaseTestCase):
         shutil.rmtree(temp_dir)
 
     def assert_spark_dump_contains_listens(self, dump, expected_listen_count):
+        """ This method checks that the spark dump specified contains the
+        expected number of listens. We also do some schema checks for the
+        listens here too
+        """
         pxz_command = ['pxz', '--decompress', '--stdout', dump]
         pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
 
@@ -197,6 +201,7 @@ class TestInfluxListenStore(DatabaseTestCase):
                 if file_name.endswith('.json'):
                     for line in tar.extractfile(member).readlines():
                         listen = ujson.loads(line)
+                        self.assertIn('inserted_timestamp', listen)
                         listen_count += 1
         self.assertEqual(listen_count, expected_listen_count)
 
