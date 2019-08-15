@@ -20,7 +20,7 @@ def cli():
 @click.option('--f', is_flag=True, help='Delete existing directories from HDFS recursively.')
 @click.option('--create_dir', is_flag=True, help='Create directories in HDFS.')
 def init_dir(rm, f, create_dir):
-    """ Creates directories in HDFS to run the recommendation engine.
+    """ Create directories in HDFS to run the recommendation engine.
     """
     try:
         listenbrainz_spark.init_spark_session('Manage Directories')
