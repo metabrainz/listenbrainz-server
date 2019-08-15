@@ -10,6 +10,7 @@ from listenbrainz_spark import config
 from listenbrainz_spark import hdfs_connection
 
 from hdfs.util import HdfsError
+from py4j.protocol import Py4JJavaError
 
 @click.group()
 def cli():
