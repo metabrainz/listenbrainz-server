@@ -109,7 +109,7 @@ def create_dir(path):
     """
     hdfs_connection.client.makedirs(path)
 
-def delete_dir(path):
+def delete_dir(path, recursive=False):
     """ Deletes a directory recursively from HDFS.
 
         Args:
@@ -119,7 +119,7 @@ def delete_dir(path):
               >> Raises HdfsError if trying to delete a non-empty directory.
                  For non-empty directory set recursive to 'True'.
     """
-    hdfs_connection.client.delete(path, recursive=False)
+    hdfs_connection.client.delete(path, recursive=recursive)
 
 def get_status(path):
     """ Checks the status of a directory in HDFS. The function throws HdfsError if the directory
