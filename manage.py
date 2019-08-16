@@ -18,9 +18,9 @@ def cli():
 
 @cli.command(name='init_dir')
 @click.option('--rm', is_flag=True, help='Delete existing directories from HDFS.')
-@click.option('--f', is_flag=True, help='Delete existing directories from HDFS recursively.')
+@click.option('--recursive', is_flag=True, help='Delete existing directories from HDFS recursively.')
 @click.option('--create_dir', is_flag=True, help='Create directories in HDFS.')
-def init_dir(rm, f, create_dir):
+def init_dir(rm, recursive, create_dir):
     """ Create directories in HDFS to run the recommendation engine.
     """
     try:
@@ -36,30 +36,40 @@ def init_dir(rm, f, create_dir):
             utils.delete_dir(path.CHECKPOINT_DIR)
             logging.info('Successfully deleted directories.')
         except HdfsError as err:
-            logging.error('{}: Some/all directories are non-empty. Try "--f" to delete recursively.'.format(
+            logging.error('{}: Some/all directories are non-empty. Try "--recursive" to delete recursively.'.format(
                 type(err).__name__))
             logging.warning('Deleting directory recursively will delete all the recommendation data.')
             sys.exit(-1)
 
-    if f:
-        utils.delete_dir(path.RECOMMENDATION_PARENT_DIR, recursive=True)
-        utils.delete_dir(path.CHECKPOINT_DIR, recursive=True)
-        logging.info('Successfully deleted directories recursively.')
+    if recursive:
+        try:
+            utils.delete_dir(path.RECOMMENDATION_PARENT_DIR, recursive=True)
+            utils.delete_dir(path.CHECKPOINT_DIR, recursive=True)
+            logging.info('Successfully deleted directories recursively.')
+        except HdfsError as err:
+            logging.error('{}: An error occurred while deleting directories recursively.\n{}\nAborting...'.format(
+                type(err).__name__, str(err)))
+            sys.exit(-1)
 
     if create_dir:
-        logging.info('Creating directory to store dataframes...')
-        utils.create_dir(path.DATAFRAME_DIR)
+        try:
+            logging.info('Creating directory to store dataframes...')
+            utils.create_dir(path.DATAFRAME_DIR)
 
-        logging.info('Creating directory to store models...')
-        utils.create_dir(path.MODEL_DIR)
+            logging.info('Creating directory to store models...')
+            utils.create_dir(path.MODEL_DIR)
 
-        logging.info('Creating directory to store candidate sets...')
-        utils.create_dir(path.CANDIDATE_SET_DIR)
+            logging.info('Creating directory to store candidate sets...')
+            utils.create_dir(path.CANDIDATE_SET_DIR)
 
-        logging.info('Creating directory to store RDD checkpoints...')
-        utils.create_dir(path.CHECKPOINT_DIR)
+            logging.info('Creating directory to store RDD checkpoints...')
+            utils.create_dir(path.CHECKPOINT_DIR)
 
-        print('Done!')
+            print('Done!')
+        except HdfsError as err:
+            logging.error('{}: An error occured while creating some/more directories.\n{}\nAborting...'.format(
+                type(err).__name__, str(err)))
+            sys.exit(-1)
 
 @cli.command(name='dataframe')
 def dataframes():
