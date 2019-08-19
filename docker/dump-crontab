@@ -1,0 +1,9 @@
+PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin
+PYTHONPATH=/usr/local/lib/python36.zip:/usr/local/lib/python3.6:/usr/local/lib/python3.6/lib-dynload:/usr/local/lib/python3.6/site-packages:/usr/local/lib/python3.6/site-packages/messybrainz-99.0.0.dev0-py3.6.egg
+GOOGLE_APPLICATION_CREDENTIALS=/code/listenbrainz/credentials/bigquery-credentials.json
+
+# Full Data dumps creation for backup and public use
+00 12 1,15 * * /code/listenbrainz/admin/create-dumps.sh full >> /var/log/dump_create.log 2>&1
+
+# Incremental listen data dumps at 00:00 every Monday and Thursday
+00 00 * * 1,4 /code/listenbrainz/admin/create-dumps.sh incremental >> /var/log/dump_create.log 2>&1
