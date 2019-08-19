@@ -63,10 +63,17 @@ COPY . /code/listenbrainz
 FROM listenbrainz-base as listenbrainz-prod
 ARG deploy_env
 
+
+# production sidenote: We create a `lbdumps` user to create data dumps because
+# the ListenBrainz servers on prod (etc. lemmy) use storage boxes [0] which
+# are owned by lbdumps on the host too.
+# [0]: https://github.com/metabrainz/syswiki/blob/master/ListenBrainzStorageBox.md
+RUN useradd --create-home --shell /bin/bash --uid 900 --gid 900 lbdumps
+
 # Add cron jobs
-ADD docker/crontab /etc/cron.d/lb-crontab
-RUN chmod 0644 /etc/cron.d/lb-crontab && crontab -u listenbrainz /etc/cron.d/lb-crontab
-RUN touch /var/log/stats.log /var/log/dump_create.log && chown listenbrainz:listenbrainz /var/log/stats.log /var/log/dump_create.log
+ADD docker/dump-crontab /etc/cron.d/lbdump-crontab
+RUN chmod 0644 /etc/cron.d/lbdump-crontab && crontab -u lbdumps /etc/cron.d/lbdump-crontab
+RUN touch /var/log/stats.log /var/log/dump_create.log && chown lbdumps:lbdumps /var/log/stats.log /var/log/dump_create.log
 
 # Make sure the cron service doesn't start automagically
 # http://smarden.org/runit/runsv.8.html
@@ -81,8 +88,8 @@ COPY ./docker/$deploy_env/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
 COPY ./docker/prod/uwsgi/uwsgi-api-compat.ini /etc/uwsgi/uwsgi-api-compat.ini
 
 # Create directories for backups and FTP syncs
-RUN mkdir /home/listenbrainz/backup /home/listenbrainz/ftp
-RUN chown -R listenbrainz:listenbrainz /home/listenbrainz/backup /home/listenbrainz/ftp
+RUN mkdir /home/lbdumps/backup /home/lbdumps/ftp
+RUN chown -R lbdumps:lbdumps /home/lbdumps/backup /home/lbdumps/ftp
 
 RUN mkdir /static
 WORKDIR /static
