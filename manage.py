@@ -106,6 +106,11 @@ def user():
     from listenbrainz_spark.stats import user
     user.main()
 
+@cli.resultcallback()
+def remove_zip(result, **kwargs):
+    """ Remove zip created by spark-submit.
+    """
+    os.remove(os.path.join('/', 'rec', 'listenbrainz_spark.zip'))
 
 if __name__ == '__main__':
     # The root logger always defaults to WARNING level
