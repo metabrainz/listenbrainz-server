@@ -7,8 +7,10 @@ from datetime import datetime
 from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
+from listenbrainz_spark import path
 from listenbrainz_spark import stats
-from listenbrainz_spark import config, utils
+from listenbrainz_spark import utils
+from listenbrainz_spark import config
 from listenbrainz_spark.exceptions import SQLException
 from listenbrainz_spark.recommendations.utils import save_html
 from listenbrainz_spark.sql import create_dataframes_queries as sql
@@ -17,6 +19,8 @@ from pyspark.sql.utils import AnalysisException
 
 # dataframe html is generated when set to true
 SAVE_DATAFRAME_HTML = False
+# os.path.join ignores everything before a '/'
+HDFS_PATH = config.HDFS_CLUSTER_URI + path.DATAFRAME_DIR + '/'
 
 def save_dataframe_html(users_df_time, recordings_df_time, playcounts_df_time, total_time):
     """ Prepare and save dataframe HTML.
@@ -47,7 +51,6 @@ def get_listens_for_training_model_window():
                     recording_msid, release_mbid, release_msid, release_name, tags, track_name, user_name
                 ]
     """
-    training_df = None
     to_date = datetime.utcnow()
     from_date = stats.adjust_days(to_date, config.TRAIN_MODEL_WINDOW)
     # shift to the first of the month
@@ -70,7 +73,7 @@ def main():
         sys.exit(-1)
 
     if not df:
-        logging.error('Parquet files containing listening history of past {} month(s) missing form HDFS'.format(
+        logging.error('Parquet files containing listening history of past {} days missing form HDFS'.format(
             config.TRAIN_MODEL_WINDOW))
         sys.exit(-1)
 
@@ -83,8 +86,6 @@ def main():
         sys.exit(-1)
     logging.info('Files fetched from HDFS and dataframe registered in {}s'.format('{:.2f}'.format(time() - ti)))
 
-    path = os.path.join(config.HDFS_CLUSTER_URI, 'data', 'listenbrainz', 'recommendation-engine', 'dataframes')
-
     logging.info('Preparing users data and saving to HDFS...')
     t0 = time()
     try:
@@ -94,7 +95,7 @@ def main():
         sys.exit(-1)
 
     try:
-        utils.save_parquet(users_df, path + '/users_df.parquet')
+        utils.save_parquet(users_df, HDFS_PATH + 'users_df.parquet')
     except Py4JJavaError as err:
         logging.error('Could not save users dataframe. {}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
@@ -109,7 +110,7 @@ def main():
         sys.exit(-1)
 
     try:
-        utils.save_parquet(recordings_df, path + '/recordings_df.parquet')
+        utils.save_parquet(recordings_df, HDFS_PATH + 'recordings_df.parquet')
     except Py4JJavaError as err:
         logging.error('Could not save recordings dataframe. {}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
@@ -133,13 +134,12 @@ def main():
 
     try:
         playcounts_df = sql.get_playcounts_data()
-        playcounts_df.write.format('parquet').save(path + '/playcounts_df.parquet', mode='overwrite')
     except SQLException as err:
         logging.error('{}\nAborting...'.format(err))
         sys.exit(-1)
 
     try:
-        utils.save_parquet(playcounts_df, path + '/playcounts_df.parquet')
+        utils.save_parquet(playcounts_df, HDFS_PATH + 'playcounts_df.parquet')
     except Py4JJavaError as err:
         logging.error('Could not save playcounts dataframe. {}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
