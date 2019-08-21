@@ -68,6 +68,7 @@ ARG deploy_env
 # the ListenBrainz servers on prod (etc. lemmy) use storage boxes [0] which
 # are owned by lbdumps on the host too.
 # [0]: https://github.com/metabrainz/syswiki/blob/master/ListenBrainzStorageBox.md
+RUN groupadd --gid 900 lbdumps
 RUN useradd --create-home --shell /bin/bash --uid 900 --gid 900 lbdumps
 
 # Add cron jobs
