@@ -11,7 +11,7 @@ TEMP_DIR="{{template "KEY" "temp_dir"}}"
 # The backups include a full database export
 BACKUP_DIR="{{template "KEY" "backup_dir"}}"
 BACKUP_USER="{{template "KEY" "user"}}"
-BACKUP_GROUP="{{template "KEY" "user"}}"
+BACKUP_GROUP="{{template "KEY" "group"}}"
 BACKUP_DIR_MODE=700
 BACKUP_FILE_MODE=600
 
@@ -19,7 +19,7 @@ BACKUP_FILE_MODE=600
 # for public consumption
 FTP_DIR="{{template "KEY" "ftp_dir"}}"
 FTP_USER="{{template "KEY" "user"}}"
-FTP_GROUP="{{template "KEY" "user"}}"
+FTP_GROUP="{{template "KEY" "group"}}"
 FTP_DIR_MODE=755
 FTP_FILE_MODE=644
 
