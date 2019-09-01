@@ -23,30 +23,25 @@ model_metadata_schema = [
     StructField('alpha', FloatType(), nullable=True), # Baseline level of confidence weighting applied.
     StructField('created', TimestampType(), nullable=True), # Timestamp when the model is saved in HDFS.
     StructField('deleted', TimestampType(), nullable=True), # Timestamp when the model is deleted from HDFS.
-    StructField('lambda', FloatType(), nullable=True), # Controls over fitting.
-    # Model id or identification string of best model. Connector for model_metadata_schema and dataframe_metadata_schema.
-    StructField('model_id', StringType(), nullable=False),
-    StructField('num_iterations', IntegerType(), nullable=True), # Number of iterations to run.
-    StructField('rank', IntegerType(), nullable=True), # Number of hidden features in our low-rank approximation matrices.
-    StructField('test_data_count', IntegerType(), nullable=True), # Number of listens used to test the model.
-    StructField('test_rmse', FloatType(), nullable=True), # Root mean squared error for test data.
-    StructField('training_data_count', IntegerType(), nullable=True), # Number of listens used to train the model.
-    StructField('updated', BooleanType(), nullable=False) # false by default, set to true when all other fields are filled.
-    StructField('validation_data_count', IntegerType(), nullable=True), # Number of listens used to validate the model.
-    StructField('validation_rmse', FloatType(), nullable=True), # Root mean squared error for validation data.
-]
-
-dataframe_metadata_schema = [
     # Timestamp from when listens have been used to train, validate and test the model.
     StructField('from_date', TimestampType(), nullable=False),
+    StructField('lambda', FloatType(), nullable=True), # Controls over fitting.
     # Number of listens recorded in a given time frame (between from_date and to_date, both inclusive).
     StructField('listens_count', IntegerType(), nullable=False),
     StructField('model_id', StringType(), nullable=False), # Model id or identification string of best model.
+    StructField('num_iterations', IntegerType(), nullable=True), # Number of iterations to run.
     StructField('playcounts_count', IntegerType(), nullable=False), # Summation of training data, validation data and test data.
+    StructField('rank', IntegerType(), nullable=True), # Number of hidden features in our low-rank approximation matrices.
     StructField('recordings_count', IntegerType(), nullable=False), # Number of distinct recordings heard in a given time frame.
+    StructField('test_data_count', IntegerType(), nullable=True), # Number of listens used to test the model.
+    StructField('test_rmse', FloatType(), nullable=True), # Root mean squared error for test data.
     # Timestamp till when listens have been used to train, validate and test the model.
     StructField('to_date', TimestampType(), nullable=False),
+    StructField('training_data_count', IntegerType(), nullable=True), # Number of listens used to train the model.
+    StructField('updated', BooleanType(), nullable=False) # false by default, set to true when all other fields are non empty.
     StructField('users_count', Timestamp(), nullable=False), # Number of users active in a given time frame.
+    StructField('validation_data_count', IntegerType(), nullable=True), # Number of listens used to validate the model.
+    StructField('validation_rmse', FloatType(), nullable=True), # Root mean squared error for validation data.
 ]
 
 # The field names of the schema need to be sorted, otherwise we get weird
@@ -55,7 +50,6 @@ dataframe_metadata_schema = [
 # also sort it programmatically just in case
 listen_schema = StructType(sorted(listen_schema, key=lambda field: field.name))
 model_metadata_schema = StructType(sorted(model_metadata_schema, key=lambda field: field.name))
-dataframe_metadata_schema = StructType(sorted(dataframe_metadata_schema, key=lambda field: field.name))
 
 def convert_listen_to_row(listen):
     """ Convert a listen to a pyspark.sql.Row object.
