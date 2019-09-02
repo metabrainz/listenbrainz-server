@@ -24,7 +24,7 @@ pika == 0.13.0
 git+https://github.com/metabrainz/messybrainz-server.git@production#egg=messybrainz
 git+https://github.com/metabrainz/brainzutils-python.git@v1.10.1
 spotipy == 2.4.4
-pyyaml == 4.2b1
+pyyaml == 5.1.2
 eventlet == 0.24.1
 Flask-CORS == 3.0.7
 uWSGI == 2.0.18
