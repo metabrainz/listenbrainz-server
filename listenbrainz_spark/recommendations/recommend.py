@@ -10,7 +10,7 @@ from collections import defaultdict
 from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
-from listenbrainz_spark import config, utils
+from listenbrainz_spark import config, utils, path
 from listenbrainz_spark.sql import get_user_id
 from listenbrainz_spark.exceptions import SQLException
 from listenbrainz_spark.sql import recommend_queries as sql
@@ -77,7 +77,7 @@ def recommend_user(user_name, model, recordings_df):
                     'track_name', 'recording_msid', 'artist_name', 'artist_msid', 'release_name',
                     'release_msid', 'recording_id'
                 ]
-                
+
         Returns:
             user_recommendations (dict): Dictionary can be depicted as:
                 {
@@ -203,15 +203,11 @@ def main():
         sys.exit(-1)
 
     try:
-        # path where dataframes are stored.
-        path = os.path.join(config.HDFS_CLUSTER_URI, 'data', 'listenbrainz', 'recommendation-engine', 'dataframes')
-        users_df = utils.read_files_from_HDFS(path + '/users_df.parquet')
-        recordings_df = utils.read_files_from_HDFS(path + '/recordings_df.parquet')
+        users_df = utils.read_files_from_HDFS(path.USERS_DATAFRAME_PATH)
+        recordings_df = utils.read_files_from_HDFS(path.RECORDINGS_DATAFRAME_PATH)
 
-        # path where candidate sets are stored.
-        path = os.path.join(config.HDFS_CLUSTER_URI, 'data', 'listenbrainz', 'recommendation-engine', 'candidate-set')
-        top_artists_candidate_df = utils.read_files_from_HDFS(path + '/top_artists.parquet')
-        similar_artists_candidate_df = utils.read_files_from_HDFS(path + '/similar_artists.parquet')
+        top_artists_candidate_df = utils.read_files_from_HDFS(path.TOP_ARTIST_CANDIDATE_SET)
+        similar_artists_candidate_df = utils.read_files_from_HDFS(path.SIMILAR_ARTIST_CANDIDATE_SET)
     except AnalysisException as err:
         logging.error('{}\n{}\nAborting...'.format(str(err), err.stackTrace))
         sys.exit(-1)
@@ -228,14 +224,13 @@ def main():
         logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
 
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recommendation-metadata.json')
-    with open(path, 'r') as f:
+    _path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recommendation-metadata.json')
+    with open(_path, 'r') as f:
         recommendation_metadata = json.load(f)
         best_model_id = recommendation_metadata['best_model_id']
         user_names = recommendation_metadata['user_name']
 
-    best_model_path = os.path.join('/', 'data', 'listenbrainz', 'recommendation-engine', 'best-model', '{}' \
-        .format(best_model_id))
+    best_model_path = path.DATA_DIR + '/' + best_model_id
 
     logging.info('Loading model...')
     t0 = time()

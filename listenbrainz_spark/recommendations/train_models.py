@@ -12,7 +12,7 @@ from collections import namedtuple, defaultdict
 from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
-from listenbrainz_spark import config, utils
+from listenbrainz_spark import config, utils, path
 from listenbrainz_spark.recommendations.utils import save_html
 
 from pyspark.sql import Row
@@ -151,9 +151,7 @@ def main():
         sys.exit(-1)
 
     try:
-        path = os.path.join(config.HDFS_CLUSTER_URI, 'data', 'listenbrainz', 'recommendation-engine', 'dataframes',
-            'playcounts_df.parquet')
-        playcounts_df = utils.read_files_from_HDFS(path)
+        playcounts_df = utils.read_files_from_HDFS(path.PLAYCOUNTS_DATAFRAME_PATH)
     except AnalysisException as err:
         logging.error('{}\n{}\nAborting...'.format(str(err), err.stackTrace))
         sys.exit(-1)
@@ -200,9 +198,8 @@ def main():
     logging.info('Saving model...')
     t0 = time()
     try:
-        path = os.path.join('/', 'data', 'listenbrainz', 'recommendation-engine', 'best-model', '{}' \
-        .format(best_model_metadata['model_id']))
-        model.model.save(listenbrainz_spark.context, config.HDFS_CLUSTER_URI + path)
+        _path = path.DATA_DIR + '/' + best_model_metadata['model_id']
+        model.model.save(listenbrainz_spark.context, config.HDFS_CLUSTER_URI + _path)
     except Py4JJavaError as err:
         logging.error('Unable to save best model "{}": {} \n{}. Aborting...'.format(best_model_metadata['model_id'],
             type(err).__name__, str(err.java_exception)))
@@ -214,9 +211,9 @@ def main():
             models_training_time)
 
     # Save best model id to a JSON file
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recommendation-metadata.json')
-    with open(path, 'r') as f:
+    _path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recommendation-metadata.json')
+    with open(_path, 'r') as f:
         recommendation_metadata = json.load(f)
         recommendation_metadata['best_model_id'] = best_model_metadata['model_id']
-    with open(path, 'w') as f:
+    with open(_path, 'w') as f:
         json.dump(recommendation_metadata,f)
