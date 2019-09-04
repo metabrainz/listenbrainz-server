@@ -249,8 +249,8 @@ def main():
         sys.exit(-1)
     logging.info('Files fetched from HDFS and dataframes registered in {}s'.format('{:.2f}'.format(time() - ti)))
 
-    _path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'recommendation-metadata.json')
-    with open(_path) as f:
+    metadata_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'recommendation-metadata.json')
+    with open(metadata_file_path) as f:
         recommendation_metadata = json.load(f)
         user_names = recommendation_metadata['user_name']
 
