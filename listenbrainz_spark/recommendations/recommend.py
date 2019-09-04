@@ -224,8 +224,8 @@ def main():
         logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
 
-    _path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recommendation-metadata.json')
-    with open(_path, 'r') as f:
+    metadata_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recommendation-metadata.json')
+    with open(metadata_file_path, 'r') as f:
         recommendation_metadata = json.load(f)
         best_model_id = recommendation_metadata['best_model_id']
         user_names = recommendation_metadata['user_name']
