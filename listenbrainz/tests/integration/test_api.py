@@ -8,7 +8,9 @@ from redis import Redis
 import listenbrainz.db.user as db_user
 import time
 import json
+from listenbrainz import config
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
+from influxdb import InfluxDBClient
 
 class APITestCase(IntegrationTestCase):
 
@@ -19,7 +21,18 @@ class APITestCase(IntegrationTestCase):
     def tearDown(self):
         r = Redis(host=self.app.config['REDIS_HOST'], port=self.app.config['REDIS_PORT'])
         r.flushall()
+        self.reset_influx_db()
         super(APITestCase, self).tearDown()
+
+    def reset_influx_db(self):
+        """ Resets the entire influx db """
+        influx = InfluxDBClient(
+            host=config.INFLUX_HOST,
+            port=config.INFLUX_PORT,
+            database=config.INFLUX_DB_NAME
+        )
+        influx.query('DROP DATABASE %s' % config.INFLUX_DB_NAME)
+        influx.query('CREATE DATABASE %s' % config.INFLUX_DB_NAME)
 
     def test_get_listens(self):
         """ Test to make sure that the api sends valid listens on get requests.
