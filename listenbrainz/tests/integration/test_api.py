@@ -91,12 +91,12 @@ class APITestCase(IntegrationTestCase):
         self.assertEqual(response.json['payload']['latest_listen_ts'], ts)
 
 
-        # checkt that recent listens are fectched correctly
+        # check that recent listens are fetched correctly
         url = url_for('api_v1.get_recent_listens_for_user_list', user_list = self.user['musicbrainz_id'])
-        response = self.client.get(url, query_string = {'count': '1'})
+        response = self.client.get(url, query_string = {'limit': '1'})
         self.assert200(response)
         data = json.loads(response.data)['payload']
-        self.assertEqual(data['count'], 2)
+        self.assertEqual(data['count'], 1)
 
 
     def send_data(self, payload):
