@@ -10,7 +10,7 @@ from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
 from listenbrainz_spark import stats
-from listenbrainz_spark import config, utils
+from listenbrainz_spark import config, utils, path
 from listenbrainz_spark.sql import get_user_id
 from listenbrainz_spark.exceptions import SQLException
 from listenbrainz_spark.recommendations.utils import save_html
@@ -146,9 +146,8 @@ def save_candidate_sets(top_artists_candidate_set_df, similar_artists_candidate_
                         'user_id', 'recording_id'
                     ]
     """
-    path = os.path.join(config.HDFS_CLUSTER_URI, 'data', 'listenbrainz', 'recommendation-engine', 'candidate-set')
-    utils.save_parquet(top_artists_candidate_set_df, path  + '/top_artists.parquet')
-    utils.save_parquet(similar_artists_candidate_set_df, path + '/similar_artists.parquet')
+    utils.save_parquet(top_artists_candidate_set_df, path.TOP_ARTIST_CANDIDATE_SET)
+    utils.save_parquet(similar_artists_candidate_set_df, path.SIMILAR_ARTIST_CANDIDATE_SET)
 
 def get_candidate_html_data(similar_artist_df, user_name):
     """ Get artists similar to top artists listened to by the user. The function is invoked
@@ -229,15 +228,9 @@ def main():
         sys.exit(-1)
 
     try:
-        # path where artist relation is stored.
-        path = os.path.join(config.HDFS_CLUSTER_URI, 'data', 'listenbrainz', 'similar_artists',
-            'artist_artist_relations.parquet')
-        artists_relation_df = utils.read_files_from_HDFS(path)
-
-        # path where dataframes are stored.
-        path = os.path.join(config.HDFS_CLUSTER_URI, 'data', 'listenbrainz', 'recommendation-engine', 'dataframes')
-        recordings_df = utils.read_files_from_HDFS(path + '/recordings_df.parquet')
-        users_df = utils.read_files_from_HDFS(path + '/users_df.parquet')
+        artists_relation_df = utils.read_files_from_HDFS(path.SIMILAR_ARTIST_DATAFRAME_PATH)
+        recordings_df = utils.read_files_from_HDFS(path.RECORDINGS_DATAFRAME_PATH)
+        users_df = utils.read_files_from_HDFS(path.USERS_DATAFRAME_PATH)
     except AnalysisException as err:
         logging.error('{}\n{}\nAborting...'.format(str(err), err.stackTrace))
         sys.exit(-1)
@@ -256,8 +249,8 @@ def main():
         sys.exit(-1)
     logging.info('Files fetched from HDFS and dataframes registered in {}s'.format('{:.2f}'.format(time() - ti)))
 
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'recommendation-metadata.json')
-    with open(path) as f:
+    metadata_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'recommendation-metadata.json')
+    with open(metadata_file_path) as f:
         recommendation_metadata = json.load(f)
         user_names = recommendation_metadata['user_name']
 

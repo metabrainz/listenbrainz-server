@@ -19,8 +19,6 @@ from pyspark.sql.utils import AnalysisException
 
 # dataframe html is generated when set to true
 SAVE_DATAFRAME_HTML = False
-# os.path.join ignores everything before a '/'
-HDFS_PATH = config.HDFS_CLUSTER_URI + path.DATAFRAME_DIR + '/'
 
 def save_dataframe_html(users_df_time, recordings_df_time, playcounts_df_time, total_time):
     """ Prepare and save dataframe HTML.
@@ -95,7 +93,7 @@ def main():
         sys.exit(-1)
 
     try:
-        utils.save_parquet(users_df, HDFS_PATH + 'users_df.parquet')
+        utils.save_parquet(users_df, path.USERS_DATAFRAME_PATH)
     except Py4JJavaError as err:
         logging.error('Could not save users dataframe. {}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
@@ -110,7 +108,7 @@ def main():
         sys.exit(-1)
 
     try:
-        utils.save_parquet(recordings_df, HDFS_PATH + 'recordings_df.parquet')
+        utils.save_parquet(recordings_df, path.RECORDINGS_DATAFRAME_PATH)
     except Py4JJavaError as err:
         logging.error('Could not save recordings dataframe. {}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
@@ -139,7 +137,7 @@ def main():
         sys.exit(-1)
 
     try:
-        utils.save_parquet(playcounts_df, HDFS_PATH + 'playcounts_df.parquet')
+        utils.save_parquet(playcounts_df, path.PLAYCOUNTS_DATAFRAME_PATH)
     except Py4JJavaError as err:
         logging.error('Could not save playcounts dataframe. {}\n{}\nAborting...'.format(str(err), err.java_exception))
         sys.exit(-1)
