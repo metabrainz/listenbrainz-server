@@ -198,7 +198,7 @@ def main():
     logging.info('Saving model...')
     t0 = time()
     try:
-        metadata_file_path = path.DATA_DIR + '/' + best_model_metadata['model_id']
+        metadata_file_path = os.path.join(path.DATA_DIR, best_model_metadata['model_id'])
         model.model.save(listenbrainz_spark.context, config.HDFS_CLUSTER_URI + metadata_file_path)
     except Py4JJavaError as err:
         logging.error('Unable to save best model "{}": {} \n{}. Aborting...'.format(best_model_metadata['model_id'],
