@@ -11,7 +11,7 @@ from listenbrainz_spark import path
 from listenbrainz_spark import stats
 from listenbrainz_spark import utils
 from listenbrainz_spark import config
-from listenbrainz_spark.exceptions import SQLException
+from listenbrainz_spark.exceptions import SQLException, FileNotSavedException
 from listenbrainz_spark.recommendations.utils import save_html
 from listenbrainz_spark.sql import create_dataframes_queries as sql
 
@@ -94,9 +94,8 @@ def main():
 
     try:
         utils.save_parquet(users_df, path.USERS_DATAFRAME_PATH)
-    except Py4JJavaError as err:
-        logging.error('Could not save users dataframe. {}\n{}\nAborting...'.format(str(err), err.java_exception))
-        sys.exit(-1)
+    except FileNotSavedException as err:
+        raise
     users_df_time = '{:.2f}'.format((time() - t0) / 60)
 
     logging.info('Preparing recordings data and saving to HDFS...')

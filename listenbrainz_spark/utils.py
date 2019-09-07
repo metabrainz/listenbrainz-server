@@ -9,8 +9,9 @@ import listenbrainz_spark
 from listenbrainz_spark import stats
 from listenbrainz_spark import config
 from listenbrainz_spark.stats import run_query
-
 from listenbrainz_spark import hdfs_connection
+
+from listenbrainz_spark.exceptions import FileNotSavedException
 from pyspark.sql.utils import AnalysisException
 
 def create_path(path):
@@ -96,7 +97,7 @@ def save_parquet(df, path):
     try:
         df.write.format('parquet').save(path, mode='overwrite')
     except Py4JJavaError as err:
-        raise Py4JJavaError('Cannot save parquet to {}: {}\n'.format(path, type(err).__name__), err.java_exception)
+        raise FileNotSavedException(err.java_exception, path)
 
 def create_dir(path):
     """ Creates a directory in HDFS.
