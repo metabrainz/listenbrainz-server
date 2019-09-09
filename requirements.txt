@@ -5,7 +5,7 @@ Flask-WTF == 0.14
 Flask-SQLAlchemy == 2.3
 flask-socketio == 3.3.1
 click == 7.0
-jsonschema == 3.0.1
+jsonschema == 3.0.2
 rauth == 0.7.3
 setproctitle == 1.1.10
 markupsafe == 1.1.1
