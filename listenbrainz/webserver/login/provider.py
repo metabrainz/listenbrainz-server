@@ -36,12 +36,6 @@ def get_user():
     if user:
         if not user['musicbrainz_row_id']:
             db_user.update_musicbrainz_row_id(musicbrainz_id, data['metabrainz_user_id'])
-
-        # if the musicbrainz_id of the user from MusicBrainz is different, we need
-        # to update it here too
-        if user['musicbrainz_id'] != musicbrainz_id:
-            db_user.update_musicbrainz_id(user['id'], musicbrainz_id)
-
         return User.from_dbrow(user)
     else:
         return None
