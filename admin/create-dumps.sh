@@ -83,9 +83,8 @@ echo "Backup directories created!"
 
 # Copy the files into the backup directory
 echo "Begin copying dumps to backup directory..."
-chown "$BACKUP_USER:$BACKUP_GROUP" "$DUMP_DIR"/*
-chmod "$BACKUP_FILE_MODE" "$DUMP_DIR"/*
 retry cp -a "$DUMP_DIR"/* "$BACKUP_DIR"/$SUB_DIR/"$DUMP_NAME"/
+chmod "$BACKUP_FILE_MODE" "$BACKUP_DIR"/"$SUB_DIR"/"$DUMP_NAME"/*
 echo "Dumps copied to backup directory!"
 
 
@@ -106,9 +105,8 @@ chown "$FTP_USER:$FTP_GROUP" \
 # make sure all dump files are owned by the correct user
 # and set appropriate mode for files to be uploaded to
 # the FTP server
-chown "$FTP_USER:$FTP_GROUP" "$DUMP_DIR"/*
-chmod "$FTP_FILE_MODE" "$DUMP_DIR"/*
 retry cp -a "$DUMP_DIR"/* "$FTP_CURRENT_DUMP_DIR"
+chmod "$FTP_FILE_MODE" "$FTP_CURRENT_DUMP_DIR"/*
 
 # create an explicit rsync filter for the new private dump in the
 # ftp folder
