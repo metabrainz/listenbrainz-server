@@ -1,5 +1,7 @@
 from py4j.protocol import Py4JJavaError
 
+from listenbrainz_spark.exceptions import SparkSessionNotInitializedException
+
 from pyspark import SparkContext
 from pyspark.sql import SparkSession, SQLContext
 
@@ -25,5 +27,4 @@ def init_spark_session(app_name):
         context.setLogLevel("ERROR")
         sql_context = SQLContext(context)
     except Py4JJavaError as err:
-        raise Py4JJavaError('Cannot initialize Spark session "{}": {}\n'.format(app_name, type(err).__name__),
-            err.java_exception)
+        raise SparkSessionNotInitializedException(app_name, err.java_exception)
