@@ -1,11 +1,11 @@
 const path = require('path');
 const ManifestPlugin = require('webpack-manifest-plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 module.exports = function(env){
   const isProd = env === "production";
   const plugins = [
-    new CleanWebpackPlugin('/static/js/dist'),
+    new CleanWebpackPlugin(),
     new ManifestPlugin()
   ];
   return {
