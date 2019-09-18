@@ -60,11 +60,8 @@ def load_config(app):
             sys.exit(-1)
 
         print("loading consul config file %s)" % config_file)
-        app.config.from_pyfile(config_file)
 
-    else:
-        app.config.from_pyfile(config_file)
-
+    app.config.from_pyfile(config_file)
     # Output config values and some other info
     print('Configuration values are as follows: ')
     print(pprint.pformat(app.config, indent=4))
