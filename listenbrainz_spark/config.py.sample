@@ -37,3 +37,9 @@ RECOMMENDATION_SIMILAR_ARTIST_LIMIT = 30
 # candidate sets
 TOP_ARTISTS_LIMIT = 20
 SIMILAR_ARTISTS_LIMIT = 10
+
+LOG_SENTRY = {
+    'dsn':'',
+    'environment': 'development',
+    'level': 'ERROR',
+}
