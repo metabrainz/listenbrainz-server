@@ -15,6 +15,7 @@ from listenbrainz_spark.exceptions import SQLException, FileNotSavedException, F
 from listenbrainz_spark.recommendations.utils import save_html
 from listenbrainz_spark.sql import create_dataframes_queries as sql
 
+from flask import current_app
 from pyspark.sql.utils import AnalysisException
 
 # dataframe html is generated when set to true
@@ -56,83 +57,95 @@ def get_listens_for_training_model_window():
 
     try:
         training_df = utils.get_listens(from_date, to_date)
-    except ValueError:
-        raise
-    except FileNotFetchedException:
-        raise
+    except ValueError as err:
+        current_app.logger.error(str(err), exc_info=True)
+        sys.exit(-1)
+    except FileNotFetchedException as err:
+        current_app.logger.error(str(err), exc_info=True)
+        sys.exit(-1)
     return training_df
 
 def main():
     ti = time()
     try:
         listenbrainz_spark.init_spark_session('Create Dataframes')
-    except SparkSessionNotInitializedException:
-        raise
+    except SparkSessionNotInitializedException as err:
+        current_app.logger.error(str(err), exc_info=True)
+        sys.exit(-1)
 
     df = get_listens_for_training_model_window()
 
     if not df:
-        logging.error('Parquet files containing listening history of past {} days missing form HDFS'.format(
+        current_app.logger.error('Parquet files containing listening history of past {} days missing form HDFS'.format(
             config.TRAIN_MODEL_WINDOW))
         sys.exit(-1)
 
-    logging.info('Registering Dataframe...')
+    current_app.logger.info('Registering Dataframe...')
     table = 'df_to_train_{}'.format(datetime.strftime(datetime.utcnow(), '%Y_%m_%d'))
     try:
         utils.register_dataframe(df, table)
-    except ViewNotRegisteredException:
-        raise
-    logging.info('Files fetched from HDFS and dataframe registered in {}s'.format('{:.2f}'.format(time() - ti)))
+    except ViewNotRegisteredException as err:
+        current_app.logger.error(str(err), exc_info=True)
+        sys.exit(-1)
+    current_app.logger.info('Files fetched from HDFS and dataframe registered in {}s'.format('{:.2f}'.format(time() - ti)))
 
-    logging.info('Preparing users data and saving to HDFS...')
+    current_app.logger.info('Preparing users data and saving to HDFS...')
     t0 = time()
     try:
         users_df = sql.prepare_user_data(table)
-    except SQLException:
-        raise
+    except SQLException as err:
+        current_app.logger.error(str(err), exc_info=True)
+        sys.exit(-1)
 
     try:
         utils.save_parquet(users_df, path.USERS_DATAFRAME_PATH)
-    except FileNotSavedException:
-        raise
+    except FileNotSavedException as err:
+        current_app.logger.error(str(err), exc_info=True)
+        sys.exit(-1)
     users_df_time = '{:.2f}'.format((time() - t0) / 60)
 
-    logging.info('Preparing recordings data and saving to HDFS...')
+    current_app.logger.info('Preparing recordings data and saving to HDFS...')
     t0 = time()
     try:
         recordings_df = sql.prepare_recording_data(table)
-    except SQLException:
-        raise
+    except SQLException as err:
+        current_app.logger.error(str(err), exc_info=True)
+        sys.exit(-1)
 
     try:
         utils.save_parquet(recordings_df, path.RECORDINGS_DATAFRAME_PATH)
-    except FileNotSavedException:
-        raise
+    except FileNotSavedException as err:
+        current_app.logger.error(str(err), exc_info=True)
+        sys.exit(-1)
     recordings_df_time = '{:.2f}'.format((time() - t0) / 60)
 
-    logging.info('Preparing listen data dump and playcounts, saving playcounts to HDFS...')
+    current_app.logger.info('Preparing listen data dump and playcounts, saving playcounts to HDFS...')
     t0 = time()
     try:
         listens_df = sql.prepare_listen_data(table)
-    except SQLException:
-        raise
+    except SQLException as err:
+        current_app.logger.error(str(err), exc_info=True)
+        sys.exit(-1)
 
     try:
         utils.register_dataframe(listens_df, 'listen')
         utils.register_dataframe(users_df, 'user')
         utils.register_dataframe(recordings_df, 'recording')
-    except ViewNotRegisteredException:
-        raise
+    except ViewNotRegisteredException as err:
+        current_app.logger.error(str(err), exc_info=True)
+        sys.exit(-1)
 
     try:
         playcounts_df = sql.get_playcounts_data()
-    except SQLException:
-        raise
+    except SQLException as err:
+        current_app.logger.error(str(err), exc_info=True)
+        sys.exit(-1)
 
     try:
         utils.save_parquet(playcounts_df, path.PLAYCOUNTS_DATAFRAME_PATH)
-    except FileNotSavedException:
-        raise
+    except FileNotSavedException as err:
+        current_app.logger.error(str(err), exc_info=True)
+        sys.exit(-1)
     playcounts_df_time = '{:.2f}'.format((time() - t0) / 60)
     total_time = '{:.2f}'.format((time() - ti) / 60)
 

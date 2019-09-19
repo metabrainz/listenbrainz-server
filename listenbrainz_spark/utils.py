@@ -12,7 +12,32 @@ from listenbrainz_spark.stats import run_query
 from listenbrainz_spark import hdfs_connection
 
 from listenbrainz_spark.exceptions import FileNotSavedException, ViewNotRegisteredException, PathNotFoundException, FileNotFetchedException
+from flask import current_app
+from brainzutils.flask import CustomFlask
 from pyspark.sql.utils import AnalysisException
+
+def create_app(debug=None):
+    """ Uses brainzutils (https://github.com/metabrainz/brainzutils-python) to log exceptions to sentry.
+    """
+    # create flask application
+    app = CustomFlask(import_name=__name__)
+    # load config
+    config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.py')
+
+    # config must exist to link the file with our flask app.
+    if os.path.exists(config_file):
+        app.config.from_pyfile(config_file)
+    else:
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), config_file)
+
+    if debug is not None:
+        app.debug = debug
+
+    # attach app logs to sentry.
+    app.init_loggers(
+        sentry_config=app.config.get('LOG_SENTRY')
+    )
+    return app
 
 def create_path(path):
     try:
@@ -72,7 +97,7 @@ def get_listens(from_date, to_date):
             month = read_files_from_HDFS('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, from_date.year, from_date.month))
             df = df.union(month) if df else month
         except PathNotFoundException as err:
-            logging.error('{}\nFetching file for next date...').format(err)
+            current_app.logger.warning('{}\nFetching file for next date...').format(err)
         # go to the next month of from_date
         from_date = stats.adjust_days(from_date, config.STEPS_TO_REACH_NEXT_MONTH, shift_backwards=False)
         # shift to the first of the month
