@@ -14,8 +14,10 @@ from py4j.protocol import Py4JJavaError
 import listenbrainz_spark
 from listenbrainz_spark import config, utils, path
 from listenbrainz_spark.recommendations.utils import save_html
+from listenbrainz_spark.exceptions import SparkSessionNotInitializedException, PathNotFoundException, FileNotFetchedException
 
 from pyspark.sql import Row
+from flask import current_app
 from pyspark.sql.utils import AnalysisException
 from pyspark.mllib.recommendation import ALS, Rating
 
@@ -60,7 +62,7 @@ def preprocess_data(playcounts_df):
             validation_data (rdd): Used for validation.
             test_data (rdd): Used for testing.
     """
-    logging.info('Splitting dataframe...')
+    current_app.logger.info('Splitting dataframe...')
     training_data, validation_data, test_data = playcounts_df.rdd.map(parse_dataset).randomSplit([4, 1, 1], 45)
     return training_data, validation_data, test_data
 
@@ -86,18 +88,20 @@ def train(training_data, validation_data, num_validation, ranks, lambdas, iterat
     alpha = 3.0
     for rank, lmbda, iteration in itertools.product(ranks, lambdas, iterations):
         t0 = time()
+        model_id = 'listenbrainz-recommendation-model-{}'.format(uuid.uuid4())
         try:
             model = ALS.trainImplicit(training_data, rank, iterations=iteration, lambda_=lmbda, alpha=alpha)
-            model_id = 'listenbrainz-recommendation-model-{}'.format(uuid.uuid4())
         except Py4JJavaError as err:
-            raise Py4JJavaError('Unable to train model "{}": {}\n'.format(model_id, type(err).__name__), err.java_exception)
+            current_app.logger.error('Unable to train model "{}": {}\n{}'.format(model_id, type(err).__name__, str(err.java_exception)))
+            sys.exit(-1)
         mt = '{:.2f}'.format((time() - t0) / 60)
         t0 = time()
         try:
             validation_rmse = compute_rmse(model, validation_data, num_validation)
         except Py4JJavaError as err:
-            raise Py4JJavaError('Root Mean Squared Error for model "{}" for validation data not computed: {}\n'.format(
-                model_id, type(err).__name__), err.java_exception)
+            current_app.logger.error('Root Mean Squared Error for model "{}" for validation data not computed: {}\n{}'.format(
+                model_id, type(err).__name__, str(err.java_exception)))
+            sys.exit(-1)
         vt = '{:.2f}'.format((time() - t0) / 60)
         model_metadata.append((model_id, mt, rank, '{:.1f}'.format(lmbda), iteration, "%.2f" % (validation_rmse), vt))
         if best_model is None or validation_rmse < best_model.error:
@@ -146,17 +150,14 @@ def main():
     time_ = defaultdict(dict)
     try:
         listenbrainz_spark.init_spark_session('Train Models')
-    except Py4JJavaError as err:
-        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
+    except SparkSessionNotInitializedException as err:
+        current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
     try:
         playcounts_df = utils.read_files_from_HDFS(path.PLAYCOUNTS_DATAFRAME_PATH)
-    except AnalysisException as err:
-        logging.error('{}\n{}\nAborting...'.format(str(err), err.stackTrace))
-        sys.exit(-1)
-    except Py4JJavaError as err:
-        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
+    except FileNotFetchedException as err:
+        current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
     time_['load_playcounts'] = '{:.2f}'.format((time() - ti) / 60)
 
@@ -174,20 +175,17 @@ def main():
     num_validation = validation_data.count()
     num_test = test_data.count()
 
-    logging.info('Training models...')
+    current_app.logger.info('Training models...')
     t0 = time()
-    try:
-        model, model_metadata, best_model_metadata = train(training_data, validation_data, num_validation, config.RANKS,
-            config.LAMBDAS, config.ITERATIONS)
-    except Py4JJavaError as err:
-        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
-        sys.exit(-1)
+
+    model, model_metadata, best_model_metadata = train(training_data, validation_data, num_validation, config.RANKS,
+        config.LAMBDAS, config.ITERATIONS)
     models_training_time = '{:.2f}'.format((time() - t0) / 3600)
 
     try:
         best_model_test_rmse = compute_rmse(model.model, test_data, num_test)
     except Py4JJavaError as err:
-        logging.error('Root mean squared error for best model for test data not computed:{}\n{}\nAborting...'.format(
+        current_app.logger.error('Root mean squared error for best model for test data not computed:{}\n{}\nAborting...'.format(
             type(err).__name__, str(err.java_exception)))
         sys.exit(-1)
 
@@ -195,13 +193,13 @@ def main():
     training_data.unpersist()
     validation_data.unpersist()
 
-    logging.info('Saving model...')
+    current_app.logger.info('Saving model...')
     t0 = time()
+    metadata_file_path = os.path.join(path.DATA_DIR, best_model_metadata['model_id'])
     try:
-        metadata_file_path = os.path.join(path.DATA_DIR, best_model_metadata['model_id'])
         model.model.save(listenbrainz_spark.context, config.HDFS_CLUSTER_URI + metadata_file_path)
     except Py4JJavaError as err:
-        logging.error('Unable to save best model "{}": {} \n{}. Aborting...'.format(best_model_metadata['model_id'],
+        current_app.logger.error('Unable to save best model "{}": {} \n{}. Aborting...'.format(best_model_metadata['model_id'],
             type(err).__name__, str(err.java_exception)))
         sys.exit(-1)
     time_['save_model'] = '{:.2f}'.format((time() - t0) / 60)
