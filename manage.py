@@ -110,7 +110,8 @@ def user():
     """ Invoke script responsible for calculating user statistics.
     """
     from listenbrainz_spark.stats import user
-    user.main()
+    with app.app_context:
+        user.main()
 
 @cli.resultcallback()
 def remove_zip(result, **kwargs):
