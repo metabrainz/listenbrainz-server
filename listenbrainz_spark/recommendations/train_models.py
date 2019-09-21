@@ -92,15 +92,15 @@ def train(training_data, validation_data, num_validation, ranks, lambdas, iterat
         try:
             model = ALS.trainImplicit(training_data, rank, iterations=iteration, lambda_=lmbda, alpha=alpha)
         except Py4JJavaError as err:
-            current_app.logger.error('Unable to train model "{}": {}\n{}'.format(model_id, type(err).__name__, str(err.java_exception)))
+            current_app.logger.error('Unable to train model "{}"\n{}'.format(model_id, str(err.java_exception)), exc_info=True)
             sys.exit(-1)
         mt = '{:.2f}'.format((time() - t0) / 60)
         t0 = time()
         try:
             validation_rmse = compute_rmse(model, validation_data, num_validation)
         except Py4JJavaError as err:
-            current_app.logger.error('Root Mean Squared Error for model "{}" for validation data not computed: {}\n{}'.format(
-                model_id, type(err).__name__, str(err.java_exception)))
+            current_app.logger.error('Root Mean Squared Error for model "{}" for validation data not computed\n{}'.format(
+                model_id, str(err.java_exception)), exc_info=True)
             sys.exit(-1)
         vt = '{:.2f}'.format((time() - t0) / 60)
         model_metadata.append((model_id, mt, rank, '{:.1f}'.format(lmbda), iteration, "%.2f" % (validation_rmse), vt))
@@ -185,8 +185,8 @@ def main():
     try:
         best_model_test_rmse = compute_rmse(model.model, test_data, num_test)
     except Py4JJavaError as err:
-        current_app.logger.error('Root mean squared error for best model for test data not computed:{}\n{}\nAborting...'.format(
-            type(err).__name__, str(err.java_exception)))
+        current_app.logger.error('Root mean squared error for best model for test data not computed\n{}\nAborting...'.format(
+            str(err.java_exception)), exc_info=True)
         sys.exit(-1)
 
     # Cached data must be cleared to avoid OOM.
@@ -199,8 +199,8 @@ def main():
     try:
         model.model.save(listenbrainz_spark.context, config.HDFS_CLUSTER_URI + metadata_file_path)
     except Py4JJavaError as err:
-        current_app.logger.error('Unable to save best model "{}": {} \n{}. Aborting...'.format(best_model_metadata['model_id'],
-            type(err).__name__, str(err.java_exception)))
+        current_app.logger.error('Unable to save best model "{}"\n{}. Aborting...'.format(best_model_metadata['model_id'],
+            str(err.java_exception)), exc_info=True)
         sys.exit(-1)
     time_['save_model'] = '{:.2f}'.format((time() - t0) / 60)
 
