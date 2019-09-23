@@ -5,6 +5,21 @@ class SparkException(Exception):
     def __str__(self):
         return self.message
 
+class DataFrameNotAppendedException(SparkException):
+    """ Failed to append a dataframe to existing dataframe in HDFS or
+        failed to write a new dataframe to HDFS.
+    """
+    def __init__(self, message, schema):
+        self.error_msg = 'DataFrame with following schema not appended: \n{}\n{}'.format(schema, message)
+        super(DataFrameNotAppendedException, self).__init__(self.error_msg)
+
+class DataFrameNotCreatedException(SparkException):
+    """ Failed to create a new dataframe.
+    """
+    def __init__(self, message, row):
+        self.error_msg = 'Cannot create dataframe for following row object: \n{}\n{}'.format(row, message)
+        super(DataFrameNotCreatedException, self).__init__(self.error_msg)
+
 class FileNotFetchedException(SparkException):
     """ Failed to fetch a file from secondary storage.
     """
