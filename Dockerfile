@@ -20,6 +20,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
                        ca-certificates \
                        netbase \
+                       git \
                        libbz2-1.0 \
                        libexpat1 \
                        libffi6 \

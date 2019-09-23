@@ -12,10 +12,12 @@ from py4j.protocol import Py4JJavaError
 import listenbrainz_spark
 from listenbrainz_spark import config, utils, path
 from listenbrainz_spark.sql import get_user_id
-from listenbrainz_spark.exceptions import SQLException
+from listenbrainz_spark.exceptions import SQLException, SparkSessionNotInitializedException, PathNotFoundException, \
+    FileNotFetchedException, ViewNotRegisteredException
 from listenbrainz_spark.sql import recommend_queries as sql
 from listenbrainz_spark.recommendations.utils import save_html
 
+from flask import current_app
 from pyspark.sql.utils import AnalysisException
 from pyspark.mllib.recommendation import MatrixFactorizationModel
 
@@ -145,12 +147,12 @@ def get_recommendations(user_names, recordings_df, model):
             t0 = time()
             user_recommendations = recommend_user(user_name, model, recordings_df)
             user_recommendations['time'] = '{:.2f}'.format((time() - t0) / 60)
-            logging.info('Recommendations for "{}" generated'.format(user_name))
+            current_app.logger.info('Recommendations for "{}" generated'.format(user_name))
             recommendations[user_name] = user_recommendations
         except TypeError as err:
-            logging.error('{}: Invalid user name. User "{}" does not exist.'.format(type(err).__name__,user_name))
+            current_app.logger.error('{}: Invalid user name. User "{}" does not exist.'.format(type(err).__name__,user_name))
         except SQLException as err:
-            logging.error('{}\nRecommendations for "{}" not generated'.format(err, user_name))
+            current_app.logger.error('{}\nRecommendations for "{}" not generated'.format(str(err), user_name), exc_info=True)
     return recommendations
 
 def get_recommendation_html(recommendations, time_, best_model_id, ti):
@@ -198,8 +200,8 @@ def main():
     time_ = defaultdict(dict)
     try:
         listenbrainz_spark.init_spark_session('Recommendations')
-    except Py4JJavaError as err:
-        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
+    except SparkSessionNotInitializedException as err:
+        current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
     try:
@@ -208,11 +210,11 @@ def main():
 
         top_artists_candidate_df = utils.read_files_from_HDFS(path.TOP_ARTIST_CANDIDATE_SET)
         similar_artists_candidate_df = utils.read_files_from_HDFS(path.SIMILAR_ARTIST_CANDIDATE_SET)
-    except AnalysisException as err:
-        logging.error('{}\n{}\nAborting...'.format(str(err), err.stackTrace))
+    except PathNotFoundException as err:
+        current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
-    except Py4JJavaError as err:
-        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
+    except FileNotFetchedException as err:
+        current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
     try:
@@ -220,8 +222,8 @@ def main():
         utils.register_dataframe(top_artists_candidate_df, 'top_artist')
         utils.register_dataframe(similar_artists_candidate_df, 'similar_artist')
         utils.register_dataframe(recordings_df, 'recording')
-    except Py4JJavaError as err:
-        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
+    except ViewNotRegisteredException as err:
+        current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
     metadata_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recommendation-metadata.json')
@@ -232,13 +234,13 @@ def main():
 
     best_model_path = path.DATA_DIR + '/' + best_model_id
 
-    logging.info('Loading model...')
+    current_app.logger.info('Loading model...')
     t0 = time()
     try:
         model = load_model(config.HDFS_CLUSTER_URI + best_model_path)
     except Py4JJavaError as err:
-        logging.error('Unable to load model "{}": {}\n{}\nAborting...'.format(best_model_id, type(err).__name__,
-            str(err.java_exception)))
+        current_app.logger.error('Unable to load model "{}"\n{}\nAborting...'.format(best_model_id, str(err.java_exception)),
+            exc_info=True)
         sys.exit(-1)
     time_['load_model'] = '{:.2f}'.format((time() - t0) / 60)
 
