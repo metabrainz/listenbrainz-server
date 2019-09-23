@@ -12,6 +12,8 @@ from listenbrainz_spark import hdfs_connection
 from hdfs.util import HdfsError
 from py4j.protocol import Py4JJavaError
 
+app = utils.create_app(debug=True)
+
 @click.group()
 def cli():
     pass
@@ -76,35 +78,40 @@ def dataframes():
     """ Invoke script responsible for pre-processing data.
     """
     from listenbrainz_spark.recommendations import create_dataframes
-    create_dataframes.main()
+    with app.app_context():
+        create_dataframes.main()
 
 @cli.command(name='model')
 def model():
     """ Invoke script responsible for training data.
     """
     from listenbrainz_spark.recommendations import train_models
-    train_models.main()
+    with app.app_context():
+        train_models.main()
 
 @cli.command(name='candidate')
 def candidate():
     """ Invoke script responsible for generating candidate sets.
     """
     from listenbrainz_spark.recommendations import candidate_sets
-    candidate_sets.main()
+    with app.app_context():
+        candidate_sets.main()
 
 @cli.command(name='recommend')
 def recommend():
     """ Invoke script responsible for generating recommendations.
     """
     from listenbrainz_spark.recommendations import recommend
-    recommend.main()
+    with app.app_context():
+        recommend.main()
 
 @cli.command(name='user')
 def user():
     """ Invoke script responsible for calculating user statistics.
     """
     from listenbrainz_spark.stats import user
-    user.main()
+    with app.app_context:
+        user.main()
 
 @cli.resultcallback()
 def remove_zip(result, **kwargs):

@@ -12,10 +12,12 @@ import listenbrainz_spark
 from listenbrainz_spark import stats
 from listenbrainz_spark import config, utils, path
 from listenbrainz_spark.sql import get_user_id
-from listenbrainz_spark.exceptions import SQLException
 from listenbrainz_spark.recommendations.utils import save_html
 from listenbrainz_spark.sql import candidate_sets_queries as sql
+from listenbrainz_spark.exceptions import SQLException, SparkSessionNotInitializedException, ViewNotRegisteredException, \
+    PathNotFoundException, FileNotFetchedException
 
+from flask import current_app
 from pyspark.sql.utils import AnalysisException, ParseException
 
 # Candidate Set HTML is generated if set to true.
@@ -31,12 +33,18 @@ def get_listens_for_rec_generation_window():
                     recording_msid, release_mbid, release_msid, release_name, tags, track_name, user_name
                 ]
     """
-    df = None
     to_date = datetime.utcnow()
     from_date = stats.adjust_days(to_date, config.RECOMMENDATION_GENERATION_WINDOW)
     # shift to the first of the month
     from_date = stats.replace_days(from_date, 1)
-    df = utils.get_listens(from_date, to_date)
+    try:
+        df = utils.get_listens(from_date, to_date)
+    except ValueError as err:
+        current_app.logger.error(str(err), exc_info=True)
+        sys.exit(-1)
+    except FileNotFetchedException as err:
+        current_app.logger.error(str(err), exc_info=True)
+        sys.exit(-1)
     return df
 
 def get_similar_artists(top_artists_df, user_name):
@@ -203,51 +211,48 @@ def main():
     ti = time()
     try:
         listenbrainz_spark.init_spark_session('Candidate_set')
-    except Py4JJavaError as err:
-        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
+    except SparkSessionNotInitializedException as err:
+        current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
-    try:
-        df = get_listens_for_rec_generation_window()
-    except Py4JJavaError as err:
-        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
-        sys.exit(-1)
+    df = get_listens_for_rec_generation_window()
+
+    if not df:
+        current_app.logger.error('Listening history of past {} days do not exist'.format(config.RECOMMENDATION_GENERATION_WINDOW))
 
     try:
         utils.register_dataframe(df, 'df')
-    except Py4JJavaError as err:
-        logging.error('Cannot register dataframe containing listens of past {} days: {}\n{}\nAborting...'.format(
-            config.RECOMMENDATION_GENERATION_WINDOW, str(err), err.java_exception))
+    except ViewNotRegisteredException as err:
+        current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
     try:
         listens_df = sql.get_listens_for_X_days()
     except SQLException as err:
-        logging.error('Query to fetch listens of past {} days not executed: {}\n{}\nAborting...'.format(
-            config.RECOMMENDATION_GENERATION_WINDOW, type(err).__name__, str(err)))
+        current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
     try:
         artists_relation_df = utils.read_files_from_HDFS(path.SIMILAR_ARTIST_DATAFRAME_PATH)
         recordings_df = utils.read_files_from_HDFS(path.RECORDINGS_DATAFRAME_PATH)
         users_df = utils.read_files_from_HDFS(path.USERS_DATAFRAME_PATH)
-    except AnalysisException as err:
-        logging.error('{}\n{}\nAborting...'.format(str(err), err.stackTrace))
+    except PathNotFoundException as err:
+        current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
-    except Py4JJavaError as err:
-        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
+    except FileNotFetchedException as err:
+        current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
-    logging.info('Registering Dataframes...')
+    current_app.logger.info('Registering Dataframes...')
     try:
         utils.register_dataframe(listens_df, 'listens_df')
         utils.register_dataframe(recordings_df, 'recording')
         utils.register_dataframe(users_df, 'user')
         utils.register_dataframe(artists_relation_df, 'artists_relation')
-    except Py4JJavaError as err:
-        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
+    except ViewNotRegisteredException as err:
+        current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
-    logging.info('Files fetched from HDFS and dataframes registered in {}s'.format('{:.2f}'.format(time() - ti)))
+    current_app.logger.info('Files fetched from HDFS and dataframes registered in {}s'.format('{:.2f}'.format(time() - ti)))
 
     metadata_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'recommendation-metadata.json')
     with open(metadata_file_path) as f:
@@ -262,43 +267,43 @@ def main():
         try:
             user_id = get_user_id(user_name)
         except TypeError as err:
-            logging.error('{}: Invalid user name. User "{}" does not exist.'.format(type(err).__name__,user_name))
+            current_app.logger.error('{}: Invalid user name. User "{}" does not exist.'.format(type(err).__name__,user_name))
             continue
         except SQLException as err:
-            logging.error('User id for "{}" cannot be retrieved: {}\n{}'.format(user_name, type(err).__name__, str(err)))
+            current_app.logger.error('User id for "{}" cannot be retrieved\n{}'.format(user_name, str(err)), exc_info=True)
             continue
 
         try:
             top_artists_df = sql.get_top_artists(user_name)
             top_artists_df.take(1)[0]
         except IndexError as err:
-            logging.error('{}\n{}\nNo top artists found, i.e. "{}" is either a new user or has empty listening history.' \
+            current_app.logger.error('{}: {}\nNo top artists found, i.e. "{}" is either a new user or has empty listening history.' \
                 ' Candidate sets cannot be generated'.format(type(err).__name__, str(err), user_name))
             continue
         except SQLException as err:
-            logging.error('Top artists cannot be retrieved for "{}": {}\n{}'.format(user_name, type(err).__name__, str(err)))
+            current_app.logger.error('Top artists cannot be retrieved for "{}": {}\n{}'.format(user_name, str(err)), exc_info=True)
             continue
 
         try:
             similar_artists_df = get_similar_artists(top_artists_df, user_name)
         except IndexError as err:
-            logging.error('{}\nGenrating recommendations for next user'.format(err))
+            current_app.logger.error('{}\nGenrating recommendations for next user'.format(err))
             continue
         except SQLException as err:
-            logging.error('Candidate sets not generated for "{}"\n{}'.format(user_name, err))
+            current_app.logger.error('Candidate sets not generated for "{}"\n{}'.format(user_name,str(err)), exc_info=True)
             continue
 
         try:
             utils.register_dataframe(similar_artists_df, 'similar_artist')
             utils.register_dataframe(top_artists_df, 'top_artist')
-        except Py4JJavaError as err:
-            logging.error('{}\n{}'.format(str(err), err.java_exception))
+        except ViewNotRegisteredException as err:
+            current_app.logger.error(str(err), exc_info=True)
             continue
 
         try:
             top_artists_recording_ids_df = get_top_artists_recording_ids(similar_artists_df, user_name, user_id)
         except SQLException as err:
-            logging.error('Candidate sets could not be generated for "{}"\n{}'.format(user_name, err))
+            current_app.logger.error('Candidate sets could not be generated for "{}"\n{}'.format(user_name, str(err)), exc_info=True)
             continue
         top_artists_candidate_set_df = top_artists_candidate_set_df.union(top_artists_recording_ids_df) \
             if top_artists_candidate_set_df else top_artists_recording_ids_df
@@ -307,10 +312,10 @@ def main():
             similar_artists_recording_ids_df = get_similar_artists_recording_ids(similar_artists_df, top_artists_df,
                 user_name, user_id)
         except IndexError as err:
-            logging.error('{}\nGenrating recommendations for next user'.format(err))
+            current_app.logger.error('{}\nGenrating recommendations for next user'.format(err))
             continue
         except SQLException as err:
-            logging.error('Candidate sets could not be generated for "{}"\n{}'.format(user_name, err))
+            current_app.logger.error('Candidate sets could not be generated for "{}"\n{}'.format(user_name, str(err)), exc_info=True)
             continue
         similar_artists_candidate_set_df = similar_artists_candidate_set_df.union(similar_artists_recording_ids_df) \
             if similar_artists_candidate_set_df else similar_artists_recording_ids_df
@@ -318,17 +323,17 @@ def main():
         if SAVE_CANDIDATE_HTML:
             user_data[user_name]['artists'] = get_candidate_html_data(similar_artists_df, user_name)
             user_data[user_name]['time'] = '{:.2f}'.format(time() - ts)
-        logging.info('candidate_set generated for \"{}\"'.format(user_name))
+        current_app.logger.info('candidate_set generated for \"{}\"'.format(user_name))
 
     try:
         save_candidate_sets(top_artists_candidate_set_df, similar_artists_candidate_set_df)
     except Py4JJavaError as err:
-        logging.error('{}\n{}\nAborting...'.format(str(err), err.java_exception))
+        current_app.logger.error('{}\nAborting...'.format(str(err.java_exception)), exc_info=True)
         sys.exit(-1)
 
     if SAVE_CANDIDATE_HTML:
         try:
             save_candidate_html(user_data)
         except SQLException as err:
-            logging.error('Could not save candidate HTML\n{}'.format(err))
+            current_app.logger.error('Could not save candidate HTML\n{}'.format(str(err)), exc_info=True)
             sys.exit(-1)

@@ -9,9 +9,35 @@ import listenbrainz_spark
 from listenbrainz_spark import stats
 from listenbrainz_spark import config
 from listenbrainz_spark.stats import run_query
-
 from listenbrainz_spark import hdfs_connection
+
+from listenbrainz_spark.exceptions import FileNotSavedException, ViewNotRegisteredException, PathNotFoundException, FileNotFetchedException
+from flask import current_app
+from brainzutils.flask import CustomFlask
 from pyspark.sql.utils import AnalysisException
+
+def create_app(debug=None):
+    """ Uses brainzutils (https://github.com/metabrainz/brainzutils-python) to log exceptions to sentry.
+    """
+    # create flask application
+    app = CustomFlask(import_name=__name__)
+    # load config
+    config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.py')
+
+    # config must exist to link the file with our flask app.
+    if os.path.exists(config_file):
+        app.config.from_pyfile(config_file)
+    else:
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), config_file)
+
+    if debug is not None:
+        app.debug = debug
+
+    # attach app logs to sentry.
+    app.init_loggers(
+        sentry_config=app.config.get('LOG_SENTRY')
+    )
+    return app
 
 def create_path(path):
     try:
@@ -31,8 +57,7 @@ def register_dataframe(df, table_name):
     try:
         df.createOrReplaceTempView(table_name)
     except Py4JJavaError as err:
-        raise Py4JJavaError('Cannot register dataframe "{}": {}\n'.format(table_name, type(err).__name__),
-            err.java_exception)
+        raise ViewNotRegisteredException(err.java_exception, table_name)
 
 def read_files_from_HDFS(path):
     """ Loads the dataframe stored at the given path in HDFS.
@@ -44,11 +69,9 @@ def read_files_from_HDFS(path):
         df = listenbrainz_spark.sql_context.read.parquet(path)
         return df
     except AnalysisException as err:
-      raise AnalysisException('Cannot read "{}" from HDFS: {}\n'.format(path, type(err).__name__),
-            stackTrace=traceback.format_exc())
+        raise PathNotFoundException(str(err), path)
     except Py4JJavaError as err:
-        raise Py4JJavaError('An error occurred while fetching "{}": {}\n'.format(path, type(err).__name__),
-            err.java_exception)
+        raise FileNotFetchedException(err.java_exception, path)
 
 def get_listens(from_date, to_date):
     """ Prepare dataframe of months falling between from_date and to_date (both inclusive).
@@ -65,21 +88,16 @@ def get_listens(from_date, to_date):
                     'track_name', 'user_name'
                 ]
     """
-    try:
-        if to_date < from_date:
-            raise ValueError()
-    except ValueError as err:
-        logging.error('{}: Data generation window is negative i.e. from_date (date from which start fetching listens)' \
+    if to_date < from_date:
+        raise ValueError('{}: Data generation window is negative i.e. from_date (date from which start fetching listens)' \
             ' is greater than to_date (date upto which fetch listens).\nAborting...'.format(type(err).__name__))
-        sys.exit(-1)
-
     df = None
     while from_date <= to_date:
         try:
             month = read_files_from_HDFS('{}/data/listenbrainz/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI, from_date.year, from_date.month))
             df = df.union(month) if df else month
-        except AnalysisException as err:
-            logging.error('{}\nTrying to fetch listens for next date.'.format(str(err)))
+        except PathNotFoundException as err:
+            current_app.logger.warning('{}\nFetching file for next date...'.format(err))
         # go to the next month of from_date
         from_date = stats.adjust_days(from_date, config.STEPS_TO_REACH_NEXT_MONTH, shift_backwards=False)
         # shift to the first of the month
@@ -96,7 +114,7 @@ def save_parquet(df, path):
     try:
         df.write.format('parquet').save(path, mode='overwrite')
     except Py4JJavaError as err:
-        raise Py4JJavaError('Cannot save parquet to {}: {}\n'.format(path, type(err).__name__), err.java_exception)
+        raise FileNotSavedException(err.java_exception, path)
 
 def create_dir(path):
     """ Creates a directory in HDFS.
