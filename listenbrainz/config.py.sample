@@ -50,6 +50,8 @@ UNIQUE_QUEUE = "unique"
 FOLLOW_LIST_QUEUE = "follow_list"
 PLAYING_NOW_EXCHANGE = "playing_now"
 PLAYING_NOW_QUEUE = "playing_now"
+BIGQUERY_EXCHANGE = "bigquery"
+BIGQUERY_QUEUE = "bigquery"
 SPARK_JOB_REQUEST_QUEUE = 'spark_job_request'
 SPARK_JOB_REQUEST_EXCHANGE = 'spark_job_request'
 
