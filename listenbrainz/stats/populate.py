@@ -36,7 +36,7 @@ def send_message_to_spark_cluster(message):
             current_app.logger.error('Could not send message to spark cluster: %s', ujson.dumps(message), exc_info=True)
 
 @cli.command(name="request_user_stats")
-def request_user_stats(force):
+def request_user_stats():
     """ Send a user stats request to the spark cluster
     """
     send_message_to_spark_cluster({
