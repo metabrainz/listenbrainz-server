@@ -48,10 +48,10 @@ INCOMING_QUEUE = "incoming"
 UNIQUE_EXCHANGE = "unique"
 UNIQUE_QUEUE = "unique"
 FOLLOW_LIST_QUEUE = "follow_list"
-BIGQUERY_EXCHANGE = "bigquery"
-BIGQUERY_QUEUE = "bigquery"
 PLAYING_NOW_EXCHANGE = "playing_now"
 PLAYING_NOW_QUEUE = "playing_now"
+SPARK_JOB_REQUEST_QUEUE = 'spark_job_request'
+SPARK_JOB_REQUEST_EXCHANGE = 'spark_job_request'
 
 # MusicBrainz OAuth
 MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
