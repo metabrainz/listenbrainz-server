@@ -6,4 +6,4 @@ if [[ ! -d "docker" ]]; then
 fi
 
 # invoke docker, but ungrep noisy influx log messages that I can't turn off
-docker-compose -f docker/docker-compose.yml -p listenbrainz build && docker-compose -f docker/docker-compose.yml -p listenbrainz up
+docker-compose -f docker/docker-compose.yml -p listenbrainz "$@"
