@@ -11,7 +11,8 @@ from listenbrainz_spark import path, schema
 from listenbrainz_spark import stats
 from listenbrainz_spark import utils
 from listenbrainz_spark import config
-from listenbrainz_spark.exceptions import SQLException, FileNotSavedException, FileNotFetchedException, ViewNotRegisteredException, SparkSessionNotInitializedException
+from listenbrainz_spark.exceptions import SQLException, FileNotSavedException, FileNotFetchedException, ViewNotRegisteredException, \
+    SparkSessionNotInitializedException, DataFrameNotAppendedException, DataFrameNotCreatedException
 from listenbrainz_spark.recommendations.utils import save_html
 from listenbrainz_spark.sql import create_dataframes_queries as sql
 
@@ -20,13 +21,11 @@ from pyspark.sql.utils import AnalysisException
 
 # dataframe html is generated when set to true
 SAVE_DATAFRAME_HTML = False
-# dict to save dataframe metadata which would be later merged in model_metadata dataframe.
-METADATA = {}
 
-def generate_best_model_id():
+def generate_best_model_id(metadata):
     """ Generate best model id.
     """
-    METADATA['model_id'] = '{}-{}'.format(config.MODEL_ID_PREFIX, uuid.uuid4())
+    metadata['model_id'] = '{}-{}'.format(config.MODEL_ID_PREFIX, uuid.uuid4())
 
 def save_dataframe_html(users_df_time, recordings_df_time, playcounts_df_time, total_time):
     """ Prepare and save dataframe HTML.
@@ -47,17 +46,25 @@ def save_dataframe_html(users_df_time, recordings_df_time, playcounts_df_time, t
     }
     save_html(queries_html, context, 'queries.html')
 
-def save_dataframe_metadata_to_HDFS():
+def save_dataframe_metadata_to_HDFS(metadata):
     """ Save dataframe metadata to model_metadata dataframe.
     """
     # Convert metadata to row object.
-    meatdata_row = schema.convert_model_metadata_to_row(METADATA)
-    # Create dataframe from the row object.
-    dataframe_metadata = utils.create_dataframe(meatdata_row, schema.model_metadata_schema)
-    # Append the dataframe to existing dataframe if already exist or create a new one.
-    utils.append(dataframe_metadata, path.MODEL_METADATA)
+    metadata_row = schema.convert_model_metadata_to_row(metadata)
+    try:
+        # Create dataframe from the row object.
+        dataframe_metadata = utils.create_dataframe(metadata_row, schema.model_metadata_schema)
+    except DataFrameNotCreatedException as err:
+        current_app.logger.error(str(err), exc_info=True)
+        sys.exit(-1)
+    try:
+        # Append the dataframe to existing dataframe if already exist or create a new one.
+        utils.append(dataframe_metadata, path.MODEL_METADATA)
+    except DataFrameNotAppendedException as err:
+        current_app.logger.error(str(err), exc_info=True)
+        sys.exit(-1)
 
-def get_listens_for_training_model_window():
+def get_listens_for_training_model_window(metadata):
     """  Prepare dataframe of listens of X days to train. Here X is a config value.
 
         Returns:
@@ -72,8 +79,8 @@ def get_listens_for_training_model_window():
     # shift to the first of the month
     from_date = stats.replace_days(from_date, 1)
 
-    METADATA['to_date'] = to_date
-    METADATA['from_date'] = from_date
+    metadata['to_date'] = to_date
+    metadata['from_date'] = from_date
     try:
         training_df = utils.get_listens(from_date, to_date)
     except ValueError as err:
@@ -86,13 +93,17 @@ def get_listens_for_training_model_window():
 
 def main():
     ti = time()
+    # dict to save dataframe metadata which would be later merged in model_metadata dataframe.
+    metadata = {}
+    # "updated" should always be set to False in this script.
+    metadata['updated'] = False
     try:
         listenbrainz_spark.init_spark_session('Create Dataframes')
     except SparkSessionNotInitializedException as err:
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
-    df = get_listens_for_training_model_window()
+    df = get_listens_for_training_model_window(metadata)
 
     if not df:
         current_app.logger.error('Parquet files containing listening history of past {} days missing form HDFS'.format(
@@ -115,7 +126,7 @@ def main():
     except SQLException as err:
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
-    METADATA['users_count'] = users_df.count()
+    metadata['users_count'] = users_df.count()
 
     try:
         utils.save_parquet(users_df, path.USERS_DATAFRAME_PATH)
@@ -131,7 +142,7 @@ def main():
     except SQLException as err:
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
-    METADATA['recordings_count'] = recordings_df.count()
+    metadata['recordings_count'] = recordings_df.count()
 
     try:
         utils.save_parquet(recordings_df, path.RECORDINGS_DATAFRAME_PATH)
@@ -147,7 +158,7 @@ def main():
     except SQLException as err:
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
-    METADATA['listens_count'] = listens_df.count()
+    metadata['listens_count'] = listens_df.count()
 
     try:
         utils.register_dataframe(listens_df, 'listen')
@@ -162,7 +173,7 @@ def main():
     except SQLException as err:
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
-    METADATA['playcounts_count'] = playcounts_df.count()
+    metadata['playcounts_count'] = playcounts_df.count()
 
     try:
         utils.save_parquet(playcounts_df, path.PLAYCOUNTS_DATAFRAME_PATH)
@@ -172,11 +183,8 @@ def main():
     playcounts_df_time = '{:.2f}'.format((time() - t0) / 60)
     total_time = '{:.2f}'.format((time() - ti) / 60)
 
-    # "updated" should always be set to False in this script.
-    METADATA['updated'] = False
-
-    generate_best_model_id()
-    save_dataframe_metadata_to_HDFS()
+    generate_best_model_id(metadata)
+    save_dataframe_metadata_to_HDFS(metadata)
 
     if SAVE_DATAFRAME_HTML:
         save_dataframe_html(users_df_time, recordings_df_time, playcounts_df_time, total_time)
