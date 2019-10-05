@@ -10,9 +10,11 @@ from listenbrainz_spark import stats
 from listenbrainz_spark import config
 from listenbrainz_spark.stats import run_query
 from listenbrainz_spark import hdfs_connection
+from listenbrainz_spark.exceptions import FileNotSavedException, ViewNotRegisteredException, PathNotFoundException, \
+    FileNotFetchedException, HDFSDirectoryNotDeletedException
 
-from listenbrainz_spark.exceptions import FileNotSavedException, ViewNotRegisteredException, PathNotFoundException, FileNotFetchedException
 from flask import current_app
+from hdfs.util import HdfsError
 from brainzutils.flask import CustomFlask
 from pyspark.sql.utils import AnalysisException
 
@@ -137,7 +139,10 @@ def delete_dir(path, recursive=False):
               >> Raises HdfsError if trying to delete a non-empty directory.
                  For non-empty directory set recursive to 'True'.
     """
-    hdfs_connection.client.delete(path, recursive=recursive)
+    try:
+        hdfs_connection.client.delete(path, recursive=recursive)
+    except HdfsError as err:
+        raise HDFSDirectoryNotDeletedException(str(err), path)
 
 def get_status(path):
     """ Checks the status of a directory in HDFS. The function throws HdfsError if the directory

@@ -15,7 +15,8 @@ import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark import config, utils, path
 from listenbrainz_spark.recommendations.utils import save_html
-from listenbrainz_spark.exceptions import SparkSessionNotInitializedException, PathNotFoundException, FileNotFetchedException
+from listenbrainz_spark.exceptions import SparkSessionNotInitializedException, PathNotFoundException, FileNotFetchedException, \
+    HDFSDirectoryNotDeletedException
 
 from pyspark.sql import Row
 from flask import current_app
@@ -210,7 +211,10 @@ def main():
 
     hdfs_connection.init_hdfs(config.HDFS_HTTP_URI)
     # Delete checkpoint dir as saved lineages would eat up space, we won't be using them anyway.
-    utils.delete_dir(path.CHECKPOINT_DIR, recursive=True)
+    try:
+        utils.delete_dir(path.CHECKPOINT_DIR, recursive=True)
+    except HDFSDirectoryNotDeletedException as err:
+        current_app.logger.error(str(err), exc_info=True)
 
     if SAVE_TRAINING_HTML:
         save_training_html(time_, num_training, num_validation, num_test, model_metadata, best_model_metadata, ti,
