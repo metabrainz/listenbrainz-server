@@ -215,6 +215,7 @@ def main():
         utils.delete_dir(path.CHECKPOINT_DIR, recursive=True)
     except HDFSDirectoryNotDeletedException as err:
         current_app.logger.error(str(err), exc_info=True)
+        sys.exit(-1)
 
     if SAVE_TRAINING_HTML:
         save_training_html(time_, num_training, num_validation, num_test, model_metadata, best_model_metadata, ti,
