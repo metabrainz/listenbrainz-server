@@ -29,12 +29,15 @@ function open_psql_shell {
 if [ "$1" == "manage" ]; then shift
 	echo "Invoking manage.py..."
 	invoke_manage "$@"
+	exit
 
 elif [ "$1" == "psql" ]; then
 	echo "Entering into PSQL shell to query DB..."
 	open_psql_shell
+	exit
 
 else
 	echo "Trying to run the passed command with docker-compose..."
 	invoke_docker_compose "$@"
+	exit
 fi
