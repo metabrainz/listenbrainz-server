@@ -37,7 +37,11 @@ elif [ "$1" == "psql" ]; then
 	exit
 
 else
-	echo "Trying to run the passed command with docker-compose..."
+	if [ "$#" == 0 ]; then
+		echo "No argument provided. Trying to run docker-compose..."
+	else
+		echo "Trying to run the passed command with docker-compose..."
+	fi
 	invoke_docker_compose "$@"
 	exit
 fi
