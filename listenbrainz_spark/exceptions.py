@@ -4,7 +4,7 @@ class SparkException(Exception):
 
     def __str__(self):
         return self.message
-
+      
 class DataFrameNotAppendedException(SparkException):
     """ Failed to append a dataframe to existing dataframe in HDFS or
         failed to write a new dataframe to HDFS.
@@ -20,6 +20,13 @@ class DataFrameNotCreatedException(SparkException):
         self.error_msg = 'Cannot create dataframe for following row object: \n{}\n{}'.format(row, message)
         super(DataFrameNotCreatedException, self).__init__(self.error_msg)
 
+class HDFSException(Exception):
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return self.message
+
 class FileNotFetchedException(SparkException):
     """ Failed to fetch a file from secondary storage.
     """
@@ -33,6 +40,13 @@ class FileNotSavedException(SparkException):
     def __init__(self, message, file_path):
         self.error_msg = 'File could not be saved to {}\n{}'.format(file_path, message)
         super(FileNotSavedException, self).__init__(self.error_msg)
+
+class HDFSDirectoryNotDeletedException(HDFSException):
+    """ Failed to delete an HDFS directory.
+    """
+    def __init__(self, message, file_path):
+        self.error_msg = 'Directory with the following path could not be deleted: {}\n{}'.format(file_path, message)
+        super(HDFSDirectoryNotDeletedException, self).__init__(self.error_msg)
 
 class PathNotFoundException(SparkException):
     """ Failed to find a given path in secondary storage.
