@@ -12,9 +12,11 @@ from collections import namedtuple, defaultdict
 from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
+from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark import config, utils, path
 from listenbrainz_spark.recommendations.utils import save_html
-from listenbrainz_spark.exceptions import SparkSessionNotInitializedException, PathNotFoundException, FileNotFetchedException
+from listenbrainz_spark.exceptions import SparkSessionNotInitializedException, PathNotFoundException, FileNotFetchedException, \
+    HDFSDirectoryNotDeletedException
 
 from pyspark.sql import Row
 from flask import current_app
@@ -154,6 +156,9 @@ def main():
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
+    # Add checkpoint dir to break and save RDD lineage.
+    listenbrainz_spark.context.setCheckpointDir(config.HDFS_CLUSTER_URI + path.CHECKPOINT_DIR)
+
     try:
         playcounts_df = utils.read_files_from_HDFS(path.PLAYCOUNTS_DATAFRAME_PATH)
     except FileNotFetchedException as err:
@@ -203,6 +208,14 @@ def main():
             str(err.java_exception)), exc_info=True)
         sys.exit(-1)
     time_['save_model'] = '{:.2f}'.format((time() - t0) / 60)
+
+    hdfs_connection.init_hdfs(config.HDFS_HTTP_URI)
+    # Delete checkpoint dir as saved lineages would eat up space, we won't be using them anyway.
+    try:
+        utils.delete_dir(path.CHECKPOINT_DIR, recursive=True)
+    except HDFSDirectoryNotDeletedException as err:
+        current_app.logger.error(str(err), exc_info=True)
+        sys.exit(-1)
 
     if SAVE_TRAINING_HTML:
         save_training_html(time_, num_training, num_validation, num_test, model_metadata, best_model_metadata, ti,
