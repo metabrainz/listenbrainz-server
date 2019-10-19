@@ -36,8 +36,6 @@ services:
       target: listenbrainz-dev
     environment:
       GOOGLE_APPLICATION_CREDENTIALS: '/code/credentials/bigquery-credentials.json'
-    volumes:
-      - ..:/code/listenbrainz:z
     depends_on:
       - redis
       - db
