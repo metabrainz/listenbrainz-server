@@ -38,8 +38,8 @@ model_metadata_schema = [
     # Timestamp till when listens have been used to train, validate and test the model.
     StructField('to_date', TimestampType(), nullable=False),
     StructField('training_data_count', IntegerType(), nullable=True), # Number of listens used to train the model.
-    StructField('updated', BooleanType(), nullable=False) # false by default, set to true when all other fields are non empty.
-    StructField('users_count', Timestamp(), nullable=False), # Number of users active in a given time frame.
+    StructField('updated', BooleanType(), nullable=False), # false by default, set to true when all other fields are non empty.
+    StructField('users_count', TimestampType(), nullable=False), # Number of users active in a given time frame.
     StructField('validation_data_count', IntegerType(), nullable=True), # Number of listens used to validate the model.
     StructField('validation_rmse', FloatType(), nullable=True), # Root mean squared error for validation data.
 ]
