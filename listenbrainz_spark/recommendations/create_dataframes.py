@@ -74,6 +74,7 @@ def get_listens_for_training_model_window(metadata):
                 ]
     """
     to_date = datetime.utcnow()
+    to_date = stats.adjust_days(to_date, 5000)
     from_date = stats.adjust_days(to_date, config.TRAIN_MODEL_WINDOW)
     # shift to the first of the month
     from_date = stats.replace_days(from_date, 1)
@@ -173,7 +174,7 @@ def main():
     current_app.logger.info('Preparing listen data dump and playcounts, saving playcounts to HDFS...')
     # listens_df : | recording_mbid| user_name|
     listens_df = complete_listens_df.select('recording_mbid', 'user_name')
-     metadata['listens_count'] = listens_df.count()
+    metadata['listens_count'] = listens_df.count()
     # playcounts_df: | recording_id| user_id| count|
     # listens_df is joined with users_df on user_name which gives us [ recording_mbid', 'user_name', user_id].
     # The output is then joined with recording_df on recording_mbid which results into ['recording_mbid', 'recording_id', 'user_name', 'user_id'],
