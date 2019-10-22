@@ -7,11 +7,10 @@ from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
 from listenbrainz_spark.stats import run_query
-from listenbrainz_spark import stats, config, path
+from listenbrainz_spark import stats, config, path, schema
 from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark.exceptions import FileNotSavedException, ViewNotRegisteredException, PathNotFoundException, \
-    FileNotFetchedException, HDFSDirectoryNotDeletedException
-
+    FileNotFetchedException, DataFrameNotCreatedException, DataFrameNotAppendedException, HDFSDirectoryNotDeletedException
 from flask import current_app
 from hdfs.util import HdfsError
 from brainzutils.flask import CustomFlask
@@ -23,6 +22,19 @@ from pyspark.sql.utils import AnalysisException
 # "track_name": "Tougher Than It Is", "recording_msid": "c559b2f8-41ff-4b55-ab3c-0b57d9b85d11",
 # "recording_mbid": "1750f8ca-410e-4bdc-bf90-b0146cb5ee35", "tags": []}
 # All the keys in the dict are column/field names in a Spark dataframe.
+
+def append(df, dest_path):
+    """ Append a dataframe to existing dataframe in HDFS or write a new one
+        if dataframe does not exist.
+
+        Args:
+            df (dataframe): Dataframe to append.
+            dest_path (string): Path where the existing dataframe is found or where a new dataframe should be created.
+    """
+    try:
+        df.write.mode('append').parquet(dest_path)
+    except Py4JJavaError as err:
+        raise DataFrameNotAppendedException(err.java_exception, df.schema)
 
 def create_app(debug=None):
     """ Uses brainzutils (https://github.com/metabrainz/brainzutils-python) to log exceptions to sentry.
@@ -46,6 +58,22 @@ def create_app(debug=None):
         sentry_config=app.config.get('LOG_SENTRY')
     )
     return app
+
+def create_dataframe(row, schema):
+    """ Create a dataframe containing a single row.
+
+        Args:
+            row (pyspark.sql.Row object): A Spark SQL row.
+            schema: Dataframe schema.
+
+        Returns:
+            df (dataframe): Newly created dataframe.
+    """
+    try:
+        df = listenbrainz_spark.session.createDataFrame([row], schema=schema)
+        return df
+    except Py4JJavaError as err:
+        raise DataFrameNotCreatedException(err.java_exception, row)
 
 def create_path(path):
     try:
