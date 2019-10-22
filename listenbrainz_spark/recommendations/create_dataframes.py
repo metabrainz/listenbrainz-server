@@ -7,15 +7,15 @@ from datetime import datetime
 from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
-from listenbrainz_spark import path
-from listenbrainz_spark import stats
-from listenbrainz_spark import utils
-from listenbrainz_spark import config
-from listenbrainz_spark.exceptions import SQLException, FileNotSavedException, FileNotFetchedException, ViewNotRegisteredException, SparkSessionNotInitializedException
+from listenbrainz_spark import path, stats, utils, config
 from listenbrainz_spark.recommendations.utils import save_html
-from listenbrainz_spark.sql import create_dataframes_queries as sql
+from listenbrainz_spark.exceptions import SQLException, FileNotSavedException, FileNotFetchedException, \
+    SparkSessionNotInitializedException
 
 from flask import current_app
+import pyspark.sql.functions as func
+from pyspark.sql.window import Window
+from pyspark.sql.functions import rank
 from pyspark.sql.utils import AnalysisException
 
 # dataframe html is generated when set to true
@@ -44,10 +44,10 @@ def get_listens_for_training_model_window():
     """  Prepare dataframe of listens of X days to train. Here X is a config value.
 
         Returns:
-            training_df (dataframe): Columns can de depicted as:
+            A dataframe with columns as:
                 [
-                    artist_mbids, artist_msid, artist_name, listened_at, recording_mbid,
-                    recording_msid, release_mbid, release_msid, release_name, tags, track_name, user_name
+                    artist_msid, artist_name, listened_at, recording_msid, release_mbid,
+                    release_msid, release_name, tags, track_name, user_name
                 ]
     """
     to_date = datetime.utcnow()
@@ -63,7 +63,34 @@ def get_listens_for_training_model_window():
     except FileNotFetchedException as err:
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
-    return training_df
+    return utils.get_listens_without_artist_and_recording_mbids(training_df)
+
+def get_mapped_artist_and_recording_msids(partial_listens_df, artist_mapping_df, recording_mapping_df):
+    """ Map recording msid->mbid and artis msid->mbids so that every listen has an mbid.
+
+        Args:
+            partial_listens_df (dataframe): Columns can be depicted as:
+                [
+                    'artist_msid', 'artist_name', 'listened_at', 'recording_msid', 'release_mbid',
+                    'release_msid', 'release_name', 'tags', 'track_name', 'user_name'
+                ]
+            artist_mapping_df (dataframe): Columns can be depicted as:
+                [
+                    'artist_mbids', 'artist_msid'
+                ]
+            recording_mapping_df (dataframe): Columns can be depicted as:
+                [
+                    'recording_mbid', 'recording_msid'
+                ]
+
+        Returns:
+            mapped_df (dataframe): Dataframe with all the columns/fields that a typical listen has.
+    """
+    # Map and get artist_mbids
+    df = partial_listens_df.join(artist_mapping_df, ['artist_msid'], 'inner')
+    # Map and get recording_mbid
+    mapped_df = df.join(recording_mapping_df, ['recording_msid'], 'inner')
+    return mapped_df
 
 def main():
     ti = time()
@@ -73,29 +100,24 @@ def main():
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
-    df = get_listens_for_training_model_window()
+    # Dataframe contains all columns except artist_mbids and recording_mbid
+    partial_listens_df = get_listens_for_training_model_window()
 
-    if not df:
-        current_app.logger.error('Parquet files containing listening history of past {} days missing form HDFS'.format(
-            config.TRAIN_MODEL_WINDOW))
-        sys.exit(-1)
+    # Dataframe containing artist msid->mbid mapping
+    artist_mapping_df = utils.read_files_from_HDFS(path.ARTIST_MSID_MBIDS_MAPPING_PATH)
+    # Dataframe containing recording msid->mbid mapping
+    recording_mapping_df = utils.read_files_from_HDFS(path.RECORDING_MSID_MBID_MAPPING_PATH)
 
-    current_app.logger.info('Registering Dataframe...')
-    table = 'df_to_train_{}'.format(datetime.strftime(datetime.utcnow(), '%Y_%m_%d'))
-    try:
-        utils.register_dataframe(df, table)
-    except ViewNotRegisteredException as err:
-        current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
-    current_app.logger.info('Files fetched from HDFS and dataframe registered in {}s'.format('{:.2f}'.format(time() - ti)))
+    # Dataframe containing all fields that a listen should have including artist_mbids and recording_msid.
+    complete_listens_df = get_mapped_artist_and_recording_msids(partial_listens_df, artist_mapping_df, recording_mapping_df)
 
     current_app.logger.info('Preparing users data and saving to HDFS...')
     t0 = time()
-    try:
-        users_df = sql.prepare_user_data(table)
-    except SQLException as err:
-        current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+    # We use window function to give rank to distinct user_names
+    # Not that if user_names are not distinct rank would repeat and give unexpected results.
+    # users_df = | user_name| user_id|
+    user_window = Window.orderBy('user_name')
+    users_df = complete_listens_df.select('user_name').distinct().withColumn('user_id', rank().over(user_window))
 
     try:
         utils.save_parquet(users_df, path.USERS_DATAFRAME_PATH)
@@ -106,11 +128,9 @@ def main():
 
     current_app.logger.info('Preparing recordings data and saving to HDFS...')
     t0 = time()
-    try:
-        recordings_df = sql.prepare_recording_data(table)
-    except SQLException as err:
-        current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+    # recordings_df = | recording_mbid| recording_id|
+    recording_window = Window.orderBy('recording_mbid')
+    recordings_df = complete_listens_df.select('recording_mbid').distinct().withColumn('recording_id', rank().over(recording_window))
 
     try:
         utils.save_parquet(recordings_df, path.RECORDINGS_DATAFRAME_PATH)
@@ -121,25 +141,17 @@ def main():
 
     current_app.logger.info('Preparing listen data dump and playcounts, saving playcounts to HDFS...')
     t0 = time()
-    try:
-        listens_df = sql.prepare_listen_data(table)
-    except SQLException as err:
-        current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+    # listens_df : | recording_mbid| user_name|
+    listens_df = complete_listens_df.select('recording_mbid', 'user_name')
 
-    try:
-        utils.register_dataframe(listens_df, 'listen')
-        utils.register_dataframe(users_df, 'user')
-        utils.register_dataframe(recordings_df, 'recording')
-    except ViewNotRegisteredException as err:
-        current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
-
-    try:
-        playcounts_df = sql.get_playcounts_data()
-    except SQLException as err:
-        current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+    # playcounts_df: | recording_id| user_id| count|
+    # listens_df is joined with users_df on user_name which gives us [ recording_mbid', 'user_name', user_id].
+    # The output is then joined with recording_df on recording_mbid which results into ['recording_mbid', 'recording_id', 'user_name', 'user_id'],
+    # The final step is groupBy which create groups on user_id and recording_id and count the number of recording_ids.
+    # The final dataframe tells us about the number of times a user has listend to a particular track for all users.
+    playcounts_df = listens_df.join(users_df, 'user_name', 'inner') \
+            .join(recordings_df, 'recording_mbid', 'inner') \
+            .groupBy('user_id', 'recording_id').agg(func.sum('recording_id').alias('count'))
 
     try:
         utils.save_parquet(playcounts_df, path.PLAYCOUNTS_DATAFRAME_PATH)

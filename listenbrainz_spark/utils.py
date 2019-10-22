@@ -17,6 +17,13 @@ from hdfs.util import HdfsError
 from brainzutils.flask import CustomFlask
 from pyspark.sql.utils import AnalysisException
 
+# A typical listen is of the form:
+# {"listened_at": "2005-02-28T20:39:08Z", "user_name": "vansika", "artist_msid": "6276299c-57e9-4014-9fdd-ab9ed800f61d",
+# "artist_name": "Cake", "artist_mbids": [], "release_msid": null, "release_name": null, "release_mbid": "",
+# "track_name": "Tougher Than It Is", "recording_msid": "c559b2f8-41ff-4b55-ab3c-0b57d9b85d11",
+# "recording_mbid": "1750f8ca-410e-4bdc-bf90-b0146cb5ee35", "tags": []}
+# All the keys in the dict are column/field names in a Spark dataframe.
+
 def create_app(debug=None):
     """ Uses brainzutils (https://github.com/metabrainz/brainzutils-python) to log exceptions to sentry.
     """
@@ -74,6 +81,29 @@ def read_files_from_HDFS(path):
     except Py4JJavaError as err:
         raise FileNotFetchedException(err.java_exception, path)
 
+def get_listens_without_artist_and_recording_mbids(df):
+    """ Get dataframe with all fields except artist_mbids and recording_mbid.
+
+        Args:
+            df (dataframe): Columns can be depicted as:
+                [
+                    'artist_mbids', artist_msid', 'artist_name', 'listened_at', 'recording_mbid', recording_msid',
+                     'release_mbid', 'release_msid', 'release_name', 'tags', 'track_name', 'user_name'
+                ]
+        Returns:
+            A dataframe with columns that can be depicted as:
+                [
+                    'artist_msid', 'artist_name', 'listened_at', 'recording_msid', 'release_mbid',
+                    'release_msid', 'release_name', 'tags', 'track_name', 'user_name'
+                ]
+
+    """
+    # Not all listens in ListenBrainz contain mbids but every listen has an msid.
+    # We fetch listens such that the mbid fields are not selected.
+    # We then map the msids with mbids so that every listen has an mbid too.
+    return df.select('artist_msid', 'artist_name', 'listened_at', 'recording_msid', 'release_mbid', 'release_msid',
+        'release_name', 'tags', 'track_name', 'user_name')
+
 def get_listens(from_date, to_date):
     """ Prepare dataframe of months falling between from_date and to_date (both inclusive).
 
@@ -95,7 +125,8 @@ def get_listens(from_date, to_date):
     df = None
     while from_date <= to_date:
         try:
-            month = read_files_from_HDFS('{}/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI + path.LISTENBRAINZ_DATA_DIRECTORY, from_date.year, from_date.month))
+            month = read_files_from_HDFS('{}/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI + path.LISTENBRAINZ_DATA_DIRECTORY,
+                from_date.year, from_date.month))
             df = df.union(month) if df else month
         except PathNotFoundException as err:
             current_app.logger.warning('{}\nFetching file for next date...'.format(err))
@@ -103,6 +134,9 @@ def get_listens(from_date, to_date):
         from_date = stats.adjust_days(from_date, config.STEPS_TO_REACH_NEXT_MONTH, shift_backwards=False)
         # shift to the first of the month
         from_date = stats.replace_days(from_date, 1)
+    if not df:
+        current_app.logger.error('Listening history missing form HDFS')
+        sys.exit(-1)
     return df
 
 def save_parquet(df, path):

@@ -36,5 +36,8 @@ SIMILAR_ARTIST_CANDIDATE_SET = config.HDFS_CLUSTER_URI + CANDIDATE_SET_DIR + '/'
 MODEL_METADATA = config.HDFS_CLUSTER_URI + MODEL_DIR + '/' + 'model_metadata.parquet'
 # Absolute path to save model index
 INDEX = config.HDFS_CLUSTER_URI + MODEL_DIR + '/' + 'index.parquet'
-
+# Abolute path to artist mbid-msid mapping.
+ARTIST_MSID_MBIDS_MAPPING_PATH = config.HDFS_CLUSTER_URI + os.path.join('/', 'artist_msid_mbids_mapping', 'artist_msid_mbids_mapping.parquet')
+# Absolute path to recording msid-mbid mapping.
+RECORDING_MSID_MBID_MAPPING_PATH = config.HDFS_CLUSTER_URI + os.path.join('/', 'recording_msid_mbid_mapping', 'recording_msid_mbid_mapping.parquet')
 
