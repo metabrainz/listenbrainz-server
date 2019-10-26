@@ -156,7 +156,7 @@ section of the file.
 Initialize ListenBrainz containers
 ----------------------------------
 
-Next, run the ``develop.sh build`` script in the root of the repository. Using
+Next, run ``develop.sh build`` in the root of the repository. Using
 ``docker-compose``, it creates multiple Docker containers for the different
 services and parts of the ListenBrainz server. This script starts Redis,
 PostgreSQL, InfluxDB, and web server containers. This also makes it easy to stop
@@ -200,7 +200,7 @@ Run the magic script
 --------------------
 
 Now that the databases are initialized, always start your development
-environment by executing the ``develop.sh up`` script. Now, it will work as
+environment by executing ``develop.sh up``. Now, it will work as
 expected.
 
 .. code-block:: bash
@@ -218,34 +218,35 @@ CTRL^C. Once everything is running, visit your new site from your browser!
 Now, you are all set to begin making changes and seeing them in real-time inside
 of your development environment!
 
-An insight into the magic script
+Using develop.sh
 --------------------------------
+We provide a utility to wrap docker compose and some common development processes.
 
-To open a psql session, use the following command:
+To open a psql session, run:
 
 .. code-block:: bash
 
     ./develop.sh psql
 
-To run any docker-compose command do the following:
+To pass any docker-compose command, run:
 
 .. code-block:: bash
 
     ./develop.sh <command>
 
-To get a list of valid docker-compose commands:
+To get a list of valid docker-compose commands, run:
 
 .. code-block:: bash
 
     ./develop.sh help
 
 ``develop.sh`` provides a direct interface to invoke manage.py.
-To invoke manage.py do the following:
+To invoke manage.py, run:
 
 .. code-block:: bash
     ./develop.sh manage <command>
 
-To get a list of manage.py commands do the following;
+To get a list of manage.py commands, run:
 
 .. code-block:: bash
     ./develop.sh manage --help

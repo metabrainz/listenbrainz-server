@@ -24,7 +24,8 @@ function open_psql_shell {
 }
 
 function npm_install {
-	invoke_docker_compose run --rm static_builder npm install
+	invoke_docker_compose run --rm --user `id -u`:`id -g` -e \
+							HOME=/tmp static_builder npm install
 }
 # Arguments following "manage" are as it is passed to function "invoke_manage" and executed.
 # Check on each argument of manage.py is not performed here because with manage.py, develop.sh will expand too.
@@ -41,7 +42,7 @@ elif [ "$1" == "psql" ]; then
 	exit
 
 elif [ "$1" == "npm" ]; then
-	echo "Insatalling node dependencies..."
+	echo "Installing node dependencies..."
 	npm_install
 	exit
 
