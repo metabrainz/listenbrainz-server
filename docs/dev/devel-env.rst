@@ -156,7 +156,7 @@ section of the file.
 Initialize ListenBrainz containers
 ----------------------------------
 
-Next, run the ``develop.sh`` script in the root of the repository. Using
+Next, run ``develop.sh build`` in the root of the repository. Using
 ``docker-compose``, it creates multiple Docker containers for the different
 services and parts of the ListenBrainz server. This script starts Redis,
 PostgreSQL, InfluxDB, and web server containers. This also makes it easy to stop
@@ -167,7 +167,7 @@ finished yet.
 
 .. code-block:: bash
 
-    ./develop.sh
+    ./develop.sh build
 
 
 Initialize ListenBrainz databases
@@ -178,9 +178,9 @@ proceeding, run these three commands to initialize the databases.
 
 .. code-block:: bash
 
-    docker-compose -f docker/docker-compose.yml -p listenbrainz run --rm web python3 manage.py init_db --create-db
-    docker-compose -f docker/docker-compose.yml -p listenbrainz run --rm web python3 manage.py init_msb_db --create-db
-    docker-compose -f docker/docker-compose.yml -p listenbrainz run --rm web python3 manage.py init_influx
+    ./develop.sh manage init_db --create-db
+    ./develop.sh manage init_msb_db --create-db
+    ./develop.sh manage init_influx
 
 Your development environment is now ready. Now, let's actually see ListenBrainz
 load locally!
@@ -193,19 +193,19 @@ You also need to install some JavaScript dependencies.
 
 .. code-block:: bash
 
-    docker-compose -f docker/docker-compose.yml -p listenbrainz run --rm web npm install
+    ./develop.sh npm
 
 
 Run the magic script
 --------------------
 
 Now that the databases are initialized, always start your development
-environment by executing the ``develop.sh`` script. Now, it will work as
+environment by executing ``develop.sh up``. Now, it will work as
 expected.
 
 .. code-block:: bash
 
-    ./develop.sh
+    ./develop.sh up
 
 You will see the containers eventually run again. Leave the script running to
 see your development environment in the browser. Later, shut it down by pressing
@@ -218,6 +218,38 @@ CTRL^C. Once everything is running, visit your new site from your browser!
 Now, you are all set to begin making changes and seeing them in real-time inside
 of your development environment!
 
+Using develop.sh
+--------------------------------
+We provide a utility to wrap docker compose and some common development processes.
+
+To open a psql session, run:
+
+.. code-block:: bash
+
+    ./develop.sh psql
+
+To pass any docker-compose command, run:
+
+.. code-block:: bash
+
+    ./develop.sh <command>
+
+To get a list of valid docker-compose commands, run:
+
+.. code-block:: bash
+
+    ./develop.sh help
+
+``develop.sh`` provides a direct interface to invoke manage.py.
+To invoke manage.py, run:
+
+.. code-block:: bash
+    ./develop.sh manage <command>
+
+To get a list of manage.py commands, run:
+
+.. code-block:: bash
+    ./develop.sh manage --help
 
 Test your changes with unit tests
 ---------------------------------
