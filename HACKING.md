@@ -28,7 +28,7 @@ After dropping the database, you'll probably need to create the database again:
 
 To get a postgres command prompt:
 
-    docker exec -it listenbrainz_web_1 psql -U listenbrainz -h db listenbrainz
+    ./develop.sh psql
 
 ### Tests
 
