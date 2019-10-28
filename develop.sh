@@ -13,19 +13,19 @@ function invoke_docker_compose {
 
 function invoke_manage {
 	invoke_docker_compose run --rm web \
-							python3 manage.py \
-							"$@"
+						python3 manage.py \
+						"$@"
 }
 
 function open_psql_shell {
 	invoke_docker_compose run --rm web psql \
-							-U listenbrainz  \
-							-h db listenbrainz
+						-U listenbrainz  \
+						-h db listenbrainz
 }
 
 function npm_install {
 	invoke_docker_compose run --rm --user `id -u`:`id -g` -e \
-							HOME=/tmp static_builder npm install
+						HOME=/tmp static_builder npm install
 }
 # Arguments following "manage" are as it is passed to function "invoke_manage" and executed.
 # Check on each argument of manage.py is not performed here because with manage.py, develop.sh will expand too.
