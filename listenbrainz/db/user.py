@@ -246,24 +246,6 @@ def update_latest_import(musicbrainz_id, ts):
             raise DatabaseException
 
 
-def update_musicbrainz_id(id, musicbrainz_id):
-    """ Update the username (musicbrainz_id) of the user with specified row ID
-    """
-    with db.engine.connect() as connection:
-        try:
-            connection.execute(sqlalchemy.text("""
-                UPDATE "user"
-                   SET musicbrainz_id = :musicbrainz_id
-                 WHERE id = :id
-                """), {
-                'id': id,
-                'musicbrainz_id': musicbrainz_id,
-            })
-        except sqlalchemy.exc.ProgrammingError as e:
-            logger.error(e)
-            raise DatabaseException
-
-
 def increase_latest_import(musicbrainz_id, ts):
     """Increases the latest_import field for user with specified MusicBrainz ID"""
     user = get_by_mb_id(musicbrainz_id)
