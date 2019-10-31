@@ -43,7 +43,7 @@ then
     exec python3 manage.py run_follow_server -h 0.0.0.0 -p 3031
 fi
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-stats-consumer-beta" ]
+if [ "${CONTAINER_NAME}" = "listenbrainz-spark-reader-beta" ]
 then
     cd /code/listenbrainz
     exec python3 -m listenbrainz.spark.spark_reader
