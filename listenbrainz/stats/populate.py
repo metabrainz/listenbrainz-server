@@ -3,13 +3,61 @@ import listenbrainz.utils as utils
 import pika
 import ujson
 
-from listenbrainz import db
-from listenbrainz import stats
+from flask import current_app
 from listenbrainz.webserver import create_app
 
-from flask import current_app
+
+QUERIES_JSON_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'spark', 'request_queries.json')
 
 cli = click.Group()
+
+class InvalidSparkRequestError(Exception):
+    pass
+
+
+def _get_possible_queries():
+    """ Return the dict describing all possible queries that can
+    be sent to Spark. Listed in listenbrainz/spark/request_queries.json
+    """
+    with open(QUERIES_JSON_PATH) as f:
+        return ujson.load(f)
+
+
+def _prepare_query_message(query, params=None):
+    """ Prepare the JSON message that needs to be sent to the
+    spark cluster based on the query and the parameters the
+    query needs
+
+    Args:
+        query (str): the name of the query, should be in request_queries.json
+        params (dict): the parameters the query needs, should contain all the params
+            in the correspoding request_queries.json to be valid
+
+    Raises:
+        InvalidSparkRequestError if the query isn't in the list or if the parameters
+        don't match up
+    """
+    if params is None:
+        params = {}
+
+    possible_queries = _get_possible_queries()
+    if query not in possible_queries:
+        raise InvalidSparkRequestError(query)
+
+    message = {'query': possible_queries[query]['name']}
+
+    required_params = set(possible_queries[query]['params'])
+    given_params = set(params.keys())
+    if required_params != given_params:
+        raise InvalidSparkRequestError
+
+    if params:
+        message['params'] = {}
+    for key, value in params.items():
+        message['params'][key] = value
+
+    return json.dumps(message)
+
 
 def send_message_to_spark_cluster(message):
     with create_app().app_context():
@@ -23,9 +71,9 @@ def send_message_to_spark_cluster(message):
         )
         try:
             channel = rabbitmq_connection.channel()
-            channel.exchange_declare(exchange=current_app.config['SPARK_JOB_REQUEST_EXCHANGE'], exchange_type='fanout')
+            channel.exchange_declare(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], exchange_type='fanout')
             channel.basic_publish(
-                exchange=current_app.config['SPARK_JOB_REQUEST_EXCHANGE'],
+                exchange=current_app.config['SPARK_REQUEST_EXCHANGE'],
                 routing_key='',
                 body=ujson.dumps(message),
                 properties=pika.BasicProperties(delivery_mode=2,),
@@ -35,11 +83,9 @@ def send_message_to_spark_cluster(message):
             # move ahead
             current_app.logger.error('Could not send message to spark cluster: %s', ujson.dumps(message), exc_info=True)
 
-@cli.command(name="request_user_stats")
-def request_user_stats():
+
+@cli.command(name="request_all_user_stats")
+def request_all_user_stats():
     """ Send a user stats request to the spark cluster
     """
-    send_message_to_spark_cluster({
-        'type': 'request',
-        'message': 'user_stats',
-    })
+    send_message_to_spark_cluster(_prepare_query_message('stats.user.all'))
