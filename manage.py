@@ -190,8 +190,8 @@ def init_influx():
 
 
 # Add other commands here
-import listenbrainz.stats.populate as populate
-cli.add_command(populate.cli, name="stats")
+import listenbrainz.spark.request_manage as spark_request_manage
+cli.add_command(spark_request_manage.cli, name="spark")
 import listenbrainz.db.dump_manager as dump_manager
 cli.add_command(dump_manager.cli, name="dump")
 import listenbrainz.listen_replay.cli as listen_replay

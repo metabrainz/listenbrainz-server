@@ -1,0 +1,12 @@
+{
+	"stats.user.all": {
+		"name": "stats.user.all",
+		"description": "All user statistics that ListenBrainz calculates for all ListenBrainz users",
+		"params": []
+	},
+	"stats.user.for_user": {
+		"name": "stats.user.for_user",
+		"description": "All user statistics that ListenBrainz calculates for the specified user",
+		"params": ["musicbrainz_id"]
+	}
+}
