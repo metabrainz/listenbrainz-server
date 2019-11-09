@@ -59,7 +59,7 @@ def _prepare_query_message(query, params=None):
     return json.dumps(message)
 
 
-def send_message_to_spark_cluster(message):
+def send_request_to_spark_cluster(message):
     with create_app().app_context():
         rabbitmq_connection = utils.connect_to_rabbitmq(
             username=current_app.config['RABBITMQ_USERNAME'],
@@ -88,4 +88,4 @@ def send_message_to_spark_cluster(message):
 def request_all_user_stats():
     """ Send a user stats request to the spark cluster
     """
-    send_message_to_spark_cluster(_prepare_query_message('stats.user.all'))
+    send_request_to_spark_cluster(_prepare_query_message('stats.user.all'))
