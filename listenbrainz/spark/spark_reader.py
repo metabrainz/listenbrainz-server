@@ -67,11 +67,11 @@ class SparkReader:
                 self.init_rabbitmq_connection()
                 self.incoming_ch = utils.create_channel_to_consume(
                     connection=self.connection,
-                    exchange=current_app.config['SPARK_EXCHANGE'],
-                    queue=current_app.config['SPARK_QUEUE'],
+                    exchange=current_app.config['SPARK_RESULT_EXCHANGE'],
+                    queue=current_app.config['SPARK_RESULT_QUEUE'],
                     callback_function=self.callback,
                 )
-                current_app.logger.info('Stats calculator started!')
+                current_app.logger.info('Spark consumer started!')
                 try:
                     self.incoming_ch.start_consuming()
                 except pika.exceptions.ConnectionClosed:

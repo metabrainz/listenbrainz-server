@@ -52,8 +52,11 @@ PLAYING_NOW_EXCHANGE = "playing_now"
 PLAYING_NOW_QUEUE = "playing_now"
 BIGQUERY_EXCHANGE = "bigquery"
 BIGQUERY_QUEUE = "bigquery"
-SPARK_JOB_REQUEST_QUEUE = 'spark_job_request'
-SPARK_JOB_REQUEST_EXCHANGE = 'spark_job_request'
+
+SPARK_RESULT_EXCHANGE = "spark_result"
+SPARK_RESULT_QUEUE = "spark_result"
+SPARK_REQUEST_EXCHANGE = "spark_request"
+SPARK_REQUEST_QUEUE = "spark_request"
 
 # MusicBrainz OAuth
 MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"

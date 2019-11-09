@@ -74,6 +74,11 @@ BIGQUERY_QUEUE = '''{{template "KEY" "bigquery_queue"}}'''
 PLAYING_NOW_EXCHANGE = '''{{template "KEY" "playing_now_exchange"}}'''
 PLAYING_NOW_QUEUE = '''{{template "KEY" "playing_now_queue"}}'''
 
+SPARK_RESULT_EXCHANGE = '''{{template "KEY" "spark_result_exchange"}}'''
+SPARK_RESULT_QUEUE = '''{{template "KEY" "spark_result_queue"}}'''
+SPARK_REQUEST_EXCHANGE = '''{{template "KEY" "spark_request_exchange"}}'''
+SPARK_REQUEST_QUEUE = '''{{template "KEY" "spark_request_queue"}}'''
+
 
 MUSICBRAINZ_CLIENT_ID = '''{{template "KEY" "musicbrainz/client_id"}}'''
 MUSICBRAINZ_CLIENT_SECRET = '''{{template "KEY" "musicbrainz/client_secret"}}'''
