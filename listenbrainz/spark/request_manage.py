@@ -1,5 +1,6 @@
 import click
 import listenbrainz.utils as utils
+import os
 import pika
 import ujson
 
@@ -7,7 +8,7 @@ from flask import current_app
 from listenbrainz.webserver import create_app
 
 
-QUERIES_JSON_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'spark', 'request_queries.json')
+QUERIES_JSON_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'request_queries.json')
 
 cli = click.Group()
 
@@ -56,7 +57,7 @@ def _prepare_query_message(query, params=None):
     for key, value in params.items():
         message['params'][key] = value
 
-    return json.dumps(message)
+    return ujson.dumps(message)
 
 
 def send_request_to_spark_cluster(message):
