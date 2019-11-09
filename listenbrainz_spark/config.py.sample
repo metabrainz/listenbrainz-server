@@ -10,9 +10,11 @@ RABBITMQ_PASSWORD = "guest"
 RABBITMQ_VHOST = "/"
 MAXIMUM_RABBITMQ_CONNECTIONS = 100
 
-# rabbitmq exchange and queue for stats
-SPARK_EXCHANGE = "spark"
-SPARK_QUEUE = "spark"
+# rabbitmq exchanges and queues
+SPARK_REQUEST_EXCHANGE = "spark_request"
+SPARK_REQUEST_QUEUE = "spark_request"
+SPARK_RESULT_EXCHANGE = "spark_result"
+SPARK_RESULT_QUEUE = "spark_result"
 
 # train model
 RANKS = [8, 12]
