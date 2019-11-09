@@ -175,3 +175,6 @@ COPY . /rec
 
 FROM metabrainz-spark-base as metabrainz-spark-dev
 COPY . /rec
+
+FROM metabrainz-spark-base as metabrainz-spark-request-consumer
+COPY . /rec
