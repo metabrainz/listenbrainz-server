@@ -4,7 +4,7 @@ source config.sh
 
 CONTAINER_NAME = "spark-request-consumer"
 
-docker pull metabrainz/listenbrainz-spark:latest
+docker pull metabrainz/listenbrainz-spark-request-consumer:latest
 
 zip -r listenbrainz_spark.zip listenbrainz_spark/
 docker run \
@@ -19,5 +19,5 @@ docker run \
     --conf "spark.executor.memory"=$EXECUTOR_MEMORY \
     --conf "spark.driver.memory"=$DRIVER_MEMORY \
     --py-files listenbrainz_spark.zip \
-    metabrainz/listenbrainz-spark:latest \
+    metabrainz/listenbrainz-spark-request-consumer:latest \
     /usr/local/spark/bin/spark-submit listenbrainz_spark/request_consumer/main.py
