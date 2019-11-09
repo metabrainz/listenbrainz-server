@@ -54,8 +54,8 @@ def _prepare_query_message(query, params=None):
 
     if params:
         message['params'] = {}
-    for key, value in params.items():
-        message['params'][key] = value
+        for key, value in params.items():
+            message['params'][key] = value
 
     return ujson.dumps(message)
 
