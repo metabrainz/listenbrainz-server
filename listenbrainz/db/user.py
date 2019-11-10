@@ -1,9 +1,7 @@
-from listenbrainz import config
-
 import logging
 import sqlalchemy
-
 import uuid
+
 from datetime import datetime
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
