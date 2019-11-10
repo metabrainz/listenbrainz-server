@@ -2,6 +2,7 @@ import os
 import sys
 import click
 import logging
+import time
 
 import listenbrainz_spark
 from listenbrainz_spark import path
@@ -110,8 +111,17 @@ def user():
     """ Invoke script responsible for calculating user statistics.
     """
     from listenbrainz_spark.stats import user
-    with app.app_context:
+    with app.app_context():
         user.main()
+
+@cli.command(name='request_consumer')
+def request_consumer():
+    """ Invoke script responsible for the request consumer
+    """
+    from listenbrainz_spark.request_consumer.request_consumer import main
+    with app.app_context():
+        main('request-consumer-%s' % str(int(time.time())))
+
 
 @cli.resultcallback()
 def remove_zip(result, **kwargs):
@@ -124,6 +134,3 @@ if __name__ == '__main__':
     # The level is changed from WARNING to INFO
     logging.getLogger().setLevel(logging.INFO)
     cli()
-
-
-
