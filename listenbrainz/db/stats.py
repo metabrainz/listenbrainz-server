@@ -28,7 +28,7 @@ from listenbrainz import db
 from listenbrainz.utils import safely_import_config
 safely_import_config()
 
-def insert_user_stats(user_id, artists, recordings, releases, artist_count, yearmonth):
+def insert_user_stats(user_id, artists, recordings, releases, artist_count):
     """Inserts user stats calculated from Spark into the database.
 
        If stats are already present for some user, they are updated to the new
@@ -39,30 +39,25 @@ def insert_user_stats(user_id, artists, recordings, releases, artist_count, year
              recordings (dict): the top recordings listened to by the user
              releases (dict): the top releases listened to by the user
              artist_count (int): the total number of artists listened to by the user
-             yearmonth (str): a string representing the month in which the stats were calculated, 
-                        for example '2019-01'
     """
 
     artist_stats = {
         'count': artist_count,
-        'top_month': {
+        'all_time': {
             'artists': artists,
-            'month': yearmonth,
         }
     }
 
     recording_stats = {
-        'top_month': {
+        'all_time': {
             'recordings': recordings,
-            'month': yearmonth,
         },
     }
 
 
     release_stats = {
-        'top_month': {
+        'all_time': {
             'releases': releases,
-            'month': yearmonth,
         }
     }
 
