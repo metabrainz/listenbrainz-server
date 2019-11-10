@@ -6,7 +6,7 @@ CONTAINER_NAME="spark-request-consumer"
 
 docker pull metabrainz/listenbrainz-spark-request-consumer:latest
 
-zip -rq listenbrainz_spark.zip listenbrainz_spark/
+zip -rq listenbrainz_spark_request_consumer.zip listenbrainz_spark/
 docker run \
     -d \
     -v `pwd`:/rec \
@@ -21,5 +21,5 @@ docker run \
         --conf "spark.executor.cores"=$EXECUTOR_CORES \
         --conf "spark.executor.memory"=$EXECUTOR_MEMORY \
         --conf "spark.driver.memory"=$DRIVER_MEMORY \
-        --py-files listenbrainz_spark.zip \
+        --py-files listenbrainz_spark_request_consumer.zip \
         listenbrainz_spark/request_consumer/main.py
