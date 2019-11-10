@@ -76,7 +76,7 @@ def send_request_to_spark_cluster(message):
             channel.basic_publish(
                 exchange=current_app.config['SPARK_REQUEST_EXCHANGE'],
                 routing_key='',
-                body=ujson.dumps(message),
+                body=message,
                 properties=pika.BasicProperties(delivery_mode=2,),
             )
         except Exception:
