@@ -33,7 +33,7 @@ class RequestConsumer:
     def get_response(self, request):
         try:
             query = request['query']
-            params = request['params']
+            params = request.get('params', {})
         except Exception:
             current_app.logger.error('Bad query sent to spark request consumer: %s', json.dumps(request), exc_info=True)
             return None
