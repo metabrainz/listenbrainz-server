@@ -10,7 +10,6 @@ from listenbrainz import utils
 from listenbrainz.db import user as db_user, stats as db_stats
 from listenbrainz.webserver import create_app
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz import config
 import sqlalchemy
 
 class SparkReader:
