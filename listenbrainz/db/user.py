@@ -2,11 +2,9 @@ import logging
 import sqlalchemy
 import uuid
 
-
 from datetime import datetime
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz import config
 
 
 logger = logging.getLogger(__name__)
@@ -257,36 +255,6 @@ def reset_latest_import(musicbrainz_id):
     """Resets the latest_import field for user with specified MusicBrainz ID to 0"""
     user = get_by_mb_id(musicbrainz_id)
     update_latest_import(musicbrainz_id, 0)
-
-
-def get_users_with_uncalculated_stats():
-    """ Returns users whose stats have not been calculated by the stats calculation process
-        yet. This means that the user must have logged-in in the last
-        config.STATS_CALCULATION_LOGIN_TIME days and her stats must not have already
-        been calculated in this interval.
-
-        Returns:
-            A list of dicts each of the form
-            {
-                'id' (int): the row ID of the user,
-                'musicbrainz_id' (str): the musicbrainz_id of the user
-            }
-    """
-
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-                SELECT pu.id, pu.musicbrainz_id
-                  FROM public."user" pu
-             LEFT JOIN statistics.user su
-                    ON pu.id = su.user_id
-                 WHERE pu.last_login >= NOW() - INTERVAL ':x days'
-                   AND (su.last_updated IS NULL OR su.last_updated < NOW() - INTERVAL ':y days')
-                """), {
-                    'x': config.STATS_CALCULATION_LOGIN_TIME,
-                    'y': config.STATS_CALCULATION_INTERVAL,
-                })
-
-        return [dict(row) for row in result]
 
 
 def get_all_users(created_before=None, columns=None):
