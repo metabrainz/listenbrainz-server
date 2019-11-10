@@ -71,7 +71,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
             recordings={},
             releases={},
             artist_count=2,
-            yearmonth='2019-01',
         )
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
@@ -161,7 +160,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
             recordings={},
             releases={},
             artist_count=2,
-            yearmonth='2019-01',
         )
 
         r = self.client.get(url_for('user.artists', user_name=self.user.musicbrainz_id))
@@ -174,7 +172,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
             recordings={},
             releases={},
             artist_count=2,
-            yearmonth='2019-01',
         )
 
         r = self.client.get(url_for('user.artists', user_name=self.user.musicbrainz_id))

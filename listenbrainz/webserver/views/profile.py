@@ -91,7 +91,7 @@ def info():
     # check if user is in stats calculation queue or if valid stats already exist
     in_stats_queue = _redis.redis.get(construct_stats_queue_key(current_user.musicbrainz_id)) == 'queued'
     try:
-        stats_exist = db_stats.valid_stats_exist(current_user.id)
+        stats_exist = db_stats.valid_stats_exist(current_user.id, current_app.config['STATS_CALCULATION_INTERVAL'])
     except DatabaseException:
         stats_exist = False
 
@@ -170,7 +170,7 @@ def request_stats():
     status = _redis.redis.get(construct_stats_queue_key(current_user.musicbrainz_id)) == 'queued'
     if status == 'queued':
         flash.info('You have already been added to the stats calculation queue! Please check back later.')
-    elif db_stats.valid_stats_exist(current_user.id):
+    elif db_stats.valid_stats_exist(current_user.id, current_app.config['STATS_CALCULATION_INTERVAL']):
         flash.info('Your stats were calculated in the most recent stats calculation interval,'
             ' please wait until the next interval! We calculate new statistics every Monday at 00:00 UTC.')
     else:

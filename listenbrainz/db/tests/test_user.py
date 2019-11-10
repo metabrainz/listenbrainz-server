@@ -135,7 +135,6 @@ class UserTestCase(DatabaseTestCase):
             recordings={},
             releases={},
             artist_count=2,
-            yearmonth='2019-01',
         )
         user_stats = db_stats.get_all_user_stats(user_id)
         self.assertIsNotNone(user_stats)
