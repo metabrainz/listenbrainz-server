@@ -41,10 +41,8 @@ class SparkReader:
             if not user:
                 break
             artists = metadata['artists']['artist_stats']
-            recordings = metadata['recordings']
-            releases = metadata['releases']
             artist_count = metadata['artists']['artist_count']
-            db_stats.insert_user_stats(user['id'], artists, recordings, releases, artist_count)
+            db_stats.insert_user_stats(user['id'], artists, {}, {}, artist_count)
             current_app.logger.info("data for {} published".format(username))
 
         while True:
