@@ -6,7 +6,8 @@ import uuid
 from datetime import datetime
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz import config
+from listenbrainz.utils import safely_import_config
+safely_import_config()
 
 
 logger = logging.getLogger(__name__)
