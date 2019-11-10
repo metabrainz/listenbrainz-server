@@ -25,7 +25,8 @@ import sqlalchemy
 import ujson
 
 from listenbrainz import db
-from listenbrainz import config 
+from listenbrainz.utils import safely_import_config
+safely_import_config()
 
 def insert_user_stats(user_id, artists, recordings, releases, artist_count, yearmonth):
     """Inserts user stats calculated from Spark into the database.
