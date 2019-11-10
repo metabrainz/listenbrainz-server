@@ -16,7 +16,7 @@ from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.influx_connection import _influx
 from listenbrainz.webserver.views.api_tools import publish_data_to_queue
 import time
-from datetime import datetime  
+from datetime import datetime
 from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
 
 LISTENS_PER_PAGE = 25

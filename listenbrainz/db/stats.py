@@ -25,8 +25,6 @@ import sqlalchemy
 import ujson
 
 from listenbrainz import db
-from listenbrainz.utils import safely_import_config
-safely_import_config()
 
 def insert_user_stats(user_id, artists, recordings, releases, artist_count):
     """Inserts user stats calculated from Spark into the database.
@@ -170,12 +168,14 @@ def get_all_user_stats(user_id):
     return get_user_stats(user_id, 'artist, recording, release')
 
 
-def valid_stats_exist(user_id):
+def valid_stats_exist(user_id, days):
     """ Returns True if statistics for a user have been calculated in
-    the last week, and are present in the db
+    the last X days (where x is passed to the function), and are present in the db
 
     Args:
         user_id (int): the row ID of the user
+        days (int): the number of days in which stats should have been calculated
+            to consider them valid
 
     Returns:
         bool value signifying if valid stats exist for the user in the db
@@ -189,7 +189,7 @@ def valid_stats_exist(user_id):
                    AND last_updated >= NOW() - INTERVAL ':x days'
             """), {
                 'user_id': user_id,
-                'x': config.STATS_CALCULATION_INTERVAL,
+                'x': days,
             })
         row = result.fetchone()
         return True if row is not None else False
