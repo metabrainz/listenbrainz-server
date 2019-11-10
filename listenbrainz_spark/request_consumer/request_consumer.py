@@ -31,8 +31,12 @@ from flask import current_app
 class RequestConsumer:
 
     def get_response(self, request):
-        query = request['query']
-        params = request['params']
+        try:
+            query = request['query']
+            params = request['params']
+        except Exception:
+            current_app.logger.error('Bad query sent to spark request consumer: %s', json.dumps(request), exc_info=True)
+            return None
 
         try:
             query_handler = listenbrainz_spark.query_map.functions[query]
