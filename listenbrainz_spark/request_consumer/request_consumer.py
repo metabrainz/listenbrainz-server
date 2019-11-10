@@ -25,7 +25,7 @@ import time
 
 import listenbrainz_spark
 from datetime import datetime
-from listenbrainz_spark.utils import init_rabbitmq, create_app
+from listenbrainz_spark.utils import init_rabbitmq
 from flask import current_app
 
 class RequestConsumer:
@@ -50,7 +50,7 @@ class RequestConsumer:
             return None
 
 
-    def push_to_response_queue(response):
+    def push_to_response_queue(self, response):
         while True:
             try:
                 self.response_channel.basic_publish(
@@ -72,7 +72,7 @@ class RequestConsumer:
         channel.basic_ack(delivery_tag=method.delivery_tag)
 
 
-    def connect_to_rabbitmq():
+    def connect_to_rabbitmq(self):
         self.rabbitmq = init_rabbitmq(
             username=current_app.config['RABBITMQ_USERNAME'],
             password=current_app.config['RABBITMQ_PASSWORD'],
@@ -84,28 +84,25 @@ class RequestConsumer:
 
 
     def run(self):
-        app = create_app()
-        if not app:
-            sys.exit(-1)
-        with app.app_context():
-            while True:
-                self.connect_to_rabbitmq()
-                self.request_channel = self.rabbitmq.channel()
-                self.request_channel.exchange_declare(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], exchange_type='fanout')
-                self.request_channel.queue_declare(current_app.config['SPARK_REQUEST_QUEUE'], durable=True)
-                self.request_channel.queue_bind(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], queue=current_app.config['SPARK_REQUEST_QUEUE'])
-                self.request_channel.basic_consume(self.callback, queue=current_app.config['SPARK_REQUEST_QUEUE'])
+        while True:
+            self.connect_to_rabbitmq()
+            self.request_channel = self.rabbitmq.channel()
+            self.request_channel.exchange_declare(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], exchange_type='fanout')
+            self.request_channel.queue_declare(current_app.config['SPARK_REQUEST_QUEUE'], durable=True)
+            self.request_channel.queue_bind(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], queue=current_app.config['SPARK_REQUEST_QUEUE'])
+            self.request_channel.basic_consume(self.callback, queue=current_app.config['SPARK_REQUEST_QUEUE'])
 
-                self.result_channel = self.rabbitmq.channel()
-                self.result_channel.exchange_declare(exchange=current_app.config['SPARK_RESULT_EXCHANGE'], exchange_type='fanout')
+            self.result_channel = self.rabbitmq.channel()
+            self.result_channel.exchange_declare(exchange=current_app.config['SPARK_RESULT_EXCHANGE'], exchange_type='fanout')
 
-                current_app.logger.info('Started request consumer...')
-                try:
-                    self.request_channel.start_consuming()
-                except pika.exceptions.ConnectionClosed:
-                    current_app.logger.error('connection to rabbitmq closed.', exc_info=True)
-                    continue
-                self.rabbitmq.close()
+            current_app.logger.info('Started request consumer...')
+            try:
+                self.request_channel.start_consuming()
+            except pika.exceptions.ConnectionClosed:
+                current_app.logger.error('connection to rabbitmq closed.', exc_info=True)
+                continue
+            self.rabbitmq.close()
+
 
 def main(app_name):
     listenbrainz_spark.init_spark_session(app_name)
