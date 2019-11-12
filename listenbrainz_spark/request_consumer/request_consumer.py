@@ -24,13 +24,14 @@ import sys
 import time
 
 import listenbrainz_spark
+import listenbrainz_spark.query_map
 from datetime import datetime
 from listenbrainz_spark.utils import init_rabbitmq
 from flask import current_app
 
 class RequestConsumer:
 
-    def get_response(self, request):
+    def get_result(self, request):
         try:
             query = request['query']
             params = request.get('params', {})
@@ -43,6 +44,9 @@ class RequestConsumer:
         except KeyError:
             current_app.logger.error("Bad query sent to spark request consumer: %s", query, exc_info=True)
             return None
+        except Exception as e:
+            current_app.logger.error("Error while mapping query to function: %s", str(e), exc_info=True)
+            return None
 
         try:
             return query_handler(**params)
@@ -54,26 +58,48 @@ class RequestConsumer:
             return None
 
 
-    def push_to_response_queue(self, response):
+    def push_to_result_queue(self, result):
         while True:
             try:
-                self.response_channel.basic_publish(
+                self.result_channel.basic_publish(
                     exchange=current_app.config['SPARK_RESULT_EXCHANGE'],
                     routing_key='',
-                    body=ujson.dumps(response),
+                    body=json.dumps(result),
                     properties=pika.BasicProperties(delivery_mode = 2,),
                 )
                 break
             except pika.exceptions.ConnectionClosed:
+                self.connect_to_rabbitmq()
                 time.sleep(1)
+            except pika.exceptions.ChannelClosed:
+                self.result_channel = self.rabbitmq.channel()
+                self.result_channel.exchange_declare(exchange=current_app.config['SPARK_RESULT_EXCHANGE'], exchange_type='fanout')
+
 
 
     def callback(self, channel, method, properties, body):
+        current_app.logger.info("Processing new request...")
         request = json.loads(body.decode('utf-8'))
-        response = self.get_response(request)
-        if response:
-            self.push_to_response_queue(response)
-        channel.basic_ack(delivery_tag=method.delivery_tag)
+        current_app.logger.info("Calculating result...")
+        result = self.get_result(request)
+        current_app.logger.info("Done!")
+        if result:
+            current_app.logger.info("Pushing to result queue...")
+            self.push_to_result_queue(result)
+            current_app.logger.info("Done!")
+        while True:
+            try:
+                self.request_channel.basic_ack(delivery_tag=method.delivery_tag)
+                break
+            except pika.exceptions.ChannelClosed:
+                self.request_channel = self.rabbitmq.channel()
+                self.request_channel.exchange_declare(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], exchange_type='fanout')
+                self.request_channel.queue_declare(current_app.config['SPARK_REQUEST_QUEUE'], durable=True)
+                self.request_channel.queue_bind(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], queue=current_app.config['SPARK_REQUEST_QUEUE'])
+                self.request_channel.basic_consume(self.callback, queue=current_app.config['SPARK_REQUEST_QUEUE'])
+
+
+        current_app.logger.info("Request processed!")
 
 
     def connect_to_rabbitmq(self):
@@ -89,7 +115,9 @@ class RequestConsumer:
 
     def run(self):
         while True:
+            current_app.logger.info("Connecting to RabbitMQ...")
             self.connect_to_rabbitmq()
+            current_app.logger.info("Connected!")
             self.request_channel = self.rabbitmq.channel()
             self.request_channel.exchange_declare(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], exchange_type='fanout')
             self.request_channel.queue_declare(current_app.config['SPARK_REQUEST_QUEUE'], durable=True)
