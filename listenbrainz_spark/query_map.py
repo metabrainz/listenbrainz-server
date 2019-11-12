@@ -1,5 +1,5 @@
-from listenbrainz_spark import stats
+import listenbrainz_spark.stats.user.all
 
 functions = {
-	'stats.user.all': stats.user.all.calculate,
+	'stats.user.all': listenbrainz_spark.stats.user.all.calculate,
 }
