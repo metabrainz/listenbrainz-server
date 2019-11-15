@@ -143,13 +143,6 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 
-
-RUN mkdir /rec
-WORKDIR /rec
-COPY requirements.txt /rec/requirements.txt
-RUN pip3 install -r requirements.txt
-
-
 ENV DOCKERIZE_VERSION v0.6.1
 RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
@@ -163,6 +156,10 @@ RUN cd /usr/local && \
     tar xzf spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION.tgz && \
     ln -s spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION spark
 
+RUN mkdir /rec
+WORKDIR /rec
+COPY requirements.txt /rec/requirements.txt
+RUN pip3 install -r requirements.txt
 
 FROM metabrainz-spark-base as metabrainz-spark-master
 CMD /usr/local/spark/sbin/start-master.sh

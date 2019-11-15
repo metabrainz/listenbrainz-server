@@ -1,0 +1,27 @@
+version: "3.4"
+
+volumes:
+    datanode:
+    namenode:
+
+services:
+  hadoop-master:
+    image: metabrainz/hadoop-yarn:beta
+    command: hdfs namenode
+    volumes:
+      - namenode:/home/hadoop/hdfs:z
+
+  datanode:
+    image: metabrainz/hadoop-yarn:beta
+    command: hdfs datanode
+    volumes:
+      - datanode:/home/hadoop/hdfs:z
+
+  test:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: metabrainz-spark-dev
+    command: py.test --junitxml=/data/test_report.xml --cov-report xml:/data/coverage.xml
+    volumes:
+      - ..:/rec:z
