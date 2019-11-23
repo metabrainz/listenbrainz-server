@@ -28,7 +28,7 @@ RECORDINGS_DATAFRAME_PATH = config.HDFS_CLUSTER_URI + DATAFRAME_DIR + '/' + 'rec
 # Absolute path to processed data/listens ready to be trained.
 PLAYCOUNTS_DATAFRAME_PATH = config.HDFS_CLUSTER_URI + DATAFRAME_DIR + '/' + 'playcounts_df.parquet'
 # Absolute path to similar artist relation.
-SIMILAR_ARTIST_DATAFRAME_PATH = config.HDFS_CLUSTER_URI + SIMILAR_ARTIST_DIR + '/' + 'artist_artist_relations.parquet'
+SIMILAR_ARTIST_DATAFRAME_PATH = SIMILAR_ARTIST_DIR + '/' + 'artist_credit_artist_credit_relations.parquet'
 # Absolute path to candidate sets.
 TOP_ARTIST_CANDIDATE_SET = config.HDFS_CLUSTER_URI + CANDIDATE_SET_DIR + '/' + 'top_artist.parquet'
 SIMILAR_ARTIST_CANDIDATE_SET = config.HDFS_CLUSTER_URI + CANDIDATE_SET_DIR + '/' + 'similar_artist.parquet'
@@ -36,5 +36,7 @@ SIMILAR_ARTIST_CANDIDATE_SET = config.HDFS_CLUSTER_URI + CANDIDATE_SET_DIR + '/'
 MODEL_METADATA = config.HDFS_CLUSTER_URI + MODEL_DIR + '/' + 'model_metadata.parquet'
 # Absolute path to save model index
 INDEX = config.HDFS_CLUSTER_URI + MODEL_DIR + '/' + 'index.parquet'
-# Abolute path to recording mbid->msid and artist mbid-msid mapping.
-RECORDING_ARTIST_MBID_MSID_MAPPING = config.HDFS_CLUSTER_URI + os.path.join('/', 'mapping', 'recording_artist_msid_mbid_mapping.parquet')
+# Absolute path to recording mbid->msid and artist mbid-msid mapping.
+RECORDING_ARTIST_MBID_MSID_MAPPING = os.path.join('/', 'mapping', 'recording_artist_msid_mbid_mapping.parquet')
+# Absolute path to mapped listens.
+MAPPED_LISTENS = config.HDFS_CLUSTER_URI + DATAFRAME_DIR + '/' + 'mapped_listens_df.parquet'
