@@ -26,14 +26,14 @@ from pyspark.sql.utils import AnalysisException, ParseException
 SAVE_CANDIDATE_HTML = True
 
 def get_listens_for_rec_generation_window(mapped_df):
-    """ Get listens to fetcch top artists.
+    """ Get listens to fetch top artists.
 
         Args:
             mapped_df (dataframe): Dataframe with all the columns/fields that a typical listen has.
     """
     df = mapped_df.select('*') \
         .where((col('listened_at') >= to_timestamp(date_sub(current_timestamp(),
-        config.RECOMMENDATION_GENERATION_WINDOW))) & (col('listened_at') < current_timestamp()))
+        config.RECOMMENDATION_GENERATION_WINDOW))) & (col('listened_at') <= current_timestamp()))
     return df
 
 def get_top_artists(df, user_name):
@@ -49,8 +49,10 @@ def get_top_artists(df, user_name):
                     'mb_artist_credit_id', 'artist_name'
                 ]
     """
-    top_artists_df = df.select('mb_artist_credit_id', 'artist_name').where(col('user_name') == user_name) \
-        .groupBy('mb_artist_credit_id', 'artist_name').agg(func.count('mb_artist_credit_id').alias('count')) \
+    top_artists_df = df.select('mb_artist_credit_id', 'artist_name') \
+        .where(col('user_name') == user_name) \
+        .groupBy('mb_artist_credit_id', 'artist_name') \
+        .agg(func.count('mb_artist_credit_id').alias('count')) \
         .orderBy('count', ascending=False).limit(config.TOP_ARTISTS_LIMIT)
 
     return top_artists_df
@@ -71,13 +73,15 @@ def get_similar_artists(top_artists_df, artists_relation_df, user_name):
     """
     top_artists = [row.mb_artist_credit_id for row in top_artists_df.collect()]
 
-    similar_artists_df = artists_relation_df.select(col('id_0').alias('top_artist_credit_id'), col('id_1') \
-        .alias('similar_artist_credit_id'), col('name_0').alias('top_artist_name'), col('name_1') \
-        .alias('similar_artist_name'), 'score').where(artists_relation_df.id_0.isin(top_artists)) \
+    similar_artists_df = artists_relation_df.select(
+            col('id_0').alias('top_artist_credit_id'), col('id_1').alias('similar_artist_credit_id'), \
+            col('name_0').alias('top_artist_name'), col('name_1').alias('similar_artist_name'), 'score') \
+            .where(artists_relation_df.id_0.isin(top_artists)) \
         .union(
-            artists_relation_df.select(col('id_1').alias('top_artist_credit_id'), col('id_0') \
-                .alias('similar_artist_credit_id'), col('name_1').alias('top_artist_name'), col('name_0') \
-                .alias('similar_artist_name'), 'score').where(artists_relation_df.id_1.isin(top_artists))
+            artists_relation_df.select(
+                col('id_1').alias('top_artist_credit_id'), col('id_0').alias('similar_artist_credit_id'), \
+                col('name_1').alias('top_artist_name'), col('name_0').alias('similar_artist_name'), 'score') \
+                .where(artists_relation_df.id_1.isin(top_artists))
         ).distinct()
 
     try:
@@ -104,7 +108,7 @@ def get_similar_artists(top_artists_df, artists_relation_df, user_name):
     return distinct_similar_artists_df
 
 def get_candidate_recording_ids(artist_credit_ids, recordings_df, user_id):
-    """ Get recordings corresponding to artist_cresit_ids
+    """ Get recordings corresponding to artist_credit_ids
 
         Args:
             artist_credit_ids (list): A list of artist_credit ids.
@@ -117,8 +121,10 @@ def get_candidate_recording_ids(artist_credit_ids, recordings_df, user_id):
                     'user_id', 'recording_id'
                 ]
     """
-    df = recordings_df[recordings_df.mb_artist_credit_id.isin(artist_credit_ids)].select('recording_id')
-    recordings_ids_df = df.withColumn('user_id', lit(user_id)).select('user_id', 'recording_id')
+    df = recordings_df[recordings_df.mb_artist_credit_id.isin(artist_credit_ids)] \
+        .select('recording_id')
+    recordings_ids_df = df.withColumn('user_id', lit(user_id)) \
+        .select('user_id', 'recording_id')
     return recordings_ids_df
 
 def get_top_artists_recording_ids(top_artists_df, recordings_df, user_id):
@@ -225,8 +231,21 @@ def save_candidate_html(user_data):
     save_html(candidate_html, context, 'candidate.html')
 
 def get_user_id(df, user_name):
+    """ Get user id of the user.
+
+        Args:
+            df (dataframe): Dataframe to fetch user id.
+            user_name (str): User name of the user.
+
+        Returns:
+            row.user_id (int): User id of the user.
+
+        Raises:
+            IndexError (exception): if user id is not found.
+    """
     try:
-        row = df.select('user_id').where(col('user_name') == user_name).take(1)[0]
+        row = df.select('user_id') \
+            .where(col('user_name') == user_name).take(1)[0]
         return row.user_id
     except IndexError:
         raise IndexError()

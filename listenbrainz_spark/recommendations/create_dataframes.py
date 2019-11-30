@@ -152,8 +152,8 @@ def get_playcounts_df(listens_df, recordings_df, users_df, metadata):
     # The final step uses groupBy which create groups on user_id and recording_id and count the number of recording_ids.
     # The final dataframe tells us about the number of times a user has listend to a particular track for all users.
     playcounts_df = listens_df.join(users_df, 'user_name', 'inner') \
-                        .join(recordings_df, 'mb_recording_gid', 'inner') \
-                        .groupBy('user_id', 'recording_id').agg(func.count('recording_id').alias('count'))
+        .join(recordings_df, 'mb_recording_gid', 'inner') \
+        .groupBy('user_id', 'recording_id').agg(func.count('recording_id').alias('count'))
 
     metadata['playcounts_count'] = playcounts_df.count()
     save_dataframe(playcounts_df, path.PLAYCOUNTS_DATAFRAME_PATH)
@@ -188,8 +188,8 @@ def get_recordings_df(complete_listens_df, metadata):
                 ]
     """
     recording_window = Window.orderBy('mb_recording_gid')
-    recordings_df = complete_listens_df.select('mb_recording_gid', 'mb_artist_credit_id').distinct().withColumn('recording_id',
-                        rank().over(recording_window))
+    recordings_df = complete_listens_df.select('mb_recording_gid', 'mb_artist_credit_id').distinct() \
+        .withColumn('recording_id', rank().over(recording_window))
 
     metadata['recordings_count'] = recordings_df.count()
     save_dataframe(recordings_df, path.RECORDINGS_DATAFRAME_PATH)
