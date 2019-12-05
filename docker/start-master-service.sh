@@ -20,3 +20,6 @@ docker service create --replicas 1 \
     --env SPARK_NO_DAEMONIZE=1 \
     --mount type=volume,source=spark-volume,destination=/home/hadoop/spark \
     metabrainz/spark-master
+
+# start the request consumer (stats, recommendation requests from the main server farm)
+./start-request-consumer-container.sh

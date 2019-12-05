@@ -28,3 +28,20 @@ def init_spark_session(app_name):
         sql_context = SQLContext(context)
     except Py4JJavaError as err:
         raise SparkSessionNotInitializedException(app_name, err.java_exception)
+
+
+def init_test_session(app_name):
+    global session, context, sql_context
+    try:
+        session = SparkSession \
+                .builder \
+                .master('local') \
+                .appName(app_name) \
+                .config("spark.hadoop.dfs.client.use.datanode.hostname", "true") \
+                .config("spark.hadoop.dfs.datanode.use.datanode.hostname", "true") \
+                .getOrCreate()
+        context = session.sparkContext
+        context.setLogLevel("ERROR")
+        sql_context = SQLContext(context)
+    except Py4JJavaError as err:
+        raise SparkSessionNotInitializedException(app_name, err.java_exception)

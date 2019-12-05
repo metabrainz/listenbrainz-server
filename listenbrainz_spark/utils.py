@@ -3,6 +3,7 @@ import sys
 import errno
 import logging
 import traceback
+import pika
 from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
@@ -15,6 +16,7 @@ from flask import current_app
 from hdfs.util import HdfsError
 from brainzutils.flask import CustomFlask
 from pyspark.sql.utils import AnalysisException
+from time import sleep
 
 # A typical listen is of the form:
 # {"listened_at": "2005-02-28T20:39:08Z", "user_name": "vansika", "artist_msid": "6276299c-57e9-4014-9fdd-ab9ed800f61d",
@@ -58,6 +60,23 @@ def create_app(debug=None):
         sentry_config=app.config.get('LOG_SENTRY')
     )
     return app
+
+
+def init_rabbitmq(username, password, host, port, vhost, log=logging.error):
+    while True:
+        try:
+            credentials = pika.PlainCredentials(username, password)
+            connection_parameters = pika.ConnectionParameters(
+                host=host,
+                port=port,
+                virtual_host=vhost,
+                credentials=credentials,
+            )
+            return pika.BlockingConnection(connection_parameters)
+        except Exception as e:
+            log('Error while connecting to RabbitMQ', exc_info=True)
+            sleep(1)
+
 
 def create_dataframe(row, schema):
     """ Create a dataframe containing a single row.
