@@ -38,7 +38,7 @@ def get_listens_for_rec_generation_window():
     # shift to the first of the month
     from_date = stats.replace_days(from_date, 1)
     try:
-        df = utils.get_listens(from_date, to_date)
+        df = utils.get_listens(from_date, to_date, config.HDFS_CLUSTER_URI + path.LISTENBRAINZ_DATA_DIRECTORY)
     except ValueError as err:
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)

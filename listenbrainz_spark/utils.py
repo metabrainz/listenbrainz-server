@@ -121,7 +121,7 @@ def read_files_from_HDFS(path):
     except Py4JJavaError as err:
         raise FileNotFetchedException(err.java_exception, path)
 
-def get_listens(from_date, to_date):
+def get_listens(from_date, to_date, dest_path):
     """ Prepare dataframe of months falling between from_date and to_date (both inclusive).
 
         Args:
@@ -142,7 +142,7 @@ def get_listens(from_date, to_date):
     df = None
     while from_date <= to_date:
         try:
-            month = read_files_from_HDFS('{}/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI + path.LISTENBRAINZ_DATA_DIRECTORY, from_date.year, from_date.month))
+            month = read_files_from_HDFS('{}/{}/{}.parquet'.format(dest_path, from_date.year, from_date.month))
             df = df.union(month) if df else month
         except PathNotFoundException as err:
             current_app.logger.warning('{}\nFetching file for next date...'.format(err))
@@ -186,18 +186,23 @@ def delete_dir(path, recursive=False):
                  For non-empty directory set recursive to 'True'.
     """
     try:
-        hdfs_connection.client.delete(path, recursive=recursive)
+        deleted = hdfs_connection.client.delete(path, recursive=recursive)
+        if not deleted:
+            raise HDFSDirectoryNotDeletedException('', path)
+        return deleted
     except HdfsError as err:
         raise HDFSDirectoryNotDeletedException(str(err), path)
 
-def get_status(path):
-    """ Checks the status of a directory in HDFS. The function throws HdfsError if the directory
-        does not exist otherwise returns a JSON. May be used to check if a directory exists or not.
+def path_exists(path):
+    """ Checks if the path exists in HDFS. The function returns False if the path
+        does not exist otherwise returns True.
 
         Args:
-            path (string): Path of the directory to check status for.
+            path (string): Path to check status for.
 
         Note: Caller is responsible for initializing HDFS connection.
     """
-    status = hdfs_connection.client.status(path)
-    return status
+    path_found = hdfs_connection.client.status(path, strict=False)
+    if path_found:
+        return True
+    return False
