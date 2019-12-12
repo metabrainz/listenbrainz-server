@@ -151,7 +151,7 @@ def get_listens_without_artist_and_recording_mbids(df):
     return df.select('artist_msid', 'artist_name', 'listened_at', 'recording_msid', 'release_mbid', 'release_msid',
         'release_name', 'tags', 'track_name', 'user_name')
 
-def get_listens(from_date, to_date):
+def get_listens(from_date, to_date, dest_path):
     """ Prepare dataframe of months falling between from_date and to_date (both inclusive).
 
         Args:
@@ -172,8 +172,7 @@ def get_listens(from_date, to_date):
     df = None
     while from_date <= to_date:
         try:
-            month = read_files_from_HDFS('{}/{}/{}.parquet'.format(config.HDFS_CLUSTER_URI + path.LISTENBRAINZ_DATA_DIRECTORY,
-                from_date.year, from_date.month))
+            month = read_files_from_HDFS('{}/{}/{}.parquet'.format(dest_path, from_date.year, from_date.month))
             df = df.union(month) if df else month
         except PathNotFoundException as err:
             current_app.logger.warning('{}\nFetching file for next date...'.format(err))
