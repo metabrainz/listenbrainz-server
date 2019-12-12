@@ -82,7 +82,7 @@ def get_listens_for_training_model_window(metadata):
     metadata['to_date'] = to_date
     metadata['from_date'] = from_date
     try:
-        training_df = utils.get_listens(from_date, to_date)
+        training_df = utils.get_listens(from_date, to_date, config.HDFS_CLUSTER_URI + path.LISTENBRAINZ_DATA_DIRECTORY)
     except ValueError as err:
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
