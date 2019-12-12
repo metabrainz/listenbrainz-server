@@ -220,18 +220,23 @@ def delete_dir(path, recursive=False):
                  For non-empty directory set recursive to 'True'.
     """
     try:
-        hdfs_connection.client.delete(path, recursive=recursive)
+        deleted = hdfs_connection.client.delete(path, recursive=recursive)
+        if not deleted:
+            raise HDFSDirectoryNotDeletedException('', path)
+        return deleted
     except HdfsError as err:
         raise HDFSDirectoryNotDeletedException(str(err), path)
 
-def get_status(path):
-    """ Checks the status of a directory in HDFS. The function throws HdfsError if the directory
-        does not exist otherwise returns a JSON. May be used to check if a directory exists or not.
+def path_exists(path):
+    """ Checks if the path exists in HDFS. The function returns False if the path
+        does not exist otherwise returns True.
 
         Args:
-            path (string): Path of the directory to check status for.
+            path (string): Path to check status for.
 
         Note: Caller is responsible for initializing HDFS connection.
     """
-    status = hdfs_connection.client.status(path)
-    return status
+    path_found = hdfs_connection.client.status(path, strict=False)
+    if path_found:
+        return True
+    return False
