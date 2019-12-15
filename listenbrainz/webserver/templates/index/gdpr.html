@@ -25,8 +25,10 @@
       </p>
 
     <form method="POST">
-      <input type="radio" id="gdpr-agree" name="gdpr-options" value="agree" required> OK, I agree<br/>
-      <input type="radio" id="gdpr-disagree" name="gdpr-options" value="disagree" required> No, take me to the account deletion page<br/>
+      <input type="radio" id="gdpr-agree" name="gdpr-options" value="agree" required>
+      <label for="gdpr-agree">OK, I agree</label><br/>
+      <input type="radio" id="gdpr-disagree" name="gdpr-options" value="disagree" required>
+      <label for="gdpr-disagree">No, take me to the account deletion page</label><br/>
       {% if request.args.get('next') %}
         <input type="hidden" name="next" value="{{ request.args.get('next') }}"/>
       {% endif %}
