@@ -40,7 +40,7 @@ class RequestConsumer:
             return None
 
         try:
-            query_handler = listenbrainz_spark.query_map.functions[query]
+            query_handler = listenbrainz_spark.query_map.get_query_handler(query)
         except KeyError:
             current_app.logger.error("Bad query sent to spark request consumer: %s", query, exc_info=True)
             return None

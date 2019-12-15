@@ -25,4 +25,4 @@ services:
       context: ..
       dockerfile: Dockerfile
       target: metabrainz-spark-dev
-    command: dockerize -wait tcp://hadoop-master:9000 -timeout 60s bash -c "cp listenbrainz_spark/config.py.sample listenbrainz_spark/config.py; py.test --junitxml=/data/test_report.xml --cov-report xml:/data/coverage.xml"
+    command: dockerize -wait tcp://hadoop-master:9000 -timeout 60s bash -c "cp listenbrainz_spark/config.py.sample listenbrainz_spark/config.py; python -m pytest --junitxml=/data/test_report.xml --cov-report xml:/data/coverage.xml"
