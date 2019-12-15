@@ -1,8 +1,6 @@
 import os
-import unittest
 from datetime import datetime
 
-import listenbrainz_spark
 from listenbrainz_spark.tests import SparkTestCase
 from listenbrainz_spark import utils, hdfs_connection, config
 
