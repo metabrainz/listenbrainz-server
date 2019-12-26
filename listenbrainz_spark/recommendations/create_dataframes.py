@@ -65,7 +65,7 @@ def save_dataframe_metadata_to_HDFS(metadata):
     metadata_row = schema.convert_model_metadata_to_row(metadata)
     try:
         # Create dataframe from the row object.
-        dataframe_metadata = utils.create_dataframe(metadata_row, schema.model_metadata_schema)
+        dataframe_metadata = utils.create_dataframe([metadata_row], schema.model_metadata_schema)
     except DataFrameNotCreatedException as err:
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
@@ -77,8 +77,26 @@ def save_dataframe_metadata_to_HDFS(metadata):
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
-def get_listens_for_training_model_window(metadata):
+def get_dates_to_train_data():
+    """ Get window to fetch listens to train data.
+
+        Returns:
+            from_date (datetime): Date from which start fetching listens.
+            to_date (datetime): Date upto which fetch listens.
+    """
+    to_date = datetime.utcnow()
+    from_date = stats.adjust_days(to_date, config.TRAIN_MODEL_WINDOW)
+    # shift to the first of the month
+    from_date = stats.replace_days(from_date, 1)
+    return to_date, from_date
+
+def get_listens_for_training_model_window(to_date, from_date, metadata, dest_path):
     """  Prepare dataframe of listens of X days to train. Here X is a config value.
+
+        Args:
+            from_date (datetime): Date from which start fetching listens.
+            to_date (datetime): Date upto which fetch listens.
+            dest_path (str): HDFS path.
 
         Returns:
             A dataframe with columns as:
@@ -87,15 +105,10 @@ def get_listens_for_training_model_window(metadata):
                     release_msid, release_name, tags, track_name, user_name
                 ]
     """
-    to_date = datetime.utcnow()
-    from_date = stats.adjust_days(to_date, config.TRAIN_MODEL_WINDOW)
-    # shift to the first of the month
-    from_date = stats.replace_days(from_date, 1)
-
     metadata['to_date'] = to_date
     metadata['from_date'] = from_date
     try:
-        training_df = utils.get_listens(from_date, to_date, config.HDFS_CLUSTER_URI + path.LISTENBRAINZ_DATA_DIRECTORY)
+        training_df = utils.get_listens(from_date, to_date, dest_path)
     except ValueError as err:
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
@@ -229,10 +242,11 @@ def main():
         sys.exit(-1)
 
     # Dataframe containing all columns except artist_mbids and recording_mbid
-    partial_listens_df = get_listens_for_training_model_window(metadata)
+    to_date, from_date = get_dates_to_train_data()
+    partial_listens_df = get_listens_for_training_model_window(to_date, from_date, metadata, path.LISTENBRAINZ_DATA_DIRECTORY)
 
     # Dataframe containing recording msid->mbid and artist msid->mbid mapping.
-    recording_artist_mapping_df = utils.read_files_from_HDFS(config.HDFS_CLUSTER_URI + path.RECORDING_ARTIST_MBID_MSID_MAPPING)
+    recording_artist_mapping_df = utils.read_files_from_HDFS(path.RECORDING_ARTIST_MBID_MSID_MAPPING)
 
     # Dataframe containing all fields that a listen should have including artist_mbids and recording_msid.
     complete_listens_df = get_mapped_artist_and_recording_mbids(partial_listens_df, recording_artist_mapping_df)

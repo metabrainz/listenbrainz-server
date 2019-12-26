@@ -262,7 +262,7 @@ def main():
         mapped_df = utils.read_files_from_HDFS(path.MAPPED_LISTENS)
         recordings_df = utils.read_files_from_HDFS(path.RECORDINGS_DATAFRAME_PATH)
         users_df = utils.read_files_from_HDFS(path.USERS_DATAFRAME_PATH)
-        artists_relation_df = utils.read_files_from_HDFS(config.HDFS_CLUSTER_URI + path.SIMILAR_ARTIST_DATAFRAME_PATH)
+        artists_relation_df = utils.read_files_from_HDFS(path.SIMILAR_ARTIST_DATAFRAME_PATH)
     except PathNotFoundException as err:
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)

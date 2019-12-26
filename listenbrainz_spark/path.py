@@ -1,7 +1,5 @@
 import os
 
-from listenbrainz_spark import config
-
 # Parent directory containing listens and data driven from ListenBrainz.
 LISTENBRAINZ_DATA_DIRECTORY = os.path.join('/', 'data', 'listenbrainz')
 # Directory containing similar artist relation.
@@ -23,20 +21,20 @@ CHECKPOINT_DIR = os.path.join('/', 'checkpoint')
 DATA_DIR = os.path.join(MODEL_DIR, 'data')
 
 # Absolute path to dataframes used in processing raw data/listens.
-USERS_DATAFRAME_PATH = config.HDFS_CLUSTER_URI + DATAFRAME_DIR + '/' + 'users_df.parquet'
-RECORDINGS_DATAFRAME_PATH = config.HDFS_CLUSTER_URI + DATAFRAME_DIR + '/' + 'recordings_df.parquet'
+USERS_DATAFRAME_PATH = DATAFRAME_DIR + '/' + 'users_df.parquet'
+RECORDINGS_DATAFRAME_PATH = DATAFRAME_DIR + '/' + 'recordings_df.parquet'
 # Absolute path to processed data/listens ready to be trained.
-PLAYCOUNTS_DATAFRAME_PATH = config.HDFS_CLUSTER_URI + DATAFRAME_DIR + '/' + 'playcounts_df.parquet'
+PLAYCOUNTS_DATAFRAME_PATH = DATAFRAME_DIR + '/' + 'playcounts_df.parquet'
 # Absolute path to similar artist relation.
 SIMILAR_ARTIST_DATAFRAME_PATH = SIMILAR_ARTIST_DIR + '/' + 'artist_credit_artist_credit_relations.parquet'
 # Absolute path to candidate sets.
-TOP_ARTIST_CANDIDATE_SET = config.HDFS_CLUSTER_URI + CANDIDATE_SET_DIR + '/' + 'top_artist.parquet'
-SIMILAR_ARTIST_CANDIDATE_SET = config.HDFS_CLUSTER_URI + CANDIDATE_SET_DIR + '/' + 'similar_artist.parquet'
+TOP_ARTIST_CANDIDATE_SET = CANDIDATE_SET_DIR + '/' + 'top_artist.parquet'
+SIMILAR_ARTIST_CANDIDATE_SET = CANDIDATE_SET_DIR + '/' + 'similar_artist.parquet'
 # Absolute path to model metadata.
-MODEL_METADATA = config.HDFS_CLUSTER_URI + MODEL_DIR + '/' + 'model_metadata.parquet'
+MODEL_METADATA = MODEL_DIR + '/' + 'model_metadata.parquet'
 # Absolute path to save model index
-INDEX = config.HDFS_CLUSTER_URI + MODEL_DIR + '/' + 'index.parquet'
+INDEX = MODEL_DIR + '/' + 'index.parquet'
 # Absolute path to recording mbid->msid and artist mbid-msid mapping.
 RECORDING_ARTIST_MBID_MSID_MAPPING = os.path.join('/', 'mapping', 'recording_artist_msid_mbid_mapping.parquet')
 # Absolute path to mapped listens.
-MAPPED_LISTENS = config.HDFS_CLUSTER_URI + DATAFRAME_DIR + '/' + 'mapped_listens_df.parquet'
+MAPPED_LISTENS = DATAFRAME_DIR + '/' + 'mapped_listens_df.parquet'

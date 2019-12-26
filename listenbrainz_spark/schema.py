@@ -52,12 +52,21 @@ model_metadata_schema = [
     StructField('validation_rmse', FloatType(), nullable=True), # Root mean squared error for validation data.
 ]
 
+mapping_schema = [
+    StructField('msb_recording_msid', StringType(), nullable=False),
+    StructField('msb_artist_msid', StringType(), nullable=False),
+    StructField('mb_recording_gid', StringType(), nullable=False),
+    StructField('mb_artist_gids', ArrayType(StringType()), nullable=False),
+    StructField('mb_artist_credit_id', IntegerType(), nullable=False),
+]
+
 # The field names of the schema need to be sorted, otherwise we get weird
 # errors due to type mismatches when creating DataFrames using the schema
 # Although, we try to keep it sorted in the actual definition itself, we
 # also sort it programmatically just in case
 listen_schema = StructType(sorted(listen_schema, key=lambda field: field.name))
 model_metadata_schema = StructType(sorted(model_metadata_schema, key=lambda field: field.name))
+mapping_schema = StructType(sorted(mapping_schema, key=lambda field: field.name))
 
 def convert_listen_to_row(listen):
     """ Convert a listen to a pyspark.sql.Row object.
@@ -119,18 +128,35 @@ def convert_model_metadata_to_row(meta):
     )
 
 def convert_to_spark_json(listen):
-    meta = listen['track_metadata']
-    return {
-        'listened_at': str(datetime.fromtimestamp(listen['listened_at'])),
-        'user_name': listen['user_name'],
-        'artist_msid': meta['additional_info']['artist_msid'],
-        'artist_name': meta['artist_name'],
-        'artist_mbids': meta['additional_info'].get('artist_mbids', []),
-        'release_msid': meta['additional_info'].get('release_msid', ''),
-        'release_name': meta.get('release_name', ''),
-        'release_mbid': meta['additional_info'].get('release_mbid', ''),
-        'track_name': meta['track_name'],
-        'recording_msid': listen['recording_msid'],
-        'recording_mbid': meta['additional_info'].get('recording_mbid', ''),
-        'tags': meta['additional_info'].get('tags', []),
-    }
+    meta = listen
+    return Row(
+        listened_at=meta['listened_at'],
+        user_name=meta['user_name'],
+        artist_msid=meta['artist_msid'],
+        artist_name=meta['artist_name'],
+        artist_mbids=meta.get('artist_mbids', []),
+        release_msid=meta.get('release_msid', ''),
+        release_name=meta.get('release_name', ''),
+        release_mbid=meta.get('release_mbid', ''),
+        track_name=meta['track_name'],
+        recording_msid=meta['recording_msid'],
+        recording_mbid=meta.get('recording_mbid', ''),
+        tags=meta.get('tags', []),
+    )
+
+def convert_mapping_to_row(mapping):
+    """ Convert model metadata to row object.
+
+        Args:
+            mapping (dict): A dictionary containing mapping metadata.
+
+        Returns:
+            pyspark.sql.Row object - A Spark SQL row.
+    """
+    return Row(
+        msb_recording_msid=mapping.get('msb_recording_msid'),
+        mb_recording_gid=mapping.get('mb_recording_gid'),
+        msb_artist_msid=mapping.get('msb_artist_msid'),
+        mb_artist_gids=mapping.get('mb_artist_gids'),
+        mb_artist_credit_id=mapping.get('mb_artist_credit_id')
+    )

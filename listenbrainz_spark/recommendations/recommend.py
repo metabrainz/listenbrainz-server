@@ -61,6 +61,7 @@ def get_recommended_recordings(candidate_set, limit, recordings_df, model, mappe
 
     df = recordings_df.select('mb_artist_credit_id', 'mb_recording_gid') \
         .where(recordings_df.recording_id.isin(recommended_recording_ids))
+
     # get the track_name and artist_name to make the HTML redable. This step will not be required when sending recommendations
     # to lemmy since gids are enough to recognize the track.
     recommendations_df = df.join(mapped_listens, ['mb_artist_credit_id', 'mb_recording_gid']) \

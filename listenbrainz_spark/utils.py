@@ -34,7 +34,7 @@ def append(df, dest_path):
             dest_path (string): Path where the existing dataframe is found or where a new dataframe should be created.
     """
     try:
-        df.write.mode('append').parquet(dest_path)
+        df.write.mode('append').parquet(config.HDFS_CLUSTER_URI + dest_path)
     except Py4JJavaError as err:
         raise DataFrameNotAppendedException(err.java_exception, df.schema)
 
@@ -89,7 +89,7 @@ def create_dataframe(row, schema):
             df (dataframe): Newly created dataframe.
     """
     try:
-        df = listenbrainz_spark.session.createDataFrame([row], schema=schema)
+        df = listenbrainz_spark.session.createDataFrame(row, schema=schema)
         return df
     except Py4JJavaError as err:
         raise DataFrameNotCreatedException(err.java_exception, row)
@@ -121,7 +121,7 @@ def read_files_from_HDFS(path):
             path (str): An HDFS path.
     """
     try:
-        df = listenbrainz_spark.sql_context.read.parquet(path)
+        df = listenbrainz_spark.sql_context.read.parquet(config.HDFS_CLUSTER_URI + path)
         return df
     except AnalysisException as err:
         raise PathNotFoundException(str(err), path)
@@ -193,7 +193,7 @@ def save_parquet(df, path):
             path (str): Path in HDFS to save the dataframe.
     """
     try:
-        df.write.format('parquet').save(path, mode='overwrite')
+        df.write.format('parquet').save(config.HDFS_CLUSTER_URI + path, mode='overwrite')
     except Py4JJavaError as err:
         raise FileNotSavedException(err.java_exception, path)
 
@@ -218,13 +218,9 @@ def delete_dir(path, recursive=False):
               >> Raises HdfsError if trying to delete a non-empty directory.
                  For non-empty directory set recursive to 'True'.
     """
-    try:
-        deleted = hdfs_connection.client.delete(path, recursive=recursive)
-        if not deleted:
-            raise HDFSDirectoryNotDeletedException('', path)
-        return deleted
-    except HdfsError as err:
-        raise HDFSDirectoryNotDeletedException(str(err), path)
+    deleted = hdfs_connection.client.delete(path, recursive=recursive)
+    if not deleted:
+        raise HDFSDirectoryNotDeletedException('', path)
 
 def path_exists(path):
     """ Checks if the path exists in HDFS. The function returns False if the path
@@ -239,3 +235,19 @@ def path_exists(path):
     if path_found:
         return True
     return False
+
+def hdfs_walk(path, depth=0):
+    """ Depth-first walk of HDFS filesystem.
+
+        Args:
+            path (str): Path to start DFS.
+            depth (int): Maximum depth to explore files/folders. 0 for no limit.
+
+        Returns:
+            walk: a generator yeilding tuples (path, dirs, files).
+    """
+    try:
+        walk = hdfs_connection.client.walk(hdfs_path=path, depth=depth)
+        return walk
+    except HdfsError as err:
+        raise PathNotFoundException(str(err), path)
