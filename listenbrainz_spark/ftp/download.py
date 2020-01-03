@@ -1,3 +1,5 @@
+from time import time
+
 from listenbrainz_spark.ftp import ListenBrainzFTPDownloader
 from listenbrainz_spark.exceptions import DumpNotFoundException
 
@@ -53,7 +55,11 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
         self.connection.cwd(req_mapping_dump)
         mapping_file_name = self.get_mapping_file_name(req_mapping_dump)
+
+        t0 = time()
+        current_app.logger.info('Downloading {} from FTP...'.format(mapping_file_name))
         dest_path = self.download_dump(mapping_file_name, directory)
+        current_app.logger.info('Done. Total time: {:.2f}'.format(time() - t0))
         return dest_path
 
     def download_msid_mbid_mapping_with_text(self):
@@ -88,5 +94,9 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
         self.connection.cwd(req_listens_dump)
         listens_file_name = self.get_listens_file_name(req_listens_dump)
+
+        t0 = time()
+        current_app.logger.info('Downloading {} from FTP...'.format(listens_file_name))
         dest_path = self.download_dump(listens_file_name, directory)
+        current_app.logger.info('Done. Total time: {:.2f}'.format(time() - t0))
         return dest_path

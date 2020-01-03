@@ -61,9 +61,7 @@ class ListenBrainzFTPDownloader:
             Returns:
                 dest_path (str): Local path where dump has been downloaded.
         """
-        current_app.logger.info("Downloading {}...".format(filename))
         dest_path = os.path.join(directory, filename)
         self.download_file_binary(filename, dest_path)
-        current_app.logger.info('Done')
         self.connection.cwd('/')
         return dest_path
