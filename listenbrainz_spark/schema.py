@@ -53,11 +53,13 @@ model_metadata_schema = [
 ]
 
 mapping_schema = [
-    StructField('msb_recording_msid', StringType(), nullable=False),
-    StructField('msb_artist_msid', StringType(), nullable=False),
-    StructField('mb_recording_gid', StringType(), nullable=False),
-    StructField('mb_artist_gids', ArrayType(StringType()), nullable=False),
     StructField('mb_artist_credit_id', IntegerType(), nullable=False),
+    StructField('mb_artist_credit_mbids', ArrayType(StringType()), nullable=False),
+    StructField('mb_recording_mbid', StringType(), nullable=False),
+    StructField('mb_release_mbid', StringType(), nullable=False),
+    StructField('msb_artist_msid', StringType(), nullable=False),
+    StructField('msb_recording_msid', StringType(), nullable=False),
+    StructField('msb_release_msid', StringType(), nullable=False),
 ]
 
 # The field names of the schema need to be sorted, otherwise we get weird
@@ -154,9 +156,11 @@ def convert_mapping_to_row(mapping):
             pyspark.sql.Row object - A Spark SQL row.
     """
     return Row(
-        msb_recording_msid=mapping.get('msb_recording_msid'),
-        mb_recording_gid=mapping.get('mb_recording_gid'),
+        mb_artist_credit_id=mapping.get('mb_artist_credit_id'),
+        mb_artist_credit_mbids=mapping.get('mb_artist_credit_mbids'),
+        mb_recording_mbid=mapping.get('mb_recording_mbid'),
+        mb_release_mbid=mapping.get('mb_release_mbid'),
         msb_artist_msid=mapping.get('msb_artist_msid'),
-        mb_artist_gids=mapping.get('mb_artist_gids'),
-        mb_artist_credit_id=mapping.get('mb_artist_credit_id')
+        msb_recording_msid=mapping.get('msb_recording_msid'),
+        msb_release_msid=mapping.get('msb_release_msid'),
     )

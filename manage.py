@@ -74,6 +74,30 @@ def init_dir(rm, recursive, create_dir):
                 type(err).__name__, str(err)))
             sys.exit(-1)
 
+@cli.command(name='upload_mapping')
+""" Invoke script to upload mapping to HDFS.
+"""
+def download_mapping():
+    from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
+    from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
+    with app.app_context():
+        downloader_obj = ListenbrainzDataDownloader()
+        src = downloader_obj.download_msid_mbid_mapping(path.FTP_FILES_PATH)
+        uploader_obj = ListenbrainzDataUploader()
+        uploader_obj.upload_mapping(src)
+
+@cli.command(name='upload_listens')
+""" Invoke script to upload listens to HDFS.
+"""
+def download_mapping():
+    from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
+    from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
+    with app.app_context():
+        downloader_obj = ListenbrainzDataDownloader()
+        src = downloader_obj.download_listens(path.FTP_FILES_PATH)
+        uploader_obj = ListenbrainzDataUploader()
+        uploader_obj.upload_listens(src)
+
 @cli.command(name='dataframe')
 def dataframes():
     """ Invoke script responsible for pre-processing data.
@@ -121,7 +145,6 @@ def request_consumer():
     from listenbrainz_spark.request_consumer.request_consumer import main
     with app.app_context():
         main('request-consumer-%s' % str(int(time.time())))
-
 
 @cli.resultcallback()
 def remove_zip(result, **kwargs):

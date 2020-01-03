@@ -38,3 +38,6 @@ INDEX = MODEL_DIR + '/' + 'index.parquet'
 RECORDING_ARTIST_MBID_MSID_MAPPING = os.path.join('/', 'mapping', 'recording_artist_msid_mbid_mapping.parquet')
 # Absolute path to mapped listens.
 MAPPED_LISTENS = DATAFRAME_DIR + '/' + 'mapped_listens_df.parquet'
+
+# Path to files downloaded from FTP.
+FTP_FILES_PATH = '/rec/listenbrainz_spark'
