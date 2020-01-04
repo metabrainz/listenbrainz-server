@@ -74,7 +74,7 @@ class ListenbrainzHDFSUploader:
                 tar.extract(member)
                 tmp_hdfs_path = os.path.join(tmp_dump_dir, member.name)
                 hdfs_connection.client.upload(hdfs_path=tmp_hdfs_path, local_path=member.name)
-                self.callback(member.name, dest_path, tmp_hdfs_path)
+                callback(member.name, dest_path, tmp_hdfs_path)
                 utils.delete_dir(tmp_hdfs_path, recursive=True)
                 os.remove(member.name)
                 file_count += 1

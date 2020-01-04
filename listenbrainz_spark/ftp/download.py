@@ -1,5 +1,7 @@
 from time import time
 
+
+from listenbrainz_spark import config
 from listenbrainz_spark.ftp import ListenBrainzFTPDownloader
 from listenbrainz_spark.exceptions import DumpNotFoundException
 
@@ -19,15 +21,12 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         return mapping_dump_name + '.tar.bz2'
 
     def get_listens_file_name(self, listens_dump_name):
-        """ Get the name of Spark listens dump name archive from the dump directory name.
-
-            Args:
-                listens_dump_name (str): FTP dump directory name.
+        """ Get the name of Spark listens dump name archive.
 
             Returns:
                 '' : Spark listens dump archive name.
         """
-        return listens_dump_name + '-spark-full.tar.xz'
+        return config.TEMP_LISTENS_DUMP
 
     def download_msid_mbid_mapping(self, directory, mapping_dump_id=None):
         """ Download msid_mbid_mapping to dir passed as an argument.
@@ -59,7 +58,7 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         t0 = time()
         current_app.logger.info('Downloading {} from FTP...'.format(mapping_file_name))
         dest_path = self.download_dump(mapping_file_name, directory)
-        current_app.logger.info('Done. Total time: {:.2f}'.format(time() - t0))
+        current_app.logger.info('Done. Total time: {:.2f} sec'.format(time() - t0))
         return dest_path
 
     def download_msid_mbid_mapping_with_text(self):
@@ -81,7 +80,7 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         """
         self.connection.cwd('/pub/musicbrainz/listenbrainz/fullexport/')
         listens_dump = self.list_dir()
-        if dump_id:
+        if listens_dump_id:
             for listens_dump_name in listens_dump:
                 if int(listens_dump_name.split('-')[2] == listens_dump_id):
                     req_listens_dump = listens_dump_name
@@ -90,13 +89,13 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
                     err_msg = "Could not find listen dump with ID: {}. Aborting...".format(listens_dump_id)
                     raise DumpNotFoundException(err_msg)
         else:
-            req_listens_dump = config.TEMP_LISTENS_DUMP + '-' + 'full/'
+            req_listens_dump = config.TEMP_LISTENS_DIR
 
         self.connection.cwd(req_listens_dump)
-        listens_file_name = self.get_listens_file_name(req_listens_dump)
+        listens_file_name = self.get_listens_file_name()
 
         t0 = time()
         current_app.logger.info('Downloading {} from FTP...'.format(listens_file_name))
         dest_path = self.download_dump(listens_file_name, directory)
-        current_app.logger.info('Done. Total time: {:.2f}'.format(time() - t0))
+        current_app.logger.info('Done. Total time: {:.2f} sec'.format(time() - t0))
         return dest_path

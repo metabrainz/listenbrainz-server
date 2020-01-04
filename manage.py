@@ -75,9 +75,9 @@ def init_dir(rm, recursive, create_dir):
             sys.exit(-1)
 
 @cli.command(name='upload_mapping')
-""" Invoke script to upload mapping to HDFS.
-"""
 def download_mapping():
+    """ Invoke script to upload mapping to HDFS.
+    """
     from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
     from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
     with app.app_context():
@@ -87,9 +87,9 @@ def download_mapping():
         uploader_obj.upload_mapping(src)
 
 @cli.command(name='upload_listens')
-""" Invoke script to upload listens to HDFS.
-"""
 def download_mapping():
+    """ Invoke script to upload listens to HDFS.
+    """
     from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
     from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
     with app.app_context():
