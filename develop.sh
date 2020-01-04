@@ -24,7 +24,7 @@ function open_psql_shell {
 }
 
 function npm_install {
-	invoke_docker_compose run --rm --user `id -u`:`id -g` -e \
+	invoke_docker_compose run --rm -e \
 				HOME=/tmp static_builder npm install
 }
 # Arguments following "manage" are as it is passed to function "invoke_manage" and executed.
