@@ -1,6 +1,7 @@
 from datetime import datetime
 from pyspark.sql import Row
-from pyspark.sql.types import StructField, StructType, ArrayType, StringType, TimestampType, FloatType, IntegerType, BooleanType
+from pyspark.sql.types import StructField, StructType, ArrayType, StringType, TimestampType, FloatType, \
+    IntegerType, BooleanType
 
 
 # NOTE: please keep this schema definition alphabetized
@@ -52,7 +53,7 @@ model_metadata_schema = [
     StructField('validation_rmse', FloatType(), nullable=True), # Root mean squared error for validation data.
 ]
 
-mapping_schema = [
+msid_mbid_mapping_schema = [
     StructField('mb_artist_credit_id', IntegerType(), nullable=False),
     StructField('mb_artist_credit_mbids', ArrayType(StringType()), nullable=False),
     StructField('mb_recording_mbid', StringType(), nullable=False),
@@ -62,13 +63,22 @@ mapping_schema = [
     StructField('msb_release_msid', StringType(), nullable=False),
 ]
 
+artist_relation_schema =[
+    StructField('id_0', IntegerType(), nullable=False), # artist credit
+    StructField('name_1', StringType(), nullable=False), # artist name
+    StructField('name_0', StringType(), nullable=False),
+    StructField('id_1', IntegerType(), nullable=False),
+    StructField('score', FloatType(), nullable=False),
+]
+
 # The field names of the schema need to be sorted, otherwise we get weird
 # errors due to type mismatches when creating DataFrames using the schema
 # Although, we try to keep it sorted in the actual definition itself, we
 # also sort it programmatically just in case
 listen_schema = StructType(sorted(listen_schema, key=lambda field: field.name))
 model_metadata_schema = StructType(sorted(model_metadata_schema, key=lambda field: field.name))
-mapping_schema = StructType(sorted(mapping_schema, key=lambda field: field.name))
+msid_mbid_mapping_schema = StructType(sorted(msid_mbid_mapping_schema, key=lambda field: field.name))
+artist_relation_schema = StructType(sorted(artist_relation_schema, key=lambda field: field.name))
 
 def convert_listen_to_row(listen):
     """ Convert a listen to a pyspark.sql.Row object.

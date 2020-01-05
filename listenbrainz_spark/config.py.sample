@@ -52,5 +52,5 @@ LOG_SENTRY = {
 MODEL_ID_PREFIX = 'listenbrainz-recommendation-model'
 
 FTP_SERVER_URI = 'ftp.musicbrainz.org'
-TEMP_LISTENS_DIR = 'listenbrainz-dump-61-20190708-000001-full/'
-TEMP_LISTENS_DUMP = 'listenbrainz-listens-dump-61-20190708-000001-spark-full.tar.xz'
+TEMP_LISTENS_DIR = 'listenbrainz-dump-88-20190930-000002-full/'
+TEMP_LISTENS_DUMP = 'listenbrainz-listens-dump-88-20190930-000002-spark-full.tar.xz'

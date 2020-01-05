@@ -10,22 +10,23 @@ from flask import current_app
 
 class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
 
-    def process_json_mapping(self, _, dest_path, tmp_hdfs_path):
-        """ Read mapping JSON from HDFS as a dataframe and upload to
+    def process_json(self, _, dest_path, tmp_hdfs_path, schema):
+        """ Read JSON from HDFS as a dataframe and upload to
             HDFS as a parquet.
 
             Args:
-                dest_path (str): HDFS path to upload mappping as parquet.
-                tmp_hdfs_path (str): HDFS path where mapping JSON has been uploaded.
+                dest_path (str): HDFS path to upload JSON as parquet.
+                tmp_hdfs_path (str): HDFS path where JSON has been uploaded.
         """
-        df = utils.read_json(tmp_hdfs_path, schema=schema.mapping_schema)
-        utils.save_parquet(df, dest_path)
-        df = utils.read_files_from_HDFS(dest_path)
-        df.show()
-        print(df.count())
-        df.printSchema()
+        start_time = time.time()
+        df = utils.read_json(tmp_hdfs_path, schema=schema)
+        current_app.logger.info("Processing {} rows...".format(df.count()))
 
-    def process_json_listens(self, filename, data_dir, tmp_hdfs_path):
+        current_app.logger.info("Uploading to {}...".format(dest_path))
+        utils.save_parquet(df, dest_path)
+        current_app.logger.info("File processed in {:.2f} seconds!".format(time.time() - start_time))
+
+    def process_json_listens(self, filename, data_dir, tmp_hdfs_path, schema):
         """ Process a file containing listens from the ListenBrainz dump and add listens to
             appropriate dataframes.
 
@@ -35,7 +36,7 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
                 tmp_HDFS_path (str): HDFS path where listens JSON has been uploaded.
         """
         start_time = time.time()
-        df = utils.read_json(tmp_hdfs_path, schema=schema.listen_schema).cache()
+        df = utils.read_json(tmp_hdfs_path, schema=schema).cache()
         current_app.logger.info("Processing {} listens...".format(df.count()))
 
         if filename.split('/')[-1] == 'invalid.json':
@@ -49,26 +50,36 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         utils.save_parquet(df, dest_path)
         current_app.logger.info("File processed in {:.2f} seconds!".format(time.time() - start_time))
 
-        df = utils.read_files_from_HDFS(dest_path)
-        df.show()
-        print(df.count())
-        df.printSchema()
-
-    def upload_mapping(self, archive):
+    def upload_mapping(self, archive, Force=False):
         """ Decompress archive and upload mapping to HDFS.
 
             Args:
                 archive: Mapping tar file to upload.
+                force: If True deletes dir at path where mappings are to be uploaded.
         """
         with tarfile.open(name=archive, mode='r:bz2') as tar:
-            self.upload_archive(tar, path.RECORDING_ARTIST_MBID_MSID_MAPPING, self.process_json_mapping)
+            self.upload_archive(tar, path.MBID_MSID_MAPPING, schema.msid_mbid_mapping_schema, self.process_json,
+                force=force)
 
-    def upload_listens(self, archive):
+    def upload_listens(self, archive, force=False):
         """ Decompress archive and upload listens to HDFS.
 
             Args:
                 archive: listens tar file to upload.
+                force: If True deletes dir at path where listens are to be uploaded.
         """
         pxz = self.get_pxz_output(archive)
         with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
-            self.upload_archive(tar, path.LISTENBRAINZ_DATA_DIRECTORY, self.process_json_listens)
+            self.upload_archive(tar, path.LISTENBRAINZ_DATA_DIRECTORY, schema.listen_schema,
+                self.process_json_listens, force=force)
+
+    def upload_artist_relation(self, archive, force=False):
+        """ Decompress archive and upload artist relation to HDFS.
+
+            Args:
+                archive: artist relation tar file to upload.
+                force: If True deletes dir at path where artist relations are to be uploaded.
+        """
+        with tarfile.open(name=archive, mode='r:bz2') as tar:
+            self.upload_archive(tar, path.SIMILAR_ARTIST_DATAFRAME_PATH, schema.artist_relation_schema,
+                self.process_json_artist_relation, force=force)

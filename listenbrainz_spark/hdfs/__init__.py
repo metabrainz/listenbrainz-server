@@ -46,12 +46,13 @@ class ListenbrainzHDFSUploader:
         pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
         return pxz
 
-    def upload_archive(self, tar, dest_path, callback=None, force=False):
+    def upload_archive(self, tar, dest_path, schema, callback=None, force=False):
         """ Upload data dump to HDFS.
 
             Args:
                 tar: Uncompressed tar object.
                 dest_path (str): HDFS path to upload data dump.
+                schema: Schema of parquet to be uploaded.
                 callback: Function to process JSON files.
                 force: If True deletes dir at dest_path
         """
@@ -74,12 +75,13 @@ class ListenbrainzHDFSUploader:
                 tar.extract(member)
                 tmp_hdfs_path = os.path.join(tmp_dump_dir, member.name)
                 hdfs_connection.client.upload(hdfs_path=tmp_hdfs_path, local_path=member.name)
-                callback(member.name, dest_path, tmp_hdfs_path)
+                callback(member.name, dest_path, tmp_hdfs_path, schema)
                 utils.delete_dir(tmp_hdfs_path, recursive=True)
                 os.remove(member.name)
                 file_count += 1
                 time_taken = time.time() - t
-                current_app.logger.info("Done! Processed {} files. Current file done in {:.2f} sec".format(file_count, time_taken))
+                current_app.logger.info("Done! Processed {} files. Current file done in {:.2f} sec".format(
+                    file_count, time_taken))
                 total_time += time_taken
                 average_time = total_time / file_count
                 print("Total time: {:.2f}, average time: {:.2f}".format(total_time, average_time))
