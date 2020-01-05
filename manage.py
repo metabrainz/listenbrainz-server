@@ -75,6 +75,7 @@ def init_dir(rm, recursive, create_dir):
             sys.exit(-1)
 
 @cli.command(name='upload_mapping')
+@click.option("--force", "-f", is_flag=True, help="Deletes exisitng mapping.")
 def upload_mapping():
     """ Invoke script to upload mapping to HDFS.
     """
@@ -84,9 +85,14 @@ def upload_mapping():
         downloader_obj = ListenbrainzDataDownloader()
         src = downloader_obj.download_msid_mbid_mapping(path.FTP_FILES_PATH)
         uploader_obj = ListenbrainzDataUploader()
-        uploader_obj.upload_mapping(src)
+
+        if force:
+            uploader_obj.upload_mapping(src, force=True)
+        else:
+            uploader_obj.upload_mapping(src, force=False)
 
 @cli.command(name='upload_listens')
+@click.option("--force", "-f", is_flag=True, help="Deletes exisitng listens.")
 def upload_listens():
     """ Invoke script to upload listens to HDFS.
     """
@@ -96,9 +102,14 @@ def upload_listens():
         downloader_obj = ListenbrainzDataDownloader()
         src = downloader_obj.download_listens(path.FTP_FILES_PATH)
         uploader_obj = ListenbrainzDataUploader()
-        uploader_obj.upload_listens(src)
+
+        if force:
+            uploader_obj.upload_listens(src, force=True)
+        else:
+            uploader_obj.upload_listens(src, force=False)
 
 @cli.command(name='upload_artist_relation')
+@click.option("--force", "-f", is_flag=True, help="Deletes exisitng artist relation.")
 def upload_artist_relation():
     """ Invoke script  to upload artist relation to HDFS.
     """
@@ -108,7 +119,11 @@ def upload_artist_relation():
         downloader_obj = ListenbrainzDataDownloader()
         src = downloader_obj.download_artist_relation(path.FTP_FILES_PATH)
         uploader_obj = ListenbrainzDataUploader()
-        uploader_obj.upload_artist_relation(src)
+
+        if force:
+            uploader_obj.upload_artist_relation(src, force=True)
+        else:
+            uploader_obj.upload_artist_relation(src, force=False)
 
 @cli.command(name='dataframe')
 def dataframes():
