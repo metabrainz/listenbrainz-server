@@ -50,7 +50,7 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         utils.save_parquet(df, dest_path)
         current_app.logger.info("File processed in {:.2f} seconds!".format(time.time() - start_time))
 
-    def upload_mapping(self, archive, Force=False):
+    def upload_mapping(self, archive, force=False):
         """ Decompress archive and upload mapping to HDFS.
 
             Args:
@@ -82,4 +82,4 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         """
         with tarfile.open(name=archive, mode='r:bz2') as tar:
             self.upload_archive(tar, path.SIMILAR_ARTIST_DATAFRAME_PATH, schema.artist_relation_schema,
-                self.process_json_artist_relation, force=force)
+                self.process_json, force=force)

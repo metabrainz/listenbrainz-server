@@ -76,7 +76,7 @@ def init_dir(rm, recursive, create_dir):
 
 @cli.command(name='upload_mapping')
 @click.option("--force", "-f", is_flag=True, help="Deletes exisitng mapping.")
-def upload_mapping():
+def upload_mapping(force):
     """ Invoke script to upload mapping to HDFS.
     """
     from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
@@ -93,7 +93,7 @@ def upload_mapping():
 
 @cli.command(name='upload_listens')
 @click.option("--force", "-f", is_flag=True, help="Deletes exisitng listens.")
-def upload_listens():
+def upload_listens(force):
     """ Invoke script to upload listens to HDFS.
     """
     from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
@@ -110,11 +110,11 @@ def upload_listens():
 
 @cli.command(name='upload_artist_relation')
 @click.option("--force", "-f", is_flag=True, help="Deletes exisitng artist relation.")
-def upload_artist_relation():
+def upload_artist_relation(force):
     """ Invoke script  to upload artist relation to HDFS.
     """
-    from listenbrainz_spark.ftp.download import ListenbrainzDataUploader
-    from listenbrainz_spark.ftp.upload import ListenbrainzDataUploader
+    from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
+    from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
     with app.app_context():
         downloader_obj = ListenbrainzDataDownloader()
         src = downloader_obj.download_artist_relation(path.FTP_FILES_PATH)
