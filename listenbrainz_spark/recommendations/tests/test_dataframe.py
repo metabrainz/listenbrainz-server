@@ -31,7 +31,7 @@ class CreateDataframeTestCase(SparkTestCase):
 
     @classmethod
     def upload_test_listen_to_HDFS(cls):
-        month, year = cls.date.strftime('%m'), cls.date.strftime('%Y')
+        month, year = cls.date.strftime('%m').lstrip('0'), cls.date.strftime('%Y')
 
         test_listen = {
             "user_name": "vansika", "artist_msid": "a36d6fc9-49d0-4789-a7dd-a2b72369ca45",
@@ -44,11 +44,12 @@ class CreateDataframeTestCase(SparkTestCase):
 
     @classmethod
     def upload_test_mapping_to_HDFS(cls):
-        test_mapping = {"msb_recording_msid":"cb6985cd-cc71-4d59-b4fb-2e72796af741"
-            ,"mb_recording_gid":"3acb406f-c716-45f8-a8bd-96ca3939c2e5","msb_artist_msid":"a36d6fc9-49d0-4789-a7dd-a2b72369ca45",
-            "mb_artist_gids":["181c4177-f33a-441d-b15d-910acaf18b07"],"mb_artist_credit_id":2157963}
+        test_mapping = {"msb_recording_msid":"cb6985cd-cc71-4d59-b4fb-2e72796af741",
+            "mb_recording_mbid":"3acb406f-c716-45f8-a8bd-96ca3939c2e5","msb_artist_msid":"a36d6fc9-49d0-4789-a7dd-a2b72369ca45",
+            "mb_artist_credit_mbids":["181c4177-f33a-441d-b15d-910acaf18b07"],"mb_artist_credit_id":2157963,
+            "mb_release_mbid": "xxxxx", "msb_release_msid": "xxxxx"}
 
-        test_mapping_df = utils.create_dataframe([schema.convert_mapping_to_row(test_mapping)], schema.mapping_schema)
+        test_mapping_df = utils.create_dataframe([schema.convert_mapping_to_row(test_mapping)], schema.msid_mbid_mapping_schema)
         utils.save_parquet(test_mapping_df, MAPPING_PATH)
 
     @classmethod
@@ -88,8 +89,8 @@ class CreateDataframeTestCase(SparkTestCase):
         mapped_df = create_dataframes.get_mapped_artist_and_recording_mbids(partial_listen_df, mapping_df)
         self.assertEqual(mapped_df.count(), 1)
         complete_listen_col = ['artist_msid', 'artist_name', 'listened_at', 'recording_msid', 'release_mbid', 'release_msid',
-            'release_name', 'tags', 'track_name', 'user_name', 'mb_artist_credit_id', 'mb_artist_gids', 'mb_recording_gid',
-             'msb_artist_msid', 'msb_recording_msid']
+            'release_name', 'tags', 'track_name', 'user_name', 'mb_artist_credit_id', 'mb_artist_credit_mbids', 'mb_recording_mbid',
+            'mb_release_mbid', 'msb_artist_msid', 'msb_recording_msid', 'msb_release_msid']
         self.assertListEqual(complete_listen_col, mapped_df.columns)
         status = utils.path_exists(path.MAPPED_LISTENS)
         self.assertTrue(status)
@@ -110,7 +111,7 @@ class CreateDataframeTestCase(SparkTestCase):
         mapped_df = utils.read_files_from_HDFS(MAPPED_LISTENS_PATH)
         recordings_df = create_dataframes.get_recordings_df(mapped_df, metadata)
         self.assertEqual(recordings_df.count(), 1)
-        self.assertListEqual(['mb_recording_gid', 'mb_artist_credit_id', 'recording_id'], recordings_df.columns)
+        self.assertListEqual(['mb_recording_mbid', 'mb_artist_credit_id', 'recording_id'], recordings_df.columns)
         self.assertEqual(metadata['recordings_count'], 1)
 
         status = utils.path_exists(path.RECORDINGS_DATAFRAME_PATH)
@@ -121,7 +122,7 @@ class CreateDataframeTestCase(SparkTestCase):
         mapped_df = utils.read_files_from_HDFS(MAPPED_LISTENS_PATH)
         listens_df = create_dataframes.get_listens_df(mapped_df, metadata)
         self.assertEqual(listens_df.count(), 1)
-        self.assertListEqual(['mb_recording_gid', 'user_name'], listens_df.columns)
+        self.assertListEqual(['mb_recording_mbid', 'user_name'], listens_df.columns)
         self.assertEqual(metadata['listens_count'], 1)
 
     def test_get_playcounts_df(self):
