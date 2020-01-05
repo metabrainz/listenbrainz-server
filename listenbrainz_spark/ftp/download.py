@@ -1,6 +1,5 @@
 from time import time
 
-
 from listenbrainz_spark import config
 from listenbrainz_spark.ftp import ListenBrainzFTPDownloader
 from listenbrainz_spark.exceptions import DumpNotFoundException
@@ -20,7 +19,7 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         """
         return mapping_dump_name + '.tar.bz2'
 
-    def get_listens_file_name(self, listens_dump_name):
+    def get_listens_file_name(self):
         """ Get the name of Spark listens dump name archive.
 
             Returns:

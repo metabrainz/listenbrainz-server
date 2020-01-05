@@ -1,4 +1,5 @@
 import os
+import time
 import tarfile
 
 import listenbrainz_spark
@@ -35,7 +36,7 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         """
         start_time = time.time()
         df = utils.read_json(tmp_hdfs_path, schema=schema.listen_schema).cache()
-        current_app.logger.info("Processing {} listens...".format(file_df.count()))
+        current_app.logger.info("Processing {} listens...".format(df.count()))
 
         if filename.split('/')[-1] == 'invalid.json':
             dest_path = os.path.join(data_dir, 'invalid.parquet')
@@ -45,7 +46,7 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
             dest_path = os.path.join(data_dir, year, '{}.parquet'.format(str(month)))
 
         current_app.logger.info("Uploading to {}...".format(dest_path))
-        utils.save_parquet(file_df, dest_path)
+        utils.save_parquet(df, dest_path)
         current_app.logger.info("File processed in {:.2f} seconds!".format(time.time() - start_time))
 
         df = utils.read_files_from_HDFS(dest_path)
