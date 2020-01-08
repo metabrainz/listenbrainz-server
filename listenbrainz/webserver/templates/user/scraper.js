@@ -500,12 +500,17 @@ function getTotalNumberOfScrobbles() {
     xhr.timeout = 10 * 1000; // 10 seconds
     xhr.open('GET', encodeURI(url));
     xhr.onload = function () {
-        var data = JSON.parse(this.response)['user'];
-        if ('playcount' in data) {
-            playCount = parseInt(data['playcount']);
+        if (/^2/.test(this.status)) {
+            var data = JSON.parse(this.response)['user'];
+            if ('playcount' in data) {
+                playCount = parseInt(data['playcount']);
+            }
+            else {
+                playCount = -1;
+            }
         }
         else {
-            playCount = -1;
+            updateMessage("An error occurred, please try again. :(");
         }
     };
     xhr.ontimeout = function () {
