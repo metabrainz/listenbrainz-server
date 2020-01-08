@@ -75,7 +75,7 @@ def init_dir(rm, recursive, create_dir):
             sys.exit(-1)
 
 @cli.command(name='upload_mapping')
-@click.option("--force", "-f", is_flag=True, help="Deletes exisitng mapping.")
+@click.option("--force", "-f", is_flag=True, help="Deletes existing mapping.")
 def upload_mapping(force):
     """ Invoke script to upload mapping to HDFS.
     """
@@ -85,14 +85,10 @@ def upload_mapping(force):
         downloader_obj = ListenbrainzDataDownloader()
         src = downloader_obj.download_msid_mbid_mapping(path.FTP_FILES_PATH)
         uploader_obj = ListenbrainzDataUploader()
-
-        if force:
-            uploader_obj.upload_mapping(src, force=True)
-        else:
-            uploader_obj.upload_mapping(src, force=False)
+        uploader_obj.upload_mapping(src, force=force)
 
 @cli.command(name='upload_listens')
-@click.option("--force", "-f", is_flag=True, help="Deletes exisitng listens.")
+@click.option("--force", "-f", is_flag=True, help="Deletes existing listens.")
 def upload_listens(force):
     """ Invoke script to upload listens to HDFS.
     """
@@ -102,14 +98,10 @@ def upload_listens(force):
         downloader_obj = ListenbrainzDataDownloader()
         src = downloader_obj.download_listens(path.FTP_FILES_PATH)
         uploader_obj = ListenbrainzDataUploader()
-
-        if force:
-            uploader_obj.upload_listens(src, force=True)
-        else:
-            uploader_obj.upload_listens(src, force=False)
+        uploader_obj.upload_listens(src, force=force)
 
 @cli.command(name='upload_artist_relation')
-@click.option("--force", "-f", is_flag=True, help="Deletes exisitng artist relation.")
+@click.option("--force", "-f", is_flag=True, help="Deletes existing artist relation.")
 def upload_artist_relation(force):
     """ Invoke script  to upload artist relation to HDFS.
     """
@@ -119,11 +111,7 @@ def upload_artist_relation(force):
         downloader_obj = ListenbrainzDataDownloader()
         src = downloader_obj.download_artist_relation(path.FTP_FILES_PATH)
         uploader_obj = ListenbrainzDataUploader()
-
-        if force:
-            uploader_obj.upload_artist_relation(src, force=True)
-        else:
-            uploader_obj.upload_artist_relation(src, force=False)
+        uploader_obj.upload_artist_relation(src, force=force)
 
 @cli.command(name='dataframe')
 def dataframes():

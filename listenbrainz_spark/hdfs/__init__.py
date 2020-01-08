@@ -57,8 +57,7 @@ class ListenbrainzHDFSUploader:
                 force: If True deletes dir at dest_path
         """
         if callback is None:
-            current_app.logger.critical('Callback to process JSON missing. Aboritng...')
-            sys.exit(-1)
+            raise NotImplementedError('Callback to process JSON missing. Aboritng...')
 
         tmp_dump_dir = tempfile.mkdtemp()
         if force:
@@ -84,6 +83,6 @@ class ListenbrainzHDFSUploader:
                     file_count, time_taken))
                 total_time += time_taken
                 average_time = total_time / file_count
-                print("Total time: {:.2f}, average time: {:.2f}".format(total_time, average_time))
+                current_app.logger.info("Total time: {:.2f}, average time: {:.2f}".format(total_time, average_time))
         utils.delete_dir(tmp_dump_dir, recursive=True)
         shutil.rmtree(tmp_dump_dir)
