@@ -251,3 +251,16 @@ def hdfs_walk(path, depth=0):
         return walk
     except HdfsError as err:
         raise PathNotFoundException(str(err), path)
+
+def read_json(hdfs_path, schema):
+    """ Upload JSON file to HDFS as parquet.
+
+        Args:
+            hdfs_path (str): HDFS path to upload JSON.
+            schema: Blueprint of parquet.
+
+        Returns:
+            df (parquet): Dataframe.
+    """
+    df = listenbrainz_spark.session.read.json(config.HDFS_CLUSTER_URI + hdfs_path, schema=schema)
+    return df

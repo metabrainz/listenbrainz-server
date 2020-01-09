@@ -44,7 +44,7 @@ def get_recommended_recordings(candidate_set, limit, recordings_df, model, mappe
             limit (int): Number of recommendations to be generated.
             recordings_df (dataframe): Columns can be depicted as:
                 [
-                    'mb_recording_gid', 'mb_artist_credit_id', 'recording_id'
+                    'mb_recording_mbid', 'mb_artist_credit_id', 'recording_id'
                 ]
             model (parquet): Best model after training.
             mapped_listens (dataframe): Dataframe with all the columns/fields that a typical listen has.
@@ -59,17 +59,17 @@ def get_recommended_recordings(candidate_set, limit, recordings_df, model, mappe
     recommendations = model.predictAll(candidate_set).takeOrdered(limit, lambda product: -product.rating)
     recommended_recording_ids = [(recommendations[i].product) for i in range(len(recommendations))]
 
-    df = recordings_df.select('mb_artist_credit_id', 'mb_recording_gid') \
+    df = recordings_df.select('mb_artist_credit_id', 'mb_recording_mbid') \
         .where(recordings_df.recording_id.isin(recommended_recording_ids))
 
     # get the track_name and artist_name to make the HTML redable. This step will not be required when sending recommendations
     # to lemmy since gids are enough to recognize the track.
-    recommendations_df = df.join(mapped_listens, ['mb_artist_credit_id', 'mb_recording_gid']) \
-        .select('mb_artist_credit_id', 'artist_name', 'mb_recording_gid', 'track_name').distinct()
+    recommendations_df = df.join(mapped_listens, ['mb_artist_credit_id', 'mb_recording_mbid']) \
+        .select('mb_artist_credit_id', 'artist_name', 'mb_recording_mbid', 'track_name').distinct()
 
     recommended_recordings = []
     for row in recommendations_df.collect():
-        rec = (row.track_name, row.artist_name, row.mb_recording_gid, row.mb_artist_credit_id)
+        rec = (row.track_name, row.artist_name, row.mb_recording_mbid, row.mb_artist_credit_id)
         recommended_recordings.append(rec)
     return recommended_recordings
 

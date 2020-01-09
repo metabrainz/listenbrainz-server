@@ -128,7 +128,8 @@ def get_mapped_artist_and_recording_mbids(partial_listens_df, recording_artist_m
                 ]
             recording_artist_mapping_df (dataframe): Columns can be depicted as:
                 [
-                    'mb_artist_gids', 'msb_artist_msid', 'mb_recording_mbid', 'msb_recording_msid'
+                    'mb_artist_credit_mbids', 'msb_artist_msid', 'mb_recording_mbid', 'msb_recording_msid'
+                    'mb_artist_credit_id', 'mb_release_mbid', ''msb_release_msid''
                 ]
 
         Returns:
@@ -165,7 +166,7 @@ def get_playcounts_df(listens_df, recordings_df, users_df, metadata):
     # The final step uses groupBy which create groups on user_id and recording_id and count the number of recording_ids.
     # The final dataframe tells us about the number of times a user has listend to a particular track for all users.
     playcounts_df = listens_df.join(users_df, 'user_name', 'inner') \
-        .join(recordings_df, 'mb_recording_gid', 'inner') \
+        .join(recordings_df, 'mb_recording_mbid', 'inner') \
         .groupBy('user_id', 'recording_id').agg(func.count('recording_id').alias('count'))
 
     metadata['playcounts_count'] = playcounts_df.count()
@@ -181,10 +182,10 @@ def get_listens_df(complete_listens_df, metadata):
         Returns:
             listens_df (dataframe): Columns can be depicted as:
                     [
-                        'mb_recording_gid', 'user_name'
+                        'mb_recording_mbid', 'user_name'
                     ]
     """
-    listens_df = complete_listens_df.select('mb_recording_gid', 'user_name')
+    listens_df = complete_listens_df.select('mb_recording_mbid', 'user_name')
     metadata['listens_count'] = listens_df.count()
     return listens_df
 
@@ -197,11 +198,11 @@ def get_recordings_df(complete_listens_df, metadata):
         Returns:
             recordings_df (dataframe): Columns can be depicted as:
                 [
-                    'mb_recording_gid', 'mb_artist_credit_id', 'recording_id'
+                    'mb_recording_mbid', 'mb_artist_credit_id', 'recording_id'
                 ]
     """
-    recording_window = Window.orderBy('mb_recording_gid')
-    recordings_df = complete_listens_df.select('mb_recording_gid', 'mb_artist_credit_id').distinct() \
+    recording_window = Window.orderBy('mb_recording_mbid')
+    recordings_df = complete_listens_df.select('mb_recording_mbid', 'mb_artist_credit_id').distinct() \
         .withColumn('recording_id', rank().over(recording_window))
 
     metadata['recordings_count'] = recordings_df.count()
@@ -246,7 +247,7 @@ def main():
     partial_listens_df = get_listens_for_training_model_window(to_date, from_date, metadata, path.LISTENBRAINZ_DATA_DIRECTORY)
 
     # Dataframe containing recording msid->mbid and artist msid->mbid mapping.
-    recording_artist_mapping_df = utils.read_files_from_HDFS(path.RECORDING_ARTIST_MBID_MSID_MAPPING)
+    recording_artist_mapping_df = utils.read_files_from_HDFS(path.MBID_MSID_MAPPING)
 
     # Dataframe containing all fields that a listen should have including artist_mbids and recording_msid.
     complete_listens_df = get_mapped_artist_and_recording_mbids(partial_listens_df, recording_artist_mapping_df)
