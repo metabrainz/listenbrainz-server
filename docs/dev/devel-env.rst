@@ -286,3 +286,12 @@ Also, run the **integration tests** for ListenBrainz.
 When the tests complete, you will see if your changes are valid or not. These tests
 are a helpful way to validate new changes without a lot of work.
 
+FAQ's
+---------------------------------
+
+* What to do if getting an error while running './develop.sh build' command, 'ERROR: Couldn't connect to Docker daemon at http+docker://localhost - is it running?' ?
+
+-  You need to add the user to the docker group by entering the following command in the terminal :
+  `sudo usermod -aG docker $USER`. After this command, restart the computer and then again run the './develop.sh build'.
+
+
