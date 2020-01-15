@@ -54,4 +54,5 @@
 {% block scripts %}
   {{ super() }}
   <script src="{{ get_static_path('import.js') }}" type="text/javascript"></script>
+  <script id="react-props" type="application/json">{{ props|safe }}</script>
 {% endblock %}

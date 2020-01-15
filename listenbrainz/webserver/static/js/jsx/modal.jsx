@@ -30,7 +30,7 @@ export default class Modal extends React.Component {
         };
         return (
             <div style={divStyle} id="listen-progress-container">
-                <button onClick={this.props.onClose} style={buttonStyle} disabled={false}>
+                <button onClick={this.props.onClose} style={buttonStyle} disabled={this.props.disable}>
                     <FontAwesomeIcon icon={faTimes} />
                 </button>
                 <div>
