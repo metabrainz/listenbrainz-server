@@ -2,7 +2,6 @@ import os
 import sys
 import time
 import shutil
-import tempfile
 import subprocess
 
 import listenbrainz_spark
@@ -46,10 +45,11 @@ class ListenbrainzHDFSUploader:
         pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
         return pxz
 
-    def upload_archive(self, tar, dest_path, schema, callback=None, force=False):
+    def upload_archive(self, tmp_dump_dir, tar, dest_path, schema, callback=None, force=False):
         """ Upload data dump to HDFS.
 
             Args:
+                tmp_dump_dir (str): Path to temporary directory to upload JSON.
                 tar: Uncompressed tar object.
                 dest_path (str): HDFS path to upload data dump.
                 schema: Schema of parquet to be uploaded.
@@ -59,7 +59,6 @@ class ListenbrainzHDFSUploader:
         if callback is None:
             raise NotImplementedError('Callback to process JSON missing. Aboritng...')
 
-        tmp_dump_dir = tempfile.mkdtemp()
         if force:
             current_app.logger.info('Removing {} from HDFS...'.format(dest_path))
             utils.delete_dir(dest_path, recursive=True)
@@ -73,7 +72,7 @@ class ListenbrainzHDFSUploader:
                 t = time.time()
                 tar.extract(member)
                 tmp_hdfs_path = os.path.join(tmp_dump_dir, member.name)
-                hdfs_connection.client.upload(hdfs_path=tmp_hdfs_path, local_path=member.name)
+                utils.upload(tmp_hdfs_path, member.name)
                 callback(member.name, dest_path, tmp_hdfs_path, schema)
                 utils.delete_dir(tmp_hdfs_path, recursive=True)
                 os.remove(member.name)

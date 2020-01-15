@@ -50,6 +50,32 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         """
         return config.TEMP_LISTENS_DUMP
 
+    def get_spark_dump_path(self, directory, dump_id, ftp_dump_dir, dump_id_pos):
+        """ Download dump and get local (spark) path.
+
+            Args:
+                directory (str): Dir to save dump locally.
+                dump_id (int): Unique identifier of dump to be downloaded.
+                    If not provided, most recent dump will be downloaded.
+                ftp_dump_dir (str): FTP dir to find dump.
+                dump_id_pos (int): Unique identifier position in dump name.
+
+            Returns:
+                dest_path (str): Local path where dump has been downloaded.
+        """
+        self.connection.cwd(ftp_dump_dir)
+        dump = self.list_dir()
+        req_dump = self.get_req_dump(dump, dump_id, dump_id_pos)
+
+        self.connection.cwd(req_dump)
+        file_name = self.get_file_name(req_dump)
+
+        t0 = time()
+        current_app.logger.info('Downloading {} from FTP...'.format(file_name))
+        dest_path = self.download_dump(file_name, directory)
+        current_app.logger.info('Done. Total time: {:.2f} sec'.format(time() - t0))
+        return dest_path
+
     def download_msid_mbid_mapping(self, directory, mapping_dump_id=None):
         """ Download msid_mbid_mapping to dir passed as an argument.
 
@@ -61,17 +87,7 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
             Returns:
                 dest_path (str): Local path where mapping has been downloaded.
         """
-        self.connection.cwd('/pub/musicbrainz/listenbrainz/labs/mappings/msid-mbid-mapping/')
-        mappings_dump = self.list_dir()
-        req_mapping_dump = self.get_req_dump(mappings_dump, mapping_dump_id, 3)
-
-        self.connection.cwd(req_mapping_dump)
-        mapping_file_name = self.get_file_name(req_mapping_dump)
-
-        t0 = time()
-        current_app.logger.info('Downloading {} from FTP...'.format(mapping_file_name))
-        dest_path = self.download_dump(mapping_file_name, directory)
-        current_app.logger.info('Done. Total time: {:.2f} sec'.format(time() - t0))
+        dest_path = self.get_spark_dump_path(directory, mapping_dump_id, config.FTP_MSID_MBID_DIR, 3)
         return dest_path
 
     def download_msid_mbid_mapping_with_text(self):
@@ -91,7 +107,7 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
             Returns:
                 dest_path (str): Local path where listens have been downloaded.
         """
-        self.connection.cwd('/pub/musicbrainz/listenbrainz/fullexport/')
+        self.connection.cwd(config.FTP_LISTENS_DIR)
         listens_dump = self.list_dir()
         # Temporary listens dump name.
         req_listens_dump = config.TEMP_LISTENS_DIR
@@ -119,15 +135,5 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
             Returns:
                 dest_path (str): Local path where artist relation has been downloaded.
         """
-        self.connection.cwd('/pub/musicbrainz/listenbrainz/labs/artist-credit-artist-credit-relations/')
-        artist_relation_dump = self.list_dir()
-        req_artist_relation_dump = self.get_req_dump(artist_relation_dump, artist_relation_dump_id, 5)
-
-        self.connection.cwd(req_artist_relation_dump)
-        artist_relation_file_name = self.get_file_name(req_artist_relation_dump)
-
-        t0 = time()
-        current_app.logger.info('Downloading {} from FTP...'.format(artist_relation_file_name))
-        dest_path = self.download_dump(artist_relation_file_name, directory)
-        current_app.logger.info('Done. Total time: {:.2f} sec'.format(time() - t0))
+        dest_path = self.get_spark_dump_path(directory, artist_relation_dump_id, config.FTP_ARTIST_RELATION_DIR, 5)
         return dest_path

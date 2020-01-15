@@ -264,3 +264,12 @@ def read_json(hdfs_path, schema):
     """
     df = listenbrainz_spark.session.read.json(config.HDFS_CLUSTER_URI + hdfs_path, schema=schema)
     return df
+
+def upload(hdfs_path, local_path):
+    """ Upload local file to HDFS.
+
+        Args:
+            hdfs_path (str): HDFS path to upload local file.
+            local_path (str): Local path of file to be uploaded.
+    """
+    hdfs_connection.client.upload(hdfs_path=hdfs_path, local_path=local_path)
