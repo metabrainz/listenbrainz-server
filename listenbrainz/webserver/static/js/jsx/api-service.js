@@ -15,6 +15,11 @@ export default class APIService {
       APIBaseURI += '/1';
     }
     this.APIBaseURI = APIBaseURI;
+
+    // Variables used to honor LB's rate limit
+    this.rl_remain = -1;
+    this.rl_reset = -1;
+    this.rl_origin = -1;
   }
 
   async getRecentListensForUsers(userNames, limit) {
@@ -83,7 +88,77 @@ export default class APIService {
     const result = await response.json();
     return result.user_token;
   }
-  
+
+  async getLatestImport(userName) {
+    /*
+     *  Send a GET request to the ListenBrainz server to get the latest import time
+     *  from previous imports for the user.
+     */
+
+    if (!isString(userName)) {
+      throw new SyntaxError(`Expected username string, got ${typeof userName} instead`);
+    }
+
+    userName = encodeURIComponent(userName);
+    let url = `${this.APIBaseURI}/latest-import?user_name=${userName}`;
+    console.log(url);
+    const response = await fetch(url, {
+      method: 'GET',
+      mode: 'no-cors',
+    });
+    this.checkStatus(response);
+    const result = await response.json();
+    return parseInt(result.latest_import);
+  }
+
+  async setLatestImport(userToken, timestamp) {
+    /*
+     * Send a POST request to the ListenBrainz server after the import is complete to
+     * update the latest import time on the server. This will make future imports stop
+     * when they reach this point of time in the listen history.
+     */
+
+
+    if (!isString(userToken)) {
+      throw new SyntaxError(`Expected usertoken string, got ${typeof userToken} instead`);
+    }
+    if (!isFinite(timestamp)) {
+      throw new SyntaxError(`Expected timestamp number, got ${typeof timestamp} instead`);
+    }
+    
+    let url = `${this.APIBaseURI}/latest-import`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Token ${userToken}`,
+        'Content-Type': 'application/json;charset=UTF-8',
+      },
+      body: JSON.stringify({ts: parseInt(timestamp)}),
+    });
+    this.checkStatus(response);
+    return true; // Return true if timestamp is updated
+  }
+
+  getRateLimitDelay() {
+    /* Get the amount of time we should wait according to LB rate limits before making a request to LB */
+    let delay = 0;
+    let current = new Date().getTime() / 1000;
+    if (this.rl_reset < 0 || current > this.rl_origin + this.rl_reset)
+        delay = 0;
+    else if (this.rl_remain > 0)
+        delay = Math.max(0, Math.ceil((rl_reset * 1000) / rl_remain));
+    else
+        delay = Math.max(0, Math.ceil(rl_reset * 1000));
+    return delay;
+  }
+
+  updateRateLimitParameters(response) {
+    /* Update the variables we use to honor LB's rate limits */
+    this.rl_remain = parseInt(response.headers['X-RateLimit-Remaining']);
+    this.rl_reset = parseInt(response.headers['X-RateLimit-Reset-In']);
+    this.rl_origin = new Date().getTime() / 1000;
+  }
+
   checkStatus(response) {
     if (response.status >= 200 && response.status < 300) {
       return;
