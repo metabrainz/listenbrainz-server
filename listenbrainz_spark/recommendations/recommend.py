@@ -11,13 +11,14 @@ from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
 from listenbrainz_spark import config, utils, path
-from listenbrainz_spark.sql import get_user_id
+from listenbrainz_spark.recommendations.candidate_sets import get_user_id
 from listenbrainz_spark.exceptions import SQLException, SparkSessionNotInitializedException, PathNotFoundException, \
     FileNotFetchedException, ViewNotRegisteredException
 from listenbrainz_spark.sql import recommend_queries as sql
 from listenbrainz_spark.recommendations.utils import save_html
 
 from flask import current_app
+from pyspark.sql.functions import lit, col
 from pyspark.sql.utils import AnalysisException
 from pyspark.mllib.recommendation import MatrixFactorizationModel
 
@@ -32,7 +33,7 @@ def load_model(path):
     """
     return MatrixFactorizationModel.load(listenbrainz_spark.context, path)
 
-def get_recommended_recordings(candidate_set, limit, recordings_df, model):
+def get_recommended_recordings(candidate_set, limit, recordings_df, model, mapped_listens):
     """ Get list of recommended recordings from the candidate set
 
         Args:
@@ -43,10 +44,10 @@ def get_recommended_recordings(candidate_set, limit, recordings_df, model):
             limit (int): Number of recommendations to be generated.
             recordings_df (dataframe): Columns can be depicted as:
                 [
-                    'track_name', 'recording_msid', 'artist_name', 'artist_msid', 'release_name',
-                    'release_msid', 'recording_id'
+                    'mb_recording_mbid', 'mb_artist_credit_id', 'recording_id'
                 ]
             model (parquet): Best model after training.
+            mapped_listens (dataframe): Dataframe with all the columns/fields that a typical listen has.
 
         Returns:
             recommended_recordings (list): [
@@ -57,17 +58,23 @@ def get_recommended_recordings(candidate_set, limit, recordings_df, model):
     """
     recommendations = model.predictAll(candidate_set).takeOrdered(limit, lambda product: -product.rating)
     recommended_recording_ids = [(recommendations[i].product) for i in range(len(recommendations))]
-    if len(recommended_recording_ids) == 1:
-        recommendations_df = sql.get_recordings(tuple(recommended_recording_ids[0]))
-    else:
-        recommendations_df = sql.get_recordings(tuple(recommended_recording_ids))
+
+    df = recordings_df.select('mb_artist_credit_id', 'mb_recording_mbid') \
+        .where(recordings_df.recording_id.isin(recommended_recording_ids))
+
+    # get the track_name and artist_name to make the HTML redable. This step will not be required when sending recommendations
+    # to lemmy since gids are enough to recognize the track.
+    recommendations_df = df.join(mapped_listens, ['mb_artist_credit_id', 'mb_recording_mbid']) \
+        .select('mb_artist_credit_id', 'artist_name', 'mb_recording_mbid', 'track_name').distinct()
+
     recommended_recordings = []
     for row in recommendations_df.collect():
-        rec = (row.track_name, row.recording_msid, row.artist_name, row.artist_msid, row.release_name, row.release_msid)
+        rec = (row.track_name, row.artist_name, row.mb_recording_mbid, row.mb_artist_credit_id)
         recommended_recordings.append(rec)
     return recommended_recordings
 
-def recommend_user(user_name, model, recordings_df):
+def recommend_user(user_name, model, recordings_df, users_df, top_artists_candidate_set,
+    similar_artists_candidate_set, mapped_listens):
     """ Get recommended recordings which belong to top artists and artists similar to top
         artists listened to by the user.
 
@@ -79,6 +86,10 @@ def recommend_user(user_name, model, recordings_df):
                     'track_name', 'recording_msid', 'artist_name', 'artist_msid', 'release_name',
                     'release_msid', 'recording_id'
                 ]
+            users_df (dataframe): Dataframe containing user names and user ids.
+            top_artists_candidate_set (dataframe): Dataframe containing recording ids of top artists.
+            similar_artists_candidate_set (dataframe): Dataframe containing recording ids of similar artists.
+            mapped_listens (dataframe): Dataframe with all the columns/fields that a typical listen has.
 
         Returns:
             user_recommendations (dict): Dictionary can be depicted as:
@@ -96,22 +107,25 @@ def recommend_user(user_name, model, recordings_df):
                 }
     """
     user_recommendations = defaultdict(dict)
-    user_id = get_user_id(user_name)
+    user_id = get_user_id(users_df, user_name)
 
-    top_artists_recordings = sql.get_top_artists_recordings(user_id)
-    top_artists_candidate_set = top_artists_recordings.rdd.map(lambda r: (r['user_id'], r['recording_id']))
-    top_artists_recommended_recordings = get_recommended_recordings(top_artists_candidate_set, config \
-        .RECOMMENDATION_TOP_ARTIST_LIMIT, recordings_df, model)
+    top_artists_recordings_df = top_artists_candidate_set.select('user_id', 'recording_id') \
+        .where(col('user_id') == user_id)
+    top_artists_recordings_rdd = top_artists_recordings_df.rdd.map(lambda r: (r['user_id'], r['recording_id']))
+    top_artists_recommended_recordings = get_recommended_recordings(top_artists_recordings_rdd, config \
+        .RECOMMENDATION_TOP_ARTIST_LIMIT, recordings_df, model, mapped_listens)
     user_recommendations['top_artists_recordings'] = top_artists_recommended_recordings
 
-    similar_artists_recordings = sql.get_similar_artists_recordings(user_id)
-    similar_artists_candidate_set = similar_artists_recordings.rdd.map(lambda r : (r['user_id'], r['recording_id']))
-    similar_artists_recommended_recordings = get_recommended_recordings(similar_artists_candidate_set,
-        config.RECOMMENDATION_SIMILAR_ARTIST_LIMIT, recordings_df, model)
+    similar_artists_recordings_df = similar_artists_candidate_set.select('user_id', 'recording_id') \
+        .where(col('user_id') == user_id)
+    similar_artists_recordings_rdd = similar_artists_recordings_df.rdd.map(lambda r : (r['user_id'], r['recording_id']))
+    similar_artists_recommended_recordings = get_recommended_recordings(similar_artists_recordings_rdd,
+        config.RECOMMENDATION_SIMILAR_ARTIST_LIMIT, recordings_df, model,mapped_listens)
     user_recommendations['similar_artists_recordings'] = similar_artists_recommended_recordings
     return user_recommendations
 
-def get_recommendations(user_names, recordings_df, model):
+def get_recommendations(user_names, recordings_df, model, users_df, top_artists_candidate_set,
+    similar_artists_candidate_set, mapped_listens):
     """ Generate recommendations for users.
 
         Args:
@@ -119,9 +133,12 @@ def get_recommendations(user_names, recordings_df, model):
             model: Best model after training.
             recordings_df (dataframe): Columns can be depicted as:
                 [
-                    'track_name', 'recording_msid', 'artist_name', 'artist_msid', 'release_name',
-                    'release_msid', 'recording_id'
+                    'mb_recording_gid', 'mb_artist_credit_id', 'recording_id'
                 ]
+            users_df (dataframe): Dataframe containing user names and user ids.
+            top_artists_candidate_set (dataframe): Dataframe containing recording ids of top artists.
+            similar_artists_candidate_set (dataframe): Dataframe containing recording ids of similar artists.
+            mapped_listens (dataframe): Dataframe with all the columns/fields that a typical listen has.
 
         Returns:
             recommendations (dict): Dictionary can be depicted as:
@@ -145,14 +162,13 @@ def get_recommendations(user_names, recordings_df, model):
     for user_name in user_names:
         try:
             t0 = time()
-            user_recommendations = recommend_user(user_name, model, recordings_df)
+            user_recommendations = recommend_user(user_name, model, recordings_df, users_df, top_artists_candidate_set,
+                similar_artists_candidate_set, mapped_listens)
             user_recommendations['time'] = '{:.2f}'.format((time() - t0) / 60)
             current_app.logger.info('Recommendations for "{}" generated'.format(user_name))
             recommendations[user_name] = user_recommendations
-        except TypeError as err:
-            current_app.logger.error('{}: Invalid user name. User "{}" does not exist.'.format(type(err).__name__,user_name))
-        except SQLException as err:
-            current_app.logger.error('{}\nRecommendations for "{}" not generated'.format(str(err), user_name), exc_info=True)
+        except IndexError:
+            current_app.logger.error('{} is new/invalid user.'.format(user_name))
     return recommendations
 
 def get_recommendation_html(recommendations, time_, best_model_id, ti):
@@ -185,7 +201,7 @@ def get_recommendation_html(recommendations, time_, best_model_id, ti):
     """
     date = datetime.utcnow().strftime('%Y-%m-%d')
     recommendation_html = 'Recommendation-{}-{}.html'.format(uuid.uuid4(), date)
-    column = ('Track Name', 'Recording MSID', 'Artist Name', 'Artist MSID', 'Release Name', 'Release MSID')
+    column = ('Track Name', 'Artist Name', 'MB_RECORDING_GID', 'MB_ARTIST_CREDIT_ID')
     context = {
         'recommendations' : recommendations,
         'column' : column,
@@ -208,21 +224,13 @@ def main():
         users_df = utils.read_files_from_HDFS(path.USERS_DATAFRAME_PATH)
         recordings_df = utils.read_files_from_HDFS(path.RECORDINGS_DATAFRAME_PATH)
 
-        top_artists_candidate_df = utils.read_files_from_HDFS(path.TOP_ARTIST_CANDIDATE_SET)
-        similar_artists_candidate_df = utils.read_files_from_HDFS(path.SIMILAR_ARTIST_CANDIDATE_SET)
+        top_artists_candidate_set = utils.read_files_from_HDFS(path.TOP_ARTIST_CANDIDATE_SET)
+        similar_artists_candidate_set = utils.read_files_from_HDFS(path.SIMILAR_ARTIST_CANDIDATE_SET)
+        mapped_listens = utils.read_files_from_HDFS(path.MAPPED_LISTENS)
     except PathNotFoundException as err:
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
     except FileNotFetchedException as err:
-        current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
-
-    try:
-        utils.register_dataframe(users_df, 'user')
-        utils.register_dataframe(top_artists_candidate_df, 'top_artist')
-        utils.register_dataframe(similar_artists_candidate_df, 'similar_artist')
-        utils.register_dataframe(recordings_df, 'recording')
-    except ViewNotRegisteredException as err:
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
@@ -249,7 +257,8 @@ def main():
     recordings_df.persist()
 
     t0 = time()
-    recommendations = get_recommendations(user_names, recordings_df, model)
+    recommendations = get_recommendations(user_names, recordings_df, model, users_df, top_artists_candidate_set,
+        similar_artists_candidate_set, mapped_listens)
     time_['total_recommendation_time'] = '{:.2f}'.format((time() - t0) / 3600)
 
     # persisted data must be cleared from memory after usage to avoid OOM

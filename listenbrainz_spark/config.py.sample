@@ -50,3 +50,7 @@ LOG_SENTRY = {
 # String + UUID
 # The following var defines the string of which the model id is made up of.
 MODEL_ID_PREFIX = 'listenbrainz-recommendation-model'
+
+FTP_SERVER_URI = 'ftp.eu.metabrainz.org'
+TEMP_LISTENS_DIR = 'listenbrainz-dump-88-20190930-000002-full/'
+TEMP_LISTENS_DUMP = 'listenbrainz-listens-dump-88-20190930-000002-spark-full.tar.xz'
