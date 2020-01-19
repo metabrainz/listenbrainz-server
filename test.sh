@@ -1,5 +1,6 @@
 #!/bin/bash
 
+<<<<<<< HEAD
 # ./test.sh                bring up, make database, test, bring down
 # for development:
 # ./test.sh -u             bring up background and load database if needed
@@ -130,3 +131,5 @@ else
                    -p $COMPOSE_PROJECT_NAME \
                    run --rm listenbrainz py.test "$@"
 fi
+=======
+>>>>>>> labs/master
