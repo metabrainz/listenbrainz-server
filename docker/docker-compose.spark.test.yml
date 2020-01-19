@@ -1,0 +1,26 @@
+volumes:
+  namenode:
+
+services:
+  hadoop-master:
+    image: metabrainz/hadoop-yarn:beta
+    command: hdfs namenode
+    ports:
+      - "9000:9000"
+      - "9870:9870"
+    volumes:
+      - namenode:/home/hadoop/hdfs:z
+
+  datanode:
+    image: metabrainz/hadoop-yarn:beta
+    command: hdfs datanode
+
+  test:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: metabrainz-spark-dev
+    command: dockerize -wait tcp://hadoop-master:9000 -timeout 60s bash -c "PYTHONDONTWRITEBYTECODE=1 python -m pytest --junitxml=/data/test_report.xml --cov-report xml:/data/coverage.xml"
+    volumes:
+      - ..:/rec:z
+

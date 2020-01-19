@@ -49,8 +49,8 @@ problem.
 
 ### Docstrings
 
-Unless the function is easy to quickly understand, it needs a docstring 
-describing what it does, how it does it, what the arguments are, and what 
+Unless the function is easy to quickly understand, it needs a docstring
+describing what it does, how it does it, what the arguments are, and what
 the expected output is.
 
 We recommend using
@@ -68,8 +68,7 @@ We follow a "typical" GitHub workflow for contributing changes.
     * For example, if you are going to fix issue PICARD-257, branch can be called `picard-257` or `preserve-artwork`.
 3. Make your changes and **commit them with a
 [good description](http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html)**.
-    * Write your commit summary lines in **imperative voice** and **sentence 
-      case**.
+    * Write your commit summary lines in **imperative voice** and **sentence case**.
     * Commit message contents don't need a lot of details, but make sure others
       can look back later and understand your changes and why.
 4. Ensure that you follow the [pull request requirements](#pull-request-requirements).

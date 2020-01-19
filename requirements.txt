@@ -28,3 +28,8 @@ pyyaml == 5.2
 eventlet == 0.25.1
 Flask-CORS == 3.0.8
 uWSGI == 2.0.18
+hetznercloud==1.1.1
+hdfs == 2.1.0
+numpy==1.17.2
+py4j == 0.10.8.1
+pyspark == 2.4.4
