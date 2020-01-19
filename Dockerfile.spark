@@ -158,8 +158,8 @@ RUN cd /usr/local && \
 
 RUN mkdir /rec
 WORKDIR /rec
-COPY requirements.txt /rec/requirements.txt
-RUN pip3 install -r requirements.txt
+COPY requirements_spark.txt /rec/requirements_spark.txt
+RUN pip3 install -r requirements_spark.txt
 
 FROM metabrainz-spark-base as metabrainz-spark-master
 CMD /usr/local/spark/sbin/start-master.sh

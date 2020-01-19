@@ -20,7 +20,7 @@ services:
       context: ..
       dockerfile: Dockerfile
       target: metabrainz-spark-dev
-    command: dockerize -wait tcp://hadoop-master:9000 -timeout 60s bash -c "PYTHONDONTWRITEBYTECODE=1 python -m pytest --junitxml=/data/test_report.xml --cov-report xml:/data/coverage.xml"
+    command: dockerize -wait tcp://hadoop-master:9000 -timeout 60s bash -c "PYTHONDONTWRITEBYTECODE=1 python -m pytest -c pytest.spark.ini --junitxml=/data/test_report.xml --cov-report xml:/data/coverage.xml"
     volumes:
       - ..:/rec:z
 
