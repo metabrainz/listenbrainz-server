@@ -89,6 +89,40 @@ export default class APIService {
     return result.user_token;
   }
 
+  async submitListens(userToken, listenType, payload) {
+    /*
+     *  Send a POST request to the ListenBrainz server to submit a listen
+     */
+
+    if (!isString(userToken)) {
+      throw new SyntaxError(`Expected usertoken string, got ${typeof userToken} instead`);
+    }
+    if (listenType !== "single" || listenType !== "playingNow" || listenType !== "import") {
+      throw new SyntaxError(`listenType can be "single", "playingNow" or "import", got ${listenType} instead`);
+    }
+
+    let struct = {
+      "listen_type": listenType,
+      "payload": payload,
+    }
+
+    let url = `${this.APIBaseURI}/submit-listens`;
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${userToken}`,
+          'Content-Type': 'application/json;charset=UTF-8',
+        },
+        body: JSON.stringify(struct),
+      })
+      return response.status; // Return status so that caller can handle appropriately
+    } catch {
+      // Retry if there is an network error
+      setTimeout(this.submitListens(userToken, listenType, payload), 3000)
+    }
+  }
+
   async getLatestImport(userName) {
     /*
      *  Send a GET request to the ListenBrainz server to get the latest import time
@@ -99,12 +133,9 @@ export default class APIService {
       throw new SyntaxError(`Expected username string, got ${typeof userName} instead`);
     }
 
-    userName = encodeURIComponent(userName);
     let url = `${this.APIBaseURI}/latest-import?user_name=${userName}`;
-    console.log(url);
     const response = await fetch(url, {
       method: 'GET',
-      mode: 'no-cors',
     });
     this.checkStatus(response);
     const result = await response.json();
