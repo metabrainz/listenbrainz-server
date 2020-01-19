@@ -11,7 +11,11 @@
     ./github/CONTRIBUTING.md.
 -->
 
-# Summary
+# Description
+<!--
+ A one line description of what this change does
+-->
+
 
 * This is a…
     * ( ) Bug fix
@@ -25,8 +29,8 @@
 # Problem
 
 <!--
-    Anything that helps us understand why you are making this change goes here.
-    What problem are you trying to fix? What does this change address?
+    What problem are you trying to fix? What does this change address? Please try to
+    think of people who do not have the context you have on the problem.
 -->
 
 * JIRA ticket (_optional_): <!-- [LB-XXX](https://tickets.metabrainz.org/browse/LB-XXX) -->
