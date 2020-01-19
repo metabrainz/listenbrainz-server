@@ -5,6 +5,7 @@ services:
 
 install:
   - cp listenbrainz/config.py.sample listenbrainz/config.py
+  - cp listenbrainz_spark/config.py.sample listenbrainz_spark/config.py
   # Build the unit test docker-compose project
   - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test build
   - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test run --rm listenbrainz
