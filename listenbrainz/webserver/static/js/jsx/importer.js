@@ -251,4 +251,27 @@ export default class Importer {
     this.activeFetches--;
     this.getNextPagesIfSlots();
   }
+  
+  encodeScrobbles(jsonstr) {
+    let scrobbles = JSON.parse(jsonstr);
+    scrobbles = scrobbles['recenttracks']['track'];
+    let parsedScrobbles = this.map((rawScrobble) => {
+      let scrobble = new Scrobble(rawScrobble);
+      return scrobble.asJSONSerializable();
+    }, scrobbles);
+    return parsedScrobbles;
+  }
+  
+  map(applicable, collection) {
+    let newCollection = [];
+    for (let i = 0; i < collection.length; i++) {
+      let result = applicable(collection[i]);
+      if ('listened_at' in result) {
+        // Add If there is no 'listened_at' attribute then either the listen is invalid or the
+        // listen is currently playing. In both cases we need to skip the submission.
+        newCollection.push(result);
+      };
+    }
+    return newCollection;
+  }  
 }
