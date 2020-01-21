@@ -1,21 +1,113 @@
 import APIService from './api-service'
 
+class Scrobble {
+  constructor(rootScrobbleElement) {
+    this.rootScrobbleElement = rootScrobbleElement;
+  }
+  
+  lastfmID() {
+    // Returns url of type "http://www.last.fm/music/Mot%C3%B6rhead"
+    if ('url' in this.rootScrobbleElement && this.rootScrobbleElement['url'] !== "" ) {
+      let url = this.rootScrobbleElement['url'];
+      url = url.split("/");
+      return url.slice(0, parts.length-2).join("/");
+    } else {
+      return "";
+    }
+  }
+  
+  artistName() {
+    if ('artist' in this.rootScrobbleElement && '#text' in this.rootScrobbleElement['artist']) {
+      return this.rootScrobbleElement['artist']['#text'];
+    } else {
+      return "";
+    }
+  }
+  
+  trackName() {
+    if ('name' in this.rootScrobbleElement) {
+      return this.rootScrobbleElement['name'];
+    } else {
+      return "";
+    }
+  }
+  
+  releaseName() {
+    if ('album' in this.rootScrobbleElement && '#text' in this.rootScrobbleElement['album']) {
+      return this.rootScrobbleElement['album']['#text'];
+    } else {
+      return "";
+    }
+  };
+  
+  scrobbledAt() {
+    if ('date' in this.rootScrobbleElement && 'uts' in this.rootScrobbleElement['date']) {
+      return this.rootScrobbleElement['date']['uts'];
+    } else {
+      /*
+      The audioscrobbler API's output differs when the user is playing song.
+      In case, when the user is playing song, the API returns 1st listen with
+      attribute as {"@attr": {"now_playing":"true"}} while other listens with
+      attribute as {"date": {"utc":"12345756", "#text":"21 Jul 2016, 10:22"}}
+      We need to only submit listens which were played in the past.
+      */
+      return "";
+    }
+  };
+  
+  trackMBID() {
+    if ('mbid' in this.rootScrobbleElement) {
+      return this.rootScrobbleElement['mbid'];
+    } else {
+      return "";
+    }
+  };
+  
+  asJSONSerializable() {
+    let trackjson = {
+      "track_metadata": {
+        "track_name": this.trackName(),
+        "artist_name": this.artistName(),
+        "release_name": this.releaseName(),
+        "additional_info": {
+          "recording_mbid": this.trackMBID()
+        }
+      },
+      "listened_at": this.scrobbledAt(),
+    };
+    
+    // Remove keys with blank values
+    (function filter(obj) {
+      $.each(obj, function(key, value){
+        if (value === "" || value === null){
+          delete obj[key];
+        } else if (Object.prototype.toString.call(value) === '[object Object]') {
+          filter(value);
+        } else if (Array.isArray(value)) {
+          value.forEach(function (el) { filter(el); });
+        }
+      });
+    })(trackjson);
+    return trackjson;
+  };
+}
+
 export default class Importer {  
   constructor(lastfmUsername, props, updateMessage, setClose) {
     this.APIService = new APIService(props.api_url || `${window.location.origin}/1`) // Used to access LB API
-
+    
     this.updateMessage = updateMessage // Used to update the message in modal
     this.setClose = setClose; // Used to enable or disable close button in modal
-
+    
     this.lastfmUsername = lastfmUsername;
     this.lastfmURL = props.lastfm_api_url;
     this.lastfmKey = props.lastfm_api_key;
     
     this.userName = props.user.name;
     this.userToken = props.user.auth_token;
-
+    
     this.page = 1;
-    this.numberOfPages = 0;
+    this.totalPages = 0;
     this.playCount = -1; // the number of scrobbles reported by Last.FM
     this.countReceived = 0; // number of scrobbles the Last.FM API sends us, this can be diff from playCount
     
@@ -28,25 +120,27 @@ export default class Importer {
     
     this.activeFetches = 0;
     this.maxActiveFetches = 10;
+    
+    this.timesGetPage = 0;
   }
-
+  
   async startImport() {
     this.setClose(false); // Disable the close button
     this.updateMessage("Your import from Last.fm is starting!");
     this.playCount = await this.getTotalNumberOfScrobbles();
     this.latestImportTime = await this.APIService.getLatestImport(this.userName); // TODO: Error handling, test usernames having special characters
     this.incrementalImport = this.latestImportTime > 0;
-    this.numberOfPages = await this.getNumberOfPages();
-    if (this.numberOfPages > 0) {
-      this.getNextPageIfSlot();
+    this.totalPages = await this.getNumberOfPages();
+    if (this.totalPages > 0) {
+      this.getNextPagesIfSlots();
     }
   }
-
+  
   async getTotalNumberOfScrobbles() {
     /*
-     * Get the total play count reported by Last.FM for user
-     */
-
+    * Get the total play count reported by Last.FM for user
+    */
+    
     let url = `${this.lastfmURL}?method=user.getinfo&user=${this.lastfmUsername}&api_key=${this.lastfmKey}&format=json`;
     try {
       let response = await fetch(encodeURI(url));
@@ -62,12 +156,12 @@ export default class Importer {
       return -1;
     }
   }
-
+  
   async getNumberOfPages() {
     /*
-     * Get the total pages of data from last import
-     */
-
+    * Get the total pages of data from last import
+    */
+    
     let url = `${this.lastfmURL}?method=user.getrecenttracks&user=${this.lastfmUsername}&api_key=${this.lastfmKey}&from=${this.latestImportTime+1}&format=json`;
     try {
       let response = await fetch(encodeURI(url));
@@ -83,35 +177,43 @@ export default class Importer {
       return 0;
     }
   }
-
-  getNextPageIfSlot() {
+  
+  getNextPagesIfSlots() {
     /* 
-     * Get next page if number of active fetches is less than 10 
-     */
-
-    while (this.activeFetches < this.maxActiveFetches) {
+    * Get next page if number of active fetches is less than 10 
+    */
+    
+    while (this.activeFetches < this.maxActiveFetches && this.page <= this.totalPages) {
       this.activeFetches++;
       this.getPage(this.page);
       this.page++;
     }
   }
-
+  
   async getPage(page) {
     /*
-     * Fetch page from Last.fm
-     */ 
-
+    * Fetch page from Last.fm
+    */ 
+    
     let retry = (reason) => {
       console.warn(reason + ' fetching last.fm page=' + page + ', retrying in 3s');
       setTimeout(this.getPage(page), 3000);
     }
-
+    
     let url = `${this.lastfmURL}?method=user.getrecenttracks&user=${this.lastfmUsername}&api_key=${this.lastfmKey}&from=${this.latestImportTime+1}&page=${page}&format=json`;
     try {
       let response = await fetch(encodeURI(url));
       if (response.ok) {
         let data = await response.json();
-        // TODO
+        // Set latest import time
+        if (page === 1) {
+          if ('date' in data['recenttracks']['track'][0]) {
+            this.maximumTimestampForImport = data['recenttracks']['track'][0]['date']['uts'];
+          } else {
+            this.maximumTimestampForImport = Math.floor(Date.now() / 1000);
+          }
+        }
+        this.reportPageAndGetNext(response, page);
       } else {
         if (/^5/.test(response.status)) {
           retry('got ' + response.status);
@@ -124,5 +226,29 @@ export default class Importer {
       // Retry if there is a network error
       retry('error');
     }
+  }
+  
+  reportPageAndGetNext(response, page) {
+    this.timesGetPage++;
+    if (page == 1) {
+      this.updateMessage("Todo");
+    }
+    // let struct = encodeScrobbles(response);
+    // submitQueue.push(struct);
+    // countReceived += struct['payload'].length;
+    // if (!struct.payload.length) 
+    //     pageDone();
+    // else{
+    //     if (struct['payload'][struct['payload'].length - 1]['listened_at'] < latestImportTime) {
+    //         previouslyDone = true;
+    //         stopPage = page;
+    //     }
+    //     if (!isSubmitActive){
+    //         isSubmitActive = true;
+    //         submitListens();
+    //     }
+    // }
+    this.activeFetches--;
+    this.getNextPagesIfSlots();
   }
 }
