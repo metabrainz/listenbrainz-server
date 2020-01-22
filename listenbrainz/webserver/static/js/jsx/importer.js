@@ -122,6 +122,8 @@ export default class Importer {
     this.maxActiveFetches = 10;
     
     this.timesGetPage = 0;
+    
+    this.numCompleted = 0; // number of pages completed till now
   }
   
   async startImport() {
@@ -213,7 +215,7 @@ export default class Importer {
             this.maximumTimestampForImport = Math.floor(Date.now() / 1000);
           }
         }
-        this.reportPageAndGetNext(response, page);
+        this.reportPageAndGetNext(data, page);
       } else {
         if (/^5/.test(response.status)) {
           retry('got ' + response.status);
@@ -228,32 +230,41 @@ export default class Importer {
     }
   }
   
-  reportPageAndGetNext(response, page) {
+  reportPageAndGetNext(data, page) {
     this.timesGetPage++;
     if (page == 1) {
       this.updateMessage("Todo");
     }
-    // let struct = encodeScrobbles(response);
-    // submitQueue.push(struct);
-    // countReceived += struct['payload'].length;
-    // if (!struct.payload.length) 
-    //     pageDone();
-    // else{
-    //     if (struct['payload'][struct['payload'].length - 1]['listened_at'] < latestImportTime) {
-    //         previouslyDone = true;
-    //         stopPage = page;
-    //     }
-    //     if (!isSubmitActive){
-    //         isSubmitActive = true;
-    //         submitListens();
-    //     }
-    // }
-    this.activeFetches--;
+    let struct = this.encodeScrobbles(data);
+    this.submitQueue.push(struct);
+    this.countReceived += struct.length;
+    if (struct.length === 0) { 
+      this.pageDone();
+    } else {
+      if (!this.isSubmitActive){
+        this.isSubmitActive = true;
+        this.submitListens();
+      }
+    }
     this.getNextPagesIfSlots();
   }
+
+  pageDone() {
+    this.activeFetches--;
+    this.numCompleted++;
+
+    // start the next submission
+    if (this.submitQueue.length > 0) {
+      this.submitListens();
+    } else {
+      this.isSubmitActive = false;
+    }
+
+    // Check to see if we need to start up more fetches
+    this.getNextPagesIfSlots();    
+  }
   
-  encodeScrobbles(jsonstr) {
-    let scrobbles = JSON.parse(jsonstr);
+  encodeScrobbles(scrobbles) {
     scrobbles = scrobbles['recenttracks']['track'];
     let parsedScrobbles = this.map((rawScrobble) => {
       let scrobble = new Scrobble(rawScrobble);
