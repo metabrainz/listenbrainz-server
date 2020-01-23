@@ -97,7 +97,7 @@ export default class APIService {
     if (!isString(userToken)) {
       throw new SyntaxError(`Expected usertoken string, got ${typeof userToken} instead`);
     }
-    if (listenType !== "single" || listenType !== "playingNow" || listenType !== "import") {
+    if (listenType !== "single" && listenType !== "playingNow" && listenType !== "import") {
       throw new SyntaxError(`listenType can be "single", "playingNow" or "import", got ${listenType} instead`);
     }
 
@@ -119,6 +119,7 @@ export default class APIService {
       return response.status; // Return status so that caller can handle appropriately
     } catch {
       // Retry if there is an network error
+      console.warn("Error, retrying in 3 sec");
       setTimeout(this.submitListens(userToken, listenType, payload), 3000)
     }
   }

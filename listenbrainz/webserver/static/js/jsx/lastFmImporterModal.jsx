@@ -96,9 +96,9 @@ class Modal extends React.Component {
         <input type="submit" value="Import Now!" disabled={!this.state.lastfmUsername}/>
         </form>
         <Modal show={this.state.show} onClose={this.toggleModal} disable={!this.state.canClose}> 
-        <img src='/static/img/listenbrainz-logo.svg' height='75' />
-        <br/><br/>
-        <p>{this.state.msg}</p>
+          <img src='/static/img/listenbrainz-logo.svg' height='75' />
+          <br/><br/>
+          <p>{this.state.msg}</p>
         </Modal>
         </div>
         );

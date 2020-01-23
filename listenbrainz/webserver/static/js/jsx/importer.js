@@ -122,8 +122,13 @@ export default class Importer {
     this.maxActiveFetches = 10;
     
     this.timesGetPage = 0;
+    this.timesReportScrobbles = 0;
+    this.times4Error = 0;
+    this.times5Error = 0;
     
     this.numCompleted = 0; // number of pages completed till now
+
+    this.props = props;
   }
   
   async startImport() {
@@ -136,6 +141,10 @@ export default class Importer {
     if (this.totalPages > 0) {
       this.getNextPagesIfSlots();
     }
+    // Update latest import time on LB server
+    this.APIService.setLatestImport(this.props.user.auth_token, this.maximumTimestampForImport);
+    this.updateMessage("Done");
+    this.setClose(true);
   }
   
   async getTotalNumberOfScrobbles() {
@@ -185,7 +194,7 @@ export default class Importer {
     * Get next page if number of active fetches is less than 10 
     */
     
-    while (this.activeFetches < this.maxActiveFetches && this.page <= this.totalPages) {
+    while (this.activeFetches < this.maxActiveFetches && this.page < this.totalPages) {
       this.activeFetches++;
       this.getPage(this.page);
       this.page++;
@@ -221,7 +230,7 @@ export default class Importer {
           retry('got ' + response.status);
         } else {
           // ignore 40x
-          // TODO
+          this.pageDone()
         }
       }
     } catch {
@@ -235,10 +244,10 @@ export default class Importer {
     if (page == 1) {
       this.updateMessage("Todo");
     }
-    let struct = this.encodeScrobbles(data);
-    this.submitQueue.push(struct);
-    this.countReceived += struct.length;
-    if (struct.length === 0) { 
+    let payload = this.encodeScrobbles(data);
+    this.submitQueue.push(payload);
+    this.countReceived += payload.length;
+    if (payload.length === 0) { 
       this.pageDone();
     } else {
       if (!this.isSubmitActive){
@@ -248,20 +257,76 @@ export default class Importer {
     }
     this.getNextPagesIfSlots();
   }
-
+  
   pageDone() {
     this.activeFetches--;
     this.numCompleted++;
-
+    
     // start the next submission
     if (this.submitQueue.length > 0) {
       this.submitListens();
     } else {
       this.isSubmitActive = false;
     }
-
+    
     // Check to see if we need to start up more fetches
     this.getNextPagesIfSlots();    
+  }
+  
+  async submitListens() {
+    
+    let payload = this.submitQueue.shift();
+
+    try {
+      this.timesReportScrobbles++;
+      let status = await this.APIService.submitListens(this.props.user.auth_token, "import", payload);
+      if (status >= 200 && status < 300) {
+        this.pageDone();
+      } else if (status == 429) {
+        // This should never happen, but if it does, toss it back in and try again.
+        this.submitQueue.unshift(payload);
+        setTimeout(this.submitListens(), 3000);
+      } else if (status >= 400 && status < 500) {
+        this.times4Error++;
+        // We mark 4xx errors as completed because we don't
+        // retry them
+        console.warn("4xx error, skipping");
+        this.pageDone();
+      } else if (status >= 500) {
+        console.warn("received http error " + status + " req'ing");
+        this.times5Error++;
+        // If something causes a 500 error, better not repeat it and just skip it.
+        this.pageDone();
+      } else {
+        console.warn("received http status " + status + ", skipping");
+        this.pageDone();
+      }
+      
+      this.updateMessage("Submit Listens");
+      //   var msg = "<i class='fa fa-cog fa-spin'></i> Sending page " + numCompleted;
+      
+      //   // show total number of pages if this is the first import and not an incremental
+      //   // import
+      //   if (!incrementalImport) {
+      //     msg += " of " + numberOfPages;
+      //   }
+      
+      //   msg += " to ListenBrainz.<br><span style='font-size:8pt'>";
+      
+      //   // show a message explaining that this is an incremental import
+      //   if (incrementalImport) {
+      //     msg += "Note: This import will stop at the starting point of your last import. :)<br>";
+      //   }
+      
+      //   msg += "Please don't close this page while this is running</span>"
+      //   updateMessage(msg);
+      
+      // };
+    } catch {
+      console.warn("Error, retrying in 3s");
+      this.submitQueue.unshift(payload);
+      setTimeout(this.submitListens(), 3000);
+    }
   }
   
   encodeScrobbles(scrobbles) {
@@ -284,5 +349,5 @@ export default class Importer {
       };
     }
     return newCollection;
-  }  
+  }
 }
