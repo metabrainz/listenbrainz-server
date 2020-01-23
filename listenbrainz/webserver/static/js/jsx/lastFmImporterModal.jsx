@@ -91,15 +91,16 @@ class Modal extends React.Component {
     render() {
       return (
         <div className="Importer">
-        <form onSubmit={this.handleSubmit}>
-        <input type="text" onChange={this.handleChange} value={this.state.lastfmUsername} placeholder="Last.fm Username" size="30" />
-        <input type="submit" value="Import Now!" disabled={!this.state.lastfmUsername}/>
-        </form>
-        <Modal show={this.state.show} onClose={this.toggleModal} disable={!this.state.canClose}> 
-          <img src='/static/img/listenbrainz-logo.svg' height='75' />
-          <br/><br/>
-          <p>{this.state.msg}</p>
-        </Modal>
+          <form onSubmit={this.handleSubmit}>
+            <input type="text" onChange={this.handleChange} value={this.state.lastfmUsername} placeholder="Last.fm Username" size="30" />
+            <input type="submit" value="Import Now!" disabled={!this.state.lastfmUsername}/>
+          </form>
+          <Modal show={this.state.show} onClose={this.toggleModal} disable={!this.state.canClose}> 
+            <img src='/static/img/listenbrainz-logo.svg' height='75' />
+            <br/><br/>
+            <div>{this.state.msg}</div>
+            <br/>
+          </Modal>
         </div>
         );
       }

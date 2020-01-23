@@ -168,7 +168,7 @@ export default class APIService {
       body: JSON.stringify({ts: parseInt(timestamp)}),
     });
     this.checkStatus(response);
-    return true; // Return true if timestamp is updated
+    return response.status; // Return true if timestamp is updated
   }
 
   getRateLimitDelay() {
