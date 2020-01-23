@@ -208,7 +208,7 @@ export default class Importer {
     
     let retry = (reason) => {
       console.warn(reason + ' fetching last.fm page=' + page + ', retrying in 3s');
-      setTimeout(this.getPage(page), 3000);
+      setTimeout(() => this.getPage(page), 3000);
     }
     
     let url = `${this.lastfmURL}?method=user.getrecenttracks&user=${this.lastfmUsername}&api_key=${this.lastfmKey}&from=${this.latestImportTime+1}&page=${page}&format=json`;
@@ -285,7 +285,7 @@ export default class Importer {
       } else if (status == 429) {
         // This should never happen, but if it does, toss it back in and try again.
         this.submitQueue.unshift(payload);
-        setTimeout(this.submitListens(), 3000);
+        setTimeout(() => this.submitListens(), 3000);
       } else if (status >= 400 && status < 500) {
         this.times4Error++;
         // We mark 4xx errors as completed because we don't
@@ -325,7 +325,7 @@ export default class Importer {
     } catch {
       console.warn("Error, retrying in 3s");
       this.submitQueue.unshift(payload);
-      setTimeout(this.submitListens(), 3000);
+      setTimeout(() => this.submitListens(), 3000);
     }
   }
   

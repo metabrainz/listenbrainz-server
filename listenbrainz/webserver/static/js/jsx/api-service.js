@@ -120,7 +120,7 @@ export default class APIService {
     } catch {
       // Retry if there is an network error
       console.warn("Error, retrying in 3 sec");
-      setTimeout(this.submitListens(userToken, listenType, payload), 3000)
+      setTimeout(() => this.submitListens(userToken, listenType, payload), 3000)
     }
   }
 
