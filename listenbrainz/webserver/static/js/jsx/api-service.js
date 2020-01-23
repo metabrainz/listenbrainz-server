@@ -107,6 +107,12 @@ export default class APIService {
     }
 
     let url = `${this.APIBaseURI}/submit-listens`;
+    
+    let delay = this.getRateLimitDelay();
+    // Halt execution for some time
+    await new Promise((resolve) => {
+      setTimeout(resolve, delay);
+    })
     try {
       const response = await fetch(url, {
         method: 'POST',
@@ -116,6 +122,7 @@ export default class APIService {
         },
         body: JSON.stringify(struct),
       })
+      this.updateRateLimitParameters(response);
       return response.status; // Return status so that caller can handle appropriately
     } catch {
       // Retry if there is an network error
