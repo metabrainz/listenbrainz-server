@@ -35,13 +35,13 @@ class CandidateSetsTestClass(SparkTestCase):
     @classmethod
     def get_listens(cls):
         cls.date = datetime.utcnow()
-        df1 = utils.create_dataframe([cls.get_listen_row(cls.date, 'vansika', 1)], schema=None)
+        df1 = utils.create_dataframe(cls.get_listen_row(cls.date, 'vansika', 1), schema=None)
         shifted_date = stats.adjust_days(cls.date, config.RECOMMENDATION_GENERATION_WINDOW + 1)
-        df2 = utils.create_dataframe([cls.get_listen_row(shifted_date, 'vansika', 1)], schema=None)
+        df2 = utils.create_dataframe(cls.get_listen_row(shifted_date, 'vansika', 1), schema=None)
         shifted_date = stats.adjust_days(cls.date, 1, shift_backwards=False)
-        df3 = utils.create_dataframe([cls.get_listen_row(shifted_date, 'rob', 2)], schema=None)
+        df3 = utils.create_dataframe(cls.get_listen_row(shifted_date, 'rob', 2), schema=None)
         shifted_date = stats.adjust_days(cls.date, 2)
-        df4 = utils.create_dataframe([cls.get_listen_row(shifted_date, 'rob', 2)], schema=None)
+        df4 = utils.create_dataframe(cls.get_listen_row(shifted_date, 'rob', 2), schema=None)
         test_mapped_df = df1.union(df2).union(df3).union(df4)
         return test_mapped_df
 
@@ -62,28 +62,28 @@ class CandidateSetsTestClass(SparkTestCase):
         self.assertEqual(row.mb_artist_credit_id, 1)
 
     def test_get_similar_artists(self):
-        df = utils.create_dataframe([Row(score=1.0, id_0=1, name_0="Less Than Jake", id_1=2,
-            name_1="Wolfgang Amadeus Mozart")], schema=None)
-        artist_relation_df = df.union(utils.create_dataframe([Row(score=1.0, id_0=3, name_0="Katty Peri", id_1=1,
-            name_1="Less Than Jake")], schema=None))
+        df = utils.create_dataframe(Row(score=1.0, id_0=1, name_0="Less Than Jake", id_1=2,
+            name_1="Wolfgang Amadeus Mozart"), schema=None)
+        artist_relation_df = df.union(utils.create_dataframe(Row(score=1.0, id_0=3, name_0="Katty Peri", id_1=1,
+            name_1="Less Than Jake"), schema=None))
 
-        top_artist_df = utils.create_dataframe([Row(mb_artist_credit_id=1, artist_name="Less Than Jake", count=1)],
+        top_artist_df = utils.create_dataframe(Row(mb_artist_credit_id=1, artist_name="Less Than Jake", count=1),
             schema=None)
         similar_artist_df = candidate_sets.get_similar_artists(top_artist_df, artist_relation_df, 'vansika')
         self.assertEqual(similar_artist_df.count(), 2)
         cols = ['top_artist_credit_id', 'similar_artist_credit_id', 'similar_artist_name', 'top_artist_name']
         self.assertListEqual(cols, similar_artist_df.columns)
 
-        artist_relation_df = utils.create_dataframe([Row(score=1.0, id_0=3, name_0="Katty Peri", id_1=2,
-            name_1="Alka Yagnik")], schema=None)
+        artist_relation_df = utils.create_dataframe(Row(score=1.0, id_0=3, name_0="Katty Peri", id_1=2,
+            name_1="Alka Yagnik"), schema=None)
         with self.assertRaises(IndexError):
             candidate_sets.get_similar_artists(top_artist_df, artist_relation_df, 'vansika')
 
-        df = utils.create_dataframe([Row(mb_artist_credit_id=1, artist_name="Less Than Jake", count=1)], schema=None)
-        top_artist_df = df.union(utils.create_dataframe([Row(mb_artist_credit_id=2, artist_name="Katty Peri", count=1)],
+        df = utils.create_dataframe(Row(mb_artist_credit_id=1, artist_name="Less Than Jake", count=1), schema=None)
+        top_artist_df = df.union(utils.create_dataframe(Row(mb_artist_credit_id=2, artist_name="Katty Peri", count=1),
             schema=None))
-        artist_relation_df = utils.create_dataframe([Row(score=1.0, id_0=2, name_0="Katty Peri", id_1=1,
-            name_1="Less Than Jake")], schema=None)
+        artist_relation_df = utils.create_dataframe(Row(score=1.0, id_0=2, name_0="Katty Peri", id_1=1,
+            name_1="Less Than Jake"), schema=None)
         with self.assertRaises(IndexError):
             candidate_sets.get_similar_artists(top_artist_df, artist_relation_df, 'vansika')
 
@@ -95,18 +95,18 @@ class CandidateSetsTestClass(SparkTestCase):
 
     def test_get_top_artists_recording_ids(self):
         recordings_df = self.get_recordings_df()
-        df = utils.create_dataframe([Row(mb_artist_credit_id=1, artist_name="Less Than Jake", count=1)], schema=None)
-        top_artist_df = df.union(utils.create_dataframe([Row(mb_artist_credit_id=2, artist_name="Kishore Kumar", count=1)],
+        df = utils.create_dataframe(Row(mb_artist_credit_id=1, artist_name="Less Than Jake", count=1), schema=None)
+        top_artist_df = df.union(utils.create_dataframe(Row(mb_artist_credit_id=2, artist_name="Kishore Kumar", count=1),
             schema=None))
         recording_ids = candidate_sets.get_top_artists_recording_ids(top_artist_df, recordings_df, 1)
         self.assertListEqual(['user_id', 'recording_id'], recording_ids.columns)
         self.assertEqual(recording_ids.count(), 2)
 
     def test_get_similar_artist_recording_ids(self):
-        df = utils.create_dataframe([Row(top_artist_credit_id=1, similar_artist_credit_id=2,
-            similar_artist_name='Kishore Kumar', top_artist_name="Less Than Jake")], schema=None)
-        similar_artist_df = df.union(utils.create_dataframe([Row(top_artist_credit_id=2, similar_artist_credit_id=1,
-            similar_artist_name="Kishore Kumar", top_artist_name="Less Than Jake")], schema=None))
+        df = utils.create_dataframe(Row(top_artist_credit_id=1, similar_artist_credit_id=2,
+            similar_artist_name='Kishore Kumar', top_artist_name="Less Than Jake"), schema=None)
+        similar_artist_df = df.union(utils.create_dataframe(Row(top_artist_credit_id=2, similar_artist_credit_id=1,
+            similar_artist_name="Kishore Kumar", top_artist_name="Less Than Jake"), schema=None))
 
         recordings_df = self.get_recordings_df()
         recording_ids = candidate_sets.get_similar_artists_recording_ids(similar_artist_df, recordings_df, 1)

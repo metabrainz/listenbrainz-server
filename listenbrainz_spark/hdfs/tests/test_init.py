@@ -76,6 +76,7 @@ class HDFSTestCase(unittest.TestCase):
                 tar.add(invalid_json_file_path, arcname=os.path.join('temp_tar', 'invalid.txt'))
             pxz.stdin.close()
 
+        pxz.wait()
         return temp_archive
 
     def test_upload_archive(self):

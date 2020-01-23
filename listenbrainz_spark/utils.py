@@ -89,7 +89,7 @@ def create_dataframe(row, schema):
             df (dataframe): Newly created dataframe.
     """
     try:
-        df = listenbrainz_spark.session.createDataFrame(row, schema=schema)
+        df = listenbrainz_spark.session.createDataFrame([row], schema=schema)
         return df
     except Py4JJavaError as err:
         raise DataFrameNotCreatedException(err.java_exception, row)
