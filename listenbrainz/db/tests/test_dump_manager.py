@@ -87,6 +87,8 @@ class DumpManagerTestCase(DatabaseTestCase):
         self.assertIn('listenbrainz-dump-4-20180312-000004-full', newdirs)
 
         self.assertNotIn('listenbrainz-dump-1-20180312-000001-incremental', newdirs)
+        self.assertNotIn('listenbrainz-dump-2-20180312-000002-incremental', newdirs)
+        self.assertNotIn('listenbrainz-dump-3-20180312-000003-incremental', newdirs)
 
         self.assertIn('listenbrainz-dump-4-20180312-000004-incremental', newdirs)
         self.assertIn('listenbrainz-dump-5-20180312-000005-incremental', newdirs)
