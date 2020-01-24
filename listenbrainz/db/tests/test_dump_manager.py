@@ -72,6 +72,8 @@ class DumpManagerTestCase(DatabaseTestCase):
         create_path(os.path.join(self.tempdir, 'listenbrainz-dump-5-20180312-000005-incremental'))
         create_path(os.path.join(self.tempdir, 'listenbrainz-dump-6-20180312-000006-incremental'))
         create_path(os.path.join(self.tempdir, 'listenbrainz-dump-7-20180312-000007-incremental'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-99-20200124-000007-incremental'))
+        create_path(os.path.join(self.tempdir, 'listenbrainz-dump-100-20200124-000008-incremental'))
 
         create_path(os.path.join(self.tempdir, 'not-a-dump'))
 
@@ -86,12 +88,12 @@ class DumpManagerTestCase(DatabaseTestCase):
 
         self.assertNotIn('listenbrainz-dump-1-20180312-000001-incremental', newdirs)
 
-        self.assertIn('listenbrainz-dump-2-20180312-000002-incremental', newdirs)
-        self.assertIn('listenbrainz-dump-3-20180312-000003-incremental', newdirs)
         self.assertIn('listenbrainz-dump-4-20180312-000004-incremental', newdirs)
         self.assertIn('listenbrainz-dump-5-20180312-000005-incremental', newdirs)
         self.assertIn('listenbrainz-dump-6-20180312-000006-incremental', newdirs)
         self.assertIn('listenbrainz-dump-7-20180312-000007-incremental', newdirs)
+        self.assertIn('listenbrainz-dump-99-20200124-000007-incremental', newdirs)
+        self.assertIn('listenbrainz-dump-100-20200124-000008-incremental', newdirs)
 
         self.assertIn('not-a-dump', newdirs)
 

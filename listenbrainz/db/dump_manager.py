@@ -198,6 +198,10 @@ def delete_old_dumps(location):
     _cleanup_dumps(location)
 
 
+def get_dump_id(dump_name):
+    return int(dump_name.split('-')[2])
+
+
 def _cleanup_dumps(location):
     """ Delete old dumps while keeping the latest two dumps in the specified directory
 
@@ -208,14 +212,16 @@ def _cleanup_dumps(location):
         (int, int): the number of dumps remaining, the number of dumps deleted
     """
     full_dump_re = re.compile('listenbrainz-dump-[0-9]*-[0-9]*-[0-9]*-full')
-    full_dumps = [x for x in sorted(os.listdir(location), reverse=True) if full_dump_re.match(x)]
+    dump_files = [x for x in os.listdir(location) if full_dump_re.match(x)]
+    full_dumps = [x for x in sorted(dump_files, key=get_dump_id, reverse=True)]
     if not full_dumps:
         print('No full dumps present in specified directory!')
     else:
         remove_dumps(location, full_dumps, NUMBER_OF_FULL_DUMPS_TO_KEEP)
 
     incremental_dump_re = re.compile('listenbrainz-dump-[0-9]*-[0-9]*-[0-9]*-incremental')
-    incremental_dumps = [x for x in sorted(os.listdir(location), reverse=True) if incremental_dump_re.match(x)]
+    dump_files = [x for x in os.listdir(location) if incremental_dump_re.match(x)]
+    incremental_dumps = [x for x in sorted(dump_files, key=get_dump_id, reverse=True)]
     if not incremental_dumps:
         print('No full dumps present in specified directory!')
     else:
