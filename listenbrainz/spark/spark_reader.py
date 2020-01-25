@@ -50,7 +50,7 @@ class SparkReader:
             return
 
         try:
-            response_handler = get_response_handler(response_type)
+            response_handler = self.get_response_handler(response_type)
         except Exception:
             current_app.logger.error('Unknown response type: %s, doing nothing.', response_type, exc_info=True)
             return
