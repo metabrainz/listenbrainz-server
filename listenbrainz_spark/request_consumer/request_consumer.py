@@ -86,7 +86,7 @@ class RequestConsumer:
         current_app.logger.info("Calculating result...")
         messages = self.get_result(request)
         current_app.logger.info("Done!")
-        if result:
+        if messages:
             current_app.logger.info("Pushing to result queue...")
             self.push_to_result_queue(messages)
             current_app.logger.info("Done!")
