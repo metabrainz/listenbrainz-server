@@ -55,36 +55,30 @@ class Modal extends React.Component {
         lastfmUsername: '',
         msg: '',
       };
-      
-      this.handleChange = this.handleChange.bind(this);
-      this.handleSubmit = this.handleSubmit.bind(this);
-      this.toggleModal = this.toggleModal.bind(this);
-      this.updateMessage = this.updateMessage.bind(this);
-      this.setClose = this.setClose.bind(this);
     }
     
-    handleChange(event) {
+    handleChange = (event) => {
       this.setState({lastfmUsername: event.target.value});
     } 
     
-    handleSubmit(event) {
+    handleSubmit = (event) => {
       this.toggleModal();
       event.preventDefault();
       this.importer = new Importer(this.state.lastfmUsername, this.props, this.updateMessage, this.setClose);
       this.importer.startImport();
     }
     
-    toggleModal() {
+    toggleModal = () => {
       this.setState((prevState) => {
         return {show: !prevState.show};
       });
     }
     
-    setClose(value) {
+    setClose = (value) => {
       this.setState({canClose: value});
     }
     
-    updateMessage(msg) {
+    updateMessage = (msg) => {
       this.setState({msg: msg});
     }
     
