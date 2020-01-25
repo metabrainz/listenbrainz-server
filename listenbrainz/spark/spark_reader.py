@@ -10,11 +10,21 @@ from listenbrainz import utils
 from listenbrainz.db import user as db_user, stats as db_stats
 from listenbrainz.webserver import create_app
 from listenbrainz.db.exceptions import DatabaseException
+from listenbrainz.spark.handlers import handle_user_artist, handle_user_release, handle_user_track
 import sqlalchemy
 
 class SparkReader:
     def __init__(self):
         self.app = create_app() # creating a flask app for config values and logging to Sentry
+
+    def get_response_handler(self, response_type):
+        response_handler_map = {
+            'user_artist': handle_user_artist,
+            'user_release': handle_user_release,
+            'user_track': handle_user_track,
+        }
+        return response_handler_map[response_type]
+
 
     def init_rabbitmq_connection(self):
         """ Initializes the connection to RabbitMQ.
@@ -31,20 +41,33 @@ class SparkReader:
             error_logger=current_app.logger.error,
         )
 
+    def process_response(self, response):
+        try:
+            response_type = response['type']
+            data = response.get('data', {})
+        except KeyError:
+            current_app.logger.error('Bad response sent to spark_reader: %s', json.dumps(request), exc_info=True)
+            return
+
+        try:
+            response_handler = get_response_handler(response_type)
+        except Exception:
+            current_app.logger.error('Unknown response type: %s, doing nothing.', response_type, exc_info=True)
+            return
+
+        try:
+            response_handler(data)
+        except Exception as e:
+            current_app.logger.error('Error in the response handler: %s', str(e), exc_info=True)
+            return
+
+
     def callback(self, ch, method, properties, body):
         """ Handle the data received from the queue and
             insert into the database accordingly.
         """
-        data = ujson.loads(body)
-        for username , metadata in data.items():
-            user = db_user.get_by_mb_id(username)
-            if not user:
-                break
-            artists = metadata['artists']['artist_stats']
-            artist_count = metadata['artists']['artist_count']
-            db_stats.insert_user_stats(user['id'], artists, {}, {}, artist_count)
-            current_app.logger.info("data for {} published".format(username))
-
+        response = ujson.loads(body)
+        self.process_response(response)
         while True:
             try:
                 self.incoming_ch.basic_ack(delivery_tag=method.delivery_tag)
@@ -54,10 +77,10 @@ class SparkReader:
 
 
     def start(self):
-    	""" initiates RabbitMQ connection and starts consuming from the queue
-    	"""
+        """ initiates RabbitMQ connection and starts consuming from the queue
+        """
 
-    	with self.app.app_context():
+        with self.app.app_context():
 
             while True:
                 self.init_rabbitmq_connection()

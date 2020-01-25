@@ -61,21 +61,22 @@ class RequestConsumer:
 
 
     def push_to_result_queue(self, result):
-        while True:
-            try:
-                self.result_channel.basic_publish(
-                    exchange=current_app.config['SPARK_RESULT_EXCHANGE'],
-                    routing_key='',
-                    body=json.dumps(result),
-                    properties=pika.BasicProperties(delivery_mode = 2,),
-                )
-                break
-            except pika.exceptions.ConnectionClosed:
-                self.connect_to_rabbitmq()
-                time.sleep(1)
-            except pika.exceptions.ChannelClosed:
-                self.result_channel = self.rabbitmq.channel()
-                self.result_channel.exchange_declare(exchange=current_app.config['SPARK_RESULT_EXCHANGE'], exchange_type='fanout')
+        for message in messages:
+            while True:
+                try:
+                    self.result_channel.basic_publish(
+                        exchange=current_app.config['SPARK_RESULT_EXCHANGE'],
+                        routing_key='',
+                        body=json.dumps(message),
+                        properties=pika.BasicProperties(delivery_mode = 2,),
+                    )
+                    break
+                except pika.exceptions.ConnectionClosed:
+                    self.connect_to_rabbitmq()
+                    time.sleep(1)
+                except pika.exceptions.ChannelClosed:
+                    self.result_channel = self.rabbitmq.channel()
+                    self.result_channel.exchange_declare(exchange=current_app.config['SPARK_RESULT_EXCHANGE'], exchange_type='fanout')
 
 
 
@@ -83,11 +84,11 @@ class RequestConsumer:
         current_app.logger.info("Processing new request...")
         request = json.loads(body.decode('utf-8'))
         current_app.logger.info("Calculating result...")
-        result = self.get_result(request)
+        messages = self.get_result(request)
         current_app.logger.info("Done!")
         if result:
             current_app.logger.info("Pushing to result queue...")
-            self.push_to_result_queue(result)
+            self.push_to_result_queue(messages)
             current_app.logger.info("Done!")
         while True:
             try:
