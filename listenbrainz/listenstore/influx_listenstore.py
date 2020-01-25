@@ -960,5 +960,28 @@ class InfluxListenStore(ListenStore):
                 time.sleep(1)
 
 
+    def delete_listens_for_user(self, musicbrainz_id):
+    	for _ in range(5):
+    		try:
+    			self.influx.delete_series(get_measurement_name(musicbrainz_id))
+                break
+            except InfluxDBClientError as e:
+                # influxdb-python raises client error if measurement isn't found
+                # so we have to handle that case.
+                if 'measurement not found' in e.content:
+                    return
+                else:
+                    self.log.error('Error in influx client while dropping listens %s: %s', musicbrainz_id, str(e), exc_info=True)
+                    time.sleep(3)
+            except InfluxDBServerError as e:
+                self.log.error('Error in influx server while dropping listens %s: %s', musicbrainz_id, str(e), exc_info=True)
+                time.sleep(3)
+            except Exception as e:
+                self.log.error('Error while trying to drop listens of user %s: %s', musicbrainz_id, str(e), exc_info=True)
+                time.sleep(3)
+        else:
+            raise InfluxListenStoreException("Couldn't delete listens of user with MusicBrainz ID: %s" % musicbrainz_id)
+
+
 class InfluxListenStoreException(Exception):
     pass
