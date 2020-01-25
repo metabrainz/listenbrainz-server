@@ -6,7 +6,7 @@ if [[ ! -d "docker" ]]; then
 fi
 
 function invoke_docker_compose_spark {
-	docker-compose -f docker/docker-compose.dev.yml \
+	docker-compose -f docker/docker-compose.spark.yml \
 				-p listenbrainzspark \
 				"$@"
 }
