@@ -1,3 +1,5 @@
+version: "3.4"
+
 volumes:
   namenode:
 
@@ -23,4 +25,3 @@ services:
     command: dockerize -wait tcp://hadoop-master:9000 -timeout 60s bash -c "PYTHONDONTWRITEBYTECODE=1 python -m pytest -c pytest.spark.ini --junitxml=/data/test_report.xml --cov-report xml:/data/coverage.xml"
     volumes:
       - ..:/rec:z
-
