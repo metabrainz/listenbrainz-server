@@ -1,4 +1,6 @@
 import unittest
+
+from unittest import mock
 from listenbrainz.spark.handlers import handle_user_artist
 
 class HandlersTestCase(unittest.TestCase):
