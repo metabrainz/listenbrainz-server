@@ -1,7 +1,7 @@
 import {isFinite, isNil, isString} from 'lodash';
 
 export default class APIService {
-  
+
   APIBaseURI;
 
   constructor(APIBaseURI){
@@ -36,19 +36,19 @@ export default class APIService {
     if(!isNil(limit) && isFinite(Number(limit))){
       query += `?limit=${limit}`
     }
-    
+
     const response = await fetch(query, {
       accept: 'application/json',
       method: "GET"
     })
     this.checkStatus(response);
     const result = await response.json();
-    
+
     return result.payload.listens
   }
-  
+
   async getListensForUser(userName, minTs, maxTs, count) {
-    
+
     if(typeof userName !== 'string'){
       throw new SyntaxError(`Expected username string, got ${typeof userName} instead`);
     }
@@ -78,7 +78,7 @@ export default class APIService {
     })
     this.checkStatus(response);
     const result = await response.json();
-    
+
     return result.payload.listens
   }
 
@@ -91,8 +91,8 @@ export default class APIService {
 
   async submitListens(userToken, listenType, payload) {
     /*
-     *  Send a POST request to the ListenBrainz server to submit a listen
-     */
+    *  Send a POST request to the ListenBrainz server to submit a listen
+    */
 
     if (!isString(userToken)) {
       throw new SyntaxError(`Expected usertoken string, got ${typeof userToken} instead`);
@@ -107,7 +107,7 @@ export default class APIService {
     }
 
     let url = `${this.APIBaseURI}/submit-listens`;
-    
+
     let delay = this.getRateLimitDelay();
     // Halt execution for some time
     await new Promise((resolve) => {
@@ -133,9 +133,9 @@ export default class APIService {
 
   async getLatestImport(userName) {
     /*
-     *  Send a GET request to the ListenBrainz server to get the latest import time
-     *  from previous imports for the user.
-     */
+    *  Send a GET request to the ListenBrainz server to get the latest import time
+    *  from previous imports for the user.
+    */
 
     if (!isString(userName)) {
       throw new SyntaxError(`Expected username string, got ${typeof userName} instead`);
@@ -152,10 +152,10 @@ export default class APIService {
 
   async setLatestImport(userToken, timestamp) {
     /*
-     * Send a POST request to the ListenBrainz server after the import is complete to
-     * update the latest import time on the server. This will make future imports stop
-     * when they reach this point of time in the listen history.
-     */
+    * Send a POST request to the ListenBrainz server after the import is complete to
+    * update the latest import time on the server. This will make future imports stop
+    * when they reach this point of time in the listen history.
+    */
 
 
     if (!isString(userToken)) {
@@ -164,7 +164,7 @@ export default class APIService {
     if (!isFinite(timestamp)) {
       throw new SyntaxError(`Expected timestamp number, got ${typeof timestamp} instead`);
     }
-    
+
     let url = `${this.APIBaseURI}/latest-import`;
     const response = await fetch(url, {
       method: 'POST',
@@ -182,12 +182,13 @@ export default class APIService {
     /* Get the amount of time we should wait according to LB rate limits before making a request to LB */
     let delay = 0;
     let current = new Date().getTime() / 1000;
-    if (this.rl_reset < 0 || current > this.rl_origin + this.rl_reset)
-        delay = 0;
-    else if (this.rl_remain > 0)
-        delay = Math.max(0, Math.ceil((rl_reset * 1000) / rl_remain));
-    else
-        delay = Math.max(0, Math.ceil(rl_reset * 1000));
+    if (this.rl_reset < 0 || current > this.rl_origin + this.rl_reset) {
+      delay = 0;
+    } else if (this.rl_remain > 0) {
+      delay = Math.max(0, Math.ceil((this.rl_reset * 1000) / rl_remain));
+    } else {
+      delay = Math.max(0, Math.ceil(this.rl_reset * 1000));
+    }
     return delay;
   }
 
