@@ -5,6 +5,12 @@ if [[ ! -d "docker" ]]; then
     exit -1
 fi
 
+function invoke_docker_compose_spark {
+	docker-compose -f docker/docker-compose.dev.yml \
+				-p listenbrainzspark \
+				"$@"
+}
+
 function invoke_docker_compose {
 	docker-compose -f docker/docker-compose.yml \
 				-p listenbrainz \
@@ -44,6 +50,10 @@ elif [ "$1" == "psql" ]; then
 elif [ "$1" == "npm" ]; then
 	echo "Installing node dependencies..."
 	npm_install
+	exit
+
+elif [ "$1" == "spark" ]; then shift
+	invoke_docker_compose_spark "$@"
 	exit
 
 else
