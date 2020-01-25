@@ -44,9 +44,8 @@ class SparkReader:
     def process_response(self, response):
         try:
             response_type = response['type']
-            data = response.get('data', {})
         except KeyError:
-            current_app.logger.error('Bad response sent to spark_reader: %s', json.dumps(response), exc_info=True)
+            current_app.logger.error('Bad response sent to spark_reader: %s', json.dumps(response, indent=4), exc_info=True)
             return
 
         try:
@@ -56,9 +55,9 @@ class SparkReader:
             return
 
         try:
-            response_handler(data)
+            response_handler(response)
         except Exception as e:
-            current_app.logger.error('Error in the response handler: %s', str(e), exc_info=True)
+            current_app.logger.error('Error in the response handler: %s, data: %s', str(e), json.dumps(response, indent=4), exc_info=True)
             return
 
 
