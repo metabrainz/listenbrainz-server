@@ -9,7 +9,8 @@ import zipfile
 
 
 from datetime import datetime
-from flask import Blueprint, render_template, request, url_for, redirect, current_app, make_response, jsonify
+from flask import Blueprint, Response, render_template, request, url_for, \
+    redirect, current_app, make_response, jsonify, stream_with_context
 from flask_login import current_user, login_required
 import spotipy.oauth2
 from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
@@ -123,6 +124,39 @@ def import_data():
     )
 
 
+def fetch_listens(musicbrainz_id, to_ts):
+    """
+    Fetch all listens for the user from listenstore by making repeated queries
+    to listenstore until we get all the data. Returns a generator that streams
+    the results.
+    """
+    db_conn = webserver.create_influx(current_app)
+    while True:
+        batch = db_conn.fetch_listens(current_user.musicbrainz_id, to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
+        if not batch:
+            break
+        yield from batch
+        to_ts = batch[-1].ts_since_epoch  # new to_ts will be the the timestamp of the last listen fetched
+
+
+def map_listen_for_export(obj):
+    """ Convert a listen fetched from listenstore into a dict to export. """
+    dic = obj.data
+    dic['timestamp'] = obj.ts_since_epoch
+    dic['release_msid'] = None if obj.release_msid is None else str(obj.release_msid)
+    dic['artist_msid'] = None if obj.artist_msid is None else str(obj.artist_msid)
+    dic['recording_msid'] = None if obj.recording_msid is None else str(obj.recording_msid)
+    return dic
+
+
+def stream_json_array(elements):
+    """ Return a generator of string fragments of the elements encoded as array. """
+    for i, element in enumerate(elements):
+        yield '[' if i == 0 else ','
+        yield ujson.dumps(element)
+    yield ']'
+
+
 @profile_bp.route("/export", methods=["GET", "POST"])
 @login_required
 def export_data():
@@ -131,28 +165,14 @@ def export_data():
         db_conn = webserver.create_influx(current_app)
         filename = current_user.musicbrainz_id + "_lb-" + datetime.today().strftime('%Y-%m-%d') + ".json"
 
-        # fetch all listens for the user from listenstore by making repeated queries to
-        # listenstore until we get all the data
+        # Build a generator that streams the json response. We never load all
+        # listens into memory at once, and we can start serving the response
+        # immediately.
         to_ts = int(time())
-        listens = []
-        while True:
-            batch = db_conn.fetch_listens(current_user.musicbrainz_id, to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
-            if not batch:
-                break
-            listens.extend(batch)
-            to_ts = batch[-1].ts_since_epoch  # new to_ts will the the timestamp of the last listen fetched
+        listens = fetch_listens(current_user.musicbrainz_id, to_ts)
+        output = stream_json_array(map_listen_for_export(obj) for obj in listens)
 
-        # Fetch output and convert it into dict with keys as indexes
-        output = []
-        for index, obj in enumerate(listens):
-            dic = obj.data
-            dic['timestamp'] = obj.ts_since_epoch
-            dic['release_msid'] = None if obj.release_msid is None else str(obj.release_msid)
-            dic['artist_msid'] = None if obj.artist_msid is None else str(obj.artist_msid)
-            dic['recording_msid'] = None if obj.recording_msid is None else str(obj.recording_msid)
-            output.append(dic)
-
-        response = make_response(ujson.dumps(output))
+        response = Response(stream_with_context(output))
         response.headers["Content-Disposition"] = "attachment; filename=" + filename
         response.headers['Content-Type'] = 'application/json; charset=utf-8'
         response.mimetype = "text/json"
