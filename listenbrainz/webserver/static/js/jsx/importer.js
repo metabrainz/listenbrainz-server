@@ -131,7 +131,6 @@ export default class Importer {
     } catch(error) {
       this.updateMessage("An error occurred, please try again. :(")
       this.setClose(true); // Enable the close button
-      console.log(error);
     }
   }
 
@@ -236,7 +235,6 @@ export default class Importer {
    while (this.activeSubmits < this.maxActiveSubmits && this.submitQueue.length) {
       this.activeSubmits++;
       let payload = this.submitQueue.shift();
-      console.log(this.submitQueue);
       this.submitPage(payload);
     } 
   }

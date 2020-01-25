@@ -12,7 +12,7 @@ module.exports = function(env){
     mode: isProd ? "production" : "development",
     entry: {
       main: '/static/js/jsx/profile.jsx',
-      import: '/static/js/jsx/lastFmImporterModal.jsx'
+      import: '/static/js/jsx/lastFmImporter.jsx'
     },
     output: {
       filename: isProd ? '[name].[contenthash].js' : '[name].js',
