@@ -38,7 +38,7 @@ services:
   playground:
     build:
       context: ..
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.spark
       target: metabrainz-spark-dev
     command: sleep 1000000000
     volumes:
