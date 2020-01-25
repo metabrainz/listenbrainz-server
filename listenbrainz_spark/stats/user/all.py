@@ -21,7 +21,7 @@ def calculate():
     for user_name, user_artists in artist_data.items():
         messages.append({
             'musicbrainz_id': user_name,
-            'response_type': 'user_artist',
+            'type': 'user_artist',
             'artist_stats': user_artists,
             'artist_count': len(user_artists ),
         })
