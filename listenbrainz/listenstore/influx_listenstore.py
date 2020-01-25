@@ -963,7 +963,7 @@ class InfluxListenStore(ListenStore):
     def delete_listens_for_user(self, musicbrainz_id):
     	for _ in range(5):
     		try:
-    			self.influx.delete_series(get_measurement_name(musicbrainz_id))
+    			self.influx.delete_series(get_measurement_name(musicbrainz_id))	
                 break
             except InfluxDBClientError as e:
                 # influxdb-python raises client error if measurement isn't found
