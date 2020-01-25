@@ -17,5 +17,3 @@ class HandlersTestCase(unittest.TestCase):
 
         handle_user_artist(data)
         mock_db_insert.assert_called_with(1, data['artist_stats'], {}, {}, data['artist_count'])
-
-
