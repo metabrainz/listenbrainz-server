@@ -46,7 +46,7 @@ class SparkReader:
             response_type = response['type']
             data = response.get('data', {})
         except KeyError:
-            current_app.logger.error('Bad response sent to spark_reader: %s', json.dumps(request), exc_info=True)
+            current_app.logger.error('Bad response sent to spark_reader: %s', json.dumps(response), exc_info=True)
             return
 
         try:
