@@ -60,7 +60,7 @@ class RequestConsumer:
             return None
 
 
-    def push_to_result_queue(self, result):
+    def push_to_result_queue(self, messages):
         for message in messages:
             while True:
                 try:
