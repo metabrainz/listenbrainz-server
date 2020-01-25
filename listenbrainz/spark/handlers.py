@@ -13,10 +13,3 @@ def handle_user_artist(data):
     artist_count = data['artist_count']
     db_stats.insert_user_stats(user['id'], artists, {}, {}, artist_count)
     current_app.logger.info('Processed artist data for %s', musicbrainz_id)
-
-
-def handle_user_release(data):
-    pass #TODO: add releases
-
-def handle_user_track(data):
-    pass #TODO: add track

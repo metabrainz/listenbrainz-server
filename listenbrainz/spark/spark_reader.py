@@ -10,7 +10,7 @@ from listenbrainz import utils
 from listenbrainz.db import user as db_user, stats as db_stats
 from listenbrainz.webserver import create_app
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz.spark.handlers import handle_user_artist, handle_user_release, handle_user_track
+from listenbrainz.spark.handlers import handle_user_artist
 import sqlalchemy
 
 class SparkReader:
@@ -20,8 +20,6 @@ class SparkReader:
     def get_response_handler(self, response_type):
         response_handler_map = {
             'user_artist': handle_user_artist,
-            'user_release': handle_user_release,
-            'user_track': handle_user_track,
         }
         return response_handler_map[response_type]
 
