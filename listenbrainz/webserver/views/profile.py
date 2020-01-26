@@ -139,16 +139,6 @@ def fetch_listens(musicbrainz_id, to_ts):
         to_ts = batch[-1].ts_since_epoch  # new to_ts will be the the timestamp of the last listen fetched
 
 
-def map_listen_for_export(obj):
-    """ Convert a listen fetched from listenstore into a dict to export. """
-    dic = obj.data
-    dic['timestamp'] = obj.ts_since_epoch
-    dic['release_msid'] = None if obj.release_msid is None else str(obj.release_msid)
-    dic['artist_msid'] = None if obj.artist_msid is None else str(obj.artist_msid)
-    dic['recording_msid'] = None if obj.recording_msid is None else str(obj.recording_msid)
-    return dic
-
-
 def stream_json_array(elements):
     """ Return a generator of string fragments of the elements encoded as array. """
     for i, element in enumerate(elements):
@@ -170,7 +160,7 @@ def export_data():
         # immediately.
         to_ts = int(time())
         listens = fetch_listens(current_user.musicbrainz_id, to_ts)
-        output = stream_json_array(map_listen_for_export(obj) for obj in listens)
+        output = stream_json_array(listen.to_api() for listen in listens)
 
         response = Response(stream_with_context(output))
         response.headers["Content-Disposition"] = "attachment; filename=" + filename
