@@ -44,7 +44,7 @@ services:
     volumes:
       - ..:/rec:z
 
-networks:
-  default:
-    external:
-      name: listenbrainz_default
+# networks:
+#   default:
+#     external:
+#       name: listenbrainz_default

@@ -13,6 +13,7 @@ function invoke_docker_compose_spark {
 
 function invoke_docker_compose {
 	docker-compose -f docker/docker-compose.yml \
+	 			-f docker/docker-compose.spark.yml \
 				-p listenbrainz \
 				"$@"
 }
