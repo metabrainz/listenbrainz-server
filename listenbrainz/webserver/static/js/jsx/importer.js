@@ -44,6 +44,11 @@ export default class Importer {
     this.numCompleted = 0; // number of pages completed till now
 
     this.props = props;
+
+     // Variables used to honor LB's rate limit
+     this.rl_remain = -1;
+     this.rl_reset = -1;
+     this.rl_origin = -1;
   }
 
   async startImport() {
@@ -242,27 +247,33 @@ export default class Importer {
   async submitPage(payload) {
     try {
       this.timesReportScrobbles++;
-      let status = await this.APIService.submitListens(this.userToken, "import", payload);
-      if (status >= 200 && status < 300) {
+      let delay = this.getRateLimitDelay();
+      // Halt execution for some time
+      await new Promise((resolve) => {
+        setTimeout(resolve, delay);
+      })
+      let response = await this.APIService.submitListens(this.userToken, "import", payload);
+      if (response.status >= 200 && response.status < 300) {
         this.pageSubmitDone();
-      } else if (status == 429) {
+      } else if (response.status == 429) {
         // This should never happen, but if it does, toss it back in and try again.
         setTimeout(() => this.submitListens(payload), 3000);
-      } else if (status >= 400 && status < 500) {
+      } else if (response.status >= 400 && response.status < 500) {
         this.times4Error++;
         // We mark 4xx errors as completed because we don't
         // retry them
         console.warn("4xx error, skipping");
         this.pageSubmitDone();
-      } else if (status >= 500) {
-        console.warn("received http error " + status + " req'ing");
+      } else if (response.status >= 500) {
+        console.warn("received http error " + response.status + " req'ing");
         this.times5Error++;
         // If something causes a 500 error, better not repeat it and just skip it.
         this.pageSubmitDone();
       } else {
-        console.warn("received http status " + status + ", skipping");
+        console.warn("received http status " + response.status + ", skipping");
         this.pageSubmitDone();
       }
+      this.updateRateLimitParameters(response);
     } catch {
       console.warn("Error, retrying in 3s");
       setTimeout(() => this.submitListens(payload), 3000);
@@ -305,5 +316,26 @@ export default class Importer {
       };
     }
     return newCollection;
+  }
+
+  getRateLimitDelay() {
+    /* Get the amount of time we should wait according to LB rate limits before making a request to LB */
+    let delay = 0;
+    let current = new Date().getTime() / 1000;
+    if (this.rl_reset < 0 || current > this.rl_origin + this.rl_reset) {
+      delay = 0;
+    } else if (this.rl_remain > 0) {
+      delay = Math.max(0, Math.ceil((this.rl_reset * 1000) / rl_remain));
+    } else {
+      delay = Math.max(0, Math.ceil(this.rl_reset * 1000));
+    }
+    return delay;
+  }
+
+  updateRateLimitParameters(response) {
+    /* Update the variables we use to honor LB's rate limits */
+    this.rl_remain = parseInt(response.headers['X-RateLimit-Remaining']);
+    this.rl_reset = parseInt(response.headers['X-RateLimit-Reset-In']);
+    this.rl_origin = new Date().getTime() / 1000;
   }
 }

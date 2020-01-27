@@ -15,11 +15,6 @@ export default class APIService {
       APIBaseURI += '/1';
     }
     this.APIBaseURI = APIBaseURI;
-
-    // Variables used to honor LB's rate limit
-    this.rl_remain = -1;
-    this.rl_reset = -1;
-    this.rl_origin = -1;
   }
 
   async getRecentListensForUsers(userNames, limit) {
@@ -108,11 +103,6 @@ export default class APIService {
 
     let url = `${this.APIBaseURI}/submit-listens`;
 
-    let delay = this.getRateLimitDelay();
-    // Halt execution for some time
-    await new Promise((resolve) => {
-      setTimeout(resolve, delay);
-    })
     try {
       const response = await fetch(url, {
         method: 'POST',
@@ -122,8 +112,7 @@ export default class APIService {
         },
         body: JSON.stringify(struct),
       })
-      this.updateRateLimitParameters(response);
-      return response.status; // Return status so that caller can handle appropriately
+      return response; // Return status so that caller can handle appropriately
     } catch {
       // Retry if there is an network error
       console.warn("Error, retrying in 3 sec");
@@ -176,27 +165,6 @@ export default class APIService {
     });
     this.checkStatus(response);
     return response.status; // Return true if timestamp is updated
-  }
-
-  getRateLimitDelay() {
-    /* Get the amount of time we should wait according to LB rate limits before making a request to LB */
-    let delay = 0;
-    let current = new Date().getTime() / 1000;
-    if (this.rl_reset < 0 || current > this.rl_origin + this.rl_reset) {
-      delay = 0;
-    } else if (this.rl_remain > 0) {
-      delay = Math.max(0, Math.ceil((this.rl_reset * 1000) / rl_remain));
-    } else {
-      delay = Math.max(0, Math.ceil(this.rl_reset * 1000));
-    }
-    return delay;
-  }
-
-  updateRateLimitParameters(response) {
-    /* Update the variables we use to honor LB's rate limits */
-    this.rl_remain = parseInt(response.headers['X-RateLimit-Remaining']);
-    this.rl_reset = parseInt(response.headers['X-RateLimit-Reset-In']);
-    this.rl_origin = new Date().getTime() / 1000;
   }
 
   checkStatus(response) {
