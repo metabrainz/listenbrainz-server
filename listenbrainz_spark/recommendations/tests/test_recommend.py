@@ -73,7 +73,7 @@ class RecommendTestClass(SparkTestCase):
         self.assertLessEqual(len(user_recommendations['similar_artists_recordings']),
             config.RECOMMENDATION_SIMILAR_ARTIST_LIMIT)
 
-    def test_ge_recommendations(self):
+    def test_get_recommendations(self):
         model = recommend.load_model(config.HDFS_CLUSTER_URI + self.model_save_path)
         user_names = ['vansika', 'rob']
         recordings_df = self.get_recordings_df()
