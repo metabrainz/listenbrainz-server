@@ -23,32 +23,19 @@ export default class Importer {
     this.playCount = -1; // the number of scrobbles reported by Last.FM
     this.countReceived = 0; // number of scrobbles the Last.FM API sends us, this can be diff from playCount
 
-    this.submitQueue = []; // Queue that keeps tracks of submits to be made to LB
-    this.isSubmitActive = false;
-
     this.latestImportTime = 0; // the latest timestamp that we've imported earlier
-    this.maximumTimestampForImport = 0; // the latest listen found in this import
+    this.maxTimestampForImport = 0; // the latest listen found in this import
     this.incrementalImport = false;
 
-    this.activeFetches = 0;
-    this.maxActiveFetches = 10;
-
-    this.activeSubmits = 0;
-    this.maxActiveSubmits = 10;
-
-    this.timesGetPage = 0;
-    this.timesReportScrobbles = 0;
-    this.times4Error = 0;
-    this.times5Error = 0;
-
     this.numCompleted = 0; // number of pages completed till now
+    this.numSuccesful = 0; // number of pages succesfully submitted
 
     this.props = props;
 
-     // Variables used to honor LB's rate limit
-     this.rl_remain = -1;
-     this.rl_reset = -1;
-     this.rl_origin = -1;
+    // Variables used to honor LB's rate limit
+    this.rl_remain = -1;
+    this.rl_reset = -1;
+    this.rl_origin = -1;
   }
 
   async startImport() {
@@ -58,19 +45,38 @@ export default class Importer {
     this.latestImportTime = await this.APIService.getLatestImport(this.userName); // TODO: Error handling, test usernames having special characters
     this.incrementalImport = this.latestImportTime > 0;
     this.totalPages = await this.getNumberOfPages();
-    if (this.totalPages > 0) {
-      await this.getListens();
+    this.page = this.totalPages; // Start from the last page so that oldest scrobbles are imported first
+
+    while (this.page > 0) {
+      let payload = await this.getPage(this.page);
+      if (payload) {
+        // Submit only if response is valid
+        this.submitPage(payload);
+      }
+
+      this.page--;
+      this.numCompleted++;
+
+      // Update message
+      let msg = (
+        <p>
+        <FontAwesomeIcon icon={faSpinner} spin/> Sending page {this.numCompleted} of {this.totalPages} to ListenBrainz <br/>
+        <span style={{fontSize:8+'pt'}}>
+        {this.incrementalImport && <span>Note: This import will stop at the starting point of your last import. :)<br/></span>}
+        <span>Please don't close this page while this is running</span>
+        </span>
+        </p>
+      );
+      this.updateMessage(msg);
     }
-    if (this.submitQueue.length > 0) {
-      await this.submitListens();
-    }
+
     // Update latest import time on LB server
     try {
-      this.maximumTimestampForImport = Math.max(parseInt(this.maximumTimestampForImport), this.latestImportTime);
-      this.APIService.setLatestImport(this.userToken, this.maximumTimestampForImport);
+      this.maxTimestampForImport = Math.max(parseInt(this.maxTimestampForImport), this.latestImportTime);
+      this.APIService.setLatestImport(this.userToken, this.maxTimestampForImport);
     } catch {
       console.warn("Error, retrying in 3s");
-      setTimeout(() => this.APIService.setLatestImport(this.userToken, this.maximumTimestampForImport), 3000)
+      setTimeout(() => this.APIService.setLatestImport(this.userToken, this.maxTimestampForImport), 3000)
     }
     let final_msg = (
       <p>
@@ -84,14 +90,6 @@ export default class Importer {
           <b><span style={{fontSize: 10+'pt'}} className="text-danger">The number submitted listens is different from the {this.playCount} that Last.fm reports due to an inconsistency in their API, sorry!<br/></span></b>
         }
         <span style={{fontSize: 8+'pt'}}>Thank you for using ListenBrainz!</span>
-        {/* For debugging} */}
-        <span style={{display:'none'}}>
-          reportedScrobbles = {this.timesReportScrobbles} <br/>
-          getPage = {this.timesGetPage} <br/>
-          number4xx = {this.imes4Error} <br/>
-          number5xx = {this.times5Error} <br/>
-          page = {this.page} <br/>
-        </span> 
       </p>
     );
     this.updateMessage(final_msg);
@@ -139,39 +137,13 @@ export default class Importer {
     }
   }
 
-  getListens() {
-    this.getNextPagesIfSlots();
-
-    return new Promise((resolve, reject) => {
-      // Resolve the promise if number of pages recieved is equal to total pages
-      let that = this;
-      (function waitForPages(){
-        if (that.timesGetPage == that.totalPages) 
-          return resolve();
-        setTimeout(waitForPages, 100);
-      })();
-    })
-  }
-
-  getNextPagesIfSlots() {
-    /*
-    * Get next page if number of active fetches is less than 10
-    */
-
-    while (this.activeFetches < this.maxActiveFetches && this.page <= this.totalPages) {
-      this.activeFetches++;
-      this.getPage(this.page);
-      this.page++;
-    }
-  }
-
   async getPage(page) {
     /*
     * Fetch page from Last.fm
     */
 
     let retry = (reason) => {
-      console.warn(reason + ' fetching last.fm page=' + page + ', retrying in 3s');
+      console.warn(`${reason} fetching last.fm page=${page}, retrying in 3s`);
       setTimeout(() => this.getPage(page), 3000);
     }
 
@@ -181,119 +153,59 @@ export default class Importer {
       if (response.ok) {
         let data = await response.json();
         // Set latest import time
-        if (page === 1) {
-          if ('date' in data['recenttracks']['track'][0]) {
-            this.maximumTimestampForImport = data['recenttracks']['track'][0]['date']['uts'];
-          } else {
-            this.maximumTimestampForImport = Math.floor(Date.now() / 1000);
-          }
+        if ('date' in data['recenttracks']['track'][0]) {
+          this.maxTimestampForImport = Math.max(data['recenttracks']['track'][0]['date']['uts'], this.maxTimestampForImport);
+        } else {
+          this.maxTimestampForImport = Math.floor(Date.now() / 1000);
         }
-        this.reportPageAndGetNext(data);
+
+        // Encode the page so that it can be submitted
+        let payload = this.encodeScrobbles(data);
+        this.countReceived += payload.length;
+        return payload;
       } else {
         if (/^5/.test(response.status)) {
-          retry('got ' + response.status);
+          retry(`Got ${response.status}`);
         } else {
           // ignore 40x
-          this.pageGetDone()
+          console.warn(`Got ${response.status}, skipping`);
         }
       }
     } catch {
       // Retry if there is a network error
-      retry('error');
+      retry('Error');
     }
-  }
-
-  reportPageAndGetNext(data) {
-    let payload = this.encodeScrobbles(data);
-    this.submitQueue.push(payload);
-    this.countReceived += payload.length;
-    this.pageGetDone();
-  }
-
-  pageGetDone() {
-    this.activeFetches--;
-    this.timesGetPage++;
-    this.updateMessage(<p><FontAwesomeIcon icon={faSpinner} spin/> Getting page {this.timesGetPage} of {this.totalPages}<br/><span style={{fontSize: 8+'pt'}}>Please do not close this page while the process is running</span></p>);
-    // Check to see if we need to start up more fetches
-    this.getNextPagesIfSlots();
-  }
-
-  submitListens() {
-    this.submitNextPagesIfSlots();
-
-    return new Promise((resolve, reject) => {
-      // Resolve the promise if number of pages recieved is equal to total pages
-      let that = this;
-      (function waitForPages(){
-        if (that.numCompleted == that.totalPages) 
-          return resolve();
-        setTimeout(waitForPages, 100);
-      })();
-    })
-  }
-
-  submitNextPagesIfSlots() {
-    /*
-    * Submit next page if number of active fetches is less than 10
-    */
-
-   while (this.activeSubmits < this.maxActiveSubmits && this.submitQueue.length) {
-      this.activeSubmits++;
-      let payload = this.submitQueue.shift();
-      this.submitPage(payload);
-    } 
   }
 
   async submitPage(payload) {
     try {
-      this.timesReportScrobbles++;
       let delay = this.getRateLimitDelay();
       // Halt execution for some time
       await new Promise((resolve) => {
         setTimeout(resolve, delay);
       })
+
       let response = await this.APIService.submitListens(this.userToken, "import", payload);
       if (response.status >= 200 && response.status < 300) {
-        this.pageSubmitDone();
+        this.numSuccesful++;
       } else if (response.status == 429) {
         // This should never happen, but if it does, toss it back in and try again.
         setTimeout(() => this.submitListens(payload), 3000);
       } else if (response.status >= 400 && response.status < 500) {
-        this.times4Error++;
         // We mark 4xx errors as completed because we don't
         // retry them
         console.warn("4xx error, skipping");
-        this.pageSubmitDone();
       } else if (response.status >= 500) {
         console.warn("received http error " + response.status + " req'ing");
-        this.times5Error++;
         // If something causes a 500 error, better not repeat it and just skip it.
-        this.pageSubmitDone();
       } else {
         console.warn("received http status " + response.status + ", skipping");
-        this.pageSubmitDone();
       }
       this.updateRateLimitParameters(response);
     } catch {
       console.warn("Error, retrying in 3s");
       setTimeout(() => this.submitListens(payload), 3000);
     }
-  }
-
-  pageSubmitDone() {
-    this.numCompleted++;
-    this.activeSubmits--;
-    let msg = (
-      <p>
-      <FontAwesomeIcon icon={faSpinner} spin/> Sending page {this.numCompleted} of {this.totalPages} to ListenBrainz <br/>
-      <span style={{fontSize:8+'pt'}}>
-      {this.incrementalImport && <span>Note: This import will stop at the starting point of your last import. :)<br/></span>}
-      <span>Please don't close this page while this is running</span>
-      </span>
-      </p>
-    );
-    this.updateMessage(msg);
-    this.submitNextPagesIfSlots()
   }
 
   encodeScrobbles(scrobbles) {
