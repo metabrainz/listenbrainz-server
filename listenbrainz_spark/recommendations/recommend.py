@@ -65,11 +65,13 @@ def get_recommended_recordings(candidate_set, limit, recordings_df, model, mappe
     # get the track_name and artist_name to make the HTML redable. This step will not be required when sending recommendations
     # to lemmy since gids are enough to recognize the track.
     recommendations_df = df.join(mapped_listens, ['mb_artist_credit_id', 'mb_recording_mbid']) \
-        .select('mb_artist_credit_id', 'artist_name', 'mb_recording_mbid', 'track_name').distinct()
+        .select('artist_name', 'mb_artist_credit_id', 'mb_artist_credit_mbids', 'mb_recording_mbid', \
+            'mb_release_mbid', 'release_name', 'track_name').distinct()
 
     recommended_recordings = []
     for row in recommendations_df.collect():
-        rec = (row.track_name, row.artist_name, row.mb_recording_mbid, row.mb_artist_credit_id)
+        rec = (row.artist_name, row.mb_artist_credit_id, row.mb_artist_credit_mbids, row.mb_recording_mbid,
+            row.mb_release_mbid, row.release_name, row.track_name)
         recommended_recordings.append(rec)
     return recommended_recordings
 
@@ -201,7 +203,8 @@ def get_recommendation_html(recommendations, time_, best_model_id, ti):
     """
     date = datetime.utcnow().strftime('%Y-%m-%d')
     recommendation_html = 'Recommendation-{}-{}.html'.format(uuid.uuid4(), date)
-    column = ('Track Name', 'Artist Name', 'MB_RECORDING_GID', 'MB_ARTIST_CREDIT_ID')
+    column = ('ARTIST_NAME', 'MB_ARTIST_CREDIT_ID', 'MB_ARTIST_CREDIT_MBIDS', 'MB_RECORDING_MBID',
+        'MB_RELEASE_MBID', 'RELEASE_NAME', 'TRACK_NAME')
     context = {
         'recommendations' : recommendations,
         'column' : column,
