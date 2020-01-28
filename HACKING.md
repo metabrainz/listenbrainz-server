@@ -39,3 +39,17 @@ To run the unit tests:
 To run the integration tests:
 
     ./integration-test.sh
+
+### Spark
+- ##### Format namenode
+    Before formatting namenode, datanode must be formatted. To format namenode and datanode:
+
+        docker-compose -f docker/docker-compose.spark.yml -p listenbrainzspark run --rm hadoop-master hdfs namenode -format -clusterId <datanode cluster ID>
+
+    To open datanode command prompt:
+
+        docker exec -it listenbrainzspark_datanode_1 bash
+
+    To get the datanode cluster id:
+
+        cat /home/hadoop/hdfs/datanode/current/VERSION | grep "clusterID"
