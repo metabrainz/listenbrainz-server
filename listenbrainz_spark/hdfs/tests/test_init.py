@@ -15,9 +15,17 @@ from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
 from pyspark.sql.types import StructField, StructType, StringType
 
 test_listen = {
-            'user_name': 'vansika', 'artist_msid': "a36d6fc9-49d0-4789-a7dd-a2b72369ca45", 'release_msid' : "xxxxxx",
-            'release_name': "xxxxxx", 'artist_name': "Less Than Jake", 'release_mbid': "xxxxxx", 'track_name': "Al's War",
-            'recording_msid': "cb6985cd-cc71-4d59-b4fb-2e72796af741", 'tags': ['xxxx'], 'listened_at': str(datetime.utcnow())
+
+            'user_name': 'vansika',
+            'artist_msid': "a36d6fc9-49d0-4789-a7dd-a2b72369ca45",
+            'release_msid' : "xxxxxx",
+            'release_name': "xxxxxx",
+            'artist_name': "Less Than Jake",
+            'release_mbid': "xxxxxx",
+            'track_name': "Al's War",
+            'recording_msid': "cb6985cd-cc71-4d59-b4fb-2e72796af741",
+            'tags': ['xxxx'],
+            'listened_at': str(datetime.utcnow())
         }
 
 class HDFSTestCase(unittest.TestCase):
@@ -85,8 +93,8 @@ class HDFSTestCase(unittest.TestCase):
         tmp_dump_dir = tempfile.mkdtemp()
 
         with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
-                ListenbrainzHDFSUploader().upload_archive(tmp_dump_dir, tar, '/test', schema.listen_schema,
-                    ListenbrainzDataUploader().process_json_listens)
+            ListenbrainzHDFSUploader().upload_archive(tmp_dump_dir, tar, '/test', schema.listen_schema,
+            ListenbrainzDataUploader().process_json_listens)
 
         walk = utils.hdfs_walk('/test', depth=1)
         dirs = next(walk)[1]
