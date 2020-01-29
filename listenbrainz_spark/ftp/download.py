@@ -5,6 +5,9 @@ from listenbrainz_spark.exceptions import DumpNotFoundException
 
 from flask import current_app
 
+MAPPING_DUMP_ID_POS = 3
+ARTIST_RELATION_DUMP_ID_POS = 5
+
 class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
     def get_dump_name_to_download(self, dump, dump_id, dump_id_pos):
@@ -86,7 +89,6 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
             Returns:
                 dest_path (str): Local path where mapping has been downloaded.
         """
-        MAPPING_DUMP_ID_POS = 3
         dest_path = self.download_spark_dump_and_get_path(
                         directory, mapping_dump_id, current_app.config['FTP_MSID_MBID_DIR'],
                         MAPPING_DUMP_ID_POS
@@ -138,7 +140,6 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
             Returns:
                 dest_path (str): Local path where artist relation has been downloaded.
         """
-        ARTIST_RELATION_DUMP_ID_POS = 5
         dest_path = self.download_spark_dump_and_get_path(
                         directory, artist_relation_dump_id, current_app.config['FTP_ARTIST_RELATION_DIR'],
                         ARTIST_RELATION_DUMP_ID_POS

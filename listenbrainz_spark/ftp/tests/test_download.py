@@ -4,8 +4,9 @@ from unittest.mock import patch, call
 
 import listenbrainz_spark
 from listenbrainz_spark import config, utils
-from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
 from listenbrainz_spark.exceptions import DumpNotFoundException
+from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader, MAPPING_DUMP_ID_POS, \
+    ARTIST_RELATION_DUMP_ID_POS
 
 class FTPDownloaderTestCase(unittest.TestCase):
 
@@ -64,7 +65,7 @@ class FTPDownloaderTestCase(unittest.TestCase):
     @patch('ftplib.FTP')
     def test_download_msid_mbid_mapping(self, mock_ftp_cons, mock_spark_dump):
         dest_path = ListenbrainzDataDownloader().download_msid_mbid_mapping('/fakedir', 1)
-        mock_spark_dump.assert_called_once_with('/fakedir', 1, config.FTP_MSID_MBID_DIR, 3)
+        mock_spark_dump.assert_called_once_with('/fakedir', 1, config.FTP_MSID_MBID_DIR, MAPPING_DUMP_ID_POS)
         self.assertEqual(dest_path, mock_spark_dump.return_value)
 
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.download_dump')
@@ -85,5 +86,6 @@ class FTPDownloaderTestCase(unittest.TestCase):
     @patch('ftplib.FTP')
     def test_download_artist_relation(self, mock_ftp_cons, mock_spark_dump):
         dest_path = ListenbrainzDataDownloader().download_artist_relation('/fakedir', 1)
-        mock_spark_dump.assert_called_once_with('/fakedir', 1, config.FTP_ARTIST_RELATION_DIR, 5)
+        mock_spark_dump.assert_called_once_with('/fakedir', 1, config.FTP_ARTIST_RELATION_DIR,
+            ARTIST_RELATION_DUMP_ID_POS)
         self.assertEqual(dest_path, mock_spark_dump.return_value)
