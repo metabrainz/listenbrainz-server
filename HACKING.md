@@ -44,7 +44,7 @@ To run the integration tests:
 - ##### Format namenode
     Before formatting namenode, datanode must be formatted. To format namenode and datanode:
 
-        docker-compose -f docker/docker-compose.spark.yml -p listenbrainzspark run --rm hadoop-master hdfs namenode -format -clusterId <datanode cluster ID>
+        ./spark_develop.sh format <datanode cluster ID>
 
     To open datanode command prompt:
 
