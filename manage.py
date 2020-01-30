@@ -73,7 +73,6 @@ def run_follow_server(host, port, debug=True):
 @click.option("--create-db", is_flag=True, help="Create the database and user.")
 def init_db(force, create_db):
     """Initializes database.
-
     This process involves several steps:
     1. Table structure is created.
     2. Primary keys and foreign keys are created.
@@ -123,7 +122,6 @@ def init_db(force, create_db):
 @click.option("--create-db", is_flag=True, help="Skip creating database and user. Tables/indexes only.")
 def init_msb_db(force, create_db):
     """Initializes database.
-
     This process involves several steps:
     1. Table structure is created.
     2. Primary keys and foreign keys are created.

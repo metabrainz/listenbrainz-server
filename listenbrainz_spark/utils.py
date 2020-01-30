@@ -18,6 +18,13 @@ from brainzutils.flask import CustomFlask
 from pyspark.sql.utils import AnalysisException
 from time import sleep
 
+# A typical listen is of the form:
+# {"listened_at": "2005-02-28T20:39:08Z", "user_name": "vansika", "artist_msid": "6276299c-57e9-4014-9fdd-ab9ed800f61d",
+# "artist_name": "Cake", "artist_mbids": [], "release_msid": null, "release_name": null, "release_mbid": "",
+# "track_name": "Tougher Than It Is", "recording_msid": "c559b2f8-41ff-4b55-ab3c-0b57d9b85d11",
+# "recording_mbid": "1750f8ca-410e-4bdc-bf90-b0146cb5ee35", "tags": []}
+# All the keys in the dict are column/field names in a Spark dataframe.
+
 def append(df, dest_path):
     """ Append a dataframe to existing dataframe in HDFS or write a new one
         if dataframe does not exist.
@@ -27,7 +34,7 @@ def append(df, dest_path):
             dest_path (string): Path where the existing dataframe is found or where a new dataframe should be created.
     """
     try:
-        df.write.mode('append').parquet(dest_path)
+        df.write.mode('append').parquet(config.HDFS_CLUSTER_URI + dest_path)
     except Py4JJavaError as err:
         raise DataFrameNotAppendedException(err.java_exception, df.schema)
 
@@ -114,12 +121,35 @@ def read_files_from_HDFS(path):
             path (str): An HDFS path.
     """
     try:
-        df = listenbrainz_spark.sql_context.read.parquet(path)
+        df = listenbrainz_spark.sql_context.read.parquet(config.HDFS_CLUSTER_URI + path)
         return df
     except AnalysisException as err:
         raise PathNotFoundException(str(err), path)
     except Py4JJavaError as err:
         raise FileNotFetchedException(err.java_exception, path)
+
+def get_listens_without_artist_and_recording_mbids(df):
+    """ Get dataframe with all fields except artist_mbids and recording_mbid.
+
+        Args:
+            df (dataframe): Columns can be depicted as:
+                [
+                    'artist_mbids', artist_msid', 'artist_name', 'listened_at', 'recording_mbid', recording_msid',
+                     'release_mbid', 'release_msid', 'release_name', 'tags', 'track_name', 'user_name'
+                ]
+        Returns:
+            A dataframe with columns that can be depicted as:
+                [
+                    'artist_msid', 'artist_name', 'listened_at', 'recording_msid', 'release_mbid',
+                    'release_msid', 'release_name', 'tags', 'track_name', 'user_name'
+                ]
+
+    """
+    # Not all listens in ListenBrainz contain mbids but every listen has an msid.
+    # We fetch listens such that the mbid fields are not selected.
+    # We then map the msids with mbids so that every listen has an mbid too.
+    return df.select('artist_msid', 'artist_name', 'listened_at', 'recording_msid', 'release_mbid', 'release_msid',
+        'release_name', 'tags', 'track_name', 'user_name')
 
 def get_listens(from_date, to_date, dest_path):
     """ Prepare dataframe of months falling between from_date and to_date (both inclusive).
@@ -150,6 +180,9 @@ def get_listens(from_date, to_date, dest_path):
         from_date = stats.adjust_days(from_date, config.STEPS_TO_REACH_NEXT_MONTH, shift_backwards=False)
         # shift to the first of the month
         from_date = stats.replace_days(from_date, 1)
+    if not df:
+        current_app.logger.error('Listening history missing form HDFS')
+        sys.exit(-1)
     return df
 
 def save_parquet(df, path):
@@ -160,7 +193,7 @@ def save_parquet(df, path):
             path (str): Path in HDFS to save the dataframe.
     """
     try:
-        df.write.format('parquet').save(path, mode='overwrite')
+        df.write.format('parquet').save(config.HDFS_CLUSTER_URI + path, mode='overwrite')
     except Py4JJavaError as err:
         raise FileNotSavedException(err.java_exception, path)
 
@@ -185,13 +218,9 @@ def delete_dir(path, recursive=False):
               >> Raises HdfsError if trying to delete a non-empty directory.
                  For non-empty directory set recursive to 'True'.
     """
-    try:
-        deleted = hdfs_connection.client.delete(path, recursive=recursive)
-        if not deleted:
-            raise HDFSDirectoryNotDeletedException('', path)
-        return deleted
-    except HdfsError as err:
-        raise HDFSDirectoryNotDeletedException(str(err), path)
+    deleted = hdfs_connection.client.delete(path, recursive=recursive)
+    if not deleted:
+        raise HDFSDirectoryNotDeletedException('', path)
 
 def path_exists(path):
     """ Checks if the path exists in HDFS. The function returns False if the path
@@ -206,3 +235,41 @@ def path_exists(path):
     if path_found:
         return True
     return False
+
+def hdfs_walk(path, depth=0):
+    """ Depth-first walk of HDFS filesystem.
+
+        Args:
+            path (str): Path to start DFS.
+            depth (int): Maximum depth to explore files/folders. 0 for no limit.
+
+        Returns:
+            walk: a generator yeilding tuples (path, dirs, files).
+    """
+    try:
+        walk = hdfs_connection.client.walk(hdfs_path=path, depth=depth)
+        return walk
+    except HdfsError as err:
+        raise PathNotFoundException(str(err), path)
+
+def read_json(hdfs_path, schema):
+    """ Upload JSON file to HDFS as parquet.
+
+        Args:
+            hdfs_path (str): HDFS path to upload JSON.
+            schema: Blueprint of parquet.
+
+        Returns:
+            df (parquet): Dataframe.
+    """
+    df = listenbrainz_spark.session.read.json(config.HDFS_CLUSTER_URI + hdfs_path, schema=schema)
+    return df
+
+def upload_to_HDFS(hdfs_path, local_path):
+    """ Upload local file to HDFS.
+
+        Args:
+            hdfs_path (str): HDFS path to upload local file.
+            local_path (str): Local path of file to be uploaded.
+    """
+    hdfs_connection.client.upload(hdfs_path=hdfs_path, local_path=local_path)

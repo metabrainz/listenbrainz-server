@@ -1,6 +1,7 @@
 from datetime import datetime
 from pyspark.sql import Row
-from pyspark.sql.types import StructField, StructType, ArrayType, StringType, TimestampType, FloatType, IntegerType, BooleanType
+from pyspark.sql.types import StructField, StructType, ArrayType, StringType, TimestampType, FloatType, \
+    IntegerType, BooleanType
 
 
 # NOTE: please keep this schema definition alphabetized
@@ -52,12 +53,32 @@ model_metadata_schema = [
     StructField('validation_rmse', FloatType(), nullable=True), # Root mean squared error for validation data.
 ]
 
+msid_mbid_mapping_schema = [
+    StructField('mb_artist_credit_id', IntegerType(), nullable=False),
+    StructField('mb_artist_credit_mbids', ArrayType(StringType()), nullable=False),
+    StructField('mb_recording_mbid', StringType(), nullable=False),
+    StructField('mb_release_mbid', StringType(), nullable=False),
+    StructField('msb_artist_msid', StringType(), nullable=False),
+    StructField('msb_recording_msid', StringType(), nullable=False),
+    StructField('msb_release_msid', StringType(), nullable=False),
+]
+
+artist_relation_schema =[
+    StructField('id_0', IntegerType(), nullable=False), # artist credit
+    StructField('name_1', StringType(), nullable=False), # artist name
+    StructField('name_0', StringType(), nullable=False),
+    StructField('id_1', IntegerType(), nullable=False),
+    StructField('score', FloatType(), nullable=False),
+]
+
 # The field names of the schema need to be sorted, otherwise we get weird
 # errors due to type mismatches when creating DataFrames using the schema
 # Although, we try to keep it sorted in the actual definition itself, we
 # also sort it programmatically just in case
 listen_schema = StructType(sorted(listen_schema, key=lambda field: field.name))
 model_metadata_schema = StructType(sorted(model_metadata_schema, key=lambda field: field.name))
+msid_mbid_mapping_schema = StructType(sorted(msid_mbid_mapping_schema, key=lambda field: field.name))
+artist_relation_schema = StructType(sorted(artist_relation_schema, key=lambda field: field.name))
 
 def convert_listen_to_row(listen):
     """ Convert a listen to a pyspark.sql.Row object.
@@ -119,18 +140,37 @@ def convert_model_metadata_to_row(meta):
     )
 
 def convert_to_spark_json(listen):
-    meta = listen['track_metadata']
-    return {
-        'listened_at': str(datetime.fromtimestamp(listen['listened_at'])),
-        'user_name': listen['user_name'],
-        'artist_msid': meta['additional_info']['artist_msid'],
-        'artist_name': meta['artist_name'],
-        'artist_mbids': meta['additional_info'].get('artist_mbids', []),
-        'release_msid': meta['additional_info'].get('release_msid', ''),
-        'release_name': meta.get('release_name', ''),
-        'release_mbid': meta['additional_info'].get('release_mbid', ''),
-        'track_name': meta['track_name'],
-        'recording_msid': listen['recording_msid'],
-        'recording_mbid': meta['additional_info'].get('recording_mbid', ''),
-        'tags': meta['additional_info'].get('tags', []),
-    }
+    meta = listen
+    return Row(
+        listened_at=meta['listened_at'],
+        user_name=meta['user_name'],
+        artist_msid=meta['artist_msid'],
+        artist_name=meta['artist_name'],
+        artist_mbids=meta.get('artist_mbids', []),
+        release_msid=meta.get('release_msid', ''),
+        release_name=meta.get('release_name', ''),
+        release_mbid=meta.get('release_mbid', ''),
+        track_name=meta['track_name'],
+        recording_msid=meta['recording_msid'],
+        recording_mbid=meta.get('recording_mbid', ''),
+        tags=meta.get('tags', []),
+    )
+
+def convert_mapping_to_row(mapping):
+    """ Convert model metadata to row object.
+
+        Args:
+            mapping (dict): A dictionary containing mapping metadata.
+
+        Returns:
+            pyspark.sql.Row object - A Spark SQL row.
+    """
+    return Row(
+        mb_artist_credit_id=mapping.get('mb_artist_credit_id'),
+        mb_artist_credit_mbids=mapping.get('mb_artist_credit_mbids'),
+        mb_recording_mbid=mapping.get('mb_recording_mbid'),
+        mb_release_mbid=mapping.get('mb_release_mbid'),
+        msb_artist_msid=mapping.get('msb_artist_msid'),
+        msb_recording_msid=mapping.get('msb_recording_msid'),
+        msb_release_msid=mapping.get('msb_release_msid'),
+    )

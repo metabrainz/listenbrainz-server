@@ -26,7 +26,7 @@ class InitTestCase(SparkTestCase):
         self.assertEqual(d1, d2)
 
     def test_run_query(self):
-        df = utils.create_dataframe(Row(column1=1, column2=2), schema=None)
+        df = utils.create_dataframe([Row(column1=1, column2=2)], schema=None)
         utils.register_dataframe(df, "table")
         new_df = stats.run_query("""
          SELECT *
@@ -34,4 +34,3 @@ class InitTestCase(SparkTestCase):
           """
           )
         self.assertEqual(new_df.count(), df.count())
-        
