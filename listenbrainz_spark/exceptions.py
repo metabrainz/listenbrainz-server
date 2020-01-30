@@ -4,7 +4,7 @@ class SparkException(Exception):
 
     def __str__(self):
         return self.message
-      
+
 class DataFrameNotAppendedException(SparkException):
     """ Failed to append a dataframe to existing dataframe in HDFS or
         failed to write a new dataframe to HDFS.
@@ -74,5 +74,8 @@ class ViewNotRegisteredException(SparkException):
         self.error_msg = 'Dataframe not registered {}\n{}'.format(table_name, message)
         super(ViewNotRegisteredException, self).__init__(self.error_msg)
 
-
-
+class DumpNotFoundException(SparkException):
+    """ Failed to find data dump on FTP.
+    """
+    def __init__(self, message):
+        super(DumpNotFoundException, self).__init__(message)
