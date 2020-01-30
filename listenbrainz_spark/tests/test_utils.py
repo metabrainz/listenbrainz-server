@@ -1,4 +1,5 @@
 import os
+import tempfile
 from datetime import datetime
 
 from listenbrainz_spark.tests import SparkTestCase
@@ -72,3 +73,13 @@ class UtilsTestCase(SparkTestCase):
         utils.save_parquet(df, self.path_)
         received_df = utils.read_files_from_HDFS(self.path_)
         self.assertEqual(received_df.count(), 1)
+
+    def test_upload_to_HDFS(self):
+        temp_file = tempfile.mkdtemp()
+        local_path = os.path.join(temp_file, 'test_file.txt')
+        with open(local_path, 'w') as f:
+            f.write('test file')
+        self.path_ = '/test/upload.parquet'
+        utils.upload_to_HDFS(self.path_, local_path)
+        status = utils.path_exists(self.path_)
+        self.assertTrue(status)

@@ -39,7 +39,7 @@ class CreateDataframeTestCase(SparkTestCase):
             "recording_msid": "cb6985cd-cc71-4d59-b4fb-2e72796af741", "tags": [], "listened_at": cls.date
         }
 
-        test_listens_df = utils.create_dataframe([schema.convert_to_spark_json(test_listen)], schema.listen_schema)
+        test_listens_df = utils.create_dataframe(schema.convert_to_spark_json(test_listen), schema.listen_schema)
         utils.save_parquet(test_listens_df, LISTENS_PATH + '{}/{}.parquet'.format(year, month))
 
     @classmethod
@@ -49,7 +49,7 @@ class CreateDataframeTestCase(SparkTestCase):
             "mb_artist_credit_mbids":["181c4177-f33a-441d-b15d-910acaf18b07"],"mb_artist_credit_id":2157963,
             "mb_release_mbid": "xxxxx", "msb_release_msid": "xxxxx"}
 
-        test_mapping_df = utils.create_dataframe([schema.convert_mapping_to_row(test_mapping)], schema.msid_mbid_mapping_schema)
+        test_mapping_df = utils.create_dataframe(schema.convert_mapping_to_row(test_mapping), schema.msid_mbid_mapping_schema)
         utils.save_parquet(test_mapping_df, MAPPING_PATH)
 
     @classmethod
@@ -76,7 +76,7 @@ class CreateDataframeTestCase(SparkTestCase):
 
     def test_save_dataframe(self):
         path_ = '/test_df.parquet'
-        df = utils.create_dataframe([Row(column1=1, column2=2)], schema=None)
+        df = utils.create_dataframe(Row(column1=1, column2=2), schema=None)
         create_dataframes.save_dataframe(df, path_)
 
         status = utils.path_exists(path_)

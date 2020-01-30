@@ -65,7 +65,7 @@ def save_dataframe_metadata_to_HDFS(metadata):
     metadata_row = schema.convert_model_metadata_to_row(metadata)
     try:
         # Create dataframe from the row object.
-        dataframe_metadata = utils.create_dataframe([metadata_row], schema.model_metadata_schema)
+        dataframe_metadata = utils.create_dataframe(metadata_row, schema.model_metadata_schema)
     except DataFrameNotCreatedException as err:
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)

@@ -89,7 +89,7 @@ def create_dataframe(row, schema):
             df (dataframe): Newly created dataframe.
     """
     try:
-        df = listenbrainz_spark.session.createDataFrame(row, schema=schema)
+        df = listenbrainz_spark.session.createDataFrame([row], schema=schema)
         return df
     except Py4JJavaError as err:
         raise DataFrameNotCreatedException(err.java_exception, row)
@@ -264,3 +264,12 @@ def read_json(hdfs_path, schema):
     """
     df = listenbrainz_spark.session.read.json(config.HDFS_CLUSTER_URI + hdfs_path, schema=schema)
     return df
+
+def upload_to_HDFS(hdfs_path, local_path):
+    """ Upload local file to HDFS.
+
+        Args:
+            hdfs_path (str): HDFS path to upload local file.
+            local_path (str): Local path of file to be uploaded.
+    """
+    hdfs_connection.client.upload(hdfs_path=hdfs_path, local_path=local_path)

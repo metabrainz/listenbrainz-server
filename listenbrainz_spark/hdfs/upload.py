@@ -1,6 +1,7 @@
 import os
 import time
 import tarfile
+import tempfile
 
 import listenbrainz_spark
 from listenbrainz_spark import schema, path, config, utils
@@ -36,7 +37,7 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
                 tmp_HDFS_path (str): HDFS path where listens JSON has been uploaded.
         """
         start_time = time.time()
-        df = utils.read_json(tmp_hdfs_path, schema=schema).cache()
+        df = utils.read_json(tmp_hdfs_path, schema=schema)
         current_app.logger.info("Processing {} listens...".format(df.count()))
 
         if filename.split('/')[-1] == 'invalid.json':
@@ -57,9 +58,10 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
                 archive: Mapping tar file to upload.
                 force: If True deletes dir at path where mappings are to be uploaded.
         """
+        tmp_dump_dir = tempfile.mkdtemp()
         with tarfile.open(name=archive, mode='r:bz2') as tar:
-            self.upload_archive(tar, path.MBID_MSID_MAPPING, schema.msid_mbid_mapping_schema, self.process_json,
-                force=force)
+            self.upload_archive(tmp_dump_dir, tar, path.MBID_MSID_MAPPING, schema.msid_mbid_mapping_schema,
+                self.process_json, force=force)
 
     def upload_listens(self, archive, force=False):
         """ Decompress archive and upload listens to HDFS.
@@ -68,9 +70,10 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
                 archive: listens tar file to upload.
                 force: If True deletes dir at path where listens are to be uploaded.
         """
+        tmp_dump_dir = tempfile.mkdtemp()
         pxz = self.get_pxz_output(archive)
         with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
-            self.upload_archive(tar, path.LISTENBRAINZ_DATA_DIRECTORY, schema.listen_schema,
+            self.upload_archive(tmp_dump_dir, tar, path.LISTENBRAINZ_DATA_DIRECTORY, schema.listen_schema,
                 self.process_json_listens, force=force)
 
     def upload_artist_relation(self, archive, force=False):
@@ -80,6 +83,7 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
                 archive: artist relation tar file to upload.
                 force: If True deletes dir at path where artist relations are to be uploaded.
         """
+        tmp_dump_dir = tempfile.mkdtemp()
         with tarfile.open(name=archive, mode='r:bz2') as tar:
-            self.upload_archive(tar, path.SIMILAR_ARTIST_DATAFRAME_PATH, schema.artist_relation_schema,
+            self.upload_archive(tmp_dump_dir, tar, path.SIMILAR_ARTIST_DATAFRAME_PATH, schema.artist_relation_schema,
                 self.process_json, force=force)

@@ -9,7 +9,6 @@ from listenbrainz_spark import path
 from listenbrainz_spark import utils
 from listenbrainz_spark import config
 from listenbrainz_spark import hdfs_connection
-from listenbrainz_spark.data import import_dump
 
 from hdfs.util import HdfsError
 from py4j.protocol import Py4JJavaError
@@ -161,12 +160,6 @@ def request_consumer():
     from listenbrainz_spark.request_consumer.request_consumer import main
     with app.app_context():
         main('request-consumer-%s' % str(int(time.time())))
-
-@cli.command(name="import")
-@click.argument('filename', type=click.Path(exists=True))
-def import_dump_command(filename):
-    import_dump.main(app_name='import', archive=filename)
-
 
 @cli.resultcallback()
 def remove_zip(result, **kwargs):

@@ -55,7 +55,7 @@ class SparkTestCase(unittest.TestCase):
             test_playcounts.append([1, 1, 1])
         for i in range(PLAYCOUNTS_COUNT // 2 + 1, PLAYCOUNTS_COUNT + 1):
             test_playcounts.append([2, 2, 1])
-        test_playcounts_df = utils.create_dataframe(test_playcounts, schema=schema)
+        test_playcounts_df = listenbrainz_spark.session.createDataFrame(test_playcounts, schema=schema)
         utils.save_parquet(test_playcounts_df, TEST_PLAYCOUNTS_PATH)
 
     @classmethod
@@ -66,22 +66,22 @@ class SparkTestCase(unittest.TestCase):
 
     @classmethod
     def get_users_df(cls):
-        df = utils.create_dataframe([Row(user_name='vansika', user_id=1)], schema=None)
-        users_df = df.union(utils.create_dataframe([Row(user_name='rob', user_id=2)], schema=None))
+        df = utils.create_dataframe(Row(user_name='vansika', user_id=1), schema=None)
+        users_df = df.union(utils.create_dataframe(Row(user_name='rob', user_id=2), schema=None))
         return users_df
 
     @classmethod
     def get_recordings_df(cls):
-        df = utils.create_dataframe([Row(mb_recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
-            mb_artist_credit_id=1, recording_id=1)], schema=None)
-        recordings_df = df.union(utils.create_dataframe([Row(mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
-            mb_artist_credit_id=2, recording_id=2)], schema=None))
+        df = utils.create_dataframe(Row(mb_recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
+            mb_artist_credit_id=1, recording_id=1), schema=None)
+        recordings_df = df.union(utils.create_dataframe(Row(mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+            mb_artist_credit_id=2, recording_id=2), schema=None))
         return recordings_df
 
     @classmethod
     def get_candidate_set(cls):
-        df = utils.create_dataframe([Row(user_id=1, recording_id=1)], schema=None)
-        candidate_set = df.union(utils.create_dataframe([Row(user_id=2, recording_id=2)], schema=None))
+        df = utils.create_dataframe(Row(user_id=1, recording_id=1), schema=None)
+        candidate_set = df.union(utils.create_dataframe(Row(user_id=2, recording_id=2), schema=None))
         return candidate_set
 
     @classmethod
@@ -94,7 +94,7 @@ class SparkTestCase(unittest.TestCase):
             msb_artist_msid="a36d6fc9-49d0-4789-a7dd-a2b72369ca45", mb_artist_credit_mbids=["181c4177-f33a-441d-b15d-910acaf18b07"],
             mb_artist_credit_id=1, mb_release_mbid="xxxxxx", msb_release_msid='xxxxxx',
         )
-        df = utils.create_dataframe([mapped_listens_row_1], schema=None)
+        df = utils.create_dataframe(mapped_listens_row_1, schema=None)
 
         mapped_listens_row_2 = Row(
             user_name='rob', artist_msid="b36d6fc9-49d0-4789-a7dd-a2b72369ca45", release_msid="xxxxxx",
@@ -104,5 +104,5 @@ class SparkTestCase(unittest.TestCase):
             msb_artist_msid="b36d6fc9-49d0-4789-a7dd-a2b72369ca45", mb_artist_gids=["281c4177-f33a-441d-b15d-910acaf18b07"],
             mb_artist_credit_id=2, mb_release_mbid="xxxxxx", msb_release_msid='xxxxxx',
         )
-        mapped_listens_df = df.union(utils.create_dataframe([mapped_listens_row_2], schema=None))
+        mapped_listens_df = df.union(utils.create_dataframe(mapped_listens_row_2, schema=None))
         return mapped_listens_df
