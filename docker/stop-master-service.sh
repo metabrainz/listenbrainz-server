@@ -7,5 +7,5 @@
 # stop the spark and hadoop service
 docker service rm spark-master hadoop-master
 
-# remove the exmi container
+# remove the exim container
 docker rm -f exim-relay-listenbrainz.org

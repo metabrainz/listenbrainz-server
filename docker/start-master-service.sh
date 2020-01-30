@@ -39,6 +39,7 @@ docker run \
     --env GMAIL_GSUITE_RELAY=yes \
     -v ${SPOOL_VOLUME_NAME}:/var/spool/exim4 \
     --publish 25:25 \
+    --publish 587:587 \
     --restart unless-stopped \
     $IMAGE
 
