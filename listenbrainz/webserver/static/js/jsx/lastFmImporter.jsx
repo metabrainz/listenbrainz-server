@@ -25,8 +25,10 @@ class LastFmImporter extends React.Component {
   handleSubmit = (event) => {
     this.toggleModal();
     event.preventDefault();
-    this.importer = new Importer(this.state.lastfmUsername, this.props, this.updateMessage, this.setClose);
-    this.importer.startImport();
+    this.importer = new Importer(this.state.lastfmUsername, this.props);
+    setInterval(this.updateMessage, 100);
+    setInterval(this.setClose, 100);
+    this.importer.startImport()
   }
   
   toggleModal = () => {
@@ -35,12 +37,12 @@ class LastFmImporter extends React.Component {
     });
   }
   
-  setClose = (value) => {
-    this.setState({canClose: value});
+  setClose = () => {
+    this.setState({canClose: this.importer.canClose});
   }
   
-  updateMessage = (msg) => {
-    this.setState({msg: msg});
+  updateMessage = () => {
+    this.setState({msg: this.importer.msg});
   }
   
   render() {

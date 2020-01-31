@@ -5,11 +5,8 @@ import { faSpinner, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 export default class Importer {
-  constructor(lastfmUsername, props, updateMessage, setClose) {
+  constructor(lastfmUsername, props) {
     this.APIService = new APIService(props.api_url || `${window.location.origin}/1`) // Used to access LB API
-
-    this.updateMessage = updateMessage // Used to update the message in modal
-    this.setClose = setClose; // Used to enable or disable close button in modal
 
     this.lastfmUsername = lastfmUsername;
     this.lastfmURL = props.lastfm_api_url;
@@ -36,10 +33,14 @@ export default class Importer {
     this.rl_remain = -1;
     this.rl_reset = -1;
     this.rl_origin = -1;
+
+    // Message to be outputed in modal
+    this.msg = "";
+    this.canClose = true;
   }
 
   async startImport() {
-    this.setClose(false); // Disable the close button
+    this.canClose = false; // Disable the close button
     this.updateMessage("Your import from Last.fm is starting!");
     this.playCount = await this.getTotalNumberOfScrobbles();
     this.latestImportTime = await this.APIService.getLatestImport(this.userName); // TODO: Error handling, test usernames having special characters
@@ -93,7 +94,7 @@ export default class Importer {
       </p>
     );
     this.updateMessage(final_msg);
-    this.setClose(true);
+    this.canClose = true;
   }
 
   async getTotalNumberOfScrobbles() {
@@ -112,7 +113,7 @@ export default class Importer {
       }
     } catch(error) {
       this.updateMessage("An error occurred, please try again. :(")
-      this.setClose(true); // Enable the close button
+      this.canClose = true; // Enable the close button
       throw error;
     }
   }
@@ -133,7 +134,7 @@ export default class Importer {
       }
     } catch(error) {
       this.updateMessage("An error occurred, please try again. :(")
-      this.setClose(true); // Enable the close button
+      this.canClose = true; // Enable the close button
     }
   }
 
@@ -228,6 +229,10 @@ export default class Importer {
       };
     }
     return newCollection;
+  }
+
+  updateMessage = (msg) => {
+    this.msg = msg;
   }
 
   getRateLimitDelay() {
