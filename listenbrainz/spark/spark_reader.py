@@ -13,14 +13,14 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.spark.handlers import handle_user_artist
 import sqlalchemy
 
+response_handler_map = {
+    'user_artist': handle_user_artist,
+}
 class SparkReader:
     def __init__(self):
         self.app = create_app() # creating a flask app for config values and logging to Sentry
 
     def get_response_handler(self, response_type):
-        response_handler_map = {
-            'user_artist': handle_user_artist,
-        }
         return response_handler_map[response_type]
 
 

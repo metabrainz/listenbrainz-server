@@ -81,15 +81,10 @@ class RequestConsumer:
 
 
     def callback(self, channel, method, properties, body):
-        current_app.logger.info("Processing new request...")
         request = json.loads(body.decode('utf-8'))
-        current_app.logger.info("Calculating result...")
         messages = self.get_result(request)
-        current_app.logger.info("Done!")
         if messages:
-            current_app.logger.info("Pushing to result queue...")
             self.push_to_result_queue(messages)
-            current_app.logger.info("Done!")
         while True:
             try:
                 self.request_channel.basic_ack(delivery_tag=method.delivery_tag)
@@ -100,9 +95,6 @@ class RequestConsumer:
                 self.request_channel.queue_declare(current_app.config['SPARK_REQUEST_QUEUE'], durable=True)
                 self.request_channel.queue_bind(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], queue=current_app.config['SPARK_REQUEST_QUEUE'])
                 self.request_channel.basic_consume(self.callback, queue=current_app.config['SPARK_REQUEST_QUEUE'])
-
-
-        current_app.logger.info("Request processed!")
 
 
     def connect_to_rabbitmq(self):
@@ -119,9 +111,7 @@ class RequestConsumer:
     def run(self):
         while True:
             try:
-                current_app.logger.info("Connecting to RabbitMQ...")
                 self.connect_to_rabbitmq()
-                current_app.logger.info("Connected!")
                 self.request_channel = self.rabbitmq.channel()
                 self.request_channel.exchange_declare(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], exchange_type='fanout')
                 self.request_channel.queue_declare(current_app.config['SPARK_REQUEST_QUEUE'], durable=True)
@@ -131,7 +121,6 @@ class RequestConsumer:
                 self.result_channel = self.rabbitmq.channel()
                 self.result_channel.exchange_declare(exchange=current_app.config['SPARK_RESULT_EXCHANGE'], exchange_type='fanout')
 
-                current_app.logger.info('Started request consumer...')
                 try:
                     self.request_channel.start_consuming()
                 except pika.exceptions.ConnectionClosed:
