@@ -1,5 +1,5 @@
-Set up a development environment
-================================
+Set up ListenBrainz Server development environment
+==================================================
 
 To contribute to the ListenBrainz project, you need a development environment.
 With your development environment, you can test your changes before submitting a
@@ -218,8 +218,14 @@ CTRL^C. Once everything is running, visit your new site from your browser!
 Now, you are all set to begin making changes and seeing them in real-time inside
 of your development environment!
 
+Once you are done with your work, shut down the containers using the following command. 
+
+.. code-block:: bash
+
+    ./develop.sh down
+
 Using develop.sh
---------------------------------
+----------------
 We provide a utility to wrap docker compose and some common development processes.
 
 To open a psql session, run:
@@ -256,7 +262,7 @@ Test your changes with unit tests
 
 Unit tests are an important part of ListenBrainz. It helps make it easier for
 developers to test changes and help prevent easily avoidable mistakes later on.
-Before commiting new code or making a pull request, run the unit tests on your
+Before committing new code or making a pull request, run the unit tests on your
 code.
 
 .. code-block:: bash
@@ -286,12 +292,157 @@ Also, run the **integration tests** for ListenBrainz.
 When the tests complete, you will see if your changes are valid or not. These tests
 are a helpful way to validate new changes without a lot of work.
 
-FAQ's
+Set up Listenbrainz Spark development environment
+=================================================
+
+The Listenbrainz Spark module is used to generate recommendations based on collaborative
+filtering using Apache Spark. The module is also used to generate stats using BigQuery.
+
+To contribute to the ListenBrainz Spark project, you need a development environment.
+With your development environment, you can test your changes before submitting a
+patch back to the project. This guide helps you set up a development environment
+and run ListenBrainz Spark locally on your workstation. By the end of this guide, you
+will have…
+
+* Install system dependencies
+* Run ListenBrainz Spark locally on your workstation
+
+
+Install dependencies
+--------------------
+
+The ``listenbrainz_spark-server`` communicates with the ``listenbrainz-server``. 
+So you will need to set up the ``listenbrainz-server`` using the above-given steps.
+
+The ``listenbrainz_spark-server`` is shipped in Docker containers just like the 
+``listenbrainz-server``. This helps create your development environment and later deploy the application. Therefore, to work on the project, you need to install Docker
+and use containers for building the project. Containers save you from installing all of this on your own workstation.
+
+For different Docker installation instructions for your distribution refer the steps given above.
+
+Update config.py
+^^^^^^^^^^^^^^^^
+ 
+For accessing various features available you will need to update the ListenBrainz Spark configuration file. If this is your first time configuring ListenBrainz Spark, copy the sample to a live
+configuration.
+
+.. code-block:: bash
+
+    cp listenbrainz_spark/config.py.sample listenbrainz_spark/config.py
+
+
+Initialize ListenBrainz Spark containers
+----------------------------------------
+
+Next, run ``develop.sh spark build`` in the root of the repository. Using
+``docker-compose``, it creates multiple Docker containers for the different
+services and parts of the ListenBrainz Spark server. This script starts Hadoop,
+Spark, and the Listenbrainz Playground containers. This also makes it easy to stop
+them all later.
+
+The first time you run it, it downloads and creates the containers. But it's not
+finished yet.
+
+.. code-block:: bash
+
+    ./develop.sh spark build
+    
+
+Format the NameNode container
+-----------------------------
+
+If it's your first time initializing the containers, format the ``namenode`` container
+using the given command.
+
+.. code-block:: bash
+
+    docker-compose -f docker/docker-compose.spark.yml -p listenbrainzspark run --rm hadoop-master hdfs namenode -format -nonInteractive -force
+
+This will format the ``namenode`` and link the ``namenode`` and ``datanode`` to a single ClusterID. 
+
+Remember that you shouldn't execute this command after running it for the first time. If run again it will
+format the ``namenode`` again and its link with the ``datanode`` will be lost, as both of them will have different
+ClusterID's.
+
+Your development environment is now ready. Now, let's actually see ListenBrainz Spark
+load locally!
+
+
+Run the magic script
+--------------------
+
+Start your development environment by executing ``develop.sh spark up``. Now, it 
+will work as expected.
+
+.. code-block:: bash
+
+    ./develop.sh spark up
+
+Now, you are all set to begin making changes and seeing them in real-time inside
+of your development environment!
+
+Once you are done with your work, shut down the containers using the following command. 
+
+.. code-block:: bash
+
+    ./develop.sh spark down
+
+
+Test your changes with unit tests
 ---------------------------------
 
-* What to do if getting an error while running './develop.sh build' command, 'ERROR: Couldn't connect to Docker daemon at http+docker://localhost - is it running?' ?
+Unit tests are an important part of ListenBrainz Spark. It helps make it easier for
+developers to test changes and help prevent easily avoidable mistakes later on.
+Before committing new code or making a pull request, run the unit tests on your
+code.
 
--  You need to add the user to the docker group by entering the following command in the terminal :
-  `sudo usermod -aG docker $USER`. After this command, restart the computer and then again run the './develop.sh build'.
+.. code-block:: bash
+
+   ./spark_test.sh
+
+This builds and runs the containers needed for the tests. This script configures
+test-specific data volumes so that test data is isolated from your development
+data.
+
+Also, run the **integration tests** for ListenBrainz Spark.
+
+.. code-block:: bash
+
+   ./integration-test.sh
+
+When the tests complete, you will see if your changes are valid or not. These tests
+are a helpful way to validate new changes without a lot of work.
 
 
+FAQ's
+=====
+
+**What to do if getting an error while running ``./develop.sh build`` command, 'ERROR: Couldn't connect to Docker daemon at http+docker://localhost - is it running?'?**
+
+- You need to add the user to the docker group by entering the following command in the terminal:
+  
+  .. code-block:: bash
+
+    sudo usermod -aG docker $USER
+
+- After this command, restart the computer and then again run ``./develop.sh build.``
+|
+**How to resolve 'ERROR: NameNode not formatted' which arises on running ``develop.sh spark up``?**
+
+- You need to format the ``namenode`` using the following command:
+  
+  .. code-block:: bash
+
+    ``docker-compose -f docker/docker-compose.spark.yml -p listenbrainzspark run --rm hadoop-master hdfs namenode -format -nonInteractive -force``. 
+
+- After this command, again run the ``./develop.sh spark up``.
+|
+**How to resolve 'datanode is running as process 1. Stop it first' or 'namenode is running as process 1. Stop it first'?**
+
+- You need to shut down the previous containers before bringing them up again. Run the following command to shut down the containers:
+  
+.. code-block:: bash
+
+    ./develop.sh spark down
+    
+When the containers shut down, run ``./develop.sh spark up`` again.
