@@ -8,18 +8,18 @@ export default class Modal extends React.Component {
       return null;
     }
     const divStyle = {
-      position: 'fixed', 
-      top: '200px', 
-      zIndex: '200000000000000', 
-      width: '500px', 
-      marginLeft: '-250px', 
-      left: '50%', 
+      position: 'fixed',
+      top: '200px',
+      zIndex: '200000000000000',
+      width: '500px',
+      marginLeft: '-250px',
+      left: '50%',
       backgroundColor: '#fff',
       boxShadow: '0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22)',
-      textAlign: 'center', 
-      padding:'50px',
+      textAlign: 'center',
+      padding: '50px',
     };
-    
+
     const buttonStyle = {
       position: 'absolute',
       top: '5px',
@@ -30,12 +30,12 @@ export default class Modal extends React.Component {
     };
     return (
       <div style={divStyle} id="listen-progress-container">
-      <button onClick={this.props.onClose} style={buttonStyle} disabled={this.props.disable}>
-      <FontAwesomeIcon icon={faTimes} />
-      </button>
-      <div>
-      {this.props.children}
-      </div>
+        <button onClick={this.props.onClose} style={buttonStyle} disabled={this.props.disable}>
+          <FontAwesomeIcon icon={faTimes} />
+        </button>
+        <div>
+          {this.props.children}
+        </div>
       </div>
     );
   }

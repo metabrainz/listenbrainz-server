@@ -61,11 +61,11 @@ export default class Importer {
       // Update message
       let msg = (
         <p>
-        <FontAwesomeIcon icon={faSpinner} spin/> Sending page {this.numCompleted} of {this.totalPages} to ListenBrainz <br/>
-        <span style={{fontSize:8+'pt'}}>
-        {this.incrementalImport && <span>Note: This import will stop at the starting point of your last import. :)<br/></span>}
-        <span>Please don't close this page while this is running</span>
-        </span>
+          <FontAwesomeIcon icon={faSpinner} spin /> Sending page {this.numCompleted} of {this.totalPages} to ListenBrainz <br />
+          <span style={{ fontSize: 8 + 'pt' }}>
+            {this.incrementalImport && <span>Note: This import will stop at the starting point of your last import. :)<br /></span>}
+            <span>Please don't close this page while this is running</span>
+          </span>
         </p>
       );
       this.updateMessage(msg);
@@ -81,16 +81,16 @@ export default class Importer {
     }
     let final_msg = (
       <p>
-        <FontAwesomeIcon icon={faCheck}/> Import finished<br/>
-        <span style={{fontSize: 8+'pt'}}>Successfully submitted {this.countReceived} listens to ListenBrainz<br/></span>
+        <FontAwesomeIcon icon={faCheck} /> Import finished<br />
+        <span style={{ fontSize: 8 + 'pt' }}>Successfully submitted {this.countReceived} listens to ListenBrainz<br /></span>
         {/* if the count received is different from the api count, show a message accordingly
           * also don't show this message if it's an incremental import, because countReceived
           * and playCount will be different by definition in incremental imports
         */}
         {!this.incrementalImport && this.playCount != -1 && this.countReceived != this.playCount &&
-          <b><span style={{fontSize: 10+'pt'}} className="text-danger">The number submitted listens is different from the {this.playCount} that Last.fm reports due to an inconsistency in their API, sorry!<br/></span></b>
+          <b><span style={{ fontSize: 10 + 'pt' }} className="text-danger">The number submitted listens is different from the {this.playCount} that Last.fm reports due to an inconsistency in their API, sorry!<br /></span></b>
         }
-        <span style={{fontSize: 8+'pt'}}>Thank you for using ListenBrainz!</span>
+        <span style={{ fontSize: 8 + 'pt' }}>Thank you for using ListenBrainz!</span>
       </p>
     );
     this.updateMessage(final_msg);
@@ -111,7 +111,7 @@ export default class Importer {
       } else {
         return -1;
       }
-    } catch(error) {
+    } catch (error) {
       this.updateMessage("An error occurred, please try again. :(")
       this.canClose = true; // Enable the close button
       throw error;
@@ -123,7 +123,7 @@ export default class Importer {
     * Get the total pages of data from last import
     */
 
-    let url = `${this.lastfmURL}?method=user.getrecenttracks&user=${this.lastfmUsername}&api_key=${this.lastfmKey}&from=${this.latestImportTime+1}&format=json`;
+    let url = `${this.lastfmURL}?method=user.getrecenttracks&user=${this.lastfmUsername}&api_key=${this.lastfmKey}&from=${this.latestImportTime + 1}&format=json`;
     try {
       let response = await fetch(encodeURI(url));
       let data = await response.json();
@@ -132,7 +132,7 @@ export default class Importer {
       } else {
         return 0;
       }
-    } catch(error) {
+    } catch (error) {
       this.updateMessage("An error occurred, please try again. :(")
       this.canClose = true; // Enable the close button
     }
@@ -148,7 +148,7 @@ export default class Importer {
       setTimeout(() => this.getPage(page), 3000);
     }
 
-    let url = `${this.lastfmURL}?method=user.getrecenttracks&user=${this.lastfmUsername}&api_key=${this.lastfmKey}&from=${this.latestImportTime+1}&page=${page}&format=json`;
+    let url = `${this.lastfmURL}?method=user.getrecenttracks&user=${this.lastfmUsername}&api_key=${this.lastfmKey}&from=${this.latestImportTime + 1}&page=${page}&format=json`;
     try {
       let response = await fetch(encodeURI(url));
       if (response.ok) {
