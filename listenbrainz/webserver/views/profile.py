@@ -121,11 +121,6 @@ def import_data():
 
     props = {
         "user": user_data,
-        "scraper_url": url_for(
-            "user.lastfmscraper",
-            user_name=current_user.musicbrainz_id,
-            _external=True,
-        ),
         "api_url":  current_app.config["API_URL"],
         "lastfm_api_url": current_app.config["LASTFM_API_URL"],
         "lastfm_api_key": current_app.config["LASTFM_API_KEY"],
