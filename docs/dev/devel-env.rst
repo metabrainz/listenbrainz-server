@@ -250,11 +250,13 @@ To get a list of valid docker-compose commands, run:
 To invoke manage.py, run:
 
 .. code-block:: bash
+
     ./develop.sh manage <command>
 
 To get a list of manage.py commands, run:
 
 .. code-block:: bash
+
     ./develop.sh manage --help
 
 Test your changes with unit tests
