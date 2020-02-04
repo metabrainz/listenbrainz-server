@@ -11,6 +11,9 @@ env
 bigquery-credentials.json
 *.bak
 
+# ListenBrainz dumps
+listenbrainz-listens*
+
 # ListenBrainz application data
 docker/data
 

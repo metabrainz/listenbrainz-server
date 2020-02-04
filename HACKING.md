@@ -67,8 +67,7 @@ Now look for the given section in the same file.
 Update these strings with the directory name and the .tar.xz file you would like to import as temporary listens. e.g. To import the 	``listenbrainz-listens-dump-125-20200203-000002-incremental`` refer the below-given code.
 
     TEMP_LISTENS_DIR = 'listenbrainz-dump-125-20200203-000002-incremental/'
-    TEMP_LISTENS_DUMP = 'listenbrainz-dump-125-20200203-000002-incremental.tar.xz'
-
+    TEMP_LISTENS_DUMP = 'listenbrainz-listens-dump-125-20200203-000002-incremental.tar.xz'
 
 ### Import listens
 
@@ -76,7 +75,7 @@ Next open the ``bash`` terminal for  ``listenbrainz_playground_1`` container by 
 
     docker exec -it listenbrainzspark_playground_1 bash
 
-Make sure you have the Listenbrainz Spark server running before opening the ``bash`` terminal for  ``listenbrainz_playground_1`` container. For details on runnig the Listenbrainz Spark server refer [here](https://github.com/metabrainz/listenbrainz-server/blob/master/docs/dev/devel-env.rst).
+Make sure you have the Listenbrainz Spark server running before opening the ``bash`` terminal for  ``listenbrainz_playground_1`` container. For details on running the Listenbrainz Spark server refer [here](https://github.com/metabrainz/listenbrainz-server/blob/master/docs/dev/devel-env.rst).
 
 Next upload the listens to HDFS by running the following command.
     
