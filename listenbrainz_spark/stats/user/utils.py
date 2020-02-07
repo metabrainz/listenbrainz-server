@@ -1,9 +1,10 @@
 import time
 
-from collections import defaultdict
-from listenbrainz_spark.stats import run_query
+from listenbrainz_spark import session
 
-def get_artists(table):
+from collections import defaultdict
+
+def get_artists(df):
     """
     Get artist information (artist_name, artist_msid etc) for every user
     ordered by listen count (number of times a user has listened to tracks
@@ -25,30 +26,23 @@ def get_artists(table):
                 }
     """
     t0 = time.time()
-    result = run_query("""
-            SELECT user_name
-                 , artist_name
-                 , artist_msid
-                 , artist_mbids
-                 , count(artist_name) as cnt
-              FROM %s
-          GROUP BY user_name, artist_name, artist_msid, artist_mbids
-          ORDER BY cnt DESC
-        """ % (table))
-    rows = result.collect()
+    df = df.select("user_name","artist_name","artist_msid","artist_mbids")
+    df = df.groupBy("user_name","artist_name","artist_msid","artist_mbids").count()
+    df = df.sort(df['count'].desc())
+    rows = df.collect() 
     artists = defaultdict(list)
     for row in rows:
         artists[row.user_name].append({
             'artist_name': row.artist_name,
             'artist_msid': row.artist_msid,
             'artist_mbids': row.artist_mbids,
-            'listen_count': row.cnt,
+            'listen_count': row['count']
         })
     print("Query to calculate artist stats processed in %.2f s" % (time.time() - t0))
     return artists
 
 
-def get_recordings(table):
+def get_recordings(df):
     """
     Get recording information (recording_name, recording_mbid etc) for every user
     ordered by listen count (number of times a user has listened to the track/recording).
@@ -75,24 +69,10 @@ def get_recordings(table):
                 }
     """
     t0 = time.time()
-    query = run_query("""
-            SELECT user_name
-                 , track_name
-                 , recording_msid
-                 , recording_mbid
-                 , artist_name
-                 , artist_msid
-                 , artist_mbids
-                 , release_name
-                 , release_msid
-                 , release_mbid
-                 , count(recording_msid) as cnt
-              FROM %s
-          GROUP BY user_name, track_name, recording_msid, recording_mbid, artist_name, artist_msid,
-                artist_mbids, release_name, release_msid, release_mbid
-          ORDER BY cnt DESC
-        """ % (table))
-    rows = query.collect()
+    df = df.select("user_name", "artist_name", "artist_msid", "artist_mbids", "track_name", "recording_msid", "recording_mbid", "release_name", "release_mbid", "release_msid")
+    df = df.groupBy("user_name", "artist_name", "artist_msid", "artist_mbids", "release_name", "release_mbid", "release_msid", "recording_msid", "recording_mbid", "track_name").count()
+    df = df.sort(df['count'].desc())
+    rows = df.collect()
     recordings = defaultdict(list)
     for row in rows:
         recordings[row.user_name].append({
@@ -105,13 +85,13 @@ def get_recordings(table):
             'release_name': row.release_name,
             'release_msid': row.release_msid,
             'release_mbid': row.release_mbid,
-            'listen_count': row.cnt,
+            'listen_count': row['count'],
         })
     print("Query to calculate recording stats processed in %.2f s" % (time.time() - t0))
     return recordings
 
 
-def get_releases(table):
+def get_releases(df):
     """
     Get release information (release_name, release_mbid etc) for every user
     ordered by listen count (number of times a user has listened to tracks
@@ -136,20 +116,10 @@ def get_releases(table):
                 }
     """
     t0 = time.time()
-    query = run_query("""
-            SELECT user_name
-                 , release_name
-                 , release_msid
-                 , release_mbid
-                 , artist_name
-                 , artist_msid
-                 , artist_mbids
-                 , count(release_msid) as cnt
-              FROM %s
-          GROUP BY user_name, release_name, release_msid, release_mbid, artist_name, artist_msid, artist_mbids
-          ORDER BY cnt DESC
-        """ % (table))
-    rows = query.collect()
+    df = df.select("user_name", "artist_name", "artist_msid", "artist_mbids", "release_name", "release_mbid", "release_msid")
+    df = df.groupBy("user_name", "artist_name", "artist_msid", "artist_mbids", "release_name", "release_mbid", "release_msid").count()
+    df = df.sort(df['count'].desc())
+    rows = df.collect()
     releases = defaultdict(list)
     for row in rows:
         releases[row.user_name].append({
@@ -159,7 +129,7 @@ def get_releases(table):
             'artist_name': row.artist_name,
             'artist_msid': row.artist_msid,
             'artist_mbids': row.artist_mbids,
-            'listen_count': row.cnt,
+            'listen_count': row['count'],
         })
     print("Query to calculate release stats processed in %.2f s" % (time.time() - t0))
     return releases
