@@ -3,6 +3,7 @@ import sys
 import time
 import json
 import uuid
+import tempfile
 import logging
 from time import time
 from datetime import datetime
@@ -10,12 +11,15 @@ from collections import defaultdict
 from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
+from listenbrainz import DUMP_LICENSE_FILE_PATH
 from listenbrainz_spark import config, utils, path
+from listenbrainz_spark.recommendations import create_dataframes
 from listenbrainz_spark.recommendations.candidate_sets import get_user_id
 from listenbrainz_spark.exceptions import SQLException, SparkSessionNotInitializedException, PathNotFoundException, \
     FileNotFetchedException, ViewNotRegisteredException
 from listenbrainz_spark.sql import recommend_queries as sql
 from listenbrainz_spark.recommendations.utils import save_html
+from listenbrainz.db.dump_manager import write_hashes
 
 from flask import current_app
 from pyspark.sql.functions import lit, col
@@ -23,7 +27,11 @@ from pyspark.sql.utils import AnalysisException
 from pyspark.mllib.recommendation import MatrixFactorizationModel
 
 # Recommendation HTML is generated if set to true.
-SAVE_RECOMMENDATION_HTML = True
+SAVE_RECOMMENDATION_HTML = False
+TOP_ARTIST_DICT_KEY = 'top_artists_recordings'
+SIMILAR_ARTIST_DICT_KEY = 'similar_artists_recordings'
+
+TEMP_PATH = '/home/listenbrainz/msid-mbid-mapping/dump'
 
 def load_model(path):
     """ Load best model from given path in HDFS.
@@ -32,6 +40,91 @@ def load_model(path):
             path (str): Path where best model is stored.
     """
     return MatrixFactorizationModel.load(listenbrainz_spark.context, path)
+
+def convert_recommendation_to_dict_for_html(row):
+    return {
+                'artist_name': row.artist_name,
+                'mb_artist_credit_id': row.mb_artist_credit_id,
+                'mb_artist_credit_mbids': row.mb_artist_credit_mbids,
+                'mb_recording_mbid': row.mb_recording_mbid,
+                'mb_release_mbid': row.mb_release_mbid,
+                'release_name': row.release_name,
+                'track_name': row.track_name,
+    }
+
+def convert_recommendation_to_dict_for_dump(recommendation, user_name):
+    return {
+                'artist_name': recommendation['artist_name'],
+                'mb_artist_credit_id': recommendation['mb_artist_credit_id'],
+                'mb_artist_credit_mbids': recommendation['mb_artist_credit_mbids'],
+                'mb_recording_mbid': recommendation['mb_recording_mbid'],
+                'mb_release_mbid': recommendation['mb_release_mbid'],
+                'release_name': recommendation['release_name'],
+                'track_name': recommendation['track_name'],
+                'user_name': user_name,
+    }
+
+def get_archive_path(current_date):
+    to_date = create_dataframes.convert_date_to_datetime_object(current_app.config['GENERATE_CANDIDATE_SET_TO_DATE'])
+    from_date = create_dataframes.convert_date_to_datetime_object(current_app.config['GENERATE_CANDIDATE_SET_FROM_DATE'])
+
+    archive_name = 'listenbrainz-candidate-recordings-dump-{from_date}-{to_date}-{curr_time}'.format(
+                        from_date=from_date.strftime('%Y%m%d'), to_date=to_date.strftime('%Y%m%d'),
+                        curr_date=current_date.strftime('%Y%m%d-%H%M%S')
+                    )
+    return archive_name
+
+def dump_candidate_recordings(recommendations, temp_file, dict_key):
+
+    with open(temp_file, 'w') as f:
+        for user_name in recommendations:
+            for recommendation in user_name[dict_key]:
+                data = convert_recommendation_to_dict_for_dump(recommendation, user_name)
+                f.write(json.dumps(date))
+                f.write('\n')
+
+def create_candidate_recordings_dump(recommendations, threads):
+    current_date = datetime.utcnow()
+    archive_name = get_archive_name(current_date)
+    archive_path = os.path.join(TEMP_PATH, '{filename}.tar.xz'.format(filename=archive_name))
+
+    with open(archive_path, 'w') as archive:
+        pxz_command = ['pxz', '--compress', '-T{threads}'.format(threads=threads)]
+        pxz = subprocess.Popen(pxz_command, stdin=subprocess.PIPE, stdout=archive)
+
+        top_artist_tempfile = os.path.join(tempfile.mkddump(), 'top_artist_recordings.json')
+        similar_artist_tempfile = os.path.join(tempfile.mkddump(), 'similar_artist_recordings.json')
+
+        with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
+            dump_candidate_recordings(recommendations, top_artist_tempfile, TOP_ARTIST_DICT_KEY)
+            dump_candidate_recordings(recommendations, similar_artist_tempfile, SIMILAR_ARTIST_DICT_KEY)
+
+            tar.add(top_artist_tempfile, arcname=os.path.join(archive_name,
+                            'top_artist_recordings-{from_date}-{to_date}.json'.format(from_date=from_date.strftime('%Y%m%d'),
+                            to_date=to_date.strftime('%Y%m%d'))))
+
+            tar.add(similar_artist_tempfile, arcname=os.path.join(archive_name,
+                            'similar_artist_recordings-{from_date}-{to_date}.json'.format(from_date=from_date.strftime('%Y%m%d'),
+                            to_date=to_date.strftime('%Y%m%d'))))
+
+            timestamp_path = os.path.join(tempfile.mkddump(), 'TIMESTAMP')
+            with open(timestamp_path, 'w') as f:
+                f.write(current_date.isoformat(' '))
+            tar.add(timestamp_path, arcname=os.path.join(archive_name, 'TIMESTAMP'))
+
+            tar.add(DUMP_LICENSE_FILE_PATH,
+                    arcname=os.path.join(archive_name, 'COPYING'))
+
+            shutil.rmtree(temp_dir)
+
+        pxz.stdin.close()
+
+    pxz.wait()
+
+    write_hashes(archive_path)
+
+
+
 
 def get_recommended_recordings(candidate_set, limit, recordings_df, model, mapped_listens):
     """ Get list of recommended recordings from the candidate set
@@ -63,15 +156,14 @@ def get_recommended_recordings(candidate_set, limit, recordings_df, model, mappe
         .where(recordings_df.recording_id.isin(recommended_recording_ids))
 
     # get the track_name and artist_name to make the HTML redable. This step will not be required when sending recommendations
-    # to lemmy since gids are enough to recognize the track.
+    # to lemmy since mbids are enough to recognize the track.
     recommendations_df = df.join(mapped_listens, ['mb_artist_credit_id', 'mb_recording_mbid']) \
         .select('artist_name', 'mb_artist_credit_id', 'mb_artist_credit_mbids', 'mb_recording_mbid', \
             'mb_release_mbid', 'release_name', 'track_name').distinct()
 
     recommended_recordings = []
     for row in recommendations_df.collect():
-        rec = (row.artist_name, row.mb_artist_credit_id, row.mb_artist_credit_mbids, row.mb_recording_mbid,
-            row.mb_release_mbid, row.release_name, row.track_name)
+        rec = convert_recommendation_to_dict_for_html(row)
         recommended_recordings.append(rec)
     return recommended_recordings
 
@@ -114,15 +206,19 @@ def recommend_user(user_name, model, recordings_df, users_df, top_artists_candid
     top_artists_recordings_df = top_artists_candidate_set.select('user_id', 'recording_id') \
         .where(col('user_id') == user_id)
     top_artists_recordings_rdd = top_artists_recordings_df.rdd.map(lambda r: (r['user_id'], r['recording_id']))
-    top_artists_recommended_recordings = get_recommended_recordings(top_artists_recordings_rdd, config \
-        .RECOMMENDATION_TOP_ARTIST_LIMIT, recordings_df, model, mapped_listens)
+    top_artists_recommended_recordings = get_recommended_recordings(top_artists_recordings_rdd,
+                                            config.RECOMMENDATION_TOP_ARTIST_LIMIT, recordings_df,
+                                            model, mapped_listens
+                                        )
     user_recommendations['top_artists_recordings'] = top_artists_recommended_recordings
 
     similar_artists_recordings_df = similar_artists_candidate_set.select('user_id', 'recording_id') \
         .where(col('user_id') == user_id)
     similar_artists_recordings_rdd = similar_artists_recordings_df.rdd.map(lambda r : (r['user_id'], r['recording_id']))
     similar_artists_recommended_recordings = get_recommended_recordings(similar_artists_recordings_rdd,
-        config.RECOMMENDATION_SIMILAR_ARTIST_LIMIT, recordings_df, model,mapped_listens)
+                                                config.RECOMMENDATION_SIMILAR_ARTIST_LIMIT, recordings_df,
+                                                model, mapped_listens
+                                            )
     user_recommendations['similar_artists_recordings'] = similar_artists_recommended_recordings
     return user_recommendations
 
@@ -214,7 +310,7 @@ def get_recommendation_html(recommendations, time_, best_model_id, ti):
     }
     save_html(recommendation_html, context, 'recommend.html')
 
-def main():
+def main(threads, create_dump=False):
     ti = time()
     time_ = defaultdict(dict)
     try:
@@ -266,6 +362,9 @@ def main():
 
     # persisted data must be cleared from memory after usage to avoid OOM
     recordings_df.unpersist()
+
+    if create_dump:
+        create_candidate_recordings_dump(recommendations, threads)
 
     if SAVE_RECOMMENDATION_HTML:
         get_recommendation_html(recommendations, time_, best_model_id, ti)

@@ -12,6 +12,7 @@ import listenbrainz_spark
 from listenbrainz_spark import stats
 from listenbrainz_spark import config, utils, path
 from listenbrainz_spark.recommendations.utils import save_html
+from listenbrainz_spark.recommendations import create_dataframes
 from listenbrainz_spark.sql import candidate_sets_queries as sql
 from listenbrainz_spark.exceptions import SQLException, SparkSessionNotInitializedException, ViewNotRegisteredException, \
     PathNotFoundException, FileNotFetchedException
@@ -25,15 +26,28 @@ from pyspark.sql.utils import AnalysisException, ParseException
 # Candidate Set HTML is generated if set to true.
 SAVE_CANDIDATE_HTML = True
 
-def get_listens_for_rec_generation_window(mapped_df):
+def get_dates_to_generate_candidate_sets():
+    train_model_from_date, train_model_to_date = create_dataframes.get_dates_to_train_data()
+
+    generate_candidate_set_from_date = create_dataframes.convert_date_to_datetime_object(
+                                            current_app.config['GENERATE_CANDIDATE_SET_FROM_DATE'])
+    generate_candidate_set_to_date = create_dataframes.convert_date_to_datetime_object(
+                                            current_app.config['GENERATE_CANDIDATE_SET_TO_DATE'])
+
+    if train_model_to_date > generate_candidate_set_to_date or train_model_from_date < generate_candidate_set_from_date:
+        raise ValueError('Listens used to generate candidate sets must be a subset of listens used to train model')
+
+    return generate_candidate_set_to_date, generate_candidate_set_from_date
+
+def get_listens_to_generate_candidate_set(mapped_df):
     """ Get listens to fetch top artists.
 
         Args:
             mapped_df (dataframe): Dataframe with all the columns/fields that a typical listen has.
     """
+    to_date, from_date = get_listens_for_rec_generation_window()
     df = mapped_df.select('*') \
-        .where((col('listened_at') >= to_timestamp(date_sub(current_timestamp(),
-        config.RECOMMENDATION_GENERATION_WINDOW))) & (col('listened_at') <= current_timestamp()))
+        .where((col('listened_at') >= lit(from_date)) & (col('listened_at') <= lit(to_date)))
     return df
 
 def get_top_artists(df, user_name):
@@ -270,7 +284,7 @@ def main():
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
-    listens_df = get_listens_for_rec_generation_window(mapped_df)
+    listens_df = get_listens_to_generate_candidate_set(mapped_df)
 
     metadata_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'recommendation-metadata.json')
     with open(metadata_file_path) as f:

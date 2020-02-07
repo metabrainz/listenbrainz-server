@@ -77,6 +77,22 @@ def save_dataframe_metadata_to_HDFS(metadata):
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
+def convert_date_to_datetime_object(d):
+    year = int(d.split('-')[0])
+
+    if year < 2004:
+        raise ValueError('year must be greater than 2004')
+
+    month = int(d.split('-')[1])
+    day = int(d.split('-')[2])
+
+    try:
+        date = datetime(year, month, day)
+        return date
+    except ValueError as err:
+        current_app.logger.error('Invalid date: {}'.format(str(err)), exc_info=True)
+        sys.exit(-1)
+
 def get_dates_to_train_data():
     """ Get window to fetch listens to train data.
 
@@ -84,8 +100,10 @@ def get_dates_to_train_data():
             from_date (datetime): Date from which start fetching listens.
             to_date (datetime): Date upto which fetch listens.
     """
-    to_date = datetime.utcnow()
-    from_date = stats.adjust_days(to_date, config.TRAIN_MODEL_WINDOW)
+    from_date = convert_date_to_datetime_object(current_app.config['TRAIN_MODEL_FROM_DATE'])
+    to_date = convert_date_to_datetime_object(current_app.config['TRAIN_MODEL_TO_DATE'])
+
+    to_date = stats.replace_days(to_date, 1)
     # shift to the first of the month
     from_date = stats.replace_days(from_date, 1)
     return to_date, from_date

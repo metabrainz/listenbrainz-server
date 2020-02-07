@@ -22,13 +22,15 @@ LAMBDAS = [0.1, 10.0]
 ITERATIONS = [10, 20]
 
 # train model on X days data
-TRAIN_MODEL_WINDOW = 180
+TRAIN_MODEL_FROM_DATE = '2019-01-01'
+TRAIN_MODEL_TO_DATE = '2019-07-01'
 
 # calculate stats on X months data
 STATS_CALCULATION_WINDOW = 1
 
 # generate recommendations after every X days
-RECOMMENDATION_GENERATION_WINDOW = 7
+GENERATE_CANDIDATE_SET_FROM_DATE = '2019-03-01'
+GENERATE_CANDIDATE_SET_TO_DATE = '2019-05-01'
 
 STEPS_TO_REACH_NEXT_MONTH = 32
 
@@ -43,8 +45,8 @@ SIMILAR_ARTISTS_LIMIT = 10
 LOG_SENTRY = {
     'dsn':'',
     'environment': 'development',
+    'level': 'ERROR',
 }
-SENTRY_DSN_PUBLIC = ''
 
 # Model id is made up of two parts.
 # String + UUID
@@ -54,7 +56,7 @@ MODEL_ID_PREFIX = 'listenbrainz-recommendation-model'
 FTP_SERVER_URI = 'ftp.eu.metabrainz.org'
 FTP_MSID_MBID_DIR = '/pub/musicbrainz/listenbrainz/labs/mappings/msid-mbid-mapping/'
 FTP_ARTIST_RELATION_DIR = '/pub/musicbrainz/listenbrainz/labs/artist-credit-artist-credit-relations/'
-FTP_LISTENS_DIR = '/pub/musicbrainz/listenbrainz/fullexport/'
+FTP_LISTENS_DIR = '/pub/musicbrainz/listenbrainz/incremental/'
 
-TEMP_LISTENS_DIR = 'listenbrainz-dump-88-20190930-000002-full/'
-TEMP_LISTENS_DUMP = 'listenbrainz-listens-dump-88-20190930-000002-spark-full.tar.xz'
+TEMP_LISTENS_DIR = 'listenbrainz-dump-99-20191107-000002-incremental/'
+TEMP_LISTENS_DUMP = 'listenbrainz-listens-dump-99-20191107-000002-spark-incremental.tar.xz'

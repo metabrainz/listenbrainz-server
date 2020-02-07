@@ -3,12 +3,14 @@ import sys
 import click
 import logging
 import time
+from datetime import datetime
 
 import listenbrainz_spark
 from listenbrainz_spark import path
 from listenbrainz_spark import utils
-from listenbrainz_spark import config
+from listenbrainz_spark import config, stats
 from listenbrainz_spark import hdfs_connection
+from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 
 from hdfs.util import HdfsError
 from py4j.protocol import Py4JJavaError
@@ -138,12 +140,13 @@ def candidate():
         candidate_sets.main()
 
 @cli.command(name='recommend')
-def recommend():
+@click.option('--threads', '-t', default=DUMP_DEFAULT_THREAD_COUNT)
+def recommend(create_dump):
     """ Invoke script responsible for generating recommendations.
     """
     from listenbrainz_spark.recommendations import recommend
     with app.app_context():
-        recommend.main()
+        recommend.main(threads, create_dump)
 
 @cli.command(name='user')
 def user():
