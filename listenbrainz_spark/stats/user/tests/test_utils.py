@@ -1,7 +1,6 @@
 from listenbrainz_spark.stats import user
 from listenbrainz_spark import utils
 from listenbrainz_spark.tests import SparkTestCase
-
 from pyspark.sql import Row
 
 class UtilsTestCase(SparkTestCase):

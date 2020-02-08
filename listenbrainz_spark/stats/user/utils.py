@@ -1,7 +1,4 @@
 import time
-
-from listenbrainz_spark import session
-
 from collections import defaultdict
 
 def get_artists(df):
