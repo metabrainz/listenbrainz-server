@@ -40,45 +40,41 @@ To run the integration tests:
 
     ./integration-test.sh
 
-Importing Listenbrainz Listens to HDFS
---------------------------------------
+## Generating Stats
 
-To generate the stats and recommendations on your local machine you will need to import the listens into HDFS. It is recommended to use the ``listenbrainz-incremental-dumps`` for your local environment. Follow the given steps to import the listens.
-
-### Getting  name of the dump file
-
-Visit the [Listenbrainz FTP Server](http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/) website and note down the name of the dump directory and the corresponding .tar.xz file you would like to import.
+To generate the stats on your local machine you will need to import the listens into HDFS. 
+You should use the ``listenbrainz-incremental-dumps`` for your local environment as the size of 
+``listenbrainz-full-export-dumps`` is large for a local machine (The latest 
+``listenbrainz-full-export-dump`` size is around 9.3 GB). Follow the given steps to import the 
+listens.
 
 ### Update config.py
 
-Open the ``config.py`` file present in the ``listenbrainz_spark`` directory and look for the following section.
-
-    FTP_LISTENS_DIR = '/pub/musicbrainz/listenbrainz/fullexport/'
-
-Update the FTP listens directory to import the incremental dumps as given.
+Open the ``config.py`` file present in the ``listenbrainz_spark`` directory and update the FTP 
+listens directory to import the incremental dumps as given.
 
     FTP_LISTENS_DIR = '/pub/musicbrainz/listenbrainz/incremental/'
 
-Now look for the given section in the same file.
+Now update the temporary listens directory and dump with the directory name and the .tar.xz file 
+you would like to import as temporary listens. e.g. To import the 
+``listenbrainz-listens-dump-127-20200210-000002-incremental`` refer the below-given code.
 
-    TEMP_LISTENS_DIR = 'listenbrainz-dump-88-20190930-000002-full/'
-    TEMP_LISTENS_DUMP = 'listenbrainz-listens-dump-88-20190930-000002-spark-full.tar.xz'
+    TEMP_LISTENS_DIR = 'listenbrainz-dump-127-20200210-000002-incremental/'
+    TEMP_LISTENS_DUMP = 'listenbrainz-listens-dump-127-20200210-000002-incremental.tar.xz'
 
-Update these strings with the directory name and the .tar.xz file you would like to import as temporary listens. e.g. To import the 	``listenbrainz-listens-dump-125-20200203-000002-incremental`` refer the below-given code.
+### Upload listens to HDFS
 
-    TEMP_LISTENS_DIR = 'listenbrainz-dump-125-20200203-000002-incremental/'
-    TEMP_LISTENS_DUMP = 'listenbrainz-listens-dump-125-20200203-000002-incremental.tar.xz'
+Next open the ``bash`` terminal for  ``listenbrainz_playground_1`` container by executing the 
+following command
 
-### Import listens
+    ./develop.sh spark exec playground bash
 
-Next open the ``bash`` terminal for  ``listenbrainz_playground_1`` container by executing the following command
-
-    docker exec -it listenbrainzspark_playground_1 bash
-
-Make sure you have the Listenbrainz Spark server running before opening the ``bash`` terminal for  ``listenbrainz_playground_1`` container. For details on running the Listenbrainz Spark server refer [here](https://github.com/metabrainz/listenbrainz-server/blob/master/docs/dev/devel-env.rst).
+Make sure you have the Listenbrainz Spark server running before opening the ``bash`` terminal for  
+``listenbrainz_playground_1`` container. For details on running the Listenbrainz Spark server refer 
+[here](https://github.com/metabrainz/listenbrainz-server/blob/master/docs/dev/devel-env.rst).
 
 Next upload the listens to HDFS by running the following command.
     
     /usr/local/spark/bin/spark-submit spark_manage.py upload_listens
 
-Now you may proceed with generating stats or recommendations on your system.
+Now you may proceed with generating stats on your system.

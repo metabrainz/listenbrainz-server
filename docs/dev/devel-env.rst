@@ -297,8 +297,7 @@ are a helpful way to validate new changes without a lot of work.
 Set up Listenbrainz Spark development environment
 =================================================
 
-The Listenbrainz Spark module is used to generate recommendations based on collaborative
-filtering using Apache Spark. The module is also used to generate stats using BigQuery.
+The Listenbrainz Spark module is used to generate recommendations and stats using Apache Spark. The recommendations are generated based on collaborative filtering technique.
 
 To contribute to the ListenBrainz Spark project, you need a development environment.
 With your development environment, you can test your changes before submitting a
@@ -358,7 +357,7 @@ using the given command.
 
 .. code-block:: bash
 
-    docker-compose -f docker/docker-compose.spark.yml -p listenbrainzspark run --rm hadoop-master hdfs namenode -format -nonInteractive -force
+    ./develop.sh spark run --rm hadoop-master hdfs namenode -format -nonInteractive -force
 
 This will format the ``namenode`` and link the ``namenode`` and ``datanode`` to a single ClusterID. 
 
@@ -406,18 +405,12 @@ This builds and runs the containers needed for the tests. This script configures
 test-specific data volumes so that test data is isolated from your development
 data.
 
-Also, run the **integration tests** for ListenBrainz Spark.
-
-.. code-block:: bash
-
-   ./integration-test.sh
-
 When the tests complete, you will see if your changes are valid or not. These tests
 are a helpful way to validate new changes without a lot of work.
 
 
-FAQ's
-=====
+FAQs
+====
 
 **What to do if getting an error while running ``./develop.sh build`` command, 'ERROR: Couldn't connect to Docker daemon at http+docker://localhost - is it running?'?**
 
@@ -429,16 +422,7 @@ FAQ's
 
 - After this command, restart the computer and then again run ``./develop.sh build.``
 |
-**How to resolve 'ERROR: NameNode not formatted' which arises on running ``develop.sh spark up``?**
 
-- You need to format the ``namenode`` using the following command:
-  
-  .. code-block:: bash
-
-    ``docker-compose -f docker/docker-compose.spark.yml -p listenbrainzspark run --rm hadoop-master hdfs namenode -format -nonInteractive -force``. 
-
-- After this command, again run the ``./develop.sh spark up``.
-|
 **How to resolve 'datanode is running as process 1. Stop it first' or 'namenode is running as process 1. Stop it first'?**
 
 - You need to shut down the previous containers before bringing them up again. Run the following command to shut down the containers:
@@ -448,3 +432,14 @@ FAQ's
     ./develop.sh spark down
     
 When the containers shut down, run ``./develop.sh spark up`` again.
+|
+
+**How to resolve 'sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) FATAL: role "listenbrainz" does not exist' on running './test.sh'?**
+
+- You need to shut down the previous test containers before bringing them up again. Run the following command to shut down the containers:
+  
+.. code-block:: bash
+
+    ./test.sh -d
+    
+When the containers shut down, run `` ./test.sh`` to run the tests again.
