@@ -231,7 +231,7 @@ def _get_spotify_uri_for_listens(listens):
 
 def delete_user(musicbrainz_id):
     """ Delete a user from ListenBrainz completely.
-    First, drops the user's influx measurement and then deletes her from the
+    First, drops the user's influx measurement and then deletes him/her from the
     database.
 
     Args:
