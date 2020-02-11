@@ -255,16 +255,17 @@ def delete_user(musicbrainz_id):
     db_user.delete(user.id)
 
 def delete_listens_history(musicbrainz_id):
+
 	""" Delete all listens for user with specified MusicBrainz ID.
 
-        Note: this method tries to delete the user 5 times before giving up.
+	Note: this method tries to delete the user 5 times before giving up.
 
-        Args:
-            musicbrainz_id (str): the MusicBrainz ID of the user
+	Args:
+	musicbrainz_id (str): the MusicBrainz ID of the user
 
-        Raises: Exception if unable to delete the user in 5 retries
-        """
-        for _ in range(5):
+	Raises: Exception if unable to delete the user in 5 retries
+	"""
+	for _ in range(5):
             try:
                 _influx.drop_measurement(get_measurement_name(musicbrainz_id))
                 break
@@ -274,18 +275,16 @@ def delete_listens_history(musicbrainz_id):
                 if 'measurement not found' in e.content:
                     return
                 else:
-                    current_app.logger.error('Error in influx client while dropping user %s: %s', musicbrainz_id, str(e), exc_info=True)
+                    current_app.log.error('Error in influx client while dropping user %s: %s', musicbrainz_id, str(e), exc_info=True)
                     time.sleep(3)
             except InfluxDBServerError as e:
-                current_app.logger.error('Error in influx server while dropping user %s: %s', musicbrainz_id, str(e), exc_info=True)
+                current_app.log.error('Error in influx server while dropping user %s: %s', musicbrainz_id, str(e), exc_info=True)
                 time.sleep(3)
             except Exception as e:
-                current_app.logger.error('Error while trying to drop user %s: %s', musicbrainz_id, str(e), exc_info=True)
+                current_app.log.error('Error while trying to drop user %s: %s', musicbrainz_id, str(e), exc_info=True)
                 time.sleep(3)
         else:
             raise InfluxListenStoreException("Couldn't delete user with MusicBrainz ID: %s" % musicbrainz_id)
 
-
 class InfluxListenStoreException(Exception):
     pass
-
