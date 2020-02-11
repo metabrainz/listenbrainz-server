@@ -268,22 +268,21 @@ def delete_listens_history(musicbrainz_id):
 	for _ in range(5):
 		try:
 			_influx.drop_measurement(get_measurement_name(musicbrainz_id))
-		break
-	    except InfluxDBClientError as e:
-		
+			break		
+		except InfluxDBClientError as e:
 		# influxdb-python raises client error if measurement isn't found
 		# so we have to handle that case.
-		if 'measurement not found' in e.content:
-		    	return
-		else:
-			current_app.logger.error('Error in influx client while dropping user %s: %s', musicbrainz_id, str(e), exc_info=True)
+			if 'measurement not found' in e.content:
+				return
+			else:
+				current_app.logger.error('Error in influx client while dropping user %s: %s', musicbrainz_id, str(e), exc_info=True)
+				time.sleep(3)
+		except InfluxDBServerError as e:
+			current_app.logger.error('Error in influx server while dropping user %s: %s', musicbrainz_id, str(e), exc_info=True)
 			time.sleep(3)
-	    except InfluxDBServerError as e:
-		current_app.logger.error('Error in influx server while dropping user %s: %s', musicbrainz_id, str(e), exc_info=True)
-		time.sleep(3)
-	    except Exception as e:
-		current_app.logger.error('Error while trying to drop user %s: %s', musicbrainz_id, str(e), exc_info=True)
-		time.sleep(3)
+        	except Exception as e:
+			current_app.logger.error('Error while trying to drop user %s: %s', musicbrainz_id, str(e), exc_info=True)
+			time.sleep(3)
 	else:
 		raise InfluxListenStoreException("Couldn't delete user with MusicBrainz ID: %s" % musicbrainz_id)
 
