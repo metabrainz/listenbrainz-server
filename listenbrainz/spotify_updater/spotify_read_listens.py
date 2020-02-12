@@ -226,7 +226,7 @@ def submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTE
                 raise spotify.SpotifyListenBrainzError('ISE while trying to import listens: %s', str(e))
 
 
-def parse_and_validate_spotify_plays(plays, listen_type):
+def parse_and_validate_spotify_plays(plays, listen_type, latest_listened_at = 0):
     """ Converts and validates the listens received from the Spotify API.
 
     Args:
@@ -239,6 +239,9 @@ def parse_and_validate_spotify_plays(plays, listen_type):
     listens = []
     for play in plays:
         listen = _convert_spotify_play_to_listen(play, listen_type=listen_type)
+        if latest_listened_at and listen.listened_at <= latest_listened_at:
+            continue
+
         try:
             validate_listen(listen, listen_type)
             listens.append(listen)
@@ -278,7 +281,8 @@ def process_one_user(user):
 
     recently_played = get_user_recently_played(user)
     if recently_played is not None and 'items' in recently_played:
-        listens = parse_and_validate_spotify_plays(recently_played['items'], LISTEN_TYPE_IMPORT)
+        spotify_user = spotify.get_user(user.user_id)
+        listens = parse_and_validate_spotify_plays(recently_played['items'], LISTEN_TYPE_IMPORT, spotify_user.latest_listened_at)
         current_app.logger.debug('Received %d tracks for %s', len(listens), str(user))
 
     # if we don't have any new listens, return
