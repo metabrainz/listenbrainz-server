@@ -281,8 +281,7 @@ def process_one_user(user):
 
     recently_played = get_user_recently_played(user)
     if recently_played is not None and 'items' in recently_played:
-        spotify_user = spotify.get_user(user.user_id)
-        listens = parse_and_validate_spotify_plays(recently_played['items'], LISTEN_TYPE_IMPORT, spotify_user.latest_listened_at)
+        listens = parse_and_validate_spotify_plays(recently_played['items'], LISTEN_TYPE_IMPORT, user.latest_listened_at)
         current_app.logger.debug('Received %d tracks for %s', len(listens), str(user))
 
     # if we don't have any new listens, return
