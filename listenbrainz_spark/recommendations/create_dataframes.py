@@ -78,6 +78,14 @@ def save_dataframe_metadata_to_HDFS(metadata):
         sys.exit(-1)
 
 def convert_date_to_datetime_object(d):
+    """ Convert passed string to datetime object.
+
+        Args:
+            d (str): Date of type string.
+
+        Returns:
+            date (datetime): Date of type datetime.
+    """
     year = int(d.split('-')[0])
 
     if year < 2004:

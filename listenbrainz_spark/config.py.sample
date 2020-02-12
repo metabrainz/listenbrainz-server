@@ -21,14 +21,14 @@ RANKS = [8, 12]
 LAMBDAS = [0.1, 10.0]
 ITERATIONS = [10, 20]
 
-# train model on X days data
+# train model on data of the given window.
 TRAIN_MODEL_FROM_DATE = '2019-01-01'
 TRAIN_MODEL_TO_DATE = '2019-07-01'
 
 # calculate stats on X months data
 STATS_CALCULATION_WINDOW = 1
 
-# generate recommendations after every X days
+# generate candidiate sets from data of the given window.
 GENERATE_CANDIDATE_SET_FROM_DATE = '2019-03-01'
 GENERATE_CANDIDATE_SET_TO_DATE = '2019-05-01'
 

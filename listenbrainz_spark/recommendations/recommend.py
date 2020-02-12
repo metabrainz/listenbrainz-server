@@ -3,8 +3,10 @@ import sys
 import time
 import json
 import uuid
-import tempfile
+import tarfile
 import logging
+import tempfile
+import subprocess
 from time import time
 from datetime import datetime
 from collections import defaultdict
@@ -28,10 +30,9 @@ from pyspark.mllib.recommendation import MatrixFactorizationModel
 
 # Recommendation HTML is generated if set to true.
 SAVE_RECOMMENDATION_HTML = False
-TOP_ARTIST_DICT_KEY = 'top_artists_recordings'
-SIMILAR_ARTIST_DICT_KEY = 'similar_artists_recordings'
-
-TEMP_PATH = '/home/listenbrainz/msid-mbid-mapping/dump'
+# type of playlist based on type of artist (top/similar)
+TOP_ARTIST = 'top_artists'
+SIMILAR_ARTIST = 'similar_artists'
 
 def load_model(path):
     """ Load best model from given path in HDFS.
@@ -42,6 +43,14 @@ def load_model(path):
     return MatrixFactorizationModel.load(listenbrainz_spark.context, path)
 
 def convert_recommendation_to_dict_for_html(row):
+    """ Convert recommendation to dictionary for HTML file.
+
+        Args:
+            row : PySpark row object.
+
+        Returns:
+            Dictionary of a recommendation.
+    """
     return {
                 'artist_name': row.artist_name,
                 'mb_artist_credit_id': row.mb_artist_credit_id,
@@ -52,7 +61,16 @@ def convert_recommendation_to_dict_for_html(row):
                 'track_name': row.track_name,
     }
 
-def convert_recommendation_to_dict_for_dump(recommendation, user_name):
+def add_user_name_to_recommendation(recommendation, user_name):
+    """ Include user name in recommendation.
+
+        Args:
+            recommendation (dict): Recommendation for a user.
+            user_name (str): User name of the user.
+
+        Returns:
+            Dictionary containing recommendation and user name.
+    """
     return {
                 'artist_name': recommendation['artist_name'],
                 'mb_artist_credit_id': recommendation['mb_artist_credit_id'],
@@ -64,40 +82,86 @@ def convert_recommendation_to_dict_for_dump(recommendation, user_name):
                 'user_name': user_name,
     }
 
-def get_archive_path(current_date):
-    to_date = create_dataframes.convert_date_to_datetime_object(current_app.config['GENERATE_CANDIDATE_SET_TO_DATE'])
-    from_date = create_dataframes.convert_date_to_datetime_object(current_app.config['GENERATE_CANDIDATE_SET_FROM_DATE'])
+def get_archive_name(to_date, from_date, current_date):
+    """ Get name of the archive to save candidate recordings.
 
+        Args:
+            to_date (datetime): Date from which listens were fetched to generate candidate sets.
+            from_date (datetime): Date upto which listens were fetched to generate candidate sets.
+            current_date (datetime): Current date.
+
+        Returns:
+            archive_name (str): Candidate recordings archive name.
+    """
     archive_name = 'listenbrainz-candidate-recordings-dump-{from_date}-{to_date}-{curr_time}'.format(
                         from_date=from_date.strftime('%Y%m%d'), to_date=to_date.strftime('%Y%m%d'),
                         curr_date=current_date.strftime('%Y%m%d-%H%M%S')
                     )
     return archive_name
 
-def dump_candidate_recordings(recommendations, temp_file, dict_key):
+def dump_candidate_recordings(recommendations, temp_file, playlist_type):
+    """ Write candidate recordings to a file based on type of playlist.
+
+        Args:
+            recommendations (dict): Recommended recordings for users.
+            temp_file (str) : File path to dump recordings.
+            playlist_type (str): Type of playlist.
+    """
 
     with open(temp_file, 'w') as f:
-        for user_name in recommendations:
-            for recommendation in user_name[dict_key]:
-                data = convert_recommendation_to_dict_for_dump(recommendation, user_name)
-                f.write(json.dumps(date))
+        for user_name, recordings in recommendations.items():
+            for recommendation in recordings[playlist_type]:
+                data = add_user_name_to_recommendation(recommendation, user_name)
+                f.write(json.dumps(data))
                 f.write('\n')
 
+def write_hashes(location):
+    """ Create hash files for each file in the given dump location.
+
+    Args:
+        location (str): the path in which the dump archive files are present.
+    """
+    for file in os.listdir(location):
+        try:
+            with open(os.path.join(location, '{}.md5'.format(file)), 'w') as f:
+                md5sum = subprocess.check_output(['md5sum', os.path.join(location, file)]).decode('utf-8').split()[0]
+                f.write(md5sum)
+            with open(os.path.join(location, '{}.sha256'.format(file)), 'w') as f:
+                sha256sum = subprocess.check_output(['sha256sum', os.path.join(location, file)]).decode('utf-8').split()[0]
+                f.write(sha256sum)
+        except IOError as e:
+            current_app.logger.error('IOError while trying to write hash files for file %s: %s', file, str(e), exc_info=True)
+            raise
+
 def create_candidate_recordings_dump(recommendations, threads):
+    """ Create candidate recordings dump.
+
+        Args:
+            recommendations (dict): Recommended recordings for users.
+            threads (int): System threads to use when creating dumps.
+    """
     current_date = datetime.utcnow()
-    archive_name = get_archive_name(current_date)
-    archive_path = os.path.join(TEMP_PATH, '{filename}.tar.xz'.format(filename=archive_name))
+    # Since recommendations are generated using candidate sets which are generated for users who
+    # appear in this window, we use this window (range of dates) while naming the dump.
+    to_date = create_dataframes.convert_date_to_datetime_object(current_app.config['GENERATE_CANDIDATE_SET_TO_DATE'])
+    from_date = create_dataframes.convert_date_to_datetime_object(current_app.config['GENERATE_CANDIDATE_SET_FROM_DATE'])
+
+    archive_name = get_archive_name(to_date, from_date, current_date)
+    dump_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), archive_name)
+
+    os.mkdir(dump_path)
+    archive_path = os.path.join(dump_path, '{filename}.tar.xz'.format(filename=archive_name))
 
     with open(archive_path, 'w') as archive:
         pxz_command = ['pxz', '--compress', '-T{threads}'.format(threads=threads)]
         pxz = subprocess.Popen(pxz_command, stdin=subprocess.PIPE, stdout=archive)
 
-        top_artist_tempfile = os.path.join(tempfile.mkddump(), 'top_artist_recordings.json')
-        similar_artist_tempfile = os.path.join(tempfile.mkddump(), 'similar_artist_recordings.json')
+        top_artist_tempfile = os.path.join(tempfile.mkdtemp(), 'top_artist_recordings.json')
+        similar_artist_tempfile = os.path.join(tempfile.mkdtemp(), 'similar_artist_recordings.json')
 
         with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
-            dump_candidate_recordings(recommendations, top_artist_tempfile, TOP_ARTIST_DICT_KEY)
-            dump_candidate_recordings(recommendations, similar_artist_tempfile, SIMILAR_ARTIST_DICT_KEY)
+            dump_candidate_recordings(recommendations, top_artist_tempfile, TOP_ARTIST)
+            dump_candidate_recordings(recommendations, similar_artist_tempfile, SIMILAR_ARTIST)
 
             tar.add(top_artist_tempfile, arcname=os.path.join(archive_name,
                             'top_artist_recordings-{from_date}-{to_date}.json'.format(from_date=from_date.strftime('%Y%m%d'),
@@ -107,7 +171,7 @@ def create_candidate_recordings_dump(recommendations, threads):
                             'similar_artist_recordings-{from_date}-{to_date}.json'.format(from_date=from_date.strftime('%Y%m%d'),
                             to_date=to_date.strftime('%Y%m%d'))))
 
-            timestamp_path = os.path.join(tempfile.mkddump(), 'TIMESTAMP')
+            timestamp_path = os.path.join(tempfile.mkdtemp(), 'TIMESTAMP')
             with open(timestamp_path, 'w') as f:
                 f.write(current_date.isoformat(' '))
             tar.add(timestamp_path, arcname=os.path.join(archive_name, 'TIMESTAMP'))
@@ -115,16 +179,11 @@ def create_candidate_recordings_dump(recommendations, threads):
             tar.add(DUMP_LICENSE_FILE_PATH,
                     arcname=os.path.join(archive_name, 'COPYING'))
 
-            shutil.rmtree(temp_dir)
-
         pxz.stdin.close()
 
     pxz.wait()
 
-    write_hashes(archive_path)
-
-
-
+    write_hashes(dump_path)
 
 def get_recommended_recordings(candidate_set, limit, recordings_df, model, mapped_listens):
     """ Get list of recommended recordings from the candidate set
@@ -210,7 +269,7 @@ def recommend_user(user_name, model, recordings_df, users_df, top_artists_candid
                                             config.RECOMMENDATION_TOP_ARTIST_LIMIT, recordings_df,
                                             model, mapped_listens
                                         )
-    user_recommendations['top_artists_recordings'] = top_artists_recommended_recordings
+    user_recommendations[TOP_ARTIST] = top_artists_recommended_recordings
 
     similar_artists_recordings_df = similar_artists_candidate_set.select('user_id', 'recording_id') \
         .where(col('user_id') == user_id)
@@ -219,7 +278,7 @@ def recommend_user(user_name, model, recordings_df, users_df, top_artists_candid
                                                 config.RECOMMENDATION_SIMILAR_ARTIST_LIMIT, recordings_df,
                                                 model, mapped_listens
                                             )
-    user_recommendations['similar_artists_recordings'] = similar_artists_recommended_recordings
+    user_recommendations[SIMILAR_ARTIST] = similar_artists_recommended_recordings
     return user_recommendations
 
 def get_recommendations(user_names, recordings_df, model, users_df, top_artists_candidate_set,

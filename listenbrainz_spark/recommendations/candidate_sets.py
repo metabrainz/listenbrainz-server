@@ -27,6 +27,13 @@ from pyspark.sql.utils import AnalysisException, ParseException
 SAVE_CANDIDATE_HTML = True
 
 def get_dates_to_generate_candidate_sets():
+    """ Get window to geenrate candidate sets.
+
+        Returns:
+            generate_candidate_set_to_date (datetime): Date from which start fetching listens
+            generate_candidate_set_from_date (datetime): Date upto which fetch lisens.
+
+    """
     train_model_from_date, train_model_to_date = create_dataframes.get_dates_to_train_data()
 
     generate_candidate_set_from_date = create_dataframes.convert_date_to_datetime_object(
@@ -39,18 +46,17 @@ def get_dates_to_generate_candidate_sets():
 
     return generate_candidate_set_to_date, generate_candidate_set_from_date
 
-def get_listens_to_generate_candidate_set(mapped_df):
+def get_listens_to_generate_candidate_set(mapped_df, to_date, from_date):
     """ Get listens to fetch top artists.
 
         Args:
             mapped_df (dataframe): Dataframe with all the columns/fields that a typical listen has.
     """
-    to_date, from_date = get_listens_for_rec_generation_window()
     df = mapped_df.select('*') \
         .where((col('listened_at') >= lit(from_date)) & (col('listened_at') <= lit(to_date)))
     return df
 
-def get_top_artists(df, user_name):
+def get_top_artists(df, user_name, to_date, from_date):
     """ Get top artists listened to by the user.
 
         Args:
@@ -68,6 +74,13 @@ def get_top_artists(df, user_name):
         .groupBy('mb_artist_credit_id', 'artist_name') \
         .agg(func.count('mb_artist_credit_id').alias('count')) \
         .orderBy('count', ascending=False).limit(config.TOP_ARTISTS_LIMIT)
+
+    try:
+        top_artists_df.take(1)[0]
+    except IndexError:
+        current_app.logger.error('No top artists found for {}. User has not been active from {} to {}'.format(
+            user_name, from_date, to_date))
+        raise IndexError()
 
     return top_artists_df
 
@@ -284,25 +297,25 @@ def main():
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
-    listens_df = get_listens_to_generate_candidate_set(mapped_df)
+    to_date, from_date = get_dates_to_generate_candidate_sets()
+    listens_df = get_listens_to_generate_candidate_set(mapped_df, to_date, from_date)
 
     metadata_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'recommendation-metadata.json')
     with open(metadata_file_path) as f:
         recommendation_metadata = json.load(f)
-        user_names = recommendation_metadata['user_name']
 
     user_data = defaultdict(dict)
     similar_artists_candidate_set_df = None
     top_artists_candidate_set_df = None
-    for user_name in user_names:
+    for row in users_df.collect():
         ts = time()
-        try:
-            user_id = get_user_id(users_df, user_name)
-        except IndexError:
-            current_app.logger.error('{} is new/invalid user'.format(user_name))
-            continue
+        user_id = row.user_id
+        user_name = row.user_name
 
-        top_artists_df = get_top_artists(listens_df, user_name)
+        try:
+            top_artists_df = get_top_artists(listens_df, user_name, to_date, from_date)
+        except IndexError:
+            continue
 
         top_artists_recording_ids_df = get_top_artists_recording_ids(top_artists_df, recordings_df, user_id)
         top_artists_candidate_set_df = top_artists_candidate_set_df.union(top_artists_recording_ids_df) \

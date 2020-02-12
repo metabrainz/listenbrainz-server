@@ -10,12 +10,12 @@ from listenbrainz_spark import path
 from listenbrainz_spark import utils
 from listenbrainz_spark import config, stats
 from listenbrainz_spark import hdfs_connection
-from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 
 from hdfs.util import HdfsError
 from py4j.protocol import Py4JJavaError
 
 app = utils.create_app(debug=True)
+DUMP_DEFAULT_THREAD_COUNT = 8
 
 @click.group()
 def cli():
@@ -140,8 +140,9 @@ def candidate():
         candidate_sets.main()
 
 @cli.command(name='recommend')
+@click.option('--create_dump', is_flag=True, help='Create dump of candidate recordings.')
 @click.option('--threads', '-t', default=DUMP_DEFAULT_THREAD_COUNT)
-def recommend(create_dump):
+def recommend(create_dump, threads):
     """ Invoke script responsible for generating recommendations.
     """
     from listenbrainz_spark.recommendations import recommend
