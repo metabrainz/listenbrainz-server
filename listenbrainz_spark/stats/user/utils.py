@@ -23,9 +23,9 @@ def get_artists(df):
                 }
     """
     t0 = time.time()
-    df = df.select("user_name","artist_name","artist_msid","artist_mbids")
-    df = df.groupBy("user_name","artist_name","artist_msid","artist_mbids").count()
-    df = df.sort(df['count'].desc())
+    df = df.select("user_name","artist_name","artist_msid","artist_mbids") \
+    .groupBy("user_name","artist_name","artist_msid","artist_mbids").count() \
+    .sort(df['count'].desc())
     rows = df.collect() 
     artists = defaultdict(list)
     for row in rows:
@@ -66,9 +66,9 @@ def get_recordings(df):
                 }
     """
     t0 = time.time()
-    df = df.select("user_name", "artist_name", "artist_msid", "artist_mbids", "track_name", "recording_msid", "recording_mbid", "release_name", "release_mbid", "release_msid")
-    df = df.groupBy("user_name", "artist_name", "artist_msid", "artist_mbids", "release_name", "release_mbid", "release_msid", "recording_msid", "recording_mbid", "track_name").count()
-    df = df.sort(df['count'].desc())
+    df = df.select("user_name", "artist_name", "artist_msid", "artist_mbids", "track_name", "recording_msid", "recording_mbid", "release_name", "release_mbid", "release_msid") \
+    .groupBy("user_name", "artist_name", "artist_msid", "artist_mbids", "release_name", "release_mbid", "release_msid", "recording_msid", "recording_mbid", "track_name").count() \
+    .sort(df['count'].desc())
     rows = df.collect()
     recordings = defaultdict(list)
     for row in rows:
@@ -113,9 +113,9 @@ def get_releases(df):
                 }
     """
     t0 = time.time()
-    df = df.select("user_name", "artist_name", "artist_msid", "artist_mbids", "release_name", "release_mbid", "release_msid")
-    df = df.groupBy("user_name", "artist_name", "artist_msid", "artist_mbids", "release_name", "release_mbid", "release_msid").count()
-    df = df.sort(df['count'].desc())
+    df = df.select("user_name", "artist_name", "artist_msid", "artist_mbids", "release_name", "release_mbid", "release_msid") \
+    .groupBy("user_name", "artist_name", "artist_msid", "artist_mbids", "release_name", "release_mbid", "release_msid").count() \
+    .sort(df['count'].desc())
     rows = df.collect()
     releases = defaultdict(list)
     for row in rows:
