@@ -34,16 +34,24 @@ def get_dates_to_generate_candidate_sets():
             generate_candidate_set_from_date (datetime): Date upto which fetch lisens.
 
     """
-    train_model_to_date = convert_date_to_datetime_object(current_app.config['TRAIN_MODEL_FROM_DATE'])
-    train_model_from_date = convert_date_to_datetime_object(current_app.config['TRAIN_MODEL_TO_DATE'])
+    train_model_from_date = create_dataframes.convert_date_to_datetime_object(current_app.config['TRAIN_MODEL_FROM_DATE'])
+    train_model_to_date = create_dataframes.convert_date_to_datetime_object(current_app.config['TRAIN_MODEL_TO_DATE'])
+
 
     generate_candidate_set_from_date = create_dataframes.convert_date_to_datetime_object(
                                             current_app.config['GENERATE_CANDIDATE_SET_FROM_DATE'])
     generate_candidate_set_to_date = create_dataframes.convert_date_to_datetime_object(
                                             current_app.config['GENERATE_CANDIDATE_SET_TO_DATE'])
 
-    if train_model_to_date < generate_candidate_set_to_date or train_model_from_date > generate_candidate_set_from_date:
-        raise ValueError('Listens used to generate candidate sets must be a subset of listens used to train model')
+    if train_model_to_date < generate_candidate_set_to_date:
+        raise ValueError('Listens used to generate candidate sets must be a subset of listens used to train model'. \
+            ' TRAIN_MODEL_TO_DATE: {} must be greater than or equal to GENERATE_CANDIDATE_SET_TO_DATE: {}'.format(
+                train_model_to_date, generate_candidate_set_to_date))
+
+    if train_model_from_date > generate_candidate_set_from_date:
+        raise ValueError('Listens used to generate candidate sets must be a subset of listens used to train model'. \
+            ' TRAIN_MODEL_FROM_DATE: {} must be less than or equal to GENERATE_CANDIDATE_SET_FROM_DATE: {}'.format(
+                train_model_from_date, generate_candidate_set_from_date))
 
     return generate_candidate_set_to_date, generate_candidate_set_from_date
 
