@@ -3,14 +3,14 @@ Set up ListenBrainz Server development environment
 
 To contribute to the ListenBrainz project, you need a development environment.
 With your development environment, you can test your changes before submitting a
-patch back to the project. This guide helps you set up a development environment
+patch to the project. This guide helps you set up a development environment
 and run ListenBrainz locally on your workstation. By the end of this guide, you
 will have…
 
-* Install system dependencies
-* Register a MusicBrainz application
-* Initialize development databases
-* Run ListenBrainz locally on your workstation
+* Installed system dependencies
+* Registered a MusicBrainz application
+* Initialized development databases
+* Running ListenBrainz Server
 
 
 Install dependencies
@@ -64,7 +64,7 @@ Ubuntu / Ubuntu-based systems
 Register a MusicBrainz application
 ----------------------------------
 
-Next, you need to register your application and get a OAuth token from
+Next, you need to register your application and get an OAuth token from
 MusicBrainz. Using the OAuth token lets you sign into your development
 environment with your MusicBrainz account. Then, you can import your plays from
 somewhere else.
@@ -80,7 +80,7 @@ options.
 
 - **Callback URL**: ``http://localhost/login/musicbrainz/post``
 
-After entering this information, you'll have a OAuth client ID and OAuth client
+After entering this information, you'll have an OAuth client ID and OAuth client
 secret. You'll use these for configuring ListenBrainz.
 
 
@@ -261,7 +261,7 @@ To get a list of manage.py commands, run:
 
 Test your changes with unit tests
 ---------------------------------
-
+								
 Unit tests are an important part of ListenBrainz. It helps make it easier for
 developers to test changes and help prevent easily avoidable mistakes later on.
 Before committing new code or making a pull request, run the unit tests on your
@@ -294,38 +294,34 @@ Also, run the **integration tests** for ListenBrainz.
 When the tests complete, you will see if your changes are valid or not. These tests
 are a helpful way to validate new changes without a lot of work.
 
-Set up Listenbrainz Spark development environment
+Set up ListenBrainz Spark development environment
 =================================================
 
-The Listenbrainz Spark module is used to generate recommendations and stats using Apache Spark. The recommendations are generated based on collaborative filtering technique.
+The ListenBrainz Spark module is used to generate recommendations and stats using Apache Spark. The recommendations are generated based on collaborative filtering technique.
 
 To contribute to the ListenBrainz Spark project, you need a development environment.
 With your development environment, you can test your changes before submitting a
-patch back to the project. This guide helps you set up a development environment
-and run ListenBrainz Spark locally on your workstation. By the end of this guide, you
-will have…
+patch to the project. This guide helps you set up a development environment and run 
+ListenBrainz Spark locally on your workstation. By the end of this guide, you will have…
 
-* Install system dependencies
-* Run ListenBrainz Spark locally on your workstation
-
+* Installed system dependencies
+* Running Spark containers
 
 Install dependencies
 --------------------
 
-The ``listenbrainz_spark-server`` communicates with the ``listenbrainz-server``. 
+The ``listenbrainz_spark`` containers communicate with the ``listenbrainz-server`` containers. 
 So you will need to set up the ``listenbrainz-server`` using the above-given steps.
 
-The ``listenbrainz_spark-server`` is shipped in Docker containers just like the 
-``listenbrainz-server``. This helps create your development environment and later deploy the application. Therefore, to work on the project, you need to install Docker
-and use containers for building the project. Containers save you from installing all of this on your own workstation.
+The ``listenbrainz_spark`` is shipped in Docker containers just like the 
+``listenbrainz-server``. This helps create your development environment and later deploy the application. Therefore, to work on the project, you need to install Docker and use containers for building the project. Containers save you from installing all of this on your own workstation.
 
 For different Docker installation instructions for your distribution refer the steps given above.
 
 Update config.py
 ^^^^^^^^^^^^^^^^
  
-For accessing various features available you will need to update the ListenBrainz Spark configuration file. If this is your first time configuring ListenBrainz Spark, copy the sample to a live
-configuration.
+For accessing various features available you will need to update the ListenBrainz Spark configuration file. If this is your first time configuring ListenBrainz Spark, copy the sample to a live configuration.
 
 .. code-block:: bash
 
@@ -337,8 +333,8 @@ Initialize ListenBrainz Spark containers
 
 Next, run ``develop.sh spark build`` in the root of the repository. Using
 ``docker-compose``, it creates multiple Docker containers for the different
-services and parts of the ListenBrainz Spark server. This script starts Hadoop,
-Spark, and the Listenbrainz Playground containers. This also makes it easy to stop
+services and parts of the ListenBrainz Spark. This script starts Hadoop,
+Spark, and the ListenBrainz Playground containers. This also makes it easy to stop
 them all later.
 
 The first time you run it, it downloads and creates the containers. But it's not
@@ -357,16 +353,15 @@ using the given command.
 
 .. code-block:: bash
 
-    ./develop.sh spark run --rm hadoop-master hdfs namenode -format -nonInteractive -force
+    ./develop.sh format
 
 This will format the ``namenode`` and link the ``namenode`` and ``datanode`` to a single ClusterID. 
 
-Remember that you shouldn't execute this command after running it for the first time. If run again it will
-format the ``namenode`` again and its link with the ``datanode`` will be lost, as both of them will have different
-ClusterID's.
+**Warning:** Running this command more than once will erase all the ``namenode`` data and its 
+link with the ``datanode`` will be lost, as both of them will have different ClusterID's.
 
 Your development environment is now ready. Now, let's actually see ListenBrainz Spark
-load locally!
+in action!
 
 
 Run the magic script
@@ -436,7 +431,7 @@ When the containers shut down, run ``./develop.sh spark up`` again.
 
 **How to resolve 'sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) FATAL: role "listenbrainz" does not exist' on running './test.sh'?**
 
-- You need to shut down the previous test containers before bringing them up again. Run the following command to shut down the containers:
+- You need to shut down the previous test containers before bringing them up again. Run the following command to shut down the test containers:
   
 .. code-block:: bash
 
