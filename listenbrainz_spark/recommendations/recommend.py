@@ -21,7 +21,6 @@ from listenbrainz_spark.exceptions import SQLException, SparkSessionNotInitializ
     FileNotFetchedException, ViewNotRegisteredException
 from listenbrainz_spark.sql import recommend_queries as sql
 from listenbrainz_spark.recommendations.utils import save_html
-from listenbrainz.db.dump_manager import write_hashes
 
 from flask import current_app
 from pyspark.sql.functions import lit, col
