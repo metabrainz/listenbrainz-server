@@ -44,12 +44,12 @@ def get_dates_to_generate_candidate_sets():
                                             current_app.config['GENERATE_CANDIDATE_SET_TO_DATE'])
 
     if train_model_to_date < generate_candidate_set_to_date:
-        raise ValueError('Listens used to generate candidate sets must be a subset of listens used to train model'. \
+        raise ValueError('Listens used to generate candidate sets must be a subset of listens used to train model\n' \
             ' TRAIN_MODEL_TO_DATE: {} must be greater than or equal to GENERATE_CANDIDATE_SET_TO_DATE: {}'.format(
                 train_model_to_date, generate_candidate_set_to_date))
 
     if train_model_from_date > generate_candidate_set_from_date:
-        raise ValueError('Listens used to generate candidate sets must be a subset of listens used to train model'. \
+        raise ValueError('Listens used to generate candidate sets must be a subset of listens used to train model\n' \
             ' TRAIN_MODEL_FROM_DATE: {} must be less than or equal to GENERATE_CANDIDATE_SET_FROM_DATE: {}'.format(
                 train_model_from_date, generate_candidate_set_from_date))
 

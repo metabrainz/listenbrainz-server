@@ -92,7 +92,7 @@ def get_archive_name(to_date, from_date, current_date):
         Returns:
             archive_name (str): Candidate recordings archive name.
     """
-    archive_name = 'listenbrainz-candidate-recordings-dump-{from_date}-{to_date}-{curr_time}'.format(
+    archive_name = 'listenbrainz-candidate-recordings-dump-{from_date}-{to_date}-{curr_date}'.format(
                         from_date=from_date.strftime('%Y%m%d'), to_date=to_date.strftime('%Y%m%d'),
                         curr_date=current_date.strftime('%Y%m%d-%H%M%S')
                     )
