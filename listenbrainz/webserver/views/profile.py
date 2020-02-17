@@ -251,7 +251,8 @@ def delete_listens():
                 current_app.logger.error('Error while deleting listens for %s: %s', current_user.musicbrainz_id, str(e))
                 flash.error('Error while deleting listens for %s, please try again later.' % current_user.musicbrainz_id)
                 return redirect(url_for('profile.info'))
-            return redirect(url_for('index.index'))
+            flash.info('Successfully deleted listens for %s.' % current_user.musicbrainz_id)
+            return redirect(url_for('user.profile', user_name=current_user.musicbrainz_id))
         else:
             flash.error('Cannot delete the user\'s listens due to error during authentication, please try again later.')
             return redirect('profile.info')
