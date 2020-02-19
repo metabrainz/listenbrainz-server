@@ -1,7 +1,7 @@
 import {isFinite, isNil, isString} from 'lodash';
 
 export default class APIService {
-  
+
   APIBaseURI;
 
   constructor(APIBaseURI){
@@ -31,19 +31,19 @@ export default class APIService {
     if(!isNil(limit) && isFinite(Number(limit))){
       query += `?limit=${limit}`
     }
-    
+
     const response = await fetch(query, {
       accept: 'application/json',
       method: "GET"
     })
     this.checkStatus(response);
     const result = await response.json();
-    
+
     return result.payload.listens
   }
-  
+
   async getListensForUser(userName, minTs, maxTs, count) {
-    
+
     if(typeof userName !== 'string'){
       throw new SyntaxError(`Expected username string, got ${typeof userName} instead`);
     }
@@ -73,7 +73,7 @@ export default class APIService {
     })
     this.checkStatus(response);
     const result = await response.json();
-    
+
     return result.payload.listens
   }
 
@@ -83,7 +83,90 @@ export default class APIService {
     const result = await response.json();
     return result.user_token;
   }
-  
+
+  async submitListens(userToken, listenType, payload) {
+    /*
+    *  Send a POST request to the ListenBrainz server to submit a listen
+    */
+
+    if (!isString(userToken)) {
+      throw new SyntaxError(`Expected usertoken string, got ${typeof userToken} instead`);
+    }
+    if (listenType !== "single" && listenType !== "playingNow" && listenType !== "import") {
+      throw new SyntaxError(`listenType can be "single", "playingNow" or "import", got ${listenType} instead`);
+    }
+
+    let struct = {
+      "listen_type": listenType,
+      "payload": payload,
+    }
+
+    let url = `${this.APIBaseURI}/submit-listens`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${userToken}`,
+          'Content-Type': 'application/json;charset=UTF-8',
+        },
+        body: JSON.stringify(struct),
+      })
+      return response; // Return status so that caller can handle appropriately
+    } catch {
+      // Retry if there is an network error
+      console.warn("Error, retrying in 3 sec");
+      setTimeout(() => this.submitListens(userToken, listenType, payload), 3000)
+    }
+  }
+
+  async getLatestImport(userName) {
+    /*
+    *  Send a GET request to the ListenBrainz server to get the latest import time
+    *  from previous imports for the user.
+    */
+
+    if (!isString(userName)) {
+      throw new SyntaxError(`Expected username string, got ${typeof userName} instead`);
+    }
+
+    let url = `${this.APIBaseURI}/latest-import?user_name=${userName}`;
+    const response = await fetch(url, {
+      method: 'GET',
+    });
+    this.checkStatus(response);
+    const result = await response.json();
+    return parseInt(result.latest_import);
+  }
+
+  async setLatestImport(userToken, timestamp) {
+    /*
+    * Send a POST request to the ListenBrainz server after the import is complete to
+    * update the latest import time on the server. This will make future imports stop
+    * when they reach this point of time in the listen history.
+    */
+
+
+    if (!isString(userToken)) {
+      throw new SyntaxError(`Expected usertoken string, got ${typeof userToken} instead`);
+    }
+    if (!isFinite(timestamp)) {
+      throw new SyntaxError(`Expected timestamp number, got ${typeof timestamp} instead`);
+    }
+
+    let url = `${this.APIBaseURI}/latest-import`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Token ${userToken}`,
+        'Content-Type': 'application/json;charset=UTF-8',
+      },
+      body: JSON.stringify({ts: parseInt(timestamp)}),
+    });
+    this.checkStatus(response);
+    return response.status; // Return true if timestamp is updated
+  }
+
   checkStatus(response) {
     if (response.status >= 200 && response.status < 300) {
       return;
