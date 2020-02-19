@@ -113,14 +113,23 @@ def import_data():
     if 'LASTFM_API_KEY' not in current_app.config or current_app.config['LASTFM_API_KEY'] == "":
         return NotFound("LASTFM_API_KEY not specified.")
 
+    user_data = {
+        "id": current_user.id,
+        "name": current_user.musicbrainz_id,
+        "auth_token": current_user.auth_token,
+    }
+
+    props = {
+        "user": user_data,
+        "api_url":  current_app.config["API_URL"],
+        "lastfm_api_url": current_app.config["LASTFM_API_URL"],
+        "lastfm_api_key": current_app.config["LASTFM_API_KEY"],
+    }
+
     return render_template(
         "user/import.html",
         user=current_user,
-        scraper_url=url_for(
-            "user.lastfmscraper",
-            user_name=current_user.musicbrainz_id,
-            _external=True,
-        ),
+        props=ujson.dumps(props),
     )
 
 
