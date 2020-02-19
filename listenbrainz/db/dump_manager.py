@@ -31,7 +31,7 @@ import sys
 
 from brainzutils.mail import send_mail
 from datetime import datetime
-from flask import current_app
+from flask import current_app, render_template
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from listenbrainz import db
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
@@ -45,11 +45,11 @@ NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP = 6
 
 cli = click.Group()
 
-def send_dump_creation_notification(dump_name):
+def send_dump_creation_notification(dump_name, dump_type):
     if not current_app.config['TESTING']:
-        dump_link = 'http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/fullexport/{}'.format(dump_name)
+        dump_link = 'http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/{}/{}'.format(dump_type, dump_name)
         send_mail(
-            subject="ListenBrainz full dump created - {}".format(dump_name),
+            subject="ListenBrainz dump created - {}".format(dump_name),
             text=render_template('emails/data_dump_created_notification.txt', dump_name=dump_name, dump_link=dump_link),
             recipients=['param@metabrainz.org'],
             from_name='ListenBrainz',
@@ -105,7 +105,7 @@ def create_full(location, threads, dump_id, last_dump_id):
             return
 
         # if in production, send an email to interested people for observability
-        send_dump_creation_notification(dump_name)
+        send_dump_creation_notification(dump_name, 'fullexport')
 
         current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
 
@@ -147,7 +147,7 @@ def create_incremental(location, threads, dump_id):
             return
 
         # if in production, send an email to interested people for observability
-        send_dump_creation_notification(dump_name)
+        send_dump_creation_notification(dump_name, 'incremental')
 
         current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
 
