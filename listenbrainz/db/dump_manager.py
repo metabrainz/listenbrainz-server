@@ -29,6 +29,7 @@ import shutil
 import subprocess
 import sys
 
+from brainzutils.mail import send_mail
 from datetime import datetime
 from flask import current_app
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
@@ -43,6 +44,17 @@ NUMBER_OF_FULL_DUMPS_TO_KEEP = 2
 NUMBER_OF_INCREMENTAL_DUMPS_TO_KEEP = 6
 
 cli = click.Group()
+
+def send_dump_creation_notification(dump_name):
+    if not current_app.config['TESTING']:
+        dump_link = 'http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/fullexport/{}'.format(dump_name)
+        send_mail(
+            subject="ListenBrainz full dump created - {}".format(dump_name),
+            text=render_template('emails/data_dump_created_notification.txt', dump_name=dump_name, dump_link=dump_link),
+            recipients=['param@metabrainz.org'],
+            from_name='ListenBrainz',
+            from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
+        )
 
 
 @cli.command(name="create_full")
@@ -80,7 +92,8 @@ def create_full(location, threads, dump_id, last_dump_id):
                 sys.exit(-1)
             end_time = dump_entry['created']
 
-        dump_path = os.path.join(location, 'listenbrainz-dump-{dump_id}-{time}-full'.format(dump_id=dump_id, time=end_time.strftime('%Y%m%d-%H%M%S')))
+        dump_name = 'listenbrainz-dump-{dump_id}-{time}-full'.format(dump_id=dump_id, time=end_time.strftime('%Y%m%d-%H%M%S'))
+        dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
         db_dump.dump_postgres_db(dump_path, end_time, threads)
         ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads, spark_format=False)
@@ -90,6 +103,10 @@ def create_full(location, threads, dump_id, last_dump_id):
         except IOError as e:
             current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
             return
+
+        # if in production, send an email to interested people for observability
+        send_dump_creation_notification(dump_name)
+
         current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
 
 
@@ -117,7 +134,9 @@ def create_incremental(location, threads, dump_id):
             sys.exit(-1)
         start_time = prev_dump_entry['created']
         current_app.logger.info("Dumping data from %s to %s", start_time, end_time)
-        dump_path = os.path.join(location, 'listenbrainz-dump-{dump_id}-{time}-incremental'.format(dump_id=dump_id, time=end_time.strftime('%Y%m%d-%H%M%S')))
+
+        dump_name = 'listenbrainz-dump-{dump_id}-{time}-incremental'.format(dump_id=dump_id, time=end_time.strftime('%Y%m%d-%H%M%S'))
+        dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
         ls.dump_listens(dump_path, dump_id=dump_id, start_time=start_time, end_time=end_time, threads=threads, spark_format=False)
         ls.dump_listens(dump_path, dump_id=dump_id, start_time=start_time, end_time=end_time, threads=threads, spark_format=True)
@@ -126,6 +145,10 @@ def create_incremental(location, threads, dump_id):
         except IOError as e:
             current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
             return
+
+        # if in production, send an email to interested people for observability
+        send_dump_creation_notification(dump_name)
+
         current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
 
 
