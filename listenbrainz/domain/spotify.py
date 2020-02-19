@@ -117,7 +117,7 @@ def get_spotify_oauth(permissions=None):
     client_secret = current_app.config['SPOTIFY_CLIENT_SECRET']
     scope = ' '.join(permissions) if permissions else None
     redirect_url = current_app.config['SPOTIFY_CALLBACK_URL']
-    return spotipy.oauth2.SpotifyOAuth(client_id, client_secret, redirect_uri=redirect_url, scope=scope)
+    return spotipy.oauth2.SpotifyOAuth(client_id=client_id, client_secret=client_secret, redirect_uri=redirect_url, scope=scope)
 
 
 def get_user(user_id):
