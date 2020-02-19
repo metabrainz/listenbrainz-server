@@ -23,7 +23,7 @@ services:
       - redis:/data:z
 
   influx:
-    image: influxdb:1.2.4
+    image: influxdb:1.7.9
     volumes:
       - influxdb:/var/lib/influxdb:z
     environment:
