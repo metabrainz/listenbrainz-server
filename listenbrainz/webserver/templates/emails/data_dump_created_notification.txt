@@ -1,4 +1,4 @@
-Hi!
+Hi! 👋
 
 A new data dump has been automatically created.
 
@@ -10,4 +10,4 @@ and is available at the following link:
 {{ dump_link }}
 
 
-Your Friendly Neighbourhood Brainzbot
+Your Friendly Neighbourhood Brainzbot 🤖
