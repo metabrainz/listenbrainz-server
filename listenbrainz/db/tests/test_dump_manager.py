@@ -100,6 +100,8 @@ class DumpManagerTestCase(DatabaseTestCase):
 
             self.assertEqual(mock_send_mail.call_args[1]['subject'], 'ListenBrainz dump created - {}'.format(expected_dump_name))
             self.assertEqual(mock_send_mail.call_args[1]['text'], expected_text)
+            self.assertIn('listenbrainz-observability@metabrainz.org', mock_send_mail.call_args[1]['recipients'])
+
 
 
     def test_cleanup_dumps(self):

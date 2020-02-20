@@ -51,7 +51,7 @@ def send_dump_creation_notification(dump_name, dump_type):
         send_mail(
             subject="ListenBrainz dump created - {}".format(dump_name),
             text=render_template('emails/data_dump_created_notification.txt', dump_name=dump_name, dump_link=dump_link),
-            recipients=['param@metabrainz.org'],
+            recipients=['listenbrainz-observability@metabrainz.org'],
             from_name='ListenBrainz',
             from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
         )
