@@ -4,7 +4,25 @@ receive from the Spark cluster.
 import listenbrainz.db.user as db_user
 import listenbrainz.db.stats as db_stats
 
-from flask import current_app
+from flask import current_app, render_template
+from brainzutils.mail import send_mail
+from datetime import datetime, timezone, timedelta
+
+TIME_TO_CONSIDER_STATS_AS_OLD = 12 # hours
+
+def new_user_stats():
+    return datetime.now(timezone.utc) - db_stats.get_timestamp_for_last_user_stats_update() > timedelta(hours=TIME_TO_CONSIDER_STATS_AS_OLD)
+
+
+def notify_user_stats_update():
+    if not current_app.config['TESTING']:
+        send_mail(
+            subject="New user stats are being written into the DB - ListenBrainz",
+            text=render_template('emails/user_stats_notification.txt', now=str(datetime.utcnow())),
+            recipients=['listenbrainz-observability@metabrainz.org'],
+            from_name='ListenBrainz',
+            from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
+        )
 
 
 def handle_user_artist(data):
@@ -14,6 +32,10 @@ def handle_user_artist(data):
     user = db_user.get_by_mb_id(musicbrainz_id)
     if not user:
         return
+
+    # send a notification if this is a new batch of stats
+    if new_user_stats():
+        notify_user_stats_update()
     artists = data['artist_stats']
     artist_count = data['artist_count']
     db_stats.insert_user_stats(user['id'], artists, {}, {}, artist_count)
