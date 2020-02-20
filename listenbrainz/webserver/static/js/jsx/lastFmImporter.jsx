@@ -6,7 +6,7 @@ import Importer from './importer'
 import Modal from './lastFmImporterModal.jsx'
 
 
-class LastFmImporter extends React.Component {
+export default class LastFmImporter extends React.Component {
   constructor(props) {
     super(props);
 
