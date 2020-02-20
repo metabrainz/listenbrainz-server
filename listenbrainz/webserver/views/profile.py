@@ -237,8 +237,8 @@ def delete_listens():
     """ Delete all the listens for the currently logged-in user from ListenBrainz.
 
     If POST request, this view checks for the correct authorization token and
-    deletes the listens. If deletion is successful, redirects to home page, else
-    flashes an error and redirects to user's info page.
+    deletes the listens. If deletion is successful, redirects to user's profile page, 
+    else flashes an error and redirects to user's info page.
 
     If GET request, this view renders a page asking the user to confirm
     that they wish to delete their listens.
