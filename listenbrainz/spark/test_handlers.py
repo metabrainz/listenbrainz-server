@@ -2,7 +2,7 @@ import unittest
 
 from datetime import datetime, timezone, timedelta
 from flask import current_app
-from listenbrainz.spark.handlers import handle_user_artist, new_user_stats
+from listenbrainz.spark.handlers import handle_user_artist, is_new_user_stats_batch
 from listenbrainz.webserver import create_app
 from unittest import mock
 
@@ -13,7 +13,7 @@ class HandlersTestCase(unittest.TestCase):
 
     @mock.patch('listenbrainz.spark.handlers.db_stats.insert_user_stats')
     @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')
-    @mock.patch('listenbrainz.spark.handlers.new_user_stats')
+    @mock.patch('listenbrainz.spark.handlers.is_new_user_stats_batch')
     @mock.patch('listenbrainz.spark.handlers.send_mail')
     def test_handle_user_artist(self, mock_send_mail, mock_new_user_stats, mock_get_by_mb_id, mock_db_insert):
         data = {
@@ -33,8 +33,8 @@ class HandlersTestCase(unittest.TestCase):
         mock_send_mail.assert_called_once()
 
     @mock.patch('listenbrainz.spark.handlers.db_stats.get_timestamp_for_last_user_stats_update')
-    def test_new_user_stats(self, mock_db_get_timestamp):
+    def test_is_new_user_stats_batch(self, mock_db_get_timestamp):
         mock_db_get_timestamp.return_value = datetime.now(timezone.utc)
-        self.assertFalse(new_user_stats())
+        self.assertFalse(is_new_user_stats_batch())
         mock_db_get_timestamp.return_value = datetime.now(timezone.utc) - timedelta(hours=13)
-        self.assertTrue(new_user_stats())
+        self.assertTrue(is_new_user_stats_batch())

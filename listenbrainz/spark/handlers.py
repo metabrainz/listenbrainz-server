@@ -10,7 +10,13 @@ from datetime import datetime, timezone, timedelta
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 12 # hours
 
-def new_user_stats():
+def is_new_user_stats_batch():
+    """ Returns True if this batch of user stats is new, False otherwise
+
+    User stats come in as multiple rabbitmq messages. We only wish to send an email once per batch.
+    So, we check the database and see if the difference between the last time stats were updated
+    and right now is greater than 12 hours.
+    """
     return datetime.now(timezone.utc) - db_stats.get_timestamp_for_last_user_stats_update() > timedelta(hours=TIME_TO_CONSIDER_STATS_AS_OLD)
 
 
@@ -34,7 +40,7 @@ def handle_user_artist(data):
         return
 
     # send a notification if this is a new batch of stats
-    if new_user_stats():
+    if is_new_user_stats_batch():
         notify_user_stats_update()
     artists = data['artist_stats']
     artist_count = data['artist_count']
