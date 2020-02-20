@@ -90,7 +90,8 @@ export default class Importer {
         {!this.incrementalImport && this.playCount != -1 && this.countReceived != this.playCount &&
           <b><span style={{ fontSize: 10 + 'pt' }} className="text-danger">The number submitted listens is different from the {this.playCount} that Last.fm reports due to an inconsistency in their API, sorry!<br /></span></b>
         }
-        <span style={{ fontSize: 8 + 'pt' }}>Thank you for using ListenBrainz!</span>
+        <span style={{ fontSize: 8 + 'pt' }}>Thank you for using ListenBrainz!</span><br /><br />
+        <span style={{ fontSize: 10 + 'pt'}}><a href={`${this.props.profile_url}`}>Close and go to your ListenBrainz profile</a></span>
       </p>
     );
     this.updateMessage(final_msg);
