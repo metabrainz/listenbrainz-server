@@ -51,3 +51,15 @@ script:
                                      bash -c "py.test listenbrainz/tests/integration"
   - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int down
 
+language: node_js
+node_js:
+- lts/*
+cache:
+  directories:
+    - node_modules
+before_install:
+- npm update
+install:
+- npm run build:dev
+script:
+- npm test
