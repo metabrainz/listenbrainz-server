@@ -1,3 +1,3 @@
 PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin
 
-00 12 * * 6 /usr/local/bin/python /code/listenbrainz/manage.py spark request_all_user_stats
+00 12 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_all_user_stats
