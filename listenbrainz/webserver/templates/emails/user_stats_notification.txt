@@ -1,0 +1,8 @@
+Hi! 👋
+
+New user stats were received by the spark consumer
+and are being written into the database.
+
+The first stat came in at {{ now }} UTC.
+
+Your Friendly Neighbourhood Brainzbot 🤖
