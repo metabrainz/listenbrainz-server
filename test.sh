@@ -77,7 +77,13 @@ function dcdown {
     # Shutting down all containers associated with this project
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-               down
+                    down 
+}
+
+function static_tester_up {
+    docker-compose -f $COMPOSE_FILE_LOC \
+                   -p $COMPOSE_PROJECT_NAME \
+                   up static_tester 
 }
 
 # Exit immediately if a command exits with a non-zero status.
@@ -119,14 +125,22 @@ DB_RUNNING=$?
 if [ $DB_EXISTS -eq 1 -a $DB_RUNNING -eq 1 ]; then
     # If no containers, run setup then run tests, then bring down
     bring_up_db
+    static_tester_up
     setup
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
                    run --rm listenbrainz py.test "$@"
+    docker-compose -f $COMPOSE_FILE_LOC \
+                   -p $COMPOSE_PROJECT_NAME \
+                   run --rm static_tester npm test
     dcdown
 else
     # Else, we have containers, just run tests
+    static_tester_up
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
                    run --rm listenbrainz py.test "$@"
+    docker-compose -f $COMPOSE_FILE_LOC \
+                   -p $COMPOSE_PROJECT_NAME \
+                   run --rm static_tester npm test
 fi

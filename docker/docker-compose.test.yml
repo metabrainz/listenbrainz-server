@@ -43,3 +43,10 @@ services:
       - db
       - influx
       - rabbitmq
+ 
+  static_tester:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.jest
+    volumes:
+      - ../listenbrainz/webserver/static:/code/static:z
