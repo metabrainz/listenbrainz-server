@@ -94,6 +94,15 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
         user = db_user.get(self.user['id'])
         self.assertIsNone(user)
 
+    
+    def test_delete_listens(self):
+        self.temporary_login(self.user['login_id'])
+        r = self.client.get(url_for('profile.delete_listens'))
+        self.assert200(r)
+
+        r = self.client.post(url_for('profile.delete_listens'), data={'token': self.user['auth_token']})
+        self.assertRedirects(r, url_for('user.profile', user_name=self.user['musicbrainz_id']))
+
 
     @patch('listenbrainz.webserver.views.profile.spotify.remove_user')
     @patch('listenbrainz.webserver.views.profile.spotify.get_spotify_oauth')
