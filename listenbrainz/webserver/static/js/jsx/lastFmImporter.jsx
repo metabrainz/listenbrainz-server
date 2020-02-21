@@ -53,7 +53,7 @@ class LastFmImporter extends React.Component {
           <input type="submit" value="Import Now!" disabled={!this.state.lastfmUsername} />
         </form>
         <Modal show={this.state.show} onClose={this.toggleModal} disable={!this.state.canClose}>
-          <img src='/static/img/listenbrainz-logo.svg' height='75' />
+          <img src='/static/img/listenbrainz-logo.svg' height='75' class='img-responsive'/>
           <br /><br />
           <div>{this.state.msg}</div>
           <br />
