@@ -16,19 +16,19 @@ FAQs
 
 - You need to shut down the previous containers before bringing them up again. Run the following command to shut down the containers:
   
-.. code-block:: bash
+  .. code-block:: bash
 
     ./develop.sh spark down
     
-When the containers shut down, run ``./develop.sh spark up`` again.
+- When the containers shut down, run ``./develop.sh spark up`` again.
 |
 
 **How to resolve 'sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) FATAL: role "listenbrainz" does not exist' on running './test.sh'?**
 
 - You need to shut down the previous test containers before bringing them up again. Run the following command to shut down the test containers:
   
-.. code-block:: bash
+  .. code-block:: bash
 
     ./test.sh -d
     
-When the containers shut down, run ``./test.sh`` to run the tests again.
+- When the containers shut down, run ``./test.sh`` to run the tests again.
