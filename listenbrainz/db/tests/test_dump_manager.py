@@ -29,6 +29,7 @@ import tempfile
 import time
 
 from click.testing import CliRunner
+from flask import current_app, render_template
 from listenbrainz.db import dump_manager
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.listenstore.tests.util import generate_data
@@ -36,21 +37,22 @@ from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app
 from listenbrainz.webserver.influx_connection import init_influx_connection
 from time import sleep
+from unittest.mock import patch
 
 class DumpManagerTestCase(DatabaseTestCase):
 
     def setUp(self):
         super().setUp()
-        app = create_app()
+        self.app = create_app()
         self.tempdir = tempfile.mkdtemp()
         self.runner = CliRunner()
         self.listenstore = init_influx_connection(logging.getLogger(__name__), {
-            'REDIS_HOST': app.config['REDIS_HOST'],
-            'REDIS_PORT': app.config['REDIS_PORT'],
-            'REDIS_NAMESPACE': app.config['REDIS_NAMESPACE'],
-            'INFLUX_HOST': app.config['INFLUX_HOST'],
-            'INFLUX_PORT': app.config['INFLUX_PORT'],
-            'INFLUX_DB_NAME': app.config['INFLUX_DB_NAME'],
+            'REDIS_HOST': self.app.config['REDIS_HOST'],
+            'REDIS_PORT': self.app.config['REDIS_PORT'],
+            'REDIS_NAMESPACE': self.app.config['REDIS_NAMESPACE'],
+            'INFLUX_HOST': self.app.config['INFLUX_HOST'],
+            'INFLUX_PORT': self.app.config['INFLUX_PORT'],
+            'INFLUX_DB_NAME': self.app.config['INFLUX_DB_NAME'],
         })
         self.user_id = db_user.create(1, 'iliekcomputers')
         self.user_name = db_user.get(self.user_id)['musicbrainz_id']
@@ -58,6 +60,49 @@ class DumpManagerTestCase(DatabaseTestCase):
     def tearDown(self):
         super().tearDown()
         shutil.rmtree(self.tempdir)
+
+    @patch('listenbrainz.db.dump_manager.send_mail')
+    def test_send_dump_creation_notification_full(self, mock_send_mail):
+        with self.app.app_context():
+
+            # should not call send mail when testing
+            current_app.config['TESTING'] = True
+            dump_manager.send_dump_creation_notification('listenbrainz-dump-1-20180312-000001-full', 'fullexport')
+            mock_send_mail.assert_not_called()
+
+            # should be called when in production
+            current_app.config['TESTING'] = False
+            dump_manager.send_dump_creation_notification('listenbrainz-dump-1-20180312-000001-full', 'fullexport')
+            mock_send_mail.assert_called_once()
+            expected_dump_name = 'listenbrainz-dump-1-20180312-000001-full'
+            expected_dump_link = 'http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/fullexport/{}'.format(expected_dump_name)
+            expected_text = render_template('emails/data_dump_created_notification.txt', dump_name=expected_dump_name, dump_link=expected_dump_link)
+
+            self.assertEqual(mock_send_mail.call_args[1]['subject'], 'ListenBrainz dump created - {}'.format(expected_dump_name))
+            self.assertEqual(mock_send_mail.call_args[1]['text'], expected_text)
+
+    @patch('listenbrainz.db.dump_manager.send_mail')
+    def test_send_dump_creation_notification_incremental(self, mock_send_mail):
+        with self.app.app_context():
+
+            # should not call send mail when testing
+            current_app.config['TESTING'] = True
+            dump_manager.send_dump_creation_notification('listenbrainz-dump-1-20180312-000001-incremental', 'incremental')
+            mock_send_mail.assert_not_called()
+
+            # should be called when in production
+            current_app.config['TESTING'] = False
+            dump_manager.send_dump_creation_notification('listenbrainz-dump-1-20180312-000001-incremental', 'incremental')
+            mock_send_mail.assert_called_once()
+            expected_dump_name = 'listenbrainz-dump-1-20180312-000001-incremental'
+            expected_dump_link = 'http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/incremental/{}'.format(expected_dump_name)
+            expected_text = render_template('emails/data_dump_created_notification.txt', dump_name=expected_dump_name, dump_link=expected_dump_link)
+
+            self.assertEqual(mock_send_mail.call_args[1]['subject'], 'ListenBrainz dump created - {}'.format(expected_dump_name))
+            self.assertEqual(mock_send_mail.call_args[1]['text'], expected_text)
+            self.assertIn('listenbrainz-observability@metabrainz.org', mock_send_mail.call_args[1]['recipients'])
+
+
 
     def test_cleanup_dumps(self):
         create_path(os.path.join(self.tempdir, 'listenbrainz-dump-1-20180312-000001-full'))
@@ -99,7 +144,8 @@ class DumpManagerTestCase(DatabaseTestCase):
 
         self.assertIn('not-a-dump', newdirs)
 
-    def test_create_full_db(self):
+    @patch('listenbrainz.db.dump_manager.send_dump_creation_notification')
+    def test_create_full_db(self, mock_notify):
 
         listens = generate_data(1, self.user_name, 1, 5)
         self.listenstore.insert(listens)
@@ -109,6 +155,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         self.runner.invoke(dump_manager.create_full, ['--location', self.tempdir])
         self.assertEqual(len(os.listdir(self.tempdir)), 1)
         dump_name = os.listdir(self.tempdir)[0]
+        mock_notify.assert_called_with(dump_name, 'fullexport')
 
         # make sure that the dump contains a full listens dump, a spark dump, a public dump
         # and a private dump
@@ -157,7 +204,8 @@ class DumpManagerTestCase(DatabaseTestCase):
                 archive_count += 1
         self.assertEqual(archive_count, 4)
 
-    def test_create_incremental(self):
+    @patch('listenbrainz.db.dump_manager.send_dump_creation_notification')
+    def test_create_incremental(self, mock_notify):
         # create a incremental dump, this won't work because the incremental dump does
         # not have a previous dump
         result = self.runner.invoke(dump_manager.create_incremental, ['--location', self.tempdir])
@@ -170,6 +218,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         result = self.runner.invoke(dump_manager.create_incremental, ['--location', self.tempdir])
         self.assertEqual(len(os.listdir(self.tempdir)), 1)
         dump_name = os.listdir(self.tempdir)[0]
+        mock_notify.assert_called_with(dump_name, 'incremental')
 
         # created dump ID should be one greater than previous dump's ID
         created_dump_id = int(dump_name.split('-')[2])
