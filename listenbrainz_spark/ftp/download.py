@@ -8,6 +8,9 @@ from flask import current_app
 MAPPING_DUMP_ID_POS = 3
 ARTIST_RELATION_DUMP_ID_POS = 5
 
+FULL = 'full'
+INCREMENTAL = 'incremental'
+
 class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
     def get_dump_name_to_download(self, dump, dump_id, dump_id_pos):
@@ -111,7 +114,7 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
     def download_msid_mbid_mapping_with_matchable(self):
         pass
 
-    def download_listens(self, directory, listens_dump_id=None):
+    def download_listens(self, directory, listens_dump_id=None, dump_type=FULL):
         """ Download listens to dir passed as an argument.
 
             Args:
@@ -122,6 +125,9 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
             Returns:
                 dest_path (str): Local path where listens have been downloaded.
         """
+        ftp_cwd_dir = current_app.config['FTP_LISTENS_DIR'] + 'fullexport/'
+        if dump_type == INCREMENTAL:
+            ftp_cwd_dir = current_app.config['FTP_LISTENS_DIR'] + 'incremental/'
         self.connection.cwd(current_app.config['FTP_LISTENS_DIR'])
         listens_dump_list = sorted(self.list_dir(), key=lambda x: int(x.split('-')[2]))
         req_listens_dump = self.get_dump_name_to_download(listens_dump_list, listens_dump_id, 2)
