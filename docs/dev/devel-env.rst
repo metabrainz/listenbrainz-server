@@ -277,6 +277,11 @@ once so that subsequent running of the tests is faster:
    ./test.sh -s # stop test containers, but don't remove them
    ./test.sh -d # stop and remove all test containers
 
+If you made any changes to the frontend, you can run the tests for frontend using
+
+.. code-block:: bash
+    ./frontend-test.sh
+
 Also, run the **integration tests** for ListenBrainz.
 
 .. code-block:: bash
