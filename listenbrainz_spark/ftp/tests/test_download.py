@@ -39,9 +39,12 @@ class FTPDownloaderTestCase(unittest.TestCase):
         self.assertEqual(dump_name + '.tar.bz2', filename)
 
     @patch('ftplib.FTP')
-    def test_get_listens_file_name(self, mock_ftp_cons):
-        filename = ListenbrainzDataDownloader().get_listens_file_name()
-        self.assertEqual(filename, config.TEMP_LISTENS_DUMP)
+    def test_get_listens_dump_file_name(self, mock_ftp_cons):
+        filename = ListenbrainzDataDownloader().get_listens_dump_file_name('listenbrainz-dump-17-20190101-000001-full/')
+        self.assertEqual('listenbrainz-listens-dump-17-20190101-000001-spark-full.tar.xz', filename)
+
+        filename = ListenbrainzDataDownloader().get_listens_dump_file_name('listenbrainz-dump-17-20190101-000001-incremental/')
+        self.assertEqual('listenbrainz-listens-dump-17-20190101-000001-spark-incremental.tar.xz', filename)
 
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.download_dump')
     @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.get_file_name')
@@ -69,14 +72,14 @@ class FTPDownloaderTestCase(unittest.TestCase):
         self.assertEqual(dest_path, mock_spark_dump.return_value)
 
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.download_dump')
-    @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.get_listens_file_name')
+    @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.get_listens_dump_file_name')
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.list_dir')
     @patch('ftplib.FTP')
-    def test_download_listens(self, mock_ftp_cons, mock_list_dir, mock_get_f_name, mock_download_dump):
-        mock_ftp = mock_ftp_cons.return_value
+    def test_download_listens(self, mock_ftp, mock_list_dir, mock_get_f_name, mock_download_dump):
+        mock_list_dir.return_value = ['listenbrainz-dump-123-20190101-000000/', 'listenbrainz-dump-45-20190201-000000']
         dest_path = ListenbrainzDataDownloader().download_listens('fakedir', None)
         mock_list_dir.assert_called_once()
-        mock_ftp.cwd.assert_has_calls([call(config.FTP_LISTENS_DIR), call(config.TEMP_LISTENS_DIR)])
+        mock_ftp.return_value.cwd.assert_has_calls([call(config.FTP_LISTENS_DIR), call('listenbrainz-dump-123-20190101-000000/')])
 
         mock_get_f_name.assert_called_once()
         mock_download_dump.assert_called_once_with(mock_get_f_name.return_value, 'fakedir')
