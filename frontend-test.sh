@@ -1,3 +1,5 @@
+#!/bin/bash
+
 COMPOSE_FILE_LOC=docker/docker-compose.test.yml
 COMPOSE_PROJECT_NAME_ORIGINAL=listenbrainz_test
 

@@ -126,7 +126,6 @@ if [ $DB_EXISTS -eq 1 -a $DB_RUNNING -eq 1 ]; then
     dcdown
 else
     # Else, we have containers, just run tests
-    static_tester_up
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
                    run --rm listenbrainz py.test "$@"
