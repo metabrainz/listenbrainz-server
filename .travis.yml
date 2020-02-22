@@ -51,5 +51,5 @@ script:
                                      bash -c "py.test listenbrainz/tests/integration"
   - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int down
 
-  - echo "JavaScripts tests start here"
+  - echo "JavaScript tests start here"
   - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test run --rm static_tester npm test
