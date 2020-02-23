@@ -125,10 +125,10 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
             Returns:
                 dest_path (str): Local path where listens have been downloaded.
         """
-        ftp_cwd_dir = current_app.config['FTP_LISTENS_DIR'] + 'fullexport/'
+        ftp_cwd = current_app.config['FTP_LISTENS_DIR'] + 'fullexport/'
         if dump_type == INCREMENTAL:
-            ftp_cwd_dir = current_app.config['FTP_LISTENS_DIR'] + 'incremental/'
-        self.connection.cwd(current_app.config['FTP_LISTENS_DIR'])
+            ftp_cwd = current_app.config['FTP_LISTENS_DIR'] + 'incremental/'
+        self.connection.cwd(ftp_cwd)
         listens_dump_list = sorted(self.list_dir(), key=lambda x: int(x.split('-')[2]))
         req_listens_dump = self.get_dump_name_to_download(listens_dump_list, listens_dump_id, 2)
 
