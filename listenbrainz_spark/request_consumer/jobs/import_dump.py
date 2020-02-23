@@ -20,6 +20,7 @@ def import_dump_to_hdfs(dump_type, force, dump_id=None):
 def import_newest_full_dump_handler():
     dump_name = import_dump_to_hdfs('full', force=True)
     return [{
+        'type': 'import_full_dump',
         'imported_dump': dump_name,
         'time': str(datetime.utcnow()),
     }]
