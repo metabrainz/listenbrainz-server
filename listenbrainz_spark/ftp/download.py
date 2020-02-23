@@ -8,6 +8,9 @@ from flask import current_app
 MAPPING_DUMP_ID_POS = 3
 ARTIST_RELATION_DUMP_ID_POS = 5
 
+FULL = 'full'
+INCREMENTAL = 'incremental'
+
 class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
     def get_dump_name_to_download(self, dump, dump_id, dump_id_pos):
@@ -44,13 +47,23 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         """
         return dump_name + '.tar.bz2'
 
-    def get_listens_file_name(self):
+    def get_listens_dump_file_name(self, dump_name):
         """ Get the name of Spark listens dump name archive.
 
             Returns:
-                '' : Spark listens dump archive name.
+                str : Spark listens dump archive name.
         """
-        return current_app.config['TEMP_LISTENS_DUMP']
+        dump_id = dump_name.split('-')[2]
+        dump_date = dump_name.split('-')[3]
+        dump_time_of_day = dump_name.split('-')[4]
+        dump_type = 'full' if 'full' in dump_name.split('-')[5] else 'incremental'
+        return 'listenbrainz-listens-dump-{dump_id}-{date}-{tod}-spark-{dump_type}.tar.xz'.format(
+            dump_id=dump_id,
+            date=dump_date,
+            tod=dump_time_of_day,
+            dump_type=dump_type,
+        )
+
 
     def download_spark_dump_and_get_path(self, directory, dump_id, ftp_dump_dir, dump_id_pos):
         """ Download dump and get local (spark) path.
@@ -101,7 +114,7 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
     def download_msid_mbid_mapping_with_matchable(self):
         pass
 
-    def download_listens(self, directory, listens_dump_id=None):
+    def download_listens(self, directory, listens_dump_id=None, dump_type=FULL):
         """ Download listens to dir passed as an argument.
 
             Args:
@@ -112,16 +125,16 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
             Returns:
                 dest_path (str): Local path where listens have been downloaded.
         """
-        self.connection.cwd(current_app.config['FTP_LISTENS_DIR'])
-        listens_dump = self.list_dir()
-        # Temporary listens dump name.
-        req_listens_dump = current_app.config['TEMP_LISTENS_DIR']
-        # req_listens_dump = self.get_dump_name_to_download(listens_dump, listens_dump_id, 2)
-        # Uncomment the above command when full and incremental dumps are updated.
-        # refer to: http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/
+        ftp_cwd = current_app.config['FTP_LISTENS_DIR'] + 'fullexport/'
+        if dump_type == INCREMENTAL:
+            ftp_cwd = current_app.config['FTP_LISTENS_DIR'] + 'incremental/'
+        self.connection.cwd(ftp_cwd)
+        listens_dump_list = sorted(self.list_dir(), key=lambda x: int(x.split('-')[2]))
+        req_listens_dump = self.get_dump_name_to_download(listens_dump_list, listens_dump_id, 2)
+
 
         self.connection.cwd(req_listens_dump)
-        listens_file_name = self.get_listens_file_name()
+        listens_file_name = self.get_listens_dump_file_name(req_listens_dump)
 
         t0 = time()
         current_app.logger.info('Downloading {} from FTP...'.format(listens_file_name))
