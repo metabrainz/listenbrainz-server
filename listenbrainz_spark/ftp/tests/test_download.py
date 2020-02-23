@@ -93,7 +93,7 @@ class FTPDownloaderTestCase(unittest.TestCase):
         mock_list_dir.return_value = ['listenbrainz-dump-123-20190101-000000/', 'listenbrainz-dump-45-20190201-000000']
         dest_path = ListenbrainzDataDownloader().download_listens('fakedir', None, dump_type='incremental')
         mock_list_dir.assert_called_once()
-        mock_ftp.return_value.cwd.assert_has_calls([call(config.FTP_LISTENS_DIR + 'fullexport/'), call('listenbrainz-dump-123-20190101-000000/')])
+        mock_ftp.return_value.cwd.assert_has_calls([call(config.FTP_LISTENS_DIR + 'incremental/'), call('listenbrainz-dump-123-20190101-000000/')])
 
         mock_get_f_name.assert_called_once()
         mock_download_dump.assert_called_once_with(mock_get_f_name.return_value, 'fakedir')
