@@ -1,0 +1,10 @@
+Hi! 👋
+
+A new data dump has been imported into the spark
+cluster.
+
+Dump name: {{ dump_name }}
+Import time: {{ time }}
+
+Your Friendly Neighbourhood Brainzbot 🤖
+

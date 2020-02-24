@@ -98,7 +98,7 @@ def upload_listens(force, incremental):
     with app.app_context():
         downloader_obj = ListenbrainzDataDownloader()
         dump_type = 'incremental' if incremental else 'full'
-        src = downloader_obj.download_listens(directory=path.FTP_FILES_PATH, dump_type=dump_type)
+        src, _ = downloader_obj.download_listens(directory=path.FTP_FILES_PATH, dump_type=dump_type)
         uploader_obj = ListenbrainzDataUploader()
         uploader_obj.upload_listens(src, force=force)
 

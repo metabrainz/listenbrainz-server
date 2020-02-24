@@ -140,7 +140,7 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         current_app.logger.info('Downloading {} from FTP...'.format(listens_file_name))
         dest_path = self.download_dump(listens_file_name, directory)
         current_app.logger.info('Done. Total time: {:.2f} sec'.format(time() - t0))
-        return dest_path
+        return dest_path, listens_file_name
 
     def download_artist_relation(self, directory, artist_relation_dump_id=None):
         """ Download artist relation to dir passed as an argument.
