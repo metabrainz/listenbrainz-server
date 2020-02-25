@@ -90,3 +90,9 @@ def request_all_user_stats():
     """ Send a user stats request to the spark cluster
     """
     send_request_to_spark_cluster(_prepare_query_message('stats.user.all'))
+
+@cli.command(name="request_import_full")
+def request_import_new_full_dump():
+    """ Send the cluster a request to import a new full data dump
+    """
+    send_request_to_spark_cluster(_prepare_query_message('import.dump.full'))
