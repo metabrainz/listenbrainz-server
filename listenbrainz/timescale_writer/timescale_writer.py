@@ -12,6 +12,7 @@ from flask import current_app
 
 from listenbrainz.listen import Listen
 from listenbrainz.listen_writer import ListenWriter
+import psycopg2
 from psycopg2.errors import OperationalError, DuplicateTable, UntranslatableCharacter
 from psycopg2.extras import execute_values
 
@@ -57,16 +58,18 @@ class TimescaleWriterSubscriber(ListenWriter):
 
         with self.conn.cursor() as curs:
             # TODO: Later add this line to the query and pass the results down to the unique rmq
-            # RETURNING listened_at, recording_msid, user_name, data
             query = """INSERT INTO listen 
                             VALUES %s
                        ON CONFLICT (listened_at, recording_msid, user_name)
                      ON CONSTRAINT listened_at_recording_msid_user_name_ndx_listen 
                         DO NOTHING
+                         RETURNING listened_at, recording_msid, user_name, data
                     """
             try:
                 execute_values(curs, query, listens, template=None)
+                result = curs.fetchone()
                 self.conn.commit()
+                current_app.logger.info("Wrote %d unique listens." % result['count'])
             except psycopg2.OperationalError as err:
                 current_app.logger.error("Cannot write data to timescale: %s. Sleep." % str(err), exc_info=True)
 
@@ -79,28 +82,32 @@ class TimescaleWriterSubscriber(ListenWriter):
             current_app.logger.info("timescale-writer init")
             self._verify_hosts_in_config()
 
-            with psycopg2.connect('dbname=listenbrainz user=listenbrainz host=10.2.2.31 password=listenbrainz') as conn:
-                self.conn = conn
-                while True:
-                    self.connect_to_rabbitmq()
-                    self.incoming_ch = self.connection.channel()
-                    self.incoming_ch.exchange_declare(exchange=current_app.config['INCOMING_EXCHANGE'], exchange_type='fanout')
-                    self.incoming_ch.queue_declare(TIMESCALE_QUEUE, durable=True)
-                    self.incoming_ch.queue_bind(exchange=current_app.config['INCOMING_EXCHANGE'], queue=TIMESCALE_QUEUE)
-                    self.incoming_ch.basic_consume(
-                        lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self),
-                        queue=TIMESCALE_QUEUE,
-                    )
+            try:
+                with psycopg2.connect('dbname=listenbrainz user=listenbrainz host=10.2.2.31 password=listenbrainz') as conn:
+                    current_app.logger.info("connected to timescale")
+                    self.conn = conn
+                    while True:
+                        self.connect_to_rabbitmq()
+                        self.incoming_ch = self.connection.channel()
+                        self.incoming_ch.exchange_declare(exchange=current_app.config['INCOMING_EXCHANGE'], exchange_type='fanout')
+                        self.incoming_ch.queue_declare(TIMESCALE_QUEUE, durable=True)
+                        self.incoming_ch.queue_bind(exchange=current_app.config['INCOMING_EXCHANGE'], queue=TIMESCALE_QUEUE)
+                        self.incoming_ch.basic_consume(
+                            lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self),
+                            queue=TIMESCALE_QUEUE,
+                        )
 
-                    current_app.logger.info("timescale-writer started")
-                    try:
-                        self.incoming_ch.start_consuming()
-                    except pika.exceptions.ConnectionClosed:
-                        current_app.logger.warn("Connection to rabbitmq closed. Re-opening.", exc_info=True)
-                        self.connection = None
-                        continue
+                        current_app.logger.info("timescale-writer started")
+                        try:
+                            self.incoming_ch.start_consuming()
+                        except pika.exceptions.ConnectionClosed:
+                            current_app.logger.warn("Connection to rabbitmq closed. Re-opening.", exc_info=True)
+                            self.connection = None
+                            continue
 
-                    self.connection.close()
+                        self.connection.close()
+            except Exception as err:
+                current_app.logger.info("failed to connect to timescale. ", str(err))
 
             self.conn = None
 
