@@ -52,7 +52,7 @@ fi
 if [ "${CONTAINER_NAME}" = "listenbrainz-timescale-writer-beta" ]
 then
     cd /code/listenbrainz
-    exec python3 -m listenbrainz.timescale_writer.timescale_writer
+    exec python3 -u -m listenbrainz.timescale_writer.timescale_writer
 fi
 
 echo "init script has no clue which service to start. Set env var CONTAINER_NAME!"
