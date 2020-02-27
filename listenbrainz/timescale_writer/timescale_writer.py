@@ -16,6 +16,8 @@ import psycopg2
 from psycopg2.errors import OperationalError, DuplicateTable, UntranslatableCharacter
 from psycopg2.extras import execute_values
 
+import sys, traceback
+
 TIMESCALE_QUEUE = "ts_incoming"
 
 class TimescaleWriterSubscriber(ListenWriter):
@@ -43,7 +45,7 @@ class TimescaleWriterSubscriber(ListenWriter):
 
         count = len(listens)
 
-        self._collect_and_log_stats(count, call_method=self.ls.update_listen_counts)
+#        self._collect_and_log_stats(count, call_method=self.ls.update_listen_counts)
 
         return ret
 
@@ -53,38 +55,58 @@ class TimescaleWriterSubscriber(ListenWriter):
             This is quick and dirty for a proof of concept. Errors are logged, but data ruthlessly discarded.
         '''
 
-        if not data:
+        if not listens:
             return 0
+
+        to_insert = []
+        for listen in listens:
+            tm = listen['track_metadata']
+            # Clean up null characters in the data
+            if 'artist_name' in tm and tm['artist_name']:
+                tm['artist_name'] = tm['artist_name'].replace("\u0000", "")
+            if 'track_name' in tm and tm['track_name']:
+                 tm['track_name'] = tm['track_name'].replace("\u0000", "")
+            if 'release_name' in tm and tm['release_name']:
+                tm['release_name'] = tm['release_name'].replace("\u0000", "")
+
+            to_insert.append([
+                    listen['listened_at'],
+                    listen['recording_msid'],
+                    listen['user_name'],
+                    ujson.dumps(tm)])
 
         with self.conn.cursor() as curs:
             # TODO: Later add this line to the query and pass the results down to the unique rmq
             query = """INSERT INTO listen 
                             VALUES %s
                        ON CONFLICT (listened_at, recording_msid, user_name)
-                     ON CONSTRAINT listened_at_recording_msid_user_name_ndx_listen 
                         DO NOTHING
                          RETURNING listened_at, recording_msid, user_name, data
                     """
             try:
-                execute_values(curs, query, listens, template=None)
+                execute_values(curs, query, to_insert, template=None)
                 result = curs.fetchone()
                 self.conn.commit()
-                current_app.logger.info("Wrote %d unique listens." % result['count'])
             except psycopg2.OperationalError as err:
-                current_app.logger.error("Cannot write data to timescale: %s. Sleep." % str(err), exc_info=True)
+                print("Cannot write data to timescale: %s." % str(err))
+                return 0
+            except Exception as err:
+                print("Cannot write data to timescale: %s. Sleep." % str(err))
+                traceback.print_exc()
+                return 0
 
-        return len(listens)
+        return len(to_insert)
 
 
     def start(self):
         app = create_app()
         with app.app_context():
-            current_app.logger.info("timescale-writer init")
+            print("timescale-writer init")
             self._verify_hosts_in_config()
 
             try:
                 with psycopg2.connect('dbname=listenbrainz user=listenbrainz host=10.2.2.31 password=listenbrainz') as conn:
-                    current_app.logger.info("connected to timescale")
+                    print("connected to timescale")
                     self.conn = conn
                     while True:
                         self.connect_to_rabbitmq()
@@ -97,7 +119,7 @@ class TimescaleWriterSubscriber(ListenWriter):
                             queue=TIMESCALE_QUEUE,
                         )
 
-                        current_app.logger.info("timescale-writer started")
+                        print("timescale-writer started")
                         try:
                             self.incoming_ch.start_consuming()
                         except pika.exceptions.ConnectionClosed:
@@ -107,7 +129,8 @@ class TimescaleWriterSubscriber(ListenWriter):
 
                         self.connection.close()
             except Exception as err:
-                current_app.logger.info("failed to connect to timescale. ", str(err))
+                traceback.print_exc()
+                print("failed to start timescale loop ", str(err))
 
             self.conn = None
 
