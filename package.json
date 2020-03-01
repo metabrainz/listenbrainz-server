@@ -13,7 +13,8 @@
     "postinstall": "npm run build:prod",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage --colors"
+    "test:coverage": "jest --coverage --colors",
+    "test:debug": "node --inspect node_modules/.bin/jest --runInBand"
   },
   "author": "MetaBrainz Foundation Inc.",
   "license": "GPL-2.0-only",
