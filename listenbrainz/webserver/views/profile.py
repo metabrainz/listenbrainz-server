@@ -13,7 +13,7 @@ from flask import Blueprint, Response, render_template, request, url_for, \
     redirect, current_app, make_response, jsonify, stream_with_context
 from flask_login import current_user, login_required
 import spotipy.oauth2
-from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
+from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError, Unauthorized
 from listenbrainz.webserver.errors import APIBadRequest, APIServiceUnavailable, APINotFound
 from werkzeug.utils import secure_filename
 
@@ -31,8 +31,6 @@ from listenbrainz.webserver.views.api_tools import insert_payload, validate_list
     LISTEN_TYPE_IMPORT, publish_data_to_queue
 from os import path, makedirs
 from time import time
-from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
-from werkzeug.utils import secure_filename
 
 profile_bp = Blueprint("profile", __name__)
 
@@ -234,7 +232,7 @@ def delete():
             return redirect(url_for('index.index'))
         else:
             flash.error('Cannot delete user due to error during authentication, please try again later.')
-            return redirect('profile.info')
+            return redirect(url_for('profile.info'))
     else:
         return render_template(
             'profile/delete.html',
@@ -254,7 +252,7 @@ def delete_listens():
     that they wish to delete their listens.
     """
     if request.method == 'POST':
-        if request.form.get('token') == current_user.auth_token:
+        if request.form.get('token') and (request.form.get('token') == current_user.auth_token):
             try:
                 delete_listens_history(current_user.musicbrainz_id)
             except Exception as e:
@@ -264,11 +262,10 @@ def delete_listens():
             flash.info('Successfully deleted listens for %s.' % current_user.musicbrainz_id)
             return redirect(url_for('user.profile', user_name=current_user.musicbrainz_id))
         else:
-            flash.error('Cannot delete the user\'s listens due to error during authentication, please try again later.')
-            return redirect('profile.info')
+            raise Unauthorized("Auth token invalid or missing.")
     else:
         return render_template(
-            'profile/deletelistens.html',
+            'profile/delete_listens.html',
             user=current_user,
         )
 
