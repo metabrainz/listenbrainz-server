@@ -83,7 +83,7 @@ class TimescaleWriterSubscriber(ListenWriter):
             self._verify_hosts_in_config()
 
             try:
-                with psycopg2.connect('dbname=listenbrainz user=listenbrainz host=10.2.2.31 password=listenbrainz') as conn:
+                with psycopg2.connect('dbname=listenbrainz user=listenbrainz host=localhost password=listenbrainz') as conn:
                     current_app.logger.info("connected to timescale")
                     self.conn = conn
                     while True:
