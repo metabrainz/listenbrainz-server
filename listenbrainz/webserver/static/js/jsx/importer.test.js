@@ -13,9 +13,11 @@ const props = {
     name: 'dummyUser',
     auth_token: 'foobar',
   },
-  lastfmURL: 'foobar',
+  lastfm_api_url: 'http://ws.audioscrobbler.com/2.0/',
   lastfm_api_key: 'foobar',
-}
+};
+const lastfmUsername = 'dummyUser';
+const importer = new Importer(lastfmUsername, props);
 
 describe('encodeScrobbles is working correctly', () => {
   beforeEach(() => {
@@ -24,7 +26,44 @@ describe('encodeScrobbles is working correctly', () => {
   });
 
   it('encodes the given scrobbles correctly', () => {
-    let importer = new Importer('dummyUser', props);
     expect(importer.encodeScrobbles(encodeScrobble_input)).toEqual(encodeScrobble_output);
   });
 });
+
+describe('getNumberOfPages works correctly', () => {
+  beforeEach(() => {
+    // Clear previous mocks
+    APIService.mockClear();
+
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(encodeScrobble_input),
+      })
+    })
+  });
+
+  it('should call with the correct url', () => {
+    importer.getNumberOfPages();
+
+    expect(window.fetch).toHaveBeenCalledWith(`${props.lastfm_api_url}?method=user.getrecenttracks&user=${lastfmUsername}&api_key=${props.lastfm_api_key}&from=1&format=json`);
+  })
+
+  it('should return number of pages', async () => {
+    const num = await importer.getNumberOfPages();
+    expect(num).toBe(1);
+  })
+
+  it('should return -1 if there is an error', async () => {
+    // Mock function for failed fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: failed,
+      })
+    })
+
+    const num = await importer.getNumberOfPages();
+    expect(num).toBe(-1);
+  })
+})
