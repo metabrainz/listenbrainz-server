@@ -1,0 +1,24 @@
+[
+  {
+    "track_metadata": {
+      "track_name": "Up&Up",
+      "artist_name": "Coldplay",
+      "release_name": "A Head Full Of Dreams",
+      "additional_info": {
+        "recording_mbid": "02b47acf-3bc5-47dc-a516-e8c2c95bc07b"
+      }
+    },
+    "listened_at": "1583223398"
+  },
+  {
+    "track_metadata": {
+      "track_name": "Believer",
+      "artist_name": "Imagine Dragons",
+      "release_name": "Evolve",
+      "additional_info": {
+        "recording_mbid": "022d6bfb-2a57-486b-a784-2af9b4b93fa9"
+      }
+    },
+    "listened_at": "1583222465"
+  }
+]

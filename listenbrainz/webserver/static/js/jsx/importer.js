@@ -43,7 +43,7 @@ export default class Importer {
     this.canClose = false; // Disable the close button
     this.updateMessage("Your import from Last.fm is starting!");
     this.playCount = await this.getTotalNumberOfScrobbles();
-    this.latestImportTime = await this.APIService.getLatestImport(this.userName); // TODO: Error handling, test usernames having special characters
+    this.latestImportTime = await this.APIService.getLatestImport(this.userName);
     this.incrementalImport = this.latestImportTime > 0;
     this.totalPages = await this.getNumberOfPages();
     this.page = this.totalPages; // Start from the last page so that oldest scrobbles are imported first
