@@ -7,8 +7,9 @@ SECRET_KEY = "CHANGE_ME"
 
 # DATABASES
 
-# Primary database
+# Primary databases
 SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@db:5432/listenbrainz"
+SQLALCHEMY_TIMESCALE_URI = "postgresql://listenbrainz:listenbrainz@db:5432/timescale-lb"
 MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@db:5432/messybrainz"
 
 POSTGRES_ADMIN_URI="postgresql://postgres@db/template1"
@@ -28,11 +29,6 @@ PG_ASYNC_LISTEN_COMMIT = False
 REDIS_HOST = "redis"
 REDIS_PORT = 6379
 REDIS_NAMESPACE = "listenbrainz"
-
-# Influx DB (main listen store)
-INFLUX_HOST    = "influx"
-INFLUX_PORT    = 8086
-INFLUX_DB_NAME  = "listenbrainz"
 
 # RabbitMQ
 RABBITMQ_HOST = "rabbitmq"

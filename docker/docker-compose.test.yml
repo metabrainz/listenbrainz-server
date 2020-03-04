@@ -13,16 +13,8 @@ services:
   redis:
     image: redis:5.0.3
 
-  influx:
-    image: influxdb:1.2.4
-    environment:
-      INFLUXDB_REPORTING_DISABLED: 'true'
-      INFLUXDB_META_LOGGING_ENABLED: 'false'
-      INFLUXDB_DATA_QUERY_LOG_ENABLED: 'false'
-      INFLUXDB_DATA_WAL_LOGGING_ENABLED: 'false'
-      INFLUXDB_DATA_DATA_LOGGING_ENABLED: 'false'
-      INFLUXDB_HTTP_LOG_ENABLED: 'true'
-      INFLUXDB_CONTINUOUS_QUERIES_LOG_ENABLED: 'false'
+  timescale:
+    image: timescale/timescaledb:latest-pg11
 
   rabbitmq:
     image: rabbitmq:3.6.5
@@ -41,7 +33,7 @@ services:
     depends_on:
       - redis
       - db
-      - influx
+      - timescale
       - rabbitmq
  
   frontend_tester:

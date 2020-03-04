@@ -105,14 +105,14 @@ class TimescaleWriterSubscriber(ListenWriter):
             self._verify_hosts_in_config()
 
             try:
-                with psycopg2.connect('dbname=listenbrainz user=listenbrainz host=10.2.2.31 password=listenbrainz') as conn:
+                with psycopg2.connect(current_app.config['SQLALCHEMY_TIMESCALE_URI']) as conn:
                     print("connected to timescale")
                     self.conn = conn
                     while True:
                         self.connect_to_rabbitmq()
                         self.incoming_ch = self.connection.channel()
                         self.incoming_ch.exchange_declare(exchange=current_app.config['INCOMING_EXCHANGE'], exchange_type='fanout')
-                        self.incoming_ch.queue_declare(TIMESCALE_QUEUE, durable=True)
+                        self.incoming_ch.queue_declare(current_app.config['INCOMING_QUEUE'], durable=True)
                         self.incoming_ch.queue_bind(exchange=current_app.config['INCOMING_EXCHANGE'], queue=TIMESCALE_QUEUE)
                         self.incoming_ch.basic_consume(
                             lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self),

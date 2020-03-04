@@ -9,6 +9,7 @@ import psycopg2
 SCHEMA_VERSION = 5
 
 engine = None
+timescale = None
 
 DUMP_DEFAULT_THREAD_COUNT = 4
 
@@ -28,6 +29,25 @@ def init_db_connection(connect_str):
             break
         except psycopg2.OperationalError as e:
             print("Couldn't establish connection to db: {}".format(str(e)))
+            print("Sleeping 2 seconds and trying again...")
+            time.sleep(2)
+
+
+def init_timescale_connection(connect_str):
+    """Initializes database connection to timescale server using the specified Flask app.
+
+    Configuration file must contain `SQLALCHEMY_TIMESCALE_URI` key. See
+    https://pythonhosted.org/Flask-SQLAlchemy/config.html#configuration-keys
+    for more info.
+    """
+    global timescale
+    while True:
+        try:
+            timescale = create_engine(connect_str, poolclass=NullPool)
+            print("Connection to timescale established!")
+            break
+        except psycopg2.OperationalError as e:
+            print("Couldn't establish connection to timescale: {}".format(str(e)))
             print("Sleeping 2 seconds and trying again...")
             time.sleep(2)
 

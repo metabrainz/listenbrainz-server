@@ -7,7 +7,7 @@ version: "3.4"
 volumes:
   postgres:
   redis:
-  influxdb:
+  timescaledb:
   rabbitmq:
 
 services:
@@ -22,18 +22,10 @@ services:
     volumes:
       - redis:/data:z
 
-  influx:
-    image: influxdb:1.2.4
+  timescale:
+    image: timescale/timescaledb:latest-pg11
     volumes:
-      - influxdb:/var/lib/influxdb:z
-    environment:
-      INFLUXDB_REPORTING_DISABLED: 'true'
-      INFLUXDB_META_LOGGING_ENABLED: 'false'
-      INFLUXDB_DATA_QUERY_LOG_ENABLED: 'false'
-      INFLUXDB_DATA_WAL_LOGGING_ENABLED: 'false'
-      INFLUXDB_DATA_DATA_LOGGING_ENABLED: 'false'
-      INFLUXDB_HTTP_LOG_ENABLED: 'true'
-      INFLUXDB_CONTINUOUS_QUERIES_LOG_ENABLED: 'false'
+      - timescaledb:/var/lib/postgresql/data:z
 
   rabbitmq:
     image: rabbitmq:3.6.5
@@ -55,7 +47,7 @@ services:
     depends_on:
       - redis
       - db
-      - influx
+      - timescale
       - rabbitmq
 
   api_compat:
@@ -68,17 +60,17 @@ services:
     depends_on:
       - redis
       - db
-      - influx
+      - timescale
       - rabbitmq
 
-  influx_writer:
+  timescale_writer:
     image: web
-    command: python3 -m "listenbrainz.influx_writer.influx_writer"
+    command: python3 -m "listenbrainz.timescale_writer.timescale_writer"
     volumes:
       - ..:/code/listenbrainz:z
     depends_on:
       - redis
-      - influx
+      - timescale
       - rabbitmq
 
   spotify_reader:
@@ -88,7 +80,7 @@ services:
     command: python3 -m "listenbrainz.spotify_updater.spotify_read_listens"
     depends_on:
       - redis
-      - influx
+      - timescale
       - rabbitmq
 
   bigquery:

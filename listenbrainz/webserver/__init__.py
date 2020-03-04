@@ -110,9 +110,10 @@ def gen_app(config_path=None, debug=None):
         app.logger.critical("RabbitMQ service is not up!", exc_info=True)
 
 
-    # Database connection
+    # Database connections
     from listenbrainz import db
     db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
+    db.init_timescale_connection(app.config['SQLALCHEMY_TIMESCALE_URI'])
     from listenbrainz.webserver.external import messybrainz
     messybrainz.init_db_connection(app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
 
