@@ -112,9 +112,11 @@ export default class Importer {
       } else {
         return -1;
       }
-    } catch (error) {
+    } catch {
       this.updateMessage("An error occurred, please try again. :(")
       this.canClose = true; // Enable the close button
+      error = new Error();
+      error.message = "Something went wrong";
       throw error;
     }
   }
