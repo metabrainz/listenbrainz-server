@@ -26,6 +26,8 @@ services:
     image: timescale/timescaledb:latest-pg11
     volumes:
       - timescaledb:/var/lib/postgresql/data:z
+    environment:
+      POSTGRES_PASSWORD: postgres
 
   rabbitmq:
     image: rabbitmq:3.6.5
