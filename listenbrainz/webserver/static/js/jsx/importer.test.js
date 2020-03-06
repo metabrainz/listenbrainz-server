@@ -61,7 +61,7 @@ describe('getNumberOfPages works correctly', () => {
     // Mock function for failed fetch
     window.fetch = jest.fn().mockImplementation(() => {
       return Promise.resolve({
-        ok: failed,
+        ok: false,
       })
     })
 
@@ -96,7 +96,7 @@ describe('getTotalNumberOfScrobbles works correctly', () => {
   })
 
   it('should return -1 if playcount is not available', async () => {
-    // Mock function for failed fetch
+    // Mock function for fetch
     window.fetch = jest.fn().mockImplementation(() => {
       return Promise.resolve({
         ok: true,
@@ -112,9 +112,92 @@ describe('getTotalNumberOfScrobbles works correctly', () => {
     // Mock function for failed fetch
     window.fetch = jest.fn().mockImplementation(() => {
       return Promise.resolve({
-        ok: failed,
+        ok: false,
       })
     })
     await expect(importer.getTotalNumberOfScrobbles()).rejects.toThrowError();
   })
 })
+
+describe('getPage works correctly', () => {
+  beforeEach(() => {
+    // Clear previous mocks
+    APIService.mockClear();
+
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(page),
+      })
+    })
+  });
+
+  it('should call with the correct url', () => {
+    importer.getPage(1);
+
+    expect(window.fetch).toHaveBeenCalledWith(`${props.lastfm_api_url}?method=user.getrecenttracks&user=${lastfmUsername}&api_key=${props.lastfm_api_key}&from=1&page=1&format=json`);
+  })
+
+  it('should call encodeScrobbles', async () => {
+    // Mock function for encodeScrobbles
+    importer.encodeScrobbles = jest.fn(data => ["foo", "bar"]);
+
+    const data = await importer.getPage(1);
+    expect(importer.encodeScrobbles).toHaveBeenCalledTimes(1);
+    expect(data).toEqual(["foo", "bar"]);
+  })
+
+  it('should retry if 50x error is recieved', async () => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: false,
+        status: 503,
+      })
+    })
+    // Mock function for console.warn and setTimeout
+    console.warn = jest.fn();
+    window.setTimeout = jest.fn();
+
+    await importer.getPage(1);
+    // There is no direct way to check if retry has been called
+    expect(window.setTimeout).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith('Got 503 fetching last.fm page=1, retrying in 3s')
+  })
+
+  it('should skip the page if 40x is recieved', async () => {
+    // Mock function for failed fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: false,
+        status: 404,
+      })
+    })
+
+    // Mock function for console.warn and setTimeout
+    console.warn = jest.fn();
+
+    await importer.getPage(1);
+    expect(console.warn).toHaveBeenCalledWith('Got 404, skipping')
+  })
+
+  it('should retry if there is any other error', async () => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.reject(),
+      })
+    })
+    // Mock function for console.warn and setTimeout
+    console.warn = jest.fn();
+    window.setTimeout = jest.fn();
+
+    await importer.getPage(1);
+    // There is no direct way to check if retry has been called
+    expect(window.setTimeout).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith('Error fetching last.fm page=1, retrying in 3s')
+  })
+})
+
