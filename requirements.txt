@@ -1,5 +1,5 @@
 Flask-Admin == 1.5.5
-Flask-Testing == 0.7.1
+Flask-Testing == 0.8.0
 Flask-Login == 0.4.1
 Flask-WTF == 0.14.3
 Flask-SQLAlchemy == 2.4.1
