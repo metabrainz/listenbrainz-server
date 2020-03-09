@@ -195,7 +195,7 @@ export default class Importer {
         this.numSuccesful++;
       } else if (response.status == 429) {
         // This should never happen, but if it does, toss it back in and try again.
-        setTimeout(() => this.submitListens(payload), 3000);
+        setTimeout(() => this.submitPage(payload), 3000);
       } else if (response.status >= 400 && response.status < 500) {
         // We mark 4xx errors as completed because we don't
         // retry them
@@ -209,7 +209,7 @@ export default class Importer {
       this.updateRateLimitParameters(response);
     } catch {
       console.warn("Error, retrying in 3s");
-      setTimeout(() => this.submitListens(payload), 3000);
+      setTimeout(() => this.submitPage(payload), 3000);
     }
   }
 
