@@ -4,6 +4,7 @@ import os
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 
+from datetime import datetime, timezone
 from listenbrainz.db.testing import DatabaseTestCase
 
 class StatsDatabaseTestCase(DatabaseTestCase):
@@ -61,6 +62,12 @@ class StatsDatabaseTestCase(DatabaseTestCase):
             'user_releases': releases,
             'user_recordings': recordings,
         }
+
+    def test_get_timestamp_for_last_user_stats_update(self):
+        ts = datetime.now(timezone.utc)
+        self.insert_test_data()
+        received_ts = db_stats.get_timestamp_for_last_user_stats_update()
+        self.assertGreaterEqual(received_ts, ts)
 
     def test_get_user_stats(self):
         data_inserted = self.insert_test_data()

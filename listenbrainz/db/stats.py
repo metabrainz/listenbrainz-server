@@ -26,6 +26,19 @@ import ujson
 
 from listenbrainz import db
 
+def get_timestamp_for_last_user_stats_update():
+    """ Get the time when the user stats table was last updated
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT MAX(last_updated) as last_update_ts
+              FROM statistics.user
+            """
+        ))
+        row = result.fetchone()
+        return row['last_update_ts'] if row else None
+
+
 def insert_user_stats(user_id, artists, recordings, releases, artist_count):
     """Inserts user stats calculated from Spark into the database.
 

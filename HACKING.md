@@ -40,41 +40,36 @@ To run the integration tests:
 
     ./integration-test.sh
 
-## Generating Stats
+### Spark
 
-To generate the stats on your local machine you will need to upload the listens to HDFS. 
-On a local machine, ``listenbrainz-incremental-dumps`` should be used since the size of ``listenbrainz-full-export-dumps`` is large for a local machine (The latest ``listenbrainz-full-export-dump`` size is around 9.3 GB). Follow the given steps to import the 
-listens.
+Listen history submitted to ListenBrainz is processed to get useful information out of it. ListenBrainz uses Apache Spark to process this big data. Since ListenBrainz services and ListenBrainz Spark services run on separate clusters, the containers are separate too. To setup ListenBrainz, ListenBrainz Spark setup is not required but since ListenBrainz Spark uses ListenBrainz network to send and recieve RabbitMQ messages, the vice versa is not true i.e. to setup ListenBrainz Spark, it is necessary to setup ListenBrainz. Here is a guide for your way around a few areas of Spark.
 
-### Update config.py
+- ##### Format namenode
+    Before formatting namenode, datanode must be formatted. To format namenode and datanode:
 
-Open the ``config.py`` file present in the ``listenbrainz_spark`` directory and update the FTP_LISTENS_DIR with the directory name from where the dumps will be fetched from the FTP server.
+        ./spark_develop.sh format <datanode cluster ID>
 
-    FTP_LISTENS_DIR = '/pub/musicbrainz/listenbrainz/incremental/'
+    To open datanode command prompt:
 
-Update TEMP_LISTENS_DIR with the directory name and TEMP_LISTENS_DUMP with the .tar.xz file. 
-Refer the [FTP server](http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/) website for the
-name of directory and tar.xz file.
+        docker exec -it listenbrainzspark_datanode_1 bash
 
-e.g. To import the ``listenbrainz-listens-dump-127-20200210-000002-incremental`` refer the example given below.
+    To get the datanode cluster id:
 
-    TEMP_LISTENS_DIR = 'listenbrainz-dump-127-20200210-000002-incremental/'
-    TEMP_LISTENS_DUMP = 'listenbrainz-listens-dump-127-20200210-000002-incremental.tar.xz'
-
-### Upload listens to HDFS
-
-Open the ``bash`` terminal for  ``listenbrainz_playground_1`` container by executing the following command
-
-    ./develop.sh spark exec playground bash
-
-Make sure to have ListenBrainz Spark running before opening the ``bash`` terminal for  
-``listenbrainz_playground_1`` container. For details on running ``ListenBrainz Spark`` refer 
-[here](https://github.com/metabrainz/listenbrainz-server/blob/master/docs/dev/devel-env.rst).
-
-Upload the listens to HDFS by running the following command.
+        cat /home/hadoop/hdfs/datanode/current/VERSION | grep "clusterID"
     
-    /usr/local/spark/bin/spark-submit spark_manage.py upload_listens
+- ##### Upload listens to HDFS
 
-This command first downloads the listens dump from the FTP server and then uploads the listens to HDFS.
+    On a local machine, ``listenbrainz-incremental-dumps`` should be used since the size of ``listenbrainz-full-export-dumps`` is large for a local machine. (The average ``listenbrainz-full-export-dump`` size is around 9 GB). Follow the given steps to import the listens.
 
-Now you may proceed with generating stats on your system.
+    Open the ``bash`` terminal for  ``listenbrainz_playground_1`` container by executing the following command
+
+        ./spark_develop.sh exec playground bash
+
+    Make sure to have ListenBrainz Spark running before opening the ``bash`` terminal for  
+    ``listenbrainz_playground_1`` container. For details on running ``ListenBrainz Spark`` refer [here](https://github.com/metabrainz/listenbrainz-server/blob/master/docs/dev/devel-env.rst#set-up-listenbrainz-spark-development-environment).
+
+    Upload the listens to HDFS by running the following command.
+        
+        /usr/local/spark/bin/spark-submit spark_manage.py upload_listens -i
+
+    This command first fetches the name of the latest incremental dump, downloads the listens dump from the FTP server and then uploads the listens to HDFS.

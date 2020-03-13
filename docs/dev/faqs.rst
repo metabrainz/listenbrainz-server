@@ -18,9 +18,9 @@ FAQs
   
   .. code-block:: bash
 
-    ./develop.sh spark down
+    ./spark_develop.sh down
     
-- When the containers shut down, run ``./develop.sh spark up`` again.
+- When the containers shut down, run ``./spark_develop.sh up`` again.
 |
 
 **How to resolve 'sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) FATAL: role "listenbrainz" does not exist' on running './test.sh'?**

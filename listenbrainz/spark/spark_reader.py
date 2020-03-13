@@ -10,11 +10,12 @@ from listenbrainz import utils
 from listenbrainz.db import user as db_user, stats as db_stats
 from listenbrainz.webserver import create_app
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz.spark.handlers import handle_user_artist
+from listenbrainz.spark.handlers import handle_user_artist, handle_dump_imported
 import sqlalchemy
 
 response_handler_map = {
     'user_artist': handle_user_artist,
+    'import_full_dump': handle_dump_imported,
 }
 class SparkReader:
     def __init__(self):

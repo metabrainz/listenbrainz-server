@@ -285,6 +285,11 @@ once so that subsequent running of the tests is faster:
    ./test.sh -s # stop test containers, but don't remove them
    ./test.sh -d # stop and remove all test containers
 
+If you made any changes to the frontend, you can run the tests for frontend using
+
+.. code-block:: bash
+    ./frontend-test.sh
+
 Also, run the **integration tests** for ListenBrainz.
 
 .. code-block:: bash
@@ -331,7 +336,7 @@ For accessing various features available you will need to update the ListenBrain
 Initialize ListenBrainz Spark containers
 ----------------------------------------
 
-Next, run ``develop.sh spark build`` in the root of the repository. Using
+Next, run ``spark_develop.sh build`` in the root of the repository. Using
 ``docker-compose``, it creates multiple Docker containers for the different
 services and parts of the ListenBrainz Spark. This script starts Hadoop,
 Spark, and the ListenBrainz Playground containers. This also makes it easy to stop
@@ -342,23 +347,16 @@ finished yet.
 
 .. code-block:: bash
 
-    ./develop.sh spark build
+    ./spark_develop.sh build
     
 
 Format the NameNode container
 -----------------------------
 
-If it's your first time initializing the containers, format the ``namenode`` container
-using the given command.
+If it's your first time initializing the containers, you need to format the ``namenode`` 
+container. Refer `here`_ for details on how to format the ``namenode`` container.
 
-.. code-block:: bash
-
-    ./develop.sh format
-
-This will format the ``namenode`` and link the ``namenode`` and ``datanode`` to a single ClusterID. 
-
-**Warning:** Running this command more than once will erase all the ``namenode`` data and its 
-link with the ``datanode`` will be lost, as both of them will have different ClusterID's.
+.. _here: https://github.com/metabrainz/listenbrainz-server/blob/master/HACKING.md#format-namenode
 
 Your development environment is now ready. Now, let's actually see ListenBrainz Spark
 in action!
@@ -367,12 +365,12 @@ in action!
 Run the magic script
 --------------------
 
-Start your development environment by executing ``develop.sh spark up``. Now, it 
+Start your development environment by executing ``spark_develop.sh up``. Now, it 
 will work as expected.
 
 .. code-block:: bash
 
-    ./develop.sh spark up
+    ./spark_develop.sh up
 
 Now, you are all set to begin making changes and seeing them in real-time inside
 of your development environment!
@@ -381,7 +379,7 @@ Once you are done with your work, shut down the containers using the following c
 
 .. code-block:: bash
 
-    ./develop.sh spark down
+    ./spark_develop.sh down
 
 
 Test your changes with unit tests
