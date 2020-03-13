@@ -45,3 +45,23 @@ def handle_user_artist(data):
     artists = data['artist_stats']
     artist_count = data['artist_count']
     db_stats.insert_user_stats(user['id'], artists, {}, {}, artist_count)
+
+
+def handle_dump_imported(data):
+    """ Process the response that the cluster sends after importing a new full dump
+
+    We don't really need to _do_ anything, just send an email over for observability.
+    """
+    if current_app.config['TESTING']:
+        return
+
+
+    dump_name = data['imported_dump']
+    import_completion_time = data['time']
+    send_mail(
+        subject='A full data dump has been imported into the Spark cluster',
+        text=render_template('emails/dump_import_notification.txt', dump_name=dump_name, time=import_completion_time),
+        recipients=['listenbrainz-observability@metabrainz.org'],
+        from_name='ListenBrainz',
+        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
+    )

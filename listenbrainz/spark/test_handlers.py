@@ -2,7 +2,7 @@ import unittest
 
 from datetime import datetime, timezone, timedelta
 from flask import current_app
-from listenbrainz.spark.handlers import handle_user_artist, is_new_user_stats_batch
+from listenbrainz.spark.handlers import handle_user_artist, is_new_user_stats_batch, handle_dump_imported
 from listenbrainz.webserver import create_app
 from unittest import mock
 
@@ -38,3 +38,25 @@ class HandlersTestCase(unittest.TestCase):
         self.assertFalse(is_new_user_stats_batch())
         mock_db_get_timestamp.return_value = datetime.now(timezone.utc) - timedelta(hours=13)
         self.assertTrue(is_new_user_stats_batch())
+
+    @mock.patch('listenbrainz.spark.handlers.send_mail')
+    def test_handle_dump_imported(self, mock_send_mail):
+        with self.app.app_context():
+            time = datetime.now()
+            dump_name = 'listenbrainz-listens-dump-20200223-000000-spark-full.tar.xz'
+
+            # testing, should not send a mail
+            self.app.config['TESTING'] = True
+            handle_dump_imported({
+                'imported_dump': dump_name,
+                'time': str(time),
+            })
+            mock_send_mail.assert_not_called()
+
+            # in prod now, should send it
+            self.app.config['TESTING'] = False
+            handle_dump_imported({
+                'imported_dump': dump_name,
+                'time': str(time),
+            })
+            mock_send_mail.assert_called_once()

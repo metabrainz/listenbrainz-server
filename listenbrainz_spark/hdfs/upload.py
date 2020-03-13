@@ -38,7 +38,6 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
         """
         start_time = time.time()
         df = utils.read_json(tmp_hdfs_path, schema=schema)
-        current_app.logger.info("Processing {} listens...".format(df.count()))
 
         if filename.split('/')[-1] == 'invalid.json':
             dest_path = os.path.join(data_dir, 'invalid.parquet')
