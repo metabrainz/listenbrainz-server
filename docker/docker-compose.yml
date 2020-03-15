@@ -24,10 +24,12 @@ services:
 
   timescale:
     image: timescale/timescaledb:latest-pg11
+    expose:
+      - 5433
     volumes:
       - timescaledb:/var/lib/postgresql/data:z
     environment:
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: 'postgres'
 
   rabbitmq:
     image: rabbitmq:3.6.5

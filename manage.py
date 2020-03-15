@@ -199,8 +199,8 @@ def init_db(force, create_db):
 
     application = webserver.create_app()
     with application.app_context():
-        print('Creating schema...')
-        db.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_schema.sql'))
+#        print('Creating schema...')
+#        db.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_schema.sql'))
 
         print('Creating Functions...')
         db.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_functions.sql'))
