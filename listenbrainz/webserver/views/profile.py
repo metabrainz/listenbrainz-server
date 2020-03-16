@@ -13,7 +13,7 @@ from flask import Blueprint, Response, render_template, request, url_for, \
     redirect, current_app, make_response, jsonify, stream_with_context
 from flask_login import current_user, login_required
 import spotipy.oauth2
-from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
+from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError, Unauthorized
 from listenbrainz.webserver.errors import APIBadRequest, APIServiceUnavailable, APINotFound
 from werkzeug.utils import secure_filename
 
@@ -26,13 +26,11 @@ from listenbrainz.webserver.login import api_login_required
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.influx_connection import _influx
 from listenbrainz.webserver.utils import sizeof_readable
-from listenbrainz.webserver.views.user import delete_user, _get_user
+from listenbrainz.webserver.views.user import delete_user, _get_user, delete_listens_history
 from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, \
     LISTEN_TYPE_IMPORT, publish_data_to_queue
 from os import path, makedirs
 from time import time
-from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
-from werkzeug.utils import secure_filename
 
 profile_bp = Blueprint("profile", __name__)
 
@@ -234,13 +232,42 @@ def delete():
             return redirect(url_for('index.index'))
         else:
             flash.error('Cannot delete user due to error during authentication, please try again later.')
-            return redirect('profile.info')
+            return redirect(url_for('profile.info'))
     else:
         return render_template(
             'profile/delete.html',
             user=current_user,
         )
 
+@profile_bp.route('/delete-listens', methods=['GET', 'POST'])
+@login_required
+def delete_listens():
+    """ Delete all the listens for the currently logged-in user from ListenBrainz.
+
+    If POST request, this view checks for the correct authorization token and
+    deletes the listens. If deletion is successful, redirects to user's profile page, 
+    else flashes an error and redirects to user's info page.
+
+    If GET request, this view renders a page asking the user to confirm that they 
+    wish to delete their listens.
+    """
+    if request.method == 'POST':
+        if request.form.get('token') and (request.form.get('token') == current_user.auth_token):
+            try:
+                delete_listens_history(current_user.musicbrainz_id)
+            except Exception as e:
+                current_app.logger.error('Error while deleting listens for %s: %s', current_user.musicbrainz_id, str(e))
+                flash.error('Error while deleting listens for %s, please try again later.' % current_user.musicbrainz_id)
+                return redirect(url_for('profile.info'))
+            flash.info('Successfully deleted listens for %s.' % current_user.musicbrainz_id)
+            return redirect(url_for('user.profile', user_name=current_user.musicbrainz_id))
+        else:
+            raise Unauthorized("Auth token invalid or missing.")
+    else:
+        return render_template(
+            'profile/delete_listens.html',
+            user=current_user,
+        )
 
 @profile_bp.route('/connect-spotify', methods=['GET', 'POST'])
 @login_required
