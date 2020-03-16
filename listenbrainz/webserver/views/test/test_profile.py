@@ -98,30 +98,43 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
     def test_delete_listens(self):
         """Tests delete listens end point"""
         self.temporary_login(self.user['login_id'])
+        delete_listens_url = url_for('profile.delete_listens')
+        response = self.client.get(delete_listens_url)
+        self.assert200(response)
 
-        response = self.client.post(url_for('profile.delete_listens'), data={'token': self.user['auth_token']})
+        response = self.client.post(delete_listens_url, data={'token': self.user['auth_token']})
         self.assertRedirects(response, url_for('user.profile', user_name=self.user['musicbrainz_id']))
 
     def test_delete_listens_not_logged_in(self):
         """Tests delete listens view when not logged in"""
         delete_listens_url = url_for('profile.delete_listens')
-        response = self.client.post(delete_listens_url)
+        response = self.client.get(delete_listens_url) # GET request
+        self.assertStatus(response, 302)
+        self.assertRedirects(response, url_for('login.index', next=delete_listens_url))
+
+        response = self.client.post(delete_listens_url) # POST request
         self.assertStatus(response, 302)
         self.assertRedirects(response, url_for('login.index', next=delete_listens_url))
 
     def test_delete_listens_auth_token_not_provided(self):
         """Tests delete listens end point when auth token is missing"""
         self.temporary_login(self.user['login_id'])
+        delete_listens_url = url_for('profile.delete_listens')
+        response = self.client.get(delete_listens_url)
+        self.assert200(response)
 
-        response = self.client.post(url_for('profile.delete_listens')) # auth token is missing
+        response = self.client.post(delete_listens_url) # auth token is missing
         self.assertStatus(response, 401)
 
     def test_delete_listens_invalid_auth_token(self):
         """Tests delete listens end point when auth token is invalid"""
         self.temporary_login(self.user['login_id'])
+        delete_listens_url = url_for('profile.delete_listens')
+        response = self.client.get(delete_listens_url)
+        self.assert200(response)
         
         invalid_auth_token = 'invalid-auth-token'
-        response = self.client.post(url_for('profile.delete_listens'), data={'token': invalid_auth_token})
+        response = self.client.post(delete_listens_url, data={'token': invalid_auth_token}) # auth token is invalid
         self.assertStatus(response, 401)
 
     @patch('listenbrainz.webserver.views.profile.spotify.remove_user')

@@ -59,7 +59,10 @@ class ProfileViewsTestCase(IntegrationTestCase):
         """
         Test delete listens for a user
         """
+        # test get requests to delete-listens view first
         self.temporary_login(self.user['login_id'])
+        resp = self.client.get(url_for('profile.delete_listens'))
+        self.assert200(resp)
 
         # send three listens for the user
         resp = self.send_listens()

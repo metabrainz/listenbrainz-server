@@ -18,10 +18,7 @@
     </p>
 
     <p>
-      <form action="{{url_for("profile.delete_listens")}}" method="POST">
-        <input type="hidden" name="token" value="{{ user.auth_token }}">
-        <button id="btn-delete-listens" class="btn btn-info btn-lg" style="width: 300px">Delete your listens.</button>
-      </form>
+      <a href="{{ url_for("profile.delete_listens") }}" style="color: white;"><span class="btn btn-info btn-lg" style="width: 300px">Delete your listens</span></a>
     </p>
 
     <h3> Reset Last.FM Import timestamp </h3>
