@@ -231,7 +231,7 @@ def _get_spotify_uri_for_listens(listens):
 
 def delete_user(musicbrainz_id):
     """ Delete a user from ListenBrainz completely.
-    First, drops the user's influx measurement and then deletes her from the
+    First, drops the user's influx measurement and then deletes the user from the
     database.
 
     Args:
@@ -253,3 +253,18 @@ def delete_user(musicbrainz_id):
         error_msg='Could not put user %s into queue for deletion, please try again later' % musicbrainz_id,
     )
     db_user.delete(user.id)
+
+def delete_listens_history(musicbrainz_id):
+    """ Delete a user's listens from ListenBrainz completely.
+    This, drops the user's influx measurement and resets their listen count. 
+
+    Args:
+        musicbrainz_id (str): the MusicBrainz ID of the user
+
+    Raises:
+        NotFound if user isn't present in the database
+    """
+
+    user = _get_user(musicbrainz_id)
+    _influx.delete(user.musicbrainz_id)
+    _influx.reset_listen_count(user.musicbrainz_id)
