@@ -180,7 +180,7 @@ proceeding, run these three commands to initialize the databases.
 
     ./develop.sh manage init_db --create-db
     ./develop.sh manage init_msb_db --create-db
-    ./develop.sh manage init_influx
+    ./develop.sh manage init_ts_db --create-db
 
 Your development environment is now ready. Now, let's actually see ListenBrainz
 load locally!

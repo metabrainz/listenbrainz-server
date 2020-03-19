@@ -14,7 +14,7 @@ DUMP_DEFAULT_THREAD_COUNT = 4
 
 
 def init_db_connection(connect_str):
-    """Initializes database connection using the specified Flask app.
+    """Initializes timescale connection using the specified Flask app.
 
     Configuration file must contain `SQLALCHEMY_DATABASE_URI` key. See
     https://pythonhosted.org/Flask-SQLAlchemy/config.html#configuration-keys
@@ -24,15 +24,17 @@ def init_db_connection(connect_str):
     while True:
         try:
             engine = create_engine(connect_str, poolclass=NullPool)
-            print("Connection to db established!")
+            print("Connection to timescale established!")
             break
         except psycopg2.OperationalError as e:
-            print("Couldn't establish connection to db: {}".format(str(e)))
+            print("Couldn't establish connection to timescale: {}".format(str(e)))
             print("Sleeping 2 seconds and trying again...")
             time.sleep(2)
 
 
+
 def run_sql_script(sql_file_path):
+    print(sql_file_path)
     with open(sql_file_path) as sql:
         with engine.connect() as connection:
             connection.execute(sql.read())

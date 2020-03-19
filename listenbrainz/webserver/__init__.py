@@ -112,8 +112,9 @@ def gen_app(config_path=None, debug=None):
 
     # Database connections
     from listenbrainz import db
+    from listenbrainz.db import timescale as ts
     db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
-    db.init_timescale_connection(app.config['SQLALCHEMY_TIMESCALE_URI'])
+    ts.init_db_connection(app.config['SQLALCHEMY_TIMESCALE_URI'])
     from listenbrainz.webserver.external import messybrainz
     messybrainz.init_db_connection(app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
 

@@ -7,7 +7,8 @@ CREATE TABLE listen (
         data            JSONB             NOT NULL
 );
 
-SELECT create_hypertable('listen', 'listened_at', chunk_time_interval => %s)" % (86400 * 5);
+-- 86400 * 5 seconds = 43200
+SELECT create_hypertable('listen', 'listened_at', chunk_time_interval => 432000);
 
 
 COMMIT;

@@ -1,4 +1,5 @@
 from listenbrainz import db
+from listenbrainz.db import timescale as ts
 from listenbrainz import webserver
 from listenbrainz import stats
 from werkzeug.serving import run_simple
@@ -7,7 +8,6 @@ import os
 import click
 import subprocess
 from urllib.parse import urlsplit
-from influxdb import InfluxDBClient
 
 from listenbrainz.utils import safely_import_config
 safely_import_config()
@@ -20,7 +20,6 @@ def cli():
 ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'sql')
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'timescale')
 MSB_ADMIN_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../messybrainz', 'admin', 'sql')
-ADMIN_INFLUX_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'admin', 'influx')
 
 
 @cli.command()
@@ -180,39 +179,36 @@ def init_db(force, create_db):
     3. Views are created
     """
     from listenbrainz import config
-    db.init_db_connection(config.TIMESCALE_ADMIN_URI)
+    ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
     if force:
-        res = db.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'drop_db.sql'))
+        res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'drop_db.sql'))
         if not res:
             raise Exception('Failed to drop existing database and user! Exit code: %i' % res)
 
     if create_db:
         print('Creating user and a database...')
-        res = db.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
+        res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
         if not res:
             raise Exception('Failed to create new database and user! Exit code: %i' % res)
 
-        db.init_db_connection(config.TIMESCALE_ADMIN_LB_URI)
+        ts.init_db_connection(config.TIMESCALE_ADMIN_LB_URI)
         print('Creating database extensions...')
-        res = db.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_extensions.sql'))
+        res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_extensions.sql'))
     # Don't raise an exception if the extension already exists
 
     application = webserver.create_app()
     with application.app_context():
-#        print('Creating schema...')
-#        db.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_schema.sql'))
+        print('Creating tables...')
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_tables.sql'))
 
         print('Creating Functions...')
-        db.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_functions.sql'))
-
-        print('Creating tables...')
-        db.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_tables.sql'))
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_functions.sql'))
 
         print('Creating views...')
-        db.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
 
         print('Creating indexes...')
-        db.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
 
         print("Done!")
 
