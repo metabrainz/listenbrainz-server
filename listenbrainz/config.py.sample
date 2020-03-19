@@ -15,7 +15,7 @@ POSTGRES_ADMIN_URI="postgresql://postgres@db/template1"
 POSTGRES_ADMIN_LB_URI = "postgresql://postgres@db/listenbrainz"
 MB_DATABASE_URI = ""
 
-SQLALCHEMY_TIMESCALE_URI = "postgresql://timescale_lb:timescale_lb@timescale:5433/timescale_lb"
+SQLALCHEMY_TIMESCALE_URI = "postgresql://timescale_lb:timescale_lb@timescale/timescale_lb"
 TIMESCALE_ADMIN_URI = "postgresql://postgres@timescale/template1"
 TIMESCALE_ADMIN_LB_URI = "postgresql://postgres@timescale/timescale_lb"
 
