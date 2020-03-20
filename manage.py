@@ -185,7 +185,7 @@ def init_db(force, create_db):
         if not res:
             raise Exception('Failed to drop existing database and user! Exit code: %i' % res)
 
-    if create_db:
+    if create_db or force:
         print('Creating user and a database...')
         res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
         if not res:

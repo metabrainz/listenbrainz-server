@@ -101,7 +101,7 @@ def gen_app(config_path=None, debug=None):
     create_redis(app)
 
     # Influx connection
-    create_influx(app)
+    # create_influx(app)
 
     # RabbitMQ connection
     try:
