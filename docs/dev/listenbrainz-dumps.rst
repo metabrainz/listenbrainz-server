@@ -74,10 +74,7 @@ Each line in the part of the file we read is a listen submitted for that particu
 user.
 
 
-Here is some example code to explain the mentioned way of parsing the listens dump:
-
-.. include:: ./dump_examples/read_listens_dump.py
-   :code: python
+`Here <https://github.com/metabrainz/listenbrainz-server/blob/master/docs/dev/dump_examples/read_listens_dump.py>`_ is some example code to explain the mentioned way of parsing the listens dump.
 
 
 Incremental dumps
