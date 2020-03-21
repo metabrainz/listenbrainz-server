@@ -7,7 +7,7 @@ import Importer from './importer'
 jest.mock('./importer');
 
 let wrapper = null;
-describe('LastFmImporter is working correctly', () => {
+describe('LastFmImporter Page', () => {
   beforeEach(() => {
     // Clear previous mocks
     Importer.mockClear();

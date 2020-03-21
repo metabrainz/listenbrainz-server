@@ -22,7 +22,7 @@ const props = {
 const lastfmUsername = 'dummyUser';
 const importer = new Importer(lastfmUsername, props);
 
-describe('encodeScrobbles is working correctly', () => {
+describe('encodeScrobbles', () => {
   beforeEach(() => {
     // Clear previous mocks
     APIService.mockClear();
@@ -33,7 +33,7 @@ describe('encodeScrobbles is working correctly', () => {
   });
 });
 
-describe('getNumberOfPages works correctly', () => {
+describe('getNumberOfPages', () => {
   beforeEach(() => {
     // Clear previous mocks
     APIService.mockClear();
@@ -71,7 +71,7 @@ describe('getNumberOfPages works correctly', () => {
   })
 })
 
-describe('getTotalNumberOfScrobbles works correctly', () => {
+describe('getTotalNumberOfScrobbles', () => {
   beforeEach(() => {
     // Clear previous mocks
     APIService.mockClear();
@@ -120,7 +120,7 @@ describe('getTotalNumberOfScrobbles works correctly', () => {
   })
 })
 
-describe('getPage works correctly', () => {
+describe('getPage', () => {
   beforeEach(() => {
     // Clear previous mocks
     APIService.mockClear();
@@ -204,7 +204,7 @@ describe('getPage works correctly', () => {
   })
 })
 
-describe('submitPage works correctly', () => {
+describe('submitPage', () => {
   beforeEach(() => {
     // Clear previous mocks
     APIService.mockClear();
@@ -228,6 +228,7 @@ describe('submitPage works correctly', () => {
     // https://stackoverflow.com/questions/51126786/jest-fake-timers-with-promises
     await new Promise(resolve => setImmediate(resolve));
     
+    expect(importer.APIService.submitListens).toHaveBeenCalledTimes(1);
     expect(importer.APIService.submitListens).toHaveBeenCalledWith("foobar", "import", undefined);
     expect(importer.numSuccesful).toEqual(1);
   })
