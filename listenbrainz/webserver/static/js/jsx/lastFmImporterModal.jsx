@@ -9,12 +9,14 @@ export default class Modal extends React.Component {
     }
     const divStyle = {
       position: 'fixed',
-      top: '200px',
+      height: '90%',
+      maxHeight: '300px',
+      top: '50%',
       zIndex: '200000000000000',
       width: '90%',
       maxWidth: '500px',
-      transform: 'translateX(-50%)',
       left: '50%',
+      transform: 'translate(-50%, -50%)',
       backgroundColor: '#fff',
       boxShadow: '0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22)',
       textAlign: 'center',
