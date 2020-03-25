@@ -43,7 +43,7 @@ export default class Importer {
     this.canClose = false; // Disable the close button
     this.updateMessage("Your import from Last.fm is starting!");
     this.playCount = await this.getTotalNumberOfScrobbles();
-    this.latestImportTime = await this.APIService.getLatestImport(this.userName); // TODO: Error handling, test usernames having special characters
+    this.latestImportTime = await this.APIService.getLatestImport(this.userName);
     this.incrementalImport = this.latestImportTime > 0;
     this.totalPages = await this.getNumberOfPages();
     this.page = this.totalPages; // Start from the last page so that oldest scrobbles are imported first
@@ -112,9 +112,11 @@ export default class Importer {
       } else {
         return -1;
       }
-    } catch (error) {
+    } catch {
       this.updateMessage("An error occurred, please try again. :(")
       this.canClose = true; // Enable the close button
+      error = new Error();
+      error.message = "Something went wrong";
       throw error;
     }
   }
@@ -136,6 +138,7 @@ export default class Importer {
     } catch (error) {
       this.updateMessage("An error occurred, please try again. :(")
       this.canClose = true; // Enable the close button
+      return -1;
     }
   }
 
@@ -192,7 +195,7 @@ export default class Importer {
         this.numSuccesful++;
       } else if (response.status == 429) {
         // This should never happen, but if it does, toss it back in and try again.
-        setTimeout(() => this.submitListens(payload), 3000);
+        setTimeout(() => this.submitPage(payload), 3000);
       } else if (response.status >= 400 && response.status < 500) {
         // We mark 4xx errors as completed because we don't
         // retry them
@@ -206,7 +209,7 @@ export default class Importer {
       this.updateRateLimitParameters(response);
     } catch {
       console.warn("Error, retrying in 3s");
-      setTimeout(() => this.submitListens(payload), 3000);
+      setTimeout(() => this.submitPage(payload), 3000);
     }
   }
 

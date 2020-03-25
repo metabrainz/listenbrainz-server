@@ -76,7 +76,8 @@ export default class Scrobble {
 
     // Remove keys with blank values
     (function filter(obj) {
-      $.each(obj, function(key, value){
+      Object.keys(obj).forEach(function(key) {
+        let value = obj[key];
         if (value === "" || value === null){
           delete obj[key];
         } else if (Object.prototype.toString.call(value) === '[object Object]') {
