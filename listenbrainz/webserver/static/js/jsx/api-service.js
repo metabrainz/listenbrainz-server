@@ -129,8 +129,8 @@ export default class APIService {
     if (!isString(userName)) {
       throw new SyntaxError(`Expected username string, got ${typeof userName} instead`);
     }
-
     let url = `${this.APIBaseURI}/latest-import?user_name=${userName}`;
+    url = encodeURI(url);
     const response = await fetch(url, {
       method: 'GET',
     });

@@ -4,9 +4,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 export default class Modal extends React.Component {
   render() {
-    if (!this.props.show) {
-      return null;
-    }
     const divStyle = {
       position: 'fixed',
       height: '90%',
