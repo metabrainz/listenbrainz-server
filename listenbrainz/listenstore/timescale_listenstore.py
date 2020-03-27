@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import listenbrainz.db.user as db_user
+from listenbrainz.db import timescale as ts
 import os.path
 import subprocess
 import tarfile
@@ -14,41 +15,30 @@ import json
 from brainzutils import cache
 from collections import defaultdict
 from datetime import datetime, timezone
-from influxdb import InfluxDBClient
-from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 
 from listenbrainz import DUMP_LICENSE_FILE_PATH
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db.dump import SchemaMismatchException
-from listenbrainz.listen import Listen, convert_influx_row_to_spark_row
+from listenbrainz.listen import Listen
 from listenbrainz.listenstore import ListenStore
 from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, \
     USER_CACHE_TIME, REDIS_USER_TIMESTAMPS, LISTENS_DUMP_SCHEMA_VERSION
-from listenbrainz.utils import quote, get_escaped_measurement_name, get_measurement_name, get_influx_query_timestamp, \
-    convert_influx_nano_to_python_time, convert_python_time_to_nano_int, convert_to_unix_timestamp, \
-    create_path, log_ioerrors, init_cache, convert_influx_to_datetime
+from listenbrainz.utils import create_path, log_ioerrors, init_cache
 
 REDIS_INFLUX_USER_LISTEN_COUNT = "ls.listencount."  # append username
-COUNT_RETENTION_POLICY = "one_week"
-COUNT_MEASUREMENT_NAME = "listen_count"
-TEMP_COUNT_MEASUREMENT = COUNT_RETENTION_POLICY + "." + COUNT_MEASUREMENT_NAME
-TIMELINE_COUNT_MEASUREMENT = COUNT_MEASUREMENT_NAME
-
 DUMP_CHUNK_SIZE = 100000
-
 NUMBER_OF_USERS_PER_DIRECTORY = 1000
 DUMP_FILE_SIZE_LIMIT = 1024 * 1024 * 1024 # 1 GB
 
 
-class InfluxListenStore(ListenStore):
+class TimescaleListenStore(ListenStore):
 
     REDIS_INFLUX_TOTAL_LISTEN_COUNT = "ls.listencount.total"
     TOTAL_LISTEN_COUNT_CACHE_TIME = 5 * 60
     USER_LISTEN_COUNT_CACHE_TIME = 10 * 60  # in seconds. 15 minutes
 
     def __init__(self, conf, logger):
-        super(InfluxListenStore, self).__init__(logger)
-        self.influx = InfluxDBClient(host=conf['INFLUX_HOST'], port=conf['INFLUX_PORT'], database=conf['INFLUX_DB_NAME'])
+        super(TimescaleListenStore, self).__init__(logger)
         # Initialize brainzutils cache
         init_cache(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], namespace=conf['REDIS_NAMESPACE'])
         self.dump_temp_dir_root = conf.get('LISTEN_DUMP_TEMP_DIR_ROOT', tempfile.mkdtemp())
@@ -72,6 +62,18 @@ class InfluxListenStore(ListenStore):
             count = cache.get(user_key, decode=False)
             if count:
                 return int(count)
+
+	with ts.engine.connect() as connection:
+	    result = connection.execute(sqlalchemy.text("""
+		INSERT INTO "user" (musicbrainz_id, musicbrainz_row_id, auth_token)
+		     VALUES (:mb_id, :mb_row_id, :token)
+		  RETURNING id
+	    """), {
+		"mb_id": musicbrainz_id,
+		"token": str(uuid.uuid4()),
+		"mb_row_id": musicbrainz_row_id,
+	    })
+	    return result.fetchone()["id"]
 
         try:
             results = self.influx.query('SELECT count(*) FROM ' + get_escaped_measurement_name(user_name))
