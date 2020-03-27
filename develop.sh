@@ -23,6 +23,12 @@ function open_psql_shell {
             -h db listenbrainz
 }
 
+function open_timescale_shell {
+    invoke_docker_compose run --rm web psql \
+            -U timescale_lb  \
+            -h timescale timescale_lb
+}
+
 function npm_install {
     invoke_docker_compose run --rm -e \
                 HOME=/tmp static_builder npm install
@@ -39,6 +45,11 @@ if [ "$1" == "manage" ]; then shift
 elif [ "$1" == "psql" ]; then
     echo "Entering into PSQL shell to query DB..."
     open_psql_shell
+    exit
+
+elif [ "$1" == "timescale" ]; then
+    echo "Entering into PSQL shell to query Timescale DB..."
+    open_timescale_shell
     exit
 
 elif [ "$1" == "npm" ]; then
