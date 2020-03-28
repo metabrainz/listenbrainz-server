@@ -40,5 +40,10 @@ then
     exec python3 -m listenbrainz.spotify_updater.spotify_read_listens
 fi
 
+if [ "${CONTAINER_NAME}" = "listenbrainz-spark-reader-prod" ]
+then
+    cd /code/listenbrainz
+    exec python3 -m listenbrainz.spark.spark_reader
+fi
 
 echo "init script has no clue which service to start. Set env var CONTAINER_NAME!"

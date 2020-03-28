@@ -1,6 +1,7 @@
 #!/bin/bash
 
 DUMP_THREADS=4
+TEMP_DIR='/home/listenbrainz/data/dumps'
 
 # Where to back things up to, who should own the backup files, and what mode
 # those files should have.
@@ -24,4 +25,6 @@ FTP_FILE_MODE=644
 RSYNC_FULLEXPORT_HOST='10.2.2.28'
 RSYNC_FULLEXPORT_PORT='65415'
 RSYNC_FULLEXPORT_DIR="$FTP_DIR/fullexport"
+RSYNC_INCREMENTAL_DIR="$FTP_DIR/incremental"
 RSYNC_FULLEXPORT_KEY='/home/listenbrainz/.ssh/rsync-listenbrainz-dumps-full'
+RSYNC_INCREMENTAL_KEY='/home/listenbrainz/.ssh/rsync-listenbrainz-dumps-incremental'

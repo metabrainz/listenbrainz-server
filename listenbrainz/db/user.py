@@ -1,13 +1,10 @@
-
 import logging
-
+import sqlalchemy
 import uuid
 
-import sqlalchemy
-
+from datetime import datetime
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz import config
 
 
 logger = logging.getLogger(__name__)
@@ -256,45 +253,15 @@ def increase_latest_import(musicbrainz_id, ts):
 
 def reset_latest_import(musicbrainz_id):
     """Resets the latest_import field for user with specified MusicBrainz ID to 0"""
-    user = get_by_mb_id(musicbrainz_id)
     update_latest_import(musicbrainz_id, 0)
 
 
-def get_users_with_uncalculated_stats():
-    """ Returns users whose stats have not been calculated by the stats calculation process
-        yet. This means that the user must have logged-in in the last
-        config.STATS_CALCULATION_LOGIN_TIME days and her stats must not have already
-        been calculated in this interval.
-
-        Returns:
-            A list of dicts each of the form
-            {
-                'id' (int): the row ID of the user,
-                'musicbrainz_id' (str): the musicbrainz_id of the user
-            }
-    """
-
-    with db.engine.connect() as connection:
-        result = connection.execute(sqlalchemy.text("""
-                SELECT pu.id, pu.musicbrainz_id
-                  FROM public."user" pu
-             LEFT JOIN statistics.user su
-                    ON pu.id = su.user_id
-                 WHERE pu.last_login >= NOW() - INTERVAL ':x days'
-                   AND (su.last_updated IS NULL OR su.last_updated < NOW() - INTERVAL ':y days')
-                """), {
-                    'x': config.STATS_CALCULATION_LOGIN_TIME,
-                    'y': config.STATS_CALCULATION_INTERVAL,
-                })
-
-        return [dict(row) for row in result]
-
-
-def get_all_users(columns=None):
+def get_all_users(created_before=None, columns=None):
     """ Returns a list of all users in the database
 
         Args:
             columns: a list of columns to be returned for each user
+            created_before (datetime): only return users who were created before this timestamp, defaults to now
 
         Returns: if columns is None, A list of dicts of the following format for each user
             {
@@ -312,12 +279,18 @@ def get_all_users(columns=None):
     if columns is None:
         columns = USER_GET_COLUMNS
 
+    if created_before is None:
+        created_before = datetime.now()
+
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
                 SELECT {columns}
                   FROM "user"
+                 WHERE created <= :created
               ORDER BY id
-            """.format(columns=', '.join(columns))))
+            """.format(columns=', '.join(columns))),{
+                "created": created_before,
+            })
 
         return [dict(row) for row in result]
 

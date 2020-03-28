@@ -35,6 +35,7 @@ class UserAdminView(AdminModelView):
     column_searchable_list = [
         'id',
         'musicbrainz_row_id',
+        'musicbrainz_id'
     ]
 
     column_filters = [
@@ -42,4 +43,7 @@ class UserAdminView(AdminModelView):
         'gdpr_agreed',
         'last_login',
         'latest_import',
+        'id',
+        'musicbrainz_id',
+        'musicbrainz_row_id',
     ]

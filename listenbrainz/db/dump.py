@@ -1,4 +1,7 @@
 """ This module contains data dump creation and import functions.
+
+Read more about the data dumps in our documentation here:
+https://listenbrainz.readthedocs.io/en/production/dev/listenbrainz-dumps.html
 """
 
 # listenbrainz-server - Server for the ListenBrainz project
@@ -165,18 +168,6 @@ def dump_postgres_db(location, dump_time=datetime.today(), threads=None):
         return
 
     current_app.logger.info('Dump of public data created at %s!', public_dump)
-
-
-    current_app.logger.info('Creating a new entry in the data_dump table...')
-    while True:
-        try:
-            dump_id = add_dump_entry(dump_time.strftime('%s'))
-            break
-        except Exception as e:
-            current_app.logger.warn('Error while adding dump entry: %s, trying again...', str(e), exc_info=True)
-            time.sleep(3)
-
-    current_app.logger.info('New entry with id %d added to data_dump table!', dump_id)
 
     current_app.logger.info('ListenBrainz PostgreSQL data dump created at %s!', location)
     return private_dump, public_dump
@@ -354,6 +345,20 @@ def get_dump_entries():
             """))
 
         return [dict(row) for row in result]
+
+
+def get_dump_entry(dump_id):
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT id, created
+              FROM data_dump
+             WHERE id = :dump_id
+        """), {
+            'dump_id': dump_id,
+        })
+        if result.rowcount > 0:
+            return dict(result.fetchone())
+        return None
 
 
 def import_postgres_dump(private_dump_archive_path=None, public_dump_archive_path=None, threads=DUMP_DEFAULT_THREAD_COUNT):

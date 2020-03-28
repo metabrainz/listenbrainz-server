@@ -80,53 +80,6 @@ class UserTestCase(DatabaseTestCase):
         user = db_user.get_by_mb_id(user['musicbrainz_id'])
         self.assertEqual(val, int(user['latest_import'].strftime('%s')))
 
-    def test_get_users_with_uncalculated_stats(self):
-
-        # create two users, set one's last_login
-        # to a very old value and one's last_login
-        # to now and then call the function
-        user1 = db_user.get_or_create(5, 'recentuser1')
-        with db.engine.connect() as connection:
-            connection.execute(sqlalchemy.text("""
-                UPDATE "user"
-                   SET last_login = to_timestamp(0)
-                 WHERE musicbrainz_id = :musicbrainz_id
-                """), {
-                    'musicbrainz_id': 'recentuser1'
-                })
-
-        user2 = db_user.get_or_create(6, 'recentuser2')
-        with db.engine.connect() as connection:
-            connection.execute(sqlalchemy.text("""
-                UPDATE "user"
-                   SET last_login = NOW()
-                 WHERE musicbrainz_id = :musicbrainz_id
-                """), {
-                    'musicbrainz_id': 'recentuser2'
-                })
-
-        users_with_uncalculated_stats = db_user.get_users_with_uncalculated_stats()
-        self.assertEqual(len(users_with_uncalculated_stats), 1)
-        self.assertEqual(users_with_uncalculated_stats[0]['musicbrainz_id'], 'recentuser2')
-
-
-        # now if we've calculated the stats for user2 recently (just now)
-        # then the function shouldn't return user2
-
-        # put some data in the stats table for user2
-        with db.engine.connect() as connection:
-            connection.execute(sqlalchemy.text("""
-                INSERT INTO statistics.user (user_id, artist, release, recording, last_updated)
-                     VALUES (:user_id, :artist, :release, :recording, NOW())
-            """), {
-                'user_id': user2['id'],
-                'artist': ujson.dumps({}),
-                'release': ujson.dumps({}),
-                'recording': ujson.dumps({}),
-            })
-
-        users_with_uncalculated_stats = db_user.get_users_with_uncalculated_stats()
-        self.assertListEqual(users_with_uncalculated_stats, [])
 
     def test_reset_latest_import(self):
         user = db_user.get_or_create(7, 'resetlatestimportuser')
@@ -164,7 +117,7 @@ class UserTestCase(DatabaseTestCase):
                 self.assertIn(column, user)
 
         # check that only id is present if columns = ['id']
-        users = db_user.get_all_users(['id'])
+        users = db_user.get_all_users(columns=['id'])
         for user in users:
             self.assertIn('id', user)
             for column in db_user.USER_GET_COLUMNS:
@@ -182,7 +135,6 @@ class UserTestCase(DatabaseTestCase):
             recordings={},
             releases={},
             artist_count=2,
-            yearmonth='2019-01',
         )
         user_stats = db_stats.get_all_user_stats(user_id)
         self.assertIsNotNone(user_stats)

@@ -1,0 +1,12 @@
+click==7.1.1
+hetznercloud==1.1.1
+hdfs == 2.5.8
+Jinja2 == 2.11.1
+pika==0.13.0
+python-dateutil==2.8.0
+numpy==1.18.2
+git+https://github.com/metabrainz/brainzutils-python.git@v1.14.0
+pytest == 5.4.1
+pytest-cov == 2.8.1
+py4j == 0.10.9
+pyspark == 2.4.5

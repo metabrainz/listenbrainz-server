@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Recommendations</title>
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+</style>
+</head>
+<body>
+	<center>
+		<h1>Generating recommendations</h1>
+	</center>
+	<p>Time taken to generate recommendations for each user:</p>
+	<table>
+		<tr>
+			<th>user name</th>
+			<th>total time taken to generate recommendations (min)</th>
+		</tr>
+		{% for user_name, user in recommendations.items() -%}
+		<tr>
+			<td>{{ user_name }}</td>
+			<td>{{ user['time'] }}m</td>
+		</tr>
+		{% endfor -%}
+	</table>
+	<p>Time taken in generating recommendations for all the above listed users: <b>{{ time.total_recommendation_time }}h</b></p>
+	<p><b>Note</b>: Total time lapsed in generating recommendations is <b>{{ total_time }}h</b></p>
+	<p>Model used to generate recommendations is <b>{{ best_model }}</b> i.e. best model. Time taken to load best model is <b>{{ time.load_model }}m</b></p>
+	<p>Sub-steps in generating recommendations for every user are as follows:</p>
+	<ul>
+		<li><p><b>get_user_id: </b>A query<b>(get_user_id)</b> is processed to get user id from the user name provided for whom the recommendations shall be generated.</p></li>
+		<li>
+			<p><b>get_top_artists_recordings: </b>From the user id, recordings of top artists associated with a user are retrieved which serve as a candidate set for the user for playlist 1.</p>
+		</li>
+		<li>
+			<p><b>get_similar_artists_recordings: </b>From the user id, recordings of similar artists associated with a user are retrieved which serve as a candidate set for the user for playlist 2.</p>
+		</li>
+		<li>
+			<p><b>predictAll : </b>Both the candidate sets are fed to Spark's inbuilt function 'predictAll' consecutively, to predict tracks for users from the provided pool of recording_ids. The function returns recommended recording_ids.</p>
+		</li>
+		<li>
+			<p><b>recommendations: </b>The last step is to lookup for information (track_name, artist_name etc) corresponding to the recommended recording_ids which can be retrieved using recordings_df dataframe.</p>
+			</blockquote>
+		</li>
+	</ul>
+	<p>Following are the playlists generated for the above listed users: </p>
+	{% for user_name, user in recommendations.items() -%}
+	<center>
+		<h2>Playlist 1: Top artists</h2>
+	</center>
+	<h4>{{ user_name }}</h4>
+	<table style="width:100%">
+		<tr>
+			{% for col in column -%}
+			<th>{{ col }}</th>
+			{% endfor -%}
+		</tr>
+		{% for recommended_recordings in user['top_artists_recordings'] -%}
+		<tr>
+			{% for entity in recommended_recordings -%}
+			<td>{{ entity }}</td>
+			{% endfor -%}
+		</tr>
+		{% endfor -%}
+	</table>
+	{% endfor -%}
+	{% for user_name, user in recommendations.items() -%}
+	<center>
+		<h2>Playlist 2: Similar Artists</h2>
+	</center>
+	<h4>{{ user_name }}</h4>
+	<table style="width:100%">
+		<tr>
+			{% for col in column -%}
+			<th>{{ col }}</th>
+			{% endfor -%}
+		</tr>
+		{% for recommended_recordings in user['similar_artists_recordings'] -%}
+		<tr>
+			{% for entity in recommended_recordings -%}
+			<td>{{ entity }}</td>
+			{% endfor -%}
+		</tr>
+		{% endfor -%}
+	</table>
+	{% endfor -%}
+	<p><i><b>Note: </b>Number of rows in a dataframe or number of elements in an RDD (count information) is not included because it leades to unnecessary computation time.</i></p>
+</body>
+</html>
+
+

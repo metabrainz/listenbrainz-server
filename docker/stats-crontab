@@ -1,0 +1,7 @@
+PATH=/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin
+
+# Request user stats every day at 12:00
+00 12 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_all_user_stats
+
+# Request full data dump import into spark cluster on 8th and 22nd every month
+00 00 8,22 * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_import_full
