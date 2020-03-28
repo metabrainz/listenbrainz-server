@@ -4,7 +4,7 @@ Flask-Login == 0.4.1
 Flask-WTF == 0.14.3
 Flask-SQLAlchemy == 2.4.1
 flask-socketio == 4.2.1
-click == 7.0
+click == 7.1.1
 jsonschema == 3.2.0
 rauth == 0.7.3
 setproctitle == 1.1.10
