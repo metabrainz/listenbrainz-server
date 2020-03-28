@@ -137,8 +137,8 @@ DEBUG_TB_INTERCEPT_REDIRECTS = False
 ADMINS = []
 
 # SPOTIFY
-SPOTIFY_CLIENT_ID = ''
-SPOTIFY_CLIENT_SECRET = ''
+SPOTIFY_CLIENT_ID = 'needs a non empty default value for tests, change this'
+SPOTIFY_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
 SPOTIFY_CALLBACK_URL = 'http://localhost/profile/connect-spotify/callback'
 
 # This is set to False to stop a warning from flask_sqlalchemy.
