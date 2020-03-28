@@ -71,7 +71,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
             recordings={},
             releases={},
             artist_count=2,
-            yearmonth='2019-01',
         )
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
@@ -117,28 +116,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
             'permission': 'permission',
         })
 
-    def test_scraper_username(self):
-        """ Tests that the username is correctly rendered in the last.fm importer """
-        response = self.client.get(
-            url_for('user.lastfmscraper', user_name=self.user.musicbrainz_id),
-            query_string={
-                'user_token': self.user.auth_token,
-                'lastfm_username': 'dummy',
-            }
-        )
-        self.assert200(response)
-        self.assertIn('var user_name = "iliekcomputers";', response.data.decode('utf-8'))
-
-        response = self.client.get(
-            url_for('user.lastfmscraper', user_name=self.weirduser.musicbrainz_id),
-            query_string={
-                'user_token': self.weirduser.auth_token,
-                'lastfm_username': 'dummy',
-            }
-        )
-        self.assert200(response)
-        self.assertIn('var user_name = "weird%5Cuser%20name";', response.data.decode('utf-8'))
-
     def test_top_artists(self):
         """ Tests the artist stats view """
 
@@ -161,7 +138,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
             recordings={},
             releases={},
             artist_count=2,
-            yearmonth='2019-01',
         )
 
         r = self.client.get(url_for('user.artists', user_name=self.user.musicbrainz_id))
@@ -174,7 +150,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
             recordings={},
             releases={},
             artist_count=2,
-            yearmonth='2019-01',
         )
 
         r = self.client.get(url_for('user.artists', user_name=self.user.musicbrainz_id))

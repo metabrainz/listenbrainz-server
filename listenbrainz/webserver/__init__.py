@@ -26,6 +26,7 @@ def create_influx(app):
         'REDIS_HOST': app.config['REDIS_HOST'],
         'REDIS_PORT': app.config['REDIS_PORT'],
         'REDIS_NAMESPACE': app.config['REDIS_NAMESPACE'],
+        'LISTEN_DUMP_TEMP_DIR_ROOT': app.config['LISTEN_DUMP_TEMP_DIR_ROOT'],
     })
 
 
@@ -59,11 +60,8 @@ def load_config(app):
             sys.exit(-1)
 
         print("loading consul config file %s)" % config_file)
-        app.config.from_pyfile(config_file)
 
-    else:
-        app.config.from_pyfile(config_file)
-
+    app.config.from_pyfile(config_file)
     # Output config values and some other info
     print('Configuration values are as follows: ')
     print(pprint.pformat(app.config, indent=4))
@@ -242,6 +240,7 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.profile import profile_bp
     from listenbrainz.webserver.views.follow import follow_bp
     from listenbrainz.webserver.views.follow_api import follow_api_bp
+    from listenbrainz.webserver.views.status_api import status_api_bp
     app.register_blueprint(index_bp)
     app.register_blueprint(login_bp, url_prefix='/login')
     app.register_blueprint(user_bp, url_prefix='/user')
@@ -249,4 +248,5 @@ def _register_blueprints(app):
     app.register_blueprint(follow_bp, url_prefix='/follow')
     app.register_blueprint(api_bp, url_prefix=API_PREFIX)
     app.register_blueprint(follow_api_bp, url_prefix=API_PREFIX+'/follow')
+    app.register_blueprint(status_api_bp, url_prefix=API_PREFIX+'/status')
     app.register_blueprint(api_bp_compat)

@@ -1,0 +1,13 @@
+Hi! 👋
+
+A new data dump has been automatically created.
+
+Name: {{ dump_name }}
+
+Please check that it was synced to FTP correctly
+and is available at the following link:
+
+{{ dump_link }}
+
+
+Your Friendly Neighbourhood Brainzbot 🤖

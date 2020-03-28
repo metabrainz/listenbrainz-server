@@ -10,12 +10,20 @@ from listenbrainz import utils
 from listenbrainz.db import user as db_user, stats as db_stats
 from listenbrainz.webserver import create_app
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz import config
+from listenbrainz.spark.handlers import handle_user_artist, handle_dump_imported
 import sqlalchemy
 
+response_handler_map = {
+    'user_artist': handle_user_artist,
+    'import_full_dump': handle_dump_imported,
+}
 class SparkReader:
     def __init__(self):
         self.app = create_app() # creating a flask app for config values and logging to Sentry
+
+    def get_response_handler(self, response_type):
+        return response_handler_map[response_type]
+
 
     def init_rabbitmq_connection(self):
         """ Initializes the connection to RabbitMQ.
@@ -32,23 +40,32 @@ class SparkReader:
             error_logger=current_app.logger.error,
         )
 
+    def process_response(self, response):
+        try:
+            response_type = response['type']
+        except KeyError:
+            current_app.logger.error('Bad response sent to spark_reader: %s', json.dumps(response, indent=4), exc_info=True)
+            return
+
+        try:
+            response_handler = self.get_response_handler(response_type)
+        except Exception:
+            current_app.logger.error('Unknown response type: %s, doing nothing.', response_type, exc_info=True)
+            return
+
+        try:
+            response_handler(response)
+        except Exception as e:
+            current_app.logger.error('Error in the response handler: %s, data: %s', str(e), json.dumps(response, indent=4), exc_info=True)
+            return
+
+
     def callback(self, ch, method, properties, body):
         """ Handle the data received from the queue and
             insert into the database accordingly.
         """
-        data = ujson.loads(body)
-        for username , metadata in data.items():
-            user = db_user.get_by_mb_id(username)
-            if not user:
-                break
-            artists = metadata['artists']['artist_stats']
-            recordings = metadata['recordings']
-            releases = metadata['releases']
-            artist_count = metadata['artists']['artist_count']
-            yearmonth = metadata['yearmonth']
-            db_stats.insert_user_stats(user['id'], artists, recordings, releases, artist_count, yearmonth)
-            current_app.logger.info("data for {} published".format(username))
-
+        response = ujson.loads(body)
+        self.process_response(response)
         while True:
             try:
                 self.incoming_ch.basic_ack(delivery_tag=method.delivery_tag)
@@ -58,20 +75,20 @@ class SparkReader:
 
 
     def start(self):
-    	""" initiates RabbitMQ connection and starts consuming from the queue
-    	"""
+        """ initiates RabbitMQ connection and starts consuming from the queue
+        """
 
-    	with self.app.app_context():
+        with self.app.app_context():
 
             while True:
                 self.init_rabbitmq_connection()
                 self.incoming_ch = utils.create_channel_to_consume(
                     connection=self.connection,
-                    exchange=current_app.config['SPARK_EXCHANGE'],
-                    queue=current_app.config['SPARK_QUEUE'],
+                    exchange=current_app.config['SPARK_RESULT_EXCHANGE'],
+                    queue=current_app.config['SPARK_RESULT_QUEUE'],
                     callback_function=self.callback,
                 )
-                current_app.logger.info('Stats calculator started!')
+                current_app.logger.info('Spark consumer started!')
                 try:
                     self.incoming_ch.start_consuming()
                 except pika.exceptions.ConnectionClosed:

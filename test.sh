@@ -77,7 +77,7 @@ function dcdown {
     # Shutting down all containers associated with this project
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-               down
+                    down 
 }
 
 # Exit immediately if a command exits with a non-zero status.

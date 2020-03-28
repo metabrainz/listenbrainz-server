@@ -225,22 +225,19 @@ class RecentListens extends React.Component {
 
   render() {
 
-    const spotifyListens = this.state.listens.filter(listen => listen.track_metadata
-      && listen.track_metadata.additional_info
-      && listen.track_metadata.additional_info.listening_from === "spotify"
-    );
-
     const getSpotifyEmbedSrc = () => {
       if (this.state.currentListen)
       {
         return getSpotifyEmbedUriFromListen(this.state.currentListen);
-      } else if (spotifyListens.length)
-      {
-
+      }
+      const spotifyListens = this.state.listens.filter(listen =>
+        _.get(listen, "listen.track_metadata.additional_info.listening_from") === "spotify"
+      );
+      if (spotifyListens.length){
         return getSpotifyEmbedUriFromListen(spotifyListens[0]);
       }
-      return null
-    };
+      return null;
+    }
 
     return (
       <div>
@@ -361,7 +358,7 @@ class RecentListens extends React.Component {
               <SpotifyPlayer
                 APIService={this.APIService}
                 ref={this.spotifyPlayer}
-                listens={spotifyListens}
+                listens={this.state.listens}
                 direction={this.state.direction}
                 spotify_user={this.props.spotify}
                 onCurrentListenChange={this.handleCurrentListenChange}

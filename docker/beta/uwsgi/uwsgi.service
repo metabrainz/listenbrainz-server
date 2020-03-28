@@ -2,6 +2,9 @@
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-web-beta" ]
 then
+    rm -f /etc/service/cron/down
+    sv restart cron
+
     exec uwsgi /etc/uwsgi/uwsgi.ini
 fi
 
@@ -40,5 +43,10 @@ then
     exec python3 manage.py run_follow_server -h 0.0.0.0 -p 3031
 fi
 
+if [ "${CONTAINER_NAME}" = "listenbrainz-spark-reader-beta" ]
+then
+    cd /code/listenbrainz
+    exec python3 -m listenbrainz.spark.spark_reader
+fi
 
 echo "init script has no clue which service to start. Set env var CONTAINER_NAME!"

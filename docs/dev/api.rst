@@ -18,8 +18,8 @@ site [#]_.
 Reference
 ---------
 
-API Calls
-^^^^^^^^^
+Core API Endpoints
+^^^^^^^^^^^^^^^^^^
 
 .. autoflask:: listenbrainz.webserver:create_app_rtfd()
    :blueprints: api_v1
@@ -60,6 +60,14 @@ API Calls
   :statuscode 200: latest import timestamp updated
   :statuscode 400: invalid JSON sent, see error message for details.
   :statuscode 401: invalid authorization. See error message for details.
+
+Status API Endpoints
+^^^^^^^^^^^^^^^^^^^^
+
+.. autoflask:: listenbrainz.webserver:create_app_rtfd()
+   :blueprints: status_api_v1
+   :include-empty-docstring:
+   :undoc-static:
 
 Rate limiting
 ^^^^^^^^^^^^^
