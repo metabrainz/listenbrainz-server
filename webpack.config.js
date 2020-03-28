@@ -1,16 +1,19 @@
 const path = require('path');
 const ManifestPlugin = require('webpack-manifest-plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 module.exports = function(env){
   const isProd = env === "production";
   const plugins = [
-    new CleanWebpackPlugin('/static/js/dist'),
+    new CleanWebpackPlugin(),
     new ManifestPlugin()
   ];
   return {
     mode: isProd ? "production" : "development",
-    entry: '/static/js/jsx/profile.jsx',
+    entry: {
+      main: '/static/js/jsx/profile.jsx',
+      import: '/static/js/jsx/lastFmImporter.jsx'
+    },
     output: {
       filename: isProd ? '[name].[contenthash].js' : '[name].js',
       path: '/static/js/dist'

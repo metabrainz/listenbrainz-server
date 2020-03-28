@@ -1,3 +1,5 @@
+import os
+
 DEBUG = True # set to False in production mode
 
 SECRET_KEY = "CHANGE_ME"
@@ -50,6 +52,11 @@ BIGQUERY_EXCHANGE = "bigquery"
 BIGQUERY_QUEUE = "bigquery"
 PLAYING_NOW_EXCHANGE = "playing_now"
 PLAYING_NOW_QUEUE = "playing_now"
+
+SPARK_RESULT_EXCHANGE = "spark_result"
+SPARK_RESULT_QUEUE = "spark_result"
+SPARK_REQUEST_EXCHANGE = "spark_request"
+SPARK_REQUEST_QUEUE = "spark_request"
 
 # MusicBrainz OAuth
 MUSICBRAINZ_CLIENT_ID = "CLIENT_ID"
@@ -130,8 +137,8 @@ DEBUG_TB_INTERCEPT_REDIRECTS = False
 ADMINS = []
 
 # SPOTIFY
-SPOTIFY_CLIENT_ID = ''
-SPOTIFY_CLIENT_SECRET = ''
+SPOTIFY_CLIENT_ID = 'needs a non empty default value for tests, change this'
+SPOTIFY_CLIENT_SECRET = 'needs a non empty default value for tests, change this'
 SPOTIFY_CALLBACK_URL = 'http://localhost/profile/connect-spotify/callback'
 
 # This is set to False to stop a warning from flask_sqlalchemy.
@@ -149,3 +156,5 @@ MAIL_FROM_DOMAIN = 'listenbrainz.org'
 # expiration of 'Remember me' cookie
 SESSION_REMEMBER_ME_DURATION = 365
 
+# listen dumps creation dir
+LISTEN_DUMP_TEMP_DIR_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'tmp')

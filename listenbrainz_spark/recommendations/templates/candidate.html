@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Candidate Set</title>
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+</style>
+</head>
+<body>
+	<center>
+		<h1>Data Preprocessing to generate recommendations</h1>
+	</center>
+	<p>The following table gives information about total time taken to generate three candidate sets for user: </p>
+	<table>
+		<tr>
+			<th>user name</th>
+			<th>time(s)</th>
+		</tr>
+		{% for user_name, metadata in user_data.items() -%}
+		<tr>
+			<td>{{ user_name }}</td>
+			<td>{{ metadata['time'] }}</td>
+		</tr>
+		{% endfor -%}
+	</table>
+	<p>To get personalized recommendations for users, candidate sets are generated for each user consisting of recording ids and the user id using the underlying procedure.</p>
+	{% for user_name, metadata in user_data.items() -%}
+	<p>Similar artists set for <b>{{ user_name }}</b></p>
+		<table>
+			<tr>
+				<th>Top Artist</th>
+				{% for i in range(10) -%}
+				<th>Similar artist</th>
+				{% endfor -%}
+			</tr>
+			{% for top_artist, similar_artists in metadata['artists'].items() -%}
+			<tr>
+				<td>{{ top_artist }}</td>
+				{% for name in similar_artists -%}
+				<td>{{ name }}</td>
+				{% endfor -%}
+			</tr>
+			{% endfor -%}
+		</table>
+	{% endfor -%}
+</body>
+</html>

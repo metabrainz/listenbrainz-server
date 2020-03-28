@@ -17,7 +17,7 @@ data.
 A team of former Last.fm and current MusicBrainz hackers created the first
 version of ListenBrainz in a weekend. Since the original project was created,
 technology has advanced at an incredibly rapid pace, which made re-creating the
-original project fairly straightforward. 
+original project fairly straightforward.
 
 The project has two main goals:
 
@@ -35,24 +35,15 @@ These instructions help you get started with the development process.
 Installation in a production environment may be different.
 
 **Read the [development environment
-documentation](https://listenbrainz.readthedocs.io/en/latest/dev/devel-env.html 
+documentation](https://listenbrainz.readthedocs.io/en/latest/dev/devel-env.html
 "Setting up a development environment - ListenBrainz documentation")**
 
 
 ## Calculating statistics
 
-ListenBrainz uses [Google BigQuery](https://cloud.google.com/bigquery/
-"BigQuery - Analytics Data Warehouse") to calculate statistics. You need a
-BigQuery credentials file called `bigquery-credentials.json` to the
-`credentials` directory for it to work. This file is obtained from the Google
-BigQuery site by creating a new project. The `WRITE_TO_BIGQUERY` variable in
-`config.py` needs to be set to `True` also.
-
-The stats are automatically calculated in the `scheduler` container, but if you
-want to manually start statistic calculation, run this.
-
-    docker-compose -f docker/docker-compose.yml -p listenbrainz run --rm web python manage.py stats calculate
-
+There have been some problems with our statistics infrastructure which used Google BigQuery.
+We're currently in the process of fixing it. In the meantime, new statistics will not be calculated.
+Please bear with us while we work on getting statistics back, hopefully very soon!
 
 ## Documentation
 

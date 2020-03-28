@@ -73,7 +73,6 @@ def run_follow_server(host, port, debug=True):
 @click.option("--create-db", is_flag=True, help="Create the database and user.")
 def init_db(force, create_db):
     """Initializes database.
-
     This process involves several steps:
     1. Table structure is created.
     2. Primary keys and foreign keys are created.
@@ -102,6 +101,9 @@ def init_db(force, create_db):
         print('Creating schema...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_schema.sql'))
 
+        print('Creating Types...')
+        db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_types.sql'))
+
         print('Creating tables...')
         db.run_sql_script(os.path.join(ADMIN_SQL_DIR, 'create_tables.sql'))
 
@@ -120,7 +122,6 @@ def init_db(force, create_db):
 @click.option("--create-db", is_flag=True, help="Skip creating database and user. Tables/indexes only.")
 def init_msb_db(force, create_db):
     """Initializes database.
-
     This process involves several steps:
     1. Table structure is created.
     2. Primary keys and foreign keys are created.
@@ -187,10 +188,12 @@ def init_influx():
 
 
 # Add other commands here
-import listenbrainz.stats.populate as populate
-cli.add_command(populate.cli, name="stats")
+import listenbrainz.spark.request_manage as spark_request_manage
+cli.add_command(spark_request_manage.cli, name="spark")
 import listenbrainz.db.dump_manager as dump_manager
 cli.add_command(dump_manager.cli, name="dump")
+import listenbrainz.listen_replay.cli as listen_replay
+cli.add_command(listen_replay.cli, name="replay")
 
 
 if __name__ == '__main__':

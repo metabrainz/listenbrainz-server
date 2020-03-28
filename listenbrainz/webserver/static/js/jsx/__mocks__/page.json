@@ -1,0 +1,85 @@
+{
+  "recenttracks": {
+    "@attr": {
+      "page": "1",
+      "perPage": "50",
+      "user": "ishaanshah",
+      "total": "2",
+      "totalPages": "1"
+    },
+    "track": [
+      {
+        "artist": {
+          "mbid": "cc197bad-dc9c-440d-a5b5-d52ba2e14234",
+          "#text": "Coldplay"
+        },
+        "album": {
+          "mbid": "002183a5-c087-4c0a-9c47-65ef79261dd2",
+          "#text": "A Head Full Of Dreams"
+        },
+        "image": [
+          {
+            "size": "small",
+            "#text": "https://lastfm.freetls.fastly.net/i/u/34s/174d490504bf25ced4880e8fd54ddb1c.jpg"
+          },
+          {
+            "size": "medium",
+            "#text": "https://lastfm.freetls.fastly.net/i/u/64s/174d490504bf25ced4880e8fd54ddb1c.jpg"
+          },
+          {
+            "size": "large",
+            "#text": "https://lastfm.freetls.fastly.net/i/u/174s/174d490504bf25ced4880e8fd54ddb1c.jpg"
+          },
+          {
+            "size": "extralarge",
+            "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/174d490504bf25ced4880e8fd54ddb1c.jpg"
+          }
+        ],
+        "streamable": "0",
+        "date": {
+          "uts": "1583223398",
+          "#text": "03 Mar 2020, 08:16"
+        },
+        "url": "https://www.last.fm/music/Coldplay/_/Up&Up",
+        "name": "Up&Up",
+        "mbid": "02b47acf-3bc5-47dc-a516-e8c2c95bc07b"
+      },
+      {
+        "artist": {
+          "mbid": "012151a8-0f9a-44c9-997f-ebd68b5389f9",
+          "#text": "Imagine Dragons"
+        },
+        "album": {
+          "mbid": "25c11880-bc5e-43db-927b-522eb871dc9e",
+          "#text": "Evolve"
+        },
+        "image": [
+          {
+            "size": "small",
+            "#text": "https://lastfm.freetls.fastly.net/i/u/34s/8c77e9f509c4dd3bca8d3ac6b5344ce5.png"
+          },
+          {
+            "size": "medium",
+            "#text": "https://lastfm.freetls.fastly.net/i/u/64s/8c77e9f509c4dd3bca8d3ac6b5344ce5.png"
+          },
+          {
+            "size": "large",
+            "#text": "https://lastfm.freetls.fastly.net/i/u/174s/8c77e9f509c4dd3bca8d3ac6b5344ce5.png"
+          },
+          {
+            "size": "extralarge",
+            "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/8c77e9f509c4dd3bca8d3ac6b5344ce5.png"
+          }
+        ],
+        "streamable": "0",
+        "date": {
+          "uts": "1583222465",
+          "#text": "03 Mar 2020, 08:01"
+        },
+        "url": "https://www.last.fm/music/Imagine+Dragons/_/Believer",
+        "name": "Believer",
+        "mbid": "022d6bfb-2a57-486b-a784-2af9b4b93fa9"
+      }
+    ]
+  }
+}

@@ -25,9 +25,21 @@ import sqlalchemy
 import ujson
 
 from listenbrainz import db
-from listenbrainz import config 
 
-def insert_user_stats(user_id, artists, recordings, releases, artist_count, yearmonth):
+def get_timestamp_for_last_user_stats_update():
+    """ Get the time when the user stats table was last updated
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT MAX(last_updated) as last_update_ts
+              FROM statistics.user
+            """
+        ))
+        row = result.fetchone()
+        return row['last_update_ts'] if row else None
+
+
+def insert_user_stats(user_id, artists, recordings, releases, artist_count):
     """Inserts user stats calculated from Spark into the database.
 
        If stats are already present for some user, they are updated to the new
@@ -38,30 +50,25 @@ def insert_user_stats(user_id, artists, recordings, releases, artist_count, year
              recordings (dict): the top recordings listened to by the user
              releases (dict): the top releases listened to by the user
              artist_count (int): the total number of artists listened to by the user
-             yearmonth (str): a string representing the month in which the stats were calculated, 
-                        for example '2019-01'
     """
 
     artist_stats = {
         'count': artist_count,
-        'top_month': {
+        'all_time': {
             'artists': artists,
-            'month': yearmonth,
         }
     }
 
     recording_stats = {
-        'top_month': {
+        'all_time': {
             'recordings': recordings,
-            'month': yearmonth,
         },
     }
 
 
     release_stats = {
-        'top_month': {
+        'all_time': {
             'releases': releases,
-            'month': yearmonth,
         }
     }
 
@@ -174,12 +181,14 @@ def get_all_user_stats(user_id):
     return get_user_stats(user_id, 'artist, recording, release')
 
 
-def valid_stats_exist(user_id):
+def valid_stats_exist(user_id, days):
     """ Returns True if statistics for a user have been calculated in
-    the last week, and are present in the db
+    the last X days (where x is passed to the function), and are present in the db
 
     Args:
         user_id (int): the row ID of the user
+        days (int): the number of days in which stats should have been calculated
+            to consider them valid
 
     Returns:
         bool value signifying if valid stats exist for the user in the db
@@ -193,7 +202,7 @@ def valid_stats_exist(user_id):
                    AND last_updated >= NOW() - INTERVAL ':x days'
             """), {
                 'user_id': user_id,
-                'x': config.STATS_CALCULATION_INTERVAL,
+                'x': days,
             })
         row = result.fetchone()
         return True if row is not None else False

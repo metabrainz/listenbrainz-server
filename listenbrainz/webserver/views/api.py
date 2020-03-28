@@ -272,8 +272,10 @@ def validate_token():
     """
     Check whether a User Token is a valid entry in the database.
 
-    In order to query this endpoint, send a GET request.
-    A JSON response will be returned, with one of three codes.
+    In order to query this endpoint, send a GET request with the token to check
+    as the `token` argument (example: /validate-token?token=token-to-check)
+
+    A JSON response will be returned, with one of two codes.
 
     :statuscode 200: The user token is valid/invalid.
     :statuscode 400: No token was sent to the endpoint.
@@ -285,12 +287,15 @@ def validate_token():
     if user is None:
         return jsonify({
             'code': 200,
-            'message': 'Token invalid.'
+            'message': 'Token invalid.',
+            'valid': False,
         })
     else:
         return jsonify({
             'code': 200,
-            'message': 'Token valid.'
+            'message': 'Token valid.',
+            'valid': True,
+            'user_name': user['musicbrainz_id'],
         })
 
 

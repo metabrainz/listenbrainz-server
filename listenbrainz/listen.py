@@ -288,7 +288,7 @@ class Listen(object):
 
 
 def convert_influx_row_to_spark_row(row):
-    return {
+    data = {
         'listened_at': str(row['time']),
         'user_name': row['user_name'],
         'artist_msid': row['artist_msid'],
@@ -302,3 +302,10 @@ def convert_influx_row_to_spark_row(row):
         'recording_mbid': row.get('recording_mbid', ''),
         'tags': convert_comma_seperated_string_to_list(row.get('tags', [])),
     }
+
+    if 'inserted_timestamp' in row and row['inserted_timestamp'] is not None:
+        data['inserted_timestamp'] = str(datetime.utcfromtimestamp(row['inserted_timestamp']))
+    else:
+        data['inserted_timestamp'] = str(datetime.utcfromtimestamp(0))
+
+    return data

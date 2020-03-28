@@ -4,21 +4,22 @@
 #!/bin/bash
 
 DUMP_THREADS="{{template "KEY" "dump_threads"}}"
+TEMP_DIR="{{template "KEY" "temp_dir"}}"
 
 # Where to back things up to, who should own the backup files, and what mode
 # those files should have.
 # The backups include a full database export
 BACKUP_DIR="{{template "KEY" "backup_dir"}}"
-BACKUP_USER=listenbrainz
-BACKUP_GROUP=listenbrainz
+BACKUP_USER="{{template "KEY" "user"}}"
+BACKUP_GROUP="{{template "KEY" "group"}}"
 BACKUP_DIR_MODE=700
 BACKUP_FILE_MODE=600
 
 # Same but for the files that need to copied to the FTP server,
 # for public consumption
 FTP_DIR="{{template "KEY" "ftp_dir"}}"
-FTP_USER=listenbrainz
-FTP_GROUP=listenbrainz
+FTP_USER="{{template "KEY" "user"}}"
+FTP_GROUP="{{template "KEY" "group"}}"
 FTP_DIR_MODE=755
 FTP_FILE_MODE=644
 
@@ -26,4 +27,6 @@ FTP_FILE_MODE=644
 RSYNC_FULLEXPORT_HOST="{{template "KEY" "rsync_fullexport_host"}}"
 RSYNC_FULLEXPORT_PORT="{{template "KEY" "rsync_fullexport_port"}}"
 RSYNC_FULLEXPORT_DIR="$FTP_DIR/fullexport"
-RSYNC_FULLEXPORT_KEY='/home/listenbrainz/.ssh/rsync-listenbrainz-dumps-full'
+RSYNC_INCREMENTAL_DIR="$FTP_DIR/incremental"
+RSYNC_FULLEXPORT_KEY='/home/{{template "KEY" "user"}}/.ssh/rsync-listenbrainz-dumps-full'
+RSYNC_INCREMENTAL_KEY='/home/{{template "KEY" "user"}}/.ssh/rsync-listenbrainz-dumps-incremental'
