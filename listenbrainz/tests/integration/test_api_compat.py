@@ -162,7 +162,7 @@ class APICompatTestCase(APICompatIntegrationTestCase):
         self.assertEqual(response['lfm']['scrobbles']['@accepted'], '1')
 
         # Check if listen reached the influx listenstore
-        time.sleep(1)
+        time.sleep(2)
         listens = self.ls.fetch_listens(self.lb_user['musicbrainz_id'], from_ts=timestamp-1)
         self.assertEqual(len(listens), 1)
 

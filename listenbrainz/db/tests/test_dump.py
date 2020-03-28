@@ -109,13 +109,3 @@ class DumpTestCase(DatabaseTestCase):
             self.assertEqual(user_count, 1)
             two_id = db_user.create(2, 'vnskprk')
             self.assertGreater(two_id, one_id)
-
-
-    def test_dump_postgres_db_table_entries(self):
-        with self.app.app_context():
-            db_user.create(1, 'test_user')
-            timestamp = datetime.today()
-            location = db_dump.dump_postgres_db(self.tempdir, dump_time=timestamp)
-            dump_entries = db_dump.get_dump_entries()
-            self.assertEqual(len(dump_entries), 1)
-            self.assertEqual(dump_entries[0]['created'].strftime('%s'), timestamp.strftime('%s'))

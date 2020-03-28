@@ -5,6 +5,7 @@ services:
 
 install:
   - cp listenbrainz/config.py.sample listenbrainz/config.py
+  - cp listenbrainz_spark/config.py.sample listenbrainz_spark/config.py
   # Build the unit test docker-compose project
   - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test build
   - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test run --rm listenbrainz
@@ -35,11 +36,11 @@ script:
                 -wait tcp://db:5432 -timeout 60s
                 -wait tcp://influx:8086 -timeout 60s
                 -wait tcp://redis:6379 -timeout 60s
-                py.test
+                "py.test"
   - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test down
 
   # Bring up integration test containers, run tests and bring them down
-  - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int up -d db influx redis influx_writer bigquery rabbitmq
+  - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int up -d db influx redis influx_writer rabbitmq
   - sleep 10
   - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int
                run --rm listenbrainz dockerize
@@ -50,3 +51,5 @@ script:
                                      bash -c "py.test listenbrainz/tests/integration"
   - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int down
 
+  - echo "JavaScript tests start here"
+  - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test run --rm frontend_tester npm test
