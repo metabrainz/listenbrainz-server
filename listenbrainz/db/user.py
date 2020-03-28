@@ -253,7 +253,6 @@ def increase_latest_import(musicbrainz_id, ts):
 
 def reset_latest_import(musicbrainz_id):
     """Resets the latest_import field for user with specified MusicBrainz ID to 0"""
-    user = get_by_mb_id(musicbrainz_id)
     update_latest_import(musicbrainz_id, 0)
 
 
