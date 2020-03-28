@@ -292,6 +292,8 @@ def process_one_user(user):
     spotify.update_latest_listened_at(user.user_id, latest_listened_at)
     spotify.update_last_updated(user.user_id)
 
+    current_app.logger.info('imported %d listens for %s' % (len(listens), str(user)))
+
 
 def process_all_spotify_users():
     """ Get a batch of users to be processed and import their Spotify plays.
@@ -315,7 +317,6 @@ def process_all_spotify_users():
     failure = 0
     for u in users:
         t = time.time()
-        current_app.logger.info('Importing spotify listens for user %s', str(u))
         try:
             process_one_user(u)
             success += 1
@@ -335,8 +336,6 @@ def process_all_spotify_users():
         except Exception as e:
             current_app.logger.critical('spotify_reader could not import listens: %s', str(e), exc_info=True)
             failure += 1
-
-        current_app.logger.info('Took a total of %.2f seconds to process user %s', time.time() - t, str(u))
 
     current_app.logger.info('Processed %d users successfully!', success)
     current_app.logger.info('Encountered errors while processing %d users.', failure)

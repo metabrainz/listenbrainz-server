@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import json
 import sys
 import os
 import pika
@@ -37,10 +36,18 @@ class InfluxWriterSubscriber(ListenWriter):
         self.unique_ch = None
         self.redis_listenstore = None
 
+        self.callback_t0 = 0.0
+        self.cb_delta = 0.0
+
 
     def callback(self, ch, method, properties, body):
+        self.cb_delta = time() - self.callback_t0
+
+        t0 = time()
         listens = ujson.loads(body)
+        t1 = time()
         ret = self.write(listens)
+        t2 = time()
         if not ret:
             return ret
 
@@ -54,7 +61,9 @@ class InfluxWriterSubscriber(ListenWriter):
         count = len(listens)
 
         self._collect_and_log_stats(count, call_method=self.ls.update_listen_counts)
+        t3 = time()
 
+        self.callback_t0 = time()
         return ret
 
 
@@ -100,7 +109,7 @@ class InfluxWriterSubscriber(ListenWriter):
             except (InfluxDBServerError, InfluxDBClientError, ValueError, ConnectionError) as e:
                 error_message = 'Unable to insert bad listen to listenstore: {error}, listen={json}'
                 influx_dict = data[0].to_influx(get_measurement_name(data[0].user_name))
-                current_app.logger.error(error_message.format(error=str(e), json=json.dumps(influx_dict, indent=3)), exc_info=True)
+                current_app.logger.error(error_message.format(error=str(e), json=ujson.dumps(influx_dict, indent=3)), exc_info=True)
                 return 0
         else:
             slice_index = len(data) // 2
@@ -127,7 +136,7 @@ class InfluxWriterSubscriber(ListenWriter):
 
             # if the timestamp is illegal, don't use it for ranges
             if t.bit_length() > 32:
-                current_app.logger.error("timestamp %d is too large. listen: %s", t, json.dumps(listen, indent=3))
+                current_app.logger.error("timestamp %d is too large. listen: %s", t, ujson.dumps(listen, indent=3))
                 continue
 
             if user_name not in users:
@@ -163,7 +172,9 @@ class InfluxWriterSubscriber(ListenWriter):
 
             while True:
                 try:
+                    t0 = time()
                     results = self.influx.query(query)
+                    t1 = time()
                     break
                 except Exception as e:
                     current_app.logger.warn('Could not query influx, trying again: %s', str(e), exc_info=True)
@@ -171,9 +182,11 @@ class InfluxWriterSubscriber(ListenWriter):
 
             # collect all the timestamps for this given time range.
 
+            t2 = time()
             timestamps = defaultdict(list) # dict of list of listens indexed by timestamp
             for result in results.get_points(measurement=get_measurement_name(user_name)):
                 timestamps[convert_to_unix_timestamp(result['time'])].append(result)
+            t3 = time()
 
             for listen in users[user_name]['listens']:
                 # Check if a listen with the same timestamp and recording msid is already present in
@@ -204,11 +217,13 @@ class InfluxWriterSubscriber(ListenWriter):
                         'recording_msid': recording_msid
                     })
 
-        t0 = time()
+        t4 = time()
         submitted_count = self.insert_to_listenstore(submit)
-        self.time += time() - t0
+        t5 = time()
+        self.time += t5 - t0
 
-        current_app.logger.info("dups: %d, unique: %d, submitted: %d" % (duplicate_count, unique_count, submitted_count))
+#        current_app.logger.info("dups: %d, unique: %d, submitted: %d" % (duplicate_count, unique_count, submitted_count))
+        current_app.logger.info("delta: %.3f read: %.3f fetch: %.3f save: %.3f (%d, %d, %d)" % (self.cb_delta, t1 - t0, t3 - t2, t5 - t4, duplicate_count, unique_count, submitted_count))
         if not unique_count:
             return True
 
