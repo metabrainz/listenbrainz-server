@@ -51,7 +51,7 @@
     "enzyme": "^3.11.0",
     "enzyme-adapter-react-16": "^1.15.2",
     "jest": "^25.1.0",
-    "webpack": "^4.41.5",
+    "webpack": "^4.42.1",
     "webpack-cli": "^3.3.10",
     "webpack-manifest-plugin": "^2.2.0"
   }
