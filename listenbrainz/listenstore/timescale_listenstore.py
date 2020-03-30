@@ -40,10 +40,6 @@ class TimescaleListenStore(ListenStore):
 
     def __init__(self, conf, logger):
         super(TimescaleListenStore, self).__init__(logger)
-
-        # create connection to timescale
-        self.ts = ts.engine.connect()
-
         # Initialize brainzutils cache
         init_cache(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], namespace=conf['REDIS_NAMESPACE'])
         self.dump_temp_dir_root = conf.get('LISTEN_DUMP_TEMP_DIR_ROOT', tempfile.mkdtemp())
@@ -70,10 +66,11 @@ class TimescaleListenStore(ListenStore):
                 return int(count)
 
         try:
-            result = self.ts.execute(sqlalchemy.text("SELECT COUNT(*) FROM listen_count WHERE user_name = :user_name"), {
-                "user_name": user_name,
-            })
-            count = result.fetchone()["count"]
+            with ts.engine.connect() as connection:
+                result = connection.execute(sqlalchemy.text("SELECT COUNT(*) FROM listen_count WHERE user_name = :user_name"), {
+                    "user_name": user_name,
+                })
+                count = result.fetchone()["count"]
         except psycopg2.OperationalError as e:
             self.log.error("Cannot query timescale listen_count: %s" % str(e), exc_info=True)
             raise
