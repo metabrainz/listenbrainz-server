@@ -25,5 +25,7 @@ logging.basicConfig(level=logging.INFO,
 
 from listenbrainz.listenstore import redis_listenstore
 from listenbrainz.listenstore import influx_listenstore
+from listenbrainz.listenstore import timescale_listenstore
 RedisListenStore = redis_listenstore.RedisListenStore
 InfluxListenStore = influx_listenstore.InfluxListenStore
+TimescaleListenStore = timescale_listenstore.TimescaleListenStore
