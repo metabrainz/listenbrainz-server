@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import listenbrainz.db.user as db_user
+from listenbrainz.db import timescale as ts
 import os.path
 import subprocess
 import tarfile
@@ -10,37 +11,28 @@ import shutil
 import ujson
 import uuid
 import json
+import psycopg2
 
 from brainzutils import cache
 from collections import defaultdict
 from datetime import datetime, timezone
-from influxdb import InfluxDBClient
-from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 
 from listenbrainz import DUMP_LICENSE_FILE_PATH
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db.dump import SchemaMismatchException
-from listenbrainz.listen import Listen, convert_influx_row_to_spark_row
+from listenbrainz.listen import Listen
 from listenbrainz.listenstore import ListenStore
 from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, \
     USER_CACHE_TIME, REDIS_USER_TIMESTAMPS, LISTENS_DUMP_SCHEMA_VERSION
-from listenbrainz.utils import quote, get_escaped_measurement_name, get_measurement_name, get_influx_query_timestamp, \
-    convert_influx_nano_to_python_time, convert_python_time_to_nano_int, convert_to_unix_timestamp, \
-    create_path, log_ioerrors, init_cache, convert_influx_to_datetime
+from listenbrainz.utils import create_path, log_ioerrors, init_cache
 
-REDIS_INFLUX_USER_LISTEN_COUNT = "ls.listencount."  # append username
-COUNT_RETENTION_POLICY = "one_week"
-COUNT_MEASUREMENT_NAME = "listen_count"
-TEMP_COUNT_MEASUREMENT = COUNT_RETENTION_POLICY + "." + COUNT_MEASUREMENT_NAME
-TIMELINE_COUNT_MEASUREMENT = COUNT_MEASUREMENT_NAME
-
+REDIS_TIMESCALE_USER_LISTEN_COUNT = "ls.listencount."  # append username
 DUMP_CHUNK_SIZE = 100000
-
 NUMBER_OF_USERS_PER_DIRECTORY = 1000
 DUMP_FILE_SIZE_LIMIT = 1024 * 1024 * 1024 # 1 GB
 
 
-class InfluxListenStore(ListenStore):
+class TimescaleListenStore(ListenStore):
 
     REDIS_INFLUX_TOTAL_LISTEN_COUNT = "ls.listencount.total"
     TOTAL_LISTEN_COUNT_CACHE_TIME = 5 * 60
@@ -52,6 +44,7 @@ class InfluxListenStore(ListenStore):
         # Initialize brainzutils cache
         init_cache(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], namespace=conf['REDIS_NAMESPACE'])
         self.dump_temp_dir_root = conf.get('LISTEN_DUMP_TEMP_DIR_ROOT', tempfile.mkdtemp())
+
 
     def get_listen_count_for_user(self, user_name, need_exact=False):
         """Get the total number of listens for a user. The number of listens comes from
@@ -68,27 +61,26 @@ class InfluxListenStore(ListenStore):
             # decode is set to False as we have not encoded the value when we set it
             # in brainzutils cache as we need to call increment operation which requires
             # an integer value
-            user_key = '{}{}'.format(REDIS_INFLUX_USER_LISTEN_COUNT, user_name)
+            user_key = '{}{}'.format(REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
             count = cache.get(user_key, decode=False)
             if count:
                 return int(count)
 
         try:
-            results = self.influx.query('SELECT count(*) FROM ' + get_escaped_measurement_name(user_name))
-        except (InfluxDBServerError, InfluxDBClientError) as e:
-            self.log.error("Cannot query influx: %s" % str(e), exc_info=True)
+            with ts.engine.connect() as connection:
+                result = connection.execute(sqlalchemy.text("SELECT COUNT(*) FROM listen_count WHERE user_name = :user_name"), {
+                    "user_name": user_name,
+                })
+                count = result.fetchone()["count"]
+        except psycopg2.OperationalError as e:
+            self.log.error("Cannot query timescale listen_count: %s" % str(e), exc_info=True)
             raise
 
-        # get the number of listens from the json
-        try:
-            count = results.get_points(measurement = get_measurement_name(user_name)).__next__()['count_recording_msid']
-        except (KeyError, StopIteration):
-            count = 0
-
         # put this value into brainzutils cache with an expiry time
-        user_key = "{}{}".format(REDIS_INFLUX_USER_LISTEN_COUNT, user_name)
+        user_key = "{}{}".format(REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
         cache.set(user_key, int(count), InfluxListenStore.USER_LISTEN_COUNT_CACHE_TIME, encode=False)
         return int(count)
+
 
     def reset_listen_count(self, user_name):
         """ Reset the listen count of a user from cache and put in a new calculated value.
@@ -98,19 +90,18 @@ class InfluxListenStore(ListenStore):
         """
         self.get_listen_count_for_user(user_name, need_exact=True)
 
-    def _select_single_value(self, query, measurement):
+
+    def _select_single_timestamp(self, query):
         try:
-            results = self.influx.query(query)
-        except Exception as err:
-            self.log.error("Cannot query influx: %s" % str(err), exc_info=True)
+            with ts.engine.connect() as connection:
+                result = connection.execute(sqlalchemy.text("SELECT COUNT(*) FROM listen_count WHERE user_name = :user_name"), {
+                    "user_name": user_name,
+                })
+                count = result.fetchone()["count"]
+        except psycopg2.OperationalError as e:
+            self.log.error("Cannot query timescale listen_count: %s" % str(e), exc_info=True)
             raise
 
-        for result in results.get_points(measurement=measurement):
-            return result['time']
-
-        return None
-
-    def _select_single_timestamp(self, query, measurement):
         try:
             results = self.influx.query(query)
         except Exception as err:
@@ -175,6 +166,7 @@ class InfluxListenStore(ListenStore):
             )
         return count
 
+
     def get_timestamps_for_user(self, user_name):
         """ Return the max_ts and min_ts for a given user and cache the result in brainzutils cache
         """
@@ -186,10 +178,10 @@ class InfluxListenStore(ListenStore):
             max_ts = int(max_ts)
         else:
             query = 'SELECT first(artist_msid) FROM ' + get_escaped_measurement_name(user_name)
-            min_ts = self._select_single_timestamp(query, get_measurement_name(user_name))
+            min_ts = self._select_single_timestamp(query)
 
             query = 'SELECT last(artist_msid) FROM ' + get_escaped_measurement_name(user_name)
-            max_ts = self._select_single_timestamp(query, get_measurement_name(user_name))
+            max_ts = self._select_single_timestamp(query)
 
             cache.set(REDIS_USER_TIMESTAMPS % user_name, "%d,%d" % (min_ts, max_ts), USER_CACHE_TIME)
 
@@ -211,7 +203,7 @@ class InfluxListenStore(ListenStore):
         # If we reach this point, we were able to write the listens to the InfluxListenStore.
         # So update the listen counts of the users cached in brainzutils cache.
         for data in submit:
-            user_key = "{}{}".format(REDIS_INFLUX_USER_LISTEN_COUNT, data['fields']['user_name'])
+            user_key = "{}{}".format(REDIS_TIMESCALE_USER_LISTEN_COUNT, data['fields']['user_name'])
 
             cached_count = cache.get(user_key, decode=False)
             if cached_count:
