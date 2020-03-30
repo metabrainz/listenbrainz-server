@@ -47,14 +47,8 @@ class InfluxListenStore(ListenStore):
     USER_LISTEN_COUNT_CACHE_TIME = 10 * 60  # in seconds. 15 minutes
 
     def __init__(self, conf, logger):
-<<<<<<< HEAD
-        super(InfluxListenStore, self).__init__(logger)
-        self.influx = InfluxDBClient(host=conf['INFLUX_HOST'], port=conf['INFLUX_PORT'], database=conf['INFLUX_DB_NAME'])
-=======
         super(TimescaleListenStore, self).__init__(logger)
-        print("yup2")
         self.ts = ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
->>>>>>> 26546a0e... Timescale tests setup
         # Initialize brainzutils cache
         init_cache(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], namespace=conf['REDIS_NAMESPACE'])
         self.dump_temp_dir_root = conf.get('LISTEN_DUMP_TEMP_DIR_ROOT', tempfile.mkdtemp())
