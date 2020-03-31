@@ -45,8 +45,6 @@ class TimescaleWriterSubscriber(ListenWriter):
 
         count = len(listens)
 
-#        self._collect_and_log_stats(count, call_method=self.ls.update_listen_counts)
-
         return ret
 
 
