@@ -97,7 +97,7 @@ class TimescaleListenStore(ListenStore):
     def _select_single_timestamp(self, field, measurement):
         try:
             with ts.engine.connect() as connection:
-                result = connection.execute(sqlalchemy.text("SELECT :field AS value FROM listen WHERE user_name = :user_name'), {
+                result = connection.execute(sqlalchemy.text("SELECT :field AS value FROM listen WHERE user_name = :user_name"), {
                     "user_name": user_name,
                     "field" : field
                 })
@@ -164,8 +164,8 @@ class TimescaleListenStore(ListenStore):
         for listen in listens:
             submit.append(listen.to_json())
 
-	query = """INSERT INTO listen
-		        VALUES %s
+        query = """INSERT INTO listen
+                        VALUES %s
                    ON CONFLICT (listened_at, recording_msid, user_name)
                     DO NOTHING
                      RETURNING listened_at, recording_msid, user_name"""
@@ -252,9 +252,9 @@ class TimescaleListenStore(ListenStore):
         query = """SELECT data 
                      FROM listen 
                     WHERE user_name IN (:user_list) 
-                      AND listened_at > :ts"""
+                      AND listened_at > :ts
                  ORDER BY time DESC 
-                    LIMIT :limit""""
+                    LIMIT :limit"""
 
         listens = []
         with ts.engine.connect() as connection:
