@@ -120,69 +120,6 @@ class Listen(object):
             data=j.get('track_metadata')
         )
 
-    @classmethod
-    def from_influx(cls, row):
-        """ Factory to make Listen objects from an influx row
-        """
-
-
-        t = convert_to_unix_timestamp(row['time'])
-
-        data = {
-            'release_msid': row.get('release_msid'),
-            'release_mbid': row.get('release_mbid'),
-            'recording_mbid': row.get('recording_mbid'),
-            'release_group_mbid': row.get('release_group_mbid'),
-            'artist_mbids': convert_comma_seperated_string_to_list(row.get('artist_mbids', '')),
-            'tags': convert_comma_seperated_string_to_list(row.get('tags', '')),
-            'work_mbids': convert_comma_seperated_string_to_list(row.get('work_mbids', '')),
-            'isrc': row.get('isrc'),
-            'spotify_id': row.get('spotify_id'),
-            'tracknumber': row.get('tracknumber'),
-            'track_mbid': row.get('track_mbid'),
-        }
-
-        # The influx row can contain many fields that are user-generated.
-        # We only need to add those fields which have some value in them to additional_info.
-        # Also, we need to make sure that we don't add fields like time, user_name etc. into
-        # the additional_info.
-        for key, value in row.items():
-            if key not in data and key not in Listen.TOP_LEVEL_KEYS + Listen.PRIVATE_KEYS and value is not None:
-                try:
-                    value = ujson.loads(value)
-                    data[key] = value
-                    continue
-                except (ValueError, TypeError):
-                    pass
-
-                # there are some lists in the database that were converted to string
-                # via str(list) so they can't be loaded via json.
-                # Example: "['Blank & Jones']"
-                # However, yaml parses them safely and correctly
-                try:
-                    value = yaml.safe_load(value)
-                    data[key] = value
-                    continue
-                except (ValueError, yaml.scanner.ScannerError, yaml.parser.ParserError, Exception):
-                    pass
-
-                data[key] = value
-
-        return cls(
-            timestamp=t,
-            user_name=row.get('user_name'),
-            artist_msid=row.get('artist_msid'),
-            recording_msid=row.get('recording_msid'),
-            release_msid=row.get('release_msid'),
-            inserted_timestamp=row.get('inserted_timestamp'),
-            data={
-                'additional_info': data,
-                'artist_name': row.get('artist_name'),
-                'track_name': row.get('track_name'),
-                'release_name': row.get('release_name'),
-            }
-        )
-
     def to_api(self):
         """
         Converts listen into the format in which listens are returned in the payload by the api
@@ -212,62 +149,6 @@ class Listen(object):
             'track_metadata': self.data,
             'recording_msid': self.recording_msid
         }
-
-    def to_influx(self, measurement):
-        """
-        Converts listen into dict that can be submitted to influx directly.
-
-        Returns:
-            a dict with appropriate values of measurement, time, tags and fields
-        """
-
-        if 'tracknumber' in self.data['additional_info']:
-            try:
-                tracknumber = int(self.data['additional_info']['tracknumber'])
-            except (ValueError, TypeError):
-                tracknumber = None
-        else:
-            tracknumber = None
-
-        data = {
-            'measurement' : measurement,
-            'time' : self.ts_since_epoch,
-            'fields' : {
-                'user_name' : escape(self.user_name),
-                'artist_name' : self.data['artist_name'],
-                'artist_msid' : self.artist_msid,
-                'artist_mbids' : ",".join(self.data['additional_info'].get('artist_mbids', [])),
-                'release_name' : self.data.get('release_name', ''),
-                'release_msid' : self.release_msid,
-                'release_mbid' : self.data['additional_info'].get('release_mbid', ''),
-                'track_name' : self.data['track_name'],
-                'recording_msid' : self.recording_msid,
-                'recording_mbid' : self.data['additional_info'].get('recording_mbid', ''),
-                'tags' : ",".join(self.data['additional_info'].get('tags', [])),
-                'release_group_mbid': self.data['additional_info'].get('release_group_mbid', ''),
-                'track_mbid': self.data['additional_info'].get('track_mbid', ''),
-                'work_mbids': ','.join(self.data['additional_info'].get('work_mbids', [])),
-                'tracknumber': tracknumber,
-                'isrc': self.data['additional_info'].get('isrc', ''),
-                'spotify_id': self.data['additional_info'].get('spotify_id', ''),
-                'inserted_timestamp': int(time.time()),
-            }
-        }
-
-
-        # if we need a dedup tag, then add it to the row
-        if self.dedup_tag > 0:
-            data['tags'] = {'dedup_tag': self.dedup_tag}
-
-        # add the user generated keys present in additional info to fields
-        for key, value in self.data['additional_info'].items():
-            if key in Listen.PRIVATE_KEYS:
-                continue
-            if key not in Listen.SUPPORTED_KEYS:
-                data['fields'][key] = ujson.dumps(value)
-
-        return data
-
 
 
     def validate(self):
