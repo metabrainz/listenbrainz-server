@@ -13,8 +13,9 @@ from listenbrainz import config
 from listenbrainz.listenstore.tests.util import create_test_data_for_influxlistenstore, generate_data
 from listenbrainz.webserver.timescale_connection import init_ts_connection
 
+TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'admin', 'timescale')
 
-TIMESCALE_SQL_DIR = "/code/listenbrainz/admin/timescale"
+# TIMESCALE_SQL_DIR = "/code/listenbrainz/admin/timescale"
 
 class TestTimescaleListenStore(DatabaseTestCase):
 
@@ -42,6 +43,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
             'REDIS_HOST': config.REDIS_HOST,
             'REDIS_PORT': config.REDIS_PORT,
             'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
+            'SQLALCHEMY_TIMESCALE_URI': config.SQLALCHEMY_TIMESCALE_URI,
         })
 
         self.testuser_id = db_user.create(1, "test")
