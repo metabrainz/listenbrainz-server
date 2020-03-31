@@ -25,7 +25,6 @@ export default class Importer {
     this.incrementalImport = false;
 
     this.numCompleted = 0; // number of pages completed till now
-    this.numSuccesful = 0; // number of pages succesfully submitted
 
     this.props = props;
 
@@ -183,34 +182,14 @@ export default class Importer {
   }
 
   async submitPage(payload) {
-    try {
-      let delay = this.getRateLimitDelay();
-      // Halt execution for some time
-      await new Promise((resolve) => {
-        setTimeout(resolve, delay);
-      })
+    let delay = this.getRateLimitDelay();
+    // Halt execution for some time
+    await new Promise((resolve) => {
+      setTimeout(resolve, delay);
+    })
 
-      let response = await this.APIService.submitListens(this.userToken, "import", payload);
-      if (response.status >= 200 && response.status < 300) {
-        this.numSuccesful++;
-      } else if (response.status == 429) {
-        // This should never happen, but if it does, toss it back in and try again.
-        setTimeout(() => this.submitPage(payload), 3000);
-      } else if (response.status >= 400 && response.status < 500) {
-        // We mark 4xx errors as completed because we don't
-        // retry them
-        console.warn("4xx error, skipping");
-      } else if (response.status >= 500) {
-        console.warn("received http error " + response.status + " req'ing");
-        // If something causes a 500 error, better not repeat it and just skip it.
-      } else {
-        console.warn("received http status " + response.status + ", skipping");
-      }
-      this.updateRateLimitParameters(response);
-    } catch {
-      console.warn("Error, retrying in 3s");
-      setTimeout(() => this.submitPage(payload), 3000);
-    }
+    let response = await this.APIService.submitListens(this.userToken, "import", payload);
+    this.updateRateLimitParameters(response);
   }
 
   encodeScrobbles(scrobbles) {
