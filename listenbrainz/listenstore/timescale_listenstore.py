@@ -41,6 +41,9 @@ class TimescaleListenStore(ListenStore):
 
     def __init__(self, conf, logger):
         super(TimescaleListenStore, self).__init__(logger)
+
+        ts.init_db_connection(conf['SQLALCHEMY_TIMESCALE_URI'])
+
         # Initialize brainzutils cache
         init_cache(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], namespace=conf['REDIS_NAMESPACE'])
         self.dump_temp_dir_root = conf.get('LISTEN_DUMP_TEMP_DIR_ROOT', tempfile.mkdtemp())
