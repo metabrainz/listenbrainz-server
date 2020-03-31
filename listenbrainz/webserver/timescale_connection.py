@@ -6,7 +6,6 @@ _ts = None
 def init_ts_connection(logger, conf):
     global _ts
     while True:
-        logger.error("ys")
         try:
             _ts = TimescaleListenStore(conf, logger)
             break

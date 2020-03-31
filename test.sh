@@ -30,7 +30,7 @@ fi
 
 
 function bring_up_db {
-    docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME up -d db influx redis rabbitmq
+    docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME up -d db timescale redis rabbitmq
 }
 
 function setup {

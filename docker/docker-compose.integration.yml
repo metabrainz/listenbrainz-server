@@ -28,15 +28,18 @@ services:
     depends_on:
       - redis
       - db
-      - influx
+      - timescale
       - rabbitmq
 
-  influx_writer:
-    image: listenbrainz
-    command: python3 -m "listenbrainz.influx_writer.influx_writer"
+  timescale_writer:
+    image: web
+    command: python3 -m "listenbrainz.timescale_writer.timescale_writer"
+    volumes:
+      - ..:/code/listenbrainz:z
     depends_on:
       - redis
-      - influx
+      - timescale
+      - rabbitmq 
 
   rabbitmq:
     image: rabbitmq:3.6.5

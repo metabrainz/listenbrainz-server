@@ -37,7 +37,7 @@ script:
   - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test down
 
   # Bring up integration test containers, run tests and bring them down
-  - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int up -d db timescale redis rabbitmq
+  - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int up -d db timescale redis timescale_writer rabbitmq
   - sleep 10
   - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int
                run --rm listenbrainz dockerize
