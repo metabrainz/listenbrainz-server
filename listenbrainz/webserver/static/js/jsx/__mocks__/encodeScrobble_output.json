@@ -5,7 +5,9 @@
       "artist_name": "Coldplay",
       "release_name": "A Head Full Of Dreams",
       "additional_info": {
-        "recording_mbid": "02b47acf-3bc5-47dc-a516-e8c2c95bc07b"
+        "recording_mbid": "02b47acf-3bc5-47dc-a516-e8c2c95bc07b",
+        "release_mbid": "002183a5-c087-4c0a-9c47-65ef79261dd2",
+        "artist_mbids": ["cc197bad-dc9c-440d-a5b5-d52ba2e14234"]
       }
     },
     "listened_at": "1583223398"
@@ -16,7 +18,21 @@
       "artist_name": "Imagine Dragons",
       "release_name": "Evolve",
       "additional_info": {
-        "recording_mbid": "022d6bfb-2a57-486b-a784-2af9b4b93fa9"
+        "recording_mbid": "022d6bfb-2a57-486b-a784-2af9b4b93fa9",
+        "release_mbid": "25c11880-bc5e-43db-927b-522eb871dc9e",
+        "artist_mbids": ["012151a8-0f9a-44c9-997f-ebd68b5389f9"]
+      }
+    },
+    "listened_at": "1583222465"
+  },
+  {
+    "track_metadata": {
+      "track_name": "Believer",
+      "artist_name": "Imagine Dragons",
+      "release_name": "Evolve",
+      "additional_info": {
+        "recording_mbid": "022d6bfb-2a57-486b-a784-2af9b4b93fa9",
+        "artist_mbids": []
       }
     },
     "listened_at": "1583222465"
