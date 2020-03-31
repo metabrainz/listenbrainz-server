@@ -210,25 +210,28 @@ class TimescaleListenStore(ListenStore):
             to_ts: seconds since epoch, in float
         """
 
-        # Quote single quote characters which could be used to mount an injection attack.
-        # Sadly, influxdb does not provide a means to do this in the client library
-        query = 'SELECT * FROM ' + get_escaped_measurement_name(user_name)
+        query = 'SELECT data FROM :user_name '
+        args = { 'user_name' : user_name }
 
         if from_ts is not None:
-            query += "WHERE time > " + get_influx_query_timestamp(from_ts)
+            query += "WHERE time > :ts"
+            args['ts'] = from_ts
         else:
-            query += "WHERE time < " + get_influx_query_timestamp(to_ts)
+            query += "WHERE time < :ts"
+            args['ts'] = to_ts
 
-        query += " ORDER BY time " + ORDER_TEXT[order] + " LIMIT " + str(limit)
-        try:
-            results = self.influx.query(query)
-        except Exception as err:
-            self.log.error("Cannot query influx while getting listens for user: %s: %s", user_name, str(err), exc_info=True)
-            return []
+        query += " ORDER BY time " + ORDER_TEXT[order] + " LIMIT :limit"
+        args['limit'] = limit
 
         listens = []
-        for result in results.get_points(measurement=get_measurement_name(user_name)):
-            listens.append(Listen.from_influx(result))
+        with ts.engine.connect() as connection:
+            curs = connection.execute(sqlalchemy.text(query, args))
+            while True:
+                result = curs.fetchone()
+                if not result:
+                    break
+            
+                listens.append(Listen.from_json(result[0]))
 
         if order == ORDER_ASC:
             listens.reverse()
@@ -245,24 +248,23 @@ class TimescaleListenStore(ListenStore):
             max_age: Only return listens if they are no more than max_age seconds old. Default 3600 seconds
         """
 
-        escaped_user_list = []
-        for user_name in user_list:
-           escaped_user_list.append(get_escaped_measurement_name(user_name))
-
-        query = "SELECT username, * FROM " + ",".join(escaped_user_list)
-        query += " WHERE time > " + get_influx_query_timestamp(int(time.time()) - max_age)
-        query += " ORDER BY time DESC LIMIT " + str(limit)
-        try:
-            results = self.influx.query(query)
-        except Exception as err:
-            self.log.error("Cannot query influx while getting listens for users: %s: %s", user_list, str(err), exc_info=True)
-            return []
+        args = { 'user_list' : user_list, 'ts' : int(time.time()) - max_age, 'limit' : limit }
+        query = """SELECT data 
+                     FROM listen 
+                    WHERE user_name IN (:user_list) 
+                      AND listened_at > :ts"""
+                 ORDER BY time DESC 
+                    LIMIT :limit""""
 
         listens = []
-        for user in user_list:
-            for result in results.get_points(measurement=get_measurement_name(user)):
-                l = Listen.from_influx(result)
-                listens.append(l)
+        with ts.engine.connect() as connection:
+            curs = connection.execute(sqlalchemy.text(query, args))
+            while True:
+                result = curs.fetchone()
+                if not result:
+                    break
+            
+                listens.append(Listen.from_json(result[0]))
 
         return listens
 
