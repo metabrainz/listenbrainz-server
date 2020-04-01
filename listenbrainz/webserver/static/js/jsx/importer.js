@@ -225,7 +225,7 @@ export default class Importer {
     if (this.rl_reset < 0 || current > this.rl_origin + this.rl_reset) {
       delay = 0;
     } else if (this.rl_remain > 0) {
-      delay = Math.max(0, Math.ceil((this.rl_reset * 1000) / rl_remain));
+      delay = Math.max(0, Math.ceil((this.rl_reset * 1000) / this.rl_remain));
     } else {
       delay = Math.max(0, Math.ceil(this.rl_reset * 1000));
     }
@@ -234,8 +234,8 @@ export default class Importer {
 
   updateRateLimitParameters(response) {
     /* Update the variables we use to honor LB's rate limits */
-    this.rl_remain = parseInt(response.headers['X-RateLimit-Remaining']);
-    this.rl_reset = parseInt(response.headers['X-RateLimit-Reset-In']);
+    this.rl_remain = parseInt(response.headers.get('X-RateLimit-Remaining'));
+    this.rl_reset = parseInt(response.headers.get('X-RateLimit-Reset-In'));
     this.rl_origin = new Date().getTime() / 1000;
   }
 }
