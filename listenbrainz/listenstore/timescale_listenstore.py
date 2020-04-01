@@ -1,7 +1,7 @@
 # coding=utf-8
 
 import listenbrainz.db.user as db_user
-from listenbrainz.db import timescale as ts
+from listenbrainz.db import timescale
 import os.path
 import subprocess
 import tarfile
@@ -42,8 +42,8 @@ class TimescaleListenStore(ListenStore):
     def __init__(self, conf, logger):
         super(TimescaleListenStore, self).__init__(logger)
 
-        ts.init_db_connection(conf['SQLALCHEMY_TIMESCALE_URI'])
-        self.ts = ts
+        timescale.init_db_connection(conf['SQLALCHEMY_TIMESCALE_URI'])
+
         # Initialize brainzutils cache
         init_cache(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], namespace=conf['REDIS_NAMESPACE'])
         self.dump_temp_dir_root = conf.get('LISTEN_DUMP_TEMP_DIR_ROOT', tempfile.mkdtemp())
@@ -70,7 +70,7 @@ class TimescaleListenStore(ListenStore):
                 return int(count)
 
         try:
-            with self.ts.engine.connect() as connection:
+            with timescale.engine.connect() as connection:
                 result = connection.execute(sqlalchemy.text("SELECT SUM(count) FROM listen_count WHERE user_name = :user_name"), {
                     "user_name": user_name,
                 })
@@ -96,7 +96,7 @@ class TimescaleListenStore(ListenStore):
 
     def _select_single_timestamp(self, field, measurement):
         try:
-            with self.ts.engine.connect() as connection:
+            with timescale.engine.connect() as connection:
                 result = connection.execute(sqlalchemy.text("SELECT :field AS value FROM listen WHERE user_name = :user_name"), {
                     "user_name": user_name,
                     "field" : field
@@ -119,7 +119,7 @@ class TimescaleListenStore(ListenStore):
                 return int(count)
 
         try:
-            with self.ts.engine.connect() as connection:
+            with timescale.engine.connect() as connection:
                 result = connection.execute(sqlalchemy.text("SELECT SUM(count) FROM listen_count"))
                 count = result.fetchone()["sum"]
         except psycopg2.OperationalError as e:
@@ -173,7 +173,7 @@ class TimescaleListenStore(ListenStore):
 
         try:
             inserted_rows = []
-            conn = self.ts.engine.raw_connection()
+            conn = timescale.engine.raw_connection()
             with conn.cursor() as curs:
                 execute_values(curs, query, submit, template=None)
                 while True:
@@ -225,7 +225,7 @@ class TimescaleListenStore(ListenStore):
         args['limit'] = limit
 
         listens = []
-        with ts.engine.connect() as connection:
+        with timescale.engine.connect() as connection:
             curs = connection.execute(sqlalchemy.text(query, args))
             while True:
                 result = curs.fetchone()
@@ -258,7 +258,7 @@ class TimescaleListenStore(ListenStore):
                     LIMIT :limit"""
 
         listens = []
-        with ts.engine.connect() as connection:
+        with timescale.engine.connect() as connection:
             curs = connection.execute(sqlalchemy.text(query, args))
             while True:
                 result = curs.fetchone()
