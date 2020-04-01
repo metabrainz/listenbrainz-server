@@ -4,7 +4,7 @@ export default class Scrobble {
   }
 
   lastfmID() {
-    // Returns url of type "http://www.last.fm/music/Mot%C3%B6rhead"
+    /* Returns url of type "http://www.last.fm/music/Mot%C3%B6rhead" */
     if ('url' in this.rootScrobbleElement && this.rootScrobbleElement['url'] !== "" ) {
       let url = this.rootScrobbleElement['url'];
       url = url.split("/");
@@ -15,6 +15,7 @@ export default class Scrobble {
   }
 
   artistName() {
+    /* Returns artistName if present, else returns an empty string */
     if ('artist' in this.rootScrobbleElement && '#text' in this.rootScrobbleElement['artist']) {
       return this.rootScrobbleElement['artist']['#text'];
     } else {
@@ -22,7 +23,17 @@ export default class Scrobble {
     }
   }
 
+  artistMBID() {
+    /* Returns artistName if present, else returns an empty string */
+    if ('artist' in this.rootScrobbleElement && 'mbid' in this.rootScrobbleElement['artist']) {
+      return this.rootScrobbleElement['artist']['mbid'];
+    } else {
+      return "";
+    }
+  }
+
   trackName() {
+    /* Returns trackName if present, else returns an empty string */
     if ('name' in this.rootScrobbleElement) {
       return this.rootScrobbleElement['name'];
     } else {
@@ -31,6 +42,7 @@ export default class Scrobble {
   }
 
   releaseName() {
+    /* Returns releaseName if present, else returns an empty string */
     if ('album' in this.rootScrobbleElement && '#text' in this.rootScrobbleElement['album']) {
       return this.rootScrobbleElement['album']['#text'];
     } else {
@@ -38,7 +50,17 @@ export default class Scrobble {
     }
   };
 
+  releaseMBID() {
+    /* Returns releaseMBID if present, else returns an empty string */
+    if ('album' in this.rootScrobbleElement && 'mbid' in this.rootScrobbleElement['album']) {
+      return this.rootScrobbleElement['album']['mbid'];
+    } else {
+      return "";
+    }
+  };
+
   scrobbledAt() {
+    /* Returns scrobbledAt if present, else returns an empty string */
     if ('date' in this.rootScrobbleElement && 'uts' in this.rootScrobbleElement['date']) {
       return this.rootScrobbleElement['date']['uts'];
     } else {
@@ -54,6 +76,7 @@ export default class Scrobble {
   };
 
   trackMBID() {
+    /* Returns trackMBID if present, else returns an empty string */
     if ('mbid' in this.rootScrobbleElement) {
       return this.rootScrobbleElement['mbid'];
     } else {
@@ -68,7 +91,10 @@ export default class Scrobble {
         "artist_name": this.artistName(),
         "release_name": this.releaseName(),
         "additional_info": {
-          "recording_mbid": this.trackMBID()
+          "listening_from": "lastfm",
+          "recording_mbid": this.trackMBID(),
+          "lastfm_release_mbid": this.releaseMBID(),
+          "lastfm_artist_mbid": this.artistMBID()
         }
       },
       "listened_at": this.scrobbledAt(),
@@ -83,6 +109,8 @@ export default class Scrobble {
         } else if (Object.prototype.toString.call(value) === '[object Object]') {
           filter(value);
         } else if (Array.isArray(value)) {
+          value = value.filter(Boolean);
+          obj[key] = value;
           value.forEach(function (el) { filter(el); });
         }
       });

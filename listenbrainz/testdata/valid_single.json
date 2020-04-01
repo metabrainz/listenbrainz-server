@@ -6,7 +6,10 @@
             "track_metadata": {
                 "artist_name": "Kanye West",
                 "track_name": "Fade",
-                "release_name": "The Life of Pablo"
+                "release_name": "The Life of Pablo",
+                "additional_info": {
+                    "listened_from": "spotify"
+                }
             }
         }
     ]

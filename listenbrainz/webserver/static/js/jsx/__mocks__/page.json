@@ -79,6 +79,40 @@
         "url": "https://www.last.fm/music/Imagine+Dragons/_/Believer",
         "name": "Believer",
         "mbid": "022d6bfb-2a57-486b-a784-2af9b4b93fa9"
+      },
+      {
+        "artist": {
+          "#text": "Imagine Dragons"
+        },
+        "album": {
+          "#text": "Evolve"
+        },
+        "image": [
+          {
+            "size": "small",
+            "#text": "https://lastfm.freetls.fastly.net/i/u/34s/8c77e9f509c4dd3bca8d3ac6b5344ce5.png"
+          },
+          {
+            "size": "medium",
+            "#text": "https://lastfm.freetls.fastly.net/i/u/64s/8c77e9f509c4dd3bca8d3ac6b5344ce5.png"
+          },
+          {
+            "size": "large",
+            "#text": "https://lastfm.freetls.fastly.net/i/u/174s/8c77e9f509c4dd3bca8d3ac6b5344ce5.png"
+          },
+          {
+            "size": "extralarge",
+            "#text": "https://lastfm.freetls.fastly.net/i/u/300x300/8c77e9f509c4dd3bca8d3ac6b5344ce5.png"
+          }
+        ],
+        "streamable": "0",
+        "date": {
+          "uts": "1583222465",
+          "#text": "03 Mar 2020, 08:01"
+        },
+        "url": "https://www.last.fm/music/Imagine+Dragons/_/Believer",
+        "name": "Believer",
+        "mbid": "022d6bfb-2a57-486b-a784-2af9b4b93fa9"
       }
     ]
   }

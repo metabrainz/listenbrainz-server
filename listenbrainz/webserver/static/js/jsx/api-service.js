@@ -15,6 +15,7 @@ export default class APIService {
       APIBaseURI += '/1';
     }
     this.APIBaseURI = APIBaseURI;
+    this.MAX_LISTEN_SIZE = 10000; // Maximum size of listens that can be sent
   }
 
   async getRecentListensForUsers(userNames, limit) {
@@ -86,7 +87,7 @@ export default class APIService {
 
   async submitListens(userToken, listenType, payload) {
     /*
-    *  Send a POST request to the ListenBrainz server to submit a listen
+      Send a POST request to the ListenBrainz server to submit a listen
     */
 
     if (!isString(userToken)) {
@@ -96,27 +97,42 @@ export default class APIService {
       throw new SyntaxError(`listenType can be "single", "playingNow" or "import", got ${listenType} instead`);
     }
 
-    let struct = {
-      "listen_type": listenType,
-      "payload": payload,
-    }
+    if (JSON.stringify(payload).length <= this.MAX_LISTEN_SIZE) {
+      // Payload is within submission limit, submit directly
+      let struct = {
+        "listen_type": listenType,
+        "payload": payload,
+      }
 
-    let url = `${this.APIBaseURI}/submit-listens`;
+      let url = `${this.APIBaseURI}/submit-listens`;
 
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Token ${userToken}`,
-          'Content-Type': 'application/json;charset=UTF-8',
-        },
-        body: JSON.stringify(struct),
-      })
-      return response; // Return status so that caller can handle appropriately
-    } catch {
-      // Retry if there is an network error
-      console.warn("Error, retrying in 3 sec");
-      setTimeout(() => this.submitListens(userToken, listenType, payload), 3000)
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Token ${userToken}`,
+            'Content-Type': 'application/json;charset=UTF-8',
+          },
+          body: JSON.stringify(struct),
+        })
+
+        if (response.status == 429) {
+          // This should never happen, but if it does, try again.
+          console.warn("Error, retrying in 3 sec");
+          setTimeout(() => this.submitListens(userToken, listenType, payload), 3000)
+        } else if (!(response.status >= 200 && response.status < 300)){
+          console.warn(`Got ${response.status} error, skipping`);
+        }
+        return response; // Return response so that caller can handle appropriately
+      } catch {
+        // Retry if there is an network error
+        console.warn("Error, retrying in 3 sec");
+        setTimeout(() => this.submitListens(userToken, listenType, payload), 3000)
+      }
+    } else {
+      // Payload is not within submission limit, split and submit
+      await this.submitListens(userToken, listenType, payload.slice(0, payload.length/2));
+      return await this.submitListens(userToken, listenType, payload.slice(payload.length/2, payload.length));
     }
   }
 
