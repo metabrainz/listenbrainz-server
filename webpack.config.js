@@ -21,29 +21,29 @@ module.exports = function(env){
     module: {
       rules: [
         {
-            test: [/\.js$/ , /\.jsx$/], exclude: /node_modules/, use: {
-                loader: "babel-loader",
-                options: {
-                    "presets": [[
-                          "@babel/preset-env",
-                          {
-                            "targets": {
-                              "node": "10",
-                              "browsers": [ "> 0.2% and not dead", "firefox >= 44" ]
-                            }
-                          }
-                        ],
-                        "@babel/preset-react"],
-                    "plugins": ["@babel/plugin-proposal-class-properties", "@babel/plugin-transform-runtime"]
+          test: [/\.js$/ , /\.jsx$/], exclude: /node_modules/, use: {
+            loader: "babel-loader",
+            options: {
+              "presets": [[
+                "@babel/preset-env",
+                {
+                  "targets": {
+                    "node": "10",
+                    "browsers": [ "> 0.2% and not dead", "firefox >= 44" ]
+                  }
                 }
+              ],
+                "@babel/preset-react"],
+              "plugins": ["@babel/plugin-proposal-class-properties", "@babel/plugin-transform-runtime"]
             }
+          }
         }
       ]
     },
     resolve: {
-        modules: ['/code/node_modules', '/static/node_modules']
+      modules: ['/code/node_modules', '/static/node_modules']
     },
     plugins: plugins,
     watch: isProd ? false : true
-}
+  }
 };
