@@ -12,9 +12,6 @@ describe('submitListens', () => {
       })
     })
 
-    // Mock function for checkStatus
-    apiService.checkStatus = jest.fn();
-
     // Mock function for setTimeout and console.warn
     console.warn = jest.fn();
     window.setTimeout = jest.fn();
@@ -54,13 +51,52 @@ describe('submitListens', () => {
     expect(window.setTimeout).toHaveBeenCalledTimes(1);
   });
 
+  it('retries if error 429 is recieved fails', async () => {
+    // Overide mock for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 429
+      });
+    })
+
+    await apiService.submitListens("foobar", "import", "foobar");
+    expect(console.warn).toHaveBeenCalledWith("Error, retrying in 3 sec");
+    expect(window.setTimeout).toHaveBeenCalledTimes(1);
+  });
+
+  it('skips if any other response code is recieved', async () => {
+    // Overide mock for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 404
+      });
+    })
+
+    await apiService.submitListens("foobar", "import", "foobar");
+    expect(console.warn).toHaveBeenCalledWith("Got 404 error, skipping");
+  });
+
   it('returns the response if successful', async () => {
     await expect(apiService.submitListens("foobar","import", "foobar")).resolves.toEqual({
       ok: true,
       status: 200,
     });
   });
-})
+
+  it('calls itself recursively if size of payload is exceed MAX_LISTEN_SIZE', async () => {
+    // Change MAX_LISTEN_SIZE to 0
+    apiService.MAX_LISTEN_SIZE = 9;
+
+    const spy = jest.spyOn(apiService, 'submitListens');
+    await apiService.submitListens("foobar", "import", ["foo", "bar"]);
+    expect(spy).toHaveBeenCalledTimes(3);
+    expect(spy).toHaveBeenCalledWith("foobar", "import", ["foo", "bar"]);
+    expect(spy).toHaveBeenCalledWith("foobar", "import", ["foo"]);
+    expect(spy).toHaveBeenCalledWith("foobar", "import", ["bar"]);
+  });
+});
 
 describe('getLatestImport', () => {
   beforeEach(() => {

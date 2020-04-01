@@ -54,7 +54,7 @@ export default class LastFmImporter extends React.Component {
         </form>
         {this.state.show &&
           <Modal onClose={this.toggleModal} disable={!this.state.canClose}>
-            <img src='/static/img/listenbrainz-logo.svg' height='75' class='img-responsive'/>
+            <img src='/static/img/listenbrainz-logo.svg' height='75' className='img-responsive'/>
             <br /><br />
             <div>{this.state.msg}</div>
             <br />

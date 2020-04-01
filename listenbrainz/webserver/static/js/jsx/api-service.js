@@ -120,7 +120,7 @@ export default class APIService {
           // This should never happen, but if it does, try again.
           console.warn("Error, retrying in 3 sec");
           setTimeout(() => this.submitListens(userToken, listenType, payload), 3000)
-        } else {
+        } else if (!(response.status >= 200 && response.status < 300)){
           console.warn(`Got ${response.status} error, skipping`);
         }
         return response; // Return response so that caller can handle appropriately
@@ -131,8 +131,8 @@ export default class APIService {
       }
     } else {
       // Payload is not within submission limit, split and submit
-      this.submitListens(userToken, listenType, payload.slice(0, payload.length/2));
-      return this.submitListens(userToken, listenType, payload.slice(payload.length/2, payload.length));
+      await this.submitListens(userToken, listenType, payload.slice(0, payload.length/2));
+      return await this.submitListens(userToken, listenType, payload.slice(payload.length/2, payload.length));
     }
   }
 
