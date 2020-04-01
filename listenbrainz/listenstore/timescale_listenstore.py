@@ -162,9 +162,10 @@ class TimescaleListenStore(ListenStore):
 
         submit = []
         for listen in listens:
-            submit.append(listen.to_json())
+            submit.append((listen.ts_since_epoch, listen.recording_msid, listen.user_name, listen.to_timescale()))
+        print(submit)
 
-        query = """INSERT INTO listen
+        query = """INSERT INTO listen (listened_at, recording_msid, user_name, data)
                     VALUES %s
                     ON CONFLICT (listened_at, recording_msid, user_name)
                         DO NOTHING
@@ -252,9 +253,9 @@ class TimescaleListenStore(ListenStore):
         query = """SELECT data 
                      FROM listen 
                     WHERE user_name IN (:user_list) 
-                      AND listened_at > :ts"""
+                      AND listened_at > :ts
                  ORDER BY time DESC 
-                    LIMIT :limit""""
+                    LIMIT :limit"""
 
         listens = []
         with ts.engine.connect() as connection:
