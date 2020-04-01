@@ -209,14 +209,15 @@ describe('submitPage', () => {
     // Clear previous mocks
     APIService.mockClear();
 
-    // Mock for getRateLimitDelay
+    // Mock for getRateLimitDelay and updateRateLimitParameters
+    importer.getRateLimitDelay = jest.fn().mockImplementation(() => 0);
     importer.updateRateLimitParameters = jest.fn();
 
     // Mock for console.warn
     console.warn = jest.fn();
   });
 
-  it('calls submitListens once and increments numSuccesful', async () => {
+  it('calls submitListens once', async () => {
     let spy = jest.spyOn(importer.APIService, 'submitListens').mockImplementation(async () => {
       return {"status": 200}
     });
@@ -230,27 +231,12 @@ describe('submitPage', () => {
     
     expect(importer.APIService.submitListens).toHaveBeenCalledTimes(1);
     expect(importer.APIService.submitListens).toHaveBeenCalledWith("foobar", "import", undefined);
-    expect(importer.numSuccesful).toEqual(1);
-  })
+  });
 
-  it('retries if response "429" is recieved', async () => {
+
+  it('calls updateRateLimitParameters once', async () => {
     let spy = jest.spyOn(importer.APIService, 'submitListens').mockImplementation(async () => {
-      return {"status": 429}
-    });
-
-    importer.submitPage();
-    jest.advanceTimersByTime(2999);
-
-    // Flush all promises
-    // https://stackoverflow.com/questions/51126786/jest-fake-timers-with-promises
-    await new Promise(resolve => setImmediate(resolve));
-
-    expect(setTimeout).toHaveBeenCalledTimes(2);
-  })
-
-  it('skips when 4xx other than 429 is recieved', async () => {
-    let spy = jest.spyOn(importer.APIService, 'submitListens').mockImplementation(async () => {
-      return {"status": 404}
+      return {"status": 200}
     });
 
     importer.submitPage();
@@ -259,53 +245,13 @@ describe('submitPage', () => {
     // Flush all promises
     // https://stackoverflow.com/questions/51126786/jest-fake-timers-with-promises
     await new Promise(resolve => setImmediate(resolve));
-
-    expect(console.warn).toHaveBeenCalledWith("4xx error, skipping");
+    
+    expect(importer.updateRateLimitParameters).toHaveBeenCalledTimes(1);
+    expect(importer.updateRateLimitParameters).toHaveBeenCalledWith({"status": 200});
   })
 
-  it('skips when 5xx is recieved', async () => {
-    let spy = jest.spyOn(importer.APIService, 'submitListens').mockImplementation(async () => {
-      return {"status": 500}
-    });
-
+  it('calls getRateLimitDelay once', async () => {
     importer.submitPage();
-    jest.runAllTimers();
-
-    // Flush all promises
-    // https://stackoverflow.com/questions/51126786/jest-fake-timers-with-promises
-    await new Promise(resolve => setImmediate(resolve));
-
-    expect(console.warn).toHaveBeenCalledWith("received http error 500 req'ing");
-  })
-
-  it('skips when anything else is recieved', async () => {
-    let spy = jest.spyOn(importer.APIService, 'submitListens').mockImplementation(async () => {
-      return {"status": 100}
-    });
-
-    importer.submitPage();
-    jest.runAllTimers();
-
-    // Flush all promises
-    // https://stackoverflow.com/questions/51126786/jest-fake-timers-with-promises
-    await new Promise(resolve => setImmediate(resolve));
-
-    expect(console.warn).toHaveBeenCalledWith("received http status 100, skipping");
-  })
-
-  it('retries when submitListens fails', async () => {
-    let spy = jest.spyOn(importer.APIService, 'submitListens').mockImplementation(async () => {
-      return Promise.reject();
-    });
-
-    importer.submitPage();
-    jest.advanceTimersByTime(2999);
-
-    // Flush all promises
-    // https://stackoverflow.com/questions/51126786/jest-fake-timers-with-promises
-    await new Promise(resolve => setImmediate(resolve));
-
-    expect(console.warn).toHaveBeenCalledWith("Error, retrying in 3s");
-    expect(setTimeout).toHaveBeenCalledTimes(2);
-  })
+    expect(importer.getRateLimitDelay).toHaveBeenCalledTimes(1);
+  });
 })

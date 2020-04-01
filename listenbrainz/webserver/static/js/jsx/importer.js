@@ -25,7 +25,6 @@ export default class Importer {
     this.incrementalImport = false;
 
     this.numCompleted = 0; // number of pages completed till now
-    this.numSuccesful = 0; // number of pages succesfully submitted
 
     this.props = props;
 
@@ -183,34 +182,14 @@ export default class Importer {
   }
 
   async submitPage(payload) {
-    try {
-      let delay = this.getRateLimitDelay();
-      // Halt execution for some time
-      await new Promise((resolve) => {
-        setTimeout(resolve, delay);
-      })
+    let delay = this.getRateLimitDelay();
+    // Halt execution for some time
+    await new Promise((resolve) => {
+      setTimeout(resolve, delay);
+    })
 
-      let response = await this.APIService.submitListens(this.userToken, "import", payload);
-      if (response.status >= 200 && response.status < 300) {
-        this.numSuccesful++;
-      } else if (response.status == 429) {
-        // This should never happen, but if it does, toss it back in and try again.
-        setTimeout(() => this.submitPage(payload), 3000);
-      } else if (response.status >= 400 && response.status < 500) {
-        // We mark 4xx errors as completed because we don't
-        // retry them
-        console.warn("4xx error, skipping");
-      } else if (response.status >= 500) {
-        console.warn("received http error " + response.status + " req'ing");
-        // If something causes a 500 error, better not repeat it and just skip it.
-      } else {
-        console.warn("received http status " + response.status + ", skipping");
-      }
-      this.updateRateLimitParameters(response);
-    } catch {
-      console.warn("Error, retrying in 3s");
-      setTimeout(() => this.submitPage(payload), 3000);
-    }
+    let response = await this.APIService.submitListens(this.userToken, "import", payload);
+    this.updateRateLimitParameters(response);
   }
 
   encodeScrobbles(scrobbles) {
@@ -246,7 +225,7 @@ export default class Importer {
     if (this.rl_reset < 0 || current > this.rl_origin + this.rl_reset) {
       delay = 0;
     } else if (this.rl_remain > 0) {
-      delay = Math.max(0, Math.ceil((this.rl_reset * 1000) / rl_remain));
+      delay = Math.max(0, Math.ceil((this.rl_reset * 1000) / this.rl_remain));
     } else {
       delay = Math.max(0, Math.ceil(this.rl_reset * 1000));
     }
@@ -255,8 +234,8 @@ export default class Importer {
 
   updateRateLimitParameters(response) {
     /* Update the variables we use to honor LB's rate limits */
-    this.rl_remain = parseInt(response.headers['X-RateLimit-Remaining']);
-    this.rl_reset = parseInt(response.headers['X-RateLimit-Reset-In']);
+    this.rl_remain = parseInt(response.headers.get('X-RateLimit-Remaining'));
+    this.rl_reset = parseInt(response.headers.get('X-RateLimit-Reset-In'));
     this.rl_origin = new Date().getTime() / 1000;
   }
 }
