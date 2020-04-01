@@ -15,8 +15,6 @@ from listenbrainz.webserver.timescale_connection import init_ts_connection
 
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'admin', 'timescale')
 
-# TIMESCALE_SQL_DIR = "/code/listenbrainz/admin/timescale"
-
 class TestTimescaleListenStore(DatabaseTestCase):
 
 
@@ -32,6 +30,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_functions.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
+
 
     def setUp(self):
         super(TestTimescaleListenStore, self).setUp()
@@ -55,7 +54,16 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.logstore.insert(test_data)
         return len(test_data)
 
-    def test_get_listen_count_for_user(self):
+    def test_insert_timescale(self):
         count = self._create_test_data(self.testuser_name)
-        listen_count = self.logstore.get_listen_count_for_user(user_name=self.testuser_name)
-        self.assertEqual(count, listen_count)
+        self.assertEqual(len(self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1399999999)), count)
+
+#    def test_get_listen_count_for_user(self):
+#        count = self._create_test_data(self.testuser_name)
+#
+#        # The listen_counts in the database will always be lagging behind and will not be fully
+#        # accurate, but they will give a good indication for the number of listens of a user.
+#        # This means that we can't insert data data and expect it to be in the DB right away
+#        # so we can fetch them for running tests
+#        listen_count = self.logstore.get_listen_count_for_user(user_name=self.testuser_name)
+#        self.assertEqual(count, listen_count)

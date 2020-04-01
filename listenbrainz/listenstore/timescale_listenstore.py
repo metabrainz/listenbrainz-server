@@ -13,6 +13,7 @@ import uuid
 import json
 import psycopg2
 from psycopg2.extras import execute_values
+import sqlalchemy
 
 from brainzutils import cache
 from collections import defaultdict
@@ -74,15 +75,16 @@ class TimescaleListenStore(ListenStore):
                 result = connection.execute(sqlalchemy.text("SELECT SUM(count) FROM listen_count WHERE user_name = :user_name"), {
                     "user_name": user_name,
                 })
-                count = result.fetchone()["sum"]
+                count = result.fetchone()[0] or 0
+
         except psycopg2.OperationalError as e:
             self.log.error("Cannot query timescale listen_count: %s" % str(e), exc_info=True)
             raise
 
         # put this value into brainzutils cache with an expiry time
         user_key = "{}{}".format(REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
-        cache.set(user_key, int(count), InfluxListenStore.USER_LISTEN_COUNT_CACHE_TIME, encode=False)
-        return int(count)
+        cache.set(user_key, count, TimescaleListenStore.USER_LISTEN_COUNT_CACHE_TIME, encode=False)
+        return count
 
 
     def reset_listen_count(self, user_name):
@@ -180,7 +182,7 @@ class TimescaleListenStore(ListenStore):
                     result = curs.fetchone()
                     if not result:
                         break
-                    inserted_rows.append((result[0], result[1], result[3]))
+                    inserted_rows.append((result[0], result[1], result[2]))
 
             conn.commit()
         except psycopg2.OperationalError as err:
@@ -211,22 +213,19 @@ class TimescaleListenStore(ListenStore):
             to_ts: seconds since epoch, in float
         """
 
-        query = 'SELECT data FROM :user_name '
-        args = { 'user_name' : user_name }
-
+        query = 'SELECT data FROM listen WHERE user_name = :user_name AND '
         if from_ts is not None:
-            query += "WHERE time > :ts"
-            args['ts'] = from_ts
+            query += "listened_at > :ts"
+            ts = from_ts
         else:
-            query += "WHERE time < :ts"
-            args['ts'] = to_ts
+            query += "listened_at < :ts"
+            ts = to_ts
 
-        query += " ORDER BY time " + ORDER_TEXT[order] + " LIMIT :limit"
-        args['limit'] = limit
+        query += " ORDER BY listened_at " + ORDER_TEXT[order] + " LIMIT :limit"
 
         listens = []
         with timescale.engine.connect() as connection:
-            curs = connection.execute(sqlalchemy.text(query, args))
+            curs = connection.execute(sqlalchemy.text(query), user_name=user_name, ts=ts, limit=limit)
             while True:
                 result = curs.fetchone()
                 if not result:
