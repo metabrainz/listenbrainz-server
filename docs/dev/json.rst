@@ -71,7 +71,7 @@ A complete submit listen JSON document may look like::
           "listened_at": 1443521965,
           "track_metadata": {
             "additional_info": {
-              "listened_from": "spotify",
+              "listening_from": "spotify",
               "release_mbid": "bf9e91ea-8029-4a04-a26a-224e00a83266",
               "artist_mbids": [
                 "db92a151-1ac2-438b-bc43-b82e149ddd50"
@@ -163,7 +163,7 @@ element                 description
 ``isrc``                The ISRC code associated with the recording.
 ``spotify_id``          The Spotify track URL associated with this recording.  e.g.: http://open.spotify.com/track/1rrgWMXGCGHru5bIRxGFV0
 ``tags``                A list of user defined tags to be associated with this recording. These tags are similar to last.fm tags. For example, you have apply tags such as ``punk``, ``see-live``, ``smelly``. You may submit up to :data:`~webserver.views.api.MAX_TAGS_PER_LISTEN` tags and each tag may be up to :data:`~webserver.views.api.MAX_TAG_SIZE` characters large.
-``listened_from``       The source of the listen, i.e the name of the client or service which submits the listen.
+``listening_from``       The source of the listen, i.e the name of the client or service which submits the listen.
 ======================= ===========================================================================================================================================================================================================================================================================================================================================================================================================
 
 At this point, we are not scrubbing any superflous elements that may be

@@ -85,7 +85,7 @@ describe('submitListens', () => {
     });
   });
 
-  it('calls itself recursively if size of payload is exceed MAX_LISTEN_SIZE', async () => {
+  it('calls itself recursively if size of payload exceeds MAX_LISTEN_SIZE', async () => {
     // Change MAX_LISTEN_SIZE to 0
     apiService.MAX_LISTEN_SIZE = 9;
 
