@@ -70,7 +70,7 @@ class APITestCase(IntegrationTestCase):
         self.assertEqual(data['listens'][0]['track_metadata']['track_name'], 'Fade')
         self.assertEqual(data['listens'][0]['track_metadata']['artist_name'], 'Kanye West')
         self.assertEqual(data['listens'][0]['track_metadata']['release_name'], 'The Life of Pablo')
-        self.assertEqual(data['listens'][0]['track_metadata']['additional_info']['listened_from'], 'spotify');
+        self.assertEqual(data['listens'][0]['track_metadata']['additional_info']['listening_from'], 'spotify')
 
         # make sure that artist msid, release msid and recording msid are present in data
         self.assertTrue(is_valid_uuid(data['listens'][0]['recording_msid']))
