@@ -247,23 +247,25 @@ class TimescaleListenStore(ListenStore):
             max_age: Only return listens if they are no more than max_age seconds old. Default 3600 seconds
         """
 
-        args = { 'user_list' : user_list, 'ts' : int(time.time()) - max_age, 'limit' : limit }
-        query = """SELECT data 
-                     FROM listen 
-                    WHERE user_name IN (:user_list) 
-                      AND listened_at > :ts
-                 ORDER BY time DESC 
-                    LIMIT :limit"""
+        args = { 'user_list' : tuple(user_list), 'ts' : int(time.time()) - max_age, 'limit' : limit }
+        query = """SELECT * FROM (
+                              SELECT listened_at, recording_msid, user_name, data,
+                                     row_number() over (partition by user_name order by listened_at) as rownum
+                                FROM listen
+                               WHERE user_name IN :user_list
+                                 AND listened_at > :ts
+                            ORDER BY listened_at DESC) tmp
+                           WHERE rownum <= :limit"""
 
         listens = []
         with timescale.engine.connect() as connection:
-            curs = connection.execute(sqlalchemy.text(query, args))
+            curs = connection.execute(sqlalchemy.text(query), args)
             while True:
                 result = curs.fetchone()
                 if not result:
                     break
             
-                listens.append(Listen.from_timescale(result[0]))
+                listens.append(Listen.from_timescale(result[0], result[1], user_name, result[2]))
 
         return listens
 
