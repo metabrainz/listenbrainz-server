@@ -9,12 +9,15 @@
   "scripts": {
     "build:dev": "webpack --progress --colors",
     "build:prod": "webpack -p --env production --progress --colors",
+    "build:types": "tsc --emitDeclarationOnly",
     "build": "npm run build:dev",
     "postinstall": "npm run build:prod",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage --colors",
-    "test:debug": "node --inspect node_modules/.bin/jest --runInBand"
+    "test:debug": "node --inspect node_modules/.bin/jest --runInBand",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "npm run type-check -- --watch"
   },
   "author": "MetaBrainz Foundation Inc.",
   "license": "GPL-2.0-only",
