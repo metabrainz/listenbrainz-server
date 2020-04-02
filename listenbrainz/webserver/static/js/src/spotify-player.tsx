@@ -1,7 +1,7 @@
-import {PlaybackControls} from './playback-controls.jsx';
+import {PlaybackControls} from './playback-controls';
 import React from 'react';
 import {isEqual as _isEqual} from 'lodash';
-import {searchForSpotifyTrack} from './utils.jsx';
+import {searchForSpotifyTrack} from './utils';
 
 function getSpotifyUriFromListen(listen) {
   if (!listen || !listen.track_metadata || !listen.track_metadata.additional_info ||

@@ -3,15 +3,15 @@
 import * as timeago from 'time-ago';
 
 import { faListUl, faMusic } from '@fortawesome/free-solid-svg-icons'
-import {getArtistLink, getPlayButton, getSpotifyEmbedUriFromListen, getTrackLink} from './utils.jsx';
+import {getArtistLink, getPlayButton, getSpotifyEmbedUriFromListen, getTrackLink} from './utils';
 
 import APIService from './api-service';
 import { AlertList } from 'react-bs-notifier';
-import {FollowUsers} from './follow-users.jsx';
+import {FollowUsers} from './follow-users';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {SpotifyPlayer} from './spotify-player.jsx';
+import {SpotifyPlayer} from './spotify-player';
 import {isEqual as _isEqual} from 'lodash';
 import io from 'socket.io-client';
 
