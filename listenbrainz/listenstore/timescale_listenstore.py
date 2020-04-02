@@ -213,7 +213,7 @@ class TimescaleListenStore(ListenStore):
             to_ts: seconds since epoch, in float
         """
 
-        query = 'SELECT data FROM listen WHERE user_name = :user_name AND '
+        query = 'SELECT listened_at, recording_msid, data FROM listen WHERE user_name = :user_name AND '
         if from_ts is not None:
             query += "listened_at > :ts"
             ts = from_ts
@@ -231,7 +231,7 @@ class TimescaleListenStore(ListenStore):
                 if not result:
                     break
             
-                listens.append(Listen.from_json(result[0]))
+                listens.append(Listen.from_timescale(result[0], result[1], user_name, result[2]))
 
         if order == ORDER_ASC:
             listens.reverse()
@@ -264,7 +264,7 @@ class TimescaleListenStore(ListenStore):
                 if not result:
                     break
             
-                listens.append(Listen.from_json(result[0]))
+                listens.append(Listen.from_timescale(result[0]))
 
         return listens
 

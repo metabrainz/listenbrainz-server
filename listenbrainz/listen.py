@@ -120,6 +120,24 @@ class Listen(object):
             data=j.get('track_metadata')
         )
 
+
+    @classmethod
+    def from_timescale(cls, listened_at, recording_msid, user_name, j):
+        """Factory to make Listen() objects from a timescale dict"""
+
+        j['listened_at']=datetime.utcfromtimestamp(float(listened_at))
+        return cls(
+            user_id=j.get('user_id'),
+            user_name=user_name,
+            timestamp=j['listened_at'],
+            artist_msid=j['track_metadata']['additional_info'].get('artist_msid'),
+            release_msid=j['track_metadata']['additional_info'].get('release_msid'),
+            recording_msid=recording_msid,
+            dedup_tag=j.get('dedup_tag', 0),
+            data=j.get('track_metadata')
+        )
+
+
     def to_api(self):
         """
         Converts listen into the format in which listens are returned in the payload by the api
@@ -152,79 +170,10 @@ class Listen(object):
 
 
     def to_timescale(self):
-        """
-        Converts listen into dict that can be submitted to timescale. user_name, listened_at and recording_msid 
-        are already full columns in the listens table, so we will not duplicate those values here.
-
-        Returns:
-           A JSON string
-
-        """
-
-        if 'tracknumber' in self.data['additional_info']:
-            try:
-                tracknumber = int(self.data['additional_info']['tracknumber'])
-            except (ValueError, TypeError):
-                tracknumber = None
-        else:
-            tracknumber = None
-
-        # Collect the data to be stored in the DB, careful to not create wasteful empty fields in the JSON:
-        data = {}
-        if 'artist_name' in self.data and self.data['artist_name']:
-            data['artist_name'] = self.data['artist_name']
-
-        if self.artist_msid:
-            data['artist_msid'] = self.artist_msid
-
-        if 'artist_mbids' in self.data['additional_info'] and self.data['additional_info']['artist_mbids']:
-            data['artist_mbids'] = ",".join(self.data['additional_info']['artist_mbids'])
-
-        if 'release_name' in self.data and self.data['release_name']:
-            data['release_name'] = self.data['release_name']
-
-        if self.release_msid: 
-            data['release_msid'] = self.release_msid
-
-        if 'release_mbid' in self.data['additional_info'] and self.data['additional_info']['release_mbid']:
-            data['release_mbid'] = self.data['additional_info']['release_mbid']
-
-        if 'track_name' in self.data and self.data['track_name']:
-            data['track_name'] = self.data['track_name']
-
-        if 'recording_mbid' in self.data['additional_info'] and self.data['additional_info']['recording_mbid']:
-            data['recording_mbid'] = self.data['additional_info']['recording_mbid']
-
-        if 'tags' in self.data['additional_info'] and self.data['additional_info']['tags']:
-            data['tags'] = ",".join(self.data['additional_info']['tags'])
-
-        if 'release_group_mbid' in self.data['additional_info'] and self.data['additional_info']['release_group_mbid']:
-            data['release_group_mbid'] = self.data['additional_info']['release_group_mbid']
-
-        if 'track_mbid' in self.data['additional_info'] and self.data['additional_info']['track_mbid']:
-            data['track_mbid'] = self.data['additional_info']['track_mbid']
-
-        if 'work_mbids' in self.data['additional_info'] and self.data['additional_info']['work_mbids']:
-            data['work_mbids'] = ','.join(self.data['additional_info']['work_mbids'])
-
-        if tracknumber:
-            data['tracknumber'] = tracknumber
-
-        if 'isrc' in self.data['additional_info'] and self.data['additional_info']['isrc']:
-            data['isrc'] = self.data['additional_info']['isrc']
-
-        if 'spotify_id' in self.data['additional_info'] and self.data['additional_info']['spotify_id']:
-            data['spotify_id'] = self.data['additional_info']['spotify_id']
-
-        # add the user generated keys present in additional info to fields
-        for key, value in self.data['additional_info'].items():
-            if key in Listen.PRIVATE_KEYS:
-                continue
-            if key not in Listen.SUPPORTED_KEYS:
-                data['fields'][key] = ujson.dumps(value)
-
-        return ujson.dumps(data)
-
+        return ujson.dumps({
+            'user_id': self.user_id,
+            'track_metadata': self.data
+        })
 
 
     def validate(self):
