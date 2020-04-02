@@ -165,7 +165,6 @@ class TimescaleListenStore(ListenStore):
         submit = []
         for listen in listens:
             submit.append((listen.ts_since_epoch, listen.recording_msid, listen.user_name, listen.to_timescale()))
-        print(submit)
 
         query = """INSERT INTO listen (listened_at, recording_msid, user_name, data)
                     VALUES %s

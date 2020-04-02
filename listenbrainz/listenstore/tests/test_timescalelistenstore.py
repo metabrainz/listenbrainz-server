@@ -35,7 +35,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
     def setUp(self):
         super(TestTimescaleListenStore, self).setUp()
         self.log = logging.getLogger(__name__)
-        print("yup")
         self.reset_timescale_db()
         
         self.logstore = init_ts_connection(self.log, {
@@ -48,15 +47,51 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.testuser_id = db_user.create(1, "test")
         self.testuser_name = db_user.get(self.testuser_id)['musicbrainz_id']
 
+    def tearDown(self):
+        self.logstore = None
+        super(TestTimescaleListenStore, self).tearDown()
 
     def _create_test_data(self, user_name):
         test_data = create_test_data_for_influxlistenstore(user_name)
         self.logstore.insert(test_data)
         return len(test_data)
 
+
     def test_insert_timescale(self):
         count = self._create_test_data(self.testuser_name)
         self.assertEqual(len(self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1399999999)), count)
+    
+    def test_fetch_listens_0(self):
+        self._create_test_data(self.testuser_name)
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000000, limit=1)
+        self.assertEqual(len(listens), 1)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000050)
+
+    def test_fetch_listens_1(self):
+        self._create_test_data(self.testuser_name)
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000000)
+        self.assertEqual(len(listens), 4)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
+        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[3].ts_since_epoch, 1400000050)
+
+    def test_fetch_listens_2(self):
+        self._create_test_data(self.testuser_name)
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000100)
+        self.assertEqual(len(listens), 2)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
+
+    def test_fetch_listens_3(self):
+        self._create_test_data(self.testuser_name)
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
+        self.assertEqual(len(listens), 5)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
+        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[3].ts_since_epoch, 1400000050)
+        self.assertEqual(listens[4].ts_since_epoch, 1400000000)
 
 #    def test_get_listen_count_for_user(self):
 #        count = self._create_test_data(self.testuser_name)
@@ -67,3 +102,31 @@ class TestTimescaleListenStore(DatabaseTestCase):
 #        # so we can fetch them for running tests
 #        listen_count = self.logstore.get_listen_count_for_user(user_name=self.testuser_name)
 #        self.assertEqual(count, listen_count)
+
+    def test_fetch_listens_escaped(self):
+        user = db_user.get_or_create(2, 'i have a\\weird\\user, name"\n')
+        user_name = user['musicbrainz_id']
+        self._create_test_data(user_name)
+        listens = self.logstore.fetch_listens(user_name=user_name, from_ts=1400000100)
+        self.assertEqual(len(listens), 2)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
+
+    def test_fetch_recent_listens(self): #fail
+        user = db_user.get_or_create(2, 'someuser')
+        user_name = user['musicbrainz_id']
+        self._create_test_data(user_name)
+
+        user2 = db_user.get_or_create(3, 'otheruser')
+        user_name2 = user2['musicbrainz_id']
+        self._create_test_data(user_name2)
+
+        recent = self.logstore.fetch_recent_listens_for_users([user_name, user_name2], limit=1, max_age=10000000000)
+        self.assertEqual(len(recent), 2)
+
+        recent = self.logstore.fetch_recent_listens_for_users([user_name, user_name2], max_age=10000000000)
+        self.assertEqual(len(recent), 4)
+
+        recent = self.logstore.fetch_recent_listens_for_users([user_name], max_age = int(time.time()) - recent[0].ts_since_epoch + 1)
+        self.assertEqual(len(recent), 1)
+        self.assertEqual(recent[0].ts_since_epoch, 1400000200)
