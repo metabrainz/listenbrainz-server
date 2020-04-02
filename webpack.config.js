@@ -11,34 +11,43 @@ module.exports = function(env){
   return {
     mode: isProd ? "production" : "development",
     entry: {
-      main: '/static/js/jsx/profile.jsx',
-      import: '/static/js/jsx/lastFmImporter.jsx'
+      main: '/static/ts/tsx/profile.tsx',
+      import: '/static/ts/tsx/lastFmImporter.tsx'
     },
     output: {
       filename: isProd ? '[name].[contenthash].js' : '[name].js',
       path: '/static/js/dist'
     },
+    devtool: isProd ? false : "inline-source-map",
     module: {
       rules: [
         {
-          test: [/\.js$/ , /\.jsx$/], exclude: /node_modules/, use: {
+          test: /\.(js|ts)x?$/,
+          exclude: /node_modules/,
+          use: {
             loader: "babel-loader",
             options: {
-              "presets": [[
-                "@babel/preset-env",
-                {
-                  "targets": {
-                    "node": "10",
-                    "browsers": [ "> 0.2% and not dead", "firefox >= 44" ]
+              "presets": [
+                [
+                  "@babel/preset-env",
+                  {
+                    "targets": {
+                      "node": "10",
+                      "browsers": [ "> 0.2% and not dead", "firefox >= 44" ]
+                    }
                   }
-                }
+                ],
+                "@babel/preset-typescript",
+                "@babel/preset-react"
               ],
-                "@babel/preset-react"],
-              "plugins": ["@babel/plugin-proposal-class-properties", "@babel/plugin-transform-runtime"]
+              "plugins": [
+                "@babel/plugin-proposal-class-properties",
+                "@babel/plugin-transform-runtime"
+              ]
             }
           }
         }
-      ]
+      ],
     },
     resolve: {
       modules: ['/code/node_modules', '/static/node_modules']
