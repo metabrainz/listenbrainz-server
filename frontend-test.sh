@@ -12,3 +12,5 @@ TEST_CONTAINER_REF="${COMPOSE_PROJECT_NAME}_${TEST_CONTAINER_NAME}_1"
 docker-compose -f $COMPOSE_FILE_LOC \
                -p $COMPOSE_PROJECT_NAME \
                run --rm frontend_tester npm test
+
+# TODO: Add typechecking in tests once port to typescript is complete
