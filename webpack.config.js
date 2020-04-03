@@ -12,7 +12,7 @@ module.exports = function(env){
     mode: isProd ? "production" : "development",
     entry: {
       main: '/static/js/src/profile.tsx',
-      import: '/static/ts/src/lastFmImporter.tsx'
+      import: '/static/js/src/lastFmImporter.tsx'
     },
     output: {
       filename: isProd ? '[name].[contenthash].js' : '[name].js',
@@ -50,7 +50,8 @@ module.exports = function(env){
       ],
     },
     resolve: {
-      modules: ['/code/node_modules', '/static/node_modules']
+      modules: ['/code/node_modules', '/static/node_modules'],
+      extensions: ['.ts', '.tsx', '.js', '.jsx', '.json']
     },
     plugins: plugins,
     watch: isProd ? false : true
