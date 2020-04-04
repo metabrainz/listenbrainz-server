@@ -51,10 +51,10 @@ elif [ "$1" == "npm" ]; then
     npm_install
     exit
 
-elif [ "$1" == "type-check" ]; then shift
-    echo "Type checking typescript files..."
-    type_check
-    exit
+elif [ "$1" == "format" ]; then shift
+	echo "Formatting NameNode..."
+	format_namenode
+	exit
 
 else
     if [ "$#" == 0 ]; then

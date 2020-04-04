@@ -15,5 +15,3 @@ docker-compose -f $COMPOSE_FILE_LOC \
 docker-compose -f $COMPOSE_FILE_LOC \
                -p $COMPOSE_PROJECT_NAME \
                run --rm frontend_tester npm run type-check
-
-# TODO: Add typechecking in tests once port to typescript is complete

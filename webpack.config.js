@@ -11,8 +11,8 @@ module.exports = function(env){
   return {
     mode: isProd ? "production" : "development",
     entry: {
-      main: '/static/js/src/profile.tsx',
-      import: '/static/js/src/lastFmImporter.tsx'
+      main: '/static/js/src/profile.jsx',
+      import: '/static/js/src/lastFmImporter.jsx'
     },
     output: {
       filename: isProd ? '[name].[contenthash].js' : '[name].js',
