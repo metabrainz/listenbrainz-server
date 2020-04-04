@@ -28,11 +28,6 @@ function npm_install {
                 HOME=/tmp static_builder npm install
 }
 
-function type_check {
-    invoke_docker_compose run --rm \
-        static_builder npm run type-check:watch 
-}
-
 function format_namenode {
 	invoke_docker_compose_spark run --rm \
 				hadoop-master hdfs namenode -format -nonInteractive -force
@@ -55,11 +50,6 @@ elif [ "$1" == "npm" ]; then
     echo "Installing node dependencies..."
     npm_install
     exit
-
-elif [ "$1" == "format" ]; then shift
-	echo "Formatting NameNode..."
-	format_namenode
-	exit
 
 elif [ "$1" == "type-check" ]; then shift
     echo "Type checking typescript files..."
