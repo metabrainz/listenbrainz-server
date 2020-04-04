@@ -1,3 +1,5 @@
+// TODO: Port to typescript
+
 import { faEye, faEyeSlash, faFastBackward, faFastForward, faPauseCircle, faPlayCircle, faSortAmountDown, faSortAmountUp } from '@fortawesome/free-solid-svg-icons'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
