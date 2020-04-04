@@ -6,6 +6,9 @@ import time
 import ujson
 from time import sleep
 import logging
+import psycopg2
+from psycopg2.extras import execute_values
+import sqlalchemy
 
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db import timescale as ts
@@ -56,6 +59,17 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.logstore.insert(test_data)
         return len(test_data)
 
+    def test_check_listen_count_view_exists(self):
+        try:
+            with ts.engine.connect() as connection:
+                result = connection.execute(sqlalchemy.text("SELECT column_name FROM information_schema.columns WHERE table_name = 'listen_count'"))
+                cols = result.fetchall()
+        except psycopg2.OperationalError as e:
+            self.log.error("Cannot query timescale listen_count: %s" % str(e), exc_info=True)
+            raise
+        self.assertEqual(cols[0][0], "bucket")
+        self.assertEqual(cols[1][0], "user_name")
+        self.assertEqual(cols[2][0], "count")
 
     def test_insert_timescale(self):
         count = self._create_test_data(self.testuser_name)

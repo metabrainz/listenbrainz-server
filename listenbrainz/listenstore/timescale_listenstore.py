@@ -116,7 +116,7 @@ class TimescaleListenStore(ListenStore):
         """
 
         if cache_value:
-            count = cache.get(InfluxListenStore.REDIS_INFLUX_TOTAL_LISTEN_COUNT, decode=False)
+            count = cache.get(TimescaleListenStore.REDIS_INFLUX_TOTAL_LISTEN_COUNT, decode=False)
             if count:
                 return int(count)
 
