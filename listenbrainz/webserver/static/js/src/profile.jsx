@@ -1,3 +1,5 @@
+// TODO: Port to typescript
+
 'use strict';
 
 import * as timeago from 'time-ago';

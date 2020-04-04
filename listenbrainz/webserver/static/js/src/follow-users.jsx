@@ -1,3 +1,5 @@
+// TODO: Port to typescript
+
 import { faChevronDown, faChevronUp, faPlusCircle, faSave, faSitemap, faTimes, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import {getArtistLink, getPlayButton, getTrackLink} from './utils';
 

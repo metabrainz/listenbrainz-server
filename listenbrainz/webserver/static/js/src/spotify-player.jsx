@@ -1,3 +1,5 @@
+// TODO: Port to typescript
+
 import {PlaybackControls} from './playback-controls';
 import React from 'react';
 import {isEqual as _isEqual} from 'lodash';
