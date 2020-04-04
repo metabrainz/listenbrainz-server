@@ -1,9 +1,11 @@
+// TODO: Port to typescript
+
 'use strict'
 
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Importer from './importer'
-import Modal from './lastFmImporterModal.jsx'
+import Modal from './lastFmImporterModal'
 
 
 export default class LastFmImporter extends React.Component {

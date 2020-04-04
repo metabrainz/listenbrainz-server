@@ -1,3 +1,5 @@
+// TODO: Port to typescript
+
 export default class Scrobble {
   constructor(rootScrobbleElement) {
     this.rootScrobbleElement = rootScrobbleElement;

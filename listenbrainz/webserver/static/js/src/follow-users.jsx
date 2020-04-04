@@ -1,5 +1,7 @@
+// TODO: Port to typescript
+
 import { faChevronDown, faChevronUp, faPlusCircle, faSave, faSitemap, faTimes, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
-import {getArtistLink, getPlayButton, getTrackLink} from './utils.jsx';
+import {getArtistLink, getPlayButton, getTrackLink} from './utils';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react';

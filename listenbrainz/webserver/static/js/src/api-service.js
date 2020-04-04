@@ -1,3 +1,5 @@
+// TODO: Port to typescript
+
 import {isFinite, isNil, isString} from 'lodash';
 
 export default class APIService {
