@@ -132,7 +132,7 @@ class Listen(object):
             timestamp=j['listened_at'],
             artist_msid=j['track_metadata']['additional_info'].get('artist_msid'),
             release_msid=j['track_metadata']['additional_info'].get('release_msid'),
-            recording_msid=recording_msid,
+            recording_msid=str(recording_msid),
             dedup_tag=j.get('dedup_tag', 0),
             data=j.get('track_metadata')
         )
@@ -198,21 +198,21 @@ def convert_timescale_row_to_spark_row(row):
         Convert a timescale listen row (listened_at, recording_msid, user_name, created, data)
         to a spark row.
     """
-    data = row[4]
+    data = row[4]['track_metadata']
     return  {
         'listened_at': datetime.utcfromtimestamp(row[0]),
         'user_name': row[2],
-        'artist_msid': data['artist_msid'],
+        'artist_msid': data['additional_info'].get('artist_msid'),
         'artist_name': data['artist_name'],
         'artist_mbids': convert_comma_seperated_string_to_list(data.get('artist_mbids', '')),
-        'release_msid': data.get('release_msid'),
+        'release_msid': data['additional_info'].get('release_msid'),
         'release_name': data.get('release_name', ''),
         'release_mbid': data.get('release_mbid', ''),
         'track_name': data['track_name'],
-        'recording_msid': row[1],
-        'recording_mbid': data.get('recording_mbid', ''),
+        'recording_msid': str(row[1]),
+        'recording_mbid': data['additional_info'].get('recording_mbid', ''),
         'tags': convert_comma_seperated_string_to_list(data.get('tags', [])),
-        'inserted_timestamp' : created
+        'inserted_timestamp' : row[3]
     }
 
 def convert_influx_row_to_spark_row(row):
