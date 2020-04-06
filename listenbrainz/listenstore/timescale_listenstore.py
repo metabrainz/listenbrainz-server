@@ -22,7 +22,7 @@ from datetime import datetime, timezone
 from listenbrainz import DUMP_LICENSE_FILE_PATH
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db.dump import SchemaMismatchException
-from listenbrainz.listen import Listen
+from listenbrainz.listen import Listen, convert_timescale_row_to_spark_row
 from listenbrainz.listenstore import ListenStore
 from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, \
     USER_CACHE_TIME, REDIS_USER_TIMESTAMPS, LISTENS_DUMP_SCHEMA_VERSION
@@ -116,7 +116,7 @@ class TimescaleListenStore(ListenStore):
         """
 
         if cache_value:
-            count = cache.get(InfluxListenStore.REDIS_INFLUX_TOTAL_LISTEN_COUNT, decode=False)
+            count = cache.get(TimescaleListenStore.REDIS_INFLUX_TOTAL_LISTEN_COUNT, decode=False)
             if count:
                 return int(count)
 
@@ -203,6 +203,7 @@ class TimescaleListenStore(ListenStore):
         return inserted_rows
 
 
+    # TODO: Fetch created from the DB as well
     def fetch_listens_from_storage(self, user_name, from_ts, to_ts, limit, order):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving
             the value they are converted to the local server's timezone. So to compare
@@ -254,8 +255,12 @@ class TimescaleListenStore(ListenStore):
                                 FROM listen
                                WHERE user_name IN :user_list
                                  AND listened_at > :ts
+                            GROUP BY user_name, listened_at, recording_msid, data
                             ORDER BY listened_at DESC) tmp
                            WHERE rownum <= :limit"""
+        print(max_age)
+        print(query)
+        print(args)
 
         listens = []
         with timescale.engine.connect() as connection:
@@ -270,58 +275,52 @@ class TimescaleListenStore(ListenStore):
         return listens
 
 
-    def get_listens_batch_for_dump(self, username, end_time, offset):
-        """ Get a batch of listens for the full dump.
-
-        This does not query the `inserted_timestamp` field because not all of the listens
-        in the production database have them, so for full dumps this query needs to be independent
-        of the the `inserted_timestamp` key.
+    def get_listens_query_for_dump(self, user_name, end_time, offset):
+        """ 
+            Get a query and its args dict to select a batch for listens for the full dump.
+            Use listened_at timestamp, since not all listens have the created timestamp.
         """
-        while True:
-            try:
-                return self.influx.query("""
-                    SELECT *
-                      FROM {measurement}
-                     WHERE time <= {timestamp}
-                  ORDER BY time DESC
-                     LIMIT {limit}
-                    OFFSET {offset}
-                """.format(
-                    measurement=get_escaped_measurement_name(username),
-                    timestamp=get_influx_query_timestamp(end_time.strftime('%s')),
-                    limit=DUMP_CHUNK_SIZE,
-                    offset=offset,
-                ))
-            except Exception as e:
-                self.log.error('Error while getting listens to dump for user %s: %s', username, str(e), exc_info=True)
-                time.sleep(3)
+
+        query = """SELECT listened_at, recording_msid, user_name, created, data
+                     FROM listen
+                    WHERE listened_at <= :ts
+                      AND user_name = :user_name
+                 ORDER BY listened_at DESC
+                    LIMIT :limit
+                   OFFSET :offset"""
+        args = {
+            'user_name' : user_name,
+            'ts' : end_time,
+            'offset' : offset,
+            'limit' : DUMP_CHUNK_SIZE
+        }
+
+        return (query, args)
 
 
-    def get_incremental_listens_batch(self, username, start_time, end_time, offset):
-        """ Get a batch of listens for an incremental listen dump.
-
-        This uses the `inserted_timestamp` field to get listens.
+    def get_incremental_listens_query_batch(self, user_name, start_time, end_time, offset):
+        """ 
+            Get a query for a batch of listens for an incremental listen dump.
+            This uses the `created` column to fetch listens.
         """
-        while True:
-            try:
-                return self.influx.query("""
-                    SELECT *
-                      FROM {measurement}
-                     WHERE inserted_timestamp > {start_timestamp}
-                       AND inserted_timestamp <= {end_timestamp}
-                  ORDER BY time DESC
-                     LIMIT {limit}
-                    OFFSET {offset}
-                """.format(
-                    measurement=get_escaped_measurement_name(username),
-                    start_timestamp=int(start_time.strftime('%s')),
-                    end_timestamp=int(end_time.strftime('%s')),
-                    limit=DUMP_CHUNK_SIZE,
-                    offset=offset,
-                ))
-            except Exception as e:
-                self.log.error('Error while getting listens to dump for user %s: %s', username, str(e), exc_info=True)
-                raise
+
+        query = """SELECT listened_at, recording_msid, user_name, created, data 
+                     FROM listen
+                    WHERE created > :start_ts
+                      AND created <= :end_ts
+                 ORDER BY created DESC
+                    LIMIT :limit
+                   OFFSET :offset"""
+
+        args = {
+            'user_name' : user_name,
+            'start_ts' : start_time,
+            'end_ts' : end_time,
+            'offset' : offset,
+            'limit' : DUMP_CHUNK_SIZE
+        }
+            
+        return (query, args)
 
 
     def write_spark_listens_to_disk(self, listens, temp_dir):
@@ -344,22 +343,6 @@ class TimescaleListenStore(ListenStore):
                     f.write('\n'.join([ujson.dumps(listen) for listen in listens[year][month]]))
                     f.write('\n')
 
-    def row_inserted_before_or_equal(self, row, timestamp):
-        """ Check that the influx row passed was inserted to influx before the specified timestamp
-
-        Args:
-            row (dict): the influx row representing the listen
-            timestamp (datetime): the datetime against which the row is to be checked
-
-        Returns:
-            bool: True if row was inserted before timestamp, false otherwise
-                   (also True for all listens with no inserted_timestamp)
-        """
-        inserted_timestamp = row.get('inserted_timestamp')
-        if not inserted_timestamp:
-            inserted_timestamp = 0
-        return datetime.fromtimestamp(inserted_timestamp, tz=timezone.utc) <= timestamp.replace(tzinfo=timezone.utc)
-
 
     def dump_user_for_spark(self, username, start_time, end_time, temp_dir):
         """ Dump listens for a particular user in the format for the ListenBrainz spark dump.
@@ -377,29 +360,27 @@ class TimescaleListenStore(ListenStore):
 
         while True:
             if start_time == datetime.utcfromtimestamp(0): # if we need a full dump
-                result = self.get_listens_batch_for_dump(username, end_time, offset)
+                query, args = self.get_listens_batch_for_dump(username, end_time, offset)
             else:
-                result = self.get_incremental_listens_batch(username, start_time, end_time, offset)
+                query, args = self.get_incremental_listens_batch(username, start_time, end_time, offset)
+
             rows_added = 0
-            for row in result.get_points(get_measurement_name(username)):
+            with timescale.engine.connect() as connection:
+                curs = connection.execute(sqlalchemy.text(query), args)
+                while True:
+                    result = curs.fetchone()
+                    if not result:
+                        break
+                
+                    listen = convert_timescale_row_to_spark_row(row)
+                    created = row[3]
+                    if created.year not in unwritten_listens:
+                        unwritten_listens[created.year] = {}
+                    if created.month not in unwritten_listens[created.year]:
+                        unwritten_listens[created.year][created.month] = []
 
-                # make sure that listen was inserted in current dump's time range
-                # need to do this check in python, because influx doesn't
-                # do "IS NULL" operations and we have null inserted_timestamps from
-                # old data
-                if not self.row_inserted_before_or_equal(row, end_time):
-                    continue
-
-                listen = convert_influx_row_to_spark_row(row)
-                timestamp = convert_influx_to_datetime(row['time'])
-
-                if timestamp.year not in unwritten_listens:
-                    unwritten_listens[timestamp.year] = {}
-                if timestamp.month not in unwritten_listens[timestamp.year]:
-                    unwritten_listens[timestamp.year][timestamp.month] = []
-
-                unwritten_listens[timestamp.year][timestamp.month].append(listen)
-                rows_added += 1
+                    unwritten_listens[created.year][created.month].append(listen)
+                    rows_added += 1
 
             if rows_added == 0:
                 break
@@ -430,32 +411,30 @@ class TimescaleListenStore(ListenStore):
         # Get this user's listens in chunks
         while True:
             if start_time == datetime.utcfromtimestamp(0):
-                result = self.get_listens_batch_for_dump(username, end_time, offset)
+                query, args = self.get_listens_batch_for_dump(username, end_time, offset)
             else:
-                result = self.get_incremental_listens_batch(username, start_time, end_time, offset)
+                query, args = self.get_incremental_listens_batch(username, start_time, end_time, offset)
 
             rows_added = 0
-            for row in result.get_points(get_measurement_name(username)):
+            with timescale.engine.connect() as connection:
+                curs = connection.execute(sqlalchemy.text(query), args)
+                while True:
+                    result = curs.fetchone()
+                    if not result:
+                        break
 
-                # make sure that listen was inserted in current dump's time range
-                # need to do this check in python, because influx doesn't
-                # do "IS NULL" operations and we have null inserted_timestamps from
-                # old data
-                if not self.row_inserted_before_or_equal(row, end_time):
-                    continue
-
-                listen = Listen.from_influx(row).to_api()
-                listen['user_name'] = username
-                try:
-                    bytes_written += fileobj.write(ujson.dumps(listen))
-                    bytes_written += fileobj.write('\n')
-                    rows_added += 1
-                except IOError as e:
-                    self.log.critical('IOError while writing listens into file for user %s', username, exc_info=True)
-                    raise
-                except Exception as e:
-                    self.log.error('Exception while creating json for user %s: %s', username, str(e), exc_info=True)
-                    raise
+                    listen = Listen.from_timescale(row).to_api()
+                    listen['user_name'] = username
+                    try:
+                        bytes_written += fileobj.write(ujson.dumps(listen))
+                        bytes_written += fileobj.write('\n')
+                        rows_added += 1
+                    except IOError as e:
+                        self.log.critical('IOError while writing listens into file for user %s', username, exc_info=True)
+                        raise
+                    except Exception as e:
+                        self.log.error('Exception while creating json for user %s: %s', username, str(e), exc_info=True)
+                        raise
 
             listen_count += rows_added
             if not rows_added:
@@ -771,11 +750,11 @@ class TimescaleListenStore(ListenStore):
                             while bytes_read < user['size']:
                                 line = f.readline()
                                 bytes_read += len(line)
-                                listen = Listen.from_json(ujson.loads(line)).to_influx(quote(user['user_name']))
+                                listen = Listen.from_json(ujson.loads(line)).to_timescale()
                                 listens.append(listen)
 
                                 if len(listens) > DUMP_CHUNK_SIZE:
-                                    self.write_points_to_db(listens)
+                                    self.insert(listens)
                                     listens = []
 
                             if len(listens) > 0:
@@ -789,20 +768,6 @@ class TimescaleListenStore(ListenStore):
         return users_done
 
 
-    def write_points_to_db(self, points):
-        """ Write the given data to InfluxDB. This function sleeps for 3 seconds
-            and tries again if the write fails.
-
-        Args:
-            points: a list containing dicts in the form taken by influx python bindings
-        """
-
-        while not self.influx.write_points(points, time_precision='s'):
-            self.log.critical('Error while writing listens to influx, '
-                'write_points returned False, data %s', json.dumps(points, indent=3))
-            time.sleep(3)
-
-
     def delete(self, musicbrainz_id):
         """ Delete all listens for user with specified MusicBrainz ID.
 
@@ -813,42 +778,18 @@ class TimescaleListenStore(ListenStore):
 
         Raises: Exception if unable to delete the user in 5 retries
         """
-        for _ in range(5):
-            try:
-                self.influx.drop_measurement(get_measurement_name(musicbrainz_id))
-                break
-            except InfluxDBClientError as e:
-                # influxdb-python raises client error if measurement isn't found
-                # so we have to handle that case.
-                if 'measurement not found' in e.content:
-                    return
-                else:
-                    self.log.error('Error in influx client while dropping user %s: %s', musicbrainz_id, str(e), exc_info=True)
-                    time.sleep(3)
-            except InfluxDBServerError as e:
-                self.log.error('Error in influx server while dropping user %s: %s', musicbrainz_id, str(e), exc_info=True)
-                time.sleep(3)
-            except Exception as e:
-                self.log.error('Error while trying to drop user %s: %s', musicbrainz_id, str(e), exc_info=True)
-                time.sleep(3)
-        else:
-            raise InfluxListenStoreException("Couldn't delete user with MusicBrainz ID: %s" % musicbrainz_id)
+
+        args = { 'user_name' : musicbrainz_id }
+        query = "DELETE FROM listen WHERE user_name = :user_name"
+
+        try:
+            with timescale.engine.connect() as connection:
+                curs = connection.execute(sqlalchemy.text(query), args)
+                curs.execute()
+        except psycopg2.OperationalError as e:
+            self.log.error("Cannot delete listens for user: %s" % str(e))
+            raise
 
 
-    def query(self, query):
-        while True:
-            try:
-                return self.influx.query(query)
-            except InfluxDBClientError as e:
-                self.log.error("Client error while querying influx: %s", str(e), exc_info=True)
-                time.sleep(1)
-            except InfluxDBServerError as e:
-                self.log.error("Server error while querying influx: %s", str(e), exc_info=True)
-                time.sleep(1)
-            except Exception as e:
-                self.log.error("Error while querying influx: %s", str(e), exc_info=True)
-                time.sleep(1)
-
-
-class InfluxListenStoreException(Exception):
+class TimescaleListenStoreException(Exception):
     pass

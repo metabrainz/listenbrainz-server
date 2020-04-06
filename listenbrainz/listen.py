@@ -193,6 +193,28 @@ class Listen(object):
                (self.user_name, self.ts_since_epoch, self.artist_msid, self.release_msid, self.recording_msid, self.data['artist_name'], self.data['track_name'])
 
 
+def convert_timescale_row_to_spark_row(row):
+    """
+        Convert a timescale listen row (listened_at, recording_msid, user_name, created, data)
+        to a spark row.
+    """
+    data = row[4]
+    return  {
+        'listened_at': datetime.utcfromtimestamp(row[0]),
+        'user_name': row[2],
+        'artist_msid': data['artist_msid'],
+        'artist_name': data['artist_name'],
+        'artist_mbids': convert_comma_seperated_string_to_list(data.get('artist_mbids', '')),
+        'release_msid': data.get('release_msid'),
+        'release_name': data.get('release_name', ''),
+        'release_mbid': data.get('release_mbid', ''),
+        'track_name': data['track_name'],
+        'recording_msid': row[1],
+        'recording_mbid': data.get('recording_mbid', ''),
+        'tags': convert_comma_seperated_string_to_list(data.get('tags', [])),
+        'inserted_timestamp' : created
+    }
+
 def convert_influx_row_to_spark_row(row):
     data = {
         'listened_at': str(row['time']),
