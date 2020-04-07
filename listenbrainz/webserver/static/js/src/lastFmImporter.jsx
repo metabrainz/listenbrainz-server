@@ -2,8 +2,8 @@
 // TODO: Make the code ESLint compliant
 // TODO: Port to typescript
 
-import React from "react";
 import ReactDOM from "react-dom";
+import React from "react";
 import Importer from "./importer";
 import Modal from "./lastFmImporterModal";
 
