@@ -36,7 +36,7 @@ DUMP_FILE_SIZE_LIMIT = 1024 * 1024 * 1024 # 1 GB
 
 class TimescaleListenStore(ListenStore):
 
-    REDIS_INFLUX_TOTAL_LISTEN_COUNT = "ls.listencount.total"
+    REDIS_TIMESCALE_TOTAL_LISTEN_COUNT = "ls.listencount.total"
     TOTAL_LISTEN_COUNT_CACHE_TIME = 5 * 60
     USER_LISTEN_COUNT_CACHE_TIME = 10 * 60  # in seconds. 15 minutes
 
@@ -116,7 +116,7 @@ class TimescaleListenStore(ListenStore):
         """
 
         if cache_value:
-            count = cache.get(TimescaleListenStore.REDIS_INFLUX_TOTAL_LISTEN_COUNT, decode=False)
+            count = cache.get(TimescaleListenStore.REDIS_TIMESCALE_TOTAL_LISTEN_COUNT, decode=False)
             if count:
                 return int(count)
 
@@ -130,7 +130,7 @@ class TimescaleListenStore(ListenStore):
 
         if cache_value:
             cache.set(
-                TimescaleListenStore.REDIS_INFLUX_TOTAL_LISTEN_COUNT,
+                TimescaleListenStore.REDIS_TIMESCALE_TOTAL_LISTEN_COUNT,
                 count,
                 TimescaleListenStore.TOTAL_LISTEN_COUNT_CACHE_TIME,
                 encode=False,
@@ -619,7 +619,7 @@ class TimescaleListenStore(ListenStore):
         if end_time is None:
             end_time = datetime.now()
 
-        self.log.info('Beginning dump of listens from InfluxDB...')
+        self.log.info('Beginning dump of listens from TimescaleDB...')
 
         self.log.info('Getting list of users whose listens are to be dumped...')
         users = db_user.get_all_users(columns=['id', 'musicbrainz_id'], created_before=end_time)
@@ -670,7 +670,7 @@ class TimescaleListenStore(ListenStore):
 
 
     def import_listens_dump(self, archive_path, threads=DUMP_DEFAULT_THREAD_COUNT):
-        """ Imports listens into InfluxDB from a ListenBrainz listens dump .tar.xz archive.
+        """ Imports listens into TimescaleDB from a ListenBrainz listens dump .tar.xz archive.
 
         Args:
             archive (str): the path to the listens dump .tar.xz archive to be imported

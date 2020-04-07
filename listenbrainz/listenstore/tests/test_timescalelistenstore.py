@@ -18,7 +18,7 @@ from datetime import datetime
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db import timescale as ts
 from listenbrainz import config
-from listenbrainz.listenstore.tests.util import create_test_data_for_influxlistenstore, generate_data
+from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore, generate_data
 from listenbrainz.webserver.timescale_connection import init_ts_connection
 
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'admin', 'timescale')
@@ -60,7 +60,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         super(TestTimescaleListenStore, self).tearDown()
 
     def _create_test_data(self, user_name):
-        test_data = create_test_data_for_influxlistenstore(user_name)
+        test_data = create_test_data_for_timescalelistenstore(user_name)
         self.logstore.insert(test_data)
         return len(test_data)
 
@@ -233,3 +233,39 @@ class TestTimescaleListenStore(DatabaseTestCase):
 
         self.assert_spark_dump_contains_listens(spark_dump_location, 5)
         shutil.rmtree(temp_dir)
+
+    def test_time_range_full_dumps(self): # fails because 1-11 < between_time always
+        listens = generate_data(1, self.testuser_name, 1, 5) # generate 5 listens with ts 1-5
+        self.logstore.insert(listens)
+        sleep(1)
+        between_time = datetime.now()
+        sleep(1)
+        listens = generate_data(1, self.testuser_name, 6, 5) # generate 5 listens with ts 6-10
+        self.logstore.insert(listens)
+        sleep(1)
+        temp_dir = tempfile.mkdtemp()
+        dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            end_time=between_time,
+        )
+        spark_dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            end_time=between_time,
+            spark_format=True,
+        )
+
+        sleep(1)
+        self.assertTrue(os.path.isfile(dump_location))
+        self.reset_timescale_db()
+        sleep(1)
+        self.logstore.import_listens_dump(dump_location)
+        sleep(1)
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
+        self.assertEqual(len(listens), 5)
+        self.assertEqual(listens[0].ts_since_epoch, 5)
+        self.assertEqual(listens[1].ts_since_epoch, 4)
+        self.assertEqual(listens[2].ts_since_epoch, 3)
+        self.assertEqual(listens[3].ts_since_epoch, 2)
+        self.assertEqual(listens[4].ts_since_epoch, 1)
