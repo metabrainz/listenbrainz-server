@@ -36,7 +36,7 @@ script:
                 -wait tcp://db:5432 -timeout 60s
                 -wait tcp://redis:6379 -timeout 60s
                 -wait tcp://timescale:5432 -timeout 60s
-                "py.test"
+                bash -c "py.test"
   - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test down
 
   # Bring up integration test containers, run tests and bring them down
