@@ -20,6 +20,11 @@ from listenbrainz.db import timescale as ts
 from listenbrainz import config
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore, generate_data
 from listenbrainz.webserver.timescale_connection import init_ts_connection
+from listenbrainz.utils import quote
+from listenbrainz.db.dump import SchemaMismatchException
+from listenbrainz.listenstore import TimescaleListenStore, LISTENS_DUMP_SCHEMA_VERSION
+from listenbrainz.listenstore.timescale_listenstore import REDIS_TIMESCALE_USER_LISTEN_COUNT
+
 
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'admin', 'timescale')
 
@@ -269,3 +274,301 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[2].ts_since_epoch, 3)
         self.assertEqual(listens[3].ts_since_epoch, 2)
         self.assertEqual(listens[4].ts_since_epoch, 1)
+
+        # This test fails. We insert listened_at from 1-10 using generate_data() (*see line 238 and 243 in this file*).
+        # Now we pass between_time as end_time. This end_time value is converted to int (*see line 415 in timescale_listenstore.py*) which will be 15xxxxxxxx.
+        # This 15xxxxxxxx is used as listened_at (*see line 287 and 294 in timescale_listenstore.py*). All 1-10 are less than 15xxxxxxxx so all get into the dump.
+        # So we get 10 entries instread of 5. We cannot pass 5 as between_time because db_user.get_all_users(columns=['id', 'musicbrainz_id'], created_before=end_time) needs end_time which should be datetime value (*see line 626 in timescale_listenstore.py*).
+
+    def test_full_dump_listen_with_no_insert_timestamp(self):
+        """ We have listens with no `inserted_timestamps` inside the production
+        database. This means that full dumps should always be able to dump these
+        listens as well. This is a test to test that.
+        """
+        listens = generate_data(1, self.testuser_name, 1, 5)
+
+        # insert these listens into influx without an insert_timestamp
+        influx_rows = [listen.to_influx(quote(self.testuser_name)) for listen in listens]
+        for row in influx_rows[1:]:
+            row['fields'].pop('inserted_timestamp')
+
+        t = datetime.now()
+        self.logstore.write_points_to_db(influx_rows)
+        sleep(1)
+        listens_from_influx = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
+        self.assertEqual(len(listens_from_influx), 5)
+
+        # full dump (with no start time) should contain these listens
+        temp_dir = tempfile.mkdtemp()
+        dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            end_time=datetime.now(),
+        )
+        spark_dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            end_time=datetime.now(),
+            spark_format=True,
+        )
+        self.assertTrue(os.path.isfile(dump_location))
+        self.reset_influx_db()
+        sleep(1)
+        self.logstore.import_listens_dump(dump_location)
+        sleep(1)
+        listens_from_influx = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
+        self.assertEqual(len(listens_from_influx), 5)
+        self.assert_spark_dump_contains_listens(spark_dump_location, 5)
+        shutil.rmtree(temp_dir)
+
+    def test_incremental_dumps_listen_with_no_insert_timestamp(self):
+        """ Incremental dumps should only consider listens that have
+        inserted_timestamps.
+        """
+        t = datetime.now()
+        sleep(1)
+        listens = generate_data(1, self.testuser_name, 1, 5)
+
+        # insert these listens into influx without an insert_timestamp
+        influx_rows = [listen.to_influx(quote(self.testuser_name)) for listen in listens]
+        for row in influx_rows[1:]:
+            row['fields'].pop('inserted_timestamp')
+
+        self.logstore.write_points_to_db(influx_rows)
+        sleep(1)
+        listens_from_influx = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
+        self.assertEqual(len(listens_from_influx), 5)
+
+        # incremental dump (with a start time) should not contain these listens
+        temp_dir = tempfile.mkdtemp()
+        dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            start_time=t,
+            end_time=datetime.now(),
+        )
+        spark_dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            start_time=t,
+            end_time=datetime.now(),
+            spark_format=True,
+        )
+        self.assertTrue(os.path.isfile(dump_location))
+        self.reset_influx_db()
+        sleep(1)
+        self.logstore.import_listens_dump(dump_location)
+        sleep(1)
+        listens_from_influx = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
+        self.assertEqual(len(listens_from_influx), 1)
+        self.assert_spark_dump_contains_listens(spark_dump_location, 1)
+        shutil.rmtree(temp_dir)
+
+    def test_import_listens(self):
+        count = self._create_test_data(self.testuser_name)
+        sleep(1)
+        temp_dir = tempfile.mkdtemp()
+        dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            end_time=datetime.now(),
+        )
+        sleep(1)
+        self.assertTrue(os.path.isfile(dump_location))
+        self.reset_timescale_db()
+        sleep(1)
+        self.logstore.import_listens_dump(dump_location)
+        sleep(1)
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
+        self.assertEqual(len(listens), 5)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
+        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[3].ts_since_epoch, 1400000050)
+        self.assertEqual(listens[4].ts_since_epoch, 1400000000)
+        shutil.rmtree(temp_dir)
+
+    def test_dump_and_import_listens_escaped(self):
+        user = db_user.get_or_create(3, 'i have a\\weird\\user, na/me"\n')
+        count = self._create_test_data(user['musicbrainz_id'])
+        sleep(1)
+
+        count = self._create_test_data(self.testuser_name)
+        sleep(1)
+
+        temp_dir = tempfile.mkdtemp()
+        dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            end_time=datetime.now(),
+        )
+        sleep(1)
+        self.assertTrue(os.path.isfile(dump_location))
+        self.reset_timescale_db()
+
+        self.logstore.import_listens_dump(dump_location)
+        sleep(1)
+
+        listens = self.logstore.fetch_listens(user_name=user['musicbrainz_id'], to_ts=1400000300)
+        self.assertEqual(len(listens), 5)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
+        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[3].ts_since_epoch, 1400000050)
+        self.assertEqual(listens[4].ts_since_epoch, 1400000000)
+
+
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
+        self.assertEqual(len(listens), 5)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
+        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[3].ts_since_epoch, 1400000050)
+        self.assertEqual(listens[4].ts_since_epoch, 1400000000)
+        shutil.rmtree(temp_dir)
+
+    def test_import_dump_many_users(self):
+        for i in range(2, 52):
+            db_user.create(i, 'user%d' % i)
+
+        temp_dir = tempfile.mkdtemp()
+        dump_location = self.logstore.dump_listens(
+            location=temp_dir,
+            dump_id=1,
+            end_time=datetime.now(),
+        )
+        sleep(1)
+        self.assertTrue(os.path.isfile(dump_location))
+        self.reset_timescale_db()
+
+        done = self.logstore.import_listens_dump(dump_location)
+        sleep(1)
+        self.assertEqual(done, len(db_user.get_all_users()))
+        shutil.rmtree(temp_dir)
+
+
+    def create_test_dump(self, archive_name, archive_path, schema_version=None, index=None):
+        """ Creates a test dump to test the import listens functionality.
+
+        Args:
+            archive_name (str): the name of the archive
+            archive_path (str): the full path to the archive
+            schema_version (int): the version of the schema to be written into SCHEMA_SEQUENCE
+                                  if not provided, the SCHEMA_SEQUENCE file is not added to the archive
+            index (dict): the index dict to be written into index.json
+                          if not provided, index.json is not added to the archive
+
+        Returns:
+            the full path to the archive created
+        """
+
+        temp_dir = tempfile.mkdtemp()
+        with open(archive_path, 'w') as archive:
+            pxz_command = ['pxz', '--compress']
+            pxz = subprocess.Popen(pxz_command, stdin=subprocess.PIPE, stdout=archive)
+
+            with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
+                if schema_version is not None:
+                    schema_version_path = os.path.join(temp_dir, 'SCHEMA_SEQUENCE')
+                    with open(schema_version_path, 'w') as f:
+                        f.write(str(schema_version))
+                    tar.add(schema_version_path,
+                            arcname=os.path.join(archive_name, 'SCHEMA_SEQUENCE'))
+
+                if index is not None:
+                    index_json_path = os.path.join(temp_dir, 'index.json')
+                    with open(index_json_path, 'w') as f:
+                        f.write(ujson.dumps({}))
+                    tar.add(index_json_path,
+                            arcname=os.path.join(archive_name, 'index.json'))
+
+            pxz.stdin.close()
+
+        return archive_path
+
+
+    def test_schema_mismatch_exception_for_dump_incorrect_schema(self):
+        """ Tests that SchemaMismatchException is raised when the schema of the dump is old """
+
+        # create a temp archive with incorrect SCHEMA_VERSION
+        temp_dir = tempfile.mkdtemp()
+        archive_name = 'temp_dump'
+        archive_path = os.path.join(temp_dir, archive_name + '.tar.xz')
+        archive_path = self.create_test_dump(
+            archive_name=archive_name,
+            archive_path=archive_path,
+            schema_version=LISTENS_DUMP_SCHEMA_VERSION - 1,
+            index={},
+        )
+        sleep(1)
+        with self.assertRaises(SchemaMismatchException):
+            self.logstore.import_listens_dump(archive_path)
+
+
+    def test_schema_mismatch_exception_for_dump_no_schema(self):
+        """ Tests that SchemaMismatchException is raised when there is no schema version in the archive """
+
+        temp_dir = tempfile.mkdtemp()
+        archive_name = 'temp_dump'
+        archive_path = os.path.join(temp_dir, archive_name + '.tar.xz')
+
+        archive_path = self.create_test_dump(
+            archive_name=archive_name,
+            archive_path=archive_path,
+            schema_version=None,
+            index={},
+        )
+
+        sleep(1)
+        with self.assertRaises(SchemaMismatchException):
+            self.logstore.import_listens_dump(archive_path)
+
+
+    def test_schema_mismatch_exception_for_dump_no_index(self):
+        """ Tests that SchemaMismatchException is raised when there is no index.json in the archive """
+
+        temp_dir = tempfile.mkdtemp()
+        archive_name = 'temp_dump'
+        archive_path = os.path.join(temp_dir, archive_name + '.tar.xz')
+
+        archive_path = self.create_test_dump(
+            archive_name=archive_name,
+            archive_path=archive_path,
+            schema_version=LISTENS_DUMP_SCHEMA_VERSION,
+            index=None,
+        )
+
+        sleep(1)
+        with self.assertRaises(SchemaMismatchException):
+            self.logstore.import_listens_dump(archive_path)
+
+
+    def test_delete_listens(self):
+        count = self._create_test_data(self.testuser_name)
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
+        self.assertEqual(len(listens), 5)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
+        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[3].ts_since_epoch, 1400000050)
+        self.assertEqual(listens[4].ts_since_epoch, 1400000000)
+
+        self.logstore.delete(self.testuser_name)
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
+        self.assertEqual(len(listens), 0)
+
+
+    def test_delete_listens_escaped(self):
+        user = db_user.get_or_create(213, 'i have a\\weird\\user, na/me"\n')
+        count = self._create_test_data(user['musicbrainz_id'])
+        listens = self.logstore.fetch_listens(user_name=user['musicbrainz_id'], to_ts=1400000300)
+        self.assertEqual(len(listens), 5)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
+        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[3].ts_since_epoch, 1400000050)
+        self.assertEqual(listens[4].ts_since_epoch, 1400000000)
+
+        self.logstore.delete(user['musicbrainz_id'])
+        listens = self.logstore.fetch_listens(user_name=user['musicbrainz_id'], to_ts=1400000300)
+        self.assertEqual(len(listens), 0)

@@ -787,7 +787,6 @@ class TimescaleListenStore(ListenStore):
         try:
             with timescale.engine.connect() as connection:
                 curs = connection.execute(sqlalchemy.text(query), args)
-                curs.execute()
         except psycopg2.OperationalError as e:
             self.log.error("Cannot delete listens for user: %s" % str(e))
             raise
