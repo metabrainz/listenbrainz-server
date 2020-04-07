@@ -291,11 +291,18 @@ If you made any changes to the frontend, you can run the tests for frontend usin
 
     ./frontend-test.sh
 
-ListenBrainz uses ESLint to lint the frontend codebase, you can run ESLint using,
+ListenBrainz uses ESLint to lint the frontend codebase, please make sure you lint all new frontend code using,
 
 .. code-block:: bash
 
     ./lint.sh
+
+You can also setup a pre-commit hook to do the above process before each commit.
+To do this run the following command
+
+.. code-block:: bash
+
+  cp pre-commit.sh .git/hooks/pre-commit
 
 Also, run the **integration tests** for ListenBrainz.
 
