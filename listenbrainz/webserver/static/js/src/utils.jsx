@@ -1,3 +1,4 @@
+/* eslint-disable */
 // TODO: Make the code ESLint compliant
 // TODO: Port to typescript
 

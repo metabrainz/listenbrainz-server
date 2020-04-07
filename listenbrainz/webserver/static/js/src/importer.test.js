@@ -1,3 +1,4 @@
+/* eslint-disable */
 // TODO: Make the code ESLint compliant
 import Importer from "./importer";
 import APIService from "./api-service";

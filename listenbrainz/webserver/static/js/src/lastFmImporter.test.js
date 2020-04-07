@@ -1,3 +1,4 @@
+/* eslint-disable */
 // TODO: Make the code ESLint compliant
 import React from "react";
 import { shallow } from "enzyme";
