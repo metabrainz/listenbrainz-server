@@ -285,6 +285,7 @@ class TimescaleListenStore(ListenStore):
         query = """SELECT listened_at, recording_msid, user_name, created, data
                      FROM listen
                     WHERE listened_at <= :ts
+                      AND (created IS NULL OR created <= :ts)
                       AND user_name = :user_name
                  ORDER BY listened_at DESC
                     LIMIT :limit
