@@ -163,6 +163,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
 
     def test_dump_listens_spark_format(self):
         expected_count = self._create_test_data(self.testuser_name)
+        time.sleep(1)
         temp_dir = tempfile.mkdtemp()
         dump = self.logstore.dump_listens(
             location=temp_dir,
