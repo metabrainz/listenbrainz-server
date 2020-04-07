@@ -251,7 +251,7 @@ class TimescaleListenStore(ListenStore):
         args = { 'user_list' : tuple(user_list), 'ts' : int(time.time()) - max_age, 'limit' : limit }
         query = """SELECT * FROM (
                               SELECT listened_at, recording_msid, user_name, data,
-                                     row_number() over (partition by user_name order by listened_at) as rownum
+                                     row_number() OVER (partition by user_name ORDER BY listened_at DESC) AS rownum
                                 FROM listen
                                WHERE user_name IN :user_list
                                  AND listened_at > :ts
@@ -270,6 +270,7 @@ class TimescaleListenStore(ListenStore):
                 if not result:
                     break
             
+                print(Listen.from_timescale(result[0], result[1], result[2], result[3]))
                 listens.append(Listen.from_timescale(result[0], result[1], result[2], result[3]))
 
         return listens

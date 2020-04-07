@@ -20,7 +20,6 @@ def init_db_connection(connect_str):
     https://pythonhosted.org/Flask-SQLAlchemy/config.html#configuration-keys
     for more info.
     """
-    print("CREATE ENGINE: %s" % connect_str)
     global engine
     while True:
         try:
