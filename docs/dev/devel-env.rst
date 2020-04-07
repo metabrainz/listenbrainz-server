@@ -288,7 +288,14 @@ once so that subsequent running of the tests is faster:
 If you made any changes to the frontend, you can run the tests for frontend using
 
 .. code-block:: bash
+
     ./frontend-test.sh
+
+ListenBrainz uses ESLint to lint the frontend codebase, you can run ESLint using,
+
+.. code-block:: bash
+
+    ./lint.sh
 
 Also, run the **integration tests** for ListenBrainz.
 
