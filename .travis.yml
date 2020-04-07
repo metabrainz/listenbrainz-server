@@ -47,7 +47,7 @@ script:
                                      -wait tcp://db:5432 -timeout 60s
                                      -wait tcp://redis:6379 -timeout 60s
                                      -wait tcp://rabbitmq:5672 -timeout 60s
-                                     -wait tcp://timescale:5432 -timeout 60s \
+                                     -wait tcp://timescale:5432 -timeout 60s
                                      bash -c "py.test listenbrainz/tests/integration"
   - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int down
 
