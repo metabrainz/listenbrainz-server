@@ -361,9 +361,9 @@ class TimescaleListenStore(ListenStore):
 
         while True:
             if start_time == datetime.utcfromtimestamp(0): # if we need a full dump
-                query, args = self.get_listens_batch_for_dump(username, end_time, offset)
+                query, args = self.get_listens_query_for_dump(username, end_time.strftime('%s'), offset)
             else:
-                query, args = self.get_incremental_listens_batch(username, start_time, end_time, offset)
+                query, args = self.get_incremental_listens_query_batch(username, start_time, end_time, offset)
 
             rows_added = 0
             with timescale.engine.connect() as connection:
@@ -373,8 +373,8 @@ class TimescaleListenStore(ListenStore):
                     if not result:
                         break
                 
-                    listen = convert_timescale_row_to_spark_row(row)
-                    created = row[3]
+                    listen = convert_timescale_row_to_spark_row(result)
+                    created = result[3]
                     if created.year not in unwritten_listens:
                         unwritten_listens[created.year] = {}
                     if created.month not in unwritten_listens[created.year]:
@@ -408,13 +408,13 @@ class TimescaleListenStore(ListenStore):
         offset = 0
         bytes_written = 0
         listen_count = 0
-
+        
         # Get this user's listens in chunks
         while True:
             if start_time == datetime.utcfromtimestamp(0):
-                query, args = self.get_listens_batch_for_dump(username, end_time, offset)
+                query, args = self.get_listens_query_for_dump(username, end_time.strftime('%s'), offset)
             else:
-                query, args = self.get_incremental_listens_batch(username, start_time, end_time, offset)
+                query, args = self.get_incremental_listens_query_batch(username, start_time, end_time, offset)
 
             rows_added = 0
             with timescale.engine.connect() as connection:
@@ -424,8 +424,9 @@ class TimescaleListenStore(ListenStore):
                     if not result:
                         break
 
-                    listen = Listen.from_timescale(row).to_api()
+                    listen = Listen.from_timescale(result[0], result[1], result[2], result[4]).to_api()
                     listen['user_name'] = username
+                    print(listen)
                     try:
                         bytes_written += fileobj.write(ujson.dumps(listen))
                         bytes_written += fileobj.write('\n')
@@ -751,7 +752,7 @@ class TimescaleListenStore(ListenStore):
                             while bytes_read < user['size']:
                                 line = f.readline()
                                 bytes_read += len(line)
-                                listen = Listen.from_json(ujson.loads(line)).to_timescale()
+                                listen = Listen.from_json(ujson.loads(line))
                                 listens.append(listen)
 
                                 if len(listens) > DUMP_CHUNK_SIZE:
@@ -759,7 +760,7 @@ class TimescaleListenStore(ListenStore):
                                     listens = []
 
                             if len(listens) > 0:
-                                self.write_points_to_db(listens)
+                                self.insert(listens)
 
                             self.log.info('Import of user %s done!', user['user_name'])
                             users_done += 1
