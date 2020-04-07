@@ -32,7 +32,7 @@ services:
       - rabbitmq
 
   timescale_writer:
-    image: web
+    image: listenbrainz
     command: python3 -m "listenbrainz.timescale_writer.timescale_writer"
     volumes:
       - ..:/code/listenbrainz:z
