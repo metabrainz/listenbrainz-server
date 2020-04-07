@@ -362,7 +362,7 @@ class TimescaleListenStore(ListenStore):
 
         while True:
             if start_time == datetime.utcfromtimestamp(0): # if we need a full dump
-                query, args = self.get_listens_query_for_dump(username, end_time.strftime('%s'), offset)
+                query, args = self.get_listens_query_for_dump(username, int(end_time.strftime('%s')), offset)
             else:
                 query, args = self.get_incremental_listens_query_batch(username, start_time, end_time, offset)
 
@@ -409,11 +409,11 @@ class TimescaleListenStore(ListenStore):
         offset = 0
         bytes_written = 0
         listen_count = 0
-        
+
         # Get this user's listens in chunks
         while True:
             if start_time == datetime.utcfromtimestamp(0):
-                query, args = self.get_listens_query_for_dump(username, end_time.strftime('%s'), offset)
+                query, args = self.get_listens_query_for_dump(username, int(end_time.strftime('%s')), offset)
             else:
                 query, args = self.get_incremental_listens_query_batch(username, start_time, end_time, offset)
 
