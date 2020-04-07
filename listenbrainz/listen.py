@@ -199,6 +199,12 @@ def convert_timescale_row_to_spark_row(row):
         to a spark row.
     """
     data = row[4]['track_metadata']
+
+    if 'created' in row and row['created'] is not None:
+        created = row['created']
+    else:
+        created = str(datetime.utcfromtimestamp(0))
+    
     return  {
         'listened_at': datetime.utcfromtimestamp(row[0]),
         'user_name': row[2],
@@ -212,7 +218,7 @@ def convert_timescale_row_to_spark_row(row):
         'recording_msid': str(row[1]),
         'recording_mbid': data['additional_info'].get('recording_mbid', ''),
         'tags': convert_comma_seperated_string_to_list(data.get('tags', [])),
-        'inserted_timestamp' : row[3]
+        'inserted_timestamp' : created
     }
 
 def convert_influx_row_to_spark_row(row):

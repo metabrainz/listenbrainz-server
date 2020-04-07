@@ -6,13 +6,13 @@ import time
 import ujson
 import logging
 import psycopg2
-from psycopg2.extras import execute_values
 import sqlalchemy
 import shutil
 import subprocess
 import tarfile
 import tempfile
 
+from psycopg2.extras import execute_values
 from time import sleep
 from datetime import datetime
 from listenbrainz.db.testing import DatabaseTestCase
@@ -24,7 +24,8 @@ from listenbrainz.utils import quote
 from listenbrainz.db.dump import SchemaMismatchException
 from listenbrainz.listenstore import TimescaleListenStore, LISTENS_DUMP_SCHEMA_VERSION
 from listenbrainz.listenstore.timescale_listenstore import REDIS_TIMESCALE_USER_LISTEN_COUNT
-
+from unittest.mock import MagicMock
+from brainzutils import cache
 
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'admin', 'timescale')
 
@@ -36,6 +37,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
         ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'drop_db.sql'))
         ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
+        ts.engine.dispose()
 
         ts.init_db_connection(config.TIMESCALE_ADMIN_LB_URI)
         ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_extensions.sql'))
@@ -43,6 +45,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_functions.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
+        ts.engine.dispose()
 
 
     def setUp(self):
@@ -116,16 +119,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[2].ts_since_epoch, 1400000100)
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
-
-#    def test_get_listen_count_for_user(self):
-#        count = self._create_test_data(self.testuser_name)
-#
-#        # The listen_counts in the database will always be lagging behind and will not be fully
-#        # accurate, but they will give a good indication for the number of listens of a user.
-#        # This means that we can't insert data data and expect it to be in the DB right away
-#        # so we can fetch them for running tests
-#        listen_count = self.logstore.get_listen_count_for_user(user_name=self.testuser_name)
-#        self.assertEqual(count, listen_count)
 
     def test_fetch_listens_escaped(self):
         user = db_user.get_or_create(2, 'i have a\\weird\\user, name"\n')
@@ -240,7 +233,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assert_spark_dump_contains_listens(spark_dump_location, 5)
         shutil.rmtree(temp_dir)
 
-    def test_time_range_full_dumps(self): # fails because 1-11 < between_time always
+    def test_time_range_full_dumps(self):
         listens = generate_data(1, self.testuser_name, 1, 5) # generate 5 listens with ts 1-5
         self.logstore.insert(listens)
         sleep(1)
@@ -275,28 +268,31 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 2)
         self.assertEqual(listens[4].ts_since_epoch, 1)
 
-        # This test fails. We insert listened_at from 1-10 using generate_data() (*see line 238 and 243 in this file*).
-        # Now we pass between_time as end_time. This end_time value is converted to int (*see line 415 in timescale_listenstore.py*) which will be 15xxxxxxxx.
-        # This 15xxxxxxxx is used as listened_at (*see line 287 and 294 in timescale_listenstore.py*). All 1-10 are less than 15xxxxxxxx so all get into the dump.
-        # So we get 10 entries instread of 5. We cannot pass 5 as between_time because db_user.get_all_users(columns=['id', 'musicbrainz_id'], created_before=end_time) needs end_time which should be datetime value (*see line 626 in timescale_listenstore.py*).
-
-    def test_full_dump_listen_with_no_insert_timestamp(self):
-        """ We have listens with no `inserted_timestamps` inside the production
+    def set_created_to_NULL_in_DB(self):
+        try:
+            with ts.engine.connect() as connection:
+                result = connection.execute(sqlalchemy.text("UPDATE listen SET created = NULL"))
+        except psycopg2.OperationalError as e:
+            self.log.error("Cannot query timescale listen_count: %s" % str(e), exc_info=True)
+            raise
+        return
+    
+    def test_full_dump_listen_with_no_created(self):
+        """ We have listens with no `created` inside the production
         database. This means that full dumps should always be able to dump these
         listens as well. This is a test to test that.
         """
         listens = generate_data(1, self.testuser_name, 1, 5)
 
-        # insert these listens into influx without an insert_timestamp
-        influx_rows = [listen.to_influx(quote(self.testuser_name)) for listen in listens]
-        for row in influx_rows[1:]:
-            row['fields'].pop('inserted_timestamp')
-
-        t = datetime.now()
-        self.logstore.write_points_to_db(influx_rows)
+        self.logstore.insert(listens)
         sleep(1)
-        listens_from_influx = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
-        self.assertEqual(len(listens_from_influx), 5)
+
+        # Set the created field to NULL in DB
+        self.set_created_to_NULL_in_DB()
+        sleep(1)
+
+        listens_from_timescale = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
+        self.assertEqual(len(listens_from_timescale), 5)
 
         # full dump (with no start time) should contain these listens
         temp_dir = tempfile.mkdtemp()
@@ -312,32 +308,38 @@ class TestTimescaleListenStore(DatabaseTestCase):
             spark_format=True,
         )
         self.assertTrue(os.path.isfile(dump_location))
-        self.reset_influx_db()
+        self.reset_timescale_db()
         sleep(1)
         self.logstore.import_listens_dump(dump_location)
         sleep(1)
-        listens_from_influx = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
-        self.assertEqual(len(listens_from_influx), 5)
+        listens_from_timescale = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
+        self.assertEqual(len(listens_from_timescale), 5)
         self.assert_spark_dump_contains_listens(spark_dump_location, 5)
         shutil.rmtree(temp_dir)
 
-    def test_incremental_dumps_listen_with_no_insert_timestamp(self):
+    def test_incremental_dumps_listen_with_no_created(self):
         """ Incremental dumps should only consider listens that have
-        inserted_timestamps.
+        'created' value.
         """
         t = datetime.now()
         sleep(1)
-        listens = generate_data(1, self.testuser_name, 1, 5)
+        listens = generate_data(1, self.testuser_name, 1, 4)
 
-        # insert these listens into influx without an insert_timestamp
-        influx_rows = [listen.to_influx(quote(self.testuser_name)) for listen in listens]
-        for row in influx_rows[1:]:
-            row['fields'].pop('inserted_timestamp')
-
-        self.logstore.write_points_to_db(influx_rows)
+        self.logstore.insert(listens)
         sleep(1)
-        listens_from_influx = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
-        self.assertEqual(len(listens_from_influx), 5)
+
+        # Set the created field to NULL in DB
+        self.set_created_to_NULL_in_DB()
+        sleep(1)
+
+        # Add a new listen with created as NOT NULL
+        listens = generate_data(1, self.testuser_name, 5, 1)
+        
+        self.logstore.insert(listens)
+        sleep(1)
+
+        listens_from_timescale = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
+        self.assertEqual(len(listens_from_timescale), 5)
 
         # incremental dump (with a start time) should not contain these listens
         temp_dir = tempfile.mkdtemp()
@@ -355,12 +357,12 @@ class TestTimescaleListenStore(DatabaseTestCase):
             spark_format=True,
         )
         self.assertTrue(os.path.isfile(dump_location))
-        self.reset_influx_db()
+        self.reset_timescale_db()
         sleep(1)
         self.logstore.import_listens_dump(dump_location)
         sleep(1)
-        listens_from_influx = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
-        self.assertEqual(len(listens_from_influx), 1)
+        listens_from_timescale = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
+        self.assertEqual(len(listens_from_timescale), 1)
         self.assert_spark_dump_contains_listens(spark_dump_location, 1)
         shutil.rmtree(temp_dir)
 
@@ -542,6 +544,19 @@ class TestTimescaleListenStore(DatabaseTestCase):
         with self.assertRaises(SchemaMismatchException):
             self.logstore.import_listens_dump(archive_path)
 
+    def test_listen_counts_in_cache(self):
+        count = self._create_test_data(self.testuser_name)
+        
+        # Mock the listen count returned
+        self.logstore.get_listen_count_for_user_from_timescale = MagicMock(return_value=5)
+        
+        self.assertEqual(count, self.logstore.get_listen_count_for_user(self.testuser_name, need_exact=True))
+        user_key = '{}{}'.format(REDIS_TIMESCALE_USER_LISTEN_COUNT, self.testuser_name)
+        self.assertEqual(count, int(cache.get(user_key, decode=False)))
+
+        batch = generate_data(self.testuser_id, self.testuser_name, int(time.time()), 1)
+        self.logstore.insert(batch)
+        self.assertEqual(count + 1, int(cache.get(user_key, decode=False)))
 
     def test_delete_listens(self):
         count = self._create_test_data(self.testuser_name)

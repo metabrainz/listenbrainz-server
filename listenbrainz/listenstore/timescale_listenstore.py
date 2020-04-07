@@ -26,7 +26,7 @@ from listenbrainz.listen import Listen, convert_timescale_row_to_spark_row
 from listenbrainz.listenstore import ListenStore
 from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, \
     USER_CACHE_TIME, REDIS_USER_TIMESTAMPS, LISTENS_DUMP_SCHEMA_VERSION
-from listenbrainz.utils import create_path, log_ioerrors, init_cache
+from listenbrainz.utils import create_path, log_ioerrors, init_cache, convert_influx_to_datetime
 
 REDIS_TIMESCALE_USER_LISTEN_COUNT = "ls.listencount."  # append username
 DUMP_CHUNK_SIZE = 100000
@@ -49,6 +49,24 @@ class TimescaleListenStore(ListenStore):
         init_cache(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], namespace=conf['REDIS_NAMESPACE'])
         self.dump_temp_dir_root = conf.get('LISTEN_DUMP_TEMP_DIR_ROOT', tempfile.mkdtemp())
 
+    def get_listen_count_for_user_from_timescale(self, user_name):
+        """ Returns the listen count of a user from Timescale
+
+            Args:
+                user_name: the musicbrainz id of user whose listen count needs to be reset
+        """
+        try:
+            with timescale.engine.connect() as connection:
+                result = connection.execute(sqlalchemy.text("SELECT SUM(count) FROM listen_count WHERE user_name = :user_name"), {
+                    "user_name": user_name,
+                })
+                count = result.fetchone()[0] or 0
+
+        except psycopg2.OperationalError as e:
+            self.log.error("Cannot query timescale listen_count: %s" % str(e), exc_info=True)
+            raise
+
+        return count
 
     def get_listen_count_for_user(self, user_name, need_exact=False):
         """Get the total number of listens for a user. The number of listens comes from
@@ -70,16 +88,7 @@ class TimescaleListenStore(ListenStore):
             if count:
                 return int(count)
 
-        try:
-            with timescale.engine.connect() as connection:
-                result = connection.execute(sqlalchemy.text("SELECT SUM(count) FROM listen_count WHERE user_name = :user_name"), {
-                    "user_name": user_name,
-                })
-                count = result.fetchone()[0] or 0
-
-        except psycopg2.OperationalError as e:
-            self.log.error("Cannot query timescale listen_count: %s" % str(e), exc_info=True)
-            raise
+        count = self.get_listen_count_for_user_from_timescale(user_name)
 
         # put this value into brainzutils cache with an expiry time
         user_key = "{}{}".format(REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
@@ -375,13 +384,14 @@ class TimescaleListenStore(ListenStore):
                         break
                 
                     listen = convert_timescale_row_to_spark_row(result)
-                    created = result[3]
-                    if created.year not in unwritten_listens:
-                        unwritten_listens[created.year] = {}
-                    if created.month not in unwritten_listens[created.year]:
-                        unwritten_listens[created.year][created.month] = []
+                    timestamp = listen['listened_at']
 
-                    unwritten_listens[created.year][created.month].append(listen)
+                    if timestamp.year not in unwritten_listens:
+                        unwritten_listens[timestamp.year] = {}
+                    if timestamp.month not in unwritten_listens[timestamp.year]:
+                        unwritten_listens[timestamp.year][timestamp.month] = []
+
+                    unwritten_listens[timestamp.year][timestamp.month].append(listen)
                     rows_added += 1
 
             if rows_added == 0:
