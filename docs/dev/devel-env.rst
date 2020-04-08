@@ -297,7 +297,7 @@ ListenBrainz uses ESLint to lint the frontend codebase, please make sure you lin
 
     ./lint.sh
 
-You can also setup a pre-commit hook to do the above process before each commit.
+You can also setup a pre-commit hook to do the above process automatically before each commit.
 To do this run the following command
 
 .. code-block:: bash
