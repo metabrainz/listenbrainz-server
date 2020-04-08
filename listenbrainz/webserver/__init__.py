@@ -17,12 +17,10 @@ deploy_env = os.environ.get('DEPLOY_ENV', '')
 CONSUL_CONFIG_FILE_RETRY_COUNT = 10
 API_LISTENED_AT_ALLOWED_SKEW = 60 * 60 # allow a skew of 1 hour in listened_at submissions
 
-def create_influx(app):
-    from listenbrainz.webserver.influx_connection import init_influx_connection
-    return init_influx_connection(app.logger, {
-        'INFLUX_HOST': app.config['INFLUX_HOST'],
-        'INFLUX_PORT': app.config['INFLUX_PORT'],
-        'INFLUX_DB_NAME': app.config['INFLUX_DB_NAME'],
+def create_timescale(app):
+    from listenbrainz.webserver.timescale_connection import init_timescale_connection
+    return init_timescale_connection(app.logger, {
+        'SQLALCHEMY_TIMESCALE_URI': app.config['SQLALCHEMY_TIMESCALE_URI'],
         'REDIS_HOST': app.config['REDIS_HOST'],
         'REDIS_PORT': app.config['REDIS_PORT'],
         'REDIS_NAMESPACE': app.config['REDIS_NAMESPACE'],
@@ -100,8 +98,8 @@ def gen_app(config_path=None, debug=None):
     # Redis connection
     create_redis(app)
 
-    # Influx connection
-    # create_influx(app)
+    # Timescale connection
+    create_timescale(app)
 
     # RabbitMQ connection
     try:

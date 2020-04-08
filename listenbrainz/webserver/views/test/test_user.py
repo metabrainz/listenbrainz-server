@@ -6,8 +6,8 @@ from unittest import mock
 from flask import url_for, current_app
 from influxdb import InfluxDBClient
 from listenbrainz.db.testing import DatabaseTestCase
-from listenbrainz.listenstore.tests.util import create_test_data_for_influxlistenstore
-from listenbrainz.webserver.influx_connection import init_influx_connection
+from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
+from listenbrainz.webserver.timescale_connection import init_timescale_connection
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver.testing import ServerTestCase
 
@@ -29,13 +29,11 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
 
         self.influx.query('''create database %s''' % current_app.config['INFLUX_DB_NAME'])
 
-        self.logstore = init_influx_connection(self.log, {
+        self.logstore = init_timescale_connection(self.log, {
             'REDIS_HOST': current_app.config['REDIS_HOST'],
             'REDIS_PORT': current_app.config['REDIS_PORT'],
             'REDIS_NAMESPACE': current_app.config['REDIS_NAMESPACE'],
-            'INFLUX_HOST': current_app.config['INFLUX_HOST'],
-            'INFLUX_PORT': current_app.config['INFLUX_PORT'],
-            'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
+            'SQLALCHEMY_TIMESCALE_URI': self.app.config['SQLALCHEMY_TIMESCALE_URI']
         })
 
         user = db_user.get_or_create(1, 'iliekcomputers')

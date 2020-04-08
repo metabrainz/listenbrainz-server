@@ -32,12 +32,11 @@ import sys
 from brainzutils.mail import send_mail
 from datetime import datetime
 from flask import current_app, render_template
-from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from listenbrainz import db
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app
-from listenbrainz.webserver.influx_connection import init_influx_connection
+from listenbrainz.webserver.timescale_connection import init_timescale_connection
 
 
 NUMBER_OF_FULL_DUMPS_TO_KEEP = 2
@@ -74,7 +73,7 @@ def create_full(location, threads, dump_id, last_dump_id):
     """
     app = create_app()
     with app.app_context():
-        from listenbrainz.webserver.influx_connection import _influx as ls
+        from listenbrainz.webserver.timescale_connection import _ts as ls
         if last_dump_id:
             all_dumps = db_dump.get_dump_entries()
             if len(all_dumps) == 0:
@@ -117,7 +116,7 @@ def create_full(location, threads, dump_id, last_dump_id):
 def create_incremental(location, threads, dump_id):
     app = create_app()
     with app.app_context():
-        from listenbrainz.webserver.influx_connection import _influx as ls
+        from listenbrainz.webserver.timescale_connection import _ts as ls
         if dump_id is None:
             end_time = datetime.now()
             dump_id = db_dump.add_dump_entry(int(end_time.strftime('%s')))
@@ -157,7 +156,7 @@ def create_incremental(location, threads, dump_id):
 @click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
 def create_spark_dump(location, threads):
     with create_app().app_context():
-        from listenbrainz.webserver.influx_connection import _influx as ls
+        from listenbrainz.webserver.timescale_connection import _ts as ls
         time_now = datetime.today()
         dump_path = os.path.join(location, 'listenbrainz-spark-dump-{time}'.format(time=time_now.strftime('%Y%m%d-%H%M%S')))
         create_path(dump_path)
@@ -198,7 +197,7 @@ def import_dump(private_archive, public_archive, listen_archive, threads):
     with app.app_context():
         db_dump.import_postgres_dump(private_archive, public_archive, threads)
 
-        from listenbrainz.webserver.influx_connection import _influx as ls
+        from listenbrainz.webserver.timescale_connection import _ts as ls
         try:
             ls.import_listens_dump(listen_archive, threads)
         except IOError as e:

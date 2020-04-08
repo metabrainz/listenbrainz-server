@@ -218,8 +218,6 @@ import listenbrainz.spark.request_manage as spark_request_manage
 cli.add_command(spark_request_manage.cli, name="spark")
 import listenbrainz.db.dump_manager as dump_manager
 cli.add_command(dump_manager.cli, name="dump")
-import listenbrainz.listen_replay.cli as listen_replay
-cli.add_command(listen_replay.cli, name="replay")
 
 
 if __name__ == '__main__':

@@ -35,7 +35,7 @@ from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.listenstore.tests.util import generate_data
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app
-from listenbrainz.webserver.influx_connection import init_influx_connection
+from listenbrainz.webserver.timescale_connection import init_timescale_connection
 from time import sleep
 from unittest.mock import patch
 
@@ -46,13 +46,11 @@ class DumpManagerTestCase(DatabaseTestCase):
         self.app = create_app()
         self.tempdir = tempfile.mkdtemp()
         self.runner = CliRunner()
-        self.listenstore = init_influx_connection(logging.getLogger(__name__), {
+        self.listenstore = init_timescale_connection(logging.getLogger(__name__), {
             'REDIS_HOST': self.app.config['REDIS_HOST'],
             'REDIS_PORT': self.app.config['REDIS_PORT'],
             'REDIS_NAMESPACE': self.app.config['REDIS_NAMESPACE'],
-            'INFLUX_HOST': self.app.config['INFLUX_HOST'],
-            'INFLUX_PORT': self.app.config['INFLUX_PORT'],
-            'INFLUX_DB_NAME': self.app.config['INFLUX_DB_NAME'],
+            'SQLALCHEMY_TIMESCALE_URI': self.app.config['SQLALCHEMY_TIMESCALE_URI']
         })
         self.user_id = db_user.create(1, 'iliekcomputers')
         self.user_name = db_user.get(self.user_id)['musicbrainz_id']

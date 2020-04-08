@@ -24,7 +24,6 @@ from listenbrainz.stats.utils import construct_stats_queue_key
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.login import api_login_required
 from listenbrainz.webserver.redis_connection import _redis
-from listenbrainz.webserver.influx_connection import _influx
 from listenbrainz.webserver.utils import sizeof_readable
 from listenbrainz.webserver.views.user import delete_user, _get_user
 from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, \
@@ -140,7 +139,7 @@ def fetch_listens(musicbrainz_id, to_ts):
     to listenstore until we get all the data. Returns a generator that streams
     the results.
     """
-    db_conn = webserver.create_influx(current_app)
+    db_conn = webserver.create_timescale(current_app)
     while True:
         batch = db_conn.fetch_listens(current_user.musicbrainz_id, to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
         if not batch:
@@ -162,7 +161,7 @@ def stream_json_array(elements):
 def export_data():
     """ Exporting the data to json """
     if request.method == "POST":
-        db_conn = webserver.create_influx(current_app)
+        db_conn = webserver.create_timescale(current_app)
         filename = current_user.musicbrainz_id + "_lb-" + datetime.today().strftime('%Y-%m-%d') + ".json"
 
         # Build a generator that streams the json response. We never load all

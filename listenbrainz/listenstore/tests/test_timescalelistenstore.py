@@ -19,7 +19,7 @@ from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db import timescale as ts
 from listenbrainz import config
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore, generate_data
-from listenbrainz.webserver.timescale_connection import init_ts_connection
+from listenbrainz.webserver.timescale_connection import init_timescale_connection
 from listenbrainz.utils import quote
 from listenbrainz.db.dump import SchemaMismatchException
 from listenbrainz.listenstore import TimescaleListenStore, LISTENS_DUMP_SCHEMA_VERSION
@@ -53,7 +53,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.log = logging.getLogger(__name__)
         self.reset_timescale_db()
         
-        self.logstore = init_ts_connection(self.log, {
+        self.logstore = init_timescale_connection(self.log, {
             'REDIS_HOST': config.REDIS_HOST,
             'REDIS_PORT': config.REDIS_PORT,
             'REDIS_NAMESPACE': config.REDIS_NAMESPACE,

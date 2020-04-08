@@ -3,7 +3,7 @@ from listenbrainz.listenstore import TimescaleListenStore
 
 _ts = None
 
-def init_ts_connection(logger, conf):
+def init_timescale_connection(logger, conf):
     global _ts
     while True:
         try:

@@ -5,7 +5,6 @@ import ujson
 
 from flask import Blueprint, render_template, request, url_for, Response, redirect, flash, current_app, jsonify
 from flask_login import current_user, login_required
-from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain import spotify
@@ -13,7 +12,7 @@ from listenbrainz.webserver import flash
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver.redis_connection import _redis
-from listenbrainz.webserver.influx_connection import _influx
+from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.views.api_tools import publish_data_to_queue
 import time
 from datetime import datetime
@@ -51,7 +50,7 @@ def lastfmscraper(user_name):
 @user_bp.route("/<user_name>")
 def profile(user_name):
     # Which database to use to showing user listens.
-    db_conn = webserver.influx_connection._influx
+    db_conn = _ts
     # Which database to use to show playing_now stream.
     playing_now_conn = webserver.redis_connection._redis
 
@@ -231,7 +230,7 @@ def _get_spotify_uri_for_listens(listens):
 
 def delete_user(musicbrainz_id):
     """ Delete a user from ListenBrainz completely.
-    First, drops the user's influx measurement and then deletes her from the
+    First, drops the user's listens and then deletes her from the
     database.
 
     Args:
@@ -242,7 +241,7 @@ def delete_user(musicbrainz_id):
     """
 
     user = _get_user(musicbrainz_id)
-    _influx.delete(user.musicbrainz_id)
+    _ts.delete(user.musicbrainz_id)
     publish_data_to_queue(
         data={
             'type': 'delete.user',
