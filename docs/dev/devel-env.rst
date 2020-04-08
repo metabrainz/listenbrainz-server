@@ -291,11 +291,21 @@ If you made any changes to the frontend, you can run the tests for frontend usin
 
     ./frontend-test.sh
 
-ListenBrainz uses ESLint to lint the frontend codebase, please make sure you lint all new frontend code using,
+ListenBrainz uses ESLint to lint the frontend codebase, please make sure you lint 
+all new frontend code using,
 
 .. code-block:: bash
 
     ./lint.sh
+
+.. note::
+
+    You might need to rebuild the `static_builder` image before running the linter,
+    this can be done using,
+
+    .. code-block:: bash
+        
+        ./develop build static_builder
 
 You can also setup a pre-commit hook to do the above process automatically before each commit.
 To do this run the following command
