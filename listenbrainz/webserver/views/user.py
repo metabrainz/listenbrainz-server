@@ -2,6 +2,7 @@ import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import urllib
 import ujson
+import psycopg2
 
 from flask import Blueprint, render_template, request, url_for, Response, redirect, flash, current_app, jsonify
 from flask_login import current_user, login_required
@@ -61,7 +62,7 @@ def profile(user_name):
     try:
         have_listen_count = True
         listen_count = db_conn.get_listen_count_for_user(user_name)
-    except (InfluxDBServerError, InfluxDBClientError):
+    except psycopg2.OperationalError:
         have_listen_count = False
         listen_count = 0
 

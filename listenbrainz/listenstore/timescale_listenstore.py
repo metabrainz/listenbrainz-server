@@ -105,7 +105,7 @@ class TimescaleListenStore(ListenStore):
         self.get_listen_count_for_user(user_name, need_exact=True)
 
 
-    def _select_single_timestamp(self, field, measurement):
+    def _select_single_timestamp(self, field, user_name):
         try:
             with timescale.engine.connect() as connection:
                 result = connection.execute(sqlalchemy.text("SELECT :field AS value FROM listen WHERE user_name = :user_name"), {
