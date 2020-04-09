@@ -288,6 +288,7 @@ once so that subsequent running of the tests is faster:
 If you made any changes to the frontend, you can run the tests for frontend using
 
 .. code-block:: bash
+
     ./frontend-test.sh
 
 Also, run the **integration tests** for ListenBrainz.
@@ -298,6 +299,30 @@ Also, run the **integration tests** for ListenBrainz.
 
 When the tests complete, you will see if your changes are valid or not. These tests
 are a helpful way to validate new changes without a lot of work.
+
+
+Lint your code
+--------------
+
+ListenBrainz uses ESLint to lint the frontend codebase, please make sure you lint
+all new frontend code using
+
+.. code-block:: bash
+
+    ./lint.sh
+
+This command should list all issues with the code you've modified. Make sure to fix
+all errors.
+
+.. note::
+
+    You might need to rebuild the `static_builder` image before running the linter,
+    this can be done using,
+
+    .. code-block:: bash
+
+        ./develop build static_builder
+
 
 Set up ListenBrainz Spark development environment
 =================================================

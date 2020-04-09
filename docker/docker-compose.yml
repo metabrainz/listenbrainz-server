@@ -122,7 +122,7 @@ services:
       dockerfile: docker/Dockerfile.webpack
     command: npm run build:dev
     volumes:
-      - ..:/code/listenbrainz:z
+      - ../listenbrainz/webserver/static:/code/static:z
       - ../listenbrainz/webserver/static:/static:z
 
   type_checker:
@@ -131,6 +131,6 @@ services:
       dockerfile: docker/Dockerfile.webpack
     command: npm run type-check:watch
     volumes:
-      - ..:/code/listenbrainz:z
+      - ../listenbrainz/webserver/static:/code/static:z
       - ../listenbrainz/webserver/static:/static:z
 
