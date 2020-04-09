@@ -20,6 +20,10 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         DatabaseTestCase.setUp(self)
 
         self.log = logging.getLogger(__name__)
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3cf80797c8b11f4e51303d59f70927f102a6b6e4
         self.logstore = init_timescale_connection(self.log, {
             'REDIS_HOST': current_app.config['REDIS_HOST'],
             'REDIS_PORT': current_app.config['REDIS_PORT'],
@@ -36,7 +40,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
 
     def tearDown(self):
         self.logstore = None
-
         ServerTestCase.tearDown(self)
         DatabaseTestCase.tearDown(self)
 
@@ -162,8 +165,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
     @mock.patch('listenbrainz.webserver.views.user.time')
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
     def test_ts_filters(self, timescale, m_time):
-        """Check that max_ts and min_ts are passed to the timescale """
-
+        """Check that max_ts and min_ts are passed to timescale """
         # If no parameter is given, use current time as the to_ts
         m_time.time.return_value = 1520946608
         self.client.get(url_for('user.profile', user_name='iliekcomputers'))

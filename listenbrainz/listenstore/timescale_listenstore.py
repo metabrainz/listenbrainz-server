@@ -26,7 +26,7 @@ from listenbrainz.listen import Listen, convert_timescale_row_to_spark_row
 from listenbrainz.listenstore import ListenStore
 from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, \
     USER_CACHE_TIME, REDIS_USER_TIMESTAMPS, LISTENS_DUMP_SCHEMA_VERSION
-from listenbrainz.utils import create_path, log_ioerrors, init_cache, convert_influx_to_datetime
+from listenbrainz.utils import create_path, log_ioerrors, init_cache
 
 REDIS_TIMESCALE_USER_LISTEN_COUNT = "ls.listencount."  # append username
 DUMP_CHUNK_SIZE = 100000
@@ -105,12 +105,17 @@ class TimescaleListenStore(ListenStore):
         self.get_listen_count_for_user(user_name, need_exact=True)
 
 
-    def _select_single_timestamp(self, field, user_name):
+    def _select_single_timestamp(self, select_min_timestamp, user_name):
+
+        if select_min_timestamp:
+            query = "SELECT min(listened_at) AS value FROM listen WHERE user_name = :user_name"
+        else:
+            query = "SELECT max(listened_at) AS value FROM listen WHERE user_name = :user_name"
+
         try:
             with timescale.engine.connect() as connection:
-                result = connection.execute(sqlalchemy.text("SELECT :field AS value FROM listen WHERE user_name = :user_name"), {
-                    "user_name": user_name,
-                    "field" : field
+                result = connection.execute(sqlalchemy.text(query), {
+                    "user_name": user_name
                 })
                 return result.fetchone()["value"]
         except psycopg2.OperationalError as e:
@@ -157,8 +162,8 @@ class TimescaleListenStore(ListenStore):
             min_ts = int(min_ts)
             max_ts = int(max_ts)
         else:
-            min_ts = self._select_single_timestamp("first(artist_msid)", user_name)
-            max_ts = self._select_single_timestamp("last(artist_msid)", user_name)
+            min_ts = self._select_single_timestamp(True, user_name)
+            max_ts = self._select_single_timestamp(False, user_name)
 
             cache.set(REDIS_USER_TIMESTAMPS % user_name, "%d,%d" % (min_ts, max_ts), USER_CACHE_TIME)
 

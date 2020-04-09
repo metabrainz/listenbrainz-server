@@ -20,7 +20,6 @@ from listenbrainz.db import timescale as ts
 from listenbrainz import config
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore, generate_data
 from listenbrainz.webserver.timescale_connection import init_timescale_connection
-from listenbrainz.utils import quote
 from listenbrainz.db.dump import SchemaMismatchException
 from listenbrainz.listenstore import TimescaleListenStore, LISTENS_DUMP_SCHEMA_VERSION
 from listenbrainz.listenstore.timescale_listenstore import REDIS_TIMESCALE_USER_LISTEN_COUNT

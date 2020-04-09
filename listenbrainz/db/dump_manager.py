@@ -63,7 +63,7 @@ def send_dump_creation_notification(dump_name, dump_type):
 @click.option('--last-dump-id', is_flag=True)
 def create_full(location, threads, dump_id, last_dump_id):
     """ Create a ListenBrainz data dump which includes a private dump, a statistics dump
-        and a dump of the actual listens from InfluxDB
+        and a dump of the actual listens from the listenstore
 
         Args:
             location (str): path to the directory where the dump should be made
@@ -200,14 +200,11 @@ def import_dump(private_archive, public_archive, listen_archive, threads):
         from listenbrainz.webserver.timescale_connection import _ts as ls
         try:
             ls.import_listens_dump(listen_archive, threads)
+        except psycopg2.OperationalError as e:
+            current_app.logger.critical('OperationalError while trying to import data: %s', str(e), exc_info=True)
+            raise
         except IOError as e:
-            current_app.logger.critical('IOError while trying to import data into Influx: %s', str(e), exc_info=True)
-            raise
-        except InfluxDBClientError as e:
-            current_app.logger.critical('Error while sending data to Influx: %s', str(e), exc_info=True)
-            raise
-        except InfluxDBServerError as e:
-            current_app.logger.critical('InfluxDB Server Error while importing data: %s', str(e), exc_info=True)
+            current_app.logger.critical('IOError while trying to import data: %s', str(e), exc_info=True)
             raise
         except Exception as e:
             current_app.logger.critical('Unexpected error while importing data: %s', str(e), exc_info=True)
