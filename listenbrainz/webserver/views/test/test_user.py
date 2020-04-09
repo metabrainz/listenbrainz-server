@@ -4,7 +4,6 @@ import ujson
 from unittest import mock
 
 from flask import url_for, current_app
-from influxdb import InfluxDBClient
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore
 from listenbrainz.webserver.timescale_connection import init_timescale_connection
@@ -21,13 +20,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         DatabaseTestCase.setUp(self)
 
         self.log = logging.getLogger(__name__)
-        self.influx = InfluxDBClient(
-            host=current_app.config['INFLUX_HOST'],
-            port=current_app.config['INFLUX_PORT'],
-            database=current_app.config['INFLUX_DB_NAME'],
-        )
-
-        self.influx.query('''create database %s''' % current_app.config['INFLUX_DB_NAME'])
 
         self.logstore = init_timescale_connection(self.log, {
             'REDIS_HOST': current_app.config['REDIS_HOST'],
@@ -44,9 +36,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.weirduser = User.from_dbrow(weirduser)
 
     def tearDown(self):
-        self.influx.query('''drop database %s''' % current_app.config['INFLUX_DB_NAME'])
         self.logstore = None
-
         ServerTestCase.tearDown(self)
         DatabaseTestCase.tearDown(self)
 
@@ -155,7 +145,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertContext('active_section', 'artists')
 
     def _create_test_data(self, user_name):
-        test_data = create_test_data_for_influxlistenstore(user_name)
+        test_data = create_test_data_for_timescalelistenstore(user_name)
         self.logstore.insert(test_data)
 
     def test_username_case(self):
@@ -170,38 +160,38 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assert200(response2)
 
     @mock.patch('listenbrainz.webserver.views.user.time')
-    @mock.patch('listenbrainz.webserver.influx_connection._influx.fetch_listens')
-    def test_ts_filters(self, influx, m_time):
-        """Check that max_ts and min_ts are passed to the influx """
+    @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
+    def test_ts_filters(self, timescale, m_time):
+        """Check that max_ts and min_ts are passed to timescale """
 
         # If no parameter is given, use current time as the to_ts
         m_time.time.return_value = 1520946608
         self.client.get(url_for('user.profile', user_name='iliekcomputers'))
         req_call = mock.call('iliekcomputers', limit=25, to_ts=1520946608)
-        influx.assert_has_calls([req_call])
-        influx.reset_mock()
+        timescale.assert_has_calls([req_call])
+        timescale.reset_mock()
 
-        # max_ts query param -> to_ts influx param
+        # max_ts query param -> to_ts timescale param
         self.client.get(url_for('user.profile', user_name='iliekcomputers'), query_string={'max_ts': 1520946000})
         req_call = mock.call('iliekcomputers', limit=25, to_ts=1520946000)
-        influx.assert_has_calls([req_call])
-        influx.reset_mock()
+        timescale.assert_has_calls([req_call])
+        timescale.reset_mock()
 
-        # min_ts query param -> from_ts influx param
+        # min_ts query param -> from_ts timescale param
         self.client.get(url_for('user.profile', user_name='iliekcomputers'), query_string={'min_ts': 1520941000})
         req_call = mock.call('iliekcomputers', limit=25, from_ts=1520941000)
-        influx.assert_has_calls([req_call])
-        influx.reset_mock()
+        timescale.assert_has_calls([req_call])
+        timescale.reset_mock()
 
         # If max_ts and min_ts set, only max_ts is used
         self.client.get(url_for('user.profile', user_name='iliekcomputers'),
                         query_string={'min_ts': 1520941000, 'max_ts': 1520946000})
         req_call = mock.call('iliekcomputers', limit=25, to_ts=1520946000)
-        influx.assert_has_calls([req_call])
+        timescale.assert_has_calls([req_call])
 
 
-    @mock.patch('listenbrainz.webserver.influx_connection._influx.fetch_listens')
-    def test_ts_filters_errors(self, influx):
+    @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
+    def test_ts_filters_errors(self, timescale):
         """If max_ts and min_ts are not integers, show an error page"""
         self._create_test_data('iliekcomputers')
         response = self.client.get(url_for('user.profile', user_name='iliekcomputers'),
@@ -214,4 +204,4 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assert400(response)
         self.assertIn(b'Incorrect timestamp argument min_ts: b', response.data)
 
-        influx.assert_not_called()
+        timescale.assert_not_called()

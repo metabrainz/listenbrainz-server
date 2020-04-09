@@ -11,6 +11,10 @@ MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@db:5
 
 POSTGRES_ADMIN_URI="postgresql://postgres@db/template1"
 
+SQLALCHEMY_TIMESCALE_URI = "postgresql://timescale_lb:timescale_lb@timescale/timescale_lb"
+TIMESCALE_ADMIN_URI = "postgresql://postgres:postgres@timescale/template1"
+TIMESCALE_ADMIN_LB_URI = "postgresql://postgres:postgres@timescale/timescale_lb"
+
 # Other postgres configuration options
 # Oldest listens which can be stored in the database, in days.
 MAX_POSTGRES_LISTEN_HISTORY = "-1"
@@ -24,11 +28,6 @@ PG_ASYNC_LISTEN_COMMIT = False
 REDIS_HOST = "redis"
 REDIS_PORT = 6379
 REDIS_NAMESPACE = "listenbrainz"
-
-# Influx DB (main listen store)
-INFLUX_HOST    = "influx"
-INFLUX_PORT    = 8086
-INFLUX_DB_NAME  = "listenbrainz"
 
 # RabbitMQ
 RABBITMQ_HOST = "rabbitmq"

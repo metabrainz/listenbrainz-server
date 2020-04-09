@@ -18,7 +18,7 @@ class TestAPICompatUserClass(DatabaseTestCase):
     def setUp(self):
         super(TestAPICompatUserClass, self).setUp()
         self.log = logging.getLogger(__name__)
-        self.logstore = init_influx_connection(self.log, {
+        self.logstore = init_timescale_connection(self.log, {
             'SQLALCHEMY_TIMESCALE_URI': self.app.config['SQLALCHEMY_TIMESCALE_URI'],
             'REDIS_HOST': config.REDIS_HOST,
             'REDIS_PORT': config.REDIS_PORT,

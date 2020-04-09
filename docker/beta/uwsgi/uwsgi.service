@@ -8,10 +8,10 @@ then
     exec uwsgi /etc/uwsgi/uwsgi.ini
 fi
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-influx-writer-beta" ]
+if [ "${CONTAINER_NAME}" = "listenbrainz-timescale-writer-beta" ]
 then
     cd /code/listenbrainz
-    exec python3 -m listenbrainz.influx_writer.influx_writer
+    exec python3 -u -m listenbrainz.timescale_writer.timescale_writer
 fi
 
 if [ "${CONTAINER_NAME}" = "listenbrainz-bigquery-writer-beta" ]
@@ -47,12 +47,6 @@ if [ "${CONTAINER_NAME}" = "listenbrainz-spark-reader-beta" ]
 then
     cd /code/listenbrainz
     exec python3 -m listenbrainz.spark.spark_reader
-fi
-
-if [ "${CONTAINER_NAME}" = "listenbrainz-timescale-writer-beta" ]
-then
-    cd /code/listenbrainz
-    exec python3 -u -m listenbrainz.timescale_writer.timescale_writer
 fi
 
 echo "init script has no clue which service to start. Set env var CONTAINER_NAME!"

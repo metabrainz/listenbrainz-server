@@ -5,7 +5,7 @@ import ujson
 import yaml
 
 from datetime import datetime
-from listenbrainz.utils import escape, convert_to_unix_timestamp
+from listenbrainz.utils import escape
 
 def flatten_dict(d, seperator='', parent_key=''):
     """
@@ -220,26 +220,3 @@ def convert_timescale_row_to_spark_row(row):
         'tags': convert_comma_seperated_string_to_list(data.get('tags', [])),
         'inserted_timestamp' : created
     }
-
-def convert_influx_row_to_spark_row(row):
-    data = {
-        'listened_at': str(row['time']),
-        'user_name': row['user_name'],
-        'artist_msid': row['artist_msid'],
-        'artist_name': row['artist_name'],
-        'artist_mbids': convert_comma_seperated_string_to_list(row.get('artist_mbids', '')),
-        'release_msid': row.get('release_msid'),
-        'release_name': row.get('release_name', ''),
-        'release_mbid': row.get('release_mbid', ''),
-        'track_name': row['track_name'],
-        'recording_msid': row['recording_msid'],
-        'recording_mbid': row.get('recording_mbid', ''),
-        'tags': convert_comma_seperated_string_to_list(row.get('tags', [])),
-    }
-
-    if 'inserted_timestamp' in row and row['inserted_timestamp'] is not None:
-        data['inserted_timestamp'] = str(datetime.utcfromtimestamp(row['inserted_timestamp']))
-    else:
-        data['inserted_timestamp'] = str(datetime.utcfromtimestamp(0))
-
-    return data

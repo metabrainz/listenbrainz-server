@@ -200,7 +200,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             'permission': 'user-read-recently-played',
         })
 
-    @patch('listenbrainz.listenstore.influx_listenstore.InfluxListenStore.fetch_listens')
+    @patch('listenbrainz.listenstore.timescale_listenstore.TimescaleListenStore.fetch_listens')
     def test_export_streaming(self, mock_fetch_listens):
         self.temporary_login(self.user['login_id'])
 
