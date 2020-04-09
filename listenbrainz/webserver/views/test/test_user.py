@@ -20,10 +20,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         DatabaseTestCase.setUp(self)
 
         self.log = logging.getLogger(__name__)
-<<<<<<< HEAD
-=======
-
->>>>>>> 3cf80797c8b11f4e51303d59f70927f102a6b6e4
         self.logstore = init_timescale_connection(self.log, {
             'REDIS_HOST': current_app.config['REDIS_HOST'],
             'REDIS_PORT': current_app.config['REDIS_PORT'],
