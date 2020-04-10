@@ -1,33 +1,16 @@
 import ReactDOM from "react-dom";
 import React from "react";
-// @ts-ignore
 import Importer from "./importer";
 // @ts-ignore
 import Modal from "./lastFmImporterModal";
 
-interface Props {
-  user: {
-    id: string;
-    name: string;
-    auth_token: string;
-  };
-  profileUrl: string;
-  apiUrl: string;
-  lastfmApiUrl: string;
-  lastfmApiKey: string;
-}
-
-interface State {
-  show: boolean;
-  canClose: boolean;
-  lastfmUsername: string;
-  msg: string;
-}
-
-export default class LastFmImporter extends React.Component<Props, State> {
+export default class LastFmImporter extends React.Component<
+  ImporterProps,
+  ImporterState
+> {
   importer: any;
 
-  constructor(props: Props) {
+  constructor(props: ImporterProps) {
     super(props);
 
     this.state = {
