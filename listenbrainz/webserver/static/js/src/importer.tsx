@@ -1,13 +1,42 @@
-// TODO: Port to typescript
-
 import React from "react";
 import { faSpinner, faCheck } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core"; // eslint-disable-line no-unused-vars
 import Scrobble from "./scrobble";
+// @ts-ignore
 import APIService from "./api-service";
 
 export default class Importer {
-  constructor(lastfmUsername, props) {
+  private APIService: any;
+
+  private lastfmUsername: string;
+  private lastfmURL: string;
+  private lastfmKey: string;
+
+  private userName: string;
+  private userToken: string;
+
+  private page = 1;
+  private totalPages = 0;
+
+  private playCount = -1; // the number of scrobbles reported by Last.FM
+  private countReceived = 0; // number of scrobbles the Last.FM API sends us, this can be diff from playCount
+
+  private latestImportTime = 0; // the latest timestamp that we've imported earlier
+  private maxTimestampForImport = 0; // the latest listen found in this import
+  private incrementalImport = false;
+
+  private numCompleted = 0; // number of pages completed till now
+
+  // Variables used to honor LB's rate limit
+  private rlRemain = -1;
+  private rlReset = -1;
+  private rlOrigin = -1;
+
+  public msg = (<p />); // Message to be displayed in modal
+  public canClose = true;
+
+  constructor(lastfmUsername: string, private props: ImporterProps) {
     this.APIService = new APIService(
       props.apiUrl || `${window.location.origin}/1`
     ); // Used to access LB API
@@ -18,33 +47,11 @@ export default class Importer {
 
     this.userName = props.user.name;
     this.userToken = props.user.auth_token;
-
-    this.page = 1;
-    this.totalPages = 0;
-    this.playCount = -1; // the number of scrobbles reported by Last.FM
-    this.countReceived = 0; // number of scrobbles the Last.FM API sends us, this can be diff from playCount
-
-    this.latestImportTime = 0; // the latest timestamp that we've imported earlier
-    this.maxTimestampForImport = 0; // the latest listen found in this import
-    this.incrementalImport = false;
-
-    this.numCompleted = 0; // number of pages completed till now
-
-    this.props = props;
-
-    // Variables used to honor LB's rate limit
-    this.rl_remain = -1;
-    this.rl_reset = -1;
-    this.rl_origin = -1;
-
-    // Message to be outputed in modal
-    this.msg = "";
-    this.canClose = true;
   }
 
   async startImport() {
     this.canClose = false; // Disable the close button
-    this.updateMessage("Your import from Last.fm is starting!");
+    this.updateMessage(<p>Your import from Last.fm is starting!</p>);
     this.playCount = await this.getTotalNumberOfScrobbles();
     this.latestImportTime = await this.APIService.getLatestImport(
       this.userName
@@ -67,8 +74,8 @@ export default class Importer {
       // Update message
       const msg = (
         <p>
-          <FontAwesomeIcon icon={faSpinner} spin /> Sending page{" "}
-          {this.numCompleted} of {this.totalPages} to ListenBrainz <br />
+          <FontAwesomeIcon icon={faSpinner.iconName as IconProp} spin /> Sending
+          page {this.numCompleted} of {this.totalPages} to ListenBrainz <br />
           <span style={{ fontSize: `${8}pt` }}>
             {this.incrementalImport && (
               <span>
@@ -107,7 +114,7 @@ export default class Importer {
     }
     const finalMsg = (
       <p>
-        <FontAwesomeIcon icon={faCheck} /> Import finished
+        <FontAwesomeIcon icon={faCheck.iconName as IconProp} /> Import finished
         <br />
         <span style={{ fontSize: `${8}pt` }}>
           Successfully submitted {this.countReceived} listens to ListenBrainz
@@ -159,7 +166,7 @@ export default class Importer {
       }
       return -1;
     } catch {
-      this.updateMessage("An error occurred, please try again. :(");
+      this.updateMessage(<p>An error occurred, please try again. :(</p>);
       this.canClose = true; // Enable the close button
       const error = new Error();
       error.message = "Something went wrong";
@@ -183,18 +190,19 @@ export default class Importer {
       }
       return 0;
     } catch (error) {
-      this.updateMessage("An error occurred, please try again. :(");
+      this.updateMessage(<p>An error occurred, please try again. :(</p>);
       this.canClose = true; // Enable the close button
       return -1;
     }
   }
 
-  async getPage(page) {
+  async getPage(page: number) {
     /*
      * Fetch page from Last.fm
      */
 
-    const retry = () => {
+    // eslint-disable-next-line no-unused-vars
+    const retry = (reason: string) => {
       // console.warn(`${reason} while fetching last.fm page=${page}, retrying in 3s`);
       setTimeout(() => this.getPage(page), 3000);
     };
@@ -223,7 +231,7 @@ export default class Importer {
         this.countReceived += payload.length;
         return payload;
       }
-      if (/^5/.test(response.status)) {
+      if (/^5/.test(response.status.toString())) {
         retry(`Got ${response.status}`);
       } else {
         // ignore 40x
@@ -236,7 +244,8 @@ export default class Importer {
     return null;
   }
 
-  async submitPage(payload) {
+  // TODO: Replace with array of Listens
+  async submitPage(payload: any) {
     const delay = this.getRateLimitDelay();
     // Halt execution for some time
     await new Promise((resolve) => {
@@ -251,16 +260,17 @@ export default class Importer {
     this.updateRateLimitParameters(response);
   }
 
-  static encodeScrobbles(scrobbles) {
+  // TODO: Replace return type with array of Listens
+  static encodeScrobbles(scrobbles: any): any {
     const rawScrobbles = scrobbles.recenttracks.track;
-    const parsedScrobbles = Importer.map((rawScrobble) => {
+    const parsedScrobbles = Importer.map((rawScrobble: any) => {
       const scrobble = new Scrobble(rawScrobble);
       return scrobble.asJSONSerializable();
     }, rawScrobbles);
     return parsedScrobbles;
   }
 
-  static map(applicable, collection) {
+  static map(applicable: Function, collection: any) {
     const newCollection = [];
     for (let i = 0; i < collection.length; i += 1) {
       const result = applicable(collection[i]);
@@ -273,7 +283,7 @@ export default class Importer {
     return newCollection;
   }
 
-  updateMessage = (msg) => {
+  updateMessage = (msg: React.ReactElement) => {
     this.msg = msg;
   };
 
@@ -281,20 +291,20 @@ export default class Importer {
     /* Get the amount of time we should wait according to LB rate limits before making a request to LB */
     let delay = 0;
     const current = new Date().getTime() / 1000;
-    if (this.rl_reset < 0 || current > this.rl_origin + this.rl_reset) {
+    if (this.rlReset < 0 || current > this.rlOrigin + this.rlReset) {
       delay = 0;
-    } else if (this.rl_remain > 0) {
-      delay = Math.max(0, Math.ceil((this.rl_reset * 1000) / this.rl_remain));
+    } else if (this.rlRemain > 0) {
+      delay = Math.max(0, Math.ceil((this.rlReset * 1000) / this.rlRemain));
     } else {
-      delay = Math.max(0, Math.ceil(this.rl_reset * 1000));
+      delay = Math.max(0, Math.ceil(this.rlReset * 1000));
     }
     return delay;
   }
 
-  updateRateLimitParameters(response) {
+  updateRateLimitParameters(response: Response) {
     /* Update the variables we use to honor LB's rate limits */
-    this.rl_remain = Number(response.headers.get("X-RateLimit-Remaining"));
-    this.rl_reset = Number(response.headers.get("X-RateLimit-Reset-In"));
-    this.rl_origin = new Date().getTime() / 1000;
+    this.rlRemain = Number(response.headers.get("X-RateLimit-Remaining"));
+    this.rlReset = Number(response.headers.get("X-RateLimit-Reset-In"));
+    this.rlOrigin = new Date().getTime() / 1000;
   }
 }
