@@ -135,7 +135,7 @@ export default class APIService {
       listenType,
       payload.slice(0, payload.length / 2)
     );
-    return await this.submitListens(
+    return this.submitListens(
       userToken,
       listenType,
       payload.slice(payload.length / 2, payload.length)

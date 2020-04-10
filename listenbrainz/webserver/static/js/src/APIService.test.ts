@@ -12,7 +12,7 @@ describe("submitListens", () => {
       });
     });
 
-    jest.useFakeTimers()
+    jest.useFakeTimers();
   });
 
   it("calls fetch with correct parameters", async () => {
@@ -32,14 +32,17 @@ describe("submitListens", () => {
 
   it("retries if submit fails", async () => {
     // Overide mock for fetch
-    window.fetch = jest.fn().mockImplementationOnce(() => {
-      return Promise.reject({});
-    }).mockImplementation(() => {
-      return Promise.resolve({
-        ok: true,
-        status: 200,
+    window.fetch = jest
+      .fn()
+      .mockImplementationOnce(() => {
+        return Promise.reject({});
       })
-    });
+      .mockImplementation(() => {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+        });
+      });
 
     await apiService.submitListens("foobar", "import", "foobar");
     expect(setTimeout).toHaveBeenCalledTimes(1);
