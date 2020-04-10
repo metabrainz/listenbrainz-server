@@ -1,26 +1,11 @@
-/* eslint-disable */
-// TODO: Make the code ESLint compliant
-// TODO: Port to typescript
-
 export default class Scrobble {
-  constructor(rootScrobbleElement) {
+  private rootScrobbleElement: any;
+
+  constructor(rootScrobbleElement: any) {
     this.rootScrobbleElement = rootScrobbleElement;
   }
 
-  lastfmID() {
-    /* Returns url of type "http://www.last.fm/music/Mot%C3%B6rhead" */
-    if (
-      "url" in this.rootScrobbleElement &&
-      this.rootScrobbleElement.url !== ""
-    ) {
-      let { url } = this.rootScrobbleElement;
-      url = url.split("/");
-      return url.slice(0, parts.length - 2).join("/");
-    }
-    return "";
-  }
-
-  artistName() {
+  artistName(): string {
     /* Returns artistName if present, else returns an empty string */
     if (
       "artist" in this.rootScrobbleElement &&
@@ -31,7 +16,7 @@ export default class Scrobble {
     return "";
   }
 
-  artistMBID() {
+  artistMBID(): string {
     /* Returns artistName if present, else returns an empty string */
     if (
       "artist" in this.rootScrobbleElement &&
@@ -42,7 +27,7 @@ export default class Scrobble {
     return "";
   }
 
-  trackName() {
+  trackName(): string {
     /* Returns trackName if present, else returns an empty string */
     if ("name" in this.rootScrobbleElement) {
       return this.rootScrobbleElement.name;
@@ -50,7 +35,7 @@ export default class Scrobble {
     return "";
   }
 
-  releaseName() {
+  releaseName(): string {
     /* Returns releaseName if present, else returns an empty string */
     if (
       "album" in this.rootScrobbleElement &&
@@ -61,7 +46,7 @@ export default class Scrobble {
     return "";
   }
 
-  releaseMBID() {
+  releaseMBID(): string {
     /* Returns releaseMBID if present, else returns an empty string */
     if (
       "album" in this.rootScrobbleElement &&
@@ -72,7 +57,7 @@ export default class Scrobble {
     return "";
   }
 
-  scrobbledAt() {
+  scrobbledAt(): string {
     /* Returns scrobbledAt if present, else returns an empty string */
     if (
       "date" in this.rootScrobbleElement &&
@@ -90,7 +75,7 @@ export default class Scrobble {
     return "";
   }
 
-  trackMBID() {
+  trackMBID(): string {
     /* Returns trackMBID if present, else returns an empty string */
     if ("mbid" in this.rootScrobbleElement) {
       return this.rootScrobbleElement.mbid;
@@ -98,7 +83,8 @@ export default class Scrobble {
     return "";
   }
 
-  asJSONSerializable() {
+  // TODO: Make this type as Listen
+  asJSONSerializable(): any {
     const trackjson = {
       track_metadata: {
         track_name: this.trackName(),
@@ -115,24 +101,25 @@ export default class Scrobble {
     };
 
     // Remove keys with blank values
-    (function filter(obj) {
+    (function filter(obj: any) {
       Object.keys(obj).forEach(function (key) {
         let value = obj[key];
         if (value === "" || value === null) {
-          delete obj[key];
+          delete obj[key]; // eslint-disable-line no-param-reassign
         } else if (
           Object.prototype.toString.call(value) === "[object Object]"
         ) {
           filter(value);
         } else if (Array.isArray(value)) {
           value = value.filter(Boolean);
-          obj[key] = value;
-          value.forEach(function (el) {
+          obj[key] = value; // eslint-disable-line no-param-reassign
+          value.forEach(function (el: any) {
             filter(el);
           });
         }
       });
     })(trackjson);
+
     return trackjson;
   }
 }
