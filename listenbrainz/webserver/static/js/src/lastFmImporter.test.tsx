@@ -8,21 +8,20 @@ import Importer from "./importer";
 
 jest.mock("./importer");
 
-let wrapper = null;
 describe("LastFmImporter Page", () => {
   beforeEach(() => {
     // Clear previous mocks
     Importer.mockClear();
 
-    // Mount each time
-    wrapper = shallow(<LastFmImporter />);
   });
 
   it("renders without crashing", () => {
+    const wrapper = shallow(<LastFmImporter />);
     expect(wrapper).toBeTruthy();
   });
 
   it("modal renders when button clicked", () => {
+    const wrapper = shallow(<LastFmImporter />);
     // Simulate submiting the form
     wrapper.find("form").simulate("submit", {
       preventDefault: () => null,
@@ -33,6 +32,7 @@ describe("LastFmImporter Page", () => {
   });
 
   it("submit button is disabled when input is empty", () => {
+    const wrapper = shallow(<LastFmImporter />);
     // Make sure that the input is empty
     wrapper.setState({ lastfmUsername: "" });
 

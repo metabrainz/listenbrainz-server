@@ -120,7 +120,7 @@ export default class APIService {
               () => this.submitListens(userToken, listenType, payload, stackDepth + 1),
               3000
             );
-          )
+          }
         }
         return response; // Return response so that caller can handle appropriately
       } catch {

@@ -5,18 +5,14 @@ import { shallow } from "enzyme";
 
 import LastFmImporterModal from "./lastFmImporterModal";
 
-let wrapper = null;
 describe("LastFmImporterModal", () => {
-  beforeEach(() => {
-    // Mount each time
-    wrapper = shallow(<LastFmImporterModal />);
-  });
-
   it("renders without crashing", () => {
+    const wrapper = shallow(<LastFmImporterModal />);
     expect(wrapper).toBeTruthy();
   });
 
   it("close button is disabled/enabled based upon props", () => {
+    const wrapper = shallow(<LastFmImporterModal />);
     // Test if close button is disabled
     wrapper.setProps({ disable: true });
     expect(wrapper.find("button").props().disabled).toBe(true);
