@@ -16,3 +16,9 @@ declare interface ImporterState {
   lastfmUsername: string;
   msg: string;
 }
+
+declare interface ModalProps {
+  disable: boolean;
+  children: React.ReactElement[];
+  onClose(event: React.MouseEvent<HTMLButtonElement>): void;
+}

@@ -1,16 +1,15 @@
-// TODO: Port to typescript
-
 import React from "react";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
+import { IconProp } from "@fortawesome/fontawesome-svg-core"; // eslint-disable-line no-unused-vars
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-const Modal = (props) => {
+const Modal = (props: ModalProps) => {
   const divStyle = {
     position: "fixed",
     height: "90%",
     maxHeight: "300px",
     top: "50%",
-    zIndex: "200000000000000",
+    zIndex: 2,
     width: "90%",
     maxWidth: "500px",
     left: "50%",
@@ -19,7 +18,7 @@ const Modal = (props) => {
     boxShadow: "0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22)",
     textAlign: "center",
     padding: "50px",
-  };
+  } as React.CSSProperties;
 
   const buttonStyle = {
     position: "absolute",
@@ -28,7 +27,7 @@ const Modal = (props) => {
     outline: "none",
     border: "none",
     background: "transparent",
-  };
+  } as React.CSSProperties;
 
   const { children, onClose, disable } = props;
 
@@ -40,7 +39,7 @@ const Modal = (props) => {
         disabled={disable}
         type="button"
       >
-        <FontAwesomeIcon icon={faTimes} />
+        <FontAwesomeIcon icon={faTimes.iconName as IconProp} />
       </button>
       <div>{children}</div>
     </div>
