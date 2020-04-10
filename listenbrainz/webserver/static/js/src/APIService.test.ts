@@ -12,8 +12,7 @@ describe("submitListens", () => {
       });
     });
 
-    // Mock function for setTimeout and console.warn
-    jest.useFakeTimers();
+    jest.useFakeTimers()
   });
 
   it("calls fetch with correct parameters", async () => {

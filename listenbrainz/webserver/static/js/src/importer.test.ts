@@ -10,7 +10,7 @@ import getInfoNoPlayCount from "./__mocks__/getInfoNoPlayCount.json";
 // Output for the mock data
 import encodeScrobble_output from "./__mocks__/encodeScrobble_output.json";
 
-jest.mock("./api-service");
+jest.mock("./APIService");
 jest.useFakeTimers();
 
 const props = {
