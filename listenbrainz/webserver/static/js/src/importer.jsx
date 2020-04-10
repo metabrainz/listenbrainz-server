@@ -1,5 +1,3 @@
-/* eslint-disable */
-// TODO: Make the code ESLint compliant
 // TODO: Port to typescript
 
 import React from "react";
@@ -11,12 +9,12 @@ import APIService from "./api-service";
 export default class Importer {
   constructor(lastfmUsername, props) {
     this.APIService = new APIService(
-      props.api_url || `${window.location.origin}/1`
+      props.apiUrl || `${window.location.origin}/1`
     ); // Used to access LB API
 
     this.lastfmUsername = lastfmUsername;
-    this.lastfmURL = props.lastfm_api_url;
-    this.lastfmKey = props.lastfm_api_key;
+    this.lastfmURL = props.lastfmApiUrl;
+    this.lastfmKey = props.lastfmApiKey;
 
     this.userName = props.user.name;
     this.userToken = props.user.auth_token;
@@ -56,14 +54,15 @@ export default class Importer {
     this.page = this.totalPages; // Start from the last page so that oldest scrobbles are imported first
 
     while (this.page > 0) {
-      const payload = await this.getPage(this.page);
+      // Fixing no-await-in-loop will require significant changes to the code, ignoring for now
+      const payload = await this.getPage(this.page); // eslint-disable-line
       if (payload) {
         // Submit only if response is valid
         this.submitPage(payload);
       }
 
-      this.page--;
-      this.numCompleted++;
+      this.page -= 1;
+      this.numCompleted += 1;
 
       // Update message
       const msg = (
@@ -78,7 +77,7 @@ export default class Importer {
                 <br />
               </span>
             )}
-            <span>Please don't close this page while this is running</span>
+            <span>Please don&apos;t close this page while this is running</span>
           </span>
         </p>
       );
@@ -88,7 +87,7 @@ export default class Importer {
     // Update latest import time on LB server
     try {
       this.maxTimestampForImport = Math.max(
-        parseInt(this.maxTimestampForImport),
+        Number(this.maxTimestampForImport),
         this.latestImportTime
       );
       this.APIService.setLatestImport(
@@ -96,7 +95,7 @@ export default class Importer {
         this.maxTimestampForImport
       );
     } catch {
-      console.warn("Error, retrying in 3s");
+      // console.warn("Error setting latest import timestamp, retrying in 3s");
       setTimeout(
         () =>
           this.APIService.setLatestImport(
@@ -106,7 +105,7 @@ export default class Importer {
         3000
       );
     }
-    const final_msg = (
+    const finalMsg = (
       <p>
         <FontAwesomeIcon icon={faCheck} /> Import finished
         <br />
@@ -119,8 +118,8 @@ export default class Importer {
          * and playCount will be different by definition in incremental imports
          */}
         {!this.incrementalImport &&
-          this.playCount != -1 &&
-          this.countReceived != this.playCount && (
+          this.playCount !== -1 &&
+          this.countReceived !== this.playCount && (
             <b>
               <span style={{ fontSize: `${10}pt` }} className="text-danger">
                 The number submitted listens is different from the{" "}
@@ -136,13 +135,13 @@ export default class Importer {
         <br />
         <br />
         <span style={{ fontSize: `${10}pt` }}>
-          <a href={`${this.props.profile_url}`}>
+          <a href={`${this.props.profileUrl}`}>
             Close and go to your ListenBrainz profile
           </a>
         </span>
       </p>
     );
-    this.updateMessage(final_msg);
+    this.updateMessage(finalMsg);
     this.canClose = true;
   }
 
@@ -156,13 +155,13 @@ export default class Importer {
       const response = await fetch(encodeURI(url));
       const data = await response.json();
       if ("playcount" in data.user) {
-        return parseInt(data.user.playcount);
+        return Number(data.user.playcount);
       }
       return -1;
     } catch {
       this.updateMessage("An error occurred, please try again. :(");
       this.canClose = true; // Enable the close button
-      error = new Error();
+      const error = new Error();
       error.message = "Something went wrong";
       throw error;
     }
@@ -180,7 +179,7 @@ export default class Importer {
       const response = await fetch(encodeURI(url));
       const data = await response.json();
       if ("recenttracks" in data) {
-        return parseInt(data.recenttracks["@attr"].totalPages);
+        return Number(data.recenttracks["@attr"].totalPages);
       }
       return 0;
     } catch (error) {
@@ -195,8 +194,8 @@ export default class Importer {
      * Fetch page from Last.fm
      */
 
-    const retry = (reason) => {
-      console.warn(`${reason} fetching last.fm page=${page}, retrying in 3s`);
+    const retry = () => {
+      // console.warn(`${reason} while fetching last.fm page=${page}, retrying in 3s`);
       setTimeout(() => this.getPage(page), 3000);
     };
 
@@ -220,7 +219,7 @@ export default class Importer {
         }
 
         // Encode the page so that it can be submitted
-        const payload = this.encodeScrobbles(data);
+        const payload = Importer.encodeScrobbles(data);
         this.countReceived += payload.length;
         return payload;
       }
@@ -228,12 +227,13 @@ export default class Importer {
         retry(`Got ${response.status}`);
       } else {
         // ignore 40x
-        console.warn(`Got ${response.status}, skipping`);
+        // console.warn(`Got ${response.status} while fetching page last.fm page=${page}, skipping`);
       }
     } catch {
       // Retry if there is a network error
       retry("Error");
     }
+    return null;
   }
 
   async submitPage(payload) {
@@ -251,18 +251,18 @@ export default class Importer {
     this.updateRateLimitParameters(response);
   }
 
-  encodeScrobbles(scrobbles) {
-    scrobbles = scrobbles.recenttracks.track;
-    const parsedScrobbles = this.map((rawScrobble) => {
+  static encodeScrobbles(scrobbles) {
+    const rawScrobbles = scrobbles.recenttracks.track;
+    const parsedScrobbles = Importer.map((rawScrobble) => {
       const scrobble = new Scrobble(rawScrobble);
       return scrobble.asJSONSerializable();
-    }, scrobbles);
+    }, rawScrobbles);
     return parsedScrobbles;
   }
 
-  map(applicable, collection) {
+  static map(applicable, collection) {
     const newCollection = [];
-    for (let i = 0; i < collection.length; i++) {
+    for (let i = 0; i < collection.length; i += 1) {
       const result = applicable(collection[i]);
       if ("listened_at" in result) {
         // Add If there is no 'listened_at' attribute then either the listen is invalid or the
@@ -293,8 +293,8 @@ export default class Importer {
 
   updateRateLimitParameters(response) {
     /* Update the variables we use to honor LB's rate limits */
-    this.rl_remain = parseInt(response.headers.get("X-RateLimit-Remaining"));
-    this.rl_reset = parseInt(response.headers.get("X-RateLimit-Reset-In"));
+    this.rl_remain = Number(response.headers.get("X-RateLimit-Remaining"));
+    this.rl_reset = Number(response.headers.get("X-RateLimit-Reset-In"));
     this.rl_origin = new Date().getTime() / 1000;
   }
 }
