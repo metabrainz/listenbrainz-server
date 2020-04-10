@@ -1,42 +1,41 @@
-/* eslint-disable */
-// TODO: Make the code ESLint compliant
-// TODO: Port to typescript
-
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React from "react"; // jsx compiled to React.createElement
+import * as React from "react";
+import _ from "lodash";
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 
-export function getSpotifyEmbedUriFromListen(listen) {
+import { IconProp } from "@fortawesome/fontawesome-svg-core"; // eslint-disable-line no-unused-vars
+
+const getSpotifyEmbedUriFromListen = (listen: any): string | null => {
   const spotifyId = _.get(listen, "track_metadata.additional_info.spotify_id");
   if (typeof spotifyId !== "string") {
     return null;
   }
-  const spotify_track = spotifyId.split("https://open.spotify.com/")[1];
-  if (typeof spotify_track !== "string") {
+  const spotifyTrack = spotifyId.split("https://open.spotify.com/")[1];
+  if (typeof spotifyTrack !== "string") {
     return null;
   }
   return spotifyId.replace(
     "https://open.spotify.com/",
     "https://open.spotify.com/embed/"
   );
-}
+};
 
-export async function searchForSpotifyTrack(
-  spotifyToken,
-  trackName,
-  artistName,
-  releaseName
-) {
+const searchForSpotifyTrack = async (
+  spotifyToken?: string,
+  trackName?: string,
+  artistName?: string,
+  releaseName?: string
+): Promise<any> => {
   if (!spotifyToken) {
-    throw new Error({
-      status: 403,
-      message: "You need to connect to your Spotify account",
-    });
+    throw new Error(
+      JSON.stringify({
+        status: 403,
+        message: "You need to connect to your Spotify account",
+      })
+    );
   }
   if (!trackName) {
-    console.error(
-      "searchForSpotifyTrack was not passed a trackName, cannot proceed"
-    );
+    // search for track was not provided a track name, cannot proceed
     return null;
   }
   const queryString = `q="${trackName}"
@@ -64,46 +63,62 @@ export async function searchForSpotifyTrack(
     return tracks[0];
   }
   return null;
-}
+};
 
-export function getArtistLink(listen) {
+const getArtistLink = (listen: any) => {
   const artistName = _.get(listen, "track_metadata.artist_name");
   const firstArtist = _.first(
     _.get(listen, "track_metadata.additional_info.artist_mbids")
   );
   if (firstArtist) {
     return (
-      <a href={`http://musicbrainz.org/artist/${firstArtist}`} target="_blank">
+      <a
+        href={`http://musicbrainz.org/artist/${firstArtist}`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         {artistName}
       </a>
     );
   }
   return artistName;
-}
+};
 
-export function getTrackLink(listen) {
+// TODO: remove this "any" when a listen type has been defined.
+const getTrackLink = (listen: any): JSX.Element | string => {
   const trackName = _.get(listen, "track_metadata.track_name");
   if (_.get(listen, "track_metadata.additional_info.recording_mbid")) {
     return (
       <a
         href={`http://musicbrainz.org/recording/${listen.track_metadata.additional_info.recording_mbid}`}
         target="_blank"
+        rel="noopener noreferrer"
       >
         {trackName}
       </a>
     );
   }
   return trackName;
-}
+};
 
-export function getPlayButton(listen, onClickFunction) {
+const getPlayButton = (listen: any, onClickFunction: () => void) => {
+  /* es-lint */
   return (
     <button
       title="Play"
       className="btn-link"
       onClick={onClickFunction.bind(listen)}
+      type="button"
     >
-      <FontAwesomeIcon size="2x" icon={faPlayCircle} />
+      <FontAwesomeIcon size="2x" icon={faPlayCircle.iconName as IconProp} />
     </button>
   );
-}
+};
+
+export {
+  getSpotifyEmbedUriFromListen,
+  searchForSpotifyTrack,
+  getArtistLink,
+  getTrackLink,
+  getPlayButton,
+};
