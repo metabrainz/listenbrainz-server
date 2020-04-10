@@ -3,10 +3,11 @@
 // TODO: Port to typescript
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React from "react"; // jsx compiled to React.createElement
+import * as React from "react"; // jsx compiled to React.createElement
+import _ from "lodash";
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 
-export function getSpotifyEmbedUriFromListen(listen) {
+const getSpotifyEmbedUriFromListen = (listen: any) : string | null => {
   const spotifyId = _.get(listen, "track_metadata.additional_info.spotify_id");
   if (typeof spotifyId !== "string") {
     return null;
@@ -21,17 +22,17 @@ export function getSpotifyEmbedUriFromListen(listen) {
   );
 }
 
-export async function searchForSpotifyTrack(
-  spotifyToken,
-  trackName,
-  artistName,
-  releaseName
-) {
+const searchForSpotifyTrack = async (
+  spotifyToken: string | null,
+  trackName: string | null,
+  artistName: string | null,
+  releaseName: string | null
+): Promise<any> => {
   if (!spotifyToken) {
-    throw new Error({
+    throw new Error(JSON.stringify({
       status: 403,
       message: "You need to connect to your Spotify account",
-    });
+    }));
   }
   if (!trackName) {
     console.error(
@@ -66,7 +67,7 @@ export async function searchForSpotifyTrack(
   return null;
 }
 
-export function getArtistLink(listen) {
+const getArtistLink = (listen: any) => {
   const artistName = _.get(listen, "track_metadata.artist_name");
   const firstArtist = _.first(
     _.get(listen, "track_metadata.additional_info.artist_mbids")
@@ -81,7 +82,8 @@ export function getArtistLink(listen) {
   return artistName;
 }
 
-export function getTrackLink(listen) {
+// TODO: remove this "any" when a listen type has been defined.
+export function getTrackLink(listen: any) {
   const trackName = _.get(listen, "track_metadata.track_name");
   if (_.get(listen, "track_metadata.additional_info.recording_mbid")) {
     return (
@@ -96,7 +98,7 @@ export function getTrackLink(listen) {
   return trackName;
 }
 
-export function getPlayButton(listen, onClickFunction) {
+export function getPlayButton(listen: any, onClickFunction: any) {
   return (
     <button
       title="Play"
