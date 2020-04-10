@@ -26,6 +26,14 @@ module.exports = {
   rules: {
     "prettier/prettier": "error",
     "react/jsx-filename-extension": "off",
+    "import/extensions": "off",
+  },
+  settings: {
+    "import/resolver": {
+      "node": {
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+      }
+    }
   },
   overrides: [
     {

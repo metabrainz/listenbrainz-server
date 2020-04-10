@@ -6,7 +6,7 @@ import React from "react";
 import { faSpinner, faCheck } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Scrobble from "./scrobble";
-import APIService from "./api-service";
+import APIService from "./APIService";
 
 export default class Importer {
   constructor(lastfmUsername, props) {
