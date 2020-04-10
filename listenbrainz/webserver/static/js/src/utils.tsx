@@ -35,6 +35,7 @@ const searchForSpotifyTrack = async (
     );
   }
   if (!trackName) {
+    // search for track was not provided a track name, cannot proceed
     return null;
   }
   const queryString = `q="${trackName}"
