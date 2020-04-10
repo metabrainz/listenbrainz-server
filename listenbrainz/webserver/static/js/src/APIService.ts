@@ -90,8 +90,7 @@ export default class APIService {
   submitListens = async (
     userToken: string,
     listenType: ListenType,
-    payload: SubmitListensPayload,
-    stackDepth: number = 0,
+    payload: SubmitListensPayload
   ): Promise<Response> => {
     if (JSON.stringify(payload).length <= this.MAX_LISTEN_SIZE) {
       // Payload is within submission limit, submit directly
@@ -115,23 +114,18 @@ export default class APIService {
         // we skip listens if we get an error code that's not a rate limit
         if (response.status === 429) {
           // Rate limit error, this should never happen, but if it does, try again in 3 seconds.
-          if (stackDepth < 10) {
-            setTimeout(
-              () => this.submitListens(userToken, listenType, payload, stackDepth + 1),
-              3000
-            );
-          }
+          setTimeout(
+            () => this.submitListens(userToken, listenType, payload),
+            3000
+          );
         }
         return response; // Return response so that caller can handle appropriately
       } catch {
         // Retry if there is an network error
-        if (stackDepth < 10) {
-          console.log("heyo, retrying")
-          setTimeout(
-            () => this.submitListens(userToken, listenType, payload, stackDepth + 1),
-            3000
-          );
-        }
+        setTimeout(
+          () => this.submitListens(userToken, listenType, payload),
+          3000
+        );
       }
     }
 
@@ -141,7 +135,7 @@ export default class APIService {
       listenType,
       payload.slice(0, payload.length / 2)
     );
-    return this.submitListens(
+    return await this.submitListens(
       userToken,
       listenType,
       payload.slice(payload.length / 2, payload.length)

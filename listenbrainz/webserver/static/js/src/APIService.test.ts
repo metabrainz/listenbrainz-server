@@ -32,8 +32,13 @@ describe("submitListens", () => {
 
   it("retries if submit fails", async () => {
     // Overide mock for fetch
-    window.fetch = jest.fn().mockImplementation(() => {
-      return Promise.reject();
+    window.fetch = jest.fn().mockImplementationOnce(() => {
+      return Promise.reject({});
+    }).mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+      })
     });
 
     await apiService.submitListens("foobar", "import", "foobar");
