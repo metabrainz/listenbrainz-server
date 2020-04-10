@@ -1,6 +1,4 @@
-/* eslint-disable */
-// TODO: Make the code ESLint compliant
-import APIService from "./api-service";
+import APIService from "./APIService";
 
 const apiService = new APIService("foobar");
 
@@ -15,20 +13,7 @@ describe("submitListens", () => {
     });
 
     // Mock function for setTimeout and console.warn
-    console.warn = jest.fn();
-    window.setTimeout = jest.fn();
-  });
-
-  it("throws an error if userToken is not a string", async () => {
-    await expect(
-      apiService.submitListens(["foo", "bar"], "import", "foobar")
-    ).rejects.toThrow(SyntaxError);
-  });
-
-  it("throws an error if listenType is invalid", async () => {
-    await expect(
-      apiService.submitListens("foobar", "foobar", "foobar")
-    ).rejects.toThrow(SyntaxError);
+    jest.useFakeTimers();
   });
 
   it("calls fetch with correct parameters", async () => {
@@ -53,8 +38,7 @@ describe("submitListens", () => {
     });
 
     await apiService.submitListens("foobar", "import", "foobar");
-    expect(console.warn).toHaveBeenCalledWith("Error, retrying in 3 sec");
-    expect(window.setTimeout).toHaveBeenCalledTimes(1);
+    expect(setTimeout).toHaveBeenCalledTimes(1);
   });
 
   it("retries if error 429 is recieved fails", async () => {
@@ -67,8 +51,7 @@ describe("submitListens", () => {
     });
 
     await apiService.submitListens("foobar", "import", "foobar");
-    expect(console.warn).toHaveBeenCalledWith("Error, retrying in 3 sec");
-    expect(window.setTimeout).toHaveBeenCalledTimes(1);
+    expect(setTimeout).toHaveBeenCalledTimes(1);
   });
 
   it("skips if any other response code is recieved", async () => {
@@ -81,7 +64,6 @@ describe("submitListens", () => {
     });
 
     await apiService.submitListens("foobar", "import", "foobar");
-    expect(console.warn).toHaveBeenCalledWith("Got 404 error, skipping");
   });
 
   it("returns the response if successful", async () => {
@@ -121,12 +103,6 @@ describe("getLatestImport", () => {
     apiService.checkStatus = jest.fn();
   });
 
-  it("throws an error if userName is not a string", async () => {
-    await expect(apiService.getLatestImport(["foo", "bar"])).rejects.toThrow(
-      SyntaxError
-    );
-  });
-
   it("encodes url correctly", async () => {
     await apiService.getLatestImport("ईशान");
     expect(window.fetch).toHaveBeenCalledWith(
@@ -159,18 +135,6 @@ describe("setLatestImport", () => {
 
     // Mock function for checkStatus
     apiService.checkStatus = jest.fn();
-  });
-
-  it("throws an error if userToken is not a string", async () => {
-    await expect(apiService.setLatestImport(["foo", "bar"], 0)).rejects.toThrow(
-      SyntaxError
-    );
-  });
-
-  it("throws an error if timestamp is not a number", async () => {
-    await expect(apiService.setLatestImport("foobar", "0")).rejects.toThrow(
-      SyntaxError
-    );
   });
 
   it("calls fetch with correct parameters", async () => {

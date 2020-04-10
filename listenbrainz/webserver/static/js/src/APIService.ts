@@ -165,7 +165,7 @@ export default class APIService {
    */
   setLatestImport = async (
     userToken: string,
-    timestamp: string
+    timestamp: number
   ): Promise<number> => {
     const url = `${this.APIBaseURI}/latest-import`;
     const response = await fetch(url, {
@@ -174,7 +174,7 @@ export default class APIService {
         Authorization: `Token ${userToken}`,
         "Content-Type": "application/json;charset=UTF-8",
       },
-      body: JSON.stringify({ ts: parseInt(timestamp, 10) }),
+      body: JSON.stringify({ ts: timestamp }),
     });
     this.checkStatus(response);
     return response.status; // Return true if timestamp is updated
