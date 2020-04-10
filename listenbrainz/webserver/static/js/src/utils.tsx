@@ -1,11 +1,11 @@
 /* eslint-disable */
 // TODO: Make the code ESLint compliant
-// TODO: Port to typescript
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react"; // jsx compiled to React.createElement
 import _ from "lodash";
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 const getSpotifyEmbedUriFromListen = (listen: any) : string | null => {
   const spotifyId = _.get(listen, "track_metadata.additional_info.spotify_id");
@@ -23,10 +23,10 @@ const getSpotifyEmbedUriFromListen = (listen: any) : string | null => {
 }
 
 const searchForSpotifyTrack = async (
-  spotifyToken: string | null,
-  trackName: string | null,
-  artistName: string | null,
-  releaseName: string | null
+  spotifyToken?: string,
+  trackName?: string,
+  artistName?: string,
+  releaseName?: string
 ): Promise<any> => {
   if (!spotifyToken) {
     throw new Error(JSON.stringify({
@@ -83,7 +83,7 @@ const getArtistLink = (listen: any) => {
 }
 
 // TODO: remove this "any" when a listen type has been defined.
-export function getTrackLink(listen: any) {
+const getTrackLink = (listen: any): JSX.Element | string => {
   const trackName = _.get(listen, "track_metadata.track_name");
   if (_.get(listen, "track_metadata.additional_info.recording_mbid")) {
     return (
@@ -98,14 +98,16 @@ export function getTrackLink(listen: any) {
   return trackName;
 }
 
-export function getPlayButton(listen: any, onClickFunction: any) {
+const getPlayButton = (listen: any, onClickFunction: () => void) => {
   return (
     <button
       title="Play"
       className="btn-link"
       onClick={onClickFunction.bind(listen)}
     >
-      <FontAwesomeIcon size="2x" icon={faPlayCircle} />
+      <FontAwesomeIcon size="2x" icon={faPlayCircle.iconName as IconProp} />
     </button>
   );
 }
+
+export {getSpotifyEmbedUriFromListen, searchForSpotifyTrack, getArtistLink, getTrackLink, getPlayButton};
