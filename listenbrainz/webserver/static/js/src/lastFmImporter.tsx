@@ -1,14 +1,33 @@
-/* eslint-disable */
-// TODO: Make the code ESLint compliant
-// TODO: Port to typescript
-
 import ReactDOM from "react-dom";
 import React from "react";
+// @ts-ignore
 import Importer from "./importer";
+// @ts-ignore
 import Modal from "./lastFmImporterModal";
 
-export default class LastFmImporter extends React.Component {
-  constructor(props) {
+interface Props {
+  user: {
+    id: string;
+    name: string;
+    auth_token: string;
+  };
+  profileUrl: string;
+  apiUrl: string;
+  lastfmApiUrl: string;
+  lastfmApiKey: string;
+}
+
+interface State {
+  show: boolean;
+  canClose: boolean;
+  lastfmUsername: string;
+  msg: string;
+}
+
+export default class LastFmImporter extends React.Component<Props, State> {
+  importer: any;
+
+  constructor(props: Props) {
     super(props);
 
     this.state = {
@@ -19,14 +38,15 @@ export default class LastFmImporter extends React.Component {
     };
   }
 
-  handleChange = (event) => {
+  handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({ lastfmUsername: event.target.value });
   };
 
-  handleSubmit = (event) => {
+  handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    const { lastfmUsername } = this.state;
     this.toggleModal();
     event.preventDefault();
-    this.importer = new Importer(this.state.lastfmUsername, this.props);
+    this.importer = new Importer(lastfmUsername, this.props);
     setInterval(this.updateMessage, 100);
     setInterval(this.setClose, 100);
     this.importer.startImport();
@@ -47,32 +67,31 @@ export default class LastFmImporter extends React.Component {
   };
 
   render() {
+    const { show, canClose, lastfmUsername, msg } = this.state;
+
     return (
       <div className="Importer">
         <form onSubmit={this.handleSubmit}>
           <input
             type="text"
             onChange={this.handleChange}
-            value={this.state.lastfmUsername}
+            value={lastfmUsername}
             placeholder="Last.fm Username"
-            size="30"
+            size={30}
           />
-          <input
-            type="submit"
-            value="Import Now!"
-            disabled={!this.state.lastfmUsername}
-          />
+          <input type="submit" value="Import Now!" disabled={!lastfmUsername} />
         </form>
-        {this.state.show && (
-          <Modal onClose={this.toggleModal} disable={!this.state.canClose}>
+        {show && (
+          <Modal onClose={this.toggleModal} disable={!canClose}>
             <img
               src="/static/img/listenbrainz-logo.svg"
               height="75"
               className="img-responsive"
+              alt=""
             />
             <br />
             <br />
-            <div>{this.state.msg}</div>
+            <div>{msg}</div>
             <br />
           </Modal>
         )}
@@ -81,14 +100,30 @@ export default class LastFmImporter extends React.Component {
   }
 }
 
-document.addEventListener("DOMContentLoaded", (event) => {
+document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#react-container");
   const propsElement = document.getElementById("react-props");
   let reactProps;
   try {
-    reactProps = JSON.parse(propsElement.innerHTML);
+    reactProps = JSON.parse(propsElement!.innerHTML);
   } catch (err) {
-    console.error("Error parsing props:", err);
+    // Show error to the user and ask to reload page
   }
-  ReactDOM.render(<LastFmImporter {...reactProps} />, domContainer);
+  const {
+    user,
+    profile_url,
+    api_url,
+    lastfm_api_url,
+    lastfm_api_key,
+  } = reactProps;
+  ReactDOM.render(
+    <LastFmImporter
+      user={user}
+      profileUrl={profile_url}
+      apiUrl={api_url}
+      lastfmApiKey={lastfm_api_key}
+      lastfmApiUrl={lastfm_api_url}
+    />,
+    domContainer
+  );
 });
