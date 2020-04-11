@@ -60,7 +60,6 @@ class SpotifyDomainTestCase(ServerTestCase):
 
         func_oauth = spotify.get_spotify_oauth(spotify.SPOTIFY_LISTEN_PERMISSIONS)
         self.assertIn('streaming', func_oauth.scope)
-        self.assertIn('user-read-birthdate', func_oauth.scope)
         self.assertIn('user-read-email', func_oauth.scope)
         self.assertIn('user-read-private', func_oauth.scope)
         self.assertNotIn('user-read-recently-played', func_oauth.scope)
@@ -70,7 +69,6 @@ class SpotifyDomainTestCase(ServerTestCase):
         self.assertIn('user-read-currently-playing', func_oauth.scope)
         self.assertIn('user-read-recently-played', func_oauth.scope)
         self.assertNotIn('streaming', func_oauth.scope)
-        self.assertNotIn('user-read-birthdate', func_oauth.scope)
         self.assertNotIn('user-read-email', func_oauth.scope)
         self.assertNotIn('user-read-private', func_oauth.scope)
 
