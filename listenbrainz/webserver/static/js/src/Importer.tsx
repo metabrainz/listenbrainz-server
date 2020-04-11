@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import * as React from "react";
 import { faSpinner, faCheck } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -74,8 +73,8 @@ export default class Importer {
       // Update message
       const msg = (
         <p>
-          <FontAwesomeIcon icon={faSpinner.iconName as IconProp} spin /> Sending
-          page {this.numCompleted} of {this.totalPages} to ListenBrainz <br />
+          <FontAwesomeIcon icon={faSpinner as IconProp} spin /> Sending page{" "}
+          {this.numCompleted} of {this.totalPages} to ListenBrainz <br />
           <span style={{ fontSize: `${8}pt` }}>
             {this.incrementalImport && (
               <span>
@@ -114,7 +113,7 @@ export default class Importer {
     }
     const finalMsg = (
       <p>
-        <FontAwesomeIcon icon={faCheck.iconName as IconProp} /> Import finished
+        <FontAwesomeIcon icon={faCheck as IconProp} /> Import finished
         <br />
         <span style={{ fontSize: `${8}pt` }}>
           Successfully submitted {this.countReceived} listens to ListenBrainz

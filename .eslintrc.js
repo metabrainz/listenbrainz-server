@@ -28,6 +28,7 @@ module.exports = {
     "react/jsx-filename-extension": "off",
     "import/extensions": "off",
     camelcase: "warn",
+    "no-unused-vars": "off",
     "lines-between-class-members": [
       "error",
       "always",
@@ -51,7 +52,6 @@ module.exports = {
       rules: {
         "import/no-extraneous-dependencies": "off",
         "react/jsx-props-no-spreading": "off",
-        "no-unused-vars": "off",
         "jest/no-disabled-tests": "warn",
         "jest/no-focused-tests": "error",
         "jest/no-identical-title": "error",
