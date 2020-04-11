@@ -1,11 +1,10 @@
+/* eslint-disable no-unused-vars */
 import * as React from "react";
 import { faSpinner, faCheck } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { IconProp } from "@fortawesome/fontawesome-svg-core"; // eslint-disable-line no-unused-vars
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import Scrobble from "./Scrobble";
 import APIService from "./APIService";
-import {ImporterProps} from "./types";
-import {LastFmScrobblePage} from "./types";
 
 export default class Importer {
   APIService: APIService;
@@ -52,7 +51,7 @@ export default class Importer {
 
   async startImport() {
     this.canClose = false; // Disable the close button
-    this.updateMessage((<p>Your import from Last.fm is starting!</p>));
+    this.updateMessage(<p>Your import from Last.fm is starting!</p>);
     this.playCount = await this.getTotalNumberOfScrobbles();
     this.latestImportTime = await this.APIService.getLatestImport(
       this.userName
@@ -191,7 +190,7 @@ export default class Importer {
       }
       return 0;
     } catch (error) {
-      this.updateMessage((<p>An error occurred, please try again. :(</p>));
+      this.updateMessage(<p>An error occurred, please try again. :(</p>);
       this.canClose = true; // Enable the close button
       return -1;
     }
@@ -202,7 +201,6 @@ export default class Importer {
      * Fetch page from Last.fm
      */
 
-    // eslint-disable-next-line no-unused-vars
     const retry = (reason: string) => {
       // console.warn(`${reason} while fetching last.fm page=${page}, retrying in 3s`);
       setTimeout(() => this.getPage(page), 3000);
@@ -228,7 +226,7 @@ export default class Importer {
         }
 
         // Encode the page so that it can be submitted
-        const payload = this.encodeScrobbles(data);
+        const payload = Importer.encodeScrobbles(data);
         this.countReceived += payload.length;
         return payload;
       }
@@ -262,8 +260,7 @@ export default class Importer {
   }
 
   // TODO: Replace return type with array of Listens
-  encodeScrobbles(scrobbles: LastFmScrobblePage): any {
-    console.log(scrobbles);
+  static encodeScrobbles(scrobbles: LastFmScrobblePage): any {
     const rawScrobbles = scrobbles.recenttracks.track;
     const parsedScrobbles = Importer.map((rawScrobble: any) => {
       const scrobble = new Scrobble(rawScrobble);
