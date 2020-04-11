@@ -15,7 +15,6 @@
     "format": "eslint ./static/js/src --ignore-path .gitignore --ext .js,jsx,ts,tsx --fix",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:update-snapshots": "jest -u",
     "test:coverage": "jest --coverage --colors",
     "test:debug": "node --inspect node_modules/.bin/jest --runInBand",
     "type-check": "tsc --noEmit",
