@@ -8,7 +8,10 @@ declare type SpotifyPlayDirection = "up" | "down" | "hidden";
 // TODO: make this type specific
 declare type SubmitListensPayload = any;
 
-declare type SpotifyUser = any; // TODO
+declare interface SpotifyUser {
+  access_token: string;
+  permission: string;
+}
 declare type SpotifyPermission = any; // TODO
 declare type SpotifyTrack = any; // TODO
 declare type SpotifyArtist = any; // TODO

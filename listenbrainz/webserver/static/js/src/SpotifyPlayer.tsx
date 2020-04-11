@@ -195,7 +195,9 @@ export default class SpotifyPlayer extends React.Component<
           this.handleError(response.statusText);
         }
       })
-      .catch((error) => {this.handleError(error.message)});
+      .catch((error) => {
+        this.handleError(error.message);
+      });
   };
 
   checkSpotifyToken = async (
@@ -293,7 +295,11 @@ export default class SpotifyPlayer extends React.Component<
     if (!error) {
       return;
     }
-    newAlert("danger", title || "Playback error", typeof error === "object" ? error.message : error);
+    newAlert(
+      "danger",
+      title || "Playback error",
+      typeof error === "object" ? error.message : error
+    );
   };
 
   handleWarning = (message: string | JSX.Element, title?: string): void => {
@@ -449,7 +455,9 @@ export default class SpotifyPlayer extends React.Component<
           return this.handleSpotifyAPICurrentlyPlaying(innerResponse);
         });
       })
-      .catch((error: Error) => {this.handleError(error.message)});
+      .catch((error: Error) => {
+        this.handleError(error.message);
+      });
   };
 
   handleSpotifyAPICurrentlyPlaying = (currentlyPlaying: any): void => {
