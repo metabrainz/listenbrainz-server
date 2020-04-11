@@ -55,7 +55,7 @@ type PlaybackControlsState = {
   autoHideControls: boolean;
 };
 
-export class PlaybackControls extends React.Component<
+export default class PlaybackControls extends React.Component<
   PlaybackControlsProps,
   PlaybackControlsState
 > {

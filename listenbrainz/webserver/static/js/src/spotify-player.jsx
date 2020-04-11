@@ -4,7 +4,7 @@
 
 import React from "react";
 import { isEqual as _isEqual } from "lodash";
-import { PlaybackControls } from "./PlaybackControls"
+import  PlaybackControls  from "./PlaybackControls"
 import { searchForSpotifyTrack } from "./utils";
 
 function getSpotifyUriFromListen(listen) {
