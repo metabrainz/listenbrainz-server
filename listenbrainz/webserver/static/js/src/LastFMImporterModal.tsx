@@ -3,8 +3,6 @@ import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core"; // eslint-disable-line no-unused-vars
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
-import {ModalProps} from './types';
-
 const LastFMImporterModal = (props: ModalProps) => {
   const divStyle = {
     position: "fixed",

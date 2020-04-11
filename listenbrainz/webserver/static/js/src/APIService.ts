@@ -1,5 +1,4 @@
 import APIError from "./APIError";
-import { Listen, SubmitListensPayload, ListenType } from "./types"; // eslint-disable-line no-unused-vars
 
 export default class APIService {
   APIBaseURI: string;

@@ -1,14 +1,12 @@
-/* eslint-disable no-undef */
+// TODO: make this type specific
+declare type Listen = any;
+
+declare type ListenType = "single" | "playingNow" | "import";
 
 // TODO: make this type specific
-export type Listen = any;
+declare type SubmitListensPayload = any;
 
-export type ListenType = "single" | "playingNow" | "import";
-
-// TODO: make this type specific
-export type SubmitListensPayload = any;
-
-export interface ImporterProps {
+declare interface ImporterProps {
   user: {
     id?: string;
     name: string;
@@ -20,21 +18,21 @@ export interface ImporterProps {
   lastfmApiKey: string;
 }
 
-export interface ImporterState {
+declare interface ImporterState {
   show: boolean;
   canClose: boolean;
   lastfmUsername: string;
   msg: string;
 }
 
-export interface ModalProps {
+declare interface ModalProps {
   disable: boolean;
   children: React.ReactElement[];
   onClose(event: React.MouseEvent<HTMLButtonElement>): void;
 }
 
-export interface LastFmScrobblePage {
+declare interface LastFmScrobblePage {
   recenttracks: {
-    track: any
-  }
+    track: any;
+  };
 }
