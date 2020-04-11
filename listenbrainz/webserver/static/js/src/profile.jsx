@@ -14,7 +14,7 @@ import { isEqual as _isEqual } from "lodash";
 import io from "socket.io-client";
 import { SpotifyPlayer } from "./spotify-player";
 import { FollowUsers } from "./follow-users";
-import APIService from "./api-service";
+import APIService from "./APIService";
 import {
   getArtistLink,
   getPlayButton,

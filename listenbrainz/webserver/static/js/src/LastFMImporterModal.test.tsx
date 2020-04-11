@@ -1,22 +1,22 @@
-/* eslint-disable */
-// TODO: Make the code ESLint compliant
-import React from "react";
+import * as React from "react";
 import { shallow } from "enzyme";
 
-import LastFmImporterModal from "./lastFmImporterModal";
+import LastFMImporterModal from "./LastFMImporterModal";
 
-let wrapper = null;
+const props = {
+  disable: false,
+  children: [],
+  onClose: (event: React.MouseEvent<HTMLButtonElement>) => {},
+};
+
 describe("LastFmImporterModal", () => {
-  beforeEach(() => {
-    // Mount each time
-    wrapper = shallow(<LastFmImporterModal />);
-  });
-
   it("renders without crashing", () => {
+    const wrapper = shallow(<LastFMImporterModal {...props} />);
     expect(wrapper).toBeTruthy();
   });
 
   it("close button is disabled/enabled based upon props", () => {
+    const wrapper = shallow(<LastFMImporterModal {...props} />);
     // Test if close button is disabled
     wrapper.setProps({ disable: true });
     expect(wrapper.find("button").props().disabled).toBe(true);

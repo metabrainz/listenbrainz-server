@@ -3,7 +3,7 @@ import * as React from "react";
 import _ from "lodash";
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 
-import { IconProp } from "@fortawesome/fontawesome-svg-core"; // eslint-disable-line no-unused-vars
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 const getSpotifyEmbedUriFromListen = (listen: any): string | null => {
   const spotifyId = _.get(listen, "track_metadata.additional_info.spotify_id");
@@ -110,7 +110,7 @@ const getPlayButton = (listen: any, onClickFunction: () => void) => {
       onClick={onClickFunction.bind(listen)}
       type="button"
     >
-      <FontAwesomeIcon size="2x" icon={faPlayCircle.iconName as IconProp} />
+      <FontAwesomeIcon size="2x" icon={faPlayCircle as IconProp} />
     </button>
   );
 };
