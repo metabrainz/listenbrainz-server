@@ -1,22 +1,19 @@
-const path = require('path');
-const ManifestPlugin = require('webpack-manifest-plugin');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const path = require("path");
+const ManifestPlugin = require("webpack-manifest-plugin");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 
-module.exports = function(env){
+module.exports = function (env) {
   const isProd = env === "production";
-  const plugins = [
-    new CleanWebpackPlugin(),
-    new ManifestPlugin()
-  ];
+  const plugins = [new CleanWebpackPlugin(), new ManifestPlugin()];
   return {
     mode: isProd ? "production" : "development",
     entry: {
-      main: '/static/js/src/profile.jsx',
-      import: '/static/js/src/LastFMImporter.tsx'
+      main: "/static/js/src/profile.jsx",
+      import: "/static/js/src/LastFMImporter.tsx",
     },
     output: {
-      filename: isProd ? '[name].[contenthash].js' : '[name].js',
-      path: '/static/js/dist'
+      filename: isProd ? "[name].[contenthash].js" : "[name].js",
+      path: "/static/js/dist",
     },
     devtool: isProd ? false : "inline-source-map",
     module: {
@@ -27,33 +24,33 @@ module.exports = function(env){
           use: {
             loader: "babel-loader",
             options: {
-              "presets": [
+              presets: [
                 [
                   "@babel/preset-env",
                   {
-                    "targets": {
-                      "node": "10",
-                      "browsers": [ "> 0.2% and not dead", "firefox >= 44" ]
-                    }
-                  }
+                    targets: {
+                      node: "10",
+                      browsers: ["> 0.2% and not dead", "firefox >= 44"],
+                    },
+                  },
                 ],
                 "@babel/preset-typescript",
-                "@babel/preset-react"
+                "@babel/preset-react",
               ],
-              "plugins": [
+              plugins: [
                 "@babel/plugin-proposal-class-properties",
-                "@babel/plugin-transform-runtime"
-              ]
-            }
-          }
-        }
+                "@babel/plugin-transform-runtime",
+              ],
+            },
+          },
+        },
       ],
     },
     resolve: {
-      modules: ['/code/node_modules', '/static/node_modules'],
-      extensions: ['.ts', '.tsx', '.js', '.jsx', '.json']
+      modules: ["/code/node_modules", "/static/node_modules"],
+      extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
     },
-    plugins: plugins,
-    watch: isProd ? false : true
-  }
+    plugins,
+    watch: !isProd,
+  };
 };

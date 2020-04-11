@@ -1,7 +1,6 @@
 import * as ReactDOM from "react-dom";
 import * as React from "react";
 import Importer from "./Importer";
-import {ImporterProps, ImporterState} from "./types";
 
 import LastFMImporterModal from "./LastFMImporterModal";
 

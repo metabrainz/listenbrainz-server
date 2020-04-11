@@ -1,11 +1,9 @@
 import * as React from "react";
 import { faSpinner, faCheck } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { IconProp } from "@fortawesome/fontawesome-svg-core"; // eslint-disable-line no-unused-vars
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import Scrobble from "./Scrobble";
 import APIService from "./APIService";
-import {ImporterProps} from "./types";
-import {LastFmScrobblePage} from "./types";
 
 export default class Importer {
   APIService: APIService;
@@ -52,7 +50,7 @@ export default class Importer {
 
   async startImport() {
     this.canClose = false; // Disable the close button
-    this.updateMessage((<p>Your import from Last.fm is starting!</p>));
+    this.updateMessage(<p>Your import from Last.fm is starting!</p>);
     this.playCount = await this.getTotalNumberOfScrobbles();
     this.latestImportTime = await this.APIService.getLatestImport(
       this.userName
@@ -75,8 +73,8 @@ export default class Importer {
       // Update message
       const msg = (
         <p>
-          <FontAwesomeIcon icon={faSpinner.iconName as IconProp} spin /> Sending
-          page {this.numCompleted} of {this.totalPages} to ListenBrainz <br />
+          <FontAwesomeIcon icon={faSpinner as IconProp} spin /> Sending page{" "}
+          {this.numCompleted} of {this.totalPages} to ListenBrainz <br />
           <span style={{ fontSize: `${8}pt` }}>
             {this.incrementalImport && (
               <span>
@@ -115,7 +113,7 @@ export default class Importer {
     }
     const finalMsg = (
       <p>
-        <FontAwesomeIcon icon={faCheck.iconName as IconProp} /> Import finished
+        <FontAwesomeIcon icon={faCheck as IconProp} /> Import finished
         <br />
         <span style={{ fontSize: `${8}pt` }}>
           Successfully submitted {this.countReceived} listens to ListenBrainz
@@ -191,7 +189,7 @@ export default class Importer {
       }
       return 0;
     } catch (error) {
-      this.updateMessage((<p>An error occurred, please try again. :(</p>));
+      this.updateMessage(<p>An error occurred, please try again. :(</p>);
       this.canClose = true; // Enable the close button
       return -1;
     }
@@ -202,7 +200,6 @@ export default class Importer {
      * Fetch page from Last.fm
      */
 
-    // eslint-disable-next-line no-unused-vars
     const retry = (reason: string) => {
       // console.warn(`${reason} while fetching last.fm page=${page}, retrying in 3s`);
       setTimeout(() => this.getPage(page), 3000);
@@ -228,7 +225,7 @@ export default class Importer {
         }
 
         // Encode the page so that it can be submitted
-        const payload = this.encodeScrobbles(data);
+        const payload = Importer.encodeScrobbles(data);
         this.countReceived += payload.length;
         return payload;
       }
@@ -262,8 +259,7 @@ export default class Importer {
   }
 
   // TODO: Replace return type with array of Listens
-  encodeScrobbles(scrobbles: LastFmScrobblePage): any {
-    console.log(scrobbles);
+  static encodeScrobbles(scrobbles: LastFmScrobblePage): any {
     const rawScrobbles = scrobbles.recenttracks.track;
     const parsedScrobbles = Importer.map((rawScrobble: any) => {
       const scrobble = new Scrobble(rawScrobble);

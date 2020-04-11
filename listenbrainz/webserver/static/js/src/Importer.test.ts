@@ -1,5 +1,3 @@
-// TODO: Make the code ESLint compliant
-
 import Importer from "./Importer";
 
 // Mock data to test functions
@@ -7,8 +5,7 @@ import * as page from "./__mocks__/page.json";
 import * as getInfo from "./__mocks__/getInfo.json";
 import * as getInfoNoPlayCount from "./__mocks__/getInfoNoPlayCount.json";
 // Output for the mock data
-import * as encodeScrobble_output from "./__mocks__/encodeScrobble_output.json";
-import { Listen, ListenType } from "./types";
+import * as encodeScrobbleOutput from "./__mocks__/encodeScrobbleOutput.json";
 
 jest.useFakeTimers();
 const props = {
@@ -27,7 +24,7 @@ const importer = new Importer(lastfmUsername, props);
 
 describe("encodeScrobbles", () => {
   it("encodes the given scrobbles correctly", () => {
-    expect(importer.encodeScrobbles(page)).toEqual(encodeScrobble_output);
+    expect(Importer.encodeScrobbles(page)).toEqual(encodeScrobbleOutput);
   });
 });
 
@@ -70,7 +67,6 @@ describe("getNumberOfPages", () => {
 
 describe("getTotalNumberOfScrobbles", () => {
   beforeEach(() => {
-
     // Mock function for fetch
     window.fetch = jest.fn().mockImplementation(() => {
       return Promise.resolve({
@@ -119,7 +115,6 @@ describe("getTotalNumberOfScrobbles", () => {
 
 describe("getPage", () => {
   beforeEach(() => {
-
     // Mock function for fetch
     window.fetch = jest.fn().mockImplementation(() => {
       return Promise.resolve({
@@ -139,10 +134,10 @@ describe("getPage", () => {
 
   it("should call encodeScrobbles", async () => {
     // Mock function for encodeScrobbles
-    importer.encodeScrobbles = jest.fn((data) => ["foo", "bar"]);
+    Importer.encodeScrobbles = jest.fn(() => ["foo", "bar"]);
 
     const data = await importer.getPage(1);
-    expect(importer.encodeScrobbles).toHaveBeenCalledTimes(1);
+    expect(Importer.encodeScrobbles).toHaveBeenCalledTimes(1);
     expect(data).toEqual(["foo", "bar"]);
   });
 
@@ -193,20 +188,14 @@ describe("getPage", () => {
 
 describe("submitPage", () => {
   beforeEach(() => {
-
     importer.getRateLimitDelay = jest.fn().mockImplementation(() => 0);
     importer.updateRateLimitParameters = jest.fn();
-
   });
 
   it("calls submitListens once", async () => {
     importer.APIService.submitListens = jest.fn().mockImplementation(() => {
-      return Promise.resolve({status: 200})
-    })
-    // @ts-ignore
-    console.log(window.fetch.mock.calls)
-
-
+      return Promise.resolve({ status: 200 });
+    });
     importer.submitPage(["listen"]);
 
     jest.runAllTimers();
@@ -215,16 +204,16 @@ describe("submitPage", () => {
     // https://stackoverflow.com/questions/51126786/jest-fake-timers-with-promises
     await new Promise((resolve) => setImmediate(resolve));
 
-    expect(importer.APIService.submitListens).toHaveBeenCalledTimes(1)
+    expect(importer.APIService.submitListens).toHaveBeenCalledTimes(1);
   });
 
   it("calls updateRateLimitParameters once", async () => {
     importer.APIService.submitListens = jest.fn().mockImplementation(() => {
-      return Promise.resolve({status: 200});
-    })
+      return Promise.resolve({ status: 200 });
+    });
     importer.submitPage(["listen"]);
 
-    jest.runAllTimers()
+    jest.runAllTimers();
 
     // Flush all promises
     // https://stackoverflow.com/questions/51126786/jest-fake-timers-with-promises

@@ -15,16 +15,14 @@ const props = {
   lastfmApiKey: "foobar",
 };
 
-
 describe("LastFmImporter Page", () => {
-
   it("renders without crashing", () => {
-    const wrapper = shallow(<LastFmImporter {...props}/>);
+    const wrapper = shallow(<LastFmImporter {...props} />);
     expect(wrapper).toBeTruthy();
   });
 
   it("modal renders when button clicked", () => {
-    const wrapper = shallow(<LastFmImporter {...props}/>);
+    const wrapper = shallow(<LastFmImporter {...props} />);
     // Simulate submiting the form
     wrapper.find("form").simulate("submit", {
       preventDefault: () => null,
@@ -35,7 +33,7 @@ describe("LastFmImporter Page", () => {
   });
 
   it("submit button is disabled when input is empty", () => {
-    const wrapper = shallow(<LastFmImporter {...props}/>);
+    const wrapper = shallow(<LastFmImporter {...props} />);
     // Make sure that the input is empty
     wrapper.setState({ lastfmUsername: "" });
 
