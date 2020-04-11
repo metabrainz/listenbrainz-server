@@ -1,6 +1,7 @@
+/* eslint-disable no-unused-vars */
 import * as React from "react";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
-import { IconProp } from "@fortawesome/fontawesome-svg-core"; // eslint-disable-line no-unused-vars
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const LastFMImporterModal = (props: ModalProps) => {
@@ -39,7 +40,7 @@ const LastFMImporterModal = (props: ModalProps) => {
         disabled={disable}
         type="button"
       >
-        <FontAwesomeIcon icon={faTimes.iconName as IconProp} />
+        <FontAwesomeIcon icon={faTimes as IconProp} />
       </button>
       <div>{children}</div>
     </div>
