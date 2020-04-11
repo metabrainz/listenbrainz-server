@@ -1,6 +1,3 @@
-// TODO: Make the code ESLint compliant
-// TODO: Port to typescript
-
 import * as React from "react";
 import {
   faEye,
