@@ -3,5 +3,5 @@ FROM node:10.15-alpine
 RUN mkdir /code
 WORKDIR /code
 
-COPY package.json package-lock.json webpack.config.js babel.config.js enzyme.config.js jest.config.js tsconfig.json .eslintrc.js .gitignore /code/
+COPY package.json package-lock.json webpack.config.js babel.config.js enzyme.config.ts jest.config.js tsconfig.json .eslintrc.js .gitignore /code/
 RUN npm install

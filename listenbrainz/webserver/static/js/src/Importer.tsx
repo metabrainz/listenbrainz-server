@@ -1,52 +1,56 @@
-/* eslint-disable */
-// TODO: Make the code ESLint compliant
-// TODO: Port to typescript
-
-import React from "react";
+import * as React from "react";
 import { faSpinner, faCheck } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import Scrobble from "./scrobble";
-import APIService from "./api-service";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import Scrobble from "./Scrobble";
+import APIService from "./APIService";
 
 export default class Importer {
-  constructor(lastfmUsername, props) {
+  APIService: APIService;
+
+  private lastfmUsername: string;
+  private lastfmURL: string;
+  private lastfmKey: string;
+
+  private userName: string;
+  private userToken: string;
+
+  private page = 1;
+  private totalPages = 0;
+
+  private playCount = -1; // the number of scrobbles reported by Last.FM
+  private countReceived = 0; // number of scrobbles the Last.FM API sends us, this can be diff from playCount
+
+  private latestImportTime = 0; // the latest timestamp that we've imported earlier
+  private maxTimestampForImport = 0; // the latest listen found in this import
+  private incrementalImport = false;
+
+  private numCompleted = 0; // number of pages completed till now
+
+  // Variables used to honor LB's rate limit
+  private rlRemain = -1;
+  private rlReset = -1;
+  private rlOrigin = -1;
+
+  public msg?: React.ReactElement; // Message to be displayed in modal
+  public canClose = true;
+
+  constructor(lastfmUsername: string, private props: ImporterProps) {
     this.APIService = new APIService(
-      props.api_url || `${window.location.origin}/1`
+      props.apiUrl || `${window.location.origin}/1`
     ); // Used to access LB API
 
     this.lastfmUsername = lastfmUsername;
-    this.lastfmURL = props.lastfm_api_url;
-    this.lastfmKey = props.lastfm_api_key;
+    this.lastfmURL = props.lastfmApiUrl;
+    this.lastfmKey = props.lastfmApiKey;
 
     this.userName = props.user.name;
     this.userToken = props.user.auth_token;
-
-    this.page = 1;
-    this.totalPages = 0;
-    this.playCount = -1; // the number of scrobbles reported by Last.FM
-    this.countReceived = 0; // number of scrobbles the Last.FM API sends us, this can be diff from playCount
-
-    this.latestImportTime = 0; // the latest timestamp that we've imported earlier
-    this.maxTimestampForImport = 0; // the latest listen found in this import
-    this.incrementalImport = false;
-
-    this.numCompleted = 0; // number of pages completed till now
-
-    this.props = props;
-
-    // Variables used to honor LB's rate limit
-    this.rl_remain = -1;
-    this.rl_reset = -1;
-    this.rl_origin = -1;
-
-    // Message to be outputed in modal
-    this.msg = "";
-    this.canClose = true;
   }
 
   async startImport() {
     this.canClose = false; // Disable the close button
-    this.updateMessage("Your import from Last.fm is starting!");
+    this.updateMessage(<p>Your import from Last.fm is starting!</p>);
     this.playCount = await this.getTotalNumberOfScrobbles();
     this.latestImportTime = await this.APIService.getLatestImport(
       this.userName
@@ -56,19 +60,20 @@ export default class Importer {
     this.page = this.totalPages; // Start from the last page so that oldest scrobbles are imported first
 
     while (this.page > 0) {
-      const payload = await this.getPage(this.page);
+      // Fixing no-await-in-loop will require significant changes to the code, ignoring for now
+      const payload = await this.getPage(this.page); // eslint-disable-line
       if (payload) {
         // Submit only if response is valid
         this.submitPage(payload);
       }
 
-      this.page--;
-      this.numCompleted++;
+      this.page -= 1;
+      this.numCompleted += 1;
 
       // Update message
       const msg = (
         <p>
-          <FontAwesomeIcon icon={faSpinner} spin /> Sending page{" "}
+          <FontAwesomeIcon icon={faSpinner as IconProp} spin /> Sending page{" "}
           {this.numCompleted} of {this.totalPages} to ListenBrainz <br />
           <span style={{ fontSize: `${8}pt` }}>
             {this.incrementalImport && (
@@ -78,7 +83,7 @@ export default class Importer {
                 <br />
               </span>
             )}
-            <span>Please don't close this page while this is running</span>
+            <span>Please don&apos;t close this page while this is running</span>
           </span>
         </p>
       );
@@ -88,7 +93,7 @@ export default class Importer {
     // Update latest import time on LB server
     try {
       this.maxTimestampForImport = Math.max(
-        parseInt(this.maxTimestampForImport),
+        Number(this.maxTimestampForImport),
         this.latestImportTime
       );
       this.APIService.setLatestImport(
@@ -96,7 +101,7 @@ export default class Importer {
         this.maxTimestampForImport
       );
     } catch {
-      console.warn("Error, retrying in 3s");
+      // console.warn("Error setting latest import timestamp, retrying in 3s");
       setTimeout(
         () =>
           this.APIService.setLatestImport(
@@ -106,9 +111,9 @@ export default class Importer {
         3000
       );
     }
-    const final_msg = (
+    const finalMsg = (
       <p>
-        <FontAwesomeIcon icon={faCheck} /> Import finished
+        <FontAwesomeIcon icon={faCheck as IconProp} /> Import finished
         <br />
         <span style={{ fontSize: `${8}pt` }}>
           Successfully submitted {this.countReceived} listens to ListenBrainz
@@ -119,8 +124,8 @@ export default class Importer {
          * and playCount will be different by definition in incremental imports
          */}
         {!this.incrementalImport &&
-          this.playCount != -1 &&
-          this.countReceived != this.playCount && (
+          this.playCount !== -1 &&
+          this.countReceived !== this.playCount && (
             <b>
               <span style={{ fontSize: `${10}pt` }} className="text-danger">
                 The number submitted listens is different from the{" "}
@@ -136,13 +141,13 @@ export default class Importer {
         <br />
         <br />
         <span style={{ fontSize: `${10}pt` }}>
-          <a href={`${this.props.profile_url}`}>
+          <a href={`${this.props.profileUrl}`}>
             Close and go to your ListenBrainz profile
           </a>
         </span>
       </p>
     );
-    this.updateMessage(final_msg);
+    this.updateMessage(finalMsg);
     this.canClose = true;
   }
 
@@ -156,13 +161,13 @@ export default class Importer {
       const response = await fetch(encodeURI(url));
       const data = await response.json();
       if ("playcount" in data.user) {
-        return parseInt(data.user.playcount);
+        return Number(data.user.playcount);
       }
       return -1;
     } catch {
-      this.updateMessage("An error occurred, please try again. :(");
+      this.updateMessage(<p>An error occurred, please try again. :(</p>);
       this.canClose = true; // Enable the close button
-      error = new Error();
+      const error = new Error();
       error.message = "Something went wrong";
       throw error;
     }
@@ -180,23 +185,23 @@ export default class Importer {
       const response = await fetch(encodeURI(url));
       const data = await response.json();
       if ("recenttracks" in data) {
-        return parseInt(data.recenttracks["@attr"].totalPages);
+        return Number(data.recenttracks["@attr"].totalPages);
       }
       return 0;
     } catch (error) {
-      this.updateMessage("An error occurred, please try again. :(");
+      this.updateMessage(<p>An error occurred, please try again. :(</p>);
       this.canClose = true; // Enable the close button
       return -1;
     }
   }
 
-  async getPage(page) {
+  async getPage(page: number) {
     /*
      * Fetch page from Last.fm
      */
 
-    const retry = (reason) => {
-      console.warn(`${reason} fetching last.fm page=${page}, retrying in 3s`);
+    const retry = (reason: string) => {
+      // console.warn(`${reason} while fetching last.fm page=${page}, retrying in 3s`);
       setTimeout(() => this.getPage(page), 3000);
     };
 
@@ -220,23 +225,25 @@ export default class Importer {
         }
 
         // Encode the page so that it can be submitted
-        const payload = this.encodeScrobbles(data);
+        const payload = Importer.encodeScrobbles(data);
         this.countReceived += payload.length;
         return payload;
       }
-      if (/^5/.test(response.status)) {
+      if (/^5/.test(response.status.toString())) {
         retry(`Got ${response.status}`);
       } else {
         // ignore 40x
-        console.warn(`Got ${response.status}, skipping`);
+        // console.warn(`Got ${response.status} while fetching page last.fm page=${page}, skipping`);
       }
     } catch {
       // Retry if there is a network error
       retry("Error");
     }
+    return null;
   }
 
-  async submitPage(payload) {
+  // TODO: Replace with array of Listens
+  async submitPage(payload: any) {
     const delay = this.getRateLimitDelay();
     // Halt execution for some time
     await new Promise((resolve) => {
@@ -251,18 +258,19 @@ export default class Importer {
     this.updateRateLimitParameters(response);
   }
 
-  encodeScrobbles(scrobbles) {
-    scrobbles = scrobbles.recenttracks.track;
-    const parsedScrobbles = this.map((rawScrobble) => {
+  // TODO: Replace return type with array of Listens
+  static encodeScrobbles(scrobbles: LastFmScrobblePage): any {
+    const rawScrobbles = scrobbles.recenttracks.track;
+    const parsedScrobbles = Importer.map((rawScrobble: any) => {
       const scrobble = new Scrobble(rawScrobble);
       return scrobble.asJSONSerializable();
-    }, scrobbles);
+    }, rawScrobbles);
     return parsedScrobbles;
   }
 
-  map(applicable, collection) {
+  static map(applicable: Function, collection: any) {
     const newCollection = [];
-    for (let i = 0; i < collection.length; i++) {
+    for (let i = 0; i < collection.length; i += 1) {
       const result = applicable(collection[i]);
       if ("listened_at" in result) {
         // Add If there is no 'listened_at' attribute then either the listen is invalid or the
@@ -273,7 +281,7 @@ export default class Importer {
     return newCollection;
   }
 
-  updateMessage = (msg) => {
+  updateMessage = (msg: React.ReactElement) => {
     this.msg = msg;
   };
 
@@ -281,20 +289,20 @@ export default class Importer {
     /* Get the amount of time we should wait according to LB rate limits before making a request to LB */
     let delay = 0;
     const current = new Date().getTime() / 1000;
-    if (this.rl_reset < 0 || current > this.rl_origin + this.rl_reset) {
+    if (this.rlReset < 0 || current > this.rlOrigin + this.rlReset) {
       delay = 0;
-    } else if (this.rl_remain > 0) {
-      delay = Math.max(0, Math.ceil((this.rl_reset * 1000) / this.rl_remain));
+    } else if (this.rlRemain > 0) {
+      delay = Math.max(0, Math.ceil((this.rlReset * 1000) / this.rlRemain));
     } else {
-      delay = Math.max(0, Math.ceil(this.rl_reset * 1000));
+      delay = Math.max(0, Math.ceil(this.rlReset * 1000));
     }
     return delay;
   }
 
-  updateRateLimitParameters(response) {
+  updateRateLimitParameters(response: Response) {
     /* Update the variables we use to honor LB's rate limits */
-    this.rl_remain = parseInt(response.headers.get("X-RateLimit-Remaining"));
-    this.rl_reset = parseInt(response.headers.get("X-RateLimit-Reset-In"));
-    this.rl_origin = new Date().getTime() / 1000;
+    this.rlRemain = Number(response.headers.get("X-RateLimit-Remaining"));
+    this.rlReset = Number(response.headers.get("X-RateLimit-Reset-In"));
+    this.rlOrigin = new Date().getTime() / 1000;
   }
 }
