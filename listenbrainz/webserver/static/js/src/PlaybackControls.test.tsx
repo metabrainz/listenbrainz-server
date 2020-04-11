@@ -1,7 +1,7 @@
 import * as React from "react";
 import { mount } from "enzyme";
 
-import { SpotifyPlayDirection, PlaybackControls } from "./PlaybackControls";
+import { PlaybackControls } from "./PlaybackControls";
 
 const props = {
   playPreviousTrack: () => {},
