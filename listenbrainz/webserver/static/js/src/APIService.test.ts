@@ -35,7 +35,7 @@ describe("submitListens", () => {
     window.fetch = jest
       .fn()
       .mockImplementationOnce(() => {
-        return Promise.reject({});
+        return Promise.reject(Error);
       })
       .mockImplementation(() => {
         return Promise.resolve({

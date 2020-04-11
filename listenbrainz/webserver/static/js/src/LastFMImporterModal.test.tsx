@@ -7,7 +7,8 @@ const props = {
   disable: false,
   children: [],
   onClose: (event: React.MouseEvent<HTMLButtonElement>) => {},
-}
+};
+
 describe("LastFmImporterModal", () => {
   it("renders without crashing", () => {
     const wrapper = shallow(<LastFMImporterModal {...props} />);
