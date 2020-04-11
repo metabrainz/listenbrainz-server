@@ -1,5 +1,5 @@
 import * as React from "react";
-import { shallow } from "enzyme";
+import { mount } from "enzyme";
 
 import { SpotifyPlayDirection, PlaybackControls } from "./PlaybackControls";
 
@@ -17,7 +17,7 @@ const props = {
 };
 describe("PlaybackControls", () => {
   it("renders", () => {
-    const wrapper = shallow(<PlaybackControls {...props} />);
-    expect(wrapper).toMatchSnapshot();
+    const wrapper = mount(<PlaybackControls {...props} />);
+    expect(wrapper.html()).toMatchSnapshot();
   });
 });
