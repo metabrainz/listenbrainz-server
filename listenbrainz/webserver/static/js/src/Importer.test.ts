@@ -162,6 +162,19 @@ describe("getPage", () => {
     jest.runAllTimers();
   });
 
+  it("should skip the page if 40x is recieved", async () => {
+    // Mock function for failed fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: false,
+        status: 404,
+      });
+    });
+
+    await importer.getPage(1);
+    expect(setTimeout).not.toHaveBeenCalled();
+  });
+
   it("should retry if there is any other error", async () => {
     // Mock function for fetch
     window.fetch = jest.fn().mockImplementation(() => {

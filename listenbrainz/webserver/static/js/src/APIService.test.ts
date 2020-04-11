@@ -71,6 +71,7 @@ describe("submitListens", () => {
     });
 
     await apiService.submitListens("foobar", "import", "foobar");
+    expect(setTimeout).not.toHaveBeenCalled(); // no setTimeout calls for future retries
   });
 
   it("returns the response if successful", async () => {
