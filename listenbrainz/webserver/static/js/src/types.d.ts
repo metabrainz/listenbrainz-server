@@ -3,6 +3,7 @@ declare type Listen = any;
 
 declare type ListenType = "single" | "playingNow" | "import";
 
+declare type SpotifyPlayDirection = "up" | "down" | "hidden";
 // TODO: make this type specific
 declare type SubmitListensPayload = any;
 
