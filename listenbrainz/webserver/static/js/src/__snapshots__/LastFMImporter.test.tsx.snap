@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LastFmImporter Page renders 1`] = `"<div class=\\"Importer\\"><form><input type=\\"text\\" placeholder=\\"Last.fm Username\\" size=\\"30\\" value=\\"\\"><input type=\\"submit\\" disabled=\\"\\" value=\\"Import Now!\\"></form></div>"`;

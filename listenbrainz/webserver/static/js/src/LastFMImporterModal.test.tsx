@@ -1,5 +1,5 @@
 import * as React from "react";
-import { shallow } from "enzyme";
+import { mount, shallow } from "enzyme";
 
 import LastFMImporterModal from "./LastFMImporterModal";
 
@@ -10,9 +10,9 @@ const props = {
 };
 
 describe("LastFmImporterModal", () => {
-  it("renders without crashing", () => {
-    const wrapper = shallow(<LastFMImporterModal {...props} />);
-    expect(wrapper).toBeTruthy();
+  it("renders", () => {
+    const wrapper = mount(<LastFMImporterModal {...props} />);
+    expect(wrapper.html()).toMatchSnapshot();
   });
 
   it("close button is disabled/enabled based upon props", () => {
