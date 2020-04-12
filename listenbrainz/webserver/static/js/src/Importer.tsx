@@ -46,7 +46,7 @@ export default class Importer {
     this.lastfmKey = props.lastfmApiKey;
 
     this.userName = props.user.name;
-    this.userToken = props.user.auth_token;
+    this.userToken = props.user.auth_token || "";
   }
 
   async startImport() {

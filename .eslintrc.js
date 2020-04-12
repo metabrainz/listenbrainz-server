@@ -24,11 +24,13 @@ module.exports = {
   },
   plugins: ["react", "@typescript-eslint", "prettier"],
   rules: {
-    "prettier/prettier": "error",
+    "react/prop-tyes": "off",
     "react/jsx-filename-extension": "off",
+    "react/jsx-props-no-spreading": "off",
     "import/extensions": "off",
-    camelcase: "warn",
     "no-unused-vars": "off",
+    camelcase: "warn",
+    "prettier/prettier": "error",
     "lines-between-class-members": [
       "error",
       "always",
@@ -51,7 +53,6 @@ module.exports = {
       plugins: ["jest"],
       rules: {
         "import/no-extraneous-dependencies": "off",
-        "react/jsx-props-no-spreading": "off",
         "jest/no-disabled-tests": "warn",
         "jest/no-focused-tests": "error",
         "jest/no-identical-title": "error",
