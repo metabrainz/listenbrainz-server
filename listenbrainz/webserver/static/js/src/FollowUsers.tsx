@@ -107,13 +107,12 @@ export default class FollowUsers extends React.Component<
     ) {
       finalListName = this.nameInput.current.value;
     }
-
     fetch(saveUrl, {
       method: "POST",
       body: JSON.stringify({
         users,
         name: finalListName,
-        id: listId,
+        id: listId === undefined ? listId : null,
       }),
       headers: { Authorization: `Token ${creator.auth_token}` },
     })
@@ -121,7 +120,7 @@ export default class FollowUsers extends React.Component<
         if (!response.ok) {
           throw Error(response.statusText);
         }
-        newAlert("success", "Successfully saved list");
+        newAlert("success", "Successfully saved list", "Success");
         return response.json();
       })
       .then((data) => {
