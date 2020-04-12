@@ -19,8 +19,8 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 type FollowUsersProps = {
   followList?: Array<string>,
   saveUrl?: string,
-  listId?: number,
-  listName?: string,
+  listId: number,
+  listName: string,
   onUserListChange: (users: Array<string>) => void;
   creator: ListenBrainzUser,
   newAlert: (
