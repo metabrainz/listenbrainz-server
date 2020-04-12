@@ -4,7 +4,11 @@ declare module "time-ago";
 
 // TODO: make this type specific
 declare type Listen = any;
-declare type ListenBrainzUser = any;
+declare type ListenBrainzUser = {
+  id?: string;
+  name: string;
+  auth_token?: string;
+};
 
 declare type ListenType = "single" | "playingNow" | "import";
 
@@ -41,11 +45,6 @@ declare type Alert = {
 };
 
 declare type FollowUsersPlayingNow = any;
-declare type User = {
-  id?: string;
-  name: string;
-  auth_token?: string;
-};
 
 declare type LastFmScrobblePage = {
   recenttracks: {

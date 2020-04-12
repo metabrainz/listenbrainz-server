@@ -10,8 +10,7 @@ import * as ReactDOM from "react-dom";
 import * as _ from "lodash";
 import * as io from "socket.io-client";
 import SpotifyPlayer from "./SpotifyPlayer";
-// @ts-ignore
-import { FollowUsers } from "./follow-users";
+import FollowUsers from "./FollowUsers";
 import APIService from "./APIService";
 import {
   getArtistLink,
@@ -37,7 +36,7 @@ export interface RecentListensProps {
   profileUrl?: string;
   saveUrl?: string;
   spotify: SpotifyUser;
-  user: User;
+  user: ListenBrainzUser;
   webSocketsServerUrl: string;
 }
 
@@ -392,7 +391,7 @@ class RecentListens extends React.Component<
                         <th>User</th>
                       )}
                       {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
-                      <th />
+                      <th style={{ width: "50px" }} />
                     </tr>
                   </thead>
                   <tbody>
@@ -406,11 +405,10 @@ class RecentListens extends React.Component<
                         }
                         return 0;
                       })
-                      .map((listen, index) => {
+                      .map((listen) => {
                         return (
                           <tr
-                            // eslint-disable-next-line react/no-array-index-key
-                            key={index}
+                            key={listen}
                             onDoubleClick={this.playListen.bind(this, listen)}
                             className={`listen ${
                               this.isCurrentListen(listen) ? "info" : ""
