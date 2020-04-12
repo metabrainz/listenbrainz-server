@@ -462,12 +462,12 @@ class RecentListens extends React.Component<
                         !previousListenTs ? "hidden" : ""
                       }`}
                     >
-                      <a href={`${profileUrl}?minTs=${previousListenTs}`}>
+                      <a href={`${profileUrl}?min_ts=${previousListenTs}`}>
                         &larr; Previous
                       </a>
                     </li>
                     <li className="next" hidden={!nextListenTs}>
-                      <a href={`${profileUrl}?maxTs=${nextListenTs}`}>
+                      <a href={`${profileUrl}?max_ts=${nextListenTs}`}>
                         Next &rarr;
                       </a>
                     </li>
