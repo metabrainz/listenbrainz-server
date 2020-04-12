@@ -32,7 +32,7 @@ export interface RecentListensProps {
   latestSpotifyUri?: string;
   listenCount?: string;
   listens?: Array<Listen>;
-  mode: ListensListMode,
+  mode: ListensListMode;
   nextListenTs?: number;
   previousListenTs?: number;
   profileUrl?: string;
