@@ -20,6 +20,8 @@ import {
   getTrackLink,
 } from "./utils";
 
+export type ListensListMode = "listens" | "follow" | "recent";
+
 export interface RecentListensProps {
   apiUrl: string;
   artistCount?: number | null | undefined;
@@ -30,8 +32,8 @@ export interface RecentListensProps {
   latestListenTs?: number;
   latestSpotifyUri?: string;
   listenCount?: number;
-  listens?: Listen[];
-  mode: "listens" | "follow" | "recent";
+  listens?: Array<Listen>;
+  mode: ListensListMode,
   nextListenTs?: number;
   previousListenTs?: number;
   profileUrl?: string;
@@ -56,7 +58,7 @@ export interface RecentListensState {
   saveUrl: string;
 }
 
-class RecentListens extends React.Component<
+export default class RecentListens extends React.Component<
   RecentListensProps,
   RecentListensState
 > {
@@ -462,12 +464,12 @@ class RecentListens extends React.Component<
                         !previousListenTs ? "hidden" : ""
                       }`}
                     >
-                      <a href={`${profileUrl}?minTs=${previousListenTs}`}>
+                      <a href={`${profileUrl}?min_ts=${previousListenTs}`}>
                         &larr; Previous
                       </a>
                     </li>
                     <li className="next" hidden={!nextListenTs}>
-                      <a href={`${profileUrl}?maxTs=${nextListenTs}`}>
+                      <a href={`${profileUrl}?max_ts=${nextListenTs}`}>
                         Next &rarr;
                       </a>
                     </li>
@@ -570,7 +572,7 @@ document.addEventListener("DOMContentLoaded", () => {
       haveListenCount={have_listen_count}
       latestListenTs={latest_listen_ts}
       latestSpotifyUri={latest_spotify_uri}
-      listenCount={listen_count}
+      listenCount={Number(listen_count)}
       listens={listens}
       mode={mode}
       nextListenTs={next_listen_ts}
