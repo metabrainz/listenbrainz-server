@@ -18,7 +18,6 @@ SPOTIFY_IMPORT_PERMISSIONS = (
 
 SPOTIFY_LISTEN_PERMISSIONS = (
     'streaming',
-    'user-read-birthdate',
     'user-read-email',
     'user-read-private',
 )

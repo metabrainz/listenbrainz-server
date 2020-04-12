@@ -12,7 +12,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { isEqual as _isEqual } from "lodash";
 import io from "socket.io-client";
-import { SpotifyPlayer } from "./spotify-player";
+import SpotifyPlayer from "./SpotifyPlayer";
 import { FollowUsers } from "./follow-users";
 import APIService from "./APIService";
 import {
@@ -447,11 +447,11 @@ class RecentListens extends React.Component {
             {this.props.spotify.access_token &&
             this.state.canPlayMusic !== false ? (
               <SpotifyPlayer
-                APIService={this.APIService}
+                apiService={this.APIService}
                 ref={this.spotifyPlayer}
                 listens={this.state.listens}
                 direction={this.state.direction}
-                spotify_user={this.props.spotify}
+                spotifyUser={this.props.spotify}
                 onCurrentListenChange={this.handleCurrentListenChange}
                 onAccountError={this.handleSpotifyAccountError}
                 onPermissionError={this.handleSpotifyPermissionError}
