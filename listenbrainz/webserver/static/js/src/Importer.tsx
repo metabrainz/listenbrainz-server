@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import Scrobble from "./Scrobble";
 import APIService from "./APIService";
+import { ImporterProps } from "./LastFMImporter";
 
 export default class Importer {
   APIService: APIService;

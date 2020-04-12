@@ -3,6 +3,12 @@ import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
+export interface ModalProps {
+  disable: boolean;
+  children: React.ReactElement[];
+  onClose(event: React.MouseEvent<HTMLButtonElement>): void;
+}
+
 const LastFMImporterModal = (props: ModalProps) => {
   const divStyle = {
     position: "fixed",
