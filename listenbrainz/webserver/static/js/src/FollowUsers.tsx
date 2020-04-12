@@ -1,7 +1,3 @@
-/* eslint-disable */
-// TODO: Make the code ESLint compliant
-// TODO: Port to typescript
-
 import {
   faPlusCircle,
   faSave,
@@ -11,37 +7,40 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import * as React from "react";
 import { isNil as _isNil } from "lodash";
 import { getArtistLink, getPlayButton, getTrackLink } from "./utils";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 type FollowUsersProps = {
-  followList?: Array<string>,
-  saveUrl?: string,
-  listId: number,
-  listName: string,
-  onUserListChange: (users: Array<string>) => void;
-  creator: ListenBrainzUser,
+  followList?: Array<string>;
+  saveUrl?: string;
+  listId?: number;
+  listName?: string;
+  onUserListChange: (users: Array<string>, dontSendUpdate?: boolean) => void;
+  creator: ListenBrainzUser;
   newAlert: (
-    alertType: AlertType,
+    type: AlertType,
     title: string,
     message?: string | JSX.Element
-  ) => void,
-  playingNow: FollowUsersPlayingNow,
-  playListen: (listen: Listen) => void,
-}
+  ) => void;
+  playingNow: FollowUsersPlayingNow;
+  playListen: (listen: Listen) => void;
+};
 
 type FollowUsersState = {
-  users: Array<string>,
-  saveUrl: string,
-  listId: number | null,
-  listName: string,
-}
+  users: Array<string>;
+  saveUrl: string;
+  listId: number | undefined;
+  listName: string | undefined;
+};
 
-export default class FollowUsers extends React.Component<FollowUsersProps, FollowUsersState> {
-  private textInput =  React.createRef<HTMLInputElement>();
-  private nameInput =  React.createRef<HTMLInputElement>();
+export default class FollowUsers extends React.Component<
+  FollowUsersProps,
+  FollowUsersState
+> {
+  textInput = React.createRef<HTMLInputElement>();
+  nameInput = React.createRef<HTMLInputElement>();
   constructor(props: FollowUsersProps) {
     super(props);
     this.state = {
@@ -59,10 +58,10 @@ export default class FollowUsers extends React.Component<FollowUsersProps, Follo
     if (!this.textInput) return;
     if (!this.textInput.current) return;
     const currentValue: string = this.textInput.current.value;
-    const {users} = this.state;
+    const { users } = this.state;
     if (
-      (currentValue === "" ||
-      users.find((user: string) => user === currentValue))
+      currentValue === "" ||
+      users.find((user: string) => user === currentValue)
     ) {
       return;
     }
@@ -74,12 +73,11 @@ export default class FollowUsers extends React.Component<FollowUsersProps, Follo
         if (this.textInput && this.textInput.current) {
           this.textInput.current.value = "";
         }
-        const {onUserListChange} = this.props;
-        const {users} = this.state;
+        const { onUserListChange } = this.props;
         onUserListChange(users);
       }
     );
-  }
+  };
 
   removeUserFromList = (index: number): void => {
     this.setState(
@@ -88,32 +86,33 @@ export default class FollowUsers extends React.Component<FollowUsersProps, Follo
         return { users: prevState.users };
       },
       () => {
-        const {onUserListChange} = this.props;
-        const {users} = this.state;
+        const { onUserListChange } = this.props;
+        const { users } = this.state;
         onUserListChange(users);
       }
     );
-  }
+  };
 
   saveFollowList = (): void => {
     if (!this.nameInput) return;
     if (!this.nameInput.current) return;
 
-    const { listName , users, listId, saveUrl } = this.state;
-    const {creator, newAlert} = this.props;
+    const { listName, users, listId, saveUrl } = this.state;
+    const { creator, newAlert } = this.props;
 
     let finalListName = listName;
-    if (!_isNil(this.nameInput.current.value) && this.nameInput.current.value.length) {
+    if (
+      !_isNil(this.nameInput.current.value) &&
+      this.nameInput.current.value.length
+    ) {
       finalListName = this.nameInput.current.value;
     }
-
-
     fetch(saveUrl, {
       method: "POST",
       body: JSON.stringify({
-        users: users,
+        users,
         name: finalListName,
-        id: listId,
+        id: listId === undefined ? listId : null,
       }),
       headers: { Authorization: `Token ${creator.auth_token}` },
     })
@@ -121,64 +120,63 @@ export default class FollowUsers extends React.Component<FollowUsersProps, Follo
         if (!response.ok) {
           throw Error(response.statusText);
         }
-        newAlert("success", "Successfully saved list");
+        newAlert("success", "Successfully saved list", "Success");
         return response.json();
       })
       .then((data) => {
-        console.debug(data);
-        this.setState(
-            { listId: data.list_id }
-        );
+        this.setState({ listId: data.list_id });
       })
       .catch((error) => {
-        console.error(error);
         newAlert("danger", "Could not save list", error.message);
       });
-  }
+  };
 
   newFollowList = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     event.preventDefault();
-    this.setState(
-      {
-        users: [],
-        listId: null,
-        listName: "",
-      }
-    );
+    this.setState({
+      users: [],
+      listId: undefined,
+      listName: "",
+    });
     if (this.nameInput && this.nameInput.current) {
       this.nameInput.current.value = "";
     }
-  }
+  };
 
-  addFollowerOnClick = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-    event.preventDefault()
+  addFollowerOnClick = (
+    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => {
+    event.preventDefault();
     this.addUserToList();
-  }
+  };
+
+  saveListOnClick = (
+    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => {
+    event.preventDefault();
+    this.saveFollowList();
+  };
 
   addFollowerOnEnter(event: React.KeyboardEvent<HTMLInputElement>) {
-    event.preventDefault();
     if (event.key === "Enter") {
       this.addUserToList();
     }
   }
 
-  saveListOnClick = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-    event.preventDefault();
-    this.saveFollowList()
-  }
-
   saveListOnEnter(event: React.KeyboardEvent<HTMLInputElement>) {
-    event.preventDefault();
     if (event.key === "Enter") {
       this.saveFollowList();
     }
   }
 
   render() {
+    const { listName, users } = this.state;
+    const { playingNow, playListen } = this.props;
     const noTopBottomPadding = {
       paddingTop: 0,
       paddingBottom: 0,
     };
+
     return (
       <div className="panel panel-primary">
         <div className="panel-heading">
@@ -225,7 +223,7 @@ export default class FollowUsers extends React.Component<FollowUsersProps, Follo
                 <input
                   type="text"
                   className="form-control"
-                  defaultValue={this.state.listName}
+                  defaultValue={listName}
                   placeholder="New list name"
                   ref={this.nameInput}
                   onKeyPress={this.saveListOnEnter}
@@ -255,41 +253,37 @@ export default class FollowUsers extends React.Component<FollowUsersProps, Follo
               <tr>
                 <th>User</th>
                 <th>Listening now</th>
-                <th style={{width: "50px"}} />
-                <th style={{width: "65px"}} />
+                {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
+                <th style={{ width: "50px" }} />
+                {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
+                <th style={{ width: "65px" }} />
               </tr>
             </thead>
             <tbody>
-              {this.state.users.map((user, index) => {
+              {users.map((user, index) => {
                 return (
                   <tr
                     key={user}
-                    className={this.props.playingNow[user] && "playing_now"}
-                    onDoubleClick={this.props.playListen.bind(
-                      this,
-                      this.props.playingNow[user]
-                    )}
+                    className={playingNow[user] && "playing_now"}
+                    onDoubleClick={playListen.bind(this, playingNow[user])}
                   >
                     <td>{user}</td>
                     <td>
-                      {this.props.playingNow[user] && (
+                      {playingNow[user] && (
                         <>
-                          {getTrackLink(this.props.playingNow[user])}
+                          {getTrackLink(playingNow[user])}
                           <span className="small">
                             {" "}
-                            — {getArtistLink(this.props.playingNow[user])}
+                            — {getArtistLink(playingNow[user])}
                           </span>
                         </>
                       )}
                     </td>
                     <td className="playButton">
-                      {this.props.playingNow[user] &&
+                      {playingNow[user] &&
                         getPlayButton(
-                          this.props.playingNow[user],
-                          this.props.playListen.bind(
-                            this,
-                            this.props.playingNow[user]
-                          )
+                          playingNow[user],
+                          playListen.bind(this, playingNow[user])
                         )}
                     </td>
                     <td style={noTopBottomPadding}>
