@@ -39,8 +39,8 @@ export default class FollowUsers extends React.Component<
   FollowUsersProps,
   FollowUsersState
 > {
-  private textInput = React.createRef<HTMLInputElement>();
-  private nameInput = React.createRef<HTMLInputElement>();
+  textInput = React.createRef<HTMLInputElement>();
+  nameInput = React.createRef<HTMLInputElement>();
   constructor(props: FollowUsersProps) {
     super(props);
     this.state = {
@@ -159,14 +159,12 @@ export default class FollowUsers extends React.Component<
   };
 
   addFollowerOnEnter(event: React.KeyboardEvent<HTMLInputElement>) {
-    event.preventDefault();
     if (event.key === "Enter") {
       this.addUserToList();
     }
   }
 
   saveListOnEnter(event: React.KeyboardEvent<HTMLInputElement>) {
-    event.preventDefault();
     if (event.key === "Enter") {
       this.saveFollowList();
     }
