@@ -1,5 +1,5 @@
 import * as React from "react";
-import { shallow } from "enzyme";
+import { mount, shallow } from "enzyme";
 
 import LastFmImporter from "./LastFMImporter";
 
@@ -16,9 +16,9 @@ const props = {
 };
 
 describe("LastFmImporter Page", () => {
-  it("renders without crashing", () => {
-    const wrapper = shallow(<LastFmImporter {...props} />);
-    expect(wrapper).toBeTruthy();
+  it("renders", () => {
+    const wrapper = mount(<LastFmImporter {...props} />);
+    expect(wrapper.html()).toMatchSnapshot();
   });
 
   it("modal renders when button clicked", () => {
