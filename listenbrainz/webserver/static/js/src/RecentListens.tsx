@@ -31,7 +31,7 @@ export interface RecentListensProps {
   haveListenCount?: boolean;
   latestListenTs?: number;
   latestSpotifyUri?: string;
-  listenCount?: number;
+  listenCount?: string;
   listens?: Array<Listen>;
   mode: ListensListMode,
   nextListenTs?: number;
@@ -572,7 +572,7 @@ document.addEventListener("DOMContentLoaded", () => {
       haveListenCount={have_listen_count}
       latestListenTs={latest_listen_ts}
       latestSpotifyUri={latest_spotify_uri}
-      listenCount={Number(listen_count)}
+      listenCount={listen_count}
       listens={listens}
       mode={mode}
       nextListenTs={next_listen_ts}
