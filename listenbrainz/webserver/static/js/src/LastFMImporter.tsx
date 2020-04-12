@@ -4,7 +4,7 @@ import Importer from "./Importer";
 
 import LastFMImporterModal from "./LastFMImporterModal";
 
-export interface ImporterProps {
+export type ImporterProps = {
   user: {
     id?: string;
     name: string;
@@ -14,14 +14,14 @@ export interface ImporterProps {
   apiUrl?: string;
   lastfmApiUrl: string;
   lastfmApiKey: string;
-}
+};
 
-export interface ImporterState {
+export type ImporterState = {
   show: boolean;
   canClose: boolean;
   lastfmUsername: string;
   msg: string;
-}
+};
 
 export default class LastFmImporter extends React.Component<
   ImporterProps,
