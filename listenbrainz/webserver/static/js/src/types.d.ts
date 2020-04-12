@@ -24,13 +24,20 @@ declare interface SpotifyImage {
   height: number;
 }
 declare type SpotifyPlayerTrackWindow = any; // TODO
-declare type AlertType = "danger" | "warning" | "success";
 declare type SpotifyPlayerSDKState = any;
 
 // the spotify-web-playback-sdk types are a bit messy
 // Adding an any here for now.
 // TODO: remove this any eventually
 declare type SpotifyPlayerType = any | Spotify.SpotifyPlayer;
+
+declare type AlertType = "danger" | "warning" | "success";
+declare type Alert = {
+  id: number;
+  type: AlertType;
+  title: string;
+  message: string | JSX.Element;
+};
 
 declare type User = {
   id?: string;

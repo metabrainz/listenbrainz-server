@@ -9,8 +9,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as _ from "lodash";
 import * as io from "socket.io-client";
-// @ts-ignore
-import { SpotifyPlayer } from "./spotify-player";
+import SpotifyPlayer from "./SpotifyPlayer";
 // @ts-ignore
 import { FollowUsers } from "./follow-users";
 import APIService from "./APIService";
@@ -37,25 +36,20 @@ export interface RecentListensProps {
   previousListenTs?: number;
   profileUrl?: string;
   saveUrl?: string;
-  spotify: {
-    access_token?: string;
-    permission?: string;
-  };
+  spotify: SpotifyUser;
   user: User;
   webSocketsServerUrl: string;
 }
 
 export interface RecentListensState {
-  // TODO: put correct value
-  alerts: any;
+  alerts: Array<Alert>;
   canPlayMusic?: boolean;
   currentListen: Listen;
-  // TODO: put correct value
-  direction: string;
-  followList: string[];
+  direction: SpotifyPlayDirection;
+  followList: Array<string>;
   listId: string;
   listName: string;
-  listens: Listen[];
+  listens: Array<Listen>;
   mode: "listens" | "follow" | "recent";
   // TODO: put correct value
   playingNowByUser: any;
@@ -68,7 +62,7 @@ class RecentListens extends React.Component<
 > {
   private APIService: APIService;
 
-  private spotifyPlayer = React.createRef();
+  private spotifyPlayer = React.createRef<SpotifyPlayerType>();
 
   private socket!: SocketIOClient.Socket;
 
@@ -159,7 +153,7 @@ class RecentListens extends React.Component<
     );
   };
 
-  handleSpotifyAccountError = (error: string): void => {
+  handleSpotifyAccountError = (error: string | JSX.Element): void => {
     this.newAlert("danger", "Spotify account error", error);
     this.setState({ canPlayMusic: false });
   };
@@ -169,8 +163,7 @@ class RecentListens extends React.Component<
     this.setState({ canPlayMusic: false });
   };
 
-  // TODO: Change to correct type
-  playListen = (listen: any): void => {
+  playListen = (listen: Listen): void => {
     if (this.spotifyPlayer.current) {
       // @ts-ignore
       this.spotifyPlayer.current.playListen(listen);
@@ -254,13 +247,17 @@ class RecentListens extends React.Component<
     }
   };
 
-  newAlert = (type: AlertType, title: string, message: string): void => {
+  newAlert = (
+    type: AlertType,
+    title: string,
+    message: string | JSX.Element
+  ): void => {
     const newAlert = {
       id: new Date().getTime(),
       type,
       title,
       message,
-    };
+    } as Alert;
 
     this.setState((prevState) => {
       return {
@@ -269,8 +266,7 @@ class RecentListens extends React.Component<
     });
   };
 
-  // TODO: Change to correct type
-  onAlertDismissed = (alert: any): void => {
+  onAlertDismissed = (alert: Alert): void => {
     const { alerts } = this.state;
 
     // find the index of the alert that was dismissed
@@ -502,7 +498,7 @@ class RecentListens extends React.Component<
           >
             {spotify.access_token && canPlayMusic !== false ? (
               <SpotifyPlayer
-                APIService={this.APIService}
+                apiService={this.APIService}
                 currentListen={currentListen}
                 direction={direction}
                 listens={listens}
@@ -511,7 +507,7 @@ class RecentListens extends React.Component<
                 onCurrentListenChange={this.handleCurrentListenChange}
                 onPermissionError={this.handleSpotifyPermissionError}
                 ref={this.spotifyPlayer}
-                spotify_user={spotify}
+                spotifyUser={spotify}
               />
             ) : (
               // Fallback embedded player
