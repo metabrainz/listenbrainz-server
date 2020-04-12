@@ -8,7 +8,7 @@ module.exports = function (env) {
   return {
     mode: isProd ? "production" : "development",
     entry: {
-      main: "/static/js/src/profile.jsx",
+      main: "/static/js/src/RecentListens.tsx",
       import: "/static/js/src/LastFMImporter.tsx",
     },
     output: {

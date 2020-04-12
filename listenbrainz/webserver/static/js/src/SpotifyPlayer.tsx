@@ -141,7 +141,6 @@ export default class SpotifyPlayer extends React.Component<
         }
         this.handleWarning("Could not find track on Spotify");
         this.playNextTrack();
-        return;
       })
       .catch((errorObject) => {
         if (errorObject.status === 401) {
@@ -157,7 +156,6 @@ export default class SpotifyPlayer extends React.Component<
           return;
         }
         this.handleError(errorObject.message);
-        return;
       });
   };
 
