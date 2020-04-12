@@ -17,10 +17,10 @@ type FollowUsersProps = {
   saveUrl?: string;
   listId?: number;
   listName?: string;
-  onUserListChange: (users: Array<string>) => void;
+  onUserListChange: (users: Array<string>, dontSendUpdate?: boolean) => void;
   creator: ListenBrainzUser;
   newAlert: (
-    alertType: AlertType,
+    type: AlertType,
     title: string,
     message?: string | JSX.Element
   ) => void;

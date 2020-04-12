@@ -23,7 +23,7 @@ export interface RecentListensProps {
   apiUrl: string;
   artistCount?: number | null | undefined;
   followList?: string[];
-  followListId?: string;
+  followListId?: number;
   followListName?: string;
   haveListenCount?: boolean;
   latestListenTs?: number;
@@ -46,7 +46,7 @@ export interface RecentListensState {
   currentListen: Listen;
   direction: SpotifyPlayDirection;
   followList: Array<string>;
-  listId: string;
+  listId?: number;
   listName: string;
   listens: Array<Listen>;
   mode: "listens" | "follow" | "recent";
@@ -76,7 +76,7 @@ class RecentListens extends React.Component<
       playingNowByUser: {},
       saveUrl: props.saveUrl || "",
       listName: props.followListName || "",
-      listId: props.followListId || "",
+      listId: props.followListId || undefined,
       direction: "down",
     };
 
@@ -121,7 +121,7 @@ class RecentListens extends React.Component<
 
   handleFollowUserListChange = (
     userList: string[],
-    dontSendUpdate: boolean
+    dontSendUpdate?: boolean
   ): void => {
     const { mode } = this.state;
     const { user } = this.props;
@@ -249,7 +249,7 @@ class RecentListens extends React.Component<
   newAlert = (
     type: AlertType,
     title: string,
-    message: string | JSX.Element
+    message?: string | JSX.Element
   ): void => {
     const newAlert = {
       id: new Date().getTime(),
