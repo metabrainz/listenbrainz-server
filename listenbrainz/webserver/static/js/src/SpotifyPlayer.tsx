@@ -137,9 +137,11 @@ export default class SpotifyPlayer extends React.Component<
             "Found a match"
           );
           this.playSpotifyURI(track.uri);
+          return;
         }
         this.handleWarning("Could not find track on Spotify");
         this.playNextTrack();
+        return;
       })
       .catch((errorObject) => {
         if (errorObject.status === 401) {
@@ -148,11 +150,14 @@ export default class SpotifyPlayer extends React.Component<
             errorObject.message,
             this.searchAndPlayTrack.bind(this, listen)
           );
+          return;
         }
         if (errorObject.status === 403) {
           this.handleAccountError();
+          return;
         }
         this.handleError(errorObject.message);
+        return;
       });
   };
 
