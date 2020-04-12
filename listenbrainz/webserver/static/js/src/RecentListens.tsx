@@ -10,8 +10,7 @@ import * as ReactDOM from "react-dom";
 import * as _ from "lodash";
 import * as io from "socket.io-client";
 import SpotifyPlayer from "./SpotifyPlayer";
-// @ts-ignore
-import { FollowUsers } from "./follow-users";
+import FollowUsers from "./FollowUsers";
 import APIService from "./APIService";
 import {
   getArtistLink,
@@ -26,7 +25,7 @@ export interface RecentListensProps {
   apiUrl: string;
   artistCount?: number | null | undefined;
   followList?: string[];
-  followListId?: string;
+  followListId?: number;
   followListName?: string;
   haveListenCount?: boolean;
   latestListenTs?: number;
@@ -39,7 +38,7 @@ export interface RecentListensProps {
   profileUrl?: string;
   saveUrl?: string;
   spotify: SpotifyUser;
-  user: User;
+  user: ListenBrainzUser;
   webSocketsServerUrl: string;
 }
 
@@ -49,7 +48,7 @@ export interface RecentListensState {
   currentListen: Listen;
   direction: SpotifyPlayDirection;
   followList: Array<string>;
-  listId: string;
+  listId?: number;
   listName: string;
   listens: Array<Listen>;
   mode: "listens" | "follow" | "recent";
@@ -79,7 +78,7 @@ export default class RecentListens extends React.Component<
       playingNowByUser: {},
       saveUrl: props.saveUrl || "",
       listName: props.followListName || "",
-      listId: props.followListId || "",
+      listId: props.followListId || undefined,
       direction: "down",
     };
 
@@ -124,7 +123,7 @@ export default class RecentListens extends React.Component<
 
   handleFollowUserListChange = (
     userList: string[],
-    dontSendUpdate: boolean
+    dontSendUpdate?: boolean
   ): void => {
     const { mode } = this.state;
     const { user } = this.props;
@@ -252,7 +251,7 @@ export default class RecentListens extends React.Component<
   newAlert = (
     type: AlertType,
     title: string,
-    message: string | JSX.Element
+    message?: string | JSX.Element
   ): void => {
     const newAlert = {
       id: new Date().getTime(),
@@ -394,7 +393,7 @@ export default class RecentListens extends React.Component<
                         <th>User</th>
                       )}
                       {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
-                      <th />
+                      <th style={{ width: "50px" }} />
                     </tr>
                   </thead>
                   <tbody>
@@ -408,11 +407,10 @@ export default class RecentListens extends React.Component<
                         }
                         return 0;
                       })
-                      .map((listen, index) => {
+                      .map((listen) => {
                         return (
                           <tr
-                            // eslint-disable-next-line react/no-array-index-key
-                            key={index}
+                            key={listen}
                             onDoubleClick={this.playListen.bind(this, listen)}
                             className={`listen ${
                               this.isCurrentListen(listen) ? "info" : ""
