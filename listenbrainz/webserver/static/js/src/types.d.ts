@@ -40,7 +40,7 @@ declare type Alert = {
 };
 
 declare type User = {
-  id?: string;
+  id?: number;
   name: string;
   auth_token?: string;
 };
