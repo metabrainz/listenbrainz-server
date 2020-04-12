@@ -3,8 +3,6 @@
 // TODO: Port to typescript
 
 import {
-  faChevronDown,
-  faChevronUp,
   faPlusCircle,
   faSave,
   faSitemap,
@@ -13,12 +11,38 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React from "react";
+import * as React from "react";
 import { isNil as _isNil } from "lodash";
 import { getArtistLink, getPlayButton, getTrackLink } from "./utils";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
-export class FollowUsers extends React.Component {
-  constructor(props) {
+type FollowUsersProps = {
+  followList?: Array<string>,
+  saveUrl?: string,
+  listId?: number,
+  listName?: string,
+  onUserListChange: (users: Array<string>) => void;
+  creator: ListenBrainzUser,
+  newAlert: (
+    alertType: AlertType,
+    title: string,
+    message?: string | JSX.Element
+  ) => void,
+  playingNow: FollowUsersPlayingNow,
+  playListen: (listen: Listen) => void,
+}
+
+type FollowUsersState = {
+  users: Array<string>,
+  saveUrl: string,
+  listId: number | null,
+  listName: string,
+}
+
+export default class FollowUsers extends React.Component<FollowUsersProps, FollowUsersState> {
+  private textInput =  React.createRef<HTMLInputElement>();
+  private nameInput =  React.createRef<HTMLInputElement>();
+  constructor(props: FollowUsersProps) {
     super(props);
     this.state = {
       users: props.followList || [],
@@ -31,101 +55,122 @@ export class FollowUsers extends React.Component {
     this.saveListOnEnter = this.saveListOnEnter.bind(this);
   }
 
-  addUserToList(event) {
-    event.preventDefault();
+  addUserToList = (): void => {
+    if (!this.textInput) return;
+    if (!this.textInput.current) return;
+    const currentValue: string = this.textInput.current.value;
+    const {users} = this.state;
     if (
-      this.textInput.value === "" ||
-      this.state.users.find((user) => user === this.textInput.value)
+      (currentValue === "" ||
+      users.find((user: string) => user === currentValue))
     ) {
       return;
     }
     this.setState(
-      (prevState) => {
-        return { users: prevState.users.concat([this.textInput.value]) };
+      (prevState: FollowUsersState) => {
+        return { users: prevState.users.concat([currentValue]) };
       },
       () => {
-        this.textInput.value = "";
-        this.props.onUserListChange(this.state.users);
+        if (this.textInput && this.textInput.current) {
+          this.textInput.current.value = "";
+        }
+        const {onUserListChange} = this.props;
+        const {users} = this.state;
+        onUserListChange(users);
       }
     );
   }
 
-  removeUserFromList(index) {
+  removeUserFromList = (index: number): void => {
     this.setState(
-      (prevState) => {
+      (prevState: FollowUsersState) => {
         prevState.users.splice(index, 1);
         return { users: prevState.users };
       },
       () => {
-        this.props.onUserListChange(this.state.users);
+        const {onUserListChange} = this.props;
+        const {users} = this.state;
+        onUserListChange(users);
       }
     );
   }
 
-  saveFollowList(event) {
-    let { listName } = this.state;
-    if (!_isNil(this.nameInput.value) && this.nameInput.value.length) {
-      listName = this.nameInput.value;
+  saveFollowList = (): void => {
+    if (!this.nameInput) return;
+    if (!this.nameInput.current) return;
+
+    const { listName , users, listId, saveUrl } = this.state;
+    const {creator, newAlert} = this.props;
+
+    let finalListName = listName;
+    if (!_isNil(this.nameInput.current.value) && this.nameInput.current.value.length) {
+      finalListName = this.nameInput.current.value;
     }
-    fetch(this.state.saveUrl, {
+
+
+    fetch(saveUrl, {
       method: "POST",
       body: JSON.stringify({
-        users: this.state.users,
-        name: listName,
-        id: this.state.listId,
+        users: users,
+        name: finalListName,
+        id: listId,
       }),
-      headers: { Authorization: `Token ${this.props.creator.auth_token}` },
+      headers: { Authorization: `Token ${creator.auth_token}` },
     })
       .then((response) => {
         if (!response.ok) {
-          this.props.newAlert(
-            "danger",
-            "Could not save list",
-            response.statusText
-          );
-          return;
+          throw Error(response.statusText);
         }
-        this.props.newAlert("success", "Successfully saved list");
+        newAlert("success", "Successfully saved list");
         return response.json();
       })
       .then((data) => {
         console.debug(data);
-        console.debug(`old List ID: ${this.state.listId}`);
         this.setState(
-          (prevState) => {
-            return { listId: data.list_id };
-          },
-          () => {
-            console.debug(`new List ID: ${this.state.listId}`);
-          }
+            { listId: data.list_id }
         );
       })
       .catch((error) => {
         console.error(error);
-        this.props.newAlert("danger", "Could not save list", error.message);
+        newAlert("danger", "Could not save list", error.message);
       });
   }
 
-  newFollowList(event) {
-    this.setState((prevState) => {
-      return {
+  newFollowList = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    event.preventDefault();
+    this.setState(
+      {
         users: [],
         listId: null,
-        listName: null,
-      };
-    });
-    this.nameInput.value = null;
-  }
-
-  addFollowerOnEnter(event) {
-    if (event.key === "Enter") {
-      this.addUserToList(event);
+        listName: "",
+      }
+    );
+    if (this.nameInput && this.nameInput.current) {
+      this.nameInput.current.value = "";
     }
   }
 
-  saveListOnEnter(event) {
+  addFollowerOnClick = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    event.preventDefault()
+    this.addUserToList();
+  }
+
+  addFollowerOnEnter(event: React.KeyboardEvent<HTMLInputElement>) {
+    event.preventDefault();
     if (event.key === "Enter") {
-      this.saveFollowList(event);
+      this.addUserToList();
+    }
+  }
+
+  saveListOnClick = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    event.preventDefault();
+    this.saveFollowList()
+  }
+
+  saveListOnEnter(event: React.KeyboardEvent<HTMLInputElement>) {
+    event.preventDefault();
+    if (event.key === "Enter") {
+      this.saveFollowList();
     }
   }
 
@@ -137,12 +182,12 @@ export class FollowUsers extends React.Component {
     return (
       <div className="panel panel-primary">
         <div className="panel-heading">
-          <FontAwesomeIcon icon={faSitemap} flip="vertical" />
+          <FontAwesomeIcon icon={faSitemap as IconProp} flip="vertical" />
           <span
             style={{
               fontSize: "x-large",
               marginLeft: "0.55em",
-              verticalAign: "middle",
+              verticalAlign: "middle",
             }}
           >
             Follow users
@@ -160,7 +205,7 @@ export class FollowUsers extends React.Component {
                   type="text"
                   className="form-control"
                   placeholder="Username…"
-                  ref={(input) => (this.textInput = input)}
+                  ref={this.textInput}
                   onKeyPress={this.addFollowerOnEnter}
                 />
                 <span className="input-group-btn">
@@ -169,7 +214,7 @@ export class FollowUsers extends React.Component {
                     type="button"
                     onClick={this.addUserToList}
                   >
-                    <FontAwesomeIcon icon={faPlusCircle} /> Add
+                    <FontAwesomeIcon icon={faPlusCircle as IconProp} /> Add
                   </button>
                 </span>
               </div>
@@ -182,7 +227,7 @@ export class FollowUsers extends React.Component {
                   className="form-control"
                   defaultValue={this.state.listName}
                   placeholder="New list name"
-                  ref={(input) => (this.nameInput = input)}
+                  ref={this.nameInput}
                   onKeyPress={this.saveListOnEnter}
                 />
                 <div className="input-group-btn">
@@ -191,14 +236,14 @@ export class FollowUsers extends React.Component {
                     type="button"
                     onClick={this.saveFollowList.bind(this)}
                   >
-                    <FontAwesomeIcon icon={faSave} /> Save
+                    <FontAwesomeIcon icon={faSave as IconProp} /> Save
                   </button>
                   <button
                     className="btn btn-danger"
                     type="button"
-                    onClick={this.newFollowList.bind(this)}
+                    onClick={this.newFollowList}
                   >
-                    <FontAwesomeIcon icon={faTimes} /> Clear
+                    <FontAwesomeIcon icon={faTimes as IconProp} /> Clear
                   </button>
                 </div>
               </div>
@@ -210,8 +255,8 @@ export class FollowUsers extends React.Component {
               <tr>
                 <th>User</th>
                 <th>Listening now</th>
-                <th width="50px" />
-                <th width="65px" />
+                <th style={{width: "50px"}} />
+                <th style={{width: "65px"}} />
               </tr>
             </thead>
             <tbody>
@@ -254,7 +299,7 @@ export class FollowUsers extends React.Component {
                         aria-label="Remove"
                         onClick={this.removeUserFromList.bind(this, index)}
                       >
-                        <FontAwesomeIcon icon={faTrashAlt} />
+                        <FontAwesomeIcon icon={faTrashAlt as IconProp} />
                       </button>
                     </td>
                   </tr>
