@@ -42,6 +42,6 @@ const props = {
 describe("RecentListens", () => {
   it("renders correctly on the profile page", () => {
     const wrapper = mount(<RecentListens {...props} />);
-    expect(wrapper).toMatchSnapshot();
+    expect(wrapper.html()).toMatchSnapshot();
   });
 });
