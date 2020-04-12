@@ -28,7 +28,7 @@ const props = {
   haveListenCount,
   latestListenTs,
   latestSpotifyUri,
-  listenCount: Number(listenCount),
+  listenCount,
   listens,
   mode: mode as ListensListMode,
   nextListenTs,

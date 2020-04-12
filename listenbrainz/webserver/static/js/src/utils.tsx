@@ -1,6 +1,6 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
-import _ from "lodash";
+import * as _ from "lodash";
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
