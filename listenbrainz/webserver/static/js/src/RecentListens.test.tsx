@@ -1,5 +1,5 @@
 import * as React from "react";
-import { mount } from "enzyme";
+import { shallow } from "enzyme";
 import * as timeago from "time-ago";
 
 import * as recentListensProfilePageProps from "./__mocks__/recentListensProfilePageProps.json";
@@ -43,7 +43,7 @@ const props = {
 describe("RecentListens", () => {
   it("renders correctly on the profile page", () => {
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
-    const wrapper = mount(<RecentListens {...props} />);
+    const wrapper = shallow(<RecentListens {...props} />);
     expect(wrapper.html()).toMatchSnapshot();
   });
 });
