@@ -13,6 +13,7 @@
     "build": "npm run build:dev",
     "postinstall": "npm run build:prod",
     "format": "eslint ./static/js/src --ignore-path .gitignore --ext .js,jsx,ts,tsx --fix --quiet",
+    "format:ci": "eslint ./static/js/src --ignore-path .gitignore --ext .js,jsx,ts,tsx",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:update-snapshots": "jest -u",
