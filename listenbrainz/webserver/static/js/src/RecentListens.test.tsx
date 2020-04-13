@@ -1,5 +1,6 @@
 import * as React from "react";
 import { mount } from "enzyme";
+import * as timeago from "time-ago";
 
 import * as recentListensProfilePageProps from "./__mocks__/recentListensProfilePageProps.json";
 
@@ -40,10 +41,8 @@ const props = {
 };
 
 describe("RecentListens", () => {
-  // this test fails because we show relative times for listens ("x days ago")
-  // which means that the snapshot changes with time
-  // TODO: fix this
-  it.skip("renders correctly on the profile page", () => {
+  it("renders correctly on the profile page", () => {
+    timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
     const wrapper = mount(<RecentListens {...props} />);
     expect(wrapper.html()).toMatchSnapshot();
   });
