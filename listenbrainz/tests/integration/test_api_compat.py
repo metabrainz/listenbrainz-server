@@ -21,6 +21,7 @@
 
 import json
 import time
+import logging
 import xmltodict
 
 import listenbrainz.db.user as db_user
@@ -28,7 +29,9 @@ from flask import url_for, current_app
 from listenbrainz.db.lastfm_session import Session
 from listenbrainz.db.lastfm_token import Token
 from listenbrainz.db.lastfm_user import User
-from listenbrainz.listenstore import InfluxListenStore
+from listenbrainz import config
+from listenbrainz.listenstore import TimescaleListenStore
+from listenbrainz.webserver.timescale_connection import init_timescale_connection
 from listenbrainz.tests.integration import APICompatIntegrationTestCase
 
 
@@ -43,15 +46,13 @@ class APICompatTestCase(APICompatIntegrationTestCase):
             self.lb_user['musicbrainz_id'],
             self.lb_user['auth_token'],
         )
-
-        self.ls = InfluxListenStore({
-            'REDIS_HOST': current_app.config['REDIS_HOST'],
-            'REDIS_PORT': current_app.config['REDIS_PORT'],
-            'REDIS_NAMESPACE': current_app.config['REDIS_NAMESPACE'],
-            'INFLUX_HOST': current_app.config['INFLUX_HOST'],
-            'INFLUX_PORT': current_app.config['INFLUX_PORT'],
-            'INFLUX_DB_NAME': current_app.config['INFLUX_DB_NAME'],
-        }, self.app.logger)
+        self.log = logging.getLogger(__name__)
+        self.ls = init_timescale_connection(self.log, {
+            'REDIS_HOST': config.REDIS_HOST,
+            'REDIS_PORT': config.REDIS_PORT,
+            'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
+            'SQLALCHEMY_TIMESCALE_URI': config.SQLALCHEMY_TIMESCALE_URI,
+        })
 
     def test_record_listen_now_playing(self):
         """ Tests if listen of type 'nowplaying' is recorded correctly
@@ -161,7 +162,7 @@ class APICompatTestCase(APICompatIntegrationTestCase):
         self.assertEqual(response['lfm']['@status'], 'ok')
         self.assertEqual(response['lfm']['scrobbles']['@accepted'], '1')
 
-        # Check if listen reached the influx listenstore
+        # Check if listen reached the timescale listenstore
         time.sleep(1)
         listens = self.ls.fetch_listens(self.lb_user['musicbrainz_id'], from_ts=timestamp-1)
         self.assertEqual(len(listens), 1)
@@ -198,7 +199,7 @@ class APICompatTestCase(APICompatIntegrationTestCase):
         self.assertEqual(response['lfm']['@status'], 'ok')
         self.assertEqual(response['lfm']['scrobbles']['@accepted'], '2')
 
-        # Check if listens reached the influx listenstore
+        # Check if listens reached the timescale listenstore
         time.sleep(1)
         listens = self.ls.fetch_listens(self.lb_user['musicbrainz_id'], from_ts=timestamp-1)
         self.assertEqual(len(listens), 2)

@@ -186,21 +186,17 @@ class TimescaleListenStore(ListenStore):
                         DO NOTHING
                         RETURNING listened_at, recording_msid, user_name"""
 
-        try:
-            inserted_rows = []
-            conn = timescale.engine.raw_connection()
-            with conn.cursor() as curs:
-                execute_values(curs, query, submit, template=None)
-                while True:
-                    result = curs.fetchone()
-                    if not result:
-                        break
-                    inserted_rows.append((result[0], result[1], result[2]))
+        inserted_rows = []
+        conn = timescale.engine.raw_connection()
+        with conn.cursor() as curs:
+            execute_values(curs, query, submit, template=None)
+            while True:
+                result = curs.fetchone()
+                if not result:
+                    break
+                inserted_rows.append((result[0], result[1], result[2]))
 
-            conn.commit()
-        except psycopg2.OperationalError as err:
-            self.log.error("Cannot write data to timescale: %s." % str(err))
-            return 0
+        conn.commit()
 
         # So update the listen counts of the users cached in brainzutils cache.
         for ts, msid, user_name in inserted_rows:

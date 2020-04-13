@@ -23,10 +23,7 @@ class TimescaleWriterTestCase(IntegrationTestCase):
                              'SQLALCHEMY_TIMESCALE_URI': config.SQLALCHEMY_TIMESCALE_URI}, self.app.logger)
         self.rs = RedisListenStore(self.app.logger, { 'REDIS_HOST': config.REDIS_HOST,
                              'REDIS_PORT': config.REDIS_PORT,
-                             'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
-                             'INFLUX_HOST': config.INFLUX_HOST,
-                             'INFLUX_PORT': config.INFLUX_PORT,
-                             'INFLUX_DB_NAME': config.INFLUX_DB_NAME})
+                             'REDIS_NAMESPACE': config.REDIS_NAMESPACE})
 
     def send_listen(self, user, filename):
         with open(self.path_to_data_file(filename)) as f:
