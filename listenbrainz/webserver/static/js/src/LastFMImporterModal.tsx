@@ -12,8 +12,7 @@ export type ModalProps = {
 const LastFMImporterModal = (props: ModalProps) => {
   const divStyle = {
     position: "fixed",
-    height: "90%",
-    maxHeight: "300px",
+    height: "auto",
     top: "50%",
     zIndex: 2,
     width: "90%",
