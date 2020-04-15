@@ -113,7 +113,9 @@ declare type Alert = {
   message: string | JSX.Element;
 };
 
-declare type FollowUsersPlayingNow = any;
+declare type FollowUsersPlayingNow = {
+  [user: string]: Listen;
+};
 
 declare type LastFmScrobblePage = {
   recenttracks: {
