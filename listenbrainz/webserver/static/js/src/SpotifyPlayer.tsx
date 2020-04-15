@@ -82,6 +82,7 @@ export default class SpotifyPlayer extends React.Component<
     this.state = {
       accessToken: props.spotifyUser.access_token,
       permission: props.spotifyUser.permission,
+      // @ts-ignore
       currentSpotifyTrack: {},
       playerPaused: true,
       progressMs: 0,
@@ -409,18 +410,15 @@ export default class SpotifyPlayer extends React.Component<
     this.spotifyPlayer.on("account_error", this.handleAccountError);
     this.spotifyPlayer.on("playback_error", this.handleError);
 
-    this.spotifyPlayer.addListener(
-      "ready",
-      ({ deviceID }: { deviceID: SpotifyDeviceID }) => {
-        if (callbackFunction) {
-          callbackFunction();
-        }
-        this.startPlayerStateTimer();
-        if (fixSpotifyPlayerStyleIssue) {
-          fixSpotifyPlayerStyleIssue();
-        }
+    this.spotifyPlayer.addListener("ready", () => {
+      if (callbackFunction) {
+        callbackFunction();
       }
-    );
+      this.startPlayerStateTimer();
+      if (fixSpotifyPlayerStyleIssue) {
+        fixSpotifyPlayerStyleIssue();
+      }
+    });
 
     this.spotifyPlayer.addListener(
       "player_state_changed",

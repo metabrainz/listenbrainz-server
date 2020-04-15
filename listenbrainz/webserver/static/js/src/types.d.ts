@@ -59,15 +59,45 @@ declare type SpotifyUser = {
   permission: string;
 };
 
-declare type SpotifyPermission = any; // TODO
-declare type SpotifyTrack = any; // TODO
-declare type SpotifyArtist = any; // TODO
-declare type SpotifyDeviceID = any; // TODO
-declare interface SpotifyImage {
+declare type SpotifyPermission = string;
+
+declare type SpotifyImage = {
   height: number;
-}
-declare type SpotifyPlayerTrackWindow = any; // TODO
-declare type SpotifyPlayerSDKState = any;
+  url: string;
+};
+
+declare type SpotifyArtist = {
+  uri: string;
+  name: string;
+};
+
+declare type SpotifyTrack = {
+  album: {
+    uri: string;
+    name: string;
+    images: Array<SpotifyImage>;
+  };
+  artists: Array<SpotifyTrack>;
+  id: string | null;
+  is_playable: boolean;
+  media_type: "audio" | "video";
+  name: string;
+  type: "track" | "episode" | "ad";
+  uri: string;
+};
+
+declare type SpotifyPlayerTrackWindow = {
+  device_id: string;
+};
+
+declare type SpotifyPlayerSDKState = {
+  paused: boolean;
+  position: number;
+  duration: number;
+  track_window: {
+    current_track: SpotifyTrack;
+  };
+};
 
 // the spotify-web-playback-sdk types are a bit messy
 // Adding an any here for now.
@@ -75,6 +105,7 @@ declare type SpotifyPlayerSDKState = any;
 declare type SpotifyPlayerType = any | Spotify.SpotifyPlayer;
 
 declare type AlertType = "danger" | "warning" | "success";
+
 declare type Alert = {
   id: number;
   type: AlertType;
@@ -83,6 +114,7 @@ declare type Alert = {
 };
 
 declare type FollowUsersPlayingNow = any;
+
 declare type LastFmScrobblePage = {
   recenttracks: {
     track: any;
