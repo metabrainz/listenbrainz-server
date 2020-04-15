@@ -16,19 +16,15 @@ from psycopg2.errors import OperationalError, DuplicateTable, UntranslatableChar
 
 from listenbrainz.listen import Listen
 from time import time, sleep
-from listenbrainz.listenstore import InfluxListenStore
 from listenbrainz.listenstore import RedisListenStore
-from listenbrainz.utils import escape, get_measurement_name, get_escaped_measurement_name, \
-                               get_influx_query_timestamp, convert_to_unix_timestamp, \
-                               convert_timestamp_to_influx_row_format
 import listenbrainz.utils as utils
 from listenbrainz.listen_writer import ListenWriter
 from listenbrainz.webserver import create_app
 
 # We need to use different incoming queues and unique exchanges in order to co-exist with the unflux setup
 # for testing. We will need to undo these before releasing:
-TIMESCALE_INCOMING_QUEUE = "ts_incoming"
-TIMESCALE_UNIQUE_EXCHANGE = "ts_unque"
+TIMESCALE_INCOMING_QUEUE = "incoming"
+TIMESCALE_UNIQUE_EXCHANGE = "unique"
 
 class TimescaleWriterSubscriber(ListenWriter):
 
@@ -122,7 +118,7 @@ class TimescaleWriterSubscriber(ListenWriter):
     def start(self):
         app = create_app()
         with app.app_context():
-            current_app.logger.info("influx-writer init")
+            current_app.logger.info("timescale-writer init")
             self._verify_hosts_in_config()
 
             if "SQLALCHEMY_TIMESCALE_URI" not in current_app.config:
@@ -185,5 +181,5 @@ class TimescaleWriterSubscriber(ListenWriter):
 
 
 if __name__ == "__main__":
-    rc = InfluxWriterSubscriber()
+    rc = TimescaleWriterSubscriber()
     rc.start()
