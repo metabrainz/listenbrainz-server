@@ -40,7 +40,6 @@ def init_rabbitmq_connection(app):
             app.config['INCOMING_EXCHANGE'],
         )
     _rabbitmq.add()
-    app.logger.info('Connection to RabbitMQ established!')
 
 
 class RabbitMQConnectionPool:

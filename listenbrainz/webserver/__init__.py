@@ -61,8 +61,8 @@ def load_config(app):
 
     app.config.from_pyfile(config_file)
     # Output config values and some other info
-    print('Configuration values are as follows: ')
-    print(pprint.pformat(app.config, indent=4))
+#    print('Configuration values are as follows: ')
+#    print(pprint.pformat(app.config, indent=4))
     try:
         with open('.git-version') as git_version_file:
             print('Running on git commit: %s', git_version_file.read().strip())

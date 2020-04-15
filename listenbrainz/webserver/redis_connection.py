@@ -12,7 +12,6 @@ def init_redis_connection(logger, host, port):
     global _redis
     while True:
         try:
-            logger.info("Connecting to redis {}:{}".format(host, port))
             _redis = RedisListenStore(logger, {
                 'REDIS_HOST': host,
                 'REDIS_PORT': port

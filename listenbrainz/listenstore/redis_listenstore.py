@@ -15,7 +15,6 @@ class RedisListenStore(ListenStore):
 
     def __init__(self, log, conf):
         super(RedisListenStore, self).__init__(log)
-        self.log.info('Connecting to redis: %s:%s', conf['REDIS_HOST'], conf['REDIS_PORT'])
         self.redis = Redis(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], decode_responses=True)
 
     def get_playing_now(self, user_id):
