@@ -3,7 +3,7 @@ from listenbrainz.listen import Listen
 from datetime import datetime
 import time
 import uuid
-
+import ujson
 
 class ListenTestCase(unittest.TestCase):
 
@@ -83,6 +83,7 @@ class ListenTestCase(unittest.TestCase):
             artist_msid=uuid.uuid4(),
             recording_msid=uuid.uuid4(),
             dedup_tag=3,
+            user_id = 1,
             data={
                 'artist_name': 'Radiohead',
                 'track_name': 'True Love Waits',
@@ -92,24 +93,26 @@ class ListenTestCase(unittest.TestCase):
             }
         )
 
-        data = listen.to_timescale(listen)
+        data = listen.to_timescale()
 
-        # Make sure every value that we don't explicitly support is a string
-        for key in data['fields']:
-            if key not in Listen.SUPPORTED_KEYS and key not in Listen.PRIVATE_KEYS:
-                self.assertIsInstance(data['fields'][key], str)
+        # Check data is of type string
+        self.assertIsInstance(data, str)
 
-        # Check values
-        self.assertEqual(data['measurement'], listen.user_name)
-        self.assertEqual(data['time'], listen.ts_since_epoch)
-        self.assertEqual(data['tags']['dedup_tag'], listen.dedup_tag)
-        self.assertEqual(data['fields']['user_name'], listen.user_name)
-        self.assertEqual(data['fields']['artist_msid'], listen.artist_msid)
-        self.assertEqual(data['fields']['recording_msid'], listen.recording_msid)
-        self.assertEqual(data['fields']['track_name'], listen.data['track_name'])
-        self.assertEqual(data['fields']['artist_name'], listen.data['artist_name'])
+        # Convert returned data to json
+        json_data = ujson.loads(data)
 
-        self.assertIn('inserted_timestamp', data['fields'])
+        # Check that the required fields are dumped into data
+        self.assertIn('user_id', json_data)
+        self.assertIn('track_metadata', json_data)
+        self.assertIn('additional_info', json_data['track_metadata'])
+
+        # Check track name 
+        self.assertEqual(json_data['track_metadata']['track_name'],
+                         listen.data['track_name'])
+
+        # Check artist name 
+        self.assertEqual(json_data['track_metadata']['artist_name'],
+                         listen.data['artist_name'])
 
 
     def test_from_json(self):
