@@ -72,7 +72,13 @@ export default class RecentListens extends React.Component<
     this.state = {
       alerts: [],
       listens: props.listens || [],
-      currentListen: null,
+      currentListen: {
+        listened_at: 0,
+        track_metadata: {
+          artist_name: "",
+          track_name: "",
+        },
+      },
       mode: props.mode,
       followList: props.followList || [],
       playingNowByUser: {},
@@ -206,6 +212,7 @@ export default class RecentListens extends React.Component<
         return {
           playingNowByUser: {
             ...prevState.playingNowByUser,
+            // @ts-ignore
             [userName]: playingNow,
           },
           listens: prevState.listens,
@@ -410,7 +417,7 @@ export default class RecentListens extends React.Component<
                       .map((listen) => {
                         return (
                           <tr
-                            key={listen}
+                            key={listen.listened_at}
                             onDoubleClick={this.playListen.bind(this, listen)}
                             className={`listen ${
                               this.isCurrentListen(listen) ? "info" : ""
@@ -425,7 +432,9 @@ export default class RecentListens extends React.Component<
                               </td>
                             ) : (
                               <td>
-                                <abbr title={listen.listened_at_iso}>
+                                <abbr
+                                  title={listen.listened_at_iso?.toString()}
+                                >
                                   {listen.listened_at_iso
                                     ? timeago.ago(listen.listened_at_iso)
                                     : timeago.ago(listen.listened_at * 1000)}

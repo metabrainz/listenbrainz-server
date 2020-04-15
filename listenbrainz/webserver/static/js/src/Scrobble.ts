@@ -57,7 +57,7 @@ export default class Scrobble {
     return "";
   }
 
-  scrobbledAt(): string {
+  scrobbledAt(): number {
     /* Returns scrobbledAt if present, else returns an empty string */
     if (
       "date" in this.rootScrobbleElement &&
@@ -72,7 +72,7 @@ export default class Scrobble {
       attribute as {"date": {"utc":"12345756", "#text":"21 Jul 2016, 10:22"}}
       We need to only submit listens which were played in the past.
       */
-    return "";
+    return -1;
   }
 
   trackMBID(): string {
@@ -83,8 +83,7 @@ export default class Scrobble {
     return "";
   }
 
-  // TODO: Make this type as Listen
-  asJSONSerializable(): any {
+  asJSONSerializable(): Listen {
     const trackjson = {
       track_metadata: {
         track_name: this.trackName(),
@@ -102,7 +101,7 @@ export default class Scrobble {
 
     // Remove keys with blank values
     (function filter(obj: any) {
-      Object.keys(obj).forEach(function (key) {
+      Object.keys(obj).forEach((key) => {
         let value = obj[key];
         if (value === "" || value === null) {
           delete obj[key]; // eslint-disable-line no-param-reassign
@@ -113,7 +112,7 @@ export default class Scrobble {
         } else if (Array.isArray(value)) {
           value = value.filter(Boolean);
           obj[key] = value; // eslint-disable-line no-param-reassign
-          value.forEach(function (el: any) {
+          value.forEach((el: any) => {
             filter(el);
           });
         }

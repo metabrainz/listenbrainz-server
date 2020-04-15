@@ -243,8 +243,7 @@ export default class Importer {
     return null;
   }
 
-  // TODO: Replace with array of Listens
-  async submitPage(payload: any) {
+  async submitPage(payload: Array<Listen>) {
     const delay = this.getRateLimitDelay();
     // Halt execution for some time
     await new Promise((resolve) => {
@@ -259,7 +258,6 @@ export default class Importer {
     this.updateRateLimitParameters(response);
   }
 
-  // TODO: Replace return type with array of Listens
   static encodeScrobbles(scrobbles: LastFmScrobblePage): any {
     const rawScrobbles = scrobbles.recenttracks.track;
     const parsedScrobbles = Importer.map((rawScrobble: any) => {
@@ -269,12 +267,12 @@ export default class Importer {
     return parsedScrobbles;
   }
 
-  static map(applicable: Function, collection: any) {
+  static map(applicable: (collection: any) => Listen, collection: any) {
     const newCollection = [];
     for (let i = 0; i < collection.length; i += 1) {
       const result = applicable(collection[i]);
-      if ("listened_at" in result) {
-        // Add If there is no 'listened_at' attribute then either the listen is invalid or the
+      if (result.listened_at > 0) {
+        // If the 'listened_at' attribute is -1 then either the listen is invalid or the
         // listen is currently playing. In both cases we need to skip the submission.
         newCollection.push(result);
       }
