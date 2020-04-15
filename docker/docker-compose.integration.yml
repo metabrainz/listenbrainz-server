@@ -34,8 +34,6 @@ services:
   timescale_writer:
     image: listenbrainz
     command: python3 -m "listenbrainz.timescale_writer.timescale_writer"
-    volumes:
-      - ..:/code/listenbrainz:z
     depends_on:
       - redis
       - timescale

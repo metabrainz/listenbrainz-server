@@ -13,5 +13,4 @@ def init_timescale_connection(logger, conf):
             logger.error("Couldn't create TimescaleListenStore instance: {}, sleeping and trying again...".format(str(e)), exc_info=True)
             time.sleep(2)
 
-    logger.info("Successfully created TimescaleListenStore instance!")
     return _ts

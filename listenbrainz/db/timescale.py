@@ -24,7 +24,6 @@ def init_db_connection(connect_str):
     while True:
         try:
             engine = create_engine(connect_str, poolclass=NullPool)
-            print("Connection to timescale established!")
             break
         except psycopg2.OperationalError as e:
             print("Couldn't establish connection to timescale: {}".format(str(e)))
@@ -34,7 +33,6 @@ def init_db_connection(connect_str):
 
 
 def run_sql_script(sql_file_path):
-    print(sql_file_path)
     with open(sql_file_path) as sql:
         with engine.connect() as connection:
             connection.execute(sql.read())

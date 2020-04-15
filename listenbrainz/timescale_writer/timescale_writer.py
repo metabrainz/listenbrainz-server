@@ -6,6 +6,7 @@ import os
 import pika
 import ujson
 import logging
+import traceback
 from flask import current_app
 from requests.exceptions import ConnectionError
 from redis import Redis
@@ -19,6 +20,7 @@ from time import time, sleep
 from listenbrainz.listenstore import RedisListenStore
 import listenbrainz.utils as utils
 from listenbrainz.listen_writer import ListenWriter
+from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver import create_app
 
 # We need to use different incoming queues and unique exchanges in order to co-exist with the unflux setup
@@ -175,9 +177,10 @@ class TimescaleWriterSubscriber(ListenWriter):
 
                     self.connection.close()
 
+
             except Exception as err:
                 traceback.print_exc()
-                print("failed to start timescale loop ", str(err))
+                current_app.logger.error("failed to start timescale loop ", str(err))
 
 
 if __name__ == "__main__":
