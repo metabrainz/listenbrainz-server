@@ -58,7 +58,7 @@ export default class Scrobble {
   }
 
   scrobbledAt(): number {
-    /* Returns scrobbledAt if present, else returns an empty string */
+    /* Returns scrobbledAt if present, else returns -1 */
     if (
       "date" in this.rootScrobbleElement &&
       "uts" in this.rootScrobbleElement.date
