@@ -67,7 +67,7 @@ class RedisListenStoreTestCase(DatabaseTestCase):
                     'additional_info': {},
                 },
             }
-            listens.append(listen)
+            listens.append(Listen.to_json(listen))
             self._redis.update_recent_listens([listen])
       
         recent = self._redis.get_recent_listens()

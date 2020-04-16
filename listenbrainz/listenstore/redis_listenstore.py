@@ -65,8 +65,7 @@ class RedisListenStore(ListenStore):
 
         recent = {}
         for listen in unique:
-            listen['listened_at'] = listen['listened_at'].timestamp()
-            recent[ujson.dumps(listen).encode('utf-8')] = float(listen['listened_at'])
+            recent[ujson.dumps(listen).encode('utf-8')] = float(listen.ts_since_epoch)
 
         # Don't take this very seriously -- if it fails, really no big deal. Let is go.
         if recent:

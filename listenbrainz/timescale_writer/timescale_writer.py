@@ -60,9 +60,6 @@ class TimescaleWriterSubscriber(ListenWriter):
             except pika.exceptions.ConnectionClosed:
                 self.connect_to_rabbitmq()
 
-        # TODO: Do we need to keep doing this?
-        self._collect_and_log_stats(count, call_method=self.ls.update_listen_counts)
-
         return ret
 
 
@@ -79,6 +76,7 @@ class TimescaleWriterSubscriber(ListenWriter):
         Returns: number of listens successfully sent
         """
 
+
         if not data:
             return 0
 
@@ -92,19 +90,26 @@ class TimescaleWriterSubscriber(ListenWriter):
         if not rows_inserted:
             return 0
 
+        current_app.logger.error("inserted rows: ")
+        current_app.logger.error(rows_inserted)
+
         unique = []
         inserted_index = {}
         for inserted in rows_inserted:
-            inserted_index['%d-%s-%s' % (calendar.timegm(inserted[0].utctimetuple()), inserted[1], inserted[2])] = 1
+            inserted_index['%d-%s-%s' % (inserted[0], inserted[1], inserted[2])] = 1
+
+        current_app.logger.error("inserted index")
+        current_app.logger.error(inserted_index)
 
         for listen in data:
-            k = '%d-%s-%s' % (calendar.timegm(listen.utctimetuple()), listen.recording_msid, listen.user_name)
+            k = '%d-%s-%s' % (listen.ts_since_epoch, listen.recording_msid, listen.user_name)
             if k in inserted_index:
                 unique.append(listen)
 
-        current_app.logger.info("unique: %d" % len(unique))
+        current_app.logger.error("unique: ")
+        current_app.logger.error(unique)
         if not unique:
-            return True
+            return len(rows_inserted)
 
         while True:
             try:

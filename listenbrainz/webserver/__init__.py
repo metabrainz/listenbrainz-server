@@ -43,7 +43,6 @@ def create_rabbitmq(app):
 
 def load_config(app):
 
-    print("Starting metabrainz service with %s environment." % deploy_env);
 
     # Load configuration files: If we're running under a docker deployment, wait until
     config_file = os.path.join( os.path.dirname(os.path.realpath(__file__)), '..', 'config.py' )
@@ -61,8 +60,9 @@ def load_config(app):
 
     app.config.from_pyfile(config_file)
     # Output config values and some other info
-#    print('Configuration values are as follows: ')
-#    print(pprint.pformat(app.config, indent=4))
+    if deploy_env == 'prod':
+        print('Configuration values are as follows: ')
+        print(pprint.pformat(app.config, indent=4))
     try:
         with open('.git-version') as git_version_file:
             print('Running on git commit: %s', git_version_file.read().strip())

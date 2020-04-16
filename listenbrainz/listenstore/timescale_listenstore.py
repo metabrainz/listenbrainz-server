@@ -137,7 +137,7 @@ class TimescaleListenStore(ListenStore):
         try:
             with timescale.engine.connect() as connection:
                 result = connection.execute(sqlalchemy.text("SELECT SUM(count) FROM listen_count"))
-                count = result.fetchone()["sum"] or 0 
+                count = int(result.fetchone()["sum"] or "0")
         except psycopg2.OperationalError as e:
             self.log.error("Cannot query timescale listen_count: %s" % str(e), exc_info=True)
             raise
@@ -145,7 +145,7 @@ class TimescaleListenStore(ListenStore):
         if cache_value:
             cache.set(
                 TimescaleListenStore.REDIS_TIMESCALE_TOTAL_LISTEN_COUNT,
-                int(count),
+                count,
                 TimescaleListenStore.TOTAL_LISTEN_COUNT_CACHE_TIME,
                 encode=False,
             )
@@ -232,15 +232,18 @@ class TimescaleListenStore(ListenStore):
             ts = to_ts
 
         query += " ORDER BY listened_at " + ORDER_TEXT[order] + " LIMIT :limit"
+#        query = 'SELECT listened_at, recording_msid FROM listen'
 
         listens = []
         with timescale.engine.connect() as connection:
             curs = connection.execute(sqlalchemy.text(query), user_name=user_name, ts=ts, limit=limit)
+#            curs = connection.execute(sqlalchemy.text(query))
             while True:
                 result = curs.fetchone()
                 if not result:
                     break
-            
+        
+                print(result)
                 listens.append(Listen.from_timescale(result[0], result[1], user_name, result[2]))
 
         if order == ORDER_ASC:
