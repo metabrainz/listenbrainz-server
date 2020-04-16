@@ -7,6 +7,8 @@ import pika
 import ujson
 import logging
 import traceback
+import calendar
+
 from flask import current_app
 from requests.exceptions import ConnectionError
 from redis import Redis
@@ -42,7 +44,12 @@ class TimescaleWriterSubscriber(ListenWriter):
     def callback(self, ch, method, properties, body):
 
         listens = ujson.loads(body)
-        ret = self.insert_to_listenstore(listens)
+
+        submit = []
+        for listen in listens:
+            submit.append(Listen.from_json(listen))
+        ret = self.insert_to_listenstore(submit)
+
         if not ret:
             return ret
 
@@ -87,7 +94,7 @@ class TimescaleWriterSubscriber(ListenWriter):
 
         unique = []
         inserted_index = {}
-        for inserted in row_inserted:
+        for inserted in rows_inserted:
             inserted_index['%d-%s-%s' % (calendar.timegm(inserted[0].utctimetuple()), inserted[1], inserted[2])] = 1
 
         for listen in data:
@@ -114,7 +121,7 @@ class TimescaleWriterSubscriber(ListenWriter):
 
         self.redis_listenstore.update_recent_listens(unique)
 
-        return True
+        return len(rows_inserted)
 
 
     def start(self):

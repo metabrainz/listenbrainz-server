@@ -51,7 +51,7 @@ def lastfmscraper(user_name):
 @user_bp.route("/<user_name>")
 def profile(user_name):
     # Which database to use to showing user listens.
-    db_conn = _ts
+    db_conn = webserver.timescale_connection._ts
     # Which database to use to show playing_now stream.
     playing_now_conn = webserver.redis_connection._redis
 
