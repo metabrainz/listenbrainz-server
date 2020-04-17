@@ -232,18 +232,15 @@ class TimescaleListenStore(ListenStore):
             ts = to_ts
 
         query += " ORDER BY listened_at " + ORDER_TEXT[order] + " LIMIT :limit"
-#        query = 'SELECT listened_at, recording_msid FROM listen'
 
         listens = []
         with timescale.engine.connect() as connection:
             curs = connection.execute(sqlalchemy.text(query), user_name=user_name, ts=ts, limit=limit)
-#            curs = connection.execute(sqlalchemy.text(query))
             while True:
                 result = curs.fetchone()
                 if not result:
                     break
         
-                print(result)
                 listens.append(Listen.from_timescale(result[0], result[1], user_name, result[2]))
 
         if order == ORDER_ASC:
@@ -271,9 +268,6 @@ class TimescaleListenStore(ListenStore):
                             GROUP BY user_name, listened_at, recording_msid, data
                             ORDER BY listened_at DESC) tmp
                            WHERE rownum <= :limit"""
-        print(max_age)
-        print(query)
-        print(args)
 
         listens = []
         with timescale.engine.connect() as connection:
@@ -440,7 +434,6 @@ class TimescaleListenStore(ListenStore):
 
                     listen = Listen.from_timescale(result[0], result[1], result[2], result[4]).to_api()
                     listen['user_name'] = username
-                    print(listen)
                     try:
                         bytes_written += fileobj.write(ujson.dumps(listen))
                         bytes_written += fileobj.write('\n')

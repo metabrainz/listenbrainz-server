@@ -90,24 +90,16 @@ class TimescaleWriterSubscriber(ListenWriter):
         if not rows_inserted:
             return 0
 
-        current_app.logger.error("inserted rows: ")
-        current_app.logger.error(rows_inserted)
-
         unique = []
         inserted_index = {}
         for inserted in rows_inserted:
             inserted_index['%d-%s-%s' % (inserted[0], inserted[1], inserted[2])] = 1
-
-        current_app.logger.error("inserted index")
-        current_app.logger.error(inserted_index)
 
         for listen in data:
             k = '%d-%s-%s' % (listen.ts_since_epoch, listen.recording_msid, listen.user_name)
             if k in inserted_index:
                 unique.append(listen)
 
-        current_app.logger.error("unique: ")
-        current_app.logger.error(unique)
         if not unique:
             return len(rows_inserted)
 
@@ -174,8 +166,6 @@ class TimescaleWriterSubscriber(ListenWriter):
                         lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self),
                         queue=TIMESCALE_INCOMING_QUEUE,
                     )
-
-                    print("timescale-writer started")
 
                     self.unique_ch = self.connection.channel()
                     self.unique_ch.exchange_declare(exchange=TIMESCALE_UNIQUE_EXCHANGE, exchange_type='fanout')
