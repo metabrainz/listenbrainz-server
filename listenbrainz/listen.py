@@ -108,7 +108,15 @@ class Listen(object):
         if 'playing_now' in j:
             j.update({'listened_at': None})
         else:
-            j['listened_at']=datetime.utcfromtimestamp(float(j['listened_at']))
+            # Let's go play whack-a-mole with our lovely whicket of timestamp fields. Hopefully one will work!
+            try:
+                j['listened_at']=datetime.utcfromtimestamp(float(j['listened_at']))
+            except KeyError:
+                try:
+                    j['listened_at']=datetime.utcfromtimestamp(float(j['timestamp']))
+                except KeyError:
+                    j['listened_at']=datetime.utcfromtimestamp(float(j['ts_since_epoch']))
+
         return cls(
             user_id=j.get('user_id'),
             user_name=j.get('user_name', ''),

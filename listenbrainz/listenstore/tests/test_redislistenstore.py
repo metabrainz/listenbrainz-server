@@ -57,26 +57,25 @@ class RedisListenStoreTestCase(DatabaseTestCase):
         listens = []
         t = int(time.time())
         for i in range(RedisListenStore.RECENT_LISTENS_MAX * 3):
-            listen = {
-                'user_id': self.testuser['id'],
-                'user_name': self.testuser['musicbrainz_id'],
-                'listened_at': datetime.datetime.fromtimestamp(t - i),
-                'track_metadata': {
+            listen = Listen(user_id = self.testuser['id'],
+                user_name = self.testuser['musicbrainz_id'],
+                timestamp = t - i,
+                data = {
                     'artist_name': str(uuid.uuid4()),
                     'track_name': str(uuid.uuid4()),
                     'additional_info': {},
-                },
-            }
-            listens.append(Listen.to_json(listen))
-            self._redis.update_recent_listens([listen])
+                }
+            )
+            listens.append(listen)
+            self._redis.update_recent_listens(listens)
       
         recent = self._redis.get_recent_listens()
         self.assertEqual(len(recent), RedisListenStore.RECENT_LISTENS_MAX)
         self.assertIsInstance(recent[0], Listen)
         for i, r in enumerate(recent):
-            self.assertEqual(r.timestamp.timestamp(), listens[i]['listened_at'])
+            self.assertEqual(r.timestamp, listens[i].timestamp)
 
         recent = self._redis.get_recent_listens(5)
         self.assertEqual(len(recent), 5)
         for i, r in enumerate(recent):
-            self.assertEqual(r.timestamp.timestamp(), listens[i]['listened_at'])
+            self.assertEqual(r.timestamp, listens[i].timestamp)
