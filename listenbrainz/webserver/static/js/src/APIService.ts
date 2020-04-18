@@ -89,14 +89,14 @@ export default class APIService {
   submitListens = async (
     userToken: string,
     listenType: ListenType,
-    payload: SubmitListensPayload
+    payload: Array<Listen>
   ): Promise<Response> => {
     if (JSON.stringify(payload).length <= this.MAX_LISTEN_SIZE) {
       // Payload is within submission limit, submit directly
       const struct = {
         listen_type: listenType,
         payload,
-      };
+      } as SubmitListensPayload;
 
       const url = `${this.APIBaseURI}/submit-listens`;
 

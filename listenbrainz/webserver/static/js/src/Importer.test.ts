@@ -196,7 +196,15 @@ describe("submitPage", () => {
     importer.APIService.submitListens = jest.fn().mockImplementation(() => {
       return Promise.resolve({ status: 200 });
     });
-    importer.submitPage(["listen"]);
+    importer.submitPage([
+      {
+        listened_at: 1000,
+        track_metadata: {
+          artist_name: "foobar",
+          track_name: "bazfoo",
+        },
+      },
+    ]);
 
     jest.runAllTimers();
 
@@ -211,7 +219,15 @@ describe("submitPage", () => {
     importer.APIService.submitListens = jest.fn().mockImplementation(() => {
       return Promise.resolve({ status: 200 });
     });
-    importer.submitPage(["listen"]);
+    importer.submitPage([
+      {
+        listened_at: 1000,
+        track_metadata: {
+          artist_name: "foobar",
+          track_name: "bazfoo",
+        },
+      },
+    ]);
 
     jest.runAllTimers();
 
@@ -226,7 +242,15 @@ describe("submitPage", () => {
   });
 
   it("calls getRateLimitDelay once", async () => {
-    importer.submitPage(["listen"]);
+    importer.submitPage([
+      {
+        listened_at: 1000,
+        track_metadata: {
+          artist_name: "foobar",
+          track_name: "bazfoo",
+        },
+      },
+    ]);
     expect(importer.getRateLimitDelay).toHaveBeenCalledTimes(1);
   });
 });

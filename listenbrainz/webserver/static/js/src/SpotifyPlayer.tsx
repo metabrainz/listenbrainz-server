@@ -24,7 +24,7 @@ const getSpotifyUriFromListen = (listen: Listen): string => {
 
 // Fix for LB-447 (Player does not play any sound)
 // https://github.com/spotify/web-playback-sdk/issues/75#issuecomment-487325589
-const fixSpotifyPlayerStyleIssue = function () {
+const fixSpotifyPlayerStyleIssue = () => {
   const iframe = document.querySelector(
     'iframe[src="https://sdk.scdn.co/embedded/index.html"]'
   ) as any; // TODO: this is hacky, but this whole function seems hacky tbh
@@ -82,7 +82,7 @@ export default class SpotifyPlayer extends React.Component<
     this.state = {
       accessToken: props.spotifyUser.access_token,
       permission: props.spotifyUser.permission,
-      currentSpotifyTrack: {},
+      currentSpotifyTrack: {} as SpotifyTrack,
       playerPaused: true,
       progressMs: 0,
       durationMs: 0,
@@ -234,7 +234,7 @@ export default class SpotifyPlayer extends React.Component<
     }
   };
 
-  playListen = (listen?: Listen): void => {
+  playListen = (listen: Listen): void => {
     const { onCurrentListenChange } = this.props;
     onCurrentListenChange(listen);
     if (_.get(listen, "track_metadata.additional_info.spotify_id")) {
@@ -246,7 +246,7 @@ export default class SpotifyPlayer extends React.Component<
 
   isCurrentListen = (element: Listen): boolean => {
     const { currentListen } = this.props;
-    return currentListen && _isEqual(element, currentListen);
+    return (currentListen && _isEqual(element, currentListen)) as boolean;
   };
 
   playPreviousTrack = (): void => {
@@ -409,18 +409,15 @@ export default class SpotifyPlayer extends React.Component<
     this.spotifyPlayer.on("account_error", this.handleAccountError);
     this.spotifyPlayer.on("playback_error", this.handleError);
 
-    this.spotifyPlayer.addListener(
-      "ready",
-      ({ deviceID }: { deviceID: SpotifyDeviceID }) => {
-        if (callbackFunction) {
-          callbackFunction();
-        }
-        this.startPlayerStateTimer();
-        if (fixSpotifyPlayerStyleIssue) {
-          fixSpotifyPlayerStyleIssue();
-        }
+    this.spotifyPlayer.addListener("ready", () => {
+      if (callbackFunction) {
+        callbackFunction();
       }
-    );
+      this.startPlayerStateTimer();
+      if (fixSpotifyPlayerStyleIssue) {
+        fixSpotifyPlayerStyleIssue();
+      }
+    });
 
     this.spotifyPlayer.addListener(
       "player_state_changed",

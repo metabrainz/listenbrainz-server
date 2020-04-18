@@ -7,7 +7,7 @@ import APIService from "./APIService";
 const props = {
   spotifyUser: {
     access_token: "heyo",
-    permission: "read",
+    permission: "read" as SpotifyPermission,
   },
   direction: "up" as SpotifyPlayDirection,
   onPermissionError: (message: string) => {},
