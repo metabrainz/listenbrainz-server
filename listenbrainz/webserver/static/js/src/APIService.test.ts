@@ -16,7 +16,15 @@ describe("submitListens", () => {
   });
 
   it("calls fetch with correct parameters", async () => {
-    await apiService.submitListens("foobar", "import", "foobar");
+    await apiService.submitListens("foobar", "import", [
+      {
+        listened_at: 1000,
+        track_metadata: {
+          artist_name: "foobar",
+          track_name: "bazfoo",
+        },
+      },
+    ]);
     expect(window.fetch).toHaveBeenCalledWith("foobar/1/submit-listens", {
       method: "POST",
       headers: {
@@ -25,7 +33,15 @@ describe("submitListens", () => {
       },
       body: JSON.stringify({
         listen_type: "import",
-        payload: "foobar",
+        payload: [
+          {
+            listened_at: 1000,
+            track_metadata: {
+              artist_name: "foobar",
+              track_name: "bazfoo",
+            },
+          },
+        ],
       }),
     });
   });
@@ -44,7 +60,15 @@ describe("submitListens", () => {
         });
       });
 
-    await apiService.submitListens("foobar", "import", "foobar");
+    await apiService.submitListens("foobar", "import", [
+      {
+        listened_at: 1000,
+        track_metadata: {
+          artist_name: "foobar",
+          track_name: "bazfoo",
+        },
+      },
+    ]);
     expect(setTimeout).toHaveBeenCalledTimes(1);
   });
 
@@ -57,7 +81,15 @@ describe("submitListens", () => {
       });
     });
 
-    await apiService.submitListens("foobar", "import", "foobar");
+    await apiService.submitListens("foobar", "import", [
+      {
+        listened_at: 1000,
+        track_metadata: {
+          artist_name: "foobar",
+          track_name: "bazfoo",
+        },
+      },
+    ]);
     expect(setTimeout).toHaveBeenCalledTimes(1);
   });
 
@@ -70,13 +102,29 @@ describe("submitListens", () => {
       });
     });
 
-    await apiService.submitListens("foobar", "import", "foobar");
+    await apiService.submitListens("foobar", "import", [
+      {
+        listened_at: 1000,
+        track_metadata: {
+          artist_name: "foobar",
+          track_name: "bazfoo",
+        },
+      },
+    ]);
     expect(setTimeout).not.toHaveBeenCalled(); // no setTimeout calls for future retries
   });
 
   it("returns the response if successful", async () => {
     await expect(
-      apiService.submitListens("foobar", "import", "foobar")
+      apiService.submitListens("foobar", "import", [
+        {
+          listened_at: 1000,
+          track_metadata: {
+            artist_name: "foobar",
+            track_name: "bazfoo",
+          },
+        },
+      ])
     ).resolves.toEqual({
       ok: true,
       status: 200,
@@ -84,15 +132,60 @@ describe("submitListens", () => {
   });
 
   it("calls itself recursively if size of payload exceeds MAX_LISTEN_SIZE", async () => {
-    // Change MAX_LISTEN_SIZE to 0
-    apiService.MAX_LISTEN_SIZE = 9;
+    apiService.MAX_LISTEN_SIZE = 100;
 
     const spy = jest.spyOn(apiService, "submitListens");
-    await apiService.submitListens("foobar", "import", ["foo", "bar"]);
+    await apiService.submitListens("foobar", "import", [
+      {
+        listened_at: 1000,
+        track_metadata: {
+          artist_name: "foobar",
+          track_name: "bazfoo",
+        },
+      },
+      {
+        listened_at: 1000,
+        track_metadata: {
+          artist_name: "bazfoo",
+          track_name: "foobar",
+        },
+      },
+    ]);
     expect(spy).toHaveBeenCalledTimes(3);
-    expect(spy).toHaveBeenCalledWith("foobar", "import", ["foo", "bar"]);
-    expect(spy).toHaveBeenCalledWith("foobar", "import", ["foo"]);
-    expect(spy).toHaveBeenCalledWith("foobar", "import", ["bar"]);
+    expect(spy).toHaveBeenCalledWith("foobar", "import", [
+      {
+        listened_at: 1000,
+        track_metadata: {
+          artist_name: "foobar",
+          track_name: "bazfoo",
+        },
+      },
+      {
+        listened_at: 1000,
+        track_metadata: {
+          artist_name: "bazfoo",
+          track_name: "foobar",
+        },
+      },
+    ]);
+    expect(spy).toHaveBeenCalledWith("foobar", "import", [
+      {
+        listened_at: 1000,
+        track_metadata: {
+          artist_name: "foobar",
+          track_name: "bazfoo",
+        },
+      },
+    ]);
+    expect(spy).toHaveBeenCalledWith("foobar", "import", [
+      {
+        listened_at: 1000,
+        track_metadata: {
+          artist_name: "bazfoo",
+          track_name: "foobar",
+        },
+      },
+    ]);
   });
 });
 

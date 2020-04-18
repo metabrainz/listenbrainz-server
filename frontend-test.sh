@@ -2,6 +2,7 @@
 
 # ./frontend-test.sh                    Run tests
 # ./frontend-test.sh -u                 Run tests, update snapshots
+# ./frontend-test.sh -t                 Run type-checker
 # ./frontend-test.sh -b                 Build containers
 
 if [ "$1" == "-u" ]; then
@@ -13,6 +14,13 @@ fi
 
 if [ "$1" == "-b" ]; then
     docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test build
+    exit 0
+fi
+
+if [ "$1" == "-t" ]; then
+    docker-compose -f docker/docker-compose.test.yml \
+                   -p listenbrainz_test \
+                   run --rm frontend_tester npm run type-check
     exit 0
 fi
 

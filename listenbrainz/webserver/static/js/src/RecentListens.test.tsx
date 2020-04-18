@@ -35,7 +35,7 @@ const props = {
   nextListenTs,
   previousListenTs,
   profileUrl,
-  spotify,
+  spotify: spotify as SpotifyUser,
   user,
   webSocketsServerUrl,
 };
