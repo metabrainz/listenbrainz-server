@@ -75,6 +75,8 @@ describe("componentDidMount", () => {
   });
 });
 
+describe("connectWebsockets", () => {});
+
 describe("handleFollowUserListChange", () => {});
 
 describe("handleSpotifyAccountError", () => {
@@ -129,3 +131,70 @@ describe("handleSpotifyPermissionError", () => {
   });
 });
 
+describe("playListen", () => {});
+
+describe("receiveNewListen", () => {});
+
+describe("receiveNewPlayingNow", () => {});
+
+describe("handleCurrentListenChange", () => {});
+
+describe("isCurrentListen", () => {});
+
+describe("getRecentListensForFollowList", () => {});
+
+describe("newAlert", () => {
+  it("creates a new alert", () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
+
+    // Mock Date().getTime()
+    jest.spyOn(Date.prototype, "getTime").mockImplementation(() => 0);
+
+    expect(wrapper.state().alerts).toMatchObject([]);
+
+    instance.newAlert("warning", "Test", "foobar");
+    expect(wrapper.state().alerts).toMatchObject([
+      { id: 0, type: "warning", title: "Test", message: "foobar" },
+    ]);
+
+    instance.newAlert("danger", "test", <p>foobar</p>);
+    expect(wrapper.state().alerts).toMatchObject([
+      { id: 0, type: "warning", title: "Test", message: "foobar" },
+      { id: 0, type: "danger", title: "test", message: <p>foobar</p> },
+    ]);
+  });
+});
+
+describe("onAlertDismissed", () => {
+  it("deletes a alert", () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
+
+    // Mock Date().getTime()
+    jest.spyOn(Date.prototype, "getTime").mockImplementation(() => 0);
+
+    const alert1 = {
+      id: 0,
+      type: "warning",
+      title: "Test",
+      message: "foobar",
+    } as Alert;
+    const alert2 = {
+      id: 0,
+      type: "danger",
+      title: "test",
+      message: <p>foobar</p>,
+    } as Alert;
+    wrapper.setState({
+      alerts: [alert1, alert2],
+    });
+    expect(wrapper.state().alerts).toMatchObject([alert1, alert2]);
+
+    instance.onAlertDismissed(alert1);
+    expect(wrapper.state().alerts).toMatchObject([alert2]);
+
+    instance.onAlertDismissed(alert2);
+    expect(wrapper.state().alerts).toMatchObject([]);
+  });
+});
