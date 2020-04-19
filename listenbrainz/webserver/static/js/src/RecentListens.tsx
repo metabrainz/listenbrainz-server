@@ -159,14 +159,13 @@ export default class RecentListens extends React.Component<
     this.setState({ canPlayMusic: false });
   };
 
-  handleSpotifyPermissionError = (error: string): void => {
+  handleSpotifyPermissionError = (error: string | JSX.Element): void => {
     this.newAlert("danger", "Spotify permission error", error);
     this.setState({ canPlayMusic: false });
   };
 
   playListen = (listen: Listen): void => {
     if (this.spotifyPlayer.current) {
-      // @ts-ignore
       this.spotifyPlayer.current.playListen(listen);
     } else {
       // For fallback embedded player

@@ -74,3 +74,58 @@ describe("componentDidMount", () => {
     expect(instance.getRecentListensForFollowList).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("handleFollowUserListChange", () => {});
+
+describe("handleSpotifyAccountError", () => {
+  it("calls newAlert", () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
+    instance.newAlert = jest.fn();
+
+    instance.handleSpotifyAccountError(<p>Test</p>);
+    expect(instance.newAlert).toHaveBeenCalledTimes(1);
+    expect(instance.newAlert).toHaveBeenCalledWith(
+      "danger",
+      "Spotify account error",
+      <p>Test</p>
+    );
+  });
+
+  it('sets "canPlayMusic" to false', () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
+
+    wrapper.setState({ canPlayMusic: true });
+
+    instance.handleSpotifyAccountError(<p>Test</p>);
+    expect(wrapper.state().canPlayMusic).toBe(false);
+  });
+});
+
+describe("handleSpotifyPermissionError", () => {
+  it("calls newAlert", () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
+    instance.newAlert = jest.fn();
+
+    instance.handleSpotifyPermissionError(<p>Test</p>);
+    expect(instance.newAlert).toHaveBeenCalledTimes(1);
+    expect(instance.newAlert).toHaveBeenCalledWith(
+      "danger",
+      "Spotify permission error",
+      <p>Test</p>
+    );
+  });
+
+  it('sets "canPlayMusic" to false', () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
+
+    wrapper.setState({ canPlayMusic: true });
+
+    instance.handleSpotifyPermissionError(<p>Test</p>);
+    expect(wrapper.state().canPlayMusic).toBe(false);
+  });
+});
+
