@@ -256,7 +256,7 @@ def delete_user(musicbrainz_id):
 
 def delete_listens_history(musicbrainz_id):
     """ Delete a user's listens from ListenBrainz completely.
-    This, drops the user's influx measurement and resets their listen count. 
+    This, delete the user's influx measurement and resets their listen count. 
 
     Args:
         musicbrainz_id (str): the MusicBrainz ID of the user
@@ -266,6 +266,6 @@ def delete_listens_history(musicbrainz_id):
     """
 
     user = _get_user(musicbrainz_id)
-    _influx.delete(user.musicbrainz_id)
-    _influx.reset_listen_count(user.musicbrainz_id)
+    _ts.delete(user.musicbrainz_id)
+    _ts.reset_listen_count(user.musicbrainz_id)
     db_user.reset_latest_import(user.musicbrainz_id)

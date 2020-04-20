@@ -178,8 +178,11 @@ class TimescaleListenStore(ListenStore):
         """
 
         submit = []
+        user_names = {}
         for listen in listens:
-            submit.append((listen.ts_since_epoch, listen.recording_msid, listen.user_name, listen.to_timescale()))
+            user_names[listen.user_name] = 1
+            submit.append((listen.ts_since_epoch, listen.recording_msid,
+                           listen.user_name, listen.to_timescale()))
 
         query = """INSERT INTO listen (listened_at, recording_msid, user_name, data)
                     VALUES %s
@@ -207,7 +210,6 @@ class TimescaleListenStore(ListenStore):
                 cache.increment(user_key)
 
         # Invalidate cached data for user
-        user_names = {}
         for user_name in user_names.keys():
             cache.delete(REDIS_USER_TIMESTAMPS % user_name)
 
