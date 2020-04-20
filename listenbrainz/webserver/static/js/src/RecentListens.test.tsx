@@ -137,9 +137,50 @@ describe("receiveNewListen", () => {});
 
 describe("receiveNewPlayingNow", () => {});
 
-describe("handleCurrentListenChange", () => {});
+describe("handleCurrentListenChange", () => {
+  it("sets the state correctly", () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
 
-describe("isCurrentListen", () => {});
+    const listen: Listen = {
+      listened_at: 0,
+      track_metadata: {
+        artist_name: "George Erza",
+        track_name: "Shotgun",
+      },
+    };
+    instance.handleCurrentListenChange(listen);
+
+    expect(wrapper.state().currentListen).toMatchObject(listen);
+  });
+});
+
+describe("isCurrentListen", () => {
+  it("returns true if currentListen and passed listen is same", () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
+
+    const listen: Listen = {
+      listened_at: 0,
+      track_metadata: {
+        artist_name: "Coldplay",
+        track_name: "Up & Up",
+      },
+    };
+    wrapper.setState({ currentListen: listen });
+
+    expect(instance.isCurrentListen(listen)).toBe(true);
+  });
+
+  it("returns false if currentListen is not set", () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
+
+    wrapper.setState({ currentListen: undefined });
+
+    expect(instance.isCurrentListen({} as Listen)).toBeFalsy();
+  });
+});
 
 describe("getRecentListensForFollowList", () => {});
 

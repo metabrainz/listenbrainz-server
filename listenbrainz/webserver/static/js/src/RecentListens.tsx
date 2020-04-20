@@ -45,7 +45,7 @@ export interface RecentListensProps {
 export interface RecentListensState {
   alerts: Array<Alert>;
   canPlayMusic?: boolean;
-  currentListen: Listen;
+  currentListen?: Listen;
   direction: SpotifyPlayDirection;
   followList: Array<string>;
   listId?: number;
@@ -72,7 +72,6 @@ export default class RecentListens extends React.Component<
     this.state = {
       alerts: [],
       listens: props.listens || [],
-      currentListen: {} as Listen,
       mode: props.mode,
       followList: props.followList || [],
       playingNowByUser: {},
@@ -227,7 +226,7 @@ export default class RecentListens extends React.Component<
 
   isCurrentListen = (listen: Listen): boolean => {
     const { currentListen } = this.state;
-    return currentListen && _.isEqual(listen, currentListen);
+    return Boolean(currentListen && _.isEqual(listen, currentListen));
   };
 
   getRecentListensForFollowList = async () => {
