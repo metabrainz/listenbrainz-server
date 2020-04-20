@@ -107,7 +107,7 @@ def get_listens(user_name):
     if max_ts == None and min_ts == None:
         max_ts = current_time
 
-    db_conn = webserver.create_influx(current_app)
+    db_conn = webserver.create_timescale(current_app)
     listens = db_conn.fetch_listens(
         user_name,
         limit=min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET),
@@ -194,7 +194,7 @@ def get_recent_listens_for_user_list(user_list):
     if not len(users):
         raise APIBadRequest("user_list is empty or invalid.")
 
-    db_conn = webserver.create_influx(current_app)
+    db_conn = webserver.create_timescale(current_app)
     listens = db_conn.fetch_recent_listens_for_users(
         users,
         limit=limit

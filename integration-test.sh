@@ -21,24 +21,25 @@ echo "Build current setup"
 docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME build
 
 echo "Running setup"
-docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME run --rm listenbrainz dockerize -wait tcp://db:5432 -timeout 60s \
-                  -wait tcp://influx:8086 -timeout 60s \
+docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME run --rm listenbrainz dockerize \
+                -wait tcp://db:5432 -timeout 60s \
+                -wait tcp://timescale:5432 -timeout 60s \
                 bash -c "python3 manage.py init_db --create-db && \
                          python3 manage.py init_msb_db --create-db && \
-                         python3 manage.py init_influx"
+                         python3 manage.py init_ts_db --create-db"
 
 
 echo "Bring containers up"
-docker-compose -f docker/docker-compose.integration.yml -p $COMPOSE_PROJECT_NAME up -d db influx redis influx_writer rabbitmq
+docker-compose -f docker/docker-compose.integration.yml -p $COMPOSE_PROJECT_NAME up -d db timescale redis timescale_writer rabbitmq
 
 echo "Start running tests"
 docker-compose -f docker/docker-compose.integration.yml \
                -p $COMPOSE_PROJECT_NAME \
                run --rm listenbrainz dockerize \
                                      -wait tcp://db:5432 -timeout 60s \
-                                     -wait tcp://influx:8086 -timeout 60s \
                                      -wait tcp://redis:6379 -timeout 60s \
                                      -wait tcp://rabbitmq:5672 -timeout 60s \
+                                     -wait tcp://timescale:5432 -timeout 60s \
                                      bash -c "py.test listenbrainz/tests/integration"
 echo "Take down containers"
 docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME down

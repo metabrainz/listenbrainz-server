@@ -159,7 +159,7 @@ Initialize ListenBrainz containers
 Next, run ``develop.sh build`` in the root of the repository. Using
 ``docker-compose``, it creates multiple Docker containers for the different
 services and parts of the ListenBrainz server. This script starts Redis,
-PostgreSQL, InfluxDB, and web server containers. This also makes it easy to stop
+PostgreSQL, TimescaleDB, and web server containers. This also makes it easy to stop
 them all later.
 
 The first time you run it, it downloads and creates the containers. But it's not
@@ -180,7 +180,7 @@ proceeding, run these three commands to initialize the databases.
 
     ./develop.sh manage init_db --create-db
     ./develop.sh manage init_msb_db --create-db
-    ./develop.sh manage init_influx
+    ./develop.sh manage init_ts_db --create-db
 
 Your development environment is now ready. Now, let's actually see ListenBrainz
 load locally!

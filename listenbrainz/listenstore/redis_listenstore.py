@@ -15,7 +15,6 @@ class RedisListenStore(ListenStore):
 
     def __init__(self, log, conf):
         super(RedisListenStore, self).__init__(log)
-        self.log.info('Connecting to redis: %s:%s', conf['REDIS_HOST'], conf['REDIS_PORT'])
         self.redis = Redis(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], decode_responses=True)
 
     def get_playing_now(self, user_id):
@@ -66,8 +65,7 @@ class RedisListenStore(ListenStore):
 
         recent = {}
         for listen in unique:
-            listen['listened_at'] = listen['listened_at'].timestamp()
-            recent[ujson.dumps(listen).encode('utf-8')] = float(listen['listened_at'])
+            recent[ujson.dumps(listen.to_json()).encode('utf-8')] = float(listen.ts_since_epoch)
 
         # Don't take this very seriously -- if it fails, really no big deal. Let is go.
         if recent:

@@ -17,12 +17,10 @@ deploy_env = os.environ.get('DEPLOY_ENV', '')
 CONSUL_CONFIG_FILE_RETRY_COUNT = 10
 API_LISTENED_AT_ALLOWED_SKEW = 60 * 60 # allow a skew of 1 hour in listened_at submissions
 
-def create_influx(app):
-    from listenbrainz.webserver.influx_connection import init_influx_connection
-    return init_influx_connection(app.logger, {
-        'INFLUX_HOST': app.config['INFLUX_HOST'],
-        'INFLUX_PORT': app.config['INFLUX_PORT'],
-        'INFLUX_DB_NAME': app.config['INFLUX_DB_NAME'],
+def create_timescale(app):
+    from listenbrainz.webserver.timescale_connection import init_timescale_connection
+    return init_timescale_connection(app.logger, {
+        'SQLALCHEMY_TIMESCALE_URI': app.config['SQLALCHEMY_TIMESCALE_URI'],
         'REDIS_HOST': app.config['REDIS_HOST'],
         'REDIS_PORT': app.config['REDIS_PORT'],
         'REDIS_NAMESPACE': app.config['REDIS_NAMESPACE'],
@@ -45,7 +43,6 @@ def create_rabbitmq(app):
 
 def load_config(app):
 
-    print("Starting metabrainz service with %s environment." % deploy_env);
 
     # Load configuration files: If we're running under a docker deployment, wait until
     config_file = os.path.join( os.path.dirname(os.path.realpath(__file__)), '..', 'config.py' )
@@ -63,8 +60,9 @@ def load_config(app):
 
     app.config.from_pyfile(config_file)
     # Output config values and some other info
-    print('Configuration values are as follows: ')
-    print(pprint.pformat(app.config, indent=4))
+    if deploy_env == 'prod':
+        print('Configuration values are as follows: ')
+        print(pprint.pformat(app.config, indent=4))
     try:
         with open('.git-version') as git_version_file:
             print('Running on git commit: %s', git_version_file.read().strip())
@@ -100,8 +98,8 @@ def gen_app(config_path=None, debug=None):
     # Redis connection
     create_redis(app)
 
-    # Influx connection
-    create_influx(app)
+    # Timescale connection
+    create_timescale(app)
 
     # RabbitMQ connection
     try:
@@ -110,9 +108,11 @@ def gen_app(config_path=None, debug=None):
         app.logger.critical("RabbitMQ service is not up!", exc_info=True)
 
 
-    # Database connection
+    # Database connections
     from listenbrainz import db
+    from listenbrainz.db import timescale as ts
     db.init_db_connection(app.config['SQLALCHEMY_DATABASE_URI'])
+    ts.init_db_connection(app.config['SQLALCHEMY_TIMESCALE_URI'])
     from listenbrainz.webserver.external import messybrainz
     messybrainz.init_db_connection(app.config['MESSYBRAINZ_SQLALCHEMY_DATABASE_URI'])
 

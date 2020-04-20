@@ -15,10 +15,9 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz import webserver
 from listenbrainz.domain import spotify
 from listenbrainz.webserver import flash
-from listenbrainz.webserver.influx_connection import _influx
+from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.views.user import delete_user
-from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 import pika
 import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
 
@@ -35,7 +34,7 @@ def index():
 
     # get total listen count
     try:
-        listen_count = _influx.get_total_listen_count()
+        listen_count = _ts.get_total_listen_count()
     except Exception as e:
         current_app.logger.error('Error while trying to get total listen count: %s', str(e))
         listen_count = None
@@ -113,7 +112,7 @@ def current_status():
         incoming_len_msg = 'Unknown'
         unique_len_msg = 'Unknown'
 
-    listen_count = _influx.get_total_listen_count()
+    listen_count = _ts.get_total_listen_count()
     try:
         user_count = format(int(_get_user_count()), ',d')
     except DatabaseException as e:

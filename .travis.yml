@@ -11,10 +11,10 @@ install:
   - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test run --rm listenbrainz
       dockerize
       -wait tcp://db:5432 -timeout 60s
-      -wait tcp://influx:8086 -timeout 60s bash -c
-      "python3 manage.py init_db --create-db &&
-       python3 manage.py init_msb_db --create-db &&
-       python3 manage.py init_influx"
+      -wait tcp://timescale:5432 -timeout 60s bash -c
+      "python manage.py init_db --create-db &&
+       python manage.py init_msb_db --create-db &&
+       python manage.py init_ts_db --create-db"
   - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test stop
 
   # Build the integration test docker-compose project
@@ -22,32 +22,32 @@ install:
   - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int run --rm listenbrainz
       dockerize
       -wait tcp://db:5432 -timeout 60s
-      -wait tcp://influx:8086 -timeout 60s bash -c
-      "python3 manage.py init_db --create-db &&
-       python3 manage.py init_msb_db --create-db &&
-       python3 manage.py init_influx"
+      -wait tcp://timescale:5432 -timeout 60s bash -c
+      "python manage.py init_db --create-db &&
+       python manage.py init_msb_db --create-db &&
+       python manage.py init_ts_db --create-db"
   - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int stop
 
 script:
   # First run unit tests and bring containers down then
-  - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test up -d db influx redis
+  - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test up -d db timescale redis
   - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test run --rm listenbrainz
                 dockerize
                 -wait tcp://db:5432 -timeout 60s
-                -wait tcp://influx:8086 -timeout 60s
                 -wait tcp://redis:6379 -timeout 60s
+                -wait tcp://timescale:5432 -timeout 60s
                 "py.test"
   - docker-compose -f docker/docker-compose.test.yml -p listenbrainz_test down
 
   # Bring up integration test containers, run tests and bring them down
-  - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int up -d db influx redis influx_writer rabbitmq
+  - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int up -d db timescale redis timescale_writer rabbitmq
   - sleep 10
   - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int
                run --rm listenbrainz dockerize
                                      -wait tcp://db:5432 -timeout 60s
-                                     -wait tcp://influx:8086 -timeout 60s
                                      -wait tcp://redis:6379 -timeout 60s
                                      -wait tcp://rabbitmq:5672 -timeout 60s
+                                     -wait tcp://timescale:5432 -timeout 60s
                                      bash -c "py.test listenbrainz/tests/integration"
   - docker-compose -f docker/docker-compose.integration.yml -p listenbrainz_int down
 
