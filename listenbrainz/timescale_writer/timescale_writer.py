@@ -25,11 +25,6 @@ from listenbrainz.listen_writer import ListenWriter
 from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver import create_app
 
-# We need to use different incoming queues and unique exchanges in order to co-exist with the unflux setup
-# for testing. We will need to undo these before releasing:
-TIMESCALE_INCOMING_QUEUE = "incoming"
-TIMESCALE_UNIQUE_EXCHANGE = "unique"
-
 class TimescaleWriterSubscriber(ListenWriter):
 
     def __init__(self):
@@ -106,7 +101,7 @@ class TimescaleWriterSubscriber(ListenWriter):
         while True:
             try:
                 self.unique_ch.basic_publish(
-                    exchange=TIMESCALE_UNIQUE_EXCHANGE,
+                    exchange=current_app.config['UNIQUE_EXCHANGE'],
                     routing_key='',
                     body=ujson.dumps(unique),
                     properties=pika.BasicProperties(delivery_mode = 2,),
@@ -161,14 +156,14 @@ class TimescaleWriterSubscriber(ListenWriter):
                     self.incoming_ch = self.connection.channel()
                     self.incoming_ch.exchange_declare(exchange=current_app.config['INCOMING_EXCHANGE'], exchange_type='fanout')
                     self.incoming_ch.queue_declare(current_app.config['INCOMING_QUEUE'], durable=True)
-                    self.incoming_ch.queue_bind(exchange=current_app.config['INCOMING_EXCHANGE'], queue=TIMESCALE_INCOMING_QUEUE)
+                    self.incoming_ch.queue_bind(exchange=current_app.config['INCOMING_EXCHANGE'], queue=current_app.config['INCOMING_QUEUE'])
                     self.incoming_ch.basic_consume(
                         lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self),
-                        queue=TIMESCALE_INCOMING_QUEUE,
+                        queue=current_app.config['INCOMING_QUEUE'],
                     )
 
                     self.unique_ch = self.connection.channel()
-                    self.unique_ch.exchange_declare(exchange=TIMESCALE_UNIQUE_EXCHANGE, exchange_type='fanout')
+                    self.unique_ch.exchange_declare(exchange=current_app.config['UNIQUE_EXCHANGE'], exchange_type='fanout')
 
                     try:
                         self.incoming_ch.start_consuming()
