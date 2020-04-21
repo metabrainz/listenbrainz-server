@@ -2,6 +2,7 @@ import queue
 from time import sleep
 import pika
 import listenbrainz.utils as utils
+from flask import current_app
 
 _rabbitmq = None
 
@@ -39,7 +40,6 @@ def init_rabbitmq_connection(app):
             app.config['MAXIMUM_RABBITMQ_CONNECTIONS'],
             app.config['INCOMING_EXCHANGE'],
         )
-    _rabbitmq.add()
 
 
 class RabbitMQConnectionPool:
@@ -67,6 +67,11 @@ class RabbitMQConnectionPool:
 
     def release(self, connection):
         try:
+            # If we're running in the dev server, close connections since threads exit after the request
+            if current_app.debug:
+                connection.close()
+                return
+
             if connection.is_open:
                 self.queue.put_nowait(connection)
         except queue.Full:

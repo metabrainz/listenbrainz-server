@@ -65,7 +65,7 @@ def load_config(app):
         print(pprint.pformat(app.config, indent=4))
     try:
         with open('.git-version') as git_version_file:
-            print('Running on git commit: %s', git_version_file.read().strip())
+            print('Running on git commit: %s' % git_version_file.read().strip())
     except IOError as e:
         print('Unable to retrieve git commit. Error: %s', str(e))
 
