@@ -11,6 +11,7 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
+import sys
 
 from psycopg2.extras import execute_values
 from time import sleep
@@ -82,6 +83,23 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(cols[0][0], "bucket")
         self.assertEqual(cols[1][0], "user_name")
         self.assertEqual(cols[2][0], "count")
+    
+    # this test should be done first, because the other tests keep inserting more rows
+    def test_aaa_get_total_listen_count(self):
+        listen_count = self.logstore.get_total_listen_count(False)
+        self.assertEqual(0, listen_count)
+
+        count = self._create_test_data(self.testuser_name)
+        sleep(1)
+        listen_count = self.logstore.get_total_listen_count(False)
+        self.assertEqual(count, listen_count)
+
+        testuser2 = db_user.get_or_create(11, 'testuser2')
+        testuser_name2 = testuser2['musicbrainz_id']
+        count = self._create_test_data(testuser_name2)
+        sleep(1)
+        listen_count = self.logstore.get_total_listen_count(False)
+        self.assertEqual(count * 2, listen_count)
 
     def test_insert_timescale(self):
         count = self._create_test_data(self.testuser_name)
@@ -119,6 +137,11 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
 
+    def test_get_listen_count_for_user(self):
+        count = self._create_test_data(self.testuser_name)
+        listen_count = self.logstore.get_listen_count_for_user(user_name=self.testuser_name)
+        self.assertEqual(count, listen_count)
+
     def test_fetch_listens_escaped(self):
         user = db_user.get_or_create(2, 'i have a\\weird\\user, name"\n')
         user_name = user['musicbrainz_id']
@@ -128,7 +151,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
 
-    def test_fetch_recent_listens(self): #fails
+    def test_fetch_recent_listens(self):
         user = db_user.get_or_create(2, 'someuser')
         user_name = user['musicbrainz_id']
         self._create_test_data(user_name)
@@ -544,11 +567,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
             self.logstore.import_listens_dump(archive_path)
 
     def test_listen_counts_in_cache(self):
-        count = self._create_test_data(self.testuser_name)
-        
-        # Mock the listen count returned
-        self.logstore.get_listen_count_for_user_from_timescale = MagicMock(return_value=5)
-        
+        count = self._create_test_data(self.testuser_name)     
         self.assertEqual(count, self.logstore.get_listen_count_for_user(self.testuser_name, need_exact=True))
         user_key = '{}{}'.format(REDIS_TIMESCALE_USER_LISTEN_COUNT, self.testuser_name)
         self.assertEqual(count, int(cache.get(user_key, decode=False)))
