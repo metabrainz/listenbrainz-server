@@ -1,0 +1,33 @@
+server {
+     root        /usr/share/nginx/www;
+     server_name messybrainz.org;
+     access_log  /var/log/nginx/messybrainz-combined.log combined;
+     error_log   /var/log/nginx/messybrainz-error.log notice;
+
+     location /static {
+          root /home/messybrainz/messybrainz-server/webserver;
+          gzip on;
+          gzip_http_version 1.0;
+          gzip_comp_level 6;
+          gzip_proxied any;
+          gzip_types text/plain text/css application/json application/x-javascript text/javascript;
+          gzip_buffers 16 8k;
+          gzip_vary on;
+     }
+
+     location    / {
+	  try_files $uri @msb;
+     }
+     location @msb {
+          include uwsgi_params;
+          uwsgi_pass unix:/tmp/messybrainz.uwsgi.sock;
+          uwsgi_param X-MB-Remote-Addr $remote_addr;
+          gzip on;
+          gzip_http_version 1.0;
+          gzip_comp_level 6;
+          gzip_proxied any;
+          gzip_types text/plain application/json application/x-javascript text/javascript;
+          gzip_buffers 16 8k;
+          gzip_vary on;
+     }
+}
