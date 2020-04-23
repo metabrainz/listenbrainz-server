@@ -1,0 +1,52 @@
+#!/bin/bash
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-web-beta" ]
+then
+    rm -f /etc/service/cron/down
+    sv restart cron
+
+    exec uwsgi /etc/uwsgi/uwsgi.ini
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-timescale-writer-beta" ]
+then
+    cd /code/listenbrainz
+    exec python3 -u -m listenbrainz.timescale_writer.timescale_writer
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-bigquery-writer-beta" ]
+then
+    cd /code/listenbrainz
+    exec python3 -m listenbrainz.bigquery_writer.bigquery_writer
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-bigquery-job-runner-beta" ]
+then
+    cd /code/listenbrainz
+    exec python3 -m listenbrainz.bigquery_job_runner.bigquery_job_runner
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-spotify-reader-beta" ]
+then
+    cd /code/listenbrainz
+    exec python3 -m listenbrainz.spotify_updater.spotify_read_listens
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-api-compat-beta" ]
+then
+    exec uwsgi /etc/uwsgi/uwsgi-api-compat.ini
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-follow-dispatcher-beta" ]
+then
+    cd /code/listenbrainz
+    exec python3 manage.py run_follow_server -h 0.0.0.0 -p 3031
+fi
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-spark-reader-beta" ]
+then
+    cd /code/listenbrainz
+    exec python3 -m listenbrainz.spark.spark_reader
+fi
+
+echo "init script has no clue which service to start. Set env var CONTAINER_NAME!"
