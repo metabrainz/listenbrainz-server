@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-web-beta" ]
+if [ "${CONTAINER_NAME}" = "listenbrainz-web-test" ]
 then
     rm -f /etc/service/cron/down
     sv restart cron
@@ -8,42 +8,42 @@ then
     exec uwsgi /etc/uwsgi/uwsgi.ini
 fi
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-timescale-writer-beta" ]
+if [ "${CONTAINER_NAME}" = "listenbrainz-timescale-writer-test" ]
 then
     cd /code/listenbrainz
     exec python3 -u -m listenbrainz.timescale_writer.timescale_writer
 fi
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-bigquery-writer-beta" ]
+if [ "${CONTAINER_NAME}" = "listenbrainz-bigquery-writer-test" ]
 then
     cd /code/listenbrainz
     exec python3 -m listenbrainz.bigquery_writer.bigquery_writer
 fi
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-bigquery-job-runner-beta" ]
+if [ "${CONTAINER_NAME}" = "listenbrainz-bigquery-job-runner-test" ]
 then
     cd /code/listenbrainz
     exec python3 -m listenbrainz.bigquery_job_runner.bigquery_job_runner
 fi
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-spotify-reader-beta" ]
+if [ "${CONTAINER_NAME}" = "listenbrainz-spotify-reader-test" ]
 then
     cd /code/listenbrainz
     exec python3 -m listenbrainz.spotify_updater.spotify_read_listens
 fi
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-api-compat-beta" ]
+if [ "${CONTAINER_NAME}" = "listenbrainz-api-compat-test" ]
 then
     exec uwsgi /etc/uwsgi/uwsgi-api-compat.ini
 fi
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-follow-dispatcher-beta" ]
+if [ "${CONTAINER_NAME}" = "listenbrainz-follow-dispatcher-test" ]
 then
     cd /code/listenbrainz
     exec python3 manage.py run_follow_server -h 0.0.0.0 -p 3031
 fi
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-spark-reader-beta" ]
+if [ "${CONTAINER_NAME}" = "listenbrainz-spark-reader-test" ]
 then
     cd /code/listenbrainz
     exec python3 -m listenbrainz.spark.spark_reader

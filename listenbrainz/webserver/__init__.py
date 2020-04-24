@@ -30,7 +30,7 @@ def create_timescale(app):
 
 def create_redis(app):
     from listenbrainz.webserver.redis_connection import init_redis_connection
-    init_redis_connection(app.logger, app.config['REDIS_HOST'], app.config['REDIS_PORT'])
+    init_redis_connection(app.logger, app.config['REDIS_HOST'], app.config['REDIS_PORT'], app.config['REDIS_NAMESPACE'])
 
 
 def create_rabbitmq(app):
@@ -60,7 +60,7 @@ def load_config(app):
 
     app.config.from_pyfile(config_file)
     # Output config values and some other info
-    if deploy_env == 'prod':
+    if deploy_env in ['prod', 'test']:
         print('Configuration values are as follows: ')
         print(pprint.pformat(app.config, indent=4))
     try:

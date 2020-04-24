@@ -43,8 +43,8 @@ class TimescaleWriterSubscriber(ListenWriter):
         submit = []
         for listen in listens:
             submit.append(Listen.from_json(listen))
-        ret = self.insert_to_listenstore(submit)
 
+        ret = self.insert_to_listenstore(submit)
         if not ret:
             return ret
 
@@ -83,7 +83,7 @@ class TimescaleWriterSubscriber(ListenWriter):
             return 0
 
         if not rows_inserted:
-            return 0
+            return len(data)
 
         unique = []
         inserted_index = {}
@@ -96,7 +96,7 @@ class TimescaleWriterSubscriber(ListenWriter):
                 unique.append(listen)
 
         if not unique:
-            return len(rows_inserted)
+            return len(data)
 
         while True:
             try:
@@ -110,10 +110,10 @@ class TimescaleWriterSubscriber(ListenWriter):
             except pika.exceptions.ConnectionClosed:
                 self.connect_to_rabbitmq()
 
-
         self.redis_listenstore.update_recent_listens(unique)
+        self._collect_and_log_stats(len(unique))
 
-        return len(rows_inserted)
+        return len(data)
 
 
     def start(self):

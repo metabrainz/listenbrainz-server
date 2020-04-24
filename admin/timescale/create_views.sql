@@ -5,6 +5,6 @@ CREATE VIEW listen_count
          AS SELECT time_bucket(bigint '86400', listened_at) AS bucket, user_name, count(listen)
             FROM listen group by time_bucket(bigint '86400', listened_at), user_name;
 
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO timescale_lb;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz_ts;
 
 COMMIT;

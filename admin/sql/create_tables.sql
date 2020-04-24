@@ -134,4 +134,6 @@ CREATE TABLE statistics.user (
     last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz;
+
 COMMIT;
