@@ -11,9 +11,9 @@ MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@db:5
 
 POSTGRES_ADMIN_URI="postgresql://postgres@db/template1"
 
-SQLALCHEMY_TIMESCALE_URI = "postgresql://timescale_lb:timescale_lb@timescale/timescale_lb"
+SQLALCHEMY_TIMESCALE_URI = "postgresql://listenbrainz_ts:listenbrainz_ts@timescale/listenbrainz_ts"
 TIMESCALE_ADMIN_URI = "postgresql://postgres:postgres@timescale/template1"
-TIMESCALE_ADMIN_LB_URI = "postgresql://postgres:postgres@timescale/timescale_lb"
+TIMESCALE_ADMIN_LB_URI = "postgresql://postgres:postgres@timescale/listenbrainz_ts"
 
 # Other postgres configuration options
 # Oldest listens which can be stored in the database, in days.

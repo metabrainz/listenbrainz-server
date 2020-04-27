@@ -1,2 +1,2 @@
-DROP DATABASE IF EXISTS timescale_lb;
-DROP USER IF EXISTS timescale_lb;
+DROP DATABASE IF EXISTS listenbrainz_ts;
+DROP USER IF EXISTS listenbrainz_ts;
