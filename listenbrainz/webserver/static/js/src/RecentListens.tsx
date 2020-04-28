@@ -52,8 +52,7 @@ export interface RecentListensState {
   listName: string;
   listens: Array<Listen>;
   mode: "listens" | "follow" | "recent";
-  // TODO: put correct value
-  playingNowByUser: any;
+  playingNowByUser: FollowUsersPlayingNow;
   saveUrl: string;
 }
 
@@ -102,14 +101,11 @@ export default class RecentListens extends React.Component<
 
     this.socket = io.connect(webSocketsServerUrl);
     this.socket.on("connect", () => {
-      switch (mode) {
-        case "follow":
-          this.handleFollowUserListChange(followList, false);
-          break;
-        case "listens":
-        default:
-          this.handleFollowUserListChange([user.name], false);
-          break;
+      console.log("heya");
+      if (mode === "follow") {
+        this.handleFollowUserListChange(followList, false);
+      } else {
+        this.handleFollowUserListChange([user.name], false);
       }
     });
     this.socket.on("listen", (data: string) => {
@@ -177,7 +173,7 @@ export default class RecentListens extends React.Component<
     this.setState((prevState) => {
       const { listens } = prevState;
       // Crop listens array to 100 max
-      if (listens.length >= 100) {
+      while (listens.length >= 100) {
         if (prevState.mode === "follow") {
           listens.shift();
         } else {

@@ -1,10 +1,16 @@
+/* eslint-disable dot-notation */
 import * as React from "react";
 import { shallow } from "enzyme";
 import * as timeago from "time-ago";
+import * as io from "socket.io-client";
 
 import * as recentListensProfilePageProps from "./__mocks__/recentListensProfilePageProps.json";
+import * as tooManyListens from "./__mocks__/tooManyListens.json";
 
-import RecentListens, { ListensListMode } from "./RecentListens";
+import RecentListens, {
+  ListensListMode,
+  RecentListensProps,
+} from "./RecentListens";
 
 const {
   apiUrl,
@@ -75,9 +81,99 @@ describe("componentDidMount", () => {
   });
 });
 
-describe("connectWebsockets", () => {});
+describe("connectWebsockets", () => {
+  it("calls io.connect with correct parameters", () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
 
-describe("handleFollowUserListChange", () => {});
+    const spy = jest.spyOn(io, "connect");
+    instance.connectWebsockets();
+
+    expect(spy).toHaveBeenCalledWith("http://localhost:8081");
+    jest.clearAllMocks();
+  });
+
+  it('calls correct handler for "connect" event', () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
+
+    wrapper.setState({ mode: "follow", followList: ["foo", "bar"] });
+    const spy = jest.spyOn(instance["socket"], "on");
+    instance.handleFollowUserListChange = jest.fn();
+    instance.connectWebsockets();
+
+    expect(spy).toHaveBeenCalled();
+    expect(instance.handleFollowUserListChange).toHaveBeenCalledWith([
+      "foo",
+      "bar",
+    ]);
+  });
+
+  // it('calls correct handler for "listen" event').skips();
+
+  // it('calls correct event for "playing_now" event');
+});
+
+describe("handleFollowUserListChange", () => {
+  it("sets the state correctly", () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
+
+    instance.handleFollowUserListChange(["foo", "bar"], true);
+
+    expect(wrapper.state()["followList"]).toEqual(["foo", "bar"]);
+  });
+
+  it("doesn't do anything if dontSendUpdate is true", () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
+
+    wrapper.setState({ mode: "follow", followList: ["bar"] });
+    instance.getRecentListensForFollowList = jest.fn();
+    const spy = jest.spyOn(instance["socket"], "emit");
+    instance.handleFollowUserListChange(["foo"], true);
+
+    expect(spy).not.toHaveBeenCalled();
+    expect(instance.getRecentListensForFollowList).not.toHaveBeenCalled();
+  });
+
+  it("calls connectWebsockets if socket object hasn't been created", () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
+
+    // @ts-ignore undefined can't be assigned to socket but can happen in real life
+    instance["socket"] = undefined;
+    instance.connectWebsockets = jest.fn();
+    instance.handleFollowUserListChange(["follow"]);
+
+    expect(instance.connectWebsockets).toHaveBeenCalledTimes(1);
+  });
+
+  it("calls socket.emit with correct parameters", () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
+
+    const spy = jest.spyOn(instance["socket"], "emit");
+    instance.handleFollowUserListChange(["foo"]);
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith("json", {
+      user: "iliekcomputers",
+      follow: ["foo"],
+    });
+  });
+
+  it('calls getRecentListensForFollowList if mode is "follow"', () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
+
+    wrapper.setState({ mode: "follow", followList: ["bar"] });
+    instance.getRecentListensForFollowList = jest.fn();
+    instance.handleFollowUserListChange(["foo"]);
+
+    expect(instance.getRecentListensForFollowList).toHaveBeenCalledTimes(1);
+  });
+});
 
 describe("handleSpotifyAccountError", () => {
   it("calls newAlert", () => {
@@ -131,9 +227,74 @@ describe("handleSpotifyPermissionError", () => {
   });
 });
 
-describe("playListen", () => {});
+describe("receiveNewListen", () => {
+  const mockListen: Listen = {
+    track_metadata: {
+      artist_name: "Coldplay",
+      track_name: "Viva La Vida",
+    },
+    listened_at: 1586580524,
+    listened_at_iso: "2020-04-10T10:12:04Z",
+  };
 
-describe("receiveNewListen", () => {});
+  it("crops the listens array if length is more than or equal to 100", () => {
+    const wrapper = shallow<RecentListens>(
+      <RecentListens
+        {...(JSON.parse(JSON.stringify(tooManyListens)) as RecentListensProps)}
+      />
+    );
+    const instance = wrapper.instance();
+
+    wrapper.setState({ mode: "follow" });
+    instance.receiveNewListen(JSON.stringify(mockListen));
+
+    expect(wrapper.state()["listens"].length).toBeLessThanOrEqual(100);
+
+    wrapper.setState({
+      mode: "listens",
+      listens: JSON.parse(JSON.stringify(tooManyListens["listens"])),
+    });
+    instance.receiveNewListen(JSON.stringify(mockListen));
+
+    expect(wrapper.state()["listens"].length).toBeLessThanOrEqual(100);
+  });
+
+  it('inserts the recieved listen for "follow"', () => {
+    const wrapper = shallow<RecentListens>(
+      <RecentListens
+        {...(JSON.parse(JSON.stringify(tooManyListens)) as RecentListensProps)}
+      />
+    );
+    const instance = wrapper.instance();
+    wrapper.setState({ mode: "follow" });
+    let result: Array<Listen> = JSON.parse(
+      JSON.stringify(tooManyListens["listens"])
+    );
+    result = result.slice(0, 99);
+    result.push(mockListen);
+    instance.receiveNewListen(JSON.stringify(mockListen));
+
+    expect(wrapper.state()["listens"]).toEqual(result);
+  });
+
+  it("inserts the recieved listen for other modes", () => {
+    const wrapper = shallow<RecentListens>(
+      <RecentListens
+        {...(JSON.parse(JSON.stringify(tooManyListens)) as RecentListensProps)}
+      />
+    );
+    const instance = wrapper.instance();
+    wrapper.setState({ mode: "recent" });
+    let result: Array<Listen> = JSON.parse(
+      JSON.stringify(tooManyListens["listens"])
+    );
+    result = result.slice(0, 99);
+    result.unshift(mockListen);
+    instance.receiveNewListen(JSON.stringify(mockListen));
+
+    expect(wrapper.state()["listens"]).toEqual(result);
+  });
+});
 
 describe("receiveNewPlayingNow", () => {});
 
@@ -151,7 +312,7 @@ describe("handleCurrentListenChange", () => {
     };
     instance.handleCurrentListenChange(listen);
 
-    expect(wrapper.state().currentListen).toMatchObject(listen);
+    expect(wrapper.state().currentListen).toEqual(listen);
   });
 });
 
@@ -192,15 +353,15 @@ describe("newAlert", () => {
     // Mock Date().getTime()
     jest.spyOn(Date.prototype, "getTime").mockImplementation(() => 0);
 
-    expect(wrapper.state().alerts).toMatchObject([]);
+    expect(wrapper.state().alerts).toEqual([]);
 
     instance.newAlert("warning", "Test", "foobar");
-    expect(wrapper.state().alerts).toMatchObject([
+    expect(wrapper.state().alerts).toEqual([
       { id: 0, type: "warning", title: "Test", message: "foobar" },
     ]);
 
     instance.newAlert("danger", "test", <p>foobar</p>);
-    expect(wrapper.state().alerts).toMatchObject([
+    expect(wrapper.state().alerts).toEqual([
       { id: 0, type: "warning", title: "Test", message: "foobar" },
       { id: 0, type: "danger", title: "test", message: <p>foobar</p> },
     ]);
@@ -230,12 +391,12 @@ describe("onAlertDismissed", () => {
     wrapper.setState({
       alerts: [alert1, alert2],
     });
-    expect(wrapper.state().alerts).toMatchObject([alert1, alert2]);
+    expect(wrapper.state().alerts).toEqual([alert1, alert2]);
 
     instance.onAlertDismissed(alert1);
-    expect(wrapper.state().alerts).toMatchObject([alert2]);
+    expect(wrapper.state().alerts).toEqual([alert2]);
 
     instance.onAlertDismissed(alert2);
-    expect(wrapper.state().alerts).toMatchObject([]);
+    expect(wrapper.state().alerts).toEqual([]);
   });
 });
