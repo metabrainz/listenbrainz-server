@@ -171,7 +171,7 @@ export default class RecentListens extends React.Component<
   receiveNewListen = (newListen: string): void => {
     const listen = JSON.parse(newListen) as Listen;
     this.setState((prevState) => {
-      const { listens } = prevState;
+      let { listens } = prevState;
       // Crop listens array to 100 max
       while (listens.length >= 100) {
         if (prevState.mode === "follow") {

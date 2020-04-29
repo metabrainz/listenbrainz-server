@@ -6,6 +6,7 @@ import * as io from "socket.io-client";
 
 import * as recentListensProfilePageProps from "./__mocks__/recentListensProfilePageProps.json";
 import * as tooManyListens from "./__mocks__/tooManyListens.json";
+import * as recentListenPropOneListen from "./__mocks__/recentListenPropOneListen.json"
 
 import RecentListens, {
   ListensListMode,
@@ -262,37 +263,33 @@ describe("receiveNewListen", () => {
   it('inserts the recieved listen for "follow"', () => {
     const wrapper = shallow<RecentListens>(
       <RecentListens
-        {...(JSON.parse(JSON.stringify(tooManyListens)) as RecentListensProps)}
+        {...(recentListenPropOneListen as RecentListensProps)}
       />
     );
     const instance = wrapper.instance();
     wrapper.setState({ mode: "follow" });
-    let result: Array<Listen> = JSON.parse(
-      JSON.stringify(tooManyListens["listens"])
-    );
-    result = result.slice(0, 99);
+    let result: Array<Listen> = recentListenPropOneListen["listens"]
     result.push(mockListen);
     instance.receiveNewListen(JSON.stringify(mockListen));
 
-    expect(wrapper.state()["listens"]).toEqual(result);
+    expect(wrapper.state('listens').length).toEqual(result.length)
+    expect(wrapper.state("listens")).toEqual(result);
   });
 
   it("inserts the recieved listen for other modes", () => {
     const wrapper = shallow<RecentListens>(
       <RecentListens
-        {...(JSON.parse(JSON.stringify(tooManyListens)) as RecentListensProps)}
+        {...recentListenPropOneListen as RecentListensProps}
       />
     );
     const instance = wrapper.instance();
     wrapper.setState({ mode: "recent" });
-    let result: Array<Listen> = JSON.parse(
-      JSON.stringify(tooManyListens["listens"])
-    );
-    result = result.slice(0, 99);
+    let result: Array<Listen> = recentListenPropOneListen["listens"]
     result.unshift(mockListen);
     instance.receiveNewListen(JSON.stringify(mockListen));
 
-    expect(wrapper.state()["listens"]).toEqual(result);
+    expect(wrapper.state('listens').length).toEqual(result.length)
+    expect(wrapper.state("listens")).toEqual(result);
   });
 });
 
