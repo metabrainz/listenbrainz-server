@@ -96,10 +96,19 @@ export default class RecentListens extends React.Component<
   }
 
   connectWebsockets = (): void => {
-    const { mode, followList } = this.state;
-    const { webSocketsServerUrl, user } = this.props;
+    this.createWebsocketsConnection();
+    this.addWebsocketsHandlers();
+  }
 
+  createWebsocketsConnection = (): void => {
+    const {webSocketsServerUrl} = this.props;
     this.socket = io.connect(webSocketsServerUrl);
+  }
+
+  addWebsocketsHandlers = (): void => {
+    const { mode, followList } = this.state;
+    const { user } = this.props;
+
     this.socket.on("connect", () => {
       console.log("heya");
       if (mode === "follow") {

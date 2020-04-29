@@ -99,11 +99,14 @@ describe("connectWebsockets", () => {
     const instance = wrapper.instance();
 
     wrapper.setState({ mode: "follow", followList: ["foo", "bar"] });
+    instance.createWebsocketsConnection();
     const spy = jest.spyOn(instance["socket"], "on");
     instance.handleFollowUserListChange = jest.fn();
-    instance.connectWebsockets();
+
+    instance.addWebsocketsHandlers();
 
     expect(spy).toHaveBeenCalled();
+    expect(instance.handleFollowUserListChange).toHaveBeenCalled()
     expect(instance.handleFollowUserListChange).toHaveBeenCalledWith([
       "foo",
       "bar",
