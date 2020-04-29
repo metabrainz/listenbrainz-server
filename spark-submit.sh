@@ -11,5 +11,6 @@ time ./run.sh /usr/local/spark/bin/spark-submit \
     	--conf "spark.executor.cores"=$EXECUTOR_CORES \
     	--conf "spark.executor.memory"=$EXECUTOR_MEMORY \
     	--conf "spark.driver.memory"=$DRIVER_MEMORY \
+	--conf "spark.driver.maxResultSize"=$DRIVER_MAX_RESULT_SIZE \
 	--py-files listenbrainz_spark.zip \
 	"$@"
