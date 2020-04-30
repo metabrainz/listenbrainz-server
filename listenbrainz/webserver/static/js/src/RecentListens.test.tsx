@@ -285,9 +285,8 @@ describe("receiveNewListen", () => {
   };
 
   it("crops the listens array if length is more than or equal to 100", () => {
-    /* JSON.parse(JSON.stringify(recentListensPropsTooManyListens) is a fast way
-     * to deep copy an object. It makes sure that changes made to the object by
-     * the component doesn't affect the result variable
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
      */
     const wrapper = shallow<RecentListens>(
       <RecentListens
@@ -303,6 +302,9 @@ describe("receiveNewListen", () => {
 
     expect(wrapper.state("listens").length).toBeLessThanOrEqual(100);
 
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
     wrapper.setState({
       mode: "listens",
       listens: JSON.parse(
@@ -315,6 +317,9 @@ describe("receiveNewListen", () => {
   });
 
   it('inserts the received listen for "follow"', () => {
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
     const wrapper = shallow<RecentListens>(
       <RecentListens
         {...(JSON.parse(
@@ -324,6 +329,9 @@ describe("receiveNewListen", () => {
     );
     const instance = wrapper.instance();
     wrapper.setState({ mode: "follow" });
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
     const result: Array<Listen> = JSON.parse(
       JSON.stringify(recentListensPropsOneListen.listens)
     );
@@ -335,6 +343,9 @@ describe("receiveNewListen", () => {
   });
 
   it("inserts the received listen for other modes", () => {
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
     const wrapper = shallow<RecentListens>(
       <RecentListens
         {...(JSON.parse(
@@ -344,6 +355,9 @@ describe("receiveNewListen", () => {
     );
     const instance = wrapper.instance();
     wrapper.setState({ mode: "recent" });
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
     const result: Array<Listen> = JSON.parse(
       JSON.stringify(recentListensPropsOneListen.listens)
     );
@@ -401,6 +415,9 @@ describe("receiveNewPlayingNow", () => {
   });
 
   it("sets state correctly for other modes", () => {
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
     const wrapper = shallow<RecentListens>(
       <RecentListens
         {...(JSON.parse(
@@ -411,6 +428,9 @@ describe("receiveNewPlayingNow", () => {
     const instance = wrapper.instance();
 
     wrapper.setState({ mode: "listens" });
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
     const result = JSON.parse(
       JSON.stringify(recentListensPropsPlayingNow.listens)
     );
