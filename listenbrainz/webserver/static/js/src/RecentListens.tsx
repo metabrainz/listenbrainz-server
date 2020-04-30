@@ -45,15 +45,14 @@ export interface RecentListensProps {
 export interface RecentListensState {
   alerts: Array<Alert>;
   canPlayMusic?: boolean;
-  currentListen: Listen;
+  currentListen?: Listen;
   direction: SpotifyPlayDirection;
   followList: Array<string>;
   listId?: number;
   listName: string;
   listens: Array<Listen>;
   mode: "listens" | "follow" | "recent";
-  // TODO: put correct value
-  playingNowByUser: any;
+  playingNowByUser: FollowUsersPlayingNow;
   saveUrl: string;
 }
 
@@ -72,7 +71,6 @@ export default class RecentListens extends React.Component<
     this.state = {
       alerts: [],
       listens: props.listens || [],
-      currentListen: {} as Listen,
       mode: props.mode,
       followList: props.followList || [],
       playingNowByUser: {},
@@ -98,19 +96,24 @@ export default class RecentListens extends React.Component<
   }
 
   connectWebsockets = (): void => {
-    const { mode, followList } = this.state;
-    const { webSocketsServerUrl, user } = this.props;
+    this.createWebsocketsConnection();
+    this.addWebsocketsHandlers();
+  };
 
+  createWebsocketsConnection = (): void => {
+    const { webSocketsServerUrl } = this.props;
     this.socket = io.connect(webSocketsServerUrl);
+  };
+
+  addWebsocketsHandlers = (): void => {
+    const { mode, followList } = this.state;
+    const { user } = this.props;
+
     this.socket.on("connect", () => {
-      switch (mode) {
-        case "follow":
-          this.handleFollowUserListChange(followList, false);
-          break;
-        case "listens":
-        default:
-          this.handleFollowUserListChange([user.name], false);
-          break;
+      if (mode === "follow") {
+        this.handleFollowUserListChange(followList, false);
+      } else {
+        this.handleFollowUserListChange([user.name], false);
       }
     });
     this.socket.on("listen", (data: string) => {
@@ -159,14 +162,13 @@ export default class RecentListens extends React.Component<
     this.setState({ canPlayMusic: false });
   };
 
-  handleSpotifyPermissionError = (error: string): void => {
+  handleSpotifyPermissionError = (error: string | JSX.Element): void => {
     this.newAlert("danger", "Spotify permission error", error);
     this.setState({ canPlayMusic: false });
   };
 
   playListen = (listen: Listen): void => {
     if (this.spotifyPlayer.current) {
-      // @ts-ignore
       this.spotifyPlayer.current.playListen(listen);
     } else {
       // For fallback embedded player
@@ -179,7 +181,7 @@ export default class RecentListens extends React.Component<
     this.setState((prevState) => {
       const { listens } = prevState;
       // Crop listens array to 100 max
-      if (listens.length >= 100) {
+      while (listens.length >= 100) {
         if (prevState.mode === "follow") {
           listens.shift();
         } else {
@@ -228,7 +230,7 @@ export default class RecentListens extends React.Component<
 
   isCurrentListen = (listen: Listen): boolean => {
     const { currentListen } = this.state;
-    return currentListen && _.isEqual(listen, currentListen);
+    return Boolean(currentListen && _.isEqual(listen, currentListen));
   };
 
   getRecentListensForFollowList = async () => {
