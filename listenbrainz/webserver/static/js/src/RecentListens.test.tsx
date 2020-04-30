@@ -285,6 +285,10 @@ describe("receiveNewListen", () => {
   };
 
   it("crops the listens array if length is more than or equal to 100", () => {
+    /* JSON.parse(JSON.stringify(recentListensPropsTooManyListens) is a fast way
+     * to deep copy an object. It makes sure that changes made to the object by
+     * the component doesn't affect the result variable
+     */
     const wrapper = shallow<RecentListens>(
       <RecentListens
         {...(JSON.parse(
