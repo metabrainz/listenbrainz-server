@@ -82,55 +82,82 @@ describe("componentDidMount", () => {
   });
 });
 
-describe("connectWebsockets", () => {
-  it("calls createWebsocketsConnection", () => {
-    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
-    const instance = wrapper.instance();
-
-    instance.createWebsocketsConnection = jest.fn();
-    instance.connectWebsockets();
-
-    expect(instance.createWebsocketsConnection).toHaveBeenCalledTimes(1);
-  });
-
-  it("calls addWebsocketsHandlers", () => {
-    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
-    const instance = wrapper.instance();
-
-    wrapper.setState({ mode: "follow", followList: ["foo", "bar"] });
-    instance.createWebsocketsConnection();
-    // eslint-disable-next-line dot-notation
-    const spy = jest.spyOn(instance["socket"], "on");
-    instance.handleFollowUserListChange = jest.fn();
-
-    instance.addWebsocketsHandlers();
-
-    expect(spy).toHaveBeenCalled();
-    expect(instance.handleFollowUserListChange).toHaveBeenCalled();
-    expect(instance.handleFollowUserListChange).toHaveBeenCalledWith([
-      "foo",
-      "bar",
-    ]);
-  });
-
-  it('calls correct handler for "listen" event', () => {});
-
-  it('calls correct event for "playing_now" event', () => {});
-});
-
 describe("createWebsocketsConnection", () => {
   it("calls io.connect with correct parameters", () => {
     const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
     const instance = wrapper.instance();
 
     const spy = jest.spyOn(io, "connect");
-    instance.connectWebsockets();
+    instance.createWebsocketsConnection();
 
     expect(spy).toHaveBeenCalledWith("http://localhost:8081");
     jest.clearAllMocks();
   });
 });
 
+describe("addWebsocketsHandlers", () => {
+  it('calls correct handler for "connect" event', () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
+
+    wrapper.setState({
+      mode: "follow",
+      followList: ["foo", "bar"],
+    });
+    // eslint-disable-next-line dot-notation
+    const spy = jest.spyOn(instance["socket"], "on");
+    spy.mockImplementation((event, fn): any => {
+      if (event === "connect") {
+        fn();
+      }
+    });
+    instance.handleFollowUserListChange = jest.fn();
+    instance.addWebsocketsHandlers();
+
+    expect(instance.handleFollowUserListChange).toHaveBeenCalledWith(
+      ["foo", "bar"],
+      false
+    );
+  });
+
+  it('calls correct handler for "listen" event', () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
+
+    // eslint-disable-next-line dot-notation
+    const spy = jest.spyOn(instance["socket"], "on");
+    spy.mockImplementation((event, fn): any => {
+      if (event === "listen") {
+        fn(JSON.stringify(recentListensPropsOneListen.listens[0]));
+      }
+    });
+    instance.receiveNewListen = jest.fn();
+    instance.addWebsocketsHandlers();
+
+    expect(instance.receiveNewListen).toHaveBeenCalledWith(
+      JSON.stringify(recentListensPropsOneListen.listens[0])
+    );
+  });
+
+  it('calls correct event for "playing_now" event', () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
+
+    // eslint-disable-next-line dot-notation
+    const spy = jest.spyOn(instance["socket"], "on");
+    spy.mockImplementation((event, fn): any => {
+      if (event === "playing_now") {
+        fn(JSON.stringify(recentListensPropsPlayingNow.listens[0]));
+      }
+    });
+    instance.receiveNewPlayingNow = jest.fn();
+    instance.addWebsocketsHandlers();
+
+    expect(instance.receiveNewPlayingNow).toHaveBeenCalledWith(
+      JSON.stringify(recentListensPropsPlayingNow.listens[0])
+    );
+  });
+});
 describe("handleFollowUserListChange", () => {
   it("sets the state correctly", () => {
     const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
@@ -138,8 +165,7 @@ describe("handleFollowUserListChange", () => {
 
     instance.handleFollowUserListChange(["foo", "bar"], true);
 
-    // eslint-disable-next-line dot-notation
-    expect(wrapper.state()["followList"]).toEqual(["foo", "bar"]);
+    expect(wrapper.state("followList")).toEqual(["foo", "bar"]);
   });
 
   it("doesn't do anything if dontSendUpdate is true", () => {
@@ -271,20 +297,17 @@ describe("receiveNewListen", () => {
     wrapper.setState({ mode: "follow" });
     instance.receiveNewListen(JSON.stringify(mockListen));
 
-    // eslint-disable-next-line dot-notation
-    expect(wrapper.state()["listens"].length).toBeLessThanOrEqual(100);
+    expect(wrapper.state("listens").length).toBeLessThanOrEqual(100);
 
     wrapper.setState({
       mode: "listens",
       listens: JSON.parse(
-        // eslint-disable-next-line dot-notation
-        JSON.stringify(recentListensPropsTooManyListens["listens"])
+        JSON.stringify(recentListensPropsTooManyListens.listens)
       ),
     });
     instance.receiveNewListen(JSON.stringify(mockListen));
 
-    // eslint-disable-next-line dot-notation
-    expect(wrapper.state()["listens"].length).toBeLessThanOrEqual(100);
+    expect(wrapper.state("listens").length).toBeLessThanOrEqual(100);
   });
 
   it('inserts the received listen for "follow"', () => {
@@ -298,8 +321,7 @@ describe("receiveNewListen", () => {
     const instance = wrapper.instance();
     wrapper.setState({ mode: "follow" });
     const result: Array<Listen> = JSON.parse(
-      // eslint-disable-next-line dot-notation
-      JSON.stringify(recentListensPropsOneListen["listens"])
+      JSON.stringify(recentListensPropsOneListen.listens)
     );
     result.push(mockListen);
     instance.receiveNewListen(JSON.stringify(mockListen));
@@ -319,8 +341,7 @@ describe("receiveNewListen", () => {
     const instance = wrapper.instance();
     wrapper.setState({ mode: "recent" });
     const result: Array<Listen> = JSON.parse(
-      // eslint-disable-next-line dot-notation
-      JSON.stringify(recentListensPropsOneListen["listens"])
+      JSON.stringify(recentListensPropsOneListen.listens)
     );
     result.unshift(mockListen);
     instance.receiveNewListen(JSON.stringify(mockListen));
@@ -387,8 +408,7 @@ describe("receiveNewPlayingNow", () => {
 
     wrapper.setState({ mode: "listens" });
     const result = JSON.parse(
-      // eslint-disable-next-line dot-notation
-      JSON.stringify(recentListensPropsPlayingNow["listens"])
+      JSON.stringify(recentListensPropsPlayingNow.listens)
     );
     result.shift();
     result.unshift({ ...mockListenOne, playing_now: true });

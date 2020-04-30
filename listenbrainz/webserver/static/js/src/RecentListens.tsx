@@ -110,7 +110,6 @@ export default class RecentListens extends React.Component<
     const { user } = this.props;
 
     this.socket.on("connect", () => {
-      console.log("heya");
       if (mode === "follow") {
         this.handleFollowUserListChange(followList, false);
       } else {
