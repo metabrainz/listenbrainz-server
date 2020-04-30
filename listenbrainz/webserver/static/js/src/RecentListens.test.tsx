@@ -93,17 +93,6 @@ describe("connectWebsockets", () => {
     expect(instance.createWebsocketsConnection).toHaveBeenCalledTimes(1);
   });
 
-  it("calls io.connect with correct parameters", () => {
-    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
-    const instance = wrapper.instance();
-
-    const spy = jest.spyOn(io, "connect");
-    instance.connectWebsockets();
-
-    expect(spy).toHaveBeenCalledWith("http://localhost:8081");
-    jest.clearAllMocks();
-  });
-
   it("calls addWebsocketsHandlers", () => {
     const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
     const instance = wrapper.instance();
@@ -124,9 +113,22 @@ describe("connectWebsockets", () => {
     ]);
   });
 
-  // it('calls correct handler for "listen" event').skips();
+  it('calls correct handler for "listen" event', () => {});
 
-  // it('calls correct event for "playing_now" event');
+  it('calls correct event for "playing_now" event', () => {});
+});
+
+describe("createWebsocketsConnection", () => {
+  it("calls io.connect with correct parameters", () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
+
+    const spy = jest.spyOn(io, "connect");
+    instance.connectWebsockets();
+
+    expect(spy).toHaveBeenCalledWith("http://localhost:8081");
+    jest.clearAllMocks();
+  });
 });
 
 describe("handleFollowUserListChange", () => {
@@ -441,7 +443,47 @@ describe("isCurrentListen", () => {
   });
 });
 
-describe("getRecentListensForFollowList", () => {});
+describe("getRecentListensForFollowList", () => {
+  it("calls getRecentListensForUsers", () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
+
+    wrapper.setState({
+      followList: ["ishaanshah", "iliekcomputers", "puneruns"],
+    });
+    // eslint-disable-next-line dot-notation
+    const spy = jest.spyOn(instance["APIService"], "getRecentListensForUsers");
+    instance.getRecentListensForFollowList();
+
+    expect(spy).toHaveBeenCalledWith([
+      "ishaanshah",
+      "iliekcomputers",
+      "puneruns",
+    ]);
+  });
+
+  it("creates new alert if anything fails", () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
+
+    wrapper.setState({
+      followList: ["ishaanshah", "iliekcomputers", "puneruns"],
+    });
+    // eslint-disable-next-line dot-notation
+    const spy = jest.spyOn(instance["APIService"], "getRecentListensForUsers");
+    spy.mockImplementation(() => {
+      throw new Error("foobar");
+    });
+    instance.newAlert = jest.fn();
+    instance.getRecentListensForFollowList();
+
+    expect(instance.newAlert).toHaveBeenCalledWith(
+      "danger",
+      "Could not get recent listens",
+      "foobar"
+    );
+  });
+});
 
 describe("newAlert", () => {
   it("creates a new alert", () => {
