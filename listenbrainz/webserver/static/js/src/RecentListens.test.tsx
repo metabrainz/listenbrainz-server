@@ -1,12 +1,12 @@
-/* eslint-disable dot-notation */
 import * as React from "react";
 import { shallow } from "enzyme";
 import * as timeago from "time-ago";
 import * as io from "socket.io-client";
 
-import * as recentListensProfilePageProps from "./__mocks__/recentListensProfilePageProps.json";
-import * as tooManyListens from "./__mocks__/tooManyListens.json";
-import * as recentListenPropOneListen from "./__mocks__/recentListenPropOneListen.json"
+import * as recentListensProps from "./__mocks__/recentListensProps.json";
+import * as recentListensPropsTooManyListens from "./__mocks__/recentListensPropsTooManyListens.json";
+import * as recentListensPropsOneListen from "./__mocks__/recentListensPropsOneListen.json";
+import * as recentListensPropsPlayingNow from "./__mocks__/recentListensPropsPlayingNow.json";
 
 import RecentListens, {
   ListensListMode,
@@ -28,7 +28,7 @@ const {
   spotify,
   user,
   webSocketsServerUrl,
-} = recentListensProfilePageProps;
+} = recentListensProps;
 
 const props = {
   apiUrl,
@@ -83,6 +83,16 @@ describe("componentDidMount", () => {
 });
 
 describe("connectWebsockets", () => {
+  it("calls createWebsocketsConnection", () => {
+    const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+    const instance = wrapper.instance();
+
+    instance.createWebsocketsConnection = jest.fn();
+    instance.connectWebsockets();
+
+    expect(instance.createWebsocketsConnection).toHaveBeenCalledTimes(1);
+  });
+
   it("calls io.connect with correct parameters", () => {
     const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
     const instance = wrapper.instance();
@@ -94,19 +104,20 @@ describe("connectWebsockets", () => {
     jest.clearAllMocks();
   });
 
-  it('calls correct handler for "connect" event', () => {
+  it("calls addWebsocketsHandlers", () => {
     const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
     const instance = wrapper.instance();
 
     wrapper.setState({ mode: "follow", followList: ["foo", "bar"] });
     instance.createWebsocketsConnection();
+    // eslint-disable-next-line dot-notation
     const spy = jest.spyOn(instance["socket"], "on");
     instance.handleFollowUserListChange = jest.fn();
 
     instance.addWebsocketsHandlers();
 
     expect(spy).toHaveBeenCalled();
-    expect(instance.handleFollowUserListChange).toHaveBeenCalled()
+    expect(instance.handleFollowUserListChange).toHaveBeenCalled();
     expect(instance.handleFollowUserListChange).toHaveBeenCalledWith([
       "foo",
       "bar",
@@ -125,6 +136,7 @@ describe("handleFollowUserListChange", () => {
 
     instance.handleFollowUserListChange(["foo", "bar"], true);
 
+    // eslint-disable-next-line dot-notation
     expect(wrapper.state()["followList"]).toEqual(["foo", "bar"]);
   });
 
@@ -134,6 +146,7 @@ describe("handleFollowUserListChange", () => {
 
     wrapper.setState({ mode: "follow", followList: ["bar"] });
     instance.getRecentListensForFollowList = jest.fn();
+    // eslint-disable-next-line dot-notation
     const spy = jest.spyOn(instance["socket"], "emit");
     instance.handleFollowUserListChange(["foo"], true);
 
@@ -146,6 +159,7 @@ describe("handleFollowUserListChange", () => {
     const instance = wrapper.instance();
 
     // @ts-ignore undefined can't be assigned to socket but can happen in real life
+    // eslint-disable-next-line dot-notation
     instance["socket"] = undefined;
     instance.connectWebsockets = jest.fn();
     instance.handleFollowUserListChange(["follow"]);
@@ -157,6 +171,7 @@ describe("handleFollowUserListChange", () => {
     const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
     const instance = wrapper.instance();
 
+    // eslint-disable-next-line dot-notation
     const spy = jest.spyOn(instance["socket"], "emit");
     instance.handleFollowUserListChange(["foo"]);
 
@@ -244,7 +259,9 @@ describe("receiveNewListen", () => {
   it("crops the listens array if length is more than or equal to 100", () => {
     const wrapper = shallow<RecentListens>(
       <RecentListens
-        {...(JSON.parse(JSON.stringify(tooManyListens)) as RecentListensProps)}
+        {...(JSON.parse(
+          JSON.stringify(recentListensPropsTooManyListens)
+        ) as RecentListensProps)}
       />
     );
     const instance = wrapper.instance();
@@ -252,51 +269,132 @@ describe("receiveNewListen", () => {
     wrapper.setState({ mode: "follow" });
     instance.receiveNewListen(JSON.stringify(mockListen));
 
+    // eslint-disable-next-line dot-notation
     expect(wrapper.state()["listens"].length).toBeLessThanOrEqual(100);
 
     wrapper.setState({
       mode: "listens",
-      listens: JSON.parse(JSON.stringify(tooManyListens["listens"])),
+      listens: JSON.parse(
+        // eslint-disable-next-line dot-notation
+        JSON.stringify(recentListensPropsTooManyListens["listens"])
+      ),
     });
     instance.receiveNewListen(JSON.stringify(mockListen));
 
+    // eslint-disable-next-line dot-notation
     expect(wrapper.state()["listens"].length).toBeLessThanOrEqual(100);
   });
 
   it('inserts the recieved listen for "follow"', () => {
     const wrapper = shallow<RecentListens>(
       <RecentListens
-        {...(recentListenPropOneListen as RecentListensProps)}
+        {...(JSON.parse(
+          JSON.stringify(recentListensPropsOneListen)
+        ) as RecentListensProps)}
       />
     );
     const instance = wrapper.instance();
     wrapper.setState({ mode: "follow" });
-    let result: Array<Listen> = recentListenPropOneListen["listens"]
+    const result: Array<Listen> = JSON.parse(
+      // eslint-disable-next-line dot-notation
+      JSON.stringify(recentListensPropsOneListen["listens"])
+    );
     result.push(mockListen);
     instance.receiveNewListen(JSON.stringify(mockListen));
 
-    expect(wrapper.state('listens').length).toEqual(result.length)
+    expect(wrapper.state("listens")).toHaveLength(result.length);
     expect(wrapper.state("listens")).toEqual(result);
   });
 
   it("inserts the recieved listen for other modes", () => {
     const wrapper = shallow<RecentListens>(
       <RecentListens
-        {...recentListenPropOneListen as RecentListensProps}
+        {...(JSON.parse(
+          JSON.stringify(recentListensPropsOneListen)
+        ) as RecentListensProps)}
       />
     );
     const instance = wrapper.instance();
     wrapper.setState({ mode: "recent" });
-    let result: Array<Listen> = recentListenPropOneListen["listens"]
+    const result: Array<Listen> = JSON.parse(
+      // eslint-disable-next-line dot-notation
+      JSON.stringify(recentListensPropsOneListen["listens"])
+    );
     result.unshift(mockListen);
     instance.receiveNewListen(JSON.stringify(mockListen));
 
-    expect(wrapper.state('listens').length).toEqual(result.length)
+    expect(wrapper.state("listens")).toHaveLength(result.length);
     expect(wrapper.state("listens")).toEqual(result);
   });
 });
 
-describe("receiveNewPlayingNow", () => {});
+describe("receiveNewPlayingNow", () => {
+  const mockListenOne: Listen = {
+    track_metadata: {
+      artist_name: "Coldplay",
+      track_name: "Viva La Vida",
+    },
+    user_name: "ishaanshah",
+    listened_at: 1586580524,
+    listened_at_iso: "2020-04-10T10:12:04Z",
+  };
+  const mockListenTwo: Listen = {
+    track_metadata: {
+      artist_name: "SOHN",
+      track_name: "Falling",
+    },
+    playing_now: true,
+    listened_at: 1586513524,
+    listened_at_iso: "2020-04-10T10:12:04Z",
+  };
+
+  it('sets state correctly if mode is "follow"', () => {
+    const wrapper = shallow<RecentListens>(
+      <RecentListens
+        {...(recentListensPropsPlayingNow as RecentListensProps)}
+      />
+    );
+    const instance = wrapper.instance();
+
+    wrapper.setState({
+      mode: "follow",
+      playingNowByUser: {
+        iliekcomputers: mockListenTwo,
+      },
+    });
+    instance.receiveNewPlayingNow(JSON.stringify(mockListenOne));
+
+    expect(wrapper.state("playingNowByUser")).toEqual({
+      ishaanshah: {
+        playing_now: true,
+        ...mockListenOne,
+      },
+      iliekcomputers: mockListenTwo,
+    });
+  });
+
+  it("sets state correctly for other modes", () => {
+    const wrapper = shallow<RecentListens>(
+      <RecentListens
+        {...(JSON.parse(
+          JSON.stringify(recentListensPropsPlayingNow)
+        ) as RecentListensProps)}
+      />
+    );
+    const instance = wrapper.instance();
+
+    wrapper.setState({ mode: "listens" });
+    const result = JSON.parse(
+      // eslint-disable-next-line dot-notation
+      JSON.stringify(recentListensPropsPlayingNow["listens"])
+    );
+    result.shift();
+    result.unshift({ ...mockListenOne, playing_now: true });
+    instance.receiveNewPlayingNow(JSON.stringify(mockListenOne));
+
+    expect(wrapper.state("listens")).toEqual(result);
+  });
+});
 
 describe("handleCurrentListenChange", () => {
   it("sets the state correctly", () => {

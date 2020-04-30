@@ -98,12 +98,12 @@ export default class RecentListens extends React.Component<
   connectWebsockets = (): void => {
     this.createWebsocketsConnection();
     this.addWebsocketsHandlers();
-  }
+  };
 
   createWebsocketsConnection = (): void => {
-    const {webSocketsServerUrl} = this.props;
+    const { webSocketsServerUrl } = this.props;
     this.socket = io.connect(webSocketsServerUrl);
-  }
+  };
 
   addWebsocketsHandlers = (): void => {
     const { mode, followList } = this.state;
@@ -180,7 +180,7 @@ export default class RecentListens extends React.Component<
   receiveNewListen = (newListen: string): void => {
     const listen = JSON.parse(newListen) as Listen;
     this.setState((prevState) => {
-      let { listens } = prevState;
+      const { listens } = prevState;
       // Crop listens array to 100 max
       while (listens.length >= 100) {
         if (prevState.mode === "follow") {
