@@ -285,7 +285,7 @@ describe("receiveNewListen", () => {
     expect(wrapper.state()["listens"].length).toBeLessThanOrEqual(100);
   });
 
-  it('inserts the recieved listen for "follow"', () => {
+  it('inserts the received listen for "follow"', () => {
     const wrapper = shallow<RecentListens>(
       <RecentListens
         {...(JSON.parse(
@@ -306,7 +306,7 @@ describe("receiveNewListen", () => {
     expect(wrapper.state("listens")).toEqual(result);
   });
 
-  it("inserts the recieved listen for other modes", () => {
+  it("inserts the received listen for other modes", () => {
     const wrapper = shallow<RecentListens>(
       <RecentListens
         {...(JSON.parse(
