@@ -29,13 +29,6 @@ RUN apt-get update \
 RUN mkdir /code
 WORKDIR /code
 
-# MessyBrainz
-RUN git clone https://github.com/metabrainz/messybrainz-server.git messybrainz
-WORKDIR /code/messybrainz
-RUN git checkout production
-RUN pip3 install --no-cache-dir -r requirements.txt
-RUN python3 setup.py install
-
 RUN mkdir /code/listenbrainz
 WORKDIR /code/listenbrainz
 

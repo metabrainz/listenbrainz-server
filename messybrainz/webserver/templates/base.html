@@ -1,0 +1,61 @@
+{% from 'macros.html' import print_message %}
+
+<!DOCTYPE html>
+<html>
+<head>
+  {%- block head -%}
+    <meta charset="utf-8" />
+    <title>{% block title %}MessyBrainz{% endblock %}</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link rel="icon" sizes="16x16" href="{{ url_for('static', filename='img/favicon-16.png') }}" type="image/png" />
+    <link rel="icon" sizes="256x256" href="{{ url_for('static', filename='img/favicon-256.png') }}" type="image/png" />
+    <link rel="icon" sizes="32x32" href="{{ url_for('static', filename='img/favicon-32.png') }}" type="image/png" />
+
+    {% if config.COMPILE_LESS %}
+      <link href="{{ url_for('static', filename='css/main.less') }}" rel="stylesheet/less" type="text/css" />
+      <script src="{{ url_for('static', filename='js/lib/less.min.js') }}"></script>
+    {% else %}
+      <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet" media="screen" />
+    {% endif %}
+  {%- endblock -%}
+</head>
+
+<body>
+  <div class="container">
+
+    <div class="header">
+      <img src="{{ url_for('static', filename='img/logo_big.svg') }}" alt="MessyBrainz" />
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        {{ print_message(message, category) }}
+      {% endfor %}
+    {% endwith %}
+
+    {%- block wrapper -%}
+      <div class="content">
+        {%- block content -%}
+          <!-- Page content -->
+        {%- endblock -%}
+      </div>
+    {%- endblock -%}
+    <div class="clearfix"></div>
+
+    {%- block footer -%}
+      <hr />
+      <div class="footer clearfix">
+        <ul class="list-inline pull-left">
+          <li><a href="https://github.com/metabrainz/messybrainz-server/">GitHub</a></li>
+        </ul>
+        <ul class="list-inline pull-right">
+          <li><a href="https://metabrainz.org" title="MetaBrainz"><img src="{{ url_for('static', filename='img/metabrainz.svg') }}" /></a></li>
+        </ul>
+      </div>
+    {%- endblock -%}
+
+  </div>
+</body>
+</html>
