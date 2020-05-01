@@ -11,12 +11,6 @@
     ./github/CONTRIBUTING.md.
 -->
 
-# Description
-<!--
- A one line description of what this change does.
--->
-
-
 # Problem
 
 <!--
