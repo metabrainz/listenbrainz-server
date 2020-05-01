@@ -12,17 +12,21 @@ ListenBrainz API. Most of the complexity comes from reading or constructing
 ListenBrainz JSON documents.
 
 
-Contents:
+Contents
+--------
 
 .. toctree::
    :maxdepth: 2
 
-   dev/devel-env
    dev/api
-   dev/api-usage
    dev/json
-   dev/api-compat
+   dev/api-usage
    dev/listenbrainz-dumps
+   dev/devel-env
+   dev/spark-devel-env
+   dev/spark-architecture
+   dev/api-compat
+   dev/faqs
 
 Indices and tables
 ==================
