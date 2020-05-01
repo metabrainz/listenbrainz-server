@@ -12,7 +12,10 @@ volumes:
 
 services:
   spark-master:
-    image: metabrainz/spark-master
+    build:
+      context: ..
+      dockerfile: Dockerfile.spark
+      target: metabrainz-spark-master
     command: sleep 1000000000
     volumes:
       - spark-master:/home/hadoop/spark:z
@@ -24,7 +27,10 @@ services:
       - namenode:/home/hadoop/hdfs:z
 
   spark-worker:
-    image: metabrainz/spark-worker
+    build:
+      context: ..
+      dockerfile: Dockerfile.spark
+      target: metabrainz-spark-master
     command: sleep 1000000000
     volumes:
       - spark-worker:/home/hadoop/spark:z
@@ -41,6 +47,15 @@ services:
       dockerfile: Dockerfile.spark
       target: metabrainz-spark-dev
     command: sleep 1000000000
+    volumes:
+      - ..:/rec:z
+
+  request_consumer:
+    build:
+      context: ..
+      dockerfile: Dockerfile.spark
+      target: metabrainz-spark-dev
+    command: bash -c "zip -r listenbrainz_spark.zip listenbrainz_spark/ ; python spark_manage.py request_consumer"
     volumes:
       - ..:/rec:z
 
