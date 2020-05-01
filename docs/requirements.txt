@@ -1,4 +1,4 @@
-Sphinx==3.0.1
+Sphinx==3.0.3
 Pygments==2.6.1
 sphinxcontrib-httpdomain==1.7.0
 sphinx_rtd_theme==0.4.3
