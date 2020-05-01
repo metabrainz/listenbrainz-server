@@ -1,7 +1,7 @@
 click==7.1.2
 hetznercloud==1.1.1
 hdfs == 2.5.8
-Jinja2 == 2.11.1
+Jinja2 == 2.11.2
 pika==0.13.0
 python-dateutil==2.8.0
 numpy==1.18.2
