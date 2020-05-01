@@ -20,6 +20,7 @@ Contents
 
    dev/api
    dev/json
+   dev/clients
    dev/api-usage
    dev/listenbrainz-dumps
    dev/devel-env
