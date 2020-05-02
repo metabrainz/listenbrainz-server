@@ -71,13 +71,11 @@ class RequestConsumer:
                         properties=pika.BasicProperties(delivery_mode = 2,),
                     )
                     break
-                except pika.exceptions.ConnectionClosed:
+                except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as e:
+                    current_app.logger.error('RabbitMQ Connection closed while publishing results: %s', str(e), exc_info=True)
                     self.connect_to_rabbitmq()
+                    self.init_rabbitmq_channels()
                     time.sleep(1)
-                except pika.exceptions.ChannelClosed:
-                    self.result_channel = self.rabbitmq.channel()
-                    self.result_channel.exchange_declare(exchange=current_app.config['SPARK_RESULT_EXCHANGE'], exchange_type='fanout')
-
 
 
     def callback(self, channel, method, properties, body):
@@ -90,11 +88,9 @@ class RequestConsumer:
                 self.request_channel.basic_ack(delivery_tag=method.delivery_tag)
                 break
             except pika.exceptions.ChannelClosed:
-                self.request_channel = self.rabbitmq.channel()
-                self.request_channel.exchange_declare(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], exchange_type='fanout')
-                self.request_channel.queue_declare(current_app.config['SPARK_REQUEST_QUEUE'], durable=True)
-                self.request_channel.queue_bind(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], queue=current_app.config['SPARK_REQUEST_QUEUE'])
-                self.request_channel.basic_consume(self.callback, queue=current_app.config['SPARK_REQUEST_QUEUE'])
+                self.rabbitmq.close()
+                self.connect_to_rabbitmq()
+                self.init_rabbitmq_channels()
 
 
     def connect_to_rabbitmq(self):
@@ -107,19 +103,22 @@ class RequestConsumer:
             log=current_app.logger.critical,
         )
 
+    def init_rabbitmq_channels(self):
+        self.request_channel = self.rabbitmq.channel()
+        self.request_channel.exchange_declare(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], exchange_type='fanout')
+        self.request_channel.queue_declare(current_app.config['SPARK_REQUEST_QUEUE'], durable=True)
+        self.request_channel.queue_bind(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], queue=current_app.config['SPARK_REQUEST_QUEUE'])
+        self.request_channel.basic_consume(self.callback, queue=current_app.config['SPARK_REQUEST_QUEUE'])
+
+        self.result_channel = self.rabbitmq.channel()
+        self.result_channel.exchange_declare(exchange=current_app.config['SPARK_RESULT_EXCHANGE'], exchange_type='fanout')
 
     def run(self):
         while True:
             try:
                 self.connect_to_rabbitmq()
-                self.request_channel = self.rabbitmq.channel()
-                self.request_channel.exchange_declare(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], exchange_type='fanout')
-                self.request_channel.queue_declare(current_app.config['SPARK_REQUEST_QUEUE'], durable=True)
-                self.request_channel.queue_bind(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], queue=current_app.config['SPARK_REQUEST_QUEUE'])
-                self.request_channel.basic_consume(self.callback, queue=current_app.config['SPARK_REQUEST_QUEUE'])
-
-                self.result_channel = self.rabbitmq.channel()
-                self.result_channel.exchange_declare(exchange=current_app.config['SPARK_RESULT_EXCHANGE'], exchange_type='fanout')
+                self.init_rabbitmq_channels()
+                current_app.logger.info('Request consumer started!')
 
                 try:
                     self.request_channel.start_consuming()
