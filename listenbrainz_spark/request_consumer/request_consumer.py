@@ -81,6 +81,7 @@ class RequestConsumer:
 
     def callback(self, channel, method, properties, body):
         request = json.loads(body.decode('utf-8'))
+        current_app.logger.info('Received a request!')
         messages = self.get_result(request)
         if messages:
             self.push_to_result_queue(messages)
@@ -94,6 +95,7 @@ class RequestConsumer:
                 self.rabbitmq.close()
                 self.connect_to_rabbitmq()
                 self.init_rabbitmq_channels()
+        current_app.logger.info('Request done!')
 
 
     def connect_to_rabbitmq(self):
