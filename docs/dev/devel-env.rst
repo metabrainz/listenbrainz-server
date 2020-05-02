@@ -218,7 +218,7 @@ CTRL^C. Once everything is running, visit your new site from your browser!
 Now, you are all set to begin making changes and seeing them in real-time inside
 of your development environment!
 
-Once you are done with your work, shut down the containers using the following command. 
+Once you are done with your work, shut down the containers using the following command.
 
 .. code-block:: bash
 
@@ -261,7 +261,7 @@ To get a list of manage.py commands, run:
 
 Test your changes with unit tests
 ---------------------------------
-								
+
 Unit tests are an important part of ListenBrainz. It helps make it easier for
 developers to test changes and help prevent easily avoidable mistakes later on.
 Before committing new code or making a pull request, run the unit tests on your
@@ -321,4 +321,7 @@ all errors.
 
     .. code-block:: bash
 
-        ./develop build static_builder
+        ./develop.sh build static_builder
+
+We have a :doc:`FAQ page <faqs>` for questions that come up often. Please take a look
+if you have any issues.
