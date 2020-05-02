@@ -74,11 +74,20 @@ Each line in the part of the file we read is a listen submitted for that particu
 user.
 
 
-`Here <https://github.com/metabrainz/listenbrainz-server/blob/master/docs/dev/dump_examples/read_listens_dump.py>`_ is some example code to explain the mentioned way of parsing the listens dump.
+Here is some example code to parse the listens dump:
+
+.. include:: ./dump_examples/read_listens_dump.py
+   :code: python
 
 
-Incremental dumps
+Incremental dumps (BETA)
 =================
+
+.. warning::
+
+    The incremental dumps are in beta. We know of some data consistency issues where
+    incremental dumps have fewer listens than they should. Make
+    sure you use the full dumps if data accuracy is important.
 
 ListenBrainz provides incremental data dumps that you can use to keep up to date with
 the ListenBrainz dataset without needing to download the full dumps everytime. These

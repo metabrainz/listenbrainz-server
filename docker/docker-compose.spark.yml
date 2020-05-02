@@ -35,12 +35,12 @@ services:
     volumes:
       - datanode:/home/hadoop/hdfs:z
 
-  playground:
+  request_consumer:
     build:
       context: ..
       dockerfile: Dockerfile.spark
       target: metabrainz-spark-dev
-    command: sleep 1000000000
+    command: bash -c "zip -r listenbrainz_spark.zip listenbrainz_spark/ ; python spark_manage.py request_consumer"
     volumes:
       - ..:/rec:z
 
