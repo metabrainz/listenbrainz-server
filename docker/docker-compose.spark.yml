@@ -30,7 +30,7 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile.spark
-      target: metabrainz-spark-master
+      target: metabrainz-spark-worker
     command: sleep 1000000000
     volumes:
       - spark-worker:/home/hadoop/spark:z
