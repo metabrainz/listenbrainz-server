@@ -18,8 +18,8 @@ def is_new_user_stats_batch():
     and right now is greater than 12 hours.
     """
     last_update_ts = db_stats.get_timestamp_for_last_user_stats_update()
-    if(last_update_ts is None):
-        last_update_ts = datetime.min.replace(tzinfo=timezone.utc) # use min datetime value if last_update_ts is None
+    if last_update_ts is None:
+        last_update_ts = datetime.min.replace(tzinfo=timezone.utc)  # use min datetime value if last_update_ts is None
 
     return datetime.now(timezone.utc) - last_update_ts > timedelta(hours=TIME_TO_CONSIDER_STATS_AS_OLD)
 
