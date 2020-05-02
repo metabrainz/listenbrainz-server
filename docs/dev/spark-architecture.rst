@@ -1,8 +1,8 @@
-ListenBrainz Spark Architecture 
+ListenBrainz Spark Architecture
 ===============================
 
 In order to actually build features that use Spark, it is important to
-understand how the ListenBrainz webserver and the Spark environment 
+understand how the ListenBrainz webserver and the Spark environment
 interact.
 
 .. image:: images/request_consumer.png
@@ -12,13 +12,13 @@ The ListenBrainz webserver and Spark cluster are completely seperate entities,
 only connected by RabbitMQ. This document explains how they interact with each
 other, taking the example of a stat.
 
-The ListenBrainz environment sends a request to the `request_consumer` script 
-via RabbitMQ. The request consumer, which is connected to Spark, takes the 
-request and uses Spark to compute an appropriate response (or many responses). 
+The ListenBrainz environment sends a request to the `request_consumer` script
+via RabbitMQ. The request consumer, which is connected to Spark, takes the
+request and uses Spark to compute an appropriate response (or many responses).
 The request consumer then sends these responses via RabbitMQ to the `spark_reader`
-script, which runs alongside the webserver. The spark reader then takes the responses, 
-and in the case of a stat, writes them to the ListenBrainz PostgreSQL database. 
-Now that the stat has been updated in the database, users can view them on 
+script, which runs alongside the webserver. The spark reader then takes the responses,
+and in the case of a stat, writes them to the ListenBrainz PostgreSQL database.
+Now that the stat has been updated in the database, users can view them on
 listenbrainz.org or via the API.
 
 Developing request_consumer
@@ -28,21 +28,21 @@ Start the webserver
 ^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
- 
+
     ./develop.sh up
 
 
 Start the spark containers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Follow the :doc:`instructions <spark-devel-env>` to set up a Spark environment 
+Follow the :doc:`instructions <spark-devel-env>` to set up a Spark environment
 and import a small incremental dump so that you have some data.
 
 
 Start the spark reader
 ^^^^^^^^^^^^^^^^^^^^^^
 
-We do not start the spark reader by default with develop.sh right now, 
+We do not start the spark reader by default with develop.sh right now,
 because it isn’t much use to non-spark developers. However, you can start it yourself.
 
 
@@ -54,4 +54,4 @@ Now, you have everything needed to work with Spark. You can trigger a request li
 
 .. code-block:: bash
 
-    ./develop.sh run web python manage.py spark request_all_user_stats
+    ./develop.sh manage spark request_all_user_stats
