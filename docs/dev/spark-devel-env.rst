@@ -11,11 +11,11 @@ to set up the Spark development environment. However, if you're looking to add
 a new stat or improve our fledgling recommender system, you'll need both the webserver
 and the spark development environment.
 
-This guide should explain how to develop and test new features for ListenBrainz that use Spark. 
+This guide should explain how to develop and test new features for ListenBrainz that use Spark.
 
 Set up the webserver
 --------------------
-The spark environment is dependent on the webserver. Follow the steps in the :doc:`guide to set up the webserver environment <devel-env>`. 
+The spark environment is dependent on the webserver. Follow the steps in the :doc:`guide to set up the webserver environment <devel-env>`.
 
 Create listenbrainz_spark/config.py
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -23,7 +23,7 @@ Create listenbrainz_spark/config.py
 The spark environment needs a config.py in the listenbrainz_spark/ dir. Create it by copying from the sample config file.
 
 .. code-block:: bash
- 
+
     cp listenbrainz_spark/config.py.sample listenbrainz_spark/config.py
 
 
@@ -35,9 +35,9 @@ Run the following command to build the spark containers.
 .. code-block:: bash
 
     ./spark_develop.sh build
-    
-The first time you build the containers, you also need to format the ``namenode`` 
-container. 
+
+The first time you build the containers, you also need to format the ``namenode``
+container.
 
 .. code-block:: bash
 
@@ -50,7 +50,7 @@ in action!
 Bring containers up
 --------------------
 
-Start the ListenBrainz Spark containers by executing ``spark_develop.sh up``. 
+Start the ListenBrainz Spark containers by executing ``spark_develop.sh up``.
 
 .. code-block:: bash
 
@@ -60,7 +60,7 @@ Import data into the spark environment
 --------------------------------------
 
 We provide small data dumps that are helpful for working with real ListenBrainz data.
-Download and import a data dump into your spark environment using the following 
+Download and import a data dump into your spark environment using the following
 commands.
 
 .. code-block:: bash
@@ -71,7 +71,7 @@ commands.
 Now, you are all set to begin making changes and seeing them in real-time inside
 of your development environment!
 
-Once you are done with your work, shut down the containers using the following command. 
+Once you are done with your work, shut down the containers using the following command.
 
 .. code-block:: bash
 
@@ -106,5 +106,5 @@ data.
 When the tests complete, you will see if your changes are valid or not. These tests
 are a helpful way to validate new changes without a lot of work.
 
-Refer the :doc:`FAQs <faqs>` to resolve the common errors that may arise when setting up 
+Refer the :doc:`FAQs <faqs>` to resolve the common errors that may arise when setting up
 the development environment.
