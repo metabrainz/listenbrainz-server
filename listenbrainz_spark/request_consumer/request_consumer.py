@@ -72,10 +72,11 @@ class RequestConsumer:
                     )
                     break
                 except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as e:
-                    current_app.logger.error('RabbitMQ Connection closed while publishing results: %s', str(e), exc_info=True)
+                    current_app.logger.error('RabbitMQ Connection error while publishing results: %s', str(e), exc_info=True)
+                    time.sleep(1)
+                    self.rabbitmq.close()
                     self.connect_to_rabbitmq()
                     self.init_rabbitmq_channels()
-                    time.sleep(1)
 
 
     def callback(self, channel, method, properties, body):
@@ -87,7 +88,9 @@ class RequestConsumer:
             try:
                 self.request_channel.basic_ack(delivery_tag=method.delivery_tag)
                 break
-            except pika.exceptions.ChannelClosed:
+            except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as e:
+                current_app.logger.error('RabbitMQ Connection error when acknowledging request: %s', str(e), exc_info=True)
+                time.sleep(1)
                 self.rabbitmq.close()
                 self.connect_to_rabbitmq()
                 self.init_rabbitmq_channels()
@@ -122,8 +125,9 @@ class RequestConsumer:
 
                 try:
                     self.request_channel.start_consuming()
-                except pika.exceptions.ConnectionClosed:
-                    current_app.logger.error('connection to rabbitmq closed.', exc_info=True)
+                except pika.exceptions.ConnectionClosed as e:
+                    current_app.logger.error('connection to rabbitmq closed: %s', str(e), exc_info=True)
+                    self.rabbitmq.close()
                     continue
                 self.rabbitmq.close()
             except Py4JJavaError as e:
