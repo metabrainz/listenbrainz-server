@@ -65,7 +65,7 @@ commands.
 
 .. code-block:: bash
 
-    ./spark_develop.sh run playground python spark_manage.py upload_listens -i
+    ./spark_develop.sh run request_consumer python spark_manage.py upload_listens -i
 
 
 Now, you are all set to begin making changes and seeing them in real-time inside

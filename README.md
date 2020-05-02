@@ -35,11 +35,11 @@ These instructions help you get started with the development process.
 Installation in a production environment may be different.
 
 **Read the [development environment
-documentation](https://listenbrainz.readthedocs.io/en/latest/dev/devel-env.html
+documentation](https://listenbrainz.readthedocs.io/en/production/dev/devel-env.html
 "Setting up a development environment - ListenBrainz documentation")**
 
 In order to work with Spark, you'll have to setup the Spark development environment.
-Read the [documentation](https://listenbrainz.readthedocs.io/en/latest/dev/spark-devel-env.html).
+Read the [documentation](https://listenbrainz.readthedocs.io/en/production/dev/spark-devel-env.html).
 
 ## Documentation
 
@@ -73,4 +73,3 @@ You should have received a copy of the GNU General Public License along
 with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 ```
-
