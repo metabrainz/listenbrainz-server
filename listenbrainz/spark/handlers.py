@@ -17,7 +17,11 @@ def is_new_user_stats_batch():
     So, we check the database and see if the difference between the last time stats were updated
     and right now is greater than 12 hours.
     """
-    return datetime.now(timezone.utc) - db_stats.get_timestamp_for_last_user_stats_update() > timedelta(hours=TIME_TO_CONSIDER_STATS_AS_OLD)
+    last_update_ts = db_stats.get_timestamp_for_last_user_stats_update()
+    if last_update_ts is None:
+        last_update_ts = datetime.min.replace(tzinfo=timezone.utc)  # use min datetime value if last_update_ts is None
+
+    return datetime.now(timezone.utc) - last_update_ts > timedelta(hours=TIME_TO_CONSIDER_STATS_AS_OLD)
 
 
 def notify_user_stats_update():
