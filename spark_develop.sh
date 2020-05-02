@@ -14,7 +14,7 @@ function invoke_docker_compose_spark {
 function format_namenode_and_datanode {
     docker-compose -f docker/docker-compose.spark.yml \
         -p listenbrainzspark run --rm hadoop-master hdfs namenode \
-        -format -clusterId "$@" -nonInteractive -force
+        -format -nonInteractive -force
 }
 
 if [ "$1" == "format" ]; then shift
