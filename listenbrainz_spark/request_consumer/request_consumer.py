@@ -31,6 +31,8 @@ from flask import current_app
 
 from py4j.protocol import Py4JJavaError
 
+RABBITMQ_HEARTBEAT_TIME = 2* 60 * 60 # 2 hours -- a full dump import takes 40 minutes right now
+
 class RequestConsumer:
 
     def get_result(self, request):
@@ -106,6 +108,7 @@ class RequestConsumer:
             port=current_app.config['RABBITMQ_PORT'],
             vhost=current_app.config['RABBITMQ_VHOST'],
             log=current_app.logger.critical,
+            heartbeat=RABBITMQ_HEARTBEAT_TIME,
         )
 
     def init_rabbitmq_channels(self):
