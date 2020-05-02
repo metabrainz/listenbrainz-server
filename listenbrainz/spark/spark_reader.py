@@ -64,6 +64,7 @@ class SparkReader:
         """ Handle the data received from the queue and
             insert into the database accordingly.
         """
+        current_app.logger.debug("Received a message, processing...")
         response = ujson.loads(body)
         self.process_response(response)
         while True:
@@ -72,6 +73,7 @@ class SparkReader:
                 break
             except pika.exceptions.ConnectionClosed:
                 self.init_rabbitmq_connection()
+        current_app.logger.debug("Done!")
 
 
     def start(self):
@@ -102,4 +104,3 @@ class SparkReader:
 if __name__ == '__main__':
     sr = SparkReader()
     sr.start()
-

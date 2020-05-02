@@ -61,6 +61,7 @@ class RequestConsumer:
 
 
     def push_to_result_queue(self, messages):
+        current_app.logger.debug("Pushing result to RabbitMQ...")
         for message in messages:
             while True:
                 try:
@@ -77,6 +78,7 @@ class RequestConsumer:
                 except pika.exceptions.ChannelClosed:
                     self.result_channel = self.rabbitmq.channel()
                     self.result_channel.exchange_declare(exchange=current_app.config['SPARK_RESULT_EXCHANGE'], exchange_type='fanout')
+        current_app.logger.debug("Done!")
 
 
 
