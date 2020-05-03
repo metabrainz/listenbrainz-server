@@ -31,7 +31,7 @@ from flask import current_app
 
 from py4j.protocol import Py4JJavaError
 
-RABBITMQ_HEARTBEAT_TIME = 2* 60 * 60 # 2 hours -- a full dump import takes 40 minutes right now
+RABBITMQ_HEARTBEAT_TIME = 2 * 60 * 60  # 2 hours -- a full dump import takes 40 minutes right now
 
 class RequestConsumer:
 
@@ -117,7 +117,10 @@ class RequestConsumer:
         self.request_channel = self.rabbitmq.channel()
         self.request_channel.exchange_declare(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], exchange_type='fanout')
         self.request_channel.queue_declare(current_app.config['SPARK_REQUEST_QUEUE'], durable=True)
-        self.request_channel.queue_bind(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], queue=current_app.config['SPARK_REQUEST_QUEUE'])
+        self.request_channel.queue_bind(
+            exchange=current_app.config['SPARK_REQUEST_EXCHANGE'],
+            queue=current_app.config['SPARK_REQUEST_QUEUE']
+        )
         self.request_channel.basic_consume(self.callback, queue=current_app.config['SPARK_REQUEST_QUEUE'])
 
         self.result_channel = self.rabbitmq.channel()
