@@ -63,6 +63,7 @@ class RequestConsumer:
 
 
     def push_to_result_queue(self, messages):
+        current_app.logger.debug("Pushing result to RabbitMQ...")
         for message in messages:
             while True:
                 try:
@@ -79,6 +80,7 @@ class RequestConsumer:
                     self.rabbitmq.close()
                     self.connect_to_rabbitmq()
                     self.init_rabbitmq_channels()
+        current_app.logger.debug("Done!")
 
 
     def callback(self, channel, method, properties, body):

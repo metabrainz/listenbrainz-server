@@ -17,7 +17,11 @@ def is_new_user_stats_batch():
     So, we check the database and see if the difference between the last time stats were updated
     and right now is greater than 12 hours.
     """
-    return datetime.now(timezone.utc) - db_stats.get_timestamp_for_last_user_stats_update() > timedelta(hours=TIME_TO_CONSIDER_STATS_AS_OLD)
+    last_update_ts = db_stats.get_timestamp_for_last_user_stats_update()
+    if last_update_ts is None:
+        last_update_ts = datetime.min.replace(tzinfo=timezone.utc)  # use min datetime value if last_update_ts is None
+
+    return datetime.now(timezone.utc) - last_update_ts > timedelta(hours=TIME_TO_CONSIDER_STATS_AS_OLD)
 
 
 def notify_user_stats_update():
@@ -37,11 +41,13 @@ def handle_user_artist(data):
     musicbrainz_id = data['musicbrainz_id']
     user = db_user.get_by_mb_id(musicbrainz_id)
     if not user:
+        current_app.logger.critical("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
         return
 
     # send a notification if this is a new batch of stats
     if is_new_user_stats_batch():
         notify_user_stats_update()
+    current_app.logger.debug("inserting stats for user %s", musicbrainz_id)
     artists = data['artist_stats']
     artist_count = data['artist_count']
     db_stats.insert_user_stats(user['id'], artists, {}, {}, artist_count)

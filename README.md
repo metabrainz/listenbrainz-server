@@ -35,15 +35,11 @@ These instructions help you get started with the development process.
 Installation in a production environment may be different.
 
 **Read the [development environment
-documentation](https://listenbrainz.readthedocs.io/en/latest/dev/devel-env.html
+documentation](https://listenbrainz.readthedocs.io/en/production/dev/devel-env.html
 "Setting up a development environment - ListenBrainz documentation")**
 
-
-## Calculating statistics
-
-There have been some problems with our statistics infrastructure which used Google BigQuery.
-We're currently in the process of fixing it. In the meantime, new statistics will not be calculated.
-Please bear with us while we work on getting statistics back, hopefully very soon!
+In order to work with Spark, you'll have to setup the Spark development environment.
+Read the [documentation](https://listenbrainz.readthedocs.io/en/production/dev/spark-devel-env.html).
 
 ## Documentation
 
@@ -52,6 +48,7 @@ Full documentation for the ListenBrainz API is available at
 also build the documentation locally:
 
     cd listenbrainz-server/docs
+    pip install -r requirements.txt
     make clean html
 
 
@@ -76,4 +73,3 @@ You should have received a copy of the GNU General Public License along
 with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 ```
-

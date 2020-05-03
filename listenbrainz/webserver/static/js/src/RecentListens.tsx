@@ -470,7 +470,7 @@ export default class RecentListens extends React.Component<
                         &larr; Previous
                       </a>
                     </li>
-                    <li className="next" hidden={!nextListenTs}>
+                    <li className={`next ${!nextListenTs ? "hidden" : ""}`}>
                       <a href={`${profileUrl}?max_ts=${nextListenTs}`}>
                         Next &rarr;
                       </a>
