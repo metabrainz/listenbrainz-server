@@ -269,3 +269,4 @@ def delete_listens_history(musicbrainz_id):
     _influx.delete(user.musicbrainz_id)
     _influx.reset_listen_count(user.musicbrainz_id)
     db_user.reset_latest_import(user.musicbrainz_id)
+    db_stats.delete_user_stats(user.id)

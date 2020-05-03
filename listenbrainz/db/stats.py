@@ -1,5 +1,5 @@
 """This module contains functions to insert and retrieve statistics
-   calculated from Google BigQuery into the database.
+   calculated from Apache Spark into the database.
 """
 
 # listenbrainz-server - Server for the ListenBrainz project.
@@ -107,7 +107,7 @@ def get_user_stats(user_id, columns):
                                            this stat was last updated
             }
 
-            The `stat` dict contains all stats calculated by Google BigQuery stored in that column
+            The `stat` dict contains all stats calculated by Apache Spark stored in that column
             from listenbrainz.stats.user, keyed by stat name.
     """
     with db.engine.connect() as connection:
@@ -206,3 +206,16 @@ def valid_stats_exist(user_id, days):
             })
         row = result.fetchone()
         return True if row is not None else False
+
+def delete_user_stats(user_id):
+    """ Delete stats for user with the given row ID.
+        Args:
+            user_id (int): the row ID of the user in the DB
+    """
+    with db.engine.connect() as connection:
+        connection.execute(sqlalchemy.text("""
+            DELETE FROM statistics.user
+             WHERE user_id = :user_id
+            """), {
+                'user_id': user_id
+            })
