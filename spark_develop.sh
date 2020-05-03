@@ -17,7 +17,7 @@ function format_namenode_and_datanode {
 }
 
 if [ "$1" == "format" ]; then shift
-	echo "Formatting NameNode..."
+    echo "Formatting NameNode..."
     format_namenode_and_datanode "$@"
     exit
 else
