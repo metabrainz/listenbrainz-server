@@ -28,10 +28,6 @@ function npm_install {
                 HOME=/tmp static_builder npm install
 }
 
-function format_namenode {
-	invoke_docker_compose_spark run --rm \
-				hadoop-master hdfs namenode -format -nonInteractive -force
-}
 # Arguments following "manage" are as it is passed to function "invoke_manage" and executed.
 # Check on each argument of manage.py is not performed here because with manage.py, develop.sh will expand too.
 # Also, if any of the arguments passed to develop.sh which invoke manage.py are incorrect, exception would be raised by manage.py
@@ -50,11 +46,6 @@ elif [ "$1" == "npm" ]; then
     echo "Installing node dependencies..."
     npm_install
     exit
-
-elif [ "$1" == "format" ]; then shift
-	echo "Formatting NameNode..."
-	format_namenode
-	exit
 
 else
     if [ "$#" == 0 ]; then
