@@ -21,7 +21,8 @@ api_bp = Blueprint('api_v1', __name__)
 def submit_listen():
     """
     Submit listens to the server. A user token (found on  https://listenbrainz.org/profile/ ) must
-    be provided in the Authorization header!
+    be provided in the Authorization header! Each request should also contain at least one listen
+    in the payload.
 
     Listens should be submitted for tracks when the user has listened to half the track or 4 minutes of
     the track, whichever is lower. If the user hasn't listened to 4 minutes or half the track, it doesn't 
@@ -46,7 +47,7 @@ def submit_listen():
     try:
         payload = data['payload']
         if len(payload) == 0:
-            return "success"
+            log_raise_400("JSON document does not contain any listens", payload)
 
         if len(raw_data) > len(payload) * MAX_LISTEN_SIZE:
             log_raise_400("JSON document is too large. In aggregate, listens may not "
