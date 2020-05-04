@@ -91,7 +91,7 @@ def upload_mapping(force):
 @click.option('--incremental', '-i', is_flag=True, default=False, help="Use a smaller dump (more for testing purposes)")
 @click.option("--force", "-f", is_flag=True, help="Deletes existing listens.")
 @click.option("--id", default=None, type=int, help="Get a specific dump based on index")
-def upload_listens(force, incremental, idx):
+def upload_listens(force, incremental, id):
     """ Invoke script to upload listens to HDFS.
     """
     from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
