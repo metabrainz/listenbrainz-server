@@ -22,6 +22,8 @@ the ``submit-listens`` endpoint. Submit one of three types JSON documents:
 
    - ``payload`` contains *only* one track
 
+   - ``payload`` with no tracks will be rejected
+
    - Submitting ``playing_now`` documents is optional
 
    - Timestamp must be omitted from a ``playing_now`` submission.
