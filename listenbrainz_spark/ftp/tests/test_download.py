@@ -23,14 +23,14 @@ class FTPDownloaderTestCase(unittest.TestCase):
     @patch('ftplib.FTP')
     def test_get_dump_name_to_download(self, mock_ftp_cons):
         dump = ['listenbrainz-01-00000', 'listenbrainz-02-00000']
-        req_dump = ListenbrainzDataDownloader().get_dump_name_to_download(dump, '01', 1)
+        req_dump = ListenbrainzDataDownloader().get_dump_name_to_download(dump, 1, 1)
         self.assertEqual(req_dump, 'listenbrainz-01-00000')
 
         req_dump = ListenbrainzDataDownloader().get_dump_name_to_download(dump, None, 1)
         self.assertEqual(req_dump, 'listenbrainz-02-00000')
 
         with self.assertRaises(DumpNotFoundException):
-            ListenbrainzDataDownloader().get_dump_name_to_download(dump, '03', 1)
+            ListenbrainzDataDownloader().get_dump_name_to_download(dump, 3, 1)
 
     @patch('ftplib.FTP')
     def test_get_dump_archive_name(self, mock_ftp_cons):

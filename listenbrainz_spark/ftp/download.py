@@ -30,7 +30,7 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
                 if int(dump_name.split('-')[dump_id_pos]) == dump_id:
                     req_dump = dump_name
                     break
-            if not req_dump:
+            if req_dump is None:
                 err_msg = "Could not find dump with ID: {}. Aborting...".format(dump_id)
                 raise DumpNotFoundException(err_msg)
         else:
