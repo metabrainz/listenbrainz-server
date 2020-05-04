@@ -90,7 +90,8 @@ def upload_mapping(force):
 @cli.command(name='upload_listens')
 @click.option('--incremental', '-i', is_flag=True, default=False, help="Use a smaller dump (more for testing purposes)")
 @click.option("--force", "-f", is_flag=True, help="Deletes existing listens.")
-def upload_listens(force, incremental):
+@click.option("--idx", default=None, type=int, help="Get a specific dump based on index")
+def upload_listens(force, incremental, idx):
     """ Invoke script to upload listens to HDFS.
     """
     from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
@@ -98,7 +99,7 @@ def upload_listens(force, incremental):
     with app.app_context():
         downloader_obj = ListenbrainzDataDownloader()
         dump_type = 'incremental' if incremental else 'full'
-        src, _ = downloader_obj.download_listens(directory=path.FTP_FILES_PATH, dump_type=dump_type)
+        src, _ = downloader_obj.download_listens(directory=path.FTP_FILES_PATH, listens_dump_id=idx, dump_type=dump_type)
         uploader_obj = ListenbrainzDataUploader()
         uploader_obj.upload_listens(src, force=force)
 
