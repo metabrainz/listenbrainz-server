@@ -40,7 +40,7 @@ services:
       context: ..
       dockerfile: Dockerfile.spark
       target: metabrainz-spark-dev
-    command: bash -c "zip -r listenbrainz_spark.zip listenbrainz_spark/ ; python spark_manage.py request_consumer"
+    command: bash -c "zip -r /rec/listenbrainz_spark.zip listenbrainz_spark/ ; python spark_manage.py request_consumer"
     volumes:
       - ..:/rec:z
 
