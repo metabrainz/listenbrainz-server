@@ -110,6 +110,18 @@ class APITestCase(IntegrationTestCase):
             content_type = 'application/json'
         )
 
+    def test_zero_listens_payload(self):
+        """ Test that API returns 400 for payloads with no listens
+        """
+
+        for listen_type in ('single', 'playing_now', 'import'):
+            payload = {
+                'listen_type': listen_type,
+                'payload': [],
+            }
+            response = self.send_data(payload)
+            self.assert400(response)
+
     def test_unauthorized_submission(self):
         """ Test for checking that unauthorized submissions return 401
         """
