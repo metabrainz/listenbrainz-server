@@ -14,13 +14,14 @@ the ``submit-listens`` endpoint. Submit one of three types JSON documents:
 - ``single``: Submit single listen
 
    - Indicates user just finished listening to track
-   - Only a single track may be specified in ``payload``
+
+   - ``payload`` should contain information about *exactly one* track
 
 - ``playing_now``: Submit ``playing_now`` notification
 
    - Indicates that user just began listening to track
 
-   - ``payload`` contains *only* one track
+   - ``payload`` should contain information about *exactly one* track
 
    - Submitting ``playing_now`` documents is optional
 
@@ -28,8 +29,11 @@ the ``submit-listens`` endpoint. Submit one of three types JSON documents:
 
 - ``import``: Submit previously saved listens
 
-  - ``payload`` may contain more than one listen, but complete document may not
-    exceed :data:`~webserver.views.api.MAX_LISTEN_SIZE` bytes in size
+   - ``payload`` should contain information about *at least one* track
+
+   - submitting multiple listens in one go is allowed, but the complete JSON
+     document may not exceed :data:`~webserver.views.api.MAX_LISTEN_SIZE` bytes
+     in size
 
 The ``listen_type`` element defines different types of submissions. The element
 is placed at the top-most level of the JSON document. The only other required
