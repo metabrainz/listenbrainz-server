@@ -183,7 +183,11 @@ def get_playing_now(user_name):
 def get_artist(user_name):
     """
     Get top artists for user ``user_name``. The format for the JSON returned is defined in our :ref:`json-doc`.
+
+    **Note**: This endpoint is currently in beta and the JSON format may change in future
+
     :statuscode 200: Successfull query
+    :statuscode 404: User not found or statistics not generated for the user
     :resheader Content-Type: *application/json*
     """
 
