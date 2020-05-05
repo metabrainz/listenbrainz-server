@@ -202,24 +202,25 @@ An sample response from the endpoint may look like::
        "artist": {
          "all_time": {
            "artists": [
-             {
-               "artist_mbids": [93e6118e-7fa8-49f6-9e02-699a1ebce105],
-               "artist_msid": "d340853d-7408-4a0d-89c2-6ff13e568815",
-               "artist_name": "The Local train",
-               "listen_count": 385
-             },
-             {
-               "artist_mbids": [ae9ed5e2-4caf-4b3d-9cb3-2ad626b91714],
-               "artist_msid": "ba64b195-01dd-4613-9534-bb87dc44cffb",
-               "artist_name": "Lenka",
-               "listen_count": 333
-             },
-             {
-               "artist_mbids": [cc197bad-dc9c-440d-a5b5-d52ba2e14234],
-               "artist_msid": "6599e41e-390c-4855-a2ac-68ee798538b4",
-               "artist_name": "Coldplay",
-               "listen_count": 321
-             },
+               {
+                  "artist_mbids": [93e6118e-7fa8-49f6-9e02-699a1ebce105],
+                  "artist_msid": "d340853d-7408-4a0d-89c2-6ff13e568815",
+                  "artist_name": "The Local train",
+                  "listen_count": 385
+               },
+               {
+                  "artist_mbids": [ae9ed5e2-4caf-4b3d-9cb3-2ad626b91714],
+                  "artist_msid": "ba64b195-01dd-4613-9534-bb87dc44cffb",
+                  "artist_name": "Lenka",
+                  "listen_count": 333
+               },
+               {
+                  "artist_mbids": [cc197bad-dc9c-440d-a5b5-d52ba2e14234],
+                  "artist_msid": "6599e41e-390c-4855-a2ac-68ee798538b4",
+                  "artist_name": "Coldplay",
+                  "listen_count": 321
+               },
+            ]
          },
          "count": 3
        },

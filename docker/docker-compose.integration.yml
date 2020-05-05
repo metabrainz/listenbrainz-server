@@ -33,6 +33,8 @@ services:
       target: listenbrainz-dev
     command: py.test listenbrainz/tests/integration
     image: listenbrainz
+    volumes:
+      - ..:/code/listenbrainz:z
     depends_on:
       - redis
       - db

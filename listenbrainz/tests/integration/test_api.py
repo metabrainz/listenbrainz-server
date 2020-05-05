@@ -6,11 +6,13 @@ from listenbrainz.tests.integration import IntegrationTestCase
 from flask import url_for
 from redis import Redis
 import listenbrainz.db.user as db_user
+import listenbrainz.db.stats as db_stats
 import time
 import json
 from listenbrainz import config
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
 from influxdb import InfluxDBClient
+
 
 class APITestCase(IntegrationTestCase):
 
@@ -52,8 +54,8 @@ class APITestCase(IntegrationTestCase):
         # Removing it causes an empty list of listens to be returned.
         time.sleep(2)
 
-        url = url_for('api_v1.get_listens', user_name = self.user['musicbrainz_id'])
-        response = self.client.get(url, query_string = {'count': '1'})
+        url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
+        response = self.client.get(url, query_string={'count': '1'})
         self.assert200(response)
         data = json.loads(response.data)['payload']
 
@@ -81,33 +83,31 @@ class APITestCase(IntegrationTestCase):
         self.assertEqual(data['latest_listen_ts'], ts)
 
         # request with min_ts should work
-        response = self.client.get(url, query_string = {'min_ts': int(time.time())})
+        response = self.client.get(url, query_string={'min_ts': int(time.time())})
         self.assert200(response)
 
         # request with max_ts lesser than the timestamp of the submitted listen
         # should not send back any listens, should report a good latest_listen timestamp
-        response = self.client.get(url, query_string = {'max_ts': ts - 2})
+        response = self.client.get(url, query_string={'max_ts': ts - 2})
         self.assert200(response)
         self.assertListEqual(response.json['payload']['listens'], [])
         self.assertEqual(response.json['payload']['latest_listen_ts'], ts)
 
-
         # check that recent listens are fetched correctly
-        url = url_for('api_v1.get_recent_listens_for_user_list', user_list = self.user['musicbrainz_id'])
-        response = self.client.get(url, query_string = {'limit': '1'})
+        url = url_for('api_v1.get_recent_listens_for_user_list', user_list=self.user['musicbrainz_id'])
+        response = self.client.get(url, query_string={'limit': '1'})
         self.assert200(response)
         data = json.loads(response.data)['payload']
         self.assertEqual(data['count'], 1)
-
 
     def send_data(self, payload):
         """ Sends payload to api.submit_listen and return the response
         """
         return self.client.post(
             url_for('api_v1.submit_listen'),
-            data = json.dumps(payload),
-            headers = {'Authorization': 'Token {}'.format(self.user['auth_token'])},
-            content_type = 'application/json'
+            data=json.dumps(payload),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+            content_type='application/json'
         )
 
     def test_zero_listens_payload(self):
@@ -131,8 +131,8 @@ class APITestCase(IntegrationTestCase):
         # request with no authorization header
         response = self.client.post(
             url_for('api_v1.submit_listen'),
-            data = json.dumps(payload),
-            content_type = 'application/json'
+            data=json.dumps(payload),
+            content_type='application/json'
         )
         self.assert401(response)
         self.assertEqual(response.json['code'], 401)
@@ -140,9 +140,9 @@ class APITestCase(IntegrationTestCase):
         # request with invalid authorization header
         response = self.client.post(
             url_for('api_v1.submit_listen'),
-            data = json.dumps(payload),
-            headers = {'Authorization' : 'Token testtokenplsignore'},
-            content_type = 'application/json'
+            data=json.dumps(payload),
+            headers={'Authorization': 'Token testtokenplsignore'},
+            content_type='application/json'
         )
         self.assert401(response)
         self.assertEqual(response.json['code'], 401)
@@ -178,7 +178,6 @@ class APITestCase(IntegrationTestCase):
         r = self.client.get(url_for('api_v1.get_playing_now', user_name=self.user['musicbrainz_id']))
         self.assert200(r)
         self.assertEqual(r.json['payload']['count'], 1)
-
 
     def test_playing_now_with_duration(self):
         """ Test that playing now listens with durations expire
@@ -237,7 +236,6 @@ class APITestCase(IntegrationTestCase):
         response = self.send_data(payload)
         self.assert400(response)
         self.assertEqual(response.json['code'], 400)
-
 
     def test_valid_import(self):
         """ Test for a valid submission of listen_type 'import'
@@ -322,8 +320,8 @@ class APITestCase(IntegrationTestCase):
         # wait for influx-writer to get its work done before getting the listen back
         time.sleep(2)
 
-        url = url_for('api_v1.get_listens', user_name = self.user['musicbrainz_id'])
-        response = self.client.get(url, query_string = {'count': '1'})
+        url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
+        response = self.client.get(url, query_string={'count': '1'})
         self.assert200(response)
         data = json.loads(response.data)['payload']
         sent_additional_info = payload['payload'][0]['track_metadata']['additional_info']
@@ -346,6 +344,40 @@ class APITestCase(IntegrationTestCase):
         self.assertNotIn('artist_name', sent_additional_info)
         self.assertNotIn('release_name', sent_additional_info)
 
+    def test_artist(self):
+        """Test to make sure valid response is recieved
+        """
+        with open(self.path_to_data_file('artist_statistics.json'), 'r') as f:
+            payload = json.load(f)
+
+        db_stats.insert_user_stats(self.user['id'], payload['all_time']['artists'], {}, {}, payload['count'])
+
+        response = self.client.get(url_for('api_v1.get_artist', user_name=self.user['musicbrainz_id']))
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        sent_count = payload['count']
+        recieved_count = data['artist']['count']
+        self.assertEqual(sent_count, recieved_count)
+        sent_artist_list = payload['all_time']['artists']
+        recieved_artist_list = data['artist']['all_time']['artists']
+        self.assertListEqual(sent_artist_list, recieved_artist_list)
+        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+
+    def test_artist_stat_invalid_user(self):
+        """ Test to make sure that the api sends 404 if user does not exist.
+        """
+
+        response = self.client.get(url_for('api_v1.get_artist', user_name='nouser'))
+        self.assert404(response)
+        self.assertEqual('Cannot find user: nouser', response.json['error'])
+
+    def test_artist_stat_not_calculated(self):
+        """ Test to make sure that the api sends 404 if statistics for user have not been calculated yet
+        """
+
+        response = self.client.get(url_for('api_v1.get_artist', user_name=self.user['musicbrainz_id']))
+        self.assert404(response)
+        self.assertEqual('Statistics for user: testuserpleaseignore not calculated', response.json['error'])
 
     def test_latest_import(self):
         """ Test for api.latest_import """
@@ -416,24 +448,22 @@ class APITestCase(IntegrationTestCase):
     def test_invalid_token_validation(self):
         """Sends an invalid token to api.validate_token"""
         url = url_for('api_v1.validate_token')
-        response = self.client.get(url, query_string = {"token":"invalidtoken"})
+        response = self.client.get(url, query_string={"token": "invalidtoken"})
         self.assert200(response)
         self.assertEqual(response.json['code'], 200)
         self.assertEqual('Token invalid.', response.json['message'])
         self.assertFalse(response.json['valid'])
         self.assertNotIn('user_name', response.json)
 
-
     def test_valid_token_validation(self):
         """Sends a valid token to api.validate_token"""
         url = url_for('api_v1.validate_token')
-        response = self.client.get(url, query_string = {"token":self.user['auth_token']})
+        response = self.client.get(url, query_string={"token": self.user['auth_token']})
         self.assert200(response)
         self.assertEqual(response.json['code'], 200)
         self.assertEqual('Token valid.', response.json['message'])
         self.assertTrue(response.json['valid'])
         self.assertEqual(response.json['user_name'], self.user['musicbrainz_id'])
-
 
     def test_get_playing_now(self):
         """ Test for valid submission and retrieval of listen_type 'playing_now'
