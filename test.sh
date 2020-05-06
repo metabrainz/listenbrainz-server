@@ -190,6 +190,12 @@ if [ "$1" == "frontend" ]; then
 fi
 
 if [ "$1" == "spark" ]; then
+    # Project name is sanitized by Compose, so we need to do the same thing.
+    # See https://github.com/docker/compose/issues/2119.
+    SPARK_COMPOSE_PROJECT_NAME=$(echo $SPARK_COMPOSE_PROJECT_NAME_ORIGINAL | awk '{print tolower($0)}' | sed 's/[^a-z0-9]*//g')
+    SPARK_TEST_CONTAINER_NAME=test
+    TEST_CONTAINER_REF="${SPARK_COMPOSE_PROJECT_NAME}_${SPARK_TEST_CONTAINER_NAME}_1"
+
     spark_setup
     docker-compose -f $SPARK_COMPOSE_FILE_LOC \
                    -p $SPARK_COMPOSE_PROJECT_NAME \
