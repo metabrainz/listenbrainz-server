@@ -97,3 +97,8 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         self.insert_test_data()
         self.assertTrue(db_stats.valid_stats_exist(self.user['id'], 7))
 
+    def test_delete_user_stats(self):
+        self.assertFalse(db_stats.valid_stats_exist(self.user['id'], 7))
+        self.insert_test_data()
+        data = db_stats.delete_user_stats(self.user['id'])
+        self.assertFalse(db_stats.valid_stats_exist(self.user['id'], 7))
