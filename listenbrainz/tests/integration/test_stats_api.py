@@ -24,9 +24,29 @@ class APITestCase(IntegrationTestCase):
         self.assert200(response)
         data = json.loads(response.data)['payload']
         sent_count = payload['count']
-        recieved_count = data['artist']['count']
+        recieved_count = data['artist']['all_time']['count']
         self.assertEqual(sent_count, recieved_count)
         sent_artist_list = payload['all_time']['artists']
+        recieved_artist_list = data['artist']['all_time']['artists']
+        self.assertListEqual(sent_artist_list, recieved_artist_list)
+        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+
+    def test_artist_count(self):
+        """Test to make sure valid response is recieved if count argument is passed
+        """
+        with open(self.path_to_data_file('artist_statistics.json'), 'r') as f:
+            payload = json.load(f)
+
+        db_stats.insert_user_stats(self.user['id'], payload['all_time']['artists'], {}, {}, payload['count'])
+
+        response = self.client.get(url_for('stats_api_v1.get_artist',
+                                           user_name=self.user['musicbrainz_id']), query_string={'count': 5})
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        sent_count = 5
+        recieved_count = data['artist']['all_time']['count']
+        self.assertEqual(sent_count, recieved_count)
+        sent_artist_list = payload['all_time']['artists'][:5]
         recieved_artist_list = data['artist']['all_time']['artists']
         self.assertListEqual(sent_artist_list, recieved_artist_list)
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
