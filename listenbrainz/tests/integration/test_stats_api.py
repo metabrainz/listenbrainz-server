@@ -51,6 +51,14 @@ class APITestCase(IntegrationTestCase):
         self.assertListEqual(sent_artist_list, recieved_artist_list)
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
+    def test_artist_invalid_count(self):
+        """Test to make sure 400 response is recieved if count argument is incorrectly passed
+        """
+        response = self.client.get(url_for('stats_api_v1.get_artist',
+                                           user_name=self.user['musicbrainz_id']), query_string={'count': 'foobar'})
+        self.assert400(response)
+        self.assertEqual("Bad request, 'count' should be an integer", response.json['error'])
+
     def test_artist_stat_invalid_user(self):
         """ Test to make sure that the API sends 404 if user does not exist.
         """

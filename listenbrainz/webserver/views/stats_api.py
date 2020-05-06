@@ -1,6 +1,7 @@
 from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, APIServiceUnavailable
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError,\
+    APIUnauthorized, APINotFound, APIServiceUnavailable
 from listenbrainz.webserver.decorators import crossdomain
 import listenbrainz.db.user as db_user
 import listenbrainz.db.stats as db_stats
@@ -29,7 +30,7 @@ def get_artist(user_name):
     count = request.args.get('count', default=-1)
     try:
         count = int(count)
-    except:
+    except ValueError:
         raise APIBadRequest("Bad request, 'count' should be an integer")
 
     user = db_user.get_by_mb_id(user_name)
