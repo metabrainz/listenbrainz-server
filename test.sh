@@ -89,7 +89,6 @@ function is_unit_db_exists {
 }
 
 function unit_stop {
-    echo "stop"
     # Stopping all unit test containers associated with this project
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
@@ -112,13 +111,13 @@ function build_frontend_containers {
 function update_snapshots {
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                run --rm frontend_tester npm run type-check
+                run --rm frontend_tester npm run test:update-snapshots
 }
 
 function run_type_check {
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                run --rm frontend_tester npm run test:update-snapshots
+                run --rm frontend_tester npm run type-check
 }
 
 function spark_setup {
@@ -181,6 +180,7 @@ if [ "$1" == "spark" ]; then
     TEST_CONTAINER_REF="${SPARK_COMPOSE_PROJECT_NAME}_${SPARK_TEST_CONTAINER_NAME}_1"
 
     spark_setup
+    echo "Running tests"
     docker-compose -f $SPARK_COMPOSE_FILE_LOC \
                    -p $SPARK_COMPOSE_PROJECT_NAME \
                 up test
@@ -195,14 +195,15 @@ if [ "$1" == "int" ]; then
     INT_TEST_CONTAINER_NAME=listenbrainz
     TEST_CONTAINER_REF="${INT_COMPOSE_PROJECT_NAME}_${INT_TEST_CONTAINER_NAME}_1"
 
-    echo "Take down old containers"
+    echo "Taking down old containers"
     int_dcdown
-    echo "Build current setup"
+    echo "Building current setup"
     int_build
+    echo "Building containers"
     int_setup
-    echo "Bring containers up"
+    echo "Bringing containers up"
     bring_up_int_containers
-    echo "Start running tests"
+    echo "Running tests"
     docker-compose -f $INT_COMPOSE_FILE_LOC \
                    -p $INT_COMPOSE_PROJECT_NAME \
                 run --rm listenbrainz dockerize \
@@ -211,7 +212,7 @@ if [ "$1" == "int" ]; then
                   -wait tcp://redis:6379 -timeout 60s \
                   -wait tcp://rabbitmq:5672 -timeout 60s \
                 bash -c "py.test listenbrainz/tests/integration"
-    echo "Take down containers"
+    echo "Taking containers down"
     int_dcdown
     exit 0
 fi
@@ -224,20 +225,24 @@ TEST_CONTAINER_REF="${COMPOSE_PROJECT_NAME}_${TEST_CONTAINER_NAME}_1"
 
 if [ "$1" == "frontend" ]; then
     if [ "$2" == "-u" ]; then
+        echo "Running tests and updating snapshots"
         update_snapshots
         exit 0
     fi
 
     if [ "$2" == "-b" ]; then
+        echo "Building containers"
         build_frontend_containers
         exit 0
     fi
 
     if [ "$2" == "-t" ]; then
+        echo "Running type checker"
         run_type_check
         exit 0
     fi
 
+    echo "Running tests"
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
                 run --rm frontend_tester npm test
@@ -265,6 +270,7 @@ if [ "$1" == "-u" ]; then
     if [ $DB_EXISTS -eq 0 -o $DB_RUNNING -eq 0 ]; then
         echo "Database is already up, doing nothing"
     else
+        echo "Building containers"
         build_unit_containers
         echo "Bringing up DB"
         bring_up_unit_db
@@ -282,12 +288,14 @@ if [ $DB_EXISTS -eq 1 -a $DB_RUNNING -eq 1 ]; then
     build_unit_containers
     bring_up_unit_db
     unit_setup
+    echo "Running tests"
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
                 run --rm listenbrainz py.test "$@"
     unit_dcdown
 else
     # Else, we have containers, just run tests
+    echo "Running tests"
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
                 run --rm listenbrainz py.test "$@"
