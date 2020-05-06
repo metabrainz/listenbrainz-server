@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask import Blueprint, jsonify, current_app
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, APIServiceUnavailable
 from listenbrainz.webserver.decorators import crossdomain
@@ -34,5 +35,5 @@ def get_artist(user_name):
     return jsonify({'payload': {
         'user_id': user_name,
         'artist': stats['artist'],
-        'last_updated': stats['last_updated'],
+        'last_updated': int(stats['last_updated'].timestamp())
     }})
