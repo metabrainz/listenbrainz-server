@@ -364,7 +364,7 @@ class APITestCase(IntegrationTestCase):
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
     def test_artist_stat_invalid_user(self):
-        """ Test to make sure that the api sends 404 if user does not exist.
+        """ Test to make sure that the API sends 404 if user does not exist.
         """
 
         response = self.client.get(url_for('api_v1.get_artist', user_name='nouser'))
@@ -372,12 +372,11 @@ class APITestCase(IntegrationTestCase):
         self.assertEqual('Cannot find user: nouser', response.json['error'])
 
     def test_artist_stat_not_calculated(self):
-        """ Test to make sure that the api sends 404 if statistics for user have not been calculated yet
+        """ Test to make sure that the API sends 204 if statistics for user have not been calculated yet
         """
 
         response = self.client.get(url_for('api_v1.get_artist', user_name=self.user['musicbrainz_id']))
-        self.assert404(response)
-        self.assertEqual('Statistics for user: testuserpleaseignore not calculated', response.json['error'])
+        self.assertEqual(response.status_code, 204)
 
     def test_latest_import(self):
         """ Test for api.latest_import """

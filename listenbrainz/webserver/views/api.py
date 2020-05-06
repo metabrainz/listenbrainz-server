@@ -187,7 +187,8 @@ def get_artist(user_name):
     **Note**: This endpoint is currently in beta and the JSON format may change in future
 
     :statuscode 200: Successfull query
-    :statuscode 404: User not found or statistics not generated for the user
+    :statuscode 204: Statistics for user haven't been calculated, empty response will be returned
+    :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
 
@@ -197,7 +198,7 @@ def get_artist(user_name):
 
     stats = db_stats.get_user_artists(user['id'])
     if stats is None:
-        raise APINotFound("Statistics for user: %s not calculated" % user_name)
+        return '', 204
 
     return jsonify({'payload': {
         'user_id': user_name,
