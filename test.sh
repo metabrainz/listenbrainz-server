@@ -9,10 +9,10 @@
 # ./test.sh -d             clean unit test containers
 
 # FRONTEND TESTS
-# ./test.sh front          run frontend tests
-# ./test.sh front -u       run frontend tests, update snapshots
-# ./test.sh front -u       build frontend test containers
-# ./test.sh front -t       run type-checker
+# ./test.sh frontend       run frontend tests
+# ./test.sh frontend -u    run frontend tests, update snapshots
+# ./test.sh frontend -u    build frontend test containers
+# ./test.sh frontend -t    run type-checker
 
 # SPARK TESTS
 # ./test.sh spark          run spark tests
@@ -23,11 +23,8 @@
 COMPOSE_FILE_LOC=docker/docker-compose.test.yml
 COMPOSE_PROJECT_NAME_ORIGINAL=listenbrainz_test
 
-# Project name is sanitized by Compose, so we need to do the same thing.
-# See https://github.com/docker/compose/issues/2119.
-COMPOSE_PROJECT_NAME=$(echo $COMPOSE_PROJECT_NAME_ORIGINAL | awk '{print tolower($0)}' | sed 's/[^a-z0-9]*//g')
-TEST_CONTAINER_NAME=listenbrainz
-TEST_CONTAINER_REF="${COMPOSE_PROJECT_NAME}_${TEST_CONTAINER_NAME}_1"
+SPARK_COMPOSE_FILE_LOC=docker/docker-compose.spark.test.yml
+SPARK_COMPOSE_PROJECT_NAME_ORIGINAL=listenbrainz_spark_test
 
 #docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME build
 #    docker ps -a --no-trunc  | grep $COMPOSE_PROJECT_NAME \
@@ -120,6 +117,23 @@ function run_type_check {
                 run --rm frontend_tester npm run test:update-snapshots
 }
 
+function spark_setup {
+    echo "Running Spark test setup"
+    docker-compose -f $SPARK_COMPOSE_FILE_LOC \
+                   -p $SPARK_COMPOSE_PROJECT_NAME \
+                run --rm hadoop-master hdfs namenode -format -nonInteractive -force
+    docker-compose -f $SPARK_COMPOSE_FILE_LOC \
+                   -p $SPARK_COMPOSE_PROJECT_NAME \
+                up -d hadoop-master datanode
+}
+
+function spark_dcdown {
+    # Shutting down all spark test containers associated with this project
+    docker-compose -f $SPARK_COMPOSE_FILE_LOC \
+                   -p $SPARK_COMPOSE_PROJECT_NAME \
+                down 
+}
+
 # Exit immediately if a command exits with a non-zero status.
 # set -e
 #trap cleanup EXIT  # Cleanup after tests finish running
@@ -145,6 +159,7 @@ if [ "$1" == "-u" ]; then
     if [ $DB_EXISTS -eq 0 -o $DB_RUNNING -eq 0 ]; then
         echo "Database is already up, doing nothing"
     else
+        build_unit_containers
         echo "Bringing up DB"
         bring_up_unit_db
         unit_setup
@@ -152,7 +167,7 @@ if [ "$1" == "-u" ]; then
     exit 0
 fi
 
-if [ "$1" == "front" ]; then
+if [ "$1" == "frontend" ]; then
     if [ "$2" == "u" ]; then
         update_snapshots
         exit 0
@@ -171,14 +186,31 @@ if [ "$1" == "front" ]; then
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
                 run --rm frontend_tester npm test
+    exit 0
 fi
+
+if [ "$1" == "spark" ]; then
+    spark_setup
+    docker-compose -f $SPARK_COMPOSE_FILE_LOC \
+                   -p $SPARK_COMPOSE_PROJECT_NAME \
+                up test
+    spark_dcdown
+    exit 0
+fi
+
+# Project name is sanitized by Compose, so we need to do the same thing.
+# See https://github.com/docker/compose/issues/2119.
+COMPOSE_PROJECT_NAME=$(echo $COMPOSE_PROJECT_NAME_ORIGINAL | awk '{print tolower($0)}' | sed 's/[^a-z0-9]*//g')
+TEST_CONTAINER_NAME=listenbrainz
+TEST_CONTAINER_REF="${COMPOSE_PROJECT_NAME}_${TEST_CONTAINER_NAME}_1"
 
 is_unit_db_exists
 DB_EXISTS=$?
 is_unit_db_running
 DB_RUNNING=$?
 if [ $DB_EXISTS -eq 1 -a $DB_RUNNING -eq 1 ]; then
-    # If no containers, run setup then run tests, then bring down
+    # If no containers, build them, run setup then run tests, then bring down
+    build_unit_containers
     bring_up_unit_db
     unit_setup
     docker-compose -f $COMPOSE_FILE_LOC \
