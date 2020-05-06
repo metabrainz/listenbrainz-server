@@ -6,7 +6,6 @@ from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.views.follow import parse_user_list
 from listenbrainz import webserver
 import listenbrainz.db.user as db_user
-import listenbrainz.db.stats as db_stats
 from listenbrainz.webserver.rate_limiter import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET,\
@@ -175,36 +174,6 @@ def get_playing_now(user_name):
             'listens': listen_data,
         },
     })
-
-
-@api_bp.route("user/<user_name>/stats/artist")
-@crossdomain()
-@ratelimit()
-def get_artist(user_name):
-    """
-    Get top artists for user ``user_name``. The format for the JSON returned is defined in our :ref:`json-doc`.
-
-    **Note**: This endpoint is currently in beta and the JSON format may change in future
-
-    :statuscode 200: Successfull query
-    :statuscode 204: Statistics for user haven't been calculated, empty response will be returned
-    :statuscode 404: User not found
-    :resheader Content-Type: *application/json*
-    """
-
-    user = db_user.get_by_mb_id(user_name)
-    if user is None:
-        raise APINotFound("Cannot find user: %s" % user_name)
-
-    stats = db_stats.get_user_artists(user['id'])
-    if stats is None:
-        return '', 204
-
-    return jsonify({'payload': {
-        'user_id': user_name,
-        'artist': stats['artist'],
-        'last_updated': stats['last_updated'],
-    }})
 
 
 @api_bp.route("/users/<user_list>/recent-listens")
