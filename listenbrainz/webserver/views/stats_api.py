@@ -34,6 +34,11 @@ def get_artist(user_name):
 
     return jsonify({'payload': {
         'user_id': user_name,
-        'artist': stats['artist'],
+        'artist': {
+            "all_time": {
+                "artists": stats['artist']['all_time']['artists'],
+                "count": stats['artist']['count'],
+            },
+        },
         'last_updated': int(stats['last_updated'].timestamp())
     }})
