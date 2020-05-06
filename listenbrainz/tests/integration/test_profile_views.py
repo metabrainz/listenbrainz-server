@@ -102,6 +102,9 @@ class ProfileViewsTestCase(IntegrationTestCase):
         props = json.loads(self.get_context_variable('props'))
         self.assertEqual(props['listen_count'], '0')
 
+        # check that the artist_count has been reset
+        self.assertIsNone(props['artist_count'])
+
         # check that the latest_import timestamp has been reset too
         resp = self.client.get(url_for('api_v1.latest_import', user_name=self.user['musicbrainz_id']))
         self.assert200(resp)
