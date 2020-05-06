@@ -9,10 +9,10 @@
 # ./test.sh -d             clean unit test containers
 
 # FRONTEND TESTS
-# ./test.sh frontend       run frontend tests
-# ./test.sh frontend -u    run frontend tests, update snapshots
-# ./test.sh frontend -u    build frontend test containers
-# ./test.sh frontend -t    run type-checker
+# ./test.sh fe             run frontend tests
+# ./test.sh fe -u          run frontend tests, update snapshots
+# ./test.sh fe -b          build frontend test containers
+# ./test.sh fe -t          run type-checker
 
 # SPARK TESTS
 # ./test.sh spark          run spark tests
@@ -223,7 +223,7 @@ COMPOSE_PROJECT_NAME=$(echo $COMPOSE_PROJECT_NAME_ORIGINAL | awk '{print tolower
 TEST_CONTAINER_NAME=listenbrainz
 TEST_CONTAINER_REF="${COMPOSE_PROJECT_NAME}_${TEST_CONTAINER_NAME}_1"
 
-if [ "$1" == "frontend" ]; then
+if [ "$1" == "fe" ]; then
     if [ "$2" == "-u" ]; then
         echo "Running tests and updating snapshots"
         update_snapshots
