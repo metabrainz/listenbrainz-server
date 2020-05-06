@@ -26,6 +26,9 @@ COMPOSE_PROJECT_NAME_ORIGINAL=listenbrainz_test
 SPARK_COMPOSE_FILE_LOC=docker/docker-compose.spark.test.yml
 SPARK_COMPOSE_PROJECT_NAME_ORIGINAL=listenbrainz_spark_test
 
+INT_COMPOSE_FILE_LOC=docker/docker-compose.integration.yml
+INT_COMPOSE_PROJECT_NAME_ORIGINAL=listenbrainz_int
+
 #docker-compose -f $COMPOSE_FILE_LOC -p $COMPOSE_PROJECT_NAME build
 #    docker ps -a --no-trunc  | grep $COMPOSE_PROJECT_NAME \
 #        | awk '{print $1}' | xargs -r --no-run-if-empty docker stop
@@ -55,7 +58,8 @@ function unit_setup {
     # PostgreSQL Database initialization
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                run --rm listenbrainz dockerize -wait tcp://db:5432 -timeout 60s \
+                run --rm listenbrainz dockerize \
+                  -wait tcp://db:5432 -timeout 60s \
                   -wait tcp://influx:8086 -timeout 60s \
                   -wait tcp://rabbitmq:5672 -timeout 60s \
                 bash -c "python3 manage.py init_db --create-db && \
@@ -118,7 +122,7 @@ function run_type_check {
 }
 
 function spark_setup {
-    echo "Running Spark test setup"
+    echo "Running spark test setup"
     docker-compose -f $SPARK_COMPOSE_FILE_LOC \
                    -p $SPARK_COMPOSE_PROJECT_NAME \
                 run --rm hadoop-master hdfs namenode -format -nonInteractive -force
@@ -132,6 +136,38 @@ function spark_dcdown {
     docker-compose -f $SPARK_COMPOSE_FILE_LOC \
                    -p $SPARK_COMPOSE_PROJECT_NAME \
                 down 
+}
+
+function int_dcdown {
+    docker-compose -f $INT_COMPOSE_FILE_LOC \
+                   -p $INT_COMPOSE_PROJECT_NAME \
+                build 
+}
+
+function int_build {
+    # Shutting down all integration test containers associated with this project
+    docker-compose -f $INT_COMPOSE_FILE_LOC \
+                   -p $INT_COMPOSE_PROJECT_NAME \
+                down 
+}
+
+function int_setup {
+    echo "Running setup"
+    # PostgreSQL Database initialization
+    docker-compose -f $INT_COMPOSE_FILE_LOC \
+                   -p $INT_COMPOSE_PROJECT_NAME \
+                run --rm listenbrainz dockerize \
+                  -wait tcp://db:5432 -timeout 60s \
+                  -wait tcp://influx:8086 -timeout 60s \
+                bash -c "python3 manage.py init_db --create-db && \
+                         python3 manage.py init_msb_db --create-db && \
+                         python3 manage.py init_influx"
+}
+
+function bring_up_int_containers {
+    docker-compose -f $INT_COMPOSE_FILE_LOC \
+                   -p $INT_COMPOSE_PROJECT_NAME \
+                up -d db influx redis influx_writer rabbitmq
 }
 
 # Exit immediately if a command exits with a non-zero status.
@@ -201,6 +237,34 @@ if [ "$1" == "spark" ]; then
                    -p $SPARK_COMPOSE_PROJECT_NAME \
                 up test
     spark_dcdown
+    exit 0
+fi
+
+if [ "$1" == "int" ]; then
+    # Project name is sanitized by Compose, so we need to do the same thing.
+    # See https://github.com/docker/compose/issues/2119.
+    INT_COMPOSE_PROJECT_NAME=$(echo $INT_COMPOSE_PROJECT_NAME_ORIGINAL | awk '{print tolower($0)}' | sed 's/[^a-z0-9]*//g')
+    INT_TEST_CONTAINER_NAME=listenbrainz
+    TEST_CONTAINER_REF="${INT_COMPOSE_PROJECT_NAME}_${INT_TEST_CONTAINER_NAME}_1"
+
+    echo "Take down old containers"
+    int_dcdown
+    echo "Build current setup"
+    int_build
+    int_setup
+    echo "Bring containers up"
+    bring_up_int_containers
+    echo "Start running tests"
+    docker-compose -f $INT_COMPOSE_FILE_LOC \
+                   -p $INT_COMPOSE_PROJECT_NAME \
+                run --rm listenbrainz dockerize \
+                  -wait tcp://db:5432 -timeout 60s \
+                  -wait tcp://influx:8086 -timeout 60s \
+                  -wait tcp://redis:6379 -timeout 60s \
+                  -wait tcp://rabbitmq:5672 -timeout 60s \
+                bash -c "py.test listenbrainz/tests/integration"
+    echo "Take down containers"
+    int_dcdown
     exit 0
 fi
 
