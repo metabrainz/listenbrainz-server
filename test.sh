@@ -44,7 +44,7 @@ fi
 function build_unit_containers {
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                build -d db influx redis rabbitmq listenbrainz
+                build db influx redis rabbitmq listenbrainz
 }
 
 function bring_up_unit_db {
@@ -93,14 +93,14 @@ function unit_stop {
     # Stopping all unit test containers associated with this project
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                stop 
+                stop
 }
 
 function unit_dcdown {
     # Shutting down all unit test containers associated with this project
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                down 
+                down
 }
 
 function build_frontend_containers {
@@ -135,25 +135,24 @@ function spark_dcdown {
     # Shutting down all spark test containers associated with this project
     docker-compose -f $SPARK_COMPOSE_FILE_LOC \
                    -p $SPARK_COMPOSE_PROJECT_NAME \
-                down 
+                down
 }
 
 function int_dcdown {
     docker-compose -f $INT_COMPOSE_FILE_LOC \
                    -p $INT_COMPOSE_PROJECT_NAME \
-                build 
+                down
 }
 
 function int_build {
     # Shutting down all integration test containers associated with this project
     docker-compose -f $INT_COMPOSE_FILE_LOC \
                    -p $INT_COMPOSE_PROJECT_NAME \
-                down 
+                down
 }
 
 function int_setup {
     echo "Running setup"
-    # PostgreSQL Database initialization
     docker-compose -f $INT_COMPOSE_FILE_LOC \
                    -p $INT_COMPOSE_PROJECT_NAME \
                 run --rm listenbrainz dockerize \
@@ -172,58 +171,7 @@ function bring_up_int_containers {
 
 # Exit immediately if a command exits with a non-zero status.
 # set -e
-#trap cleanup EXIT  # Cleanup after tests finish running
-
-if [ "$1" == "-s" ]; then
-    echo "Stopping unit test containers"
-    unit_stop
-    exit 0
-fi
-
-if [ "$1" == "-d" ]; then
-    echo "Running docker-compose down"
-    unit_dcdown
-    exit 0
-fi
-
-# if -u flag, bring up db, run setup, quit
-if [ "$1" == "-u" ]; then
-    is_unit_db_exists
-    DB_EXISTS=$?
-    is_unit_db_running
-    DB_RUNNING=$?
-    if [ $DB_EXISTS -eq 0 -o $DB_RUNNING -eq 0 ]; then
-        echo "Database is already up, doing nothing"
-    else
-        build_unit_containers
-        echo "Bringing up DB"
-        bring_up_unit_db
-        unit_setup
-    fi
-    exit 0
-fi
-
-if [ "$1" == "frontend" ]; then
-    if [ "$2" == "u" ]; then
-        update_snapshots
-        exit 0
-    fi
-
-    if [ "$2" == "-b" ]; then
-        build_frontend_containers
-        exit 0
-    fi
-
-    if [ "$2" == "-t" ]; then
-        run_type_check
-        exit 0
-    fi
-
-    docker-compose -f $COMPOSE_FILE_LOC \
-                   -p $COMPOSE_PROJECT_NAME \
-                run --rm frontend_tester npm test
-    exit 0
-fi
+# trap cleanup EXIT  # Cleanup after tests finish running
 
 if [ "$1" == "spark" ]; then
     # Project name is sanitized by Compose, so we need to do the same thing.
@@ -274,6 +222,57 @@ COMPOSE_PROJECT_NAME=$(echo $COMPOSE_PROJECT_NAME_ORIGINAL | awk '{print tolower
 TEST_CONTAINER_NAME=listenbrainz
 TEST_CONTAINER_REF="${COMPOSE_PROJECT_NAME}_${TEST_CONTAINER_NAME}_1"
 
+if [ "$1" == "frontend" ]; then
+    if [ "$2" == "-u" ]; then
+        update_snapshots
+        exit 0
+    fi
+
+    if [ "$2" == "-b" ]; then
+        build_frontend_containers
+        exit 0
+    fi
+
+    if [ "$2" == "-t" ]; then
+        run_type_check
+        exit 0
+    fi
+
+    docker-compose -f $COMPOSE_FILE_LOC \
+                   -p $COMPOSE_PROJECT_NAME \
+                run --rm frontend_tester npm test
+    exit 0
+fi
+
+if [ "$1" == "-s" ]; then
+    echo "Stopping unit test containers"
+    unit_stop
+    exit 0
+fi
+
+if [ "$1" == "-d" ]; then
+    echo "Running docker-compose down"
+    unit_dcdown
+    exit 0
+fi
+
+# if -u flag, bring up db, run setup, quit
+if [ "$1" == "-u" ]; then
+    is_unit_db_exists
+    DB_EXISTS=$?
+    is_unit_db_running
+    DB_RUNNING=$?
+    if [ $DB_EXISTS -eq 0 -o $DB_RUNNING -eq 0 ]; then
+        echo "Database is already up, doing nothing"
+    else
+        build_unit_containers
+        echo "Bringing up DB"
+        bring_up_unit_db
+        unit_setup
+    fi
+    exit 0
+fi
+
 is_unit_db_exists
 DB_EXISTS=$?
 is_unit_db_running
@@ -285,11 +284,11 @@ if [ $DB_EXISTS -eq 1 -a $DB_RUNNING -eq 1 ]; then
     unit_setup
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                   run --rm listenbrainz py.test "$@"
+                run --rm listenbrainz py.test "$@"
     unit_dcdown
 else
     # Else, we have containers, just run tests
     docker-compose -f $COMPOSE_FILE_LOC \
                    -p $COMPOSE_PROJECT_NAME \
-                   run --rm listenbrainz py.test "$@"
+                run --rm listenbrainz py.test "$@"
 fi
