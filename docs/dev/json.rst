@@ -187,10 +187,10 @@ The JSON documents returned from our API look like the following::
               "artists": [
                  "-- Artist stats here --"
               ]
+              "count": "-- Number of unique artists the user has listened to --"
            },
-           "count": "-- Number of unique artists the user has listened to --"
          },
-         "last_updated": "-- Date when the statistics were last updated --"
+         "last_updated": "-- Unix timestamp when the statistics were last updated --"
        }
      }
    }
@@ -220,11 +220,11 @@ An sample response from the endpoint may look like::
                   "artist_name": "Coldplay",
                   "listen_count": 321
                },
-            ]
+            ],
+            "count": 3
          },
-         "count": 3
        },
-       "last_updated": "Sun, 03 May 2020 08:26:01 GMT",
+       "last_updated": 1588494361,
        "user_id": "John Doe"
      }
    }
@@ -233,4 +233,4 @@ An sample response from the endpoint may look like::
    `artist_mbids` and `artist_msid` are optional fields and may not be present in all the responses   
 
 .. warning::
-   The statistics API endpoint is still in beta and the `JSON` format may change in the future.
+   The statistics API endpoint is still in beta

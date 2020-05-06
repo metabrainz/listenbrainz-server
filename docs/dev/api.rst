@@ -61,6 +61,14 @@ Core API Endpoints
   :statuscode 400: invalid JSON sent, see error message for details.
   :statuscode 401: invalid authorization. See error message for details.
 
+Statistics API Endpoints
+^^^^^^^^^^^^^^^^^^^^
+
+.. autoflask:: listenbrainz.webserver:create_app_rtfd()
+   :blueprints: stats_api_v1
+   :include-empty-docstring:
+   :undoc-static:
+   
 Status API Endpoints
 ^^^^^^^^^^^^^^^^^^^^
 
