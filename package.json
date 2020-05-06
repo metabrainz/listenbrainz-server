@@ -35,6 +35,7 @@
     "@fortawesome/free-regular-svg-icons": "^5.13.0",
     "@fortawesome/free-solid-svg-icons": "^5.13.0",
     "@fortawesome/react-fontawesome": "^0.1.9",
+    "@nivo/bar": "^0.61.1",
     "clean-css": "^4.2.1",
     "eslint-plugin-jest": "^23.8.2",
     "less": "^2.7.2",
