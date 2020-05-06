@@ -229,5 +229,8 @@ An sample response from the endpoint may look like::
      }
    }
 
+.. note::
+   `artist_mbids` and `artist_msid` are optional fields and may not be present in all the responses   
+
 .. warning::
    The statistics API endpoint is still in beta and the `JSON` format may change in the future.
