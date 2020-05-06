@@ -24,30 +24,6 @@ LISTENS_PER_PAGE = 25
 user_bp = Blueprint("user", __name__)
 
 
-@user_bp.route("/<user_name>/scraper.js")
-@crossdomain()
-def lastfmscraper(user_name):
-    """ Fetch the scraper.js with proper variable injecting
-    """
-    user_token = request.args.get("user_token")
-    lastfm_username = request.args.get("lastfm_username")
-    if user_token is None or lastfm_username is None:
-        raise NotFound
-    scraper = render_template(
-        "user/scraper.js",
-        base_url="{}/1/submit-listens".format(current_app.config['API_URL']),
-        import_url="{}/1/latest-import".format(current_app.config['API_URL']),
-        user_token=user_token,
-        lastfm_username=lastfm_username,
-        # need to escape user_name here because other wise jinja doesn't handle usernames with backslashes correctly
-        user_name=urllib.parse.quote(user_name),
-        profile_url=url_for('user.profile', user_name=user_name),
-        lastfm_api_key=current_app.config['LASTFM_API_KEY'],
-        lastfm_api_url=current_app.config['LASTFM_API_URL'],
-    )
-    return Response(scraper, content_type="text/javascript")
-
-
 @user_bp.route("/<user_name>")
 def profile(user_name):
     # Which database to use to showing user listens.
@@ -139,7 +115,7 @@ def profile(user_name):
         spotify_data = spotify.get_user_dict(current_user.id)
 
     props = {
-        "user" : {
+        "user": {
             "id": user.id,
             "name": user.musicbrainz_id,
         },
@@ -155,14 +131,14 @@ def profile(user_name):
         "mode": "listens",
         "spotify": spotify_data,
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
-        "api_url"               : current_app.config['API_URL'],
+        "api_url": current_app.config['API_URL'],
     }
 
     return render_template("user/profile.html",
-        props=ujson.dumps(props),
-        mode='listens',
-        user=user,
-        active_section='listens')
+                           props=ujson.dumps(props),
+                           mode='listens',
+                           user=user,
+                           active_section='listens')
 
 
 @user_bp.route("/<user_name>/artists")
@@ -182,9 +158,9 @@ def artists(user_name):
     # if no data, flash a message and return to profile page
     if data is None:
         msg = ('No data calculated for user %s yet. ListenBrainz only calculates statistics for'
-        ' recently active users. If %s has logged in recently, they\'ve already been added to'
-        ' the stats calculation queue. Please wait until the next statistics calculation batch is finished'
-        ' or request stats calculation from your info page.') % (user_name, user_name)
+               ' recently active users. If %s has logged in recently, they\'ve already been added to'
+               ' the stats calculation queue. Please wait until the next statistics calculation batch is finished'
+               ' or request stats calculation from your info page.') % (user_name, user_name)
 
         flash.error(msg)
         return redirect(url_for('user.profile', user_name=user_name))
@@ -197,6 +173,7 @@ def artists(user_name):
         data=ujson.dumps(top_artists),
         active_section='artists'
     )
+
 
 def _get_user(user_name):
     """ Get current username """
@@ -254,9 +231,10 @@ def delete_user(musicbrainz_id):
     )
     db_user.delete(user.id)
 
+
 def delete_listens_history(musicbrainz_id):
     """ Delete a user's listens from ListenBrainz completely.
-    This, drops the user's influx measurement and resets their listen count. 
+    This, drops the user's influx measurement and resets their listen count.
 
     Args:
         musicbrainz_id (str): the MusicBrainz ID of the user
