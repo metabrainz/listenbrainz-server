@@ -207,6 +207,7 @@ def valid_stats_exist(user_id, days):
         row = result.fetchone()
         return True if row is not None else False
 
+
 def delete_user_stats(user_id):
     """ Delete stats for user with the given row ID.
         Args:
