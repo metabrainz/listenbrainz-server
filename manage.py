@@ -85,7 +85,7 @@ def init_db(force, create_db):
         if not res:
             raise Exception('Failed to drop existing database and user! Exit code: %i' % res)
 
-    if create_db:
+    if create_db or force:
         print('Creating user and a database...')
         res = db.run_sql_script_without_transaction(os.path.join(ADMIN_SQL_DIR, 'create_db.sql'))
         if not res:
@@ -134,7 +134,7 @@ def init_msb_db(force, create_db):
         if not res:
             raise Exception('Failed to drop existing database and user! Exit code: %s' % res)
 
-    if create_db:
+    if create_db or force:
         print('Creating user and a database...')
         res = db.run_sql_script_without_transaction(os.path.join(MSB_ADMIN_SQL_DIR, 'create_db.sql'))
         if not res:
