@@ -10,7 +10,7 @@ from listenbrainz.webserver.rate_limiter import ratelimit
 stats_api_bp = Blueprint('stats_api_v1', __name__)
 
 
-@stats_api_bp.route("<user_name>/artist")
+@stats_api_bp.route("/user/<user_name>/artist")
 @crossdomain()
 @ratelimit()
 def get_artist(user_name):
