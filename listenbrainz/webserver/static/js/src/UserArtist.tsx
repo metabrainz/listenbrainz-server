@@ -58,7 +58,7 @@ export default class UserArtist extends React.Component<
   render() {
     return (
       <div className="row">
-        <div className="col-md-8" style={{ height: "50em" }}>
+        <div className="col-md-8" style={{ height: "20em" }}>
           <Bar data={data} />
         </div>
       </div>
