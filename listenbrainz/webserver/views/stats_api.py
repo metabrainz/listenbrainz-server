@@ -55,7 +55,8 @@ def get_artist(user_name):
 
     .. note::
        - ``artist_mbids`` and ``artist_msid`` are optional fields and may not be present in all the responses
-       - As of now we are only calculating ``all_time`` statistics for artist. However, we plan to add other time intervals in the future.
+       - As of now we are only calculating ``all_time`` statistics for artist.
+         However, we plan to add other time intervals in the future.
 
     :param count: Optional, number of artists to return
     :statuscode 200: Successful query, you have data!
