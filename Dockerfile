@@ -68,12 +68,8 @@ RUN groupadd --gid 901 listenbrainz_stats_cron
 RUN useradd --create-home --shell /bin/bash --uid 901 --gid 901 listenbrainz_stats_cron
 
 # Add cron jobs
-ADD docker/dump-crontab /etc/cron.d/lbdump-crontab
-RUN chmod 0644 /etc/cron.d/lbdump-crontab && crontab -u lbdumps /etc/cron.d/lbdump-crontab
-RUN touch /var/log/stats.log /var/log/dump_create.log && chown lbdumps:lbdumps /var/log/stats.log /var/log/dump_create.log
-
-ADD docker/stats-crontab /etc/cron.d/stats-crontab
-RUN chmod 0644 /etc/cron.d/stats-crontab && crontab -u listenbrainz_stats_cron /etc/cron.d/stats-crontab
+ADD docker/crontab /etc/cron.d/listenbrainz
+RUN chmod 0644 /etc/cron.d/listenbrainz
 
 # Make sure the cron service doesn't start automagically
 # http://smarden.org/runit/runsv.8.html
