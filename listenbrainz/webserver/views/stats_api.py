@@ -17,54 +17,58 @@ def get_artist(user_name):
     """
     Get top artists for user ``user_name``. The format for the JSON returned is defined in our :ref:`json-doc`.
 
-    **Note**: This endpoint is currently in beta
 
     An sample response from the endpoint may look like::
 
         {
             "payload": {
-                "all_time": {
-                    "artists": [
-                        {
-                           "artist_mbids": [93e6118e-7fa8-49f6-9e02-699a1ebce105],
-                           "artist_msid": "d340853d-7408-4a0d-89c2-6ff13e568815",
-                           "artist_name": "The Local train",
-                           "listen_count": 385
-                        },
-                        {
-                           "artist_mbids": [ae9ed5e2-4caf-4b3d-9cb3-2ad626b91714],
-                           "artist_msid": "ba64b195-01dd-4613-9534-bb87dc44cffb",
-                           "artist_name": "Lenka",
-                           "listen_count": 333
-                        },
-                        {
-                           "artist_mbids": [cc197bad-dc9c-440d-a5b5-d52ba2e14234],
-                           "artist_msid": "6599e41e-390c-4855-a2ac-68ee798538b4",
-                           "artist_name": "Coldplay",
-                           "listen_count": 321
-                        }
-                    ],
-                    "count": 3
-                },
-            },
-
-           "last_updated": 1588494361,
-           "user_id": "John Doe"
+                "artists": [
+                    {
+                       "artist_mbids": [93e6118e-7fa8-49f6-9e02-699a1ebce105],
+                       "artist_msid": "d340853d-7408-4a0d-89c2-6ff13e568815",
+                       "artist_name": "The Local train",
+                       "listen_count": 385
+                    },
+                    {
+                       "artist_mbids": [ae9ed5e2-4caf-4b3d-9cb3-2ad626b91714],
+                       "artist_msid": "ba64b195-01dd-4613-9534-bb87dc44cffb",
+                       "artist_name": "Lenka",
+                       "listen_count": 333
+                    },
+                    {
+                       "artist_mbids": [cc197bad-dc9c-440d-a5b5-d52ba2e14234],
+                       "artist_msid": "6599e41e-390c-4855-a2ac-68ee798538b4",
+                       "artist_name": "Coldplay",
+                       "listen_count": 321
+                    }
+                ],
+                "count": 3,
+                "range": "all_time"
+                "last_updated": 1588494361,
+                "user_id": "John Doe"
             }
         }
 
     .. note::
-       - ``artist_mbids`` and ``artist_msid`` are optional fields and may not be present in all the responses
-       - As of now we are only calculating ``all_time`` statistics for artist.
-         However, we plan to add other time intervals in the future.
+        - This endpoint is currently in beta
+        - ``artist_mbids`` and ``artist_msid`` are optional fields and may not be present in all the responses
+        - As of now we are only calculating ``all_time`` statistics for artist.
+          However, we plan to add other time intervals in the future.
 
     :param count: Optional, number of artists to return
+    :type count: int
+    :param range: Optional, range from which statistics should be collected, defaults to ``all_time``
+    :type range: ``all_time``
     :statuscode 200: Successful query, you have data!
     :statuscode 204: Statistics for user haven't been calculated, empty response will be returned
-    :statuscode 400: Bad request, `count` should be of type integer and positive
+    :statuscode 400: Bad request, check ``response['error']`` for more details
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
+
+    _range = request.args.get('range', default='all_time')
+    if _range != 'all_time':
+        raise APIBadRequest("Bad request, 'range' should have value 'all_time'")
 
     count = request.args.get('count')
     if count is not None:
@@ -90,9 +94,8 @@ def get_artist(user_name):
 
     return jsonify({'payload': {
         'user_id': user_name,
-        "all_time": {
-            "artists": artist_list,
-            "count": len(artist_list)
-        },
+        "artists": artist_list,
+        "count": len(artist_list),
+        "range": _range,
         'last_updated': int(stats['last_updated'].timestamp())
     }})
