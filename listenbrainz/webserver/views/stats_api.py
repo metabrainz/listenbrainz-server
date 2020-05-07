@@ -20,7 +20,7 @@ def get_artist(user_name):
     **Note**: This endpoint is currently in beta
 
     :param count: Optional, number of artists to return.
-    :statuscode 200: Successfull query
+    :statuscode 200: Successful query, you have data!
     :statuscode 204: Statistics for user haven't been calculated, empty response will be returned
     :statuscode 400: Bad request, `count` should be of type integer
     :statuscode 404: User not found
