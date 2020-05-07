@@ -7,9 +7,9 @@ import listenbrainz.db.user as db_user
 from listenbrainz.tests.integration import IntegrationTestCase
 
 
-class APITestCase(IntegrationTestCase):
+class StatsAPITestCase(IntegrationTestCase):
     def setUp(self):
-        super(APITestCase, self).setUp()
+        super(StatsAPITestCase, self).setUp()
         self.user = db_user.get_or_create(1, 'testuserpleaseignore')
 
     def test_artist(self):
@@ -24,10 +24,10 @@ class APITestCase(IntegrationTestCase):
         self.assert200(response)
         data = json.loads(response.data)['payload']
         sent_count = payload['count']
-        recieved_count = data['artist']['all_time']['count']
+        recieved_count = data['all_time']['count']
         self.assertEqual(sent_count, recieved_count)
         sent_artist_list = payload['all_time']['artists']
-        recieved_artist_list = data['artist']['all_time']['artists']
+        recieved_artist_list = data['all_time']['artists']
         self.assertListEqual(sent_artist_list, recieved_artist_list)
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
@@ -44,20 +44,28 @@ class APITestCase(IntegrationTestCase):
         self.assert200(response)
         data = json.loads(response.data)['payload']
         sent_count = 5
-        recieved_count = data['artist']['all_time']['count']
+        recieved_count = data['all_time']['count']
         self.assertEqual(sent_count, recieved_count)
         sent_artist_list = payload['all_time']['artists'][:5]
-        recieved_artist_list = data['artist']['all_time']['artists']
+        recieved_artist_list = data['all_time']['artists']
         self.assertListEqual(sent_artist_list, recieved_artist_list)
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
     def test_artist_invalid_count(self):
-        """Test to make sure 400 response is recieved if count argument is incorrectly passed
+        """Test to make sure 400 response is recieved if count argument is not of type integer
         """
         response = self.client.get(url_for('stats_api_v1.get_artist',
                                            user_name=self.user['musicbrainz_id']), query_string={'count': 'foobar'})
         self.assert400(response)
-        self.assertEqual("Bad request, 'count' should be an integer", response.json['error'])
+        self.assertEqual("Bad request, 'count' should be a positive integer", response.json['error'])
+
+    def test_artist_negative_count(self):
+        """Test to make sure 400 response is recieved if count is negative
+        """
+        response = self.client.get(url_for('stats_api_v1.get_artist',
+                                           user_name=self.user['musicbrainz_id']), query_string={'count': -5})
+        self.assert400(response)
+        self.assertEqual("Bad request, 'count' should be a positive integer", response.json['error'])
 
     def test_artist_stat_invalid_user(self):
         """ Test to make sure that the API sends 404 if user does not exist.

@@ -19,19 +19,61 @@ def get_artist(user_name):
 
     **Note**: This endpoint is currently in beta
 
-    :param count: Optional, number of artists to return.
+    An sample response from the endpoint may look like::
+
+        {
+            "payload": {
+                "all_time": {
+                    "artists": [
+                        {
+                           "artist_mbids": [93e6118e-7fa8-49f6-9e02-699a1ebce105],
+                           "artist_msid": "d340853d-7408-4a0d-89c2-6ff13e568815",
+                           "artist_name": "The Local train",
+                           "listen_count": 385
+                        },
+                        {
+                           "artist_mbids": [ae9ed5e2-4caf-4b3d-9cb3-2ad626b91714],
+                           "artist_msid": "ba64b195-01dd-4613-9534-bb87dc44cffb",
+                           "artist_name": "Lenka",
+                           "listen_count": 333
+                        },
+                        {
+                           "artist_mbids": [cc197bad-dc9c-440d-a5b5-d52ba2e14234],
+                           "artist_msid": "6599e41e-390c-4855-a2ac-68ee798538b4",
+                           "artist_name": "Coldplay",
+                           "listen_count": 321
+                        }
+                    ],
+                    "count": 3
+                },
+            },
+
+           "last_updated": 1588494361,
+           "user_id": "John Doe"
+            }
+        }
+
+    .. note::
+       - ``artist_mbids`` and ``artist_msid`` are optional fields and may not be present in all the responses
+       - As of now we are only calculating ``all_time`` statistics for artist. However, we plan to add other time intervals in the future.
+
+    :param count: Optional, number of artists to return
     :statuscode 200: Successful query, you have data!
     :statuscode 204: Statistics for user haven't been calculated, empty response will be returned
-    :statuscode 400: Bad request, `count` should be of type integer
+    :statuscode 400: Bad request, `count` should be of type integer and positive
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
 
-    count = request.args.get('count', default=-1)
-    try:
-        count = int(count)
-    except ValueError:
-        raise APIBadRequest("Bad request, 'count' should be an integer")
+    count = request.args.get('count')
+    if count is not None:
+        try:
+            count = int(count)
+        except ValueError:
+            raise APIBadRequest("Bad request, 'count' should be a positive integer")
+
+        if count < 0:
+            raise APIBadRequest("Bad request, 'count' should be a positive integer")
 
     user = db_user.get_by_mb_id(user_name)
     if user is None:
@@ -41,17 +83,15 @@ def get_artist(user_name):
     if stats is None:
         return '', 204
 
-    artist_list = stats['artist']['all_time']['artists']
-    if count >= 0:
-        artist_list = stats['artist']['all_time']['artists'][:count]
+    if count is None:
+        count = stats['artist']['count']
+    artist_list = stats['artist']['all_time']['artists'][:count]
 
     return jsonify({'payload': {
         'user_id': user_name,
-        'artist': {
-            "all_time": {
-                "artists": artist_list,
-                "count": len(artist_list)
-            },
+        "all_time": {
+            "artists": artist_list,
+            "count": len(artist_list)
         },
         'last_updated': int(stats['last_updated'].timestamp())
     }})

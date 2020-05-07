@@ -2,7 +2,7 @@ ListenBrainz API
 ================
 
 The ListenBrainz server supports the following end-points for submitting and
-fetching listens.  All endpoints have this root URL for our current production
+fetching listens. All endpoints have this root URL for our current production
 site [#]_.
 
 - **API Root URL**: ``https://api.listenbrainz.org``
@@ -63,12 +63,17 @@ Core API Endpoints
 
 Statistics API Endpoints
 ^^^^^^^^^^^^^^^^^^^^
+ListenBrainz now has a statistics infrastructure that collects and computes statistics
+from the listen data that has been stored in the database. The endpoints in this section
+offer a way to get this data programmatically. The statistics are calculated once
+every 15 days. Right now we only calculate statistics for the top artists that user
+listened to. However, we plan to add more statistics in the near future.
 
 .. autoflask:: listenbrainz.webserver:create_app_rtfd()
    :blueprints: stats_api_v1
    :include-empty-docstring:
    :undoc-static:
-   
+
 Status API Endpoints
 ^^^^^^^^^^^^^^^^^^^^
 
