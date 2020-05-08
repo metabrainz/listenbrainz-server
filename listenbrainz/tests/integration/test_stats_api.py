@@ -96,6 +96,43 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assert400(response)
         self.assertEqual("Bad request, 'count' should be a positive integer", response.json['error'])
 
+    def test_artist_stat_offset(self):
+        """Test to make sure valid response is received if offset argument is passed
+
+        """
+        with open(self.path_to_data_file('artist_statistics.json'), 'r') as f:
+            payload = json.load(f)
+
+        db_stats.insert_user_stats(self.user['id'], payload['all_time']['artists'], {}, {}, payload['count'])
+
+        response = self.client.get(url_for('stats_api_v1.get_artist',
+                                           user_name=self.user['musicbrainz_id']), query_string={'offset': 5})
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        sent_offset = 5
+        received_offset = data['offset']
+        self.assertEqual(sent_offset, received_offset)
+        sent_artist_list = payload['all_time']['artists'][5:]
+        received_artist_list = data['artists']
+        self.assertListEqual(sent_artist_list, received_artist_list)
+        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+
+    def test_artist_stat_invalid_offset(self):
+        """Test to make sure 400 response is received if offset argument is not of type integer
+        """
+        response = self.client.get(url_for('stats_api_v1.get_artist',
+                                           user_name=self.user['musicbrainz_id']), query_string={'offset': 'foobar'})
+        self.assert400(response)
+        self.assertEqual("Bad request, 'offset' should be a positive integer", response.json['error'])
+
+    def test_artist_stat_negative_offset(self):
+        """Test to make sure 400 response is received if offset is negative
+        """
+        response = self.client.get(url_for('stats_api_v1.get_artist',
+                                           user_name=self.user['musicbrainz_id']), query_string={'offset': -5})
+        self.assert400(response)
+        self.assertEqual("Bad request, 'offset' should be a positive integer", response.json['error'])
+
     def test_artist_stat_invalid_user(self):
         """ Test to make sure that the API sends 404 if user does not exist.
         """

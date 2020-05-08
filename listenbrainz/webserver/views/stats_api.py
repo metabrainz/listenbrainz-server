@@ -56,7 +56,10 @@ def get_artist(user_name):
           However, we plan to add other time intervals in the future.
 
     :param count: Optional, number of artists to return
-    :type count: int
+    :type count: ``int``
+    :param offset: Optional, number of artists to skip from the beginning.
+        Ex. An offset of 5 means the top 5 artists will be skipped, defaults to 0
+    :type offset: ``int``
     :param range: Optional, range from which statistics should be collected, defaults to ``all_time``
     :type range: ``all_time``
     :statuscode 200: Successful query, you have data!
@@ -69,6 +72,16 @@ def get_artist(user_name):
     _range = request.args.get('range', default='all_time')
     if _range != 'all_time':
         raise APIBadRequest("Bad request, 'range' should have value 'all_time'")
+
+    offset = request.args.get('offset', default=0)
+    if offset is not None:
+        try:
+            offset = int(offset)
+        except ValueError:
+            raise APIBadRequest("Bad request, 'offset' should be a positive integer")
+
+        if offset < 0:
+            raise APIBadRequest("Bad request, 'offset' should be a positive integer")
 
     count = request.args.get('count')
     if count is not None:
@@ -90,12 +103,14 @@ def get_artist(user_name):
 
     if count is None:
         count = stats['artist']['count']
-    artist_list = stats['artist']['all_time']['artists'][:count]
+    count = count + offset
+    artist_list = stats['artist']['all_time']['artists'][offset:count]
 
     return jsonify({'payload': {
         'user_id': user_name,
         "artists": artist_list,
         "count": len(artist_list),
+        "offset": offset,
         "range": _range,
         'last_updated': int(stats['last_updated'].timestamp())
     }})
