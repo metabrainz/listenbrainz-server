@@ -5,7 +5,7 @@ import Bar from "./Bar";
 
 const data = [
   {
-    id: "Coldplay",
+    id: "The Chainsmokers & Coldplay & Alan Walker",
     Listens: 590,
   },
   {
@@ -22,11 +22,11 @@ const data = [
   },
   {
     id: "Lenka",
-    Listens: 20,
+    Listens: 50,
   },
   {
     id: "Ritviz",
-    Listens: 5,
+    Listens: 45,
   },
 ];
 

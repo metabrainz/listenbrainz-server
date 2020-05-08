@@ -6,20 +6,59 @@ export type BarProps = {
   data: Array<object>;
 };
 
-export default class Bar extends React.Component<BarProps> {
+export type BarState = {
+  marginLeft: number;
+};
+
+export default class Bar extends React.Component<BarProps, BarState> {
+  constructor(props: BarProps) {
+    super(props);
+
+    this.state = {
+      marginLeft: window.innerWidth / 5,
+    };
+  }
+
+  handleResize = () => {
+    this.setState({
+      marginLeft: window.innerWidth / 5,
+    });
+  };
+
+  componentDidMount() {
+    window.addEventListener("resize", this.handleResize);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener("resize", this.handleResize);
+  }
+
   render() {
     const { data } = this.props;
-    const marginLeft = 150;
+    const { marginLeft } = this.state;
 
     const leftAlignedTick = (tick: any) => {
+      let value: string = tick.value;
+      if (value.length > marginLeft / 10) {
+        value = `${value.slice(0, marginLeft / 10)}...`;
+      }
+
       return (
         <g transform={`translate(${tick.x - marginLeft}, ${tick.y})`}>
           <text textAnchor="start" dominantBaseline="middle">
-            {tick.value}
+            {value}
           </text>
         </g>
       );
     };
+
+    const labelFormatter = (((label: string) => {
+      return (
+        <tspan x={5} textAnchor="start">
+          {label}
+        </tspan>
+      );
+    }) as unknown) as LabelFormatter;
 
     const theme = {
       axis: {
@@ -35,14 +74,6 @@ export default class Bar extends React.Component<BarProps> {
         },
       },
     };
-
-    const labelFormatter = (((label: string) => {
-      return (
-        <tspan x={5} textAnchor="start">
-          {label}
-        </tspan>
-      );
-    }) as unknown) as LabelFormatter;
 
     return (
       <ResponsiveBar
