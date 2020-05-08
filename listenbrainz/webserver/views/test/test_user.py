@@ -116,46 +116,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
             'permission': 'permission',
         })
 
-    def test_top_artists(self):
-        """ Tests the artist stats view """
-
-        # when no stats in db, it should redirect to the profile page
-        r = self.client.get(url_for('user.artists', user_name=self.user.musicbrainz_id))
-        self.assertRedirects(r, url_for('user.profile', user_name=self.user.musicbrainz_id))
-
-        r = self.client.get(url_for('user.artists', user_name=self.user.musicbrainz_id), follow_redirects=True)
-        self.assert200(r)
-        self.assertIn('No data calculated', r.data.decode('utf-8'))
-
-        # add some artist stats to the db
-        with open(self.path_to_data_file('user_top_artists.json')) as f:
-            artists = ujson.load(f)
-
-        # insert empty documents to check for KeyError / ISE
-        db_stats.insert_user_stats(
-            user_id=self.user.id,
-            artists={},
-            recordings={},
-            releases={},
-            artist_count=2,
-        )
-
-        r = self.client.get(url_for('user.artists', user_name=self.user.musicbrainz_id))
-        self.assert200(r)
-        self.assertContext('active_section', 'artists')
-
-        db_stats.insert_user_stats(
-            user_id=self.user.id,
-            artists=artists,
-            recordings={},
-            releases={},
-            artist_count=2,
-        )
-
-        r = self.client.get(url_for('user.artists', user_name=self.user.musicbrainz_id))
-        self.assert200(r)
-        self.assertContext('active_section', 'artists')
-
     def _create_test_data(self, user_name):
         test_data = create_test_data_for_influxlistenstore(user_name)
         self.logstore.insert(test_data)
@@ -200,7 +160,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
                         query_string={'min_ts': 1520941000, 'max_ts': 1520946000})
         req_call = mock.call('iliekcomputers', limit=25, to_ts=1520946000)
         influx.assert_has_calls([req_call])
-
 
     @mock.patch('listenbrainz.webserver.influx_connection._influx.fetch_listens')
     def test_ts_filters_errors(self, influx):
