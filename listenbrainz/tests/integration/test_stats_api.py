@@ -13,7 +13,7 @@ class StatsAPITestCase(IntegrationTestCase):
         self.user = db_user.get_or_create(1, 'testuserpleaseignore')
 
     def test_artist_stat(self):
-        """Test to make sure valid response is recieved
+        """Test to make sure valid response is received
         """
         with open(self.path_to_data_file('artist_statistics.json'), 'r') as f:
             payload = json.load(f)
@@ -24,15 +24,15 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assert200(response)
         data = json.loads(response.data)['payload']
         sent_count = payload['count']
-        recieved_count = data['count']
-        self.assertEqual(sent_count, recieved_count)
+        received_count = data['count']
+        self.assertEqual(sent_count, received_count)
         sent_artist_list = payload['all_time']['artists']
-        recieved_artist_list = data['artists']
-        self.assertListEqual(sent_artist_list, recieved_artist_list)
+        received_artist_list = data['artists']
+        self.assertListEqual(sent_artist_list, received_artist_list)
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
     def test_artist_stat_all_time(self):
-        """Test to make sure valid response is recieved when range is 'all_time'
+        """Test to make sure valid response is received when range is 'all_time'
         """
         with open(self.path_to_data_file('artist_statistics.json'), 'r') as f:
             payload = json.load(f)
@@ -44,16 +44,16 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assert200(response)
         data = json.loads(response.data)['payload']
         sent_count = payload['count']
-        recieved_count = data['count']
-        self.assertEqual(sent_count, recieved_count)
+        received_count = data['count']
+        self.assertEqual(sent_count, received_count)
         sent_artist_list = payload['all_time']['artists']
-        recieved_artist_list = data['artists']
-        self.assertListEqual(sent_artist_list, recieved_artist_list)
+        received_artist_list = data['artists']
+        self.assertListEqual(sent_artist_list, received_artist_list)
         self.assertEqual(data['range'], 'all_time')
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
     def test_artist_stat_invalid_range(self):
-        """Test to make sure 400 is recieved if range argument is invalid
+        """Test to make sure 400 is received if range argument is invalid
         """
         response = self.client.get(url_for('stats_api_v1.get_artist',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'foobar'})
@@ -61,7 +61,7 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertEqual("Bad request, 'range' should have value 'all_time'", response.json['error'])
 
     def test_artist_stat_count(self):
-        """Test to make sure valid response is recieved if count argument is passed
+        """Test to make sure valid response is received if count argument is passed
         """
         with open(self.path_to_data_file('artist_statistics.json'), 'r') as f:
             payload = json.load(f)
@@ -73,15 +73,15 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assert200(response)
         data = json.loads(response.data)['payload']
         sent_count = 5
-        recieved_count = data['count']
-        self.assertEqual(sent_count, recieved_count)
+        received_count = data['count']
+        self.assertEqual(sent_count, received_count)
         sent_artist_list = payload['all_time']['artists'][:5]
-        recieved_artist_list = data['artists']
-        self.assertListEqual(sent_artist_list, recieved_artist_list)
+        received_artist_list = data['artists']
+        self.assertListEqual(sent_artist_list, received_artist_list)
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
     def test_artist_stat_invalid_count(self):
-        """Test to make sure 400 response is recieved if count argument is not of type integer
+        """Test to make sure 400 response is received if count argument is not of type integer
         """
         response = self.client.get(url_for('stats_api_v1.get_artist',
                                            user_name=self.user['musicbrainz_id']), query_string={'count': 'foobar'})
@@ -89,7 +89,7 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertEqual("Bad request, 'count' should be a positive integer", response.json['error'])
 
     def test_artist_stat_negative_count(self):
-        """Test to make sure 400 response is recieved if count is negative
+        """Test to make sure 400 response is received if count is negative
         """
         response = self.client.get(url_for('stats_api_v1.get_artist',
                                            user_name=self.user['musicbrainz_id']), query_string={'count': -5})
