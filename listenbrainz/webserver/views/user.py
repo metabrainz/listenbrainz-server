@@ -148,30 +148,18 @@ def artists(user_name):
         redirect to the user page with a message.
     """
 
-    try:
-        user = _get_user(user_name)
-        data = db_stats.get_user_artists(user.id)
-    except DatabaseException as e:
-        current_app.logger.error('Error while getting top artist page for user %s: %s', user.musicbrainz_id, str(e))
-        raise
+    user = _get_user(user_name)
 
-    # if no data, flash a message and return to profile page
-    if data is None:
-        msg = ('No data calculated for user %s yet. ListenBrainz only calculates statistics for'
-               ' recently active users. If %s has logged in recently, they\'ve already been added to'
-               ' the stats calculation queue. Please wait until the next statistics calculation batch is finished'
-               ' or request stats calculation from your info page.') % (user_name, user_name)
-
-        flash.error(msg)
-        return redirect(url_for('user.profile', user_name=user_name))
-
-    top_artists = data.get('artist', {}).get('all_time', {}).get('artists', [])
+    props = {
+        "user": user,
+        "api_url": current_app.config["API_URL"]
+    }
 
     return render_template(
         "user/artists.html",
-        user=user,
-        data=ujson.dumps(top_artists),
-        active_section='artists'
+        active_section="artists",
+        props=ujson.dumps(props),
+        user=user
     )
 
 
