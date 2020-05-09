@@ -12,7 +12,6 @@ import listenbrainz_spark
 from listenbrainz_spark import stats
 from listenbrainz_spark import config, utils, path
 from listenbrainz_spark.recommendations.utils import save_html
-from listenbrainz_spark.sql import candidate_sets_queries as sql
 from listenbrainz_spark.exceptions import SQLException, SparkSessionNotInitializedException, ViewNotRegisteredException, \
     PathNotFoundException, FileNotFetchedException
 
