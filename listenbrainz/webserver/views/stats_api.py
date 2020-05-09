@@ -74,25 +74,8 @@ def get_artist(user_name):
     if _range != 'all_time':
         raise APIBadRequest("Bad request, 'range' should have value 'all_time'")
 
-    offset = request.args.get('offset', default=0)
-    if offset is not None:
-        try:
-            offset = int(offset)
-        except ValueError:
-            raise APIBadRequest("Bad request, 'offset' should be a positive integer")
-
-        if offset < 0:
-            raise APIBadRequest("Bad request, 'offset' should be a positive integer")
-
-    count = request.args.get('count')
-    if count is not None:
-        try:
-            count = int(count)
-        except ValueError:
-            raise APIBadRequest("Bad request, 'count' should be a positive integer")
-
-        if count < 0:
-            raise APIBadRequest("Bad request, 'count' should be a positive integer")
+    offset = _get_non_negative_param('offset', default=0)
+    count = _get_non_negative_param('count')
 
     user = db_user.get_by_mb_id(user_name)
     if user is None:
@@ -115,3 +98,22 @@ def get_artist(user_name):
         "range": _range,
         'last_updated': int(stats['last_updated'].timestamp())
     }})
+
+
+def _get_non_negative_param(param, default=None):
+    """ Gets the value of a request parameter, validating that it is non-negative
+
+    Args:
+        param (str): the parameter to get
+        default: the value to return if the parameter doesn't exist in the request
+    """
+    value = request.args.get(param, default)
+    if value is not None:
+        try:
+            value = int(value)
+        except ValueError:
+            raise APIBadRequest("Bad request, '{}' should be a non-negative integer".format(param))
+
+        if value < 0:
+            raise APIBadRequest("Bad request, '{}' should be a non-negative integer".format(param))
+    return value
