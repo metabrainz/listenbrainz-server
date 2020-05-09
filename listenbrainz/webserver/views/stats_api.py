@@ -72,7 +72,7 @@ def get_artist(user_name):
 
     _range = request.args.get('range', default='all_time')
     if _range != 'all_time':
-        raise APIBadRequest("Bad request, 'range' should have value 'all_time'")
+        raise APIBadRequest("We currently only support the `all_time` range.")
 
     offset = _get_non_negative_param('offset', default=0)
     count = _get_non_negative_param('count')
@@ -112,8 +112,8 @@ def _get_non_negative_param(param, default=None):
         try:
             value = int(value)
         except ValueError:
-            raise APIBadRequest("Bad request, '{}' should be a non-negative integer".format(param))
+            raise APIBadRequest("'{}' should be a non-negative integer".format(param))
 
         if value < 0:
-            raise APIBadRequest("Bad request, '{}' should be a non-negative integer".format(param))
+            raise APIBadRequest("'{}' should be a non-negative integer".format(param))
     return value
