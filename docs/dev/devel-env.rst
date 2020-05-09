@@ -247,7 +247,7 @@ once so that subsequent running of the tests is faster:
 
 .. code-block:: bash
 
-   ./test.sh -u # start up and initialise the database
+   ./test.sh -u # build unit test containers, start up and initialise the database
    ./test.sh    # run tests, do this as often as you need to
    ./test.sh -s # stop test containers, but don't remove them
    ./test.sh -d # stop and remove all test containers
@@ -256,13 +256,22 @@ If you made any changes to the frontend, you can run the tests for frontend usin
 
 .. code-block:: bash
 
-    ./frontend-test.sh
+   ./test.sh fe
+
+You can also make use of the following frontend testing options for efficient testing.
+
+.. code-block:: bash
+
+   ./test.sh fe             run frontend tests
+   ./test.sh fe -u          run frontend tests, update snapshots
+   ./test.sh fe -b          build frontend test containers
+   ./test.sh fe -t          run type-checker
 
 Also, run the **integration tests** for ListenBrainz.
 
 .. code-block:: bash
 
-   ./integration-test.sh
+   ./test.sh int
 
 When the tests complete, you will see if your changes are valid or not. These tests
 are a helpful way to validate new changes without a lot of work.
