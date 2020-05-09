@@ -57,13 +57,14 @@ def get_artist(user_name):
 
     :param count: Optional, number of artists to return
     :type count: ``int``
-    :param offset: Optional, number of artists to skip from the beginning.
+    :param offset: Optional, number of artists to skip from the beginning, for pagination.
         Ex. An offset of 5 means the top 5 artists will be skipped, defaults to 0
     :type offset: ``int``
-    :param range: Optional, range from which statistics should be collected, defaults to ``all_time``
-    :type range: ``all_time``
+    :param range: Optional, time interval for which statistics should be collected, defaults to ``all_time``,
+        we currently only support all time but more intervals will be added.
+    :type range: ``str``
     :statuscode 200: Successful query, you have data!
-    :statuscode 204: Statistics for user haven't been calculated, empty response will be returned
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
     :statuscode 400: Bad request, check ``response['error']`` for more details
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
