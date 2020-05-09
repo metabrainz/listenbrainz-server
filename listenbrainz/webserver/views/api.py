@@ -25,7 +25,7 @@ def submit_listen():
     in the payload.
 
     Listens should be submitted for tracks when the user has listened to half the track or 4 minutes of
-    the track, whichever is lower. If the user hasn't listened to 4 minutes or half the track, it doesn't 
+    the track, whichever is lower. If the user hasn't listened to 4 minutes or half the track, it doesn't
     fully count as a listen and should not be submitted.
 
     For complete details on the format of the JSON to be POSTed to this endpoint, see :ref:`json-doc`.
@@ -51,7 +51,7 @@ def submit_listen():
 
         if len(raw_data) > len(payload) * MAX_LISTEN_SIZE:
             log_raise_400("JSON document is too large. In aggregate, listens may not "
-                           "be larger than %d characters." % MAX_LISTEN_SIZE, payload)
+                          "be larger than %d characters." % MAX_LISTEN_SIZE, payload)
 
         if data['listen_type'] not in ('playing_now', 'single', 'import'):
             log_raise_400("JSON document requires a valid listen_type key.", payload)
@@ -59,7 +59,7 @@ def submit_listen():
         listen_type = _get_listen_type(data['listen_type'])
         if (listen_type == LISTEN_TYPE_SINGLE or listen_type == LISTEN_TYPE_PLAYING_NOW) and len(payload) > 1:
             log_raise_400("JSON document contains more than listen for a single/playing_now. "
-                           "It should contain only one.", payload)
+                          "It should contain only one.", payload)
     except KeyError:
         log_raise_400("Invalid JSON document submitted.", raw_data)
 
@@ -125,7 +125,6 @@ def get_listens(user_name):
         to_ts=current_time,
     )
     latest_listen_ts = latest_listen[0].ts_since_epoch if len(latest_listen) > 0 else 0
-
 
     if min_ts:
         listen_data = listen_data[::-1]
@@ -247,9 +246,9 @@ def latest_import():
         if user is None:
             raise APINotFound("Cannot find user: {user_name}".format(user_name=user_name))
         return jsonify({
-                'musicbrainz_id': user['musicbrainz_id'],
-                'latest_import': 0 if not user['latest_import'] else int(user['latest_import'].strftime('%s'))
-            })
+            'musicbrainz_id': user['musicbrainz_id'],
+            'latest_import': 0 if not user['latest_import'] else int(user['latest_import'].strftime('%s'))
+        })
     elif request.method == 'POST':
         user = _validate_auth_header()
 
