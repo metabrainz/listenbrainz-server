@@ -15,7 +15,7 @@ stats_api_bp = Blueprint('stats_api_v1', __name__)
 @ratelimit()
 def get_artist(user_name):
     """
-    Get top artists for user ``user_name``. The format for the JSON returned is defined in our :ref:`json-doc`.
+    Get top artists for user ``user_name``.
 
 
     An sample response from the endpoint may look like::
