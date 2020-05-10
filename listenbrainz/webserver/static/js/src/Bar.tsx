@@ -92,7 +92,7 @@ export default class Bar extends React.Component<BarProps, BarState> {
           renderTick: leftAlignedTick,
         }}
         theme={theme}
-        keys={["Listens"]}
+        keys={["count"]}
       />
     );
   }

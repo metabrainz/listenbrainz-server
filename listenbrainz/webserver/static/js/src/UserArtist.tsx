@@ -4,7 +4,12 @@ import * as React from "react";
 
 import APIService from "./APIService";
 import Bar from "./Bar";
-import ErrorBoundary from "./ErrorBoundary.tsx";
+import ErrorBoundary from "./ErrorBoundary";
+
+export type UserArtistData = Array<{
+  id: string;
+  count: string;
+}>;
 
 export type UserArtistProps = {
   user: ListenBrainzUser;
@@ -12,10 +17,7 @@ export type UserArtistProps = {
 };
 
 export type UserArtistState = {
-  data: Array<{
-    id: string;
-    Listens: number;
-  }>;
+  data: UserArtistData;
 };
 
 export default class UserArtist extends React.Component<
@@ -34,16 +36,17 @@ export default class UserArtist extends React.Component<
     ); // Used to access LB API
 
     this.state = {
-      data: [] as UserArtistState["data"],
+      data: [],
     };
   }
 
-  processData = (data: any): UserArtistState["data"] => {
+  processData = (data: any): UserArtistData => {
+    // TODO: Define type for artist stat payload
     let result = data.payload.artists
-      .map((elem) => {
+      .map((elem: any) => {
         return {
           id: elem.artist_name,
-          Listens: elem.listen_count,
+          count: elem.listen_count,
         };
       })
       .reverse();
