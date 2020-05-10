@@ -275,7 +275,7 @@ def validate_token():
     In order to query this endpoint, send a GET request with the token to check
     as the `token` argument (example: /validate-token?token=token-to-check)
 
-    A JSON response will the following format be returned,
+    A JSON response, with the following format, will be returned. 
 
     - If the given token is valid::
 
