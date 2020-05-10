@@ -101,7 +101,7 @@ code.
 
 .. code-block:: bash
 
-   ./spark_test.sh
+   ./test.sh spark
 
 This builds and runs the containers needed for the tests. This script configures
 test-specific data volumes so that test data is isolated from your development

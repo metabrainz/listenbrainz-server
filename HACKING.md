@@ -38,4 +38,4 @@ To run the unit tests:
 
 To run the integration tests:
 
-    ./integration-test.sh
+    ./test.sh int
