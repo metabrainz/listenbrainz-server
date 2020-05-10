@@ -2,35 +2,9 @@
 import * as ReactDOM from "react-dom";
 import * as React from "react";
 
-import Bar from "./Bar";
 import APIService from "./APIService";
-
-// const data = [
-//   {
-//     id: "The Chainsmokers & Coldplay & Alan Walker",
-//     Listens: 590,
-//   },
-//   {
-//     id: "Ellie Goulding",
-//     Listens: 350,
-//   },
-//   {
-//     id: "The Fray",
-//     Listens: 320,
-//   },
-//   {
-//     id: "Vance Joy",
-//     Listens: 100,
-//   },
-//   {
-//     id: "Lenka",
-//     Listens: 50,
-//   },
-//   {
-//     id: "Ritviz",
-//     Listens: 45,
-//   },
-// ];
+import Bar from "./Bar";
+import ErrorBoundary from "./ErrorBoundary.tsx";
 
 export type UserArtistProps = {
   user: ListenBrainzUser;
@@ -90,17 +64,13 @@ export default class UserArtist extends React.Component<
 
     // Fetch data from backend
     let offset = (page - 1) * this.ROWS_PER_PAGE;
-    try {
-      let data = await this.APIService.getUserStats(
-        user.name,
-        undefined,
-        offset,
-        this.ROWS_PER_PAGE
-      );
-      this.setState({ data: this.processData(data) });
-    } catch {
-      // TODO: Error logic, either alerts or error boundaries
-    }
+    let data = await this.APIService.getUserStats(
+      user.name,
+      undefined,
+      offset,
+      this.ROWS_PER_PAGE
+    );
+    this.setState({ data: this.processData(data) });
   }
 
   render() {
@@ -126,5 +96,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // Show error to the user and ask to reload page
   }
   const { user, api_url: apiUrl } = reactProps;
-  ReactDOM.render(<UserArtist apiUrl={apiUrl} user={user} />, domContainer);
+  ReactDOM.render(
+    <ErrorBoundary>
+      <UserArtist apiUrl={apiUrl} user={user} />
+    </ErrorBoundary>,
+    domContainer
+  );
 });
