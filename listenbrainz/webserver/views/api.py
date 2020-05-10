@@ -275,7 +275,24 @@ def validate_token():
     In order to query this endpoint, send a GET request with the token to check
     as the `token` argument (example: /validate-token?token=token-to-check)
 
-    A JSON response will be returned, with one of two codes.
+    A JSON response will the following format be returned,
+
+    - If the given token is valid::
+
+        {
+            "code": 200,
+            "message": "Token valid.",
+            "valid": True,
+            "user": "MusicBrainz ID of the user with the passed token"
+        }
+
+    - If the given token is invalid::
+
+        {
+            "code": 200,
+            "message": "Token invalid.",
+            "valid": False,
+        }
 
     :statuscode 200: The user token is valid/invalid.
     :statuscode 400: No token was sent to the endpoint.
