@@ -192,14 +192,14 @@ export default class APIService {
     return result.user_token;
   };
 
+  /*
+     Send a POST request to the ListenBrainz server to submit a listen
+   */
   submitListens = async (
     userToken: string,
     listenType: ListenType,
     payload: Array<Listen>
   ): Promise<Response> => {
-    /*
-    Send a POST request to the ListenBrainz server to submit a listen
-  */
     if (JSON.stringify(payload).length <= this.MAX_LISTEN_SIZE) {
       // Payload is within submission limit, submit directly
       const struct = {
@@ -250,11 +250,11 @@ export default class APIService {
     );
   };
 
+  /*
+   *  Send a GET request to the ListenBrainz server to get the latest import time
+   *  from previous imports for the user.
+   */
   getLatestImport = async (userName: string): Promise<number> => {
-    /*
-     *  Send a GET request to the ListenBrainz server to get the latest import time
-     *  from previous imports for the user.
-     */
     const url = encodeURI(
       `${this.APIBaseURI}/latest-import?user_name=${userName}`
     );
@@ -266,15 +266,15 @@ export default class APIService {
     return parseInt(result.latest_import, 10);
   };
 
+  /*
+   * Send a POST request to the ListenBrainz server after the import is complete to
+   * update the latest import time on the server. This will make future imports stop
+   * when they reach this point of time in the listen history.
+   */
   setLatestImport = async (
     userToken: string,
     timestamp: number
   ): Promise<number> => {
-    /*
-     * Send a POST request to the ListenBrainz server after the import is complete to
-     * update the latest import time on the server. This will make future imports stop
-     * when they reach this point of time in the listen history.
-     */
     const url = `${this.APIBaseURI}/latest-import`;
     const response = await fetch(url, {
       method: "POST",
