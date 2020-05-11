@@ -150,8 +150,13 @@ def artists(user_name):
 
     user = _get_user(user_name)
 
+    user_data = {
+        "name": user.musicbrainz_id,
+        "id": user.id,
+    }
+
     props = {
-        "user": user,
+        "user": user_data,
         "api_url": current_app.config["API_URL"]
     }
 

@@ -4,6 +4,7 @@ import { ResponsiveBar, LabelFormatter } from "@nivo/bar";
 
 export type BarProps = {
   data: Array<object>;
+  maxValue: number;
 };
 
 export type BarState = {
@@ -34,7 +35,7 @@ export default class Bar extends React.Component<BarProps, BarState> {
   }
 
   render() {
-    const { data } = this.props;
+    const { data, maxValue } = this.props;
     const { marginLeft } = this.state;
 
     const leftAlignedTick = (tick: any) => {
@@ -78,6 +79,7 @@ export default class Bar extends React.Component<BarProps, BarState> {
     return (
       <ResponsiveBar
         data={data}
+        maxValue={maxValue}
         layout="horizontal"
         colors="#FD8D3C"
         indexBy="id"

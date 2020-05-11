@@ -1,114 +1,5 @@
 import APIError from "./APIError";
 
-const data = {
-  payload: {
-    artists: [
-      {
-        artist_mbids: [],
-        artist_msid: "d340853d-7408-4a0d-89c2-6ff13e568815",
-        artist_name: "The Local train",
-        listen_count: 385,
-      },
-      {
-        artist_mbids: [],
-        artist_msid: "ba64b195-01dd-4613-9534-bb87dc44cffb",
-        artist_name: "Lenka",
-        listen_count: 333,
-      },
-      {
-        artist_mbids: [],
-        artist_msid: "6599e41e-390c-4855-a2ac-68ee798538b4",
-        artist_name: "Coldplay",
-        listen_count: 321,
-      },
-      {
-        artist_mbids: [],
-        artist_msid: "fecda98e-0533-4b87-a9d1-c89b4521918b",
-        artist_name: "Imagine Dragons",
-        listen_count: 176,
-      },
-      {
-        artist_mbids: [],
-        artist_msid: "9d5adabb-9775-4535-93eb-12b485aed8bf",
-        artist_name: "Maroon 5",
-        listen_count: 118,
-      },
-      {
-        artist_mbids: [],
-        artist_msid: "7addbcac-ae39-4b4c-a956-53da336d68e8",
-        artist_name: "Ellie Goulding",
-        listen_count: 108,
-      },
-      {
-        artist_mbids: [],
-        artist_msid: "67f4ae2e-260e-4020-b957-f2df5b719501",
-        artist_name: "OneRepublic",
-        listen_count: 65,
-      },
-      {
-        artist_mbids: [],
-        artist_msid: "2b0646af-f3f0-4a5b-b629-6c31301c1c29",
-        artist_name: "The Weeknd",
-        listen_count: 52,
-      },
-      {
-        artist_mbids: [],
-        artist_msid: "0daecabb-f76d-4914-8726-82cefbecca52",
-        artist_name: "The Chainsmokers",
-        listen_count: 44,
-      },
-      {
-        artist_mbids: [],
-        artist_msid: "3b155259-b29e-4515-aa62-cb0b917f4cfd",
-        artist_name: "The Fray",
-        listen_count: 41,
-      },
-      {
-        artist_mbids: [],
-        artist_msid: "52f911d4-8f73-4fc9-9145-a99aff057524",
-        artist_name: "George Ezra",
-        listen_count: 35,
-      },
-      {
-        artist_mbids: [],
-        artist_msid: "cc0f643d-cba9-4a5e-876f-cb3d70cdf5ea",
-        artist_name: "Taylor Swift",
-        listen_count: 34,
-      },
-      {
-        artist_mbids: [],
-        artist_msid: "fbe59c7e-3a75-459b-8fc8-07abaa6d1d2c",
-        artist_name: "Train",
-        listen_count: 34,
-      },
-      {
-        artist_mbids: [],
-        artist_msid: "1024e884-3a17-4729-9e59-a026fe8a07ba",
-        artist_name: "M.I.A.",
-        listen_count: 33,
-      },
-      {
-        artist_mbids: [],
-        artist_msid: "0c115c8a-fc71-4649-aa75-aaef5f09d6d1",
-        artist_name: "American Authors",
-        listen_count: 30,
-      },
-      {
-        artist_mbids: [],
-        artist_msid: "4e202a9c-c976-4e9e-8c9f-b0b96916f6a5",
-        artist_name: "Tommee Profitt",
-        listen_count: 30,
-      },
-      {
-        artist_mbids: [],
-        artist_msid: "50751cf3-40c6-454e-99d9-3d5777e4ad4f",
-        artist_name: "Within Temptation",
-        listen_count: 30,
-      },
-    ],
-  },
-};
-
 export default class APIService {
   APIBaseURI: string;
 
@@ -294,7 +185,14 @@ export default class APIService {
     offset: number = 0,
     count?: number
   ): Promise<any> => {
-    return Promise.resolve(data);
+    let url = `${this.APIBaseURI}/stats/user/${userName}/artists?offset=${offset}&range=${range}`;
+    if (typeof count === "number") {
+      url += `&count=${count}`;
+    }
+    const response = await fetch(url);
+    this.checkStatus(response);
+    const data = response.json();
+    return data;
   };
 
   checkStatus = (response: Response): void => {

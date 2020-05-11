@@ -27,6 +27,7 @@ export default class UserArtist extends React.Component<
   APIService: APIService;
 
   private ROWS_PER_PAGE = 25;
+  private maxListens = 0; // Number of listens for first artist used to scale the graph
 
   constructor(props: UserArtistProps) {
     super(props);
@@ -58,22 +59,36 @@ export default class UserArtist extends React.Component<
 
     // Fetch page number from URL
     let url = new URL(window.location.href);
-    let page: number;
-    try {
-      page = Number(url.searchParams.get("page"));
-    } catch {
+    let page = Number(url.searchParams.get("page"));
+    if (page === 0) {
       page = 1;
     }
 
     // Fetch data from backend
     let offset = (page - 1) * this.ROWS_PER_PAGE;
-    let data = await this.APIService.getUserStats(
-      user.name,
-      undefined,
-      offset,
-      this.ROWS_PER_PAGE
-    );
-    this.setState({ data: this.processData(data) });
+    try {
+      let data = await this.APIService.getUserStats(
+        user.name,
+        undefined,
+        undefined,
+        1
+      );
+      this.maxListens = data.payload.artists[0].listen_count;
+      data = await this.APIService.getUserStats(
+        user.name,
+        undefined,
+        offset,
+        this.ROWS_PER_PAGE
+      );
+      this.setState({ data: this.processData(data) });
+    } catch (error) {
+      // ErrorBoundary doesn't catch errors in async code.
+      // Throwing an error in setState fixes this.
+      // This is a hacky solution but should be fixed with upcoming concurrent mode in React.
+      this.setState(() => {
+        throw error;
+      });
+    }
   }
 
   render() {
@@ -81,8 +96,8 @@ export default class UserArtist extends React.Component<
 
     return (
       <div className="row">
-        <div className="col-md-8" style={{ height: "50em" }}>
-          <Bar data={data} />
+        <div className="col-md-8" style={{ height: "75em" }}>
+          <Bar data={data} maxValue={this.maxListens} />
         </div>
       </div>
     );
