@@ -35,14 +35,16 @@
 
     <h3>User token</h3>
     <p>
-      If you would like to use an external program to submit data to ListenBrainz you will need the following
-      user token:
+      If you would like to use an external program to submit data to ListenBrainz, you will need the following user token:
     </p>
 
-    <div class="form-inline form-group">
-      <input class="form-control" id="auth-token" type="text" size="36" value="{{ user.auth_token }}" readonly>
-      <button class="btn btn-info btn-sm glyphicon glyphicon-copy" id="copy-token" title="Copy token to clipboard"></button>
-    </div>
+    <p>
+      <form class="form-inline">
+        <input type="password" class="form-control" id="auth-token" style="width: 400px; height:30px;" value="{{ user.auth_token }}" readonly />
+        <button type="button" class="btn btn-info glyphicon glyphicon-eye-open" id="show-hide-token" style="width: 50px; height:30px;" title="Show user token"></button>
+        <input type="button" class="btn btn-info btn-med glyphicon glyphicon-copy" id="copy-token" style="height:30px;" value="Copy" />
+      </form>
+    </p>
 
     <p>If you want to reset your token, click below</p>
     <p>
