@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React from "react";
 import { ResponsiveBar, LabelFormatter } from "@nivo/bar";
 
@@ -20,12 +19,6 @@ export default class Bar extends React.Component<BarProps, BarState> {
     };
   }
 
-  handleResize = () => {
-    this.setState({
-      marginLeft: window.innerWidth / 5,
-    });
-  };
-
   componentDidMount() {
     window.addEventListener("resize", this.handleResize);
   }
@@ -34,12 +27,18 @@ export default class Bar extends React.Component<BarProps, BarState> {
     window.removeEventListener("resize", this.handleResize);
   }
 
+  handleResize = () => {
+    this.setState({
+      marginLeft: window.innerWidth / 5,
+    });
+  };
+
   render() {
     const { data, maxValue } = this.props;
     const { marginLeft } = this.state;
 
     const leftAlignedTick = (tick: any) => {
-      let value: string = tick.value;
+      let { value } = tick.value;
       if (value.length > marginLeft / 10) {
         value = `${value.slice(0, marginLeft / 10)}...`;
       }
@@ -61,10 +60,10 @@ export default class Bar extends React.Component<BarProps, BarState> {
       );
     }) as unknown) as LabelFormatter;
 
-    const customTooltip = (data: any) => {
+    const customTooltip = (datum: any) => {
       return (
         <div>
-          {data.indexValue}: <strong>{data.value} Listens</strong>
+          {datum.indexValue}: <strong>{datum.value} Listens</strong>
         </div>
       );
     };

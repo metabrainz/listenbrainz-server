@@ -1,4 +1,3 @@
-/* eslint-disable */
 import * as ReactDOM from "react-dom";
 import * as React from "react";
 
@@ -46,24 +45,11 @@ export default class UserArtist extends React.Component<
     };
   }
 
-  processData = (data: any): UserArtistData => {
-    // TODO: Define type for artist stat payload
-    let result = data.payload.artists
-      .map((elem: any) => {
-        return {
-          id: elem.artist_name,
-          count: elem.listen_count,
-        };
-      })
-      .reverse();
-    return result;
-  };
-
   async componentDidMount() {
-    let { user } = this.props;
+    const { user } = this.props;
 
     // Fetch page number from URL
-    let url = new URL(window.location.href);
+    const url = new URL(window.location.href);
     if (url.searchParams.get("page")) {
       this.currPage = Number(url.searchParams.get("page"));
     } else {
@@ -71,7 +57,7 @@ export default class UserArtist extends React.Component<
     }
 
     // Fetch data from backend
-    let offset = (this.currPage - 1) * this.ROWS_PER_PAGE;
+    const offset = (this.currPage - 1) * this.ROWS_PER_PAGE;
     try {
       let data = await this.APIService.getUserStats(
         user.name,
@@ -100,6 +86,19 @@ export default class UserArtist extends React.Component<
       });
     }
   }
+
+  processData = (data: any): UserArtistData => {
+    // TODO: Define type for artist stat payload
+    const result = data.payload.artists
+      .map((elem: any) => {
+        return {
+          id: elem.artist_name,
+          count: elem.listen_count,
+        };
+      })
+      .reverse();
+    return result;
+  };
 
   render() {
     const { data } = this.state;
