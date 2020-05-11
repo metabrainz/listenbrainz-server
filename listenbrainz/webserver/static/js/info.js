@@ -26,4 +26,6 @@ document.getElementById("copy-token").addEventListener("click", function() {
         token.type = 'password';
     }
     copy(token);
+    var copyButton = document.getElementById("copy-token");
+    copyButton.value = "Copied!"
 });
