@@ -61,6 +61,14 @@ export default class Bar extends React.Component<BarProps, BarState> {
       );
     }) as unknown) as LabelFormatter;
 
+    const customTooltip = (data: any) => {
+      return (
+        <div>
+          {data.indexValue}: <strong>{data.value} Listens</strong>
+        </div>
+      );
+    };
+
     const theme = {
       axis: {
         ticks: {
@@ -87,6 +95,7 @@ export default class Bar extends React.Component<BarProps, BarState> {
         padding={0.15}
         labelFormat={labelFormatter}
         labelSkipWidth={0}
+        tooltip={customTooltip}
         margin={{
           left: marginLeft,
         }}
