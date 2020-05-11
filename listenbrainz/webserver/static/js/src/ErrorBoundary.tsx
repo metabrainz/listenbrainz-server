@@ -23,7 +23,7 @@ export default class ErrorBoundary extends React.Component<any, any> {
           <h2 className="page-title">{error.name}</h2>
           <p>{error.message}</p>
           <p>
-            <a href={`https://${window.location.href.split("/")[2]}`}>
+            <a href={`//${window.location.href.split("/")[2]}`}>
               Back to home page
             </a>
           </p>
