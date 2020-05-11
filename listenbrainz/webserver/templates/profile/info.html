@@ -38,19 +38,11 @@
       If you would like to use an external program to submit data to ListenBrainz you will need the user token:
     </p>
 
-    <div class="form-inline form-group">
-      <p><b>Copy User Token</b>
-      <input class="form-control" id="auth-token" type="hidden" size="36" value="{{ user.auth_token }}" readonly>
-      <button class="btn btn-info btn-sm glyphicon glyphicon-copy" id="copy-token" title="Copy token to clipboard"></button>
-      </p>
-    </div>
-
-    <div class="divcontainer">
-      <p><b>User Token</b>
-        <span class="btn btn-info glyphicon glyphicon-dropdown glyphicon-chevron-down" data-toggle="collapse" data-target="#collapsecontent" style="width: 50px"></span>
-        <div class="collapse" id="collapsecontent">{{ user.auth_token }}</div>
-      </p>
-    </div>
+    <p><form class="form-inline">
+      <input type="password" class="form-control" id="auth-token" style="width: 400px; height:30px;" value="{{ user.auth_token }}" readonly>
+      <button type="button" class="btn btn-info glyphicon glyphicon-eye-open" id="show-hide-token" style="width: 50px; height:30px;" title="Show user token"></button>
+      <button type="button" class="btn btn-info btn-sm glyphicon glyphicon-copy" id="copy-token" style="width: 50px; height:30px;" title="Copy token to clipboard" ></button>
+    </form></p>
 
     <p>If you want to reset your token, click below</p>
     <p>
