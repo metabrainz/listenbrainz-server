@@ -135,12 +135,15 @@ def get_mapped_artist_and_recording_mbids(partial_listens_df, recording_artist_m
         Returns:
             mapped_df (dataframe): Dataframe with all the columns/fields that a typical listen has.
     """
-    mapped_df = partial_listens_df.join(
-        recording_artist_mapping_df,
+    df = partial_listens_df.join(recording_artist_mapping_df,
             (partial_listens_df.recording_msid == recording_artist_mapping_df.msb_recording_msid) &
             (partial_listens_df.artist_msid == recording_artist_mapping_df.msb_artist_msid),
         'inner'
     )
+    # msb_release_name_matchable is skipped till the bug in mapping is resolved.
+    # bug : release_name in listens and msb_release_name in mapping is different.
+    mapped_df = df.select('listened_at', 'mb_artist_credit_id', 'mb_artist_credit_mbids', 'mb_recording_mbid',
+        'mb_release_mbid', 'msb_artist_credit_name_matchable', 'track_name', 'user_name')
     save_dataframe(mapped_df, path.MAPPED_LISTENS)
     return mapped_df
 
@@ -249,7 +252,7 @@ def main():
     # Dataframe containing recording msid->mbid and artist msid->mbid mapping.
     recording_artist_mapping_df = utils.read_files_from_HDFS(path.MBID_MSID_MAPPING)
 
-    # Dataframe containing all fields that a listen should have including artist_mbids and recording_msid.
+    # Dataframe containing all fields that a listen should have including artist_mbids and recording_mbid.
     complete_listens_df = get_mapped_artist_and_recording_mbids(partial_listens_df, recording_artist_mapping_df)
 
     current_app.logger.info('Preparing users data and saving to HDFS...')

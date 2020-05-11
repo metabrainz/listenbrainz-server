@@ -50,14 +50,14 @@ class RecommendTestClass(SparkTestCase):
         candidate_set_user_rdd = candidate_set_user.rdd.map(lambda r: (r['user_id'], r['recording_id']))
         recommended_rec = recommend.get_recommended_recordings(candidate_set_user_rdd, limit, recordings_df, model,
             mapped_listens)
+        print(recommended_rec)
         self.assertEqual(len(recommended_rec), limit)
-        self.assertEqual(recommended_rec[0][0], 'Less Than Jake')
+        self.assertEqual(recommended_rec[0][0], 'lessthanjake')
         self.assertEqual(recommended_rec[0][1], 1)
         self.assertEqual(recommended_rec[0][2], ['181c4177-f33a-441d-b15d-910acaf18b07'])
         self.assertEqual(recommended_rec[0][3], '3acb406f-c716-45f8-a8bd-96ca3939c2e5')
         self.assertEqual(recommended_rec[0][4], 'xxxxxx')
-        self.assertEqual(recommended_rec[0][5], 'xxxxxx')
-        self.assertEqual(recommended_rec[0][6], "Al's War")
+        self.assertEqual(recommended_rec[0][5], "Al's War")
 
     def test_recommend_user(self):
         model = recommend.load_model(config.HDFS_CLUSTER_URI + self.model_save_path)
@@ -85,16 +85,16 @@ class RecommendTestClass(SparkTestCase):
         user_recommendations = recommend.get_recommendations(user_names, recordings_df, model, users_df,
             top_artist_candidate_set, similar_artist_candidate_set, mapped_listens)
         self.assertListEqual(user_recommendations['vansika'].get('top_artists_recordings'),
-            [('Less Than Jake', 1, ['181c4177-f33a-441d-b15d-910acaf18b07'], '3acb406f-c716-45f8-a8bd-96ca3939c2e5',
-                'xxxxxx', 'xxxxxx', "Al's War")])
+            [('lessthanjake', 1, ['181c4177-f33a-441d-b15d-910acaf18b07'], '3acb406f-c716-45f8-a8bd-96ca3939c2e5',
+                'xxxxxx', "Al's War")])
         self.assertListEqual(user_recommendations['vansika'].get('similar_artists_recordings'),
-            [('Less Than Jake', 1, ['181c4177-f33a-441d-b15d-910acaf18b07'], '3acb406f-c716-45f8-a8bd-96ca3939c2e5',
-                'xxxxxx', 'xxxxxx', "Al's War")])
+            [('lessthanjake', 1, ['181c4177-f33a-441d-b15d-910acaf18b07'], '3acb406f-c716-45f8-a8bd-96ca3939c2e5',
+                'xxxxxx', "Al's War")])
         self.assertTrue(user_recommendations['vansika'].get('time'))
         self.assertListEqual(user_recommendations['rob'].get('top_artists_recordings'),
-            [('Kishore Kumar', 2, ['281c4177-f33a-441d-b15d-910acaf18b07'], '2acb406f-c716-45f8-a8bd-96ca3939c2e5',
-                'xxxxxx', 'xxxxxx', 'Mere Sapno ki Rani')])
+            [('kishorekumar', 2, ['281c4177-f33a-441d-b15d-910acaf18b07'], '2acb406f-c716-45f8-a8bd-96ca3939c2e5',
+                'xxxxxx', 'Mere Sapno ki Rani')])
         self.assertListEqual(user_recommendations['rob'].get('similar_artists_recordings'),
-            [('Kishore Kumar', 2, ['281c4177-f33a-441d-b15d-910acaf18b07'], '2acb406f-c716-45f8-a8bd-96ca3939c2e5',
-                'xxxxxx', 'xxxxxx', 'Mere Sapno ki Rani')])
+            [('kishorekumar', 2, ['281c4177-f33a-441d-b15d-910acaf18b07'], '2acb406f-c716-45f8-a8bd-96ca3939c2e5',
+                'xxxxxx', 'Mere Sapno ki Rani')])
         self.assertTrue(user_recommendations['rob'].get('time'))
