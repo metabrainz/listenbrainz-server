@@ -46,6 +46,7 @@ class TimescaleListenStore(ListenStore):
         timescale.init_db_connection(conf['SQLALCHEMY_TIMESCALE_URI'])
 
         # Initialize brainzutils cache
+        self.ns = conf['REDIS_NAMESPACE']
         init_cache(host=conf['REDIS_HOST'], port=conf['REDIS_PORT'], namespace=conf['REDIS_NAMESPACE'])
         self.dump_temp_dir_root = conf.get('LISTEN_DUMP_TEMP_DIR_ROOT', tempfile.mkdtemp())
 
@@ -65,7 +66,7 @@ class TimescaleListenStore(ListenStore):
             # decode is set to False as we have not encoded the value when we set it
             # in brainzutils cache as we need to call increment operation which requires
             # an integer value
-            user_key = '{}{}'.format(REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
+            user_key = '{}{}'.format(self.ns + REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
             count = cache.get(user_key, decode=False)
             if count:
                 return int(count)
@@ -92,7 +93,7 @@ class TimescaleListenStore(ListenStore):
             raise
 
         # put this value into brainzutils cache with an expiry time
-        user_key = "{}{}".format(REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
+        user_key = "{}{}".format(self.ns + REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
         cache.set(user_key, count, TimescaleListenStore.USER_LISTEN_COUNT_CACHE_TIME, encode=False)
         return count
 
@@ -131,7 +132,7 @@ class TimescaleListenStore(ListenStore):
         """
 
         if cache_value:
-            count = cache.get(TimescaleListenStore.REDIS_TIMESCALE_TOTAL_LISTEN_COUNT, decode=False)
+            count = cache.get(self.ns + TimescaleListenStore.REDIS_TIMESCALE_TOTAL_LISTEN_COUNT, decode=False)
             if count:
                 return int(count)
 
@@ -155,7 +156,7 @@ class TimescaleListenStore(ListenStore):
 
         if cache_value:
             cache.set(
-                TimescaleListenStore.REDIS_TIMESCALE_TOTAL_LISTEN_COUNT,
+                self.ns + TimescaleListenStore.REDIS_TIMESCALE_TOTAL_LISTEN_COUNT,
                 count,
                 TimescaleListenStore.TOTAL_LISTEN_COUNT_CACHE_TIME,
                 encode=False,
@@ -167,7 +168,7 @@ class TimescaleListenStore(ListenStore):
         """ Return the max_ts and min_ts for a given user and cache the result in brainzutils cache
         """
 
-        tss = cache.get(REDIS_USER_TIMESTAMPS % user_name)
+        tss = cache.get(self.ns + REDIS_USER_TIMESTAMPS % user_name)
         if tss:
             (min_ts, max_ts) = tss.split(",")
             min_ts = int(min_ts)
@@ -176,7 +177,7 @@ class TimescaleListenStore(ListenStore):
             min_ts = self._select_single_timestamp(True, user_name)
             max_ts = self._select_single_timestamp(False, user_name)
 
-            cache.set(REDIS_USER_TIMESTAMPS % user_name, "%d,%d" % (min_ts, max_ts), USER_CACHE_TIME)
+            cache.set(self.ns + REDIS_USER_TIMESTAMPS % user_name, "%d,%d" % (min_ts, max_ts), USER_CACHE_TIME)
 
         return min_ts, max_ts
 
@@ -214,14 +215,14 @@ class TimescaleListenStore(ListenStore):
 
         # So update the listen counts of the users cached in brainzutils cache.
         for ts, msid, user_name in inserted_rows:
-            user_key = "{}{}".format(REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
+            user_key = "{}{}".format(self.ns + REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
             cached_count = cache.get(user_key, decode=False)
             if cached_count:
                 cache.increment(user_key)
 
         # Invalidate cached data for user
         for user_name in user_names.keys():
-            cache.delete(REDIS_USER_TIMESTAMPS % user_name)
+            cache.delete(self.ns + REDIS_USER_TIMESTAMPS % user_name)
 
         return inserted_rows
 

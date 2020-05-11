@@ -53,6 +53,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.log = logging.getLogger(__name__)
         self.reset_timescale_db()
         
+        self.ns = config.REDIS_NAMESPACE
         self.logstore = init_timescale_connection(self.log, {
             'REDIS_HOST': config.REDIS_HOST,
             'REDIS_PORT': config.REDIS_PORT,
@@ -569,7 +570,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
     def test_listen_counts_in_cache(self):
         count = self._create_test_data(self.testuser_name)     
         self.assertEqual(count, self.logstore.get_listen_count_for_user(self.testuser_name, need_exact=True))
-        user_key = '{}{}'.format(REDIS_TIMESCALE_USER_LISTEN_COUNT, self.testuser_name)
+        user_key = '{}{}'.format(self.ns + REDIS_TIMESCALE_USER_LISTEN_COUNT, self.testuser_name)
         self.assertEqual(count, int(cache.get(user_key, decode=False)))
 
         batch = generate_data(self.testuser_id, self.testuser_name, int(time.time()), 1)
