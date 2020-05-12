@@ -34,14 +34,20 @@ Run the following command to build the spark containers.
 
 .. code-block:: bash
 
-    ./spark_develop.sh build
+    ./develop.sh spark build
 
 The first time you build the containers, you also need to format the ``namenode``
 container.
 
 .. code-block:: bash
 
-    ./spark_develop.sh format
+    ./develop.sh spark format
+
+.. warning::
+
+    You should run ``./develop.sh spark format`` only once, during setup. Running the command again
+    can lead to the spark environment breaking. We're looking into ways to fix this issue.
+
 
 Your development environment is now ready. Now, let's actually see ListenBrainz Spark
 in action!
@@ -50,11 +56,11 @@ in action!
 Bring containers up
 --------------------
 
-Start the ListenBrainz Spark containers by executing ``spark_develop.sh up``.
+Start the ListenBrainz Spark containers by executing ``develop.sh spark up``.
 
 .. code-block:: bash
 
-    ./spark_develop.sh up
+    ./develop.sh spark up
 
 Import data into the spark environment
 --------------------------------------
@@ -65,7 +71,7 @@ commands.
 
 .. code-block:: bash
 
-    ./spark_develop.sh run request_consumer python spark_manage.py upload_listens -i
+    ./develop.sh spark run request_consumer python spark_manage.py upload_listens -i
 
 
 Now, you are all set to begin making changes and seeing them in real-time inside
@@ -75,11 +81,11 @@ Once you are done with your work, shut down the containers using the following c
 
 .. code-block:: bash
 
-    ./spark_develop.sh down
+    ./develop.sh spark down
 
 .. note::
 
-    You'll need to run ``./spark_develop.sh down`` every time you restart your environment, otherwise hadoop errors out.
+    You'll need to run ``./develop.sh spark down`` every time you restart your environment, otherwise hadoop errors out.
 
 Working with request_consumer
 -----------------------------
