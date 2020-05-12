@@ -19,21 +19,21 @@ def load():
         composed of recording MBIDs and have the player attempt to make the list playable.
     """
 
-    raw_data = request.get_data()
     try:
-        data = ujson.loads(raw_data.decode("utf-8"))
+        raw_listens = request.form.get('listens')
     except ValueError as e:
         return render_template(
             "index/playlist.html",
-            error_msg="Cannot parse JSON document: %s" % e
+            error_msg="POST request body should have 'listens' parameter"
         )
-
-    if not isinstance(data, list):
+        
+    try:
+        listens = ujson.loads(raw_listens)
+    except ValueError as e:
         return render_template(
-                "index/playlist.html",
-                error_msg="submitted data must be a list"
-            )
-
+            "index/playlist.html",
+            error_msg="'listens' should be an JSON array"
+        )
 
     user_data = {
         "id": current_user.id,
@@ -45,14 +45,12 @@ def load():
         "user": user_data,
         "spotify": spotify_data,
         "api_url": current_app.config["API_URL"],
-        "listens" : data,
-        # "metadata" : metadata
+        "listens" : listens
     }
 
     return render_template(
         "index/playlist.html",
         props=ujson.dumps(props),
         user=current_user,
-        spotify_data=spotify_data,
-        absolute_urls= True
+        spotify_data=spotify_data
     )
