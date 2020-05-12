@@ -122,12 +122,12 @@ export default class UserArtists extends React.Component<
     return (
       <div>
         <div className="row">
-          <div className="col-md-8" style={{ height: "75em" }}>
+          <div className="col-md-12" style={{ height: "75em" }}>
             <Bar data={data} maxValue={this.maxListens} />
           </div>
         </div>
         <div className="row">
-          <div className="col-md-8">
+          <div className="col-md-12">
             <ul className="pager">
               <li className={`previous ${!(prevPage > 0) ? "hidden" : ""}`}>
                 <a href={`${this.baseUrl}?page=${prevPage}`}>&larr; Previous</a>
