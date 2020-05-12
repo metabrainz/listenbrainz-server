@@ -102,6 +102,23 @@ describe("componentDidMount", () => {
     expect(instance.processData).toHaveBeenCalledWith(userArtistsResponse, 0);
     expect(wrapper.state("data")).toEqual(userArtistsProcessDataOutput);
   });
+
+  it("throws appropriate error if statistics haven't been calculated", async () => {
+    const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
+    const instance = wrapper.instance();
+
+    // eslint-disable-next-line dot-notation
+    const spy = jest.spyOn(instance["APIService"], "getUserStats");
+    spy.mockImplementation((): any => {
+      throw SyntaxError("Unexpected end of JSON input");
+    });
+
+    await expect(instance.componentDidMount()).rejects.toThrow(
+      Error(
+        "Statistics for user: dummyUser have not been calculated yet. Please try again later."
+      )
+    );
+  });
 });
 
 describe("processData", () => {

@@ -80,6 +80,19 @@ export default class UserArtists extends React.Component<
       // Error Boundaries don't catch errors in async code.
       // Throwing an error in setState fixes this.
       // This is a hacky solution but should be fixed with upcoming concurrent mode in React.
+      if (
+        error.name === "SyntaxError" &&
+        error.message === "Unexpected end of JSON input"
+      ) {
+        // If the above error is thrown, it means stats haven't been calculated, show an
+        // appropriate message to the user.
+        this.setState(() => {
+          throw new Error(
+            `Statistics for user: ${user.name} have not been calculated yet. Please try again later.`
+          );
+        });
+      }
+
       this.setState(() => {
         throw error;
       });
