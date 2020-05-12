@@ -45,12 +45,19 @@ class CreateDataframeTestCase(SparkTestCase):
     @classmethod
     def upload_test_mapping_to_HDFS(cls):
         test_mapping = {
-            "msb_recording_msid":"cb6985cd-cc71-4d59-b4fb-2e72796af741",
-            "mb_recording_mbid":"3acb406f-c716-45f8-a8bd-96ca3939c2e5","msb_artist_msid":"a36d6fc9-49d0-4789-a7dd-a2b72369ca45",
-            "mb_artist_credit_mbids":["181c4177-f33a-441d-b15d-910acaf18b07"],"mb_artist_credit_id":2157963,
-            "mb_release_mbid": "xxxxx", "msb_release_msid": "xxxxx", "msb_artist_credit_name": "Less Than Jake",
-            "msb_artist_credit_name_matchable": 'lessthanjake', "msb_recording_name": "Al's War",
-            "msb_recording_name_matchable": "alswar", "msb_release_name": "Easier", "msb_release_name_matchable": "easier",
+            "msb_recording_msid": "cb6985cd-cc71-4d59-b4fb-2e72796af741",
+            "mb_recording_mbid": "3acb406f-c716-45f8-a8bd-96ca3939c2e5",
+            "msb_artist_msid": "a36d6fc9-49d0-4789-a7dd-a2b72369ca45",
+            "mb_artist_credit_mbids": ["181c4177-f33a-441d-b15d-910acaf18b07"],
+            "mb_artist_credit_id": 2157963,
+            "mb_release_mbid": "xxxxx",
+            "msb_release_msid": "xxxxx",
+            "msb_artist_credit_name": "Less Than Jake",
+            "msb_artist_credit_name_matchable": "lessthanjake",
+            "msb_recording_name": "Al's War",
+            "msb_recording_name_matchable": "alswar",
+            "msb_release_name": "Easier",
+            "msb_release_name_matchable": "easier",
         }
 
         test_mapping_df = utils.create_dataframe(schema.convert_mapping_to_row(test_mapping), schema.msid_mbid_mapping_schema)
