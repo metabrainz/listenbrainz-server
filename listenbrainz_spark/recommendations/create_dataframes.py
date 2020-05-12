@@ -142,8 +142,10 @@ def get_mapped_artist_and_recording_mbids(partial_listens_df, recording_artist_m
     )
     # msb_release_name_matchable is skipped till the bug in mapping is resolved.
     # bug : release_name in listens and msb_release_name in mapping is different.
-    mapped_df = df.select('listened_at', 'mb_artist_credit_id', 'mb_artist_credit_mbids', 'mb_recording_mbid',
-        'mb_release_mbid', 'msb_artist_credit_name_matchable', 'track_name', 'user_name')
+    mapped_df = df.select(
+        'listened_at', 'mb_artist_credit_id', 'mb_artist_credit_mbids', 'mb_recording_mbid',
+        'mb_release_mbid', 'msb_artist_credit_name_matchable', 'track_name', 'user_name'
+    )
     save_dataframe(mapped_df, path.MAPPED_LISTENS)
     return mapped_df
 
