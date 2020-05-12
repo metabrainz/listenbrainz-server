@@ -27,43 +27,43 @@ exports[`User Artists Page renders 1`] = `
             Array [
               Object {
                 "count": 41,
-                "id": "The Fray",
+                "id": "10. The Fray",
               },
               Object {
                 "count": 44,
-                "id": "The Chainsmokers",
+                "id": "9. The Chainsmokers",
               },
               Object {
                 "count": 52,
-                "id": "The Weeknd",
+                "id": "8. The Weeknd",
               },
               Object {
                 "count": 65,
-                "id": "OneRepublic",
+                "id": "7. OneRepublic",
               },
               Object {
                 "count": 108,
-                "id": "Ellie Goulding",
+                "id": "6. Ellie Goulding",
               },
               Object {
                 "count": 118,
-                "id": "Maroon 5",
+                "id": "5. Maroon 5",
               },
               Object {
                 "count": 176,
-                "id": "Imagine Dragons",
+                "id": "4. Imagine Dragons",
               },
               Object {
                 "count": 321,
-                "id": "Coldplay",
+                "id": "3. Coldplay",
               },
               Object {
                 "count": 333,
-                "id": "Lenka",
+                "id": "2. Lenka",
               },
               Object {
                 "count": 385,
-                "id": "The Local train",
+                "id": "1. The Local train",
               },
             ]
           }
@@ -80,43 +80,43 @@ exports[`User Artists Page renders 1`] = `
               Array [
                 Object {
                   "count": 41,
-                  "id": "The Fray",
+                  "id": "10. The Fray",
                 },
                 Object {
                   "count": 44,
-                  "id": "The Chainsmokers",
+                  "id": "9. The Chainsmokers",
                 },
                 Object {
                   "count": 52,
-                  "id": "The Weeknd",
+                  "id": "8. The Weeknd",
                 },
                 Object {
                   "count": 65,
-                  "id": "OneRepublic",
+                  "id": "7. OneRepublic",
                 },
                 Object {
                   "count": 108,
-                  "id": "Ellie Goulding",
+                  "id": "6. Ellie Goulding",
                 },
                 Object {
                   "count": 118,
-                  "id": "Maroon 5",
+                  "id": "5. Maroon 5",
                 },
                 Object {
                   "count": 176,
-                  "id": "Imagine Dragons",
+                  "id": "4. Imagine Dragons",
                 },
                 Object {
                   "count": 321,
-                  "id": "Coldplay",
+                  "id": "3. Coldplay",
                 },
                 Object {
                   "count": 333,
-                  "id": "Lenka",
+                  "id": "2. Lenka",
                 },
                 Object {
                   "count": 385,
-                  "id": "The Local train",
+                  "id": "1. The Local train",
                 },
               ]
             }

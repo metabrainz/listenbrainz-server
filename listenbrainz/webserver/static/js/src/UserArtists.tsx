@@ -67,16 +67,15 @@ export default class UserArtists extends React.Component<
       );
       this.maxListens = data.payload.artists[0].listen_count;
       this.totalPages = Math.ceil(
-        data.payload.total_count / this.ROWS_PER_PAGE
+        data.payload.total_artist_count / this.ROWS_PER_PAGE
       );
-
       data = await this.APIService.getUserStats(
         user.name,
         undefined,
         offset,
         this.ROWS_PER_PAGE
       );
-      this.setState({ data: this.processData(data) });
+      this.setState({ data: this.processData(data, offset) });
     } catch (error) {
       // Error Boundaries don't catch errors in async code.
       // Throwing an error in setState fixes this.
@@ -87,12 +86,12 @@ export default class UserArtists extends React.Component<
     }
   }
 
-  processData = (data: any): UserArtistsData => {
+  processData = (data: any, offset: number): UserArtistsData => {
     // TODO: Define type for artist stat payload
     const result = data.payload.artists
-      .map((elem: any) => {
+      .map((elem: any, idx: number) => {
         return {
-          id: elem.artist_name,
+          id: `${offset + idx + 1}. ${elem.artist_name}`,
           count: elem.listen_count,
         };
       })

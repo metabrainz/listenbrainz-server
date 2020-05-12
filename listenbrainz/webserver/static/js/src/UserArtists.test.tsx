@@ -89,7 +89,7 @@ describe("componentDidMount", () => {
     spy.mockImplementation(() => {
       return Promise.resolve(userArtistsResponse);
     });
-    instance.processData = jest.fn().mockImplementation(() => {
+    instance.processData = jest.fn().mockImplementationOnce(() => {
       return userArtistsProcessDataOutput;
     });
     delete window.location;
@@ -99,10 +99,8 @@ describe("componentDidMount", () => {
     await instance.componentDidMount();
 
     expect(spy).toHaveBeenCalledWith("dummyUser", undefined, 0, 25);
-    expect(instance.processData).toHaveBeenCalledWith(userArtistsResponse);
-    expect(wrapper.state("data")).toEqual(
-      userArtistsProcessDataOutput.reverse()
-    );
+    expect(instance.processData).toHaveBeenCalledWith(userArtistsResponse, 0);
+    expect(wrapper.state("data")).toEqual(userArtistsProcessDataOutput);
   });
 });
 
@@ -111,8 +109,8 @@ describe("processData", () => {
     const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
     const instance = wrapper.instance();
 
-    expect(instance.processData(userArtistsResponse)).toEqual(
-      userArtistsProcessDataOutput.reverse()
+    expect(instance.processData(userArtistsResponse, 0)).toEqual(
+      userArtistsProcessDataOutput
     );
   });
 });
