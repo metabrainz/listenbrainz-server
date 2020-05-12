@@ -13,20 +13,25 @@ const props = {
   apiUrl: "apiUrl",
 };
 
-// describe("User Artists Page", () => {
-//   it("renders", () => {
-//     const wrapper = mount<UserArtists>(<UserArtists {...props} />);
-//     const instance = wrapper.instance();
-//
-//     // eslint-disable-next-line dot-notation
-//     instance["maxListens"] = 385;
-//     wrapper.setState({ data: userArtistsProcessDataOutput as any });
-//     instance.forceUpdate();
-//     console.log(wrapper.html());
-//
-//     expect(wrapper.html()).toMatchSnapshot();
-//   });
-// });
+describe("User Artists Page", () => {
+  it("renders", () => {
+    // We don't need to call componentDidMount during "mount" because we are
+    // passing the data manually, so mock the implementation once.
+    jest
+      .spyOn(UserArtists.prototype, "componentDidMount")
+      .mockImplementationOnce((): any => {});
+
+    const wrapper = mount<UserArtists>(<UserArtists {...props} />);
+    const instance = wrapper.instance();
+
+    // eslint-disable-next-line dot-notation
+    instance["maxListens"] = 385;
+    wrapper.setState({ data: userArtistsProcessDataOutput as any });
+    wrapper.update();
+
+    expect(wrapper).toMatchSnapshot();
+  });
+});
 
 describe("componentDidMount", () => {
   it("set current page to 1 if not provided in URL", () => {

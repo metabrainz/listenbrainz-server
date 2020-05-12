@@ -1,0 +1,225 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`User Artists Page renders 1`] = `
+<UserArtists
+  apiUrl="apiUrl"
+  user={
+    Object {
+      "id": 0,
+      "name": "dummyUser",
+    }
+  }
+>
+  <div>
+    <div
+      className="row"
+    >
+      <div
+        className="col-md-8"
+        style={
+          Object {
+            "height": "75em",
+          }
+        }
+      >
+        <Bar
+          data={
+            Array [
+              Object {
+                "count": 41,
+                "id": "The Fray",
+              },
+              Object {
+                "count": 44,
+                "id": "The Chainsmokers",
+              },
+              Object {
+                "count": 52,
+                "id": "The Weeknd",
+              },
+              Object {
+                "count": 65,
+                "id": "OneRepublic",
+              },
+              Object {
+                "count": 108,
+                "id": "Ellie Goulding",
+              },
+              Object {
+                "count": 118,
+                "id": "Maroon 5",
+              },
+              Object {
+                "count": 176,
+                "id": "Imagine Dragons",
+              },
+              Object {
+                "count": 321,
+                "id": "Coldplay",
+              },
+              Object {
+                "count": 333,
+                "id": "Lenka",
+              },
+              Object {
+                "count": 385,
+                "id": "The Local train",
+              },
+            ]
+          }
+          maxValue={385}
+        >
+          <ResponsiveBar
+            axisLeft={
+              Object {
+                "renderTick": [Function],
+              }
+            }
+            colors="#FD8D3C"
+            data={
+              Array [
+                Object {
+                  "count": 41,
+                  "id": "The Fray",
+                },
+                Object {
+                  "count": 44,
+                  "id": "The Chainsmokers",
+                },
+                Object {
+                  "count": 52,
+                  "id": "The Weeknd",
+                },
+                Object {
+                  "count": 65,
+                  "id": "OneRepublic",
+                },
+                Object {
+                  "count": 108,
+                  "id": "Ellie Goulding",
+                },
+                Object {
+                  "count": 118,
+                  "id": "Maroon 5",
+                },
+                Object {
+                  "count": 176,
+                  "id": "Imagine Dragons",
+                },
+                Object {
+                  "count": 321,
+                  "id": "Coldplay",
+                },
+                Object {
+                  "count": 333,
+                  "id": "Lenka",
+                },
+                Object {
+                  "count": 385,
+                  "id": "The Local train",
+                },
+              ]
+            }
+            enableGridY={false}
+            indexBy="id"
+            keys={
+              Array [
+                "count",
+              ]
+            }
+            labelFormat={[Function]}
+            labelSkipWidth={0}
+            layout="horizontal"
+            margin={
+              Object {
+                "left": 204.8,
+              }
+            }
+            maxValue={385}
+            padding={0.15}
+            theme={
+              Object {
+                "axis": Object {
+                  "ticks": Object {
+                    "text": Object {
+                      "fontSize": "14px",
+                    },
+                  },
+                },
+                "labels": Object {
+                  "text": Object {
+                    "fontSize": "14px",
+                  },
+                },
+              }
+            }
+            tooltip={[Function]}
+          >
+            <ResponsiveWrapper>
+              <Measure
+                bounds={true}
+                onResize={[Function]}
+              >
+                <Component
+                  bounds={true}
+                  contentRect={
+                    Object {
+                      "bounds": Object {},
+                      "client": Object {},
+                      "entry": Object {},
+                      "margin": Object {},
+                      "offset": Object {},
+                      "scroll": Object {},
+                    }
+                  }
+                  measure={[Function]}
+                  measureRef={[Function]}
+                >
+                  <div
+                    style={
+                      Object {
+                        "height": "100%",
+                        "width": "100%",
+                      }
+                    }
+                  />
+                </Component>
+              </Measure>
+            </ResponsiveWrapper>
+          </ResponsiveBar>
+        </Bar>
+      </div>
+    </div>
+    <div
+      className="row"
+    >
+      <div
+        className="col-md-8"
+      >
+        <ul
+          className="pager"
+        >
+          <li
+            className="previous hidden"
+          >
+            <a
+              href="http://localhost/?page=0"
+            >
+              ← Previous
+            </a>
+          </li>
+          <li
+            className="next hidden"
+          >
+            <a
+              href="http://localhost/?page=2"
+            >
+              Next →
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</UserArtists>
+`;
