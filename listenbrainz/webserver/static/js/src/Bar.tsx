@@ -108,6 +108,7 @@ export default class Bar extends React.Component<BarProps, BarState> {
         }}
         theme={theme}
         keys={["count"]}
+        animate={false}
       />
     );
   }

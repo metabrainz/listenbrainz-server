@@ -34,20 +34,6 @@ describe("User Artists Page", () => {
 });
 
 describe("componentDidMount", () => {
-  it("set current page to 1 if not provided in URL", () => {
-    const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
-    const instance = wrapper.instance();
-
-    delete window.location;
-    window.location = {
-      href: "https://foobar/user/bazfoo/artists",
-    } as any;
-    instance.componentDidMount();
-
-    // eslint-disable-next-line dot-notation
-    expect(instance["currPage"]).toBe(1);
-  });
-
   it("extracts current page from the URL if present", () => {
     const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
     const instance = wrapper.instance();
@@ -80,7 +66,55 @@ describe("componentDidMount", () => {
     expect(instance["totalPages"]).toBe(7);
   });
 
-  it("calls processData and sets state correctly", async () => {
+  it("calls handlePageChange", async () => {
+    const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
+    const instance = wrapper.instance();
+
+    instance.handlePageChange = jest.fn();
+    // eslint-disable-next-line dot-notation
+    const spy = jest.spyOn(instance["APIService"], "getUserStats");
+    spy.mockImplementation(() => {
+      return Promise.resolve(userArtistsResponse as any);
+    });
+    delete window.location;
+    window.location = {
+      href: "https://foobar/user/bazfoo/artists",
+    } as any;
+    await instance.componentDidMount();
+
+    expect(instance.handlePageChange).toHaveBeenCalledWith(1);
+  });
+});
+
+describe("getData", () => {
+  it("calls getUserStats with correct parameters", async () => {
+    const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
+    const instance = wrapper.instance();
+
+    // eslint-disable-next-line dot-notation
+    const spy = jest.spyOn(instance["APIService"], "getUserStats");
+    spy.mockImplementation((): any => {
+      return Promise.resolve(userArtistsResponse);
+    });
+    await instance.getData("dummyUser", 0);
+
+    expect(spy).toHaveBeenCalledWith("dummyUser", undefined, 0, 25);
+  });
+});
+
+describe("processData", () => {
+  it("processes data correctly", () => {
+    const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
+    const instance = wrapper.instance();
+
+    expect(instance.processData(userArtistsResponse as any, 0)).toEqual(
+      userArtistsProcessDataOutput
+    );
+  });
+});
+
+describe("handlePageChange", () => {
+  it("sets state correctly and updates currPage", async () => {
     const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
     const instance = wrapper.instance();
 
@@ -92,17 +126,16 @@ describe("componentDidMount", () => {
     instance.processData = jest.fn().mockImplementationOnce(() => {
       return userArtistsProcessDataOutput;
     });
-    delete window.location;
-    window.location = {
-      href: "https://foobar/user/bazfoo/artists",
-    } as any;
-    await instance.componentDidMount();
+    await instance.handlePageChange(1);
 
-    expect(spy).toHaveBeenCalledWith("dummyUser", undefined, 0, 25);
     expect(instance.processData).toHaveBeenCalledWith(userArtistsResponse, 0);
     expect(wrapper.state("data")).toEqual(userArtistsProcessDataOutput);
+    // eslint-disable-next-line dot-notation
+    expect(instance["currPage"]).toBe(1);
   });
+});
 
+describe("handleError", () => {
   it("throws appropriate error if statistics haven't been calculated", async () => {
     const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
     const instance = wrapper.instance();
@@ -117,17 +150,6 @@ describe("componentDidMount", () => {
       Error(
         "Statistics for user: dummyUser have not been calculated yet. Please try again later."
       )
-    );
-  });
-});
-
-describe("processData", () => {
-  it("processes data correctly", () => {
-    const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
-    const instance = wrapper.instance();
-
-    expect(instance.processData(userArtistsResponse as any, 0)).toEqual(
-      userArtistsProcessDataOutput
     );
   });
 });

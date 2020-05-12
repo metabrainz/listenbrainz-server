@@ -25,11 +25,10 @@ export default class UserArtists extends React.Component<
 > {
   APIService: APIService;
 
-  private baseUrl: string; // Base URL of artist statistic page
   private ROWS_PER_PAGE = 25; // Number of atists to be shown on each page
   private maxListens = 0; // Number of listens for first artist used to scale the graph
   private totalPages = 0; // Total namber of pages, useful for pagination
-  private currPage = 1; // Current page, 1 by default
+  private currPage = 1; // Current page number
 
   constructor(props: UserArtistsProps) {
     super(props);
@@ -37,8 +36,6 @@ export default class UserArtists extends React.Component<
     this.APIService = new APIService(
       props.apiUrl || `${window.location.origin}/1`
     ); // Used to access LB API
-
-    this.baseUrl = window.location.origin + window.location.pathname;
 
     this.state = {
       data: [],
@@ -56,10 +53,8 @@ export default class UserArtists extends React.Component<
       this.currPage = 1;
     }
 
-    // Fetch data from backend
-    const offset = (this.currPage - 1) * this.ROWS_PER_PAGE;
     try {
-      let data = await this.APIService.getUserStats(
+      const data = await this.APIService.getUserStats(
         user.name,
         undefined,
         undefined,
@@ -69,35 +64,24 @@ export default class UserArtists extends React.Component<
       this.totalPages = Math.ceil(
         data.payload.total_artist_count / this.ROWS_PER_PAGE
       );
-      data = await this.APIService.getUserStats(
-        user.name,
-        undefined,
-        offset,
-        this.ROWS_PER_PAGE
-      );
-      this.setState({ data: this.processData(data, offset) });
     } catch (error) {
-      // Error Boundaries don't catch errors in async code.
-      // Throwing an error in setState fixes this.
-      // This is a hacky solution but should be fixed with upcoming concurrent mode in React.
-      if (
-        error.name === "SyntaxError" &&
-        error.message === "Unexpected end of JSON input"
-      ) {
-        // If the above error is thrown, it means stats haven't been calculated, show an
-        // appropriate message to the user.
-        this.setState(() => {
-          throw new Error(
-            `Statistics for user: ${user.name} have not been calculated yet. Please try again later.`
-          );
-        });
-      }
-
-      this.setState(() => {
-        throw error;
-      });
+      this.handleError(error);
     }
+    this.handlePageChange(this.currPage);
   }
+
+  getData = async (
+    userName: string,
+    offset: number
+  ): Promise<UserArtistsResponse> => {
+    const data = await this.APIService.getUserStats(
+      userName,
+      undefined,
+      offset,
+      this.ROWS_PER_PAGE
+    );
+    return data;
+  };
 
   processData = (
     data: UserArtistsResponse,
@@ -112,6 +96,42 @@ export default class UserArtists extends React.Component<
       })
       .reverse();
     return result;
+  };
+
+  handlePageChange = async (page: number): Promise<void> => {
+    const { user } = this.props;
+    const offset = (page - 1) * this.ROWS_PER_PAGE;
+    try {
+      const data = await this.getData(user.name, offset);
+      this.currPage = page;
+      this.setState({ data: this.processData(data, offset) });
+    } catch (error) {
+      this.handleError(error);
+    }
+  };
+
+  handleError = (error: Error): void => {
+    // Error Boundaries don't catch errors in async code.
+    // Throwing an error in setState fixes this.
+    // This is a hacky solution but should be fixed with upcoming concurrent mode in React.
+    const { user } = this.props;
+
+    if (
+      error.name === "SyntaxError" &&
+      error.message === "Unexpected end of JSON input"
+    ) {
+      // If the above error is thrown, it means stats haven't been calculated, show an
+      // appropriate message to the user.
+      this.setState(() => {
+        throw new Error(
+          `Statistics for user: ${user.name} have not been calculated yet. Please try again later.`
+        );
+      });
+    }
+
+    this.setState(() => {
+      throw error;
+    });
   };
 
   render() {
@@ -130,14 +150,20 @@ export default class UserArtists extends React.Component<
           <div className="col-md-12">
             <ul className="pager">
               <li className={`previous ${!(prevPage > 0) ? "hidden" : ""}`}>
-                <a href={`${this.baseUrl}?page=${prevPage}`}>&larr; Previous</a>
+                {/* eslint-disable-next-line */}
+                <a onClick={() => this.handlePageChange(prevPage)}>
+                  &larr; Previous
+                </a>
               </li>
               <li
                 className={`next ${
                   !(nextPage <= this.totalPages) ? "hidden" : ""
                 }`}
               >
-                <a href={`${this.baseUrl}?page=${nextPage}`}>Next &rarr;</a>
+                {/* eslint-disable-next-line */}
+                <a onClick={() => this.handlePageChange(nextPage)}>
+                  Next &rarr;
+                </a>
               </li>
             </ul>
           </div>
