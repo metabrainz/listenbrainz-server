@@ -7,7 +7,7 @@ import ErrorBoundary from "./ErrorBoundary";
 
 export type UserArtistsData = Array<{
   id: string;
-  count: string;
+  count: number;
 }>;
 
 export type UserArtistsProps = {
@@ -86,10 +86,12 @@ export default class UserArtists extends React.Component<
     }
   }
 
-  processData = (data: any, offset: number): UserArtistsData => {
-    // TODO: Define type for artist stat payload
+  processData = (
+    data: UserArtistsResponse,
+    offset: number
+  ): UserArtistsData => {
     const result = data.payload.artists
-      .map((elem: any, idx: number) => {
+      .map((elem, idx: number) => {
         return {
           id: `${offset + idx + 1}. ${elem.artist_name}`,
           count: elem.listen_count,

@@ -69,7 +69,7 @@ describe("componentDidMount", () => {
     // eslint-disable-next-line dot-notation
     const spy = jest.spyOn(instance["APIService"], "getUserStats");
     spy.mockImplementation(() => {
-      return Promise.resolve(userArtistsResponse);
+      return Promise.resolve(userArtistsResponse as any);
     });
 
     await instance.componentDidMount();
@@ -86,7 +86,7 @@ describe("componentDidMount", () => {
 
     // eslint-disable-next-line dot-notation
     const spy = jest.spyOn(instance["APIService"], "getUserStats");
-    spy.mockImplementation(() => {
+    spy.mockImplementation((): any => {
       return Promise.resolve(userArtistsResponse);
     });
     instance.processData = jest.fn().mockImplementationOnce(() => {
@@ -109,7 +109,7 @@ describe("processData", () => {
     const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
     const instance = wrapper.instance();
 
-    expect(instance.processData(userArtistsResponse, 0)).toEqual(
+    expect(instance.processData(userArtistsResponse as any, 0)).toEqual(
       userArtistsProcessDataOutput
     );
   });
