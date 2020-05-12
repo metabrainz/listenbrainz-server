@@ -43,13 +43,15 @@ container.
 
     ./develop.sh spark format
 
+.. warning::
+
+    You should run ``./develop.sh spark format`` only once, during setup. Running the command again
+    can lead to the spark environment breaking. We're looking into ways to fix this issue.
+
+
 Your development environment is now ready. Now, let's actually see ListenBrainz Spark
 in action!
 
-.. note::
-
-    You should run ``./develop.sh spark format`` only once during setup. Running the command otherwise will delete
-    all your data and unlink datanode and namenode.
 
 Bring containers up
 --------------------
