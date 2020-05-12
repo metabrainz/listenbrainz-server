@@ -17,14 +17,14 @@ export default class ErrorBoundary extends React.Component<any, any> {
     const { hasError, error } = this.state;
 
     if (hasError) {
-      document.title = "Something went wrong - Listenbrainz";
+      document.title = "Something went wrong - ListenBrainz";
       return (
         <div>
           <h2 className="page-title">{error.name}</h2>
           <p>{error.message}</p>
           <p>
-            <a href={`//${window.location.href.split("/")[2]}`}>
-              Back to home page
+            <a href={window.location.origin + window.location.pathname}>
+              Reload the page
             </a>
           </p>
         </div>

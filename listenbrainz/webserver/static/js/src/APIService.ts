@@ -181,12 +181,12 @@ export default class APIService {
 
   getUserStats = async (
     userName: string,
-    range: "all_time" = "all_time",
+    range: UserArtistAPIRange = "all_time",
     offset: number = 0,
     count?: number
   ): Promise<any> => {
     let url = `${this.APIBaseURI}/stats/user/${userName}/artists?offset=${offset}&range=${range}`;
-    if (typeof count === "number") {
+    if (count !== null && count !== undefined) {
       url += `&count=${count}`;
     }
     const response = await fetch(url);

@@ -129,3 +129,5 @@ declare type LastFmScrobblePage = {
     track: any;
   };
 };
+
+declare type UserArtistAPIRange = "all_time";
