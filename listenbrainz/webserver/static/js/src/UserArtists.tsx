@@ -5,23 +5,23 @@ import APIService from "./APIService";
 import Bar from "./Bar";
 import ErrorBoundary from "./ErrorBoundary";
 
-export type UserArtistData = Array<{
+export type UserArtistsData = Array<{
   id: string;
   count: string;
 }>;
 
-export type UserArtistProps = {
+export type UserArtistsProps = {
   user: ListenBrainzUser;
   apiUrl: string;
 };
 
-export type UserArtistState = {
-  data: UserArtistData;
+export type UserArtistsState = {
+  data: UserArtistsData;
 };
 
-export default class UserArtist extends React.Component<
-  UserArtistProps,
-  UserArtistState
+export default class UserArtists extends React.Component<
+  UserArtistsProps,
+  UserArtistsState
 > {
   APIService: APIService;
 
@@ -31,7 +31,7 @@ export default class UserArtist extends React.Component<
   private totalPages = 0; // Total namber of pages, useful for pagination
   private currPage = 1; // Current page, 1 by default
 
-  constructor(props: UserArtistProps) {
+  constructor(props: UserArtistsProps) {
     super(props);
 
     this.APIService = new APIService(
@@ -87,7 +87,7 @@ export default class UserArtist extends React.Component<
     }
   }
 
-  processData = (data: any): UserArtistData => {
+  processData = (data: any): UserArtistsData => {
     // TODO: Define type for artist stat payload
     const result = data.payload.artists
       .map((elem: any) => {
@@ -145,7 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const { user, api_url: apiUrl } = reactProps;
   ReactDOM.render(
     <ErrorBoundary>
-      <UserArtist apiUrl={apiUrl} user={user} />
+      <UserArtists apiUrl={apiUrl} user={user} />
     </ErrorBoundary>,
     domContainer
   );

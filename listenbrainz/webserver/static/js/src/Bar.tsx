@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { ResponsiveBar, LabelFormatter } from "@nivo/bar";
 
 export type BarProps = {
@@ -38,7 +38,7 @@ export default class Bar extends React.Component<BarProps, BarState> {
     const { marginLeft } = this.state;
 
     const leftAlignedTick = (tick: any) => {
-      let { value } = tick.value;
+      let { value } = tick;
       if (value.length > marginLeft / 10) {
         value = `${value.slice(0, marginLeft / 10)}...`;
       }
