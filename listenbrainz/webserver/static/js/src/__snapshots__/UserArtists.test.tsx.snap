@@ -15,7 +15,7 @@ exports[`User Artists Page renders 1`] = `
       className="row"
     >
       <div
-        className="col-md-8"
+        className="col-md-12"
         style={
           Object {
             "height": "75em",
@@ -194,7 +194,7 @@ exports[`User Artists Page renders 1`] = `
       className="row"
     >
       <div
-        className="col-md-8"
+        className="col-md-12"
       >
         <ul
           className="pager"
