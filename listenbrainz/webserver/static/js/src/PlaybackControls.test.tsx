@@ -19,6 +19,6 @@ const props = {
 describe("PlaybackControls", () => {
   it("renders", () => {
     const wrapper = mount(<PlaybackControls {...props} />);
-    expect(wrapper.html()).toMatchSnapshot();
+    expect(wrapper).toMatchSnapshot();
   });
 });
