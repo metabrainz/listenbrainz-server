@@ -94,7 +94,7 @@ def get_artist(user_name):
 
     count = min(count, MAX_ITEMS_PER_GET)
     total_artist_count = stats['artist']['count']
-  
+
     count = count + offset
     artist_list = stats['artist']['all_time']['artists'][offset:count]
 
