@@ -13,5 +13,18 @@
     <strong>Q:</strong> Is it safe for the Last.fm importer to be run twice?<br />
     <strong>A:</strong> Yes, it is. Running it twice will not cause duplicates in your listen history.
   </p>
+  
+  <p>
+    <strong>Q:</strong> I can't play music on the pages; what's going on?<br />
+    <strong>A:</strong> Make sure your browser is allowing autoplaying media on listenbrainz.org.
+    </br>If you have a Spotify account, you'll have much better results if you <a href="{{ url_for('profile.connect_spotify') }}">connect it to ListenBrainz</a>. Otherwise you'll be limited to 30 second excerpts.
+  </p>
+  
+  <p>
+    <strong>Q:</strong> I connected my Spotify account but the player just doesn't work<br />
+    <strong>A:</strong> Before anything else, try disconnecting and <a href="{{ url_for('profile.connect_spotify') }}">reconnecting your Spotify account</a>
+    </br>Make sure you select the permissions to 'record listens and play music' or 'play music only'.
+    </br>Still no luck? You might have stumbled onto a bug! We would be grateful if you could <a href="https://tickets.metabrainz.org/projects/LB">report it here</a> along with the content of your browser's console.
+  </p>
 
 {%- endblock -%}
