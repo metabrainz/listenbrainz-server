@@ -120,7 +120,7 @@ adjustments on your timestamps.
 Constants
 ^^^^^^^^^
 
-Constants that are releavant to using the API:
+Constants that are relevant to using the API:
 
 .. autodata:: listenbrainz.webserver.views.api_tools.MAX_LISTEN_SIZE
 .. autodata:: listenbrainz.webserver.views.api_tools.MAX_ITEMS_PER_GET
