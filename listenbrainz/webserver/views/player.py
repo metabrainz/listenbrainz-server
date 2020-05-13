@@ -1,39 +1,33 @@
-import uuid
 import ujson
 from werkzeug.exceptions import BadRequest
 from flask import Blueprint, render_template, current_app, request
 from flask_login import current_user, login_required
 from listenbrainz.domain import spotify
-from brainzutils.musicbrainz_db import recording as mb_rec
-from brainzutils.musicbrainz_db.exceptions import NoDataFoundException
 
-playlist_bp = Blueprint("playlist", __name__)
+player_bp = Blueprint("player", __name__)
 
 
-@playlist_bp.route("/", methods=["POST"])
+@player_bp.route("/", methods=["POST"])
 @login_required
 
 def load():
     """
-        This is the start of the BrainzPlayer concept where anyone (logged into LB) can post playlist
-        composed of recording MBIDs and have the player attempt to make the list playable.
+        This is the start of the BrainzPlayer concept where anyone (logged into LB) can post a playlist
+        composed of an array of listens-formatted items and get returned a playable playlist page.
     """
 
     try:
         raw_listens = request.form.get('listens')
     except ValueError as e:
-        return render_template(
-            "index/playlist.html",
-            error_msg="POST request body should have 'listens' parameter"
-        )
+        raise BadRequest("Missing key 'listens'")
         
     try:
         listens = ujson.loads(raw_listens)
     except ValueError as e:
-        return render_template(
-            "index/playlist.html",
-            error_msg="'listens' should be an JSON array"
-        )
+        raise BadRequest("'listens' should be a stringified JSON array. Error: %s" % e)
+
+    if len(listens) <= 0:
+        raise BadRequest("'Listens' array must have one or more items.")
 
     user_data = {
         "id": current_user.id,
@@ -49,8 +43,7 @@ def load():
     }
 
     return render_template(
-        "index/playlist.html",
+        "index/player.html",
         props=ujson.dumps(props),
-        user=current_user,
-        spotify_data=spotify_data
+        user=current_user
     )
