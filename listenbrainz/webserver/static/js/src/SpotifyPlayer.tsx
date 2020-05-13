@@ -100,7 +100,7 @@ export default class SpotifyPlayer extends React.Component<
     this.checkSpotifyToken(accessToken, permission).then((success) => {
       if (success) {
         window.onSpotifyWebPlaybackSDKReady = this.connectSpotifyPlayer;
-        const spotifyPlayerSDKLib = require("../lib/spotify-player-sdk-1.6.0"); // eslint-disable-line global-require
+        const spotifyPlayerSDKLib = require("../lib/spotify-player-sdk-1.7.1"); // eslint-disable-line global-require
       }
     });
   }
