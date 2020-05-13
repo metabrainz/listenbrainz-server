@@ -84,8 +84,8 @@ export default class APIService {
   };
 
   /*
-    Send a POST request to the ListenBrainz server to submit a listen
-  */
+     Send a POST request to the ListenBrainz server to submit a listen
+   */
   submitListens = async (
     userToken: string,
     listenType: ListenType,
@@ -177,6 +177,28 @@ export default class APIService {
     });
     this.checkStatus(response);
     return response.status; // Return true if timestamp is updated
+  };
+
+  getUserStats = async (
+    userName: string,
+    range: UserArtistsAPIRange = "all_time",
+    offset: number = 0,
+    count?: number
+  ): Promise<UserArtistsResponse> => {
+    let url = `${this.APIBaseURI}/stats/user/${userName}/artists?offset=${offset}&range=${range}`;
+    if (count !== null && count !== undefined) {
+      url += `&count=${count}`;
+    }
+    const response = await fetch(url);
+    this.checkStatus(response);
+    // if response code is 204, then statistics havent been calculated, show appropriate message
+    if (response.status === 204) {
+      throw new APIError(
+        "Statistics for the user haven't been calculated yet."
+      );
+    }
+    const data = response.json();
+    return data;
   };
 
   checkStatus = (response: Response): void => {

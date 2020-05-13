@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ErrorBoundary renders error page correctly if child component throws error 1`] = `
+<ErrorBoundary>
+  <div>
+    <h2
+      className="page-title"
+    >
+      Error
+    </h2>
+    <p>
+      Test Error
+    </p>
+    <p>
+      <button
+        className="btn-link"
+        onClick={[Function]}
+        type="button"
+      >
+        Reload the page
+      </button>
+    </p>
+  </div>
+</ErrorBoundary>
+`;
+
+exports[`ErrorBoundary renders the child component if error is not thrown 1`] = `
+<ErrorBoundary>
+  <ChildComponent>
+    <div>
+      Child Component
+    </div>
+  </ChildComponent>
+</ErrorBoundary>
+`;
