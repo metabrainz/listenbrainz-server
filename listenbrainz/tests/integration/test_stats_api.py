@@ -23,10 +23,28 @@ class StatsAPITestCase(IntegrationTestCase):
         response = self.client.get(url_for('stats_api_v1.get_artist', user_name=self.user['musicbrainz_id']))
         self.assert200(response)
         data = json.loads(response.data)['payload']
-        sent_count = payload['count']
         received_count = data['count']
-        self.assertEqual(sent_count, received_count)
-        sent_artist_list = payload['all_time']['artists']
+        self.assertEqual(25, received_count)
+        sent_artist_list = payload['all_time']['artists'][:25]
+        received_artist_list = data['artists']
+        self.assertListEqual(sent_artist_list, received_artist_list)
+        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+
+    def test_artist_stat_too_many(self):
+        """Test to make sure response received has maximum 100 listens
+        """
+        with open(self.path_to_data_file('artist_statistics_too_many.json'), 'r') as f:
+            payload = json.load(f)
+
+        db_stats.insert_user_stats(self.user['id'], payload['all_time']['artists'], {}, {}, payload['count'])
+
+        response = self.client.get(url_for('stats_api_v1.get_artist',
+                                           user_name=self.user['musicbrainz_id']), query_string={'count': 105})
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        received_count = data['count']
+        self.assertEqual(100, received_count)
+        sent_artist_list = payload['all_time']['artists'][:100]
         received_artist_list = data['artists']
         self.assertListEqual(sent_artist_list, received_artist_list)
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
@@ -43,10 +61,9 @@ class StatsAPITestCase(IntegrationTestCase):
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time'})
         self.assert200(response)
         data = json.loads(response.data)['payload']
-        sent_count = payload['count']
         received_count = data['count']
-        self.assertEqual(sent_count, received_count)
-        sent_artist_list = payload['all_time']['artists']
+        self.assertEqual(25, received_count)
+        sent_artist_list = payload['all_time']['artists'][:25]
         received_artist_list = data['artists']
         self.assertListEqual(sent_artist_list, received_artist_list)
         self.assertEqual(data['range'], 'all_time')
@@ -112,7 +129,7 @@ class StatsAPITestCase(IntegrationTestCase):
         sent_offset = 5
         received_offset = data['offset']
         self.assertEqual(sent_offset, received_offset)
-        sent_artist_list = payload['all_time']['artists'][5:]
+        sent_artist_list = payload['all_time']['artists'][5:30]
         received_artist_list = data['artists']
         self.assertListEqual(sent_artist_list, received_artist_list)
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])

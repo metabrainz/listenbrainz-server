@@ -1,11 +1,16 @@
 from datetime import datetime
-from flask import Blueprint, request, jsonify, current_app
-from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError,\
-    APIUnauthorized, APINotFound, APIServiceUnavailable
-from listenbrainz.webserver.decorators import crossdomain
-import listenbrainz.db.user as db_user
+
+from flask import Blueprint, current_app, jsonify, request
+
 import listenbrainz.db.stats as db_stats
+import listenbrainz.db.user as db_user
+from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz.webserver.errors import (APIBadRequest,
+                                           APIInternalServerError, APINotFound,
+                                           APIServiceUnavailable,
+                                           APIUnauthorized)
 from listenbrainz.webserver.rate_limiter import ratelimit
+from listenbrainz.webserver.views.api_tools import DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET
 
 stats_api_bp = Blueprint('stats_api_v1', __name__)
 
@@ -55,7 +60,8 @@ def get_artist(user_name):
         - As of now we are only calculating ``all_time`` statistics for artist.
           However, we plan to add other time intervals in the future.
 
-    :param count: Optional, number of artists to return
+    :param count: Optional, number of artists to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
+        Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET` 
     :type count: ``int``
     :param offset: Optional, number of artists to skip from the beginning, for pagination.
         Ex. An offset of 5 means the top 5 artists will be skipped, defaults to 0
@@ -86,7 +92,8 @@ def get_artist(user_name):
         return '', 204
 
     if count is None:
-        count = stats['artist']['count']
+        count = DEFAULT_ITEMS_PER_GET
+    count = min(count, MAX_ITEMS_PER_GET)
     count = count + offset
     artist_list = stats['artist']['all_time']['artists'][offset:count]
 
