@@ -1,9 +1,9 @@
 import * as ReactDOM from "react-dom";
 import * as React from "react";
 
-import APIService from "./APIService";
+import APIService from "../APIService";
 import Bar from "./Bar";
-import ErrorBoundary from "./ErrorBoundary";
+import ErrorBoundary from "../ErrorBoundary";
 
 export type UserArtistsData = Array<{
   id: string;

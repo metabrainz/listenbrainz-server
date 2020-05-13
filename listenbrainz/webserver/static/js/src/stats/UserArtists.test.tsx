@@ -2,8 +2,8 @@ import * as React from "react";
 import { mount, shallow } from "enzyme";
 
 import UserArtists from "./UserArtists";
-import * as userArtistsResponse from "./__mocks__/userArtists.json";
-import * as userArtistsProcessDataOutput from "./__mocks__/userArtistsProcessData.json";
+import * as userArtistsResponse from "../__mocks__/userArtists.json";
+import * as userArtistsProcessDataOutput from "../__mocks__/userArtistsProcessData.json";
 
 const props = {
   user: {
