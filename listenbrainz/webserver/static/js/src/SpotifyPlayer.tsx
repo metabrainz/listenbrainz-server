@@ -59,6 +59,7 @@ type SpotifyPlayerState = {
   playerPaused: boolean;
   progressMs: number;
   durationMs: number;
+  updateTime: number;
   direction: SpotifyPlayDirection;
   paused?: boolean;
   position?: number;
@@ -86,6 +87,7 @@ export default class SpotifyPlayer extends React.Component<
       playerPaused: true,
       progressMs: 0,
       durationMs: 0,
+      updateTime: performance.now(),
       direction: props.direction || "down",
     };
 
@@ -473,14 +475,26 @@ export default class SpotifyPlayer extends React.Component<
     this.setState({
       progressMs: currentlyPlaying.progress_ms,
       durationMs: currentlyPlaying.item && currentlyPlaying.item.duration_ms,
+      updateTime: performance.now(),
       currentSpotifyTrack: currentlyPlaying.item,
     });
   };
 
   startPlayerStateTimer = (): void => {
     this.playerStateTimerID = window.setInterval(() => {
-      this.spotifyPlayer.getCurrentState().then(this.handlePlayerStateChanged);
-    }, 500);
+      this.getStatePosition();
+    }, 200);
+  };
+  
+  getStatePosition = ():void => {
+    let progressMs: number;
+    if (this.state.playerPaused) {
+      progressMs = this.state.progressMs ? this.state.progressMs : 0;
+    } else {
+      const position = this.state.progressMs + (performance.now() - this.state.updateTime);
+      progressMs = position > this.state.durationMs ? this.state.durationMs : position;
+    }
+    this.setState({progressMs, updateTime: performance.now()});
   };
 
   stopPlayerStateTimer = (): void => {
@@ -518,6 +532,7 @@ export default class SpotifyPlayer extends React.Component<
       durationMs: duration,
       currentSpotifyTrack: current_track || {},
       playerPaused: paused,
+      updateTime: performance.now()
     });
     if (this.firstRun) {
       this.firstRun = false;
