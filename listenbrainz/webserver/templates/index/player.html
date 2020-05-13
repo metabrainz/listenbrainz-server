@@ -3,6 +3,16 @@
 {%- block title -%}BrainzPlayer{%- endblock -%}
 
 
+{% block content %}
+  {{ super() }}
+  {% if error_msg %}
+      <div>
+        <h2>Error</h2>
+        <p>{{ error_msg }}</p>
+      </div>
+  {% endif %}
+{% endblock %}
+
 {% block scripts %}
   {{ super() }}
   <script src="{{ get_static_path('main.js') }}" type="text/javascript"></script>

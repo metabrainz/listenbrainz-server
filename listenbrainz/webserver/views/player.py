@@ -17,17 +17,32 @@ def load():
     """
 
     try:
-        raw_listens = request.form.get('listens')
-    except ValueError as e:
-        raise BadRequest("Missing key 'listens'")
-        
+        raw_listens = request.form['listens']
+    except KeyError:
+        return render_template(
+            "index/player.html",
+            error_msg="Missing form data key 'listens'"
+        )
+
     try:
         listens = ujson.loads(raw_listens)
     except ValueError as e:
-        raise BadRequest("'listens' should be a stringified JSON array. Error: %s" % e)
+        return render_template(
+            "index/player.html",
+            error_msg="Could not parse JSON array. Error: %s" % e
+        )
+
+    if not isinstance(listens, list):
+        return render_template(
+            "index/player.html",
+            error_msg="'listens' should be a stringified JSON array."
+        )
 
     if len(listens) <= 0:
-        raise BadRequest("'Listens' array must have one or more items.")
+        return render_template(
+            "index/player.html",
+            error_msg="'Listens' array must have one or more items."
+        )
 
     user_data = {
         "id": current_user.id,
