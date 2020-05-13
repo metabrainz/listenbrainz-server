@@ -1,0 +1,72 @@
+{
+  "payload": {
+    "artists": [
+      {
+        "artist_mbids": [],
+        "artist_msid": "d340853d-7408-4a0d-89c2-6ff13e568815",
+        "artist_name": "The Local train",
+        "listen_count": 385
+      },
+      {
+        "artist_mbids": [],
+        "artist_msid": "ba64b195-01dd-4613-9534-bb87dc44cffb",
+        "artist_name": "Lenka",
+        "listen_count": 333
+      },
+      {
+        "artist_mbids": [],
+        "artist_msid": "6599e41e-390c-4855-a2ac-68ee798538b4",
+        "artist_name": "Coldplay",
+        "listen_count": 321
+      },
+      {
+        "artist_mbids": [],
+        "artist_msid": "fecda98e-0533-4b87-a9d1-c89b4521918b",
+        "artist_name": "Imagine Dragons",
+        "listen_count": 176
+      },
+      {
+        "artist_mbids": [],
+        "artist_msid": "9d5adabb-9775-4535-93eb-12b485aed8bf",
+        "artist_name": "Maroon 5",
+        "listen_count": 118
+      },
+      {
+        "artist_mbids": [],
+        "artist_msid": "7addbcac-ae39-4b4c-a956-53da336d68e8",
+        "artist_name": "Ellie Goulding",
+        "listen_count": 108
+      },
+      {
+        "artist_mbids": [],
+        "artist_msid": "67f4ae2e-260e-4020-b957-f2df5b719501",
+        "artist_name": "OneRepublic",
+        "listen_count": 65
+      },
+      {
+        "artist_mbids": [],
+        "artist_msid": "2b0646af-f3f0-4a5b-b629-6c31301c1c29",
+        "artist_name": "The Weeknd",
+        "listen_count": 52
+      },
+      {
+        "artist_mbids": [],
+        "artist_msid": "0daecabb-f76d-4914-8726-82cefbecca52",
+        "artist_name": "The Chainsmokers",
+        "listen_count": 44
+      },
+      {
+        "artist_mbids": [],
+        "artist_msid": "3b155259-b29e-4515-aa62-cb0b917f4cfd",
+        "artist_name": "The Fray",
+        "listen_count": 41
+      }
+    ],
+    "count": 10,
+    "last_updated": 1588494361,
+    "offset": 0,
+    "range": "all_time",
+    "total_artist_count": 175,
+    "user_id": "ishaanshah"
+  }
+}

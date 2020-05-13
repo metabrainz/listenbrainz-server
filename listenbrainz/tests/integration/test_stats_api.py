@@ -26,6 +26,9 @@ class StatsAPITestCase(IntegrationTestCase):
         sent_count = payload['count']
         received_count = data['count']
         self.assertEqual(sent_count, received_count)
+        sent_total_artist_count = payload['count']
+        received_total_artist_count = data['total_artist_count']
+        self.assertEqual(sent_total_artist_count, received_total_artist_count)
         sent_artist_list = payload['all_time']['artists']
         received_artist_list = data['artists']
         self.assertListEqual(sent_artist_list, received_artist_list)
@@ -75,6 +78,9 @@ class StatsAPITestCase(IntegrationTestCase):
         sent_count = 5
         received_count = data['count']
         self.assertEqual(sent_count, received_count)
+        sent_total_artist_count = payload['count']
+        received_total_artist_count = data['total_artist_count']
+        self.assertEqual(sent_total_artist_count, received_total_artist_count)
         sent_artist_list = payload['all_time']['artists'][:5]
         received_artist_list = data['artists']
         self.assertListEqual(sent_artist_list, received_artist_list)
@@ -115,6 +121,9 @@ class StatsAPITestCase(IntegrationTestCase):
         sent_artist_list = payload['all_time']['artists'][5:]
         received_artist_list = data['artists']
         self.assertListEqual(sent_artist_list, received_artist_list)
+        sent_total_artist_count = payload['count']
+        received_total_artist_count = data['total_artist_count']
+        self.assertEqual(sent_total_artist_count, received_total_artist_count)
         self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
 
     def test_artist_stat_invalid_offset(self):
