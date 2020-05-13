@@ -21,6 +21,40 @@ from pyspark.sql.utils import AnalysisException
 # dataframe html is generated when set to true
 SAVE_DATAFRAME_HTML = True
 
+# Some useful dataframe fields/columns.
+# partial_listens_df:
+#   [
+#       'artist_msid', 'artist_name', 'listened_at', 'recording_msid', 'release_mbid',
+#       'release_msid', 'release_name', 'tags', 'track_name', 'user_name'
+#   ]
+#
+# mapped_df:
+#   [
+#       'listened_at', 'mb_artist_credit_id', 'mb_artist_credit_mbids', 'mb_recording_mbid',
+#       'mb_release_mbid', 'msb_artist_credit_name_matchable', 'track_name', 'user_name'
+#   ]
+#
+# listens_df:
+#   [
+#       'recording_mbid', 'user_name'
+#   ]
+#
+# recordings_df:
+#   [
+#       'mb_artist_credit_id', 'mb_artist_credit_mbids', 'mb_recording_mbid',
+#       'mb_release_mbid', 'msb_artist_credit_name_matchable', 'track_name'
+#   ]
+#
+# users_df:
+#   [
+#       'user_name', 'user_id'
+#   ]
+#
+# playcounts_df:
+#   [
+#       'user_id', 'recording_id', 'count'
+#   ]
+
 def generate_best_model_id(metadata):
     """ Generate best model id.
     """
@@ -30,7 +64,7 @@ def save_dataframe(df, dest_path):
     """ Save dataframe to HDFS.
 
         Args:
-            df (dataframe): Dataframe to save.
+            df : Dataframe to save.
             dest_path (str): HDFS path to save dataframe.
     """
     try:
@@ -45,7 +79,7 @@ def save_dataframe_html(users_df_time, recordings_df_time, playcounts_df_time, t
         Args:
             users_df_time (str): Time taken to prepare and save users dataframe.
             recordings_df_time (str): Time taken to prepare and save recordings dataframe.
-            playcounts_df_time (str): TIme taken to prepare and save playcounts dataframe.
+            playcounts_df_time (str): Time taken to prepare and save playcounts dataframe.
             total_time (str): Time taken to execute the script.
     """
     date = datetime.utcnow().strftime('%Y-%m-%d')
@@ -99,11 +133,7 @@ def get_listens_for_training_model_window(to_date, from_date, metadata, dest_pat
             dest_path (str): HDFS path.
 
         Returns:
-            A dataframe with columns as:
-                [
-                    artist_msid, artist_name, listened_at, recording_msid, release_mbid,
-                    release_msid, release_name, tags, track_name, user_name
-                ]
+            partial_listens_df (dataframe): listens without artist mbid and recording mbid.
     """
     metadata['to_date'] = to_date
     metadata['from_date'] = from_date
@@ -115,25 +145,20 @@ def get_listens_for_training_model_window(to_date, from_date, metadata, dest_pat
     except FileNotFetchedException as err:
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
-    return utils.get_listens_without_artist_and_recording_mbids(training_df)
+
+    partial_listens_df = utils.get_listens_without_artist_and_recording_mbids(training_df)
+    return partial_listens_df
 
 def get_mapped_artist_and_recording_mbids(partial_listens_df, recording_artist_mapping_df):
     """ Map recording msid->mbid and artist msid->mbids so that every listen has an mbid.
 
         Args:
-            partial_listens_df (dataframe): Columns can be depicted as:
-                [
-                    'artist_msid', 'artist_name', 'listened_at', 'recording_msid', 'release_mbid',
-                    'release_msid', 'release_name', 'tags', 'track_name', 'user_name'
-                ]
-            recording_artist_mapping_df (dataframe): Columns can be depicted as:
-                [
-                    'mb_artist_credit_mbids', 'msb_artist_msid', 'mb_recording_mbid', 'msb_recording_msid'
-                    'mb_artist_credit_id', 'mb_release_mbid', ''msb_release_msid''
-                ]
+            partial_listens_df (dataframe): listens without artist mbid and recording mbid.
+            recording_artist_mapping_df (dataframe): msid->mbid mapping. For columns refer to
+                                                     msid_mbid_mapping_schema in listenbrainz_spark/schema.py
 
         Returns:
-            mapped_df (dataframe): Dataframe with all the columns/fields that a typical listen has.
+            mapped_df (dataframe): listens mapped with msid_mbid_mapping.
     """
     df = partial_listens_df.join(recording_artist_mapping_df,
             (partial_listens_df.recording_msid == recording_artist_mapping_df.msb_recording_msid) &
@@ -153,18 +178,13 @@ def get_playcounts_df(listens_df, recordings_df, users_df, metadata):
     """ Prepare playcounts dataframe.
 
         Args:
-            listens_df (dataframe): Columns can be depicted as:
-                [
-                    'recording_mbid', 'user_name'
-                ]
-            recordings_df (dataframe): Columns can be depicted as:
-                [
-                    'recording_mbid', 'recording_id'
-                ]
-            users_df (dataframe): Columns can be depicted as:
-                [
-                    'user_name', 'user_id'
-                ]
+            listens_df : Dataframe containing recording_mbids corresponding to a user.
+            recordings_df : Dataframe containing distinct recordings and corresponding
+                                       mbids and names.
+            users_df : Dataframe containing user names and user ids.
+
+        Returns:
+            playcounts_df: Dataframe containing play(listen) counts of users.
     """
     # listens_df is joined with users_df on user_name.
     # The output is then joined with recording_df on recording_mbid.
@@ -178,38 +198,33 @@ def get_playcounts_df(listens_df, recordings_df, users_df, metadata):
     save_dataframe(playcounts_df, path.PLAYCOUNTS_DATAFRAME_PATH)
     return playcounts_df
 
-def get_listens_df(complete_listens_df, metadata):
+def get_listens_df(mapped_df, metadata):
     """ Prepare listens dataframe.
 
         Args:
-            complete_listens_df (dataframe): Dataframe with all the columns/fields that a typical listen has.
+            mapped_df (dataframe): listens mapped with msid_mbid_mapping.
 
         Returns:
-            listens_df (dataframe): Columns can be depicted as:
-                    [
-                        'mb_recording_mbid', 'user_name'
-                    ]
+            listens_df : Dataframe containing recording_mbids corresponding to a user.
     """
-    listens_df = complete_listens_df.select('mb_recording_mbid', 'user_name')
+    listens_df = mapped_df.select('mb_recording_mbid', 'user_name')
     metadata['listens_count'] = listens_df.count()
     return listens_df
 
-def get_recordings_df(complete_listens_df, metadata):
+def get_recordings_df(mapped_df, metadata):
     """ Prepare recordings dataframe.
 
         Args:
-            complete_listens_df (dataframe): Dataframe with all the columns/fields that a typical listen has.
+            mapped_df (dataframe): listens mapped with msid_mbid_mapping.
 
         Returns:
-            recordings_df (dataframe): Columns can be depicted as:
-                [
-                    'mb_recording_mbid', 'mb_artist_credit_id', 'recording_id'
-                ]
+            recordings_df: Dataframe containing distinct recordings and corresponding
+                mbids and names.
     """
     recording_window = Window.orderBy('mb_recording_mbid')
-    recordings_df = complete_listens_df.select(
-                                        'mb_artist_credit_id', 'mb_artist_credit_mbids', 'mb_recording_mbid',
-                                        'mb_release_mbid', 'msb_artist_credit_name_matchable', 'track_name') \
+
+    recordings_df = complete_listens_df.select('mb_artist_credit_id', 'mb_artist_credit_mbids', 'mb_recording_mbid',
+                                               'mb_release_mbid', 'msb_artist_credit_name_matchable', 'track_name') \
                                        .distinct() \
                                        .withColumn('recording_id', rank().over(recording_window))
 
@@ -217,22 +232,20 @@ def get_recordings_df(complete_listens_df, metadata):
     save_dataframe(recordings_df, path.RECORDINGS_DATAFRAME_PATH)
     return recordings_df
 
-def get_users_dataframe(complete_listens_df, metadata):
+def get_users_dataframe(mapped_df, metadata):
     """ Prepare users dataframe
 
         Args:
-            complete_listens_df (dataframe): Dataframe with all the columns/fields that a typical listen has.
+            mapped_df (dataframe): listens mapped with msid_mbid_mapping.
 
         Returns:
-            users_df (dataframe): Columns can be depicted as:
-                [
-                    'user_name', 'user_id'
-                ]
+            users_df : Dataframe containing user names and user ids.
     """
     # We use window function to give rank to distinct user_names
     # Note that if user_names are not distinct rank would repeat and give unexpected results.
     user_window = Window.orderBy('user_name')
-    users_df = complete_listens_df.select('user_name').distinct().withColumn('user_id', rank().over(user_window))
+    users_df = mapped_df.select('user_name').distinct() \
+                        .withColumn('user_id', rank().over(user_window))
 
     metadata['users_count'] = users_df.count()
     save_dataframe(users_df, path.USERS_DATAFRAME_PATH)
@@ -250,29 +263,27 @@ def main():
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
-    # Dataframe containing all columns except artist_mbids and recording_mbid
     to_date, from_date = get_dates_to_train_data()
     partial_listens_df = get_listens_for_training_model_window(to_date, from_date, metadata, path.LISTENBRAINZ_DATA_DIRECTORY)
 
     # Dataframe containing recording msid->mbid and artist msid->mbid mapping.
     recording_artist_mapping_df = utils.read_files_from_HDFS(path.MBID_MSID_MAPPING)
 
-    # Dataframe containing all fields that a listen should have including artist_mbids and recording_mbid.
-    complete_listens_df = get_mapped_artist_and_recording_mbids(partial_listens_df, recording_artist_mapping_df)
+    mapped_df = get_mapped_artist_and_recording_mbids(partial_listens_df, recording_artist_mapping_df)
 
     current_app.logger.info('Preparing users data and saving to HDFS...')
     t0 = time()
-    users_df = get_users_dataframe(complete_listens_df, metadata)
+    users_df = get_users_dataframe(mapped_df, metadata)
     users_df_time = '{:.2f}'.format((time() - t0) / 60)
 
     current_app.logger.info('Preparing recordings data and saving to HDFS...')
     t0 = time()
-    recordings_df = get_recordings_df(complete_listens_df, metadata)
+    recordings_df = get_recordings_df(mapped_df, metadata)
     recordings_df_time = '{:.2f}'.format((time() - t0) / 60)
 
     current_app.logger.info('Preparing listen data dump and playcounts, saving playcounts to HDFS...')
     t0 = time()
-    listens_df = get_listens_df(complete_listens_df, metadata)
+    listens_df = get_listens_df(mapped_df, metadata)
 
     playcounts_df = get_playcounts_df(listens_df, recordings_df, users_df, metadata)
     playcounts_df_time = '{:.2f}'.format((time() - t0) / 60)
@@ -282,4 +293,6 @@ def main():
     save_dataframe_metadata_to_HDFS(metadata)
 
     if SAVE_DATAFRAME_HTML:
+        current_app.logger.info('Saving HTML...')
         save_dataframe_html(users_df_time, recordings_df_time, playcounts_df_time, total_time)
+        current_app.logger.info('Done!')
