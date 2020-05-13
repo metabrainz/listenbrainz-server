@@ -38,7 +38,7 @@ const searchForSpotifyTrack = async (
     // search for track was not provided a track name, cannot proceed
     return null;
   }
-  let queryString = `q="${trackName}"`;
+  let queryString = `q=track:${trackName}`;
   if (artistName) {
     queryString += ` artist:${artistName}`;
   }
