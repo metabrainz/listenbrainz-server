@@ -61,7 +61,7 @@ def get_artist(user_name):
           However, we plan to add other time intervals in the future.
 
     :param count: Optional, number of artists to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
-        Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET` 
+        Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
     :type count: ``int``
     :param offset: Optional, number of artists to skip from the beginning, for pagination.
         Ex. An offset of 5 means the top 5 artists will be skipped, defaults to 0
