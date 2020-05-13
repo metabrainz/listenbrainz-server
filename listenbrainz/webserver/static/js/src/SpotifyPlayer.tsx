@@ -369,6 +369,10 @@ export default class SpotifyPlayer extends React.Component<
       this.handleError(error.message);
     }
   };
+  
+  seekToPositionMs = (msTimecode:number): void => {
+    this.spotifyPlayer.seek(msTimecode);
+  }
 
   toggleDirection = (): void => {
     this.setState((prevState) => {
@@ -588,6 +592,7 @@ export default class SpotifyPlayer extends React.Component<
           }
           progressMs={progressMs}
           durationMs={durationMs}
+          seekToPositionMs={this.seekToPositionMs}
         >
           {this.getAlbumArt()}
         </PlaybackControls>
