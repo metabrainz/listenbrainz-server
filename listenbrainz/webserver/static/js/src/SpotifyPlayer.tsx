@@ -369,10 +369,10 @@ export default class SpotifyPlayer extends React.Component<
       this.handleError(error.message);
     }
   };
-  
-  seekToPositionMs = (msTimecode:number): void => {
+
+  seekToPositionMs = (msTimecode: number): void => {
     this.spotifyPlayer.seek(msTimecode);
-  }
+  };
 
   toggleDirection = (): void => {
     this.setState((prevState) => {
@@ -489,16 +489,17 @@ export default class SpotifyPlayer extends React.Component<
       this.getStatePosition();
     }, 200);
   };
-  
-  getStatePosition = ():void => {
-    let progressMs: number;
-    if (this.state.playerPaused) {
-      progressMs = this.state.progressMs ? this.state.progressMs : 0;
+
+  getStatePosition = (): void => {
+    let newProgressMs: number;
+    const { playerPaused, durationMs, progressMs, updateTime } = this.state;
+    if (playerPaused) {
+      newProgressMs = progressMs || 0;
     } else {
-      const position = this.state.progressMs + (performance.now() - this.state.updateTime);
-      progressMs = position > this.state.durationMs ? this.state.durationMs : position;
+      const position = progressMs + (performance.now() - updateTime);
+      newProgressMs = position > durationMs ? durationMs : position;
     }
-    this.setState({progressMs, updateTime: performance.now()});
+    this.setState({ progressMs: newProgressMs, updateTime: performance.now() });
   };
 
   stopPlayerStateTimer = (): void => {
@@ -536,7 +537,7 @@ export default class SpotifyPlayer extends React.Component<
       durationMs: duration,
       currentSpotifyTrack: current_track || {},
       playerPaused: paused,
-      updateTime: performance.now()
+      updateTime: performance.now(),
     });
     if (this.firstRun) {
       this.firstRun = false;
