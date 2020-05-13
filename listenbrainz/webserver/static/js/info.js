@@ -27,5 +27,5 @@ document.getElementById("copy-token").addEventListener("click", function() {
     }
     copy(token);
     var copyButton = document.getElementById("copy-token");
-    copyButton.value = "Copied!"
+    copyButton.textContent = "Copied!"
 });
