@@ -129,3 +129,22 @@ declare type LastFmScrobblePage = {
     track: any;
   };
 };
+
+declare type UserArtistsResponse = {
+  payload: {
+    artists: Array<{
+      artist_mbids?: Array<string>;
+      artist_msid?: string;
+      artist_name: string;
+      listen_count: number;
+    }>;
+    count: number;
+    last_updated: number;
+    offset: number;
+    range: UserArtistsAPIRange;
+    total_artist_count: number;
+    user_id: string;
+  };
+};
+
+declare type UserArtistsAPIRange = "all_time";

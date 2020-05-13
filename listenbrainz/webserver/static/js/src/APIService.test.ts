@@ -1,4 +1,5 @@
 import APIService from "./APIService";
+import APIError from "./APIError";
 
 const apiService = new APIService("foobar");
 
@@ -186,6 +187,53 @@ describe("submitListens", () => {
         },
       },
     ]);
+  });
+});
+
+describe("getUserStats", () => {
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ latest_import: "0" }),
+      });
+    });
+  });
+
+  it("calls fetch correctly when optional parameters are passed", async () => {
+    await apiService.getUserStats("foobar", "all_time", 10, 5);
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/stats/user/foobar/artists?offset=10&range=all_time&count=5"
+    );
+  });
+
+  it("calls fetch correctly when optional parameters are not passed", async () => {
+    await apiService.getUserStats("foobar");
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/stats/user/foobar/artists?offset=0&range=all_time"
+    );
+  });
+
+  it("throws appropriate error if statistics haven't been calculated", async () => {
+    window.fetch = jest.fn().mockImplementationOnce(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 204,
+      });
+    });
+
+    await expect(apiService.getUserStats("foobar")).rejects.toThrow(
+      Error("Statistics for the user haven't been calculated yet.")
+    );
+  });
+
+  it("calls checkStatus once", async () => {
+    apiService.checkStatus = jest.fn();
+
+    await apiService.getUserStats("foobar");
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
   });
 });
 

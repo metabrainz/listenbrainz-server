@@ -48,7 +48,8 @@ def get_artist(user_name):
                     }
                 ],
                 "count": 3,
-                "range": "all_time"
+                "total_artist_count": 175,
+                "range": "all_time",
                 "last_updated": 1588494361,
                 "user_id": "John Doe"
             }
@@ -92,6 +93,8 @@ def get_artist(user_name):
         return '', 204
 
     count = min(count, MAX_ITEMS_PER_GET)
+    total_artist_count = stats['artist']['count']
+  
     count = count + offset
     artist_list = stats['artist']['all_time']['artists'][offset:count]
 
@@ -99,6 +102,7 @@ def get_artist(user_name):
         'user_id': user_name,
         "artists": artist_list,
         "count": len(artist_list),
+        "total_artist_count": total_artist_count,
         "offset": offset,
         "range": _range,
         'last_updated': int(stats['last_updated'].timestamp())
