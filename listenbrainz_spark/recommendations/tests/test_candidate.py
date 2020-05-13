@@ -23,12 +23,9 @@ class CandidateSetsTestClass(SparkTestCase):
     @classmethod
     def get_listen_row(cls, date, user_name, credit_id):
         test_mapped_listens = Row(
-            user_name=user_name, artist_msid="a36d6fc9-49d0-4789-a7dd-a2b72369ca45", release_msid="xxxxxx",
-            release_name="xxxxxx", artist_name="Less Than Jake", release_mbid="xxxxxx", track_name="Al's War",
-            recording_msid="cb6985cd-cc71-4d59-b4fb-2e72796af741", tags=['xxxx'], listened_at=date,
-            msb_recording_msid="cb6985cd-cc71-4d59-b4fb-2e72796af741", mb_recording_gid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
-            msb_artist_msid="a36d6fc9-49d0-4789-a7dd-a2b72369ca45", mb_artist_gids=["181c4177-f33a-441d-b15d-910acaf18b07"],
-            mb_artist_credit_id=credit_id
+            user_name=user_name, msb_artist_credit_name_matchable="lessthanjake", mb_release_mbid="xxxxxx",
+            track_name="Al's War", listened_at=date, mb_recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
+            mb_artist_credit_mbids=["181c4177-f33a-441d-b15d-910acaf18b07"], mb_artist_credit_id=credit_id
         )
         return test_mapped_listens
 
@@ -56,7 +53,7 @@ class CandidateSetsTestClass(SparkTestCase):
     def test_get_top_artists(self):
         mapped_df = self.get_mapped_listens()
         test_top_artist_df = candidate_sets.get_top_artists(mapped_df, 'vansika')
-        self.assertListEqual(['mb_artist_credit_id', 'artist_name', 'count'], test_top_artist_df.columns)
+        self.assertListEqual(['mb_artist_credit_id', 'msb_artist_credit_name_matchable', 'count'], test_top_artist_df.columns)
         self.assertEqual(test_top_artist_df.count(), 1)
         row = test_top_artist_df.collect()[0]
         self.assertEqual(row.mb_artist_credit_id, 1)

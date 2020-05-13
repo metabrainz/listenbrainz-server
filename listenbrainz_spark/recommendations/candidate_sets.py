@@ -48,12 +48,11 @@ def get_top_artists(df, user_name):
                     'mb_artist_credit_id', 'artist_name'
                 ]
     """
-    top_artists_df = df.select('mb_artist_credit_id', 'artist_name') \
+    top_artists_df = df.select('mb_artist_credit_id', 'msb_artist_credit_name_matchable') \
         .where(col('user_name') == user_name) \
-        .groupBy('mb_artist_credit_id', 'artist_name') \
+        .groupBy('mb_artist_credit_id', 'msb_artist_credit_name_matchable') \
         .agg(func.count('mb_artist_credit_id').alias('count')) \
         .orderBy('count', ascending=False).limit(config.TOP_ARTISTS_LIMIT)
-
     return top_artists_df
 
 def get_similar_artists(top_artists_df, artists_relation_df, user_name):
@@ -93,6 +92,7 @@ def get_similar_artists(top_artists_df, artists_relation_df, user_name):
     top_similar_artists_df = similar_artists_df.withColumn('rank', row_number().over(window)) \
         .where(col('rank') <= config.SIMILAR_ARTISTS_LIMIT) \
         .select('top_artist_credit_id', 'similar_artist_credit_id', 'similar_artist_name', 'top_artist_name')
+
     # Remove artists from similar artists that already occurred in top artists.
     distinct_similar_artists_df = top_similar_artists_df[top_similar_artists_df \
         .similar_artist_credit_id.isin(top_artists) == False]
