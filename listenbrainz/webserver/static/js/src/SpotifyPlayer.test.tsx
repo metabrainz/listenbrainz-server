@@ -26,6 +26,6 @@ describe("SpotifyPlayer", () => {
   it("renders", () => {
     window.fetch = jest.fn();
     const wrapper = mount(<SpotifyPlayer {...props} />);
-    expect(wrapper.html()).toMatchSnapshot();
+    expect(wrapper).toMatchSnapshot();
   });
 });

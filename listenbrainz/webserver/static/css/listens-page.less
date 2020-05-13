@@ -27,6 +27,9 @@
   }
   &:hover .info, .info.showControls{
     bottom:0;
+    .currently-playing .progress{
+      height: 0.6em;
+    }
   }
   
   .noAlbumArt{
@@ -61,13 +64,17 @@
     }
     /** Progress **/
     .progress {
-      height: 0.35em;
-      background-color: fadeout(@white,80%);
+      height: 0.3em;
+      background-color: rgba(205, 235, 255, 0.2);
+      border: 0.5px solid fadeout(@dark,70%);
+      border-right: 0;
+      border-left: 0;
     }
 
     .progress-bar {
       height: 100%;
       background-color: @primary;
+      border-right: 1px solid @dark;
     }
   }
   
