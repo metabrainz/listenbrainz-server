@@ -83,12 +83,26 @@ export default class PlaybackControls extends React.Component<
   };
 
   onKeyPressHandler = (event: React.KeyboardEvent<HTMLInputElement>): void => {
-    const { durationMs, progressMs, seekToPositionMs } = this.props;
+    const {
+      durationMs,
+      progressMs,
+      seekToPositionMs,
+      playNextTrack,
+      playPreviousTrack,
+    } = this.props;
     if (event.key === "ArrowLeft") {
+      if (event.shiftKey) {
+        playPreviousTrack();
+        return;
+      }
       const oneStepEarlier = progressMs - this.keyboardStepMS;
       seekToPositionMs(oneStepEarlier > 0 ? oneStepEarlier : 0);
     }
     if (event.key === "ArrowRight") {
+      if (event.shiftKey) {
+        playNextTrack();
+        return;
+      }
       const oneStepLater = progressMs + this.keyboardStepMS;
       if (oneStepLater <= durationMs - 500) {
         seekToPositionMs(oneStepLater);
