@@ -1,7 +1,15 @@
 import * as React from "react";
 
-export default class ErrorBoundary extends React.Component<any, any> {
-  constructor(props: any) {
+export type ErrorBoundaryState = {
+  hasError: boolean;
+  error: Error | null;
+};
+
+export default class ErrorBoundary extends React.Component<
+  {},
+  ErrorBoundaryState
+> {
+  constructor(props: {}) {
     super(props);
 
     this.state = { hasError: false, error: null };
@@ -20,8 +28,8 @@ export default class ErrorBoundary extends React.Component<any, any> {
       document.title = "Something went wrong - ListenBrainz";
       return (
         <div>
-          <h2 className="page-title">{error.name}</h2>
-          <p>{error.message}</p>
+          <h2 className="page-title">{error!.name}</h2>
+          <p>{error!.message}</p>
           <p>
             <a href={window.location.origin + window.location.pathname}>
               Reload the page
