@@ -112,7 +112,10 @@ export default class SpotifyPlayer extends React.Component<
   searchAndPlayTrack = (listen: Listen): void => {
     const trackName = _.get(listen, "track_metadata.track_name");
     const artistName = _.get(listen, "track_metadata.artist_name");
-    const releaseName = _.get(listen, "track_metadata.release_name");
+    // Using the releaseName has paradoxically given worst search results, so we're going to ignor it for now
+    // const releaseName = _.get(listen, "track_metadata.release_name");
+    const releaseName = "";
+
     if (!trackName) {
       this.handleWarning("Not enough info to search on Spotify");
     }

@@ -38,10 +38,7 @@ const searchForSpotifyTrack = async (
     // search for track was not provided a track name, cannot proceed
     return null;
   }
-  const queryString = `q="${trackName}"
-    ${artistName && ` artist:${artistName}`}
-    ${releaseName && ` album:${releaseName}`}
-    &type=track`;
+  const queryString = `q="${trackName}"${artistName && ` artist:${artistName}`}${releaseName && ` album:${releaseName}`}&type=track`;
 
   const response = await fetch(
     `https://api.spotify.com/v1/search?${encodeURI(queryString)}`,
