@@ -81,7 +81,7 @@ def get_artist(user_name):
         raise APIBadRequest("We currently only support the `all_time` range.")
 
     offset = _get_non_negative_param('offset', default=0)
-    count = _get_non_negative_param('count')
+    count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
     user = db_user.get_by_mb_id(user_name)
     if user is None:
@@ -91,8 +91,6 @@ def get_artist(user_name):
     if stats is None:
         return '', 204
 
-    if count is None:
-        count = DEFAULT_ITEMS_PER_GET
     count = min(count, MAX_ITEMS_PER_GET)
     count = count + offset
     artist_list = stats['artist']['all_time']['artists'][offset:count]
