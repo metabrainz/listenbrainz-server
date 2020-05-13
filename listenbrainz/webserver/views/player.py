@@ -11,8 +11,7 @@ player_bp = Blueprint("player", __name__)
 @login_required
 
 def load():
-    """
-        This is the start of the BrainzPlayer concept where anyone (logged into LB) can post a playlist
+    """This is the start of the BrainzPlayer concept where anyone (logged into LB) can post a playlist
         composed of an array of listens-formatted items and get returned a playable playlist page.
     """
 
@@ -54,7 +53,7 @@ def load():
         "user": user_data,
         "spotify": spotify_data,
         "api_url": current_app.config["API_URL"],
-        "listens" : listens
+        "listens": listens
     }
 
     return render_template(
