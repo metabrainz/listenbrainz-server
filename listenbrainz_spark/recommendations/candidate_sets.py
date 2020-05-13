@@ -46,6 +46,7 @@ SAVE_CANDIDATE_HTML = True
 #       'user_id', 'recording_id'
 #   ]
 
+
 def get_listens_to_fetch_top_artists(mapped_df):
     """ Get listens of past X days to fetch top artists where X = RECOMMENDATION_GENERATION_WINDOW.
 
@@ -60,6 +61,7 @@ def get_listens_to_fetch_top_artists(mapped_df):
         .where((col('listened_at') >= to_timestamp(date_sub(current_timestamp(),
         config.RECOMMENDATION_GENERATION_WINDOW))) & (col('listened_at') <= current_timestamp()))
     return mapped_df_subset
+
 
 def get_top_artists(mapped_df_subset):
     """ Get top artists listened to by users who have a listening history in
@@ -83,6 +85,7 @@ def get_top_artists(mapped_df_subset):
                        .select('mb_artist_credit_id', 'msb_artist_credit_name_matchable', 'user_name')
 
     return top_artists_df
+
 
 def get_top_similar_artists(top_artists_df, artists_relation_df, users_df):
     """ Get artists similar to top artists.
@@ -127,6 +130,7 @@ def get_top_similar_artists(top_artists_df, artists_relation_df, users_df):
 
     return top_similar_artists_df
 
+
 def get_top_artists_candidate_set(top_artists_df, recordings_df, users_df):
     """ Get recording ids that belong to top artists.
 
@@ -148,6 +152,7 @@ def get_top_artists_candidate_set(top_artists_df, recordings_df, users_df):
                                      .select('user_id', 'recording_id')
 
     return top_artists_candidate_set_df
+
 
 def get_top_similar_artists_candidate_set(top_similar_artists_df, recordings_df, users_df):
     """ Get recording ids that belong to similar artists.
@@ -174,6 +179,7 @@ def get_top_similar_artists_candidate_set(top_similar_artists_df, recordings_df,
 
     return top_similar_artists_candidate_set_df
 
+
 def save_candidate_sets(top_artists_candidate_set_df, top_similar_artists_candidate_set_df):
     """ Save candidate sets to HDFS.
 
@@ -185,6 +191,7 @@ def save_candidate_sets(top_artists_candidate_set_df, top_similar_artists_candid
     """
     utils.save_parquet(top_artists_candidate_set_df, path.TOP_ARTIST_CANDIDATE_SET)
     utils.save_parquet(top_similar_artists_candidate_set_df, path.SIMILAR_ARTIST_CANDIDATE_SET)
+
 
 def get_candidate_html_data(top_similar_artists_df):
     """ Get top and similar artists associated to users. The function is invoked
@@ -208,6 +215,7 @@ def get_candidate_html_data(top_similar_artists_df):
         user_data[row.user_name].append((row.top_artist_name, row.similar_artist_name, row.score))
     return user_data
 
+
 def save_candidate_html(user_data, ti):
     """ Save user data to an HTML file.
 
@@ -218,10 +226,11 @@ def save_candidate_html(user_data, ti):
     date = datetime.utcnow().strftime('%Y-%m-%d')
     candidate_html = 'Candidate-{}-{}.html'.format(uuid.uuid4(), date)
     context = {
-        'user_data' : user_data,
-        'total_time' : '{:.2f}'.format((time() - ti) / 60),
+        'user_data': user_data,
+        'total_time': '{:.2f}'.format((time() - ti) / 60),
     }
     save_html(candidate_html, context, 'candidate.html')
+
 
 def get_user_id(df, user_name):
     """ Get user id of the user.
@@ -242,6 +251,7 @@ def get_user_id(df, user_name):
         return row.user_id
     except IndexError:
         raise IndexError()
+
 
 def main():
     ti = time()

@@ -24,6 +24,7 @@ from pyspark.mllib.recommendation import MatrixFactorizationModel
 # Recommendation HTML is generated if set to true.
 SAVE_RECOMMENDATION_HTML = True
 
+
 def load_model(path):
     """ Load best model from given path in HDFS.
 
@@ -31,6 +32,7 @@ def load_model(path):
             path (str): Path where best model is stored.
     """
     return MatrixFactorizationModel.load(listenbrainz_spark.context, path)
+
 
 def get_recommended_recordings(candidate_set, limit, recordings_df, model, mapped_listens):
     """ Get list of recommended recordings from the candidate set
@@ -172,46 +174,6 @@ def get_recommendations(user_names, recordings_df, model, users_df, top_artists_
             current_app.logger.error('{} is new/invalid user.'.format(user_name))
     return recommendations
 
-def get_recommendation_html(recommendations, time_, best_model_id, ti):
-    """ Prepare and save recommendation HTML.
-
-        Args:
-            time_ (dict): Dictionary containing execution time information, can be depicted as:
-                {
-                    'load_model' : '3.09',
-                    ...
-                }
-            best_model_id (str): Id of the model used for generating recommendations
-            ti (str): Seconds since epoch when the script was run.
-            recommendations (dict): Dictionary can be depicted as:
-                {
-                    'user_name 1': {
-                        'time': 'xx.xx',
-                        'top_artists_recordings': [
-                            ('xxx', 'xxx', 'xxx', 'xxx', 'xxx', 'xxx', 'xxx'),
-                            ...
-                            ('xxx', 'xxx', 'xxx', 'xxx', 'xxx', 'xxx', 'xxx')
-                        ]
-                        'similar_artists_recordings' : [
-                            ('xxx', 'xxx', 'xxx', 'xxx', 'xxx', 'xxx', 'xxx'),
-                            ...
-                            ('xxx', 'xxx', 'xxx', 'xxx', 'xxx', 'xxx', 'xxx')
-                        ]
-                    }
-                }
-    """
-    date = datetime.utcnow().strftime('%Y-%m-%d')
-    recommendation_html = 'Recommendation-{}-{}.html'.format(uuid.uuid4(), date)
-    column = ('MSB_ARTIST_CREDIT_NAME_MATCHABLE', 'MB_ARTIST_CREDIT_ID', 'MB_ARTIST_CREDIT_MBIDS', 'MB_RECORDING_MBID',
-              'MB_RELEASE_MBID', 'TRACK_NAME')
-    context = {
-        'recommendations' : recommendations,
-        'column' : column,
-        'total_time' : '{:.2f}'.format((time() - ti) / 3600),
-        'time' : time_,
-        'best_model' : best_model_id,
-    }
-    save_html(recommendation_html, context, 'recommend.html')
 
 def main():
     ti = time()
@@ -265,6 +227,3 @@ def main():
 
     # persisted data must be cleared from memory after usage to avoid OOM
     recordings_df.unpersist()
-
-    if SAVE_RECOMMENDATION_HTML:
-        get_recommendation_html(recommendations, time_, best_model_id, ti)
