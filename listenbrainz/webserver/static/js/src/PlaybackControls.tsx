@@ -25,6 +25,7 @@ type PlaybackControlsProps = {
   artistName?: string;
   progressMs: number;
   durationMs: number;
+  seekToPositionMs: (msTimeCode: number) => void;
 };
 
 type PlaybackControlButtonProps = {
@@ -59,12 +60,55 @@ export default class PlaybackControls extends React.Component<
   PlaybackControlsProps,
   PlaybackControlsState
 > {
+  // How many milliseconds to navigate to with keyboard left/right arrows
+  keyboardStepMS: number = 5000;
+
   constructor(props: PlaybackControlsProps) {
     super(props);
     this.state = {
       autoHideControls: true,
     };
   }
+
+  progressClickHandler = (event: React.MouseEvent<HTMLInputElement>): void => {
+    const { durationMs, seekToPositionMs } = this.props;
+    const progressBarBoundingRect = event.currentTarget.getBoundingClientRect();
+    const progressBarWidth = progressBarBoundingRect.width;
+    const musicPlayerXOffset = progressBarBoundingRect.x;
+    const absoluteClickXPos = event.clientX;
+    const relativeClickXPos = absoluteClickXPos - musicPlayerXOffset;
+    const percentPos = relativeClickXPos / progressBarWidth;
+    const positionMs = Math.round(durationMs * percentPos);
+    seekToPositionMs(positionMs);
+  };
+
+  onKeyPressHandler = (event: React.KeyboardEvent<HTMLInputElement>): void => {
+    const {
+      durationMs,
+      progressMs,
+      seekToPositionMs,
+      playNextTrack,
+      playPreviousTrack,
+    } = this.props;
+    if (event.key === "ArrowLeft") {
+      if (event.shiftKey) {
+        playPreviousTrack();
+        return;
+      }
+      const oneStepEarlier = progressMs - this.keyboardStepMS;
+      seekToPositionMs(oneStepEarlier > 0 ? oneStepEarlier : 0);
+    }
+    if (event.key === "ArrowRight") {
+      if (event.shiftKey) {
+        playNextTrack();
+        return;
+      }
+      const oneStepLater = progressMs + this.keyboardStepMS;
+      if (oneStepLater <= durationMs - 500) {
+        seekToPositionMs(oneStepLater);
+      }
+    }
+  };
 
   render() {
     const {
@@ -82,6 +126,7 @@ export default class PlaybackControls extends React.Component<
     } = this.props;
 
     const { autoHideControls } = this.state;
+    const progressPercentage = Number((progressMs * 100) / durationMs);
     return (
       <div id="music-player" aria-label="Playback control">
         <div className="album">
@@ -95,11 +140,21 @@ export default class PlaybackControls extends React.Component<
           <div className="currently-playing">
             <h2 className="song-name">{trackName || "—"}</h2>
             <h3 className="artist-name">{artistName}</h3>
-            <div className="progress">
+            <div
+              className="progress"
+              onClick={this.progressClickHandler}
+              onKeyDown={this.onKeyPressHandler}
+              aria-label="Audio Progress Control"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={progressPercentage}
+              tabIndex={0}
+            >
               <div
                 className="progress-bar"
                 style={{
-                  width: `${(progressMs * 100) / durationMs}%`,
+                  width: `${progressPercentage}%`,
                 }}
               />
             </div>

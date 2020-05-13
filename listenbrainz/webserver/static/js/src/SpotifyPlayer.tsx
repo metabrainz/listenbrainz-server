@@ -59,6 +59,7 @@ type SpotifyPlayerState = {
   playerPaused: boolean;
   progressMs: number;
   durationMs: number;
+  updateTime: number;
   direction: SpotifyPlayDirection;
   paused?: boolean;
   position?: number;
@@ -86,6 +87,7 @@ export default class SpotifyPlayer extends React.Component<
       playerPaused: true,
       progressMs: 0,
       durationMs: 0,
+      updateTime: performance.now(),
       direction: props.direction || "down",
     };
 
@@ -100,7 +102,7 @@ export default class SpotifyPlayer extends React.Component<
     this.checkSpotifyToken(accessToken, permission).then((success) => {
       if (success) {
         window.onSpotifyWebPlaybackSDKReady = this.connectSpotifyPlayer;
-        const spotifyPlayerSDKLib = require("../lib/spotify-player-sdk-1.6.0"); // eslint-disable-line global-require
+        const spotifyPlayerSDKLib = require("../lib/spotify-player-sdk-1.7.1"); // eslint-disable-line global-require
       }
     });
   }
@@ -112,7 +114,10 @@ export default class SpotifyPlayer extends React.Component<
   searchAndPlayTrack = (listen: Listen): void => {
     const trackName = _.get(listen, "track_metadata.track_name");
     const artistName = _.get(listen, "track_metadata.artist_name");
-    const releaseName = _.get(listen, "track_metadata.release_name");
+    // Using the releaseName has paradoxically given worst search results, so we're going to ignor it for now
+    // const releaseName = _.get(listen, "track_metadata.release_name");
+    const releaseName = "";
+
     if (!trackName) {
       this.handleWarning("Not enough info to search on Spotify");
     }
@@ -365,6 +370,10 @@ export default class SpotifyPlayer extends React.Component<
     }
   };
 
+  seekToPositionMs = (msTimecode: number): void => {
+    this.spotifyPlayer.seek(msTimecode);
+  };
+
   toggleDirection = (): void => {
     this.setState((prevState) => {
       const direction = prevState.direction === "down" ? "up" : "down";
@@ -470,14 +479,27 @@ export default class SpotifyPlayer extends React.Component<
     this.setState({
       progressMs: currentlyPlaying.progress_ms,
       durationMs: currentlyPlaying.item && currentlyPlaying.item.duration_ms,
+      updateTime: performance.now(),
       currentSpotifyTrack: currentlyPlaying.item,
     });
   };
 
   startPlayerStateTimer = (): void => {
     this.playerStateTimerID = window.setInterval(() => {
-      this.spotifyPlayer.getCurrentState().then(this.handlePlayerStateChanged);
-    }, 500);
+      this.getStatePosition();
+    }, 200);
+  };
+
+  getStatePosition = (): void => {
+    let newProgressMs: number;
+    const { playerPaused, durationMs, progressMs, updateTime } = this.state;
+    if (playerPaused) {
+      newProgressMs = progressMs || 0;
+    } else {
+      const position = progressMs + (performance.now() - updateTime);
+      newProgressMs = position > durationMs ? durationMs : position;
+    }
+    this.setState({ progressMs: newProgressMs, updateTime: performance.now() });
   };
 
   stopPlayerStateTimer = (): void => {
@@ -515,6 +537,7 @@ export default class SpotifyPlayer extends React.Component<
       durationMs: duration,
       currentSpotifyTrack: current_track || {},
       playerPaused: paused,
+      updateTime: performance.now(),
     });
     if (this.firstRun) {
       this.firstRun = false;
@@ -570,6 +593,7 @@ export default class SpotifyPlayer extends React.Component<
           }
           progressMs={progressMs}
           durationMs={durationMs}
+          seekToPositionMs={this.seekToPositionMs}
         >
           {this.getAlbumArt()}
         </PlaybackControls>
