@@ -191,6 +191,12 @@ export default class APIService {
     }
     const response = await fetch(url);
     this.checkStatus(response);
+    // if response code is 204, then statistics havent been calculated, show appropriate message
+    if (response.status === 204) {
+      throw new APIError(
+        "Statistics for the user haven't been calculated yet."
+      );
+    }
     const data = response.json();
     return data;
   };

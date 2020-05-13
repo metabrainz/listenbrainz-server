@@ -24,9 +24,8 @@ describe("User Artists Page", () => {
     const wrapper = mount<UserArtists>(<UserArtists {...props} />);
     const instance = wrapper.instance();
 
-    // eslint-disable-next-line dot-notation
-    instance["maxListens"] = 385;
-    wrapper.setState({ data: userArtistsProcessDataOutput as any });
+    instance.maxListens = 385;
+    wrapper.setState({ data: userArtistsProcessDataOutput });
     wrapper.update();
 
     expect(wrapper).toMatchSnapshot();
@@ -41,29 +40,25 @@ describe("componentDidMount", () => {
     delete window.location;
     window.location = {
       href: "https://foobar/user/bazfoo/artists?page=3",
-    } as any;
+    } as Window["location"];
     instance.componentDidMount();
 
-    // eslint-disable-next-line dot-notation
-    expect(instance["currPage"]).toBe(3);
+    expect(instance.currPage).toBe(3);
   });
 
   it("sets maxListens and totalPages correctly", async () => {
     const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
     const instance = wrapper.instance();
 
-    // eslint-disable-next-line dot-notation
-    const spy = jest.spyOn(instance["APIService"], "getUserStats");
+    const spy = jest.spyOn(instance.APIService, "getUserStats");
     spy.mockImplementation(() => {
-      return Promise.resolve(userArtistsResponse as any);
+      return Promise.resolve(userArtistsResponse as UserArtistsResponse);
     });
 
     await instance.componentDidMount();
     expect(spy).toHaveBeenCalledWith("dummyUser", undefined, undefined, 1);
-    // eslint-disable-next-line dot-notation
-    expect(instance["maxListens"]).toBe(385);
-    // eslint-disable-next-line dot-notation
-    expect(instance["totalPages"]).toBe(7);
+    expect(instance.maxListens).toBe(385);
+    expect(instance.totalPages).toBe(7);
   });
 
   it("calls handlePageChange", async () => {
@@ -71,15 +66,14 @@ describe("componentDidMount", () => {
     const instance = wrapper.instance();
 
     instance.handlePageChange = jest.fn();
-    // eslint-disable-next-line dot-notation
-    const spy = jest.spyOn(instance["APIService"], "getUserStats");
+    const spy = jest.spyOn(instance.APIService, "getUserStats");
     spy.mockImplementation(() => {
-      return Promise.resolve(userArtistsResponse as any);
+      return Promise.resolve(userArtistsResponse as UserArtistsResponse);
     });
     delete window.location;
     window.location = {
       href: "https://foobar/user/bazfoo/artists",
-    } as any;
+    } as Window["location"];
     await instance.componentDidMount();
 
     expect(instance.handlePageChange).toHaveBeenCalledWith(1);
@@ -91,8 +85,7 @@ describe("getData", () => {
     const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
     const instance = wrapper.instance();
 
-    // eslint-disable-next-line dot-notation
-    const spy = jest.spyOn(instance["APIService"], "getUserStats");
+    const spy = jest.spyOn(instance.APIService, "getUserStats");
     spy.mockImplementation((): any => {
       return Promise.resolve(userArtistsResponse);
     });
@@ -107,9 +100,9 @@ describe("processData", () => {
     const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
     const instance = wrapper.instance();
 
-    expect(instance.processData(userArtistsResponse as any, 0)).toEqual(
-      userArtistsProcessDataOutput
-    );
+    expect(
+      instance.processData(userArtistsResponse as UserArtistsResponse, 0)
+    ).toEqual(userArtistsProcessDataOutput);
   });
 });
 
@@ -118,8 +111,7 @@ describe("handlePageChange", () => {
     const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
     const instance = wrapper.instance();
 
-    // eslint-disable-next-line dot-notation
-    const spy = jest.spyOn(instance["APIService"], "getUserStats");
+    const spy = jest.spyOn(instance.APIService, "getUserStats");
     spy.mockImplementation((): any => {
       return Promise.resolve(userArtistsResponse);
     });
@@ -130,26 +122,6 @@ describe("handlePageChange", () => {
 
     expect(instance.processData).toHaveBeenCalledWith(userArtistsResponse, 0);
     expect(wrapper.state("data")).toEqual(userArtistsProcessDataOutput);
-    // eslint-disable-next-line dot-notation
-    expect(instance["currPage"]).toBe(1);
-  });
-});
-
-describe("handleError", () => {
-  it("throws appropriate error if statistics haven't been calculated", async () => {
-    const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
-    const instance = wrapper.instance();
-
-    // eslint-disable-next-line dot-notation
-    const spy = jest.spyOn(instance["APIService"], "getUserStats");
-    spy.mockImplementation((): any => {
-      throw SyntaxError("Unexpected end of JSON input");
-    });
-
-    await expect(instance.componentDidMount()).rejects.toThrow(
-      Error(
-        "Statistics for user: dummyUser have not been calculated yet. Please try again later."
-      )
-    );
+    expect(instance.currPage).toBe(1);
   });
 });

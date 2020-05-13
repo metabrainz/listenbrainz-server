@@ -12,11 +12,13 @@ exports[`ErrorBoundary renders error page correctly if child component throws er
       Test Error
     </p>
     <p>
-      <a
-        href="http://localhost/"
+      <button
+        className="btn-link"
+        onClick={[Function]}
+        type="button"
       >
         Reload the page
-      </a>
+      </button>
     </p>
   </div>
 </ErrorBoundary>

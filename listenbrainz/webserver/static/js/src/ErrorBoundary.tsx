@@ -31,9 +31,15 @@ export default class ErrorBoundary extends React.Component<
           <h2 className="page-title">{error!.name}</h2>
           <p>{error!.message}</p>
           <p>
-            <a href={window.location.origin + window.location.pathname}>
+            <button
+              className="btn-link"
+              type="button"
+              onClick={() => {
+                window.location.reload();
+              }}
+            >
               Reload the page
-            </a>
+            </button>
           </p>
         </div>
       );

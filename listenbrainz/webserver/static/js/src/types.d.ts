@@ -140,7 +140,7 @@ declare type UserArtistsResponse = {
     }>;
     count: number;
     last_updated: number;
-    offset: 0;
+    offset: number;
     range: UserArtistsAPIRange;
     total_artist_count: number;
     user_id: string;

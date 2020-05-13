@@ -14,10 +14,31 @@ describe("ErrorBoundary", () => {
         <ChildComponent />
       </ErrorBoundary>
     );
+
     wrapper.find(ChildComponent).simulateError(Error("Test Error"));
 
     expect(wrapper.state()).toMatchObject({ hasError: true });
     expect(wrapper).toMatchSnapshot();
+  });
+
+  it("reloads page when button is clicked", () => {
+    const wrapper = mount(
+      <ErrorBoundary>
+        <ChildComponent />
+      </ErrorBoundary>
+    );
+
+    wrapper.find(ChildComponent).simulateError(Error("Test Error"));
+    // Mock the reload function
+    Object.defineProperty(window, "location", {
+      value: {
+        reload: jest.fn(),
+      },
+      writable: true,
+    });
+    wrapper.find("button").simulate("click");
+
+    expect(window.location.reload).toHaveBeenCalledTimes(1);
   });
 
   it("renders the child component if error is not thrown", () => {

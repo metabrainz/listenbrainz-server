@@ -1,4 +1,5 @@
 import APIService from "./APIService";
+import APIError from "./APIError";
 
 const apiService = new APIService("foobar");
 
@@ -212,6 +213,19 @@ describe("getUserStats", () => {
     await apiService.getUserStats("foobar");
     expect(window.fetch).toHaveBeenCalledWith(
       "foobar/1/stats/user/foobar/artists?offset=0&range=all_time"
+    );
+  });
+
+  it("throws appropriate error if statistics haven't been calculated", async () => {
+    window.fetch = jest.fn().mockImplementationOnce(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 204,
+      });
+    });
+
+    await expect(apiService.getUserStats("foobar")).rejects.toThrow(
+      Error("Statistics for the user haven't been calculated yet.")
     );
   });
 

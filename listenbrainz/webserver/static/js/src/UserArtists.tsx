@@ -25,10 +25,10 @@ export default class UserArtists extends React.Component<
 > {
   APIService: APIService;
 
-  private ROWS_PER_PAGE = 25; // Number of atists to be shown on each page
-  private maxListens = 0; // Number of listens for first artist used to scale the graph
-  private totalPages = 0; // Total namber of pages, useful for pagination
-  private currPage = 1; // Current page number
+  ROWS_PER_PAGE = 25; // Number of atists to be shown on each page
+  maxListens = 0; // Number of listens for first artist used to scale the graph
+  totalPages = 0; // Total namber of pages, useful for pagination
+  currPage = 1; // Current page number
 
   constructor(props: UserArtistsProps) {
     super(props);
@@ -114,21 +114,6 @@ export default class UserArtists extends React.Component<
     // Error Boundaries don't catch errors in async code.
     // Throwing an error in setState fixes this.
     // This is a hacky solution but should be fixed with upcoming concurrent mode in React.
-    const { user } = this.props;
-
-    if (
-      error.name === "SyntaxError" &&
-      error.message === "Unexpected end of JSON input"
-    ) {
-      // If the above error is thrown, it means stats haven't been calculated, show an
-      // appropriate message to the user.
-      this.setState(() => {
-        throw new Error(
-          `Statistics for user: ${user.name} have not been calculated yet. Please try again later.`
-        );
-      });
-    }
-
     this.setState(() => {
       throw error;
     });

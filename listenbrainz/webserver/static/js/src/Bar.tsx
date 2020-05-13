@@ -2,12 +2,30 @@ import * as React from "react";
 import { ResponsiveBar, LabelFormatter } from "@nivo/bar";
 
 export type BarProps = {
-  data: Array<object>;
+  data: Array<{
+    id: string;
+    count: number;
+  }>;
   maxValue: number;
 };
 
 export type BarState = {
   marginLeft: number;
+};
+
+type Tick = {
+  format: undefined | LabelFormatter;
+  lineX: number;
+  lineY: number;
+  rotate: number;
+  textAnchor: React.CSSProperties["textAnchor"];
+  textBaseline: React.CSSProperties["dominantBaseline"];
+  textX: number;
+  textY: number;
+  textIndex: number;
+  x: number;
+  y: number;
+  value: string;
 };
 
 export default class Bar extends React.Component<BarProps, BarState> {
@@ -37,8 +55,9 @@ export default class Bar extends React.Component<BarProps, BarState> {
     const { data, maxValue } = this.props;
     const { marginLeft } = this.state;
 
-    const leftAlignedTick = (tick: any) => {
+    const leftAlignedTick = (tick: Tick) => {
       let { value } = tick;
+
       if (value.length > marginLeft / 10) {
         value = `${value.slice(0, marginLeft / 10)}...`;
       }
