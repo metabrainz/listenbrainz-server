@@ -1,0 +1,13 @@
+#!/bin/bash
+
+
+if [ "${CONTAINER_NAME}" = "listenbrainz-cron-${DEPLOY_ENV}" ]
+then
+    rm -f /etc/service/cron/down
+    exit 0
+else
+    rm -f /etc/service/uwsgi/down
+    exit 0
+fi
+
+
