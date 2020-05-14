@@ -62,7 +62,7 @@ def create_app(debug=None):
     return app
 
 
-def init_rabbitmq(username, password, host, port, vhost, log=logging.error):
+def init_rabbitmq(username, password, host, port, vhost, log=logging.error, heartbeat=None):
     while True:
         try:
             credentials = pika.PlainCredentials(username, password)
@@ -71,6 +71,7 @@ def init_rabbitmq(username, password, host, port, vhost, log=logging.error):
                 port=port,
                 virtual_host=vhost,
                 credentials=credentials,
+                heartbeat=heartbeat,
             )
             return pika.BlockingConnection(connection_parameters)
         except Exception as e:
