@@ -149,7 +149,7 @@ def get_top_artists_candidate_set(top_artists_df, recordings_df, users_df):
     df = top_artists_df.join(recordings_df, condition, 'inner')
 
     top_artists_candidate_set_df = df.join(users_df, 'user_name', 'inner')\
-                                     .select('user_id', 'recording_id')
+                                     .select('recording_id', 'user_id', 'user_name')
 
     return top_artists_candidate_set_df
 
@@ -175,7 +175,7 @@ def get_top_similar_artists_candidate_set(top_similar_artists_df, recordings_df,
     df = top_similar_artists_df.join(recordings_df, condition, 'inner')
 
     top_similar_artists_candidate_set_df = df.join(users_df, 'user_name', 'inner')\
-                                             .select('user_id', 'recording_id')
+                                             .select('recording_id', 'user_id', 'user_name')
 
     return top_similar_artists_candidate_set_df
 
