@@ -1,27 +1,18 @@
 import os
-import sys
-import time
 import json
-import uuid
 import logging
-import tarfile
-import tempfile
-import subprocess
 from time import time
 from datetime import datetime
 from collections import defaultdict
 from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
-from listenbrainz import DUMP_LICENSE_FILE_PATH
 from listenbrainz_spark import config, utils, path
-from listenbrainz_spark.recommendations.candidate_sets import get_user_id
 from listenbrainz_spark.exceptions import SQLException, SparkSessionNotInitializedException, PathNotFoundException, \
     FileNotFetchedException, ViewNotRegisteredException
-from listenbrainz_spark.recommendations.utils import save_html
 
 from flask import current_app
-from pyspark.sql.functions import lit, col
+from pyspark.sql.functions import col
 from pyspark.sql.utils import AnalysisException
 from pyspark.mllib.recommendation import MatrixFactorizationModel
 
@@ -63,6 +54,7 @@ def generate_recommendations(candidate_set, limit, recordings_df, model):
 
     return recommended_recording_mbids
 
+
 def get_recommendations_for_user(model, user_id, user_name, recordings_df, top_artists_candidate_set,
                                  similar_artists_candidate_set):
     """ Get recommended recordings which belong to top artists and artists similar to top
@@ -81,8 +73,6 @@ def get_recommendations_for_user(model, user_id, user_name, recordings_df, top_a
             user_recommendations_top_artist: list of recommended recordings of top artist.
             user_recommendations_top_artist: list of recommended recordings of similar artist.
     """
-
-
     top_artists_recordings = top_artists_candidate_set.select('user_id', 'recording_id') \
                                                       .where(col('user_id') == user_id)
 
@@ -99,7 +89,7 @@ def get_recommendations_for_user(model, user_id, user_name, recordings_df, top_a
                                                               .where(col('user_id') == user_id)
     try:
         similar_artists_recordings.take(1)[0]
-        similar_artists_recordings_rdd = similar_artists_recordings.rdd.map(lambda r : (r['user_id'], r['recording_id']))
+        similar_artists_recordings_rdd = similar_artists_recordings.rdd.map(lambda r: (r['user_id'], r['recording_id']))
         user_recommendations_similar_artist = generate_recommendations(similar_artists_recordings_rdd,
                                                                        config.RECOMMENDATION_SIMILAR_ARTIST_LIMIT,
                                                                        recordings_df, model)
@@ -134,7 +124,6 @@ def get_recommendations_for_all(recordings_df, model, top_artists_candidate_set,
     for row in users_df.collect():
         user_name = row.user_name
         user_id = row.user_id
-        ti = time()
 
         user_recommendations_top_artist, user_recommendations_similar_artist = get_recommendations_for_user(
                 model, user_id,
