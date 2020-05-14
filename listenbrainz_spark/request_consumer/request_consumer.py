@@ -31,6 +31,8 @@ from flask import current_app
 
 from py4j.protocol import Py4JJavaError
 
+RABBITMQ_HEARTBEAT_TIME = 2 * 60 * 60  # 2 hours -- a full dump import takes 40 minutes right now
+
 class RequestConsumer:
 
     def get_result(self, request):
@@ -72,18 +74,18 @@ class RequestConsumer:
                         properties=pika.BasicProperties(delivery_mode = 2,),
                     )
                     break
-                except pika.exceptions.ConnectionClosed:
-                    self.connect_to_rabbitmq()
+                except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as e:
+                    current_app.logger.error('RabbitMQ Connection error while publishing results: %s', str(e), exc_info=True)
                     time.sleep(1)
-                except pika.exceptions.ChannelClosed:
-                    self.result_channel = self.rabbitmq.channel()
-                    self.result_channel.exchange_declare(exchange=current_app.config['SPARK_RESULT_EXCHANGE'], exchange_type='fanout')
+                    self.rabbitmq.close()
+                    self.connect_to_rabbitmq()
+                    self.init_rabbitmq_channels()
         current_app.logger.debug("Done!")
-
 
 
     def callback(self, channel, method, properties, body):
         request = json.loads(body.decode('utf-8'))
+        current_app.logger.info('Received a request!')
         messages = self.get_result(request)
         if messages:
             self.push_to_result_queue(messages)
@@ -91,12 +93,13 @@ class RequestConsumer:
             try:
                 self.request_channel.basic_ack(delivery_tag=method.delivery_tag)
                 break
-            except pika.exceptions.ChannelClosed:
-                self.request_channel = self.rabbitmq.channel()
-                self.request_channel.exchange_declare(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], exchange_type='fanout')
-                self.request_channel.queue_declare(current_app.config['SPARK_REQUEST_QUEUE'], durable=True)
-                self.request_channel.queue_bind(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], queue=current_app.config['SPARK_REQUEST_QUEUE'])
-                self.request_channel.basic_consume(self.callback, queue=current_app.config['SPARK_REQUEST_QUEUE'])
+            except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as e:
+                current_app.logger.error('RabbitMQ Connection error when acknowledging request: %s', str(e), exc_info=True)
+                time.sleep(1)
+                self.rabbitmq.close()
+                self.connect_to_rabbitmq()
+                self.init_rabbitmq_channels()
+        current_app.logger.info('Request done!')
 
 
     def connect_to_rabbitmq(self):
@@ -107,26 +110,34 @@ class RequestConsumer:
             port=current_app.config['RABBITMQ_PORT'],
             vhost=current_app.config['RABBITMQ_VHOST'],
             log=current_app.logger.critical,
+            heartbeat=RABBITMQ_HEARTBEAT_TIME,
         )
 
+    def init_rabbitmq_channels(self):
+        self.request_channel = self.rabbitmq.channel()
+        self.request_channel.exchange_declare(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], exchange_type='fanout')
+        self.request_channel.queue_declare(current_app.config['SPARK_REQUEST_QUEUE'], durable=True)
+        self.request_channel.queue_bind(
+            exchange=current_app.config['SPARK_REQUEST_EXCHANGE'],
+            queue=current_app.config['SPARK_REQUEST_QUEUE']
+        )
+        self.request_channel.basic_consume(self.callback, queue=current_app.config['SPARK_REQUEST_QUEUE'])
+
+        self.result_channel = self.rabbitmq.channel()
+        self.result_channel.exchange_declare(exchange=current_app.config['SPARK_RESULT_EXCHANGE'], exchange_type='fanout')
 
     def run(self):
         while True:
             try:
                 self.connect_to_rabbitmq()
-                self.request_channel = self.rabbitmq.channel()
-                self.request_channel.exchange_declare(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], exchange_type='fanout')
-                self.request_channel.queue_declare(current_app.config['SPARK_REQUEST_QUEUE'], durable=True)
-                self.request_channel.queue_bind(exchange=current_app.config['SPARK_REQUEST_EXCHANGE'], queue=current_app.config['SPARK_REQUEST_QUEUE'])
-                self.request_channel.basic_consume(self.callback, queue=current_app.config['SPARK_REQUEST_QUEUE'])
-
-                self.result_channel = self.rabbitmq.channel()
-                self.result_channel.exchange_declare(exchange=current_app.config['SPARK_RESULT_EXCHANGE'], exchange_type='fanout')
+                self.init_rabbitmq_channels()
+                current_app.logger.info('Request consumer started!')
 
                 try:
                     self.request_channel.start_consuming()
-                except pika.exceptions.ConnectionClosed:
-                    current_app.logger.error('connection to rabbitmq closed.', exc_info=True)
+                except pika.exceptions.ConnectionClosed as e:
+                    current_app.logger.error('connection to rabbitmq closed: %s', str(e), exc_info=True)
+                    self.rabbitmq.close()
                     continue
                 self.rabbitmq.close()
             except Py4JJavaError as e:
