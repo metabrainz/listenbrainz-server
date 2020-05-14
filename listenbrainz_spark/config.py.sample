@@ -19,7 +19,7 @@ SPARK_RESULT_QUEUE = "spark_result"
 # train model
 RANKS = [8, 12]
 LAMBDAS = [0.1, 10.0]
-ITERATIONS = [10, 20]
+ITERATIONS = [5, 10]
 
 # train model on X days data
 TRAIN_MODEL_WINDOW = 180
