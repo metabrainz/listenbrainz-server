@@ -7,7 +7,7 @@ import config
 
 
 SELECT_ARTIST_RELATIONS_QUERY = '''
-    SELECT count, arr.artist_0, a0.name AS artist_name_0, arr.artist_1, a1.name AS artist_name_1 
+    SELECT count, arr.artist_0, a0.name AS artist_name_0, arr.artist_1, a1.name AS artist_name_1
       FROM relations.artist_artist_relations arr
       JOIN artist a0 ON arr.artist_0 = a0.id
       JOIN artist a1 ON arr.artist_1 = a1.id
@@ -16,13 +16,14 @@ SELECT_ARTIST_RELATIONS_QUERY = '''
 '''
 
 SELECT_ARTIST_CREDIT_RELATIONS_QUERY = '''
-    SELECT count, arr.artist_credit_0, a0.name AS artist_name_0, arr.artist_credit_1, a1.name AS artist_name_1 
+    SELECT count, arr.artist_credit_0, a0.name AS artist_name_0, arr.artist_credit_1, a1.name AS artist_name_1
       FROM relations.artist_credit_artist_credit_relations arr
       JOIN artist a0 ON arr.artist_credit_0 = a0.id
       JOIN artist a1 ON arr.artist_credit_1 = a1.id
      WHERE (arr.artist_credit_0 = %s OR arr.artist_credit_1 = %s)
   ORDER BY count desc
 '''
+
 
 def get_artist_credit_similarities(artist_credit_id):
     '''
@@ -54,17 +55,17 @@ def _get_similarities(query, id):
                 if not row:
                     break
 
-                if id == row[1]: 
+                if id == row[1]:
                     relations.append({
-                        'count' : row[0],
-                        'id' : row[3],
-                        'artist_name' : row[4]
+                        'count': row[0],
+                        'id': row[3],
+                        'artist_name': row[4]
                     })
                 else:
                     relations.append({
-                        'count' : row[0],
-                        'id' : row[1],
-                        'artist_name' : row[2]
+                        'count': row[0],
+                        'id': row[1],
+                        'artist_name': row[2]
                     })
 
-            return relations 
+            return relations

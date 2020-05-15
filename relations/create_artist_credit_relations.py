@@ -8,9 +8,10 @@ import config
 from utils import create_schema, dump_similarities, insert_artist_pairs
 
 ARTIST_CREDIT_IDS_TO_EXCLUDE = [
-    15071, # anonymous
-    97546, # unknown
+    15071,  # anonymous
+    97546,  # unknown
 ]
+
 
 def create_or_truncate_table(conn):
     '''

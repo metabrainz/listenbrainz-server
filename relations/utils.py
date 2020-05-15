@@ -1,6 +1,7 @@
 from time import asctime
 import psycopg2
 
+
 def create_schema(conn):
     '''
         Create the relations schema if it doesn't already exist
@@ -14,7 +15,6 @@ def create_schema(conn):
     except OperationalError:
         print(asctime(), "failed to create schema 'relations'")
         conn.rollback()
-
 
         print(asctime(), "creating indexes failed.")
 

@@ -8,9 +8,10 @@ import config
 from utils import create_schema, dump_similarities, insert_artist_pairs
 
 ARTIST_MBIDS_TO_EXCLUDE = [
-    'f731ccc4-e22a-43af-a747-64213329e088', # anonymous
-    '125ec42a-7229-4250-afc5-e057484327fe', # unknown
+    'f731ccc4-e22a-43af-a747-64213329e088',  # anonymous
+    '125ec42a-7229-4250-afc5-e057484327fe',  # unknown
 ]
+
 
 def create_or_truncate_table(conn):
     '''

@@ -12,6 +12,7 @@ import psycopg2
 import ujson
 import config
 
+
 DUMP_QUERY = '''SELECT CAST(count AS float) / (select max(count) from relations.artist_artist_relations) as score,
                        a0.gid, a0.name, a1.gid, a1.name
                   FROM relations.artist_artist_relations arr
@@ -51,7 +52,7 @@ def write_table(use_ac):
         tarname = "artist-artist-relations.%s.tar.bz2" % date_string
 
     fh, temp_file = mkstemp()
-    os.close(fh) # pesky!
+    os.close(fh)  # pesky!
 
     print(asctime(), "writing relations to %s" % temp_file)
     with open(temp_file, "wt") as f:
@@ -68,21 +69,20 @@ def write_table(use_ac):
 
                     if use_ac:
                         f.write(ujson.dumps({
-                            'score' : row[0],
-                            'id_0' : row[1],
-                            'name_0' : row[2],
-                            'id_1' : row[3],
-                            'name_1' : row[4]
+                            'score': row[0],
+                            'id_0': row[1],
+                            'name_0': row[2],
+                            'id_1': row[3],
+                            'name_1': row[4]
                         }) + "\n")
                     else:
                         f.write(ujson.dumps({
-                            'score' : row[0],
-                            'mbid_0' : row[1],
-                            'name_0' : row[2],
-                            'mbid_1' : row[3],
-                            'name_1' : row[4]
+                            'score': row[0],
+                            'mbid_0': row[1],
+                            'name_0': row[2],
+                            'mbid_1': row[3],
+                            'name_1': row[4]
                         }) + "\n")
-
 
     print(asctime(), "create tar file...")
     with tarfile.open(tarname, "w:bz2") as tf:
