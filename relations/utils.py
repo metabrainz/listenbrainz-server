@@ -1,5 +1,5 @@
-import psycopg2
 from time import asctime
+import psycopg2
 
 def create_schema(conn):
     '''
@@ -11,12 +11,12 @@ def create_schema(conn):
             print(asctime(), "create schema")
             curs.execute("CREATE SCHEMA IF NOT EXISTS relations")
             conn.commit()
-    except OperationalError as err:
-        print(asctime(),"failed to create schema 'relations'")
+    except OperationalError:
+        print(asctime(), "failed to create schema 'relations'")
         conn.rollback()
 
 
-        print(asctime(),"creating indexes failed.")
+        print(asctime(), "creating indexes failed.")
 
 
 def insert_artist_pairs(artist_pairs, relations):
@@ -27,7 +27,7 @@ def insert_artist_pairs(artist_pairs, relations):
     for a0 in artist_pairs:
         for a1 in artist_pairs:
             if a0 == 1 or a1 == 1:
-                continue 
+                continue
 
             if a0 == a1:
                 continue
@@ -40,7 +40,7 @@ def insert_artist_pairs(artist_pairs, relations):
             try:
                 relations[k][0] += 1
             except KeyError:
-                relations[k] = [ 1, a0, a1 ]
+                relations[k] = [1, a0, a1]
 
 
 def insert_rows(curs, table, values):
@@ -51,10 +51,10 @@ def insert_rows(curs, table, values):
     query = ("INSERT INTO %s VALUES " % table) + ",".join(values)
     try:
         curs.execute(query)
-    except psycopg2.OperationalError as err:
+    except psycopg2.OperationalError:
         print(asctime(), "failed to insert rows")
 
-            
+
 def dump_similarities(conn, table, relations):
     '''
         After all the similarities have been collected, write then to the DB in batches.
@@ -75,6 +75,6 @@ def dump_similarities(conn, table, relations):
                 conn.commit()
                 values = []
 
-        if len(values):
+        if len(values) > 0:
             insert_rows(curs, table, values)
             conn.commit()

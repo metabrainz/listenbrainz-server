@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 
 import os
-import sys
+import tarfile
+import datetime
+import time
+from time import asctime
+from tempfile import mkstemp
+
+import click
 import psycopg2
 import ujson
-import tarfile
-import datetime, time
-from time import asctime
-import click
-from tempfile import mkstemp
 import config
 
 DUMP_QUERY = '''SELECT CAST(count AS float) / (select max(count) from relations.artist_artist_relations) as score,
@@ -20,7 +21,8 @@ DUMP_QUERY = '''SELECT CAST(count AS float) / (select max(count) from relations.
               ORDER BY score DESC
              '''
 
-DUMP_QUERY_AC = '''SELECT CAST(count AS float) / (select max(count) from relations.artist_credit_artist_credit_relations) as score,
+DUMP_QUERY_AC = '''SELECT CAST(count AS float) / (SELECT MAX(count)
+                                                    FROM relations.artist_credit_artist_credit_relations) AS score,
                           ac0.id, string_agg(concat(acn0.name, acn0.join_phrase), ''),
                           ac1.id, string_agg(concat(acn1.name, acn1.join_phrase), '')
                      FROM relations.artist_credit_artist_credit_relations arr
@@ -39,14 +41,15 @@ def write_table(use_ac):
         not the artist_relations_table.
     '''
 
+    dt = datetime.datetime.now()
+    date_string = "%d-%02d-%02d" % (dt.year, dt.month, dt.day)
     if use_ac:
-        filename = "artist-credit-artist-credit-relations.json"
-        tarname = "artist-credit-artist-credit-relations.tar.bz2"
+        filename = "artist_credit-artist_credit-relations.json"
+        tarname = "artist_credit-artist_credit-relations.%s.tar.bz2" % date_string
     else:
         filename = "artist-artist-relations.json"
-        tarname = "artist-artist-relations.tar.bz2"
+        tarname = "artist-artist-relations.%s.tar.bz2" % date_string
 
-    count = 0
     fh, temp_file = mkstemp()
     os.close(fh) # pesky!
 

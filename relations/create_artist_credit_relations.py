@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
-import sys
-import pprint
-import psycopg2
 from time import asctime
+import psycopg2
 from psycopg2.errors import OperationalError, DuplicateTable, UndefinedObject
 
 import config
@@ -19,34 +17,34 @@ def create_or_truncate_table(conn):
         Create the artist_credit_relations table if it doesn't exist, otherwise truncate it.
     '''
 
-    print(asctime(),"drop old indexes, truncate table or create new table")
+    print(asctime(), "drop old indexes, truncate table or create new table")
     try:
         with conn.cursor() as curs:
             print(asctime(), "create table")
             curs.execute("""CREATE TABLE relations.artist_credit_artist_credit_relations (
-                                         count integer, 
-                                         artist_credit_0 integer, 
+                                         count integer,
+                                         artist_credit_0 integer,
                                          artist_credit_1 integer)""")
 
-    except DuplicateTable as err:
-        conn.rollback() 
+    except DuplicateTable:
+        conn.rollback()
         try:
             with conn.cursor() as curs:
                 try:
                     curs.execute("TRUNCATE relations.artist_credit_artist_credit_relations")
                     conn.commit()
-                except UndefinedObject as err:
+                except UndefinedObject:
                     conn.rollback()
 
                 try:
                     curs.execute("DROP INDEX relations.artist_credit_artist_credit_relations_artist_0_ndx")
                     curs.execute("DROP INDEX relations.artist_credit_artist_credit_relations_artist_1_ndx")
                     conn.commit()
-                except UndefinedObject as err:
+                except UndefinedObject:
                     conn.rollback()
 
-        except OperationalError as err:
-            print(asctime(),"failed to truncate existing table")
+        except OperationalError:
+            print(asctime(), "failed to truncate existing table")
             conn.rollback()
 
 
@@ -55,19 +53,19 @@ def create_indexes(conn):
         Create the indexes for the completed relations tables
     '''
 
-    print(asctime(),"creating indexes")
+    print(asctime(), "creating indexes")
     try:
         with conn.cursor() as curs:
-            curs.execute('''CREATE INDEX artist_credit_artist_credit_relations_artist_0_ndx 
+            curs.execute('''CREATE INDEX artist_credit_artist_credit_relations_artist_0_ndx
                                       ON relations.artist_credit_artist_credit_relations (artist_credit_0)''')
-            curs.execute('''CREATE INDEX artist_credit_artist_credit_relations_artist_1_ndx 
+            curs.execute('''CREATE INDEX artist_credit_artist_credit_relations_artist_1_ndx
                                       ON relations.artist_credit_artist_credit_relations (artist_credit_1)''')
             conn.commit()
-    except OperationalError as err:
+    except OperationalError:
         conn.rollback()
-        print(asctime(),"creating indexes failed.")
+        print(asctime(), "creating indexes failed.")
 
-            
+
 def calculate_artist_credit_similarities():
     '''
         Calculate artist credit relations by fetching recordings for various artist albums and then
