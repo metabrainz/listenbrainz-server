@@ -26,6 +26,7 @@ import ujson
 
 from listenbrainz import db
 
+
 def get_timestamp_for_last_user_stats_update():
     """ Get the time when the user stats table was last updated
     """
@@ -34,12 +35,12 @@ def get_timestamp_for_last_user_stats_update():
             SELECT MAX(last_updated) as last_update_ts
               FROM statistics.user
             """
-        ))
+                                                    ))
         row = result.fetchone()
         return row['last_update_ts'] if row else None
 
 
-def insert_user_stats(user_id, artists, recordings, releases, artist_count):
+def insert_user_stats(user_id, artists, recordings, releases):
     """Inserts user stats calculated from Spark into the database.
 
        If stats are already present for some user, they are updated to the new
@@ -52,11 +53,9 @@ def insert_user_stats(user_id, artists, recordings, releases, artist_count):
              artist_count (int): the total number of artists listened to by the user
     """
 
+    artist_range = artists['range']
     artist_stats = {
-        'count': artist_count,
-        'all_time': {
-            'artists': artists,
-        }
+        artist_range: artists
     }
 
     recording_stats = {
@@ -65,29 +64,28 @@ def insert_user_stats(user_id, artists, recordings, releases, artist_count):
         },
     }
 
-
     release_stats = {
         'all_time': {
             'releases': releases,
         }
     }
 
-
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
             INSERT INTO statistics.user (user_id, artist, recording, release)
                  VALUES (:user_id, :artists, :recordings, :releases)
             ON CONFLICT (user_id)
-          DO UPDATE SET artist = :artists,
+          DO UPDATE SET artist = jsonb_set(artist, '\{{artist_range}\}', ':artists->:artist_range'::jsonb, TRUE),
                         recording = :recordings,
                         release = :releases,
                         last_updated = NOW()
-            """), {
-                'user_id': user_id,
-                'artists': ujson.dumps(artist_stats),
-                'recordings': ujson.dumps(recording_stats),
-                'releases': ujson.dumps(release_stats),
-            }
+            """.format(artist_range=artist_range)), {
+            'user_id': user_id,
+            'artists': ujson.dumps(artist_stats),
+            'artist_range': artist_range,
+            'recordings': ujson.dumps(recording_stats),
+            'releases': ujson.dumps(release_stats),
+        }
         )
 
 
@@ -116,8 +114,8 @@ def get_user_stats(user_id, columns):
               FROM statistics.user
              WHERE user_id = :user_id
             """.format(columns=columns)), {
-                'user_id': user_id
-            }
+            'user_id': user_id
+        }
         )
         row = result.fetchone()
         return dict(row) if row else None
@@ -201,9 +199,9 @@ def valid_stats_exist(user_id, days):
                  WHERE user_id = :user_id
                    AND last_updated >= NOW() - INTERVAL ':x days'
             """), {
-                'user_id': user_id,
-                'x': days,
-            })
+            'user_id': user_id,
+            'x': days,
+        })
         row = result.fetchone()
         return True if row is not None else False
 
@@ -218,5 +216,5 @@ def delete_user_stats(user_id):
             DELETE FROM statistics.user
              WHERE user_id = :user_id
             """), {
-                'user_id': user_id
-            })
+            'user_id': user_id
+        })
