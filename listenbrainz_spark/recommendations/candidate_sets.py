@@ -55,15 +55,16 @@ def get_listens_to_fetch_top_artists(mapped_df):
                                    for dataframe columns.
 
         Returns:
-            mapped_df_subset (dataframe): A subset of mapped_df containing user history.
+            mapped_listens_subset (dataframe): A subset of mapped_df containing user history.
     """
-    mapped_df_subset = mapped_df.select('*') \
-        .where((col('listened_at') >= to_timestamp(date_sub(current_timestamp(),
-        config.RECOMMENDATION_GENERATION_WINDOW))) & (col('listened_at') <= current_timestamp()))
-    return mapped_df_subset
+    mapped_listens_subset = mapped_df.select('*') \
+                                     .where((col('listened_at') >= to_timestamp(date_sub(current_timestamp(),
+                                             config.RECOMMENDATION_GENERATION_WINDOW))) & \
+                                             (col('listened_at') <= current_timestamp()))
+    return mapped_listens_subset
 
 
-def get_top_artists(mapped_df_subset):
+def get_top_artists(mapped_listens_subset):
     """ Get top artists listened to by users who have a listening history in
         the past X days where X = RECOMMENDATION_GENERATION_WINDOW.
 
@@ -74,9 +75,9 @@ def get_top_artists(mapped_df_subset):
             top_artists_df (dataframe): Top Y artists listened to by a user for all users where
                                         Y = TOP_ARTISTS_LIMIT
     """
-    df = mapped_df_subset.select('mb_artist_credit_id', 'msb_artist_credit_name_matchable', 'user_name') \
-                         .groupBy('mb_artist_credit_id', 'msb_artist_credit_name_matchable', 'user_name') \
-                         .agg(func.count('mb_artist_credit_id').alias('count'))
+    df = mapped_listens_subset.select('mb_artist_credit_id', 'msb_artist_credit_name_matchable', 'user_name') \
+                              .groupBy('mb_artist_credit_id', 'msb_artist_credit_name_matchable', 'user_name') \
+                              .agg(func.count('mb_artist_credit_id').alias('count'))
 
     window = Window.partitionBy('user_name').orderBy(col('count').desc())
 
@@ -87,14 +88,13 @@ def get_top_artists(mapped_df_subset):
     return top_artists_df
 
 
-def get_top_similar_artists(top_artists_df, artists_relation_df, users_df):
+def get_top_similar_artists(top_artists_df, artists_relation_df):
     """ Get artists similar to top artists.
 
         Args:
             top_artists_df: Dataframe containing top artists listened to by users
             artist_relation_df: Dataframe containing artists and similar artists.
                                 For columns refer to artist_relation_schema in listenbrainz_spark/schema.py.
-            users_df: Dataframe containing user names and user ids.
 
         Returns:
             top_similar_artists_df (dataframe): Top Z artists similar to top artists where
@@ -126,7 +126,10 @@ def get_top_similar_artists(top_artists_df, artists_relation_df, users_df):
                    .orderBy(col('score').desc())
 
     top_similar_artists_df = similar_artists_df.withColumn('rank', row_number().over(window)) \
-                                               .where(col('rank') <= config.SIMILAR_ARTISTS_LIMIT)
+                                               .where(col('rank') <= config.SIMILAR_ARTISTS_LIMIT)\
+                                               .select('top_artist_credit_id', 'top_artist_name',
+                                                       'similar_artist_credit_id', 'similar_artist_name',
+                                                       'score', 'user_name')
 
     return top_similar_artists_df
 
@@ -232,27 +235,6 @@ def save_candidate_html(user_data, ti):
     save_html(candidate_html, context, 'candidate.html')
 
 
-def get_user_id(df, user_name):
-    """ Get user id of the user.
-
-        Args:
-            df (dataframe): Dataframe to fetch user id.
-            user_name (str): User name of the user.
-
-        Returns:
-            row.user_id (int): User id of the user.
-
-        Raises:
-            IndexError (exception): if user id is not found.
-    """
-    try:
-        row = df.select('user_id') \
-            .where(col('user_name') == user_name).take(1)[0]
-        return row.user_id
-    except IndexError:
-        raise IndexError()
-
-
 def main():
     ti = time()
     try:
@@ -274,16 +256,16 @@ def main():
         sys.exit(-1)
 
     current_app.logger.info('Fetching listens to get top artists...')
-    mapped_df_subset = get_listens_to_fetch_top_artists(mapped_df)
+    mapped_listens_subset = get_listens_to_fetch_top_artists(mapped_df)
 
     current_app.logger.info('Fetching top artists...')
-    top_artists_df = get_top_artists(mapped_df_subset)
+    top_artists_df = get_top_artists(mapped_listens_subset)
 
     current_app.logger.info('Preparing top artists candidate set...')
     top_artists_candidate_set_df = get_top_artists_candidate_set(top_artists_df, recordings_df, users_df)
 
     current_app.logger.info('Fetching similar artists...')
-    top_similar_artists_df = get_top_similar_artists(top_artists_df, artists_relation_df, users_df)
+    top_similar_artists_df = get_top_similar_artists(top_artists_df, artists_relation_df)
 
     current_app.logger.info('Preparing similar artists candidate set...')
     top_similar_artists_candidate_set_df = get_top_similar_artists_candidate_set(top_similar_artists_df, recordings_df, users_df)
@@ -295,11 +277,7 @@ def main():
         sys.exit(-1)
 
     if SAVE_CANDIDATE_HTML:
-        try:
-            user_data = get_candidate_html_data(top_similar_artists_df)
-            current_app.logger.info('Saving HTML...')
-            save_candidate_html(user_data, ti)
-            current_app.logger.info('Done!')
-        except SQLException as err:
-            current_app.logger.error('Could not save candidate HTML\n{}'.format(str(err)), exc_info=True)
-            sys.exit(-1)
+        user_data = get_candidate_html_data(top_similar_artists_df)
+        current_app.logger.info('Saving HTML...')
+        save_candidate_html(user_data, ti)
+        current_app.logger.info('Done!')
