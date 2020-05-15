@@ -78,7 +78,7 @@ class DumpManagerTestCase(DatabaseTestCase):
             expected_dump_link = 'http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/fullexport/{}'.format(expected_dump_name)
             expected_text = render_template('emails/data_dump_created_notification.txt', dump_name=expected_dump_name, dump_link=expected_dump_link)
 
-            self.assertEqual(mock_send_mail.call_args[1]['subject'], 'ListenBrainz dump created - {}'.format(expected_dump_name))
+            self.assertEqual(mock_send_mail.call_args[1]['subject'], 'ListenBrainz fullexport dump created - {}'.format(expected_dump_name))
             self.assertEqual(mock_send_mail.call_args[1]['text'], expected_text)
 
     @patch('listenbrainz.db.dump_manager.send_mail')
@@ -98,7 +98,7 @@ class DumpManagerTestCase(DatabaseTestCase):
             expected_dump_link = 'http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/incremental/{}'.format(expected_dump_name)
             expected_text = render_template('emails/data_dump_created_notification.txt', dump_name=expected_dump_name, dump_link=expected_dump_link)
 
-            self.assertEqual(mock_send_mail.call_args[1]['subject'], 'ListenBrainz dump created - {}'.format(expected_dump_name))
+            self.assertEqual(mock_send_mail.call_args[1]['subject'], 'ListenBrainz incremental dump created - {}'.format(expected_dump_name))
             self.assertEqual(mock_send_mail.call_args[1]['text'], expected_text)
             self.assertIn('listenbrainz-observability@metabrainz.org', mock_send_mail.call_args[1]['recipients'])
 
