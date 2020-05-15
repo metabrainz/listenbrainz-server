@@ -28,7 +28,7 @@ SAVE_DATAFRAME_HTML = True
 #       'release_msid', 'release_name', 'tags', 'track_name', 'user_name'
 #   ]
 #
-# mapped_df:
+# mapped_listens:
 #   [
 #       'listened_at', 'mb_artist_credit_id', 'mb_artist_credit_mbids', 'mb_recording_mbid',
 #       'mb_release_mbid', 'msb_artist_credit_name_matchable', 'track_name', 'user_name'
@@ -165,7 +165,7 @@ def get_mapped_artist_and_recording_mbids(partial_listens_df, recording_artist_m
                                                      msid_mbid_mapping_schema in listenbrainz_spark/schema.py
 
         Returns:
-            mapped_df (dataframe): listens mapped with msid_mbid_mapping.
+            mapped_listens (dataframe): listens mapped with msid_mbid_mapping.
     """
     df = partial_listens_df.join(recording_artist_mapping_df,
             (partial_listens_df.recording_msid == recording_artist_mapping_df.msb_recording_msid) &
@@ -174,12 +174,12 @@ def get_mapped_artist_and_recording_mbids(partial_listens_df, recording_artist_m
     )
     # msb_release_name_matchable is skipped till the bug in mapping is resolved.
     # bug : release_name in listens and msb_release_name in mapping is different.
-    mapped_df = df.select(
+    mapped_listens = df.select(
         'listened_at', 'mb_artist_credit_id', 'mb_artist_credit_mbids', 'mb_recording_mbid',
         'mb_release_mbid', 'msb_artist_credit_name_matchable', 'track_name', 'user_name'
     )
-    save_dataframe(mapped_df, path.MAPPED_LISTENS)
-    return mapped_df
+    save_dataframe(mapped_listens, path.MAPPED_LISTENS)
+    return mapped_listens
 
 
 def get_playcounts_df(listens_df, recordings_df, users_df, metadata):
@@ -207,32 +207,32 @@ def get_playcounts_df(listens_df, recordings_df, users_df, metadata):
     return playcounts_df
 
 
-def get_listens_df(mapped_df, metadata):
+def get_listens_df(mapped_listens, metadata):
     """ Prepare listens dataframe.
 
         Args:
-            mapped_df (dataframe): listens mapped with msid_mbid_mapping.
+            mapped_listens (dataframe): listens mapped with msid_mbid_mapping.
 
         Returns:
             listens_df : Dataframe containing recording_mbids corresponding to a user.
     """
-    listens_df = mapped_df.select('mb_recording_mbid', 'user_name')
+    listens_df = mapped_listens.select('mb_recording_mbid', 'user_name')
     metadata['listens_count'] = listens_df.count()
     return listens_df
 
 
-def get_recordings_df(mapped_df, metadata):
+def get_recordings_df(mapped_listens, metadata):
     """ Prepare recordings dataframe.
 
         Args:
-            mapped_df (dataframe): listens mapped with msid_mbid_mapping.
+            mapped_listens (dataframe): listens mapped with msid_mbid_mapping.
 
         Returns:
             recordings_df: Dataframe containing distinct recordings and corresponding
                 mbids and names.
     """
     recording_window = Window.orderBy('mb_recording_mbid')
-    recordings_df = mapped_df.select(
+    recordings_df = mapped_listens.select(
         'mb_artist_credit_id', 'mb_artist_credit_mbids', 'mb_recording_mbid',
         'mb_release_mbid', 'msb_artist_credit_name_matchable', 'track_name') \
         .distinct() \
@@ -243,11 +243,11 @@ def get_recordings_df(mapped_df, metadata):
     return recordings_df
 
 
-def get_users_dataframe(mapped_df, metadata):
+def get_users_dataframe(mapped_listens, metadata):
     """ Prepare users dataframe
 
         Args:
-            mapped_df (dataframe): listens mapped with msid_mbid_mapping.
+            mapped_listens (dataframe): listens mapped with msid_mbid_mapping.
 
         Returns:
             users_df : Dataframe containing user names and user ids.
@@ -255,7 +255,7 @@ def get_users_dataframe(mapped_df, metadata):
     # We use window function to give rank to distinct user_names
     # Note that if user_names are not distinct rank would repeat and give unexpected results.
     user_window = Window.orderBy('user_name')
-    users_df = mapped_df.select('user_name').distinct() \
+    users_df = mapped_listens.select('user_name').distinct() \
                         .withColumn('user_id', rank().over(user_window))
 
     metadata['users_count'] = users_df.count()
@@ -281,21 +281,21 @@ def main():
     # Dataframe containing recording msid->mbid and artist msid->mbid mapping.
     recording_artist_mapping_df = utils.read_files_from_HDFS(path.MBID_MSID_MAPPING)
 
-    mapped_df = get_mapped_artist_and_recording_mbids(partial_listens_df, recording_artist_mapping_df)
+    mapped_listens = get_mapped_artist_and_recording_mbids(partial_listens_df, recording_artist_mapping_df)
 
     current_app.logger.info('Preparing users data and saving to HDFS...')
     t0 = time()
-    users_df = get_users_dataframe(mapped_df, metadata)
+    users_df = get_users_dataframe(mapped_listens, metadata)
     users_df_time = '{:.2f}'.format((time() - t0) / 60)
 
     current_app.logger.info('Preparing recordings data and saving to HDFS...')
     t0 = time()
-    recordings_df = get_recordings_df(mapped_df, metadata)
+    recordings_df = get_recordings_df(mapped_listens, metadata)
     recordings_df_time = '{:.2f}'.format((time() - t0) / 60)
 
     current_app.logger.info('Preparing listen data dump and playcounts, saving playcounts to HDFS...')
     t0 = time()
-    listens_df = get_listens_df(mapped_df, metadata)
+    listens_df = get_listens_df(mapped_listens, metadata)
 
     playcounts_df = get_playcounts_df(listens_df, recordings_df, users_df, metadata)
     playcounts_df_time = '{:.2f}'.format((time() - t0) / 60)
