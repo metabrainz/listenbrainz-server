@@ -15,12 +15,10 @@ class CandidateSetsTestClass(SparkTestCase):
     def setUpClass(cls):
         super().setUpClass()
 
-
     @classmethod
     def tearDownClass(cls):
         super().delete_dir()
         super().tearDownClass()
-
 
     @classmethod
     def get_listen_row(cls, date, user_name, credit_id):
@@ -36,7 +34,6 @@ class CandidateSetsTestClass(SparkTestCase):
         )
         return test_mapped_listens
 
-
     @classmethod
     def get_listens(cls):
         cls.date = datetime.utcnow()
@@ -50,7 +47,6 @@ class CandidateSetsTestClass(SparkTestCase):
         test_mapped_df = df1.union(df2).union(df3).union(df4)
         return test_mapped_df
 
-
     def test_get_listens_for_rec_generation_window(self):
         mapped_df = self.get_listens()
         test_df = candidate_sets.get_listens_to_fetch_top_artists(mapped_df)
@@ -58,7 +54,6 @@ class CandidateSetsTestClass(SparkTestCase):
         max_date = test_df.select(f.max('listened_at').alias('listened_at')).take(1)[0]
         self.assertGreaterEqual(self.date, min_date.listened_at)
         self.assertLessEqual(self.date, max_date.listened_at)
-
 
     def test_get_top_artists(self):
         mapped_listens = self.get_mapped_listens()
@@ -71,7 +66,6 @@ class CandidateSetsTestClass(SparkTestCase):
         top_artist_id = sorted([row.mb_artist_credit_id for row in test_top_artist.collect()])
         self.assertEqual(top_artist_id[0], 1)
         self.assertEqual(top_artist_id[1], 2)
-
 
     def test_get_top_similar_artists(self):
         df = utils.create_dataframe(
@@ -118,7 +112,6 @@ class CandidateSetsTestClass(SparkTestCase):
         self.assertEqual(similar_artist_id[0], 2)
         self.assertEqual(similar_artist_id[1], 3)
 
-
     def test_get_top_artists_candidate_set(self):
         recordings_df = self.get_recordings_df()
         users = self.get_users_df()
@@ -145,7 +138,6 @@ class CandidateSetsTestClass(SparkTestCase):
         cols = ['recording_id', 'user_id', 'user_name']
         self.assertListEqual(sorted(cols), sorted(recording_ids.columns))
         self.assertEqual(recording_ids.count(), 2)
-
 
     def test_get_top_similar_artists_candidate_set(self):
         df = utils.create_dataframe(
@@ -179,7 +171,6 @@ class CandidateSetsTestClass(SparkTestCase):
         cols = ['recording_id', 'user_id', 'user_name']
         self.assertListEqual(sorted(cols), sorted(recording_ids.columns))
         self.assertEqual(recording_ids.count(), 1)
-
 
     def test_save_candidate_sets(self):
         top_artist_candidate_sets_df = self.get_candidate_set()

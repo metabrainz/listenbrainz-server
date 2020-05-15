@@ -59,8 +59,8 @@ def get_listens_to_fetch_top_artists(mapped_df):
     """
     mapped_listens_subset = mapped_df.select('*') \
                                      .where((col('listened_at') >= to_timestamp(date_sub(current_timestamp(),
-                                             config.RECOMMENDATION_GENERATION_WINDOW))) & \
-                                             (col('listened_at') <= current_timestamp()))
+                                             config.RECOMMENDATION_GENERATION_WINDOW))) &
+                                            (col('listened_at') <= current_timestamp()))
     return mapped_listens_subset
 
 

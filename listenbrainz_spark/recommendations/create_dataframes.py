@@ -256,7 +256,7 @@ def get_users_dataframe(mapped_listens, metadata):
     # Note that if user_names are not distinct rank would repeat and give unexpected results.
     user_window = Window.orderBy('user_name')
     users_df = mapped_listens.select('user_name').distinct() \
-                        .withColumn('user_id', rank().over(user_window))
+                             .withColumn('user_id', rank().over(user_window))
 
     metadata['users_count'] = users_df.count()
     save_dataframe(users_df, path.USERS_DATAFRAME_PATH)
