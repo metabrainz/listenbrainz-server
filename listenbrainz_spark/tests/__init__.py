@@ -66,37 +66,93 @@ class SparkTestCase(unittest.TestCase):
 
     @classmethod
     def get_users_df(cls):
-        df = utils.create_dataframe(Row(user_name='vansika', user_id=1), schema=None)
-        users_df = df.union(utils.create_dataframe(Row(user_name='rob', user_id=2), schema=None))
+        df = utils.create_dataframe(
+            Row(
+                user_name='vansika',
+                user_id=1
+            ),
+            schema=None
+        )
+        users_df = df.union(utils.create_dataframe(
+            Row(
+                user_name='rob',
+                user_id=2
+            ),
+            schema=None
+        ))
         return users_df
 
     @classmethod
     def get_recordings_df(cls):
-        df = utils.create_dataframe(Row(mb_recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
-            mb_artist_credit_id=1, recording_id=1), schema=None)
-        recordings_df = df.union(utils.create_dataframe(Row(mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
-            mb_artist_credit_id=2, recording_id=2), schema=None))
+        df = utils.create_dataframe(
+            Row(
+                mb_artist_credit_id=1,
+                mb_artist_credit_mbids=["181c4177-f33a-441d-b15d-910acaf18b07"],
+                mb_recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                mb_release_mbid="xxxxxx",
+                msb_artist_credit_name_matchable="lessthanjake",
+                recording_id=1,
+                track_name="Al's War",
+            ),
+            schema=None
+        )
+        recordings_df = df.union(utils.create_dataframe(
+            Row(
+                mb_artist_credit_id=2,
+                mb_artist_mbids=["281c4177-f33a-441d-b15d-910acaf18b07"],
+                mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                mb_release_mbid="xxxxxx",
+                msb_artist_credit_name_matchable="kishorekumar",
+                recording_id=2,
+                track_name="Mere Sapno ki Rani",
+            ),
+            schema=None
+        ))
         return recordings_df
 
     @classmethod
     def get_candidate_set(cls):
-        df = utils.create_dataframe(Row(user_id=1, recording_id=1), schema=None)
-        candidate_set = df.union(utils.create_dataframe(Row(user_id=2, recording_id=2), schema=None))
+        df = utils.create_dataframe(
+            Row(
+                user_id=1,
+                recording_id=1,
+                user_name='vansika'
+            ),
+            schema=None
+        )
+        candidate_set = df.union(utils.create_dataframe(
+            Row(
+                user_id=2,
+                recording_id=2,
+                user_name='rob'
+            ),
+            schema=None
+        ))
         return candidate_set
 
     @classmethod
     def get_mapped_listens(cls):
         mapped_listens_row_1 = Row(
-            user_name='vansika', msb_artist_credit_name_matchable="lessthanjake", track_name="Al's War",
-            listened_at=datetime.utcnow(), mb_recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
-            mb_artist_credit_mbids=["181c4177-f33a-441d-b15d-910acaf18b07"], mb_artist_credit_id=1, mb_release_mbid="xxxxxx",
+            listened_at=datetime.utcnow(),
+            mb_artist_credit_id=1,
+            mb_artist_credit_mbids=["181c4177-f33a-441d-b15d-910acaf18b07"],
+            mb_recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
+            mb_release_mbid="xxxxxx",
+            msb_artist_credit_name_matchable="lessthanjake",
+            track_name="Al's War",
+            user_name='vansika',
         )
         df = utils.create_dataframe(mapped_listens_row_1, schema=None)
 
         mapped_listens_row_2 = Row(
-            user_name='rob', msb_artist_credit_name_matchable="kishorekumar", track_name="Mere Sapno ki Rani",
-            listened_at=datetime.utcnow(), mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
-            mb_artist_mbids=["281c4177-f33a-441d-b15d-910acaf18b07"], mb_artist_credit_id=2, mb_release_mbid="xxxxxx",
+            listened_at=datetime.utcnow(),
+            mb_artist_credit_id=2,
+            mb_artist_mbids=["281c4177-f33a-441d-b15d-910acaf18b07"],
+            mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+            mb_release_mbid="xxxxxx",
+            msb_artist_credit_name_matchable="kishorekumar",
+            track_name="Mere Sapno ki Rani",
+            user_name='rob',
         )
         mapped_listens_df = df.union(utils.create_dataframe(mapped_listens_row_2, schema=None))
         return mapped_listens_df

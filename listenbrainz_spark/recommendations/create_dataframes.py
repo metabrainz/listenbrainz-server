@@ -207,8 +207,11 @@ def get_recordings_df(complete_listens_df, metadata):
                 ]
     """
     recording_window = Window.orderBy('mb_recording_mbid')
-    recordings_df = complete_listens_df.select('mb_recording_mbid', 'mb_artist_credit_id').distinct() \
-        .withColumn('recording_id', rank().over(recording_window))
+    recordings_df = complete_listens_df.select(
+                                        'mb_artist_credit_id', 'mb_artist_credit_mbids', 'mb_recording_mbid',
+                                        'mb_release_mbid', 'msb_artist_credit_name_matchable', 'track_name' ) \
+                                       .distinct() \
+                                       .withColumn('recording_id', rank().over(recording_window))
 
     metadata['recordings_count'] = recordings_df.count()
     save_dataframe(recordings_df, path.RECORDINGS_DATAFRAME_PATH)
