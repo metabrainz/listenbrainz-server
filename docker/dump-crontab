@@ -1,6 +1,6 @@
 # Full Data dumps creation for backup and public use, every Sunday
-00 12 * * 0 /code/listenbrainz/admin/create-dumps.sh full
+00 00 * * 0 /code/listenbrainz/admin/create-dumps.sh full
 
 # Incremental listen data dumps at 00:00 every Monday and Thursday
-00 00 * * 1,4 lbdumps /code/listenbrainz/admin/create-dumps.sh incremental
+00 00 * * 4,6 /code/listenbrainz/admin/create-dumps.sh incremental
 
