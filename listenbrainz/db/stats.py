@@ -54,6 +54,7 @@ def insert_user_stats(user_id, artists, recordings, releases):
     """
 
     artist_range = artists['range']
+    del artists['range']
     artist_stats = {
         artist_range: artists
     }
@@ -75,14 +76,17 @@ def insert_user_stats(user_id, artists, recordings, releases):
             INSERT INTO statistics.user (user_id, artist, recording, release)
                  VALUES (:user_id, :artists, :recordings, :releases)
             ON CONFLICT (user_id)
-          DO UPDATE SET artist = jsonb_set(artist, '\{{artist_range}\}', ':artists->:artist_range'::jsonb, TRUE),
+          DO UPDATE SET artist = jsonb_set(statistics.user.artist,
+                                    '{{{artist_range}}}',
+                                    to_jsonb('' || :artists_range_stats || ''::text),
+                                    TRUE),
                         recording = :recordings,
                         release = :releases,
                         last_updated = NOW()
             """.format(artist_range=artist_range)), {
             'user_id': user_id,
             'artists': ujson.dumps(artist_stats),
-            'artist_range': artist_range,
+            'artists_range_stats': ujson.dumps(artist_stats[artist_range]),
             'recordings': ujson.dumps(recording_stats),
             'releases': ujson.dumps(release_stats),
         }

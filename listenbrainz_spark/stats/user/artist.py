@@ -1,14 +1,15 @@
 import time
+from collections import defaultdict
 from datetime import datetime
 
-from collections import defaultdict
-from listenbrainz_spark.utils import get_listens
-from listenbrainz_spark.stats import adjust_months, adjust_days
-from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
+from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
+from listenbrainz_spark.stats import adjust_days, adjust_months, run_query
+from listenbrainz_spark.stats.user.utils import filter_listens
+from listenbrainz_spark.utils import get_listens
 
 
-def get_artists(from_date=None, to_date=None):
+def get_artists(table):
     """ Get artist information (artist_name, artist_msid etc) for every user
         ordered by listen count in a particular time range.
 
@@ -29,16 +30,19 @@ def get_artists(from_date=None, to_date=None):
 
     t0 = time.time()
 
-    if from_date is None:
-        from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
-
-    if to_date is None:
-        to_date = datetime.now()
-
-    listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
-
-    result = listens_df.filter(listens_df.listened_at.between(from_date, to_date)).groupBy(
-        'user_name', 'artist_name', 'artist_msid', 'artist_mbids').count().orderBy('count', ascending=False)
+    result = run_query("""
+            SELECT user_name
+                 , artist_name
+                 , artist_msid
+                 , artist_mbids
+                 , count(artist_name) as cnt
+              FROM {table}
+          GROUP BY user_name
+                 , artist_name
+                 , artist_msid
+                 , artist_mbids
+          ORDER BY cnt DESC
+            """.format(table=table))
 
     rows = result.collect()
     artists = defaultdict(list)
@@ -47,7 +51,7 @@ def get_artists(from_date=None, to_date=None):
             'artist_name': row['artist_name'],
             'artist_msid': row['artist_msid'],
             'artist_mbids': row['artist_mbids'],
-            'listen_count': row['count'],
+            'listen_count': row['cnt'],
         })
     print("Query to calculate artist stats processed in %.2f s" % (time.time() - t0))
     return artists
@@ -56,20 +60,41 @@ def get_artists(from_date=None, to_date=None):
 def get_artists_last_week():
     from_date = adjust_days(datetime.now(), 7)
     to_date = datetime.now()
-    return get_artists(from_date, to_date)
+
+    listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
+    filtered_df = filter_listens(listens_df, from_date, to_date)
+    filtered_df.createOrReplaceTempView('user_artist_last_week')
+
+    return get_artists('user_artist_last_week')
 
 
 def get_artists_last_month():
     from_date = adjust_months(datetime.now(), 1)
     to_date = datetime.now()
-    return get_artists(from_date, to_date)
+
+    listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
+    filtered_df = filter_listens(listens_df, from_date, to_date)
+    filtered_df.createOrReplaceTempView('user_artist_last_month')
+
+    return get_artists('user_artist_last_month')
 
 
 def get_artists_last_year():
     from_date = adjust_months(datetime.now(), 12)
     to_date = datetime.now()
-    return get_artists(from_date, to_date)
+
+    listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
+    filtered_df = filter_listens(listens_df, from_date, to_date)
+    filtered_df.createOrReplaceTempView('user_artist_last_year')
+
+    return get_artists('user_artist_last_year')
 
 
 def get_artists_all_time():
-    return get_artists()
+    from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
+    to_date = datetime.now()
+
+    listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
+    listens_df.createOrReplaceTempView('user_artist_all_time')
+
+    return get_artists('user_artist_all_time')
