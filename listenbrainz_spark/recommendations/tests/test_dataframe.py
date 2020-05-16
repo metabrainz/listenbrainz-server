@@ -123,7 +123,7 @@ class CreateDataframeTestCase(SparkTestCase):
         mapped_df = utils.read_files_from_HDFS(MAPPED_LISTENS_PATH)
         recordings_df = create_dataframes.get_recordings_df(mapped_df, metadata)
         self.assertEqual(recordings_df.count(), 1)
-        self.assertListEqual(['mb_recording_mbid', 'mb_artist_credit_id', 'recording_id'], recordings_df.columns)
+        self.assertListEqual(sorted(self.get_recordings_df().columns), sorted(recordings_df.columns))
         self.assertEqual(metadata['recordings_count'], 1)
 
         status = utils.path_exists(path.RECORDINGS_DATAFRAME_PATH)
