@@ -1,0 +1,7 @@
+#
+# Database connection.
+
+# If you are connecting to a musicbrainz-docker instance for MusicBrainz data, this string should work:
+# DB_CONNECT = "dbname=musicbrainz_db user=musicbrainz host=localhost port=5432 password=musicbrainz"
+
+DB_CONNECT = ""
