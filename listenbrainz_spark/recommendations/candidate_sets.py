@@ -219,18 +219,18 @@ def get_candidate_html_data(top_similar_artists_df):
     return user_data
 
 
-def save_candidate_html(user_data, ti):
+def save_candidate_html(user_data, time_initial):
     """ Save user data to an HTML file.
 
         Args:
             user_data (dict): Top and similar artists associated to users.
-            ti (str): Total time taken to generate candidate sets.
+            time_initial (str): Timestamp when the script was invoked.
     """
     date = datetime.utcnow().strftime('%Y-%m-%d')
     candidate_html = 'Candidate-{}-{}.html'.format(uuid.uuid4(), date)
     context = {
         'user_data': user_data,
-        'total_time': '{:.2f}'.format((time() - ti) / 60),
+        'total_time': '{:.2f}'.format((time() - time_initial) / 60),
     }
     save_html(candidate_html, context, 'candidate.html')
 
@@ -257,7 +257,7 @@ def get_user_id(df, user_name):
 
 
 def main():
-    ti = time()
+    time_initial = time()
     try:
         listenbrainz_spark.init_spark_session('Candidate_set')
     except SparkSessionNotInitializedException as err:
@@ -292,7 +292,9 @@ def main():
     top_similar_artists_candidate_set_df = get_top_similar_artists_candidate_set(top_similar_artists_df, recordings_df, users_df)
 
     try:
+        current_app.logger.info('Saving candidate sets...')
         save_candidate_sets(top_artists_candidate_set_df, top_similar_artists_candidate_set_df)
+        current_app.logger.info('Done!')
     except Py4JJavaError as err:
         current_app.logger.error('{}\nAborting...'.format(str(err.java_exception)), exc_info=True)
         sys.exit(-1)
@@ -300,5 +302,5 @@ def main():
     if SAVE_CANDIDATE_HTML:
         user_data = get_candidate_html_data(top_similar_artists_df)
         current_app.logger.info('Saving HTML...')
-        save_candidate_html(user_data, ti)
+        save_candidate_html(user_data, time_initial)
         current_app.logger.info('Done!')
