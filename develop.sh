@@ -1,5 +1,7 @@
 #!/bin/bash
 
+POSTGRES_ADMIN_LB_URI="postgresql://postgres:postgres@db/listenbrainz"
+
 if [[ ! -d "docker" ]]; then
     echo "This script must be run from the top level directory of the listenbrainz-server source."
     exit -1
@@ -19,8 +21,7 @@ function invoke_manage {
 
 function open_psql_shell {
     invoke_docker_compose run --rm web psql \
-            -U listenbrainz  \
-            -h db listenbrainz
+        $POSTGRES_ADMIN_LB_URI
 }
 
 function npm_install {
