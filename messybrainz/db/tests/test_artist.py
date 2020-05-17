@@ -528,7 +528,6 @@ class ArtistTestCase(DatabaseTestCase):
                 [UUID("88a8d8a9-7c9b-4f7b-8700-7f0f7a503688")], [UUID("b49a9595-3576-44bb-8ac0-e26d3f5b42ff")]
             ])
 
-
     @unittest.skip("test fails with pg12 upgrade, this isn't used in prod anywhere")
     def test_create_artist_credit_clusters(self):
         """Tests if artist_credit clusters are correctly formed."""
@@ -705,7 +704,6 @@ class ArtistTestCase(DatabaseTestCase):
             ])
             self.assertSetEqual(set(gids), gids_from_data)
 
-
     @unittest.skip("This test broke with PG12 upgrade, code is not used in prod")
     def test_fetch_artist_mbids_left_to_cluster_from_recording_artist_join(self):
         """ Tests if artist MBIDs left to add to artist_credit_redirect table are
@@ -788,7 +786,6 @@ class ArtistTestCase(DatabaseTestCase):
                 [UUID("859d0860-d480-4efd-970c-c05d5f1776b8"), UUID("f82bcf78-5b69-4622-a5ef-73800768d9ac")],
             )
             self.assertDictEqual(recording_1, recordings[0])
-
 
     @unittest.skip("This test broke with PG12 upgrade, code is not used in prod")
     def test_create_clusters_using_fetched_artist_mbids_without_anomalies(self):
@@ -878,7 +875,6 @@ class ArtistTestCase(DatabaseTestCase):
             gid_from_data = UUID(data.get_artist_credit(connection, "James Morrison"))
             artist_mbids = artist.get_artist_mbids_using_msid(connection, gid_from_data)
             self.assertListEqual(artist_mbids, [[UUID("88a8d8a9-7c9b-4f7b-8700-7f0f7a503688")]])
-
 
     @unittest.skip("This test broke with PG12 upgrade, code is not used in prod")
     def test_create_clusters_using_fetched_artist_mbids_for_anomalies(self):
