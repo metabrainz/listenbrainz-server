@@ -13,9 +13,11 @@ volumes:
 services:
 
   db:
-    image: postgres:9.5.3
+    image: postgres:12.3
     volumes:
       - postgres:/var/lib/postgresql/data:z
+    environment:
+      POSTGRES_PASSWORD: 'postgres'
 
   redis:
     image: redis:5.0.3
