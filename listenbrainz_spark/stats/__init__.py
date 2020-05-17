@@ -6,6 +6,7 @@ from listenbrainz_spark.exceptions import SQLException
 
 from pyspark.sql.utils import *
 
+
 def run_query(query):
     """ Returns dataframe that results from running the query.
 
@@ -27,19 +28,26 @@ def run_query(query):
         raise SQLException('{}. Failed to parse SQL command\n{}\n{}'.format(type(err).__name__, query, str(err)))
     except IllegalArgumentException as err:
         raise SQLException('{}. Passed an illegal or inappropriate argument to\n{}\n{}'.format(type(err).__name__, query,
-            str(err)))
+                                                                                               str(err)))
     except StreamingQueryException as err:
         raise SQLException('{}. Exception that stopped a :class:`StreamingQuery`\n{}\n{}'.format(type(err).__name__, query,
-            str(err)))
+                                                                                                 str(err)))
     except QueryExecutionException as err:
         raise SQLException('{}. Failed to execute a query{}\n{}'.format(type(err).__name__, query, str(err)))
     except UnknownException as err:
         raise SQLException('{}. An error occurred while executing{}\n{}'.format(type(err).__name__, query, str(err)))
     return processed_query
 
+
 def replace_days(date, day):
     date = date.replace(day=day)
     return date
+
+
+def replace_months(date, month):
+    date = date.replace(month=month)
+    return date
+
 
 def adjust_months(date, months, shift_backwards=True):
     if shift_backwards:
@@ -47,6 +55,7 @@ def adjust_months(date, months, shift_backwards=True):
     else:
         date = date + relativedelta(months=months)
     return date
+
 
 def adjust_days(date, days, shift_backwards=True):
     if shift_backwards:

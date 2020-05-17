@@ -4,8 +4,8 @@ from datetime import datetime
 
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
-from listenbrainz_spark.stats import adjust_days, adjust_months, run_query
-from listenbrainz_spark.stats.user.utils import filter_listens
+from listenbrainz_spark.stats import replace_months, run_query, adjust_days
+from listenbrainz_spark.stats.user.utils import filter_listens, get_latest_listen_ts
 from listenbrainz_spark.utils import get_listens
 
 
@@ -58,8 +58,11 @@ def get_artists(table):
 
 
 def get_artists_last_week():
-    from_date = adjust_days(datetime.now(), 7)
-    to_date = datetime.now()
+    date = get_latest_listen_ts()
+
+    # Get date for Monday before "date"
+    to_date = adjust_days(date, date.weekday())
+    from_date = adjust_days(to_date, 7)
 
     listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
     filtered_df = filter_listens(listens_df, from_date, to_date)
@@ -69,23 +72,20 @@ def get_artists_last_week():
 
 
 def get_artists_last_month():
-    from_date = adjust_months(datetime.now(), 1)
-    to_date = datetime.now()
+    date = get_latest_listen_ts()
 
-    listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
-    filtered_df = filter_listens(listens_df, from_date, to_date)
-    filtered_df.createOrReplaceTempView('user_artist_last_month')
+    listens_df = get_listens(date, date, LISTENBRAINZ_DATA_DIRECTORY)
+    listens_df.createOrReplaceTempView('user_artist_last_month')
 
     return get_artists('user_artist_last_month')
 
 
 def get_artists_last_year():
-    from_date = adjust_months(datetime.now(), 12)
-    to_date = datetime.now()
+    to_date = get_latest_listen_ts()
+    from_date = replace_months(to_date, 1)
 
     listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
-    filtered_df = filter_listens(listens_df, from_date, to_date)
-    filtered_df.createOrReplaceTempView('user_artist_last_year')
+    listens_df.createOrReplaceTempView('user_artist_last_year')
 
     return get_artists('user_artist_last_year')
 
