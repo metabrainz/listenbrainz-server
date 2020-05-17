@@ -1,6 +1,6 @@
 #!/bin/bash
 
-POSTGRES_ADMIN_LB_URI="postgresql://postgres:postgres@db/listenbrainz"
+POSTGRES_ADMIN_LB_URI="postgresql://listenbrainz:listenbrainz@db/listenbrainz"
 
 if [[ ! -d "docker" ]]; then
     echo "This script must be run from the top level directory of the listenbrainz-server source."
