@@ -53,7 +53,7 @@ ALTER TABLE follow_list ADD CONSTRAINT follow_list_name_creator_key UNIQUE (name
 CREATE TABLE recommendation.cf_recording (
   id                  SERIAL, -- PK
   user_id             INTEGER NOT NULL, --FK to "user".id
-  recording_msid      UUID NOT NULL,
+  recording_mbid      UUID NOT NULL,
   type                cf_recording_type NOT NULL,
   created             TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
