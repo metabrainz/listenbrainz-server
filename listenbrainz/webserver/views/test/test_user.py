@@ -1,5 +1,6 @@
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
+import json
 import ujson
 from unittest import mock
 
@@ -65,12 +66,13 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertIsNone(props['artist_count'])
 
         # check that artist count is shown if stats have been calculated
+        with open(self.path_to_data_file('user_top_artists.json')) as f:
+            artists = json.load(f)
         db_stats.insert_user_stats(
             user_id=self.user.id,
-            artists={},
+            artists=artists,
             recordings={},
             releases={},
-            artist_count=2,
         )
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
