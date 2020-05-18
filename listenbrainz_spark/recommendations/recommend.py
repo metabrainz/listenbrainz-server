@@ -71,7 +71,7 @@ def get_recommendations_for_user(model, user_id, user_name, recordings_df, top_a
 
         Returns:
             user_recommendations_top_artist: list of recommended recordings of top artist.
-            user_recommendations_top_artist: list of recommended recordings of similar artist.
+            user_recommendations_similar_artist: list of recommended recordings of similar artist.
     """
     top_artists_recordings = top_artists_candidate_set.select('user_id', 'recording_id') \
                                                       .where(col('user_id') == user_id)
@@ -126,15 +126,13 @@ def get_recommendations_for_all(recordings_df, model, top_artists_candidate_set,
         user_id = row.user_id
 
         user_recommendations_top_artist, user_recommendations_similar_artist = get_recommendations_for_user(
-                model, user_id,
-                user_name, recordings_df,
-                top_artists_candidate_set,
-                similar_artists_candidate_set
+            model, user_id, user_name, recordings_df,
+            top_artists_candidate_set, similar_artists_candidate_set
         )
 
         messages.append({
             'musicbrainz_id': user_name,
-            'type': 'recommendations',
+            'type': 'cf_recording_recommendations',
             'top_artist': user_recommendations_top_artist,
             'similar_artist': user_recommendations_similar_artist,
         })
