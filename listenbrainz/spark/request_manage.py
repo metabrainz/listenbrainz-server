@@ -12,6 +12,7 @@ QUERIES_JSON_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'r
 
 cli = click.Group()
 
+
 class InvalidSparkRequestError(Exception):
     pass
 
@@ -90,6 +91,35 @@ def request_all_user_stats():
     """ Send a user stats request to the spark cluster
     """
     send_request_to_spark_cluster(_prepare_query_message('stats.user.all'))
+
+
+@cli.command(name="request_last_week_user_artists")
+def request_all_user_stats():
+    """ Send a user stats request to the spark cluster
+    """
+    send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.last_week'))
+
+
+@cli.command(name="request_last_month_user_artists")
+def request_all_user_stats():
+    """ Send a user stats request to the spark cluster
+    """
+    send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.last_month'))
+
+
+@cli.command(name="request_last_year_user_artists")
+def request_all_user_stats():
+    """ Send a user stats request to the spark cluster
+    """
+    send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.last_year'))
+
+
+@cli.command(name="request_all_time_user_artists")
+def request_all_user_stats():
+    """ Send a user stats request to the spark cluster
+    """
+    send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.all_time'))
+
 
 @cli.command(name="request_import_full")
 def request_import_new_full_dump():
