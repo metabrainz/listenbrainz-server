@@ -5,7 +5,7 @@ from flask import current_app
 
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
-from listenbrainz_spark.stats import replace_months, run_query, adjust_days
+from listenbrainz_spark.stats import replace_months, run_query, adjust_days, replace_days
 from listenbrainz_spark.stats.user.utils import filter_listens, get_latest_listen_ts
 from listenbrainz_spark.utils import get_listens
 
@@ -72,7 +72,7 @@ def get_artists_last_week():
     filtered_df.createOrReplaceTempView('user_artists_last_week')
 
     artist_data = get_artists('user_artists_last_week')
-    messages = create_messages(artist_data, 'user_artists', 'last_week')
+    messages = create_messages(artist_data, 'user_artists', 'last_week', from_date.timestamp(), to_date.timestamp())
 
     current_app.logger.debug("Done!")
 
@@ -82,13 +82,14 @@ def get_artists_last_week():
 def get_artists_last_month():
     current_app.logger.debug("Calculating artist_last_month...")
 
-    date = get_latest_listen_ts()
+    to_date = get_latest_listen_ts()
+    from_date = replace_days(to_date, 1)
 
-    listens_df = get_listens(date, date, LISTENBRAINZ_DATA_DIRECTORY)
+    listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
     listens_df.createOrReplaceTempView('user_artists_last_month')
 
     artist_data = get_artists('user_artists_last_month')
-    messages = create_messages(artist_data, 'user_artists', 'last_month')
+    messages = create_messages(artist_data, 'user_artists', 'last_month', from_date.timestamp(), to_date.timestamp())
 
     current_app.logger.debug("Done!")
 
@@ -105,7 +106,7 @@ def get_artists_last_year():
     listens_df.createOrReplaceTempView('user_artists_last_year')
 
     artist_data = get_artists('user_artists_last_year')
-    messages = create_messages(artist_data, 'user_artists', 'last_year')
+    messages = create_messages(artist_data, 'user_artists', 'last_year', from_date.timestamp(), to_date.timestamp())
 
     current_app.logger.debug("Done!")
 
@@ -115,27 +116,29 @@ def get_artists_last_year():
 def get_artists_all_time():
     current_app.logger.debug("Calculating artist_all_time...")
 
-    from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
     to_date = datetime.now()
+    from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
 
     listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
     listens_df.createOrReplaceTempView('user_artists_all_time')
 
     artist_data = get_artists('user_artists_all_time')
-    messages = create_messages(artist_data, 'user_artists', 'all_time')
+    messages = create_messages(artist_data, 'user_artists', 'all_time', from_date.timestamp(), to_date.timestamp())
 
     current_app.logger.debug("Done!")
 
     return messages
 
 
-def create_messages(artist_data, _type, _range):
+def create_messages(artist_data, _type, _range, from_ts, to_ts):
     messages = []
     for user_name, user_artists in artist_data.items():
         messages.append({
             'musicbrainz_id': user_name,
             'type': _type,
             'range': _range,
+            'from': from_ts,
+            'to': to_ts,
             'artists': user_artists,
             'count': len(user_artists)
         })
