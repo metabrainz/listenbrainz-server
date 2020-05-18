@@ -16,6 +16,10 @@ import sqlalchemy
 response_handler_map = {
     'user_artists': handle_user_artist,
     'import_full_dump': handle_dump_imported,
+    'dataframes': handle_dataframes,
+    'model': handle_model,
+    'candidate_sets': handle_candidate_sets,
+    'recommendations': handle_recommendations,
 }
 
 

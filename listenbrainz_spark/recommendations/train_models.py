@@ -237,3 +237,5 @@ def main():
         recommendation_metadata['best_model_id'] = best_model_metadata['model_id']
     with open(metadata_file_path, 'w') as f:
         json.dump(recommendation_metadata,f)
+
+    return [{'type': 'model'}]

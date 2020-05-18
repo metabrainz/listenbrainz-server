@@ -304,3 +304,5 @@ def main():
         current_app.logger.info('Saving HTML...')
         save_candidate_html(user_data, time_initial)
         current_app.logger.info('Done!')
+
+    return [{'type': 'candidate_sets'}]

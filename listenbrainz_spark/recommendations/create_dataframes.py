@@ -299,3 +299,5 @@ def main():
         current_app.logger.info('Saving HTML...')
         save_dataframe_html(users_df_time, recordings_df_time, playcounts_df_time, total_time)
         current_app.logger.info('Done!')
+
+    return [{'type': 'dataframes'}]

@@ -119,3 +119,27 @@ def request_import_new_full_dump():
     """ Send the cluster a request to import a new full data dump
     """
     send_request_to_spark_cluster(_prepare_query_message('import.dump.full'))
+
+@cli.command(name="request_dataframes")
+def request_dataframes():
+    """ Send the cluster a request to create dataframes.
+    """
+    send_request_to_spark_cluster(_prepare_query_message('recommendations.create_dataframes'))
+
+@cli.command(name='request_model')
+def request_model():
+    """ Send the cluster request to train the data.
+    """
+    send_request_to_spark_cluster(_prepare_query_message('recommendations.train_model'))
+
+@cli.command(name='request_candidate_sets'):
+def request_candidate_sets():
+    """ Send the cluster the request to generate candidate sets.
+    """
+    send_request_to_spark_cluster(_prepare_query_message('recommendations.candidate_sets'))
+
+@cli.command(name='request_recommendations'):
+def request_recommendations():
+    """ Send the cluster the request to generate recommendations.
+    """
+    send_request_to_spark_cluster(_prepare_query_message('recommendations.recommend'))

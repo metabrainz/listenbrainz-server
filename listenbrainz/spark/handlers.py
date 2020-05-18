@@ -73,3 +73,14 @@ def handle_dump_imported(data):
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
     )
+
+def handle_recommendations(data):
+    musicbrainz_id = data['musicbrainz_id']
+    user = db_user.get_by_mb_id(musicbrainz_id)
+    if not user:
+        current_app.logger.critical("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
+        return
+
+    #write email
+
+    current_app.logger.debug('inserting recommendations for user "{}"'.format(musicbrainz_id))
