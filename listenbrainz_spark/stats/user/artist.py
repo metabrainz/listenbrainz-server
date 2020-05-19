@@ -56,9 +56,9 @@ def get_artists(table):
     return artists
 
 
-def get_artists_last_week():
-    """ Get the last_week top artists for all users """
-    current_app.logger.debug("Calculating artist_last_week...")
+def get_artists_week():
+    """ Get the week top artists for all users """
+    current_app.logger.debug("Calculating artist_week...")
 
     date = get_latest_listen_ts()
 
@@ -67,10 +67,10 @@ def get_artists_last_week():
 
     listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
     filtered_df = filter_listens(listens_df, from_date, to_date)
-    filtered_df.createOrReplaceTempView('user_artists_last_week')
+    filtered_df.createOrReplaceTempView('user_artists_week')
 
-    artist_data = get_artists('user_artists_last_week')
-    messages = create_messages(artist_data=artist_data, _type='user_artists', _range='last_week',
+    artist_data = get_artists('user_artists_week')
+    messages = create_messages(artist_data=artist_data, _type='user_artists', _range='week',
                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
     current_app.logger.debug("Done!")

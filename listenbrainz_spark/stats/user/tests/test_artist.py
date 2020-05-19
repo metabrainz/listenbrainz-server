@@ -70,7 +70,7 @@ class ArtistTestCase(SparkTestCase):
     # @patch('listenbrainz_spark.stats.user.artist.create_messages')
     # def test_get_artist_week(self, create_messages_mock, get_artists_mock,
     #                          createOrReplaceTempView_mock, get_latest_listen_ts_mock):
-    #     artist_stats.get_artists_last_week()
+    #     artist_stats.get_artists_week()
 
     #     get_latest_listen_ts_mock.return_value = datetime(2020, 5, 19)
     #     get_latest_listen_ts_mock.assert_called_once()

@@ -4,7 +4,7 @@ import listenbrainz_spark.request_consumer.jobs.import_dump
 
 functions = {
     'stats.user.all': listenbrainz_spark.stats.user.all.calculate,
-    'stats.user.artist.last_week': listenbrainz_spark.stats.user.artist.get_artists_last_week,
+    'stats.user.artist.week': listenbrainz_spark.stats.user.artist.get_artists_week,
     'stats.user.artist.last_month': listenbrainz_spark.stats.user.artist.get_artists_last_month,
     'stats.user.artist.last_year': listenbrainz_spark.stats.user.artist.get_artists_last_year,
     'stats.user.artist.all_time': listenbrainz_spark.stats.user.artist.get_artists_all_time,

@@ -4,8 +4,8 @@
     "description": "All user statistics that ListenBrainz calculates for all ListenBrainz users",
     "params": []
   },
-  "stats.user.artist.last_week": {
-    "name": "stats.user.artist.last_week",
+  "stats.user.artist.week": {
+    "name": "stats.user.artist.week",
     "description": "Artist statistics for all users in the last week",
     "params": []
   },
