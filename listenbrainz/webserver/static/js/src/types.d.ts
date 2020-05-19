@@ -21,6 +21,7 @@ interface AdditionalInfo {
   spotify_album_id?: string | null;
   spotify_artist_ids?: Array<string> | null;
   spotify_id?: string | null;
+  youtube_id?: string | null;
   tags?: Array<string> | null;
   track_mbid?: string | null;
   tracknumber?: number | null;
