@@ -15,7 +15,7 @@ def insert_lovehate_record(user_id, recording_msid, score):
 
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            INSERT INTO lovehate (user_id, recording_msid, score)
+            INSERT INTO recording_lovehate (user_id, recording_msid, score)
                  VALUES (:user_id, :recording_msid, :score)
             ON CONFLICT (user_id, recording_msid)
           DO UPDATE SET score = :score,
@@ -37,7 +37,7 @@ def delete_lovehate_record(user_id, recording_msid):
 
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            DELETE FROM lovehate
+            DELETE FROM recording_lovehate
              WHERE user_id = :user_id
                AND recording_msid = :recording_msid
             """), {
@@ -60,7 +60,7 @@ def get_user_loved_or_hated_recordings(user_id, score):
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT user_id, recording_msid, score
-              FROM lovehate
+              FROM recording_lovehate
              WHERE user_id = :user_id
                AND score = :score
             """), {
@@ -72,7 +72,7 @@ def get_user_loved_or_hated_recordings(user_id, score):
             if not row:
                 return None
 
-            records.append(_format_lovehate_row(row[0], row[1], row[2]))
+            records.append(_format_recording_lovehate_row(row[0], row[1], row[2]))
         return records
 
 
@@ -87,7 +87,7 @@ def get_user_loved_and_hated_recordings(user_id):
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT user_id, recording_msid, score
-              FROM lovehate
+              FROM recording_lovehate
              WHERE user_id = :user_id
             """), {
                 'user_id': user_id
@@ -98,7 +98,7 @@ def get_user_loved_and_hated_recordings(user_id):
             if not row:
                 return None
 
-            records.append(_format_lovehate_row(row[0], row[1], row[2]))
+            records.append(_format_recording_lovehate_row(row[0], row[1], row[2]))
         return records
 
 
@@ -114,7 +114,7 @@ def get_records_for_given_recording(recording_msid):
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT user_id, recording_msid, score
-              FROM lovehate
+              FROM recording_lovehate
              WHERE recording_msid = :recording_msid
             """), {
                 'user_id': user_id
@@ -125,11 +125,11 @@ def get_records_for_given_recording(recording_msid):
             if not row:
                 return None
 
-            records.append(_format_lovehate_row(row[0], row[1], row[2]))
+            records.append(_format_recording_lovehate_row(row[0], row[1], row[2]))
         return records
 
 
-def _format_lovehate_row(user_id, recording_msid, score):
+def _format_recording_lovehate_row(user_id, recording_msid, score):
     record = {
         'user_id': user_id,
         'recording_msid': recording_msid,
