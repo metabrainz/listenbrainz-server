@@ -3,7 +3,7 @@ import { isEqual as _isEqual } from "lodash";
 import * as _ from "lodash";
 import PlaybackControls from "./PlaybackControls";
 import { searchForSpotifyTrack } from "./utils";
-import APIService from "./APIService";
+import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
 
 const getSpotifyUriFromListen = (listen: Listen): string => {
   if (
@@ -36,47 +36,28 @@ const fixSpotifyPlayerStyleIssue = () => {
   }
 };
 
-type SpotifyPlayerProps = {
+type SpotifyPlayerProps = DataSourceProps & {
   spotifyUser: SpotifyUser;
-  direction: SpotifyPlayDirection;
-  onPermissionError?: (message: string) => void;
-  onCurrentListenChange: (listen: Listen) => void;
-  currentListen?: Listen;
-  listens: Array<Listen>;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
-  apiService: APIService;
-  onAccountError: (message: string | JSX.Element) => void;
+  refreshSpotifyToken: () => Promise<string>;
 };
 
 type SpotifyPlayerState = {
   accessToken: string;
   permission: SpotifyPermission;
   currentSpotifyTrack: SpotifyTrack;
-  playerPaused: boolean;
+  // playerPaused: boolean;
   progressMs: number;
   durationMs: number;
-  updateTime: number;
-  direction: SpotifyPlayDirection;
-  paused?: boolean;
-  position?: number;
-  duration?: number;
   trackWindow?: SpotifyPlayerTrackWindow;
 };
 
-export default class SpotifyPlayer extends React.Component<
-  SpotifyPlayerProps,
-  SpotifyPlayerState
-> {
+export default class SpotifyPlayer
+  extends React.Component<SpotifyPlayerProps, SpotifyPlayerState>
+  implements DataSourceType {
   spotifyPlayer?: SpotifyPlayerType;
 
-  firstRun: boolean = true;
-
   playerStateTimerID?: number | null;
-  debouncedPlayNextTrack: () => void;
+  debouncedOnTrackEnd: () => void;
 
   constructor(props: SpotifyPlayerProps) {
     super(props);
@@ -84,14 +65,12 @@ export default class SpotifyPlayer extends React.Component<
       accessToken: props.spotifyUser.access_token,
       permission: props.spotifyUser.permission,
       currentSpotifyTrack: {} as SpotifyTrack,
-      playerPaused: true,
+      // playerPaused: true,
       progressMs: 0,
       durationMs: 0,
-      updateTime: performance.now(),
-      direction: props.direction || "down",
     };
 
-    this.debouncedPlayNextTrack = _.debounce(this.playNextTrack, 500, {
+    this.debouncedOnTrackEnd = _.debounce(props.onTrackEnd, 500, {
       leading: true,
       trailing: false,
     });
@@ -107,6 +86,13 @@ export default class SpotifyPlayer extends React.Component<
     });
   }
 
+  componentDidUpdate(prevProps: DataSourceProps) {
+    const { show } = this.props;
+    if (prevProps.show === true && show === false && this.spotifyPlayer) {
+      this.spotifyPlayer.pause();
+    }
+  }
+
   componentWillUnmount(): void {
     this.disconnectSpotifyPlayer();
   }
@@ -117,9 +103,15 @@ export default class SpotifyPlayer extends React.Component<
     // Using the releaseName has paradoxically given worst search results, so we're going to ignor it for now
     // const releaseName = _.get(listen, "track_metadata.release_name");
     const releaseName = "";
-
+    const {
+      handleError,
+      handleWarning,
+      handleSuccess,
+      onTrackNotFound,
+    } = this.props;
     if (!trackName) {
-      this.handleWarning("Not enough info to search on Spotify");
+      handleWarning("Not enough info to search on Spotify");
+      onTrackNotFound();
     }
     const { accessToken } = this.state;
 
@@ -128,7 +120,7 @@ export default class SpotifyPlayer extends React.Component<
         // Track should be a Spotify track object:
         // https://developer.spotify.com/documentation/web-api/reference/object-model/#track-object-full
         if (_.has(track, "name") && _.has(track, "id") && _.has(track, "uri")) {
-          this.handleSuccess(
+          handleSuccess(
             <span>
               We found a matching track on Spotify:
               <br />
@@ -144,8 +136,8 @@ export default class SpotifyPlayer extends React.Component<
           this.playSpotifyURI(track.uri);
           return;
         }
-        this.handleWarning("Could not find track on Spotify");
-        this.playNextTrack();
+        // handleWarning("Could not find track on Spotify");
+        onTrackNotFound();
       })
       .catch((errorObject) => {
         if (errorObject.status === 401) {
@@ -160,15 +152,16 @@ export default class SpotifyPlayer extends React.Component<
           this.handleAccountError();
           return;
         }
-        this.handleError(errorObject.message);
+        handleError(errorObject.message);
       });
   };
 
   playSpotifyURI = (spotifyURI: string): void => {
-    const { accessToken } = this.state;
     if (!this.spotifyPlayer) {
       this.connectSpotifyPlayer(this.playSpotifyURI.bind(this, spotifyURI));
     }
+    const { accessToken } = this.state;
+    const { handleError } = this.props;
     fetch(
       `https://api.spotify.com/v1/me/player/play?device_id=${this.spotifyPlayer._options.id}`, // eslint-disable-line no-underscore-dangle
       {
@@ -200,11 +193,11 @@ export default class SpotifyPlayer extends React.Component<
           return;
         }
         if (!response.ok) {
-          this.handleError(response.statusText);
+          handleError(response.statusText);
         }
       })
       .catch((error) => {
-        this.handleError(error.message);
+        handleError(error.message);
       });
   };
 
@@ -212,7 +205,7 @@ export default class SpotifyPlayer extends React.Component<
     accessToken?: string,
     permission?: string
   ): Promise<boolean> => {
-    const { onPermissionError } = this.props;
+    const { onInvalidateDataSource, handleError } = this.props;
     if (!accessToken || !permission) {
       this.handleAccountError();
       return false;
@@ -226,22 +219,18 @@ export default class SpotifyPlayer extends React.Component<
       ];
       for (let i = 0; i < requiredScopes.length; i += 1) {
         if (!scopes.includes(requiredScopes[i])) {
-          if (onPermissionError) {
-            onPermissionError("Permission to play songs not granted");
-          }
+          onInvalidateDataSource("Permission to play songs not granted");
           return false;
         }
       }
       return true;
     } catch (error) {
-      this.handleError(error);
+      handleError(error);
       return false;
     }
   };
 
   playListen = (listen: Listen): void => {
-    const { onCurrentListenChange } = this.props;
-    onCurrentListenChange(listen);
     if (_.get(listen, "track_metadata.additional_info.spotify_id")) {
       this.playSpotifyURI(getSpotifyUriFromListen(listen));
     } else {
@@ -249,75 +238,11 @@ export default class SpotifyPlayer extends React.Component<
     }
   };
 
-  isCurrentListen = (element: Listen): boolean => {
-    const { currentListen } = this.props;
-    return (currentListen && _isEqual(element, currentListen)) as boolean;
-  };
-
-  playPreviousTrack = (): void => {
-    this.playNextTrack(true);
-  };
-
-  playNextTrack = (invert: boolean = false): void => {
-    const { listens } = this.props;
-    const { direction } = this.state;
-
-    if (listens.length === 0) {
-      this.handleWarning(
-        "You can try loading listens or refreshing the page",
-        "No Spotify listens to play"
-      );
-      return;
-    }
-
-    const currentListenIndex = listens.findIndex(this.isCurrentListen);
-
-    let nextListenIndex;
-    if (currentListenIndex === -1) {
-      nextListenIndex = direction === "up" ? listens.length - 1 : 0;
-    } else if (direction === "up") {
-      nextListenIndex =
-        invert === true ? currentListenIndex + 1 : currentListenIndex - 1 || 0;
-    } else if (direction === "down") {
-      nextListenIndex =
-        invert === true ? currentListenIndex - 1 || 0 : currentListenIndex + 1;
-    } else {
-      this.handleWarning("Please select a song to play", "Unrecognised state");
-      return;
-    }
-
-    const nextListen = listens[nextListenIndex];
-    if (!nextListen) {
-      this.handleWarning(
-        "You can try loading more listens or refreshing the page",
-        "No more Spotify listens to play"
-      );
-      return;
-    }
-
-    this.playListen(nextListen);
-  };
-
-  handleError = (error: string | Error, title?: string): void => {
-    const { newAlert } = this.props;
-    if (!error) {
-      return;
-    }
-    newAlert(
-      "danger",
-      title || "Playback error",
-      typeof error === "object" ? error.message : error
-    );
-  };
-
-  handleWarning = (message: string | JSX.Element, title?: string): void => {
-    const { newAlert } = this.props;
-    newAlert("warning", title || "Playback error", message);
-  };
-
-  handleSuccess = (message: string | JSX.Element, title?: string): void => {
-    const { newAlert } = this.props;
-    newAlert("success", title || "Success", message);
+  togglePlay = (): void => {
+    const { handleError } = this.props;
+    this.spotifyPlayer.togglePlay().catch((error: Error) => {
+      handleError(error.message);
+    });
   };
 
   handleTokenError = async (
@@ -333,13 +258,14 @@ export default class SpotifyPlayer extends React.Component<
       this.handleAccountError();
     }
     try {
-      const { apiService } = this.props;
-      const userToken = await apiService.refreshSpotifyToken();
+      const { refreshSpotifyToken } = this.props;
+      const userToken = await refreshSpotifyToken();
       this.setState({ accessToken: userToken }, () => {
         this.connectSpotifyPlayer(callbackFunction);
       });
     } catch (err) {
-      this.handleError(err.message);
+      const { handleError } = this.props;
+      handleError(err.message);
     }
   };
 
@@ -356,17 +282,9 @@ export default class SpotifyPlayer extends React.Component<
         and refresh this page
       </p>
     );
-    const { onAccountError } = this.props;
-    if (onAccountError) {
-      onAccountError(errorMessage);
-    }
-  };
-
-  togglePlay = async (): Promise<void> => {
-    try {
-      await this.spotifyPlayer.togglePlay();
-    } catch (error) {
-      this.handleError(error.message);
+    const { onInvalidateDataSource } = this.props;
+    if (onInvalidateDataSource) {
+      onInvalidateDataSource(errorMessage);
     }
   };
 
@@ -374,15 +292,7 @@ export default class SpotifyPlayer extends React.Component<
     this.spotifyPlayer.seek(msTimecode);
   };
 
-  toggleDirection = (): void => {
-    this.setState((prevState) => {
-      const direction = prevState.direction === "down" ? "up" : "down";
-      return { direction };
-    });
-  };
-
   disconnectSpotifyPlayer = (): void => {
-    this.stopPlayerStateTimer();
     if (!this.spotifyPlayer) {
       return;
     }
@@ -396,13 +306,17 @@ export default class SpotifyPlayer extends React.Component<
       this.spotifyPlayer.disconnect();
     }
     this.spotifyPlayer = null;
-    this.firstRun = true;
   };
 
   connectSpotifyPlayer = (callbackFunction?: () => void): void => {
     this.disconnectSpotifyPlayer();
 
     const { accessToken } = this.state;
+
+    if (!window.Spotify) {
+      setTimeout(this.connectSpotifyPlayer.bind(this, callbackFunction), 1000);
+      return;
+    }
 
     this.spotifyPlayer = new window.Spotify.Player({
       name: "ListenBrainz Player",
@@ -412,17 +326,17 @@ export default class SpotifyPlayer extends React.Component<
       volume: 0.7, // Careful with this, now…
     });
 
+    const { handleError } = this.props;
     // Error handling
-    this.spotifyPlayer.on("initialization_error", this.handleError);
+    this.spotifyPlayer.on("initialization_error", handleError);
     this.spotifyPlayer.on("authentication_error", this.handleTokenError);
     this.spotifyPlayer.on("account_error", this.handleAccountError);
-    this.spotifyPlayer.on("playback_error", this.handleError);
+    this.spotifyPlayer.on("playback_error", handleError);
 
     this.spotifyPlayer.addListener("ready", () => {
       if (callbackFunction) {
         callbackFunction();
       }
-      this.startPlayerStateTimer();
       if (fixSpotifyPlayerStyleIssue) {
         fixSpotifyPlayerStyleIssue();
       }
@@ -459,19 +373,20 @@ export default class SpotifyPlayer extends React.Component<
         }
         return response.json().then((innerResponse) => {
           if (innerResponse.error) {
-            return this.handleError(innerResponse.error.message);
+            return handleError(innerResponse.error.message);
           }
           return this.handleSpotifyAPICurrentlyPlaying(innerResponse);
         });
       })
       .catch((error: Error) => {
-        this.handleError(error.message);
+        handleError(error.message);
       });
   };
 
   handleSpotifyAPICurrentlyPlaying = (currentlyPlaying: any): void => {
+    const { handleWarning } = this.props;
     if (currentlyPlaying.is_playing) {
-      this.handleWarning(
+      handleWarning(
         "Using Spotify on this page will interrupt your current playback",
         "Spotify player"
       );
@@ -479,38 +394,12 @@ export default class SpotifyPlayer extends React.Component<
     this.setState({
       progressMs: currentlyPlaying.progress_ms,
       durationMs: currentlyPlaying.item && currentlyPlaying.item.duration_ms,
-      updateTime: performance.now(),
       currentSpotifyTrack: currentlyPlaying.item,
     });
   };
 
-  startPlayerStateTimer = (): void => {
-    this.playerStateTimerID = window.setInterval(() => {
-      this.getStatePosition();
-    }, 200);
-  };
-
-  getStatePosition = (): void => {
-    let newProgressMs: number;
-    const { playerPaused, durationMs, progressMs, updateTime } = this.state;
-    if (playerPaused) {
-      newProgressMs = progressMs || 0;
-    } else {
-      const position = progressMs + (performance.now() - updateTime);
-      newProgressMs = position > durationMs ? durationMs : position;
-    }
-    this.setState({ progressMs: newProgressMs, updateTime: performance.now() });
-  };
-
-  stopPlayerStateTimer = (): void => {
-    if (this.playerStateTimerID) {
-      window.clearInterval(this.playerStateTimerID);
-    }
-    this.playerStateTimerID = null;
-  };
-
-  handlePlayerStateChanged = (state: SpotifyPlayerSDKState): void => {
-    if (!state) {
+  handlePlayerStateChanged = (playerState: SpotifyPlayerSDKState): void => {
+    if (!playerState) {
       return;
     }
     const {
@@ -518,30 +407,55 @@ export default class SpotifyPlayer extends React.Component<
       position,
       duration,
       track_window: { current_track },
-    } = state;
+    } = playerState;
 
-    if (paused) {
-      this.stopPlayerStateTimer();
-    } else if (!this.playerStateTimerID) {
-      this.startPlayerStateTimer();
+    const { currentSpotifyTrack, progressMs, durationMs } = this.state;
+    const { playerPaused } = this.props;
+    const { onTrackEnd } = this.props;
+    const {
+      onPlayerPausedChange,
+      onProgressChange,
+      onDurationChange,
+    } = this.props;
+
+    if (paused !== playerPaused) {
+      onPlayerPausedChange(paused);
     }
+
     // How do we accurately detect the end of a song?
     // From https://github.com/spotify/web-playback-sdk/issues/35#issuecomment-469834686
     if (position === 0 && paused === true) {
       // Track finished, play next track
-      this.debouncedPlayNextTrack();
+      onTrackEnd();
       return;
     }
+
+    if (!_isEqual(currentSpotifyTrack, current_track)) {
+      const { onTrackInfoChange } = this.props;
+
+      const artists = current_track.artists
+        .map((artist: SpotifyArtist) => artist.name)
+        .join(", ");
+      onTrackInfoChange(current_track.name, artists);
+
+      this.setState({
+        progressMs: position,
+        durationMs: duration,
+        currentSpotifyTrack: current_track,
+      });
+      return;
+    }
+
+    onProgressChange(position);
+
+    if (duration !== durationMs) {
+      onDurationChange(duration);
+    }
+
     this.setState({
       progressMs: position,
       durationMs: duration,
-      currentSpotifyTrack: current_track || {},
-      playerPaused: paused,
-      updateTime: performance.now(),
     });
-    if (this.firstRun) {
-      this.firstRun = false;
-    }
   };
 
   getAlbumArt = (): JSX.Element | null => {
@@ -568,36 +482,10 @@ export default class SpotifyPlayer extends React.Component<
   };
 
   render() {
-    const {
-      playerPaused,
-      direction,
-      currentSpotifyTrack,
-      progressMs,
-      durationMs,
-    } = this.state;
-    return (
-      <div>
-        <PlaybackControls
-          playPreviousTrack={this.playPreviousTrack}
-          playNextTrack={this.playNextTrack}
-          togglePlay={this.firstRun ? this.playNextTrack : this.togglePlay}
-          playerPaused={playerPaused}
-          toggleDirection={this.toggleDirection}
-          direction={direction}
-          trackName={currentSpotifyTrack.name}
-          artistName={
-            currentSpotifyTrack.artists &&
-            currentSpotifyTrack.artists
-              .map((artist: SpotifyArtist) => artist.name)
-              .join(", ")
-          }
-          progressMs={progressMs}
-          durationMs={durationMs}
-          seekToPositionMs={this.seekToPositionMs}
-        >
-          {this.getAlbumArt()}
-        </PlaybackControls>
-      </div>
-    );
+    const { show } = this.props;
+    if (!show) {
+      return null;
+    }
+    return <div>{this.getAlbumArt()}</div>;
   }
 }

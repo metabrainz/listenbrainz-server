@@ -20,7 +20,7 @@ type PlaybackControlsProps = {
   togglePlay: (invert?: boolean) => void;
   playerPaused: boolean;
   toggleDirection: () => void;
-  direction: SpotifyPlayDirection;
+  direction: BrainzPlayDirection;
   trackName?: string;
   artistName?: string;
   progressMs: number;

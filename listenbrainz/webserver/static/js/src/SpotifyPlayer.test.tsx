@@ -9,7 +9,7 @@ const props = {
     access_token: "heyo",
     permission: "read" as SpotifyPermission,
   },
-  direction: "up" as SpotifyPlayDirection,
+  direction: "up" as BrainzPlayDirection,
   onPermissionError: (message: string) => {},
   onCurrentListenChange: (listen: Listen) => {},
   newAlert: (

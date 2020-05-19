@@ -9,7 +9,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as _ from "lodash";
 import * as io from "socket.io-client";
-import SpotifyPlayer from "./SpotifyPlayer";
+import BrainzPlayer from "./BrainzPlayer";
 import FollowUsers from "./FollowUsers";
 import APIService from "./APIService";
 import {
@@ -46,7 +46,7 @@ export interface RecentListensState {
   alerts: Array<Alert>;
   canPlayMusic?: boolean;
   currentListen?: Listen;
-  direction: SpotifyPlayDirection;
+  direction: BrainzPlayDirection;
   followList: Array<string>;
   listId?: number;
   listName: string;
@@ -62,7 +62,7 @@ export default class RecentListens extends React.Component<
 > {
   private APIService: APIService;
 
-  private spotifyPlayer = React.createRef<SpotifyPlayerType>();
+  private brainzPlayer = React.createRef<BrainzPlayer>();
 
   private socket!: SocketIOClient.Socket;
 
@@ -157,19 +157,9 @@ export default class RecentListens extends React.Component<
     );
   };
 
-  handleSpotifyAccountError = (error: string | JSX.Element): void => {
-    this.newAlert("danger", "Spotify account error", error);
-    this.setState({ canPlayMusic: false });
-  };
-
-  handleSpotifyPermissionError = (error: string | JSX.Element): void => {
-    this.newAlert("danger", "Spotify permission error", error);
-    this.setState({ canPlayMusic: false });
-  };
-
   playListen = (listen: Listen): void => {
-    if (this.spotifyPlayer.current) {
-      this.spotifyPlayer.current.playListen(listen);
+    if (this.brainzPlayer.current) {
+      this.brainzPlayer.current.playListen(listen);
     } else {
       // For fallback embedded player
       this.setState({ currentListen: listen });
@@ -500,33 +490,16 @@ export default class RecentListens extends React.Component<
             // eslint-disable-next-line no-dupe-keys
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
-            {spotify.access_token && canPlayMusic !== false ? (
-              <SpotifyPlayer
-                apiService={this.APIService}
-                currentListen={currentListen}
-                direction={direction}
-                listens={listens}
-                newAlert={this.newAlert}
-                onAccountError={this.handleSpotifyAccountError}
-                onCurrentListenChange={this.handleCurrentListenChange}
-                onPermissionError={this.handleSpotifyPermissionError}
-                ref={this.spotifyPlayer}
-                spotifyUser={spotify}
-              />
-            ) : (
-              // Fallback embedded player
-              <div className="col-md-4 text-right">
-                <iframe
-                  allow="encrypted-media"
-                  allowTransparency
-                  frameBorder="0"
-                  height="380"
-                  src={getSpotifyEmbedSrc() || undefined}
-                  title="fallbackSpotifyPlayer"
-                  width="300"
-                />
-              </div>
-            )}
+            <BrainzPlayer
+              apiService={this.APIService}
+              currentListen={currentListen}
+              direction={direction}
+              listens={listens}
+              newAlert={this.newAlert}
+              onCurrentListenChange={this.handleCurrentListenChange}
+              ref={this.brainzPlayer}
+              spotifyUser={spotify}
+            />
           </div>
         </div>
       </div>

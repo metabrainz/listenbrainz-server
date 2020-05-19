@@ -48,7 +48,7 @@ declare type ListenBrainzUser = {
 
 declare type ListenType = "single" | "playingNow" | "import";
 
-declare type SpotifyPlayDirection = "up" | "down" | "hidden";
+declare type BrainzPlayDirection = "up" | "down" | "hidden";
 
 declare type SubmitListensPayload = {
   listen_type: "single" | "playing_now" | "import";
