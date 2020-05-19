@@ -98,18 +98,18 @@ def get_artists_month():
     return messages
 
 
-def get_artists_last_year():
-    """ Get the last_year top artists for all users """
-    current_app.logger.debug("Calculating artist_last_year...")
+def get_artists_year():
+    """ Get the year top artists for all users """
+    current_app.logger.debug("Calculating artist_year...")
 
     to_date = get_latest_listen_ts()
     from_date = replace_months(to_date, 1)
 
     listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
-    listens_df.createOrReplaceTempView('user_artists_last_year')
+    listens_df.createOrReplaceTempView('user_artists_year')
 
-    artist_data = get_artists('user_artists_last_year')
-    messages = create_messages(artist_data=artist_data, _type='user_artists', _range='last_year',
+    artist_data = get_artists('user_artists_year')
+    messages = create_messages(artist_data=artist_data, _type='user_artists', _range='year',
                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
     current_app.logger.debug("Done!")

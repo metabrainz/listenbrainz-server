@@ -14,8 +14,8 @@
     "description": "Artist statistics for all users in the last month",
     "params": []
   },
-  "stats.user.artist.last_year": {
-    "name": "stats.user.artist.last_year",
+  "stats.user.artist.year": {
+    "name": "stats.user.artist.year",
     "description": "Artist statistics for all users in the last year",
     "params": []
   },

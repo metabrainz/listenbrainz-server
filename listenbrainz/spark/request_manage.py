@@ -102,7 +102,7 @@ def request_user_stats(week, month, year):
         return
 
     if (year):
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.last_year'))
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.year'))
         return
 
     # Default if no specific flag is provided
