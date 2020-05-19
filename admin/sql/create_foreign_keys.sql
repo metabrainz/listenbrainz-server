@@ -54,4 +54,10 @@ ALTER TABLE recommendation.recommender_session
     REFERENCES recommendation.recommender (id)
     ON DELETE CASCADE;
 
+ALTER TABLE recording_lovehate
+    ADD CONSTRAINT recording_lovehate_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
 COMMIT;
