@@ -86,39 +86,27 @@ def send_request_to_spark_cluster(message):
             current_app.logger.error('Could not send message to spark cluster: %s', ujson.dumps(message), exc_info=True)
 
 
-@cli.command(name="request_all_user_stats")
-def request_all_user_stats():
+@cli.command(name="request_user_stats")
+@click.option("--week", is_flag=True, help="Request weekly statistics")
+@click.option("--month", is_flag=True, help="Request monthly statistics")
+@click.option("--week", is_flag=True, help="Request yearly statistics")
+def request_user_stats(week, month, year):
     """ Send a user stats request to the spark cluster
     """
+    if (week):
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.last_week'))
+        return
+
+    if (month):
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.last_month'))
+        return
+
+    if (year):
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.last_year'))
+        return
+
+    # Default if no specific flag is provided
     send_request_to_spark_cluster(_prepare_query_message('stats.user.all'))
-
-
-@cli.command(name="request_last_week_user_artists")
-def request_all_user_stats():
-    """ Send a user stats request to the spark cluster
-    """
-    send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.last_week'))
-
-
-@cli.command(name="request_last_month_user_artists")
-def request_all_user_stats():
-    """ Send a user stats request to the spark cluster
-    """
-    send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.last_month'))
-
-
-@cli.command(name="request_last_year_user_artists")
-def request_all_user_stats():
-    """ Send a user stats request to the spark cluster
-    """
-    send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.last_year'))
-
-
-@cli.command(name="request_all_time_user_artists")
-def request_all_user_stats():
-    """ Send a user stats request to the spark cluster
-    """
-    send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.all_time'))
 
 
 @cli.command(name="request_import_full")

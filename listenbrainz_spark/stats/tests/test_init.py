@@ -11,7 +11,7 @@ class InitTestCase(SparkTestCase):
         self.assertEqual(stats.replace_days(datetime.datetime(2019, 5, 12), 13), datetime.datetime(2019, 5, 13))
 
     def test_replace_months(self):
-        self.assertEqual(stats.replace_months(datetime(2020, 5, 18), 6), datetime.datetime(2020, 6, 18))
+        self.assertEqual(stats.replace_months(datetime.datetime(2020, 5, 18), 6), datetime.datetime(2020, 6, 18))
 
     def test_adjust_months(self):
         d1 = stats.adjust_months(datetime.datetime(2019, 5, 12), 3, shift_backwards=False)

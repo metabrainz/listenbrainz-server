@@ -1,11 +1,11 @@
-from datetime import datetime
 import time
-
 from collections import defaultdict
-from listenbrainz_spark.stats import run_query
-from listenbrainz_spark.utils import get_listens
-from listenbrainz_spark.stats import adjust_months, adjust_days
+from datetime import datetime
+
+from listenbrainz_spark.exceptions import HDFSException
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
+from listenbrainz_spark.stats import adjust_days, adjust_months, run_query
+from listenbrainz_spark.utils import get_listens
 
 
 def get_latest_listen_ts():
@@ -15,7 +15,7 @@ def get_latest_listen_ts():
         try:
             df = get_listens(now, now, LISTENBRAINZ_DATA_DIRECTORY)
             break
-        except SystemExit:
+        except HDFSException:
             now = adjust_months(now, 1)
 
     df.createOrReplaceTempView('latest_listen_ts')
