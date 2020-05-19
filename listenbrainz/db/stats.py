@@ -50,13 +50,12 @@ def insert_user_stats(user_id, artists, recordings, releases):
              artists (dict): the top artists listened to by the user
              recordings (dict): the top recordings listened to by the user
              releases (dict): the top releases listened to by the user
-             artist_count (int): the total number of artists listened to by the user
     """
 
     artist_range = artists['range']
-    del artists['range']
+    artists_mod = {key: artists[key] for key in artists if key != 'range'}
     artist_stats = {
-        artist_range: artists
+        artist_range: artists_mod
     }
 
     recording_stats = {

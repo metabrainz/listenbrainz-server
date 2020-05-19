@@ -70,7 +70,7 @@ def get_artists_week():
     filtered_df.createOrReplaceTempView('user_artists_week')
 
     artist_data = get_artists('user_artists_week')
-    messages = create_messages(artist_data=artist_data, _type='user_artists', _range='week',
+    messages = create_messages(artist_data=artist_data, stats_type='user_artists', stats_range='week',
                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
     current_app.logger.debug("Done!")
@@ -90,7 +90,7 @@ def get_artists_month():
 
     artist_data = get_artists('user_artists_month')
 
-    messages = create_messages(artist_data=artist_data, _type='user_artists', _range='month',
+    messages = create_messages(artist_data=artist_data, stats_type='user_artists', stats_range='month',
                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
     current_app.logger.debug("Done!")
@@ -109,7 +109,7 @@ def get_artists_year():
     listens_df.createOrReplaceTempView('user_artists_year')
 
     artist_data = get_artists('user_artists_year')
-    messages = create_messages(artist_data=artist_data, _type='user_artists', _range='year',
+    messages = create_messages(artist_data=artist_data, stats_type='user_artists', stats_range='year',
                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
     current_app.logger.debug("Done!")
@@ -128,7 +128,7 @@ def get_artists_all_time():
     listens_df.createOrReplaceTempView('user_artists_all_time')
 
     artist_data = get_artists('user_artists_all_time')
-    messages = create_messages(artist_data=artist_data, _type='user_artists', _range='all_time',
+    messages = create_messages(artist_data=artist_data, stats_type='user_artists', stats_range='all_time',
                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
     current_app.logger.debug("Done!")
@@ -136,14 +136,14 @@ def get_artists_all_time():
     return messages
 
 
-def create_messages(artist_data, _type, _range, from_ts, to_ts):
+def create_messages(artist_data, stats_type, stats_range, from_ts, to_ts):
     """
     Create messages to send the data to the webserver via RabbitMQ
 
     Args:
         artist_data (dict): Data to sent to the webserver
-        _type (str): The type of statistics calculated
-        _range (str): The range for which the statistics have been calculated
+        stats_type (str): The type of statistics calculated
+        stats_range (str): The range for which the statistics have been calculated
         from_ts (int): The UNIX timestamp of start time of the stats
         to_ts (int): The UNIX timestamp of end time of the stats
 
@@ -154,8 +154,8 @@ def create_messages(artist_data, _type, _range, from_ts, to_ts):
     for user_name, user_artists in artist_data.items():
         messages.append({
             'musicbrainz_id': user_name,
-            'type': _type,
-            'range': _range,
+            'type': stats_type,
+            'range': stats_range,
             'from': from_ts,
             'to': to_ts,
             'artists': user_artists,

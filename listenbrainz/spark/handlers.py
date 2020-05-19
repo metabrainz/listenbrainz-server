@@ -50,11 +50,10 @@ def handle_user_artist(data):
         notify_user_stats_update()
     current_app.logger.debug("inserting stats for user %s", musicbrainz_id)
 
-    # delete extra data
-    del data['musicbrainz_id']
-    del data['type']
+    to_remove = {'musicbrainz_id', 'type'}
+    data_mod = {key: data[key] for key in data if key not in to_remove}
 
-    db_stats.insert_user_stats(user['id'], data, {}, {})
+    db_stats.insert_user_stats(user['id'], data_mod, {}, {})
 
 
 def handle_dump_imported(data):
