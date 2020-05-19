@@ -40,3 +40,7 @@ class UtilsTestCase(SparkTestCase):
 
         self.assertEqual(rows[0]['listened_at'], adjust_days(from_date, 5, shift_backwards=False))
         self.assertEqual(rows[1]['listened_at'], adjust_days(to_date, 5))
+
+    def test_get_last_monday(self):
+        date = datetime(2020, 5, 19)
+        self.assertEqual(datetime(2020, 5, 18), user_utils.get_last_monday(date))

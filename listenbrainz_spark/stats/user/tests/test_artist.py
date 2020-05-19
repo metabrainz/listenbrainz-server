@@ -2,15 +2,13 @@ import json
 import os
 from collections import defaultdict
 from datetime import datetime
+from unittest.mock import patch
 
 import listenbrainz_spark.stats.user.artist as artist_stats
 from listenbrainz_spark import utils
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
-from listenbrainz_spark.stats import (adjust_days, adjust_months, replace_days,
-                                      replace_months)
-from listenbrainz_spark.stats.user.utils import get_last_monday
 from listenbrainz_spark.tests import SparkTestCase
-from pyspark.sql import Row, catalog
+from pyspark.sql import Row
 
 TEST_DATA_PATH = '../../../testdata'
 
@@ -26,15 +24,6 @@ class ArtistTestCase(SparkTestCase):
 
     def save_dataframe(self):
         now = datetime.now()
-        days = []
-        # Date in all_time
-        days.append(adjust_months(now, 13))
-        # Date in year
-        days.append(replace_months(now, 1))
-        # Date in month
-        days.append(replace_days(now, 1))
-        # Date in week
-        days.append(adjust_days(get_last_monday(now), 3))
 
         with open(self.path_to_data_file('user_top_artists.json')) as f:
             data = json.load(f)
@@ -44,13 +33,13 @@ class ArtistTestCase(SparkTestCase):
             for idx in range(0, entry['count']):
                 # Assign listened_at to each listen
                 row = utils.create_dataframe(Row(user_name=entry['user_name'], artist_name=entry['artist_name'],
-                                                 artist_msid=entry['artist_msid'], artist_mbids=entry['artist_mbids'],
-                                                 listened_at=days[idx % 4]), schema=None)
+                                                 artist_msid=entry['artist_msid'], artist_mbids=entry['artist_mbids']),
+                                             schema=None)
                 df = df.union(row) if df else row
 
         utils.save_parquet(df, os.path.join(self.path_, '{}/{}.parquet'.format(now.year, now.month)))
 
-    def test_get_artist(self):
+    def test_get_artists(self):
         self.save_dataframe()
         df = utils.get_listens(datetime.now(), datetime.now(), self.path_)
         df.createOrReplaceTempView('test_view')
@@ -74,25 +63,15 @@ class ArtistTestCase(SparkTestCase):
         received = artist_stats.get_artists('test_view')
 
         self.assertDictEqual(received, expected)
-        catalog.deleteTempView('test_view')
 
-    def test_get_artist_week(self):
-        self.save_dataframe()
+    # @patch('listenbrainz_spark.stats.user.utils.get_latest_listen_ts')
+    # @patch('pyspark.sql.DataFrame.createOrReplaceTempView')
+    # @patch('listenbrainz_spark.stats.user.artist.get_artists', return_value={'user1': 'artist1'})
+    # @patch('listenbrainz_spark.stats.user.artist.create_messages')
+    # def test_get_artist_week(self, create_messages_mock, get_artists_mock,
+    #                          createOrReplaceTempView_mock, get_latest_listen_ts_mock):
+    #     artist_stats.get_artists_last_week()
 
-        now = datetime.now()
-        to_ts = get_last_monday(now).timestamp()
-        from_ts = adjust_days(get_last_monday(now), 7).timestamp()
-        expected = [
-            {
-                'musicbrainz_id': 'user1',
-                'type': 'user_artists',
-                'range': 'last_week',
-                'from': from_ts,
-                'to': to_ts,
-                'artists': [
-                ],
-                'count': 4
-            }
-        ]
+    #     get_latest_listen_ts_mock.return_value = datetime(2020, 5, 19)
+    #     get_latest_listen_ts_mock.assert_called_once()
 
-        received = artist_stats.get_artists_last_week()

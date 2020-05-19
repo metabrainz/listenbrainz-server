@@ -2,7 +2,6 @@ import time
 from collections import defaultdict
 from datetime import datetime
 from flask import current_app
-from pyspark.sql import catalog
 
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
@@ -74,7 +73,6 @@ def get_artists_last_week():
     messages = create_messages(artist_data=artist_data, _type='user_artists', _range='last_week',
                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
-    catalog.dropTempView('user_artists_last_week')
     current_app.logger.debug("Done!")
 
     return messages
@@ -95,7 +93,6 @@ def get_artists_last_month():
     messages = create_messages(artist_data=artist_data, _type='user_artists', _range='last_month',
                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
-    catalog.dropTempView('user_artists_last_month')
     current_app.logger.debug("Done!")
 
     return messages
@@ -115,7 +112,6 @@ def get_artists_last_year():
     messages = create_messages(artist_data=artist_data, _type='user_artists', _range='last_year',
                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
-    catalog.dropTempView('user_artists_last_year')
     current_app.logger.debug("Done!")
 
     return messages
@@ -135,7 +131,6 @@ def get_artists_all_time():
     messages = create_messages(artist_data=artist_data, _type='user_artists', _range='all_time',
                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
-    catalog.dropTempView('user_artists_all_time')
     current_app.logger.debug("Done!")
 
     return messages
