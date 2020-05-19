@@ -3,12 +3,14 @@ receive from the Spark cluster.
 """
 import listenbrainz.db.user as db_user
 import listenbrainz.db.stats as db_stats
+import listenbrainz.db.recommendations_cf_recording as db_rec
 
 from flask import current_app, render_template
 from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
+TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7 # days
 
 
 def is_new_user_stats_batch():
@@ -24,6 +26,28 @@ def is_new_user_stats_batch():
 
     return datetime.now(timezone.utc) - last_update_ts > timedelta(minutes=TIME_TO_CONSIDER_STATS_AS_OLD)
 
+def is_new_cf_recording_recommendation_batch():
+    """ Returns True if this batch of recommendations is new, False otherwise
+    """
+    create_ts = db_rec.get_timestamp_for_last_recording_recommended()
+    if create_ts is None:
+        return True
+
+    return datetime.now(timezone.utc) - create_ts > timedelta(days=TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD)
+
+def notify_cf_recording_recommendations_update():
+    """ Send an email to notify recommendations are being written into db.
+    """
+    if current_app.config['TESTING']:
+        return
+
+    send_mail(
+        subject="Recommendations being written into the DB - ListenBrainz",
+        text=render_template('emails/cf_recording_recommendation_notification.txt', now=str(datetime.utcnow())),
+        recipients=['listenbrainz-observability@metabrainz.org'],
+        from_name='ListenBrainz',
+        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
+    )
 
 def notify_user_stats_update(stat_type):
     if not current_app.config['TESTING']:
@@ -74,13 +98,83 @@ def handle_dump_imported(data):
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
     )
 
+def handle_dataframes(data):
+    """ Send an email after dataframes have been successfully created and uploaded to HDFS.
+    """
+    if current_app.config['TESTING']:
+        return
+
+    dataframe_upload_time = data['dataframe_upload_time']
+    dataframe_creation_time = data['total_time']
+    from_date = data['from_date']
+    to_date = data['to_date']
+    send_mail(
+        subject='Dataframes have been uploaded to HDFS',
+        text=render_template('emails/cf_recording_dataframes_upload_notification.txt', time_to_upload=dataframe_upload_time,
+                             from_date=from_date, to_date=to_date, total_time=dataframe_creation_time),
+        recipients=['listenbrainz-observability@metabrainz.org'],
+        from_name='ListenBrainz',
+        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
+    )
+
+def handle_model(data):
+    """ Send an email after trained data (model) has been successfully uploaded to HDFS.
+    """
+    if current_app.config['TESTING']:
+        return
+
+    model_upload_time = data['model_upload_time']
+    model_creation_time = data['total_time']
+    send_mail(
+        subject='Model created and successfully uploaded to HDFS',
+        text=render_template('emails/cf_recording_model_upload_notification.txt', time_to_upload=model_upload_time,
+                             total_time=model_creation_time),
+        recipients=['listenbrainz-observability@metabrainz.org'],
+        from_name='ListenBrainz',
+        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
+    )
+
+def handle_candidate_sets(data):
+    """ Send an email after candidate sets have been successfully uploaded to HDFS.
+    """
+    if current_app.config['TESTING']:
+        return
+
+    candidate_sets_upload_time = data['candidate_sets_upload_time']
+    candidate_set_creation_time = data['total_time']
+    from_date = data['from_date']
+    to_date = data['to_date']
+    send_mail(
+        subject='Candidate sets created and successfully uploaded to HDFS',
+        text=render_template('emails/cf_candidate_sets_upload_notification.txt', time_to_upload=candidate_sets_upload_time,
+                             from_date=from_date, to_date=to_date, total_time=candidate_set_creation_time),
+        recipients=['listenbrainz-observability@metabrainz.org'],
+        from_name='ListenBrainz',
+        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
+   )
+
+
 def handle_recommendations(data):
+    """ Take recommended recordings for a user and save it in the db.
+    """
     musicbrainz_id = data['musicbrainz_id']
     user = db_user.get_by_mb_id(musicbrainz_id)
     if not user:
-        current_app.logger.critical("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
+        current_app.logger.critical("Generated recommendations for a user that doesn't exist in the Postgres database: {}" \
+                                    .format(musicbrainz_id))
         return
 
-    #write email
+    if is_new_cf_recording_recommendation_batch():
+        notify_cf_recording_recommendations_update()
 
-    current_app.logger.debug('inserting recommendations for user "{}"'.format(musicbrainz_id))
+    current_app.logger.debug("inserting recommendation for {}".format(musicbrainz_id))
+    top_artist = data['top_artist']
+    similar_artist = data['similar_artist']
+    print(user['id'])
+    for recording_mbid in top_artist:
+        db_rec.insert_user_recommendation(user['id'], recording_mbid, artist_type='top_artist')
+
+    for recording_mbid in similar_artist:
+        db_rec.insert_user_recommendation(user['id'], recording_mbid, artist_type='similar_artist')
+
+    current_app.logger.debug("recommendation for {} inserted".format(musicbrainz_id))

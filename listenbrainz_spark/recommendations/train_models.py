@@ -238,4 +238,10 @@ def main():
     with open(metadata_file_path, 'w') as f:
         json.dump(recommendation_metadata,f)
 
-    return [{'type': 'model'}]
+    message = [{
+        'type': 'cf_recording_model',
+        'model_upload_time': str(datetime.utcnow()),
+        'total_time': '{:.2f}'.format((time() - ti) / 3600),
+    }]
+
+    return message

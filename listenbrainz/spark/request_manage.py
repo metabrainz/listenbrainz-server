@@ -47,7 +47,6 @@ def _prepare_query_message(query, params=None):
         raise InvalidSparkRequestError(query)
 
     message = {'query': possible_queries[query]['name']}
-
     required_params = set(possible_queries[query]['params'])
     given_params = set(params.keys())
     if required_params != given_params:
@@ -124,22 +123,22 @@ def request_import_new_full_dump():
 def request_dataframes():
     """ Send the cluster a request to create dataframes.
     """
-    send_request_to_spark_cluster(_prepare_query_message('recommendations.create_dataframes'))
+    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.create_dataframes'))
 
 @cli.command(name='request_model')
 def request_model():
     """ Send the cluster request to train the data.
     """
-    send_request_to_spark_cluster(_prepare_query_message('recommendations.train_model'))
+    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.train_model'))
 
-@cli.command(name='request_candidate_sets'):
+@cli.command(name='request_candidate_sets')
 def request_candidate_sets():
     """ Send the cluster the request to generate candidate sets.
     """
-    send_request_to_spark_cluster(_prepare_query_message('recommendations.candidate_sets'))
+    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.candidate_sets'))
 
-@cli.command(name='request_recommendations'):
+@cli.command(name='request_recommendations')
 def request_recommendations():
     """ Send the cluster the request to generate recommendations.
     """
-    send_request_to_spark_cluster(_prepare_query_message('recommendations.recommend'))
+    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.recommend'))
