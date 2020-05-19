@@ -2,22 +2,21 @@ import time
 from collections import defaultdict
 from datetime import datetime
 from flask import current_app
+from pyspark.sql import catalog
 
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
 from listenbrainz_spark.stats import replace_months, run_query, adjust_days, replace_days
-from listenbrainz_spark.stats.user.utils import filter_listens, get_latest_listen_ts
+from listenbrainz_spark.stats.user.utils import filter_listens, get_latest_listen_ts, get_last_monday
 from listenbrainz_spark.utils import get_listens
 
 
 def get_artists(table):
     """ Get artist information (artist_name, artist_msid etc) for every user
-        ordered by listen count in a particular time range.
+        ordered by listen count
 
         Args:
             table (str): name of the temporary table.
-            from_date (str): UNIX timestamp of start time, defaults to LAST_FM_FOUNDING_YEAR
-            to_date (str): UNIX timestamp of end time, defaults to NOW
 
         Returns:
             artists: A dict of dicts which can be depicted as:
@@ -59,12 +58,12 @@ def get_artists(table):
 
 
 def get_artists_last_week():
+    """ Get the last_week top artists for all users """
     current_app.logger.debug("Calculating artist_last_week...")
 
     date = get_latest_listen_ts()
 
-    # Get date for Monday before "date"
-    to_date = adjust_days(date, date.weekday())
+    to_date = get_last_monday(date)
     from_date = adjust_days(to_date, 7)
 
     listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
@@ -72,14 +71,17 @@ def get_artists_last_week():
     filtered_df.createOrReplaceTempView('user_artists_last_week')
 
     artist_data = get_artists('user_artists_last_week')
-    messages = create_messages(artist_data, 'user_artists', 'last_week', from_date.timestamp(), to_date.timestamp())
+    messages = create_messages(artist_data=artist_data, _type='user_artists', _range='last_week',
+                               from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
+    catalog.dropTempView('user_artists_last_week')
     current_app.logger.debug("Done!")
 
     return messages
 
 
 def get_artists_last_month():
+    """ Get the last_month top artists for all users """
     current_app.logger.debug("Calculating artist_last_month...")
 
     to_date = get_latest_listen_ts()
@@ -89,14 +91,18 @@ def get_artists_last_month():
     listens_df.createOrReplaceTempView('user_artists_last_month')
 
     artist_data = get_artists('user_artists_last_month')
-    messages = create_messages(artist_data, 'user_artists', 'last_month', from_date.timestamp(), to_date.timestamp())
 
+    messages = create_messages(artist_data=artist_data, _type='user_artists', _range='last_month',
+                               from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
+
+    catalog.dropTempView('user_artists_last_month')
     current_app.logger.debug("Done!")
 
     return messages
 
 
 def get_artists_last_year():
+    """ Get the last_year top artists for all users """
     current_app.logger.debug("Calculating artist_last_year...")
 
     to_date = get_latest_listen_ts()
@@ -106,14 +112,17 @@ def get_artists_last_year():
     listens_df.createOrReplaceTempView('user_artists_last_year')
 
     artist_data = get_artists('user_artists_last_year')
-    messages = create_messages(artist_data, 'user_artists', 'last_year', from_date.timestamp(), to_date.timestamp())
+    messages = create_messages(artist_data=artist_data, _type='user_artists', _range='last_year',
+                               from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
+    catalog.dropTempView('user_artists_last_year')
     current_app.logger.debug("Done!")
 
     return messages
 
 
 def get_artists_all_time():
+    """ Get the all_time top artists for all users """
     current_app.logger.debug("Calculating artist_all_time...")
 
     to_date = datetime.now()
@@ -123,14 +132,29 @@ def get_artists_all_time():
     listens_df.createOrReplaceTempView('user_artists_all_time')
 
     artist_data = get_artists('user_artists_all_time')
-    messages = create_messages(artist_data, 'user_artists', 'all_time', from_date.timestamp(), to_date.timestamp())
+    messages = create_messages(artist_data=artist_data, _type='user_artists', _range='all_time',
+                               from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
+    catalog.dropTempView('user_artists_all_time')
     current_app.logger.debug("Done!")
 
     return messages
 
 
 def create_messages(artist_data, _type, _range, from_ts, to_ts):
+    """
+    Create messages to send the data to the webserver via RabbitMQ
+
+    Args:
+        artist_data (dict): Data to sent to the webserver
+        _type (str): The type of statistics calculated
+        _range (str): The range for which the statistics have been calculated
+        from_ts (int): The UNIX timestamp of start time of the stats
+        to_ts (int): The UNIX timestamp of end time of the stats
+
+    Returns:
+        messages (list): A list of messages to be sent via RabbitMQ
+    """
     messages = []
     for user_name, user_artists in artist_data.items():
         messages.append({
