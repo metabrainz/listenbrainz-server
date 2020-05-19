@@ -128,8 +128,9 @@ class UserTestCase(DatabaseTestCase):
 
         user = db_user.get(user_id)
         self.assertIsNotNone(user)
-        with open(self.path_to_data_file('user_top_artists.json')) as f:
-            artists = ujson.load(f)
+        artists = {
+            'range': 'all_time'
+        }
         db_stats.insert_user_stats(
             user_id=user_id,
             artists=artists,

@@ -65,9 +65,10 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         props = ujson.loads(self.get_context_variable('props'))
         self.assertIsNone(props['artist_count'])
 
-        # check that artist count is shown if stats have been calculated
-        with open(self.path_to_data_file('user_top_artists.json')) as f:
-            artists = json.load(f)
+        artists = {
+            'range': 'all_time',
+            'count': 5
+        }
         db_stats.insert_user_stats(
             user_id=self.user.id,
             artists=artists,
