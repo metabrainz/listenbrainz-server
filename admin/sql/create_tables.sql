@@ -134,7 +134,7 @@ CREATE TABLE statistics.user (
     last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE lovehate (
+CREATE TABLE recording_lovehate (
     id                      SERIAL, -- PK
     user_id                 INTEGER NOT NULL, -- FK to "user".id
     recording_msid          UUID NOT NULL,
