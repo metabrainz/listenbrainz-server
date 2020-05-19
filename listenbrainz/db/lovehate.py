@@ -27,6 +27,7 @@ def insert_lovehate_record(user_id, recording_msid, score):
             }
         )
 
+
 def delete_lovehate_record(user_id, recording_msid):
     """ Deletes the record for a user's loved/hated recording from the database.
         Args:
