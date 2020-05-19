@@ -5,7 +5,9 @@ from listenbrainz_spark.exceptions import DumpNotFoundException
 
 from flask import current_app
 
-MAPPING_DUMP_ID_POS = 3
+# mbid_msid_mapping_with_matchable is used.
+# refer to: http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/labs/mappings/
+MAPPING_DUMP_ID_POS = 5
 ARTIST_RELATION_DUMP_ID_POS = 5
 
 FULL = 'full'
@@ -108,12 +110,6 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
                         MAPPING_DUMP_ID_POS
                     )
         return dest_path
-
-    def download_msid_mbid_mapping_with_text(self):
-        pass
-
-    def download_msid_mbid_mapping_with_matchable(self):
-        pass
 
     def download_listens(self, directory, listens_dump_id=None, dump_type=FULL):
         """ Download listens to dir passed as an argument.

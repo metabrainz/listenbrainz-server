@@ -1,0 +1,46 @@
+MusicBrainz Artist-Artist and Artist_Credit-Artist_Credit relations
+===================================================================
+
+This data dump contains artist to artist or artist_credit to artist_credit
+relations that indicate how strongly (or not) an artist is related to 
+another artist.
+
+Each of the two tables contain a score (from 0.0 to 1.0) of the
+relationship between the two entities and the ids and names of 
+the entities. Each relation is written to a line of text as a JSON
+document.
+
+
+artist-artist
+-------------
+
+This dump contain the score, mbids (mbid_0 and mbid_1) and the names of the artists (name_0 and name_1):
+
+{
+    "score" :1.0,
+    "mbid_0":"1f9df192-a621-4f54-8850-2c5373b7eac9",
+    "name_0":"Ludwig van Beethoven",
+    "mbid_1":"b972f589-fb0e-474e-b64a-803b0364fa75",
+    "name_1":"Wolfgang Amadeus Mozart"
+}
+
+This document expresses that Ludwig van Beethoven and Wolfgang Amadeus Mozart are very strongly (the strongest, in fact!) 
+related to each other.
+
+
+artist_credit-artist_credit
+---------------------------
+
+This dump contain the score, artist_credit_ids (id_0 and id_1) and the names of the artist_credits (name_0 and name_1):
+
+{
+    "score" :1.0,
+    "id_0"  :1021,
+    "name_0":"Ludwig van Beethoven",
+    "id_1"  :11285,
+    "name_1":"Wolfgang Amadeus Mozart"
+}
+
+This document expresses that the artist credit Ludwig van Beethoven and artist credit Wolfgang Amadeus Mozart are very 
+strongly related to each other.
+

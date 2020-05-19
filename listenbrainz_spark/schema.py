@@ -58,9 +58,15 @@ msid_mbid_mapping_schema = [
     StructField('mb_artist_credit_mbids', ArrayType(StringType()), nullable=False),
     StructField('mb_recording_mbid', StringType(), nullable=False),
     StructField('mb_release_mbid', StringType(), nullable=False),
+    StructField('msb_artist_credit_name', StringType(), nullable=False),
+    StructField('msb_artist_credit_name_matchable', StringType(), nullable=False),
     StructField('msb_artist_msid', StringType(), nullable=False),
     StructField('msb_recording_msid', StringType(), nullable=False),
     StructField('msb_release_msid', StringType(), nullable=False),
+    StructField('msb_recording_name', StringType(), nullable=False),
+    StructField('msb_recording_name_matchable', StringType(), nullable=False),
+    StructField('msb_release_name', StringType(), nullable=False),
+    StructField('msb_release_name_matchable', StringType(), nullable=False),
 ]
 
 artist_relation_schema =[
@@ -170,7 +176,13 @@ def convert_mapping_to_row(mapping):
         mb_artist_credit_mbids=mapping.get('mb_artist_credit_mbids'),
         mb_recording_mbid=mapping.get('mb_recording_mbid'),
         mb_release_mbid=mapping.get('mb_release_mbid'),
+        msb_artist_credit_name=mapping.get('msb_artist_credit_name'),
+        msb_artist_credit_name_matchable=mapping.get('msb_artist_credit_name_matchable'),
         msb_artist_msid=mapping.get('msb_artist_msid'),
         msb_recording_msid=mapping.get('msb_recording_msid'),
         msb_release_msid=mapping.get('msb_release_msid'),
+        msb_recording_name=mapping.get('msb_recording_name'),
+        msb_recording_name_matchable=mapping.get('msb_recording_name_matchable'),
+        msb_release_name=mapping.get('msb_release_name'),
+        msb_release_name_matchable=mapping.get('msb_release_name_matchable'),
     )
