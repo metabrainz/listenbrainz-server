@@ -98,7 +98,7 @@ def request_user_stats(week, month, year):
         return
 
     if (month):
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.last_month'))
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.month'))
         return
 
     if (year):

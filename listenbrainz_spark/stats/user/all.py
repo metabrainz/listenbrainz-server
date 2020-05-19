@@ -5,7 +5,7 @@ def calculate():
     messages = []
 
     messages = messages + user_artists.get_artists_week()
-    messages = messages + user_artists.get_artists_last_month()
+    messages = messages + user_artists.get_artists_month()
     messages = messages + user_artists.get_artists_last_year()
     messages = messages + user_artists.get_artists_all_time()
 

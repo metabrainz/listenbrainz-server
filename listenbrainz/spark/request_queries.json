@@ -9,8 +9,8 @@
     "description": "Artist statistics for all users in the last week",
     "params": []
   },
-  "stats.user.artist.last_month": {
-    "name": "stats.user.artist.last_month",
+  "stats.user.artist.month": {
+    "name": "stats.user.artist.month",
     "description": "Artist statistics for all users in the last month",
     "params": []
   },
