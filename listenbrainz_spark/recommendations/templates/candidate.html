@@ -20,35 +20,21 @@ td, th {
 	<center>
 		<h1>Data Preprocessing to generate recommendations</h1>
 	</center>
-	<p>The following table gives information about total time taken to generate three candidate sets for user: </p>
-	<table>
-		<tr>
-			<th>user name</th>
-			<th>time(s)</th>
-		</tr>
-		{% for user_name, metadata in user_data.items() -%}
-		<tr>
-			<td>{{ user_name }}</td>
-			<td>{{ metadata['time'] }}</td>
-		</tr>
-		{% endfor -%}
-	</table>
 	<p>To get personalized recommendations for users, candidate sets are generated for each user consisting of recording ids and the user id using the underlying procedure.</p>
-	{% for user_name, metadata in user_data.items() -%}
+    <p>Total time taken to generate candidates set for all users: <b>{{ total_time }}m</b></p>
+	{% for user_name, data in user_data.items() -%}
 	<p>Similar artists set for <b>{{ user_name }}</b></p>
 		<table>
 			<tr>
 				<th>Top Artist</th>
-				{% for i in range(10) -%}
 				<th>Similar artist</th>
-				{% endfor -%}
+				<th>Score</th>
 			</tr>
-			{% for top_artist, similar_artists in metadata['artists'].items() -%}
+			{% for i in data -%}
 			<tr>
-				<td>{{ top_artist }}</td>
-				{% for name in similar_artists -%}
-				<td>{{ name }}</td>
-				{% endfor -%}
+				<td>{{ i[0] }}</td>
+				<td>{{ i[1] }}</td>
+				<td>{{ i[2] }}</td>
 			</tr>
 			{% endfor -%}
 		</table>

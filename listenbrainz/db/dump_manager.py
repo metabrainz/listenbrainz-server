@@ -49,7 +49,7 @@ def send_dump_creation_notification(dump_name, dump_type):
     if not current_app.config['TESTING']:
         dump_link = 'http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/{}/{}'.format(dump_type, dump_name)
         send_mail(
-            subject="ListenBrainz dump created - {}".format(dump_name),
+            subject="ListenBrainz {} dump created - {}".format(dump_type, dump_name),
             text=render_template('emails/data_dump_created_notification.txt', dump_name=dump_name, dump_link=dump_link),
             recipients=['listenbrainz-observability@metabrainz.org'],
             from_name='ListenBrainz',

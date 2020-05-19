@@ -7,8 +7,10 @@ version: "3.4"
 services:
 
   db:
-    image: postgres:9.5.3
+    image: postgres:12.3
     command: postgres -F
+    environment:
+      POSTGRES_PASSWORD: 'postgres'
 
   redis:
     image: redis:5.0.3
