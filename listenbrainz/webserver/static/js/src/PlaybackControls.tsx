@@ -139,7 +139,7 @@ export default class PlaybackControls extends React.Component<
           }`}
         >
           <div className="currently-playing">
-            <h2 className="song-name">{trackName || "—"}</h2>
+            {trackName && <h2 className="song-name">{trackName}</h2>}
             {artistName && <h3 className="artist-name">{artistName}</h3>}
             <div
               className="progress"

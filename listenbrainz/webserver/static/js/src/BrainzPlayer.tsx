@@ -249,7 +249,7 @@ export default class BrainzPlayer extends React.Component<
       this.playListen(currentListen, currentDataSourceIndex + 1);
     } else {
       this.handleWarning(
-        "We couldn't find a matching song on any service we tried",
+        "We couldn't find a matching song on any music service we tried",
         "Oh no !"
       );
       this.playNextTrack();

@@ -402,11 +402,11 @@ export default class RecentListens extends React.Component<
                       .map((listen) => {
                         return (
                           <tr
-                            key={`${listen.listened_at}-${listen.track_metadata.additional_info?.recording_msid}-${listen.user_name}`}
+                            key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
                             onDoubleClick={this.playListen.bind(this, listen)}
-                            className={`listen ${
-                              this.isCurrentListen(listen) ? "info" : ""
-                            } ${listen.playing_now ? "playing_now" : ""}`}
+                            className={`listen${
+                              this.isCurrentListen(listen) ? " info" : ""
+                            }${listen.playing_now ? " playing_now" : ""}`}
                           >
                             <td>{getTrackLink(listen)}</td>
                             <td>{getArtistLink(listen)}</td>
