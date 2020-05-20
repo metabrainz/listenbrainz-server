@@ -9,8 +9,13 @@ from flask import current_app, render_template
 from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
 
+<<<<<<< HEAD
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7 # days
+=======
+TIME_TO_CONSIDER_STATS_AS_OLD = 12  # hours
+TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
+>>>>>>> PEP-8 fixes
 
 
 def is_new_user_stats_batch():
@@ -26,6 +31,7 @@ def is_new_user_stats_batch():
 
     return datetime.now(timezone.utc) - last_update_ts > timedelta(minutes=TIME_TO_CONSIDER_STATS_AS_OLD)
 
+
 def is_new_cf_recording_recommendation_batch():
     """ Returns True if this batch of recommendations is new, False otherwise
     """
@@ -34,6 +40,7 @@ def is_new_cf_recording_recommendation_batch():
         return True
 
     return datetime.now(timezone.utc) - create_ts > timedelta(days=TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD)
+
 
 def notify_cf_recording_recommendations_update():
     """ Send an email to notify recommendations are being written into db.
@@ -49,7 +56,12 @@ def notify_cf_recording_recommendations_update():
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
     )
 
+<<<<<<< HEAD
 def notify_user_stats_update(stat_type):
+=======
+
+def notify_user_stats_update():
+>>>>>>> PEP-8 fixes
     if not current_app.config['TESTING']:
         send_mail(
             subject="New user stats are being written into the DB - ListenBrainz",
@@ -98,6 +110,7 @@ def handle_dump_imported(data):
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
     )
 
+
 def handle_dataframes(data):
     """ Send an email after dataframes have been successfully created and uploaded to HDFS.
     """
@@ -117,6 +130,7 @@ def handle_dataframes(data):
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
     )
 
+
 def handle_model(data):
     """ Send an email after trained data (model) has been successfully uploaded to HDFS.
     """
@@ -133,6 +147,7 @@ def handle_model(data):
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
     )
+
 
 def handle_candidate_sets(data):
     """ Send an email after candidate sets have been successfully uploaded to HDFS.
@@ -151,7 +166,7 @@ def handle_candidate_sets(data):
         recipients=['listenbrainz-observability@metabrainz.org'],
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
-   )
+    )
 
 
 def handle_recommendations(data):
@@ -160,7 +175,7 @@ def handle_recommendations(data):
     musicbrainz_id = data['musicbrainz_id']
     user = db_user.get_by_mb_id(musicbrainz_id)
     if not user:
-        current_app.logger.critical("Generated recommendations for a user that doesn't exist in the Postgres database: {}" \
+        current_app.logger.critical("Generated recommendations for a user that doesn't exist in the Postgres database: {}"
                                     .format(musicbrainz_id))
         return
 

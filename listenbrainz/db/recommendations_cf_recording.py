@@ -26,6 +26,7 @@ import sqlalchemy
 from listenbrainz import db
 from flask import current_app
 
+
 def get_timestamp_for_last_recording_recommended():
     """ Get the time when recommendation_cf_recording table was last updated
     """
@@ -33,10 +34,11 @@ def get_timestamp_for_last_recording_recommended():
         result = connection.execute(sqlalchemy.text("""
             SELECT MAX(created) as created_ts
               FROM recommendation.cf_recording
-            """
-        ))
+            """)
+        )
         row = result.fetchone()
         return row['created_ts'] if row else None
+
 
 def insert_user_recommendation(user_id, recording_mbid, artist_type=None):
     """ Insert recommended recording for a user in the db.
@@ -53,5 +55,5 @@ def insert_user_recommendation(user_id, recording_mbid, artist_type=None):
                 'user_id': user_id,
                 'recording_mbid': recording_mbid,
                 'artist_type': artist_type,
-        }
-    )
+            }
+        )

@@ -119,11 +119,13 @@ def request_import_new_full_dump():
     """
     send_request_to_spark_cluster(_prepare_query_message('import.dump.full'))
 
+
 @cli.command(name="request_dataframes")
 def request_dataframes():
     """ Send the cluster a request to create dataframes.
     """
     send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.create_dataframes'))
+
 
 @cli.command(name='request_model')
 def request_model():
@@ -131,11 +133,13 @@ def request_model():
     """
     send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.train_model'))
 
+
 @cli.command(name='request_candidate_sets')
 def request_candidate_sets():
     """ Send the cluster the request to generate candidate sets.
     """
     send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.candidate_sets'))
+
 
 @cli.command(name='request_recommendations')
 def request_recommendations():

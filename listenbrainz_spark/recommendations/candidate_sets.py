@@ -46,6 +46,7 @@ SAVE_CANDIDATE_HTML = True
 #       'user_id', 'recording_id'
 #   ]
 
+
 def get_dates_to_generate_candidate_sets(mapped_df):
     """ Get window to fetch listens ti generate candidate sets.
 
@@ -324,7 +325,7 @@ def main():
         save_candidate_html(user_data, total_time)
         current_app.logger.info('Done!')
 
-    message =  [{
+    message = [{
         'type': 'cf_recording_candidate_sets',
         'candidate_sets_upload_time': str(datetime.utcnow()),
         'total_time': total_time,
