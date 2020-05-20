@@ -64,12 +64,18 @@ class RequestManageTestCase(unittest.TestCase):
 		received_message = request_manage._prepare_query_message('stats.user.all')
 		self.assertEqual(expected_message, received_message)
 
-		expected_message = ujson.dumps({
-			'query': 'stats.user.for_user',
-			'params': {
-				'musicbrainz_id': 'iliekcomputers'
-			},
-		})
-		received_message = request_manage._prepare_query_message('stats.user.for_user', {'musicbrainz_id': 'iliekcomputers'})
+		expected_message = ujson.dumps({'query': 'stats.user.artist.week'})
+		received_message = request_manage._prepare_query_message('stats.user.artist.week)
 		self.assertEqual(expected_message, received_message)
 
+		expected_message = ujson.dumps({'query': 'stats.user.artist.month'})
+		received_message = request_manage._prepare_query_message('stats.user.artist.month')
+		self.assertEqual(expected_message, received_message)
+
+		expected_message = ujson.dumps({'query': 'stats.user.artist.year'})
+		received_message = request_manage._prepare_query_message('stats.user.artist.year')
+		self.assertEqual(expected_message, received_message)
+
+		expected_message = ujson.dumps({'query': 'stats.user.artist.all_time'})
+		received_message = request_manage._prepare_query_message('stats.user.artist.all_time')
+		self.assertEqual(expected_message, received_message)

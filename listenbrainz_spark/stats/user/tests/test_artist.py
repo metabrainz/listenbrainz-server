@@ -2,18 +2,18 @@ import json
 import os
 from collections import defaultdict
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import listenbrainz_spark.stats.user.artist as artist_stats
 from listenbrainz_spark import utils
+from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
+from listenbrainz_spark.stats.user.utils import get_latest_listen_ts
 from listenbrainz_spark.tests import SparkTestCase
 from pyspark.sql import Row
 
-TEST_DATA_PATH = '../../../testdata'
 
-
-class ArtistTestCase(SparkTestCase):
+class ArtistIntegrationTestCase(SparkTestCase):
     # use path_ as prefix for all paths in this class.
     path_ = LISTENBRAINZ_DATA_DIRECTORY
 
@@ -64,14 +64,84 @@ class ArtistTestCase(SparkTestCase):
 
         self.assertDictEqual(received, expected)
 
-    # @patch('listenbrainz_spark.stats.user.utils.get_latest_listen_ts')
-    # @patch('pyspark.sql.DataFrame.createOrReplaceTempView')
-    # @patch('listenbrainz_spark.stats.user.artist.get_artists', return_value={'user1': 'artist1'})
-    # @patch('listenbrainz_spark.stats.user.artist.create_messages')
-    # def test_get_artist_week(self, create_messages_mock, get_artists_mock,
-    #                          createOrReplaceTempView_mock, get_latest_listen_ts_mock):
-    #     artist_stats.get_artists_week()
 
-    #     get_latest_listen_ts_mock.return_value = datetime(2020, 5, 19)
-    #     get_latest_listen_ts_mock.assert_called_once()
+class ArtistUnitTestCase(SparkTestCase):
+    @patch('listenbrainz_spark.stats.user.artist.get_latest_listen_ts', return_value=datetime(2020, 5, 20))
+    @patch('listenbrainz_spark.stats.user.artist.get_listens')
+    @patch('listenbrainz_spark.stats.user.artist.filter_listens')
+    @patch('listenbrainz_spark.stats.user.artist.get_artists', return_value='artist_data')
+    @patch('listenbrainz_spark.stats.user.artist.create_messages')
+    def test_get_artist_week(self, mock_create_messages, mock_get_artists, mock_filter_listens, mock_get_listens, mock_get_latest_listen_ts):
+        mock_df = MagicMock()
+        mock_get_listens.return_value = mock_df
+        mock_filtered_df = MagicMock()
+        mock_filter_listens.return_value = mock_filtered_df
 
+        artist_stats.get_artists_week()
+        from_date = datetime(2020, 5, 11)
+        to_date = datetime(2020, 5, 18)
+
+        mock_get_latest_listen_ts.assert_called_once()
+        mock_get_listens.assert_called_with(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
+        mock_filter_listens.assert_called_with(mock_df, from_date, to_date)
+        mock_filtered_df.createOrReplaceTempView.assert_called_with('user_artists_week')
+        mock_get_artists.assert_called_with('user_artists_week')
+        mock_create_messages.assert_called_with(artist_data='artist_data', stats_type='user_artists',
+                                                stats_range='week', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
+
+    @patch('listenbrainz_spark.stats.user.artist.get_latest_listen_ts', return_value=datetime(2020, 5, 20))
+    @patch('listenbrainz_spark.stats.user.artist.get_listens')
+    @patch('listenbrainz_spark.stats.user.artist.get_artists', return_value='artist_data')
+    @patch('listenbrainz_spark.stats.user.artist.create_messages')
+    def test_get_artist_month(self, mock_create_messages, mock_get_artists, mock_get_listens, mock_get_latest_listen_ts):
+        mock_df = MagicMock()
+        mock_get_listens.return_value = mock_df
+
+        artist_stats.get_artists_month()
+        from_date = datetime(2020, 5, 1)
+        to_date = datetime(2020, 5, 20)
+
+        mock_get_latest_listen_ts.assert_called_once()
+        mock_get_listens.assert_called_with(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
+        mock_df.createOrReplaceTempView.assert_called_with('user_artists_month')
+        mock_get_artists.assert_called_with('user_artists_month')
+        mock_create_messages.assert_called_with(artist_data='artist_data', stats_type='user_artists',
+                                                stats_range='month', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
+
+    @patch('listenbrainz_spark.stats.user.artist.get_latest_listen_ts', return_value=datetime(2020, 5, 20))
+    @patch('listenbrainz_spark.stats.user.artist.get_listens')
+    @patch('listenbrainz_spark.stats.user.artist.get_artists', return_value='artist_data')
+    @patch('listenbrainz_spark.stats.user.artist.create_messages')
+    def test_get_artist_year(self, mock_create_messages, mock_get_artists, mock_get_listens, mock_get_latest_listen_ts):
+        mock_df = MagicMock()
+        mock_get_listens.return_value = mock_df
+
+        artist_stats.get_artists_year()
+        from_date = datetime(2020, 1, 1)
+        to_date = datetime(2020, 5, 20)
+
+        mock_get_latest_listen_ts.assert_called_once()
+        mock_get_listens.assert_called_with(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
+        mock_df.createOrReplaceTempView.assert_called_with('user_artists_year')
+        mock_get_artists.assert_called_with('user_artists_year')
+        mock_create_messages.assert_called_with(artist_data='artist_data', stats_type='user_artists',
+                                                stats_range='year', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
+
+    @patch('listenbrainz_spark.stats.user.artist.get_latest_listen_ts', return_value=datetime(2020, 5, 20))
+    @patch('listenbrainz_spark.stats.user.artist.get_listens')
+    @patch('listenbrainz_spark.stats.user.artist.get_artists', return_value='artist_data')
+    @patch('listenbrainz_spark.stats.user.artist.create_messages')
+    def test_get_artist_all_time(self, mock_create_messages, mock_get_artists, mock_get_listens, mock_get_latest_listen_ts):
+        mock_df = MagicMock()
+        mock_get_listens.return_value = mock_df
+
+        artist_stats.get_artists_all_time()
+        from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
+        to_date = datetime(2020, 5, 20)
+
+        mock_get_latest_listen_ts.assert_called_once()
+        mock_get_listens.assert_called_with(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
+        mock_df.createOrReplaceTempView.assert_called_with('user_artists_all_time')
+        mock_get_artists.assert_called_with('user_artists_all_time')
+        mock_create_messages.assert_called_with(artist_data='artist_data', stats_type='user_artists',
+                                                stats_range='all_time', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())

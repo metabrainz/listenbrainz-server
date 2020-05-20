@@ -21,6 +21,7 @@ class UtilsTestCase(SparkTestCase):
     def test_get_latest_listen_ts(self):
         date = datetime(2020, 5, 18)
         df = utils.create_dataframe(Row(listened_at=date), schema=None)
+        df = df.union(utils.create_dataframe(Row(listened_at=adjust_days(date, 7)), schema=None))
         utils.save_parquet(df, '{}/2020/5.parquet'.format(self.path_))
 
         result = user_utils.get_latest_listen_ts()

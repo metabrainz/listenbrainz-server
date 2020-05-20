@@ -79,7 +79,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')
         props = ujson.loads(self.get_context_variable('props'))
-        self.assertEqual(props['artist_count'], '2')
+        self.assertEqual(props['artist_count'], '5')
         self.assertDictEqual(props['spotify'], {})
 
     @mock.patch('listenbrainz.webserver.views.user.spotify')

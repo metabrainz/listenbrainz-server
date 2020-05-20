@@ -54,4 +54,4 @@ Now, you have everything needed to work with Spark. You can trigger a request li
 
 .. code-block:: bash
 
-    ./develop.sh manage spark request_all_user_stats
+    ./develop.sh manage spark request_user_stats

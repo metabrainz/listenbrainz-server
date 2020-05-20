@@ -103,7 +103,7 @@ def get_artists_year():
     current_app.logger.debug("Calculating artist_year...")
 
     to_date = get_latest_listen_ts()
-    from_date = replace_months(to_date, 1)
+    from_date = replace_days(replace_months(to_date, 1), 1)
 
     listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
     listens_df.createOrReplaceTempView('user_artists_year')
@@ -121,7 +121,7 @@ def get_artists_all_time():
     """ Get the all_time top artists for all users """
     current_app.logger.debug("Calculating artist_all_time...")
 
-    to_date = datetime.now()
+    to_date = get_latest_listen_ts()
     from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
 
     listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
