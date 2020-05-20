@@ -11,7 +11,8 @@ from listenbrainz_spark.stats import run_query
 from listenbrainz_spark import stats, config, path, schema
 from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark.exceptions import FileNotSavedException, ViewNotRegisteredException, PathNotFoundException, \
-    FileNotFetchedException, DataFrameNotCreatedException, DataFrameNotAppendedException, HDFSDirectoryNotDeletedException
+    FileNotFetchedException, DataFrameNotCreatedException, DataFrameNotAppendedException, \
+    HDFSDirectoryNotDeletedException, HDFSException
 from flask import current_app
 from hdfs.util import HdfsError
 from brainzutils.flask import CustomFlask
@@ -183,8 +184,9 @@ def get_listens(from_date, to_date, dest_path):
         from_date = stats.replace_days(from_date, 1)
     if not df:
         current_app.logger.error('Listening history missing form HDFS')
-        sys.exit(-1)
+        raise HDFSException("Listening history missing from HDFS")
     return df
+
 
 def save_parquet(df, path):
     """ Save dataframe as parquet to given path in HDFS.

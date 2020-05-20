@@ -12,7 +12,9 @@ import pyspark.sql.functions as f
 from pyspark.sql.types import StructType, StructField, IntegerType
 
 TEST_PLAYCOUNTS_PATH = '/tests/playcounts.parquet'
+TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'testdata')
 PLAYCOUNTS_COUNT = 100
+
 
 class SparkTestCase(unittest.TestCase):
 
@@ -156,3 +158,11 @@ class SparkTestCase(unittest.TestCase):
         )
         mapped_listens_df = df.union(utils.create_dataframe(mapped_listens_row_2, schema=None))
         return mapped_listens_df
+
+    def path_to_data_file(self, file_name):
+        """ Returns the path of the test data file relative to listenbrainz_spark/test/__init__.py.
+
+            Args:
+                file_name: the name of the data file
+        """
+        return os.path.join(TEST_DATA_PATH, file_name)

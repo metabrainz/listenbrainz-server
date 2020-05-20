@@ -80,7 +80,6 @@ class UserTestCase(DatabaseTestCase):
         user = db_user.get_by_mb_id(user['musicbrainz_id'])
         self.assertEqual(val, int(user['latest_import'].strftime('%s')))
 
-
     def test_reset_latest_import(self):
         user = db_user.get_or_create(7, 'resetlatestimportuser')
         self.assertEqual(int(user['latest_import'].strftime('%s')), 0)
@@ -129,12 +128,14 @@ class UserTestCase(DatabaseTestCase):
 
         user = db_user.get(user_id)
         self.assertIsNotNone(user)
+        artists = {
+            'range': 'all_time'
+        }
         db_stats.insert_user_stats(
             user_id=user_id,
-            artists={},
+            artists=artists,
             recordings={},
             releases={},
-            artist_count=2,
         )
         user_stats = db_stats.get_all_user_stats(user_id)
         self.assertIsNotNone(user_stats)
@@ -156,7 +157,6 @@ class UserTestCase(DatabaseTestCase):
         self.assertIsNone(user)
         token = db_spotify.get_token_for_user(user_id)
         self.assertIsNone(token)
-
 
     def test_validate_usernames(self):
         db_user.create(11, 'eleven')

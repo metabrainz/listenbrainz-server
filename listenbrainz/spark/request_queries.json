@@ -1,17 +1,32 @@
 {
-    "stats.user.all": {
-        "name": "stats.user.all",
-        "description": "All user statistics that ListenBrainz calculates for all ListenBrainz users",
-        "params": []
-    },
-    "stats.user.for_user": {
-        "name": "stats.user.for_user",
-        "description": "All user statistics that ListenBrainz calculates for the specified user",
-        "params": ["musicbrainz_id"]
-    },
-    "import.dump.full": {
-        "name": "import.dump.full",
-        "description": "Import a new full dump into the spark cluster",
-        "params": []
-    }
+  "stats.user.all": {
+    "name": "stats.user.all",
+    "description": "All user statistics that ListenBrainz calculates for all ListenBrainz users",
+    "params": []
+  },
+  "stats.user.artist.week": {
+    "name": "stats.user.artist.week",
+    "description": "Artist statistics for all users in the last week",
+    "params": []
+  },
+  "stats.user.artist.month": {
+    "name": "stats.user.artist.month",
+    "description": "Artist statistics for all users in the last month",
+    "params": []
+  },
+  "stats.user.artist.year": {
+    "name": "stats.user.artist.year",
+    "description": "Artist statistics for all users in the last year",
+    "params": []
+  },
+  "stats.user.artist.all_time": {
+    "name": "stats.user.artist.all_time",
+    "description": "All time artist statistics for all users",
+    "params": []
+  },
+  "import.dump.full": {
+    "name": "import.dump.full",
+    "description": "Import a new full dump into the spark cluster",
+    "params": []
+  }
 }

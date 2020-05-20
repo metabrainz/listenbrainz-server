@@ -12,6 +12,7 @@ QUERIES_JSON_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'r
 
 cli = click.Group()
 
+
 class InvalidSparkRequestError(Exception):
     pass
 
@@ -85,11 +86,33 @@ def send_request_to_spark_cluster(message):
             current_app.logger.error('Could not send message to spark cluster: %s', ujson.dumps(message), exc_info=True)
 
 
-@cli.command(name="request_all_user_stats")
-def request_all_user_stats():
+@cli.command(name="request_user_stats")
+@click.option("--week", is_flag=True, help="Request weekly statistics")
+@click.option("--month", is_flag=True, help="Request monthly statistics")
+@click.option("--year", is_flag=True, help="Request yearly statistics")
+@click.option("--all-time", is_flag=True, help="Request all time statistics")
+def request_user_stats(week, month, year, all_time):
     """ Send a user stats request to the spark cluster
     """
+    if week:
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.week'))
+        return
+
+    if month:
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.month'))
+        return
+
+    if year:
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.year'))
+        return
+
+    if all_time:
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.all_time'))
+        return
+
+    # Default if no specific flag is provided
     send_request_to_spark_cluster(_prepare_query_message('stats.user.all'))
+
 
 @cli.command(name="request_import_full")
 def request_import_new_full_dump():

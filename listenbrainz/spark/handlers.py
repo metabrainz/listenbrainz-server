@@ -8,7 +8,8 @@ from flask import current_app, render_template
 from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
 
-TIME_TO_CONSIDER_STATS_AS_OLD = 12 # hours
+TIME_TO_CONSIDER_STATS_AS_OLD = 12  # hours
+
 
 def is_new_user_stats_batch():
     """ Returns True if this batch of user stats is new, False otherwise
@@ -48,9 +49,11 @@ def handle_user_artist(data):
     if is_new_user_stats_batch():
         notify_user_stats_update()
     current_app.logger.debug("inserting stats for user %s", musicbrainz_id)
-    artists = data['artist_stats']
-    artist_count = data['artist_count']
-    db_stats.insert_user_stats(user['id'], artists, {}, {}, artist_count)
+
+    to_remove = {'musicbrainz_id', 'type'}
+    data_mod = {key: data[key] for key in data if key not in to_remove}
+
+    db_stats.insert_user_stats(user['id'], data_mod, {}, {})
 
 
 def handle_dump_imported(data):
@@ -60,7 +63,6 @@ def handle_dump_imported(data):
     """
     if current_app.config['TESTING']:
         return
-
 
     dump_name = data['imported_dump']
     import_completion_time = data['time']
