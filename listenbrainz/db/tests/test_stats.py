@@ -15,8 +15,8 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         self.user = db_user.get_or_create(1, 'stats_user')
 
     def test_insert_user_stats(self):
-
-        with open(self.path_to_data_file('user_top_artists.json')) as f:
+        """ Test if data is inserted correctly """
+        with open(self.path_to_data_file('user_top_artists_db.json')) as f:
             artists_data = json.load(f)
         with open(self.path_to_data_file('user_top_releases.json')) as f:
             releases = json.load(f)
@@ -37,10 +37,38 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         self.assertListEqual(result['recording']['all_time']['recordings'], recordings)
         self.assertGreater(int(result['last_updated'].strftime('%s')), 0)
 
+    def test_insert_user_stats_mult_ranges(self):
+        """ Test if multiple time range data is inserted correctly """
+        with open(self.path_to_data_file('user_top_artists_db.json')) as f:
+            artists_data = json.load(f)
+
+        db_stats.insert_user_stats(
+            user_id=self.user['id'],
+            artists=artists_data,
+            recordings={},
+            releases={}
+        )
+        artists_data['range'] = 'year'
+        artists_data['from'] = 5
+        db_stats.insert_user_stats(
+            user_id=self.user['id'],
+            artists=artists_data,
+            recordings={},
+            releases={}
+        )
+
+        result = db_stats.get_all_user_stats(user_id=self.user['id'])
+        self.assertListEqual(result['artist']['all_time']['artists'], artists_data['artists'])
+        self.assertEqual(result['artist']['all_time']['count'], 2)
+        self.assertEqual(result['artist']['all_time']['from'], 0)
+        self.assertListEqual(result['artist']['year']['artists'], artists_data['artists'])
+        self.assertEqual(result['artist']['year']['count'], 2)
+        self.assertEqual(result['artist']['year']['from'], 5)
+
     def insert_test_data(self):
         """ Insert test data into the database """
 
-        with open(self.path_to_data_file('user_top_artists.json')) as f:
+        with open(self.path_to_data_file('user_top_artists_db.json')) as f:
             artists = json.load(f)
         with open(self.path_to_data_file('user_top_releases.json')) as f:
             releases = json.load(f)

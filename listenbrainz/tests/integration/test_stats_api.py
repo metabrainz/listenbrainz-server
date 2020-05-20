@@ -15,7 +15,7 @@ class StatsAPITestCase(IntegrationTestCase):
     def test_artist_stat(self):
         """Test to make sure valid response is received
         """
-        with open(self.path_to_data_file('artist_statistics.json'), 'r') as f:
+        with open(self.path_to_data_file('user_top_artists_api.json'), 'r') as f:
             payload = json.load(f)
 
         db_stats.insert_user_stats(self.user['id'], payload, {}, {})
@@ -37,7 +37,7 @@ class StatsAPITestCase(IntegrationTestCase):
     def test_artist_stat_too_many(self):
         """Test to make sure response received has maximum 100 listens
         """
-        with open(self.path_to_data_file('artist_statistics_too_many.json'), 'r') as f:
+        with open(self.path_to_data_file('user_top_artists_too_many_api.json'), 'r') as f:
             payload = json.load(f)
 
         db_stats.insert_user_stats(self.user['id'], payload, {}, {})
@@ -56,7 +56,7 @@ class StatsAPITestCase(IntegrationTestCase):
     def test_artist_stat_all_time(self):
         """Test to make sure valid response is received when range is 'all_time'
         """
-        with open(self.path_to_data_file('artist_statistics.json'), 'r') as f:
+        with open(self.path_to_data_file('user_top_artists_api.json'), 'r') as f:
             payload = json.load(f)
 
         db_stats.insert_user_stats(self.user['id'], payload, {}, {})
@@ -84,7 +84,7 @@ class StatsAPITestCase(IntegrationTestCase):
     def test_artist_stat_count(self):
         """Test to make sure valid response is received if count argument is passed
         """
-        with open(self.path_to_data_file('artist_statistics.json'), 'r') as f:
+        with open(self.path_to_data_file('user_top_artists_api.json'), 'r') as f:
             payload = json.load(f)
 
         db_stats.insert_user_stats(self.user['id'], payload, {}, {})
@@ -124,7 +124,7 @@ class StatsAPITestCase(IntegrationTestCase):
         """Test to make sure valid response is received if offset argument is passed
 
         """
-        with open(self.path_to_data_file('artist_statistics.json'), 'r') as f:
+        with open(self.path_to_data_file('user_top_artists_api.json'), 'r') as f:
             payload = json.load(f)
 
         db_stats.insert_user_stats(self.user['id'], payload, {}, {})

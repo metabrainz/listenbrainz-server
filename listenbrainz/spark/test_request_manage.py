@@ -65,7 +65,7 @@ class RequestManageTestCase(unittest.TestCase):
 		self.assertEqual(expected_message, received_message)
 
 		expected_message = ujson.dumps({'query': 'stats.user.artist.week'})
-		received_message = request_manage._prepare_query_message('stats.user.artist.week)
+		received_message = request_manage._prepare_query_message('stats.user.artist.week')
 		self.assertEqual(expected_message, received_message)
 
 		expected_message = ujson.dumps({'query': 'stats.user.artist.month'})
