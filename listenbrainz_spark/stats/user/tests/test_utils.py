@@ -1,102 +1,47 @@
+from datetime import datetime
+
 import listenbrainz_spark.stats.user.utils as user_utils
+from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
 from listenbrainz_spark import utils
 from listenbrainz_spark.tests import SparkTestCase
+from listenbrainz_spark.stats import adjust_months, adjust_days
 
 from pyspark.sql import Row
 
+
 class UtilsTestCase(SparkTestCase):
+    # use path_ as prefix for all paths in this class.
+    path_ = LISTENBRAINZ_DATA_DIRECTORY
 
-    def create_df(self):
-        df = utils.create_dataframe(Row(user_name='user2', artist_name='artist1', artist_msid='1',artist_mbids='1',
-            track_name='test', recording_msid='1', recording_mbid='1', release_name='test',release_msid='1',
-            release_mbid='1'), schema=None)
-        df1 = utils.create_dataframe(Row(user_name='user1',artist_name='artist1', artist_msid='1',artist_mbids='1',
-            track_name='test', recording_msid='1', recording_mbid='1', release_name='test',release_msid='1',
-             release_mbid='1'), schema=None)
-        df = df.union(df1)
-        df2 = utils.create_dataframe(Row(user_name='user1',artist_name='artist1', artist_msid='1',artist_mbids='1',
-            track_name='test', recording_msid='1', recording_mbid='1', release_name='test',release_msid='1',
-            release_mbid='1'), schema=None)
-        df = df.union(df2)
-        return df
+    def tearDown(self):
+        path_found = utils.path_exists(self.path_)
+        if path_found:
+            utils.delete_dir(self.path_, recursive=True)
 
-    def test_get_artists(self):
-        df = self.create_df()
-        df.createOrReplaceTempView('table')
-        dictionary = {
-                    'user1': [{
-                        'artist_name': 'artist1',
-                        'artist_msid': '1',
-                        'artist_mbids': '1',
-                        'listen_count': 2
-                    }],
-                        'user2': [{
-                        'artist_name': 'artist1',
-                        'artist_msid': '1',
-                        'artist_mbids': '1',
-                        'listen_count': 1
-                    }]
-                     }
+    def test_get_latest_listen_ts(self):
+        date = datetime(2020, 5, 18)
+        df = utils.create_dataframe(Row(listened_at=date), schema=None)
+        df = df.union(utils.create_dataframe(Row(listened_at=adjust_days(date, 7)), schema=None))
+        utils.save_parquet(df, '{}/2020/5.parquet'.format(self.path_))
 
-        self.assertDictEqual(user_utils.get_artists('table'), dictionary)
-        self.assertEqual(user_utils.get_artists('table')['user1'][0]['listen_count'], 2)
+        result = user_utils.get_latest_listen_ts()
+        self.assertEqual(date, result)
 
-    def test_get_recordings(self):
-        df = self.create_df()
-        df.createOrReplaceTempView('table')
-        dictionary =  {
-                    'user1' : [{
-                        'track_name': 'test',
-                        'recording_msid': '1',
-                        'recording_mbid': '1',
-                        'artist_name': 'artist1',
-                        'artist_msid': '1',
-                        'artist_mbids': '1',
-                        'release_name': 'test',
-                        'release_msid': '1',
-                        'release_mbid': '1',
-                        'listen_count': 2
-                    }],
-                    'user2' : [{
-                        'track_name': 'test',
-                        'recording_msid': '1',
-                        'recording_mbid': '1',
-                        'artist_name': 'artist1',
-                        'artist_msid': '1',
-                        'artist_mbids': '1',
-                        'release_name': 'test',
-                        'release_msid': '1',
-                        'release_mbid': '1',
-                        'listen_count': 1
-                    }]
-                     }
+    def test_filter_listens(self):
+        from_date = datetime(2020, 5, 1)
+        to_date = datetime(2020, 5, 31)
 
-        self.assertDictEqual(user_utils.get_recordings('table'), dictionary)
-        self.assertEqual(user_utils.get_recordings('table')['user1'][0]['listen_count'], 2)
+        df = utils.create_dataframe(Row(listened_at=adjust_months(from_date, 1)), None)
+        df = df.union(utils.create_dataframe(Row(listened_at=adjust_months(to_date, 1, shift_backwards=False)), None))
+        df = df.union(utils.create_dataframe(Row(listened_at=adjust_days(from_date, 5, shift_backwards=False)), None))
+        df = df.union(utils.create_dataframe(Row(listened_at=adjust_days(to_date, 5)), None))
 
-    def test_get_releases(self):
-        df = self.create_df()
-        df.createOrReplaceTempView('table')
-        dictionary =  {
-                    'user1' : [{
-                        'artist_name': 'artist1',
-                        'artist_msid': '1',
-                        'artist_mbids': '1',
-                        'release_name': 'test',
-                        'release_msid': '1',
-                        'release_mbid': '1',
-                        'listen_count': 2
-                    }],
-                    'user2' : [{
-                        'artist_name': 'artist1',
-                        'artist_msid': '1',
-                        'artist_mbids': '1',
-                        'release_name': 'test',
-                        'release_msid': '1',
-                        'release_mbid': '1',
-                        'listen_count': 1
-                    }]
-                     }
+        result = user_utils.filter_listens(df, from_date, to_date)
+        rows = result.collect()
 
-        self.assertDictEqual(user_utils.get_releases('table'), dictionary)
-        self.assertEqual(user_utils.get_releases('table')['user1'][0]['listen_count'], 2)
+        self.assertEqual(rows[0]['listened_at'], adjust_days(from_date, 5, shift_backwards=False))
+        self.assertEqual(rows[1]['listened_at'], adjust_days(to_date, 5))
+
+    def test_get_last_monday(self):
+        date = datetime(2020, 5, 19)
+        self.assertEqual(datetime(2020, 5, 18), user_utils.get_last_monday(date))

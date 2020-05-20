@@ -14,16 +14,17 @@ from listenbrainz.spark.handlers import handle_user_artist, handle_dump_imported
 import sqlalchemy
 
 response_handler_map = {
-    'user_artist': handle_user_artist,
+    'user_artists': handle_user_artist,
     'import_full_dump': handle_dump_imported,
 }
+
+
 class SparkReader:
     def __init__(self):
-        self.app = create_app() # creating a flask app for config values and logging to Sentry
+        self.app = create_app()  # creating a flask app for config values and logging to Sentry
 
     def get_response_handler(self, response_type):
         return response_handler_map[response_type]
-
 
     def init_rabbitmq_connection(self):
         """ Initializes the connection to RabbitMQ.

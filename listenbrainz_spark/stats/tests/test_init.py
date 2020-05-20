@@ -5,9 +5,13 @@ from listenbrainz_spark.tests import SparkTestCase
 
 from pyspark.sql import Row
 
+
 class InitTestCase(SparkTestCase):
     def test_replace_days(self):
         self.assertEqual(stats.replace_days(datetime.datetime(2019, 5, 12), 13), datetime.datetime(2019, 5, 13))
+
+    def test_replace_months(self):
+        self.assertEqual(stats.replace_months(datetime.datetime(2020, 5, 18), 6), datetime.datetime(2020, 6, 18))
 
     def test_adjust_months(self):
         d1 = stats.adjust_months(datetime.datetime(2019, 5, 12), 3, shift_backwards=False)
@@ -32,5 +36,5 @@ class InitTestCase(SparkTestCase):
          SELECT *
           FROM table
           """
-          )
+                                 )
         self.assertEqual(new_df.count(), df.count())

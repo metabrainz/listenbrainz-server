@@ -1,5 +1,6 @@
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
+import json
 import ujson
 from unittest import mock
 
@@ -64,19 +65,21 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         props = ujson.loads(self.get_context_variable('props'))
         self.assertIsNone(props['artist_count'])
 
-        # check that artist count is shown if stats have been calculated
+        artists = {
+            'range': 'all_time',
+            'count': 5
+        }
         db_stats.insert_user_stats(
             user_id=self.user.id,
-            artists={},
+            artists=artists,
             recordings={},
             releases={},
-            artist_count=2,
         )
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')
         props = ujson.loads(self.get_context_variable('props'))
-        self.assertEqual(props['artist_count'], '2')
+        self.assertEqual(props['artist_count'], '5')
         self.assertDictEqual(props['spotify'], {})
 
     @mock.patch('listenbrainz.webserver.views.user.spotify')
