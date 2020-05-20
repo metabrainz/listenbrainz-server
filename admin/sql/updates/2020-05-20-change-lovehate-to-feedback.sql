@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS recording_lovehate CASCADE;
 
 -- Create new table
 CREATE TABLE recording_feedback (
+    id                      SERIAL, -- PK
     user_id                 INTEGER NOT NULL, -- FK to "user".id
     recording_msid          UUID NOT NULL,
     score                   SMALLINT NOT NULL,
