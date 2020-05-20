@@ -1,5 +1,14 @@
-# Request user stats every day at 12:00
-00 12 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_all_user_stats 
+# Request user all_time artists every day at 12:00
+00 12 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --all-time
+
+# Request user weekly artists every day at 13:00
+00 13 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --week
+
+# Request user monthly artists every day at 14:00
+00 14 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --month
+
+# Request user yearly artists every day at 15:00
+00 15 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --year
 
 # Request full data dump import into spark cluster, every Wednesday
 00 00 * * 3 /usr/local/bin/python /code/listenbrainz/manage.py spark request_import_full

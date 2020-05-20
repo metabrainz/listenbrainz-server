@@ -36,7 +36,7 @@ class HandlersTestCase(unittest.TestCase):
     def test_is_new_user_stats_batch(self, mock_db_get_timestamp):
         mock_db_get_timestamp.return_value = datetime.now(timezone.utc)
         self.assertFalse(is_new_user_stats_batch())
-        mock_db_get_timestamp.return_value = datetime.now(timezone.utc) - timedelta(hours=13)
+        mock_db_get_timestamp.return_value = datetime.now(timezone.utc) - timedelta(minutes=21)
         self.assertTrue(is_new_user_stats_batch())
 
     @mock.patch('listenbrainz.spark.handlers.send_mail')
