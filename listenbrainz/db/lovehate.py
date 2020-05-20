@@ -63,17 +63,20 @@ def get_user_loved_or_hated_recordings(user_id, score):
               FROM recording_lovehate
              WHERE user_id = :user_id
                AND score = :score
+          ORDER BY created DESC
             """), {
+                'user_id': user_id,
                 'score': score
             }
         )
         while True:
             row = result.fetchone()
             if not row:
-                return None
+                break
 
             records.append(_format_recording_lovehate_row(row[0], row[1], row[2]))
-        return records
+
+    return records
 
 
 def get_user_loved_and_hated_recordings(user_id):
@@ -88,7 +91,7 @@ def get_user_loved_and_hated_recordings(user_id):
         result = connection.execute(sqlalchemy.text("""
             SELECT user_id, recording_msid, score
               FROM recording_lovehate
-             WHERE user_id = :user_id
+          ORDER BY created DESC
             """), {
                 'user_id': user_id
             }
@@ -96,10 +99,11 @@ def get_user_loved_and_hated_recordings(user_id):
         while True:
             row = result.fetchone()
             if not row:
-                return None
+                break
 
             records.append(_format_recording_lovehate_row(row[0], row[1], row[2]))
-        return records
+
+    return records
 
 
 def get_records_for_given_recording(recording_msid):
@@ -116,23 +120,25 @@ def get_records_for_given_recording(recording_msid):
             SELECT user_id, recording_msid, score
               FROM recording_lovehate
              WHERE recording_msid = :recording_msid
+          ORDER BY created DESC
             """), {
-                'user_id': user_id
+                'recording_msid': recording_msid
             }
         )
         while True:
             row = result.fetchone()
             if not row:
-                return None
+                break
 
             records.append(_format_recording_lovehate_row(row[0], row[1], row[2]))
-        return records
+
+    return records
 
 
 def _format_recording_lovehate_row(user_id, recording_msid, score):
     record = {
         'user_id': user_id,
         'recording_msid': recording_msid,
-        'score': self.score,
+        'score': score,
     }
     return record
