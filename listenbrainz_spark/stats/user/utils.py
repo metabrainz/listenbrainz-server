@@ -25,7 +25,7 @@ def get_latest_listen_ts():
 
 
 def filter_listens(df, from_date, to_date):
-    """ 
+    """
     Filter the given dataframe to return listens which lie between from_date and to_date
 
     Args:

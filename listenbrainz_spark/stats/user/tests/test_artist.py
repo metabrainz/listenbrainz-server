@@ -71,7 +71,8 @@ class ArtistUnitTestCase(SparkTestCase):
     @patch('listenbrainz_spark.stats.user.artist.filter_listens')
     @patch('listenbrainz_spark.stats.user.artist.get_artists', return_value='artist_data')
     @patch('listenbrainz_spark.stats.user.artist.create_messages')
-    def test_get_artist_week(self, mock_create_messages, mock_get_artists, mock_filter_listens, mock_get_listens, mock_get_latest_listen_ts):
+    def test_get_artist_week(self, mock_create_messages, mock_get_artists,
+                             mock_filter_listens, mock_get_listens, mock_get_latest_listen_ts):
         mock_df = MagicMock()
         mock_get_listens.return_value = mock_df
         mock_filtered_df = MagicMock()

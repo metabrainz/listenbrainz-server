@@ -60,22 +60,22 @@ class RequestManageTestCase(unittest.TestCase):
 			request_manage._prepare_query_message('stats.user.for_one_user', {})
 
 	def test_prepare_query_message_happy_path(self):
-		expected_message = ujson.dumps({'query': 'stats.user.all'})
-		received_message = request_manage._prepare_query_message('stats.user.all')
-		self.assertEqual(expected_message, received_message)
-
-		expected_message = ujson.dumps({'query': 'stats.user.artist.week'})
-		received_message = request_manage._prepare_query_message('stats.user.artist.week')
-		self.assertEqual(expected_message, received_message)
-
-		expected_message = ujson.dumps({'query': 'stats.user.artist.month'})
-		received_message = request_manage._prepare_query_message('stats.user.artist.month')
-		self.assertEqual(expected_message, received_message)
-
-		expected_message = ujson.dumps({'query': 'stats.user.artist.year'})
-		received_message = request_manage._prepare_query_message('stats.user.artist.year')
-		self.assertEqual(expected_message, received_message)
-
-		expected_message = ujson.dumps({'query': 'stats.user.artist.all_time'})
-		received_message = request_manage._prepare_query_message('stats.user.artist.all_time')
-		self.assertEqual(expected_message, received_message)
+                expected_message = ujson.dumps({'query': 'stats.user.all'})
+                received_message = request_manage._prepare_query_message('stats.user.all')
+                self.assertEqual(expected_message, received_message)
+                
+                expected_message = ujson.dumps({'query': 'stats.user.artist.week'})
+                received_message = request_manage._prepare_query_message('stats.user.artist.week')
+                self.assertEqual(expected_message, received_message)
+                
+                expected_message = ujson.dumps({'query': 'stats.user.artist.month'})
+                received_message = request_manage._prepare_query_message('stats.user.artist.month')
+                self.assertEqual(expected_message, received_message)
+                
+                expected_message = ujson.dumps({'query': 'stats.user.artist.year'})
+                received_message = request_manage._prepare_query_message('stats.user.artist.year')
+                self.assertEqual(expected_message, received_message)
+                
+                expected_message = ujson.dumps({'query': 'stats.user.artist.all_time'})
+                received_message = request_manage._prepare_query_message('stats.user.artist.all_time')
+                self.assertEqual(expected_message, received_message)
