@@ -8,7 +8,7 @@ from flask import current_app, render_template
 from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
 
-TIME_TO_CONSIDER_STATS_AS_OLD = 12  # hours
+TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 
 
 def is_new_user_stats_batch():
@@ -22,14 +22,14 @@ def is_new_user_stats_batch():
     if last_update_ts is None:
         last_update_ts = datetime.min.replace(tzinfo=timezone.utc)  # use min datetime value if last_update_ts is None
 
-    return datetime.now(timezone.utc) - last_update_ts > timedelta(hours=TIME_TO_CONSIDER_STATS_AS_OLD)
+    return datetime.now(timezone.utc) - last_update_ts > timedelta(minutes=TIME_TO_CONSIDER_STATS_AS_OLD)
 
 
-def notify_user_stats_update():
+def notify_user_stats_update(stat_type):
     if not current_app.config['TESTING']:
         send_mail(
             subject="New user stats are being written into the DB - ListenBrainz",
-            text=render_template('emails/user_stats_notification.txt', now=str(datetime.utcnow())),
+            text=render_template('emails/user_stats_notification.txt', now=str(datetime.utcnow()), stat_type=stat_type),
             recipients=['listenbrainz-observability@metabrainz.org'],
             from_name='ListenBrainz',
             from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
@@ -47,7 +47,7 @@ def handle_user_artist(data):
 
     # send a notification if this is a new batch of stats
     if is_new_user_stats_batch():
-        notify_user_stats_update()
+        notify_user_stats_update(stat_type=data.get('type', ''))
     current_app.logger.debug("inserting stats for user %s", musicbrainz_id)
 
     to_remove = {'musicbrainz_id', 'type'}
