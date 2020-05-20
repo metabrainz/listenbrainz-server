@@ -46,6 +46,7 @@ def delete(user_id, recording_msid):
             }
         )
 
+
 def get_feedback(user_id):
     """ Get a list of recording feedbacks given by the user.
         Args:
@@ -72,8 +73,9 @@ def get_feedback(user_id):
 
     return records
 
+
 def get_feedback_single_type(user_id, score):
-    """ Get a list of recording feedbacks of particular type (loved or hated) given by the user. 
+    """ Get a list of recording feedbacks of particular type (loved or hated) given by the user.
         If score is +1 then get loved recordings, if -1 then get hated recordings.
         Args:
             user_id (int): the row ID of the user

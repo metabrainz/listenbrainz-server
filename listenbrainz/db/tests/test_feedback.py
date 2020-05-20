@@ -6,13 +6,12 @@ import listenbrainz.db.user as db_user
 
 from listenbrainz.db.testing import DatabaseTestCase
 
-class FeedbackDatabaseTestCase(DatabaseTestCase):
 
+class FeedbackDatabaseTestCase(DatabaseTestCase):
 
     def setUp(self):
         DatabaseTestCase.setUp(self)
         self.user = db_user.get_or_create(1, 'recording_feedback_user')
-
 
     def insert_test_data(self, user_id, neg_score=False):
         """ Insert test data into the database """
@@ -26,7 +25,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase):
                 db_feedback.insert(user_id, fb_neg["recording_msid"], fb_neg["score"])
 
             return
-    
+
         # Insert the two records with positive score
         with open(self.path_to_data_file('recording_feedback.json')) as f:
             rec_feedback = json.load(f)
@@ -34,19 +33,17 @@ class FeedbackDatabaseTestCase(DatabaseTestCase):
         for fb in rec_feedback:
             db_feedback.insert(user_id, fb["recording_msid"], fb["score"])
 
-
     def test_insert(self):
         self.insert_test_data(self.user['id'])
         result = db_feedback.get_feedback(self.user['id'])
         self.assertEqual(len(result), 2)
-
 
     def test_update_score_when_feedback_already_exits(self):
         self.insert_test_data(self.user['id'])
         result = db_feedback.get_feedback(self.user['id'])
         self.assertEqual(len(result), 2)
 
-        # insert the negative score records, where 1 recording_msid already exists 
+        # insert the negative score records, where 1 recording_msid already exists
         # with postive score for the given user
         self.insert_test_data(self.user['id'], neg_score=True)
         result = db_feedback.get_feedback(self.user['id'])
@@ -66,7 +63,6 @@ class FeedbackDatabaseTestCase(DatabaseTestCase):
 
         self.assertNotEqual(result[0]["recording_msid"], del_rec_msid)
 
-
     def test_get_feedback(self):
         self.insert_test_data(self.user['id'])
         result = db_feedback.get_feedback(self.user['id'])
@@ -84,7 +80,6 @@ class FeedbackDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(result[1]["score"], -1)
         self.assertEqual(result[2]["score"], 1)
 
-
     def test_get_feedback_single_type(self):
         self.insert_test_data(self.user['id'])
         result = db_feedback.get_feedback_single_type(self.user['id'], 1)
@@ -100,7 +95,6 @@ class FeedbackDatabaseTestCase(DatabaseTestCase):
 
         self.assertEqual(result[0]["score"], -1)
         self.assertEqual(result[1]["score"], -1)
-
 
     def test_get_feedback_for_recording(self):
         rec_msid_1 = "d23f4719-9212-49f0-ad08-ddbfbfc50d6f"
