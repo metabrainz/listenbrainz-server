@@ -3,19 +3,15 @@ receive from the Spark cluster.
 """
 import listenbrainz.db.user as db_user
 import listenbrainz.db.stats as db_stats
-import listenbrainz.db.recommendations_cf_recording as db_rec
+import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
 
 from flask import current_app, render_template
 from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
 
-<<<<<<< HEAD
+
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
-TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7 # days
-=======
-TIME_TO_CONSIDER_STATS_AS_OLD = 12  # hours
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
->>>>>>> PEP-8 fixes
 
 
 def is_new_user_stats_batch():
@@ -35,7 +31,7 @@ def is_new_user_stats_batch():
 def is_new_cf_recording_recommendation_batch():
     """ Returns True if this batch of recommendations is new, False otherwise
     """
-    create_ts = db_rec.get_timestamp_for_last_recording_recommended()
+    create_ts = db_recommendations_cf_recording.get_timestamp_for_last_recording_recommended()
     if create_ts is None:
         return True
 
@@ -56,12 +52,8 @@ def notify_cf_recording_recommendations_update():
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
     )
 
-<<<<<<< HEAD
-def notify_user_stats_update(stat_type):
-=======
 
-def notify_user_stats_update():
->>>>>>> PEP-8 fixes
+def notify_user_stats_update(stat_type):
     if not current_app.config['TESTING']:
         send_mail(
             subject="New user stats are being written into the DB - ListenBrainz",
@@ -186,6 +178,6 @@ def handle_recommendations(data):
     top_artist_recording = data['top_artist']
     similar_artist_recording = data['similar_artist']
 
-    db_rec.insert_user_recommendation(user['id'], top_artist_recording, similar_artist_recording)
+    db_recommendations_cf_recording.insert_user_recommendation(user['id'], top_artist_recording, similar_artist_recording)
 
     current_app.logger.debug("recommendation for {} inserted".format(musicbrainz_id))

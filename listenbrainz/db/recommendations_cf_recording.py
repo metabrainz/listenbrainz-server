@@ -43,6 +43,12 @@ def get_timestamp_for_last_recording_recommended():
 
 def insert_user_recommendation(user_id, top_artist_recording, similar_artist_recording):
     """ Insert recommended recording for a user in the db.
+
+        Args:
+            user_id (int): row id of the user.
+            top_artist_recording (list): recommended recording mbids that belong to top artists listened to by the user.
+            similar_artist_recording (list): recommended recording mbids that belong to artists similar to top artists
+                                             listened to by the user.
     """
     recommendation = {
         'top_artist': top_artist_recording,
@@ -62,3 +68,35 @@ def insert_user_recommendation(user_id, top_artist_recording, similar_artist_rec
                 'recommendation': ujson.dumps(recommendation),
             }
         )
+
+def get_user_recommendation(user_id):
+    """ Get recommendations for a user with the given row ID.
+
+        Args:
+            user_id (int): the row ID of the user in the DB
+
+        Returns:
+            A dict of the following format
+            {
+                'user_id' (int): the row ID of the user in the DB,
+                'recording_mbid'  (dict): recommended recording mbids
+                'created' (datetime): datetime object representing when
+                                      the recommendation for this user was last updated.
+            }
+
+            recording_mbid = {
+                'top_artist_recording': [],
+                'similar_artist_recording': []
+            }
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT user_id, recording_mbid, created
+              FROM recommendation.cf_recording
+             WHERE user_id = :user_id
+            """), {
+                    'user_id': user_id
+                }
+        )
+        row = result.fetchone()
+        return dict(row) if row else None

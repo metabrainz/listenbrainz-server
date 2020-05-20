@@ -53,4 +53,5 @@
         "name": "cf_recording.recommendations.recommend",
         "description": "Generate recommendations for all active ListenBrainz users.",
         "params": []
+    }
 }

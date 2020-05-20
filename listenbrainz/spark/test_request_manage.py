@@ -80,3 +80,19 @@ class RequestManageTestCase(unittest.TestCase):
         expected_message = ujson.dumps({'query': 'stats.user.artist.all_time'})
         received_message = request_manage._prepare_query_message('stats.user.artist.all_time')
         self.assertEqual(expected_message, received_message)
+
+        expected_message = ujson.dumps({'query': 'cf_recording.recommendations.create_dataframes'})
+        received_message = request_manage._prepare_query_message('cf_recording.recommendations.create_dataframes')
+        self.assertEqual(expected_message, received_message)
+
+        expected_message = ujson.dumps({'query': 'cf_recording.recommendations.train_model'})
+        received_message = request_manage._prepare_query_message('cf_recording.recommendations.train_model')
+        self.assertEqual(expected_message, received_message)
+
+        expected_message = ujson.dumps({'query': 'cf_recording.recommendations.candidate_sets'})
+        received_message = request_manage._prepare_query_message('cf_recording.recommendations.candidate_sets')
+        self.assertEqual(expected_message, received_message)
+
+        expected_message = ujson.dumps({'query': 'cf_recording.recommendations.recommend'})
+        received_message = request_manage._prepare_query_message('cf_recording.recommendations.recommend')
+        self.assertEqual(expected_message, received_message)
