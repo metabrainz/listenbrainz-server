@@ -3,14 +3,14 @@ import sqlalchemy
 from listenbrainz import db
 
 
-def insert(user_id, recording_msid, score):
+def insert(user_id: int, recording_msid: str, score: int):
     """ Inserts a feedback record for a user's loved/hated recording into the database.
         If the record is already present for the user, the score is updated to the new
         value passed.
         Args:
-            user_id (int): the row id of the user
-            recording_msid (string): the MessyBrainz ID of the recording
-            score (int): The score associated with the recording (+1/-1 for love/hate respectively)
+            user_id: the row id of the user
+            recording_msid: the MessyBrainz ID of the recording
+            score: The score associated with the recording (+1/-1 for love/hate respectively)
     """
 
     with db.engine.connect() as connection:
@@ -28,11 +28,11 @@ def insert(user_id, recording_msid, score):
         )
 
 
-def delete(user_id, recording_msid):
+def delete(user_id: int, recording_msid: str):
     """ Deletes the feedback record for a given recording for the user from the database.
         Args:
-            user_id (int): the row id of the user
-            recording_msid (dict): the MessyBrainz ID of the recording
+            user_id: the row id of the user
+            recording_msid: the MessyBrainz ID of the recording
     """
 
     with db.engine.connect() as connection:
@@ -47,10 +47,10 @@ def delete(user_id, recording_msid):
         )
 
 
-def get_feedback(user_id):
+def get_feedback(user_id: int):
     """ Get a list of recording feedbacks given by the user.
         Args:
-            user_id (int): the row ID of the user in the DB
+            user_id: the row ID of the user in the DB
         Returns:
             A list of user's loved and hated recordings
     """
@@ -74,11 +74,11 @@ def get_feedback(user_id):
     return records
 
 
-def get_feedback_single_type(user_id, score):
+def get_feedback_single_type(user_id: int, score: int):
     """ Get a list of recording feedbacks of particular type (loved or hated) given by the user.
         If score is +1 then get loved recordings, if -1 then get hated recordings.
         Args:
-            user_id (int): the row ID of the user
+            user_id: the row ID of the user
         Returns:
             A list of user's loved or hated recordings
     """
@@ -106,10 +106,10 @@ def get_feedback_single_type(user_id, score):
     return records
 
 
-def get_feedback_for_recording(recording_msid):
+def get_feedback_for_recording(recording_msid: str):
     """ Get a list of feedbacks for a given recording.
         Args:
-            recording_msid (string): the MessyBrainz ID of the recording
+            recording_msid: the MessyBrainz ID of the recording
         Returns:
             A list of feedbacks for the given recording
     """
@@ -135,12 +135,12 @@ def get_feedback_for_recording(recording_msid):
     return records
 
 
-def _format_recording_feedback_row(user_id, recording_msid, score):
+def _format_recording_feedback_row(user_id: int, recording_msid: str, score: int):
     """ Format the given entires into a dict.
         Args:
-            user_id (int): the row id of the user
-            recording_msid (string): the MessyBrainz ID of the recording
-            score (int): The score associated with the recording
+            user_id: the row id of the user
+            recording_msid: the MessyBrainz ID of the recording
+            score: The score associated with the recording
         Returns:
             A dict formed from the args.
     """
