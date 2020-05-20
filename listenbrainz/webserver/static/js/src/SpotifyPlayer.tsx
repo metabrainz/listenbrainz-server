@@ -157,6 +157,7 @@ export default class SpotifyPlayer
   playSpotifyURI = (spotifyURI: string): void => {
     if (!this.spotifyPlayer) {
       this.connectSpotifyPlayer(this.playSpotifyURI.bind(this, spotifyURI));
+      return;
     }
     const { accessToken } = this.state;
     const { handleError } = this.props;
@@ -255,15 +256,16 @@ export default class SpotifyPlayer
     ) {
       this.handleAccountError();
     }
+    const { refreshSpotifyToken, onTrackNotFound } = this.props;
     try {
-      const { refreshSpotifyToken } = this.props;
       const userToken = await refreshSpotifyToken();
       this.setState({ accessToken: userToken }, () => {
         this.connectSpotifyPlayer(callbackFunction);
       });
     } catch (err) {
       const { handleError } = this.props;
-      handleError(err.message);
+      handleError(err.message, "Spotify error");
+      onTrackNotFound();
     }
   };
 
