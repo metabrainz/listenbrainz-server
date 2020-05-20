@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ReactHTML, ReactHTMLElement } from "react";
 import YouTube, { Options } from "react-youtube";
 import { isEqual as _isEqual, get as _get, isNil as _isNil } from "lodash";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
@@ -20,15 +20,7 @@ export default class YoutubePlayer
   extends React.Component<DataSourceProps, YoutubePlayerState>
   implements DataSourceType {
   youtubePlayer: any;
-  _firstRun = true;
   youtubePlayerStateTimerID = null;
-
-  // constructor(props: DataSourceProps) {
-  //   super(props);
-  //   this.state = {
-  //     currentListen: undefined,
-  //   };
-  // }
 
   componentDidUpdate(prevProps: DataSourceProps) {
     const { show } = this.props;
@@ -38,78 +30,42 @@ export default class YoutubePlayer
     }
   }
 
-  // Youtube component specific methods
-
   onReady = (event: { target: any }): void => {
-    // access to player in all event handlers via event.target
     this.youtubePlayer = event.target;
   };
-
-  // getOptions(): Options {
-  //   // const { currentListen } = this.state;
-  //   // const { handleWarning, onTrackNotFound } = this.props;
-  //   // const trackName = _get(currentListen, "track_metadata.track_name");
-  //   // const artistName = _get(currentListen, "track_metadata.artist_name");
-  //   // if (!trackName) {
-  //   //   handleWarning("Not enough info to search on Youtube");
-  //   //   onTrackNotFound();
-  //   //   return {};
-  //   // }
-  //   // let queryString = trackName;
-  //   // if (!_isNil(artistName)) {
-  //   //   queryString += `+${artistName}`;
-  //   // }
-  //   return {
-  //     playerVars: {
-  //       autoplay: 1,
-  //       controls: 0,
-  //       showinfo: 0,
-  //       fs: 0,
-  //       iv_load_policy: 3,
-  //       // list: queryString,
-  //       // listType: "search",
-  //       modestbranding: 1,
-  //       enablejsapi: 1,
-  //       rel: 0,
-  //       origin: window.location.origin.toString(),
-  //     },
-  //   };
-  // }
 
   handlePlayerStateChanged = (event: {
     data: YoutubePlayerStateType;
     target: any;
   }) => {
     const { data: state, target: player } = event;
-    const { onPlayerPausedChange, onTrackNotFound, show } = this.props;
-    // if (!_get(player, "playerInfo.playlist", []).length) {
-    //   onTrackNotFound();
-    //   return;
-    // }
-    // if (!show) {
-    //   return;
-    // }
+    const {
+      onPlayerPausedChange,
+      onDurationChange,
+      onProgressChange,
+      show,
+    } = this.props;
+
     if (state === 0) {
       console.debug("Detected Youtube end of track, playing next track");
       const { onTrackEnd } = this.props;
       onTrackEnd();
     }
-    // Unstarted / New track loaded
     if (state === YoutubePlayerStateType.UNSTARTED && show) {
       const { onTrackInfoChange } = this.props;
       const title = _get(player, "playerInfo.videoData.title", "");
       onTrackInfoChange(title);
       player.playVideo();
       onPlayerPausedChange(false);
+      onDurationChange(player.getDuration() * 1000);
     }
-    // PAUSED
     if (state === YoutubePlayerStateType.PAUSED) {
       onPlayerPausedChange(true);
     }
-    // PLAYING
     if (state === YoutubePlayerStateType.PLAYING) {
       onPlayerPausedChange(false);
     }
+    onProgressChange(player.getCurrentTime() * 1000);
   };
 
   searchAndPlayTrack = (listen: Listen): void => {
@@ -144,7 +100,6 @@ export default class YoutubePlayer
     if (!show) {
       return;
     }
-    // this.setState({ currentListen: listen });
     const youtubeURI = _get(
       listen,
       "track_metadata.additional_info.youtube_id"
@@ -175,7 +130,7 @@ export default class YoutubePlayer
     if (!this.youtubePlayer) {
       return;
     }
-    this.youtubePlayer.seekTo(msTimecode / 1000, false);
+    this.youtubePlayer.seekTo(msTimecode / 1000, true);
     this.youtubePlayer.playVideo();
   };
 
@@ -187,7 +142,7 @@ export default class YoutubePlayer
   };
 
   render() {
-    const { show, onTrackNotFound } = this.props;
+    const { show } = this.props;
     const options: Options = {
       playerVars: {
         autoplay: 1,
@@ -200,9 +155,11 @@ export default class YoutubePlayer
         rel: 0,
         origin: window.location.origin.toString(),
       },
+      width: "100%",
+      height: "100%",
     };
     return (
-      <div className={!show ? "hidden" : ""}>
+      <div className={`youtube ${!show ? "hidden" : ""}`}>
         <YouTube
           opts={options}
           onStateChange={this.handlePlayerStateChanged}

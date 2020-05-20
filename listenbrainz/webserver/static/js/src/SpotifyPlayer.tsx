@@ -1,7 +1,10 @@
 import * as React from "react";
-import { isEqual as _isEqual } from "lodash";
-import * as _ from "lodash";
-import PlaybackControls from "./PlaybackControls";
+import {
+  isEqual as _isEqual,
+  get as _get,
+  has as _has,
+  debounce as _debounce,
+} from "lodash";
 import { searchForSpotifyTrack } from "./utils";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
 
@@ -44,9 +47,7 @@ type SpotifyPlayerProps = DataSourceProps & {
 type SpotifyPlayerState = {
   accessToken: string;
   permission: SpotifyPermission;
-  currentSpotifyTrack: SpotifyTrack;
-  // playerPaused: boolean;
-  progressMs: number;
+  currentSpotifyTrack?: SpotifyTrack;
   durationMs: number;
   trackWindow?: SpotifyPlayerTrackWindow;
 };
@@ -56,7 +57,6 @@ export default class SpotifyPlayer
   implements DataSourceType {
   spotifyPlayer?: SpotifyPlayerType;
 
-  playerStateTimerID?: number | null;
   debouncedOnTrackEnd: () => void;
 
   constructor(props: SpotifyPlayerProps) {
@@ -64,13 +64,10 @@ export default class SpotifyPlayer
     this.state = {
       accessToken: props.spotifyUser.access_token,
       permission: props.spotifyUser.permission,
-      currentSpotifyTrack: {} as SpotifyTrack,
-      // playerPaused: true,
-      progressMs: 0,
       durationMs: 0,
     };
 
-    this.debouncedOnTrackEnd = _.debounce(props.onTrackEnd, 500, {
+    this.debouncedOnTrackEnd = _debounce(props.onTrackEnd, 500, {
       leading: true,
       trailing: false,
     });
@@ -88,8 +85,9 @@ export default class SpotifyPlayer
 
   componentDidUpdate(prevProps: DataSourceProps) {
     const { show } = this.props;
-    if (prevProps.show === true && show === false && this.spotifyPlayer) {
-      this.spotifyPlayer.pause();
+    if (prevProps.show === true && show === false) {
+      this.setState({ currentSpotifyTrack: undefined });
+      this.spotifyPlayer && this.spotifyPlayer.pause();
     }
   }
 
@@ -98,10 +96,10 @@ export default class SpotifyPlayer
   }
 
   searchAndPlayTrack = (listen: Listen): void => {
-    const trackName = _.get(listen, "track_metadata.track_name");
-    const artistName = _.get(listen, "track_metadata.artist_name");
+    const trackName = _get(listen, "track_metadata.track_name");
+    const artistName = _get(listen, "track_metadata.artist_name");
     // Using the releaseName has paradoxically given worst search results, so we're going to ignor it for now
-    // const releaseName = _.get(listen, "track_metadata.release_name");
+    // const releaseName = _get(listen, "track_metadata.release_name");
     const releaseName = "";
     const {
       handleError,
@@ -119,7 +117,7 @@ export default class SpotifyPlayer
       .then((track) => {
         // Track should be a Spotify track object:
         // https://developer.spotify.com/documentation/web-api/reference/object-model/#track-object-full
-        if (_.has(track, "name") && _.has(track, "id") && _.has(track, "uri")) {
+        if (_has(track, "name") && _has(track, "id") && _has(track, "uri")) {
           handleSuccess(
             <span>
               We found a matching track on Spotify:
@@ -231,7 +229,7 @@ export default class SpotifyPlayer
   };
 
   playListen = (listen: Listen): void => {
-    if (_.get(listen, "track_metadata.additional_info.spotify_id")) {
+    if (_get(listen, "track_metadata.additional_info.spotify_id")) {
       this.playSpotifyURI(getSpotifyUriFromListen(listen));
     } else {
       this.searchAndPlayTrack(listen);
@@ -384,22 +382,30 @@ export default class SpotifyPlayer
   };
 
   handleSpotifyAPICurrentlyPlaying = (currentlyPlaying: any): void => {
-    const { handleWarning } = this.props;
+    const { handleWarning, onProgressChange, onDurationChange } = this.props;
+    const { durationMs } = this.state;
     if (currentlyPlaying.is_playing) {
       handleWarning(
         "Using Spotify on this page will interrupt your current playback",
         "Spotify player"
       );
     }
+
+    onProgressChange(currentlyPlaying.progress_ms);
+
+    const newDurationMs = _get(currentlyPlaying, "item.duration_ms", null);
+    if (newDurationMs !== null && newDurationMs !== durationMs) {
+      onDurationChange(newDurationMs);
+    }
     this.setState({
-      progressMs: currentlyPlaying.progress_ms,
-      durationMs: currentlyPlaying.item && currentlyPlaying.item.duration_ms,
+      durationMs: newDurationMs,
       currentSpotifyTrack: currentlyPlaying.item,
     });
   };
 
   handlePlayerStateChanged = (playerState: SpotifyPlayerSDKState): void => {
-    if (!playerState) {
+    const { show } = this.props;
+    if (!playerState || !show) {
       return;
     }
     const {
@@ -409,9 +415,8 @@ export default class SpotifyPlayer
       track_window: { current_track },
     } = playerState;
 
-    const { currentSpotifyTrack, progressMs, durationMs } = this.state;
+    const { currentSpotifyTrack, durationMs } = this.state;
     const { playerPaused } = this.props;
-    const { onTrackEnd } = this.props;
     const {
       onPlayerPausedChange,
       onProgressChange,
@@ -426,11 +431,11 @@ export default class SpotifyPlayer
     // From https://github.com/spotify/web-playback-sdk/issues/35#issuecomment-469834686
     if (position === 0 && paused === true) {
       // Track finished, play next track
-      onTrackEnd();
+      this.debouncedOnTrackEnd();
       return;
     }
 
-    if (!_isEqual(currentSpotifyTrack, current_track)) {
+    if (!_isEqual(_get(currentSpotifyTrack, "id"), current_track.id)) {
       const { onTrackInfoChange } = this.props;
 
       const artists = current_track.artists
@@ -439,7 +444,6 @@ export default class SpotifyPlayer
       onTrackInfoChange(current_track.name, artists);
 
       this.setState({
-        progressMs: position,
         durationMs: duration,
         currentSpotifyTrack: current_track,
       });
@@ -450,12 +454,10 @@ export default class SpotifyPlayer
 
     if (duration !== durationMs) {
       onDurationChange(duration);
+      this.setState({
+        durationMs: duration,
+      });
     }
-
-    this.setState({
-      progressMs: position,
-      durationMs: duration,
-    });
   };
 
   getAlbumArt = (): JSX.Element | null => {

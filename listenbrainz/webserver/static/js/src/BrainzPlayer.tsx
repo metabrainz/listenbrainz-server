@@ -38,11 +38,10 @@ type BrainzPlayerProps = {
     message: string | JSX.Element
   ) => void;
   apiService: APIService;
-  // onAccountError: (message: string | JSX.Element) => void;
 };
 
 type BrainzPlayerState = {
-  currentDataSourceIndex: number; // "spotify_player" | "spotify_embed" | "youtube";
+  currentDataSourceIndex: number;
   currentTrackName: string;
   currentTrackArtist?: string;
   direction: BrainzPlayDirection;
@@ -62,7 +61,7 @@ export default class BrainzPlayer extends React.Component<
 
   firstRun: boolean = true;
 
-  playerStateTimerID?: number | null;
+  playerStateTimerID?: NodeJS.Timeout;
 
   constructor(props: BrainzPlayerProps) {
     super(props);
@@ -110,9 +109,6 @@ export default class BrainzPlayer extends React.Component<
         "No listens to play"
       );
       return;
-    }
-    if (this.firstRun) {
-      this.firstRun = false;
     }
 
     const currentListenIndex = listens.findIndex(this.isCurrentListen);
@@ -165,7 +161,7 @@ export default class BrainzPlayer extends React.Component<
   };
 
   invalidateDataSource = (message?: string | JSX.Element): void => {
-    // What do we do here? Remove from datasource? Using currentDataSourceIndex?
+    // What do we do here? Remove from datasource using currentDataSourceIndex?
     const { currentDataSourceIndex } = this.state;
     if (message) {
       this.handleWarning(message, "Cannot play from this source");
@@ -176,6 +172,9 @@ export default class BrainzPlayer extends React.Component<
   playListen = (listen: Listen, datasourceIndex: number = 0): void => {
     const { onCurrentListenChange } = this.props;
     onCurrentListenChange(listen);
+    if (this.firstRun) {
+      this.firstRun = false;
+    }
     this.setState({ currentDataSourceIndex: datasourceIndex }, () => {
       const { currentDataSourceIndex } = this.state;
       const dataSource =
@@ -258,7 +257,13 @@ export default class BrainzPlayer extends React.Component<
   };
 
   playerPauseChange = (paused: boolean): void => {
-    this.setState({ playerPaused: paused });
+    this.setState({ playerPaused: paused }, () => {
+      if (paused) {
+        this.stopPlayerStateTimer();
+      } else {
+        this.startPlayerStateTimer();
+      }
+    });
   };
 
   progressChange = (progressMs: number): void => {
@@ -266,7 +271,7 @@ export default class BrainzPlayer extends React.Component<
   };
 
   durationChange = (durationMs: number): void => {
-    this.setState({ durationMs });
+    this.setState({ durationMs }, this.startPlayerStateTimer);
   };
 
   trackInfoChange = (title: string, artist?: string): void => {
@@ -276,7 +281,8 @@ export default class BrainzPlayer extends React.Component<
   /* Updating the progress bar without calling any API to check current player state */
 
   startPlayerStateTimer = (): void => {
-    this.playerStateTimerID = window.setInterval(() => {
+    this.stopPlayerStateTimer();
+    this.playerStateTimerID = setInterval(() => {
       this.getStatePosition();
     }, 200);
   };
@@ -295,9 +301,9 @@ export default class BrainzPlayer extends React.Component<
 
   stopPlayerStateTimer = (): void => {
     if (this.playerStateTimerID) {
-      window.clearInterval(this.playerStateTimerID);
+      clearInterval(this.playerStateTimerID);
     }
-    this.playerStateTimerID = null;
+    this.playerStateTimerID = undefined;
   };
 
   render() {
