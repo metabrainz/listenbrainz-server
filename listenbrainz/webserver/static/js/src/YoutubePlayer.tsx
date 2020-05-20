@@ -26,7 +26,9 @@ export default class YoutubePlayer
     const { show } = this.props;
     if (prevProps.show === true && show === false && this.youtubePlayer) {
       this.youtubePlayer.stopVideo();
+      // Clear playlist
       this.youtubePlayer.clearVideo();
+      this.youtubePlayer.cueVideoById("");
     }
   }
 
@@ -77,8 +79,15 @@ export default class YoutubePlayer
       handleWarning("Not enough info to search on Youtube");
       onTrackNotFound();
     } else if (this.youtubePlayer) {
+      let query = trackName;
+      if (artistName) {
+        query += ` ${artistName}`;
+      }
+      if (releaseName) {
+        query += ` ${releaseName}`;
+      }
       this.youtubePlayer.loadPlaylist({
-        list: `${trackName}+${artistName}+${releaseName}`,
+        list: query,
         listType: "search",
       });
     }
@@ -109,6 +118,19 @@ export default class YoutubePlayer
       this.playTrackById(youtubeURI);
     } else {
       this.searchAndPlayTrack(listen);
+    }
+    setTimeout(this.checkVideoLoaded.bind(this), 1500);
+  };
+
+  checkVideoLoaded = () => {
+    if (!this.youtubePlayer) {
+      return;
+    }
+    const { onTrackNotFound } = this.props;
+    // We use cueVideoById("") as a means to clear any playlist.
+    // If search or loadVideoByID yield no results we can detect that nothing was found
+    if (!this.youtubePlayer.getVideoData().video_id) {
+      onTrackNotFound();
     }
   };
 
