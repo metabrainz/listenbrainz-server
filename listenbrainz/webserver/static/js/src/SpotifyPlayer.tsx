@@ -86,8 +86,7 @@ export default class SpotifyPlayer
   componentDidUpdate(prevProps: DataSourceProps) {
     const { show } = this.props;
     if (prevProps.show === true && show === false) {
-      this.setState({ currentSpotifyTrack: undefined });
-      this.spotifyPlayer && this.spotifyPlayer.pause();
+      this.stopAndClear();
     }
   }
 
@@ -242,6 +241,13 @@ export default class SpotifyPlayer
     this.spotifyPlayer.togglePlay().catch((error: Error) => {
       handleError(error.message);
     });
+  };
+
+  stopAndClear = (): void => {
+    this.setState({ currentSpotifyTrack: undefined });
+    if (this.spotifyPlayer) {
+      this.spotifyPlayer.pause();
+    }
   };
 
   handleTokenError = async (
