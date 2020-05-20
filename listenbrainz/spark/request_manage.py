@@ -129,20 +129,20 @@ def request_dataframes():
 
 @cli.command(name='request_model')
 def request_model():
-    """ Send the cluster request to train the data.
+    """ Send the cluster a request to train the model.
     """
     send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.train_model'))
 
 
 @cli.command(name='request_candidate_sets')
 def request_candidate_sets():
-    """ Send the cluster the request to generate candidate sets.
+    """ Send the cluster a request to generate candidate sets.
     """
     send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.candidate_sets'))
 
 
 @cli.command(name='request_recommendations')
 def request_recommendations():
-    """ Send the cluster the request to generate recommendations.
+    """ Send the cluster a request to generate recommendations.
     """
     send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.recommend'))

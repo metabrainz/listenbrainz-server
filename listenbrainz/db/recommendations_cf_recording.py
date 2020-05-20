@@ -21,6 +21,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 
+import ujson
 import sqlalchemy
 
 from listenbrainz import db
@@ -40,20 +41,24 @@ def get_timestamp_for_last_recording_recommended():
         return row['created_ts'] if row else None
 
 
-def insert_user_recommendation(user_id, recording_mbid, artist_type=None):
+def insert_user_recommendation(user_id, top_artist_recording, similar_artist_recording):
     """ Insert recommended recording for a user in the db.
     """
-    if artist_type is None:
-        current_app.logger.critical('artist type for recommendation not specified')
-        return
+    recommendation = {
+        'top_artist': top_artist_recording,
+        'similar_artist': similar_artist_recording,
+    }
 
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            INSERT INTO recommendation.cf_recording (user_id, recording_mbid, type)
-                 VALUES (:user_id, :recording_mbid, :artist_type)
-        """), {
+            INSERT INTO recommendation.cf_recording (user_id, recording_mbid)
+                 VALUES (:user_id, :recommendation)
+            ON CONFLICT (user_id)
+          DO UPDATE SET user_id = :user_id,
+                        recording_mbid = :recommendation,
+                        created = NOW()
+            """), {
                 'user_id': user_id,
-                'recording_mbid': recording_mbid,
-                'artist_type': artist_type,
+                'recommendation': ujson.dumps(recommendation),
             }
         )
