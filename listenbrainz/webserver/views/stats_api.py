@@ -51,15 +51,15 @@ def get_artist(user_name):
                 "total_artist_count": 175,
                 "range": "all_time",
                 "last_updated": 1588494361,
-                "user_id": "John Doe"
+                "user_id": "John Doe",
+                "from": 1009823400,
+                "to": 1590029157
             }
         }
 
     .. note::
         - This endpoint is currently in beta
         - ``artist_mbids`` and ``artist_msid`` are optional fields and may not be present in all the responses
-        - As of now we are only calculating ``all_time`` statistics for artist.
-          However, we plan to add other time intervals in the future.
 
     :param count: Optional, number of artists to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
         Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
@@ -67,8 +67,8 @@ def get_artist(user_name):
     :param offset: Optional, number of artists to skip from the beginning, for pagination.
         Ex. An offset of 5 means the top 5 artists will be skipped, defaults to 0
     :type offset: ``int``
-    :param range: Optional, time interval for which statistics should be collected, defaults to ``all_time``,
-        we currently only support all time but more intervals will be added.
+    :param range: Optional, time interval for which statistics should be collected, possible values are ``week``,
+        ``month``, ``year``, ``all_time``, defaults to ``all_time``
     :type range: ``str``
     :statuscode 200: Successful query, you have data!
     :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
@@ -77,9 +77,10 @@ def get_artist(user_name):
     :resheader Content-Type: *application/json*
     """
 
-    _range = request.args.get('range', default='all_time')
-    if _range != 'all_time':
-        raise APIBadRequest("We currently only support the `all_time` range.")
+    stats_range = request.args.get('range', default='all_time')
+    possible_ranges = {'week', 'month', 'year', 'all_time'}
+    if stats_range not in possible_ranges:
+        raise APIBadRequest("Invalid range")
 
     offset = _get_non_negative_param('offset', default=0)
     count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
@@ -93,19 +94,24 @@ def get_artist(user_name):
         return '', 204
 
     count = min(count, MAX_ITEMS_PER_GET)
-    total_artist_count = stats['artist'][_range]['count']
+    try:
+        total_artist_count = stats['artist'][stats_range]['count']
+    except KeyError:
+        return '', 204
 
     count = count + offset
-    artist_list = stats['artist']['all_time']['artists'][offset:count]
+    artist_list = stats['artist'][stats_range]['artists'][offset:count]
 
     return jsonify({'payload': {
-        'user_id': user_name,
+        "user_id": user_name,
         "artists": artist_list,
         "count": len(artist_list),
         "total_artist_count": total_artist_count,
         "offset": offset,
-        "range": _range,
-        'last_updated': int(stats['last_updated'].timestamp())
+        "range": stats_range,
+        "from": int(stats['artist'][stats_range]['from']),
+        "to": int(stats['artist'][stats_range]['to']),
+        "last_updated": int(stats['last_updated'].timestamp())
     }})
 
 
