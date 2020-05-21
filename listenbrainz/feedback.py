@@ -1,6 +1,7 @@
 from typing import List
 from pydantic import BaseModel, ValidationError, validator
 
+
 class Feedback(BaseModel):
     user_id: int
     recording_msid: str

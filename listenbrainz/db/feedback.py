@@ -3,6 +3,7 @@ import sqlalchemy
 from listenbrainz import db
 from listenbrainz.feedback import Feedback
 
+
 def insert(feedback: Feedback):
     """ Inserts a feedback record for a user's loved/hated recording into the database.
         If the record is already present for the user, the score is updated to the new
@@ -61,8 +62,8 @@ def get_feedback_by_user_id(user_id: int):
                 'user_id': user_id
             }
         )
-        return [Feedback(user_id = row["user_id"], recording_msid = str(row["recording_msid"]), score = row["score"])
-            for row in result.fetchall() if row['user_id'] is not None]
+        return [Feedback(user_id=row["user_id"], recording_msid=str(row["recording_msid"]), score=row["score"])
+                for row in result.fetchall() if row['user_id'] is not None]
 
 
 def get_feedback_by_user__id_and_score(user_id: int, score: int):
@@ -87,8 +88,8 @@ def get_feedback_by_user__id_and_score(user_id: int, score: int):
                 'score': score
             }
         )
-        return [Feedback(user_id = row["user_id"], recording_msid = str(row["recording_msid"]), score = row["score"])
-            for row in result.fetchall() if row['user_id'] is not None]
+        return [Feedback(user_id=row["user_id"], recording_msid=str(row["recording_msid"]), score=row["score"])
+                for row in result.fetchall() if row['user_id'] is not None]
 
 
 def get_feedback_by_recording_msid(recording_msid: str):
@@ -110,5 +111,5 @@ def get_feedback_by_recording_msid(recording_msid: str):
                 'recording_msid': recording_msid
             }
         )
-        return [Feedback(user_id = row["user_id"], recording_msid = str(row["recording_msid"]), score = row["score"])
-            for row in result.fetchall() if row['user_id'] is not None]
+        return [Feedback(user_id=row["user_id"], recording_msid=str(row["recording_msid"]), score=row["score"])
+                for row in result.fetchall() if row['user_id'] is not None]

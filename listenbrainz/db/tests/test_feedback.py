@@ -43,9 +43,9 @@ class FeedbackDatabaseTestCase(DatabaseTestCase):
             for fb_neg in self.sample_feedback_neg_score:
                 db_feedback.insert(
                     Feedback(
-                        user_id = user_id,
-                        recording_msid = fb_neg["recording_msid"],
-                        score = fb_neg["score"]
+                        user_id=user_id,
+                        recording_msid=fb_neg["recording_msid"],
+                        score=fb_neg["score"]
                     )
                 )
             return
@@ -54,9 +54,9 @@ class FeedbackDatabaseTestCase(DatabaseTestCase):
         for fb in self.sample_feedback:
             db_feedback.insert(
                 Feedback(
-                    user_id = user_id,
-                    recording_msid = fb["recording_msid"],
-                    score = fb["score"]
+                    user_id=user_id,
+                    recording_msid=fb["recording_msid"],
+                    score=fb["score"]
                 )
             )
 
@@ -85,9 +85,9 @@ class FeedbackDatabaseTestCase(DatabaseTestCase):
         del_fb = self.sample_feedback[0]
         db_feedback.delete(
             Feedback(
-                user_id = self.user['id'],
-                recording_msid = del_fb["recording_msid"],
-                score = del_fb["score"]
+                user_id=self.user['id'],
+                recording_msid=del_fb["recording_msid"],
+                score=del_fb["score"]
             )
         )
 
