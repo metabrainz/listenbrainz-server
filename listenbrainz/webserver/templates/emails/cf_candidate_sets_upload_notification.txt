@@ -1,0 +1,9 @@
+Hey! 👋
+
+Candidate sets have been successfully uploaded to HDFS.
+listens submitted from {{ from_date }} to {{ to_date  }} are used to create the candidate sets.
+
+upload time = {{ time_to_upload }}
+time taken to create candidate sets = {{ total_time }}m
+
+Your Friendly Neighbourhood Brainzbot 🤖

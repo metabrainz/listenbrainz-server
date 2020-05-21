@@ -1,0 +1,9 @@
+Hey! 👋
+
+Dataframes have been successfully uploaded to HDFS.
+listens submitted from {{ from_date }} to {{ to_date  }} are used to create the dataframes.
+
+upload time = {{ time_to_upload }}
+time taken to create dataframes = {{ total_time }}m
+
+Your Friendly Neighbourhood Brainzbot 🤖

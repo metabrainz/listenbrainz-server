@@ -1,21 +1,25 @@
-
 import json
 import logging
 import pika
 import time
 import ujson
 
+import sqlalchemy
 from flask import current_app
 from listenbrainz import utils
 from listenbrainz.db import user as db_user, stats as db_stats
 from listenbrainz.webserver import create_app
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz.spark.handlers import handle_user_artist, handle_dump_imported
-import sqlalchemy
+from listenbrainz.spark.handlers import handle_user_artist, handle_dump_imported, handle_dataframes, handle_model, \
+    handle_candidate_sets, handle_recommendations
 
 response_handler_map = {
     'user_artists': handle_user_artist,
     'import_full_dump': handle_dump_imported,
+    'cf_recording_dataframes': handle_dataframes,
+    'cf_recording_model': handle_model,
+    'cf_recording_candidate_sets': handle_candidate_sets,
+    'cf_recording_recommendations': handle_recommendations,
 }
 
 
