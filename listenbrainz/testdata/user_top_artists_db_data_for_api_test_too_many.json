@@ -602,5 +602,7 @@
     }
   ],
   "range": "all_time",
+  "from": 0,
+  "to": 5,
   "count": 125
 }
