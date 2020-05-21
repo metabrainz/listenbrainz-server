@@ -1,5 +1,5 @@
 from datetime import datetime
-from enum import Enum, auto
+from enum import Enum
 
 from flask import Blueprint, current_app, jsonify, request
 
@@ -17,10 +17,10 @@ stats_api_bp = Blueprint('stats_api_v1', __name__)
 
 
 class StatisticsRange(Enum):
-    week = auto()
-    month = auto()
-    year = auto()
-    all_time = auto()
+    week = 'week'
+    month = 'month'
+    year = 'year'
+    all_time = 'all_time'
 
 
 @stats_api_bp.route("/user/<user_name>/artists")
@@ -86,9 +86,7 @@ def get_artist(user_name):
     """
 
     stats_range = request.args.get('range', default='all_time')
-    try:
-        StatisticsRange[stats_range]
-    except KeyError:
+    if not _is_valid_range(stats_range):
         raise APIBadRequest("Invalid range: {}".format(stats_range))
 
     offset = _get_non_negative_param('offset', default=0)
@@ -141,3 +139,15 @@ def _get_non_negative_param(param, default=None):
         if value < 0:
             raise APIBadRequest("'{}' should be a non-negative integer".format(param))
     return value
+
+
+def _is_valid_range(stats_range):
+    """ Check if the provided range is valid
+
+    Args:
+        stats_range (str): the range to validate
+
+    Returns:
+        result (bool): True if given range is valid
+    """
+    return stats_range in StatisticsRange.__members__
