@@ -19,6 +19,6 @@ class Feedback(BaseModel):
     def check_recording_msid_is_valid_uuid(cls, rec_msid):
         try:
             rec_msid = uuid.UUID(rec_msid)
-            return rec_msid
+            return str(rec_msid)
         except (AttributeError, ValueError):
-            raise ValueError('Recording MSID must be a valid UUID')
+            raise ValueError('Recording MSID must be a valid UUID.')
