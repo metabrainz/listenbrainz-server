@@ -41,18 +41,18 @@ def get_timestamp_for_last_recording_recommended():
         return row['created_ts'] if row else None
 
 
-def insert_user_recommendation(user_id, top_artist_recording, similar_artist_recording):
+def insert_user_recommendation(user_id, top_artist_recording_mbids, similar_artist_recording_mbids):
     """ Insert recommended recording for a user in the db.
 
         Args:
             user_id (int): row id of the user.
-            top_artist_recording (list): recommended recording mbids that belong to top artists listened to by the user.
-            similar_artist_recording (list): recommended recording mbids that belong to artists similar to top artists
+            top_artist_recording_mbids (list): recommended recording mbids that belong to top artists listened to by the user.
+            similar_artist_recording_mbids (list): recommended recording mbids that belong to artists similar to top artists
                                              listened to by the user.
     """
     recommendation = {
-        'top_artist': top_artist_recording,
-        'similar_artist': similar_artist_recording,
+        'top_artist': top_artist_recording_mbids,
+        'similar_artist': similar_artist_recording_mbids,
     }
 
     with db.engine.connect() as connection:
@@ -68,6 +68,7 @@ def insert_user_recommendation(user_id, top_artist_recording, similar_artist_rec
                 'recommendation': ujson.dumps(recommendation),
             }
         )
+
 
 def get_user_recommendation(user_id):
     """ Get recommendations for a user with the given row ID.

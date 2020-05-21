@@ -48,7 +48,7 @@ SAVE_CANDIDATE_HTML = True
 
 
 def get_dates_to_generate_candidate_sets(mapped_df):
-    """ Get window to fetch listens ti generate candidate sets.
+    """ Get window to fetch listens to generate candidate sets.
 
         Args:
             mapped_df (dataframe): listens mapped with msid_mbid_mapping. Refer to candidate_sets.py

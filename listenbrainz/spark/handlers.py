@@ -175,9 +175,10 @@ def handle_recommendations(data):
         notify_cf_recording_recommendations_update()
 
     current_app.logger.debug("inserting recommendation for {}".format(musicbrainz_id))
-    top_artist_recording = data['top_artist']
-    similar_artist_recording = data['similar_artist']
+    top_artist_recording_mbids = data['top_artist']
+    similar_artist_recording_mbids = data['similar_artist']
 
-    db_recommendations_cf_recording.insert_user_recommendation(user['id'], top_artist_recording, similar_artist_recording)
+    db_recommendations_cf_recording.insert_user_recommendation(user['id'], top_artist_recording_mbids,
+                                                               similar_artist_recording_mbids)
 
     current_app.logger.debug("recommendation for {} inserted".format(musicbrainz_id))
