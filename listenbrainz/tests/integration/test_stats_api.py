@@ -29,10 +29,10 @@ class StatsAPITestCase(IntegrationTestCase):
         received_total_artist_count = data['total_artist_count']
         self.assertEqual(sent_total_artist_count, received_total_artist_count)
         sent_from = payload['from']
-        received_from = data['from']
+        received_from = data['from_ts']
         self.assertEqual(sent_from, received_from)
         sent_to = payload['to']
-        received_to = data['to']
+        received_to = data['to_ts']
         self.assertEqual(sent_to, received_to)
         sent_artist_list = payload['artists'][:25]
         received_artist_list = data['artists']
@@ -53,10 +53,10 @@ class StatsAPITestCase(IntegrationTestCase):
         received_count = data['count']
         self.assertEqual(100, received_count)
         sent_from = payload['from']
-        received_from = data['from']
+        received_from = data['from_ts']
         self.assertEqual(sent_from, received_from)
         sent_to = payload['to']
-        received_to = data['to']
+        received_to = data['to_ts']
         self.assertEqual(sent_to, received_to)
         sent_artist_list = payload['artists'][:100]
         received_artist_list = data['artists']
@@ -147,7 +147,7 @@ class StatsAPITestCase(IntegrationTestCase):
         response = self.client.get(url_for('stats_api_v1.get_artist',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'foobar'})
         self.assert400(response)
-        self.assertEqual("Invalid range", response.json['error'])
+        self.assertEqual("Invalid range: foobar", response.json['error'])
 
     def test_artist_stat_count(self):
         """ Test to make sure valid response is received if count argument is passed """

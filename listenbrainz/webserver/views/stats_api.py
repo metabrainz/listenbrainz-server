@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum, auto
 
 from flask import Blueprint, current_app, jsonify, request
 
@@ -13,6 +14,13 @@ from listenbrainz.webserver.rate_limiter import ratelimit
 from listenbrainz.webserver.views.api_tools import DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET
 
 stats_api_bp = Blueprint('stats_api_v1', __name__)
+
+
+class StatisticsRange(Enum):
+    week = auto()
+    month = auto()
+    year = auto()
+    all_time = auto()
 
 
 @stats_api_bp.route("/user/<user_name>/artists")
@@ -52,8 +60,8 @@ def get_artist(user_name):
                 "range": "all_time",
                 "last_updated": 1588494361,
                 "user_id": "John Doe",
-                "from": 1009823400,
-                "to": 1590029157
+                "from_ts": 1009823400,
+                "to_ts": 1590029157
             }
         }
 
@@ -78,9 +86,10 @@ def get_artist(user_name):
     """
 
     stats_range = request.args.get('range', default='all_time')
-    possible_ranges = {'week', 'month', 'year', 'all_time'}
-    if stats_range not in possible_ranges:
-        raise APIBadRequest("Invalid range")
+    try:
+        StatisticsRange[stats_range]
+    except KeyError:
+        raise APIBadRequest("Invalid range: {}".format(stats_range))
 
     offset = _get_non_negative_param('offset', default=0)
     count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
@@ -109,8 +118,8 @@ def get_artist(user_name):
         "total_artist_count": total_artist_count,
         "offset": offset,
         "range": stats_range,
-        "from": int(stats['artist'][stats_range]['from']),
-        "to": int(stats['artist'][stats_range]['to']),
+        "from_ts": int(stats['artist'][stats_range]['from']),
+        "to_ts": int(stats['artist'][stats_range]['to']),
         "last_updated": int(stats['last_updated'].timestamp())
     }})
 
