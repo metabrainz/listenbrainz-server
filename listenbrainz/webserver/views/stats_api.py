@@ -142,7 +142,7 @@ def _get_non_negative_param(param, default=None):
 
 
 def _is_valid_range(stats_range):
-    """ Check if the provided range is valid
+    """ Check if the provided stats time range is valid
 
     Args:
         stats_range (str): the range to validate
