@@ -7,19 +7,16 @@ type YoutubePlayerState = {
   currentListen?: Listen;
 };
 
-enum YoutubePlayerStateType {
-  UNSTARTED = -1,
-  ENDED = 0,
-  PLAYING = 1,
-  PAUSED = 2,
-  BUFFERING = 3,
-  CUED = 5,
-}
+// For some reason Youtube types do not document getVideoData,
+// which we need to determine if there was no search results
+type ExtendedYoutubePlayer = {
+  getVideoData?: () => { video_id?: string; author: string; title: string };
+} & YT.Player;
 
 export default class YoutubePlayer
   extends React.Component<DataSourceProps, YoutubePlayerState>
   implements DataSourceType {
-  youtubePlayer: any;
+  youtubePlayer?: ExtendedYoutubePlayer;
   youtubePlayerStateTimerID = null;
 
   componentDidUpdate(prevProps: DataSourceProps) {
@@ -27,19 +24,15 @@ export default class YoutubePlayer
     if (prevProps.show === true && show === false && this.youtubePlayer) {
       this.youtubePlayer.stopVideo();
       // Clear playlist
-      this.youtubePlayer.clearVideo();
       this.youtubePlayer.cueVideoById("");
     }
   }
 
-  onReady = (event: { target: any }): void => {
+  onReady = (event: YT.PlayerEvent): void => {
     this.youtubePlayer = event.target;
   };
 
-  handlePlayerStateChanged = (event: {
-    data: YoutubePlayerStateType;
-    target: any;
-  }) => {
+  handlePlayerStateChanged = (event: YT.OnStateChangeEvent) => {
     const { data: state, target: player } = event;
     const {
       onPlayerPausedChange,
@@ -47,24 +40,26 @@ export default class YoutubePlayer
       onProgressChange,
       show,
     } = this.props;
-
-    if (state === 0) {
-      console.debug("Detected Youtube end of track, playing next track");
+    if (!show) {
+      return;
+    }
+    if (state === YouTube.PlayerState.ENDED) {
       const { onTrackEnd } = this.props;
       onTrackEnd();
     }
-    if (state === YoutubePlayerStateType.UNSTARTED && show) {
+    if (state === YouTube.PlayerState.UNSTARTED) {
       const { onTrackInfoChange } = this.props;
       const title = _get(player, "playerInfo.videoData.title", "");
       onTrackInfoChange(title);
       player.playVideo();
       onPlayerPausedChange(false);
+      onProgressChange(player.getCurrentTime() * 1000);
       onDurationChange(player.getDuration() * 1000);
     }
-    if (state === YoutubePlayerStateType.PAUSED) {
+    if (state === YouTube.PlayerState.PAUSED) {
       onPlayerPausedChange(true);
     }
-    if (state === YoutubePlayerStateType.PLAYING) {
+    if (state === YouTube.PlayerState.PLAYING) {
       onPlayerPausedChange(false);
     }
     onProgressChange(player.getCurrentTime() * 1000);
@@ -129,7 +124,10 @@ export default class YoutubePlayer
     const { onTrackNotFound } = this.props;
     // We use cueVideoById("") as a means to clear any playlist.
     // If search or loadVideoByID yield no results we can detect that nothing was found
-    if (!this.youtubePlayer.getVideoData().video_id) {
+    if (
+      this.youtubePlayer.getVideoData &&
+      !this.youtubePlayer.getVideoData().video_id
+    ) {
       onTrackNotFound();
     }
   };
@@ -156,10 +154,29 @@ export default class YoutubePlayer
     this.youtubePlayer.playVideo();
   };
 
-  onError = (event: { data: any }): void => {
-    const { errorNumber } = event.data;
+  onError = (event: YT.OnErrorEvent): void => {
+    const { data: errorNumber } = event;
     const { handleError, onTrackNotFound } = this.props;
-    handleError(errorNumber);
+    let message = "Something went wrong";
+    switch (errorNumber) {
+      case 101:
+      case 150:
+        message =
+          "The owner of the requested video does not allow it to be played in embedded players.";
+        break;
+      case 5:
+        message = "The requested content cannot be played in an HTML5 player.";
+        break;
+      case 2:
+        message = "The request contained an invalid parameter value.";
+        break;
+      case 100:
+        message = "The video requested was not found.";
+        break;
+      default:
+        break;
+    }
+    handleError(message, "Youtube player error");
     onTrackNotFound();
   };
 
@@ -173,7 +190,6 @@ export default class YoutubePlayer
         fs: 0,
         iv_load_policy: 3,
         modestbranding: 1,
-        enablejsapi: 1,
         rel: 0,
         origin: window.location.origin.toString(),
       },
