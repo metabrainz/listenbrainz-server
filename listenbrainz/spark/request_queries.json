@@ -24,6 +24,26 @@
     "description": "All time artist statistics for all users",
     "params": []
   },
+  "stats.user.release.week": {
+    "name": "stats.user.release.week",
+    "description": "Release statistics for all users in the last week",
+    "params": []
+  },
+  "stats.user.release.month": {
+    "name": "stats.user.release.month",
+    "description": "Release statistics for all users in the last month",
+    "params": []
+  },
+  "stats.user.release.year": {
+    "name": "stats.user.release.year",
+    "description": "Release statistics for all users in the last year",
+    "params": []
+  },
+  "stats.user.release.all_time": {
+    "name": "stats.user.release.all_time",
+    "description": "All time release statistics for all users",
+    "params": []
+  },
   "import.dump.full": {
     "name": "import.dump.full",
     "description": "Import a new full dump into the spark cluster",

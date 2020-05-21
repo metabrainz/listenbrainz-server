@@ -45,6 +45,37 @@ def get_last_monday(date):
     return adjust_days(date, date.weekday())
 
 
+def create_messages(data, entity, stats_type, stats_range, from_ts, to_ts):
+    """
+    Create messages to send the data to the webserver via RabbitMQ
+
+    Args:
+        release_data (dict): Data to sent to the webserver
+        entity (str): The entity for which statistics are calculated, i.e 'artists',
+            'releases' or 'recordings'
+        stats_type (str): The type of statistics calculated
+        stats_range (str): The range for which the statistics have been calculated
+        from_ts (int): The UNIX timestamp of start time of the stats
+        to_ts (int): The UNIX timestamp of end time of the stats
+
+    Returns:
+        messages (list): A list of messages to be sent via RabbitMQ
+    """
+    messages = []
+    for user_name, user_releases in data.items():
+        messages.append({
+            'musicbrainz_id': user_name,
+            'type': stats_type,
+            'range': stats_range,
+            'from': from_ts,
+            'to': to_ts,
+            entity: user_releases,
+            'count': len(user_releases)
+        })
+
+    return messages
+
+
 def get_recordings(table):
     """
     Get recording information (recording_name, recording_mbid etc) for every user
@@ -107,56 +138,3 @@ def get_recordings(table):
     print("Query to calculate recording stats processed in %.2f s" % (time.time() - t0))
     return recordings
 
-
-def get_releases(table):
-    """
-    Get release information (release_name, release_mbid etc) for every user
-    ordered by listen count (number of times a user has listened to tracks
-    which belong to a particular release).
-
-    Args:
-        table: name of the temporary table
-
-    Returns:
-        artists: A dict of dicts which can be depicted as:
-                {
-                    'user1' : [{
-                        'release_name': str
-                        'release_msid': str,
-                        'release_mbid': str,
-                        'artist_name': str,
-                        'artist_msid': str,
-                        'artist_mbids': str,
-                        'listen_count': int
-                    }],
-                    'user2' : [{...}],
-                }
-    """
-    t0 = time.time()
-    query = run_query("""
-            SELECT user_name
-                 , release_name
-                 , release_msid
-                 , release_mbid
-                 , artist_name
-                 , artist_msid
-                 , artist_mbids
-                 , count(release_msid) as cnt
-              FROM %s
-          GROUP BY user_name, release_name, release_msid, release_mbid, artist_name, artist_msid, artist_mbids
-          ORDER BY cnt DESC
-        """ % (table))
-    rows = query.collect()
-    releases = defaultdict(list)
-    for row in rows:
-        releases[row.user_name].append({
-            'release_name': row.release_name,
-            'release_msid': row.release_msid,
-            'release_mbid': row.release_mbid,
-            'artist_name': row.artist_name,
-            'artist_msid': row.artist_msid,
-            'artist_mbids': row.artist_mbids,
-            'listen_count': row.cnt,
-        })
-    print("Query to calculate release stats processed in %.2f s" % (time.time() - t0))
-    return releases
