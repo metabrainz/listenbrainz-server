@@ -19,10 +19,10 @@ exports[`PlaybackControls renders 1`] = `
     id="music-player"
   >
     <div
-      className="album"
+      className="content"
     >
       <div
-        className="noAlbumArt"
+        className="no-album-art"
       >
         No album art
       </div>

@@ -44,7 +44,6 @@ export interface RecentListensProps {
 
 export interface RecentListensState {
   alerts: Array<Alert>;
-  canPlayMusic?: boolean;
   currentListen?: Listen;
   direction: BrainzPlayDirection;
   followList: Array<string>;
@@ -276,7 +275,6 @@ export default class RecentListens extends React.Component<
   render() {
     const {
       alerts,
-      canPlayMusic,
       currentListen,
       direction,
       followList,

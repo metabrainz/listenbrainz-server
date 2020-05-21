@@ -1,4 +1,4 @@
-import React, { ReactHTML, ReactHTMLElement } from "react";
+import * as React from "react";
 import YouTube, { Options } from "react-youtube";
 import { isEqual as _isEqual, get as _get, isNil as _isNil } from "lodash";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
