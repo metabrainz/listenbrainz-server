@@ -232,12 +232,17 @@ describe("SpotifyPlayer", () => {
     });
 
     it("detects the end of a track", () => {
-      const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...props} />);
+      const onTrackEnd = jest.fn();
+      const mockProps = { ...props, onTrackEnd };
+      const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
       const instance = wrapper.instance();
-      instance.debouncedOnTrackEnd = jest.fn();
 
+      // Spotify has a tendency to send multiple messages in a short burst,
+      // and we debounce calls to onTrackEnd
       instance.handlePlayerStateChanged({ ...spotifyPlayerState, position: 0 });
-      expect(instance.debouncedOnTrackEnd).toHaveBeenCalled();
+      instance.handlePlayerStateChanged({ ...spotifyPlayerState, position: 0 });
+      instance.handlePlayerStateChanged({ ...spotifyPlayerState, position: 0 });
+      expect(instance.props.onTrackEnd).toHaveBeenCalledTimes(1);
     });
 
     it("detects a new track and sends information up", () => {
