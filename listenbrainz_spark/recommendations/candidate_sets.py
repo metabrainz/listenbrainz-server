@@ -18,7 +18,7 @@ from listenbrainz_spark.exceptions import SQLException, SparkSessionNotInitializ
 from flask import current_app
 import pyspark.sql.functions as func
 from pyspark.sql.window import Window
-from pyspark.sql.functions import lit, col, to_timestamp, current_timestamp, date_sub, row_number
+from pyspark.sql.functions import col, row_number
 from pyspark.sql.utils import AnalysisException, ParseException
 
 # Candidate Set HTML is generated if set to true.
@@ -47,20 +47,36 @@ SAVE_CANDIDATE_HTML = True
 #   ]
 
 
-def get_listens_to_fetch_top_artists(mapped_df):
-    """ Get listens of past X days to fetch top artists where X = RECOMMENDATION_GENERATION_WINDOW.
+def get_dates_to_generate_candidate_sets(mapped_df):
+    """ Get window to fetch listens to generate candidate sets.
 
         Args:
             mapped_df (dataframe): listens mapped with msid_mbid_mapping. Refer to candidate_sets.py
                                    for dataframe columns.
 
         Returns:
+            from_date (datetime): Date from which start fetching listens.
+            to_date (datetime): Date upto which fetch listens.
+    """
+    # get timestamp of latest listen in HDFS
+    to_date = mapped_df.select(func.max('listened_at').alias('listened_at')).collect()[0].listened_at
+    from_date = stats.adjust_days(to_date, config.RECOMMENDATION_GENERATION_WINDOW).replace(hour=0, minute=0, second=0)
+    return from_date, to_date
+
+
+def get_listens_to_fetch_top_artists(mapped_df, from_date, to_date):
+    """ Get listens of past X days to fetch top artists where X = RECOMMENDATION_GENERATION_WINDOW.
+
+        Args:
+            mapped_df (dataframe): listens mapped with msid_mbid_mapping. Refer to candidate_sets.py
+                                   for dataframe columns.
+            from_date (datetime): Date from which start fetching listens.
+            to_date (datetime): Date upto which fetch listens.
+
+        Returns:
             mapped_listens_subset (dataframe): A subset of mapped_df containing user history.
     """
-    mapped_listens_subset = mapped_df.select('*') \
-                                     .where((col('listened_at') >= to_timestamp(date_sub(current_timestamp(),
-                                             config.RECOMMENDATION_GENERATION_WINDOW))) &
-                                            (col('listened_at') <= current_timestamp()))
+    mapped_listens_subset = mapped_df.filter(mapped_df.listened_at.between(from_date, to_date))
     return mapped_listens_subset
 
 
@@ -219,18 +235,18 @@ def get_candidate_html_data(top_similar_artists_df):
     return user_data
 
 
-def save_candidate_html(user_data, time_initial):
+def save_candidate_html(user_data, total_time):
     """ Save user data to an HTML file.
 
         Args:
             user_data (dict): Top and similar artists associated to users.
-            time_initial (str): Timestamp when the script was invoked.
+            total_time (str): time taken to generate candidate_sets
     """
     date = datetime.utcnow().strftime('%Y-%m-%d')
     candidate_html = 'Candidate-{}-{}.html'.format(uuid.uuid4(), date)
     context = {
         'user_data': user_data,
-        'total_time': '{:.2f}'.format((time() - time_initial) / 60),
+        'total_time': total_time,
     }
     save_html(candidate_html, context, 'candidate.html')
 
@@ -276,8 +292,10 @@ def main():
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
+    from_date, to_date = get_dates_to_generate_candidate_sets(mapped_df)
+
     current_app.logger.info('Fetching listens to get top artists...')
-    mapped_listens_subset = get_listens_to_fetch_top_artists(mapped_df)
+    mapped_listens_subset = get_listens_to_fetch_top_artists(mapped_df, from_date, to_date)
 
     current_app.logger.info('Fetching top artists...')
     top_artists_df = get_top_artists(mapped_listens_subset)
@@ -299,8 +317,20 @@ def main():
         current_app.logger.error('{}\nAborting...'.format(str(err.java_exception)), exc_info=True)
         sys.exit(-1)
 
+    # time taken to generate candidate_sets
+    total_time = '{:.2f}'.format((time() - time_initial) / 60)
     if SAVE_CANDIDATE_HTML:
         user_data = get_candidate_html_data(top_similar_artists_df)
         current_app.logger.info('Saving HTML...')
-        save_candidate_html(user_data, time_initial)
+        save_candidate_html(user_data, total_time)
         current_app.logger.info('Done!')
+
+    message = [{
+        'type': 'cf_recording_candidate_sets',
+        'candidate_sets_upload_time': str(datetime.utcnow()),
+        'total_time': total_time,
+        'from_date': str(from_date),
+        'to_date': str(to_date)
+    }]
+
+    return message

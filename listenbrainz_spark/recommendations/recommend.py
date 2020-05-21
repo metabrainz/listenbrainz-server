@@ -1,3 +1,4 @@
+import sys
 import os
 import json
 import logging
@@ -116,7 +117,6 @@ def get_recommendations_for_all(recordings_df, model, top_artists_candidate_set,
     """
     messages = []
     current_app.logger.info('Generating recommendations...')
-
     # active users in the last week/month.
     # users for whom recommendations will be generated.
     users_df = top_artists_candidate_set.select('user_id', 'user_name').distinct()
