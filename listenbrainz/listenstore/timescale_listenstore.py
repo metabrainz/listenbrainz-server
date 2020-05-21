@@ -73,7 +73,7 @@ class TimescaleListenStore(ListenStore):
 
         if "PYTEST_CURRENT_TEST" in os.environ:
             # pytest sets the environment variable PYTEST_CURRENT_TEST. If the variable is set
-            # then return exact listen count using count(*) for listens corresponding to the 
+            # then return exact listen count using count(*) for listens corresponding to the
             # user_name in the listen schema itself
             print("TEST")
             query = "SELECT count(*) FROM listen WHERE user_name = :user_name"
@@ -110,9 +110,9 @@ class TimescaleListenStore(ListenStore):
     def _select_single_timestamp(self, select_min_timestamp, user_name):
 
         if select_min_timestamp:
-            query = "SELECT min(listened_at) AS value FROM listen WHERE user_name = :user_name"
+            query = "SELECT min(min_value) AS value FROM listened_at_min WHERE user_name = :user_name"
         else:
-            query = "SELECT max(listened_at) AS value FROM listen WHERE user_name = :user_name"
+            query = "SELECT max(max_value) AS value FROM listened_at_max WHERE user_name = :user_name"
 
         try:
             with timescale.engine.connect() as connection:
@@ -121,7 +121,7 @@ class TimescaleListenStore(ListenStore):
                 })
                 return result.fetchone()["value"]
         except psycopg2.OperationalError as e:
-            self.log.error("Cannot query timescale listen_count: %s" % str(e), exc_info=True)
+            self.log.error("Cannot query timescale listened_at_min/max: %s" % str(e), exc_info=True)
             raise
 
 
@@ -138,7 +138,7 @@ class TimescaleListenStore(ListenStore):
 
         if "PYTEST_CURRENT_TEST" in os.environ:
             # pytest sets the environment variable PYTEST_CURRENT_TEST. If the variable is set
-            # then return exact listen count using count(*) for listens corresponding to the 
+            # then return exact listen count using count(*) for listens corresponding to the
             # user_name in the listen schema itself
             print("TEST")
             query = "SELECT count(*) AS value FROM listen"
@@ -177,13 +177,14 @@ class TimescaleListenStore(ListenStore):
             min_ts = self._select_single_timestamp(True, user_name)
             max_ts = self._select_single_timestamp(False, user_name)
 
-            cache.set(self.ns + REDIS_USER_TIMESTAMPS % user_name, "%d,%d" % (min_ts, max_ts), USER_CACHE_TIME)
+            if min_ts and max_ts:
+                cache.set(self.ns + REDIS_USER_TIMESTAMPS % user_name, "%d,%d" % (min_ts, max_ts), USER_CACHE_TIME)
 
         return min_ts, max_ts
 
 
     def insert(self, listens):
-        """ 
+        """
             Insert a batch of listens. Returns a list of (listened_at, recording_msid, user_name) that indicates
             which rows were inserted into the DB. If the row is not listed in the return values, it was a duplicate.
         """
@@ -227,7 +228,6 @@ class TimescaleListenStore(ListenStore):
         return inserted_rows
 
 
-    # TODO: Fetch created from the DB as well
     def fetch_listens_from_storage(self, user_name, from_ts, to_ts, limit, order):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving
             the value they are converted to the local server's timezone. So to compare
@@ -237,24 +237,29 @@ class TimescaleListenStore(ListenStore):
             to_ts: seconds since epoch, in float
         """
 
-        query = 'SELECT listened_at, recording_msid, data FROM listen WHERE user_name = :user_name AND '
+        max_timestamp_window = 432000 * 3  # 15 days
+        query = """SELECT listened_at, recording_msid, data
+                     FROM listen
+                    WHERE user_name = :user_name
+                      AND listened_at > :from_ts
+                      AND listened_at < :to_ts
+                 ORDER BY listened_at """ + ORDER_TEXT[order] + """
+                    LIMIT :limit"""
         if from_ts is not None:
-            query += "listened_at > :ts"
-            ts = from_ts
+            to_ts = from_ts + max_timestamp_window
         else:
-            query += "listened_at < :ts"
-            ts = to_ts
-
-        query += " ORDER BY listened_at " + ORDER_TEXT[order] + " LIMIT :limit"
+            from_ts = to_ts - max_timestamp_window
+        self.log.info(query)
+        self.log.info("%d %d" % (from_ts, to_ts))
 
         listens = []
         with timescale.engine.connect() as connection:
-            curs = connection.execute(sqlalchemy.text(query), user_name=user_name, ts=ts, limit=limit)
+            curs = connection.execute(sqlalchemy.text(query), user_name=user_name, from_ts=from_ts, to_ts=to_ts, limit=limit)
             while True:
                 result = curs.fetchone()
                 if not result:
                     break
-        
+
                 listens.append(Listen.from_timescale(result[0], result[1], user_name, result[2]))
 
         if order == ORDER_ASC:
@@ -290,14 +295,14 @@ class TimescaleListenStore(ListenStore):
                 result = curs.fetchone()
                 if not result:
                     break
-            
+
                 listens.append(Listen.from_timescale(result[0], result[1], result[2], result[3]))
 
         return listens
 
 
     def get_listens_query_for_dump(self, user_name, end_time, offset):
-        """ 
+        """
             Get a query and its args dict to select a batch for listens for the full dump.
             Use listened_at timestamp, since not all listens have the created timestamp.
         """
@@ -321,12 +326,12 @@ class TimescaleListenStore(ListenStore):
 
 
     def get_incremental_listens_query_batch(self, user_name, start_time, end_time, offset):
-        """ 
+        """
             Get a query for a batch of listens for an incremental listen dump.
             This uses the `created` column to fetch listens.
         """
 
-        query = """SELECT listened_at, recording_msid, user_name, created, data 
+        query = """SELECT listened_at, recording_msid, user_name, created, data
                      FROM listen
                     WHERE created > :start_ts
                       AND created <= :end_ts
@@ -341,7 +346,6 @@ class TimescaleListenStore(ListenStore):
             'offset' : offset,
             'limit' : DUMP_CHUNK_SIZE
         }
-            
         return (query, args)
 
 
@@ -393,7 +397,7 @@ class TimescaleListenStore(ListenStore):
                     result = curs.fetchone()
                     if not result:
                         break
-                
+
                     listen = convert_timescale_row_to_spark_row(result)
                     timestamp = listen['listened_at']
 

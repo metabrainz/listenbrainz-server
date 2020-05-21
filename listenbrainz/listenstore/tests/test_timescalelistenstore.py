@@ -81,7 +81,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         except psycopg2.OperationalError as e:
             self.log.error("Cannot query timescale listen_count: %s" % str(e), exc_info=True)
             raise
-        self.assertEqual(cols[0][0], "bucket")
+        self.assertEqual(cols[0][0], "listened_at")
         self.assertEqual(cols[1][0], "user_name")
         self.assertEqual(cols[2][0], "count")
     
@@ -115,6 +115,10 @@ class TestTimescaleListenStore(DatabaseTestCase):
     def test_fetch_listens_1(self):
         self._create_test_data(self.testuser_name)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000000)
+        print("test_1 from 1400000000")
+        for l in listens:
+            print(l.ts_since_epoch)
+
         self.assertEqual(len(listens), 4)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
@@ -142,15 +146,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
         count = self._create_test_data(self.testuser_name)
         listen_count = self.logstore.get_listen_count_for_user(user_name=self.testuser_name)
         self.assertEqual(count, listen_count)
-
-    def test_fetch_listens_escaped(self):
-        user = db_user.get_or_create(2, 'i have a\\weird\\user, name"\n')
-        user_name = user['musicbrainz_id']
-        self._create_test_data(user_name)
-        listens = self.logstore.fetch_listens(user_name=user_name, from_ts=1400000100)
-        self.assertEqual(len(listens), 2)
-        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
-        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
 
     def test_fetch_recent_listens(self):
         user = db_user.get_or_create(2, 'someuser')

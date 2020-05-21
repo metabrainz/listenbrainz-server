@@ -8,7 +8,7 @@ CREATE TABLE listen (
         data            JSONB                    NOT NULL
 );
 
--- 86400 * 5 seconds = 43200
+-- 86400 seconds * 5 = 432000 seconds = 5 days
 SELECT create_hypertable('listen', 'listened_at', chunk_time_interval => 432000);
 
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz_ts;

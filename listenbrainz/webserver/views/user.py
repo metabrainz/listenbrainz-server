@@ -3,6 +3,7 @@ import listenbrainz.db.user as db_user
 import urllib
 import ujson
 import psycopg2
+import datetime
 
 from flask import Blueprint, render_template, request, url_for, Response, redirect, flash, current_app, jsonify
 from flask_login import current_user, login_required
@@ -81,8 +82,11 @@ def profile(user_name):
         except ValueError:
             raise BadRequest("Incorrect timestamp argument min_ts: %s" % request.args.get("min_ts"))
 
+    (min_ts_per_user, max_ts_per_user) = db_conn.get_timestamps_for_user(user_name)
+    current_app.logger.info("min %s max %s" % (datetime.fromtimestamp(min_ts_per_user or 0).strftime("%Y-%m-%d %H:%M:%S"), 
+                             datetime.fromtimestamp(max_ts_per_user or 0).strftime("%Y-%m-%d %H:%M:%S"))) 
     if max_ts is None and min_ts is None:
-        max_ts = int(time.time())
+        max_ts = max_ts_per_user or int(time.time())
 
     args = {}
     if max_ts:
@@ -90,23 +94,19 @@ def profile(user_name):
     else:
         args['from_ts'] = min_ts
 
+
     listens = []
     for listen in db_conn.fetch_listens(user_name, limit=LISTENS_PER_PAGE, **args):
-        # Let's fetch one more listen, so we know to show a next page link or not
         listens.append({
             "track_metadata": listen.data,
             "listened_at": listen.ts_since_epoch,
             "listened_at_iso": listen.timestamp.isoformat() + "Z",
         })
 
-    latest_listen = db_conn.fetch_listens(user_name=user_name, limit=1, to_ts=int(time.time()))
-    latest_listen_ts = latest_listen[0].ts_since_epoch if len(latest_listen) > 0 else 0
-
     # Calculate if we need to show next/prev buttons
     previous_listen_ts = None
     next_listen_ts = None
     if listens:
-        (min_ts_per_user, max_ts_per_user) = db_conn.get_timestamps_for_user(user_name)
         if min_ts_per_user >= 0:
             if listens[-1]['listened_at'] > min_ts_per_user:
                 next_listen_ts = listens[-1]['listened_at']
@@ -117,6 +117,8 @@ def profile(user_name):
                 previous_listen_ts = listens[0]['listened_at']
             else:
                 previous_listen_ts = None
+    current_app.logger.info("fetched min max %d %d" % (min_ts_per_user or 0, max_ts_per_user or 0))
+    current_app.logger.info("previous %d next %d" % (previous_listen_ts or -1, next_listen_ts or -1))
 
     # If there are no previous listens then display now_playing
     if not previous_listen_ts:
@@ -146,7 +148,7 @@ def profile(user_name):
         "listens": listens,
         "previous_listen_ts": previous_listen_ts,
         "next_listen_ts": next_listen_ts,
-        "latest_listen_ts": latest_listen_ts,
+        "latest_listen_ts": max_ts_per_user,
         "latest_spotify_uri": _get_spotify_uri_for_listens(listens),
         "have_listen_count": have_listen_count,
         "listen_count": format(int(listen_count), ",d"),
