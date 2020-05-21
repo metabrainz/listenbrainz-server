@@ -289,9 +289,7 @@ export default class SpotifyPlayer
       </p>
     );
     const { onInvalidateDataSource } = this.props;
-    if (onInvalidateDataSource) {
-      onInvalidateDataSource(errorMessage);
-    }
+    onInvalidateDataSource(errorMessage);
   };
 
   seekToPositionMs = (msTimecode: number): void => {
