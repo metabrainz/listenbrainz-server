@@ -46,6 +46,7 @@ export default class YoutubePlayer
     if (state === YouTube.PlayerState.ENDED) {
       const { onTrackEnd } = this.props;
       onTrackEnd();
+      return;
     }
     if (state === YouTube.PlayerState.UNSTARTED) {
       const { onTrackInfoChange } = this.props;
@@ -53,7 +54,6 @@ export default class YoutubePlayer
       onTrackInfoChange(title);
       player.playVideo();
       onPlayerPausedChange(false);
-      onProgressChange(player.getCurrentTime() * 1000);
       onDurationChange(player.getDuration() * 1000);
     }
     if (state === YouTube.PlayerState.PAUSED) {
