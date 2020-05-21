@@ -5,6 +5,13 @@ from pydantic import BaseModel, ValidationError, validator
 
 
 class Feedback(BaseModel):
+    """ Represents a feedback object
+        Args:
+            user_id: the row id of the user in the DB
+            recording_msid: the MessyBrainz ID of the recording
+            score: The score associated with the recording (+1/-1 for love/hate respectively)
+    """
+
     user_id: int
     recording_msid: str
     score: int

@@ -50,35 +50,33 @@ def get_feedback_by_user_id(user_id: int):
         Args:
             user_id: the row ID of the user in the DB
         Returns:
-            A list of user's feedback
+            A list of Feedback objects
     """
-    records = []
+
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT user_id, recording_msid, score
+            SELECT user_id, recording_msid::text, score
               FROM recording_feedback
           ORDER BY created DESC
             """), {
                 'user_id': user_id
             }
         )
-        return [Feedback(user_id=row["user_id"], recording_msid=str(row["recording_msid"]), score=row["score"])
-                for row in result.fetchall() if row['user_id'] is not None]
+        return [Feedback(**dict(row)) for row in result.fetchall()]
 
 
-def get_feedback_by_user__id_and_score(user_id: int, score: int):
+def get_feedback_by_user_id_and_score(user_id: int, score: int):
     """ Get a list of recording feedbacks of particular type (loved or hated) given by the user.
         If score is +1 then get loved recordings, if -1 then get hated recordings.
         Args:
             user_id: the row ID of the user
         Returns:
-            A list of user's feedback
+            A list of Feedback objects
     """
 
-    records = []
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT user_id, recording_msid, score
+            SELECT user_id, recording_msid::text, score
               FROM recording_feedback
              WHERE user_id = :user_id
                AND score = :score
@@ -88,8 +86,7 @@ def get_feedback_by_user__id_and_score(user_id: int, score: int):
                 'score': score
             }
         )
-        return [Feedback(user_id=row["user_id"], recording_msid=str(row["recording_msid"]), score=row["score"])
-                for row in result.fetchall() if row['user_id'] is not None]
+        return [Feedback(**dict(row)) for row in result.fetchall()]
 
 
 def get_feedback_by_recording_msid(recording_msid: str):
@@ -97,13 +94,12 @@ def get_feedback_by_recording_msid(recording_msid: str):
         Args:
             recording_msid: the MessyBrainz ID of the recording
         Returns:
-            A list of recording feedback
+            A list of Feedback objects
     """
 
-    records = []
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT user_id, recording_msid, score
+            SELECT user_id, recording_msid::text, score
               FROM recording_feedback
              WHERE recording_msid = :recording_msid
           ORDER BY created DESC
@@ -111,5 +107,4 @@ def get_feedback_by_recording_msid(recording_msid: str):
                 'recording_msid': recording_msid
             }
         )
-        return [Feedback(user_id=row["user_id"], recording_msid=str(row["recording_msid"]), score=row["score"])
-                for row in result.fetchall() if row['user_id'] is not None]
+        return [Feedback(**dict(row)) for row in result.fetchall()]

@@ -77,12 +77,14 @@ class FeedbackDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(len(result), 3)
 
     def test_delete(self):
+        del_fb = self.sample_feedback[0]
+
         self.insert_test_data(self.user['id'])
         result = db_feedback.get_feedback_by_user_id(self.user['id'])
         self.assertEqual(len(result), 2)
+        self.assertEqual(result[1].recording_msid, del_fb["recording_msid"])
 
         # delete one record for the user
-        del_fb = self.sample_feedback[0]
         db_feedback.delete(
             Feedback(
                 user_id=self.user['id'],
@@ -113,9 +115,9 @@ class FeedbackDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(result[1].score, -1)
         self.assertEqual(result[2].score, 1)
 
-    def test_get_feedback_by_user__id_and_score(self):
+    def test_get_feedback_by_user_id_and_score(self):
         self.insert_test_data(self.user['id'])
-        result = db_feedback.get_feedback_by_user__id_and_score(self.user['id'], 1)
+        result = db_feedback.get_feedback_by_user_id_and_score(self.user['id'], 1)
         self.assertEqual(len(result), 2)
 
         self.assertEqual(result[0].score, 1)
@@ -123,7 +125,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase):
 
         # insert the negative score records
         self.insert_test_data(self.user['id'], neg_score=True)
-        result = db_feedback.get_feedback_by_user__id_and_score(self.user['id'], -1)
+        result = db_feedback.get_feedback_by_user_id_and_score(self.user['id'], -1)
         self.assertEqual(len(result), 2)
 
         self.assertEqual(result[0].score, -1)
