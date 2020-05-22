@@ -40,52 +40,49 @@ def get_timestamp_for_last_user_stats_update():
         return row['last_update_ts'] if row else None
 
 
-def insert_user_stats(user_id, artists, recordings, releases):
-    """Inserts user stats calculated from Spark into the database.
+def _insert_jsonb_data(user_id, column, data):
+    """ Inserts jsonb data into the given column
+
+        Args: user_id (int): the row id of the user,
+              column (string): the column in database to insert into
+              data (dict): the data to be inserted
+    """
+    with db.engine.connect() as connection:
+        connection.execute(sqlalchemy.text("""
+            INSERT INTO statistics.user (user_id, {column})
+                 VALUES (:user_id, :data)
+            ON CONFLICT (user_id)
+          DO UPDATE SET {column} = statistics.user.{column} || :data,
+                        last_updated = NOW()
+            """.format(column=column)), {
+            'user_id': user_id,
+            'data': ujson.dumps(data),
+        }
+        )
+
+
+def insert_user_artists(user_id, artists):
+    """ Inserts artist stats calculated from Spark into the database.
+
+        If stats are already present for some user, they are updated to the new
+        values passed.
+
+        Args: user_id (int): the row id of the user,
+              artists (dict): the top artists listened to by the user
+    """
+    _insert_jsonb_data(user_id=user_id, column='artist', data=artists)
+
+
+def insert_user_releases(user_id, releases):
+    """Inserts release stats calculated from Spark into the database.
 
        If stats are already present for some user, they are updated to the new
        values passed.
 
        Args: user_id (int): the row id of the user,
-             artists (dict): the top artists listened to by the user
-             recordings (dict): the top recordings listened to by the user
              releases (dict): the top releases listened to by the user
     """
-
-    artist_range = artists['range']
-    artists_mod = {key: artists[key] for key in artists if key != 'range'}
-    artist_stats = {
-        artist_range: artists_mod
-    }
-
-    recording_stats = {
-        'all_time': {
-            'recordings': recordings,
-        },
-    }
-
-    release_stats = {
-        'all_time': {
-            'releases': releases,
-        }
-    }
-
-    with db.engine.connect() as connection:
-        connection.execute(sqlalchemy.text("""
-            INSERT INTO statistics.user (user_id, artist, recording, release)
-                 VALUES (:user_id, :artists, :recordings, :releases)
-            ON CONFLICT (user_id)
-          DO UPDATE SET artist = statistics.user.artist || :artists,
-                        recording = :recordings,
-                        release = :releases,
-                        last_updated = NOW()
-            """), {
-            'user_id': user_id,
-            'artists': ujson.dumps(artist_stats),
-            'recordings': ujson.dumps(recording_stats),
-            'releases': ujson.dumps(release_stats),
-        }
-        )
+    _insert_jsonb_data(user_id=user_id, column='release', data=releases)
 
 
 def get_user_stats(user_id, columns):
@@ -207,6 +204,7 @@ def valid_stats_exist(user_id, days):
 
 def delete_user_stats(user_id):
     """ Delete stats for user with the given row ID.
+
         Args:
             user_id (int): the row ID of the user in the DB
     """

@@ -1,5 +1,5 @@
 """ This file contains handler functions for rabbitmq messages we
-receive from the Spark cluster.
+    receive from the Spark cluster.
 """
 import listenbrainz.db.user as db_user
 import listenbrainz.db.stats as db_stats
@@ -64,9 +64,8 @@ def notify_user_stats_update(stat_type):
         )
 
 
-def handle_user_artist(data):
-    """ Take artist stats for a user and save it in the database.
-    """
+def handle_user_entity(data):
+    """ Take entity stats for a user and save it in the database. """
     musicbrainz_id = data['musicbrainz_id']
     user = db_user.get_by_mb_id(musicbrainz_id)
     if not user:
@@ -76,14 +75,19 @@ def handle_user_artist(data):
     # send a notification if this is a new batch of stats
     if is_new_user_stats_batch():
         notify_user_stats_update(stat_type=data.get('type', ''))
-    current_app.logger.debug("inserting artist stats for user %s", musicbrainz_id)
+    current_app.logger.debug("inserting stats for user %s", musicbrainz_id)
 
-    to_remove = {'musicbrainz_id', 'type', 'entity', 'data'}
-    data[data['entity']] = data['data']
+    stats_range = data['range']
+    entity = data['entity']
+    data[entity] = data['data']
+
     # Strip extra data
+    to_remove = {'musicbrainz_id', 'type', 'entity', 'data', 'range'}
     data_mod = {key: data[key] for key in data if key not in to_remove}
 
-    db_stats.insert_user_stats(user['id'], data_mod, {}, {})
+    # Get function to insert statistics
+    db_handler = getattr(db_stats, 'insert_user_{}'.format(entity))
+    db_handler(user['id'], {stats_range: data_mod})
 
 
 def handle_dump_imported(data):
