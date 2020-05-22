@@ -290,12 +290,22 @@ def main():
 
     playcounts_df = get_playcounts_df(listens_df, recordings_df, users_df, metadata)
     playcounts_df_time = '{:.2f}'.format((time() - t0) / 60)
-    total_time = '{:.2f}'.format((time() - ti) / 60)
 
     generate_best_model_id(metadata)
     save_dataframe_metadata_to_HDFS(metadata)
+    total_time = '{:.2f}'.format((time() - ti) / 60)
 
     if SAVE_DATAFRAME_HTML:
         current_app.logger.info('Saving HTML...')
         save_dataframe_html(users_df_time, recordings_df_time, playcounts_df_time, total_time)
         current_app.logger.info('Done!')
+
+    message = [{
+        'type': 'cf_recording_dataframes',
+        'dataframe_upload_time': str(datetime.utcnow()),
+        'total_time': total_time,
+        'from_date': str(from_date.strftime('%b %Y')),
+        'to_date': str(to_date.strftime('%b %Y')),
+    }]
+
+    return message

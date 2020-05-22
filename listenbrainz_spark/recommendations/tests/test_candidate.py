@@ -40,20 +40,25 @@ class CandidateSetsTestClass(SparkTestCase):
         df1 = utils.create_dataframe(cls.get_listen_row(cls.date, 'vansika', 1), schema=None)
         shifted_date = stats.adjust_days(cls.date, config.RECOMMENDATION_GENERATION_WINDOW + 1)
         df2 = utils.create_dataframe(cls.get_listen_row(shifted_date, 'vansika', 1), schema=None)
-        shifted_date = stats.adjust_days(cls.date, 1, shift_backwards=False)
+        shifted_date = stats.adjust_days(cls.date, 1)
         df3 = utils.create_dataframe(cls.get_listen_row(shifted_date, 'rob', 2), schema=None)
         shifted_date = stats.adjust_days(cls.date, 2)
         df4 = utils.create_dataframe(cls.get_listen_row(shifted_date, 'rob', 2), schema=None)
         test_mapped_df = df1.union(df2).union(df3).union(df4)
         return test_mapped_df
 
-    def test_get_listens_for_rec_generation_window(self):
+    def test_get_dates_to_generate_candidate_sets(self):
         mapped_df = self.get_listens()
-        test_df = candidate_sets.get_listens_to_fetch_top_artists(mapped_df)
-        min_date = test_df.select(f.min('listened_at').alias('listened_at')).take(1)[0]
-        max_date = test_df.select(f.max('listened_at').alias('listened_at')).take(1)[0]
-        self.assertGreaterEqual(self.date, min_date.listened_at)
-        self.assertLessEqual(self.date, max_date.listened_at)
+        from_date, to_date = candidate_sets.get_dates_to_generate_candidate_sets(mapped_df)
+        self.assertEqual(to_date, self.date)
+        expected_date = stats.adjust_days(self.date, config.RECOMMENDATION_GENERATION_WINDOW).replace(hour=0, minute=0, second=0)
+        self.assertEqual(from_date, expected_date)
+
+    def test_get_listens_to_fetch_top_artists(self):
+        mapped_df = self.get_listens()
+        from_date, to_date = candidate_sets.get_dates_to_generate_candidate_sets(mapped_df)
+        mapped_listens_subset = candidate_sets.get_listens_to_fetch_top_artists(mapped_df, from_date, to_date)
+        self.assertEqual(mapped_listens_subset.count(), 3)
 
     def test_get_top_artists(self):
         mapped_listens = self.get_mapped_listens()
