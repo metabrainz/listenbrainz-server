@@ -2,6 +2,7 @@ import * as React from "react";
 import { mount, shallow } from "enzyme";
 
 import YoutubePlayer from "./YoutubePlayer";
+import { DataSourceTypes } from "./BrainzPlayer";
 
 const props = {
   show: true,
@@ -15,7 +16,10 @@ const props = {
   handleError: (error: string | Error, title?: string) => {},
   handleWarning: (message: string | JSX.Element, title?: string) => {},
   handleSuccess: (message: string | JSX.Element, title?: string) => {},
-  onInvalidateDataSource: (message?: string | JSX.Element) => {},
+  onInvalidateDataSource: (
+    dataSource?: DataSourceTypes,
+    message?: string | JSX.Element
+  ) => {},
 };
 
 describe("YoutubePlayer", () => {

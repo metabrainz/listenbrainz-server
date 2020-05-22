@@ -217,7 +217,7 @@ export default class SpotifyPlayer
       ];
       for (let i = 0; i < requiredScopes.length; i += 1) {
         if (!scopes.includes(requiredScopes[i])) {
-          onInvalidateDataSource("Permission to play songs not granted");
+          onInvalidateDataSource(this, "Permission to play songs not granted");
           return false;
         }
       }
@@ -289,7 +289,7 @@ export default class SpotifyPlayer
       </p>
     );
     const { onInvalidateDataSource } = this.props;
-    onInvalidateDataSource(errorMessage);
+    onInvalidateDataSource(this, errorMessage);
   };
 
   seekToPositionMs = (msTimecode: number): void => {

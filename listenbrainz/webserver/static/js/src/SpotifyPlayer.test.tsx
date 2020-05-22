@@ -3,6 +3,7 @@ import { mount, shallow } from "enzyme";
 
 import SpotifyPlayer from "./SpotifyPlayer";
 import APIService from "./APIService";
+import { DataSourceTypes } from "./BrainzPlayer";
 
 const props = {
   spotifyUser: {
@@ -21,7 +22,10 @@ const props = {
   handleError: (error: string | Error, title?: string) => {},
   handleWarning: (message: string | JSX.Element, title?: string) => {},
   handleSuccess: (message: string | JSX.Element, title?: string) => {},
-  onInvalidateDataSource: (message?: string | JSX.Element) => {},
+  onInvalidateDataSource: (
+    dataSource?: DataSourceTypes,
+    message?: string | JSX.Element
+  ) => {},
 };
 
 describe("SpotifyPlayer", () => {

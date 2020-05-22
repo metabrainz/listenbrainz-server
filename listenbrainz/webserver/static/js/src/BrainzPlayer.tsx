@@ -11,6 +11,9 @@ export type DataSourceType = {
   togglePlay: () => void;
   seekToPositionMs: (msTimecode: number) => void;
 };
+
+export type DataSourceTypes = SpotifyPlayer | YoutubePlayer;
+
 export type DataSourceProps = {
   show: boolean;
   playerPaused: boolean;
@@ -23,7 +26,10 @@ export type DataSourceProps = {
   handleError: (error: string | Error, title?: string) => void;
   handleWarning: (message: string | JSX.Element, title?: string) => void;
   handleSuccess: (message: string | JSX.Element, title?: string) => void;
-  onInvalidateDataSource: (message?: string | JSX.Element) => void;
+  onInvalidateDataSource: (
+    dataSource?: DataSourceTypes,
+    message?: string | JSX.Element
+  ) => void;
 };
 
 type BrainzPlayerProps = {
@@ -57,7 +63,7 @@ export default class BrainzPlayer extends React.Component<
 > {
   spotifyPlayer?: React.RefObject<SpotifyPlayer>;
   youtubePlayer?: React.RefObject<YoutubePlayer>;
-  dataSources: Array<React.RefObject<DataSourceType>> = [];
+  dataSources: Array<React.RefObject<DataSourceTypes>> = [];
 
   firstRun: boolean = true;
 
@@ -68,13 +74,11 @@ export default class BrainzPlayer extends React.Component<
 
     const { access_token, permission } = props.spotifyUser;
 
+    this.spotifyPlayer = React.createRef<SpotifyPlayer>();
     if (access_token && permission) {
-      this.spotifyPlayer = React.createRef<SpotifyPlayer>();
-      if (!this.spotifyPlayer) {
-        return;
-      }
       this.dataSources.push(this.spotifyPlayer);
     }
+
     this.youtubePlayer = React.createRef<YoutubePlayer>();
     this.dataSources.push(this.youtubePlayer);
 
@@ -160,13 +164,25 @@ export default class BrainzPlayer extends React.Component<
     newAlert("success", title || "Success", message);
   };
 
-  invalidateDataSource = (message?: string | JSX.Element): void => {
-    // What do we do here? Remove from datasource using currentDataSourceIndex?
-    const { currentDataSourceIndex } = this.state;
-    if (message) {
-      this.handleWarning(message, "Cannot play from this source");
+  invalidateDataSource = (
+    dataSource?: DataSourceTypes,
+    message?: string | JSX.Element
+  ): void => {
+    let dataSourceIndex;
+    if (dataSource) {
+      dataSourceIndex = this.dataSources.findIndex(
+        (source) => source.current === dataSource
+      );
+    } else {
+      const { currentDataSourceIndex } = this.state;
+      dataSourceIndex = currentDataSourceIndex;
     }
-    this.dataSources.slice(currentDataSourceIndex, currentDataSourceIndex + 1);
+    if (dataSourceIndex !== -1) {
+      if (message) {
+        this.handleWarning(message, "Cannot play from this source");
+      }
+      this.dataSources.splice(dataSourceIndex, 1);
+    }
   };
 
   playListen = (listen: Listen, datasourceIndex: number = 0): void => {
@@ -334,7 +350,7 @@ export default class BrainzPlayer extends React.Component<
         >
           <SpotifyPlayer
             show={
-              this.dataSources[currentDataSourceIndex].current instanceof
+              this.dataSources[currentDataSourceIndex]?.current instanceof
               SpotifyPlayer
             }
             refreshSpotifyToken={apiService.refreshSpotifyToken}
@@ -354,7 +370,7 @@ export default class BrainzPlayer extends React.Component<
           />
           <YoutubePlayer
             show={
-              this.dataSources[currentDataSourceIndex].current instanceof
+              this.dataSources[currentDataSourceIndex]?.current instanceof
               YoutubePlayer
             }
             onInvalidateDataSource={this.invalidateDataSource}
