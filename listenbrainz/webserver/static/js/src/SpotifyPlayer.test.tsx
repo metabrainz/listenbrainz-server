@@ -41,8 +41,7 @@ describe("SpotifyPlayer", () => {
       const mockProps = {
         ...props,
         onInvalidateDataSource,
-        // Cheating a little bit on the type here, shhhh!
-        spotifyUser: {} as SpotifyUser,
+        spotifyUser: {},
       };
       const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
       const instance = wrapper.instance();
@@ -59,6 +58,7 @@ describe("SpotifyPlayer", () => {
         </p>
       );
       expect(instance.props.onInvalidateDataSource).toHaveBeenCalledWith(
+        instance,
         errorMsg
       );
     });
@@ -73,6 +73,7 @@ describe("SpotifyPlayer", () => {
       const instance = wrapper.instance();
       expect(instance.props.onInvalidateDataSource).toHaveBeenCalledTimes(1);
       expect(instance.props.onInvalidateDataSource).toHaveBeenCalledWith(
+        instance,
         "Permission to play songs not granted"
       );
     });
@@ -133,6 +134,7 @@ describe("SpotifyPlayer", () => {
         </p>
       );
       expect(instance.props.onInvalidateDataSource).toHaveBeenCalledWith(
+        instance,
         errorMsg
       );
     });

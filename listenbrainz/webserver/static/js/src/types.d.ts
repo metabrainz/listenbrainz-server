@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 declare module "spotify-web-playback-sdk";
 declare module "react-bs-notifier";
 declare module "time-ago";
@@ -57,8 +58,8 @@ declare type SubmitListensPayload = {
 };
 
 declare type SpotifyUser = {
-  access_token: string;
-  permission: SpotifyPermission;
+  access_token?: string;
+  permission?: SpotifyPermission;
 };
 
 declare type SpotifyPermission =

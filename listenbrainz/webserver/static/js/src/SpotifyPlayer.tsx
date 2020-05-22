@@ -62,8 +62,8 @@ export default class SpotifyPlayer
   constructor(props: SpotifyPlayerProps) {
     super(props);
     this.state = {
-      accessToken: props.spotifyUser.access_token,
-      permission: props.spotifyUser.permission,
+      accessToken: props.spotifyUser.access_token || "",
+      permission: props.spotifyUser.permission || ("" as SpotifyPermission),
       durationMs: 0,
     };
 
