@@ -142,4 +142,6 @@ CREATE TABLE recording_feedback (
     created                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz;
+
 COMMIT;

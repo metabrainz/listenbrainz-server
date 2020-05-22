@@ -4,32 +4,26 @@ import os
 import uuid
 from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.listen import Listen
-from listenbrainz.listenstore import InfluxListenStore
+from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.listenstore import RedisListenStore
 from flask import url_for
 import listenbrainz.db.user as db_user
 import time
 import json
-from influxdb import InfluxDBClient
 
 from listenbrainz import config
 
-class InfluxWriterTestCase(IntegrationTestCase):
+class TimescaleWriterTestCase(IntegrationTestCase):
 
     def setUp(self):
-        super(InfluxWriterTestCase, self).setUp()
-        self.ls = InfluxListenStore({ 'REDIS_HOST': config.REDIS_HOST,
+        super(TimescaleWriterTestCase, self).setUp()
+        self.ls = TimescaleListenStore({ 'REDIS_HOST': config.REDIS_HOST,
                              'REDIS_PORT': config.REDIS_PORT,
                              'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
-                             'INFLUX_HOST': config.INFLUX_HOST,
-                             'INFLUX_PORT': config.INFLUX_PORT,
-                             'INFLUX_DB_NAME': config.INFLUX_DB_NAME}, self.app.logger)
+                             'SQLALCHEMY_TIMESCALE_URI': config.SQLALCHEMY_TIMESCALE_URI}, self.app.logger)
         self.rs = RedisListenStore(self.app.logger, { 'REDIS_HOST': config.REDIS_HOST,
                              'REDIS_PORT': config.REDIS_PORT,
-                             'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
-                             'INFLUX_HOST': config.INFLUX_HOST,
-                             'INFLUX_PORT': config.INFLUX_PORT,
-                             'INFLUX_DB_NAME': config.INFLUX_DB_NAME})
+                             'REDIS_NAMESPACE': config.REDIS_NAMESPACE})
 
     def send_listen(self, user, filename):
         with open(self.path_to_data_file(filename)) as f:
@@ -43,7 +37,7 @@ class InfluxWriterTestCase(IntegrationTestCase):
 
     def test_dedup(self):
 
-        user = db_user.get_or_create(1, 'testinfluxwriteruser')
+        user = db_user.get_or_create(1, 'testtimescalewriteruser')
 
         # send the same listen twice
         r = self.send_listen(user, 'valid_single.json')
@@ -93,7 +87,7 @@ class InfluxWriterTestCase(IntegrationTestCase):
 
     def test_dedup_different_users(self):
         """
-        Test to make sure influx writer doesn't confuse listens with same timestamps
+        Test to make sure timescale writer doesn't confuse listens with same timestamps
         but different users to be duplicates
         """
 
@@ -105,7 +99,7 @@ class InfluxWriterTestCase(IntegrationTestCase):
         r = self.send_listen(user2, 'valid_single.json')
         self.assert200(r)
 
-        time.sleep(2) # sleep to allow influx-writer to do its thing
+        time.sleep(2) # sleep to allow timescale-writer to do its thing
 
         to_ts = int(time.time())
         listens = self.ls.fetch_listens(user1['musicbrainz_id'], to_ts=to_ts)

@@ -39,10 +39,10 @@ def to_epoch(date):
     return int((date - datetime.utcfromtimestamp(0)).total_seconds())
 
 
-def create_test_data_for_influxlistenstore(user_name):
-    """Create listens for influxlistenstore tests.
+def create_test_data_for_timescalelistenstore(user_name):
+    """Create listens for timescalelistenstore tests.
 
-    From a json file 'influx_listenstore_test_listens.json' in testdata
+    From a json file 'timescale_listenstore_test_listens.json' in testdata
     it creates Listen objects with a specified user_name for tests.
 
     Args:
@@ -51,7 +51,7 @@ def create_test_data_for_influxlistenstore(user_name):
     Returns:
         A list of Listen objects.
     """
-    test_data_file = os.path.join(TEST_DATA_PATH, 'influx_listenstore_test_listens.json')
+    test_data_file = os.path.join(TEST_DATA_PATH, 'timescale_listenstore_test_listens.json')
     with open(test_data_file, 'r') as f:
         listens = json.load(f)
 
