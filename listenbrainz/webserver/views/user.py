@@ -86,7 +86,7 @@ def profile(user_name):
     current_app.logger.info("min %s max %s" % (datetime.fromtimestamp(min_ts_per_user or 0).strftime("%Y-%m-%d %H:%M:%S"), 
                              datetime.fromtimestamp(max_ts_per_user or 0).strftime("%Y-%m-%d %H:%M:%S"))) 
     if max_ts is None and min_ts is None:
-        max_ts = max_ts_per_user or int(time.time())
+        max_ts = (max_ts_per_user + 1) or int(time.time())
 
     args = {}
     if max_ts:

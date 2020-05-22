@@ -115,10 +115,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
     def test_fetch_listens_1(self):
         self._create_test_data(self.testuser_name)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000000)
-        print("test_1 from 1400000000")
-        for l in listens:
-            print(l.ts_since_epoch)
-
         self.assertEqual(len(listens), 4)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
         self.assertEqual(listens[1].ts_since_epoch, 1400000150)
