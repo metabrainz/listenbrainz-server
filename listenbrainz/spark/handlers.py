@@ -50,30 +50,12 @@ def handle_user_artist(data):
         notify_user_stats_update(stat_type=data.get('type', ''))
     current_app.logger.debug("inserting artist stats for user %s", musicbrainz_id)
 
-    to_remove = {'musicbrainz_id', 'type'}
+    to_remove = {'musicbrainz_id', 'type', 'entity', 'data'}
+    data[data['entity']] = data['data']
+    # Strip extra data
     data_mod = {key: data[key] for key in data if key not in to_remove}
 
-    db_stats.insert_user_stats(user['id'], artist=data_mod)
-
-
-def handle_user_release(data):
-    """ Take release stats for a user and save it in the database.
-    """
-    musicbrainz_id = data['musicbrainz_id']
-    user = db_user.get_by_mb_id(musicbrainz_id)
-    if not user:
-        current_app.logger.critical("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
-        return
-
-    # send a notification if this is a new batch of stats
-    if is_new_user_stats_batch():
-        notify_user_stats_update(stat_type=data.get('type', ''))
-    current_app.logger.debug("inserting release stats for user %s", musicbrainz_id)
-
-    to_remove = {'musicbrainz_id', 'type'}
-    data_mod = {key: data[key] for key in data if key not in to_remove}
-
-    db_stats.insert_user_stats(user['id'], release=data_mod)
+    db_stats.insert_user_stats(user['id'], data_mod, {}, {})
 
 
 def handle_dump_imported(data):

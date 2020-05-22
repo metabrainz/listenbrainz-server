@@ -12,13 +12,11 @@ from listenbrainz.db import stats as db_stats
 from listenbrainz.db import user as db_user
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.spark.handlers import (handle_dump_imported,
-                                         handle_user_artist,
-                                         handle_user_release)
+                                         handle_user_artist)
 from listenbrainz.webserver import create_app
 
 response_handler_map = {
-    'user_artists': handle_user_artist,
-    'user_releases': handle_user_release,
+    'user_entity': handle_user_artist,
     'import_full_dump': handle_dump_imported,
 }
 

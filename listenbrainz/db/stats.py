@@ -40,34 +40,52 @@ def get_timestamp_for_last_user_stats_update():
         return row['last_update_ts'] if row else None
 
 
-def insert_user_stats(user_id, **kwargs):
+def insert_user_stats(user_id, artists, recordings, releases):
     """Inserts user stats calculated from Spark into the database.
 
        If stats are already present for some user, they are updated to the new
        values passed.
 
        Args: user_id (int): the row id of the user,
+             artists (dict): the top artists listened to by the user
+             recordings (dict): the top recordings listened to by the user
+             releases (dict): the top releases listened to by the user
     """
 
-    for entity, data in kwargs.items():
-        stats_range = data['range']
-        data_mod = {key: data[key] for key in data if key != 'range'}
-        to_insert = {
-            stats_range: data_mod
-        }
+    artist_range = artists['range']
+    artists_mod = {key: artists[key] for key in artists if key != 'range'}
+    artist_stats = {
+        artist_range: artists_mod
+    }
 
-        with db.engine.connect() as connection:
-            connection.execute(sqlalchemy.text("""
-                INSERT INTO statistics.user (user_id, {entity})
-                     VALUES (:user_id, :data)
-                ON CONFLICT (user_id)
-              DO UPDATE SET {entity} = statistics.user.{entity} || :data,
-                            last_updated = NOW()
-                """.format(entity=entity)), {
-                'user_id': user_id,
-                'data': ujson.dumps(to_insert),
-            }
-            )
+    recording_stats = {
+        'all_time': {
+            'recordings': recordings,
+        },
+    }
+
+    release_stats = {
+        'all_time': {
+            'releases': releases,
+        }
+    }
+
+    with db.engine.connect() as connection:
+        connection.execute(sqlalchemy.text("""
+            INSERT INTO statistics.user (user_id, artist, recording, release)
+                 VALUES (:user_id, :artists, :recordings, :releases)
+            ON CONFLICT (user_id)
+          DO UPDATE SET artist = statistics.user.artist || :artists,
+                        recording = :recordings,
+                        release = :releases,
+                        last_updated = NOW()
+            """), {
+            'user_id': user_id,
+            'artists': ujson.dumps(artist_stats),
+            'recordings': ujson.dumps(recording_stats),
+            'releases': ujson.dumps(release_stats),
+        }
+        )
 
 
 def get_user_stats(user_id, columns):
