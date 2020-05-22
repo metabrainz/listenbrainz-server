@@ -67,9 +67,10 @@ def create_messages(data, entity, stats_type, stats_range, from_ts, to_ts):
             'musicbrainz_id': user_name,
             'type': stats_type,
             'range': stats_range,
-            'from': from_ts,
-            'to': to_ts,
-            entity: user_releases,
+            'from_ts': from_ts,
+            'to_ts': to_ts,
+            'data': user_releases,
+            'entity': entity,
             'count': len(user_releases)
         })
 

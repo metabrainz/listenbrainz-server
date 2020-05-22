@@ -1,20 +1,19 @@
-import listenbrainz_spark.stats.user.artist as user_artists
-import listenbrainz_spark.stats.user.release as user_releases
+import listenbrainz_spark.stats.user.entity as user_entity
 
 
 def calculate():
     messages = []
 
     # Calculate artist stats
-    messages = messages + user_artists.get_artists_week()
-    messages = messages + user_artists.get_artists_month()
-    messages = messages + user_artists.get_artists_year()
-    messages = messages + user_artists.get_artists_all_time()
+    messages = messages + user_entity.get_entity_week('artists')
+    messages = messages + user_entity.get_entity_month('artists')
+    messages = messages + user_entity.get_entity_year('artists')
+    messages = messages + user_entity.get_entity_all_time('artists')
 
     # Calculate release stats
-    messages = messages + user_releases.get_releases_week()
-    messages = messages + user_releases.get_releases_month()
-    messages = messages + user_releases.get_releases_year()
-    messages = messages + user_releases.get_releases_all_time()
+    messages = messages + user_entity.get_entity_week('releases')
+    messages = messages + user_entity.get_entity_month('releases')
+    messages = messages + user_entity.get_entity_year('releases')
+    messages = messages + user_entity.get_entity_all_time('releases')
 
     return messages

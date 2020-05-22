@@ -4,45 +4,25 @@
     "description": "All user statistics that ListenBrainz calculates for all ListenBrainz users",
     "params": []
   },
-  "stats.user.artist.week": {
-    "name": "stats.user.artist.week",
-    "description": "Artist statistics for all users in the last week",
-    "params": []
+  "stats.user.entity.week": {
+    "name": "stats.user.entity.week",
+    "description": "Entity statistics for all users in the last week",
+    "params": ["entity"]
   },
-  "stats.user.artist.month": {
-    "name": "stats.user.artist.month",
-    "description": "Artist statistics for all users in the last month",
-    "params": []
+  "stats.user.entity.month": {
+    "name": "stats.user.entity.month",
+    "description": "Entity statistics for all users in the last month",
+    "params": ["entity"]
   },
-  "stats.user.artist.year": {
-    "name": "stats.user.artist.year",
-    "description": "Artist statistics for all users in the last year",
-    "params": []
+  "stats.user.entity.year": {
+    "name": "stats.user.entity.year",
+    "description": "Entity statistics for all users in the last year",
+    "params": ["entity"]
   },
-  "stats.user.artist.all_time": {
-    "name": "stats.user.artist.all_time",
-    "description": "All time artist statistics for all users",
-    "params": []
-  },
-  "stats.user.release.week": {
-    "name": "stats.user.release.week",
-    "description": "Release statistics for all users in the last week",
-    "params": []
-  },
-  "stats.user.release.month": {
-    "name": "stats.user.release.month",
-    "description": "Release statistics for all users in the last month",
-    "params": []
-  },
-  "stats.user.release.year": {
-    "name": "stats.user.release.year",
-    "description": "Release statistics for all users in the last year",
-    "params": []
-  },
-  "stats.user.release.all_time": {
-    "name": "stats.user.release.all_time",
-    "description": "All time release statistics for all users",
-    "params": []
+  "stats.user.entity.all_time": {
+    "name": "stats.user.entity.all_time",
+    "description": "All time entity statistics for all users",
+    "params": ["entity"]
   },
   "import.dump.full": {
     "name": "import.dump.full",
