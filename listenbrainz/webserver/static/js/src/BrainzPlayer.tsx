@@ -168,16 +168,13 @@ export default class BrainzPlayer extends React.Component<
     dataSource?: DataSourceTypes,
     message?: string | JSX.Element
   ): void => {
-    let dataSourceIndex;
+    let { currentDataSourceIndex: dataSourceIndex } = this.state;
     if (dataSource) {
       dataSourceIndex = this.dataSources.findIndex(
         (source) => source.current === dataSource
       );
-    } else {
-      const { currentDataSourceIndex } = this.state;
-      dataSourceIndex = currentDataSourceIndex;
     }
-    if (dataSourceIndex !== -1) {
+    if (dataSourceIndex >= 0) {
       if (message) {
         this.handleWarning(message, "Cannot play from this source");
       }
