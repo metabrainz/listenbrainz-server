@@ -137,13 +137,13 @@ function spark_dcdown {
                 down
 }
 
-function int_dcdown {
+function int_build {
     docker-compose -f $INT_COMPOSE_FILE_LOC \
                    -p $INT_COMPOSE_PROJECT_NAME \
-                down
+                build
 }
 
-function int_build {
+function int_dcdown {
     # Shutting down all integration test containers associated with this project
     docker-compose -f $INT_COMPOSE_FILE_LOC \
                    -p $INT_COMPOSE_PROJECT_NAME \
