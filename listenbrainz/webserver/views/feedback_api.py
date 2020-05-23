@@ -37,7 +37,7 @@ def submit_feedback():
     user = _validate_auth_header()
 
     data = request.json
-    
+
     if 'recording_msid' not in data or 'score' not in data:
         log_raise_400("JSON document must contain recording_msid and "
                       "score top level keys", data)
@@ -50,7 +50,7 @@ def submit_feedback():
         feedback = Feedback(user_id=user["id"], recording_msid=data["recording_msid"], score=data["score"])
     except ValidationError as e:
         log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "),
-                      data) #  str.replace() to tidy up the error message
+                      data)  # str.replace() to tidy up the error message
 
     try:
         if feedback.score == 0:
@@ -94,7 +94,7 @@ def get_feedback_for_user(user_name):
         else:
             log_raise_400("Score can have a value of 1 or -1.", request.args)
 
-    for i,fb in enumerate(feedback):
+    for i, fb in enumerate(feedback):
         fb.user_id = user_name
         feedback[i] = fb.__dict__
 
@@ -114,11 +114,11 @@ def get_feedback_for_recording(recording_msid):
     """
 
     if not is_valid_uuid(recording_msid):
-            log_raise_400("%s MSID format invalid." % recording_msid)
+        log_raise_400("%s MSID format invalid." % recording_msid)
 
     feedback = db_feedback.get_feedback_by_recording_msid(recording_msid)
 
-    for i,fb in enumerate(feedback):
+    for i, fb in enumerate(feedback):
         fb.user_id = db_user.get(fb.user_id)["musicbrainz_id"]
         feedback[i] = fb.__dict__
 
