@@ -61,6 +61,7 @@ def generate_best_model_id(metadata):
     """
     metadata['model_id'] = '{}-{}'.format(config.MODEL_ID_PREFIX, uuid.uuid4())
 
+
 def save_dataframe(df, dest_path):
     """ Save dataframe to HDFS.
 
@@ -73,6 +74,7 @@ def save_dataframe(df, dest_path):
     except FileNotSavedException as err:
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
+
 
 def save_dataframe_html(users_df_time, recordings_df_time, playcounts_df_time, total_time):
     """ Prepare and save dataframe HTML.
@@ -93,6 +95,7 @@ def save_dataframe_html(users_df_time, recordings_df_time, playcounts_df_time, t
     }
     save_html(queries_html, context, 'queries.html')
 
+
 def save_dataframe_metadata_to_HDFS(metadata):
     """ Save dataframe metadata to model_metadata dataframe.
     """
@@ -112,6 +115,7 @@ def save_dataframe_metadata_to_HDFS(metadata):
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
+
 def get_dates_to_train_data(train_model_window):
     """ Get window to fetch listens to train data.
 
@@ -127,6 +131,7 @@ def get_dates_to_train_data(train_model_window):
     # shift to the first of the month
     from_date = stats.replace_days(from_date, 1)
     return to_date, from_date
+
 
 def get_listens_for_training_model_window(to_date, from_date, metadata, dest_path):
     """  Prepare dataframe of listens of X days to train.
@@ -153,6 +158,7 @@ def get_listens_for_training_model_window(to_date, from_date, metadata, dest_pat
     partial_listens_df = utils.get_listens_without_artist_and_recording_mbids(training_df)
     return partial_listens_df
 
+
 def get_mapped_artist_and_recording_mbids(partial_listens_df, recording_artist_mapping_df):
     """ Map recording msid->mbid and artist msid->mbids so that every listen has an mbid.
 
@@ -177,6 +183,7 @@ def get_mapped_artist_and_recording_mbids(partial_listens_df, recording_artist_m
     )
     save_dataframe(mapped_listens, path.MAPPED_LISTENS)
     return mapped_listens
+
 
 def get_playcounts_df(listens_df, recordings_df, users_df, metadata):
     """ Prepare playcounts dataframe.
@@ -257,6 +264,7 @@ def get_users_dataframe(mapped_listens, metadata):
     metadata['users_count'] = users_df.count()
     save_dataframe(users_df, path.USERS_DATAFRAME_PATH)
     return users_df
+
 
 def main(train_model_window=None):
 
