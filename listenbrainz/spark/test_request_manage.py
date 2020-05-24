@@ -81,8 +81,15 @@ class RequestManageTestCase(unittest.TestCase):
         received_message = request_manage._prepare_query_message('stats.user.artist.all_time')
         self.assertEqual(expected_message, received_message)
 
-        expected_message = ujson.dumps({'query': 'cf_recording.recommendations.create_dataframes'})
-        received_message = request_manage._prepare_query_message('cf_recording.recommendations.create_dataframes')
+        message = {
+            'query': 'cf_recording.recommendations.create_dataframes',
+            'params': {
+                'train_model_window': 20,
+            }
+        }
+        expected_message = ujson.dumps(message)
+        received_message = request_manage._prepare_query_message('cf_recording.recommendations.create_dataframes',
+                                                                 message['params'])
         self.assertEqual(expected_message, received_message)
 
         expected_message = ujson.dumps({'query': 'cf_recording.recommendations.train_model'})
