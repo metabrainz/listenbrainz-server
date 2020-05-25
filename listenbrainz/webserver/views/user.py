@@ -62,7 +62,7 @@ def profile(user_name):
     try:
         try_harder = int(try_harder)
     except ValueError:
-        raise BadRequest("try harder must be an integer value 0 or greater: %s" % try_harder)
+        raise BadRequest("try_harder must be an integer value 0 or greater: %s" % try_harder)
 
     (min_ts_per_user, max_ts_per_user) = db_conn.get_timestamps_for_user(user_name)
     current_app.logger.info("min %s max %s" % (datetime.fromtimestamp(min_ts_per_user or 0).strftime("%Y-%m-%d %H:%M:%S"), 

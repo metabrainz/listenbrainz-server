@@ -128,13 +128,12 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assert200(response2)
 
 
-    @mock.patch('listenbrainz.webserver.views.user.time')
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
-    def test_ts_filters(self, timescale, m_time):
+    def test_ts_filters(self, timescale):
         """Check that max_ts and min_ts are passed to timescale """
         self._create_test_data('iliekcomputers')
+
         # If no parameter is given, use current time as the to_ts
-        m_time.time.return_value = 1520946608
         self.client.get(url_for('user.profile', user_name='iliekcomputers'))
         req_call = mock.call('iliekcomputers', limit=25, to_ts=1400000201, try_harder=0)
         timescale.assert_has_calls([req_call])
@@ -172,5 +171,33 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
                                    query_string={'min_ts': 'b'})
         self.assert400(response)
         self.assertIn(b'Incorrect timestamp argument min_ts: b', response.data)
+
+        timescale.assert_not_called()
+
+    @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
+    def test_try_harder_filter(self, timescale):
+        """Check that try_harder is passed to timescale """
+        self._create_test_data('iliekcomputers')
+
+        # If try_harder is not given, use tryharder=0
+        self.client.get(url_for('user.profile', user_name='iliekcomputers'))
+        req_call = mock.call('iliekcomputers', limit=25, to_ts=1400000201, try_harder=0)
+        timescale.assert_has_calls([req_call])
+        timescale.reset_mock()
+
+        # try_harder query param -> try_harder timescale param
+        self.client.get(url_for('user.profile', user_name='iliekcomputers'), query_string={'try_harder': 1})
+        req_call = mock.call('iliekcomputers', limit=25, to_ts=1400000201, try_harder=1)
+        timescale.assert_has_calls([req_call])
+        timescale.reset_mock()
+
+    @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
+    def test_ts_filters_errors(self, timescale):
+        """If try_harder is not integer, show an error page"""
+        self._create_test_data('iliekcomputers')
+        response = self.client.get(url_for('user.profile', user_name='iliekcomputers'),
+                                   query_string={'try_harder': 'a'})
+        self.assert400(response)
+        self.assertIn(b'try_harder must be an integer value 0 or greater: a', response.data)
 
         timescale.assert_not_called()
