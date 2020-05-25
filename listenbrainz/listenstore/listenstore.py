@@ -64,7 +64,7 @@ class ListenStore(object):
         raise NotImplementedError()
 
 
-    def fetch_listens(self, user_name, from_ts=None, to_ts=None, limit=DEFAULT_LISTENS_PER_FETCH, try_harder="0"):
+    def fetch_listens(self, user_name, from_ts=None, to_ts=None, limit=DEFAULT_LISTENS_PER_FETCH, try_harder=0):
         """ Check from_ts, to_ts, and limit for fetching listens
             and set them to default values if not given.
         """
@@ -78,10 +78,5 @@ class ListenStore(object):
             order = ORDER_ASC
         else:
             order = ORDER_DESC
-
-        try:
-            try_harder = int(try_harder)
-        except ValueError:
-            raise ValueError("try harder must be an integer value 0 or greater.")
 
         return self.fetch_listens_from_storage(user_name, from_ts, to_ts, limit, order, try_harder)

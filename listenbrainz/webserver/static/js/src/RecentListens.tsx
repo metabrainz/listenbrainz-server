@@ -40,6 +40,7 @@ export interface RecentListensProps {
   spotify: SpotifyUser;
   user: ListenBrainzUser;
   webSocketsServerUrl: string;
+  tryHarder?: number;
 }
 
 export interface RecentListensState {
@@ -283,6 +284,16 @@ export default class RecentListens extends React.Component<
     }
   };
 
+  reloadPageWithTryHarder = (): void => {
+  let url = window.location.href;
+  if (url.indexOf('?') > -1){
+    url += '&try_harder=1'
+  }else{
+    url += '?try_harder=1'
+  }
+  window.location.href = url;
+  }
+
   render() {
     const {
       alerts,
@@ -305,6 +316,7 @@ export default class RecentListens extends React.Component<
       profileUrl,
       spotify,
       user,
+      tryHarder
     } = this.props;
 
     const getSpotifyEmbedSrc = () => {
@@ -364,7 +376,7 @@ export default class RecentListens extends React.Component<
                 : "Playlist"}
             </h3>
 
-            {!listens.length && (
+            {(!listens.length && tryHarder == 0) && (
               <div className="lead text-center">
                 <p>No listens yet</p>
                 {mode === "follow" && (
@@ -479,6 +491,19 @@ export default class RecentListens extends React.Component<
                 )}
               </div>
             )}
+            {(mode === "listens" && tryHarder > 0) && (
+                  <div className="lead text-center">
+                    <p>We could not find any more listen, but there may be more</p>
+                    <button
+                    title="Try harder"
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={this.reloadPageWithTryHarder}
+                  >
+                    Try Harder
+                  </button>
+                </div>
+            )}
             <br />
             {mode === "follow" && (
               <FollowUsers
@@ -562,6 +587,7 @@ document.addEventListener("DOMContentLoaded", () => {
     spotify,
     user,
     web_sockets_server_url,
+    try_harder
   } = reactProps;
 
   ReactDOM.render(
@@ -584,6 +610,7 @@ document.addEventListener("DOMContentLoaded", () => {
       spotify={spotify}
       user={user}
       webSocketsServerUrl={web_sockets_server_url}
+      tryHarder={try_harder}
     />,
     domContainer
   );
