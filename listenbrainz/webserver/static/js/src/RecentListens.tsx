@@ -471,7 +471,7 @@ export default class RecentListens extends React.Component<
                   </tbody>
                 </table>
 
-                {mode === "listens" && (
+                {(mode === "listens" && tryHarder == 0) && (
                   <ul className="pager">
                     <li
                       className={`previous ${
