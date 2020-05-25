@@ -58,6 +58,8 @@ def profile(user_name):
         except ValueError:
             raise BadRequest("Incorrect timestamp argument min_ts: %s" % request.args.get("min_ts"))
 
+    try_harder = request.args.get("try_harder", 0)
+
     (min_ts_per_user, max_ts_per_user) = db_conn.get_timestamps_for_user(user_name)
     current_app.logger.info("min %s max %s" % (datetime.fromtimestamp(min_ts_per_user or 0).strftime("%Y-%m-%d %H:%M:%S"), 
                              datetime.fromtimestamp(max_ts_per_user or 0).strftime("%Y-%m-%d %H:%M:%S"))) 
@@ -67,9 +69,11 @@ def profile(user_name):
         else:
             max_ts = None
 
+    listens_missing = False
     listens = []
     if min_ts_per_user != max_ts_per_user:
         args = {}
+        args['try_harder'] = try_harder
         if max_ts:
             args['to_ts'] = max_ts
         else:
@@ -80,6 +84,8 @@ def profile(user_name):
                 "listened_at": listen.ts_since_epoch,
                 "listened_at_iso": listen.timestamp.isoformat() + "Z",
             })
+        if len(listens) < LISTENS_PER_PAGE:
+            listens_missing = True
 
     # Calculate if we need to show next/prev buttons
     previous_listen_ts = None
@@ -128,6 +134,7 @@ def profile(user_name):
         "next_listen_ts": next_listen_ts,
         "latest_listen_ts": max_ts_per_user,
         "latest_spotify_uri": _get_spotify_uri_for_listens(listens),
+        "try_harder" : listens_missing,
         "have_listen_count": have_listen_count,
         "listen_count": format(int(listen_count), ",d"),
         "artist_count": format(artist_count, ",d") if artist_count else None,

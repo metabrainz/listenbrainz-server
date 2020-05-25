@@ -237,7 +237,7 @@ class TimescaleListenStore(ListenStore):
         return inserted_rows
 
 
-    def fetch_listens_from_storage(self, user_name, from_ts, to_ts, limit, order):
+    def fetch_listens_from_storage(self, user_name, from_ts, to_ts, limit, order, try_harder):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving
             the value they are converted to the local server's timezone. So to compare
             datetime object we need to create a object in the same timezone as the server.
@@ -246,7 +246,10 @@ class TimescaleListenStore(ListenStore):
             to_ts: seconds since epoch, in float
         """
 
-        max_timestamp_window = 432000 * 3  # 15 days
+        if try_harder:
+            max_timestamp_window = 432000 * 10  # 50 days
+        else:
+            max_timestamp_window = 432000 * 3  # 15 days
         query = """SELECT listened_at, recording_msid, data
                      FROM listen
                     WHERE user_name = :user_name

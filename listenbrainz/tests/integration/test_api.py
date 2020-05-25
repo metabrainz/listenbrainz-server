@@ -4,7 +4,7 @@ import uuid
 
 from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.db import timescale as ts
-from flask import url_for
+from flask import url_for, current_app
 from redis import Redis
 import listenbrainz.db.user as db_user
 import time
@@ -22,8 +22,8 @@ class APITestCase(IntegrationTestCase):
         self.user = db_user.get_or_create(1, 'testuserpleaseignore')
 
     def tearDown(self):
-#        r = Redis(host=self.app.config['REDIS_HOST'], port=self.app.config['REDIS_PORT'])
-#        r.flushall()
+        r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
+        r.flushall()
         self.reset_timescale_db()
         super(APITestCase, self).tearDown()
 
