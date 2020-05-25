@@ -44,6 +44,7 @@
     "permission": "streaming user-read-email user-read-private"
   },
   "webSocketsServerUrl": "http://localhost:8081",
-  "apiUrl": "http://0.0.0.0"
+  "apiUrl": "http://0.0.0.0",
+  "tryHarder": 0
 }
 

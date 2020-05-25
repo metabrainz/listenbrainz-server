@@ -40,7 +40,7 @@ export interface RecentListensProps {
   spotify: SpotifyUser;
   user: ListenBrainzUser;
   webSocketsServerUrl: string;
-  tryHarder?: number;
+  tryHarder: number;
 }
 
 export interface RecentListensState {
