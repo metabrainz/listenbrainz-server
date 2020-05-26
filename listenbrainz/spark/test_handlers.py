@@ -1,11 +1,14 @@
 import unittest
+from datetime import datetime, timedelta, timezone
 from unittest import mock
-from flask import current_app
-from datetime import datetime, timezone, timedelta
 
+from flask import current_app
+
+from listenbrainz.spark.handlers import (
+    handle_candidate_sets, handle_dataframes, handle_dump_imported,
+    handle_model, handle_recommendations, handle_user_entity,
+    is_new_cf_recording_recommendation_batch, is_new_user_stats_batch)
 from listenbrainz.webserver import create_app
-from listenbrainz.spark.handlers import handle_user_artist, is_new_user_stats_batch, handle_dump_imported, handle_dataframes, \
-    handle_model, handle_candidate_sets, handle_recommendations, is_new_cf_recording_recommendation_batch
 
 
 class HandlersTestCase(unittest.TestCase):
@@ -13,24 +16,26 @@ class HandlersTestCase(unittest.TestCase):
     def setUp(self):
         self.app = create_app()
 
-    @mock.patch('listenbrainz.spark.handlers.db_stats.insert_user_stats')
+    @mock.patch('listenbrainz.spark.handlers.db_stats.insert_user_artists')
     @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')
     @mock.patch('listenbrainz.spark.handlers.is_new_user_stats_batch')
     @mock.patch('listenbrainz.spark.handlers.send_mail')
-    def test_handle_user_artist(self, mock_send_mail, mock_new_user_stats, mock_get_by_mb_id, mock_db_insert):
+    def test_handle_user_entity(self, mock_send_mail, mock_new_user_stats, mock_get_by_mb_id, mock_db_insert):
         data = {
             'musicbrainz_id': 'iliekcomputers',
-            'type': 'user_artist',
-            'artists': [{'artist_name': 'Kanye West', 'count': 200}],
+            'type': 'user_entity',
+            'entity': 'artists',
+            'range': 'all_time',
+            'data': [{'artist_name': 'Kanye West', 'count': 200}],
         }
         mock_get_by_mb_id.return_value = {'id': 1, 'musicbrainz_id': 'iliekcomputers'}
         mock_new_user_stats.return_value = True
 
         with self.app.app_context():
             current_app.config['TESTING'] = False  # set testing to false to check the notifications
-            handle_user_artist(data)
+            handle_user_entity(data)
 
-        mock_db_insert.assert_called_with(1, {'artists': data['artists']}, {}, {})
+        mock_db_insert.assert_called_with(1, {'all_time': {'artists': data['data']}})
         mock_send_mail.assert_called_once()
 
     @mock.patch('listenbrainz.spark.handlers.db_stats.get_timestamp_for_last_user_stats_update')

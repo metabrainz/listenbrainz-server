@@ -116,8 +116,8 @@ def get_artist(user_name):
         "total_artist_count": total_artist_count,
         "offset": offset,
         "range": stats_range,
-        "from_ts": int(stats['artist'][stats_range]['from']),
-        "to_ts": int(stats['artist'][stats_range]['to']),
+        "from_ts": int(stats['artist'][stats_range]['from_ts']),
+        "to_ts": int(stats['artist'][stats_range]['to_ts']),
         "last_updated": int(stats['last_updated'].timestamp())
     }})
 

@@ -1,0 +1,15 @@
+{
+  "from_ts": 0,
+  "to_ts": 10,
+  "releases": [
+    {
+      "listen_count": 230,
+      "name": "Halycon Days"
+    },
+    {
+      "listen_count": 229,
+      "name": "Delirium"
+    }
+  ],
+  "count": 2
+}
