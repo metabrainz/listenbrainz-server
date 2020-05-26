@@ -73,14 +73,15 @@ class TestTimescaleListenStore(DatabaseTestCase):
             with ts.engine.connect() as connection:
                 result = connection.execute(sqlalchemy.text("""SELECT column_name
                                                                  FROM information_schema.columns
-                                                                WHERE table_name = 'listen_count'"""))
+                                                                WHERE table_name = 'listen_count'
+                                                             ORDER BY column_name"""))
                 cols = result.fetchall()
         except psycopg2.OperationalError as e:
             self.log.error("Cannot query timescale listen_count: %s" % str(e), exc_info=True)
             raise
-        self.assertEqual(cols[0][0], "listened_at_bucket")
-        self.assertEqual(cols[1][0], "user_name")
-        self.assertEqual(cols[2][0], "count")
+        self.assertEqual(cols[0][0], "count")
+        self.assertEqual(cols[1][0], "listened_at_bucket")
+        self.assertEqual(cols[2][0], "user_name")
 
     # this test should be done first, because the other tests keep inserting more rows
     def test_aaa_get_total_listen_count(self):

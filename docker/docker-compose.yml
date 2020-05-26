@@ -25,7 +25,7 @@ services:
       - redis:/data:z
 
   timescale:
-    image: timescale/timescaledb:latest-pg11
+    image: timescale/timescaledb:latest-pg12
     volumes:
       - timescaledb:/var/lib/postgresql/data:z
     environment:
