@@ -232,7 +232,7 @@ class TimescaleListenStore(ListenStore):
 
         return inserted_rows
 
-    def fetch_listens_from_storage(self, user_name, from_ts, to_ts, limit, order, try_harder):
+    def fetch_listens_from_storage(self, user_name, from_ts, to_ts, limit, order, time_range):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving
             the value they are converted to the local server's timezone. So to compare
             datetime object we need to create a object in the same timezone as the server.
@@ -241,23 +241,20 @@ class TimescaleListenStore(ListenStore):
             to_ts: seconds since epoch, in float
             limit: the maximum number of items to return
             order: 0 for ASCending order, 1 for DESCending order
-            try_harder: If a previous call to this function didn't return the number
-                        of desired listens, setting try_harder=1 expands the time range
-                        of the search to find more listens. Without try harder it searches
-                        3 days, with try harder=1 it searches 10 days.
+            time_range: the time range (in units of 5 days) to search for listens. If none is given
+                        3 ranges (15 days) are searched. If -1 is given then all listens are searched
+                        which is slow and should be avoided if at all possible. 
         """
 
-        if try_harder:
-            max_timestamp_window = 432000 * 10  # 50 days
+        self.log.info("fetch listens")
+        self.log.info(time_range)
+        if not time_range:
+            time_range = 3 
+        if time_range < 0:
+            max_timestamp_window = -1
         else:
-            max_timestamp_window = 432000 * 3  # 15 days
-        query = """SELECT listened_at, recording_msid, data
-                     FROM listen
-                    WHERE user_name = :user_name
-                      AND listened_at > :from_ts
-                      AND listened_at < :to_ts
-                 ORDER BY listened_at """ + ORDER_TEXT[order] + """
-                    LIMIT :limit"""
+            max_timestamp_window = 432000 * time_range 
+
         if from_ts is not None:
             to_ts = from_ts + max_timestamp_window
         else:
@@ -267,6 +264,16 @@ class TimescaleListenStore(ListenStore):
                 # then set from_ts = -1 as some tests feed listens with listened_at = 0.
                 from_ts = -1
 
+        query = """SELECT listened_at, recording_msid, data
+                     FROM listen
+                    WHERE user_name = :user_name """
+
+        if max_timestamp_window >= 0:
+            query += "AND listened_at < :to_ts "
+                    
+        query += """  AND listened_at > :from_ts
+                 ORDER BY listened_at """ + ORDER_TEXT[order] + """
+                     LIMIT :limit"""
         self.log.info(query)
         self.log.info("%d %d" % (from_ts, to_ts))
 

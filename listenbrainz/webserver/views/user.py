@@ -65,8 +65,7 @@ def profile(user_name):
         raise BadRequest("try_harder must be an integer value 0 or greater: %s" % try_harder)
 
     (min_ts_per_user, max_ts_per_user) = db_conn.get_timestamps_for_user(user_name)
-    current_app.logger.info("min %s max %s" % (datetime.fromtimestamp(min_ts_per_user or 0).strftime("%Y-%m-%d %H:%M:%S"), 
-                             datetime.fromtimestamp(max_ts_per_user or 0).strftime("%Y-%m-%d %H:%M:%S"))) 
+    current_app.logger.info("fetched min max %d %d" % (min_ts_per_user or 0, max_ts_per_user or 0))
     if max_ts is None and min_ts is None:
         if max_ts_per_user:
             max_ts = (max_ts_per_user + 1) or int(time.time())
@@ -77,11 +76,16 @@ def profile(user_name):
     listens = []
     if min_ts_per_user != max_ts_per_user:
         args = {}
-        args['try_harder'] = try_harder
+        # if we're supposed to try harder then search 50 days. (each increment in time_range == 5 days)
+        args['time_range'] = 10 if try_harder else None
+        current_app.logger.info("view")
+        current_app.logger.info(try_harder)
+        current_app.logger.info(args['time_range'])
         if max_ts:
             args['to_ts'] = max_ts
         else:
             args['from_ts'] = min_ts
+        current_app.logger.info("call fetch listens")
         for listen in db_conn.fetch_listens(user_name, limit=LISTENS_PER_PAGE, **args):
             listens.append({
                 "track_metadata": listen.data,
@@ -104,8 +108,6 @@ def profile(user_name):
                 previous_listen_ts = listens[0]['listened_at']
             else:
                 previous_listen_ts = None
-    current_app.logger.info("fetched min max %d %d" % (min_ts_per_user or 0, max_ts_per_user or 0))
-    current_app.logger.info("previous %d next %d" % (previous_listen_ts or -1, next_listen_ts or -1))
 
     # If there are no previous listens then display now_playing
     if not previous_listen_ts:

@@ -64,10 +64,11 @@ class ListenStore(object):
         raise NotImplementedError()
 
 
-    def fetch_listens(self, user_name, from_ts=None, to_ts=None, limit=DEFAULT_LISTENS_PER_FETCH, try_harder=0):
+    def fetch_listens(self, user_name, from_ts=None, to_ts=None, limit=DEFAULT_LISTENS_PER_FETCH, time_range=None):
         """ Check from_ts, to_ts, and limit for fetching listens
             and set them to default values if not given.
         """
+        self.log.info("fetch listens called")
         if from_ts and to_ts:
             raise ValueError("You cannot specify from_ts and to_ts at the same time.")
 
@@ -79,4 +80,10 @@ class ListenStore(object):
         else:
             order = ORDER_DESC
 
-        return self.fetch_listens_from_storage(user_name, from_ts, to_ts, limit, order, try_harder)
+        if time_range:
+            try:
+                time_range = int(time_range)
+            except ValueError:
+                raise ValueError("time_range must be an int value")
+
+        return self.fetch_listens_from_storage(user_name, from_ts, to_ts, limit, order, time_range)

@@ -131,7 +131,7 @@ def import_data():
     )
 
 
-def fetch_listens(musicbrainz_id, to_ts):
+def fetch_listens(musicbrainz_id, to_ts, time_range=None):
     """
     Fetch all listens for the user from listenstore by making repeated queries
     to listenstore until we get all the data. Returns a generator that streams
@@ -139,7 +139,7 @@ def fetch_listens(musicbrainz_id, to_ts):
     """
     db_conn = webserver.create_timescale(current_app)
     while True:
-        batch = db_conn.fetch_listens(current_user.musicbrainz_id, to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
+        batch = db_conn.fetch_listens(current_user.musicbrainz_id, to_ts=to_ts, limit=EXPORT_FETCH_COUNT, time_range=time_range)
         if not batch:
             break
         yield from batch
@@ -166,7 +166,7 @@ def export_data():
         # listens into memory at once, and we can start serving the response
         # immediately.
         to_ts = int(time())
-        listens = fetch_listens(current_user.musicbrainz_id, to_ts)
+        listens = fetch_listens(current_user.musicbrainz_id, to_ts, time_range=-1)
         output = stream_json_array(listen.to_api() for listen in listens)
 
         response = Response(stream_with_context(output))
