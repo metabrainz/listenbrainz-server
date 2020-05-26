@@ -13,8 +13,8 @@ from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIUnauthorized)
 from listenbrainz.webserver.rate_limiter import ratelimit
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
-                                                    MAX_ITEMS_PER_GET)
-
+                                                    MAX_ITEMS_PER_GET,
+                                                    _get_non_negative_param)
 stats_api_bp = Blueprint('stats_api_v1', __name__)
 
 
@@ -244,25 +244,6 @@ def _process_entity(user_name, stats, stats_range, offset, count, entity):
     entity_list = stats[entity][stats_range][plural_entity][offset:count]
 
     return entity_list, total_entity_count
-
-
-def _get_non_negative_param(param, default=None):
-    """ Gets the value of a request parameter, validating that it is non-negative
-
-    Args:
-        param (str): the parameter to get
-        default: the value to return if the parameter doesn't exist in the request
-    """
-    value = request.args.get(param, default)
-    if value is not None:
-        try:
-            value = int(value)
-        except ValueError:
-            raise APIBadRequest("'{}' should be a non-negative integer".format(param))
-
-        if value < 0:
-            raise APIBadRequest("'{}' should be a non-negative integer".format(param))
-    return value
 
 
 def _is_valid_range(stats_range):

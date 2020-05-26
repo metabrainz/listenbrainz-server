@@ -7,7 +7,7 @@ import time
 import ujson
 import uuid
 
-from flask import current_app
+from flask import current_app,request
 from listenbrainz.listen import Listen
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
 from listenbrainz.webserver.external import messybrainz
@@ -345,3 +345,22 @@ def publish_data_to_queue(data, exchange, queue, error_msg):
     except Exception as e:
         current_app.logger.error("Cannot publish to rabbitmq channel: %s / %s" % (type(e).__name__, str(e)), exc_info=True)
         raise APIServiceUnavailable(error_msg)
+
+
+def _get_non_negative_param(param, default=None):
+    """ Gets the value of a request parameter, validating that it is non-negative
+
+    Args:
+        param (str): the parameter to get
+        default: the value to return if the parameter doesn't exist in the request
+    """
+    value = request.args.get(param, default)
+    if value is not None:
+        try:
+            value = int(value)
+        except ValueError:
+            raise APIBadRequest("'{}' should be a non-negative integer".format(param))
+
+        if value < 0:
+            raise APIBadRequest("'{}' should be a non-negative integer".format(param))
+    return value
