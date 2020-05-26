@@ -65,4 +65,3 @@ class releaseTestCase(SparkTestCase):
         received = release_stats.get_releases('test_view')
 
         self.assertDictEqual(received, expected)
-

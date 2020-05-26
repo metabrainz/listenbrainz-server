@@ -131,11 +131,9 @@ class UserTestCase(DatabaseTestCase):
         artists = {
             'range': 'all_time'
         }
-        db_stats.insert_user_stats(
+        db_stats.insert_user_artists(
             user_id=user_id,
             artists=artists,
-            recordings={},
-            releases={},
         )
         user_stats = db_stats.get_all_user_stats(user_id)
         self.assertIsNotNone(user_stats)

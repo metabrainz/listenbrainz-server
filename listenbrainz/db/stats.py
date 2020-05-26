@@ -114,7 +114,8 @@ def get_user_stats(user_id, columns):
         }
         )
         row = result.fetchone()
-        return dict(row) if row else None
+
+    return dict(row) if row else None
 
 
 def get_user_artists(user_id):

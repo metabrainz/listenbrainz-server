@@ -66,14 +66,13 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertIsNone(props['artist_count'])
 
         artists = {
-            'range': 'all_time',
-            'count': 5
+            'all_time': {
+                'count': 5
+            }
         }
-        db_stats.insert_user_stats(
+        db_stats.insert_user_artists(
             user_id=self.user.id,
             artists=artists,
-            recordings={},
-            releases={},
         )
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)

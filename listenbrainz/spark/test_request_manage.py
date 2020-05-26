@@ -65,20 +65,20 @@ class RequestManageTestCase(unittest.TestCase):
         received_message = request_manage._prepare_query_message('stats.user.all')
         self.assertEqual(expected_message, received_message)
 
-        expected_message = ujson.dumps({'query': 'stats.user.artist.week'})
-        received_message = request_manage._prepare_query_message('stats.user.artist.week')
+        expected_message = ujson.dumps({'query': 'stats.user.entity.week', 'params': {'entity': 'test'}})
+        received_message = request_manage._prepare_query_message('stats.user.entity.week', params={'entity': 'test'})
         self.assertEqual(expected_message, received_message)
 
-        expected_message = ujson.dumps({'query': 'stats.user.artist.month'})
-        received_message = request_manage._prepare_query_message('stats.user.artist.month')
+        expected_message = ujson.dumps({'query': 'stats.user.entity.month', 'params': {'entity': 'test'}})
+        received_message = request_manage._prepare_query_message('stats.user.entity.month', params={'entity': 'test'})
         self.assertEqual(expected_message, received_message)
 
-        expected_message = ujson.dumps({'query': 'stats.user.artist.year'})
-        received_message = request_manage._prepare_query_message('stats.user.artist.year')
+        expected_message = ujson.dumps({'query': 'stats.user.entity.year', 'params': {'entity': 'test'}})
+        received_message = request_manage._prepare_query_message('stats.user.entity.year', params={'entity': 'test'})
         self.assertEqual(expected_message, received_message)
 
-        expected_message = ujson.dumps({'query': 'stats.user.artist.all_time'})
-        received_message = request_manage._prepare_query_message('stats.user.artist.all_time')
+        expected_message = ujson.dumps({'query': 'stats.user.entity.all_time', 'params': {'entity': 'test'}})
+        received_message = request_manage._prepare_query_message('stats.user.entity.all_time', params={'entity': 'test'})
         self.assertEqual(expected_message, received_message)
 
         expected_message = ujson.dumps({'query': 'cf_recording.recommendations.create_dataframes'})
