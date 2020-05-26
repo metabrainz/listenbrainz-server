@@ -95,7 +95,8 @@ def request_user_stats(week, month, year, all_time):
     """
     if week:
         send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.week', params={'entity': 'artists'}))
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.week', params={'entity': 'releases'}))
+        # not calculating release stats because the spark cluster can't handle getting listen counts for ALL releases
+        # for all users
         return
 
     if month:
