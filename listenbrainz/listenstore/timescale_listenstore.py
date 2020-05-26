@@ -243,17 +243,17 @@ class TimescaleListenStore(ListenStore):
             order: 0 for ASCending order, 1 for DESCending order
             time_range: the time range (in units of 5 days) to search for listens. If none is given
                         3 ranges (15 days) are searched. If -1 is given then all listens are searched
-                        which is slow and should be avoided if at all possible. 
+                        which is slow and should be avoided if at all possible.
         """
 
         self.log.info("fetch listens")
         self.log.info(time_range)
         if not time_range:
-            time_range = 3 
+            time_range = 3
         if time_range < 0:
             max_timestamp_window = -1
         else:
-            max_timestamp_window = 432000 * time_range 
+            max_timestamp_window = 432000 * time_range
 
         if from_ts is not None:
             to_ts = from_ts + max_timestamp_window

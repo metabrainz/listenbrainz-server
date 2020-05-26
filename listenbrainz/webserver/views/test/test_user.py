@@ -36,12 +36,10 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         weirduser = db_user.get_or_create(2, 'weird\\user name')
         self.weirduser = User.from_dbrow(weirduser)
 
-
     def tearDown(self):
         self.logstore = None
         ServerTestCase.tearDown(self)
         DatabaseTestCase.tearDown(self)
-
 
     def test_user_page(self):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
@@ -71,7 +69,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         props = ujson.loads(self.get_context_variable('props'))
         self.assertEqual(props['artist_count'], '5')
         self.assertDictEqual(props['spotify'], {})
-
 
     @mock.patch('listenbrainz.webserver.views.user.spotify')
     def test_spotify_token_access(self, mock_domain_spotify):
@@ -110,11 +107,9 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
             'permission': 'permission',
         })
 
-
     def _create_test_data(self, user_name):
         test_data = create_test_data_for_timescalelistenstore(user_name)
         self.logstore.insert(test_data)
-
 
     def test_username_case(self):
         """Tests that the username in URL is case insensitive"""
@@ -126,7 +121,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertContext('user', self.user)
         self.assert200(response1)
         self.assert200(response2)
-
 
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
     def test_ts_filters(self, timescale):
@@ -156,7 +150,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
                         query_string={'min_ts': 1520941000, 'max_ts': 1520946000})
         req_call = mock.call('iliekcomputers', limit=25, to_ts=1520946000, time_range=None)
         timescale.assert_has_calls([req_call])
-
 
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
     def test_ts_filters_errors(self, timescale):

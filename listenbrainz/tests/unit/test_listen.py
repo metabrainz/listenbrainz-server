@@ -83,7 +83,7 @@ class ListenTestCase(unittest.TestCase):
             artist_msid=uuid.uuid4(),
             recording_msid=uuid.uuid4(),
             dedup_tag=3,
-            user_id = 1,
+            user_id=1,
             data={
                 'artist_name': 'Radiohead',
                 'track_name': 'True Love Waits',
@@ -106,11 +106,11 @@ class ListenTestCase(unittest.TestCase):
         self.assertIn('track_metadata', json_data)
         self.assertIn('additional_info', json_data['track_metadata'])
 
-        # Check track name 
+        # Check track name
         self.assertEqual(json_data['track_metadata']['track_name'],
                          listen.data['track_name'])
 
-        # Check artist name 
+        # Check artist name
         self.assertEqual(json_data['track_metadata']['artist_name'],
                          listen.data['artist_name'])
 

@@ -28,7 +28,7 @@ const {
   spotify,
   user,
   webSocketsServerUrl,
-  tryHarder
+  tryHarder,
 } = recentListensProps;
 
 const props = {
@@ -46,7 +46,7 @@ const props = {
   spotify: spotify as SpotifyUser,
   user,
   webSocketsServerUrl,
-  tryHarder
+  tryHarder,
 };
 
 describe("RecentListens", () => {

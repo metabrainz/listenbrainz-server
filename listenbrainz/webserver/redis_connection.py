@@ -5,6 +5,7 @@ from listenbrainz.listenstore import RedisListenStore
 
 _redis = None
 
+
 def init_redis_connection(logger, host, port, namespace):
     """Create a connection to the Redis server."""
 

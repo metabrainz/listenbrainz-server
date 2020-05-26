@@ -73,7 +73,7 @@ class RedisListenStore(ListenStore):
             self.redis.zadd(self.ns + self.RECENT_LISTENS_KEY, recent, nx=True)
 
             # Don't prune the sorted list each time, but only when it reaches twice the desired size 
-            count = self.redis.zcard(self.ns + self.RECENT_LISTENS_KEY) 
+            count = self.redis.zcard(self.ns + self.RECENT_LISTENS_KEY)
             if count > (self.RECENT_LISTENS_MAX * 2):
                 self.redis.zpopmin(self.ns + self.RECENT_LISTENS_KEY, count - self.RECENT_LISTENS_MAX - 1)
 

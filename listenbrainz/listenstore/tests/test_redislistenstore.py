@@ -57,14 +57,14 @@ class RedisListenStoreTestCase(DatabaseTestCase):
         listens = []
         t = int(time.time())
         for i in range(RedisListenStore.RECENT_LISTENS_MAX * 3):
-            listen = Listen(user_id = self.testuser['id'],
-                user_name = self.testuser['musicbrainz_id'],
-                timestamp = t - i,
-                data = {
-                    'artist_name': str(uuid.uuid4()),
-                    'track_name': str(uuid.uuid4()),
-                    'additional_info': {},
-                }
+            listen = Listen(user_id=self.testuser['id'],
+                            user_name = self.testuser['musicbrainz_id'],
+                            timestamp = t - i,
+                            data = {
+                                'artist_name': str(uuid.uuid4()),
+                                'track_name': str(uuid.uuid4()),
+                                'additional_info': {},
+                            }
             )
             listens.append(listen)
             self._redis.update_recent_listens(listens)

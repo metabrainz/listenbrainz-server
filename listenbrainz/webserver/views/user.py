@@ -139,7 +139,7 @@ def profile(user_name):
         "next_listen_ts": next_listen_ts,
         "latest_listen_ts": max_ts_per_user,
         "latest_spotify_uri": _get_spotify_uri_for_listens(listens),
-        "try_harder" : listens_missing,
+        "try_harder": listens_missing,
         "have_listen_count": have_listen_count,
         "listen_count": format(int(listen_count), ",d"),
         "artist_count": format(artist_count, ",d") if artist_count else None,

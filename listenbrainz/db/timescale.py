@@ -31,7 +31,6 @@ def init_db_connection(connect_str):
             time.sleep(2)
 
 
-
 def run_sql_script(sql_file_path):
     with open(sql_file_path) as sql:
         with engine.connect() as connection:
@@ -56,4 +55,3 @@ def run_sql_script_without_transaction(sql_file_path):
             connection.connection.set_isolation_level(1)
             connection.close()
         return True
-

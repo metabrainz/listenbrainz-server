@@ -17,6 +17,7 @@ deploy_env = os.environ.get('DEPLOY_ENV', '')
 CONSUL_CONFIG_FILE_RETRY_COUNT = 10
 API_LISTENED_AT_ALLOWED_SKEW = 60 * 60 # allow a skew of 1 hour in listened_at submissions
 
+
 def create_timescale(app):
     from listenbrainz.webserver.timescale_connection import init_timescale_connection
     return init_timescale_connection(app.logger, {
@@ -106,7 +107,6 @@ def gen_app(config_path=None, debug=None):
         create_rabbitmq(app)
     except ConnectionError:
         app.logger.critical("RabbitMQ service is not up!", exc_info=True)
-
 
     # Database connections
     from listenbrainz import db

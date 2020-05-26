@@ -36,7 +36,6 @@ class ListenWriter:
                                                     error_logger=current_app.logger.error,
                                                     error_retry_delay=self.ERROR_RETRY_DELAY)
 
-
     def _collect_and_log_stats(self, count):
         self.inserts += count
         if self.inserts >= self.REPORT_FREQUENCY:

@@ -13,17 +13,18 @@ import json
 
 from listenbrainz import config
 
+
 class TimescaleWriterTestCase(IntegrationTestCase):
 
     def setUp(self):
         super(TimescaleWriterTestCase, self).setUp()
-        self.ls = TimescaleListenStore({ 'REDIS_HOST': config.REDIS_HOST,
-                             'REDIS_PORT': config.REDIS_PORT,
-                             'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
-                             'SQLALCHEMY_TIMESCALE_URI': config.SQLALCHEMY_TIMESCALE_URI}, self.app.logger)
+        self.ls = TimescaleListenStore({'REDIS_HOST': config.REDIS_HOST,
+                                       'REDIS_PORT': config.REDIS_PORT,
+                                       'REDIS_NAMESPACE': config.REDIS_NAMESPACE,
+                                       'SQLALCHEMY_TIMESCALE_URI': config.SQLALCHEMY_TIMESCALE_URI}, self.app.logger)
         self.rs = RedisListenStore(self.app.logger, { 'REDIS_HOST': config.REDIS_HOST,
-                             'REDIS_PORT': config.REDIS_PORT,
-                             'REDIS_NAMESPACE': config.REDIS_NAMESPACE})
+                                   'REDIS_PORT': config.REDIS_PORT,
+                                   'REDIS_NAMESPACE': config.REDIS_NAMESPACE})
 
     def send_listen(self, user, filename):
         with open(self.path_to_data_file(filename)) as f:
@@ -99,7 +100,7 @@ class TimescaleWriterTestCase(IntegrationTestCase):
         r = self.send_listen(user2, 'valid_single.json')
         self.assert200(r)
 
-        time.sleep(2) # sleep to allow timescale-writer to do its thing
+        time.sleep(2)  # sleep to allow timescale-writer to do its thing
 
         to_ts = int(time.time())
         listens = self.ls.fetch_listens(user1['musicbrainz_id'], to_ts=to_ts)
