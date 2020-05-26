@@ -1,29 +1,21 @@
 #!/usr/bin/env python3
 
-import json
 import sys
-import os
+import traceback
+from time import sleep
+
 import pika
 import ujson
-import logging
-import traceback
-import calendar
-
 from flask import current_app
-from requests.exceptions import ConnectionError
 from redis import Redis
-from collections import defaultdict
-from operator import itemgetter
 import psycopg2
-from psycopg2.errors import OperationalError, DuplicateTable, UntranslatableCharacter
 
 from listenbrainz.listen import Listen
-from time import time, sleep
 from listenbrainz.listenstore import RedisListenStore
-import listenbrainz.utils as utils
 from listenbrainz.listen_writer import ListenWriter
 from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver import create_app
+
 
 class TimescaleWriterSubscriber(ListenWriter):
 
@@ -34,7 +26,6 @@ class TimescaleWriterSubscriber(ListenWriter):
         self.incoming_ch = None
         self.unique_ch = None
         self.redis_listenstore = None
-
 
     def callback(self, ch, method, properties, body):
 
@@ -50,17 +41,16 @@ class TimescaleWriterSubscriber(ListenWriter):
 
         while True:
             try:
-                self.incoming_ch.basic_ack(delivery_tag = method.delivery_tag)
+                self.incoming_ch.basic_ack(delivery_tag=method.delivery_tag)
                 break
             except pika.exceptions.ConnectionClosed:
                 self.connect_to_rabbitmq()
 
         return ret
 
-
     def insert_to_listenstore(self, data):
         """
-        Inserts a batch of listens to the ListenStore. Timescale will report back as 
+        Inserts a batch of listens to the ListenStore. Timescale will report back as
         to which rows were actually inserted into the DB, allowing us to send those
         down the unique queue.
 
@@ -71,14 +61,13 @@ class TimescaleWriterSubscriber(ListenWriter):
         Returns: number of listens successfully sent
         """
 
-
         if not data:
             return 0
 
         try:
             rows_inserted = self.ls.insert(data)
         except psycopg2.OperationalError as err:
-            current_app.logger.error("Cannot write data to listenstore: %s. Sleep." % str(e), exc_info=True)
+            current_app.logger.error("Cannot write data to listenstore: %s. Sleep." % str(err), exc_info=True)
             sleep(self.ERROR_RETRY_DELAY)
             return 0
 
@@ -104,7 +93,7 @@ class TimescaleWriterSubscriber(ListenWriter):
                     exchange=current_app.config['UNIQUE_EXCHANGE'],
                     routing_key='',
                     body=ujson.dumps(unique),
-                    properties=pika.BasicProperties(delivery_mode = 2,),
+                    properties=pika.BasicProperties(delivery_mode=2,),
                 )
                 break
             except pika.exceptions.ConnectionClosed:
@@ -115,7 +104,6 @@ class TimescaleWriterSubscriber(ListenWriter):
 
         return len(data)
 
-
     def start(self):
         app = create_app()
         with app.app_context():
@@ -123,7 +111,8 @@ class TimescaleWriterSubscriber(ListenWriter):
             self._verify_hosts_in_config()
 
             if "SQLALCHEMY_TIMESCALE_URI" not in current_app.config:
-                current_app.logger.critical("Timescale service not defined. Sleeping {0} seconds and exiting.".format(self.ERROR_RETRY_DELAY))
+                current_app.logger.critical("Timescale service not defined. Sleeping {0} seconds and exiting."
+                                            .format(self.ERROR_RETRY_DELAY))
                 sleep(self.ERROR_RETRY_DELAY)
                 sys.exit(-1)
 
@@ -138,17 +127,20 @@ class TimescaleWriterSubscriber(ListenWriter):
                         }, logger=current_app.logger)
                         break
                     except Exception as err:
-                        current_app.logger.error("Cannot connect to timescale: %s. Retrying in 2 seconds and trying again." % str(err), exc_info=True)
+                        current_app.logger.error("Cannot connect to timescale: %s. Retrying in 2 seconds and trying again." %
+                                                 str(err), exc_info=True)
                         sleep(self.ERROR_RETRY_DELAY)
 
                 while True:
                     try:
-                        self.redis = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'], decode_responses=True)
+                        self.redis = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'],
+                                           decode_responses=True)
                         self.redis.ping()
                         self.redis_listenstore = RedisListenStore(current_app.logger, current_app.config)
                         break
                     except Exception as err:
-                        current_app.logger.error("Cannot connect to redis: %s. Retrying in 2 seconds and trying again." % str(err), exc_info=True)
+                        current_app.logger.error("Cannot connect to redis: %s. Retrying in 2 seconds and trying again." %
+                                                 str(err), exc_info=True)
                         sleep(self.ERROR_RETRY_DELAY)
 
                 while True:
@@ -156,7 +148,8 @@ class TimescaleWriterSubscriber(ListenWriter):
                     self.incoming_ch = self.connection.channel()
                     self.incoming_ch.exchange_declare(exchange=current_app.config['INCOMING_EXCHANGE'], exchange_type='fanout')
                     self.incoming_ch.queue_declare(current_app.config['INCOMING_QUEUE'], durable=True)
-                    self.incoming_ch.queue_bind(exchange=current_app.config['INCOMING_EXCHANGE'], queue=current_app.config['INCOMING_QUEUE'])
+                    self.incoming_ch.queue_bind(exchange=current_app.config['INCOMING_EXCHANGE'],
+                                                queue=current_app.config['INCOMING_QUEUE'])
                     self.incoming_ch.basic_consume(
                         lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self),
                         queue=current_app.config['INCOMING_QUEUE'],
@@ -173,7 +166,6 @@ class TimescaleWriterSubscriber(ListenWriter):
                         continue
 
                     self.connection.close()
-
 
             except Exception as err:
                 traceback.print_exc()

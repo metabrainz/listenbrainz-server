@@ -1,36 +1,32 @@
 # coding=utf-8
 
-import listenbrainz.db.user as db_user
 import os
-import time
-import ujson
+from time import sleep, time
+from datetime import datetime
 import logging
-import psycopg2
-import sqlalchemy
 import shutil
 import subprocess
 import tarfile
 import tempfile
-import sys
 
-from psycopg2.extras import execute_values
-from time import sleep
-from datetime import datetime
+import ujson
+import psycopg2
+import sqlalchemy
+import listenbrainz.db.user as db_user
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db import timescale as ts
 from listenbrainz import config
 from listenbrainz.listenstore.tests.util import create_test_data_for_timescalelistenstore, generate_data
 from listenbrainz.webserver.timescale_connection import init_timescale_connection
 from listenbrainz.db.dump import SchemaMismatchException
-from listenbrainz.listenstore import TimescaleListenStore, LISTENS_DUMP_SCHEMA_VERSION
+from listenbrainz.listenstore import LISTENS_DUMP_SCHEMA_VERSION
 from listenbrainz.listenstore.timescale_listenstore import REDIS_TIMESCALE_USER_LISTEN_COUNT
-from unittest.mock import MagicMock
 from brainzutils import cache
 
 TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'admin', 'timescale')
 
-class TestTimescaleListenStore(DatabaseTestCase):
 
+class TestTimescaleListenStore(DatabaseTestCase):
 
     def reset_timescale_db(self):
 
@@ -47,12 +43,11 @@ class TestTimescaleListenStore(DatabaseTestCase):
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
         ts.engine.dispose()
 
-
     def setUp(self):
         super(TestTimescaleListenStore, self).setUp()
         self.log = logging.getLogger(__name__)
         self.reset_timescale_db()
-        
+
         self.ns = config.REDIS_NAMESPACE
         self.logstore = init_timescale_connection(self.log, {
             'REDIS_HOST': config.REDIS_HOST,
@@ -76,7 +71,9 @@ class TestTimescaleListenStore(DatabaseTestCase):
     def test_check_listen_count_view_exists(self):
         try:
             with ts.engine.connect() as connection:
-                result = connection.execute(sqlalchemy.text("SELECT column_name FROM information_schema.columns WHERE table_name = 'listen_count'"))
+                result = connection.execute(sqlalchemy.text("""SELECT column_name
+                                                                 FROM information_schema.columns
+                                                                WHERE table_name = 'listen_count'"""))
                 cols = result.fetchall()
         except psycopg2.OperationalError as e:
             self.log.error("Cannot query timescale listen_count: %s" % str(e), exc_info=True)
@@ -84,7 +81,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(cols[0][0], "listened_at_bucket")
         self.assertEqual(cols[1][0], "user_name")
         self.assertEqual(cols[2][0], "count")
-    
+
     # this test should be done first, because the other tests keep inserting more rows
     def test_aaa_get_total_listen_count(self):
         listen_count = self.logstore.get_total_listen_count(False)
@@ -105,7 +102,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
     def test_insert_timescale(self):
         count = self._create_test_data(self.testuser_name)
         self.assertEqual(len(self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1399999999)), count)
-    
+
     def test_fetch_listens_0(self):
         self._create_test_data(self.testuser_name)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000000, limit=1)
@@ -158,7 +155,8 @@ class TestTimescaleListenStore(DatabaseTestCase):
         recent = self.logstore.fetch_recent_listens_for_users([user_name, user_name2], max_age=10000000000)
         self.assertEqual(len(recent), 4)
 
-        recent = self.logstore.fetch_recent_listens_for_users([user_name], max_age = int(time.time()) - recent[0].ts_since_epoch + 1)
+        recent = self.logstore.fetch_recent_listens_for_users([user_name], max_age=int(time()) -
+                                                              recent[0].ts_since_epoch + 1)
         self.assertEqual(len(recent), 1)
         self.assertEqual(recent[0].ts_since_epoch, 1400000200)
 
@@ -175,7 +173,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
 
     def test_dump_listens_spark_format(self):
         expected_count = self._create_test_data(self.testuser_name)
-        time.sleep(1)
+        sleep(1)
         temp_dir = tempfile.mkdtemp()
         dump = self.logstore.dump_listens(
             location=temp_dir,
@@ -207,12 +205,12 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listen_count, expected_listen_count)
 
     def test_incremental_dump(self):
-        listens = generate_data(1, self.testuser_name, 1, 5) # generate 5 listens with ts 1-5
+        listens = generate_data(1, self.testuser_name, 1, 5)  # generate 5 listens with ts 1-5
         self.logstore.insert(listens)
         sleep(1)
         start_time = datetime.now()
         sleep(1)
-        listens = generate_data(1, self.testuser_name, 6, 5) # generate 5 listens with ts 6-10
+        listens = generate_data(1, self.testuser_name, 6, 5)  # generate 5 listens with ts 6-10
         self.logstore.insert(listens)
         sleep(1)
         temp_dir = tempfile.mkdtemp()
@@ -248,12 +246,12 @@ class TestTimescaleListenStore(DatabaseTestCase):
         shutil.rmtree(temp_dir)
 
     def test_time_range_full_dumps(self):
-        listens = generate_data(1, self.testuser_name, 1, 5) # generate 5 listens with ts 1-5
+        listens = generate_data(1, self.testuser_name, 1, 5)  # generate 5 listens with ts 1-5
         self.logstore.insert(listens)
         sleep(1)
         between_time = datetime.now()
         sleep(1)
-        listens = generate_data(1, self.testuser_name, 6, 5) # generate 5 listens with ts 6-10
+        listens = generate_data(1, self.testuser_name, 6, 5)  # generate 5 listens with ts 6-10
         self.logstore.insert(listens)
         sleep(1)
         temp_dir = tempfile.mkdtemp()
@@ -262,7 +260,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
             dump_id=1,
             end_time=between_time,
         )
-        spark_dump_location = self.logstore.dump_listens(
+        self.logstore.dump_listens(
             location=temp_dir,
             dump_id=1,
             end_time=between_time,
@@ -285,12 +283,11 @@ class TestTimescaleListenStore(DatabaseTestCase):
     def set_created_to_NULL_in_DB(self):
         try:
             with ts.engine.connect() as connection:
-                result = connection.execute(sqlalchemy.text("UPDATE listen SET created = NULL"))
+                connection.execute(sqlalchemy.text("UPDATE listen SET created = NULL"))
         except psycopg2.OperationalError as e:
             self.log.error("Cannot query timescale listen_count: %s" % str(e), exc_info=True)
             raise
-        return
-    
+
     def test_full_dump_listen_with_no_created(self):
         """ We have listens with no `created` inside the production
         database. This means that full dumps should always be able to dump these
@@ -348,7 +345,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
 
         # Add a new listen with created as NOT NULL
         listens = generate_data(1, self.testuser_name, 5, 1)
-        
+
         self.logstore.insert(listens)
         sleep(1)
 
@@ -381,7 +378,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         shutil.rmtree(temp_dir)
 
     def test_import_listens(self):
-        count = self._create_test_data(self.testuser_name)
+        self._create_test_data(self.testuser_name)
         sleep(1)
         temp_dir = tempfile.mkdtemp()
         dump_location = self.logstore.dump_listens(
@@ -406,10 +403,10 @@ class TestTimescaleListenStore(DatabaseTestCase):
 
     def test_dump_and_import_listens_escaped(self):
         user = db_user.get_or_create(3, 'i have a\\weird\\user, na/me"\n')
-        count = self._create_test_data(user['musicbrainz_id'])
+        self._create_test_data(user['musicbrainz_id'])
         sleep(1)
 
-        count = self._create_test_data(self.testuser_name)
+        self._create_test_data(self.testuser_name)
         sleep(1)
 
         temp_dir = tempfile.mkdtemp()
@@ -432,7 +429,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[2].ts_since_epoch, 1400000100)
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
-
 
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
         self.assertEqual(len(listens), 5)
@@ -461,7 +457,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
         sleep(1)
         self.assertEqual(done, len(db_user.get_all_users()))
         shutil.rmtree(temp_dir)
-
 
     def create_test_dump(self, archive_name, archive_path, schema_version=None, index=None):
         """ Creates a test dump to test the import listens functionality.
@@ -502,7 +497,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
 
         return archive_path
 
-
     def test_schema_mismatch_exception_for_dump_incorrect_schema(self):
         """ Tests that SchemaMismatchException is raised when the schema of the dump is old """
 
@@ -519,7 +513,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
         sleep(1)
         with self.assertRaises(SchemaMismatchException):
             self.logstore.import_listens_dump(archive_path)
-
 
     def test_schema_mismatch_exception_for_dump_no_schema(self):
         """ Tests that SchemaMismatchException is raised when there is no schema version in the archive """
@@ -538,7 +531,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
         sleep(1)
         with self.assertRaises(SchemaMismatchException):
             self.logstore.import_listens_dump(archive_path)
-
 
     def test_schema_mismatch_exception_for_dump_no_index(self):
         """ Tests that SchemaMismatchException is raised when there is no index.json in the archive """
@@ -559,17 +551,17 @@ class TestTimescaleListenStore(DatabaseTestCase):
             self.logstore.import_listens_dump(archive_path)
 
     def test_listen_counts_in_cache(self):
-        count = self._create_test_data(self.testuser_name)     
+        count = self._create_test_data(self.testuser_name)
         self.assertEqual(count, self.logstore.get_listen_count_for_user(self.testuser_name, need_exact=True))
         user_key = '{}{}'.format(self.ns + REDIS_TIMESCALE_USER_LISTEN_COUNT, self.testuser_name)
         self.assertEqual(count, int(cache.get(user_key, decode=False)))
 
-        batch = generate_data(self.testuser_id, self.testuser_name, int(time.time()), 1)
+        batch = generate_data(self.testuser_id, self.testuser_name, int(time()), 1)
         self.logstore.insert(batch)
         self.assertEqual(count + 1, int(cache.get(user_key, decode=False)))
 
     def test_delete_listens(self):
-        count = self._create_test_data(self.testuser_name)
+        self._create_test_data(self.testuser_name)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
@@ -582,10 +574,9 @@ class TestTimescaleListenStore(DatabaseTestCase):
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
         self.assertEqual(len(listens), 0)
 
-
     def test_delete_listens_escaped(self):
         user = db_user.get_or_create(213, 'i have a\\weird\\user, na/me"\n')
-        count = self._create_test_data(user['musicbrainz_id'])
+        self._create_test_data(user['musicbrainz_id'])
         listens = self.logstore.fetch_listens(user_name=user['musicbrainz_id'], to_ts=1400000300)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
