@@ -94,19 +94,23 @@ def request_user_stats(week, month, year, all_time):
     """ Send a user stats request to the spark cluster
     """
     if week:
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.week'))
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.week', params={'entity': 'artists'}))
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.week', params={'entity': 'releases'}))
         return
 
     if month:
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.month'))
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.month', params={'entity': 'artists'}))
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.month', params={'entity': 'releases'}))
         return
 
     if year:
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.year'))
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.year', params={'entity': 'artists'}))
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.year', params={'entity': 'releases'}))
         return
 
     if all_time:
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.artist.all_time'))
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.all_time', params={'entity': 'artists'}))
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.all_time', params={'entity': 'releases'}))
         return
 
     # Default if no specific flag is provided
