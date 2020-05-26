@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import json
 import os
 import listenbrainz.db.stats as db_stats
@@ -14,56 +13,51 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         DatabaseTestCase.setUp(self)
         self.user = db_user.get_or_create(1, 'stats_user')
 
-    # def test_insert_user_stats(self):
-    #     """ Test if data is inserted correctly """
-    #     with open(self.path_to_data_file('user_top_artists_db.json')) as f:
-    #         artists_data = json.load(f)
-    #     with open(self.path_to_data_file('user_top_releases.json')) as f:
-    #         releases = json.load(f)
-    #     with open(self.path_to_data_file('user_top_recordings.json')) as f:
-    #         recordings = json.load(f)
+    def test_insert_user_artists(self):
+        """ Test if artist stats are inserted correctly """
+        with open(self.path_to_data_file('user_top_artists_db.json')) as f:
+            artists_data = json.load(f)
 
-    #     db_stats.insert_user_stats(
-    #         user_id=self.user['id'],
-    #         artists=artists_data,
-    #         recordings=recordings,
-    #         releases=releases,
-    #     )
+        db_stats.insert_user_artists(user_id=self.user['id'], artists={'all_time': artists_data})
 
-    #     result = db_stats.get_all_user_stats(user_id=self.user['id'])
-    #     self.assertListEqual(result['artist']['all_time']['artists'], artists_data['artists'])
-    #     self.assertEqual(result['artist']['all_time']['count'], 2)
-    #     self.assertListEqual(result['release']['all_time']['releases'], releases)
-    #     self.assertListEqual(result['recording']['all_time']['recordings'], recordings)
-    #     self.assertGreater(int(result['last_updated'].strftime('%s')), 0)
+        result = db_stats.get_all_user_stats(user_id=self.user['id'])
+        self.assertDictEqual(result['artist']['all_time'], artists_data)
 
-    # def test_insert_user_stats_mult_ranges(self):
-    #     """ Test if multiple time range data is inserted correctly """
-    #     with open(self.path_to_data_file('user_top_artists_db.json')) as f:
-    #         artists_data = json.load(f)
+    def test_insert_user_releases(self):
+        """ Test if release stats are inserted correctly """
+        with open(self.path_to_data_file('user_top_releases_db.json')) as f:
+            releases_data = json.load(f)
 
-    #     db_stats.insert_user_stats(
-    #         user_id=self.user['id'],
-    #         artists=artists_data,
-    #         recordings={},
-    #         releases={}
-    #     )
-    #     artists_data['range'] = 'year'
-    #     artists_data['from'] = 5
-    #     db_stats.insert_user_stats(
-    #         user_id=self.user['id'],
-    #         artists=artists_data,
-    #         recordings={},
-    #         releases={}
-    #     )
+        db_stats.insert_user_releases(user_id=self.user['id'], releases={'all_time': releases_data})
 
-    #     result = db_stats.get_all_user_stats(user_id=self.user['id'])
-    #     self.assertListEqual(result['artist']['all_time']['artists'], artists_data['artists'])
-    #     self.assertEqual(result['artist']['all_time']['count'], 2)
-    #     self.assertEqual(result['artist']['all_time']['from'], 0)
-    #     self.assertListEqual(result['artist']['year']['artists'], artists_data['artists'])
-    #     self.assertEqual(result['artist']['year']['count'], 2)
-    #     self.assertEqual(result['artist']['year']['from'], 5)
+        result = db_stats.get_all_user_stats(user_id=self.user['id'])
+        self.assertDictEqual(result['release']['all_time'], releases_data)
+
+    def test_insert_user_stats_mult_ranges(self):
+        """ Test if multiple time range data is inserted correctly """
+        with open(self.path_to_data_file('user_top_artists_db.json')) as f:
+            artists_data = json.load(f)
+
+        db_stats.insert_user_artists(user_id=self.user['id'], artists={'all_time': artists_data})
+        db_stats.insert_user_artists(user_id=self.user['id'], artists={'year': artists_data})
+
+        result = db_stats.get_user_artists(1)
+
+        self.assertDictEqual(result['artist']['all_time'], artists_data)
+        self.assertDictEqual(result['artist']['year'], artists_data)
+
+    def test_insert_user_stats_mult_ranges(self):
+        """ Test if multiple time range data is inserted correctly """
+        with open(self.path_to_data_file('user_top_releases_db.json')) as f:
+            releases_data = json.load(f)
+
+        db_stats.insert_user_releases(user_id=self.user['id'], releases={'all_time': releases_data})
+        db_stats.insert_user_releases(user_id=self.user['id'], releases={'year': releases_data})
+
+        result = db_stats.get_all_user_stats(1)
+
+        self.assertDictEqual(result['release']['all_time'], releases_data)
+        self.assertDictEqual(result['release']['year'], releases_data)
 
     def insert_test_data(self):
         """ Insert test data into the database """
@@ -75,7 +69,6 @@ class StatsDatabaseTestCase(DatabaseTestCase):
 
         db_stats.insert_user_artists(self.user['id'], {'all_time': artists})
         db_stats.insert_user_releases(self.user['id'], {'all_time': releases})
-        print(db_stats.get_all_user_stats(1))
 
         return {
             'user_artists': artists,
@@ -95,7 +88,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         self.assertDictEqual(data['artist']['all_time'], data_inserted['user_artists'])
 
         data = db_stats.get_user_stats(self.user['id'], 'release')
-        self.assertDictEqual(data, data_inserted['user_releases'])
+        self.assertDictEqual(data['release']['all_time'], data_inserted['user_releases'])
 
     def test_get_user_artists(self):
         data_inserted = self.insert_test_data()

@@ -52,7 +52,7 @@ def _insert_jsonb_data(user_id, column, data):
             INSERT INTO statistics.user (user_id, {column})
                  VALUES (:user_id, :data)
             ON CONFLICT (user_id)
-          DO UPDATE SET {column} = statistics.user.{column} || :data,
+          DO UPDATE SET {column} = COALESCE(statistics.user.{column} || :data, :data),
                         last_updated = NOW()
             """.format(column=column)), {
             'user_id': user_id,
