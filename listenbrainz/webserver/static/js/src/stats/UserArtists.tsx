@@ -17,6 +17,10 @@ export type UserArtistsProps = {
 
 export type UserArtistsState = {
   data: UserArtistsData;
+  currPage: number;
+  totalPages: number;
+  maxListens: number;
+  range: UserArtistsAPIRange;
 };
 
 export default class UserArtists extends React.Component<
@@ -26,9 +30,6 @@ export default class UserArtists extends React.Component<
   APIService: APIService;
 
   ROWS_PER_PAGE = 25; // Number of atists to be shown on each page
-  maxListens = 0; // Number of listens for first artist used to scale the graph
-  totalPages = 0; // Total namber of pages, useful for pagination
-  currPage = 1; // Current page number
 
   constructor(props: UserArtistsProps) {
     super(props);
@@ -39,6 +40,10 @@ export default class UserArtists extends React.Component<
 
     this.state = {
       data: [],
+      currPage: 1,
+      totalPages: 0,
+      maxListens: 0, // Number of listens for first artist used to scale the graph
+      range: "" as UserArtistsAPIRange,
     };
   }
 
@@ -46,37 +51,68 @@ export default class UserArtists extends React.Component<
     const { user } = this.props;
 
     // Fetch page number from URL
+    let currPage = 1;
     const url = new URL(window.location.href);
     if (url.searchParams.get("page")) {
-      this.currPage = Number(url.searchParams.get("page"));
-    } else {
-      this.currPage = 1;
+      currPage = Number(url.searchParams.get("page"));
     }
 
+    // Fetch range from URL
+    let range: UserArtistsAPIRange = "all_time";
+    if (url.searchParams.get("range")) {
+      range = url.searchParams.get("range") as UserArtistsAPIRange;
+    }
+
+    let maxListens = 0;
+    let totalPages = 0;
     try {
       const data = await this.APIService.getUserStats(
         user.name,
-        undefined,
+        range,
         undefined,
         1
       );
-      this.maxListens = data.payload.artists[0].listen_count;
-      this.totalPages = Math.ceil(
+      maxListens = data.payload.artists[0].listen_count;
+      totalPages = Math.ceil(
         data.payload.total_artist_count / this.ROWS_PER_PAGE
       );
     } catch (error) {
       this.handleError(error);
     }
-    this.handlePageChange(this.currPage);
+
+    this.setState({ currPage, maxListens, totalPages, range });
+  }
+
+  async componentDidUpdate(
+    prevProps: UserArtistsProps,
+    prevState: UserArtistsState
+  ) {
+    const { currPage, range } = this.state;
+
+    // Only fetch data when
+    if (currPage !== prevState.currPage || range !== prevState.range) {
+      const { user } = this.props;
+      const offset = (currPage - 1) * this.ROWS_PER_PAGE;
+      try {
+        const data = await this.getData(user.name, offset);
+        // We are updating the state conditionally so there won't be an infinite loop
+        // eslint-disable-next-line react/no-did-update-set-state
+        this.setState({ data: this.processData(data, offset) });
+      } catch (error) {
+        this.handleError(error);
+      }
+    }
   }
 
   getData = async (
     userName: string,
     offset: number
   ): Promise<UserArtistsResponse> => {
+    const { range } = this.state;
+
     const data = await this.APIService.getUserStats(
       userName,
-      undefined,
+      range,
       offset,
       this.ROWS_PER_PAGE
     );
@@ -98,18 +134,6 @@ export default class UserArtists extends React.Component<
     return result;
   };
 
-  handlePageChange = async (page: number): Promise<void> => {
-    const { user } = this.props;
-    const offset = (page - 1) * this.ROWS_PER_PAGE;
-    try {
-      const data = await this.getData(user.name, offset);
-      this.currPage = page;
-      this.setState({ data: this.processData(data, offset) });
-    } catch (error) {
-      this.handleError(error);
-    }
-  };
-
   handleError = (error: Error): void => {
     // Error Boundaries don't catch errors in async code.
     // Throwing an error in setState fixes this.
@@ -120,15 +144,15 @@ export default class UserArtists extends React.Component<
   };
 
   render() {
-    const { data } = this.state;
-    const prevPage = this.currPage - 1;
-    const nextPage = this.currPage + 1;
+    const { data, currPage, maxListens, totalPages } = this.state;
+    const prevPage = currPage - 1;
+    const nextPage = currPage + 1;
 
     return (
       <div>
         <div className="row">
-          <div className="col-md-12" style={{ height: "75em" }}>
-            <Bar data={data} maxValue={this.maxListens} />
+          <div className="col-md-12" style={{ height: `${3 * data.length}em` }}>
+            <Bar data={data} maxValue={maxListens} />
           </div>
         </div>
         <div className="row">
@@ -136,17 +160,15 @@ export default class UserArtists extends React.Component<
             <ul className="pager">
               <li className={`previous ${!(prevPage > 0) ? "hidden" : ""}`}>
                 {/* eslint-disable-next-line */}
-                <a onClick={() => this.handlePageChange(prevPage)}>
+                <a onClick={() => this.setState({ currPage: prevPage })}>
                   &larr; Previous
                 </a>
               </li>
               <li
-                className={`next ${
-                  !(nextPage <= this.totalPages) ? "hidden" : ""
-                }`}
+                className={`next ${!(nextPage <= totalPages) ? "hidden" : ""}`}
               >
                 {/* eslint-disable-next-line */}
-                <a onClick={() => this.handlePageChange(nextPage)}>
+                <a onClick={() => this.setState({ currPage: nextPage })}>
                   Next &rarr;
                 </a>
               </li>
