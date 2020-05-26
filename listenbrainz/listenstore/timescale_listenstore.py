@@ -266,14 +266,13 @@ class TimescaleListenStore(ListenStore):
 
         query = """SELECT listened_at, recording_msid, data
                      FROM listen
-                    WHERE user_name = :user_name """
+                    WHERE user_name = :user_name
+                      AND listened_at < :to_ts """
 
         if max_timestamp_window >= 0:
-            query += "AND listened_at < :to_ts "
-                    
-        query += """  AND listened_at > :from_ts
-                 ORDER BY listened_at """ + ORDER_TEXT[order] + """
-                     LIMIT :limit"""
+            query += "AND listened_at > :from_ts "
+        query += "ORDER BY listened_at " + ORDER_TEXT[order] + " LIMIT :limit"
+
         self.log.info(query)
         self.log.info("%d %d" % (from_ts, to_ts))
 
