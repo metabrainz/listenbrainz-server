@@ -66,8 +66,6 @@ export default class UserArtists extends React.Component<
 
     await this.changeRange(range);
     const { currPage } = this.state;
-    console.log(currPage);
-    console.log(page);
     if (currPage !== page) {
       this.changePage(page);
     }

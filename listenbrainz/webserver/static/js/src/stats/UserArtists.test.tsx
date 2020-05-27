@@ -31,7 +31,7 @@ describe("User Artists Page", () => {
 });
 
 describe("componentDidMount", () => {
-  it("extracts range from the URL if present", () => {
+  it("extracts range from the URL if present", async () => {
     const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
     const instance = wrapper.instance();
 
@@ -41,12 +41,12 @@ describe("componentDidMount", () => {
     } as Window["location"];
 
     instance.changeRange = jest.fn();
-    instance.componentDidMount();
+    await instance.componentDidMount();
 
     expect(instance.changeRange).toHaveBeenCalledWith("week");
   });
 
-  it("extracts current page from the URL if present", () => {
+  it("extracts current page from the URL if present", async () => {
     const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
     const instance = wrapper.instance();
 
@@ -54,8 +54,9 @@ describe("componentDidMount", () => {
     window.location = {
       href: "https://foobar/user/bazfoo/artists?page=3",
     } as Window["location"];
+    instance.changeRange = jest.fn();
     instance.changePage = jest.fn();
-    instance.componentDidMount();
+    await instance.componentDidMount();
 
     expect(instance.changePage).toHaveBeenCalledWith(3);
   });
