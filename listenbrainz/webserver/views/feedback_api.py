@@ -59,8 +59,8 @@ def recording_feedback():
         else:
             db_feedback.insert(feedback)
     except Exception as e:
-        raise APIInternalServerError("Something went wrong. Please try again.")
         current_app.logger.error("Error while inserting recording feedback: {}".format(e))
+        raise APIInternalServerError("Something went wrong. Please try again.")
 
     return jsonify({'status': 'ok'})
 
@@ -77,10 +77,10 @@ def get_feedback_for_user(user_name):
 
     :param score: Optional, If 1 then returns the loved recordings, if -1 returns hated recordings.
     :type score: ``int``
-    :param count: Optional, number of feedback to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
+    :param count: Optional, number of feedback items to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
         Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`.
     :type count: ``int``
-    :param offset: Optional, number of feedback to skip from the beginning, for pagination.
+    :param offset: Optional, number of feedback items to skip from the beginning, for pagination.
         Ex. An offset of 5 means the top 5 feedback will be skipped, defaults to 0.
     :type offset: ``int``
     :statuscode 200: Yay, you have data!
@@ -129,10 +129,10 @@ def get_feedback_for_recording(recording_msid):
     Get feedback for recording with given ``recording_msid``. The format for the JSON returned
     is defined in our :ref:`feedback-json-doc`.
 
-    :param count: Optional, number of feedback to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
+    :param count: Optional, number of feedback items to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
         Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`.
     :type count: ``int``
-    :param offset: Optional, number of feedback to skip from the beginning, for pagination.
+    :param offset: Optional, number of feedback items to skip from the beginning, for pagination.
         Ex. An offset of 5 means the top 5 feedback will be skipped, defaults to 0.
     :type offset: ``int``
     :statuscode 200: Yay, you have data!

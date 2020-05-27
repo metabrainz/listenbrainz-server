@@ -50,8 +50,8 @@ The JSON documents returned from our API for recording feedback look like the fo
    total_count: 1
 }
 
-The number of feedback in the document are returned by the top-level ``count`` element. The total number of
-feedback for the user/recording are returned by the top-level ``total_count``. ``offset`` speicifies the
+The number of feedback items in the document are returned by the top-level ``count`` element. The total number of
+feedback items for the user/recording are returned by the top-level ``total_count``. ``offset`` specifies the
 number of feedback to skip from the beginning, for pagination.  The other element is the ``feedback`` element.
 This is a list which contains the feedback JSON elements having a ``user_id`` the MusicBrainz ID of the user,
 a ``recording_msid`` and a ``score`` key.
