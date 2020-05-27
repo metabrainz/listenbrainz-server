@@ -601,8 +601,7 @@
       "listen_count": 3
     }
   ],
-  "range": "all_time",
-  "from": 0,
-  "to": 5,
+  "from_ts": 0,
+  "to_ts": 5,
   "count": 125
 }

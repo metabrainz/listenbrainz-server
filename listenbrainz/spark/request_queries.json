@@ -1,57 +1,52 @@
 {
-    "stats.user.all": {
-        "name": "stats.user.all",
-        "description": "All user statistics that ListenBrainz calculates for all ListenBrainz users",
-        "params": []
-    },
-    "stats.user.for_user": {
-        "name": "stats.user.for_user",
-        "description": "All user statistics that ListenBrainz calculates for the specified user",
-        "params": ["musicbrainz_id"]
-    },
-    "stats.user.artist.week": {
-        "name": "stats.user.artist.week",
-        "description": "Artist statistics for all users in the last week",
-        "params": []
-    },
-    "stats.user.artist.month": {
-        "name": "stats.user.artist.month",
-        "description": "Artist statistics for all users in the last month",
-        "params": []
-    },
-    "stats.user.artist.year": {
-        "name": "stats.user.artist.year",
-        "description": "Artist statistics for all users in the last year",
-        "params": []
-    },
-    "stats.user.artist.all_time": {
-        "name": "stats.user.artist.all_time",
-        "description": "All time artist statistics for all users",
-        "params": []
-    },
-    "import.dump.full": {
-        "name": "import.dump.full",
-        "description": "Import a new full dump into the spark cluster",
-        "params": []
-    },
-    "cf_recording.recommendations.create_dataframes": {
-        "name": "cf_recording.recommendations.create_dataframes",
-        "description": "Create dataframes to prepare trainable data.",
-        "params": ["train_model_window"]
-    },
-    "cf_recording.recommendations.train_model": {
-        "name": "cf_recording.recommendations.train_model",
-        "description": "Train data to yield a model.",
-        "params": []
-    },
-    "cf_recording.recommendations.candidate_sets": {
-        "name": "cf_recording.recommendations.candidate_sets",
-        "description": "Create candidate sets to generate recommendations",
-        "params": []
-    },
-    "cf_recording.recommendations.recommend":{
-        "name": "cf_recording.recommendations.recommend",
-        "description": "Generate recommendations for all active ListenBrainz users.",
-        "params": []
-    }
+  "stats.user.all": {
+    "name": "stats.user.all",
+    "description": "All user statistics that ListenBrainz calculates for all ListenBrainz users",
+    "params": []
+  },
+  "stats.user.entity.week": {
+    "name": "stats.user.entity.week",
+    "description": "Entity statistics for all users in the last week",
+    "params": ["entity"]
+  },
+  "stats.user.entity.month": {
+    "name": "stats.user.entity.month",
+    "description": "Entity statistics for all users in the last month",
+    "params": ["entity"]
+  },
+  "stats.user.entity.year": {
+    "name": "stats.user.entity.year",
+    "description": "Entity statistics for all users in the last year",
+    "params": ["entity"]
+  },
+  "stats.user.entity.all_time": {
+    "name": "stats.user.entity.all_time",
+    "description": "All time entity statistics for all users",
+    "params": ["entity"]
+  },
+  "import.dump.full": {
+    "name": "import.dump.full",
+    "description": "Import a new full dump into the spark cluster",
+    "params": []
+  },
+  "cf_recording.recommendations.create_dataframes": {
+    "name": "cf_recording.recommendations.create_dataframes",
+    "description": "Create dataframes to prepare trainable data.",
+    "params": ["train_model_window"]
+  },
+  "cf_recording.recommendations.train_model": {
+    "name": "cf_recording.recommendations.train_model",
+    "description": "Train data to yield a model.",
+    "params": []
+  },
+  "cf_recording.recommendations.candidate_sets": {
+    "name": "cf_recording.recommendations.candidate_sets",
+    "description": "Create candidate sets to generate recommendations",
+    "params": []
+  },
+  "cf_recording.recommendations.recommend": {
+    "name": "cf_recording.recommendations.recommend",
+    "description": "Generate recommendations for all active ListenBrainz users.",
+    "params": []
+  }
 }
