@@ -66,6 +66,8 @@ export default class UserArtists extends React.Component<
 
     await this.changeRange(range);
     const { currPage } = this.state;
+    console.log(currPage);
+    console.log(page);
     if (currPage !== page) {
       this.changePage(page);
     }
@@ -106,6 +108,7 @@ export default class UserArtists extends React.Component<
       this.setState({
         data: this.processData(data, page),
         range: newRange,
+        currPage: page,
         totalPages,
         maxListens,
         artistCount,
@@ -249,7 +252,10 @@ export default class UserArtists extends React.Component<
           </div>
         </div>
         <div className="row">
-          <div className="col-md-12" style={{ height: `${3 * data.length}em` }}>
+          <div
+            className="col-md-12"
+            style={{ height: `${(75 / this.ROWS_PER_PAGE) * data.length}em` }}
+          >
             <Bar data={data} maxValue={maxListens} />
           </div>
         </div>

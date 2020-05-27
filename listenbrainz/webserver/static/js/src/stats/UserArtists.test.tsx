@@ -22,10 +22,8 @@ describe("User Artists Page", () => {
       .mockImplementationOnce((): any => {});
 
     const wrapper = mount<UserArtists>(<UserArtists {...props} />);
-    const instance = wrapper.instance();
 
-    instance.maxListens = 385;
-    wrapper.setState({ data: userArtistsProcessDataOutput });
+    wrapper.setState({ data: userArtistsProcessDataOutput, maxListens: 385 });
     wrapper.update();
 
     expect(wrapper).toMatchSnapshot();
@@ -33,6 +31,21 @@ describe("User Artists Page", () => {
 });
 
 describe("componentDidMount", () => {
+  it("extracts range from the URL if present", () => {
+    const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
+    const instance = wrapper.instance();
+
+    delete window.location;
+    window.location = {
+      href: "https://foobar/user/bazfoo/artists?range=week",
+    } as Window["location"];
+
+    instance.changeRange = jest.fn();
+    instance.componentDidMount();
+
+    expect(instance.changeRange).toHaveBeenCalledWith("week");
+  });
+
   it("extracts current page from the URL if present", () => {
     const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
     const instance = wrapper.instance();
@@ -41,42 +54,10 @@ describe("componentDidMount", () => {
     window.location = {
       href: "https://foobar/user/bazfoo/artists?page=3",
     } as Window["location"];
+    instance.changePage = jest.fn();
     instance.componentDidMount();
 
-    expect(instance.currPage).toBe(3);
-  });
-
-  it("sets maxListens and totalPages correctly", async () => {
-    const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
-    const instance = wrapper.instance();
-
-    const spy = jest.spyOn(instance.APIService, "getUserStats");
-    spy.mockImplementation(() => {
-      return Promise.resolve(userArtistsResponse as UserArtistsResponse);
-    });
-
-    await instance.componentDidMount();
-    expect(spy).toHaveBeenCalledWith("dummyUser", undefined, undefined, 1);
-    expect(instance.maxListens).toBe(385);
-    expect(instance.totalPages).toBe(7);
-  });
-
-  it("calls handlePageChange", async () => {
-    const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
-    const instance = wrapper.instance();
-
-    instance.handlePageChange = jest.fn();
-    const spy = jest.spyOn(instance.APIService, "getUserStats");
-    spy.mockImplementation(() => {
-      return Promise.resolve(userArtistsResponse as UserArtistsResponse);
-    });
-    delete window.location;
-    window.location = {
-      href: "https://foobar/user/bazfoo/artists",
-    } as Window["location"];
-    await instance.componentDidMount();
-
-    expect(instance.handlePageChange).toHaveBeenCalledWith(1);
+    expect(instance.changePage).toHaveBeenCalledWith(3);
   });
 });
 
@@ -89,9 +70,9 @@ describe("getData", () => {
     spy.mockImplementation((): any => {
       return Promise.resolve(userArtistsResponse);
     });
-    await instance.getData("dummyUser", 0);
+    await instance.getData(2, "all_time");
 
-    expect(spy).toHaveBeenCalledWith("dummyUser", undefined, 0, 25);
+    expect(spy).toHaveBeenCalledWith("dummyUser", "all_time", 25, 25);
   });
 });
 
@@ -101,13 +82,13 @@ describe("processData", () => {
     const instance = wrapper.instance();
 
     expect(
-      instance.processData(userArtistsResponse as UserArtistsResponse, 0)
+      instance.processData(userArtistsResponse as UserArtistsResponse, 1)
     ).toEqual(userArtistsProcessDataOutput);
   });
 });
 
-describe("handlePageChange", () => {
-  it("sets state correctly and updates currPage", async () => {
+describe("changePage", () => {
+  it("sets state correctly", async () => {
     const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
     const instance = wrapper.instance();
 
@@ -118,10 +99,34 @@ describe("handlePageChange", () => {
     instance.processData = jest.fn().mockImplementationOnce(() => {
       return userArtistsProcessDataOutput;
     });
-    await instance.handlePageChange(1);
+    await instance.changePage(2);
 
-    expect(instance.processData).toHaveBeenCalledWith(userArtistsResponse, 0);
+    expect(instance.processData).toHaveBeenCalledWith(userArtistsResponse, 2);
     expect(wrapper.state("data")).toEqual(userArtistsProcessDataOutput);
-    expect(instance.currPage).toBe(1);
+    expect(wrapper.state("currPage")).toBe(2);
+  });
+});
+
+describe("changeRange", () => {
+  it("sets state correctly", async () => {
+    const wrapper = shallow<UserArtists>(<UserArtists {...props} />);
+    const instance = wrapper.instance();
+
+    const spy = jest.spyOn(instance.APIService, "getUserStats");
+    spy.mockImplementation((): any => {
+      return Promise.resolve(userArtistsResponse);
+    });
+    instance.processData = jest.fn().mockImplementationOnce(() => {
+      return userArtistsProcessDataOutput;
+    });
+    await instance.changeRange("all_time");
+
+    expect(instance.processData).toHaveBeenCalledWith(userArtistsResponse, 1);
+    expect(wrapper.state("data")).toEqual(userArtistsProcessDataOutput);
+    expect(wrapper.state("range")).toEqual("all_time");
+    expect(wrapper.state("currPage")).toEqual(1);
+    expect(wrapper.state("totalPages")).toBe(7);
+    expect(wrapper.state("maxListens")).toBe(385);
+    expect(wrapper.state("artistCount")).toBe(175);
   });
 });
