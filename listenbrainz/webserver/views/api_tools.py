@@ -7,7 +7,7 @@ import time
 import ujson
 import uuid
 
-from flask import current_app,request
+from flask import current_app, request
 from listenbrainz.listen import Listen
 from listenbrainz.webserver import API_LISTENED_AT_ALLOWED_SKEW
 from listenbrainz.webserver.external import messybrainz
