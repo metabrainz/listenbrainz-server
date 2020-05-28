@@ -149,6 +149,26 @@ declare type UserArtistsResponse = {
   };
 };
 
+declare type UserReleasesResponse = {
+  payload: {
+    releases: Array<{
+      artist_mbids?: Array<string>;
+      artist_msid?: string;
+      artist_name: string;
+      release_mbid?: Array<string>;
+      release_msid?: string;
+      release_name: string;
+      listen_count: number;
+    }>;
+    count: number;
+    last_updated: number;
+    offset: number;
+    range: UserEntityAPIRange;
+    total_release_count: number;
+    user_id: string;
+  };
+};
+
 declare type UserEntityAPIRange = "all_time" | "year" | "month" | "week";
 
 declare type Entity = "artist" | "release" | "recording";

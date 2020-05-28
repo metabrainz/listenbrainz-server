@@ -66,6 +66,14 @@ export default class UserEntity extends React.Component<
       range = url.searchParams.get("range") as UserEntityAPIRange;
     }
 
+    // Fetch entity from URL
+    let entity: Entity = "artist";
+    if (url.searchParams.get("entity")) {
+      entity = url.searchParams.get("entity") as Entity;
+    }
+
+    // setState is async, we need the entity to be correctly set before calling changeRange
+    await this.setState({ entity });
     await this.changeRange(range);
     const { currPage } = this.state;
     if (currPage !== page) {
@@ -74,10 +82,10 @@ export default class UserEntity extends React.Component<
   }
 
   changePage = async (newPage: number): Promise<void> => {
-    const { range } = this.state;
+    const { range, entity } = this.state;
 
     try {
-      const data = await this.getData(newPage, range);
+      const data = await this.getData(newPage, range, entity);
       this.setState({
         data: this.processData(data, newPage),
         currPage: newPage,
@@ -88,23 +96,40 @@ export default class UserEntity extends React.Component<
   };
 
   changeRange = async (newRange: UserEntityAPIRange): Promise<void> => {
+    const { entity } = this.state;
     const { user } = this.props;
 
     const page = 1;
     try {
-      let data = await this.APIService.getUserStats(
+      let data = await this.APIService.getUserEntity(
         user.name,
+        entity,
         newRange,
         undefined,
         1
       );
-      const maxListens = data.payload.artists[0].listen_count;
-      const totalPages = Math.ceil(
-        data.payload.total_artist_count / this.ROWS_PER_PAGE
-      );
-      const entityCount = data.payload.total_artist_count;
 
-      data = await this.getData(page, newRange);
+      let maxListens = 0;
+      let totalPages = 0;
+      let entityCount = 0;
+
+      if (entity === "artist") {
+        data = data as UserArtistsResponse;
+        maxListens = data.payload.artists[0].listen_count;
+        totalPages = Math.ceil(
+          data.payload.total_artist_count / this.ROWS_PER_PAGE
+        );
+        entityCount = data.payload.total_artist_count;
+      } else if (entity === "release") {
+        data = data as UserReleasesResponse;
+        maxListens = data.payload.releases[0].listen_count;
+        totalPages = Math.ceil(
+          data.payload.total_release_count / this.ROWS_PER_PAGE
+        );
+        entityCount = data.payload.total_release_count;
+      }
+
+      data = await this.getData(page, newRange, entity);
       this.setState({
         data: this.processData(data, page),
         range: newRange,
@@ -118,15 +143,65 @@ export default class UserEntity extends React.Component<
     }
   };
 
+  changeEntity = async (newEntity: Entity): Promise<void> => {
+    const { range } = this.state;
+    const { user } = this.props;
+
+    const page = 1;
+    try {
+      let data = await this.APIService.getUserEntity(
+        user.name,
+        newEntity,
+        range,
+        undefined,
+        1
+      );
+
+      let maxListens = 0;
+      let totalPages = 0;
+      let entityCount = 0;
+
+      if (newEntity === "artist") {
+        data = data as UserArtistsResponse;
+        maxListens = data.payload.artists[0].listen_count;
+        totalPages = Math.ceil(
+          data.payload.total_artist_count / this.ROWS_PER_PAGE
+        );
+        entityCount = data.payload.total_artist_count;
+      } else if (newEntity === "release") {
+        data = data as UserReleasesResponse;
+        maxListens = data.payload.releases[0].listen_count;
+        totalPages = Math.ceil(
+          data.payload.total_release_count / this.ROWS_PER_PAGE
+        );
+        entityCount = data.payload.total_release_count;
+      }
+
+      data = await this.getData(page, range, newEntity);
+      this.setState({
+        data: this.processData(data, page, newEntity),
+        entity: newEntity,
+        currPage: page,
+        totalPages,
+        maxListens,
+        entityCount,
+      });
+    } catch (error) {
+      this.handleError(error);
+    }
+  };
+
   getData = async (
     page: number,
-    range: UserEntityAPIRange
-  ): Promise<UserArtistsResponse> => {
+    range: UserEntityAPIRange,
+    entity: Entity
+  ): Promise<UserArtistsResponse | UserReleasesResponse> => {
     const { user } = this.props;
     const offset = (page - 1) * this.ROWS_PER_PAGE;
 
-    const data = await this.APIService.getUserStats(
+    const data = await this.APIService.getUserEntity(
       user.name,
+      entity,
       range,
       offset,
       this.ROWS_PER_PAGE
@@ -134,17 +209,38 @@ export default class UserEntity extends React.Component<
     return data;
   };
 
-  processData = (data: UserArtistsResponse, page: number): UserEntityData => {
+  processData = (
+    data: UserArtistsResponse | UserReleasesResponse,
+    page: number,
+    entity?: Entity
+  ): UserEntityData => {
+    if (!entity) {
+      // eslint-disable-next-line no-param-reassign
+      ({ entity } = this.state);
+    }
     const offset = (page - 1) * this.ROWS_PER_PAGE;
 
-    const result = data.payload.artists
-      .map((elem, idx: number) => {
-        return {
-          id: `${offset + idx + 1}. ${elem.artist_name}`,
-          count: elem.listen_count,
-        };
-      })
-      .reverse();
+    let result = {} as UserEntityData;
+    if (entity === "artist") {
+      result = (data as UserArtistsResponse).payload.artists
+        .map((elem, idx: number) => {
+          return {
+            id: `${offset + idx + 1}. ${elem.artist_name}`,
+            count: elem.listen_count,
+          };
+        })
+        .reverse();
+    } else if (entity === "release") {
+      result = (data as UserReleasesResponse).payload.releases
+        .map((elem, idx: number) => {
+          return {
+            id: `${offset + idx + 1}. ${elem.release_name}`,
+            count: elem.listen_count,
+          };
+        })
+        .reverse();
+    }
+
     return result;
   };
 
@@ -178,26 +274,35 @@ export default class UserEntity extends React.Component<
           </div>
         </div>
         <div className="row">
-          <div
-            className="col-xs-6"
-            style={{
-              display: "inline-block",
-              verticalAlign: "middle",
-              float: "none",
-            }}
-          >
-            <h4 style={{ textTransform: "capitalize" }}>
-              {entity} count - <b>{entityCount}</b>
-            </h4>
+          <div className="col-xs-6">
+            <ul className="nav nav-pills">
+              <li className={entity === "artist" ? "active" : ""}>
+                <a
+                  href="#"
+                  role="button"
+                  style={{
+                    fontWeight: "bold",
+                  }}
+                  onClick={() => this.changeEntity("artist")}
+                >
+                  Artist
+                </a>
+              </li>
+              <li className={entity === "release" ? "active" : ""}>
+                <a
+                  href="#"
+                  role="button"
+                  style={{
+                    fontWeight: "bold",
+                  }}
+                  onClick={() => this.changeEntity("release")}
+                >
+                  Release
+                </a>
+              </li>
+            </ul>
           </div>
-          <div
-            className="col-xs-6"
-            style={{
-              display: "inline-block",
-              verticalAlign: "middle",
-              float: "none",
-            }}
-          >
+          <div className="col-xs-6">
             <div className="dropdown pull-right">
               <button
                 className="dropdown-toggle btn-transparent"
@@ -253,6 +358,13 @@ export default class UserEntity extends React.Component<
           </div>
         </div>
         <div className="row">
+          <div className="col-xs-12">
+            <h4 style={{ textTransform: "capitalize" }}>
+              {entity} count - <b>{entityCount}</b>
+            </h4>
+          </div>
+        </div>
+        <div className="row">
           <div
             className="col-md-12"
             style={{ height: `${(75 / this.ROWS_PER_PAGE) * data.length}em` }}
@@ -261,7 +373,7 @@ export default class UserEntity extends React.Component<
           </div>
         </div>
         <div className="row">
-          <div className="col-md-12">
+          <div className="col-xs-12">
             <ul className="pager">
               <li className={`previous ${!(prevPage > 0) ? "hidden" : ""}`}>
                 <a
