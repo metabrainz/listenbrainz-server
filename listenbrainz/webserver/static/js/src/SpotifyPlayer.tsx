@@ -46,6 +46,7 @@ type SpotifyPlayerProps = DataSourceProps & {
 
 type SpotifyPlayerState = {
   accessToken: string;
+  permission: Array<SpotifyPermission>;
   currentSpotifyTrack?: SpotifyTrack;
   durationMs: number;
   trackWindow?: SpotifyPlayerTrackWindow;
@@ -54,25 +55,6 @@ type SpotifyPlayerState = {
 export default class SpotifyPlayer
   extends React.Component<SpotifyPlayerProps, SpotifyPlayerState>
   implements DataSourceType {
-  static hasPermissions = (spotifyUser: SpotifyUser) => {
-    const { access_token: accessToken, permission } = spotifyUser;
-    if (!accessToken || !permission) {
-      return false;
-    }
-    const scopes = permission.split(" ");
-    const requiredScopes = [
-      "streaming",
-      "user-read-email",
-      "user-read-private",
-    ];
-    for (let i = 0; i < requiredScopes.length; i += 1) {
-      if (!scopes.includes(requiredScopes[i])) {
-        return false;
-      }
-    }
-    return true;
-  };
-
   spotifyPlayer?: SpotifyPlayerType;
   debouncedOnTrackEnd: () => void;
 
@@ -80,6 +62,7 @@ export default class SpotifyPlayer
     super(props);
     this.state = {
       accessToken: props.spotifyUser.access_token || "",
+      permission: props.spotifyUser.permission || [],
       durationMs: 0,
     };
 
@@ -212,8 +195,36 @@ export default class SpotifyPlayer
         }
       })
       .catch((error) => {
-        handleError(error);
+        handleError(error.message);
       });
+  };
+
+  checkSpotifyToken = async (
+    accessToken?: string,
+    permission?: Array<SpotifyPermission>
+  ): Promise<boolean> => {
+    const { onInvalidateDataSource, handleError } = this.props;
+    if (!accessToken || !permission || !permission.length) {
+      this.handleAccountError();
+      return false;
+    }
+    try {
+      const requiredScopes: Array<SpotifyPermission> = [
+        "streaming",
+        "user-read-email",
+        "user-read-private",
+      ];
+      for (let i = 0; i < requiredScopes.length; i += 1) {
+        if (!permission.includes(requiredScopes[i])) {
+          onInvalidateDataSource(this, "Permission to play songs not granted");
+          return false;
+        }
+      }
+      return true;
+    } catch (error) {
+      handleError(error);
+      return false;
+    }
   };
 
   playListen = (listen: Listen | JSPFTrack): void => {
