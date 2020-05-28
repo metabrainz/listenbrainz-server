@@ -5,21 +5,6 @@ import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
-const getSpotifyEmbedUriFromListen = (listen: any): string | null => {
-  const spotifyId = _.get(listen, "track_metadata.additional_info.spotify_id");
-  if (typeof spotifyId !== "string") {
-    return null;
-  }
-  const spotifyTrack = spotifyId.split("https://open.spotify.com/")[1];
-  if (typeof spotifyTrack !== "string") {
-    return null;
-  }
-  return spotifyId.replace(
-    "https://open.spotify.com/",
-    "https://open.spotify.com/embed/"
-  );
-};
-
 const searchForSpotifyTrack = async (
   spotifyToken?: string,
   trackName?: string,
@@ -119,10 +104,4 @@ const getPlayButton = (listen: any, onClickFunction: () => void) => {
   );
 };
 
-export {
-  getSpotifyEmbedUriFromListen,
-  searchForSpotifyTrack,
-  getArtistLink,
-  getTrackLink,
-  getPlayButton,
-};
+export { searchForSpotifyTrack, getArtistLink, getTrackLink, getPlayButton };
