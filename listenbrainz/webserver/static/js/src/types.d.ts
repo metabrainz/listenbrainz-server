@@ -143,10 +143,12 @@ declare type UserArtistsResponse = {
     count: number;
     last_updated: number;
     offset: number;
-    range: UserArtistsAPIRange;
+    range: UserEntityAPIRange;
     total_artist_count: number;
     user_id: string;
   };
 };
 
-declare type UserArtistsAPIRange = "all_time" | "year" | "month" | "week";
+declare type UserEntityAPIRange = "all_time" | "year" | "month" | "week";
+
+declare type Entity = "artist" | "release" | "recording";

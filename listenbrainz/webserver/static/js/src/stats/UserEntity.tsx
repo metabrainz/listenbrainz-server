@@ -6,34 +6,35 @@ import APIService from "../APIService";
 import Bar from "./Bar";
 import ErrorBoundary from "../ErrorBoundary";
 
-export type UserArtistsData = Array<{
+export type UserEntityData = Array<{
   id: string;
   count: number;
 }>;
 
-export type UserArtistsProps = {
+export type UserEntityProps = {
   user: ListenBrainzUser;
   apiUrl: string;
 };
 
-export type UserArtistsState = {
-  data: UserArtistsData;
-  artistCount: number;
+export type UserEntityState = {
+  data: UserEntityData;
+  range: UserEntityAPIRange;
+  entity: Entity;
   currPage: number;
+  entityCount: number;
   totalPages: number;
   maxListens: number;
-  range: UserArtistsAPIRange;
 };
 
-export default class UserArtists extends React.Component<
-  UserArtistsProps,
-  UserArtistsState
+export default class UserEntity extends React.Component<
+  UserEntityProps,
+  UserEntityState
 > {
   APIService: APIService;
 
   ROWS_PER_PAGE = 25; // Number of atists to be shown on each page
 
-  constructor(props: UserArtistsProps) {
+  constructor(props: UserEntityProps) {
     super(props);
 
     this.APIService = new APIService(
@@ -42,11 +43,12 @@ export default class UserArtists extends React.Component<
 
     this.state = {
       data: [],
-      artistCount: 0,
+      range: "all_time",
+      entity: "artist",
       currPage: 1,
+      entityCount: 0,
       totalPages: 0,
       maxListens: 0, // Number of listens for first artist used to scale the graph
-      range: "all_time",
     };
   }
 
@@ -59,9 +61,9 @@ export default class UserArtists extends React.Component<
     }
 
     // Fetch range from URL
-    let range: UserArtistsAPIRange = "all_time";
+    let range: UserEntityAPIRange = "all_time";
     if (url.searchParams.get("range")) {
-      range = url.searchParams.get("range") as UserArtistsAPIRange;
+      range = url.searchParams.get("range") as UserEntityAPIRange;
     }
 
     await this.changeRange(range);
@@ -85,7 +87,7 @@ export default class UserArtists extends React.Component<
     }
   };
 
-  changeRange = async (newRange: UserArtistsAPIRange): Promise<void> => {
+  changeRange = async (newRange: UserEntityAPIRange): Promise<void> => {
     const { user } = this.props;
 
     const page = 1;
@@ -100,7 +102,7 @@ export default class UserArtists extends React.Component<
       const totalPages = Math.ceil(
         data.payload.total_artist_count / this.ROWS_PER_PAGE
       );
-      const artistCount = data.payload.total_artist_count;
+      const entityCount = data.payload.total_artist_count;
 
       data = await this.getData(page, newRange);
       this.setState({
@@ -109,7 +111,7 @@ export default class UserArtists extends React.Component<
         currPage: page,
         totalPages,
         maxListens,
-        artistCount,
+        entityCount,
       });
     } catch (error) {
       this.handleError(error);
@@ -118,7 +120,7 @@ export default class UserArtists extends React.Component<
 
   getData = async (
     page: number,
-    range: UserArtistsAPIRange
+    range: UserEntityAPIRange
   ): Promise<UserArtistsResponse> => {
     const { user } = this.props;
     const offset = (page - 1) * this.ROWS_PER_PAGE;
@@ -132,7 +134,7 @@ export default class UserArtists extends React.Component<
     return data;
   };
 
-  processData = (data: UserArtistsResponse, page: number): UserArtistsData => {
+  processData = (data: UserArtistsResponse, page: number): UserEntityData => {
     const offset = (page - 1) * this.ROWS_PER_PAGE;
 
     const result = data.payload.artists
@@ -159,7 +161,8 @@ export default class UserArtists extends React.Component<
     const {
       data,
       range,
-      artistCount,
+      entity,
+      entityCount,
       currPage,
       maxListens,
       totalPages,
@@ -171,7 +174,7 @@ export default class UserArtists extends React.Component<
       <div>
         <div className="row">
           <div className="col-md-4">
-            <h3>Top Artists</h3>
+            <h3>History</h3>
           </div>
         </div>
         <div className="row">
@@ -183,8 +186,8 @@ export default class UserArtists extends React.Component<
               float: "none",
             }}
           >
-            <h4>
-              Artist count - <b>{artistCount}</b>
+            <h4 style={{ textTransform: "capitalize" }}>
+              {entity} count - <b>{entityCount}</b>
             </h4>
           </div>
           <div
@@ -300,7 +303,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const { user, api_url: apiUrl } = reactProps;
   ReactDOM.render(
     <ErrorBoundary>
-      <UserArtists apiUrl={apiUrl} user={user} />
+      <UserEntity apiUrl={apiUrl} user={user} />
     </ErrorBoundary>,
     domContainer
   );

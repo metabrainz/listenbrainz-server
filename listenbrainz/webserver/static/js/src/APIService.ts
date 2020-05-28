@@ -181,7 +181,7 @@ export default class APIService {
 
   getUserStats = async (
     userName: string,
-    range: UserArtistsAPIRange = "all_time",
+    range: UserEntityAPIRange = "all_time",
     offset: number = 0,
     count?: number
   ): Promise<UserArtistsResponse> => {
