@@ -92,7 +92,7 @@ def get_artist(user_name):
     if stats is None:
         return '', 204
 
-    return _process_entity(user_name, entity='artist', stats=stats)
+    return jsonify(_process_entity(user_name, entity='artist', stats=stats))
 
 
 @stats_api_bp.route("/user/<user_name>/releases")
@@ -174,10 +174,22 @@ def get_release(user_name):
     if stats is None:
         return '', 204
 
-    return _process_entity(user_name, entity='release', stats=stats)
+    return jsonify(_process_entity(user_name, entity='release', stats=stats))
 
 
 def _process_entity(user_name, entity, stats):
+    """ Process the statistics data according to query params
+
+        Args:
+            user_name (str): musicbrainz_id of the user
+            entity (str): name of the entity, i.e 'artist', 'release' or 'recording'
+            stats (dict): the dictionary containing statistic data
+
+        Returns:
+            processed_data (dict): A dictionary that contains processed data according
+                to the query params
+    """
+
     stats_range = request.args.get('range', default='all_time')
     if not _is_valid_range(stats_range):
         raise APIBadRequest("Invalid range: {}".format(stats_range))
@@ -196,7 +208,7 @@ def _process_entity(user_name, entity, stats):
     count = count + offset
     entity_list = stats[entity][stats_range][plural_entity][offset:count]
 
-    return jsonify({'payload': {
+    return {'payload': {
         "user_id": user_name,
         plural_entity: entity_list,
         "count": len(entity_list),
@@ -206,7 +218,7 @@ def _process_entity(user_name, entity, stats):
         "from_ts": int(stats[entity][stats_range]['from_ts']),
         "to_ts": int(stats[entity][stats_range]['to_ts']),
         "last_updated": int(stats['last_updated'].timestamp())
-    }})
+    }}
 
 
 def _get_non_negative_param(param, default=None):
