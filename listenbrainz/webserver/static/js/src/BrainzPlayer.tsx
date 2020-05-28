@@ -65,6 +65,9 @@ export default class BrainzPlayer extends React.Component<
   youtubePlayer?: React.RefObject<YoutubePlayer>;
   dataSources: Array<React.RefObject<DataSourceTypes>> = [];
 
+  // Since we don't want autoplay on our pages, we need a way to know
+  // that a user clicked on the play/pause button for the first time
+  // to start the playlist. Subsequent uses should toggle play/pause.
   firstRun: boolean = true;
 
   playerStateTimerID?: NodeJS.Timeout;
