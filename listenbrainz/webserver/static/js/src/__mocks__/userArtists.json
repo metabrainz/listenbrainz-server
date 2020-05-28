@@ -67,6 +67,8 @@
     "offset": 0,
     "range": "all_time",
     "total_artist_count": 175,
-    "user_id": "ishaanshah"
+    "user_id": "ishaanshah",
+    "from_ts": 1588494361,
+    "to_ts": 1588594361
   }
 }

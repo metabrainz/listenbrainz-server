@@ -149,4 +149,4 @@ declare type UserArtistsResponse = {
   };
 };
 
-declare type UserArtistsAPIRange = "all_time";
+declare type UserArtistsAPIRange = "all_time" | "year" | "month" | "week";
