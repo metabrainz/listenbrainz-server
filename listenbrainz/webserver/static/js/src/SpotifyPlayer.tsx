@@ -46,7 +46,7 @@ type SpotifyPlayerProps = DataSourceProps & {
 
 type SpotifyPlayerState = {
   accessToken: string;
-  permission: SpotifyPermission;
+  permission: Array<SpotifyPermission>;
   currentSpotifyTrack?: SpotifyTrack;
   durationMs: number;
   trackWindow?: SpotifyPlayerTrackWindow;
@@ -63,7 +63,7 @@ export default class SpotifyPlayer
     super(props);
     this.state = {
       accessToken: props.spotifyUser.access_token || "",
-      permission: props.spotifyUser.permission || ("" as SpotifyPermission),
+      permission: props.spotifyUser.permission || [],
       durationMs: 0,
     };
 
@@ -201,22 +201,21 @@ export default class SpotifyPlayer
 
   checkSpotifyToken = async (
     accessToken?: string,
-    permission?: string
+    permission?: Array<SpotifyPermission>
   ): Promise<boolean> => {
     const { onInvalidateDataSource, handleError } = this.props;
-    if (!accessToken || !permission) {
+    if (!accessToken || !permission || !permission.length) {
       this.handleAccountError();
       return false;
     }
     try {
-      const scopes = permission.split(" ");
-      const requiredScopes = [
+      const requiredScopes: Array<SpotifyPermission> = [
         "streaming",
         "user-read-email",
         "user-read-private",
       ];
       for (let i = 0; i < requiredScopes.length; i += 1) {
-        if (!scopes.includes(requiredScopes[i])) {
+        if (!permission.includes(requiredScopes[i])) {
           onInvalidateDataSource(this, "Permission to play songs not granted");
           return false;
         }
