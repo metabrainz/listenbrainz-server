@@ -84,14 +84,6 @@ def get_artist(user_name):
     :statuscode 404: User not found
     :resheader Content-Type: *application/json*
     """
-
-    stats_range = request.args.get('range', default='all_time')
-    if not _is_valid_range(stats_range):
-        raise APIBadRequest("Invalid range: {}".format(stats_range))
-
-    offset = _get_non_negative_param('offset', default=0)
-    count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
-
     user = db_user.get_by_mb_id(user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
@@ -100,24 +92,119 @@ def get_artist(user_name):
     if stats is None:
         return '', 204
 
+    return _process_entity(user_name, entity='artist', stats=stats)
+
+
+@stats_api_bp.route("/user/<user_name>/releases")
+@crossdomain()
+@ratelimit()
+def get_release(user_name):
+    """
+    Get top releases for user ``user_name``.
+
+
+    An sample response from the endpoint may look like::
+
+        {
+            "payload": {
+                "releases": [
+                    {
+                        "artist_mbids": [], 
+                        "artist_msid": "6599e41e-390c-4855-a2ac-68ee798538b4", 
+                        "artist_name": "Coldplay", 
+                        "listen_count": 26, 
+                        "release_mbid": "", 
+                        "release_msid": "d59730cf-f0e3-441e-a7a7-8e0f589632a5", 
+                        "release_name": "Live in Buenos Aires"
+                    }, 
+                    {
+                        "artist_mbids": [], 
+                        "artist_msid": "7addbcac-ae39-4b4c-a956-53da336d68e8", 
+                        "artist_name": "Ellie Goulding", 
+                        "listen_count": 25, 
+                        "release_mbid": "", 
+                        "release_msid": "de97ca87-36c4-4995-a5c9-540e35944352", 
+                        "release_name": "Delirium (Deluxe)"
+                    }, 
+                    {
+                        "artist_mbids": [], 
+                        "artist_msid": "3b155259-b29e-4515-aa62-cb0b917f4cfd", 
+                        "artist_name": "The Fray", 
+                        "listen_count": 25, 
+                        "release_mbid": "", 
+                        "release_msid": "2b2a93c3-a0bd-4f46-8507-baf5ad291966", 
+                        "release_name": "How to Save a Life"
+                    }, 
+                ],
+                "count": 3,
+                "total_release_count": 175,
+                "range": "all_time",
+                "last_updated": 1588494361,
+                "user_id": "John Doe",
+                "from_ts": 1009823400,
+                "to_ts": 1590029157
+            }
+        }
+
+    .. note::
+        - This endpoint is currently in beta
+        - ``artist_mbids``, ``artist_msid``, ``release_mbid`` and ``release_msid`` are optional fields and
+            may not be present in all the responses
+
+    :param count: Optional, number of releases to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
+        Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+    :type count: ``int``
+    :param offset: Optional, number of releases to skip from the beginning, for pagination.
+        Ex. An offset of 5 means the top 5 releases will be skipped, defaults to 0
+    :type offset: ``int``
+    :param range: Optional, time interval for which statistics should be collected, possible values are ``week``,
+        ``month``, ``year``, ``all_time``, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APINotFound("Cannot find user: %s" % user_name)
+
+    stats = db_stats.get_user_releases(user['id'])
+    if stats is None:
+        return '', 204
+
+    return _process_entity(user_name, entity='release', stats=stats)
+
+
+def _process_entity(user_name, entity, stats):
+    stats_range = request.args.get('range', default='all_time')
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest("Invalid range: {}".format(stats_range))
+
+    offset = _get_non_negative_param('offset', default=0)
+    count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+
+    plural_entity = entity + 's'
+
     count = min(count, MAX_ITEMS_PER_GET)
     try:
-        total_artist_count = stats['artist'][stats_range]['count']
+        total_entity_count = stats[entity][stats_range]['count']
     except KeyError:
         return '', 204
 
     count = count + offset
-    artist_list = stats['artist'][stats_range]['artists'][offset:count]
+    entity_list = stats[entity][stats_range][plural_entity][offset:count]
 
     return jsonify({'payload': {
         "user_id": user_name,
-        "artists": artist_list,
-        "count": len(artist_list),
-        "total_artist_count": total_artist_count,
+        plural_entity: entity_list,
+        "count": len(entity_list),
+        "total_{}_count".format(entity): total_entity_count,
         "offset": offset,
         "range": stats_range,
-        "from_ts": int(stats['artist'][stats_range]['from_ts']),
-        "to_ts": int(stats['artist'][stats_range]['to_ts']),
+        "from_ts": int(stats[entity][stats_range]['from_ts']),
+        "to_ts": int(stats[entity][stats_range]['to_ts']),
         "last_updated": int(stats['last_updated'].timestamp())
     }})
 
