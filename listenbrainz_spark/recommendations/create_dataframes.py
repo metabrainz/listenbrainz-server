@@ -9,6 +9,7 @@ from py4j.protocol import Py4JJavaError
 import listenbrainz_spark
 from listenbrainz_spark import path, stats, utils, config, schema
 from listenbrainz_spark.recommendations.utils import save_html
+from listenbrainz_spark.stats.user.utils import get_latest_listen_ts
 from listenbrainz_spark.exceptions import SQLException, FileNotSavedException, FileNotFetchedException, \
     SparkSessionNotInitializedException, DataFrameNotAppendedException, DataFrameNotCreatedException
 
@@ -60,6 +61,7 @@ def generate_best_model_id(metadata):
     """
     metadata['model_id'] = '{}-{}'.format(config.MODEL_ID_PREFIX, uuid.uuid4())
 
+
 def save_dataframe(df, dest_path):
     """ Save dataframe to HDFS.
 
@@ -72,6 +74,7 @@ def save_dataframe(df, dest_path):
     except FileNotSavedException as err:
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
+
 
 def save_dataframe_html(users_df_time, recordings_df_time, playcounts_df_time, total_time):
     """ Prepare and save dataframe HTML.
@@ -92,6 +95,7 @@ def save_dataframe_html(users_df_time, recordings_df_time, playcounts_df_time, t
     }
     save_html(queries_html, context, 'queries.html')
 
+
 def save_dataframe_metadata_to_HDFS(metadata):
     """ Save dataframe metadata to model_metadata dataframe.
     """
@@ -111,21 +115,26 @@ def save_dataframe_metadata_to_HDFS(metadata):
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
-def get_dates_to_train_data():
+
+def get_dates_to_train_data(train_model_window):
     """ Get window to fetch listens to train data.
+
+        Args:
+            train_model_window (int): model to be trained on data of given number of days.
 
         Returns:
             from_date (datetime): Date from which start fetching listens.
             to_date (datetime): Date upto which fetch listens.
     """
-    to_date = datetime.utcnow()
-    from_date = stats.adjust_days(to_date, config.TRAIN_MODEL_WINDOW)
+    to_date = get_latest_listen_ts()
+    from_date = stats.adjust_days(to_date, train_model_window)
     # shift to the first of the month
     from_date = stats.replace_days(from_date, 1)
     return to_date, from_date
 
+
 def get_listens_for_training_model_window(to_date, from_date, metadata, dest_path):
-    """  Prepare dataframe of listens of X days to train. Here X is a config value.
+    """  Prepare dataframe of listens of X days to train.
 
         Args:
             from_date (datetime): Date from which start fetching listens.
@@ -148,6 +157,7 @@ def get_listens_for_training_model_window(to_date, from_date, metadata, dest_pat
 
     partial_listens_df = utils.get_listens_without_artist_and_recording_mbids(training_df)
     return partial_listens_df
+
 
 def get_mapped_artist_and_recording_mbids(partial_listens_df, recording_artist_mapping_df):
     """ Map recording msid->mbid and artist msid->mbids so that every listen has an mbid.
@@ -173,6 +183,7 @@ def get_mapped_artist_and_recording_mbids(partial_listens_df, recording_artist_m
     )
     save_dataframe(mapped_listens, path.MAPPED_LISTENS)
     return mapped_listens
+
 
 def get_playcounts_df(listens_df, recordings_df, users_df, metadata):
     """ Prepare playcounts dataframe.
@@ -254,7 +265,13 @@ def get_users_dataframe(mapped_listens, metadata):
     save_dataframe(users_df, path.USERS_DATAFRAME_PATH)
     return users_df
 
-def main():
+
+def main(train_model_window=None):
+
+    if train_model_window is None:
+        current_app.logger.critical('Please provide the number of days to train the model')
+        sys.exit(-1)
+
     ti = time()
     # dict to save dataframe metadata which would be later merged in model_metadata dataframe.
     metadata = {}
@@ -266,7 +283,7 @@ def main():
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
-    to_date, from_date = get_dates_to_train_data()
+    to_date, from_date = get_dates_to_train_data(train_model_window)
     partial_listens_df = get_listens_for_training_model_window(to_date, from_date, metadata, path.LISTENBRAINZ_DATA_DIRECTORY)
 
     # Dataframe containing recording msid->mbid and artist msid->mbid mapping.

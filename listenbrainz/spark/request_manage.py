@@ -1,3 +1,4 @@
+import sys
 import click
 import listenbrainz.utils as utils
 import os
@@ -126,10 +127,14 @@ def request_import_new_full_dump():
 
 
 @cli.command(name="request_dataframes")
-def request_dataframes():
+@click.option("--days", type=int, default=180, help="Request model to be trained on data of given number of days")
+def request_dataframes(days):
     """ Send the cluster a request to create dataframes.
     """
-    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.create_dataframes'))
+    params = {
+        'train_model_window': days,
+    }
+    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.create_dataframes', params))
 
 
 @cli.command(name='request_model')
