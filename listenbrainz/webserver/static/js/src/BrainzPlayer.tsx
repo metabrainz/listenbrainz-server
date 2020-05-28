@@ -385,19 +385,6 @@ export default class BrainzPlayer extends React.Component<
           />
         </PlaybackControls>
       </div>
-
-      // // Fallback embedded player
-      // <div className="col-md-4 text-right">
-      // <iframe
-      // allow="encrypted-media"
-      // allowTransparency
-      // frameBorder="0"
-      // height="380"
-      // src={getSpotifyEmbedSrc() || undefined}
-      // title="fallbackSpotifyPlayer"
-      // width="300"
-      // />
-      // </div>
     );
   }
 }

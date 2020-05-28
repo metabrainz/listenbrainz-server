@@ -12,12 +12,7 @@ import * as io from "socket.io-client";
 import BrainzPlayer from "./BrainzPlayer";
 import FollowUsers from "./FollowUsers";
 import APIService from "./APIService";
-import {
-  getArtistLink,
-  getPlayButton,
-  getSpotifyEmbedUriFromListen,
-  getTrackLink,
-} from "./utils";
+import { getArtistLink, getPlayButton, getTrackLink } from "./utils";
 
 export type ListensListMode = "listens" | "follow" | "recent";
 
@@ -159,9 +154,6 @@ export default class RecentListens extends React.Component<
   playListen = (listen: Listen): void => {
     if (this.brainzPlayer.current) {
       this.brainzPlayer.current.playListen(listen);
-    } else {
-      // For fallback embedded player
-      this.setState({ currentListen: listen });
     }
   };
 
@@ -294,23 +286,6 @@ export default class RecentListens extends React.Component<
       spotify,
       user,
     } = this.props;
-
-    const getSpotifyEmbedSrc = () => {
-      if (currentListen) {
-        return getSpotifyEmbedUriFromListen(currentListen);
-      }
-      const spotifyListens = listens.filter(
-        (listen) =>
-          _.get(
-            listen,
-            "listen.track_metadata.additional_info.listening_from"
-          ) === "spotify"
-      );
-      if (spotifyListens.length) {
-        return getSpotifyEmbedUriFromListen(spotifyListens[0]);
-      }
-      return null;
-    };
 
     return (
       <div>
