@@ -32,7 +32,7 @@
   "cf_recording.recommendations.create_dataframes": {
     "name": "cf_recording.recommendations.create_dataframes",
     "description": "Create dataframes to prepare trainable data.",
-    "params": []
+    "params": ["train_model_window"]
   },
   "cf_recording.recommendations.train_model": {
     "name": "cf_recording.recommendations.train_model",

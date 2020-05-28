@@ -117,12 +117,13 @@ def upload_artist_relation(force):
         uploader_obj.upload_artist_relation(src, force=force)
 
 @cli.command(name='dataframe')
-def dataframes():
+@click.option("--days", type=int, default=180, help="Request model to be trained on data of given number of days")
+def dataframes(days):
     """ Invoke script responsible for pre-processing data.
     """
     from listenbrainz_spark.recommendations import create_dataframes
     with app.app_context():
-        create_dataframes.main()
+        create_dataframes.main(train_model_window=days)
 
 @cli.command(name='model')
 def model():

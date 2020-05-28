@@ -9,12 +9,12 @@ from listenbrainz_spark import schema, utils, config, path, hdfs_connection, sta
 
 from pyspark.sql import Row
 
-# path used in between test functions of this class
-LISTENS_PATH = '/test/listens/' # HDFS path to listens
-MAPPING_PATH = '/test/mapping.parquet'
-MAPPED_LISTENS_PATH = '/test/mapped_listens.parquet'
 
 class CreateDataframeTestCase(SparkTestCase):
+    # path used in between test functions of this class
+    listens_path = path.LISTENBRAINZ_DATA_DIRECTORY
+    mapping_path = path.MBID_MSID_MAPPING
+    mapped_listens_path = path.MAPPED_LISTENS
 
     @classmethod
     def setUpClass(cls):
@@ -45,7 +45,7 @@ class CreateDataframeTestCase(SparkTestCase):
         }
 
         test_listens_df = utils.create_dataframe(schema.convert_to_spark_json(test_listen), schema.listen_schema)
-        utils.save_parquet(test_listens_df, LISTENS_PATH + '{}/{}.parquet'.format(year, month))
+        utils.save_parquet(test_listens_df, cls.listens_path + '/{}/{}.parquet'.format(year, month))
 
     @classmethod
     def upload_test_mapping_to_HDFS(cls):
@@ -66,25 +66,26 @@ class CreateDataframeTestCase(SparkTestCase):
         }
 
         test_mapping_df = utils.create_dataframe(schema.convert_mapping_to_row(test_mapping), schema.msid_mbid_mapping_schema)
-        utils.save_parquet(test_mapping_df, MAPPING_PATH)
+        utils.save_parquet(test_mapping_df, cls.mapping_path)
 
     @classmethod
     def upload_test_mapped_listens_to_HDFS(cls):
-        partial_listen_df = create_dataframes.get_listens_for_training_model_window(cls.date, cls.date, {}, LISTENS_PATH)
-        mapping_df = utils.read_files_from_HDFS(MAPPING_PATH)
+        partial_listen_df = create_dataframes.get_listens_for_training_model_window(cls.date, cls.date, {}, cls.listens_path)
+        mapping_df = utils.read_files_from_HDFS(cls.mapping_path)
 
         mapped_listens = create_dataframes.get_mapped_artist_and_recording_mbids(partial_listen_df, mapping_df)
-        utils.save_parquet(mapped_listens, MAPPED_LISTENS_PATH)
+        utils.save_parquet(mapped_listens, cls.mapped_listens_path)
 
     def test_get_dates_to_train_data(self):
-        to_date, from_date = create_dataframes.get_dates_to_train_data()
-        d = stats.adjust_days(to_date, config.TRAIN_MODEL_WINDOW)
+        train_model_window = 20
+        to_date, from_date = create_dataframes.get_dates_to_train_data(train_model_window)
+        d = stats.adjust_days(to_date, train_model_window)
         d = stats.replace_days(d, 1)
         self.assertEqual(from_date, d)
 
     def test_get_listens_for_training_model_window(self):
         metadata = {}
-        test_df = create_dataframes.get_listens_for_training_model_window(self.date, self.date, metadata, LISTENS_PATH)
+        test_df = create_dataframes.get_listens_for_training_model_window(self.date, self.date, metadata, self.listens_path)
         self.assertEqual(metadata['to_date'], self.date)
         self.assertEqual(metadata['from_date'], self.date)
         self.assertNotIn('artist_mbids', test_df.columns)
@@ -99,8 +100,8 @@ class CreateDataframeTestCase(SparkTestCase):
         self.assertTrue(status)
 
     def test_get_mapped_artist_and_recording_mbids(self):
-        partial_listen_df = create_dataframes.get_listens_for_training_model_window(self.date, self.date, {}, LISTENS_PATH)
-        mapping_df = utils.read_files_from_HDFS(MAPPING_PATH)
+        partial_listen_df = create_dataframes.get_listens_for_training_model_window(self.date, self.date, {}, self.listens_path)
+        mapping_df = utils.read_files_from_HDFS(self.mapping_path)
 
         mapped_listens = create_dataframes.get_mapped_artist_and_recording_mbids(partial_listen_df, mapping_df)
         self.assertEqual(mapped_listens.count(), 1)
@@ -110,7 +111,7 @@ class CreateDataframeTestCase(SparkTestCase):
 
     def test_get_users_dataframe(self):
         metadata = {}
-        mapped_listens = utils.read_files_from_HDFS(MAPPED_LISTENS_PATH)
+        mapped_listens = utils.read_files_from_HDFS(self.mapped_listens_path)
         users_df = create_dataframes.get_users_dataframe(mapped_listens, metadata)
         self.assertEqual(users_df.count(), 1)
         self.assertListEqual(sorted(self.get_users_df().columns), sorted(users_df.columns))
@@ -121,7 +122,7 @@ class CreateDataframeTestCase(SparkTestCase):
 
     def test_get_recordings_dataframe(self):
         metadata = {}
-        mapped_listens = utils.read_files_from_HDFS(MAPPED_LISTENS_PATH)
+        mapped_listens = utils.read_files_from_HDFS(self.mapped_listens_path)
         recordings_df = create_dataframes.get_recordings_df(mapped_listens, metadata)
         self.assertEqual(recordings_df.count(), 1)
         self.assertListEqual(sorted(self.get_recordings_df().columns), sorted(recordings_df.columns))
@@ -132,7 +133,7 @@ class CreateDataframeTestCase(SparkTestCase):
 
     def test_get_listens_df(self):
         metadata = {}
-        mapped_listens = utils.read_files_from_HDFS(MAPPED_LISTENS_PATH)
+        mapped_listens = utils.read_files_from_HDFS(self.mapped_listens_path)
         listens_df = create_dataframes.get_listens_df(mapped_listens, metadata)
         self.assertEqual(listens_df.count(), 1)
         self.assertListEqual(['mb_recording_mbid', 'user_name'], listens_df.columns)
@@ -140,7 +141,7 @@ class CreateDataframeTestCase(SparkTestCase):
 
     def test_get_playcounts_df(self):
         metadata = {}
-        mapped_listens = utils.read_files_from_HDFS(MAPPED_LISTENS_PATH)
+        mapped_listens = utils.read_files_from_HDFS(self.mapped_listens_path)
         users_df = create_dataframes.get_users_dataframe(mapped_listens, {})
         recordings_df = create_dataframes.get_recordings_df(mapped_listens, {})
         listens_df = create_dataframes.get_listens_df(mapped_listens, {})
