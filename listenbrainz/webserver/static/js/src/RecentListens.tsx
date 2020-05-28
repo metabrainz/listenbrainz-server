@@ -9,15 +9,10 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as _ from "lodash";
 import * as io from "socket.io-client";
-import SpotifyPlayer from "./SpotifyPlayer";
+import BrainzPlayer from "./BrainzPlayer";
 import FollowUsers from "./FollowUsers";
 import APIService from "./APIService";
-import {
-  getArtistLink,
-  getPlayButton,
-  getSpotifyEmbedUriFromListen,
-  getTrackLink,
-} from "./utils";
+import { getArtistLink, getPlayButton, getTrackLink } from "./utils";
 
 export type ListensListMode = "listens" | "follow" | "recent";
 
@@ -44,9 +39,8 @@ export interface RecentListensProps {
 
 export interface RecentListensState {
   alerts: Array<Alert>;
-  canPlayMusic?: boolean;
   currentListen?: Listen;
-  direction: SpotifyPlayDirection;
+  direction: BrainzPlayDirection;
   followList: Array<string>;
   listId?: number;
   listName: string;
@@ -62,7 +56,7 @@ export default class RecentListens extends React.Component<
 > {
   private APIService: APIService;
 
-  private spotifyPlayer = React.createRef<SpotifyPlayerType>();
+  private brainzPlayer = React.createRef<BrainzPlayer>();
 
   private socket!: SocketIOClient.Socket;
 
@@ -157,22 +151,9 @@ export default class RecentListens extends React.Component<
     );
   };
 
-  handleSpotifyAccountError = (error: string | JSX.Element): void => {
-    this.newAlert("danger", "Spotify account error", error);
-    this.setState({ canPlayMusic: false });
-  };
-
-  handleSpotifyPermissionError = (error: string | JSX.Element): void => {
-    this.newAlert("danger", "Spotify permission error", error);
-    this.setState({ canPlayMusic: false });
-  };
-
   playListen = (listen: Listen): void => {
-    if (this.spotifyPlayer.current) {
-      this.spotifyPlayer.current.playListen(listen);
-    } else {
-      // For fallback embedded player
-      this.setState({ currentListen: listen });
+    if (this.brainzPlayer.current) {
+      this.brainzPlayer.current.playListen(listen);
     }
   };
 
@@ -286,7 +267,6 @@ export default class RecentListens extends React.Component<
   render() {
     const {
       alerts,
-      canPlayMusic,
       currentListen,
       direction,
       followList,
@@ -306,23 +286,6 @@ export default class RecentListens extends React.Component<
       spotify,
       user,
     } = this.props;
-
-    const getSpotifyEmbedSrc = () => {
-      if (currentListen) {
-        return getSpotifyEmbedUriFromListen(currentListen);
-      }
-      const spotifyListens = listens.filter(
-        (listen) =>
-          _.get(
-            listen,
-            "listen.track_metadata.additional_info.listening_from"
-          ) === "spotify"
-      );
-      if (spotifyListens.length) {
-        return getSpotifyEmbedUriFromListen(spotifyListens[0]);
-      }
-      return null;
-    };
 
     return (
       <div>
@@ -412,11 +375,11 @@ export default class RecentListens extends React.Component<
                       .map((listen) => {
                         return (
                           <tr
-                            key={`${listen.listened_at}-${listen.track_metadata.additional_info?.recording_msid}-${listen.user_name}`}
+                            key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
                             onDoubleClick={this.playListen.bind(this, listen)}
-                            className={`listen ${
-                              this.isCurrentListen(listen) ? "info" : ""
-                            } ${listen.playing_now ? "playing_now" : ""}`}
+                            className={`listen${
+                              this.isCurrentListen(listen) ? " info" : ""
+                            }${listen.playing_now ? " playing_now" : ""}`}
                           >
                             <td>{getTrackLink(listen)}</td>
                             <td>{getArtistLink(listen)}</td>
@@ -500,33 +463,16 @@ export default class RecentListens extends React.Component<
             // eslint-disable-next-line no-dupe-keys
             style={{ position: "-webkit-sticky", position: "sticky", top: 20 }}
           >
-            {spotify.access_token && canPlayMusic !== false ? (
-              <SpotifyPlayer
-                apiService={this.APIService}
-                currentListen={currentListen}
-                direction={direction}
-                listens={listens}
-                newAlert={this.newAlert}
-                onAccountError={this.handleSpotifyAccountError}
-                onCurrentListenChange={this.handleCurrentListenChange}
-                onPermissionError={this.handleSpotifyPermissionError}
-                ref={this.spotifyPlayer}
-                spotifyUser={spotify}
-              />
-            ) : (
-              // Fallback embedded player
-              <div className="col-md-4 text-right">
-                <iframe
-                  allow="encrypted-media"
-                  allowTransparency
-                  frameBorder="0"
-                  height="380"
-                  src={getSpotifyEmbedSrc() || undefined}
-                  title="fallbackSpotifyPlayer"
-                  width="300"
-                />
-              </div>
-            )}
+            <BrainzPlayer
+              apiService={this.APIService}
+              currentListen={currentListen}
+              direction={direction}
+              listens={listens}
+              newAlert={this.newAlert}
+              onCurrentListenChange={this.handleCurrentListenChange}
+              ref={this.brainzPlayer}
+              spotifyUser={spotify}
+            />
           </div>
         </div>
       </div>

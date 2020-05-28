@@ -20,7 +20,7 @@ type PlaybackControlsProps = {
   togglePlay: (invert?: boolean) => void;
   playerPaused: boolean;
   toggleDirection: () => void;
-  direction: SpotifyPlayDirection;
+  direction: BrainzPlayDirection;
   trackName?: string;
   artistName?: string;
   progressMs: number;
@@ -129,8 +129,9 @@ export default class PlaybackControls extends React.Component<
     const progressPercentage = Number((progressMs * 100) / durationMs);
     return (
       <div id="music-player" aria-label="Playback control">
-        <div className="album">
-          {children || <div className="noAlbumArt">No album art</div>}
+        <div className="content">
+          {children}
+          <div className="no-album-art">No album art</div>
         </div>
         <div
           className={`info ${
@@ -138,8 +139,8 @@ export default class PlaybackControls extends React.Component<
           }`}
         >
           <div className="currently-playing">
-            <h2 className="song-name">{trackName || "—"}</h2>
-            <h3 className="artist-name">{artistName}</h3>
+            {trackName && <h2 className="song-name">{trackName}</h2>}
+            {artistName && <h3 className="artist-name">{artistName}</h3>}
             <div
               className="progress"
               onClick={this.progressClickHandler}

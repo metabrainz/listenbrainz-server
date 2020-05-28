@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 declare module "spotify-web-playback-sdk";
 declare module "react-bs-notifier";
 declare module "time-ago";
@@ -21,6 +22,7 @@ interface AdditionalInfo {
   spotify_album_id?: string | null;
   spotify_artist_ids?: Array<string> | null;
   spotify_id?: string | null;
+  youtube_id?: string | null;
   tags?: Array<string> | null;
   track_mbid?: string | null;
   tracknumber?: number | null;
@@ -48,7 +50,7 @@ declare type ListenBrainzUser = {
 
 declare type ListenType = "single" | "playingNow" | "import";
 
-declare type SpotifyPlayDirection = "up" | "down" | "hidden";
+declare type BrainzPlayDirection = "up" | "down" | "hidden";
 
 declare type SubmitListensPayload = {
   listen_type: "single" | "playing_now" | "import";
@@ -56,8 +58,8 @@ declare type SubmitListensPayload = {
 };
 
 declare type SpotifyUser = {
-  access_token: string;
-  permission: SpotifyPermission;
+  access_token?: string;
+  permission?: SpotifyPermission;
 };
 
 declare type SpotifyPermission =
