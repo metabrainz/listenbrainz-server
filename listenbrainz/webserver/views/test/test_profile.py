@@ -197,7 +197,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             record_listens=True,
             error_message=None,
             latest_listened_at=None,
-            permission='user-read-recently-played some-other-permission',
+            permission=['user-read-recently-played', 'some-other-permission'],
         )
         r = self.client.post(url_for('profile.refresh_spotify_token'))
         self.assert200(r)
@@ -206,7 +206,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             'id': self.user['id'],
             'musicbrainz_id': self.user['musicbrainz_id'],
             'user_token': 'old-token',
-            'permission': 'user-read-recently-played some-other-permission',
+            'permission': ['user-read-recently-played', 'some-other-permission'],
         })
 
 
@@ -227,7 +227,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             record_listens=True,
             error_message=None,
             latest_listened_at=None,
-            permission='user-read-recently-played',
+            permission=['user-read-recently-played'],
         )
         mock_get_user.return_value = spotify_user
         spotify_user.user_token = 'new-token'
@@ -239,7 +239,7 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
             'id': self.user['id'],
             'musicbrainz_id': self.user['musicbrainz_id'],
             'user_token': 'new-token',
-            'permission': 'user-read-recently-played',
+            'permission': ['user-read-recently-played'],
         })
 
     @patch('listenbrainz.listenstore.influx_listenstore.InfluxListenStore.fetch_listens')

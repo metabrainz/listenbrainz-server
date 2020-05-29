@@ -8,7 +8,7 @@ import { DataSourceTypes } from "./BrainzPlayer";
 const props = {
   spotifyUser: {
     access_token: "heyo",
-    permission: "read" as SpotifyPermission,
+    permission: ["user-read-currently-playing"] as SpotifyPermission[],
   },
   refreshSpotifyToken: new APIService("base-uri").refreshSpotifyToken,
   show: true,
@@ -81,7 +81,11 @@ describe("SpotifyPlayer", () => {
       const onInvalidateDataSource = jest.fn();
       const spotifyUser = {
         access_token: "FNORD",
-        permission: "streaming user-read-email user-read-private" as SpotifyPermission,
+        permission: [
+          "streaming",
+          "user-read-email",
+          "user-read-private",
+        ] as SpotifyPermission[],
       };
       const mockProps = {
         ...props,
@@ -108,7 +112,11 @@ describe("SpotifyPlayer", () => {
       const checkSpotifyToken = jest.fn();
       const spotifyUser = {
         access_token: "FNORD",
-        permission: "streaming user-read-email user-read-private" as SpotifyPermission,
+        permission: [
+          "streaming",
+          "user-read-email",
+          "user-read-private",
+        ] as SpotifyPermission[],
       };
       const mockProps = {
         ...props,
