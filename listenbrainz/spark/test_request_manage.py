@@ -109,7 +109,6 @@ class RequestManageTestCase(unittest.TestCase):
                                                                  message['params'])
         self.assertEqual(expected_message, received_message)
 
-
         message = {
             'query': 'cf_recording.recommendations.recommend',
             'params': {
