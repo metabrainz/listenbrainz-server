@@ -74,13 +74,13 @@ export default class UserEntity extends React.Component<
       entity = url.searchParams.get("entity") as Entity;
     }
 
-    // setState is async, we need the entity to be correctly set before calling changeRange
-    await this.setState({ entity });
-    await this.changeRange(range);
-    const { currPage } = this.state;
-    if (currPage !== page) {
-      this.changePage(page);
-    }
+    this.setState({ entity }, async () => {
+      await this.changeRange(range);
+      const { currPage } = this.state;
+      if (currPage !== page) {
+        await this.changePage(page);
+      }
+    });
   }
 
   changePage = async (newPage: number): Promise<void> => {
@@ -132,15 +132,20 @@ export default class UserEntity extends React.Component<
       }
 
       data = await this.getData(page, newRange, entity);
-      this.setState({
-        data: this.processData(data, page),
-        range: newRange,
-        currPage: page,
-        startDate: new Date(data.payload.from_ts * 1000),
-        totalPages,
-        maxListens,
-        entityCount,
-      });
+      await new Promise((resolve) =>
+        this.setState(
+          {
+            data: this.processData(data, page),
+            range: newRange,
+            currPage: page,
+            startDate: new Date(data.payload.from_ts * 1000),
+            totalPages,
+            maxListens,
+            entityCount,
+          },
+          resolve
+        )
+      );
     } catch (error) {
       this.handleError(error);
     }
@@ -288,45 +293,44 @@ export default class UserEntity extends React.Component<
     return (
       <div>
         <div className="row">
-          <div className="col-md-4">
-            <h2>History</h2>
-          </div>
-        </div>
-        <div className="row">
-          <div className="col-xs-12">
-            <ul className="nav nav-pills">
-              <li className={entity === "artist" ? "active" : ""}>
-                <a
-                  href="#"
-                  role="button"
-                  style={{
-                    fontWeight: "bold",
-                  }}
-                  onClick={() => this.changeEntity("artist")}
-                >
-                  Artist
-                </a>
-              </li>
-              <li className={entity === "release" ? "active" : ""}>
-                <a
-                  href="#"
-                  role="button"
-                  style={{
-                    fontWeight: "bold",
-                  }}
-                  onClick={() => this.changeEntity("release")}
-                >
-                  Release
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div className="row">
           <div className="col-xs-12">
             <h3>
-              Top {entity.charAt(0).toUpperCase() + entity.slice(1)}s of{" "}
-              {range !== "all_time" ? "the" : ""}
+              Top
+              <span className="dropdown">
+                <button
+                  className="dropdown-togle btn-transparent"
+                  data-toggle="dropdown"
+                  type="button"
+                  style={{
+                    textTransform: "capitalize",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {entity}s
+                  <span className="caret" />
+                </button>
+                <ul className="dropdown-menu" role="menu">
+                  <li>
+                    <a
+                      href="#"
+                      role="button"
+                      onClick={() => this.changeEntity("artist")}
+                    >
+                      Artist
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      role="button"
+                      onClick={() => this.changeEntity("release")}
+                    >
+                      Release
+                    </a>
+                  </li>
+                </ul>
+              </span>
+              of {range !== "all_time" ? "the" : ""}
               <span className="dropdown">
                 <button
                   className="dropdown-toggle btn-transparent"
@@ -380,10 +384,17 @@ export default class UserEntity extends React.Component<
                 </ul>
               </span>
               {range === "week"
-                ? `of ${startDate.getDate()} ${month[startDate.getMonth()]} `
+                ? `of ${startDate.getDate()} ${startDate.toLocaleString(
+                    "en-us",
+                    { month: "long" }
+                  )} `
                 : ""}
-              {range === "month" ? `${month[startDate.getMonth()]} ` : ""}
-              {range !== "all_time" ? startDate.getFullYear() : ""}
+              {range === "month"
+                ? `${startDate.toLocaleString("en-us", { month: "long" })} `
+                : ""}
+              {range !== "all_time"
+                ? startDate.toLocaleString("en-us", { year: "numeric" })
+                : ""}
             </h3>
           </div>
         </div>

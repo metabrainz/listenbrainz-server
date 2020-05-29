@@ -1,6 +1,7 @@
 import json
 
-from flask import url_for
+from flask import url_for, current_app
+from redis import Redis
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
@@ -21,6 +22,11 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
             self.release_payload = json.load(f)
         db_stats.insert_user_releases(self.user['id'], {'all_time': self.release_payload})
+
+    def tearDown(self):
+        r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
+        r.flushall()
+        super(StatsAPITestCase, self).tearDown()
 
     def test_artist_stat(self):
         """ Test to make sure valid response is received """
