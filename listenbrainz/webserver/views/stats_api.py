@@ -7,11 +7,13 @@ import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
-                                           APIInternalServerError, APINotFound,
+                                           APIInternalServerError,
+                                           APINoContent, APINotFound,
                                            APIServiceUnavailable,
                                            APIUnauthorized)
 from listenbrainz.webserver.rate_limiter import ratelimit
-from listenbrainz.webserver.views.api_tools import DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET
+from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
+                                                    MAX_ITEMS_PER_GET)
 
 stats_api_bp = Blueprint('stats_api_v1', __name__)
 
@@ -172,7 +174,7 @@ def get_release(user_name):
 
     stats = db_stats.get_user_releases(user['id'])
     if stats is None:
-        return '', 204
+        raise APINoContent('')
 
     return jsonify(_process_entity(user_name, entity='release', stats=stats))
 
@@ -203,7 +205,7 @@ def _process_entity(user_name, entity, stats):
     try:
         total_entity_count = stats[entity][stats_range]['count']
     except KeyError:
-        return '', 204
+        raise APINoContent('')
 
     count = count + offset
     entity_list = stats[entity][stats_range][plural_entity][offset:count]
