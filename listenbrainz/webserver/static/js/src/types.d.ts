@@ -157,7 +157,7 @@ declare type UserReleasesResponse = {
       artist_mbids?: Array<string>;
       artist_msid?: string;
       artist_name: string;
-      release_mbid?: Array<string>;
+      release_mbid?: string;
       release_msid?: string;
       release_name: string;
       listen_count: number;
