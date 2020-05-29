@@ -49,7 +49,7 @@ exports[`UserEntity Page renders 1`] = `
                   onClick={[Function]}
                   role="button"
                 >
-                  Artist
+                  Artists
                 </a>
               </li>
               <li>
@@ -58,7 +58,7 @@ exports[`UserEntity Page renders 1`] = `
                   onClick={[Function]}
                   role="button"
                 >
-                  Release
+                  Releases
                 </a>
               </li>
             </ul>

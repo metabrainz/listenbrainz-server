@@ -275,20 +275,6 @@ export default class UserEntity extends React.Component<
     } = this.state;
     const prevPage = currPage - 1;
     const nextPage = currPage + 1;
-    const month = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
 
     return (
       <div>
@@ -316,7 +302,7 @@ export default class UserEntity extends React.Component<
                       role="button"
                       onClick={() => this.changeEntity("artist")}
                     >
-                      Artist
+                      Artists
                     </a>
                   </li>
                   <li>
@@ -325,7 +311,7 @@ export default class UserEntity extends React.Component<
                       role="button"
                       onClick={() => this.changeEntity("release")}
                     >
-                      Release
+                      Releases
                     </a>
                   </li>
                 </ul>
