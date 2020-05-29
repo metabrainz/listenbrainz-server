@@ -10,7 +10,7 @@ from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
 from listenbrainz_spark import stats
-from listenbrainz_spark import config, utils, path
+from listenbrainz_spark import utils, path
 from listenbrainz_spark.recommendations.utils import save_html
 from listenbrainz_spark.exceptions import SQLException, SparkSessionNotInitializedException, ViewNotRegisteredException, \
     PathNotFoundException, FileNotFetchedException
@@ -81,12 +81,13 @@ def get_listens_to_fetch_top_artists(mapped_df, from_date, to_date):
     return mapped_listens_subset
 
 
-def get_top_artists(mapped_listens_subset):
+def get_top_artists(mapped_listens_subset, top_artist_limit):
     """ Get top artists listened to by users who have a listening history in
         the past X days where X = RECOMMENDATION_GENERATION_WINDOW.
 
         Args:
             df (dataframe): A subset of mapped_df containing user history.
+            top_artist_limit (int): number of top artist to calculate
 
         Returns:
             top_artists_df (dataframe): Top Y artists listened to by a user for all users where
@@ -99,19 +100,20 @@ def get_top_artists(mapped_listens_subset):
     window = Window.partitionBy('user_name').orderBy(col('count').desc())
 
     top_artists_df = df.withColumn('rank', row_number().over(window)) \
-                       .where(col('rank') <= config.TOP_ARTISTS_LIMIT) \
+                       .where(col('rank') <= top_artist_limit) \
                        .select('mb_artist_credit_id', 'msb_artist_credit_name_matchable', 'user_name')
 
     return top_artists_df
 
 
-def get_top_similar_artists(top_artists_df, artists_relation_df):
+def get_top_similar_artists(top_artists_df, artists_relation_df, similar_artist_limit):
     """ Get artists similar to top artists.
 
         Args:
             top_artists_df: Dataframe containing top artists listened to by users
             artist_relation_df: Dataframe containing artists and similar artists.
                                 For columns refer to artist_relation_schema in listenbrainz_spark/schema.py.
+            similar_artist_limit (int): number of similar artist to calculate
 
         Returns:
             top_similar_artists_df (dataframe): Top Z artists similar to top artists where
@@ -143,7 +145,7 @@ def get_top_similar_artists(top_artists_df, artists_relation_df):
                    .orderBy(col('score').desc())
 
     top_similar_artists_df = similar_artists_df.withColumn('rank', row_number().over(window)) \
-                                               .where(col('rank') <= config.SIMILAR_ARTISTS_LIMIT)\
+                                               .where(col('rank') <= similar_artist_limit)\
                                                .select('top_artist_credit_id', 'top_artist_name',
                                                        'similar_artist_credit_id', 'similar_artist_name',
                                                        'score', 'user_name')
@@ -273,10 +275,18 @@ def get_user_id(df, user_name):
         raise IndexError()
 
 
-def main(recommendation_generation_window=None):
+def main(recommendation_generation_window=None, top_artist_limit=None, similar_artist_limit=None):
 
     if recommendation_generation_window is None:
         current_app.logger.critical('Please provide the number of days to generate recommendations')
+        sys.exit(-1)
+
+    if top_artist_limit is None:
+        current_app.logger.critical('Please provide top artist limit.')
+        sys.exit(-1)
+
+    if similar_artist_limit is None:
+        current_app.logger.critical('Please provide similar artist limit')
         sys.exit(-1)
 
     time_initial = time()
@@ -304,13 +314,13 @@ def main(recommendation_generation_window=None):
     mapped_listens_subset = get_listens_to_fetch_top_artists(mapped_df, from_date, to_date)
 
     current_app.logger.info('Fetching top artists...')
-    top_artists_df = get_top_artists(mapped_listens_subset)
+    top_artists_df = get_top_artists(mapped_listens_subset, top_artist_limit)
 
     current_app.logger.info('Preparing top artists candidate set...')
     top_artists_candidate_set_df = get_top_artists_candidate_set(top_artists_df, recordings_df, users_df)
 
     current_app.logger.info('Fetching similar artists...')
-    top_similar_artists_df = get_top_similar_artists(top_artists_df, artists_relation_df)
+    top_similar_artists_df = get_top_similar_artists(top_artists_df, artists_relation_df, similar_artist_limit)
 
     current_app.logger.info('Preparing similar artists candidate set...')
     top_similar_artists_candidate_set_df = get_top_similar_artists_candidate_set(top_similar_artists_df, recordings_df, users_df)

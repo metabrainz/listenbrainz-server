@@ -134,7 +134,7 @@ def request_dataframes(days):
     params = {
         'train_model_window': days,
     }
-    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.create_dataframes', params))
+    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.create_dataframes', params=params))
 
 
 @cli.command(name='request_model')
@@ -146,17 +146,27 @@ def request_model():
 
 @cli.command(name='request_candidate_sets')
 @click.option("--days", type=int, default=7, help="Request recommendations to be generated on history of given number of days")
-def request_candidate_sets(days):
+@click.option("--top", type=int, default=20, help="Calculate given number of top artist.")
+@click.option("--similar", type=int, default=20, help="Calculate given number of similar artist.")
+def request_candidate_sets(days, top, similar):
     """ Send the cluster a request to generate candidate sets.
     """
     params = {
         'recommendation_generation_window': days,
+        "top_artist_limit": top,
+        "similar_artist_limit": similar,
     }
-    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.candidate_sets', params))
+    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.candidate_sets', params=params))
 
 
 @cli.command(name='request_recommendations')
-def request_recommendations():
+@click.option("--top", type=int, default=200, help="Generate given number of top artist recommendations")
+@click.option("--similar", type=int, default=200, help="Generate given number of similar artist recommendations")
+def request_recommendations(top, similar):
     """ Send the cluster a request to generate recommendations.
     """
-    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.recommend'))
+    params = {
+        'recommendation_top_artist_limit': top,
+        'recommendation_similar_artist_limit': similar,
+    }
+    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.recommend', params=params))

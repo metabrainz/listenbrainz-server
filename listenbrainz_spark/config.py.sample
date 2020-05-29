@@ -26,14 +26,6 @@ STATS_CALCULATION_WINDOW = 1
 
 STEPS_TO_REACH_NEXT_MONTH = 32
 
-# number of recommendations to generate
-RECOMMENDATION_TOP_ARTIST_LIMIT = 30
-RECOMMENDATION_SIMILAR_ARTIST_LIMIT = 30
-
-# candidate sets
-TOP_ARTISTS_LIMIT = 20
-SIMILAR_ARTISTS_LIMIT = 10
-
 LOG_SENTRY = {
     'dsn':'',
     'environment': 'development',

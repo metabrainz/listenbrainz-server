@@ -129,7 +129,7 @@ def dataframes(days):
     """
     from listenbrainz_spark.recommendations import create_dataframes
     with app.app_context():
-        create_dataframes.main(train_model_window=days)
+        _ = create_dataframes.main(train_model_window=days)
 
 
 @cli.command(name='model')
@@ -138,26 +138,30 @@ def model():
     """
     from listenbrainz_spark.recommendations import train_models
     with app.app_context():
-        train_models.main()
+        _ = train_models.main()
 
 
 @cli.command(name='candidate')
 @click.option("--days", type=int, default=7, help="Request recommendations to be generated on history of given number of days")
-def candidate(days):
+@click.option("--top", type=int, default=20, help="Calculate given number of top artist.")
+@click.option("--similar", type=int, default=20, help="Calculate given number of similar artist.")
+def candidate(days, top, similar):
     """ Invoke script responsible for generating candidate sets.
     """
     from listenbrainz_spark.recommendations import candidate_sets
     with app.app_context():
-        candidate_sets.main(recommendation_generation_window=days)
+        _ = candidate_sets.main(recommendation_generation_window=days, top_artist_limit=top, similar_artist_limit=similar)
 
 
 @cli.command(name='recommend')
-def recommend():
+@click.option("--top", type=int, default=200, help="Generate given number of top artist recommendations")
+@click.option("--similar", type=int, default=200, help="Generate given number of similar artist recommendations")
+def recommend(top, similar):
     """ Invoke script responsible for generating recommendations.
     """
     from listenbrainz_spark.recommendations import recommend
     with app.app_context():
-        recommend.main()
+        _ = recommend.main(recommendation_top_artist_limit=top, recommendation_similar_artist_limit=similar)
 
 
 @cli.command(name='user')

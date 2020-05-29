@@ -16,6 +16,8 @@ MODEL_PATH = '/test/model'
 class RecommendTestClass(SparkTestCase):
 
     model_save_path = None
+    recommendation_top_artist_limit = 10
+    recommendation_similar_artist_limit = 10
 
     @classmethod
     def setUpClass(cls):
@@ -60,7 +62,8 @@ class RecommendTestClass(SparkTestCase):
         similar_artist_candidate_set = self.get_candidate_set()
 
         messages = recommend.get_recommendations_for_all(recordings_df, model, top_artist_candidate_set,
-                                                         similar_artist_candidate_set)
+                                                         similar_artist_candidate_set, self.recommendation_top_artist_limit,
+                                                         self.recommendation_similar_artist_limit)
         self.assertEqual(len(messages), 2)
 
         message = messages[0]
@@ -81,7 +84,9 @@ class RecommendTestClass(SparkTestCase):
                 model, user_id,
                 user_name, recordings_df,
                 top_artists_candidate_set,
-                similar_artists_candidate_set
+                similar_artists_candidate_set,
+                self.recommendation_top_artist_limit,
+                self.recommendation_similar_artist_limit
         )
         # often model gives no recommendations if candidate set has less data
         # therefore we check only for the type of return which should be a list
