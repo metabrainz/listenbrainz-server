@@ -146,6 +146,8 @@ declare type UserArtistsResponse = {
     range: UserEntityAPIRange;
     total_artist_count: number;
     user_id: string;
+    from_ts: number;
+    to_ts: number;
   };
 };
 
@@ -166,6 +168,8 @@ declare type UserReleasesResponse = {
     range: UserEntityAPIRange;
     total_release_count: number;
     user_id: string;
+    from_ts: number;
+    to_ts: number;
   };
 };
 

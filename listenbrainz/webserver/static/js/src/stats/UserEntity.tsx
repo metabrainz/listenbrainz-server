@@ -24,6 +24,7 @@ export type UserEntityState = {
   entityCount: number;
   totalPages: number;
   maxListens: number;
+  startDate: Date;
 };
 
 export default class UserEntity extends React.Component<
@@ -49,6 +50,7 @@ export default class UserEntity extends React.Component<
       entityCount: 0,
       totalPages: 0,
       maxListens: 0, // Number of listens for first artist used to scale the graph
+      startDate: new Date(),
     };
   }
 
@@ -134,6 +136,7 @@ export default class UserEntity extends React.Component<
         data: this.processData(data, page),
         range: newRange,
         currPage: page,
+        startDate: new Date(data.payload.from_ts * 1000),
         totalPages,
         maxListens,
         entityCount,
@@ -182,6 +185,7 @@ export default class UserEntity extends React.Component<
         data: this.processData(data, page, newEntity),
         entity: newEntity,
         currPage: page,
+        startDate: new Date(data.payload.from_ts * 1000),
         totalPages,
         maxListens,
         entityCount,
@@ -262,19 +266,34 @@ export default class UserEntity extends React.Component<
       currPage,
       maxListens,
       totalPages,
+      startDate,
     } = this.state;
     const prevPage = currPage - 1;
     const nextPage = currPage + 1;
+    const month = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
 
     return (
       <div>
         <div className="row">
           <div className="col-md-4">
-            <h3>History</h3>
+            <h2>History</h2>
           </div>
         </div>
         <div className="row">
-          <div className="col-xs-6">
+          <div className="col-xs-12">
             <ul className="nav nav-pills">
               <li className={entity === "artist" ? "active" : ""}>
                 <a
@@ -302,59 +321,70 @@ export default class UserEntity extends React.Component<
               </li>
             </ul>
           </div>
-          <div className="col-xs-6">
-            <div className="dropdown pull-right">
-              <button
-                className="dropdown-toggle btn-transparent"
-                data-toggle="dropdown"
-                type="button"
-                style={{
-                  textTransform: "capitalize",
-                  fontWeight: "bold",
-                }}
-              >
-                {`${range.replace(/_/g, " ")} `}
-                <span className="caret" />
-              </button>
-              <ul className="dropdown-menu" role="menu">
-                <li>
-                  <a
-                    href="#"
-                    onClick={() => this.changeRange("week")}
-                    role="button"
-                  >
-                    Week
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    onClick={() => this.changeRange("month")}
-                    role="button"
-                  >
-                    Month
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    onClick={() => this.changeRange("year")}
-                    role="button"
-                  >
-                    Year
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    onClick={() => this.changeRange("all_time")}
-                    role="button"
-                  >
-                    All Time
-                  </a>
-                </li>
-              </ul>
-            </div>
+        </div>
+        <div className="row">
+          <div className="col-xs-12">
+            <h3>
+              Top {entity.charAt(0).toUpperCase() + entity.slice(1)}s of{" "}
+              {range !== "all_time" ? "the" : ""}
+              <span className="dropdown">
+                <button
+                  className="dropdown-toggle btn-transparent"
+                  data-toggle="dropdown"
+                  type="button"
+                  style={{
+                    textTransform: "capitalize",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {`${range.replace(/_/g, " ")}`}
+                  <span className="caret" />
+                </button>
+                <ul className="dropdown-menu" role="menu">
+                  <li>
+                    <a
+                      href="#"
+                      onClick={() => this.changeRange("week")}
+                      role="button"
+                    >
+                      Week
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      onClick={() => this.changeRange("month")}
+                      role="button"
+                    >
+                      Month
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      onClick={() => this.changeRange("year")}
+                      role="button"
+                    >
+                      Year
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      onClick={() => this.changeRange("all_time")}
+                      role="button"
+                    >
+                      All Time
+                    </a>
+                  </li>
+                </ul>
+              </span>
+              {range === "week"
+                ? `of ${startDate.getDate()} ${month[startDate.getMonth()]} `
+                : ""}
+              {range === "month" ? `${month[startDate.getMonth()]} ` : ""}
+              {range !== "all_time" ? startDate.getFullYear() : ""}
+            </h3>
           </div>
         </div>
         <div className="row">
