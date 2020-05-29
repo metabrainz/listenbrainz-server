@@ -1,5 +1,9 @@
 import * as React from "react";
-import { isEqual as _isEqual, get as _get } from "lodash";
+import {
+  isEqual as _isEqual,
+  isString as _isString,
+  get as _get,
+} from "lodash";
 import * as _ from "lodash";
 import PlaybackControls from "./PlaybackControls";
 import APIService from "./APIService";
@@ -186,12 +190,46 @@ export default class BrainzPlayer extends React.Component<
   };
 
   playListen = (listen: Listen, datasourceIndex: number = 0): void => {
+    let selectedDatasourceIndex = datasourceIndex;
     const { onCurrentListenChange } = this.props;
     onCurrentListenChange(listen);
     if (this.firstRun) {
       this.firstRun = false;
     }
-    this.setState({ currentDataSourceIndex: datasourceIndex }, () => {
+
+    /** If available, retreive the service the listen was listened with */
+    const listeningFrom = _get(
+      listen,
+      "track_metadata.additional_info.listening_from"
+    );
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+
+    /** Spotify */
+    if (
+      listeningFrom === "spotify" ||
+      _get(listen, "track_metadata.additional_info.spotify_id")
+    ) {
+      selectedDatasourceIndex = this.dataSources.findIndex(
+        (ds) => ds.current instanceof SpotifyPlayer
+      );
+    }
+
+    /** Youtube */
+    if (
+      listeningFrom === "youtube" ||
+      /youtube\.com\/watch\?/.test(originURL)
+    ) {
+      selectedDatasourceIndex = this.dataSources.findIndex(
+        (ds) => ds.current instanceof YoutubePlayer
+      );
+    }
+
+    /** If no matching datasource was found, revert to the default bahaviour */
+    if (selectedDatasourceIndex === -1) {
+      selectedDatasourceIndex = datasourceIndex;
+    }
+
+    this.setState({ currentDataSourceIndex: selectedDatasourceIndex }, () => {
       const { currentDataSourceIndex } = this.state;
       const dataSource =
         this.dataSources[currentDataSourceIndex] &&

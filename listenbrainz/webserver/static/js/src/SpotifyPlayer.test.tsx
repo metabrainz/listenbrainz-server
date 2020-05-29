@@ -35,6 +35,31 @@ describe("SpotifyPlayer", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
+  it("should play from spotify_id if it exists on the listen", () => {
+    const spotifyListen: Listen = {
+      listened_at: 0,
+      track_metadata: {
+        artist_name: "Moondog",
+        track_name: "Bird's Lament",
+        additional_info: {
+          spotify_id: "https://open.spotify.com/track/surprise!",
+        },
+      },
+    };
+    const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...props} />);
+    const instance = wrapper.instance();
+
+    instance.playSpotifyURI = jest.fn();
+    instance.searchAndPlayTrack = jest.fn();
+    // play listen should extract the spotify track ID
+    instance.playListen(spotifyListen);
+    expect(instance.playSpotifyURI).toHaveBeenCalledTimes(1);
+    expect(instance.playSpotifyURI).toHaveBeenCalledWith(
+      "spotify:track:surprise!"
+    );
+    expect(instance.searchAndPlayTrack).not.toHaveBeenCalled();
+  });
+
   describe("checkSpotifyToken", () => {
     it("calls onInvalidateDataSource (via handleAccountError) if no access token or no permission", () => {
       const onInvalidateDataSource = jest.fn();

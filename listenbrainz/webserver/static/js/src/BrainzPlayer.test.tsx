@@ -87,6 +87,84 @@ describe("BrainzPlayer", () => {
     expect(instance.dataSources[0].current).toBeInstanceOf(YoutubePlayer);
   });
 
+  it("selects Youtube as source when listen has a youtube URL", () => {
+    const mockProps = {
+      ...props,
+      spotifyUser: {
+        access_token: "haveyouseenthefnords",
+        permission: "streaming user-read-email user-read-private" as SpotifyPermission,
+      },
+    };
+    const wrapper = mount<BrainzPlayer>(<BrainzPlayer {...mockProps} />);
+    const instance = wrapper.instance();
+    // Normally, Spotify datasource is selected by default
+    expect(instance.dataSources).toHaveLength(2);
+    expect(instance.dataSources[1].current).toBeInstanceOf(YoutubePlayer);
+    const youtubeListen: Listen = {
+      listened_at: 0,
+      track_metadata: {
+        artist_name: "Moondog",
+        track_name: "Bird's Lament",
+        additional_info: {
+          origin_url: "https://www.youtube.com/watch?v=RW8SBwGNcF8",
+        },
+      },
+    };
+    // if origin_url is a youtube link, it should play it with YoutubePlayer instead of Spotify
+    instance.playListen(youtubeListen);
+    expect(instance.state.currentDataSourceIndex).toEqual(1);
+  });
+
+  it("selects Spotify as source when listen has listening_from = spotify", () => {
+    const mockProps = {
+      ...props,
+      spotifyUser: {
+        access_token: "haveyouseenthefnords",
+        permission: "streaming user-read-email user-read-private" as SpotifyPermission,
+      },
+    };
+    const wrapper = mount<BrainzPlayer>(<BrainzPlayer {...mockProps} />);
+    const instance = wrapper.instance();
+    const spotifyListen: Listen = {
+      listened_at: 0,
+      track_metadata: {
+        artist_name: "Moondog",
+        track_name: "Bird's Lament",
+        additional_info: {
+          listening_from: "spotify",
+        },
+      },
+    };
+    // Try to play on youtube directly (index 1), should use spotify instead (index 0)
+    instance.playListen(spotifyListen, 1);
+    expect(instance.state.currentDataSourceIndex).toEqual(0);
+  });
+
+  it("selects Spotify as source when listen has a spotify_id", () => {
+    const mockProps = {
+      ...props,
+      spotifyUser: {
+        access_token: "haveyouseenthefnords",
+        permission: "streaming user-read-email user-read-private" as SpotifyPermission,
+      },
+    };
+    const wrapper = mount<BrainzPlayer>(<BrainzPlayer {...mockProps} />);
+    const instance = wrapper.instance();
+    const spotifyListen: Listen = {
+      listened_at: 0,
+      track_metadata: {
+        artist_name: "Moondog",
+        track_name: "Bird's Lament",
+        additional_info: {
+          spotify_id: "doesn't matter in this test as long as it's here",
+        },
+      },
+    };
+    // Try to play on youtube directly (index 1), should use spotify instead (index 0)
+    instance.playListen(spotifyListen, 1);
+    expect(instance.state.currentDataSourceIndex).toEqual(0);
+  });
+
   describe("isCurrentListen", () => {
     it("returns true if currentListen and passed listen is same", () => {
       const wrapper = shallow<BrainzPlayer>(<BrainzPlayer {...props} />);
