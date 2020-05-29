@@ -58,7 +58,7 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
             offset: number of feedback to skip from the beginning
 
         Returns:
-            A list of Feedback objects.
+            A list of Feedback objects
     """
 
     args = {"user_id": user_id, "limit": limit, "offset": offset}
@@ -101,6 +101,7 @@ def get_feedback_count_for_user(user_id: int):
 
     return count
 
+
 def get_feedback_for_recording(recording_msid: str, limit: int, offset: int, score: int = None):
     """ Get a list of recording feedbacks for a given recording
 
@@ -112,7 +113,7 @@ def get_feedback_for_recording(recording_msid: str, limit: int, offset: int, sco
             offset: number of feedback to skip from the beginning
 
         Returns:
-            A list of Feedback objects.
+            A list of Feedback objects
     """
 
     args = {"recording_msid": recording_msid, "limit": limit, "offset": offset}

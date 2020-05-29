@@ -36,7 +36,7 @@ class FeedbackDatabaseTestCase(DatabaseTestCase):
                     score=fb["score"]
                 )
             )
-        
+
         return len(self.sample_feedback)
 
     def test_insert(self):
