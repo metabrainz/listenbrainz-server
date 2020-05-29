@@ -47,12 +47,13 @@ SAVE_CANDIDATE_HTML = True
 #   ]
 
 
-def get_dates_to_generate_candidate_sets(mapped_df):
+def get_dates_to_generate_candidate_sets(mapped_df, recommendation_generation_window):
     """ Get window to fetch listens to generate candidate sets.
 
         Args:
             mapped_df (dataframe): listens mapped with msid_mbid_mapping. Refer to candidate_sets.py
                                    for dataframe columns.
+            recommendation_generation_window (int): recommendations to be generated on history of given number of days.
 
         Returns:
             from_date (datetime): Date from which start fetching listens.
@@ -60,7 +61,7 @@ def get_dates_to_generate_candidate_sets(mapped_df):
     """
     # get timestamp of latest listen in HDFS
     to_date = mapped_df.select(func.max('listened_at').alias('listened_at')).collect()[0].listened_at
-    from_date = stats.adjust_days(to_date, config.RECOMMENDATION_GENERATION_WINDOW).replace(hour=0, minute=0, second=0)
+    from_date = stats.adjust_days(to_date, recommendation_generation_window).replace(hour=0, minute=0, second=0)
     return from_date, to_date
 
 
@@ -272,7 +273,12 @@ def get_user_id(df, user_name):
         raise IndexError()
 
 
-def main():
+def main(recommendation_generation_window=None):
+
+    if recommendation_generation_window is None:
+        current_app.logger.critical('Please provide the number of days to generate recommendations')
+        sys.exit(-1)
+
     time_initial = time()
     try:
         listenbrainz_spark.init_spark_session('Candidate_set')
@@ -292,7 +298,7 @@ def main():
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
-    from_date, to_date = get_dates_to_generate_candidate_sets(mapped_df)
+    from_date, to_date = get_dates_to_generate_candidate_sets(mapped_df, recommendation_generation_window)
 
     current_app.logger.info('Fetching listens to get top artists...')
     mapped_listens_subset = get_listens_to_fetch_top_artists(mapped_df, from_date, to_date)

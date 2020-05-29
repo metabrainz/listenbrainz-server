@@ -96,8 +96,15 @@ class RequestManageTestCase(unittest.TestCase):
         received_message = request_manage._prepare_query_message('cf_recording.recommendations.train_model')
         self.assertEqual(expected_message, received_message)
 
-        expected_message = ujson.dumps({'query': 'cf_recording.recommendations.candidate_sets'})
-        received_message = request_manage._prepare_query_message('cf_recording.recommendations.candidate_sets')
+        message = {
+            'query': 'cf_recording.recommendations.candidate_sets',
+            'params': {
+                'recommendation_generation_window': 20,
+            }
+        }
+        expected_message = ujson.dumps(message)
+        received_message = request_manage._prepare_query_message('cf_recording.recommendations.candidate_sets',
+                                                                 message['params'])
         self.assertEqual(expected_message, received_message)
 
         expected_message = ujson.dumps({'query': 'cf_recording.recommendations.recommend'})

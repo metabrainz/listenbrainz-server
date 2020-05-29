@@ -145,10 +145,14 @@ def request_model():
 
 
 @cli.command(name='request_candidate_sets')
-def request_candidate_sets():
+@click.option("--days", type=int, default=7, help="Request recommendations to be generated on history of given number of days")
+def request_candidate_sets(days):
     """ Send the cluster a request to generate candidate sets.
     """
-    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.candidate_sets'))
+    params = {
+        'recommendation_generation_window': days,
+    }
+    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.candidate_sets', params))
 
 
 @cli.command(name='request_recommendations')

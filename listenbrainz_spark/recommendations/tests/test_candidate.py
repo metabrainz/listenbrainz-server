@@ -10,6 +10,7 @@ import pyspark.sql.functions as f
 class CandidateSetsTestClass(SparkTestCase):
 
     date = None
+    recommendation_generation_window = 7
 
     @classmethod
     def setUpClass(cls):
@@ -38,7 +39,7 @@ class CandidateSetsTestClass(SparkTestCase):
     def get_listens(cls):
         cls.date = datetime.utcnow()
         df1 = utils.create_dataframe(cls.get_listen_row(cls.date, 'vansika', 1), schema=None)
-        shifted_date = stats.adjust_days(cls.date, config.RECOMMENDATION_GENERATION_WINDOW + 1)
+        shifted_date = stats.adjust_days(cls.date, cls.recommendation_generation_window + 1)
         df2 = utils.create_dataframe(cls.get_listen_row(shifted_date, 'vansika', 1), schema=None)
         shifted_date = stats.adjust_days(cls.date, 1)
         df3 = utils.create_dataframe(cls.get_listen_row(shifted_date, 'rob', 2), schema=None)
@@ -49,14 +50,16 @@ class CandidateSetsTestClass(SparkTestCase):
 
     def test_get_dates_to_generate_candidate_sets(self):
         mapped_df = self.get_listens()
-        from_date, to_date = candidate_sets.get_dates_to_generate_candidate_sets(mapped_df)
+        from_date, to_date = candidate_sets.get_dates_to_generate_candidate_sets(mapped_df,
+                                                                                 self.recommendation_generation_window)
         self.assertEqual(to_date, self.date)
-        expected_date = stats.adjust_days(self.date, config.RECOMMENDATION_GENERATION_WINDOW).replace(hour=0, minute=0, second=0)
+        expected_date = stats.adjust_days(self.date, self.recommendation_generation_window).replace(hour=0, minute=0, second=0)
         self.assertEqual(from_date, expected_date)
 
     def test_get_listens_to_fetch_top_artists(self):
         mapped_df = self.get_listens()
-        from_date, to_date = candidate_sets.get_dates_to_generate_candidate_sets(mapped_df)
+        from_date, to_date = candidate_sets.get_dates_to_generate_candidate_sets(mapped_df,
+                                                                                 self.recommendation_generation_window)
         mapped_listens_subset = candidate_sets.get_listens_to_fetch_top_artists(mapped_df, from_date, to_date)
         self.assertEqual(mapped_listens_subset.count(), 3)
 

@@ -21,14 +21,8 @@ RANKS = [8, 12]
 LAMBDAS = [0.1, 10.0]
 ITERATIONS = [5, 10]
 
-# train model on X days data
-TRAIN_MODEL_WINDOW = 180
-
 # calculate stats on X months data
 STATS_CALCULATION_WINDOW = 1
-
-# generate recommendations after every X days
-RECOMMENDATION_GENERATION_WINDOW = 7
 
 STEPS_TO_REACH_NEXT_MONTH = 32
 

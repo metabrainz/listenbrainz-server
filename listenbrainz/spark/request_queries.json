@@ -42,7 +42,7 @@
   "cf_recording.recommendations.candidate_sets": {
     "name": "cf_recording.recommendations.candidate_sets",
     "description": "Create candidate sets to generate recommendations",
-    "params": []
+    "params": ["recommendation_generation_window"]
   },
   "cf_recording.recommendations.recommend": {
     "name": "cf_recording.recommendations.recommend",
