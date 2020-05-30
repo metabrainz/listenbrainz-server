@@ -92,9 +92,27 @@ def get_artist(user_name):
 
     stats = db_stats.get_user_artists(user['id'])
     if stats is None:
-        return '', 204
+        raise APINoContent('')
 
-    return jsonify(_process_entity(user_name, entity='artist', stats=stats))
+    stats_range = request.args.get('range', default='all_time')
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest("Invalid range: {}".format(stats_range))
+
+    offset = _get_non_negative_param('offset', default=0)
+    count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+
+    entity_list, total_entity_count = _process_entity(user_name, stats, stats_range, offset, count, entity='artist')
+    return jsonify({'payload': {
+        "user_id": user_name,
+        'artists': entity_list,
+        "count": len(entity_list),
+        "total_artist_count": total_entity_count,
+        "offset": offset,
+        "range": stats_range,
+        "from_ts": int(stats['artist'][stats_range]['from_ts']),
+        "to_ts": int(stats['artist'][stats_range]['to_ts']),
+        "last_updated": int(stats['last_updated'].timestamp())
+    }})
 
 
 @stats_api_bp.route("/user/<user_name>/releases")
@@ -176,28 +194,43 @@ def get_release(user_name):
     if stats is None:
         raise APINoContent('')
 
-    return jsonify(_process_entity(user_name, entity='release', stats=stats))
-
-
-def _process_entity(user_name, entity, stats):
-    """ Process the statistics data according to query params
-
-        Args:
-            user_name (str): musicbrainz_id of the user
-            entity (str): name of the entity, i.e 'artist', 'release' or 'recording'
-            stats (dict): the dictionary containing statistic data
-
-        Returns:
-            processed_data (dict): A dictionary that contains processed data according
-                to the query params
-    """
-
     stats_range = request.args.get('range', default='all_time')
     if not _is_valid_range(stats_range):
         raise APIBadRequest("Invalid range: {}".format(stats_range))
 
     offset = _get_non_negative_param('offset', default=0)
     count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+
+    entity_list, total_entity_count = _process_entity(user_name, stats, stats_range, offset, count, entity='release')
+    return jsonify({'payload': {
+        "user_id": user_name,
+        'releases': entity_list,
+        "count": len(entity_list),
+        "total_release_count": total_entity_count,
+        "offset": offset,
+        "range": stats_range,
+        "from_ts": int(stats['release'][stats_range]['from_ts']),
+        "to_ts": int(stats['release'][stats_range]['to_ts']),
+        "last_updated": int(stats['last_updated'].timestamp())
+    }})
+
+
+def _process_entity(user_name, stats, stats_range, offset, count, entity):
+    """ Process the statistics data according to query params
+
+        Args:
+            user_name (str): musicbrainz_id of the user
+            stats (dict): the dictionary containing statistic data
+            stats_range (str): time interval for which statistics should be collected
+            offset (int): number of entities to skip from the beginning
+            count (int): number of entities to return
+            entity (str): name of the entity, i.e 'artist', 'release' or 'recording'
+
+        Returns:
+            entity_list, total_entity_count (list, int): a tupple of a list and integer
+                containing the entities processed according to the query params and
+                total number of entities respectively
+    """
 
     plural_entity = entity + 's'
 
@@ -210,17 +243,7 @@ def _process_entity(user_name, entity, stats):
     count = count + offset
     entity_list = stats[entity][stats_range][plural_entity][offset:count]
 
-    return {'payload': {
-        "user_id": user_name,
-        plural_entity: entity_list,
-        "count": len(entity_list),
-        "total_{}_count".format(entity): total_entity_count,
-        "offset": offset,
-        "range": stats_range,
-        "from_ts": int(stats[entity][stats_range]['from_ts']),
-        "to_ts": int(stats[entity][stats_range]['to_ts']),
-        "last_updated": int(stats['last_updated'].timestamp())
-    }}
+    return entity_list, total_entity_count
 
 
 def _get_non_negative_param(param, default=None):
