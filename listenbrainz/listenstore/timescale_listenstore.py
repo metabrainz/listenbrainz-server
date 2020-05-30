@@ -126,10 +126,8 @@ class TimescaleListenStore(ListenStore):
                     "user_name": user_name
                 })
                 val = result.fetchone()["value"]
-                self.log.info("result: %d" % (val or -1))
                 return val
         except psycopg2.OperationalError as e:
-            self.log.info("Cannot query timescale listened_at_min/max: %s" % str(e), exc_info=True)
             self.log.error("Cannot query timescale listened_at_min/max: %s" % str(e), exc_info=True)
             raise
 
@@ -190,7 +188,7 @@ class TimescaleListenStore(ListenStore):
 
     def insert(self, listens):
         """
-            Insert a batch of listens. Returns a list of (listened_at, recording_msid, user_name) that indicates
+            Insert a batch of listens. Returns a list of (listened_at, track_name, user_name) that indicates
             which rows were inserted into the DB. If the row is not listed in the return values, it was a duplicate.
         """
 
@@ -198,14 +196,13 @@ class TimescaleListenStore(ListenStore):
         user_names = {}
         for listen in listens:
             user_names[listen.user_name] = 1
-            submit.append((listen.ts_since_epoch, listen.recording_msid,
-                           listen.user_name, listen.to_timescale()))
+            submit.append(listen.to_timescale())
 
-        query = """INSERT INTO listen (listened_at, recording_msid, user_name, data)
+        query = """INSERT INTO listen (listened_at, track_name, user_name, data)
                     VALUES %s
-                    ON CONFLICT (listened_at, recording_msid, user_name)
+                    ON CONFLICT (listened_at, track_name, user_name)
                         DO NOTHING
-                        RETURNING listened_at, recording_msid, user_name"""
+                        RETURNING listened_at, track_name, user_name"""
 
         inserted_rows = []
         conn = timescale.engine.raw_connection()
@@ -246,8 +243,6 @@ class TimescaleListenStore(ListenStore):
                         which is slow and should be avoided if at all possible.
         """
 
-        self.log.info("fetch listens")
-        self.log.info(time_range)
         if not time_range:
             time_range = 3
         if time_range < 0:
@@ -264,7 +259,7 @@ class TimescaleListenStore(ListenStore):
                 # then set from_ts = -1 as some tests feed listens with listened_at = 0.
                 from_ts = -1
 
-        query = """SELECT listened_at, recording_msid, data
+        query = """SELECT listened_at, track_name, data
                      FROM listen
                     WHERE user_name = :user_name
                       AND listened_at < :to_ts """
@@ -272,9 +267,6 @@ class TimescaleListenStore(ListenStore):
         if max_timestamp_window >= 0:
             query += "AND listened_at > :from_ts "
         query += "ORDER BY listened_at " + ORDER_TEXT[order] + " LIMIT :limit"
-
-        self.log.info(query)
-        self.log.info("%d %d" % (from_ts, to_ts))
 
         listens = []
         with timescale.engine.connect() as connection:
@@ -302,12 +294,12 @@ class TimescaleListenStore(ListenStore):
 
         args = {'user_list': tuple(user_list), 'ts': int(time.time()) - max_age, 'limit': limit}
         query = """SELECT * FROM (
-                              SELECT listened_at, recording_msid, user_name, data,
+                              SELECT listened_at, track_name, user_name, data,
                                      row_number() OVER (partition by user_name ORDER BY listened_at DESC) AS rownum
                                 FROM listen
                                WHERE user_name IN :user_list
                                  AND listened_at > :ts
-                            GROUP BY user_name, listened_at, recording_msid, data
+                            GROUP BY user_name, listened_at, track_name, data
                             ORDER BY listened_at DESC) tmp
                            WHERE rownum <= :limit"""
 
@@ -329,7 +321,7 @@ class TimescaleListenStore(ListenStore):
             Use listened_at timestamp, since not all listens have the created timestamp.
         """
 
-        query = """SELECT listened_at, recording_msid, user_name, created, data
+        query = """SELECT listened_at, track_name, user_name, created, data
                      FROM listen
                     WHERE listened_at <= :ts
                       AND (created IS NULL OR created <= to_timestamp(:ts))
@@ -352,7 +344,7 @@ class TimescaleListenStore(ListenStore):
             This uses the `created` column to fetch listens.
         """
 
-        query = """SELECT listened_at, recording_msid, user_name, created, data
+        query = """SELECT listened_at, track_name, user_name, created, data
                      FROM listen
                     WHERE created > :start_ts
                       AND created <= :end_ts

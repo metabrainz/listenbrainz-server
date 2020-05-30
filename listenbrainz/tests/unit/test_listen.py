@@ -12,11 +12,10 @@ class ListenTestCase(unittest.TestCase):
 
         timescale_row = {
             "listened_at": 1525557084,
+            "track_name": "Every Step Every Way",
             "user_name": "iliekcomputers",
-            "recording_msid": "db9a7483-a8f4-4a2c-99af-c8ab58850200",
             "data": {
                 'track_metadata': {
-                    "track_name": "Every Step Every Way",
                     "artist_name": "Majid Jordan",
                     "release_name": "Majid Jordan",
                     'additional_info': {
@@ -25,6 +24,7 @@ class ListenTestCase(unittest.TestCase):
                         "release_msid": "cf138a00-05d5-4b35-8fce-181efcc15785",
                         'release_mbid': '8294645a-f996-44b6-9060-7f189b9f59f3',
                         "recording_mbid": None,
+                        "recording_msid": "db9a7483-a8f4-4a2c-99af-c8ab58850200",
                         "tags": ["sing, song"],
                         "best_song": "definitely",
                         "genius_link": "https://genius.com/Majid-jordan-every-step-every-way-lyrics",
@@ -39,7 +39,7 @@ class ListenTestCase(unittest.TestCase):
         }
 
         listen = Listen.from_timescale(
-            timescale_row['listened_at'], timescale_row['recording_msid'], timescale_row['user_name'], timescale_row['data'])
+            timescale_row['listened_at'], timescale_row['track_name'], timescale_row['user_name'], timescale_row['data'])
 
         # Check user name
         self.assertEqual(listen.user_name, timescale_row['user_name'])
@@ -69,7 +69,7 @@ class ListenTestCase(unittest.TestCase):
             listen.artist_msid, timescale_row['data']['track_metadata']['additional_info']['artist_msid'])
         self.assertEqual(
             listen.release_msid, timescale_row['data']['track_metadata']['additional_info']['release_msid'])
-        self.assertEqual(listen.recording_msid, timescale_row['recording_msid'])
+        self.assertEqual(listen.data['track_name'], timescale_row['track_name'])
 
         # make sure additional info does not contain stuff like artist names, track names
         self.assertNotIn('track_name', listen.data['additional_info'])
@@ -80,8 +80,7 @@ class ListenTestCase(unittest.TestCase):
         listen = Listen(
             timestamp=int(time.time()),
             user_name='testuser',
-            artist_msid=uuid.uuid4(),
-            recording_msid=uuid.uuid4(),
+            artist_msid=str(uuid.uuid4()),
             dedup_tag=3,
             user_id=1,
             data={
@@ -89,11 +88,12 @@ class ListenTestCase(unittest.TestCase):
                 'track_name': 'True Love Waits',
                 'additional_info': {
                     'release_type': ["ALBUM", "REMIX"],
+                    'recording_msid': str(uuid.uuid4()),
                 }
             }
         )
 
-        data = listen.to_timescale()
+        listened_at, track_name, user_name, data = listen.to_timescale()
 
         # Check data is of type string
         self.assertIsInstance(data, str)
@@ -102,17 +102,15 @@ class ListenTestCase(unittest.TestCase):
         json_data = ujson.loads(data)
 
         # Check that the required fields are dumped into data
-        self.assertIn('user_id', json_data)
         self.assertIn('track_metadata', json_data)
         self.assertIn('additional_info', json_data['track_metadata'])
 
-        # Check track name
-        self.assertEqual(json_data['track_metadata']['track_name'],
-                         listen.data['track_name'])
-
-        # Check artist name
-        self.assertEqual(json_data['track_metadata']['artist_name'],
-                         listen.data['artist_name'])
+        # Check that the required fields are dumped into data
+        self.assertEqual(listened_at, listen.ts_since_epoch)
+        self.assertEqual(track_name, listen.data['track_name'])
+        self.assertEqual(user_name, listen.user_name)
+        self.assertEqual(json_data['user_id'], listen.user_id)
+        self.assertEqual(json_data['track_metadata']['artist_name'], listen.data['artist_name'])
 
 
     def test_from_json(self):

@@ -2,7 +2,7 @@ BEGIN;
 
 CREATE TABLE listen (
         listened_at     BIGINT                   NOT NULL,
-        recording_msid  UUID                     NOT NULL,
+        track_name      TEXT                     NOT NULL,
         user_name       TEXT                     NOT NULL,
         created         TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
         data            JSONB                    NOT NULL

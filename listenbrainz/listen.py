@@ -3,6 +3,7 @@ import calendar
 import time
 import ujson
 import yaml
+from copy import deepcopy
 
 from datetime import datetime
 from listenbrainz.utils import escape
@@ -129,17 +130,18 @@ class Listen(object):
         )
 
     @classmethod
-    def from_timescale(cls, listened_at, recording_msid, user_name, j):
+    def from_timescale(cls, listened_at, track_name, user_name, j):
         """Factory to make Listen() objects from a timescale dict"""
 
         j['listened_at'] = datetime.utcfromtimestamp(float(listened_at))
+        j['track_metadata']['track_name'] = track_name
         return cls(
             user_id=j.get('user_id'),
             user_name=user_name,
             timestamp=j['listened_at'],
             artist_msid=j['track_metadata']['additional_info'].get('artist_msid'),
             release_msid=j['track_metadata']['additional_info'].get('release_msid'),
-            recording_msid=str(recording_msid),
+            recording_msid=j['track_metadata']['additional_info'].get('recording_msid'),
             dedup_tag=j.get('dedup_tag', 0),
             data=j.get('track_metadata')
         )
@@ -174,12 +176,17 @@ class Listen(object):
             'recording_msid': self.recording_msid
         }
 
-
     def to_timescale(self):
-        return ujson.dumps({
+        track_metadata = deepcopy(self.data)
+        track_metadata['additional_info']['artist_msid'] = self.artist_msid
+        track_metadata['additional_info']['release_msid'] = self.release_msid
+        track_metadata['additional_info']['recording_msid'] = self.recording_msid
+        track_name = track_metadata['track_name']
+        del track_metadata['track_name']
+        return (self.ts_since_epoch, track_name, self.user_name, ujson.dumps({
             'user_id': self.user_id,
-            'track_metadata': self.data
-        })
+            'track_metadata': track_metadata
+        }))
 
 
     def validate(self):
@@ -201,7 +208,7 @@ class Listen(object):
 
 def convert_timescale_row_to_spark_row(row):
     """
-        Convert a timescale listen row (listened_at, recording_msid, user_name, created, data)
+        Convert a timescale listen row (listened_at, track_name, user_name, created, data)
         to a spark row.
     """
     data = row[4]['track_metadata']
@@ -220,8 +227,8 @@ def convert_timescale_row_to_spark_row(row):
         'release_msid': data['additional_info'].get('release_msid'),
         'release_name': data.get('release_name', ''),
         'release_mbid': data.get('release_mbid', ''),
-        'track_name': data['track_name'],
-        'recording_msid': str(row[1]),
+        'track_name': row[1],
+        'recording_msid': data['additional_info']['recording_msid'],
         'recording_mbid': data['additional_info'].get('recording_mbid', ''),
         'tags': convert_comma_seperated_string_to_list(data.get('tags', [])),
         'inserted_timestamp': created
