@@ -48,7 +48,7 @@ def delete(feedback: Feedback):
 
 
 def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = None):
-    """ Get a list of recording feedbacks given by the user
+    """ Get a list of recording feedback given by the user in descending order of their creation
 
         Args:
             user_id: the row ID of the user in the DB
@@ -81,13 +81,13 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
 
 
 def get_feedback_count_for_user(user_id: int):
-    """ Get total number recording feedbacks given by the user
+    """ Get total number of recording feedback given by the user
 
         Args:
             user_id: the row ID of the user in the DB
 
         Returns:
-            The total number recording feedbacks given by the user
+            The total number of recording feedback given by the user
     """
 
     query = "SELECT count(*) AS value FROM recording_feedback WHERE user_id = :user_id"
@@ -103,7 +103,7 @@ def get_feedback_count_for_user(user_id: int):
 
 
 def get_feedback_for_recording(recording_msid: str, limit: int, offset: int, score: int = None):
-    """ Get a list of recording feedbacks for a given recording
+    """ Get a list of recording feedback for a given recording in descending order of their creation
 
         Args:
             recording_msid: the MessyBrainz ID of the recording
@@ -136,13 +136,13 @@ def get_feedback_for_recording(recording_msid: str, limit: int, offset: int, sco
 
 
 def get_feedback_count_for_recording(recording_msid: str):
-    """ Get total number recording feedbacks for a given recording
+    """ Get total number of recording feedback for a given recording
 
         Args:
             recording_msid: the MessyBrainz ID of the recording
 
         Returns:
-            The total number recording feedbacks given by the user
+            The total number of recording feedback for a given recording
     """
 
     query = "SELECT count(*) AS value FROM recording_feedback WHERE recording_msid = :recording_msid"
