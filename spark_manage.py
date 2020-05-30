@@ -15,9 +15,11 @@ from py4j.protocol import Py4JJavaError
 
 app = utils.create_app(debug=True)
 
+
 @click.group()
 def cli():
     pass
+
 
 @cli.command(name='init_dir')
 @click.option('--rm', is_flag=True, help='Delete existing directories from HDFS.')
@@ -74,6 +76,7 @@ def init_dir(rm, recursive, create_dir):
                 type(err).__name__, str(err)))
             sys.exit(-1)
 
+
 @cli.command(name='upload_mapping')
 @click.option("--force", "-f", is_flag=True, help="Deletes existing mapping.")
 def upload_mapping(force):
@@ -86,6 +89,7 @@ def upload_mapping(force):
         src = downloader_obj.download_msid_mbid_mapping(path.FTP_FILES_PATH)
         uploader_obj = ListenbrainzDataUploader()
         uploader_obj.upload_mapping(src, force=force)
+
 
 @cli.command(name='upload_listens')
 @click.option('--incremental', '-i', is_flag=True, default=False, help="Use a smaller dump (more for testing purposes)")
@@ -103,6 +107,7 @@ def upload_listens(force, incremental, id):
         uploader_obj = ListenbrainzDataUploader()
         uploader_obj.upload_listens(src, force=force)
 
+
 @cli.command(name='upload_artist_relation')
 @click.option("--force", "-f", is_flag=True, help="Deletes existing artist relation.")
 def upload_artist_relation(force):
@@ -116,6 +121,7 @@ def upload_artist_relation(force):
         uploader_obj = ListenbrainzDataUploader()
         uploader_obj.upload_artist_relation(src, force=force)
 
+
 @cli.command(name='dataframe')
 @click.option("--days", type=int, default=180, help="Request model to be trained on data of given number of days")
 def dataframes(days):
@@ -123,7 +129,8 @@ def dataframes(days):
     """
     from listenbrainz_spark.recommendations import create_dataframes
     with app.app_context():
-        create_dataframes.main(train_model_window=days)
+        _ = create_dataframes.main(train_model_window=days)
+
 
 @cli.command(name='model')
 def model():
@@ -131,23 +138,31 @@ def model():
     """
     from listenbrainz_spark.recommendations import train_models
     with app.app_context():
-        train_models.main()
+        _ = train_models.main()
+
 
 @cli.command(name='candidate')
-def candidate():
+@click.option("--days", type=int, default=7, help="Request recommendations to be generated on history of given number of days")
+@click.option("--top", type=int, default=20, help="Calculate given number of top artist.")
+@click.option("--similar", type=int, default=20, help="Calculate given number of similar artist.")
+def candidate(days, top, similar):
     """ Invoke script responsible for generating candidate sets.
     """
     from listenbrainz_spark.recommendations import candidate_sets
     with app.app_context():
-        candidate_sets.main()
+        _ = candidate_sets.main(recommendation_generation_window=days, top_artist_limit=top, similar_artist_limit=similar)
+
 
 @cli.command(name='recommend')
-def recommend():
+@click.option("--top", type=int, default=200, help="Generate given number of top artist recommendations")
+@click.option("--similar", type=int, default=200, help="Generate given number of similar artist recommendations")
+def recommend(top, similar):
     """ Invoke script responsible for generating recommendations.
     """
     from listenbrainz_spark.recommendations import recommend
     with app.app_context():
-        recommend.main()
+        _ = recommend.main(recommendation_top_artist_limit=top, recommendation_similar_artist_limit=similar)
+
 
 @cli.command(name='user')
 def user():
@@ -157,6 +172,7 @@ def user():
     with app.app_context():
         user.main()
 
+
 @cli.command(name='request_consumer')
 def request_consumer():
     """ Invoke script responsible for the request consumer
@@ -165,11 +181,13 @@ def request_consumer():
     with app.app_context():
         main('request-consumer-%s' % str(int(time.time())))
 
+
 @cli.resultcallback()
 def remove_zip(result, **kwargs):
     """ Remove zip created by spark-submit.
     """
     os.remove(os.path.join('/', 'rec', 'listenbrainz_spark.zip'))
+
 
 if __name__ == '__main__':
     # The root logger always defaults to WARNING level
