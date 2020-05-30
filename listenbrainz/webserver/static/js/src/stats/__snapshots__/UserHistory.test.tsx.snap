@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`User Artists Page renders 1`] = `
-<UserArtists
+exports[`UserHistory Page renders 1`] = `
+<UserHistory
   apiUrl="apiUrl"
   user={
     Object {
@@ -15,10 +15,104 @@ exports[`User Artists Page renders 1`] = `
       className="row"
     >
       <div
-        className="col-md-4"
+        className="col-xs-12"
       >
         <h3>
-          Top Artists
+          Top
+          <span
+            className="dropdown"
+          >
+            <button
+              className="dropdown-togle btn-transparent capitalize-bold"
+              data-toggle="dropdown"
+              type="button"
+            >
+              artist
+              s
+              <span
+                className="caret"
+              />
+            </button>
+            <ul
+              className="dropdown-menu"
+              role="menu"
+            >
+              <li>
+                <a
+                  href="#"
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Artists
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Releases
+                </a>
+              </li>
+            </ul>
+          </span>
+          of 
+          <span
+            className="dropdown"
+          >
+            <button
+              className="dropdown-toggle btn-transparent capitalize-bold"
+              data-toggle="dropdown"
+              type="button"
+            >
+              all time
+              <span
+                className="caret"
+              />
+            </button>
+            <ul
+              className="dropdown-menu"
+              role="menu"
+            >
+              <li>
+                <a
+                  href="#"
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Week
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Month
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Year
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  onClick={[Function]}
+                  role="button"
+                >
+                  All Time
+                </a>
+              </li>
+            </ul>
+          </span>
         </h3>
       </div>
     </div>
@@ -26,93 +120,21 @@ exports[`User Artists Page renders 1`] = `
       className="row"
     >
       <div
-        className="col-xs-6"
-        style={
-          Object {
-            "display": "inline-block",
-            "float": "none",
-            "verticalAlign": "middle",
-          }
-        }
+        className="col-xs-12"
       >
-        <h4>
-          Artist count - 
+        <h4
+          style={
+            Object {
+              "textTransform": "capitalize",
+            }
+          }
+        >
+          artist
+           count - 
           <b>
             0
           </b>
         </h4>
-      </div>
-      <div
-        className="col-xs-6"
-        style={
-          Object {
-            "display": "inline-block",
-            "float": "none",
-            "verticalAlign": "middle",
-          }
-        }
-      >
-        <div
-          className="dropdown pull-right"
-        >
-          <button
-            className="dropdown-toggle btn-transparent"
-            data-toggle="dropdown"
-            style={
-              Object {
-                "fontWeight": "bold",
-                "textTransform": "capitalize",
-              }
-            }
-            type="button"
-          >
-            all time 
-            <span
-              className="caret"
-            />
-          </button>
-          <ul
-            className="dropdown-menu"
-            role="menu"
-          >
-            <li>
-              <a
-                href="#"
-                onClick={[Function]}
-                role="button"
-              >
-                Week
-              </a>
-            </li>
-            <li>
-              <a
-                href="#"
-                onClick={[Function]}
-                role="button"
-              >
-                Month
-              </a>
-            </li>
-            <li>
-              <a
-                href="#"
-                onClick={[Function]}
-                role="button"
-              >
-                Year
-              </a>
-            </li>
-            <li>
-              <a
-                href="#"
-                onClick={[Function]}
-                role="button"
-              >
-                All Time
-              </a>
-            </li>
-          </ul>
-        </div>
       </div>
     </div>
     <div
@@ -299,7 +321,7 @@ exports[`User Artists Page renders 1`] = `
       className="row"
     >
       <div
-        className="col-md-12"
+        className="col-xs-12"
       >
         <ul
           className="pager"
@@ -330,5 +352,5 @@ exports[`User Artists Page renders 1`] = `
       </div>
     </div>
   </div>
-</UserArtists>
+</UserHistory>
 `;

@@ -143,11 +143,13 @@ def profile(user_name):
 
 @user_bp.route("/<user_name>/artists")
 def artists(user_name):
-    """ Show the top artists for the user. These user stats must have been already
-        calculated.  If the stats are not present, we
-        redirect to the user page with a message.
-    """
+    """ Redirect to history page """
+    return redirect(url_for('user.history', user_name=user_name, entity='artist'), code=301)
 
+
+@user_bp.route("/<user_name>/history")
+def history(user_name):
+    """ Show the top entitys for the user. """
     user = _get_user(user_name)
 
     user_data = {
@@ -161,8 +163,8 @@ def artists(user_name):
     }
 
     return render_template(
-        "user/artists.html",
-        active_section="artists",
+        "user/history.html",
+        active_section="history",
         props=ujson.dumps(props),
         user=user
     )

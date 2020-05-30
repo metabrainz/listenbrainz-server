@@ -143,10 +143,36 @@ declare type UserArtistsResponse = {
     count: number;
     last_updated: number;
     offset: number;
-    range: UserArtistsAPIRange;
+    range: UserEntityAPIRange;
     total_artist_count: number;
     user_id: string;
+    from_ts: number;
+    to_ts: number;
   };
 };
 
-declare type UserArtistsAPIRange = "all_time" | "year" | "month" | "week";
+declare type UserReleasesResponse = {
+  payload: {
+    releases: Array<{
+      artist_mbids?: Array<string>;
+      artist_msid?: string;
+      artist_name: string;
+      release_mbid?: string;
+      release_msid?: string;
+      release_name: string;
+      listen_count: number;
+    }>;
+    count: number;
+    last_updated: number;
+    offset: number;
+    range: UserEntityAPIRange;
+    total_release_count: number;
+    user_id: string;
+    from_ts: number;
+    to_ts: number;
+  };
+};
+
+declare type UserEntityAPIRange = "all_time" | "year" | "month" | "week";
+
+declare type Entity = "artist" | "release" | "recording";

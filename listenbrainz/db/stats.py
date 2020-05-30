@@ -123,29 +123,17 @@ def get_user_artists(user_id):
 
         Args:
             user_id (int): the row ID of the user in the DB
-
-        Returns:
-            A dict of the following format
-            {
-                'user_id' (int): the row ID of the user in the DB,
-                'artist'  (dict): artist stats for the user, see below for better description
-                'last_updated' (datetime): datetime object representing when
-                                        this stat was last updated
-            }
-
-
-            the `artist` dict will be of the following format:
-            {
-                'all_time': all time artist listen counts for the user
-                            calculated by listenbrainz.stats.user.get_top_artists
-                'count': the total number of artists this user has listened to
-                                calculated by listenbrainz.stats.user.get_artist_count
-            }
-
-            In general, the `artist` dict will contain all artist related stats
-            calculated for the user in listenbrainz.stats.user, keyed by stat name.
     """
     return get_user_stats(user_id, 'artist')
+
+
+def get_user_releases(user_id):
+    """Get top releases for user with given ID.
+
+        Args:
+            user_id (int): the row ID of the user in the DB
+    """
+    return get_user_stats(user_id, 'release')
 
 
 def get_all_user_stats(user_id):

@@ -179,13 +179,14 @@ export default class APIService {
     return response.status; // Return true if timestamp is updated
   };
 
-  getUserStats = async (
+  getUserEntity = async (
     userName: string,
-    range: UserArtistsAPIRange = "all_time",
+    entity: Entity,
+    range: UserEntityAPIRange = "all_time",
     offset: number = 0,
     count?: number
-  ): Promise<UserArtistsResponse> => {
-    let url = `${this.APIBaseURI}/stats/user/${userName}/artists?offset=${offset}&range=${range}`;
+  ): Promise<UserArtistsResponse | UserReleasesResponse> => {
+    let url = `${this.APIBaseURI}/stats/user/${userName}/${entity}s?offset=${offset}&range=${range}`;
     if (count !== null && count !== undefined) {
       url += `&count=${count}`;
     }
