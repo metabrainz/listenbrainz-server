@@ -80,7 +80,7 @@ class TimescaleWriterSubscriber(ListenWriter):
             inserted_index['%d-%s-%s' % (inserted[0], inserted[1], inserted[2])] = 1
 
         for listen in data:
-            k = '%d-%s-%s' % (listen.ts_since_epoch, listen.recording_msid, listen.user_name)
+            k = '%d-%s-%s' % (listen.ts_since_epoch, listen.data['track_name'], listen.user_name)
             if k in inserted_index:
                 unique.append(listen)
 
