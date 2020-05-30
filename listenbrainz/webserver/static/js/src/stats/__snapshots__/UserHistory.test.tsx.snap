@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`UserEntity Page renders 1`] = `
-<UserEntity
+exports[`UserHistory Page renders 1`] = `
+<UserHistory
   apiUrl="apiUrl"
   user={
     Object {
@@ -23,14 +23,8 @@ exports[`UserEntity Page renders 1`] = `
             className="dropdown"
           >
             <button
-              className="dropdown-togle btn-transparent"
+              className="dropdown-togle btn-transparent capitalize-bold"
               data-toggle="dropdown"
-              style={
-                Object {
-                  "fontWeight": "bold",
-                  "textTransform": "capitalize",
-                }
-              }
               type="button"
             >
               artist
@@ -68,14 +62,8 @@ exports[`UserEntity Page renders 1`] = `
             className="dropdown"
           >
             <button
-              className="dropdown-toggle btn-transparent"
+              className="dropdown-toggle btn-transparent capitalize-bold"
               data-toggle="dropdown"
-              style={
-                Object {
-                  "fontWeight": "bold",
-                  "textTransform": "capitalize",
-                }
-              }
               type="button"
             >
               all time
@@ -364,5 +352,5 @@ exports[`UserEntity Page renders 1`] = `
       </div>
     </div>
   </div>
-</UserEntity>
+</UserHistory>
 `;

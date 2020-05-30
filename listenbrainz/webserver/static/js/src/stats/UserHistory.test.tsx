@@ -1,7 +1,7 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
 
-import UserEntity from "./UserEntity";
+import UserHistory from "./UserHistory";
 import * as userArtistsResponse from "../__mocks__/userArtists.json";
 import * as userArtistsProcessDataOutput from "../__mocks__/userArtistsProcessData.json";
 import * as userReleasesResponse from "../__mocks__/userReleases.json";
@@ -15,15 +15,15 @@ const props = {
   apiUrl: "apiUrl",
 };
 
-describe("UserEntity Page", () => {
+describe("UserHistory Page", () => {
   it("renders", () => {
     // We don't need to call componentDidMount during "mount" because we are
     // passing the data manually, so mock the implementation once.
     jest
-      .spyOn(UserEntity.prototype, "componentDidMount")
+      .spyOn(UserHistory.prototype, "componentDidMount")
       .mockImplementationOnce((): any => {});
 
-    const wrapper = mount<UserEntity>(<UserEntity {...props} />);
+    const wrapper = mount<UserHistory>(<UserHistory {...props} />);
 
     wrapper.setState({ data: userArtistsProcessDataOutput, maxListens: 385 });
     wrapper.update();
@@ -34,7 +34,7 @@ describe("UserEntity Page", () => {
 
 describe("componentDidMount", () => {
   it("extracts range from the URL if present", async () => {
-    const wrapper = shallow<UserEntity>(<UserEntity {...props} />);
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
     const instance = wrapper.instance();
 
     delete window.location;
@@ -49,7 +49,7 @@ describe("componentDidMount", () => {
   });
 
   it("extracts page from the URL if present", async () => {
-    const wrapper = shallow<UserEntity>(<UserEntity {...props} />);
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
     const instance = wrapper.instance();
 
     delete window.location;
@@ -64,7 +64,7 @@ describe("componentDidMount", () => {
   });
 
   it("extracts entity from the URL if present", async () => {
-    const wrapper = shallow<UserEntity>(<UserEntity {...props} />);
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
     const instance = wrapper.instance();
 
     delete window.location;
@@ -80,8 +80,8 @@ describe("componentDidMount", () => {
 });
 
 describe("getData", () => {
-  it("calls getUserEntity with correct parameters", async () => {
-    const wrapper = shallow<UserEntity>(<UserEntity {...props} />);
+  it("calls getUserHistory with correct parameters", async () => {
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
     const instance = wrapper.instance();
 
     const spy = jest.spyOn(instance.APIService, "getUserEntity");
@@ -102,7 +102,7 @@ describe("getData", () => {
 
 describe("processData", () => {
   it("processes data correctly for top artists", () => {
-    const wrapper = shallow<UserEntity>(<UserEntity {...props} />);
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
     const instance = wrapper.instance();
 
     wrapper.setState({ entity: "artist" });
@@ -113,7 +113,7 @@ describe("processData", () => {
   });
 
   it("processes data correctly for top releases", () => {
-    const wrapper = shallow<UserEntity>(<UserEntity {...props} />);
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
     const instance = wrapper.instance();
 
     wrapper.setState({ entity: "release" });
@@ -126,7 +126,7 @@ describe("processData", () => {
 
 describe("changePage", () => {
   it("sets state correctly", async () => {
-    const wrapper = shallow<UserEntity>(<UserEntity {...props} />);
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
     const instance = wrapper.instance();
 
     const spy = jest.spyOn(instance.APIService, "getUserEntity");
@@ -146,7 +146,7 @@ describe("changePage", () => {
 
 describe("changeRange", () => {
   it("sets state correctly for artists", async () => {
-    const wrapper = shallow<UserEntity>(<UserEntity {...props} />);
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
     const instance = wrapper.instance();
 
     instance.getData = jest.fn().mockImplementationOnce(() => {
@@ -175,7 +175,7 @@ describe("changeRange", () => {
   });
 
   it("sets state correctly for releases", async () => {
-    const wrapper = shallow<UserEntity>(<UserEntity {...props} />);
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
     const instance = wrapper.instance();
 
     instance.getData = jest.fn().mockImplementationOnce(() => {
@@ -206,7 +206,7 @@ describe("changeRange", () => {
 
 describe("changeEntity", () => {
   it("sets state correctly for artists", async () => {
-    const wrapper = shallow<UserEntity>(<UserEntity {...props} />);
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
     const instance = wrapper.instance();
 
     instance.getData = jest.fn().mockImplementationOnce(() => {
@@ -239,7 +239,7 @@ describe("changeEntity", () => {
   });
 
   it("sets state correctly for releases", async () => {
-    const wrapper = shallow<UserEntity>(<UserEntity {...props} />);
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
     const instance = wrapper.instance();
 
     instance.getData = jest.fn().mockImplementationOnce(() => {

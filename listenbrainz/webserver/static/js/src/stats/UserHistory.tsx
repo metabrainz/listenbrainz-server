@@ -11,12 +11,12 @@ export type UserEntityData = Array<{
   count: number;
 }>;
 
-export type UserEntityProps = {
+export type UserHistoryProps = {
   user: ListenBrainzUser;
   apiUrl: string;
 };
 
-export type UserEntityState = {
+export type UserHistoryState = {
   data: UserEntityData;
   range: UserEntityAPIRange;
   entity: Entity;
@@ -27,15 +27,15 @@ export type UserEntityState = {
   startDate: Date;
 };
 
-export default class UserEntity extends React.Component<
-  UserEntityProps,
-  UserEntityState
+export default class UserHistory extends React.Component<
+  UserHistoryProps,
+  UserHistoryState
 > {
   APIService: APIService;
 
-  ROWS_PER_PAGE = 25; // Number of atists to be shown on each page
+  ROWS_PER_PAGE = 25; // Number of rows to be shown on each page
 
-  constructor(props: UserEntityProps) {
+  constructor(props: UserHistoryProps) {
     super(props);
 
     this.APIService = new APIService(
@@ -284,13 +284,9 @@ export default class UserEntity extends React.Component<
               Top
               <span className="dropdown">
                 <button
-                  className="dropdown-togle btn-transparent"
+                  className="dropdown-togle btn-transparent capitalize-bold"
                   data-toggle="dropdown"
                   type="button"
-                  style={{
-                    textTransform: "capitalize",
-                    fontWeight: "bold",
-                  }}
                 >
                   {entity}s
                   <span className="caret" />
@@ -319,13 +315,9 @@ export default class UserEntity extends React.Component<
               of {range !== "all_time" ? "the" : ""}
               <span className="dropdown">
                 <button
-                  className="dropdown-toggle btn-transparent"
+                  className="dropdown-toggle btn-transparent capitalize-bold"
                   data-toggle="dropdown"
                   type="button"
-                  style={{
-                    textTransform: "capitalize",
-                    fontWeight: "bold",
-                  }}
                 >
                   {`${range.replace(/_/g, " ")}`}
                   <span className="caret" />
@@ -442,7 +434,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const { user, api_url: apiUrl } = reactProps;
   ReactDOM.render(
     <ErrorBoundary>
-      <UserEntity apiUrl={apiUrl} user={user} />
+      <UserHistory apiUrl={apiUrl} user={user} />
     </ErrorBoundary>,
     domContainer
   );
