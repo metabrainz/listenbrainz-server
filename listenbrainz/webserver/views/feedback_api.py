@@ -98,24 +98,27 @@ def get_feedback_for_user(user_name):
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
-    if score is None:
-        feedback = db_feedback.get_feedback_by_user_id(user["id"])
-    else:
-        if score in [-1, 1]:
-            feedback = db_feedback.get_feedback_by_user_id_and_score(user["id"], score)
-        else:
+    args = {}
+    args["user_id"] = user["id"]
+    args["limit"] = count
+    args["offset"] = offset
+
+    if score:
+        if score not in [-1, 1]:
             log_raise_400("Score can have a value of 1 or -1.", request.args)
+        args["score"] = score
 
-    total_count = len(feedback)
-    feedback_list = feedback[offset:(offset+count)]
+    feedback = db_feedback.get_feedback_for_user(**args)
+    total_count = db_feedback.get_feedback_count_for_user(user["id"])
 
-    for i, fb in enumerate(feedback_list):
-        fb.user_id = user_name
-        feedback_list[i] = fb.dict()
+    for i, fb in enumerate(feedback):
+        fb.user_id = fb.user_name
+        del fb.user_name
+        feedback[i] = fb.dict()
 
     return jsonify({
-        "feedback": feedback_list,
-        "count": len(feedback_list),
+        "feedback": feedback,
+        "count": len(feedback),
         "total_count": total_count,
         "offset": offset
     })
@@ -129,6 +132,8 @@ def get_feedback_for_recording(recording_msid):
     Get feedback for recording with given ``recording_msid``. The format for the JSON returned
     is defined in our :ref:`feedback-json-doc`.
 
+    :param score: Optional, If 1 then returns the loved recordings, if -1 returns hated recordings.
+    :type score: ``int``
     :param count: Optional, number of feedback items to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
         Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`.
     :type count: ``int``
@@ -142,26 +147,34 @@ def get_feedback_for_recording(recording_msid):
     if not is_valid_uuid(recording_msid):
         log_raise_400("%s MSID format invalid." % recording_msid)
 
+    score = _parse_int_arg('score')
+
     offset = _get_non_negative_param('offset', default=0)
     count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
     count = min(count, MAX_ITEMS_PER_GET)
 
-    feedback = db_feedback.get_feedback_by_recording_msid(recording_msid)
+    args = {}
+    args["recording_msid"] = recording_msid
+    args["limit"] = count
+    args["offset"] = offset
 
-    total_count = len(feedback)
-    feedback_list = feedback[offset:(offset+count)]
+    if score:
+        if score not in [-1, 1]:
+            log_raise_400("Score can have a value of 1 or -1.", request.args)
+        args["score"] = score
 
-    user_id_list = [fb.user_id for fb in feedback_list]
-    user_name_list = db_user.get_users_in_order(user_id_list)
+    feedback = db_feedback.get_feedback_for_recording(**args)
+    total_count = db_feedback.get_feedback_count_for_recording(recording_msid)
 
-    for i, fb in enumerate(feedback_list):
-        fb.user_id = user_name_list[i]["musicbrainz_id"]
-        feedback_list[i] = fb.dict()
+    for i, fb in enumerate(feedback):
+        fb.user_id = fb.user_name
+        del fb.user_name
+        feedback[i] = fb.dict()
 
     return jsonify({
-        "feedback": feedback_list,
-        "count": len(feedback_list),
+        "feedback": feedback,
+        "count": len(feedback),
         "total_count": total_count,
         "offset": offset
     })
