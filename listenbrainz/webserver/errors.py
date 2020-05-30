@@ -23,6 +23,11 @@ class APIError(Exception):
         return self.message
 
 
+class APINoContent(APIError):
+    def __init__(self, message, payload=None):
+        super(APINoContent, self).__init__(message, 204, payload)
+
+
 class APINotFound(APIError):
     def __init__(self, message, payload=None):
         super(APINotFound, self).__init__(message, 404, payload)

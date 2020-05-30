@@ -190,7 +190,7 @@ describe("submitListens", () => {
   });
 });
 
-describe("getUserStats", () => {
+describe("getUserEntity", () => {
   beforeEach(() => {
     // Mock function for fetch
     window.fetch = jest.fn().mockImplementation(() => {
@@ -203,14 +203,14 @@ describe("getUserStats", () => {
   });
 
   it("calls fetch correctly when optional parameters are passed", async () => {
-    await apiService.getUserStats("foobar", "all_time", 10, 5);
+    await apiService.getUserEntity("foobar", "release", "all_time", 10, 5);
     expect(window.fetch).toHaveBeenCalledWith(
-      "foobar/1/stats/user/foobar/artists?offset=10&range=all_time&count=5"
+      "foobar/1/stats/user/foobar/releases?offset=10&range=all_time&count=5"
     );
   });
 
   it("calls fetch correctly when optional parameters are not passed", async () => {
-    await apiService.getUserStats("foobar");
+    await apiService.getUserEntity("foobar", "artist");
     expect(window.fetch).toHaveBeenCalledWith(
       "foobar/1/stats/user/foobar/artists?offset=0&range=all_time"
     );
@@ -224,7 +224,7 @@ describe("getUserStats", () => {
       });
     });
 
-    await expect(apiService.getUserStats("foobar")).rejects.toThrow(
+    await expect(apiService.getUserEntity("foobar", "artist")).rejects.toThrow(
       Error("Statistics for the user haven't been calculated yet.")
     );
   });
@@ -232,7 +232,7 @@ describe("getUserStats", () => {
   it("calls checkStatus once", async () => {
     apiService.checkStatus = jest.fn();
 
-    await apiService.getUserStats("foobar");
+    await apiService.getUserEntity("foobar", "release");
     expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
   });
 });
