@@ -65,11 +65,12 @@ def profile(user_name):
         raise BadRequest("try_harder must be an integer value 0 or greater: %s" % try_harder)
 
     (min_ts_per_user, max_ts_per_user) = db_conn.get_timestamps_for_user(user_name)
+
     if max_ts is None and min_ts is None:
         if max_ts_per_user:
-            max_ts = (max_ts_per_user + 1) or int(time.time())
+            max_ts = max_ts_per_user + 1
         else:
-            max_ts = None
+            max_ts = int(time.time())
 
     listens_missing = 0
     listens = []
