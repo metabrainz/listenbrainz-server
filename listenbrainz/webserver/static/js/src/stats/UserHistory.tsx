@@ -88,6 +88,7 @@ export default class UserHistory extends React.Component<
 
     try {
       const data = await this.getData(newPage, range, entity);
+      this.changeURL(newPage, range, entity);
       this.setState({
         data: this.processData(data, newPage),
         currPage: newPage,
@@ -132,6 +133,7 @@ export default class UserHistory extends React.Component<
       }
 
       data = await this.getData(page, newRange, entity);
+      this.changeURL(page, newRange, entity);
       await new Promise((resolve) =>
         this.setState(
           {
@@ -186,6 +188,7 @@ export default class UserHistory extends React.Component<
       }
 
       data = await this.getData(page, range, newEntity);
+      this.changeURL(page, range, newEntity);
       this.setState({
         data: this.processData(data, page, newEntity),
         entity: newEntity,
@@ -260,6 +263,18 @@ export default class UserHistory extends React.Component<
     this.setState(() => {
       throw error;
     });
+  };
+
+  changeURL = (
+    page: number,
+    range: UserEntityAPIRange,
+    entity: Entity
+  ): void => {
+    window.history.pushState(
+      null,
+      "",
+      `${window.location.origin}${window.location.pathname}?page=${page}&range=${range}&entity=${entity}`
+    );
   };
 
   render() {
