@@ -25,7 +25,7 @@ class TrainModelsTestCase(SparkTestCase):
     def test_train(self):
         training_data, validation_data, test_data = super().split_playcounts()
         best_model, model_metadata, best_model_metadata = train_models.train(training_data, validation_data,
-            validation_data.count(), self.ranks, self.lambdas, self.iterations)
+            validation_data.count(), self.ranks, self.lambdas, self.iterations, self.alpha)
         self.assertTrue(best_model)
         self.assertEqual(len(model_metadata), 1)
         self.assertEqual(model_metadata[0][0], best_model_metadata['model_id'])
@@ -52,7 +52,7 @@ class TrainModelsTestCase(SparkTestCase):
     def test_save_model(self):
         training_data, validation_data, test_data = super().split_playcounts()
         best_model, _, best_model_metadata = train_models.train(training_data, validation_data,
-            validation_data.count(), self.ranks, self.lambdas, self.iterations)
+            validation_data.count(), self.ranks, self.lambdas, self.iterations, self.alpha)
         model_save_path = os.path.join('/test/model', best_model_metadata['model_id'])
         train_models.save_model(model_save_path, best_model_metadata['model_id'], best_model)
         model_exist = utils.path_exists(model_save_path)

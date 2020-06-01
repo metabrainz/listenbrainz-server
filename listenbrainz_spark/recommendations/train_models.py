@@ -68,7 +68,7 @@ def preprocess_data(playcounts_df):
     training_data, validation_data, test_data = playcounts_df.rdd.map(parse_dataset).randomSplit([4, 1, 1], 45)
     return training_data, validation_data, test_data
 
-def train(training_data, validation_data, num_validation, ranks, lambdas, iterations):
+def train(training_data, validation_data, num_validation, ranks, lambdas, iterations, alpha):
     """ Train the data and get models as per given parameters i.e. ranks, lambdas and iterations.
 
         Args:
@@ -78,6 +78,7 @@ def train(training_data, validation_data, num_validation, ranks, lambdas, iterat
             ranks (list): Number of factors in ALS model.
             lambdas (list): Controls regularization.
             iterations (list): Number of iterations to run.
+            alpha (float): Baseline level of confidence weighting applied.
 
         Returns:
             best_model: Model with least RMSE value.
@@ -87,7 +88,7 @@ def train(training_data, validation_data, num_validation, ranks, lambdas, iterat
     best_model = None
     best_model_metadata = defaultdict(dict)
     model_metadata = []
-    alpha = 3.0
+
     for rank, lmbda, iteration in itertools.product(ranks, lambdas, iterations):
         t0 = time()
         model_id = 'listenbrainz-recommendation-model-{}'.format(uuid.uuid4())
@@ -162,7 +163,24 @@ def save_model(dest_path, model_id, model):
             str(err.java_exception)), exc_info=True)
         sys.exit(-1)
 
-def main():
+def main(ranks=None, lambdas=None, iterations=None, alpha=None):
+
+    if ranks is None:
+        current_app.logger.critical('model param "ranks" missing')
+        sys.exit(-1)
+
+    if lambdas is None:
+        current_app.logger.critical('model param "lambdas" missing')
+        sys.exit(-1)
+
+    if iterations is None:
+        current_app.logger.critical('model param "iterations" missing')
+        sys.exit(-1)
+
+    if alpha is None:
+        current_app.logger.critical('model param "alpha" missing')
+        sys.exit(-1)
+
     ti = time()
     time_ = defaultdict(dict)
     try:
@@ -197,8 +215,8 @@ def main():
 
     current_app.logger.info('Training models...')
     t0 = time()
-    model, model_metadata, best_model_metadata = train(training_data, validation_data, num_validation, config.RANKS,
-        config.LAMBDAS, config.ITERATIONS)
+    model, model_metadata, best_model_metadata = train(training_data, validation_data, num_validation, ranks,
+                                                       lambdas, iterations, alpha)
     models_training_time = '{:.2f}'.format((time() - t0) / 3600)
 
     try:

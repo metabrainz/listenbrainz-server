@@ -137,11 +137,26 @@ def request_dataframes(days):
     send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.create_dataframes', params=params))
 
 
+def parse_list(ctx, args):
+    return list(args)
+
+
 @cli.command(name='request_model')
-def request_model():
+@click.option("--rank", callback=parse_list, default=[5, 10], type=int, multiple=True, help="Number of hidden features.")
+@click.option("--itr", callback=parse_list, default=[5, 10], type=int, multiple=True, help="Number of iterations to run.")
+@click.option("--lmbda", callback=parse_list, default=[0.1, 10.0], type=float, multiple=True, help="Controls over fitting.")
+@click.option("--alpha", default=3.0, type=float, help="Baseline level of confidence weighting applied")
+def request_model(rank, itr, lmbda, alpha):
     """ Send the cluster a request to train the model.
     """
-    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.train_model'))
+    params = {
+        'ranks': rank,
+        'lambdas': lmbda,
+        'iterations': itr,
+        'alpha': alpha,
+    }
+
+    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.train_model', params=params))
 
 
 @cli.command(name='request_candidate_sets')
