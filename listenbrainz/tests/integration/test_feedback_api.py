@@ -190,7 +190,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(response.json["code"], 400)
 
     def test_recording_feedback_update_score(self):
-        """ 
+        """
         Test to check that score gets updated when a user changes feedback score for a recording_msid
         i.e love to hate or vice-versa
         """
@@ -239,7 +239,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(result[0].score, updated_feedback["score"])
 
     def test_recording_feedback_delete_when_score_is_zero(self):
-        """ 
+        """
         Test to check that the feedback record gets deleted when a user removes feedback for a recording_msid
         by submitting a score = 0
         """
@@ -298,7 +298,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
 
         feedback = data["feedback"]  # sorted in descending order of their creation
         self.assertEqual(len(feedback), 2)
-        
+
         self.assertEqual(feedback[0]["user_id"], self.user["musicbrainz_id"])
         self.assertEqual(feedback[0]["recording_msid"], inserted_rows[1]["recording_msid"])
         self.assertEqual(feedback[0]["score"], inserted_rows[1]["score"])
@@ -459,7 +459,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
 
         feedback = data["feedback"]  # sorted in descending order of their creation
         self.assertEqual(len(feedback), 2)
-        
+
         self.assertEqual(feedback[0]["user_id"], self.user2["musicbrainz_id"])
         self.assertEqual(feedback[0]["recording_msid"], rec_msid_1)
         self.assertEqual(feedback[0]["score"], inserted_rows[0]["score"])
