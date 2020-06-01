@@ -216,7 +216,7 @@ class DumpManagerTestCase(DatabaseTestCase):
         self.assertEqual(result.exit_code, -1)
         self.assertEqual(len(os.listdir(self.tempdir)), 0)
 
-        dump_id = db_dump.add_dump_entry(int(time.time()))
+        dump_id = db_dump.add_dump_entry(int(time.time()) - 5)
         sleep(1)
         self.listenstore.insert(generate_data(1, self.user_name, 1, 5))
         result = self.runner.invoke(dump_manager.create_incremental, ['--location', self.tempdir])
