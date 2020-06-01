@@ -132,7 +132,7 @@ def init_cache(host, port, namespace):
     cache.init(host=host, port=port, namespace=namespace)
 
 
-def create_channel_to_consume(connection, exchange, queue, callback_function):
+def create_channel_to_consume(connection, exchange, queue, callback_function, no_ack=False):
     """ Returns a newly created channel that can consume from the specified queue.
 
     Args:
@@ -148,7 +148,7 @@ def create_channel_to_consume(connection, exchange, queue, callback_function):
     ch.exchange_declare(exchange=exchange, exchange_type='fanout')
     ch.queue_declare(queue, durable=True)
     ch.queue_bind(exchange=exchange, queue=queue)
-    ch.basic_consume(callback_function, queue=queue, no_ack=False)
+    ch.basic_consume(callback_function, queue=queue, no_ack=no_ack)
     return ch
 
 

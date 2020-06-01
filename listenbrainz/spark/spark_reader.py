@@ -80,12 +80,6 @@ class SparkReader:
         current_app.logger.debug("Received a message, processing...")
         response = ujson.loads(body)
         self.process_response(response)
-        while True:
-            try:
-                self.incoming_ch.basic_ack(delivery_tag=method.delivery_tag)
-                break
-            except pika.exceptions.ConnectionClosed:
-                self.init_rabbitmq_connection()
         current_app.logger.debug("Done!")
 
     def start(self):
@@ -101,6 +95,7 @@ class SparkReader:
                     exchange=current_app.config['SPARK_RESULT_EXCHANGE'],
                     queue=current_app.config['SPARK_RESULT_QUEUE'],
                     callback_function=self.callback,
+                    no_ack=True,
                 )
                 self.incoming_ch.basic_qos(prefetch_count=1)
                 current_app.logger.info('Spark consumer started!')
