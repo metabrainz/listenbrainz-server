@@ -6,7 +6,7 @@ Flask-SQLAlchemy == 2.4.1
 Flask-UUID == 0.2
 flask-socketio == 4.3.0
 click == 7.1.2
-Fabric == 1.10.2
+Fabric == 2.5.0
 jsonschema == 3.2.0
 rauth == 0.7.3
 setproctitle == 1.1.10
