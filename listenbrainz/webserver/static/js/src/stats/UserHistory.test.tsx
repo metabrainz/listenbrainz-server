@@ -142,6 +142,23 @@ describe("changePage", () => {
     expect(wrapper.state("data")).toEqual(userArtistsProcessDataOutput);
     expect(wrapper.state("currPage")).toBe(2);
   });
+
+  it("calls changeURL with correct parameters", async () => {
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
+    const instance = wrapper.instance();
+
+    const spy = jest.spyOn(instance.APIService, "getUserEntity");
+    spy.mockImplementation((): any => {
+      return Promise.resolve(userArtistsResponse);
+    });
+    instance.processData = jest.fn().mockImplementationOnce(() => {
+      return userArtistsProcessDataOutput;
+    });
+    instance.changeURL = jest.fn();
+    await instance.changePage(2);
+
+    expect(instance.changeURL).toHaveBeenCalledWith(2, "all_time", "release");
+  });
 });
 
 describe("changeRange", () => {
@@ -201,6 +218,27 @@ describe("changeRange", () => {
     expect(wrapper.state("totalPages")).toBe(7);
     expect(wrapper.state("maxListens")).toBe(26);
     expect(wrapper.state("entityCount")).toBe(165);
+  });
+
+  it("calls changeURL with correct parameters", async () => {
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
+    const instance = wrapper.instance();
+
+    instance.getData = jest.fn().mockImplementationOnce(() => {
+      return Promise.resolve(userReleasesResponse);
+    });
+    const spy = jest.spyOn(instance.APIService, "getUserEntity");
+    spy.mockImplementation((): any => {
+      return Promise.resolve(userReleasesResponse);
+    });
+    instance.processData = jest.fn().mockImplementationOnce(() => {
+      return userReleasesProcessDataOutput;
+    });
+    instance.changeURL = jest.fn();
+    wrapper.setState({ entity: "release" });
+    await instance.changeRange("all_time");
+
+    expect(instance.changeURL).toHaveBeenCalledWith(1, "all_time", "release");
   });
 });
 
@@ -269,5 +307,48 @@ describe("changeEntity", () => {
     expect(wrapper.state("totalPages")).toBe(7);
     expect(wrapper.state("maxListens")).toBe(26);
     expect(wrapper.state("entityCount")).toBe(165);
+  });
+
+  it("calls changeURL with correct parameters", async () => {
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
+    const instance = wrapper.instance();
+
+    instance.getData = jest.fn().mockImplementationOnce(() => {
+      return Promise.resolve(userReleasesResponse);
+    });
+    const spy = jest.spyOn(instance.APIService, "getUserEntity");
+    spy.mockImplementation((): any => {
+      return Promise.resolve(userReleasesResponse);
+    });
+    instance.processData = jest.fn().mockImplementationOnce(() => {
+      return userReleasesProcessDataOutput;
+    });
+    instance.changeURL = jest.fn();
+    wrapper.setState({ range: "all_time" });
+    await instance.changeEntity("release");
+
+    expect(instance.changeURL).toHaveBeenCalledWith(1, "all_time", "release");
+  });
+});
+
+describe("changeURL", () => {
+  it("changes the URL", () => {
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
+    const instance = wrapper.instance();
+
+    delete window.location;
+    window.location = {
+      origin: "https://foobar/",
+      pathname: "user/bazfoo/history",
+    } as Window["location"];
+    const spy = jest.spyOn(window.history, "pushState");
+    spy.mockImplementationOnce(() => {});
+
+    instance.changeURL(2, "all_time", "release");
+    expect(spy).toHaveBeenCalledWith(
+      null,
+      "",
+      "https://foobar/user/bazfoo/history?page=2&range=all_time&entity=release"
+    );
   });
 });
