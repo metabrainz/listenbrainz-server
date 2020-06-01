@@ -95,7 +95,8 @@ def connect_to_rabbitmq(username, password,
                         connection_type=pika.BlockingConnection,
                         credentials_type=pika.PlainCredentials,
                         error_logger=print,
-                        error_retry_delay=3):
+                        error_retry_delay=3,
+                        heartbeat=None):
     """Connects to RabbitMQ
 
     Args:
@@ -116,6 +117,7 @@ def connect_to_rabbitmq(username, password,
                 port=port,
                 virtual_host=virtual_host,
                 credentials=credentials,
+                heartbeat=heartbeat,
             )
             return connection_type(connection_parameters)
         except Exception as err:
