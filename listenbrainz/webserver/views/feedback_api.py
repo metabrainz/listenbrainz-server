@@ -98,17 +98,11 @@ def get_feedback_for_user(user_name):
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
-    args = {}
-    args["user_id"] = user["id"]
-    args["limit"] = count
-    args["offset"] = offset
-
     if score:
         if score not in [-1, 1]:
             log_raise_400("Score can have a value of 1 or -1.", request.args)
-        args["score"] = score
 
-    feedback = db_feedback.get_feedback_for_user(**args)
+    feedback = db_feedback.get_feedback_for_user(user_id=user["id"], limit=count, offset=offset, score=score)
     total_count = db_feedback.get_feedback_count_for_user(user["id"])
 
     for i, fb in enumerate(feedback):
@@ -154,17 +148,11 @@ def get_feedback_for_recording(recording_msid):
 
     count = min(count, MAX_ITEMS_PER_GET)
 
-    args = {}
-    args["recording_msid"] = recording_msid
-    args["limit"] = count
-    args["offset"] = offset
-
     if score:
         if score not in [-1, 1]:
             log_raise_400("Score can have a value of 1 or -1.", request.args)
-        args["score"] = score
 
-    feedback = db_feedback.get_feedback_for_recording(**args)
+    feedback = db_feedback.get_feedback_for_recording(recording_msid=recording_msid, limit=count, offset=offset, score=score)
     total_count = db_feedback.get_feedback_count_for_recording(recording_msid)
 
     for i, fb in enumerate(feedback):
