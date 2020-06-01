@@ -57,7 +57,10 @@ class ArtistTestCase(SparkTestCase):
         for user_name, user_artists in expected.items():
             user_artists.sort(key=lambda artist: artist['listen_count'], reverse=True)
 
-        received = artist_stats.get_artists('test_view')
+        data = artist_stats.get_artists('test_view')
+        received = defaultdict(list)
+        for entry in data:
+            _dict = entry.asDict(recursive=True)
+            received[_dict['user_name']] = _dict['artists']
 
         self.assertDictEqual(received, expected)
-
