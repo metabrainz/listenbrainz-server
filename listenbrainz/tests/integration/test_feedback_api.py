@@ -10,7 +10,8 @@ from listenbrainz.tests.integration import IntegrationTestCase
 class FeedbackAPITestCase(IntegrationTestCase):
     def setUp(self):
         super(FeedbackAPITestCase, self).setUp()
-        self.user = db_user.get_or_create(1, 'testuserpleaseignore')
+        self.user = db_user.get_or_create(1, "testuserpleaseignore")
+        self.user2 = db_user.get_or_create(2, "anothertestuserpleaseignore")
 
     def insert_test_data(self, user_id):
         sample_feedback = [
@@ -42,13 +43,13 @@ class FeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for('feedback_api_v1.recording_feedback'),
+            url_for("feedback_api_v1.recording_feedback"),
             data=json.dumps(feedback),
-            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
-            content_type='application/json'
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
         )
         self.assert200(response)
-        self.assertEqual(response.json['status'], 'ok')
+        self.assertEqual(response.json["status"], "ok")
 
     def test_recording_feedback_unauthorised_submission(self):
         """ Test for checking that unauthorized submissions return 401 """
@@ -59,19 +60,19 @@ class FeedbackAPITestCase(IntegrationTestCase):
 
         # request with no authorization header
         response = self.client.post(
-            url_for('feedback_api_v1.recording_feedback'),
+            url_for("feedback_api_v1.recording_feedback"),
             data=json.dumps(feedback),
-            content_type='application/json'
+            content_type="application/json"
         )
         self.assert401(response)
         self.assertEqual(response.json["code"], 401)
 
         # request with invalid authorization header
         response = self.client.post(
-            url_for('feedback_api_v1.recording_feedback'),
+            url_for("feedback_api_v1.recording_feedback"),
             data=json.dumps(feedback),
-            headers={'Authorization': 'Token testtokenplsignore'},
-            content_type='application/json'
+            headers={"Authorization": "Token testtokenplsignore"},
+            content_type="application/json"
         )
         self.assert401(response)
         self.assertEqual(response.json["code"], 401)
@@ -85,10 +86,10 @@ class FeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for('feedback_api_v1.recording_feedback'),
+            url_for("feedback_api_v1.recording_feedback"),
             data=json.dumps(incomplete_feedback),
-            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
-            content_type='application/json'
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
         )
         self.assert400(response)
         self.assertEqual(response.json["error"], "JSON document must contain recording_msid and "
@@ -100,10 +101,10 @@ class FeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for('feedback_api_v1.recording_feedback'),
+            url_for("feedback_api_v1.recording_feedback"),
             data=json.dumps(incomplete_feedback),
-            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
-            content_type='application/json'
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
         )
         self.assert400(response)
         self.assertEqual(response.json["error"], "JSON document must contain recording_msid and "
@@ -113,10 +114,10 @@ class FeedbackAPITestCase(IntegrationTestCase):
         empty_feedback = {}
 
         response = self.client.post(
-            url_for('feedback_api_v1.recording_feedback'),
+            url_for("feedback_api_v1.recording_feedback"),
             data=json.dumps(empty_feedback),
-            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
-            content_type='application/json'
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
         )
         self.assert400(response)
         self.assertEqual(response.json["error"], "JSON document must contain recording_msid and "
@@ -131,10 +132,10 @@ class FeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for('feedback_api_v1.recording_feedback'),
+            url_for("feedback_api_v1.recording_feedback"),
             data=json.dumps(invalid_feedback),
-            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
-            content_type='application/json'
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
         )
         self.assert400(response)
         self.assertEqual(response.json["error"], "JSON document may only contain recording_msid and "
@@ -150,10 +151,10 @@ class FeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for('feedback_api_v1.recording_feedback'),
+            url_for("feedback_api_v1.recording_feedback"),
             data=json.dumps(invalid_feedback),
-            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
-            content_type='application/json'
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
         )
         self.assert400(response)
         self.assertEqual(response.json["code"], 400)
@@ -165,10 +166,10 @@ class FeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for('feedback_api_v1.recording_feedback'),
+            url_for("feedback_api_v1.recording_feedback"),
             data=json.dumps(invalid_feedback),
-            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
-            content_type='application/json'
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
         )
         self.assert400(response)
         self.assertEqual(response.json["code"], 400)
@@ -180,10 +181,10 @@ class FeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for('feedback_api_v1.recording_feedback'),
+            url_for("feedback_api_v1.recording_feedback"),
             data=json.dumps(invalid_feedback),
-            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
-            content_type='application/json'
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
         )
         self.assert400(response)
         self.assertEqual(response.json["code"], 400)
@@ -201,10 +202,10 @@ class FeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for('feedback_api_v1.recording_feedback'),
+            url_for("feedback_api_v1.recording_feedback"),
             data=json.dumps(feedback),
-            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
-            content_type='application/json'
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
         )
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
@@ -222,10 +223,10 @@ class FeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for('feedback_api_v1.recording_feedback'),
+            url_for("feedback_api_v1.recording_feedback"),
             data=json.dumps(updated_feedback),
-            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
-            content_type='application/json'
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
         )
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
@@ -250,10 +251,10 @@ class FeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for('feedback_api_v1.recording_feedback'),
+            url_for("feedback_api_v1.recording_feedback"),
             data=json.dumps(feedback),
-            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
-            content_type='application/json'
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
         )
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
@@ -271,10 +272,10 @@ class FeedbackAPITestCase(IntegrationTestCase):
         }
 
         response = self.client.post(
-            url_for('feedback_api_v1.recording_feedback'),
+            url_for("feedback_api_v1.recording_feedback"),
             data=json.dumps(updated_feedback),
-            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
-            content_type='application/json'
+            headers={"Authorization": "Token {}".format(self.user["auth_token"])},
+            content_type="application/json"
         )
         self.assert200(response)
         self.assertEqual(response.json["status"], "ok")
@@ -287,16 +288,16 @@ class FeedbackAPITestCase(IntegrationTestCase):
         """ Test to make sure valid response is received """
         inserted_rows = self.insert_test_data(self.user["id"])
 
-        response = self.client.get(url_for('feedback_api_v1.get_feedback_for_user', user_name=self.user['musicbrainz_id']))
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_user", user_name=self.user["musicbrainz_id"]))
         self.assert200(response)
         data = json.loads(response.data)
 
-        self.assertEqual(data["count"], len(inserted_rows))
+        self.assertEqual(data["count"], 2)
         self.assertEqual(data["total_count"], len(inserted_rows))
         self.assertEqual(data["offset"], 0)
 
         feedback = data["feedback"]  # sorted in descending order of their creation
-        self.assertEqual(len(feedback), len(inserted_rows))
+        self.assertEqual(len(feedback), 2)
         
         self.assertEqual(feedback[0]["user_id"], self.user["musicbrainz_id"])
         self.assertEqual(feedback[0]["recording_msid"], inserted_rows[1]["recording_msid"])
@@ -308,17 +309,17 @@ class FeedbackAPITestCase(IntegrationTestCase):
 
     def test_get_feedback_for_user_invalid_user(self):
         """ Test to make sure that the API sends 404 if user does not exist. """
-        response = self.client.get(url_for('stats_api_v1.get_artist', user_name='nouser'))
+        response = self.client.get(url_for("stats_api_v1.get_artist", user_name="nouser"))
         self.assert404(response)
-        self.assertEqual(response.json['error'], 'Cannot find user: nouser')
+        self.assertEqual(response.json["error"], "Cannot find user: nouser")
 
     def test_get_feedback_for_user_with_score_param(self):
         """ Test to make sure valid response is received when score param is passed """
         inserted_rows = self.insert_test_data(self.user["id"])
 
         # pass score = 1
-        response = self.client.get(url_for('feedback_api_v1.get_feedback_for_user',
-                                   user_name=self.user['musicbrainz_id']), query_string={'score': 1})
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_user",
+                                   user_name=self.user["musicbrainz_id"]), query_string={"score": 1})
         self.assert200(response)
         data = json.loads(response.data)
 
@@ -334,8 +335,8 @@ class FeedbackAPITestCase(IntegrationTestCase):
         self.assertEqual(feedback[0]["score"], 1)
 
         # pass score = -1
-        response = self.client.get(url_for('feedback_api_v1.get_feedback_for_user',
-                                   user_name=self.user['musicbrainz_id']), query_string={'score': -1})
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_user",
+                                   user_name=self.user["musicbrainz_id"]), query_string={"score": -1})
         self.assert200(response)
         data = json.loads(response.data)
 
@@ -355,24 +356,24 @@ class FeedbackAPITestCase(IntegrationTestCase):
         inserted_rows = self.insert_test_data(self.user["id"])
 
         # pass non-int value to score
-        response = self.client.get(url_for('feedback_api_v1.get_feedback_for_user',
-                                   user_name=self.user['musicbrainz_id']), query_string={'score': "invalid_score"})
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_user",
+                                   user_name=self.user["musicbrainz_id"]), query_string={"score": "invalid_score"})
         self.assert400(response)
-        self.assertEqual(response.json['error'], "Invalid score argument: invalid_score")
+        self.assertEqual(response.json["error"], "Invalid score argument: invalid_score")
 
         # pass invalid int value to score
-        response = self.client.get(url_for('feedback_api_v1.get_feedback_for_user',
-                                   user_name=self.user['musicbrainz_id']), query_string={'score': 10})
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_user",
+                                   user_name=self.user["musicbrainz_id"]), query_string={"score": 10})
         self.assert400(response)
-        self.assertEqual(response.json['error'], "Score can have a value of 1 or -1.")
+        self.assertEqual(response.json["error"], "Score can have a value of 1 or -1.")
 
     def test_get_feedback_for_user_with_count_param(self):
         """ Test to make sure valid response is received when count param is passed """
         inserted_rows = self.insert_test_data(self.user["id"])
 
         # pass count = 1
-        response = self.client.get(url_for('feedback_api_v1.get_feedback_for_user',
-                                   user_name=self.user['musicbrainz_id']), query_string={'count': 1})
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_user",
+                                   user_name=self.user["musicbrainz_id"]), query_string={"count": 1})
         self.assert200(response)
         data = json.loads(response.data)
 
@@ -392,24 +393,24 @@ class FeedbackAPITestCase(IntegrationTestCase):
         inserted_rows = self.insert_test_data(self.user["id"])
 
         # pass non-int value to count
-        response = self.client.get(url_for('feedback_api_v1.get_feedback_for_user',
-                                   user_name=self.user['musicbrainz_id']), query_string={'count': "invalid_count"})
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_user",
+                                   user_name=self.user["musicbrainz_id"]), query_string={"count": "invalid_count"})
         self.assert400(response)
-        self.assertEqual(response.json['error'], "'count' should be a non-negative integer")
+        self.assertEqual(response.json["error"], "'count' should be a non-negative integer")
 
         # pass negative int value to count
-        response = self.client.get(url_for('feedback_api_v1.get_feedback_for_user',
-                                   user_name=self.user['musicbrainz_id']), query_string={'count': -1})
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_user",
+                                   user_name=self.user["musicbrainz_id"]), query_string={"count": -1})
         self.assert400(response)
-        self.assertEqual(response.json['error'], "'count' should be a non-negative integer")
+        self.assertEqual(response.json["error"], "'count' should be a non-negative integer")
 
     def test_get_feedback_for_user_with_offset_param(self):
         """ Test to make sure valid response is received when offset param is passed """
         inserted_rows = self.insert_test_data(self.user["id"])
 
         # pass count = 1
-        response = self.client.get(url_for('feedback_api_v1.get_feedback_for_user',
-                                   user_name=self.user['musicbrainz_id']), query_string={'offset': 1})
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_user",
+                                   user_name=self.user["musicbrainz_id"]), query_string={"offset": 1})
         self.assert200(response)
         data = json.loads(response.data)
 
@@ -429,13 +430,192 @@ class FeedbackAPITestCase(IntegrationTestCase):
         inserted_rows = self.insert_test_data(self.user["id"])
 
         # pass non-int value to offset
-        response = self.client.get(url_for('feedback_api_v1.get_feedback_for_user',
-                                   user_name=self.user['musicbrainz_id']), query_string={'offset': "invalid_offset"})
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_user",
+                                   user_name=self.user["musicbrainz_id"]), query_string={"offset": "invalid_offset"})
         self.assert400(response)
-        self.assertEqual(response.json['error'], "'offset' should be a non-negative integer")
+        self.assertEqual(response.json["error"], "'offset' should be a non-negative integer")
 
         # pass negative int value to offset
-        response = self.client.get(url_for('feedback_api_v1.get_feedback_for_user',
-                                   user_name=self.user['musicbrainz_id']), query_string={'offset': -1})
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_user",
+                                   user_name=self.user["musicbrainz_id"]), query_string={"offset": -1})
         self.assert400(response)
-        self.assertEqual(response.json['error'], "'offset' should be a non-negative integer")
+        self.assertEqual(response.json["error"], "'offset' should be a non-negative integer")
+
+    def test_get_feedback_for_recording(self):
+        """ Test to make sure valid response is received """
+        inserted_rows = self.insert_test_data(self.user["id"])
+        inserted_rows = self.insert_test_data(self.user2["id"])
+
+        rec_msid_1 = inserted_rows[0]["recording_msid"]
+
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_recording",
+                                           recording_msid=rec_msid_1))
+        self.assert200(response)
+        data = json.loads(response.data)
+
+        self.assertEqual(data["count"], 2)
+        self.assertEqual(data["total_count"], len(inserted_rows))
+        self.assertEqual(data["offset"], 0)
+
+        feedback = data["feedback"]  # sorted in descending order of their creation
+        self.assertEqual(len(feedback), 2)
+        
+        self.assertEqual(feedback[0]["user_id"], self.user2["musicbrainz_id"])
+        self.assertEqual(feedback[0]["recording_msid"], rec_msid_1)
+        self.assertEqual(feedback[0]["score"], inserted_rows[0]["score"])
+
+        self.assertEqual(feedback[1]["user_id"], self.user["musicbrainz_id"])
+        self.assertEqual(feedback[1]["recording_msid"], rec_msid_1)
+        self.assertEqual(feedback[0]["score"], inserted_rows[0]["score"])
+
+    def test_get_feedback_for_recording_invalid_recording_msid(self):
+        """ Test to make sure that the API sends 404 if recording_msid is invalid. """
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_recording", recording_msid="invalid_recording_msid"))
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "invalid_recording_msid MSID format invalid.")
+
+    def test_get_feedback_for_recording_with_score_param(self):
+        """ Test to make sure valid response is received when score param is passed """
+        inserted_rows = self.insert_test_data(self.user["id"])
+        inserted_rows = self.insert_test_data(self.user2["id"])
+
+        rec_msid_1 = inserted_rows[0]["recording_msid"]
+
+        # pass score = 1
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_recording",
+                                           recording_msid=rec_msid_1), query_string={"score": 1})
+        self.assert200(response)
+        data = json.loads(response.data)
+
+        self.assertEqual(data["count"], 2)
+        self.assertEqual(data["total_count"], len(inserted_rows))
+        self.assertEqual(data["offset"], 0)
+
+        feedback = data["feedback"]  # sorted in descending order of their creation
+        self.assertEqual(len(feedback), 2)
+
+        self.assertEqual(feedback[0]["user_id"], self.user2["musicbrainz_id"])
+        self.assertEqual(feedback[0]["recording_msid"], rec_msid_1)
+        self.assertEqual(feedback[0]["score"], inserted_rows[0]["score"])
+
+        self.assertEqual(feedback[1]["user_id"], self.user["musicbrainz_id"])
+        self.assertEqual(feedback[1]["recording_msid"], rec_msid_1)
+        self.assertEqual(feedback[0]["score"], inserted_rows[0]["score"])
+
+        # pass score = -1
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_recording",
+                                           recording_msid=rec_msid_1), query_string={"score": -1})
+        self.assert200(response)
+        data = json.loads(response.data)
+
+        self.assertEqual(data["count"], 0)
+        self.assertEqual(data["total_count"], len(inserted_rows))
+        self.assertEqual(data["offset"], 0)
+
+        feedback = data["feedback"]  # sorted in descending order of their creation
+        self.assertEqual(len(feedback), 0)
+
+    def test_get_feedback_for_recording_with_invalid_score_param(self):
+        """ Test to make sure 400 response is received if score argument is not valid """
+        inserted_rows = self.insert_test_data(self.user["id"])
+        inserted_rows = self.insert_test_data(self.user2["id"])
+
+        rec_msid_1 = inserted_rows[0]["recording_msid"]
+
+        # pass non-int value to score
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_recording",
+                                           recording_msid=rec_msid_1), query_string={"score": "invalid_score"})
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "Invalid score argument: invalid_score")
+
+        # pass invalid int value to score
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_recording",
+                                           recording_msid=rec_msid_1), query_string={"score": 10})
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "Score can have a value of 1 or -1.")
+
+    def test_get_feedback_for_recording_with_count_param(self):
+        """ Test to make sure valid response is received when count param is passed """
+        inserted_rows = self.insert_test_data(self.user["id"])
+        inserted_rows = self.insert_test_data(self.user2["id"])
+
+        rec_msid_1 = inserted_rows[0]["recording_msid"]
+
+        # pass count = 1
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_recording",
+                                           recording_msid=rec_msid_1), query_string={"count": 1})
+        self.assert200(response)
+        data = json.loads(response.data)
+
+        self.assertEqual(data["count"], 1)
+        self.assertEqual(data["total_count"], len(inserted_rows))
+        self.assertEqual(data["offset"], 0)
+
+        feedback = data["feedback"]  # sorted in descending order of their creation
+        self.assertEqual(len(feedback), 1)
+
+        self.assertEqual(feedback[0]["user_id"], self.user2["musicbrainz_id"])
+        self.assertEqual(feedback[0]["recording_msid"], rec_msid_1)
+        self.assertEqual(feedback[0]["score"], inserted_rows[0]["score"])
+
+    def test_get_feedback_for_recording_with_invalid_count_param(self):
+        """ Test to make sure 400 response is received if count argument is not valid """
+        inserted_rows = self.insert_test_data(self.user["id"])
+        inserted_rows = self.insert_test_data(self.user2["id"])
+
+        rec_msid_1 = inserted_rows[0]["recording_msid"]
+
+        # pass non-int value to count
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_recording",
+                                           recording_msid=rec_msid_1), query_string={"count": "invalid_count"})
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "'count' should be a non-negative integer")
+
+        # pass negative int value to count
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_recording",
+                                           recording_msid=rec_msid_1), query_string={"count": -1})
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "'count' should be a non-negative integer")
+
+    def test_get_feedback_for_recording_with_offset_param(self):
+        """ Test to make sure valid response is received when offset param is passed """
+        inserted_rows = self.insert_test_data(self.user["id"])
+        inserted_rows = self.insert_test_data(self.user2["id"])
+
+        rec_msid_1 = inserted_rows[0]["recording_msid"]
+
+        # pass count = 1
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_recording",
+                                           recording_msid=rec_msid_1), query_string={"offset": 1})
+        self.assert200(response)
+        data = json.loads(response.data)
+
+        self.assertEqual(data["count"], 1)
+        self.assertEqual(data["total_count"], len(inserted_rows))
+        self.assertEqual(data["offset"], 1)
+
+        feedback = data["feedback"]  # sorted in descending order of their creation
+        self.assertEqual(len(feedback), 1)
+
+        self.assertEqual(feedback[0]["user_id"], self.user["musicbrainz_id"])
+        self.assertEqual(feedback[0]["recording_msid"], rec_msid_1)
+        self.assertEqual(feedback[0]["score"], inserted_rows[0]["score"])
+
+    def test_get_feedback_for_recording_with_invalid_offset_param(self):
+        """ Test to make sure 400 response is received if offset argument is not valid """
+        inserted_rows = self.insert_test_data(self.user["id"])
+        inserted_rows = self.insert_test_data(self.user2["id"])
+
+        rec_msid_1 = inserted_rows[0]["recording_msid"]
+
+        # pass non-int value to offset
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_recording",
+                                           recording_msid=rec_msid_1), query_string={"offset": "invalid_offset"})
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "'offset' should be a non-negative integer")
+
+        # pass negative int value to offset
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_recording",
+                                           recording_msid=rec_msid_1), query_string={"offset": -1})
+        self.assert400(response)
+        self.assertEqual(response.json["error"], "'offset' should be a non-negative integer")
