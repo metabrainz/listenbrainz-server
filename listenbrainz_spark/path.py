@@ -38,6 +38,8 @@ INDEX = MODEL_DIR + '/' + 'index.parquet'
 MBID_MSID_MAPPING = os.path.join('/', 'mapping', 'msid_mbid_mapping.parquet')
 # Absolute path to mapped listens.
 MAPPED_LISTENS = DATAFRAME_DIR + '/' + 'mapped_listens_df.parquet'
+# Absolute path to save dataframe metadata
+DATAFRAME_METADATA = DATAFRAME_DIR + '/' + 'dataframe_metadata.parquet'
 
 # Path to files downloaded from FTP.
 FTP_FILES_PATH = '/rec/listenbrainz_spark'

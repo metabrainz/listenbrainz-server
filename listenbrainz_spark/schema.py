@@ -77,6 +77,20 @@ artist_relation_schema =[
     StructField('score', FloatType(), nullable=False),
 ]
 
+dataframe_metadata_schema = [
+    StructField('dataframe_created', TimestampType(), nullable=False), # Timestamp when dataframes are created and saved in HDFS.
+    StructField('dataframe_id', StringType(), nullable=False), # dataframe id or identification string of dataframe.
+    # Timestamp from when listens have been used to train, validate and test the model.
+    StructField('from_date', TimestampType(), nullable=False),
+    # Number of listens recorded in a given time frame (between from_date and to_date, both inclusive).
+    StructField('listens_count', IntegerType(), nullable=False),
+    StructField('playcounts_count', IntegerType(), nullable=False), # Summation of training data, validation data and test data.
+    StructField('recordings_count', IntegerType(), nullable=False), # Number of distinct recordings heard in a given time frame.
+    # Timestamp till when listens have been used to train, validate and test the model.
+    StructField('to_date', TimestampType(), nullable=False),
+    StructField('users_count', IntegerType(), nullable=False), # Number of users active in a given time frame.
+]
+
 # The field names of the schema need to be sorted, otherwise we get weird
 # errors due to type mismatches when creating DataFrames using the schema
 # Although, we try to keep it sorted in the actual definition itself, we
@@ -85,6 +99,7 @@ listen_schema = StructType(sorted(listen_schema, key=lambda field: field.name))
 model_metadata_schema = StructType(sorted(model_metadata_schema, key=lambda field: field.name))
 msid_mbid_mapping_schema = StructType(sorted(msid_mbid_mapping_schema, key=lambda field: field.name))
 artist_relation_schema = StructType(sorted(artist_relation_schema, key=lambda field: field.name))
+dataframe_metadata_schema = StructType(sorted(dataframe_metadata_schema, key=lambda field: field.name))
 
 def convert_listen_to_row(listen):
     """ Convert a listen to a pyspark.sql.Row object.
@@ -185,4 +200,25 @@ def convert_mapping_to_row(mapping):
         msb_recording_name_matchable=mapping.get('msb_recording_name_matchable'),
         msb_release_name=mapping.get('msb_release_name'),
         msb_release_name_matchable=mapping.get('msb_release_name_matchable'),
+    )
+
+
+def convert_dataframe_metadata_to_row(meta):
+    """ Convert dataframe metadata to a pyspark.sql.Row object.
+
+        Args:
+            meta (dict): a single dictionary representing model metadata.
+
+        Returns:
+            pyspark.sql.Row object - a Spark SQL Row based on the defined dataframe metadata schema.
+    """
+    return Row(
+        dataframe_created=datetime.utcnow(),
+        dataframe_id=meta.get('dataframe_id'),
+        from_date=meta.get('from_date'),
+        listens_count=meta.get('listens_count'),
+        playcounts_count=meta.get('playcounts_count'),
+        recordings_count=meta.get('recordings_count'),
+        to_date=meta.get('to_date'),
+        users_count=meta.get('users_count'),
     )

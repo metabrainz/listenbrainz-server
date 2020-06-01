@@ -167,3 +167,16 @@ class SparkTestCase(unittest.TestCase):
                 file_name: the name of the data file
         """
         return os.path.join(TEST_DATA_PATH, file_name)
+
+    @classmethod
+    def get_dataframe_metadata(cls, df_id):
+        metadata = {
+            'dataframe_id': df_id,
+            'from_date': datetime.utcnow(),
+            'listens_count': 100,
+            'playcounts_count': 100,
+            'recordings_count': 100,
+            'to_date': datetime.utcnow(),
+            'users_count': 100,
+        }
+        return metadata
