@@ -68,6 +68,7 @@ def preprocess_data(playcounts_df):
     training_data, validation_data, test_data = playcounts_df.rdd.map(parse_dataset).randomSplit([4, 1, 1], 45)
     return training_data, validation_data, test_data
 
+
 def train(training_data, validation_data, num_validation, ranks, lambdas, iterations, alpha):
     """ Train the data and get models as per given parameters i.e. ranks, lambdas and iterations.
 
@@ -162,6 +163,7 @@ def save_model(dest_path, model_id, model):
         current_app.logger.error('Unable to save best model "{}"\n{}. Aborting...'.format(model_id,
             str(err.java_exception)), exc_info=True)
         sys.exit(-1)
+
 
 def main(ranks=None, lambdas=None, iterations=None, alpha=None):
 

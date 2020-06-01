@@ -95,9 +95,9 @@ class RequestManageTestCase(unittest.TestCase):
         message = {
             'query': 'cf_recording.recommendations.train_model',
             'params': {
-                'ranks': [1,2],
+                'ranks': [1, 2],
                 'lambdas': [2.0, 3.0],
-                'iterations': [2,3],
+                'iterations': [2, 3],
                 'alpha': 3.0,
             }
         }
