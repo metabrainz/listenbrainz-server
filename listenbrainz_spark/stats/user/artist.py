@@ -1,5 +1,5 @@
 from listenbrainz_spark.stats import run_query
-from pyspark.sql.functions import collect_list, struct
+from pyspark.sql.functions import collect_list, sort_array, struct
 
 
 def get_artists(table):
@@ -10,19 +10,15 @@ def get_artists(table):
             table (str): name of the temporary table.
 
         Returns:
-            iterator (iter): an iterator over result, the structure 
-                of the result is as follows:
+            iterator (iter): an iterator over result
                     {
-                        user1: [
-                            {
-                                artist_name: "artist1",
-                                artist_msid: "msid1",
-                                artist_mbids: ["mbid1"],
-                                listen_count: 10
-                            },
-                            ...
-                        ],
-                        ...
+                        user1: [{
+                            'artist_name': str,
+                            'artist_msid': str,
+                            'artist_mbids': list(str),
+                            'listen_count': int
+                        }],
+                        user2: [{...}],
                     }
     """
 
@@ -31,16 +27,19 @@ def get_artists(table):
                  , artist_name
                  , artist_msid
                  , artist_mbids
-                 , count(artist_name) as listen_count 
+                 , count(artist_name) as listen_count
               FROM {table}
           GROUP BY user_name
                  , artist_name
                  , artist_msid
                  , artist_mbids
-          ORDER BY cnt DESC
+          ORDER BY listen_count DESC
             """.format(table=table))
 
-    iterator = result.withColumn("artist", struct("artist_name", "artist_msid", "artist_mbids", "cnt")).\
-        groupBy("user_name").agg(collect_list("artist").alias("artist")).toLocalIterator()
+    iterator = result \
+        .withColumn("artists", struct("listen_count", "artist_name", "artist_msid", "artist_mbids")) \
+        .groupBy("user_name") \
+        .agg(sort_array(collect_list("artists"), asc=False).alias("artists")) \
+        .toLocalIterator()
 
     return iterator
