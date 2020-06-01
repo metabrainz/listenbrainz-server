@@ -33,7 +33,6 @@ def get_artists(table):
                  , artist_name
                  , artist_msid
                  , artist_mbids
-          ORDER BY listen_count DESC
             """.format(table=table))
 
     iterator = result \

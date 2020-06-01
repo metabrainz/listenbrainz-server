@@ -62,6 +62,10 @@ class releaseTestCase(SparkTestCase):
         for user_name, user_releases in expected.items():
             user_releases.sort(key=lambda release: release['listen_count'], reverse=True)
 
-        received = release_stats.get_releases('test_view')
+        data = release_stats.get_releases('test_view')
+        received = defaultdict(list)
+        for entry in data:
+            _dict = entry.asDict(recursive=True)
+            received[_dict['user_name']] = _dict['releases']
 
         self.assertDictEqual(received, expected)

@@ -237,7 +237,7 @@ def _process_entity(user_name, stats, stats_range, offset, count, entity):
     count = min(count, MAX_ITEMS_PER_GET)
     try:
         total_entity_count = stats[entity][stats_range]['count']
-    except KeyError:
+    except (TypeError, KeyError):
         raise APINoContent('')
 
     count = count + offset

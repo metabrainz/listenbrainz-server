@@ -43,7 +43,6 @@ def get_releases(table):
                  , artist_name
                  , artist_msid
                  , artist_mbids
-          ORDER BY listen_count DESC
         """.format(table))
 
     iterator = result \
