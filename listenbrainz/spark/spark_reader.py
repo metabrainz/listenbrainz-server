@@ -102,6 +102,7 @@ class SparkReader:
                     queue=current_app.config['SPARK_RESULT_QUEUE'],
                     callback_function=self.callback,
                 )
+                self.incoming_ch.basic_qos(prefetch_count=1)
                 current_app.logger.info('Spark consumer started!')
                 try:
                     self.incoming_ch.start_consuming()
