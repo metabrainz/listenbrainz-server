@@ -27,6 +27,8 @@ response_handler_map = {
     'cf_recording_recommendations': handle_recommendations,
 }
 
+RABBITMQ_HEARTBEAT_TIME = 60 * 60 # 1 hour, in seconds
+
 
 class SparkReader:
     def __init__(self):
@@ -48,6 +50,7 @@ class SparkReader:
             port=current_app.config['RABBITMQ_PORT'],
             virtual_host=current_app.config['RABBITMQ_VHOST'],
             error_logger=current_app.logger.error,
+            heartbeat=RABBITMQ_HEARTBEAT_TIME,
         )
 
     def process_response(self, response):
@@ -77,12 +80,6 @@ class SparkReader:
         current_app.logger.debug("Received a message, processing...")
         response = ujson.loads(body)
         self.process_response(response)
-        while True:
-            try:
-                self.incoming_ch.basic_ack(delivery_tag=method.delivery_tag)
-                break
-            except pika.exceptions.ConnectionClosed:
-                self.init_rabbitmq_connection()
         current_app.logger.debug("Done!")
 
     def start(self):
@@ -98,7 +95,9 @@ class SparkReader:
                     exchange=current_app.config['SPARK_RESULT_EXCHANGE'],
                     queue=current_app.config['SPARK_RESULT_QUEUE'],
                     callback_function=self.callback,
+                    no_ack=True,
                 )
+                self.incoming_ch.basic_qos(prefetch_count=1)
                 current_app.logger.info('Spark consumer started!')
                 try:
                     self.incoming_ch.start_consuming()

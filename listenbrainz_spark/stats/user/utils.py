@@ -61,20 +61,18 @@ def create_messages(data, entity, stats_type, stats_range, from_ts, to_ts):
     Returns:
         messages (list): A list of messages to be sent via RabbitMQ
     """
-    messages = []
-    for user_name, user_releases in data.items():
-        messages.append({
-            'musicbrainz_id': user_name,
+    for entry in data:
+        _dict = entry.asDict(recursive=True)
+        yield {
+            'musicbrainz_id': _dict['user_name'],
             'type': stats_type,
             'range': stats_range,
             'from_ts': from_ts,
             'to_ts': to_ts,
-            'data': user_releases,
+            'data': _dict[entity],
             'entity': entity,
-            'count': len(user_releases)
-        })
-
-    return messages
+            'count': len(_dict[entity])
+        }
 
 
 def get_recordings(table):
