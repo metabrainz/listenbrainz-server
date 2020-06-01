@@ -1,7 +1,5 @@
-import time
-from collections import defaultdict
-
 from listenbrainz_spark.stats import run_query
+from pyspark.sql.functions import collect_list, struct
 
 
 def get_artists(table):
@@ -12,23 +10,28 @@ def get_artists(table):
             table (str): name of the temporary table.
 
         Returns:
-            artists: A dict of dicts which can be depicted as:
+            iterator (iter): an iterator over result, the structure 
+                of the result is as follows:
                     {
-                        'user1': [{
-                            'artist_name': str, 'artist_msid': str, 'artist_mbids': str, 'listen_count': int
-                        }],
-                        'user2' : [{...}]
+                        user1: [
+                            {
+                                artist_name: "artist1",
+                                artist_msid: "msid1",
+                                artist_mbids: ["mbid1"],
+                                listen_count: 10
+                            },
+                            ...
+                        ],
+                        ...
                     }
     """
-
-    t0 = time.time()
 
     result = run_query("""
             SELECT user_name
                  , artist_name
                  , artist_msid
                  , artist_mbids
-                 , count(artist_name) as cnt
+                 , count(artist_name) as listen_count 
               FROM {table}
           GROUP BY user_name
                  , artist_name
@@ -37,14 +40,7 @@ def get_artists(table):
           ORDER BY cnt DESC
             """.format(table=table))
 
-    rows = result.collect()
-    artists = defaultdict(list)
-    for row in rows:
-        artists[row.user_name].append({
-            'artist_name': row['artist_name'],
-            'artist_msid': row['artist_msid'],
-            'artist_mbids': row['artist_mbids'],
-            'listen_count': row['cnt'],
-        })
-    print("Query to calculate artist stats processed in %.2f s" % (time.time() - t0))
-    return artists
+    iterator = result.withColumn("artist", struct("artist_name", "artist_msid", "artist_mbids", "cnt")).\
+        groupBy("user_name").agg(collect_list("artist").alias("artist")).toLocalIterator()
+
+    return iterator
