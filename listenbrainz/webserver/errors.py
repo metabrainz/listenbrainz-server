@@ -6,6 +6,7 @@ import collections
 
 LastFMError = collections.namedtuple('LastFMError', ['code', 'message'])
 
+
 class APIError(Exception):
     def __init__(self, message, status_code, payload=None):
         super(APIError, self).__init__()
@@ -166,7 +167,9 @@ def init_error_handlers(app):
 
     @app.errorhandler(APIError)
     def api_error(error):
-        return jsonify(error.to_dict()), error.status_code
+        resp = make_response(jsonify(error.to_dict()))
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        return resp, error.status_code
 
     # Handle error of API_compat
     @app.errorhandler(InvalidAPIUsage)
@@ -176,6 +179,7 @@ def init_error_handlers(app):
 
 class InvalidAPIUsage(Exception):
     """ General error class for the API_compat to render errors in multiple formats """
+
     def __init__(self, api_error, status_code=500, output_format="xml"):
         Exception.__init__(self)
         self.api_error = api_error
