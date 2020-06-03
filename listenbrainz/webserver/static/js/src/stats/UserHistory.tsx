@@ -43,8 +43,8 @@ export default class UserHistory extends React.Component<
 
     this.state = {
       data: [],
-      range: "all_time",
-      entity: "artist",
+      range: "" as UserEntityAPIRange,
+      entity: "" as Entity,
       currPage: 1,
       entityCount: 0,
       totalPages: 0,
@@ -54,16 +54,44 @@ export default class UserHistory extends React.Component<
   }
 
   async componentDidMount() {
-    const { page, range, entity } = this.getURLParams();
-    await this.handleURLChange();
-    window.location.hash = `page=${page}&range=${range}&entity=${entity}`;
+    window.addEventListener("popstate", this.syncStateWithURL);
 
-    window.onhashchange = this.handleURLChange;
+    // Fetch initial data and set URL correspondingly
+    const { page, range, entity } = this.getURLParams();
+    window.history.replaceState(
+      null,
+      "",
+      `?page=${page}&range=${range}&entity=${entity}`
+    );
+    this.syncStateWithURL();
   }
 
   componentWillUnmount() {
-    window.onhashchange = () => {};
+    window.removeEventListener("popstate", this.syncStateWithURL);
   }
+
+  changePage = async (newPage: number): Promise<void> => {
+    const { entity, range } = this.state;
+    const data = await this.getData(newPage, range, entity);
+
+    this.setURLParams(newPage, range, entity);
+    this.setState({
+      data: this.processData(data, newPage, entity),
+      currPage: newPage,
+    });
+  };
+
+  changeRange = (newRange: UserEntityAPIRange): void => {
+    const { entity } = this.state;
+    this.setURLParams(1, newRange, entity);
+    this.syncStateWithURL();
+  };
+
+  changeEntity = (newEntity: Entity): void => {
+    const { range } = this.state;
+    this.setURLParams(1, range, newEntity);
+    this.syncStateWithURL();
+  };
 
   getInitData = async (
     range: UserEntityAPIRange,
@@ -72,6 +100,7 @@ export default class UserHistory extends React.Component<
     maxListens: number;
     totalPages: number;
     entityCount: number;
+    startDate: Date;
   }> => {
     const { user } = this.props;
 
@@ -103,7 +132,12 @@ export default class UserHistory extends React.Component<
       entityCount = data.payload.total_release_count;
     }
 
-    return { maxListens, totalPages, entityCount };
+    return {
+      maxListens,
+      totalPages,
+      entityCount,
+      startDate: new Date(data.payload.from_ts * 1000),
+    };
   };
 
   getData = async (
@@ -159,12 +193,11 @@ export default class UserHistory extends React.Component<
     return result;
   };
 
-  handleURLChange = async (): Promise<void> => {
-    const { page, range, entity } = this.getURLParams();
-
+  syncStateWithURL = async (): Promise<void> => {
     try {
+      const { page, range, entity } = this.getURLParams();
       const [
-        { totalPages, maxListens, entityCount },
+        { totalPages, maxListens, entityCount, startDate },
         data,
       ] = await Promise.all([
         this.getInitData(range, entity),
@@ -173,9 +206,9 @@ export default class UserHistory extends React.Component<
       this.setState({
         data: this.processData(data, page, entity),
         currPage: page,
-        startDate: new Date(data.payload.from_ts * 1000),
         range,
         entity,
+        startDate,
         totalPages,
         maxListens,
         entityCount,
@@ -190,35 +223,39 @@ export default class UserHistory extends React.Component<
     range: UserEntityAPIRange;
     entity: Entity;
   } => {
-    const hash = window.location.hash.substring(1);
-    const params = hash
-      .split("&")
-      .reduce((result: { [key: string]: string }, item: string) => {
-        const parts = item.split("=");
-        // eslint-disable-next-line no-param-reassign
-        [, result[parts[0]]] = parts;
-        return result;
-      }, {});
+    const url = new URL(window.location.href);
 
     // Get page number from URL
     let page = 1;
-    if (params.page) {
-      page = Number(params.page);
+    if (url.searchParams.get("page")) {
+      page = Number(url.searchParams.get("page"));
     }
 
     // Get range from URL
     let range: UserEntityAPIRange = "all_time";
-    if (params.range) {
-      range = params.range as UserEntityAPIRange;
+    if (url.searchParams.get("range")) {
+      range = url.searchParams.get("range") as UserEntityAPIRange;
     }
 
     // Get entity from URL
     let entity: Entity = "artist";
-    if (params.entity) {
-      entity = params.entity as Entity;
+    if (url.searchParams.get("entity")) {
+      entity = url.searchParams.get("entity") as Entity;
     }
 
     return { page, range, entity };
+  };
+
+  setURLParams = (
+    page: number,
+    range: UserEntityAPIRange,
+    entity: Entity
+  ): void => {
+    window.history.pushState(
+      null,
+      "",
+      `?page=${page}&range=${range}&entity=${entity}`
+    );
   };
 
   handleError = (error: Error): void => {
@@ -256,25 +293,25 @@ export default class UserHistory extends React.Component<
                   data-toggle="dropdown"
                   type="button"
                 >
-                  {entity}s
+                  {`${entity}s`}
                   <span className="caret" />
                 </button>
                 <ul className="dropdown-menu" role="menu">
                   <li>
-                    <a
-                      href={`#page=1&range=${range}&entity=artist`}
-                      role="button"
+                    <button
+                      type="button"
+                      onClick={() => this.changeEntity("artist")}
                     >
                       Artists
-                    </a>
+                    </button>
                   </li>
                   <li>
-                    <a
-                      href={`#page=1&range=${range}&entity=release`}
-                      role="button"
+                    <button
+                      type="button"
+                      onClick={() => this.changeEntity("release")}
                     >
                       Releases
-                    </a>
+                    </button>
                   </li>
                 </ul>
               </span>
@@ -290,36 +327,36 @@ export default class UserHistory extends React.Component<
                 </button>
                 <ul className="dropdown-menu" role="menu">
                   <li>
-                    <a
-                      href={`#page=1&range=week&entity=${entity}`}
-                      role="button"
+                    <button
+                      type="button"
+                      onClick={() => this.changeRange("week")}
                     >
                       Week
-                    </a>
+                    </button>
                   </li>
                   <li>
-                    <a
-                      href={`#page=1&range=month&entity=${entity}`}
-                      role="button"
+                    <button
+                      type="button"
+                      onClick={() => this.changeRange("month")}
                     >
                       Month
-                    </a>
+                    </button>
                   </li>
                   <li>
-                    <a
-                      href={`#page=1&range=year&entity=${entity}`}
-                      role="button"
+                    <button
+                      type="button"
+                      onClick={() => this.changeRange("year")}
                     >
                       Year
-                    </a>
+                    </button>
                   </li>
                   <li>
-                    <a
-                      href={`#page=1&range=all_time&entity=${entity}`}
-                      role="button"
+                    <button
+                      type="button"
+                      onClick={() => this.changeRange("all_time")}
                     >
                       All Time
-                    </a>
+                    </button>
                   </li>
                 </ul>
               </span>
@@ -363,22 +400,16 @@ export default class UserHistory extends React.Component<
           <div className="col-xs-12">
             <ul className="pager">
               <li className={`previous ${!(prevPage > 0) ? "hidden" : ""}`}>
-                <a
-                  href={`#page=${prevPage}&range=${range}&entity=${entity}`}
-                  role="button"
-                >
+                <button type="button" onClick={() => this.changePage(prevPage)}>
                   &larr; Previous
-                </a>
+                </button>
               </li>
               <li
                 className={`next ${!(nextPage <= totalPages) ? "hidden" : ""}`}
               >
-                <a
-                  href={`#page=${nextPage}&range=${range}&entity=${entity}`}
-                  role="button"
-                >
+                <button type="button" onClick={() => this.changePage(nextPage)}>
                   Next &rarr;
-                </a>
+                </button>
               </li>
             </ul>
           </div>
