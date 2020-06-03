@@ -180,3 +180,20 @@ class SparkTestCase(unittest.TestCase):
             'users_count': 100,
         }
         return metadata
+
+    @classmethod
+    def get_model_metadata(cls, model_id):
+        metadata = {
+            'dataframe_id': 'xxxxx',
+            'model_id': model_id,
+            'alpha': 3.0,
+            'lmbda': 2.0,
+            'iteration': 2,
+            'rank': 4,
+            'test_data_count': 3,
+            'test_rmse': 2.0,
+            'training_data_count': 4,
+            'validation_data_count': 3,
+            'validation_rmse': 2.0,
+        }
+        return metadata

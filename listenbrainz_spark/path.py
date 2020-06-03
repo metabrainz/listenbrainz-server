@@ -32,8 +32,6 @@ TOP_ARTIST_CANDIDATE_SET = os.path.join(CANDIDATE_SET_DIR, 'top_artist', 'top_ar
 SIMILAR_ARTIST_CANDIDATE_SET = os.path.join(CANDIDATE_SET_DIR, 'similar_artist', 'similar_artist.parquet')
 # Absolute path to model metadata.
 MODEL_METADATA = MODEL_DIR + '/' + 'model_metadata.parquet'
-# Absolute path to save model index
-INDEX = MODEL_DIR + '/' + 'index.parquet'
 # Absolute path to recording mbid->msid and artist mbid-msid mapping.
 MBID_MSID_MAPPING = os.path.join('/', 'mapping', 'msid_mbid_mapping.parquet')
 # Absolute path to mapped listens.
