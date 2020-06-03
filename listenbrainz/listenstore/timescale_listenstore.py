@@ -72,14 +72,7 @@ class TimescaleListenStore(ListenStore):
             if count:
                 return int(count)
 
-        if "PYTEST_CURRENT_TEST" in os.environ:
-            # pytest sets the environment variable PYTEST_CURRENT_TEST. If the variable is set
-            # then return exact listen count using count(*) for listens corresponding to the
-            # user_name in the listen schema itself
-            query = "SELECT count(*) FROM listen WHERE user_name = :user_name"
-        else:
-            # otherwise fetch the count from listen_count view
-            query = "SELECT SUM(count) FROM listen_count WHERE user_name = :user_name"
+        query = "SELECT SUM(count) FROM listen_count WHERE user_name = :user_name"
 
         try:
             with timescale.engine.connect() as connection:
@@ -113,15 +106,7 @@ class TimescaleListenStore(ListenStore):
                 user_name: the user for whom to fetch the timestamp.
         """
 
-        if "PYTEST_CURRENT_TEST" in os.environ:
-            # pytest sets the environment variable PYTEST_CURRENT_TEST. If the variable is set
-            # then return exact listen count using min(*)/max(*) for listens corresponding to the
-            # user_name in the listen schema itself
-            if select_min_timestamp:
-                query = "SELECT min(listened_at) AS value FROM listen WHERE user_name = :user_name"
-            else:
-                query = "SELECT max(listened_at) AS value FROM listen WHERE user_name = :user_name"
-        elif select_min_timestamp:
+        if select_min_timestamp:
             query = "SELECT min(min_value) AS value FROM listened_at_min WHERE user_name = :user_name"
         else:
             query = "SELECT max(max_value) AS value FROM listened_at_max WHERE user_name = :user_name"
@@ -148,14 +133,7 @@ class TimescaleListenStore(ListenStore):
             if count:
                 return int(count)
 
-        if "PYTEST_CURRENT_TEST" in os.environ:
-            # pytest sets the environment variable PYTEST_CURRENT_TEST. If the variable is set
-            # then return exact listen count using count(*) for listens corresponding to the
-            # user_name in the listen schema itself
-            query = "SELECT count(*) AS value FROM listen"
-        else:
-            # otherwise fetch the count from listen_count view
-            query = "SELECT SUM(count) AS value FROM listen_count"
+        query = "SELECT SUM(count) AS value FROM listen_count"
 
         try:
             with timescale.engine.connect() as connection:
