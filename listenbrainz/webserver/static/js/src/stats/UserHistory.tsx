@@ -377,16 +377,22 @@ export default class UserHistory extends React.Component<
                 </ul>
               </span>
               {range === "week"
-                ? `of ${startDate.getDate()} ${startDate.toLocaleString(
+                ? `of ${startDate.getUTCDate()} ${startDate.toLocaleString(
                     "en-us",
-                    { month: "long" }
+                    { month: "long", timeZone: "UTC" }
                   )} `
                 : ""}
               {range === "month"
-                ? `${startDate.toLocaleString("en-us", { month: "long" })} `
+                ? `${startDate.toLocaleString("en-us", {
+                    month: "long",
+                    timeZone: "UTC",
+                  })} `
                 : ""}
               {range !== "all_time"
-                ? startDate.toLocaleString("en-us", { year: "numeric" })
+                ? startDate.toLocaleString("en-us", {
+                    year: "numeric",
+                    timeZone: "UTC",
+                  })
                 : ""}
             </h3>
           </div>
