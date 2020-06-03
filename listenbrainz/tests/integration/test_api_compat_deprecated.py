@@ -157,7 +157,7 @@ class APICompatDeprecatedTestCase(APICompatIntegrationTestCase):
 
         time.sleep(1)
         to_ts = int(time.time())
-        listens = self.ls.fetch_listens(self.user['musicbrainz_id'], to_ts=to_ts)
+        listens = self.ls.fetch_listens(self.user['musicbrainz_id'], to_ts=to_ts, time_range=-1)
         self.assertEqual(len(listens), 1)
 
 

@@ -260,10 +260,6 @@ class TimescaleListenStore(ListenStore):
             to_ts = from_ts + max_timestamp_window
         else:
             from_ts = to_ts - max_timestamp_window
-            if "PYTEST_CURRENT_TEST" in os.environ:
-                # pytest sets the environment variable PYTEST_CURRENT_TEST. If the variable is set
-                # then set from_ts = -1 as some tests feed listens with listened_at = 0.
-                from_ts = -1
 
         query = """SELECT listened_at, track_name, data
                      FROM listen

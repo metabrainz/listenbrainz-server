@@ -49,7 +49,7 @@ class TimescaleWriterTestCase(IntegrationTestCase):
         time.sleep(2)
 
         to_ts = int(time.time())
-        listens = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
+        listens = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts, time_range=-1)
         self.assertEqual(len(listens), 1)
 
         recent = self.rs.get_recent_listens(4)
@@ -70,7 +70,7 @@ class TimescaleWriterTestCase(IntegrationTestCase):
         time.sleep(2)
 
         to_ts = int(time.time())
-        listens = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
+        listens = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts, time_range=-1)
         self.assertEqual(len(listens), 1)
 
 
@@ -82,7 +82,7 @@ class TimescaleWriterTestCase(IntegrationTestCase):
         time.sleep(2)
 
         to_ts = int(time.time())
-        listens = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
+        listens = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts, time_range=-1)
         self.assertEqual(len(listens), 1)
 
 
@@ -103,10 +103,10 @@ class TimescaleWriterTestCase(IntegrationTestCase):
         time.sleep(2)  # sleep to allow timescale-writer to do its thing
 
         to_ts = int(time.time())
-        listens = self.ls.fetch_listens(user1['musicbrainz_id'], to_ts=to_ts)
+        listens = self.ls.fetch_listens(user1['musicbrainz_id'], to_ts=to_ts, time_range=-1)
         self.assertEqual(len(listens), 1)
 
-        listens = self.ls.fetch_listens(user2['musicbrainz_id'], to_ts=to_ts)
+        listens = self.ls.fetch_listens(user2['musicbrainz_id'], to_ts=to_ts, time_range=-1)
         self.assertEqual(len(listens), 1)
 
 
@@ -132,5 +132,5 @@ class TimescaleWriterTestCase(IntegrationTestCase):
         time.sleep(2)
 
         to_ts = int(time.time())
-        listens = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts)
+        listens = self.ls.fetch_listens(user['musicbrainz_id'], to_ts=to_ts, time_range=-1)
         self.assertEqual(len(listens), 4)
