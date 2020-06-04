@@ -54,7 +54,7 @@ export default class UserHistory extends React.Component<
     };
   }
 
-  async componentDidMount() {
+  componentDidMount() {
     window.addEventListener("popstate", this.syncStateWithURL);
 
     // Fetch initial data and set URL correspondingly
