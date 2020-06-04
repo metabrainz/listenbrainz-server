@@ -15,6 +15,4 @@ CREATE VIEW listened_at_min
          AS SELECT time_bucket(bigint '86400', listened_at) AS listened_at_bucket, user_name, min(listened_at) AS min_value
             FROM listen group by time_bucket(bigint '86400', listened_at), user_name;
 
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz_ts;
-
 COMMIT;

@@ -11,6 +11,4 @@ CREATE TABLE listen (
 -- 86400 seconds * 5 = 432000 seconds = 5 days
 SELECT create_hypertable('listen', 'listened_at', chunk_time_interval => 432000);
 
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz_ts;
-
 COMMIT;
