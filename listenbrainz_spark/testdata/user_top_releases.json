@@ -68,5 +68,15 @@
     "artist_msid": 1,
     "artist_mbids": 1,
     "count": 2
+  },
+  {
+    "user_name": "user3",
+    "release_name": "",
+    "release_msid": 1,
+    "release_mbid": 1,
+    "artist_name": "artist1",
+    "artist_msid": 1,
+    "artist_mbids": 1,
+    "count": 2
   }
 ]
