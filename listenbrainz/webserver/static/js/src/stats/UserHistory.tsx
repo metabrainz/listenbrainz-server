@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/anchor-is-valid */
 import * as ReactDOM from "react-dom";
 import * as React from "react";
 
@@ -70,7 +71,14 @@ export default class UserHistory extends React.Component<
     window.removeEventListener("popstate", this.syncStateWithURL);
   }
 
-  changePage = async (newPage: number): Promise<void> => {
+  changePage = async (
+    newPage: number,
+    event?: React.MouseEvent<HTMLElement>
+  ): Promise<void> => {
+    if (event) {
+      event.preventDefault();
+    }
+
     const { entity, range } = this.state;
     const data = await this.getData(newPage, range, entity);
 
@@ -81,13 +89,27 @@ export default class UserHistory extends React.Component<
     });
   };
 
-  changeRange = (newRange: UserEntityAPIRange): void => {
+  changeRange = (
+    newRange: UserEntityAPIRange,
+    event?: React.MouseEvent<HTMLElement>
+  ): void => {
+    if (event) {
+      event.preventDefault();
+    }
+
     const { entity } = this.state;
     this.setURLParams(1, newRange, entity);
     this.syncStateWithURL();
   };
 
-  changeEntity = (newEntity: Entity): void => {
+  changeEntity = (
+    newEntity: Entity,
+    event?: React.MouseEvent<HTMLElement>
+  ): void => {
+    if (event) {
+      event.preventDefault();
+    }
+
     const { range } = this.state;
     this.setURLParams(1, range, newEntity);
     this.syncStateWithURL();
@@ -298,20 +320,22 @@ export default class UserHistory extends React.Component<
                 </button>
                 <ul className="dropdown-menu" role="menu">
                   <li>
-                    <button
-                      type="button"
-                      onClick={() => this.changeEntity("artist")}
+                    <a
+                      href=""
+                      role="button"
+                      onClick={(event) => this.changeEntity("artist", event)}
                     >
                       Artists
-                    </button>
+                    </a>
                   </li>
                   <li>
-                    <button
-                      type="button"
-                      onClick={() => this.changeEntity("release")}
+                    <a
+                      href=""
+                      role="button"
+                      onClick={(event) => this.changeEntity("release", event)}
                     >
                       Releases
-                    </button>
+                    </a>
                   </li>
                 </ul>
               </span>
@@ -327,36 +351,40 @@ export default class UserHistory extends React.Component<
                 </button>
                 <ul className="dropdown-menu" role="menu">
                   <li>
-                    <button
-                      type="button"
-                      onClick={() => this.changeRange("week")}
+                    <a
+                      href=""
+                      role="button"
+                      onClick={(event) => this.changeRange("week", event)}
                     >
                       Week
-                    </button>
+                    </a>
                   </li>
                   <li>
-                    <button
-                      type="button"
-                      onClick={() => this.changeRange("month")}
+                    <a
+                      href=""
+                      role="button"
+                      onClick={(event) => this.changeRange("month", event)}
                     >
                       Month
-                    </button>
+                    </a>
                   </li>
                   <li>
-                    <button
-                      type="button"
-                      onClick={() => this.changeRange("year")}
+                    <a
+                      href=""
+                      role="button"
+                      onClick={(event) => this.changeRange("year", event)}
                     >
                       Year
-                    </button>
+                    </a>
                   </li>
                   <li>
-                    <button
-                      type="button"
-                      onClick={() => this.changeRange("all_time")}
+                    <a
+                      href=""
+                      role="button"
+                      onClick={(event) => this.changeRange("all_time", event)}
                     >
                       All Time
-                    </button>
+                    </a>
                   </li>
                 </ul>
               </span>
@@ -400,16 +428,24 @@ export default class UserHistory extends React.Component<
           <div className="col-xs-12">
             <ul className="pager">
               <li className={`previous ${!(prevPage > 0) ? "hidden" : ""}`}>
-                <button type="button" onClick={() => this.changePage(prevPage)}>
+                <a
+                  href=""
+                  role="button"
+                  onClick={(event) => this.changePage(prevPage, event)}
+                >
                   &larr; Previous
-                </button>
+                </a>
               </li>
               <li
                 className={`next ${!(nextPage <= totalPages) ? "hidden" : ""}`}
               >
-                <button type="button" onClick={() => this.changePage(nextPage)}>
+                <a
+                  href=""
+                  role="button"
+                  onClick={(event) => this.changePage(nextPage, event)}
+                >
                   Next &rarr;
-                </button>
+                </a>
               </li>
             </ul>
           </div>
