@@ -100,37 +100,26 @@ describe("componentWillUnmount", () => {
 });
 
 describe("changePage", () => {
-  it("sets state correctly", async () => {
+  it("calls setURLParams with correct parameters", () => {
     const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
     const instance = wrapper.instance();
 
-    instance.getData = jest
-      .fn()
-      .mockImplementationOnce(() => Promise.resolve(userArtistsResponse));
-    instance.processData = jest
-      .fn()
-      .mockImplementationOnce(() => userArtistsProcessDataOutput);
     instance.setURLParams = jest.fn();
-    await instance.changePage(2);
-
-    expect(wrapper.state("data")).toBe(userArtistsProcessDataOutput);
-    expect(wrapper.state("currPage")).toBe(2);
-  });
-
-  it("calls setURLParams with correct parameters", async () => {
-    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
-    const instance = wrapper.instance();
-
-    instance.getData = jest
-      .fn()
-      .mockImplementationOnce(() => Promise.resolve(userArtistsResponse));
-    instance.processData = jest
-      .fn()
-      .mockImplementationOnce(() => userArtistsProcessDataOutput);
-    instance.setURLParams = jest.fn();
-    await instance.changePage(2);
+    instance.syncStateWithURL = jest.fn();
+    instance.changePage(2);
 
     expect(instance.setURLParams).toHaveBeenCalledWith(2, "", "");
+  });
+
+  it("calls syncStateWithURL once", () => {
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
+    const instance = wrapper.instance();
+
+    instance.setURLParams = jest.fn();
+    instance.syncStateWithURL = jest.fn();
+    instance.changeRange("week");
+
+    expect(instance.syncStateWithURL).toHaveBeenCalledTimes(1);
   });
 });
 

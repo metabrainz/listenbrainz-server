@@ -71,22 +71,17 @@ export default class UserHistory extends React.Component<
     window.removeEventListener("popstate", this.syncStateWithURL);
   }
 
-  changePage = async (
+  changePage = (
     newPage: number,
     event?: React.MouseEvent<HTMLElement>
-  ): Promise<void> => {
+  ): void => {
     if (event) {
       event.preventDefault();
     }
 
     const { entity, range } = this.state;
-    const data = await this.getData(newPage, range, entity);
-
     this.setURLParams(newPage, range, entity);
-    this.setState({
-      data: this.processData(data, newPage, entity),
-      currPage: newPage,
-    });
+    this.syncStateWithURL();
   };
 
   changeRange = (
@@ -218,22 +213,27 @@ export default class UserHistory extends React.Component<
   syncStateWithURL = async (): Promise<void> => {
     try {
       const { page, range, entity } = this.getURLParams();
-      const [
-        { totalPages, maxListens, entityCount, startDate },
-        data,
-      ] = await Promise.all([
-        this.getInitData(range, entity),
-        this.getData(page, range, entity),
-      ]);
+      const { range: currRange, entity: currEntity } = this.state;
+      if (range !== currRange || entity !== currEntity) {
+        const {
+          totalPages,
+          maxListens,
+          entityCount,
+          startDate,
+        } = await this.getInitData(range, entity);
+        this.setState({
+          range,
+          entity,
+          startDate,
+          totalPages,
+          maxListens,
+          entityCount,
+        });
+      }
+      const data = await this.getData(page, range, entity);
       this.setState({
         data: this.processData(data, page, entity),
         currPage: page,
-        range,
-        entity,
-        startDate,
-        totalPages,
-        maxListens,
-        entityCount,
       });
     } catch (error) {
       this.handleError(error);
