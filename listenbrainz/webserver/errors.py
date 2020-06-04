@@ -4,6 +4,8 @@ import yattag
 import ujson
 import collections
 
+from listenbrainz.webserver.decorators import crossdomain
+
 LastFMError = collections.namedtuple('LastFMError', ['code', 'message'])
 
 
@@ -166,10 +168,9 @@ def init_error_handlers(app):
         return handle_error(error, 503)
 
     @app.errorhandler(APIError)
+    @crossdomain()
     def api_error(error):
-        resp = make_response(jsonify(error.to_dict()))
-        resp.headers['Access-Control-Allow-Origin'] = '*'
-        return resp, error.status_code
+        return jsonify(error.to_dict()), error.status_code
 
     # Handle error of API_compat
     @app.errorhandler(InvalidAPIUsage)
