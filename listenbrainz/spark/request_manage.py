@@ -140,7 +140,9 @@ def request_dataframes(days):
 def parse_list(ctx, args):
     return list(args)
 
+
 helper_doc_link = 'https://spark.apache.org/docs/2.1.0/mllib-collaborative-filtering.html'
+
 
 @cli.command(name='request_model')
 @click.option("--rank", callback=parse_list, default=[5, 10], type=int, multiple=True,
