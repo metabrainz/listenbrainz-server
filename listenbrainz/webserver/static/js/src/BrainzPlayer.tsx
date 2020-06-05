@@ -9,6 +9,7 @@ import PlaybackControls from "./PlaybackControls";
 import APIService from "./APIService";
 import SpotifyPlayer from "./SpotifyPlayer";
 import YoutubePlayer from "./YoutubePlayer";
+import SoundcloudPlayer from "./SoundcloudPlayer";
 
 export type DataSourceType = {
   playListen: (listen: Listen) => void;
@@ -16,7 +17,7 @@ export type DataSourceType = {
   seekToPositionMs: (msTimecode: number) => void;
 };
 
-export type DataSourceTypes = SpotifyPlayer | YoutubePlayer;
+export type DataSourceTypes = SpotifyPlayer | YoutubePlayer | SoundcloudPlayer;
 
 export type DataSourceProps = {
   show: boolean;
@@ -67,6 +68,7 @@ export default class BrainzPlayer extends React.Component<
 > {
   spotifyPlayer?: React.RefObject<SpotifyPlayer>;
   youtubePlayer?: React.RefObject<YoutubePlayer>;
+  soundcloudPlayer?: React.RefObject<SoundcloudPlayer>;
   dataSources: Array<React.RefObject<DataSourceTypes>> = [];
 
   // Since we don't want autoplay on our pages, we need a way to know
@@ -88,6 +90,9 @@ export default class BrainzPlayer extends React.Component<
 
     this.youtubePlayer = React.createRef<YoutubePlayer>();
     this.dataSources.push(this.youtubePlayer);
+
+    this.soundcloudPlayer = React.createRef<SoundcloudPlayer>();
+    this.dataSources.push(this.soundcloudPlayer);
 
     this.state = {
       currentDataSourceIndex: 0,
@@ -246,6 +251,13 @@ export default class BrainzPlayer extends React.Component<
     ) {
       selectedDatasourceIndex = this.dataSources.findIndex(
         (ds) => ds.current instanceof YoutubePlayer
+      );
+    }
+
+    /** SoundCloud */
+    if (listeningFrom === "soundcloud" || /soundcloud\.com/.test(originURL)) {
+      selectedDatasourceIndex = this.dataSources.findIndex(
+        (ds) => ds.current instanceof SoundcloudPlayer
       );
     }
 
@@ -422,6 +434,24 @@ export default class BrainzPlayer extends React.Component<
             }
             onInvalidateDataSource={this.invalidateDataSource}
             ref={this.youtubePlayer}
+            playerPaused={playerPaused}
+            onPlayerPausedChange={this.playerPauseChange}
+            onProgressChange={this.progressChange}
+            onDurationChange={this.durationChange}
+            onTrackInfoChange={this.trackInfoChange}
+            onTrackEnd={this.playNextTrack}
+            onTrackNotFound={this.failedToFindTrack}
+            handleError={this.handleError}
+            handleWarning={this.handleWarning}
+            handleSuccess={this.handleSuccess}
+          />
+          <SoundcloudPlayer
+            show={
+              this.dataSources[currentDataSourceIndex]?.current instanceof
+              SoundcloudPlayer
+            }
+            onInvalidateDataSource={this.invalidateDataSource}
+            ref={this.soundcloudPlayer}
             playerPaused={playerPaused}
             onPlayerPausedChange={this.playerPauseChange}
             onProgressChange={this.progressChange}
