@@ -34,8 +34,9 @@ def get_releases(table):
                  , artist_name
                  , artist_msid
                  , artist_mbids
-                 , count(release_msid) as listen_count
+                 , count(release_name) as listen_count
               FROM {}
+             WHERE release_name <> ''
           GROUP BY user_name
                  , release_name
                  , release_msid
