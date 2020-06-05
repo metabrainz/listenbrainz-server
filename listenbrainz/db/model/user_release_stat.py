@@ -5,9 +5,7 @@ from typing import Optional, List
 
 
 class UserReleaseRecord(pydantic.BaseModel):
-    """ Each individual record for a user's artists
-
-    Contains the artist name, MessyBrainz ID, MusicBrainz IDs and listen count.
+    """ Each individual record for a user's release stats
     """
     artist_msid: Optional[str]
     artist_mbids: List[str] = []
@@ -19,7 +17,7 @@ class UserReleaseRecord(pydantic.BaseModel):
 
 
 class UserReleaseStatRange(pydantic.BaseModel):
-    """ Model for user's most listened-to artists for a particular
+    """ Model for user's most listened-to releases for a particular
     time range. Currently supports week, month, year and all-time
     """
     to_ts: int
@@ -29,7 +27,7 @@ class UserReleaseStatRange(pydantic.BaseModel):
 
 
 class UserReleaseStatJson(pydantic.BaseModel):
-    """ Model for the JSON stored in the statistics.user table's artist column
+    """ Model for the JSON stored in the statistics.user table's release column
     """
     week: Optional[UserReleaseStatRange]
     year: Optional[UserReleaseStatRange]
@@ -38,7 +36,7 @@ class UserReleaseStatJson(pydantic.BaseModel):
 
 
 class UserReleaseStat(pydantic.BaseModel):
-    """ Model for stats around a user's most listened artists
+    """ Model for stats around a user's most listened releases
     """
     user_id: int
     release: UserReleaseStatJson

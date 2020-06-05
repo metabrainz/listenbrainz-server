@@ -4,14 +4,6 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional, List
 
-
-class StatisticsRange(Enum):
-    week = 'week'
-    month = 'month'
-    year = 'year'
-    all_time = 'all_time'
-
-
 class UserArtistRecord(pydantic.BaseModel):
     """ Each individual record for a user's artists
 

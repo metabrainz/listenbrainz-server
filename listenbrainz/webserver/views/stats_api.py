@@ -1,10 +1,13 @@
 from datetime import datetime
 from enum import Enum
+from typing import Union, List
 
 from flask import Blueprint, current_app, jsonify, request
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
+from listenbrainz.db.model.user_artist_stat import UserArtistStat, UserArtistRecord
+from listenbrainz.db.model.user_release_stat import UserReleaseStat, UserReleaseRecord
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
@@ -270,14 +273,19 @@ def _is_valid_range(stats_range):
     return stats_range in StatisticsRange.__members__
 
 
-def _get_total_entity_count(stats, entity):
+def _get_total_entity_count(stats: Union[UserArtistStat, UserReleaseStat], entity: int) -> int:
+    """ Returns the total entity count (all time)
+    """
     if entity == 'release':
         return stats.release.all_time.count
     elif entity == 'artist':
         return stats.artist.all_time.count
     raise APIBadRequest("Unknown entity: %s" % entity)
 
-def _get_entity_list(stats, entity, offset, count):
+
+def _get_entity_list(stats: Union[UserArtistStat, UserReleaseStat], entity: str, offset: int, count: int) -> List[Union[UserArtistRecord, UserReleaseRecord]]:
+    """ Gets a list of entity records from the stat passed based on the offset and count
+    """
     if entity == 'release':
         return stats.release.all_time.releases[offset:count]
     elif entity == 'artist':
