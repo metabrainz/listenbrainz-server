@@ -50,7 +50,7 @@ type ProgressEvent = {
 };
 
 type SoundcloudPlayerState = {
-  currentListen?: Listen;
+  currentSoundId?: number;
 };
 
 export default class SoundcloudPlayer
@@ -74,6 +74,11 @@ export default class SoundcloudPlayer
     hide_related: true,
   };
 
+  constructor(props: DataSourceProps) {
+    super(props);
+    this.state = { currentSoundId: undefined };
+  }
+
   componentDidMount = () => {
     if (!(window as any).SC) {
       const { onInvalidateDataSource } = this.props;
@@ -85,7 +90,10 @@ export default class SoundcloudPlayer
     this.soundcloudPlayer = (window as any).SC.Widget(
       iframeElement
     ) as SoundCloudHTML5Widget;
-    this.soundcloudPlayer.bind(SoundCloudHTML5WidgetEvents.READY, this.onReady);
+    this.soundcloudPlayer.bind(
+      SoundCloudHTML5WidgetEvents.READY,
+      this.onReady.bind(this)
+    );
   };
 
   componentDidUpdate(prevProps: DataSourceProps) {
@@ -116,44 +124,33 @@ export default class SoundcloudPlayer
     }
     const { onTrackEnd, onPlayerPausedChange, onProgressChange } = this.props;
     this.soundcloudPlayer.bind(SoundCloudHTML5WidgetEvents.FINISH, onTrackEnd);
-    this.soundcloudPlayer.bind(
-      SoundCloudHTML5WidgetEvents.PAUSE,
-      onPlayerPausedChange.bind(true)
+    this.soundcloudPlayer.bind(SoundCloudHTML5WidgetEvents.PAUSE, () =>
+      onPlayerPausedChange(true)
     );
-    this.soundcloudPlayer.bind(SoundCloudHTML5WidgetEvents.PLAY, this.onPlay);
+    this.soundcloudPlayer.bind(
+      SoundCloudHTML5WidgetEvents.PLAY,
+      this.onPlay.bind(this)
+    );
     this.soundcloudPlayer.bind(
       SoundCloudHTML5WidgetEvents.PLAY_PROGRESS,
       onProgressChange
     );
-    this.soundcloudPlayer.bind(SoundCloudHTML5WidgetEvents.ERROR, this.onError);
+    this.soundcloudPlayer.bind(
+      SoundCloudHTML5WidgetEvents.ERROR,
+      this.onError.bind(this)
+    );
   };
 
   onPlay = (event: ProgressEvent): void => {
-    const {
-      onPlayerPausedChange,
-      onTrackNotFound,
-      onTrackInfoChange,
-      onDurationChange,
-    } = this.props;
+    const { onPlayerPausedChange } = this.props;
     // Detect new track loaded
-    if (
-      event.loadedProgress === 0 &&
-      event.currentPosition === 0 &&
-      event.relativePosition === 0
-    ) {
-      if (!this.soundcloudPlayer) {
-        return;
-      }
-      this.soundcloudPlayer.getCurrentSound((currentTrack: any) => {
-        if (!currentTrack) {
-          onTrackNotFound();
-        }
-        onTrackInfoChange(currentTrack.title, currentTrack.user?.username);
-        onDurationChange(currentTrack.full_duration);
-      });
+    const { currentSoundId } = this.state;
+    if (event.soundId !== currentSoundId) {
+      this.setState({ currentSoundId: event.soundId });
+      this.updateTrackInfo();
     }
 
-    onPlayerPausedChange.bind(false);
+    onPlayerPausedChange(false);
   };
 
   playListen = (listen: Listen) => {
@@ -165,7 +162,12 @@ export default class SoundcloudPlayer
     if (/soundcloud\.com/.test(originURL)) {
       if (this.soundcloudPlayer) {
         const fullURL = `https://w.soundcloud.com/player/?url=${originURL}`;
-        this.soundcloudPlayer.load(fullURL, this.options);
+        this.soundcloudPlayer.load(originURL, {
+          src: fullURL,
+          ...this.options,
+        });
+        this.soundcloudPlayer.play();
+        this.updateTrackInfo();
       } else if (this.retries <= 3) {
         this.retries += 1;
         setTimeout(this.playListen.bind(this, listen), 650);
@@ -180,6 +182,20 @@ export default class SoundcloudPlayer
     } else {
       onTrackNotFound();
     }
+  };
+
+  updateTrackInfo = () => {
+    const { onTrackNotFound, onTrackInfoChange, onDurationChange } = this.props;
+    if (!this.soundcloudPlayer) {
+      return;
+    }
+    this.soundcloudPlayer.getCurrentSound((currentTrack: any) => {
+      if (!currentTrack) {
+        onTrackNotFound();
+      }
+      onTrackInfoChange(currentTrack.title, currentTrack.user?.username);
+      onDurationChange(currentTrack.full_duration);
+    });
   };
 
   togglePlay = (): void => {
@@ -210,15 +226,11 @@ export default class SoundcloudPlayer
           id="soundcloud-iframe"
           title="Soundcloud player"
           width="100%"
-          height="166"
+          height="auto"
           scrolling="no"
           frameBorder="no"
           allow="autoplay"
-          // src=""
-          src="https://w.soundcloud.com/player/"
-          // src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(
-          //   url
-          // )}${optionsString}`}
+          src="https://w.soundcloud.com/player/?url="
         />
       </div>
     );
