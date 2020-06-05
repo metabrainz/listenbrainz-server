@@ -7,11 +7,6 @@ import Bar from "./Bar";
 import Loader from "../Loader";
 import ErrorBoundary from "../ErrorBoundary";
 
-export type UserEntityData = Array<{
-  id: string;
-  count: number;
-}>;
-
 export type UserHistoryProps = {
   user: ListenBrainzUser;
   apiUrl: string;
@@ -194,7 +189,8 @@ export default class UserHistory extends React.Component<
       result = (data as UserArtistsResponse).payload.artists
         .map((elem, idx: number) => {
           return {
-            id: `${offset + idx + 1}. ${elem.artist_name}`,
+            entity: elem.artist_name,
+            idx: offset + idx + 1,
             count: elem.listen_count,
           };
         })
@@ -203,7 +199,9 @@ export default class UserHistory extends React.Component<
       result = (data as UserReleasesResponse).payload.releases
         .map((elem, idx: number) => {
           return {
-            id: `${offset + idx + 1}. ${elem.release_name}`,
+            entity: elem.release_name,
+            artist: elem.artist_name,
+            idx: offset + idx + 1,
             count: elem.listen_count,
           };
         })

@@ -176,4 +176,11 @@ declare type UserReleasesResponse = {
 
 declare type UserEntityAPIRange = "all_time" | "year" | "month" | "week";
 
+declare type UserEntityData = Array<{
+  entity: string;
+  artist?: string;
+  idx: number;
+  count: number;
+}>;
+
 declare type Entity = "artist" | "release" | "recording";

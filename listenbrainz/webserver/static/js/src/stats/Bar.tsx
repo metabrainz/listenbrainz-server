@@ -2,10 +2,7 @@ import * as React from "react";
 import { ResponsiveBar, LabelFormatter } from "@nivo/bar";
 
 export type BarProps = {
-  data: Array<{
-    id: string;
-    count: number;
-  }>;
+  data: UserEntityData;
   maxValue: number;
 };
 
@@ -22,19 +19,23 @@ type Tick = {
   textBaseline: React.CSSProperties["dominantBaseline"];
   textX: number;
   textY: number;
-  textIndex: number;
+  tickIndex: number;
   x: number;
   y: number;
   value: string;
 };
 
 export default class Bar extends React.Component<BarProps, BarState> {
+  textRef: React.RefObject<SVGTextElement>;
+
   constructor(props: BarProps) {
     super(props);
 
     this.state = {
       marginLeft: window.innerWidth / 5,
     };
+
+    this.textRef = React.createRef();
   }
 
   componentDidMount() {
@@ -56,17 +57,31 @@ export default class Bar extends React.Component<BarProps, BarState> {
     const { marginLeft } = this.state;
 
     const leftAlignedTick = (tick: Tick) => {
-      let { value } = tick;
+      let { entity, artist } = data[tick.tickIndex];
+      const { idx } = data[tick.tickIndex];
 
-      if (value.length > marginLeft / 10) {
-        value = `${value.slice(0, marginLeft / 10)}...`;
+      if (entity.length > marginLeft / 10) {
+        entity = `${entity.slice(0, marginLeft / 10)}...`;
       }
-
+      if (artist && artist.length > marginLeft / 10) {
+        artist = `${artist.slice(0, marginLeft / 10)}...`;
+      }
       return (
         <g transform={`translate(${tick.x - marginLeft}, ${tick.y})`}>
-          <text textAnchor="start" dominantBaseline="middle">
-            {value}
-          </text>
+          <foreignObject height="100%" width="100%" y={-20}>
+            <table style={{ color: "black" }}>
+              <tbody>
+                <tr>
+                  <td>{idx}.&nbsp;</td>
+                  <td>{entity}</td>
+                </tr>
+                <tr>
+                  <td />
+                  <td style={{ fontSize: 12 }}>{artist}</td>
+                </tr>
+              </tbody>
+            </table>
+          </foreignObject>
         </g>
       );
     };
@@ -113,7 +128,7 @@ export default class Bar extends React.Component<BarProps, BarState> {
         maxValue={maxValue}
         layout="horizontal"
         colors="#FD8D3C"
-        indexBy="id"
+        indexBy="entity"
         enableGridY={false}
         padding={0.15}
         labelFormat={labelFormatter}
