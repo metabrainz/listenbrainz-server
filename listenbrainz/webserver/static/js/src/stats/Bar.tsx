@@ -134,14 +134,9 @@ export default class Bar extends React.Component<BarProps, BarState> {
     }) as unknown) as LabelFormatter;
 
     const customTooltip = (datum: any) => {
-      // Strip intial number
-      const index = datum.indexValue.substring(
-        datum.indexValue.indexOf(" ") + 1
-      );
-
       return (
         <div>
-          {index}: <strong>{datum.value} Listens</strong>
+          {datum.indexValue}: <strong>{datum.value} Listens</strong>
         </div>
       );
     };
