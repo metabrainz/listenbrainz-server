@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`UserHistory Page renders 1`] = `
+exports[`UserHistory Page renders correctly for artists 1`] = `
 <UserHistory
   apiUrl="apiUrl"
   user={
@@ -142,7 +142,7 @@ exports[`UserHistory Page renders 1`] = `
         className="col-md-12 text-center"
         style={
           Object {
-            "height": "30em",
+            "height": "75em",
           }
         }
       >
@@ -153,48 +153,158 @@ exports[`UserHistory Page renders 1`] = `
             data={
               Array [
                 Object {
-                  "count": 41,
-                  "id": "10. The Fray",
+                  "count": 6,
+                  "entity": "The Lumineers",
+                  "entityType": "artist",
+                  "idx": 25,
                 },
                 Object {
-                  "count": 44,
-                  "id": "9. The Chainsmokers",
+                  "count": 6,
+                  "entity": "Train",
+                  "entityType": "artist",
+                  "idx": 24,
                 },
                 Object {
-                  "count": 52,
-                  "id": "8. The Weeknd",
+                  "count": 8,
+                  "entity": "Backstreet Boys",
+                  "entityType": "artist",
+                  "idx": 23,
                 },
                 Object {
-                  "count": 65,
-                  "id": "7. OneRepublic",
+                  "count": 8,
+                  "entity": "The Weeknd",
+                  "entityType": "artist",
+                  "idx": 22,
                 },
                 Object {
-                  "count": 108,
-                  "id": "6. Ellie Goulding",
+                  "count": 10,
+                  "entity": "Linkin Park",
+                  "entityType": "artist",
+                  "idx": 21,
                 },
                 Object {
-                  "count": 118,
-                  "id": "5. Maroon 5",
+                  "count": 10,
+                  "entity": "M.I.A.",
+                  "entityType": "artist",
+                  "idx": 20,
                 },
                 Object {
-                  "count": 176,
-                  "id": "4. Imagine Dragons",
+                  "count": 11,
+                  "entity": "Of Monsters and Men",
+                  "entityType": "artist",
+                  "idx": 19,
                 },
                 Object {
-                  "count": 321,
-                  "id": "3. Coldplay",
+                  "count": 12,
+                  "entity": "Sia",
+                  "entityType": "artist",
+                  "idx": 18,
                 },
                 Object {
-                  "count": 333,
-                  "id": "2. Lenka",
+                  "count": 12,
+                  "entity": "The Chainsmokers",
+                  "entityType": "artist",
+                  "idx": 17,
                 },
                 Object {
-                  "count": 385,
-                  "id": "1. The Local train",
+                  "count": 12,
+                  "entity": "Tommee Profitt",
+                  "entityType": "artist",
+                  "idx": 16,
+                },
+                Object {
+                  "count": 13,
+                  "entity": "The Local train",
+                  "entityType": "artist",
+                  "idx": 15,
+                },
+                Object {
+                  "count": 15,
+                  "entity": "The Script",
+                  "entityType": "artist",
+                  "idx": 14,
+                },
+                Object {
+                  "count": 16,
+                  "entity": "Christina Perri",
+                  "entityType": "artist",
+                  "idx": 13,
+                },
+                Object {
+                  "count": 17,
+                  "entity": "George Ezra",
+                  "entityType": "artist",
+                  "idx": 12,
+                },
+                Object {
+                  "count": 19,
+                  "entity": "Ed Sheeran",
+                  "entityType": "artist",
+                  "idx": 11,
+                },
+                Object {
+                  "count": 20,
+                  "entity": "Taylor Swift",
+                  "entityType": "artist",
+                  "idx": 10,
+                },
+                Object {
+                  "count": 20,
+                  "entity": "Vance Joy",
+                  "entityType": "artist",
+                  "idx": 9,
+                },
+                Object {
+                  "count": 25,
+                  "entity": "Lenka",
+                  "entityType": "artist",
+                  "idx": 8,
+                },
+                Object {
+                  "count": 26,
+                  "entity": "Imagine Dragons",
+                  "entityType": "artist",
+                  "idx": 7,
+                },
+                Object {
+                  "count": 26,
+                  "entity": "Ritviz",
+                  "entityType": "artist",
+                  "idx": 6,
+                },
+                Object {
+                  "count": 31,
+                  "entity": "The Fray",
+                  "entityType": "artist",
+                  "idx": 5,
+                },
+                Object {
+                  "count": 36,
+                  "entity": "OneRepublic",
+                  "entityType": "artist",
+                  "idx": 4,
+                },
+                Object {
+                  "count": 38,
+                  "entity": "Maroon 5",
+                  "entityType": "artist",
+                  "idx": 3,
+                },
+                Object {
+                  "count": 54,
+                  "entity": "Ellie Goulding",
+                  "entityType": "artist",
+                  "idx": 2,
+                },
+                Object {
+                  "count": 70,
+                  "entity": "Coldplay",
+                  "entityType": "artist",
+                  "idx": 1,
                 },
               ]
             }
-            maxValue={385}
+            maxValue={70}
           >
             <ResponsiveBar
               animate={false}
@@ -207,49 +317,159 @@ exports[`UserHistory Page renders 1`] = `
               data={
                 Array [
                   Object {
-                    "count": 41,
-                    "id": "10. The Fray",
+                    "count": 6,
+                    "entity": "The Lumineers",
+                    "entityType": "artist",
+                    "idx": 25,
                   },
                   Object {
-                    "count": 44,
-                    "id": "9. The Chainsmokers",
+                    "count": 6,
+                    "entity": "Train",
+                    "entityType": "artist",
+                    "idx": 24,
                   },
                   Object {
-                    "count": 52,
-                    "id": "8. The Weeknd",
+                    "count": 8,
+                    "entity": "Backstreet Boys",
+                    "entityType": "artist",
+                    "idx": 23,
                   },
                   Object {
-                    "count": 65,
-                    "id": "7. OneRepublic",
+                    "count": 8,
+                    "entity": "The Weeknd",
+                    "entityType": "artist",
+                    "idx": 22,
                   },
                   Object {
-                    "count": 108,
-                    "id": "6. Ellie Goulding",
+                    "count": 10,
+                    "entity": "Linkin Park",
+                    "entityType": "artist",
+                    "idx": 21,
                   },
                   Object {
-                    "count": 118,
-                    "id": "5. Maroon 5",
+                    "count": 10,
+                    "entity": "M.I.A.",
+                    "entityType": "artist",
+                    "idx": 20,
                   },
                   Object {
-                    "count": 176,
-                    "id": "4. Imagine Dragons",
+                    "count": 11,
+                    "entity": "Of Monsters and Men",
+                    "entityType": "artist",
+                    "idx": 19,
                   },
                   Object {
-                    "count": 321,
-                    "id": "3. Coldplay",
+                    "count": 12,
+                    "entity": "Sia",
+                    "entityType": "artist",
+                    "idx": 18,
                   },
                   Object {
-                    "count": 333,
-                    "id": "2. Lenka",
+                    "count": 12,
+                    "entity": "The Chainsmokers",
+                    "entityType": "artist",
+                    "idx": 17,
                   },
                   Object {
-                    "count": 385,
-                    "id": "1. The Local train",
+                    "count": 12,
+                    "entity": "Tommee Profitt",
+                    "entityType": "artist",
+                    "idx": 16,
+                  },
+                  Object {
+                    "count": 13,
+                    "entity": "The Local train",
+                    "entityType": "artist",
+                    "idx": 15,
+                  },
+                  Object {
+                    "count": 15,
+                    "entity": "The Script",
+                    "entityType": "artist",
+                    "idx": 14,
+                  },
+                  Object {
+                    "count": 16,
+                    "entity": "Christina Perri",
+                    "entityType": "artist",
+                    "idx": 13,
+                  },
+                  Object {
+                    "count": 17,
+                    "entity": "George Ezra",
+                    "entityType": "artist",
+                    "idx": 12,
+                  },
+                  Object {
+                    "count": 19,
+                    "entity": "Ed Sheeran",
+                    "entityType": "artist",
+                    "idx": 11,
+                  },
+                  Object {
+                    "count": 20,
+                    "entity": "Taylor Swift",
+                    "entityType": "artist",
+                    "idx": 10,
+                  },
+                  Object {
+                    "count": 20,
+                    "entity": "Vance Joy",
+                    "entityType": "artist",
+                    "idx": 9,
+                  },
+                  Object {
+                    "count": 25,
+                    "entity": "Lenka",
+                    "entityType": "artist",
+                    "idx": 8,
+                  },
+                  Object {
+                    "count": 26,
+                    "entity": "Imagine Dragons",
+                    "entityType": "artist",
+                    "idx": 7,
+                  },
+                  Object {
+                    "count": 26,
+                    "entity": "Ritviz",
+                    "entityType": "artist",
+                    "idx": 6,
+                  },
+                  Object {
+                    "count": 31,
+                    "entity": "The Fray",
+                    "entityType": "artist",
+                    "idx": 5,
+                  },
+                  Object {
+                    "count": 36,
+                    "entity": "OneRepublic",
+                    "entityType": "artist",
+                    "idx": 4,
+                  },
+                  Object {
+                    "count": 38,
+                    "entity": "Maroon 5",
+                    "entityType": "artist",
+                    "idx": 3,
+                  },
+                  Object {
+                    "count": 54,
+                    "entity": "Ellie Goulding",
+                    "entityType": "artist",
+                    "idx": 2,
+                  },
+                  Object {
+                    "count": 70,
+                    "entity": "Coldplay",
+                    "entityType": "artist",
+                    "idx": 1,
                   },
                 ]
               }
               enableGridY={false}
-              indexBy="id"
+              indexBy="entity"
               keys={
                 Array [
                   "count",
@@ -263,7 +483,734 @@ exports[`UserHistory Page renders 1`] = `
                   "left": 204.8,
                 }
               }
-              maxValue={385}
+              maxValue={70}
+              padding={0.15}
+              theme={
+                Object {
+                  "axis": Object {
+                    "ticks": Object {
+                      "text": Object {
+                        "fontSize": "14px",
+                      },
+                    },
+                  },
+                  "labels": Object {
+                    "text": Object {
+                      "fontSize": "14px",
+                    },
+                  },
+                }
+              }
+              tooltip={[Function]}
+            >
+              <ResponsiveWrapper>
+                <Measure
+                  bounds={true}
+                  onResize={[Function]}
+                >
+                  <Component
+                    bounds={true}
+                    contentRect={
+                      Object {
+                        "bounds": Object {},
+                        "client": Object {},
+                        "entry": Object {},
+                        "margin": Object {},
+                        "offset": Object {},
+                        "scroll": Object {},
+                      }
+                    }
+                    measure={[Function]}
+                    measureRef={[Function]}
+                  >
+                    <div
+                      style={
+                        Object {
+                          "height": "100%",
+                          "width": "100%",
+                        }
+                      }
+                    />
+                  </Component>
+                </Measure>
+              </ResponsiveWrapper>
+            </ResponsiveBar>
+          </Bar>
+        </Loader>
+      </div>
+    </div>
+    <div
+      className="row"
+    >
+      <div
+        className="col-xs-12"
+      >
+        <ul
+          className="pager"
+        >
+          <li
+            className="previous hidden"
+          >
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              ← Previous
+            </a>
+          </li>
+          <li
+            className="next hidden"
+          >
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              Next →
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</UserHistory>
+`;
+
+exports[`UserHistory Page renders correctly for releases 1`] = `
+<UserHistory
+  apiUrl="apiUrl"
+  user={
+    Object {
+      "id": 0,
+      "name": "dummyUser",
+    }
+  }
+>
+  <div>
+    <div
+      className="row"
+    >
+      <div
+        className="col-xs-12"
+      >
+        <h3>
+          Top
+          <span
+            className="dropdown"
+          >
+            <button
+              className="dropdown-togle btn-transparent capitalize-bold"
+              data-toggle="dropdown"
+              type="button"
+            >
+              <span
+                className="caret"
+              />
+            </button>
+            <ul
+              className="dropdown-menu"
+              role="menu"
+            >
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Artists
+                </a>
+              </li>
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Releases
+                </a>
+              </li>
+            </ul>
+          </span>
+          of 
+          the
+          <span
+            className="dropdown"
+          >
+            <button
+              className="dropdown-toggle btn-transparent capitalize-bold"
+              data-toggle="dropdown"
+              type="button"
+            >
+              <span
+                className="caret"
+              />
+            </button>
+            <ul
+              className="dropdown-menu"
+              role="menu"
+            >
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Week
+                </a>
+              </li>
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Month
+                </a>
+              </li>
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Year
+                </a>
+              </li>
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  All Time
+                </a>
+              </li>
+            </ul>
+          </span>
+          2020
+        </h3>
+      </div>
+    </div>
+    <div
+      className="row"
+    >
+      <div
+        className="col-xs-12"
+      >
+        <h4
+          style={
+            Object {
+              "textTransform": "capitalize",
+            }
+          }
+        >
+           count - 
+          <b>
+            0
+          </b>
+        </h4>
+      </div>
+    </div>
+    <div
+      className="row"
+    >
+      <div
+        className="col-md-12 text-center"
+        style={
+          Object {
+            "height": "75em",
+          }
+        }
+      >
+        <Loader
+          isLoading={false}
+        >
+          <Bar
+            data={
+              Array [
+                Object {
+                  "artist": "Backstreet Boys",
+                  "artistMBID": Array [],
+                  "count": 8,
+                  "entity": "The Hits--Chapter One",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 25,
+                },
+                Object {
+                  "artist": "The Local train",
+                  "artistMBID": Array [],
+                  "count": 9,
+                  "entity": "Aalas Ka Pedh",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 24,
+                },
+                Object {
+                  "artist": "M.I.A.",
+                  "artistMBID": Array [],
+                  "count": 10,
+                  "entity": "Kala",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 23,
+                },
+                Object {
+                  "artist": "Linkin Park",
+                  "artistMBID": Array [],
+                  "count": 10,
+                  "entity": "One More Light",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 22,
+                },
+                Object {
+                  "artist": "Sia",
+                  "artistMBID": Array [],
+                  "count": 11,
+                  "entity": "Cheap Thrills (feat. Sean Paul)",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 21,
+                },
+                Object {
+                  "artist": "Of Monsters and Men",
+                  "artistMBID": Array [],
+                  "count": 11,
+                  "entity": "My Head Is an Animal",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 20,
+                },
+                Object {
+                  "artist": "Maroon 5",
+                  "artistMBID": Array [],
+                  "count": 11,
+                  "entity": "Overexposed",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 19,
+                },
+                Object {
+                  "artist": "Maroon 5",
+                  "artistMBID": Array [],
+                  "count": 11,
+                  "entity": "Singles",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 18,
+                },
+                Object {
+                  "artist": "The Script",
+                  "artistMBID": Array [],
+                  "count": 12,
+                  "entity": "#3",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 17,
+                },
+                Object {
+                  "artist": "Tommee Profitt",
+                  "artistMBID": Array [],
+                  "count": 12,
+                  "entity": "In The End",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 16,
+                },
+                Object {
+                  "artist": "OneRepublic",
+                  "artistMBID": Array [],
+                  "count": 13,
+                  "entity": "13 Reasons Why (Season 2)",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 15,
+                },
+                Object {
+                  "artist": "Lenka",
+                  "artistMBID": Array [],
+                  "count": 13,
+                  "entity": "Two (Expanded Edition)",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 14,
+                },
+                Object {
+                  "artist": "George Ezra",
+                  "artistMBID": Array [],
+                  "count": 15,
+                  "entity": "Staying at Tamara's",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 13,
+                },
+                Object {
+                  "artist": "Coldplay",
+                  "artistMBID": Array [],
+                  "count": 16,
+                  "entity": "A Head Full Of Dreams",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 12,
+                },
+                Object {
+                  "artist": "Christina Perri",
+                  "artistMBID": Array [],
+                  "count": 16,
+                  "entity": "A Thousand Years",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 11,
+                },
+                Object {
+                  "artist": "Ellie Goulding",
+                  "artistMBID": Array [],
+                  "count": 16,
+                  "entity": "Halcyon Days",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 10,
+                },
+                Object {
+                  "artist": "Taylor Swift",
+                  "artistMBID": Array [],
+                  "count": 17,
+                  "entity": "1989",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 9,
+                },
+                Object {
+                  "artist": "Imagine Dragons",
+                  "artistMBID": Array [],
+                  "count": 17,
+                  "entity": "Night Visions (Deluxe)",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 8,
+                },
+                Object {
+                  "artist": "Ed Sheeran",
+                  "artistMBID": Array [],
+                  "count": 17,
+                  "entity": "÷ (Deluxe)",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 7,
+                },
+                Object {
+                  "artist": "Vance Joy",
+                  "artistMBID": Array [],
+                  "count": 18,
+                  "entity": "Dream Your Life Away (Special Edition)",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 6,
+                },
+                Object {
+                  "artist": "OneRepublic",
+                  "artistMBID": Array [],
+                  "count": 18,
+                  "entity": "Native",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 5,
+                },
+                Object {
+                  "artist": "Ritviz",
+                  "artistMBID": Array [],
+                  "count": 20,
+                  "entity": "Udd Gaye (Bacardi House Party Sessions)",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 4,
+                },
+                Object {
+                  "artist": "Ellie Goulding",
+                  "artistMBID": Array [],
+                  "count": 25,
+                  "entity": "Delirium (Deluxe)",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 3,
+                },
+                Object {
+                  "artist": "The Fray",
+                  "artistMBID": Array [],
+                  "count": 25,
+                  "entity": "How to Save a Life",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 2,
+                },
+                Object {
+                  "artist": "Coldplay",
+                  "artistMBID": Array [],
+                  "count": 26,
+                  "entity": "Live in Buenos Aires",
+                  "entityMBID": "",
+                  "entityType": "release",
+                  "idx": 1,
+                },
+              ]
+            }
+            maxValue={26}
+          >
+            <ResponsiveBar
+              animate={false}
+              axisLeft={
+                Object {
+                  "renderTick": [Function],
+                }
+              }
+              colors="#FD8D3C"
+              data={
+                Array [
+                  Object {
+                    "artist": "Backstreet Boys",
+                    "artistMBID": Array [],
+                    "count": 8,
+                    "entity": "The Hits--Chapter One",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 25,
+                  },
+                  Object {
+                    "artist": "The Local train",
+                    "artistMBID": Array [],
+                    "count": 9,
+                    "entity": "Aalas Ka Pedh",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 24,
+                  },
+                  Object {
+                    "artist": "M.I.A.",
+                    "artistMBID": Array [],
+                    "count": 10,
+                    "entity": "Kala",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 23,
+                  },
+                  Object {
+                    "artist": "Linkin Park",
+                    "artistMBID": Array [],
+                    "count": 10,
+                    "entity": "One More Light",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 22,
+                  },
+                  Object {
+                    "artist": "Sia",
+                    "artistMBID": Array [],
+                    "count": 11,
+                    "entity": "Cheap Thrills (feat. Sean Paul)",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 21,
+                  },
+                  Object {
+                    "artist": "Of Monsters and Men",
+                    "artistMBID": Array [],
+                    "count": 11,
+                    "entity": "My Head Is an Animal",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 20,
+                  },
+                  Object {
+                    "artist": "Maroon 5",
+                    "artistMBID": Array [],
+                    "count": 11,
+                    "entity": "Overexposed",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 19,
+                  },
+                  Object {
+                    "artist": "Maroon 5",
+                    "artistMBID": Array [],
+                    "count": 11,
+                    "entity": "Singles",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 18,
+                  },
+                  Object {
+                    "artist": "The Script",
+                    "artistMBID": Array [],
+                    "count": 12,
+                    "entity": "#3",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 17,
+                  },
+                  Object {
+                    "artist": "Tommee Profitt",
+                    "artistMBID": Array [],
+                    "count": 12,
+                    "entity": "In The End",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 16,
+                  },
+                  Object {
+                    "artist": "OneRepublic",
+                    "artistMBID": Array [],
+                    "count": 13,
+                    "entity": "13 Reasons Why (Season 2)",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 15,
+                  },
+                  Object {
+                    "artist": "Lenka",
+                    "artistMBID": Array [],
+                    "count": 13,
+                    "entity": "Two (Expanded Edition)",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 14,
+                  },
+                  Object {
+                    "artist": "George Ezra",
+                    "artistMBID": Array [],
+                    "count": 15,
+                    "entity": "Staying at Tamara's",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 13,
+                  },
+                  Object {
+                    "artist": "Coldplay",
+                    "artistMBID": Array [],
+                    "count": 16,
+                    "entity": "A Head Full Of Dreams",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 12,
+                  },
+                  Object {
+                    "artist": "Christina Perri",
+                    "artistMBID": Array [],
+                    "count": 16,
+                    "entity": "A Thousand Years",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 11,
+                  },
+                  Object {
+                    "artist": "Ellie Goulding",
+                    "artistMBID": Array [],
+                    "count": 16,
+                    "entity": "Halcyon Days",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 10,
+                  },
+                  Object {
+                    "artist": "Taylor Swift",
+                    "artistMBID": Array [],
+                    "count": 17,
+                    "entity": "1989",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 9,
+                  },
+                  Object {
+                    "artist": "Imagine Dragons",
+                    "artistMBID": Array [],
+                    "count": 17,
+                    "entity": "Night Visions (Deluxe)",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 8,
+                  },
+                  Object {
+                    "artist": "Ed Sheeran",
+                    "artistMBID": Array [],
+                    "count": 17,
+                    "entity": "÷ (Deluxe)",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 7,
+                  },
+                  Object {
+                    "artist": "Vance Joy",
+                    "artistMBID": Array [],
+                    "count": 18,
+                    "entity": "Dream Your Life Away (Special Edition)",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 6,
+                  },
+                  Object {
+                    "artist": "OneRepublic",
+                    "artistMBID": Array [],
+                    "count": 18,
+                    "entity": "Native",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 5,
+                  },
+                  Object {
+                    "artist": "Ritviz",
+                    "artistMBID": Array [],
+                    "count": 20,
+                    "entity": "Udd Gaye (Bacardi House Party Sessions)",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 4,
+                  },
+                  Object {
+                    "artist": "Ellie Goulding",
+                    "artistMBID": Array [],
+                    "count": 25,
+                    "entity": "Delirium (Deluxe)",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 3,
+                  },
+                  Object {
+                    "artist": "The Fray",
+                    "artistMBID": Array [],
+                    "count": 25,
+                    "entity": "How to Save a Life",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 2,
+                  },
+                  Object {
+                    "artist": "Coldplay",
+                    "artistMBID": Array [],
+                    "count": 26,
+                    "entity": "Live in Buenos Aires",
+                    "entityMBID": "",
+                    "entityType": "release",
+                    "idx": 1,
+                  },
+                ]
+              }
+              enableGridY={false}
+              indexBy="entity"
+              keys={
+                Array [
+                  "count",
+                ]
+              }
+              labelFormat={[Function]}
+              labelSkipWidth={0}
+              layout="horizontal"
+              margin={
+                Object {
+                  "left": 204.8,
+                }
+              }
+              maxValue={26}
               padding={0.15}
               theme={
                 Object {
