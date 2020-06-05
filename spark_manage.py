@@ -132,13 +132,22 @@ def dataframes(days):
         _ = create_dataframes.main(train_model_window=days)
 
 
+def parse_list(ctx, args):
+    return list(args)
+
+
 @cli.command(name='model')
-def model():
+@click.option("--rank", callback=parse_list, default=[5, 10], type=int, multiple=True, help="Number of hidden features")
+@click.option("--itr", callback=parse_list, default=[5, 10], type=int, multiple=True, help="Number of iterations to run.")
+@click.option("--lmbda", callback=parse_list, default=[0.1, 10.0], type=float, multiple=True, help="Controls over fitting.")
+@click.option("--alpha", default=3.0, type=float, help="Baseline level of confidence weighting applied.")
+def model(rank, itr, lmbda, alpha):
     """ Invoke script responsible for training data.
+        For more details refer to 'https://spark.apache.org/docs/2.1.0/mllib-collaborative-filtering.html'
     """
     from listenbrainz_spark.recommendations import train_models
     with app.app_context():
-        _ = train_models.main()
+        _ = train_models.main(ranks=rank, lambdas=lmbda, iterations=itr, alpha=alpha)
 
 
 @cli.command(name='candidate')
