@@ -23,6 +23,7 @@ interface AdditionalInfo {
   spotify_artist_ids?: Array<string> | null;
   spotify_id?: string | null;
   youtube_id?: string | null;
+  origin_url?: string | null;
   tags?: Array<string> | null;
   track_mbid?: string | null;
   tracknumber?: number | null;
