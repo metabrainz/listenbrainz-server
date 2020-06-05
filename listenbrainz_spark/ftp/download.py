@@ -2,7 +2,7 @@ import re
 from time import time
 
 from listenbrainz_spark.ftp import ListenBrainzFTPDownloader
-from listenbrainz_spark.exceptions import DumpNotFoundException
+from listenbrainz_spark.exceptions import DumpNotFoundException, MissingMappingTypeException
 
 from flask import current_app
 
@@ -107,6 +107,48 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
             return int(_date + _time)
 
         return sorted(mapping, key=callback)[-1]
+
+    def get_mapping_dump_name_of_given_type(self, dump, mapping_type=None):
+        """ Get list of given mapping type dirs.
+
+            Args:
+                dump: list of dumps in the current working directory.
+                mapping_type (str): mapping type.
+
+            Returns:
+                mapping: list of mapping dump names of given type in the current working directory.
+        """
+        if mapping_type is None:
+            err_msg = 'Please provide a valid mapping type from the following:' \
+                      '\nmsid-mbid-mapping\nmsid-mbid-mapping-with-text\nmsid-mbid-mapping-matchable\n'
+            raise MissingMappingTypeException(err_msg)
+
+        mapping = list()
+        for mapping_name in dump:
+            mapping_pattern = '{}-\\d+-\\d+(.tar.bz2)$'.format(mapping_type)
+
+            if re.match(mapping_pattern, mapping_name):
+                mapping.append(mapping_name)
+
+        if len(mapping) == 0:
+            err_msg = '{} type mapping not found'.format(mapping_type)
+            raise DumpNotFoundException(err_msg)
+
+        return mapping
+
+    def get_latest_mapping(self, mapping):
+        """ Get latest mapping name.
+
+            Args:
+                mapping: list of mapping dump names.
+
+            Returns:
+                latest_mapping (str): latest mapping dump name.
+        """
+        # sort the mappings on timestamp
+        sorted_mapping = sorted(mapping, key=lambda x: int(x.split('-')[-2] + x.split('-')[-1].split('.')[0]))
+        latest_mapping = sorted_mapping[-1]
+        return latest_mapping
 
     def download_msid_mbid_mapping(self, directory):
         """ Download latest msid_mbid_mapping to dir passed as an argument.
