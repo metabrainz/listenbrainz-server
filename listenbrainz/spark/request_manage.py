@@ -141,20 +141,14 @@ def parse_list(ctx, args):
     return list(args)
 
 
-helper_doc_link = 'https://spark.apache.org/docs/2.1.0/mllib-collaborative-filtering.html'
-
-
 @cli.command(name='request_model')
-@click.option("--rank", callback=parse_list, default=[5, 10], type=int, multiple=True,
-              help="Number of hidden features. For more details refer to: {}".format(helper_doc_link))
-@click.option("--itr", callback=parse_list, default=[5, 10], type=int, multiple=True,
-              help="Number of iterations to run. For more details refer to: {}".format(helper_doc_link))
-@click.option("--lmbda", callback=parse_list, default=[0.1, 10.0], type=float, multiple=True,
-              help="Controls over fitting. For more details refer to: {}".format(helper_doc_link))
-@click.option("--alpha", default=3.0, type=float,
-              help="Baseline level of confidence weighting applied. For more details refer to: {}".format(helper_doc_link))
+@click.option("--rank", callback=parse_list, default=[5, 10], type=int, multiple=True, help="Number of hidden features")
+@click.option("--itr", callback=parse_list, default=[5, 10], type=int, multiple=True, help="Number of iterations to run.")
+@click.option("--lmbda", callback=parse_list, default=[0.1, 10.0], type=float, multiple=True, help="Controls over fitting.")
+@click.option("--alpha", default=3.0, type=float, help="Baseline level of confidence weighting applied.")
 def request_model(rank, itr, lmbda, alpha):
     """ Send the cluster a request to train the model.
+        For more details refer to 'https://spark.apache.org/docs/2.1.0/mllib-collaborative-filtering.html'
     """
     params = {
         'ranks': rank,
