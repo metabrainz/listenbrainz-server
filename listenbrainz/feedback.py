@@ -8,11 +8,13 @@ class Feedback(BaseModel):
     """ Represents a feedback object
         Args:
             user_id: the row id of the user in the DB
+            user_name: (Optional) the MusicBrainz ID of the user
             recording_msid: the MessyBrainz ID of the recording
             score: The score associated with the recording (+1/-1 for love/hate respectively)
     """
 
     user_id: int
+    user_name: str = None
     recording_msid: str
     score: int
 
