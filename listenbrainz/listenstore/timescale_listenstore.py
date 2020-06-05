@@ -106,6 +106,12 @@ class TimescaleListenStore(ListenStore):
         self.get_listen_count_for_user(user_name, need_exact=True)
 
     def _select_single_timestamp(self, select_min_timestamp, user_name):
+        """ Fetch a single timestamp (min or max) from the listenstore for a given user.
+
+            Args:
+                select_min_timestamp: boolean. Select the min timestamp if true, max if false.
+                user_name: the user for whom to fetch the timestamp.
+        """
 
         if "PYTEST_CURRENT_TEST" in os.environ:
             # pytest sets the environment variable PYTEST_CURRENT_TEST. If the variable is set
