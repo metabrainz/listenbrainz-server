@@ -25,6 +25,8 @@ import sqlalchemy
 import ujson
 
 from listenbrainz import db
+from listenbrainz.db.model.user_release_stat import UserReleaseStatJson, UserReleaseStat
+from listenbrainz.db.model.user_artist_stat import UserArtistStatJson, UserArtistStat
 
 
 def get_timestamp_for_last_user_stats_update():
@@ -61,28 +63,28 @@ def _insert_jsonb_data(user_id, column, data):
         )
 
 
-def insert_user_artists(user_id, artists):
+def insert_user_artists(user_id: int, artists: UserArtistStatJson):
     """ Inserts artist stats calculated from Spark into the database.
 
         If stats are already present for some user, they are updated to the new
         values passed.
 
-        Args: user_id (int): the row id of the user,
-              artists (dict): the top artists listened to by the user
+        Args: user_id: the row id of the user,
+              artists: the top artists listened to by the user
     """
-    _insert_jsonb_data(user_id=user_id, column='artist', data=artists)
+    _insert_jsonb_data(user_id=user_id, column='artist', data=artists.dict(exclude_none=True))
 
 
-def insert_user_releases(user_id, releases):
+def insert_user_releases(user_id: int, releases: UserReleaseStatJson):
     """Inserts release stats calculated from Spark into the database.
 
        If stats are already present for some user, they are updated to the new
        values passed.
 
-       Args: user_id (int): the row id of the user,
-             releases (dict): the top releases listened to by the user
+       Args: user_id: the row id of the user,
+             releases: the top releases listened to by the user
     """
-    _insert_jsonb_data(user_id=user_id, column='release', data=releases)
+    _insert_jsonb_data(user_id=user_id, column='release', data=releases.dict(exclude_none=True))
 
 
 def get_user_stats(user_id, columns):
@@ -124,7 +126,10 @@ def get_user_artists(user_id):
         Args:
             user_id (int): the row ID of the user in the DB
     """
-    return get_user_stats(user_id, 'artist')
+    data = get_user_stats(user_id, 'artist')
+    if not data:
+        return None
+    return UserArtistStat(**data)
 
 
 def get_user_releases(user_id):
@@ -133,35 +138,10 @@ def get_user_releases(user_id):
         Args:
             user_id (int): the row ID of the user in the DB
     """
-    return get_user_stats(user_id, 'release')
-
-
-def get_all_user_stats(user_id):
-    """ Get ALL user stats for user with given ID.
-
-        Args:
-            user_id (int): the row ID of the user in the DB
-
-        Returns:
-            A dict of the following format
-            {
-                'user_id' (int): the row ID of the user in the DB
-                'artist' (dict): artist stats for the user, for description see below
-                'recording' (dict): recording stats for the user, for description see below
-                'release' (dict): release stats for the user, for description see below
-                'last_updated': datetime object representing when these stats were
-                                last updated
-            }
-
-
-            The artist dict contains all artist related stats calculated for the user
-            from listenbrianz.stats.user
-
-            Similarly, the recording and release dicts contain all recording and release
-            related stats calculated for the user keyed by stat name.
-    """
-
-    return get_user_stats(user_id, 'artist, recording, release')
+    data = get_user_stats(user_id, 'release')
+    if not data:
+        return None
+    return UserReleaseStat(**data)
 
 
 def valid_stats_exist(user_id, days):

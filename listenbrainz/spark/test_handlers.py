@@ -10,6 +10,8 @@ from listenbrainz.spark.handlers import (
     is_new_cf_recording_recommendation_batch, is_new_user_stats_batch)
 from listenbrainz.webserver import create_app
 
+from listenbrainz.db.model.user_artist_stat import UserArtistStatJson, UserArtistStatRange, UserArtistRecord
+
 
 class HandlersTestCase(unittest.TestCase):
 
@@ -26,7 +28,13 @@ class HandlersTestCase(unittest.TestCase):
             'type': 'user_entity',
             'entity': 'artists',
             'range': 'all_time',
-            'data': [{'artist_name': 'Kanye West', 'count': 200}],
+            'from_ts': 1,
+            'to_ts': 10,
+            'count': 1,
+            'data': [{
+                'artist_name': 'Kanye West',
+                'listen_count': 200,
+            }],
         }
         mock_get_by_mb_id.return_value = {'id': 1, 'musicbrainz_id': 'iliekcomputers'}
         mock_new_user_stats.return_value = True
@@ -35,7 +43,24 @@ class HandlersTestCase(unittest.TestCase):
             current_app.config['TESTING'] = False  # set testing to false to check the notifications
             handle_user_entity(data)
 
-        mock_db_insert.assert_called_with(1, {'all_time': {'artists': data['data']}})
+        mock_db_insert.assert_called_with(1, UserArtistStatJson(
+            week=None,
+            year=None,
+            month=None,
+            all_time=UserArtistStatRange(
+                to_ts=10,
+                from_ts=1,
+                count=1,
+                artists=[
+                    UserArtistRecord(
+                        artist_msid=None,
+                        artist_mbids=[],
+                        listen_count=200,
+                        artist_name='Kanye West',
+                    )
+                ]
+            )
+        ))
         mock_send_mail.assert_called_once()
 
     @mock.patch('listenbrainz.spark.handlers.db_stats.get_timestamp_for_last_user_stats_update')

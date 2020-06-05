@@ -8,6 +8,8 @@ import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_rec
 from flask import current_app, render_template
 from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
+from listenbrainz.db.model.user_artist_stat import UserArtistStatJson
+from listenbrainz.db.model.user_release_stat import UserReleaseStatJson
 
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
@@ -63,6 +65,13 @@ def notify_user_stats_update(stat_type):
             from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
         )
 
+def _get_entity_model(entity):
+    if entity == 'artists':
+        return UserArtistStatJson
+    elif entity == 'releases':
+        return UserReleaseStatJson
+    raise ValueError("Unknown entity type: %s" % entity)
+
 
 def handle_user_entity(data):
     """ Take entity stats for a user and save it in the database. """
@@ -85,9 +94,11 @@ def handle_user_entity(data):
     to_remove = {'musicbrainz_id', 'type', 'entity', 'data', 'range'}
     data_mod = {key: data[key] for key in data if key not in to_remove}
 
+    entity_model = _get_entity_model(entity)
+
     # Get function to insert statistics
     db_handler = getattr(db_stats, 'insert_user_{}'.format(entity))
-    db_handler(user['id'], {stats_range: data_mod})
+    db_handler(user['id'], entity_model(**{stats_range: data_mod}))
 
 
 def handle_dump_imported(data):
