@@ -1,7 +1,7 @@
 import sqlalchemy
 
 from listenbrainz import db
-from listenbrainz.feedback import Feedback
+from listenbrainz.db.model.feedback import Feedback
 
 
 def insert(feedback: Feedback):
