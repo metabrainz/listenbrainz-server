@@ -4,7 +4,10 @@ import yattag
 import ujson
 import collections
 
+from listenbrainz.webserver.decorators import crossdomain
+
 LastFMError = collections.namedtuple('LastFMError', ['code', 'message'])
+
 
 class APIError(Exception):
     def __init__(self, message, status_code, payload=None):
@@ -165,6 +168,7 @@ def init_error_handlers(app):
         return handle_error(error, 503)
 
     @app.errorhandler(APIError)
+    @crossdomain()
     def api_error(error):
         return jsonify(error.to_dict()), error.status_code
 
@@ -176,6 +180,7 @@ def init_error_handlers(app):
 
 class InvalidAPIUsage(Exception):
     """ General error class for the API_compat to render errors in multiple formats """
+
     def __init__(self, api_error, status_code=500, output_format="xml"):
         Exception.__init__(self)
         self.api_error = api_error
