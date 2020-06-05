@@ -1,6 +1,11 @@
 import * as React from "react";
 import YouTube, { Options } from "react-youtube";
-import { isEqual as _isEqual, get as _get, isNil as _isNil } from "lodash";
+import {
+  isEqual as _isEqual,
+  get as _get,
+  isNil as _isNil,
+  isString as _isString,
+} from "lodash";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
 
 type YoutubePlayerState = {
@@ -104,13 +109,17 @@ export default class YoutubePlayer
     if (!show) {
       return;
     }
-    const youtubeURI = _get(
-      listen,
-      "track_metadata.additional_info.youtube_id"
-    );
-
-    if (youtubeURI) {
-      this.playTrackById(youtubeURI);
+    let youtubeId = _get(listen, "track_metadata.additional_info.youtube_id");
+    const originURL = _get(listen, "track_metadata.additional_info.origin_url");
+    if (!youtubeId && _isString(originURL) && originURL.length) {
+      const parsedURL = new URL(originURL);
+      const { hostname, searchParams } = parsedURL;
+      if (/youtube\.com/.test(hostname)) {
+        youtubeId = searchParams.get("v");
+      }
+    }
+    if (youtubeId) {
+      this.playTrackById(youtubeId);
     } else {
       this.searchAndPlayTrack(listen);
     }
