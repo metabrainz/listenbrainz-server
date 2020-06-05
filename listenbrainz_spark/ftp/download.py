@@ -1,13 +1,13 @@
+import re
 from time import time
 
 from listenbrainz_spark.ftp import ListenBrainzFTPDownloader
-from listenbrainz_spark.exceptions import DumpNotFoundException
+from listenbrainz_spark.exceptions import DumpNotFoundException, MissingMappingTypeException
 
 from flask import current_app
 
 # mbid_msid_mapping_with_matchable is used.
 # refer to: http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/labs/mappings/
-MAPPING_DUMP_ID_POS = 5
 ARTIST_RELATION_DUMP_ID_POS = 5
 
 FULL = 'full'
@@ -94,21 +94,68 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         current_app.logger.info('Done. Total time: {:.2f} sec'.format(time() - t0))
         return dest_path
 
-    def download_msid_mbid_mapping(self, directory, mapping_dump_id=None):
-        """ Download msid_mbid_mapping to dir passed as an argument.
+    def get_mapping_dump_name_of_given_type(self, dump, mapping_type=None):
+        """ Get list of given mapping type dirs.
+
+            Args:
+                dump: list of dumps in the current working directory.
+                mapping_type (str): mapping type.
+
+            Returns:
+                mapping: list of mapping dump names of given type in the current working directory.
+        """
+        if mapping_type is None:
+            err_msg = 'Please provide a valid mapping type from the following:' \
+                      '\nmsid-mbid-mapping\nmsid-mbid-mapping-with-text\nmsid-mbid-mapping-matchable\n'
+            raise MissingMappingTypeException(err_msg)
+
+        mapping = list()
+        for mapping_name in dump:
+            mapping_pattern = '{}-\\d+-\\d+(.tar.bz2)$'.format(mapping_type)
+
+            if re.match(mapping_pattern, mapping_name):
+                mapping.append(mapping_name)
+
+        if len(mapping) == 0:
+            err_msg = '{} type mapping not found'.format(mapping_type)
+            raise DumpNotFoundException(err_msg)
+
+        return mapping
+
+    def get_latest_mapping(self, mapping):
+        """ Get latest mapping name.
+
+            Args:
+                mapping: list of mapping dump names.
+
+            Returns:
+                latest_mapping (str): latest mapping dump name.
+        """
+        # sort the mappings on timestamp
+        sorted_mapping = sorted(mapping, key=lambda x: int(x.split('-')[-2] + x.split('-')[-1].split('.')[0]))
+        latest_mapping = sorted_mapping[-1]
+        return latest_mapping
+
+    def download_msid_mbid_mapping(self, directory):
+        """ Download latest msid_mbid_mapping to dir passed as an argument.
 
             Args:
                 directory (str): Dir to save mappings locally.
-                mapping_dump_id (int): Unique identifier of mapping to be downloaded.
-                    If not provided, most recent mapping will be downloaded.
 
             Returns:
                 dest_path (str): Local path where mapping has been downloaded.
         """
-        dest_path = self.download_spark_dump_and_get_path(
-                        directory, mapping_dump_id, current_app.config['FTP_MSID_MBID_DIR'],
-                        MAPPING_DUMP_ID_POS
-                    )
+        self.connection.cwd(current_app.config['FTP_MSID_MBID_DIR'])
+        dump = self.list_dir()
+
+        mapping = self.get_mapping_dump_name_of_given_type(dump, mapping_type=current_app.config['MAPPING_TYPE'])
+
+        latest_mapping = self.get_latest_mapping(mapping)
+
+        t0 = time()
+        current_app.logger.info('Downloading {} from FTP...'.format(latest_mapping))
+        dest_path = self.download_dump(latest_mapping, directory)
+        current_app.logger.info('Done. Total time: {:.2f} sec'.format(time() - t0))
         return dest_path
 
     def download_listens(self, directory, listens_dump_id=None, dump_type=FULL):
