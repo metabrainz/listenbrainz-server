@@ -315,7 +315,7 @@ export default class UserHistory extends React.Component<
                   data-toggle="dropdown"
                   type="button"
                 >
-                  {`${entity}s`}
+                  {entity ? `${entity}s` : ""}
                   <span className="caret" />
                 </button>
                 <ul className="dropdown-menu" role="menu">
