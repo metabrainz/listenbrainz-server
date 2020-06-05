@@ -205,10 +205,10 @@ class TimescaleListenStore(ListenStore):
             submit.append(listen.to_timescale())
 
         query = """INSERT INTO listen (listened_at, track_name, user_name, data)
-                    VALUES %s
-                    ON CONFLICT (listened_at, track_name, user_name)
-                        DO NOTHING
-                        RETURNING listened_at, track_name, user_name"""
+                        VALUES %s
+                   ON CONFLICT (listened_at, track_name, user_name)
+                    DO NOTHING
+                     RETURNING listened_at, track_name, user_name"""
 
         inserted_rows = []
         conn = timescale.engine.raw_connection()
