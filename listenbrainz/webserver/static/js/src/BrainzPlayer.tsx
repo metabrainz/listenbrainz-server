@@ -198,6 +198,8 @@ export default class BrainzPlayer extends React.Component<
     }
 
     /** If available, retreive the service the listen was listened with */
+    // TODO: this should be moved to a different function eventually when
+    // the logic gets too much for one function
     const listeningFrom = _get(
       listen,
       "track_metadata.additional_info.listening_from"
