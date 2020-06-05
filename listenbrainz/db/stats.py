@@ -24,6 +24,7 @@
 import sqlalchemy
 import ujson
 
+from typing import Optional
 from listenbrainz import db
 from listenbrainz.db.model.user_release_stat import UserReleaseStatJson, UserReleaseStat
 from listenbrainz.db.model.user_artist_stat import UserArtistStatJson, UserArtistStat
@@ -120,11 +121,11 @@ def get_user_stats(user_id, columns):
     return dict(row) if row else None
 
 
-def get_user_artists(user_id):
+def get_user_artists(user_id: int) -> Optional[UserArtistStat]:
     """Get top artists for user with given ID.
 
         Args:
-            user_id (int): the row ID of the user in the DB
+            user_id: the row ID of the user in the DB
     """
     data = get_user_stats(user_id, 'artist')
     if not data:
@@ -132,11 +133,11 @@ def get_user_artists(user_id):
     return UserArtistStat(**data)
 
 
-def get_user_releases(user_id):
+def get_user_releases(user_id: int) -> Optional[UserReleaseStat]:
     """Get top releases for user with given ID.
 
         Args:
-            user_id (int): the row ID of the user in the DB
+            user_id: the row ID of the user in the DB
     """
     data = get_user_stats(user_id, 'release')
     if not data:
