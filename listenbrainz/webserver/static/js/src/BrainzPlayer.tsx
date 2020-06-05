@@ -190,16 +190,39 @@ export default class BrainzPlayer extends React.Component<
   };
 
   playListen = (listen: Listen, datasourceIndex: number = 0): void => {
-    let selectedDatasourceIndex = datasourceIndex;
-    const { onCurrentListenChange } = this.props;
-    onCurrentListenChange(listen);
     if (this.firstRun) {
       this.firstRun = false;
     }
 
     /** If available, retreive the service the listen was listened with */
-    // TODO: this should be moved to a different function eventually when
-    // the logic gets too much for one function
+    let selectedDatasourceIndex = this.getSourceIndexByListenData(listen);
+
+    /** If no matching datasource was found, revert to the default bahaviour
+     * (play from source 0 or if called from failedToFindTrack, try next source)
+     */
+    if (selectedDatasourceIndex === -1) {
+      selectedDatasourceIndex = datasourceIndex;
+    }
+
+    const { onCurrentListenChange } = this.props;
+    onCurrentListenChange(listen);
+
+    this.setState({ currentDataSourceIndex: selectedDatasourceIndex }, () => {
+      const { currentDataSourceIndex } = this.state;
+      const dataSource =
+        this.dataSources[currentDataSourceIndex] &&
+        this.dataSources[currentDataSourceIndex].current;
+      if (!dataSource) {
+        this.invalidateDataSource();
+        return;
+      }
+
+      dataSource.playListen(listen);
+    });
+  };
+
+  getSourceIndexByListenData = (listen: Listen): number => {
+    let selectedDatasourceIndex = -1;
     const listeningFrom = _get(
       listen,
       "track_metadata.additional_info.listening_from"
@@ -226,23 +249,7 @@ export default class BrainzPlayer extends React.Component<
       );
     }
 
-    /** If no matching datasource was found, revert to the default bahaviour */
-    if (selectedDatasourceIndex === -1) {
-      selectedDatasourceIndex = datasourceIndex;
-    }
-
-    this.setState({ currentDataSourceIndex: selectedDatasourceIndex }, () => {
-      const { currentDataSourceIndex } = this.state;
-      const dataSource =
-        this.dataSources[currentDataSourceIndex] &&
-        this.dataSources[currentDataSourceIndex].current;
-      if (!dataSource) {
-        this.invalidateDataSource();
-        return;
-      }
-
-      dataSource.playListen(listen);
-    });
+    return selectedDatasourceIndex;
   };
 
   togglePlay = async (): Promise<void> => {
