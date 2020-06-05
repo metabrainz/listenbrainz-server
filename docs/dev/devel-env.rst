@@ -276,6 +276,13 @@ Also, run the **integration tests** for ListenBrainz.
 When the tests complete, you will see if your changes are valid or not. These tests
 are a helpful way to validate new changes without a lot of work.
 
+.. note::
+
+    If you are working on frontend for statistics and don't wan't to go through the
+    process of generating the statistics locally, you can change the `API_URL` in config
+    to `api.listenbrainz.org`_ so that the statistics are fetched from the production server.
+
+.. _api.listenbrainz.org: https://api.listenbrainz.org
 
 Lint your code
 --------------
