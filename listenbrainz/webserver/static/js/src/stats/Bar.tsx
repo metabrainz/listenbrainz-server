@@ -52,33 +52,72 @@ export default class Bar extends React.Component<BarProps, BarState> {
     });
   };
 
+  getEntityLink = (data: UserEntityDatum, entity: string) => {
+    if (data.entityMBID) {
+      return (
+        <a
+          href={`http://musicbrainz.org/${data.entityType}/${data.entityMBID}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {entity}
+        </a>
+      );
+    }
+    return entity;
+  };
+
+  getArtistLink = (data: UserEntityDatum, artist: string) => {
+    if (data.artistMBID && data.artistMBID.length) {
+      return (
+        <a
+          href={`http://musicbrainz.org/artist/${data.artistMBID[0]}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {artist}
+        </a>
+      );
+    }
+    return artist;
+  };
+
   render() {
     const { data, maxValue } = this.props;
     const { marginLeft } = this.state;
 
     const leftAlignedTick = (tick: Tick) => {
-      let { entity, artist } = data[tick.tickIndex];
-      const { idx } = data[tick.tickIndex];
+      const datum = data[tick.tickIndex];
+      let { entity, artist } = datum;
+      const { idx } = datum;
 
-      if (entity.length > marginLeft / 10) {
+      if (entity.length + String(idx).length + 3 > marginLeft / 10) {
         entity = `${entity.slice(0, marginLeft / 10)}...`;
       }
-      if (artist && artist.length > marginLeft / 10) {
+      if (artist && artist.length + String(idx).length + 3 > marginLeft / 10) {
         artist = `${artist.slice(0, marginLeft / 10)}...`;
       }
       return (
         <g transform={`translate(${tick.x - marginLeft}, ${tick.y})`}>
-          <foreignObject height="100%" width="100%" y={-20}>
+          <foreignObject
+            height="100%"
+            width="100%"
+            y={datum.entityType === "artist" ? -10 : -20}
+          >
             <table style={{ color: "black" }}>
               <tbody>
                 <tr>
                   <td>{idx}.&nbsp;</td>
-                  <td>{entity}</td>
+                  <td>{this.getEntityLink(datum, entity)}</td>
                 </tr>
-                <tr>
-                  <td />
-                  <td style={{ fontSize: 12 }}>{artist}</td>
-                </tr>
+                {artist && (
+                  <tr>
+                    <td />
+                    <td style={{ fontSize: 12 }}>
+                      {this.getArtistLink(datum, artist)}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </foreignObject>
