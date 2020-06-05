@@ -283,7 +283,12 @@ def _get_total_entity_count(stats: Union[UserArtistStat, UserReleaseStat], entit
     raise APIBadRequest("Unknown entity: %s" % entity)
 
 
-def _get_entity_list(stats: Union[UserArtistStat, UserReleaseStat], entity: str, offset: int, count: int) -> List[Union[UserArtistRecord, UserReleaseRecord]]:
+def _get_entity_list(
+    stats: Union[UserArtistStat, UserReleaseStat],
+    entity: str,
+    offset: int,
+    count: int,
+) -> List[Union[UserArtistRecord, UserReleaseRecord]]:
     """ Gets a list of entity records from the stat passed based on the offset and count
     """
     if entity == 'release':

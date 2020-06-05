@@ -4,6 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional, List
 
+
 class UserArtistRecord(pydantic.BaseModel):
     """ Each individual record for a user's artists
 

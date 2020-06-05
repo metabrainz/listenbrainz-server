@@ -65,6 +65,7 @@ def notify_user_stats_update(stat_type):
             from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
         )
 
+
 def _get_entity_model(entity):
     if entity == 'artists':
         return UserArtistStatJson
