@@ -9,13 +9,19 @@ from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
 from listenbrainz_spark import config, utils, path
+
 from listenbrainz_spark.exceptions import (PathNotFoundException,
                                            FileNotFetchedException,
                                            ViewNotRegisteredException,
                                            SparkSessionNotInitializedException,
                                            RecommendationsNotGeneratedException)
 
+from listenbrainz_spark.recommendations.train_models import get_best_model_path
+from listenbrainz_spark.exceptions import SQLException, SparkSessionNotInitializedException, PathNotFoundException, \
+    FileNotFetchedException, ViewNotRegisteredException
+
 from flask import current_app
+import pyspark.sql.functions as func
 from pyspark.sql.functions import col
 from pyspark.sql.utils import AnalysisException
 from pyspark.mllib.recommendation import MatrixFactorizationModel
@@ -33,13 +39,40 @@ class RecommendationParams:
         self.recommendation_similar_artist_limit = recommendation_similar_artist_limit
 
 
-def load_model(path):
-    """ Load best model from given path in HDFS.
+def get_best_model_id():
+    """ Get model id of recently created model.
 
-        Args:
-            path (str): Path where best model is stored.
+        Returns:
+            best_model_id (str): Model identification string.
     """
-    return MatrixFactorizationModel.load(listenbrainz_spark.context, path)
+    try:
+        model_metadata = utils.read_files_from_HDFS(path.MODEL_METADATA)
+    except PathNotFoundException as err:
+        current_app.logger.error(str(err), exc_info=True)
+        sys.exit(-1)
+    except FileNotFetchedException as err:
+        current_app.logger.error(str(err), exc_info=True)
+        sys.exit(-1)
+
+    latest_ts = model_metadata.select(func.max('model_created').alias('model_created')).take(1)[0].model_created
+    best_model_id = model_metadata.select('model_id') \
+                                  .where(col('model_created') == latest_ts).take(1)[0].model_id
+
+    return best_model_id
+
+
+def load_model():
+    """ Load best model from given path in HDFS.
+    """
+    best_model_id = get_best_model_id()
+    dest_path = get_best_model_path(best_model_id)
+    try:
+        model =  MatrixFactorizationModel.load(listenbrainz_spark.context, dest_path)
+        return model
+    except Py4JJavaError as err:
+        current_app.logger.error('Unable to load model "{}"\n{}\nAborting...'.format(best_model_id, str(err.java_exception)),
+                                 exc_info=True)
+        sys.exit(-1)
 
 
 def get_recording_mbids(params, recommended_recording_ids):
@@ -225,20 +258,8 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
-    metadata_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'recommendation-metadata.json')
-    with open(metadata_file_path, 'r') as f:
-        recommendation_metadata = json.load(f)
-        best_model_id = recommendation_metadata['best_model_id']
-
-    best_model_path = path.DATA_DIR + '/' + best_model_id
-
     current_app.logger.info('Loading model...')
-    try:
-        model = load_model(config.HDFS_CLUSTER_URI + best_model_path)
-    except Py4JJavaError as err:
-        current_app.logger.error('Unable to load model "{}"\n{}\nAborting...'.format(best_model_id, str(err.java_exception)),
-                                 exc_info=True)
-        sys.exit(-1)
+    model = load_model()
 
     # an action must be called to persist data in memory
     recordings.count()

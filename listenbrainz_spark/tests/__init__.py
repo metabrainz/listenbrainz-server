@@ -18,11 +18,6 @@ PLAYCOUNTS_COUNT = 100
 
 class SparkTestCase(unittest.TestCase):
 
-    ranks = [8]
-    lambdas = [0.1]
-    iterations = [5]
-    alpha = 3.0
-
     @classmethod
     def setUpClass(cls):
         listenbrainz_spark.init_test_session('spark-test-run-{}'.format(str(uuid.uuid4())))

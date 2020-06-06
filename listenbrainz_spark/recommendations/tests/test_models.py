@@ -18,6 +18,7 @@ class TrainModelsTestCase(SparkTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        super().upload_test_playcounts()
 
     @classmethod
     def tearDownClass(cls):
@@ -102,6 +103,7 @@ class TrainModelsTestCase(SparkTestCase):
             model_id="xxx",
             training_time="3.1",
             rmse_time="2.1",
+            alpha=3.0,
         )
 
         metadata = train_models.get_best_model_metadata(best_model)
