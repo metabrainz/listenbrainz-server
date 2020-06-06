@@ -62,7 +62,6 @@ class ListenStore(object):
         """ Check from_ts, to_ts, and limit for fetching listens
             and set them to default values if not given.
         """
-        self.log.info("fetch listens called")
         if from_ts and to_ts:
             raise ValueError("You cannot specify from_ts and to_ts at the same time.")
 
