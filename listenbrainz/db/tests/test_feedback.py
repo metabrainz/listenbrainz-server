@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import os
-from listenbrainz.feedback import Feedback
+from listenbrainz.db.model.feedback import Feedback
 import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.user as db_user
 

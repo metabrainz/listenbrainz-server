@@ -12,7 +12,7 @@ from listenbrainz.webserver.rate_limiter import ratelimit
 from listenbrainz.webserver.views.api import _validate_auth_header, _parse_int_arg
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid,\
     DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET, _get_non_negative_param
-from listenbrainz.feedback import Feedback
+from listenbrainz.db.model.feedback import Feedback
 from pydantic import ValidationError
 
 feedback_api_bp = Blueprint('feedback_api_v1', __name__)

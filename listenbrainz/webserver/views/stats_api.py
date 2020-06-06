@@ -1,10 +1,13 @@
 from datetime import datetime
 from enum import Enum
+from typing import Union, List
 
 from flask import Blueprint, current_app, jsonify, request
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
+from listenbrainz.db.model.user_artist_stat import UserArtistStat, UserArtistRecord
+from listenbrainz.db.model.user_release_stat import UserReleaseStat, UserReleaseRecord
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
@@ -102,6 +105,13 @@ def get_artist(user_name):
     count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
     entity_list, total_entity_count = _process_entity(user_name, stats, stats_range, offset, count, entity='artist')
+    try:
+        from_ts = int(getattr(stats.artist, stats_range).from_ts)
+        to_ts = int(getattr(stats.artist, stats_range).to_ts)
+        last_updated = int(stats.last_updated.timestamp())
+    except AttributeError:
+        raise APINoContent('')
+
     return jsonify({'payload': {
         "user_id": user_name,
         'artists': entity_list,
@@ -109,9 +119,9 @@ def get_artist(user_name):
         "total_artist_count": total_entity_count,
         "offset": offset,
         "range": stats_range,
-        "from_ts": int(stats['artist'][stats_range]['from_ts']),
-        "to_ts": int(stats['artist'][stats_range]['to_ts']),
-        "last_updated": int(stats['last_updated'].timestamp())
+        "from_ts": from_ts,
+        "to_ts": to_ts,
+        "last_updated": last_updated,
     }})
 
 
@@ -202,6 +212,13 @@ def get_release(user_name):
     count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
     entity_list, total_entity_count = _process_entity(user_name, stats, stats_range, offset, count, entity='release')
+    try:
+        from_ts = int(getattr(stats.release, stats_range).from_ts)
+        to_ts = int(getattr(stats.release, stats_range).to_ts)
+        last_updated = int(stats.last_updated.timestamp())
+    except AttributeError:
+        raise APINoContent('')
+
     return jsonify({'payload': {
         "user_id": user_name,
         'releases': entity_list,
@@ -209,9 +226,9 @@ def get_release(user_name):
         "total_release_count": total_entity_count,
         "offset": offset,
         "range": stats_range,
-        "from_ts": int(stats['release'][stats_range]['from_ts']),
-        "to_ts": int(stats['release'][stats_range]['to_ts']),
-        "last_updated": int(stats['last_updated'].timestamp())
+        "from_ts": from_ts,
+        "to_ts": to_ts,
+        "last_updated": last_updated,
     }})
 
 
@@ -232,16 +249,14 @@ def _process_entity(user_name, stats, stats_range, offset, count, entity):
                 total number of entities respectively
     """
 
-    plural_entity = entity + 's'
-
     count = min(count, MAX_ITEMS_PER_GET)
     try:
-        total_entity_count = stats[entity][stats_range]['count']
+        total_entity_count = _get_total_entity_count(stats, entity)
     except (TypeError, KeyError):
         raise APINoContent('')
 
     count = count + offset
-    entity_list = stats[entity][stats_range][plural_entity][offset:count]
+    entity_list = [x.dict() for x in _get_entity_list(stats, entity, offset, count)]
 
     return entity_list, total_entity_count
 
@@ -256,3 +271,28 @@ def _is_valid_range(stats_range):
         result (bool): True if given range is valid
     """
     return stats_range in StatisticsRange.__members__
+
+
+def _get_total_entity_count(stats: Union[UserArtistStat, UserReleaseStat], entity: int) -> int:
+    """ Returns the total entity count (all time)
+    """
+    if entity == 'release':
+        return stats.release.all_time.count
+    elif entity == 'artist':
+        return stats.artist.all_time.count
+    raise APIBadRequest("Unknown entity: %s" % entity)
+
+
+def _get_entity_list(
+    stats: Union[UserArtistStat, UserReleaseStat],
+    entity: str,
+    offset: int,
+    count: int,
+) -> List[Union[UserArtistRecord, UserReleaseRecord]]:
+    """ Gets a list of entity records from the stat passed based on the offset and count
+    """
+    if entity == 'release':
+        return stats.release.all_time.releases[offset:count]
+    elif entity == 'artist':
+        return stats.artist.all_time.artists[offset:count]
+    raise APIBadRequest("Unknown entity: %s" % entity)
