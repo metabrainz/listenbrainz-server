@@ -4,6 +4,7 @@ import * as React from "react";
 
 import APIService from "../APIService";
 import Bar from "./Bar";
+import withLoader from "../Loader";
 import ErrorBoundary from "../ErrorBoundary";
 
 export type UserEntityData = Array<{
@@ -25,7 +26,10 @@ export type UserHistoryState = {
   totalPages: number;
   maxListens: number;
   startDate: Date;
+  loading: boolean;
 };
+
+const BarWithLoader = withLoader(Bar);
 
 export default class UserHistory extends React.Component<
   UserHistoryProps,
@@ -51,6 +55,7 @@ export default class UserHistory extends React.Component<
       totalPages: 0,
       maxListens: 0, // Number of listens for first artist used to scale the graph
       startDate: new Date(),
+      loading: false,
     };
   }
 
@@ -211,29 +216,22 @@ export default class UserHistory extends React.Component<
   };
 
   syncStateWithURL = async (): Promise<void> => {
+    this.setState({ loading: true });
     try {
       const { page, range, entity } = this.getURLParams();
       const { range: currRange, entity: currEntity } = this.state;
+      let initData = {};
       if (range !== currRange || entity !== currEntity) {
-        const {
-          totalPages,
-          maxListens,
-          entityCount,
-          startDate,
-        } = await this.getInitData(range, entity);
-        this.setState({
-          range,
-          entity,
-          startDate,
-          totalPages,
-          maxListens,
-          entityCount,
-        });
+        initData = await this.getInitData(range, entity);
       }
       const data = await this.getData(page, range, entity);
       this.setState({
         data: this.processData(data, page, entity),
         currPage: page,
+        loading: false,
+        range,
+        entity,
+        ...initData,
       });
     } catch (error) {
       this.handleError(error);
@@ -299,6 +297,7 @@ export default class UserHistory extends React.Component<
       maxListens,
       totalPages,
       startDate,
+      loading,
     } = this.state;
     const prevPage = currPage - 1;
     const nextPage = currPage + 1;
@@ -418,10 +417,14 @@ export default class UserHistory extends React.Component<
         </div>
         <div className="row">
           <div
-            className="col-md-12"
+            className="col-md-12 text-center"
             style={{ height: `${(75 / this.ROWS_PER_PAGE) * data.length}em` }}
           >
-            <Bar data={data} maxValue={maxListens} />
+            <BarWithLoader
+              isLoading={loading}
+              data={data}
+              maxValue={maxListens}
+            />
           </div>
         </div>
         <div className="row">
