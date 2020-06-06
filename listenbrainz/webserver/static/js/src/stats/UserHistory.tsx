@@ -4,7 +4,7 @@ import * as React from "react";
 
 import APIService from "../APIService";
 import Bar from "./Bar";
-import withLoader from "../Loader";
+import Loader from "../Loader";
 import ErrorBoundary from "../ErrorBoundary";
 
 export type UserEntityData = Array<{
@@ -28,8 +28,6 @@ export type UserHistoryState = {
   startDate: Date;
   loading: boolean;
 };
-
-const BarWithLoader = withLoader(Bar);
 
 export default class UserHistory extends React.Component<
   UserHistoryProps,
@@ -420,11 +418,9 @@ export default class UserHistory extends React.Component<
             className="col-md-12 text-center"
             style={{ height: `${(75 / this.ROWS_PER_PAGE) * data.length}em` }}
           >
-            <BarWithLoader
-              isLoading={loading}
-              data={data}
-              maxValue={maxListens}
-            />
+            <Loader isLoading={loading}>
+              <Bar data={data} maxValue={maxListens} />
+            </Loader>
           </div>
         </div>
         <div className="row">
