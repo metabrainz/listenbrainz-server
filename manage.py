@@ -196,6 +196,7 @@ def init_db(force, create_db):
         res = ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_extensions.sql'))
     # Don't raise an exception if the extension already exists
 
+    ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
     application = webserver.create_app()
     with application.app_context():
         print('TS: Creating tables...')

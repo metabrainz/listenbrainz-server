@@ -37,6 +37,9 @@ class TestTimescaleListenStore(DatabaseTestCase):
 
         ts.init_db_connection(config.TIMESCALE_ADMIN_LB_URI)
         ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_extensions.sql'))
+        ts.engine.dispose()
+
+        ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_tables.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_functions.sql'))
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
