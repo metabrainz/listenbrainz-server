@@ -66,8 +66,8 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.logstore = None
         super(TestTimescaleListenStore, self).tearDown()
 
-    def _create_test_data(self, user_name):
-        test_data = create_test_data_for_timescalelistenstore(user_name)
+    def _create_test_data(self, user_name, test_data_file_name=None):
+        test_data = create_test_data_for_timescalelistenstore(user_name, test_data_file_name)
         self.logstore.insert(test_data)
         return len(test_data)
 
@@ -99,7 +99,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         testuser2 = db_user.get_or_create(11, 'testuser2')
         testuser_name2 = testuser2['musicbrainz_id']
         count = self._create_test_data(testuser_name2)
-        sleep(1)
+        sleep(2)
         listen_count = self.logstore.get_total_listen_count(False)
         self.assertEqual(count * 2, listen_count)
 
@@ -138,6 +138,62 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[2].ts_since_epoch, 1400000100)
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
+
+    def test_fetch_listens_time_range(self):
+        self._create_test_data(self.testuser_name,
+                               test_data_file_name='timescale_listenstore_test_listens_over_greater_time_range.json')
+
+        # test to_ts without time_range
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1402000050)
+        self.assertEqual(len(listens), 1)
+        self.assertEqual(listens[0].ts_since_epoch, 1402000000)
+
+        # test to_ts with time_range=5
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1402000050, time_range=5)
+        self.assertEqual(len(listens), 6)
+        self.assertEqual(listens[0].ts_since_epoch, 1402000000)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[2].ts_since_epoch, 1400000150)
+        self.assertEqual(listens[3].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[4].ts_since_epoch, 1400000050)
+        self.assertEqual(listens[5].ts_since_epoch, 1400000000)
+
+        # test to_ts with time_range=-1
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1402000050, time_range=-1)
+        self.assertEqual(len(listens), 7)
+        self.assertEqual(listens[0].ts_since_epoch, 1402000000)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[2].ts_since_epoch, 1400000150)
+        self.assertEqual(listens[3].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[4].ts_since_epoch, 1400000050)
+        self.assertEqual(listens[5].ts_since_epoch, 1400000000)
+        self.assertEqual(listens[6].ts_since_epoch, 1398000000)
+
+        # test from_ts without time_range
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1397999999)
+        self.assertEqual(len(listens), 1)
+        self.assertEqual(listens[0].ts_since_epoch, 1398000000)
+
+        # test from_ts with time_range=5
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1397999999, time_range=5)
+        self.assertEqual(len(listens), 6)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000150)
+        self.assertEqual(listens[2].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[3].ts_since_epoch, 1400000050)
+        self.assertEqual(listens[4].ts_since_epoch, 1400000000)
+        self.assertEqual(listens[5].ts_since_epoch, 1398000000)
+
+        # test from_ts with time_range=-1
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1397999999, time_range=-1)
+        self.assertEqual(len(listens), 7)
+        self.assertEqual(listens[0].ts_since_epoch, 1402000000)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000200)
+        self.assertEqual(listens[2].ts_since_epoch, 1400000150)
+        self.assertEqual(listens[3].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[4].ts_since_epoch, 1400000050)
+        self.assertEqual(listens[5].ts_since_epoch, 1400000000)
+        self.assertEqual(listens[6].ts_since_epoch, 1398000000)
 
     def test_get_listen_count_for_user(self):
         count = self._create_test_data(self.testuser_name)
