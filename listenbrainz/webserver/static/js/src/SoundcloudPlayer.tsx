@@ -1,5 +1,5 @@
 import * as React from "react";
-import { get as _get } from "lodash";
+import { get as _get, throttle as _throttle } from "lodash";
 import { DataSourceType, DataSourceProps } from "./BrainzPlayer";
 
 require("../lib/soundcloud-player-api");
@@ -122,23 +122,25 @@ export default class SoundcloudPlayer
     if (!this.soundcloudPlayer) {
       return;
     }
-    const { onTrackEnd, onPlayerPausedChange, onProgressChange } = this.props;
+    const { onTrackEnd } = this.props;
     this.soundcloudPlayer.bind(SoundCloudHTML5WidgetEvents.FINISH, onTrackEnd);
-    this.soundcloudPlayer.bind(SoundCloudHTML5WidgetEvents.PAUSE, () =>
-      onPlayerPausedChange(true)
-    );
-    this.soundcloudPlayer.bind(
-      SoundCloudHTML5WidgetEvents.PLAY,
-      this.onPlay.bind(this)
-    );
+    this.soundcloudPlayer.bind(SoundCloudHTML5WidgetEvents.PAUSE, this.onPause);
+    this.soundcloudPlayer.bind(SoundCloudHTML5WidgetEvents.PLAY, this.onPlay);
     this.soundcloudPlayer.bind(
       SoundCloudHTML5WidgetEvents.PLAY_PROGRESS,
-      onProgressChange
+      _throttle(this.onProgressChange, 2000, { leading: true, trailing: true })
     );
-    this.soundcloudPlayer.bind(
-      SoundCloudHTML5WidgetEvents.ERROR,
-      this.onError.bind(this)
-    );
+    this.soundcloudPlayer.bind(SoundCloudHTML5WidgetEvents.ERROR, this.onError);
+  };
+
+  onProgressChange = (event: ProgressEvent): void => {
+    const { onProgressChange } = this.props;
+    onProgressChange(event.currentPosition);
+  };
+
+  onPause = (event: ProgressEvent): void => {
+    const { onPlayerPausedChange } = this.props;
+    onPlayerPausedChange(true);
   };
 
   onPlay = (event: ProgressEvent): void => {
@@ -147,7 +149,7 @@ export default class SoundcloudPlayer
     const { currentSoundId } = this.state;
     if (event.soundId !== currentSoundId) {
       this.setState({ currentSoundId: event.soundId });
-      this.updateTrackInfo();
+      this.updateTrackInfo(event);
     }
 
     onPlayerPausedChange(false);
@@ -161,16 +163,10 @@ export default class SoundcloudPlayer
     const originURL = _get(listen, "track_metadata.additional_info.origin_url");
     if (/soundcloud\.com/.test(originURL)) {
       if (this.soundcloudPlayer) {
-        const fullURL = `https://w.soundcloud.com/player/?url=${originURL}`;
-        this.soundcloudPlayer.load(originURL, {
-          src: fullURL,
-          ...this.options,
-        });
-        this.soundcloudPlayer.play();
-        this.updateTrackInfo();
+        this.soundcloudPlayer.load(originURL, this.options);
       } else if (this.retries <= 3) {
         this.retries += 1;
-        setTimeout(this.playListen.bind(this, listen), 650);
+        setTimeout(this.playListen.bind(this, listen), 500);
       } else {
         // Abort!
         const { onInvalidateDataSource } = this.props;
@@ -184,17 +180,24 @@ export default class SoundcloudPlayer
     }
   };
 
-  updateTrackInfo = () => {
-    const { onTrackNotFound, onTrackInfoChange, onDurationChange } = this.props;
+  updateTrackInfo = (event?: ProgressEvent) => {
+    const {
+      onTrackInfoChange,
+      onDurationChange,
+      onProgressChange,
+    } = this.props;
     if (!this.soundcloudPlayer) {
       return;
     }
     this.soundcloudPlayer.getCurrentSound((currentTrack: any) => {
       if (!currentTrack) {
-        onTrackNotFound();
+        return;
       }
       onTrackInfoChange(currentTrack.title, currentTrack.user?.username);
       onDurationChange(currentTrack.full_duration);
+      if (event) {
+        onProgressChange(event.currentPosition);
+      }
     });
   };
 
@@ -226,7 +229,7 @@ export default class SoundcloudPlayer
           id="soundcloud-iframe"
           title="Soundcloud player"
           width="100%"
-          height="auto"
+          height="420px"
           scrolling="no"
           frameBorder="no"
           allow="autoplay"
