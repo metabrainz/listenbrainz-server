@@ -58,11 +58,11 @@ def profile(user_name):
         except ValueError:
             raise BadRequest("Incorrect timestamp argument min_ts: %s" % request.args.get("min_ts"))
 
-    try_harder = request.args.get("try_harder", 0)
+    search_larger_time_range = request.args.get("search_larger_time_range", 0)
     try:
-        try_harder = int(try_harder)
+        search_larger_time_range = int(search_larger_time_range)
     except ValueError:
-        raise BadRequest("try_harder must be an integer value 0 or greater: %s" % try_harder)
+        raise BadRequest("search_larger_time_range must be an integer value 0 or greater: %s" % search_larger_time_range)
 
     (min_ts_per_user, max_ts_per_user) = db_conn.get_timestamps_for_user(user_name)
 
@@ -76,8 +76,8 @@ def profile(user_name):
     listens = []
     if min_ts_per_user != max_ts_per_user:
         args = {}
-        # if we're supposed to try harder then search 50 days. (each increment in time_range == 5 days)
-        args['time_range'] = 10 if try_harder else None
+        # if we're supposed to search larger time range then search 50 days. (each increment in time_range == 5 days)
+        args['time_range'] = 10 if search_larger_time_range else None
         if max_ts:
             args['to_ts'] = max_ts
         else:
@@ -88,7 +88,7 @@ def profile(user_name):
                 "listened_at": listen.ts_since_epoch,
                 "listened_at_iso": listen.timestamp.isoformat() + "Z",
             })
-        if len(listens) < LISTENS_PER_PAGE and try_harder == 0:
+        if len(listens) < LISTENS_PER_PAGE and search_larger_time_range == 0:
             listens_missing = 1
     # Calculate if we need to show next/prev buttons
     previous_listen_ts = None
@@ -135,7 +135,7 @@ def profile(user_name):
         "next_listen_ts": next_listen_ts,
         "latest_listen_ts": max_ts_per_user,
         "latest_spotify_uri": _get_spotify_uri_for_listens(listens),
-        "try_harder": listens_missing,
+        "search_larger_time_range": listens_missing,
         "have_listen_count": have_listen_count,
         "listen_count": format(int(listen_count), ",d"),
         "artist_count": format(artist_count, ",d") if artist_count else None,

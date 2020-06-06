@@ -45,6 +45,6 @@
   },
   "webSocketsServerUrl": "http://localhost:8081",
   "apiUrl": "http://0.0.0.0",
-  "tryHarder": 0
+  "searchLargerTimeRange": 0
 }
 

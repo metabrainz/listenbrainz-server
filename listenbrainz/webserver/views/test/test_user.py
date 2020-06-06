@@ -168,29 +168,29 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         timescale.assert_not_called()
 
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
-    def test_try_harder_filter(self, timescale):
-        """Check that try_harder is passed to timescale """
+    def test_search_larger_time_range_filter(self, timescale):
+        """Check that search_larger_time_range is passed to timescale """
         self._create_test_data('iliekcomputers')
 
-        # If try_harder is not given, use tryharder=0
+        # If search_larger_time_range is not given, use search_larger_time_range=0
         self.client.get(url_for('user.profile', user_name='iliekcomputers'))
         req_call = mock.call('iliekcomputers', limit=25, to_ts=1400000201, time_range=None)
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
-        # try_harder query param -> try_harder timescale param
-        self.client.get(url_for('user.profile', user_name='iliekcomputers'), query_string={'try_harder': 1})
+        # search_larger_time_range query param -> search_larger_time_range timescale param
+        self.client.get(url_for('user.profile', user_name='iliekcomputers'), query_string={'search_larger_time_range': 1})
         req_call = mock.call('iliekcomputers', limit=25, to_ts=1400000201, time_range=10)
         timescale.assert_has_calls([req_call])
         timescale.reset_mock()
 
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
     def test_ts_filters_errors(self, timescale):
-        """If try_harder is not integer, show an error page"""
+        """If search_larger_time_range is not integer, show an error page"""
         self._create_test_data('iliekcomputers')
         response = self.client.get(url_for('user.profile', user_name='iliekcomputers'),
-                                   query_string={'try_harder': 'a'})
+                                   query_string={'search_larger_time_range': 'a'})
         self.assert400(response)
-        self.assertIn(b'try_harder must be an integer value 0 or greater: a', response.data)
+        self.assertIn(b'search_larger_time_range must be an integer value 0 or greater: a', response.data)
 
         timescale.assert_not_called()
