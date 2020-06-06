@@ -9,6 +9,7 @@ import ujson
 
 from listenbrainz import db
 from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.db.model.user_artist_stat import UserArtistStatJson
 
 
 class UserTestCase(DatabaseTestCase):
@@ -128,20 +129,20 @@ class UserTestCase(DatabaseTestCase):
 
         user = db_user.get(user_id)
         self.assertIsNotNone(user)
-        artists = {
-            'range': 'all_time'
-        }
+
+        with open(self.path_to_data_file('user_top_artists_db.json')) as f:
+            artists_data = ujson.load(f)
         db_stats.insert_user_artists(
             user_id=user_id,
-            artists=artists,
+            artists=UserArtistStatJson(**{'all_time': artists_data}),
         )
-        user_stats = db_stats.get_all_user_stats(user_id)
+        user_stats = db_stats.get_user_artists(user_id)
         self.assertIsNotNone(user_stats)
 
         db_user.delete(user_id)
         user = db_user.get(user_id)
         self.assertIsNone(user)
-        user_stats = db_stats.get_all_user_stats(user_id)
+        user_stats = db_stats.get_user_artists(user_id)
         self.assertIsNone(user_stats)
 
     def test_delete_when_spotify_import_activated(self):

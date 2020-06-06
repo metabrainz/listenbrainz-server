@@ -7,6 +7,7 @@ from unittest import mock
 from flask import url_for, current_app
 from influxdb import InfluxDBClient
 from listenbrainz.db.testing import DatabaseTestCase
+from listenbrainz.db.model.user_artist_stat import UserArtistStatJson
 from listenbrainz.listenstore.tests.util import create_test_data_for_influxlistenstore
 from listenbrainz.webserver.influx_connection import init_influx_connection
 from listenbrainz.webserver.login import User
@@ -65,20 +66,18 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         props = ujson.loads(self.get_context_variable('props'))
         self.assertIsNone(props['artist_count'])
 
-        artists = {
-            'all_time': {
-                'count': 5
-            }
-        }
+        with open(self.path_to_data_file('user_top_artists_db.json')) as f:
+            artists_data = ujson.load(f)
+
         db_stats.insert_user_artists(
             user_id=self.user.id,
-            artists=artists,
+            artists=UserArtistStatJson(**{'all_time': artists_data})
         )
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
         self.assertTemplateUsed('user/profile.html')
         props = ujson.loads(self.get_context_variable('props'))
-        self.assertEqual(props['artist_count'], '5')
+        self.assertEqual(props['artist_count'], '2')
         self.assertDictEqual(props['spotify'], {})
 
     @mock.patch('listenbrainz.webserver.views.user.spotify')
