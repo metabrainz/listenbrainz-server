@@ -300,6 +300,7 @@ export default class BrainzPlayer extends React.Component<
       return;
     }
     dataSource.seekToPositionMs(msTimecode);
+    this.progressChange(msTimecode);
   };
 
   toggleDirection = (): void => {
