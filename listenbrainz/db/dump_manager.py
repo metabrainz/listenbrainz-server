@@ -95,8 +95,7 @@ def create_full(location, threads, dump_id, last_dump_id):
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
         db_dump.dump_postgres_db(dump_path, end_time, threads)
-        ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads, spark_format=False)
-        ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads, spark_format=True)
+        ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads)
         try:
             write_hashes(dump_path)
         except IOError as e:
@@ -137,8 +136,7 @@ def create_incremental(location, threads, dump_id):
         dump_name = 'listenbrainz-dump-{dump_id}-{time}-incremental'.format(dump_id=dump_id, time=end_time.strftime('%Y%m%d-%H%M%S'))
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
-        ls.dump_listens(dump_path, dump_id=dump_id, start_time=start_time, end_time=end_time, threads=threads, spark_format=False)
-        ls.dump_listens(dump_path, dump_id=dump_id, start_time=start_time, end_time=end_time, threads=threads, spark_format=True)
+        ls.dump_listens(dump_path, dump_id=dump_id, start_time=start_time, end_time=end_time, threads=threads)
         try:
             write_hashes(dump_path)
         except IOError as e:
@@ -149,24 +147,6 @@ def create_incremental(location, threads, dump_id):
         send_dump_creation_notification(dump_name, 'incremental')
 
         current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
-
-
-@cli.command()
-@click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'))
-@click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
-def create_spark_dump(location, threads):
-    with create_app().app_context():
-        from listenbrainz.webserver.timescale_connection import _ts as ls
-        time_now = datetime.today()
-        dump_path = os.path.join(location, 'listenbrainz-spark-dump-{time}'.format(time=time_now.strftime('%Y%m%d-%H%M%S')))
-        create_path(dump_path)
-        ls.dump_listens(dump_path, time_now, threads, spark_format=True)
-        try:
-            write_hashes(dump_path)
-        except IOError as e:
-            current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
-            return
-        current_app.logger.info('Dump created and hash written at %s', dump_path)
 
 
 @cli.command(name="import_dump")
