@@ -301,7 +301,7 @@ class TimescaleListenStore(ListenStore):
 
         return listens
 
-    def get_listens_query_for_dump(self, user_name, end_time, offset):
+    def get_listens_query_for_dump(self, end_time, offset):
         """
             Get a query and its args dict to select a batch for listens for the full dump.
             Use listened_at timestamp, since not all listens have the created timestamp.
@@ -311,12 +311,10 @@ class TimescaleListenStore(ListenStore):
                      FROM listen
                     WHERE listened_at <= :ts
                       AND (created IS NULL OR created <= to_timestamp(:ts))
-                      AND user_name = :user_name
                  ORDER BY listened_at DESC
                     LIMIT :limit
                    OFFSET :offset"""
         args = {
-            'user_name': user_name,
             'ts': end_time,
             'offset': offset,
             'limit': DUMP_CHUNK_SIZE
@@ -339,7 +337,6 @@ class TimescaleListenStore(ListenStore):
                    OFFSET :offset"""
 
         args = {
-            'user_name': user_name,
             'start_ts': start_time,
             'end_ts': end_time,
             'offset': offset,
@@ -347,132 +344,6 @@ class TimescaleListenStore(ListenStore):
         }
         return (query, args)
 
-    def write_spark_listens_to_disk(self, listens, temp_dir):
-        """ Write all spark listens in year/month dir format to disk.
-
-        Args:
-            listens : the listens to be written into the disk
-            temp_dir: the dir into which listens should be written
-        """
-        for year in listens:
-            for month in listens[year]:
-                if year < 2002:
-                    directory = temp_dir
-                    filename = os.path.join(directory, 'invalid.json')
-                else:
-                    directory = os.path.join(temp_dir, str(year))
-                    filename = os.path.join(directory, '{}.json'.format(str(month)))
-                create_path(directory)
-                with open(filename, 'a') as f:
-                    f.write('\n'.join([ujson.dumps(listen) for listen in listens[year][month]]))
-                    f.write('\n')
-
-    def dump_user_for_spark(self, username, start_time, end_time, temp_dir):
-        """ Dump listens for a particular user in the format for the ListenBrainz spark dump.
-
-        Args:
-            username (str): the MusicBrainz ID of the user
-            start_time and end_time (datetime): the range of time for the listens dump.
-            temp_dir (str): the dir to use to write files before adding to archive
-        """
-        t0 = time.time()
-        offset = 0
-        listen_count = 0
-
-        unwritten_listens = {}
-
-        while True:
-            if start_time == datetime.utcfromtimestamp(0):  # if we need a full dump
-                query, args = self.get_listens_query_for_dump(username, int(end_time.strftime('%s')), offset)
-            else:
-                query, args = self.get_incremental_listens_query_batch(username, start_time, end_time, offset)
-
-            rows_added = 0
-            with timescale.engine.connect() as connection:
-                curs = connection.execute(sqlalchemy.text(query), args)
-                while True:
-                    result = curs.fetchone()
-                    if not result:
-                        break
-
-                    listen = convert_timescale_row_to_spark_row(result)
-                    timestamp = listen['listened_at']
-
-                    if timestamp.year not in unwritten_listens:
-                        unwritten_listens[timestamp.year] = {}
-                    if timestamp.month not in unwritten_listens[timestamp.year]:
-                        unwritten_listens[timestamp.year][timestamp.month] = []
-
-                    unwritten_listens[timestamp.year][timestamp.month].append(listen)
-                    rows_added += 1
-
-            if rows_added == 0:
-                break
-
-            listen_count += rows_added
-            offset += DUMP_CHUNK_SIZE
-
-        self.write_spark_listens_to_disk(unwritten_listens, temp_dir)
-        self.log.info("%d listens for user %s dumped at %.2f listens / sec", listen_count, username,
-                      listen_count / (time.time() - t0))
-
-    def dump_user(self, username, fileobj, start_time, end_time):
-        """ Dump specified user's listens into specified file object.
-
-        Args:
-            username (str): the MusicBrainz ID of the user whose listens are to be dumped
-            fileobj (file): the file into which listens should be written
-            start_time and end_time (datetime): the range of time for which listens are to be dumped
-
-        Returns:
-            int: the number of bytes this user's listens take in the dump file
-        """
-        t0 = time.time()
-        offset = 0
-        bytes_written = 0
-        listen_count = 0
-
-        # Get this user's listens in chunks
-        while True:
-            if start_time == datetime.utcfromtimestamp(0):
-                query, args = self.get_listens_query_for_dump(username, int(end_time.strftime('%s')), offset)
-            else:
-                query, args = self.get_incremental_listens_query_batch(username, start_time, end_time, offset)
-
-            rows_added = 0
-            with timescale.engine.connect() as connection:
-                curs = connection.execute(sqlalchemy.text(query), args)
-                while True:
-                    result = curs.fetchone()
-                    if not result:
-                        break
-
-                    listen = Listen.from_timescale(result[0], result[1], result[2], result[4]).to_api()
-                    listen['user_name'] = username
-                    try:
-                        bytes_written += fileobj.write(ujson.dumps(listen))
-                        bytes_written += fileobj.write('\n')
-                        rows_added += 1
-                    except IOError as e:
-                        self.log.critical('IOError while writing listens into file for user %s', username, exc_info=True)
-                        raise
-                    except Exception as e:
-                        self.log.error('Exception while creating json for user %s: %s', username, str(e), exc_info=True)
-                        raise
-
-            listen_count += rows_added
-            if not rows_added:
-                break
-
-            offset += DUMP_CHUNK_SIZE
-
-        time_taken = time.time() - t0
-        self.log.info('Listens for user %s dumped, total %d listens written at %.2f listens / sec!',
-                      username, listen_count, listen_count / time_taken)
-
-        # the size for this user should not include the last newline we wrote
-        # hence return bytes_written - 1 as the size in the dump for this user
-        return bytes_written - 1
 
     def write_dump_metadata(self, archive_name, start_time, end_time, temp_dir, tar, full_dump=True):
         """ Write metadata files (schema version, timestamps, license) into the dump archive.
@@ -522,95 +393,75 @@ class TimescaleListenStore(ListenStore):
             self.log.error('Exception while adding dump metadata: %s', str(e), exc_info=True)
             raise
 
-    def write_listens_to_dump(self, listens_path, users, tar, archive_name, start_time, end_time):
-        """ Write listens into the ListenBrainz dump.
+
+    def write_listens_to_disk(self, listens, temp_dir):
+        """ Write all spark listens in year/month dir format to disk.
 
         Args:
-            listens_path (str): the path where listens should be kept before adding to the archive
-            users (List[dict]): a list of all users
-            tar (TarFile obj): the tar obj to which listens should be added
-            archive_name (str): the name of the archive
-            start_time and end_time: the range of time for which listens are to be dumped
+            listens : the listens to be written into the disk
+            temp_dir: the dir into which listens should be written
         """
-        dump_complete = False
-        next_user_id = 0
-        index = {}
-        while not dump_complete:
-            file_uuid = str(uuid.uuid4())
-            file_name = file_uuid + '.listens'
-            # directory structure of the form "/%s/%02s/%s.listens" % (uuid[0], uuid[0:2], uuid)
-            file_directory = os.path.join(file_name[0], file_name[0:2])
-            tmp_directory = os.path.join(listens_path, file_directory)
-            create_path(tmp_directory)
-            tmp_file_path = os.path.join(tmp_directory, file_name)
-            archive_file_path = os.path.join(archive_name, 'listens', file_directory, file_name)
-            with open(tmp_file_path, 'w') as f:
-                file_done = False
-                while next_user_id < len(users):
-                    if f.tell() > DUMP_FILE_SIZE_LIMIT:
-                        file_done = True
+        for year in listens:
+            for month in listens[year]:
+                if year < 2002:
+                    directory = temp_dir
+                    filename = os.path.join(directory, 'invalid.json')
+                else:
+                    directory = os.path.join(temp_dir, str(year))
+                    filename = os.path.join(directory, '{}.json'.format(str(month)))
+                create_path(directory)
+                with open(filename, 'a') as f:
+                    f.write('\n'.join([ujson.dumps(listen) for listen in listens[year][month]]))
+                    f.write('\n')
+
+    def write_listens(self, start_time, end_time, temp_dir):
+        """ Dump listens in the format for the ListenBrainz dump.
+
+        Args:
+            start_time and end_time (datetime): the range of time for the listens dump.
+            temp_dir (str): the dir to use to write files before adding to archive
+        """
+        t0 = time.time()
+        offset = 0
+        listen_count = 0
+
+        unwritten_listens = {}
+
+        while True:
+            if start_time == datetime.utcfromtimestamp(0):  # if we need a full dump
+                query, args = self.get_listens_query_for_dump(int(end_time.strftime('%s')), offset)
+            else:
+                query, args = self.get_incremental_listens_query_batch(start_time, end_time, offset)
+
+            rows_added = 0
+            with timescale.engine.connect() as connection:
+                curs = connection.execute(sqlalchemy.text(query), args)
+                while True:
+                    result = curs.fetchone()
+                    if not result:
                         break
 
-                    username = users[next_user_id]['musicbrainz_id']
-                    offset = f.tell()
-                    size = self.dump_user(username=username, fileobj=f, start_time=start_time, end_time=end_time)
-                    index[username] = {
-                        'file_name': file_uuid,
-                        'offset': offset,
-                        'size': size,
-                    }
-                    next_user_id += 1
-                    self.log.info("%d users done. Total: %d", next_user_id, len(users))
+                    listen = convert_timescale_row_to_spark_row(result)
+                    timestamp = listen['listened_at']
 
-            if file_done:
-                tar.add(tmp_file_path, arcname=archive_file_path)
-                os.remove(tmp_file_path)
-                continue
+                    if timestamp.year not in unwritten_listens:
+                        unwritten_listens[timestamp.year] = {}
+                    if timestamp.month not in unwritten_listens[timestamp.year]:
+                        unwritten_listens[timestamp.year][timestamp.month] = []
 
-            if next_user_id == len(users):
-                if not file_done:  # if this was the last user and file hasn't been added, add it
-                    tar.add(tmp_file_path, arcname=archive_file_path)
-                    os.remove(tmp_file_path)
-                dump_complete = True
+                    unwritten_listens[timestamp.year][timestamp.month].append(listen)
+                    rows_added += 1
+
+            if rows_added == 0:
                 break
 
-        return index
+            listen_count += rows_added
+            offset += DUMP_CHUNK_SIZE
 
-    def write_listens_for_spark(self, listens_path, users, start_time, end_time):
-        """ Write listens into the ListenBrainz spark dump.
+        self.write_listens_to_disk(unwritten_listens, temp_dir)
+        self.log.info("%d listens dumped at %.2f listens / sec", listen_count,
+                      listen_count / (time.time() - t0))
 
-        This is different from `write_listens_to_dump` because of the different format.
-
-        Args:
-            listens_path (str): the path where listens should be written before adding to the archive
-            users (List[dict]): A list of all users
-            start_time and end_time: the range of time for which listens are to be dumped
-        """
-        for i, user in enumerate(users):
-            self.dump_user_for_spark(user['musicbrainz_id'], start_time, end_time, listens_path)
-            self.log.info("%d users done. Total: %d", i + 1, len(users))
-
-    def write_dump_index_file(self, index, temp_dir, tar, archive_name):
-        """ Writes the ListenBrainz dump index file and adds it to the archive.
-
-        Args:
-            index (dict): the index to be written into the dump
-            temp_dir (str): the temp dir where all files should be created initially
-            tar (TarFile): the tarfile object into which the index file should be added
-            archive_name (str): the name of the dump archive
-        """
-        try:
-            index_path = os.path.join(temp_dir, 'index.json')
-            with open(index_path, 'w') as f:
-                f.write(ujson.dumps(index))
-            tar.add(index_path,
-                    arcname=os.path.join(archive_name, 'index.json'))
-        except IOError as e:
-            self.log.critical('IOError while writing index.json to archive: %s', str(e), exc_info=True)
-            raise
-        except Exception as e:
-            self.log.error('Exception while adding index file to archive: %s', str(e), exc_info=True)
-            raise
 
     def dump_listens(self, location, dump_id, start_time=datetime.utcfromtimestamp(0), end_time=None,
                      threads=DUMP_DEFAULT_THREAD_COUNT, spark_format=False):
@@ -627,7 +478,7 @@ class TimescaleListenStore(ListenStore):
             dump_id (int): the ID of the dump in the dump sequence
             start_time and end_time (datetime): the time range for which listens should be dumped
                 start_time defaults to utc 0 (meaning a full dump) and end_time defaults to the current time
-            threads (int): the number of threads to user for compression
+            threads (int): the number of threads to use for compression
             spark_format (bool): dump files in Apache Spark friendly format if True, else full dumps
 
         Returns:
@@ -638,17 +489,9 @@ class TimescaleListenStore(ListenStore):
             end_time = datetime.now()
 
         self.log.info('Beginning dump of listens from TimescaleDB...')
-
-        self.log.info('Getting list of users whose listens are to be dumped...')
-        users = db_user.get_all_users(columns=['id', 'musicbrainz_id'], created_before=end_time)
-        self.log.info('Total number of users: %d', len(users))
-
         full_dump = bool(start_time == datetime.utcfromtimestamp(0))
         archive_name = 'listenbrainz-listens-dump-{dump_id}-{time}'.format(dump_id=dump_id,
                                                                            time=end_time.strftime('%Y%m%d-%H%M%S'))
-        if spark_format:
-            archive_name = '{}-spark'.format(archive_name)
-
         if full_dump:
             archive_name = '{}-full'.format(archive_name)
         else:
@@ -666,12 +509,8 @@ class TimescaleListenStore(ListenStore):
                 self.write_dump_metadata(archive_name, start_time, end_time, temp_dir, tar, full_dump)
 
                 listens_path = os.path.join(temp_dir, 'listens')
-                if spark_format:
-                    self.write_listens_for_spark(listens_path, users, start_time, end_time)
-                    tar.add(listens_path, arcname=os.path.join(archive_name, 'listens'))
-                else:
-                    index = self.write_listens_to_dump(listens_path, users, tar, archive_name, start_time, end_time)
-                    self.write_dump_index_file(index, temp_dir, tar, archive_name)
+                self.write_listens(start_time, end_time, listens_path)
+                tar.add(listens_path, arcname=os.path.join(archive_name, 'listens'))
 
                 # remove the temporary directory
                 shutil.rmtree(temp_dir)
