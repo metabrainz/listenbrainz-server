@@ -10,6 +10,7 @@ from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
 from listenbrainz.db.model.user_artist_stat import UserArtistStatJson
 from listenbrainz.db.model.user_release_stat import UserReleaseStatJson
+from listenbrainz.db.model.user_recording_stat import UserRecordingStatJson
 
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
@@ -71,6 +72,8 @@ def _get_entity_model(entity):
         return UserArtistStatJson
     elif entity == 'releases':
         return UserReleaseStatJson
+    elif entity == 'recordings':
+        return UserRecordingStatJson
     raise ValueError("Unknown entity type: %s" % entity)
 
 

@@ -27,6 +27,7 @@ import ujson
 from typing import Optional
 from listenbrainz import db
 from listenbrainz.db.model.user_release_stat import UserReleaseStatJson, UserReleaseStat
+from listenbrainz.db.model.user_recording_stat import UserRecordingStatJson, UserRecordingStat
 from listenbrainz.db.model.user_artist_stat import UserArtistStatJson, UserArtistStat
 
 
@@ -86,6 +87,19 @@ def insert_user_releases(user_id: int, releases: UserReleaseStatJson):
              releases: the top releases listened to by the user
     """
     _insert_jsonb_data(user_id=user_id, column='release', data=releases.dict(exclude_none=True))
+
+
+def insert_user_recordings(user_id: int, recordings: UserRecordingStatJson):
+    """Inserts recording stats calculated from Spark into the database.
+
+       If stats are already present for some user, they are updated to the new
+       values passed.
+
+       Args: user_id: the row id of the user,
+             recordings: the top releases listened to by the user
+    """
+    print(recordings.dict())
+    _insert_jsonb_data(user_id=user_id, column='recording', data=recordings.dict(exclude_none=True))
 
 
 def get_user_stats(user_id, columns):

@@ -8,6 +8,7 @@ from listenbrainz_spark.stats import (adjust_days, replace_days,
                                       replace_months, run_query)
 from listenbrainz_spark.stats.user.artist import get_artists
 from listenbrainz_spark.stats.user.release import get_releases
+from listenbrainz_spark.stats.user.recording import get_recordings
 from listenbrainz_spark.stats.user.utils import (create_messages,
                                                  filter_listens,
                                                  get_last_monday,
@@ -16,7 +17,8 @@ from listenbrainz_spark.utils import get_listens
 
 entity_handler_map = {
     'artists': get_artists,
-    'releases': get_releases
+    'releases': get_releases,
+    'recordings': get_recordings
 }
 
 

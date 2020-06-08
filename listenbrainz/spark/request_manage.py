@@ -91,8 +91,8 @@ def send_request_to_spark_cluster(message):
 @click.option("--month", is_flag=True, help="Request monthly statistics")
 @click.option("--year", is_flag=True, help="Request yearly statistics")
 @click.option("--all-time", is_flag=True, help="Request all time statistics")
-@click.option("--all-time-release", is_flag=True, help="Request all time release statistics")
-def request_user_stats(week, month, year, all_time, all_time_release):
+@click.option("--test", is_flag=True, help="Request test stats")
+def request_user_stats(week, month, year, all_time, test):
     """ Send a user stats request to the spark cluster
     """
     if week:
@@ -115,8 +115,8 @@ def request_user_stats(week, month, year, all_time, all_time_release):
         send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.all_time', params={'entity': 'releases'}))
         return
 
-    if all_time_release:
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.all_time', params={'entity': 'releases'}))
+    if test:
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.week', params={'entity': 'recordings'}))
         return
 
     # Default if no specific flag is provided
