@@ -276,6 +276,7 @@ Also, run the **integration tests** for ListenBrainz.
 When the tests complete, you will see if your changes are valid or not. These tests
 are a helpful way to validate new changes without a lot of work.
 
+
 Lint your code
 --------------
 
