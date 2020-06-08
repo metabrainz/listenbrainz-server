@@ -79,10 +79,3 @@ class DumpNotFoundException(SparkException):
     """
     def __init__(self, message):
         super(DumpNotFoundException, self).__init__(message)
-
-
-class MissingMappingTypeException(SparkException):
-    """ Mapping type not provided.
-    """
-    def __init__(self, message):
-        super(MissingMappingTypeException, self).__init__(message)

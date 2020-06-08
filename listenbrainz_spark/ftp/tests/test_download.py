@@ -69,8 +69,8 @@ class FTPDownloaderTestCase(unittest.TestCase):
         dest_path, filename = ListenbrainzDataDownloader().download_msid_mbid_mapping(directory)
 
         mock_ftp_cons.return_value.cwd.assert_called_once_with(config.FTP_MSID_MBID_DIR)
-        mock_available_dump.assert_called_once_with(mock_list_dir.return_value, 'msid-mbid-mapping-with-matchable')
 
+        mock_available_dump.assert_called_once_with(mock_list_dir.return_value, 'msid-mbid-mapping-with-matchable')
 
         mock_latest_mapping.assert_called_once_with([
             'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2',
