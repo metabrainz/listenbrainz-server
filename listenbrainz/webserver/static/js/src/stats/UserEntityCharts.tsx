@@ -316,7 +316,7 @@ export default class UserEntityCharts extends React.Component<
               Top
               <span className="dropdown">
                 <button
-                  className="dropdown-togle btn-transparent capitalize-bold"
+                  className="dropdown-togle btn-inline capitalize-bold"
                   data-toggle="dropdown"
                   type="button"
                 >
@@ -347,7 +347,7 @@ export default class UserEntityCharts extends React.Component<
               of {range !== "all_time" ? "the" : ""}
               <span className="dropdown">
                 <button
-                  className="dropdown-toggle btn-transparent capitalize-bold"
+                  className="dropdown-toggle btn-inline capitalize-bold"
                   data-toggle="dropdown"
                   type="button"
                 >

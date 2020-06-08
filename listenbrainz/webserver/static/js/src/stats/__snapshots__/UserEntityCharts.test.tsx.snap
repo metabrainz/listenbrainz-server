@@ -23,7 +23,7 @@ exports[`UserHistory Page renders correctly for artists 1`] = `
             className="dropdown"
           >
             <button
-              className="dropdown-togle btn-transparent capitalize-bold"
+              className="dropdown-togle btn-inline capitalize-bold"
               data-toggle="dropdown"
               type="button"
             >
@@ -61,7 +61,7 @@ exports[`UserHistory Page renders correctly for artists 1`] = `
             className="dropdown"
           >
             <button
-              className="dropdown-toggle btn-transparent capitalize-bold"
+              className="dropdown-toggle btn-inline capitalize-bold"
               data-toggle="dropdown"
               type="button"
             >
@@ -1040,7 +1040,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "renderTick": [Function],
                 }
               }
-              colors="#FD8D3C"
+              colors="#EB743B"
               data={
                 Array [
                   Object {
