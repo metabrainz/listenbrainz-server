@@ -4,7 +4,7 @@ from unittest.mock import patch, call
 
 import listenbrainz_spark
 from listenbrainz_spark import config, utils
-from listenbrainz_spark.exceptions import DumpNotFoundException, MissingMappingTypeException
+from listenbrainz_spark.exceptions import DumpNotFoundException
 from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader, ARTIST_RELATION_DUMP_ID_POS
 
 
@@ -69,14 +69,14 @@ class FTPDownloaderTestCase(unittest.TestCase):
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.download_dump')
     @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.get_latest_mapping')
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.list_dir')
-    @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.get_mapping_dump_name_of_given_type')
+    @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.get_mapping_dump_name')
     @patch('ftplib.FTP')
     def test_download_msid_mbid_mapping(self, mock_ftp_cons, mock_mapping_dump, mock_list_dir,
                                         mock_latest_mapping, mock_download_dump):
         directory = '/fakedir'
         dest_path = ListenbrainzDataDownloader().download_msid_mbid_mapping(directory)
         mock_ftp_cons.return_value.cwd.assert_called_once_with(config.FTP_MSID_MBID_DIR)
-        mock_mapping_dump.assert_called_once_with(mock_list_dir.return_value, mapping_type=config.MAPPING_TYPE)
+        mock_mapping_dump.assert_called_once_with(mock_list_dir.return_value, 'msid-mbid-mapping-with-matchable')
 
         mock_latest_mapping.assert_called_once_with(mock_mapping_dump.return_value)
         mock_download_dump.assert_called_once_with(mock_latest_mapping.return_value, directory)
@@ -95,7 +95,7 @@ class FTPDownloaderTestCase(unittest.TestCase):
         self.assertEqual(latest_mapping, expected_mapping)
 
     @patch('ftplib.FTP')
-    def test_get_mapping_dump_name_of_given_type(self, mock_ftp):
+    def test_get_mapping_dump_name(self, mock_ftp):
         dump = [
             'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2',
             'msid-mbid-mapping-with-text-20180603-202000.tar.bz2',
@@ -103,10 +103,7 @@ class FTPDownloaderTestCase(unittest.TestCase):
             'msid-mbid-mapping-with-matchable-20100603-202732.tar.bz2.md5',
         ]
 
-        with self.assertRaises(MissingMappingTypeException):
-            ListenbrainzDataDownloader().get_mapping_dump_name_of_given_type(dump)
-
-        mapping = ListenbrainzDataDownloader().get_mapping_dump_name_of_given_type(dump, mapping_type=config.MAPPING_TYPE)
+        mapping = ListenbrainzDataDownloader().get_mapping_dump_name(dump, 'msid-mbid-mapping-with-matchable')
 
         expected_mapping = [
             'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2',
@@ -121,7 +118,7 @@ class FTPDownloaderTestCase(unittest.TestCase):
         ]
 
         with self.assertRaises(DumpNotFoundException):
-            ListenbrainzDataDownloader().get_mapping_dump_name_of_given_type(dump, mapping_type=config.MAPPING_TYPE)
+            ListenbrainzDataDownloader().get_mapping_dump_name(dump, 'msid-mbid-mapping-with-matchable')
 
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.download_dump')
     @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.get_listens_dump_file_name')

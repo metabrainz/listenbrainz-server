@@ -42,7 +42,4 @@ FTP_MSID_MBID_DIR = '/pub/musicbrainz/listenbrainz/labs/mappings/msid-mbid-mappi
 FTP_ARTIST_RELATION_DIR = '/pub/musicbrainz/listenbrainz/labs/artist-credit-artist-credit-relations/'
 FTP_LISTENS_DIR = '/pub/musicbrainz/listenbrainz/'
 
-# There are three types of mapping, namely 'msid-mbid-mapping', 'msid-mbid-mapping-with-text' and 'msid-mbid-mapping-with-matchable'
-# The type can be changed to download desired mapping
-# Note: Right now, we only have schema to support 'msid-mbid-mapping-with-matchable'
-MAPPING_TYPE = 'msid-mbid-mapping-with-matchable'
+MAPPING_NAME_PREFIX = 'msid-mbid-mapping-with-matchable'
