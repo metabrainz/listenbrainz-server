@@ -7,12 +7,12 @@ import Bar from "./Bar";
 import Loader from "../Loader";
 import ErrorBoundary from "../ErrorBoundary";
 
-export type UserHistoryProps = {
+export type UserEntityChartsProps = {
   user: ListenBrainzUser;
   apiUrl: string;
 };
 
-export type UserHistoryState = {
+export type UserEntityChartsState = {
   data: UserEntityData;
   range: UserEntityAPIRange;
   entity: Entity;
@@ -24,15 +24,15 @@ export type UserHistoryState = {
   loading: boolean;
 };
 
-export default class UserHistory extends React.Component<
-  UserHistoryProps,
-  UserHistoryState
+export default class UserEntityCharts extends React.Component<
+  UserEntityChartsProps,
+  UserEntityChartsState
 > {
   APIService: APIService;
 
   ROWS_PER_PAGE = 25; // Number of rows to be shown on each page
 
-  constructor(props: UserHistoryProps) {
+  constructor(props: UserEntityChartsProps) {
     super(props);
 
     this.APIService = new APIService(
@@ -474,7 +474,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const { user, api_url: apiUrl } = reactProps;
   ReactDOM.render(
     <ErrorBoundary>
-      <UserHistory apiUrl={apiUrl} user={user} />
+      <UserEntityCharts apiUrl={apiUrl} user={user} />
     </ErrorBoundary>,
     domContainer
   );

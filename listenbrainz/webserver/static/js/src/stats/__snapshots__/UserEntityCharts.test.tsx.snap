@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`UserHistory Page renders correctly for artists 1`] = `
-<UserHistory
+<UserEntityCharts
   apiUrl="apiUrl"
   user={
     Object {
@@ -624,11 +624,11 @@ exports[`UserHistory Page renders correctly for artists 1`] = `
       </div>
     </div>
   </div>
-</UserHistory>
+</UserEntityCharts>
 `;
 
 exports[`UserHistory Page renders correctly for releases 1`] = `
-<UserHistory
+<UserEntityCharts
   apiUrl="apiUrl"
   user={
     Object {
@@ -1401,5 +1401,5 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
       </div>
     </div>
   </div>
-</UserHistory>
+</UserEntityCharts>
 `;

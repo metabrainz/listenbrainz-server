@@ -10,7 +10,7 @@ module.exports = function (env) {
     entry: {
       main: "/static/js/src/RecentListens.tsx",
       import: "/static/js/src/LastFMImporter.tsx",
-      userHistory: "/static/js/src/stats/UserHistory.tsx",
+      userEntityCharts: "/static/js/src/stats/UserEntityCharts.tsx",
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",
