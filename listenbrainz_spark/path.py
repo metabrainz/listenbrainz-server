@@ -28,8 +28,8 @@ PLAYCOUNTS_DATAFRAME_PATH = DATAFRAME_DIR + '/' + 'playcounts_df.parquet'
 # Absolute path to similar artist relation.
 SIMILAR_ARTIST_DATAFRAME_PATH = SIMILAR_ARTIST_DIR + '/' + 'artist_credit_artist_credit_relations.parquet'
 # Absolute path to candidate sets.
-TOP_ARTIST_CANDIDATE_SET = CANDIDATE_SET_DIR + '/' + 'top_artist.parquet'
-SIMILAR_ARTIST_CANDIDATE_SET = CANDIDATE_SET_DIR + '/' + 'similar_artist.parquet'
+TOP_ARTIST_CANDIDATE_SET = os.path.join(CANDIDATE_SET_DIR, 'top_artist', 'top_artist.parquet')
+SIMILAR_ARTIST_CANDIDATE_SET = os.path.join(CANDIDATE_SET_DIR, 'similar_artist', 'similar_artist.parquet')
 # Absolute path to model metadata.
 MODEL_METADATA = MODEL_DIR + '/' + 'model_metadata.parquet'
 # Absolute path to save model index
