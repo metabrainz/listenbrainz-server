@@ -309,90 +309,90 @@ export default class UserEntityCharts extends React.Component<
     const nextPage = currPage + 1;
 
     return (
-      <div>
+      <div style={{ marginTop: "1em" }}>
+        <div className="row">
+          <div className="col-xs-6">
+            <ul className="nav nav-pills">
+              <li className={entity === "artist" ? "active" : ""}>
+                <a
+                  href=""
+                  role="button"
+                  onClick={(event) => this.changeEntity("artist", event)}
+                >
+                  Artists
+                </a>
+              </li>
+              <li className={entity === "release" ? "active" : ""}>
+                <a
+                  href=""
+                  role="button"
+                  onClick={(event) => this.changeEntity("release", event)}
+                >
+                  Releases
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div className="col-xs-6 text-right">
+            <span className="dropdown" style={{ fontSize: 22 }}>
+              <button
+                className="dropdown-toggle btn-transparent capitalize-bold"
+                data-toggle="dropdown"
+                type="button"
+              >
+                {`${range.replace(/_/g, " ")}`}
+                <span className="caret" />
+              </button>
+              <ul className="dropdown-menu" role="menu">
+                <li>
+                  <a
+                    href=""
+                    role="button"
+                    onClick={(event) => this.changeRange("week", event)}
+                  >
+                    Week
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href=""
+                    role="button"
+                    onClick={(event) => this.changeRange("month", event)}
+                  >
+                    Month
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href=""
+                    role="button"
+                    onClick={(event) => this.changeRange("year", event)}
+                  >
+                    Year
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href=""
+                    role="button"
+                    onClick={(event) => this.changeRange("all_time", event)}
+                  >
+                    All Time
+                  </a>
+                </li>
+              </ul>
+            </span>
+          </div>
+        </div>
         <div className="row">
           <div className="col-xs-12">
             <h3>
-              Top
-              <span className="dropdown">
-                <button
-                  className="dropdown-togle btn-inline capitalize-bold"
-                  data-toggle="dropdown"
-                  type="button"
-                >
-                  {entity ? `${entity}s` : ""}
-                  <span className="caret" />
-                </button>
-                <ul className="dropdown-menu" role="menu">
-                  <li>
-                    <a
-                      href=""
-                      role="button"
-                      onClick={(event) => this.changeEntity("artist", event)}
-                    >
-                      Artists
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href=""
-                      role="button"
-                      onClick={(event) => this.changeEntity("release", event)}
-                    >
-                      Releases
-                    </a>
-                  </li>
-                </ul>
-              </span>
-              of {range !== "all_time" ? "the" : ""}
-              <span className="dropdown">
-                <button
-                  className="dropdown-toggle btn-inline capitalize-bold"
-                  data-toggle="dropdown"
-                  type="button"
-                >
-                  {`${range.replace(/_/g, " ")}`}
-                  <span className="caret" />
-                </button>
-                <ul className="dropdown-menu" role="menu">
-                  <li>
-                    <a
-                      href=""
-                      role="button"
-                      onClick={(event) => this.changeRange("week", event)}
-                    >
-                      Week
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href=""
-                      role="button"
-                      onClick={(event) => this.changeRange("month", event)}
-                    >
-                      Month
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href=""
-                      role="button"
-                      onClick={(event) => this.changeRange("year", event)}
-                    >
-                      Year
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href=""
-                      role="button"
-                      onClick={(event) => this.changeRange("all_time", event)}
-                    >
-                      All Time
-                    </a>
-                  </li>
-                </ul>
-              </span>
+              Top{" "}
+              <span className="capitalize-bold">
+                {entity ? `${entity}s` : ""}
+              </span>{" "}
+              of {range !== "all_time" ? "the" : ""}{" "}
+              <span className="capitalize-bold">{range.replace(/_/, " ")}</span>{" "}
               {range === "week"
                 ? `of ${startDate.getUTCDate()} ${startDate.toLocaleString(
                     "en-us",
