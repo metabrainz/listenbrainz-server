@@ -123,7 +123,9 @@ MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
 # The path must be absolute path
 UPLOAD_FOLDER = "/tmp/lastfm-backup-upload"
 
-
+# Set to "https://api.listenbrainz.org" if you want to work on frontend for user statistics
+# without going through the process of generating the stats in local environment. Otherwise,
+# set it to "http://localhost"
 API_URL = 'https://api.listenbrainz.org'
 LASTFM_PROXY_URL = 'http://localhost:8080/'
 SERVER_ROOT_URL = 'http://localhost'
