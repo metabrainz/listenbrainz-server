@@ -67,7 +67,7 @@ def load_model():
     best_model_id = get_best_model_id()
     dest_path = get_best_model_path(best_model_id)
     try:
-        model =  MatrixFactorizationModel.load(listenbrainz_spark.context, dest_path)
+        model = MatrixFactorizationModel.load(listenbrainz_spark.context, dest_path)
         return model
     except Py4JJavaError as err:
         current_app.logger.error('Unable to load model "{}"\n{}\nAborting...'.format(best_model_id, str(err.java_exception)),

@@ -56,6 +56,7 @@ SAVE_DATAFRAME_HTML = True
 #       'user_id', 'recording_id', 'count'
 #   ]
 
+
 def generate_dataframe_id(metadata):
     """ Generate dataframe id.
     """

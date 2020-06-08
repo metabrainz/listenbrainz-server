@@ -52,8 +52,8 @@ def compute_rmse(model, data, n, model_id):
     try:
         predictions = model.predictAll(data.map(lambda x: (x.user, x.product)))
         predictionsAndRatings = predictions.map(lambda x: ((x[0], x[1]), x[2])) \
-          .join(data.map(lambda x: ((x[0], x[1]), x[2]))) \
-          .values()
+                                           .join(data.map(lambda x: ((x[0], x[1]), x[2]))) \
+                                           .values()
         return sqrt(predictionsAndRatings.map(lambda x: (x[0] - x[1]) ** 2).reduce(add) / float(n))
     except Py4JJavaError as err:
         current_app.logger.error('Root Mean Squared Error for model "{}" not computed\n{}'.format(
@@ -107,8 +107,7 @@ def get_latest_dataframe_id(dataframe_metadata_df, best_model_metadata):
             best_model_metadata: Dict of best model metadata.
     """
     # get timestamp of recently saved dataframe.
-    timestamp = dataframe_metadata_df.select(f.max('dataframe_created') \
-                                     .alias('recent_dataframe_timestamp')).take(1)[0]
+    timestamp = dataframe_metadata_df.select(f.max('dataframe_created').alias('recent_dataframe_timestamp')).take(1)[0]
     # get dataframe id corresponding to most recent timestamp.
     df = dataframe_metadata_df.select('dataframe_id') \
                               .where(f.col('dataframe_created') == timestamp.recent_dataframe_timestamp).take(1)[0]
@@ -235,7 +234,7 @@ def save_best_model(model_id, model):
         current_app.logger.info('Model saved!')
     except Py4JJavaError as err:
         current_app.logger.error('Unable to save best model "{}"\n{}. Aborting...'.format(model_id,
-            str(err.java_exception)), exc_info=True)
+                                 str(err.java_exception)), exc_info=True)
         sys.exit(-1)
 
 
@@ -360,7 +359,6 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
 
     best_model_metadata = get_best_model_metadata(best_model)
     best_model_metadata['test_rmse'] = compute_rmse(best_model.model, test_data, num_test, best_model.model_id)
-
 
     best_model_metadata['training_data_count'] = num_training
     best_model_metadata['validation_data_count'] = num_validation
