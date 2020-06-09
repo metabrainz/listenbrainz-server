@@ -10,7 +10,110 @@ exports[`UserHistory Page renders correctly for artists 1`] = `
     }
   }
 >
-  <div>
+  <div
+    style={
+      Object {
+        "marginTop": "1em",
+      }
+    }
+  >
+    <div
+      className="row"
+    >
+      <div
+        className="col-xs-6"
+      >
+        <ul
+          className="nav nav-pills"
+        >
+          <li
+            className=""
+          >
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              Artists
+            </a>
+          </li>
+          <li
+            className=""
+          >
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              Releases
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div
+        className="col-xs-6 text-right"
+      >
+        <span
+          className="dropdown"
+          style={
+            Object {
+              "fontSize": 22,
+            }
+          }
+        >
+          <button
+            className="dropdown-toggle btn-transparent capitalize-bold"
+            data-toggle="dropdown"
+            type="button"
+          >
+            <span
+              className="caret"
+            />
+          </button>
+          <ul
+            className="dropdown-menu"
+            role="menu"
+          >
+            <li>
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Week
+              </a>
+            </li>
+            <li>
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Month
+              </a>
+            </li>
+            <li>
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Year
+              </a>
+            </li>
+            <li>
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                All Time
+              </a>
+            </li>
+          </ul>
+        </span>
+      </div>
+    </div>
     <div
       className="row"
     >
@@ -19,98 +122,18 @@ exports[`UserHistory Page renders correctly for artists 1`] = `
       >
         <h3>
           Top
+           
           <span
-            className="dropdown"
-          >
-            <button
-              className="dropdown-togle btn-inline capitalize-bold"
-              data-toggle="dropdown"
-              type="button"
-            >
-              <span
-                className="caret"
-              />
-            </button>
-            <ul
-              className="dropdown-menu"
-              role="menu"
-            >
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  Artists
-                </a>
-              </li>
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  Releases
-                </a>
-              </li>
-            </ul>
-          </span>
+            className="capitalize-bold"
+          />
+           
           of 
           the
+           
           <span
-            className="dropdown"
-          >
-            <button
-              className="dropdown-toggle btn-inline capitalize-bold"
-              data-toggle="dropdown"
-              type="button"
-            >
-              <span
-                className="caret"
-              />
-            </button>
-            <ul
-              className="dropdown-menu"
-              role="menu"
-            >
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  Week
-                </a>
-              </li>
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  Month
-                </a>
-              </li>
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  Year
-                </a>
-              </li>
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  All Time
-                </a>
-              </li>
-            </ul>
-          </span>
+            className="capitalize-bold"
+          />
+           
           2020
         </h3>
       </div>
