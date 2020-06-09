@@ -95,7 +95,8 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
             payload = json.load(f)
 
-        payload['range'] = 'week'
+        # Make week statistics different than all_time statistics
+        payload['artists'] = payload['artists'][25:]
         db_stats.insert_user_artists(self.user['id'], UserArtistStatJson(**{'week': payload}))
 
         response = self.client.get(url_for('stats_api_v1.get_artist',
@@ -115,6 +116,8 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
             payload = json.load(f)
 
+        # Make month statistics different than all_time statistics
+        payload['artists'] = payload['artists'][25:]
         db_stats.insert_user_artists(self.user['id'], UserArtistStatJson(**{'month': payload}))
 
         response = self.client.get(url_for('stats_api_v1.get_artist',
@@ -134,6 +137,8 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
             payload = json.load(f)
 
+        # Make year statistics different than all_time statistics
+        payload['artists'] = payload['artists'][25:]
         db_stats.insert_user_artists(self.user['id'], UserArtistStatJson(**{'year': payload}))
 
         response = self.client.get(url_for('stats_api_v1.get_artist',
@@ -310,7 +315,8 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
             payload = json.load(f)
 
-        payload['range'] = 'week'
+        # Make week statistics different than all_time statistics
+        payload['releases'] = payload['releases'][25:]
         db_stats.insert_user_releases(self.user['id'], UserReleaseStatJson(**{'week': payload}))
 
         response = self.client.get(url_for('stats_api_v1.get_release',
@@ -330,6 +336,8 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
             payload = json.load(f)
 
+        # Make month statistics different than all_time statistics
+        payload['releases'] = payload['releases'][25:]
         db_stats.insert_user_releases(self.user['id'], UserReleaseStatJson(**{'month': payload}))
 
         response = self.client.get(url_for('stats_api_v1.get_release',
@@ -349,6 +357,8 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
             payload = json.load(f)
 
+        # Make year statistics different than all_time statistics
+        payload['releases'] = payload['releases'][25:]
         db_stats.insert_user_releases(self.user['id'], UserReleaseStatJson(**{'year': payload}))
 
         response = self.client.get(url_for('stats_api_v1.get_release',

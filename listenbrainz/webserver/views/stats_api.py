@@ -8,6 +8,7 @@ import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 from listenbrainz.db.model.user_artist_stat import UserArtistStat, UserArtistRecord
 from listenbrainz.db.model.user_release_stat import UserReleaseStat, UserReleaseRecord
+from listenbrainz.db.model.user_recording_stat import UserRecordingStat, UserRecordingRecord
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
@@ -232,6 +233,113 @@ def get_release(user_name):
     }})
 
 
+@stats_api_bp.route("/user/<user_name>/recordings")
+@crossdomain()
+@ratelimit()
+def get_recording(user_name):
+    """
+    Get top recordings for user ``user_name``.
+
+
+    An sample response from the endpoint may look like::
+
+        {
+            "payload": {
+                "recordings": [
+                    {
+                        "artist_mbids": [],
+                        "artist_msid": "6599e41e-390c-4855-a2ac-68ee798538b4",
+                        "artist_name": "Coldplay",
+                        "listen_count": 26,
+                        "recording_mbid": "",
+                        "recording_msid": "d59730cf-f0e3-441e-a7a7-8e0f589632a5",
+                        "recording_name": "Live in Buenos Aires"
+                    },
+                    {
+                        "artist_mbids": [],
+                        "artist_msid": "7addbcac-ae39-4b4c-a956-53da336d68e8",
+                        "artist_name": "Ellie Goulding",
+                        "listen_count": 25,
+                        "recording_mbid": "",
+                        "recording_msid": "de97ca87-36c4-4995-a5c9-540e35944352",
+                        "recording_name": "Delirium (Deluxe)"
+                    },
+                    {
+                        "artist_mbids": [],
+                        "artist_msid": "3b155259-b29e-4515-aa62-cb0b917f4cfd",
+                        "artist_name": "The Fray",
+                        "listen_count": 25,
+                        "recording_mbid": "",
+                        "recording_msid": "2b2a93c3-a0bd-4f46-8507-baf5ad291966",
+                        "recording_name": "How to Save a Life"
+                    },
+                ],
+                "count": 3,
+                "total_recording_count": 175,
+                "range": "all_time",
+                "last_updated": 1588494361,
+                "user_id": "John Doe",
+                "from_ts": 1009823400,
+                "to_ts": 1590029157
+            }
+        }
+
+    .. note::
+        - This endpoint is currently in beta
+        - ``artist_mbids``, ``artist_msid``, ``recording_mbid`` and ``recording_msid`` are optional fields and
+            may not be present in all the responses
+
+    :param count: Optional, number of recordings to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
+        Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+    :type count: ``int``
+    :param offset: Optional, number of recordings to skip from the beginning, for pagination.
+        Ex. An offset of 5 means the top 5 recordings will be skipped, defaults to 0
+    :type offset: ``int``
+    :param range: Optional, time interval for which statistics should be collected, possible values are ``week``,
+        ``month``, ``year``, ``all_time``, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+    """
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APINotFound("Cannot find user: %s" % user_name)
+
+    stats = db_stats.get_user_recordings(user['id'])
+    if stats is None:
+        raise APINoContent('')
+
+    stats_range = request.args.get('range', default='all_time')
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest("Invalid range: {}".format(stats_range))
+
+    offset = _get_non_negative_param('offset', default=0)
+    count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+
+    entity_list, total_entity_count = _process_entity(user_name, stats, stats_range, offset, count, entity='recording')
+    try:
+        from_ts = int(getattr(stats.recording, stats_range).from_ts)
+        to_ts = int(getattr(stats.recording, stats_range).to_ts)
+        last_updated = int(stats.last_updated.timestamp())
+    except AttributeError:
+        raise APINoContent('')
+
+    return jsonify({'payload': {
+        "user_id": user_name,
+        'recordings': entity_list,
+        "count": len(entity_list),
+        "total_recording_count": total_entity_count,
+        "offset": offset,
+        "range": stats_range,
+        "from_ts": from_ts,
+        "to_ts": to_ts,
+        "last_updated": last_updated,
+    }})
+
+
 def _process_entity(user_name, stats, stats_range, offset, count, entity):
     """ Process the statistics data according to query params
 
@@ -250,49 +358,60 @@ def _process_entity(user_name, stats, stats_range, offset, count, entity):
     """
 
     count = min(count, MAX_ITEMS_PER_GET)
-    try:
-        total_entity_count = _get_total_entity_count(stats, entity)
-    except (TypeError, KeyError):
-        raise APINoContent('')
-
     count = count + offset
-    entity_list = [x.dict() for x in _get_entity_list(stats, entity, offset, count)]
+    total_entity_count = _get_total_entity_count(stats, stats_range, entity)
+    entity_list = [x.dict(exclude_none=True) for x in _get_entity_list(stats, stats_range, entity, offset, count)]
 
     return entity_list, total_entity_count
 
 
-def _is_valid_range(stats_range):
+def _is_valid_range(stats_range: str) -> bool:
     """ Check if the provided stats time range is valid
 
     Args:
-        stats_range (str): the range to validate
+        stats_range: the range to validate
 
     Returns:
-        result (bool): True if given range is valid
+        result: True if given range is valid
     """
     return stats_range in StatisticsRange.__members__
 
 
-def _get_total_entity_count(stats: Union[UserArtistStat, UserReleaseStat], entity: int) -> int:
-    """ Returns the total entity count (all time)
+def _get_total_entity_count(
+    stats: Union[UserArtistStat, UserReleaseStat, UserRecordingStat],
+    stats_range: StatisticsRange,
+    entity: int
+) -> int:
+    """ Returns the total entity count
     """
-    if entity == 'release':
-        return stats.release.all_time.count
-    elif entity == 'artist':
-        return stats.artist.all_time.count
-    raise APIBadRequest("Unknown entity: %s" % entity)
+    try:
+        if entity == 'artist':
+            return getattr(stats.artist, stats_range).count
+        elif entity == 'release':
+            return getattr(stats.release, stats_range).count
+        elif entity == 'recording':
+            return getattr(stats.recording, stats_range).count
+        raise APIBadRequest("Unknown entity: %s" % entity)
+    except AttributeError:
+        raise APINoContent('')
 
 
 def _get_entity_list(
-    stats: Union[UserArtistStat, UserReleaseStat],
+    stats: Union[UserArtistStat, UserReleaseStat, UserRecordingStat],
+    stats_range: StatisticsRange,
     entity: str,
     offset: int,
     count: int,
-) -> List[Union[UserArtistRecord, UserReleaseRecord]]:
+) -> List[Union[UserArtistRecord, UserReleaseRecord, UserRecordingRecord]]:
     """ Gets a list of entity records from the stat passed based on the offset and count
     """
-    if entity == 'release':
-        return stats.release.all_time.releases[offset:count]
-    elif entity == 'artist':
-        return stats.artist.all_time.artists[offset:count]
-    raise APIBadRequest("Unknown entity: %s" % entity)
+    try:
+        if entity == 'artist':
+            return getattr(stats.artist, stats_range).artists[offset:count]
+        elif entity == 'release':
+            return getattr(stats.release, stats_range).releases[offset:count]
+        elif entity == 'recording':
+            return getattr(stats.recording, stats_range).recordings[offset:count]
+        raise APIBadRequest("Unknown entity: %s" % entity)
+    except AttributeError:
+        raise APINoContent('')
