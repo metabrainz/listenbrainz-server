@@ -247,34 +247,31 @@ def get_recording(user_name):
             "payload": {
                 "recordings": [
                     {
-                        "artist_mbids": [],
-                        "artist_msid": "6599e41e-390c-4855-a2ac-68ee798538b4",
-                        "artist_name": "Coldplay",
-                        "listen_count": 26,
-                        "recording_mbid": "",
-                        "recording_msid": "d59730cf-f0e3-441e-a7a7-8e0f589632a5",
-                        "recording_name": "Live in Buenos Aires"
-                    },
+                        "artist_mbids": [], 
+                        "artist_msid": "7addbcac-ae39-4b4c-a956-53da336d68e8", 
+                        "artist_name": "Ellie Goulding", 
+                        "listen_count": 25, 
+                        "recording_mbid": "0fe11cd3-0be4-467b-84fa-0bd524d45d74", 
+                        "recording_msid": "c6b65a7e-7284-433e-ac5d-e3ff0aa4738a", 
+                        "release_mbid": "", 
+                        "release_msid": "de97ca87-36c4-4995-a5c9-540e35944352", 
+                        "release_name": "Delirium (Deluxe)", 
+                        "track_name": "Love Me Like You Do - From \"Fifty Shades of Grey\""
+                    }, 
                     {
-                        "artist_mbids": [],
-                        "artist_msid": "7addbcac-ae39-4b4c-a956-53da336d68e8",
-                        "artist_name": "Ellie Goulding",
-                        "listen_count": 25,
-                        "recording_mbid": "",
-                        "recording_msid": "de97ca87-36c4-4995-a5c9-540e35944352",
-                        "recording_name": "Delirium (Deluxe)"
-                    },
-                    {
-                        "artist_mbids": [],
-                        "artist_msid": "3b155259-b29e-4515-aa62-cb0b917f4cfd",
-                        "artist_name": "The Fray",
-                        "listen_count": 25,
-                        "recording_mbid": "",
-                        "recording_msid": "2b2a93c3-a0bd-4f46-8507-baf5ad291966",
-                        "recording_name": "How to Save a Life"
+                        "artist_mbids": [], 
+                        "artist_msid": "3b155259-b29e-4515-aa62-cb0b917f4cfd", 
+                        "artist_name": "The Fray", 
+                        "listen_count": 23, 
+                        "recording_mbid": "0008ab49-a6ad-40b5-aa90-9d2779265c22", 
+                        "recording_msid": "4b5bf07c-782f-4324-9242-bf56e4ba1e57", 
+                        "release_mbid": "", 
+                        "release_msid": "2b2a93c3-a0bd-4f46-8507-baf5ad291966", 
+                        "release_name": "How to Save a Life", 
+                        "track_name": "How to Save a Life"
                     },
                 ],
-                "count": 3,
+                "count": 2,
                 "total_recording_count": 175,
                 "range": "all_time",
                 "last_updated": 1588494361,
