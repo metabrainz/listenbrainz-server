@@ -21,6 +21,7 @@ class SparkTestCase(unittest.TestCase):
     ranks = [8]
     lambdas = [0.1]
     iterations = [5]
+    alpha = 3.0
 
     @classmethod
     def setUpClass(cls):
