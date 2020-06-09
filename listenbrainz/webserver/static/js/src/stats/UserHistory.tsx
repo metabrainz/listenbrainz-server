@@ -4,6 +4,7 @@ import * as React from "react";
 
 import APIService from "../APIService";
 import Bar from "./Bar";
+import Loader from "../Loader";
 import ErrorBoundary from "../ErrorBoundary";
 
 export type UserEntityData = Array<{
@@ -25,6 +26,7 @@ export type UserHistoryState = {
   totalPages: number;
   maxListens: number;
   startDate: Date;
+  loading: boolean;
 };
 
 export default class UserHistory extends React.Component<
@@ -44,163 +46,118 @@ export default class UserHistory extends React.Component<
 
     this.state = {
       data: [],
-      range: "all_time",
-      entity: "artist",
+      range: "" as UserEntityAPIRange,
+      entity: "" as Entity,
       currPage: 1,
       entityCount: 0,
       totalPages: 0,
       maxListens: 0, // Number of listens for first artist used to scale the graph
       startDate: new Date(),
+      loading: false,
     };
   }
 
-  async componentDidMount() {
-    // Fetch page number from URL
-    let page = 1;
-    const url = new URL(window.location.href);
-    if (url.searchParams.get("page")) {
-      page = Number(url.searchParams.get("page"));
-    }
+  componentDidMount() {
+    window.addEventListener("popstate", this.syncStateWithURL);
 
-    // Fetch range from URL
-    let range: UserEntityAPIRange = "all_time";
-    if (url.searchParams.get("range")) {
-      range = url.searchParams.get("range") as UserEntityAPIRange;
-    }
-
-    // Fetch entity from URL
-    let entity: Entity = "artist";
-    if (url.searchParams.get("entity")) {
-      entity = url.searchParams.get("entity") as Entity;
-    }
-
-    this.setState({ entity }, async () => {
-      await this.changeRange(range);
-      const { currPage } = this.state;
-      if (currPage !== page) {
-        await this.changePage(page);
-      }
-    });
+    // Fetch initial data and set URL correspondingly
+    const { page, range, entity } = this.getURLParams();
+    window.history.replaceState(
+      null,
+      "",
+      `?page=${page}&range=${range}&entity=${entity}`
+    );
+    this.syncStateWithURL();
   }
 
-  changePage = async (newPage: number): Promise<void> => {
-    const { range, entity } = this.state;
+  componentWillUnmount() {
+    window.removeEventListener("popstate", this.syncStateWithURL);
+  }
 
-    try {
-      const data = await this.getData(newPage, range, entity);
-      this.changeURL(newPage, range, entity);
-      this.setState({
-        data: this.processData(data, newPage),
-        currPage: newPage,
-      });
-    } catch (error) {
-      this.handleError(error);
+  changePage = (
+    newPage: number,
+    event?: React.MouseEvent<HTMLElement>
+  ): void => {
+    if (event) {
+      event.preventDefault();
     }
+
+    const { entity, range } = this.state;
+    this.setURLParams(newPage, range, entity);
+    this.syncStateWithURL();
   };
 
-  changeRange = async (newRange: UserEntityAPIRange): Promise<void> => {
+  changeRange = (
+    newRange: UserEntityAPIRange,
+    event?: React.MouseEvent<HTMLElement>
+  ): void => {
+    if (event) {
+      event.preventDefault();
+    }
+
     const { entity } = this.state;
-    const { user } = this.props;
-
-    const page = 1;
-    try {
-      let data = await this.APIService.getUserEntity(
-        user.name,
-        entity,
-        newRange,
-        undefined,
-        1
-      );
-
-      let maxListens = 0;
-      let totalPages = 0;
-      let entityCount = 0;
-
-      if (entity === "artist") {
-        data = data as UserArtistsResponse;
-        maxListens = data.payload.artists[0].listen_count;
-        totalPages = Math.ceil(
-          data.payload.total_artist_count / this.ROWS_PER_PAGE
-        );
-        entityCount = data.payload.total_artist_count;
-      } else if (entity === "release") {
-        data = data as UserReleasesResponse;
-        maxListens = data.payload.releases[0].listen_count;
-        totalPages = Math.ceil(
-          data.payload.total_release_count / this.ROWS_PER_PAGE
-        );
-        entityCount = data.payload.total_release_count;
-      }
-
-      data = await this.getData(page, newRange, entity);
-      this.changeURL(page, newRange, entity);
-      await new Promise((resolve) =>
-        this.setState(
-          {
-            data: this.processData(data, page),
-            range: newRange,
-            currPage: page,
-            startDate: new Date(data.payload.from_ts * 1000),
-            totalPages,
-            maxListens,
-            entityCount,
-          },
-          resolve
-        )
-      );
-    } catch (error) {
-      this.handleError(error);
-    }
+    this.setURLParams(1, newRange, entity);
+    this.syncStateWithURL();
   };
 
-  changeEntity = async (newEntity: Entity): Promise<void> => {
+  changeEntity = (
+    newEntity: Entity,
+    event?: React.MouseEvent<HTMLElement>
+  ): void => {
+    if (event) {
+      event.preventDefault();
+    }
+
     const { range } = this.state;
+    this.setURLParams(1, range, newEntity);
+    this.syncStateWithURL();
+  };
+
+  getInitData = async (
+    range: UserEntityAPIRange,
+    entity: Entity
+  ): Promise<{
+    maxListens: number;
+    totalPages: number;
+    entityCount: number;
+    startDate: Date;
+  }> => {
     const { user } = this.props;
 
-    const page = 1;
-    try {
-      let data = await this.APIService.getUserEntity(
-        user.name,
-        newEntity,
-        range,
-        undefined,
-        1
+    let data = await this.APIService.getUserEntity(
+      user.name,
+      entity,
+      range,
+      undefined,
+      1
+    );
+
+    let maxListens = 0;
+    let totalPages = 0;
+    let entityCount = 0;
+
+    if (entity === "artist") {
+      data = data as UserArtistsResponse;
+      maxListens = data.payload.artists[0].listen_count;
+      totalPages = Math.ceil(
+        data.payload.total_artist_count / this.ROWS_PER_PAGE
       );
-
-      let maxListens = 0;
-      let totalPages = 0;
-      let entityCount = 0;
-
-      if (newEntity === "artist") {
-        data = data as UserArtistsResponse;
-        maxListens = data.payload.artists[0].listen_count;
-        totalPages = Math.ceil(
-          data.payload.total_artist_count / this.ROWS_PER_PAGE
-        );
-        entityCount = data.payload.total_artist_count;
-      } else if (newEntity === "release") {
-        data = data as UserReleasesResponse;
-        maxListens = data.payload.releases[0].listen_count;
-        totalPages = Math.ceil(
-          data.payload.total_release_count / this.ROWS_PER_PAGE
-        );
-        entityCount = data.payload.total_release_count;
-      }
-
-      data = await this.getData(page, range, newEntity);
-      this.changeURL(page, range, newEntity);
-      this.setState({
-        data: this.processData(data, page, newEntity),
-        entity: newEntity,
-        currPage: page,
-        startDate: new Date(data.payload.from_ts * 1000),
-        totalPages,
-        maxListens,
-        entityCount,
-      });
-    } catch (error) {
-      this.handleError(error);
+      entityCount = data.payload.total_artist_count;
+    } else if (entity === "release") {
+      data = data as UserReleasesResponse;
+      maxListens = data.payload.releases[0].listen_count;
+      totalPages = Math.ceil(
+        data.payload.total_release_count / this.ROWS_PER_PAGE
+      );
+      entityCount = data.payload.total_release_count;
     }
+
+    return {
+      maxListens,
+      totalPages,
+      entityCount,
+      startDate: new Date(data.payload.from_ts * 1000),
+    };
   };
 
   getData = async (
@@ -256,16 +213,58 @@ export default class UserHistory extends React.Component<
     return result;
   };
 
-  handleError = (error: Error): void => {
-    // Error Boundaries don't catch errors in async code.
-    // Throwing an error in setState fixes this.
-    // This is a hacky solution but should be fixed with upcoming concurrent mode in React.
-    this.setState(() => {
-      throw error;
-    });
+  syncStateWithURL = async (): Promise<void> => {
+    this.setState({ loading: true });
+    try {
+      const { page, range, entity } = this.getURLParams();
+      const { range: currRange, entity: currEntity } = this.state;
+      let initData = {};
+      if (range !== currRange || entity !== currEntity) {
+        initData = await this.getInitData(range, entity);
+      }
+      const data = await this.getData(page, range, entity);
+      this.setState({
+        data: this.processData(data, page, entity),
+        currPage: page,
+        loading: false,
+        range,
+        entity,
+        ...initData,
+      });
+    } catch (error) {
+      this.handleError(error);
+    }
   };
 
-  changeURL = (
+  getURLParams = (): {
+    page: number;
+    range: UserEntityAPIRange;
+    entity: Entity;
+  } => {
+    const url = new URL(window.location.href);
+
+    // Get page number from URL
+    let page = 1;
+    if (url.searchParams.get("page")) {
+      page = Number(url.searchParams.get("page"));
+    }
+
+    // Get range from URL
+    let range: UserEntityAPIRange = "all_time";
+    if (url.searchParams.get("range")) {
+      range = url.searchParams.get("range") as UserEntityAPIRange;
+    }
+
+    // Get entity from URL
+    let entity: Entity = "artist";
+    if (url.searchParams.get("entity")) {
+      entity = url.searchParams.get("entity") as Entity;
+    }
+
+    return { page, range, entity };
+  };
+
+  setURLParams = (
     page: number,
     range: UserEntityAPIRange,
     entity: Entity
@@ -273,8 +272,17 @@ export default class UserHistory extends React.Component<
     window.history.pushState(
       null,
       "",
-      `${window.location.origin}${window.location.pathname}?page=${page}&range=${range}&entity=${entity}`
+      `?page=${page}&range=${range}&entity=${entity}`
     );
+  };
+
+  handleError = (error: Error): void => {
+    // Error Boundaries don't catch errors in async code.
+    // Throwing an error in setState fixes this.
+    // This is a hacky solution but should be fixed with upcoming concurrent mode in React.
+    this.setState(() => {
+      throw error;
+    });
   };
 
   render() {
@@ -287,6 +295,7 @@ export default class UserHistory extends React.Component<
       maxListens,
       totalPages,
       startDate,
+      loading,
     } = this.state;
     const prevPage = currPage - 1;
     const nextPage = currPage + 1;
@@ -303,24 +312,24 @@ export default class UserHistory extends React.Component<
                   data-toggle="dropdown"
                   type="button"
                 >
-                  {entity}s
+                  {entity ? `${entity}s` : ""}
                   <span className="caret" />
                 </button>
                 <ul className="dropdown-menu" role="menu">
                   <li>
                     <a
-                      href="#"
+                      href=""
                       role="button"
-                      onClick={() => this.changeEntity("artist")}
+                      onClick={(event) => this.changeEntity("artist", event)}
                     >
                       Artists
                     </a>
                   </li>
                   <li>
                     <a
-                      href="#"
+                      href=""
                       role="button"
-                      onClick={() => this.changeEntity("release")}
+                      onClick={(event) => this.changeEntity("release", event)}
                     >
                       Releases
                     </a>
@@ -340,36 +349,36 @@ export default class UserHistory extends React.Component<
                 <ul className="dropdown-menu" role="menu">
                   <li>
                     <a
-                      href="#"
-                      onClick={() => this.changeRange("week")}
+                      href=""
                       role="button"
+                      onClick={(event) => this.changeRange("week", event)}
                     >
                       Week
                     </a>
                   </li>
                   <li>
                     <a
-                      href="#"
-                      onClick={() => this.changeRange("month")}
+                      href=""
                       role="button"
+                      onClick={(event) => this.changeRange("month", event)}
                     >
                       Month
                     </a>
                   </li>
                   <li>
                     <a
-                      href="#"
-                      onClick={() => this.changeRange("year")}
+                      href=""
                       role="button"
+                      onClick={(event) => this.changeRange("year", event)}
                     >
                       Year
                     </a>
                   </li>
                   <li>
                     <a
-                      href="#"
-                      onClick={() => this.changeRange("all_time")}
+                      href=""
                       role="button"
+                      onClick={(event) => this.changeRange("all_time", event)}
                     >
                       All Time
                     </a>
@@ -406,10 +415,12 @@ export default class UserHistory extends React.Component<
         </div>
         <div className="row">
           <div
-            className="col-md-12"
+            className="col-md-12 text-center"
             style={{ height: `${(75 / this.ROWS_PER_PAGE) * data.length}em` }}
           >
-            <Bar data={data} maxValue={maxListens} />
+            <Loader isLoading={loading}>
+              <Bar data={data} maxValue={maxListens} />
+            </Loader>
           </div>
         </div>
         <div className="row">
@@ -417,9 +428,9 @@ export default class UserHistory extends React.Component<
             <ul className="pager">
               <li className={`previous ${!(prevPage > 0) ? "hidden" : ""}`}>
                 <a
-                  href="#"
+                  href=""
                   role="button"
-                  onClick={() => this.changePage(prevPage)}
+                  onClick={(event) => this.changePage(prevPage, event)}
                 >
                   &larr; Previous
                 </a>
@@ -428,9 +439,9 @@ export default class UserHistory extends React.Component<
                 className={`next ${!(nextPage <= totalPages) ? "hidden" : ""}`}
               >
                 <a
-                  href="#"
+                  href=""
                   role="button"
-                  onClick={() => this.changePage(nextPage)}
+                  onClick={(event) => this.changePage(nextPage, event)}
                 >
                   Next &rarr;
                 </a>
