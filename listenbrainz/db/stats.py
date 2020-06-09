@@ -98,7 +98,6 @@ def insert_user_recordings(user_id: int, recordings: UserRecordingStatJson):
        Args: user_id: the row id of the user,
              recordings: the top releases listened to by the user
     """
-    print(recordings.dict())
     _insert_jsonb_data(user_id=user_id, column='recording', data=recordings.dict(exclude_none=True))
 
 

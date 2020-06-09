@@ -98,11 +98,9 @@ class StatsAPITestCase(IntegrationTestCase):
 
     def test_artist_stat_week(self):
         """ Test to make sure valid response is received when range is 'week' """
-        with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
+        with open(self.path_to_data_file('user_top_artists_db_data_for_api_test_week.json'), 'r') as f:
             payload = json.load(f)
 
-        # Make week statistics different than all_time statistics
-        payload['artists'] = payload['artists'][25:]
         db_stats.insert_user_artists(self.user['id'], UserArtistStatJson(**{'week': payload}))
 
         response = self.client.get(url_for('stats_api_v1.get_artist',
@@ -110,7 +108,7 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assert200(response)
         data = json.loads(response.data)['payload']
         received_count = data['count']
-        self.assertEqual(25, received_count)
+        self.assertEqual(24, received_count)
         sent_artist_list = payload['artists'][:25]
         received_artist_list = data['artists']
         self.assertListEqual(sent_artist_list, received_artist_list)
@@ -119,11 +117,9 @@ class StatsAPITestCase(IntegrationTestCase):
 
     def test_artist_stat_month(self):
         """ Test to make sure valid response is received when range is 'month' """
-        with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
+        with open(self.path_to_data_file('user_top_artists_db_data_for_api_test_month.json'), 'r') as f:
             payload = json.load(f)
 
-        # Make month statistics different than all_time statistics
-        payload['artists'] = payload['artists'][25:]
         db_stats.insert_user_artists(self.user['id'], UserArtistStatJson(**{'month': payload}))
 
         response = self.client.get(url_for('stats_api_v1.get_artist',
@@ -140,11 +136,9 @@ class StatsAPITestCase(IntegrationTestCase):
 
     def test_artist_stat_year(self):
         """ Test to make sure valid response is received when range is 'year' """
-        with open(self.path_to_data_file('user_top_artists_db_data_for_api_test.json'), 'r') as f:
+        with open(self.path_to_data_file('user_top_artists_db_data_for_api_test_year.json'), 'r') as f:
             payload = json.load(f)
 
-        # Make year statistics different than all_time statistics
-        payload['artists'] = payload['artists'][25:]
         db_stats.insert_user_artists(self.user['id'], UserArtistStatJson(**{'year': payload}))
 
         response = self.client.get(url_for('stats_api_v1.get_artist',
@@ -318,11 +312,9 @@ class StatsAPITestCase(IntegrationTestCase):
 
     def test_release_stat_week(self):
         """ Test to make sure valid response is received when range is 'week' """
-        with open(self.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
+        with open(self.path_to_data_file('user_top_releases_db_data_for_api_test_week.json'), 'r') as f:
             payload = json.load(f)
 
-        # Make week statistics different than all_time statistics
-        payload['releases'] = payload['releases'][25:]
         db_stats.insert_user_releases(self.user['id'], UserReleaseStatJson(**{'week': payload}))
 
         response = self.client.get(url_for('stats_api_v1.get_release',
@@ -339,11 +331,9 @@ class StatsAPITestCase(IntegrationTestCase):
 
     def test_release_stat_month(self):
         """ Test to make sure valid response is received when range is 'month' """
-        with open(self.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
+        with open(self.path_to_data_file('user_top_releases_db_data_for_api_test_month.json'), 'r') as f:
             payload = json.load(f)
 
-        # Make month statistics different than all_time statistics
-        payload['releases'] = payload['releases'][25:]
         db_stats.insert_user_releases(self.user['id'], UserReleaseStatJson(**{'month': payload}))
 
         response = self.client.get(url_for('stats_api_v1.get_release',
@@ -360,11 +350,9 @@ class StatsAPITestCase(IntegrationTestCase):
 
     def test_release_stat_year(self):
         """ Test to make sure valid response is received when range is 'year' """
-        with open(self.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
+        with open(self.path_to_data_file('user_top_releases_db_data_for_api_test_year.json'), 'r') as f:
             payload = json.load(f)
 
-        # Make year statistics different than all_time statistics
-        payload['releases'] = payload['releases'][25:]
         db_stats.insert_user_releases(self.user['id'], UserReleaseStatJson(**{'year': payload}))
 
         response = self.client.get(url_for('stats_api_v1.get_release',
@@ -538,11 +526,9 @@ class StatsAPITestCase(IntegrationTestCase):
 
     def test_recording_stat_week(self):
         """ Test to make sure valid response is received when range is 'week' """
-        with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test.json'), 'r') as f:
+        with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test_week.json'), 'r') as f:
             payload = json.load(f)
 
-        # Make week statistics different than all_time statistics
-        payload['recordings'] = payload['recordings'][25:]
         db_stats.insert_user_recordings(self.user['id'], UserRecordingStatJson(**{'week': payload}))
 
         response = self.client.get(url_for('stats_api_v1.get_recording',
@@ -559,11 +545,9 @@ class StatsAPITestCase(IntegrationTestCase):
 
     def test_recording_stat_month(self):
         """ Test to make sure valid response is received when range is 'month' """
-        with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test.json'), 'r') as f:
+        with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test_month.json'), 'r') as f:
             payload = json.load(f)
 
-        # Make month statistics different than all_time statistics
-        payload['recordings'] = payload['recordings'][25:]
         db_stats.insert_user_recordings(self.user['id'], UserRecordingStatJson(**{'month': payload}))
 
         response = self.client.get(url_for('stats_api_v1.get_recording',
@@ -580,11 +564,9 @@ class StatsAPITestCase(IntegrationTestCase):
 
     def test_recording_stat_year(self):
         """ Test to make sure valid response is received when range is 'year' """
-        with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test.json'), 'r') as f:
+        with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test_year.json'), 'r') as f:
             payload = json.load(f)
 
-        # Make year statistics different than all_time statistics
-        payload['recordings'] = payload['recordings'][25:]
         db_stats.insert_user_recordings(self.user['id'], UserRecordingStatJson(**{'year': payload}))
 
         response = self.client.get(url_for('stats_api_v1.get_recording',

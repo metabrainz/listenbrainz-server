@@ -357,7 +357,7 @@ def _process_entity(user_name, stats, stats_range, offset, count, entity):
     count = min(count, MAX_ITEMS_PER_GET)
     count = count + offset
     total_entity_count = _get_total_entity_count(stats, stats_range, entity)
-    entity_list = [x.dict(exclude_none=True) for x in _get_entity_list(stats, stats_range, entity, offset, count)]
+    entity_list = [x.dict() for x in _get_entity_list(stats, stats_range, entity, offset, count)]
 
     return entity_list, total_entity_count
 
