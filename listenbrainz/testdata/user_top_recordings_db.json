@@ -1,0 +1,31 @@
+{
+  "from_ts": 0,
+  "to_ts": 10,
+  "recordings": [
+    {
+      "listen_count": 230,
+      "track_name": "Burn",
+      "release_name": "Halycon Days",
+      "artist_name": "Ellie Goulding",
+      "artist_mbids": [],
+      "artist_msid": null,
+      "release_msid": null,
+      "release_mbid": null,
+      "recording_msid": null,
+      "recording_mbid": null
+    },
+    {
+      "listen_count": 229,
+      "track_name": "Love Me Like You Do - From \"Fifty Shades of Grey\"",
+      "release_name": "Delirium",
+      "artist_name": "Ellie Goulding",
+      "artist_mbids": [],
+      "artist_msid": null,
+      "release_msid": null,
+      "release_mbid": null,
+      "recording_msid": null,
+      "recording_mbid": null
+    }
+  ],
+  "count": 2
+}

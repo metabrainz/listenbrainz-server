@@ -159,6 +159,18 @@ def get_user_releases(user_id: int) -> Optional[UserReleaseStat]:
     return UserReleaseStat(**data)
 
 
+def get_user_recordings(user_id: int) -> Optional[UserRecordingStat]:
+    """Get top recordings for user with given ID.
+
+        Args:
+            user_id: the row ID of the user in the DB
+    """
+    data = get_user_stats(user_id, 'recording')
+    if not data:
+        return None
+    return UserRecordingStat(**data)
+
+
 def valid_stats_exist(user_id, days):
     """ Returns True if statistics for a user have been calculated in
     the last X days (where x is passed to the function), and are present in the db
