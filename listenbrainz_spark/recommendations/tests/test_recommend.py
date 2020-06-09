@@ -33,8 +33,11 @@ class RecommendTestClass(SparkTestCase):
     @classmethod
     def upload_test_model(cls):
         training_data, validation_data, test_data = super().split_playcounts()
-        best_model, _, best_model_metadata = train_models.train(training_data, validation_data,
-            validation_data.count(), cls.ranks, cls.lambdas, cls.iterations)
+
+        best_model, _, best_model_metadata = train_models.train(
+            training_data, validation_data, validation_data.count(), cls.ranks,
+            cls.lambdas, cls.iterations, cls.alpha
+        )
         cls.model_save_path = os.path.join(MODEL_PATH, best_model_metadata['model_id'])
         train_models.save_model(cls.model_save_path, best_model_metadata['model_id'], best_model)
 

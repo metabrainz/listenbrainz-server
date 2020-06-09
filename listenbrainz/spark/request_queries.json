@@ -37,7 +37,7 @@
   "cf_recording.recommendations.train_model": {
     "name": "cf_recording.recommendations.train_model",
     "description": "Train data to yield a model.",
-    "params": []
+    "params": ["ranks", "lambdas", "iterations", "alpha"]
   },
   "cf_recording.recommendations.candidate_sets": {
     "name": "cf_recording.recommendations.candidate_sets",
