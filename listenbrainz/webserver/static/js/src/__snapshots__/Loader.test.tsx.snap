@@ -1,0 +1,113 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Loader renders child component when "isLoading" is false 1`] = `
+<Loader
+  isLoading={true}
+>
+  <FontAwesomeIcon
+    border={false}
+    className=""
+    fixedWidth={false}
+    flip={null}
+    icon={
+      Object {
+        "icon": Array [
+          512,
+          512,
+          Array [],
+          "f110",
+          "M304 48c0 26.51-21.49 48-48 48s-48-21.49-48-48 21.49-48 48-48 48 21.49 48 48zm-48 368c-26.51 0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.49-48-48-48zm208-208c-26.51 0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.49-48-48-48zM96 256c0-26.51-21.49-48-48-48S0 229.49 0 256s21.49 48 48 48 48-21.49 48-48zm12.922 99.078c-26.51 0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48c0-26.509-21.491-48-48-48zm294.156 0c-26.51 0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48c0-26.509-21.49-48-48-48zM108.922 60.922c-26.51 0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.491-48-48-48z",
+        ],
+        "iconName": "spinner",
+        "prefix": "fas",
+      }
+    }
+    inverse={false}
+    listItem={false}
+    mask={null}
+    pull={null}
+    pulse={false}
+    rotation={null}
+    size="4x"
+    spin={true}
+    swapOpacity={false}
+    symbol={false}
+    title=""
+    transform={null}
+  >
+    <svg
+      aria-hidden="true"
+      className="svg-inline--fa fa-spinner fa-w-16 fa-spin fa-4x "
+      data-icon="spinner"
+      data-prefix="fas"
+      focusable="false"
+      role="img"
+      style={Object {}}
+      viewBox="0 0 512 512"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M304 48c0 26.51-21.49 48-48 48s-48-21.49-48-48 21.49-48 48-48 48 21.49 48 48zm-48 368c-26.51 0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.49-48-48-48zm208-208c-26.51 0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.49-48-48-48zM96 256c0-26.51-21.49-48-48-48S0 229.49 0 256s21.49 48 48 48 48-21.49 48-48zm12.922 99.078c-26.51 0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48c0-26.509-21.491-48-48-48zm294.156 0c-26.51 0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48c0-26.509-21.49-48-48-48zM108.922 60.922c-26.51 0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.491-48-48-48z"
+        fill="currentColor"
+        style={Object {}}
+      />
+    </svg>
+  </FontAwesomeIcon>
+</Loader>
+`;
+
+exports[`Loader renders loader when "isLoading" is true 1`] = `
+<Loader
+  isLoading={true}
+>
+  <FontAwesomeIcon
+    border={false}
+    className=""
+    fixedWidth={false}
+    flip={null}
+    icon={
+      Object {
+        "icon": Array [
+          512,
+          512,
+          Array [],
+          "f110",
+          "M304 48c0 26.51-21.49 48-48 48s-48-21.49-48-48 21.49-48 48-48 48 21.49 48 48zm-48 368c-26.51 0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.49-48-48-48zm208-208c-26.51 0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.49-48-48-48zM96 256c0-26.51-21.49-48-48-48S0 229.49 0 256s21.49 48 48 48 48-21.49 48-48zm12.922 99.078c-26.51 0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48c0-26.509-21.491-48-48-48zm294.156 0c-26.51 0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48c0-26.509-21.49-48-48-48zM108.922 60.922c-26.51 0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.491-48-48-48z",
+        ],
+        "iconName": "spinner",
+        "prefix": "fas",
+      }
+    }
+    inverse={false}
+    listItem={false}
+    mask={null}
+    pull={null}
+    pulse={false}
+    rotation={null}
+    size="4x"
+    spin={true}
+    swapOpacity={false}
+    symbol={false}
+    title=""
+    transform={null}
+  >
+    <svg
+      aria-hidden="true"
+      className="svg-inline--fa fa-spinner fa-w-16 fa-spin fa-4x "
+      data-icon="spinner"
+      data-prefix="fas"
+      focusable="false"
+      role="img"
+      style={Object {}}
+      viewBox="0 0 512 512"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M304 48c0 26.51-21.49 48-48 48s-48-21.49-48-48 21.49-48 48-48 48 21.49 48 48zm-48 368c-26.51 0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.49-48-48-48zm208-208c-26.51 0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.49-48-48-48zM96 256c0-26.51-21.49-48-48-48S0 229.49 0 256s21.49 48 48 48 48-21.49 48-48zm12.922 99.078c-26.51 0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48c0-26.509-21.491-48-48-48zm294.156 0c-26.51 0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48c0-26.509-21.49-48-48-48zM108.922 60.922c-26.51 0-48 21.49-48 48s21.49 48 48 48 48-21.49 48-48-21.491-48-48-48z"
+        fill="currentColor"
+        style={Object {}}
+      />
+    </svg>
+  </FontAwesomeIcon>
+</Loader>
+`;

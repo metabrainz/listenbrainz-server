@@ -33,54 +33,196 @@ describe("UserHistory Page", () => {
 });
 
 describe("componentDidMount", () => {
-  it("extracts range from the URL if present", async () => {
+  it('adds event listener for "popstate" event', () => {
     const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
     const instance = wrapper.instance();
 
-    delete window.location;
-    window.location = {
-      href: "https://foobar/user/bazfoo/artists?range=week",
-    } as Window["location"];
+    const spy = jest.spyOn(window, "addEventListener");
+    spy.mockImplementationOnce(() => {});
+    instance.syncStateWithURL = jest.fn();
+    instance.componentDidMount();
 
-    instance.changeRange = jest.fn();
-    await instance.componentDidMount();
-
-    expect(instance.changeRange).toHaveBeenCalledWith("week");
+    expect(spy).toHaveBeenCalledWith("popstate", instance.syncStateWithURL);
   });
 
-  it("extracts page from the URL if present", async () => {
+  it("calls getURLParams once", () => {
     const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
     const instance = wrapper.instance();
 
-    delete window.location;
-    window.location = {
-      href: "https://foobar/user/bazfoo/artists?page=3",
-    } as Window["location"];
-    instance.changeRange = jest.fn();
-    instance.changePage = jest.fn();
-    await instance.componentDidMount();
+    instance.getURLParams = jest.fn().mockImplementationOnce(() => {
+      return { page: 1, range: "all_time", entity: "artist" };
+    });
+    instance.syncStateWithURL = jest.fn();
+    instance.componentDidMount();
 
-    expect(instance.changePage).toHaveBeenCalledWith(3);
+    expect(instance.getURLParams).toHaveBeenCalledTimes(1);
   });
 
-  it("extracts entity from the URL if present", async () => {
+  it("calls replaceState with correct parameters", () => {
     const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
     const instance = wrapper.instance();
 
-    delete window.location;
-    window.location = {
-      href: "https://foobar/user/bazfoo/artists?entity=release",
-    } as Window["location"];
-    instance.changeRange = jest.fn();
-    instance.changePage = jest.fn();
-    await instance.componentDidMount();
+    const spy = jest.spyOn(window.history, "replaceState");
+    spy.mockImplementationOnce(() => {});
+    instance.syncStateWithURL = jest.fn();
+    instance.componentDidMount();
 
-    expect(wrapper.state("entity")).toEqual("release");
+    expect(spy).toHaveBeenCalledWith(
+      null,
+      "",
+      "?page=1&range=all_time&entity=artist"
+    );
+  });
+
+  it("calls syncStateWithURL", () => {
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
+    const instance = wrapper.instance();
+
+    instance.syncStateWithURL = jest.fn();
+    instance.componentDidMount();
+
+    expect(instance.syncStateWithURL).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("componentWillUnmount", () => {
+  it('removes "popstate" event listener', () => {
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
+    const instance = wrapper.instance();
+
+    const spy = jest.spyOn(window, "removeEventListener");
+    spy.mockImplementationOnce(() => {});
+    instance.syncStateWithURL = jest.fn();
+    instance.componentWillUnmount();
+
+    expect(spy).toHaveBeenCalledWith("popstate", instance.syncStateWithURL);
+  });
+});
+
+describe("changePage", () => {
+  it("calls setURLParams with correct parameters", () => {
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
+    const instance = wrapper.instance();
+
+    instance.setURLParams = jest.fn();
+    instance.syncStateWithURL = jest.fn();
+    instance.changePage(2);
+
+    expect(instance.setURLParams).toHaveBeenCalledWith(2, "", "");
+  });
+
+  it("calls syncStateWithURL once", () => {
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
+    const instance = wrapper.instance();
+
+    instance.setURLParams = jest.fn();
+    instance.syncStateWithURL = jest.fn();
+    instance.changeRange("week");
+
+    expect(instance.syncStateWithURL).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("changeRange", () => {
+  it("calls setURLParams with correct parameters", () => {
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
+    const instance = wrapper.instance();
+
+    instance.setURLParams = jest.fn();
+    instance.syncStateWithURL = jest.fn();
+    instance.changeRange("week");
+
+    expect(instance.setURLParams).toHaveBeenCalledWith(1, "week", "");
+  });
+
+  it("calls syncStateWithURL once", () => {
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
+    const instance = wrapper.instance();
+
+    instance.setURLParams = jest.fn();
+    instance.syncStateWithURL = jest.fn();
+    instance.changeRange("week");
+
+    expect(instance.syncStateWithURL).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("changeEntity", () => {
+  it("calls setURLParams with correct parameters", () => {
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
+    const instance = wrapper.instance();
+
+    instance.setURLParams = jest.fn();
+    instance.syncStateWithURL = jest.fn();
+    instance.changeEntity("release");
+
+    expect(instance.setURLParams).toHaveBeenCalledWith(1, "", "release");
+  });
+
+  it("calls syncStateWithURL once", () => {
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
+    const instance = wrapper.instance();
+
+    instance.setURLParams = jest.fn();
+    instance.syncStateWithURL = jest.fn();
+    instance.changeEntity("release");
+
+    expect(instance.syncStateWithURL).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("getInitData", () => {
+  it("gets data correctly for artist", async () => {
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
+    const instance = wrapper.instance();
+
+    const spy = jest.spyOn(instance.APIService, "getUserEntity");
+    spy.mockImplementation((): any => {
+      return Promise.resolve(userArtistsResponse);
+    });
+
+    const {
+      maxListens,
+      totalPages,
+      entityCount,
+      startDate,
+    } = await instance.getInitData("all_time", "artist");
+
+    expect(maxListens).toEqual(385);
+    expect(totalPages).toEqual(7);
+    expect(entityCount).toEqual(175);
+    expect(startDate).toEqual(
+      new Date(userArtistsResponse.payload.from_ts * 1000)
+    );
+  });
+
+  it("gets data correctly for release", async () => {
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
+    const instance = wrapper.instance();
+
+    const spy = jest.spyOn(instance.APIService, "getUserEntity");
+    spy.mockImplementation((): any => {
+      return Promise.resolve(userReleasesResponse);
+    });
+
+    const {
+      maxListens,
+      totalPages,
+      entityCount,
+      startDate,
+    } = await instance.getInitData("all_time", "release");
+
+    expect(maxListens).toEqual(26);
+    expect(totalPages).toEqual(7);
+    expect(entityCount).toEqual(165);
+    expect(startDate).toEqual(
+      new Date(userReleasesResponse.payload.from_ts * 1000)
+    );
   });
 });
 
 describe("getData", () => {
-  it("calls getUserHistory with correct parameters", async () => {
+  it("calls getUserEntity with correct parameters", async () => {
     const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
     const instance = wrapper.instance();
 
@@ -124,231 +266,97 @@ describe("processData", () => {
   });
 });
 
-describe("changePage", () => {
+describe("syncStateWithURL", () => {
   it("sets state correctly", async () => {
     const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "getUserEntity");
-    spy.mockImplementation((): any => {
-      return Promise.resolve(userArtistsResponse);
-    });
-    instance.processData = jest.fn().mockImplementationOnce(() => {
-      return userArtistsProcessDataOutput;
-    });
-    await instance.changePage(2);
+    instance.getURLParams = jest.fn().mockImplementationOnce(() => ({
+      page: 1,
+      range: "all_time",
+      entity: "artist",
+    }));
+    instance.getInitData = jest.fn().mockImplementationOnce(() =>
+      Promise.resolve({
+        startDate: new Date(0),
+        totalPages: 2,
+        maxListens: 100,
+        entityCount: 50,
+      })
+    );
+    instance.getData = jest
+      .fn()
+      .mockImplementationOnce(() => Promise.resolve(userArtistsResponse));
+    instance.processData = jest
+      .fn()
+      .mockImplementationOnce(() => userArtistsProcessDataOutput);
+    await instance.syncStateWithURL();
 
-    expect(instance.processData).toHaveBeenCalledWith(userArtistsResponse, 2);
-    expect(wrapper.state("data")).toEqual(userArtistsProcessDataOutput);
-    expect(wrapper.state("currPage")).toBe(2);
+    expect(wrapper.state()).toMatchObject({
+      data: userArtistsProcessDataOutput,
+      currPage: 1,
+      range: "all_time",
+      entity: "artist",
+      startDate: new Date(0),
+      totalPages: 2,
+      maxListens: 100,
+      entityCount: 50,
+    });
   });
 
-  it("calls changeURL with correct parameters", async () => {
+  it("throws error if fetch fails", async () => {
     const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "getUserEntity");
-    spy.mockImplementation((): any => {
-      return Promise.resolve(userArtistsResponse);
-    });
-    instance.processData = jest.fn().mockImplementationOnce(() => {
-      return userArtistsProcessDataOutput;
-    });
-    instance.changeURL = jest.fn();
-    await instance.changePage(2);
+    instance.getInitData = jest
+      .fn()
+      .mockImplementationOnce(() => Promise.reject(Error("failed")));
 
-    expect(instance.changeURL).toHaveBeenCalledWith(2, "all_time", "release");
+    await expect(instance.syncStateWithURL()).rejects.toThrowError("failed");
   });
 });
 
-describe("changeRange", () => {
-  it("sets state correctly for artists", async () => {
+describe("getURLParams", () => {
+  it("gets default parameters if none are provided in the URL", () => {
     const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
     const instance = wrapper.instance();
 
-    instance.getData = jest.fn().mockImplementationOnce(() => {
-      return Promise.resolve(userArtistsResponse);
-    });
-    const spy = jest.spyOn(instance.APIService, "getUserEntity");
-    spy.mockImplementation((): any => {
-      return Promise.resolve(userArtistsResponse);
-    });
-    instance.processData = jest.fn().mockImplementationOnce(() => {
-      return userArtistsProcessDataOutput;
-    });
-    wrapper.setState({ entity: "artist" });
-    await instance.changeRange("all_time");
+    const { page, range, entity } = instance.getURLParams();
 
-    expect(instance.processData).toHaveBeenCalledWith(userArtistsResponse, 1);
-    expect(wrapper.state("data")).toEqual(userArtistsProcessDataOutput);
-    expect(wrapper.state("range")).toEqual("all_time");
-    expect(wrapper.state("currPage")).toEqual(1);
-    expect(wrapper.state("startDate")).toEqual(
-      new Date(userArtistsResponse.payload.from_ts * 1000)
-    );
-    expect(wrapper.state("totalPages")).toBe(7);
-    expect(wrapper.state("maxListens")).toBe(385);
-    expect(wrapper.state("entityCount")).toBe(175);
+    expect(page).toEqual(1);
+    expect(range).toEqual("all_time");
+    expect(entity).toEqual("artist");
   });
 
-  it("sets state correctly for releases", async () => {
-    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
-    const instance = wrapper.instance();
-
-    instance.getData = jest.fn().mockImplementationOnce(() => {
-      return Promise.resolve(userReleasesResponse);
-    });
-    const spy = jest.spyOn(instance.APIService, "getUserEntity");
-    spy.mockImplementation((): any => {
-      return Promise.resolve(userReleasesResponse);
-    });
-    instance.processData = jest.fn().mockImplementationOnce(() => {
-      return userReleasesProcessDataOutput;
-    });
-    wrapper.setState({ entity: "release" });
-    await instance.changeRange("all_time");
-
-    expect(instance.processData).toHaveBeenCalledWith(userReleasesResponse, 1);
-    expect(wrapper.state("data")).toEqual(userReleasesProcessDataOutput);
-    expect(wrapper.state("range")).toEqual("all_time");
-    expect(wrapper.state("currPage")).toEqual(1);
-    expect(wrapper.state("startDate")).toEqual(
-      new Date(userReleasesResponse.payload.from_ts * 1000)
-    );
-    expect(wrapper.state("totalPages")).toBe(7);
-    expect(wrapper.state("maxListens")).toBe(26);
-    expect(wrapper.state("entityCount")).toBe(165);
-  });
-
-  it("calls changeURL with correct parameters", async () => {
-    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
-    const instance = wrapper.instance();
-
-    instance.getData = jest.fn().mockImplementationOnce(() => {
-      return Promise.resolve(userReleasesResponse);
-    });
-    const spy = jest.spyOn(instance.APIService, "getUserEntity");
-    spy.mockImplementation((): any => {
-      return Promise.resolve(userReleasesResponse);
-    });
-    instance.processData = jest.fn().mockImplementationOnce(() => {
-      return userReleasesProcessDataOutput;
-    });
-    instance.changeURL = jest.fn();
-    wrapper.setState({ entity: "release" });
-    await instance.changeRange("all_time");
-
-    expect(instance.changeURL).toHaveBeenCalledWith(1, "all_time", "release");
-  });
-});
-
-describe("changeEntity", () => {
-  it("sets state correctly for artists", async () => {
-    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
-    const instance = wrapper.instance();
-
-    instance.getData = jest.fn().mockImplementationOnce(() => {
-      return Promise.resolve(userArtistsResponse);
-    });
-    const spy = jest.spyOn(instance.APIService, "getUserEntity");
-    spy.mockImplementation((): any => {
-      return Promise.resolve(userArtistsResponse);
-    });
-    instance.processData = jest.fn().mockImplementationOnce(() => {
-      return userArtistsProcessDataOutput;
-    });
-    wrapper.setState({ range: "all_time" });
-    await instance.changeEntity("artist");
-
-    expect(instance.processData).toHaveBeenCalledWith(
-      userArtistsResponse,
-      1,
-      "artist"
-    );
-    expect(wrapper.state("data")).toEqual(userArtistsProcessDataOutput);
-    expect(wrapper.state("entity")).toEqual("artist");
-    expect(wrapper.state("currPage")).toEqual(1);
-    expect(wrapper.state("startDate")).toEqual(
-      new Date(userArtistsResponse.payload.from_ts * 1000)
-    );
-    expect(wrapper.state("totalPages")).toBe(7);
-    expect(wrapper.state("maxListens")).toBe(385);
-    expect(wrapper.state("entityCount")).toBe(175);
-  });
-
-  it("sets state correctly for releases", async () => {
-    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
-    const instance = wrapper.instance();
-
-    instance.getData = jest.fn().mockImplementationOnce(() => {
-      return Promise.resolve(userReleasesResponse);
-    });
-    const spy = jest.spyOn(instance.APIService, "getUserEntity");
-    spy.mockImplementation((): any => {
-      return Promise.resolve(userReleasesResponse);
-    });
-    instance.processData = jest.fn().mockImplementationOnce(() => {
-      return userReleasesProcessDataOutput;
-    });
-    wrapper.setState({ range: "all_time" });
-    await instance.changeEntity("release");
-
-    expect(instance.processData).toHaveBeenCalledWith(
-      userReleasesResponse,
-      1,
-      "release"
-    );
-    expect(wrapper.state("data")).toEqual(userReleasesProcessDataOutput);
-    expect(wrapper.state("entity")).toEqual("release");
-    expect(wrapper.state("currPage")).toEqual(1);
-    expect(wrapper.state("startDate")).toEqual(
-      new Date(userReleasesResponse.payload.from_ts * 1000)
-    );
-    expect(wrapper.state("totalPages")).toBe(7);
-    expect(wrapper.state("maxListens")).toBe(26);
-    expect(wrapper.state("entityCount")).toBe(165);
-  });
-
-  it("calls changeURL with correct parameters", async () => {
-    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
-    const instance = wrapper.instance();
-
-    instance.getData = jest.fn().mockImplementationOnce(() => {
-      return Promise.resolve(userReleasesResponse);
-    });
-    const spy = jest.spyOn(instance.APIService, "getUserEntity");
-    spy.mockImplementation((): any => {
-      return Promise.resolve(userReleasesResponse);
-    });
-    instance.processData = jest.fn().mockImplementationOnce(() => {
-      return userReleasesProcessDataOutput;
-    });
-    instance.changeURL = jest.fn();
-    wrapper.setState({ range: "all_time" });
-    await instance.changeEntity("release");
-
-    expect(instance.changeURL).toHaveBeenCalledWith(1, "all_time", "release");
-  });
-});
-
-describe("changeURL", () => {
-  it("changes the URL", () => {
+  it("gets parameters if provided in the URL", () => {
     const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
     const instance = wrapper.instance();
 
     delete window.location;
     window.location = {
-      origin: "https://foobar/",
-      pathname: "user/bazfoo/history",
+      href: "https://foobar.org?page=2&range=week&entity=release",
     } as Window["location"];
+    const { page, range, entity } = instance.getURLParams();
+
+    expect(page).toEqual(2);
+    expect(range).toEqual("week");
+    expect(entity).toEqual("release");
+  });
+});
+
+describe("setURLParams", () => {
+  it("sets URL parameters", () => {
+    const wrapper = shallow<UserHistory>(<UserHistory {...props} />);
+    const instance = wrapper.instance();
+
     const spy = jest.spyOn(window.history, "pushState");
     spy.mockImplementationOnce(() => {});
 
-    instance.changeURL(2, "all_time", "release");
+    instance.setURLParams(2, "all_time", "release");
     expect(spy).toHaveBeenCalledWith(
       null,
       "",
-      "https://foobar/user/bazfoo/history?page=2&range=all_time&entity=release"
+      "?page=2&range=all_time&entity=release"
     );
   });
 });
