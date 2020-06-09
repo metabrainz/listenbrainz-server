@@ -18,4 +18,10 @@ def calculate():
     messages = itertools.chain(messages, user_entity.get_entity_year('releases'))
     messages = itertools.chain(messages, user_entity.get_entity_all_time('releases'))
 
+    # Calculate recording stats
+    messages = itertools.chain(messages, user_entity.get_entity_week('recordings'))
+    messages = itertools.chain(messages, user_entity.get_entity_month('recordings'))
+    messages = itertools.chain(messages, user_entity.get_entity_year('recordings'))
+    messages = itertools.chain(messages, user_entity.get_entity_all_time('recordings'))
+
     return messages

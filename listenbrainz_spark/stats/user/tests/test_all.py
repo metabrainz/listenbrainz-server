@@ -13,7 +13,7 @@ class UserStatsAllTestCase(SparkTestCase):
                        mock_get_entity_month, mock_get_entity_week):
         calculate()
 
-        calls = [call('artists'), call('releases')]
+        calls = [call('artists'), call('releases'), call('recordings')]
         mock_get_entity_week.assert_has_calls(calls, any_order=True)
         mock_get_entity_month.assert_has_calls(calls, any_order=True)
         mock_get_entity_year.assert_has_calls(calls, any_order=True)
