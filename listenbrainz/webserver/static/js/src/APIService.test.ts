@@ -221,11 +221,12 @@ describe("getUserEntity", () => {
       return Promise.resolve({
         ok: true,
         status: 204,
+        statusText: "NO CONTENT",
       });
     });
 
     await expect(apiService.getUserEntity("foobar", "artist")).rejects.toThrow(
-      Error("Statistics for the user haven't been calculated yet.")
+      Error("HTTP Error NO CONTENT")
     );
   });
 

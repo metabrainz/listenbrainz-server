@@ -3,6 +3,7 @@ import * as ReactDOM from "react-dom";
 import * as React from "react";
 
 import APIService from "../APIService";
+import APIError from "../APIError";
 import Bar from "./Bar";
 import Loader from "../Loader";
 import ErrorBoundary from "../ErrorBoundary";
@@ -22,6 +23,7 @@ export type UserEntityChartsState = {
   maxListens: number;
   startDate: Date;
   loading: boolean;
+  calculated: boolean;
 };
 
 export default class UserEntityCharts extends React.Component<
@@ -49,6 +51,7 @@ export default class UserEntityCharts extends React.Component<
       maxListens: 0, // Number of listens for first artist used to scale the graph
       startDate: new Date(),
       loading: false,
+      calculated: true,
     };
   }
 
@@ -223,8 +226,8 @@ export default class UserEntityCharts extends React.Component<
 
   syncStateWithURL = async (): Promise<void> => {
     this.setState({ loading: true });
+    const { page, range, entity } = this.getURLParams();
     try {
-      const { page, range, entity } = this.getURLParams();
       const { range: currRange, entity: currEntity } = this.state;
       let initData = {};
       if (range !== currRange || entity !== currEntity) {
@@ -235,12 +238,28 @@ export default class UserEntityCharts extends React.Component<
         data: this.processData(data, page, entity),
         currPage: page,
         loading: false,
+        calculated: true,
         range,
         entity,
         ...initData,
       });
     } catch (error) {
-      this.handleError(error);
+      if (error.response && error.response?.status === 204) {
+        this.setState({
+          calculated: false,
+          currPage: page,
+          entityCount: 0,
+          range,
+          entity,
+        });
+      } else {
+        // Error Boundaries don't catch errors in async code.
+        // Throwing an error in setState fixes this.
+        // This is a hacky solution but should be fixed with upcoming concurrent mode in React.
+        this.setState(() => {
+          throw error;
+        });
+      }
     }
   };
 
@@ -284,15 +303,6 @@ export default class UserEntityCharts extends React.Component<
     );
   };
 
-  handleError = (error: Error): void => {
-    // Error Boundaries don't catch errors in async code.
-    // Throwing an error in setState fixes this.
-    // This is a hacky solution but should be fixed with upcoming concurrent mode in React.
-    this.setState(() => {
-      throw error;
-    });
-  };
-
   render() {
     const {
       data,
@@ -304,6 +314,7 @@ export default class UserEntityCharts extends React.Component<
       totalPages,
       startDate,
       loading,
+      calculated,
     } = this.state;
     const prevPage = currPage - 1;
     const nextPage = currPage + 1;
@@ -422,41 +433,52 @@ export default class UserEntityCharts extends React.Component<
           </div>
         </div>
         <div className="row">
-          <div
-            className="col-md-12 text-center"
-            style={{ height: `${(75 / this.ROWS_PER_PAGE) * data.length}em` }}
-          >
-            <Loader isLoading={loading}>
-              <Bar data={data} maxValue={maxListens} />
-            </Loader>
-          </div>
+          {!calculated && (
+            <div className="col-md-12">
+              <p>Statistics for the user have not been calculated</p>
+            </div>
+          )}
+          {calculated && (
+            <div
+              className="col-md-12 text-center"
+              style={{ height: `${(75 / this.ROWS_PER_PAGE) * data.length}em` }}
+            >
+              <Loader isLoading={loading}>
+                <Bar data={data} maxValue={maxListens} />
+              </Loader>
+            </div>
+          )}
         </div>
-        <div className="row">
-          <div className="col-xs-12">
-            <ul className="pager">
-              <li className={`previous ${!(prevPage > 0) ? "hidden" : ""}`}>
-                <a
-                  href=""
-                  role="button"
-                  onClick={(event) => this.changePage(prevPage, event)}
+        {calculated && (
+          <div className="row">
+            <div className="col-xs-12">
+              <ul className="pager">
+                <li className={`previous ${!(prevPage > 0) ? "hidden" : ""}`}>
+                  <a
+                    href=""
+                    role="button"
+                    onClick={(event) => this.changePage(prevPage, event)}
+                  >
+                    &larr; Previous
+                  </a>
+                </li>
+                <li
+                  className={`next ${
+                    !(nextPage <= totalPages) ? "hidden" : ""
+                  }`}
                 >
-                  &larr; Previous
-                </a>
-              </li>
-              <li
-                className={`next ${!(nextPage <= totalPages) ? "hidden" : ""}`}
-              >
-                <a
-                  href=""
-                  role="button"
-                  onClick={(event) => this.changePage(nextPage, event)}
-                >
-                  Next &rarr;
-                </a>
-              </li>
-            </ul>
+                  <a
+                    href=""
+                    role="button"
+                    onClick={(event) => this.changePage(nextPage, event)}
+                  >
+                    Next &rarr;
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     );
   }

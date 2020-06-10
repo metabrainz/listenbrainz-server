@@ -2,6 +2,7 @@ import * as React from "react";
 import { mount, shallow } from "enzyme";
 
 import UserEntityCharts from "./UserEntityCharts";
+import APIError from "../APIError";
 import * as userArtistsResponse from "../__mocks__/userArtists.json";
 import * as userArtistsProcessDataOutput from "../__mocks__/userArtistsProcessData.json";
 import * as userReleasesResponse from "../__mocks__/userReleases.json";
@@ -322,6 +323,28 @@ describe("syncStateWithURL", () => {
       totalPages: 2,
       maxListens: 100,
       entityCount: 50,
+      calculated: true,
+    });
+  });
+
+  it("sets state correctly if stats haven't been calculated", async () => {
+    const wrapper = shallow<UserEntityCharts>(<UserEntityCharts {...props} />);
+    const instance = wrapper.instance();
+    instance.getInitData = jest.fn().mockImplementationOnce(() => {
+      const error = new APIError("Not calculated");
+      error.response = {
+        status: 204,
+      } as Response;
+      return Promise.reject(error);
+    });
+
+    await instance.syncStateWithURL();
+    expect(wrapper.state()).toMatchObject({
+      currPage: 1,
+      range: "all_time",
+      entity: "artist",
+      calculated: false,
+      entityCount: 0,
     });
   });
 
