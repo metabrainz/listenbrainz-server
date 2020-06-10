@@ -11,7 +11,7 @@ class UserReleaseRecord(pydantic.BaseModel):
     artist_mbids: List[str] = []
     release_mbid: Optional[str]
     release_msid: Optional[str]
-    release_name: str
+    release_name: Optional[str]  # TODO: Make this required once https://tickets.metabrainz.org/browse/LB-621 is fixed
     listen_count: int
     artist_name: str
 
