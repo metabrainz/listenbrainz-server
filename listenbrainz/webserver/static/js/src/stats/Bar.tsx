@@ -26,16 +26,12 @@ type Tick = {
 };
 
 export default class Bar extends React.Component<BarProps, BarState> {
-  textRef: React.RefObject<SVGTextElement>;
-
   constructor(props: BarProps) {
     super(props);
 
     this.state = {
       marginLeft: window.innerWidth / 5,
     };
-
-    this.textRef = React.createRef();
   }
 
   componentDidMount() {
@@ -104,7 +100,7 @@ export default class Bar extends React.Component<BarProps, BarState> {
             width="100%"
             y={datum.entityType === "artist" ? -10 : -20}
           >
-            <table style={{ color: "black" }}>
+            <table style={{ color: "black", textAlign: "start" }}>
               <tbody>
                 <tr>
                   <td>{idx}.&nbsp;</td>
