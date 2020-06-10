@@ -679,7 +679,23 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assertEqual(response.status_code, 204)
 
     def test_entity_stat_not_calculated(self):
-        """ Test to make sure that the API sends 204 if particular entity statistics for user have not been calculated yet """
+        """ Test to make sure that the API sends 204 if particular entity
+            statistics for user have not been calculated yet
+        """
+        # Make sure release stats are calculated, but artist stats are not
+        db_stats.delete_user_stats(self.user['id'])
+        with open(self.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
+            payload = json.load(f)
+        db_stats.insert_user_releases(self.user['id'], UserReleaseStatJson(**{'all_time': payload}))
+
+        response = self.client.get(url_for('stats_api_v1.get_artist',
+                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'year'})
+        self.assertEqual(response.status_code, 204)
+
+    def test_entity_range_stat_not_calculated(self):
+        """ Test to make sure that the API sends 204 if particular entity time
+            range statistics for user have not been calculated yet
+        """
         # Make sure release stats are calculated, but artist stats are not
         db_stats.delete_user_stats(self.user['id'])
         with open(self.path_to_data_file('user_top_releases_db_data_for_api_test.json'), 'r') as f:
