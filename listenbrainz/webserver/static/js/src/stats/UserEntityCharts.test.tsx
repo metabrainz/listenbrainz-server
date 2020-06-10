@@ -16,7 +16,7 @@ const props = {
   apiUrl: "apiUrl",
 };
 
-describe("UserHistory Page", () => {
+describe("UserEntityCharts Page", () => {
   it("renders correctly for artists", () => {
     // We don't need to call componentDidMount during "mount" because we are
     // passing the data manually, so mock the implementation once.
@@ -47,6 +47,23 @@ describe("UserHistory Page", () => {
     wrapper.setState({
       data: userReleasesProcessDataOutput as UserEntityData,
       maxListens: 26,
+    });
+    wrapper.update();
+
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it("renders correctly if stats are not calculated", () => {
+    jest
+      .spyOn(UserEntityCharts.prototype, "componentDidMount")
+      .mockImplementationOnce((): any => {});
+
+    const wrapper = mount<UserEntityCharts>(<UserEntityCharts {...props} />);
+    wrapper.setState({
+      calculated: false,
+      entity: "artist",
+      range: "all_time",
+      currPage: 1,
     });
     wrapper.update();
 

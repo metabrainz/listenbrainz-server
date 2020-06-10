@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`UserHistory Page renders correctly for artists 1`] = `
+exports[`UserEntityCharts Page renders correctly for artists 1`] = `
 <UserEntityCharts
   apiUrl="apiUrl"
   user={
@@ -361,7 +361,7 @@ exports[`UserHistory Page renders correctly for artists 1`] = `
                   "renderTick": [Function],
                 }
               }
-              colors="#FD8D3C"
+              colors="#EB743B"
               data={
                 Array [
                   Object {
@@ -650,7 +650,7 @@ exports[`UserHistory Page renders correctly for artists 1`] = `
 </UserEntityCharts>
 `;
 
-exports[`UserHistory Page renders correctly for releases 1`] = `
+exports[`UserEntityCharts Page renders correctly for releases 1`] = `
 <UserEntityCharts
   apiUrl="apiUrl"
   user={
@@ -660,7 +660,110 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
     }
   }
 >
-  <div>
+  <div
+    style={
+      Object {
+        "marginTop": "1em",
+      }
+    }
+  >
+    <div
+      className="row"
+    >
+      <div
+        className="col-xs-6"
+      >
+        <ul
+          className="nav nav-pills"
+        >
+          <li
+            className=""
+          >
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              Artists
+            </a>
+          </li>
+          <li
+            className=""
+          >
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              Releases
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div
+        className="col-xs-6 text-right"
+      >
+        <span
+          className="dropdown"
+          style={
+            Object {
+              "fontSize": 22,
+            }
+          }
+        >
+          <button
+            className="dropdown-toggle btn-transparent capitalize-bold"
+            data-toggle="dropdown"
+            type="button"
+          >
+            <span
+              className="caret"
+            />
+          </button>
+          <ul
+            className="dropdown-menu"
+            role="menu"
+          >
+            <li>
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Week
+              </a>
+            </li>
+            <li>
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Month
+              </a>
+            </li>
+            <li>
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Year
+              </a>
+            </li>
+            <li>
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                All Time
+              </a>
+            </li>
+          </ul>
+        </span>
+      </div>
+    </div>
     <div
       className="row"
     >
@@ -669,98 +772,18 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
       >
         <h3>
           Top
+           
           <span
-            className="dropdown"
-          >
-            <button
-              className="dropdown-togle btn-transparent capitalize-bold"
-              data-toggle="dropdown"
-              type="button"
-            >
-              <span
-                className="caret"
-              />
-            </button>
-            <ul
-              className="dropdown-menu"
-              role="menu"
-            >
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  Artists
-                </a>
-              </li>
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  Releases
-                </a>
-              </li>
-            </ul>
-          </span>
+            className="capitalize-bold"
+          />
+           
           of 
           the
+           
           <span
-            className="dropdown"
-          >
-            <button
-              className="dropdown-toggle btn-transparent capitalize-bold"
-              data-toggle="dropdown"
-              type="button"
-            >
-              <span
-                className="caret"
-              />
-            </button>
-            <ul
-              className="dropdown-menu"
-              role="menu"
-            >
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  Week
-                </a>
-              </li>
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  Month
-                </a>
-              </li>
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  Year
-                </a>
-              </li>
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  All Time
-                </a>
-              </li>
-            </ul>
-          </span>
+            className="capitalize-bold"
+          />
+           
           2020
         </h3>
       </div>
@@ -1421,6 +1444,183 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
             </a>
           </li>
         </ul>
+      </div>
+    </div>
+  </div>
+</UserEntityCharts>
+`;
+
+exports[`UserEntityCharts Page renders correctly if stats are not calculated 1`] = `
+<UserEntityCharts
+  apiUrl="apiUrl"
+  user={
+    Object {
+      "id": 0,
+      "name": "dummyUser",
+    }
+  }
+>
+  <div
+    style={
+      Object {
+        "marginTop": "1em",
+      }
+    }
+  >
+    <div
+      className="row"
+    >
+      <div
+        className="col-xs-6"
+      >
+        <ul
+          className="nav nav-pills"
+        >
+          <li
+            className="active"
+          >
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              Artists
+            </a>
+          </li>
+          <li
+            className=""
+          >
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              Releases
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div
+        className="col-xs-6 text-right"
+      >
+        <span
+          className="dropdown"
+          style={
+            Object {
+              "fontSize": 22,
+            }
+          }
+        >
+          <button
+            className="dropdown-toggle btn-transparent capitalize-bold"
+            data-toggle="dropdown"
+            type="button"
+          >
+            all time
+            <span
+              className="caret"
+            />
+          </button>
+          <ul
+            className="dropdown-menu"
+            role="menu"
+          >
+            <li>
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Week
+              </a>
+            </li>
+            <li>
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Month
+              </a>
+            </li>
+            <li>
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Year
+              </a>
+            </li>
+            <li>
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                All Time
+              </a>
+            </li>
+          </ul>
+        </span>
+      </div>
+    </div>
+    <div
+      className="row"
+    >
+      <div
+        className="col-xs-12"
+      >
+        <h3>
+          Top
+           
+          <span
+            className="capitalize-bold"
+          >
+            artists
+          </span>
+           
+          of 
+           
+          <span
+            className="capitalize-bold"
+          >
+            all time
+          </span>
+           
+        </h3>
+      </div>
+    </div>
+    <div
+      className="row"
+    >
+      <div
+        className="col-xs-12"
+      >
+        <h4
+          style={
+            Object {
+              "textTransform": "capitalize",
+            }
+          }
+        >
+          artist
+           count - 
+          <b>
+            0
+          </b>
+        </h4>
+      </div>
+    </div>
+    <div
+      className="row"
+    >
+      <div
+        className="col-md-12"
+      >
+        <p>
+          Statistics for the user have not been calculated
+        </p>
       </div>
     </div>
   </div>
