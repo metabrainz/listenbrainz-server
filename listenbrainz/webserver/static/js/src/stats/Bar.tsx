@@ -2,10 +2,7 @@ import * as React from "react";
 import { ResponsiveBar, LabelFormatter } from "@nivo/bar";
 
 export type BarProps = {
-  data: Array<{
-    id: string;
-    count: number;
-  }>;
+  data: UserEntityData;
   maxValue: number;
 };
 
@@ -22,7 +19,7 @@ type Tick = {
   textBaseline: React.CSSProperties["dominantBaseline"];
   textX: number;
   textY: number;
-  textIndex: number;
+  tickIndex: number;
   x: number;
   y: number;
   value: string;
@@ -51,22 +48,75 @@ export default class Bar extends React.Component<BarProps, BarState> {
     });
   };
 
+  getEntityLink = (data: UserEntityDatum, entity: string) => {
+    if (data.entityMBID) {
+      return (
+        <a
+          href={`http://musicbrainz.org/${data.entityType}/${data.entityMBID}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {entity}
+        </a>
+      );
+    }
+    return entity;
+  };
+
+  getArtistLink = (data: UserEntityDatum, artist: string) => {
+    if (data.artistMBID && data.artistMBID.length) {
+      return (
+        <a
+          href={`http://musicbrainz.org/artist/${data.artistMBID[0]}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {artist}
+        </a>
+      );
+    }
+    return artist;
+  };
+
   render() {
     const { data, maxValue } = this.props;
     const { marginLeft } = this.state;
 
     const leftAlignedTick = (tick: Tick) => {
-      let { value } = tick;
+      const datum = data[tick.tickIndex];
+      let { entity, artist } = datum;
+      const { idx } = datum;
 
-      if (value.length > marginLeft / 10) {
-        value = `${value.slice(0, marginLeft / 10)}...`;
+      if (entity.length + String(idx).length + 3 > marginLeft / 10) {
+        entity = `${entity.slice(0, marginLeft / 10)}...`;
       }
-
+      if (artist && artist.length + String(idx).length + 3 > marginLeft / 10) {
+        artist = `${artist.slice(0, marginLeft / 10)}...`;
+      }
       return (
         <g transform={`translate(${tick.x - marginLeft}, ${tick.y})`}>
-          <text textAnchor="start" dominantBaseline="middle">
-            {value}
-          </text>
+          <foreignObject
+            height="100%"
+            width="100%"
+            y={datum.entityType === "artist" ? -10 : -20}
+          >
+            <table style={{ textAlign: "start" }}>
+              <tbody>
+                <tr style={{ color: "black" }}>
+                  <td>{idx}.&nbsp;</td>
+                  <td>{this.getEntityLink(datum, entity)}</td>
+                </tr>
+                {artist && (
+                  <tr>
+                    <td />
+                    <td style={{ fontSize: 12 }}>
+                      {this.getArtistLink(datum, artist)}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </foreignObject>
         </g>
       );
     };
@@ -80,14 +130,9 @@ export default class Bar extends React.Component<BarProps, BarState> {
     }) as unknown) as LabelFormatter;
 
     const customTooltip = (datum: any) => {
-      // Strip intial number
-      const index = datum.indexValue.substring(
-        datum.indexValue.indexOf(" ") + 1
-      );
-
       return (
         <div>
-          {index}: <strong>{datum.value} Listens</strong>
+          {datum.indexValue}: <strong>{datum.value} Listens</strong>
         </div>
       );
     };
@@ -113,7 +158,7 @@ export default class Bar extends React.Component<BarProps, BarState> {
         maxValue={maxValue}
         layout="horizontal"
         colors="#FD8D3C"
-        indexBy="id"
+        indexBy="entity"
         enableGridY={false}
         padding={0.15}
         labelFormat={labelFormatter}

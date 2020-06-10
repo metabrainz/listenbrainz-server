@@ -7,11 +7,6 @@ import Bar from "./Bar";
 import Loader from "../Loader";
 import ErrorBoundary from "../ErrorBoundary";
 
-export type UserEntityData = Array<{
-  id: string;
-  count: number;
-}>;
-
 export type UserHistoryProps = {
   user: ListenBrainzUser;
   apiUrl: string;
@@ -193,9 +188,15 @@ export default class UserHistory extends React.Component<
     if (entity === "artist") {
       result = (data as UserArtistsResponse).payload.artists
         .map((elem, idx: number) => {
+          const entityMBID = elem.artist_mbids
+            ? elem.artist_mbids[0]
+            : undefined;
           return {
-            id: `${offset + idx + 1}. ${elem.artist_name}`,
+            entity: elem.artist_name,
+            entityType: entity as Entity,
+            idx: offset + idx + 1,
             count: elem.listen_count,
+            entityMBID,
           };
         })
         .reverse();
@@ -203,7 +204,12 @@ export default class UserHistory extends React.Component<
       result = (data as UserReleasesResponse).payload.releases
         .map((elem, idx: number) => {
           return {
-            id: `${offset + idx + 1}. ${elem.release_name}`,
+            entity: elem.release_name,
+            entityType: entity as Entity,
+            entityMBID: elem.release_mbid,
+            artist: elem.artist_name,
+            artistMBID: elem.artist_mbids,
+            idx: offset + idx + 1,
             count: elem.listen_count,
           };
         })
