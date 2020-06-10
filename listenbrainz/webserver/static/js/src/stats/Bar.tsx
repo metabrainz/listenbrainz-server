@@ -100,9 +100,9 @@ export default class Bar extends React.Component<BarProps, BarState> {
             width="100%"
             y={datum.entityType === "artist" ? -10 : -20}
           >
-            <table style={{ color: "black", textAlign: "start" }}>
+            <table style={{ textAlign: "start" }}>
               <tbody>
-                <tr>
+                <tr style={{ color: "black" }}>
                   <td>{idx}.&nbsp;</td>
                   <td>{this.getEntityLink(datum, entity)}</td>
                 </tr>
