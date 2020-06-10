@@ -1,102 +1,227 @@
 [
   {
-    "id": "25. The Hits--Chapter One",
+    "entity": "The Hits--Chapter One",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Backstreet Boys",
+    "artistMBID": [],
+    "idx": 25,
     "count": 8
   },
   {
-    "id": "24. Aalas Ka Pedh",
+    "entity": "Aalas Ka Pedh",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "The Local train",
+    "artistMBID": [],
+    "idx": 24,
     "count": 9
   },
   {
-    "id": "23. One More Light",
+    "entity": "Kala",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "M.I.A.",
+    "artistMBID": [],
+    "idx": 23,
     "count": 10
   },
   {
-    "id": "22. Kala",
+    "entity": "One More Light",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Linkin Park",
+    "artistMBID": [],
+    "idx": 22,
     "count": 10
   },
   {
-    "id": "21. Cheap Thrills (feat. Sean Paul)",
+    "entity": "Cheap Thrills (feat. Sean Paul)",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Sia",
+    "artistMBID": [],
+    "idx": 21,
     "count": 11
   },
   {
-    "id": "20. Singles",
+    "entity": "My Head Is an Animal",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Of Monsters and Men",
+    "artistMBID": [],
+    "idx": 20,
     "count": 11
   },
   {
-    "id": "19. Overexposed",
+    "entity": "Overexposed",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Maroon 5",
+    "artistMBID": [],
+    "idx": 19,
     "count": 11
   },
   {
-    "id": "18. My Head Is an Animal",
+    "entity": "Singles",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Maroon 5",
+    "artistMBID": [],
+    "idx": 18,
     "count": 11
   },
   {
-    "id": "17. #3",
+    "entity": "#3",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "The Script",
+    "artistMBID": [],
+    "idx": 17,
     "count": 12
   },
   {
-    "id": "16. In The End",
+    "entity": "In The End",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Tommee Profitt",
+    "artistMBID": [],
+    "idx": 16,
     "count": 12
   },
   {
-    "id": "15. 13 Reasons Why (Season 2)",
+    "entity": "13 Reasons Why (Season 2)",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "OneRepublic",
+    "artistMBID": [],
+    "idx": 15,
     "count": 13
   },
   {
-    "id": "14. Two (Expanded Edition)",
+    "entity": "Two (Expanded Edition)",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Lenka",
+    "artistMBID": [],
+    "idx": 14,
     "count": 13
   },
   {
-    "id": "13. Staying at Tamara's",
+    "entity": "Staying at Tamara's",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "George Ezra",
+    "artistMBID": [],
+    "idx": 13,
     "count": 15
   },
   {
-    "id": "12. Halcyon Days",
+    "entity": "A Head Full Of Dreams",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Coldplay",
+    "artistMBID": [],
+    "idx": 12,
     "count": 16
   },
   {
-    "id": "11. A Head Full Of Dreams",
+    "entity": "A Thousand Years",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Christina Perri",
+    "artistMBID": [],
+    "idx": 11,
     "count": 16
   },
   {
-    "id": "10. A Thousand Years",
+    "entity": "Halcyon Days",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Ellie Goulding",
+    "artistMBID": [],
+    "idx": 10,
     "count": 16
   },
   {
-    "id": "9. 1989",
+    "entity": "1989",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Taylor Swift",
+    "artistMBID": [],
+    "idx": 9,
     "count": 17
   },
   {
-    "id": "8. ÷ (Deluxe)",
+    "entity": "Night Visions (Deluxe)",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Imagine Dragons",
+    "artistMBID": [],
+    "idx": 8,
     "count": 17
   },
   {
-    "id": "7. Night Visions (Deluxe)",
+    "entity": "÷ (Deluxe)",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Ed Sheeran",
+    "artistMBID": [],
+    "idx": 7,
     "count": 17
   },
   {
-    "id": "6. Dream Your Life Away (Special Edition)",
+    "entity": "Dream Your Life Away (Special Edition)",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Vance Joy",
+    "artistMBID": [],
+    "idx": 6,
     "count": 18
   },
   {
-    "id": "5. Native",
+    "entity": "Native",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "OneRepublic",
+    "artistMBID": [],
+    "idx": 5,
     "count": 18
   },
   {
-    "id": "4. Udd Gaye (Bacardi House Party Sessions)",
+    "entity": "Udd Gaye (Bacardi House Party Sessions)",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Ritviz",
+    "artistMBID": [],
+    "idx": 4,
     "count": 20
   },
   {
-    "id": "3. How to Save a Life",
+    "entity": "Delirium (Deluxe)",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Ellie Goulding",
+    "artistMBID": [],
+    "idx": 3,
     "count": 25
   },
   {
-    "id": "2. Delirium (Deluxe)",
+    "entity": "How to Save a Life",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "The Fray",
+    "artistMBID": [],
+    "idx": 2,
     "count": 25
   },
   {
-    "id": "1. Live in Buenos Aires",
+    "entity": "Live in Buenos Aires",
+    "entityType": "release",
+    "entityMBID": "",
+    "artist": "Coldplay",
+    "artistMBID": [],
+    "idx": 1,
     "count": 26
   }
 ]

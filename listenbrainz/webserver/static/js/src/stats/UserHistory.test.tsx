@@ -16,7 +16,7 @@ const props = {
 };
 
 describe("UserHistory Page", () => {
-  it("renders", () => {
+  it("renders correctly for artists", () => {
     // We don't need to call componentDidMount during "mount" because we are
     // passing the data manually, so mock the implementation once.
     jest
@@ -25,7 +25,28 @@ describe("UserHistory Page", () => {
 
     const wrapper = mount<UserHistory>(<UserHistory {...props} />);
 
-    wrapper.setState({ data: userArtistsProcessDataOutput, maxListens: 385 });
+    wrapper.setState({
+      data: userArtistsProcessDataOutput as UserEntityData,
+      maxListens: 70,
+    });
+    wrapper.update();
+
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it("renders correctly for releases", () => {
+    // We don't need to call componentDidMount during "mount" because we are
+    // passing the data manually, so mock the implementation once.
+    jest
+      .spyOn(UserHistory.prototype, "componentDidMount")
+      .mockImplementationOnce((): any => {});
+
+    const wrapper = mount<UserHistory>(<UserHistory {...props} />);
+
+    wrapper.setState({
+      data: userReleasesProcessDataOutput as UserEntityData,
+      maxListens: 26,
+    });
     wrapper.update();
 
     expect(wrapper).toMatchSnapshot();
@@ -188,9 +209,9 @@ describe("getInitData", () => {
       startDate,
     } = await instance.getInitData("all_time", "artist");
 
-    expect(maxListens).toEqual(385);
-    expect(totalPages).toEqual(7);
-    expect(entityCount).toEqual(175);
+    expect(maxListens).toEqual(70);
+    expect(totalPages).toEqual(4);
+    expect(entityCount).toEqual(94);
     expect(startDate).toEqual(
       new Date(userArtistsResponse.payload.from_ts * 1000)
     );
@@ -214,7 +235,7 @@ describe("getInitData", () => {
 
     expect(maxListens).toEqual(26);
     expect(totalPages).toEqual(7);
-    expect(entityCount).toEqual(165);
+    expect(entityCount).toEqual(164);
     expect(startDate).toEqual(
       new Date(userReleasesResponse.payload.from_ts * 1000)
     );

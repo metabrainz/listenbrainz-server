@@ -54,7 +54,7 @@ const searchForSpotifyTrack = async (
   return null;
 };
 
-const getArtistLink = (listen: any) => {
+const getArtistLink = (listen: Listen) => {
   const artistName = _.get(listen, "track_metadata.artist_name");
   const firstArtist = _.first(
     _.get(listen, "track_metadata.additional_info.artist_mbids")
@@ -73,13 +73,12 @@ const getArtistLink = (listen: any) => {
   return artistName;
 };
 
-// TODO: remove this "any" when a listen type has been defined.
-const getTrackLink = (listen: any): JSX.Element | string => {
+const getTrackLink = (listen: Listen): JSX.Element | string => {
   const trackName = _.get(listen, "track_metadata.track_name");
   if (_.get(listen, "track_metadata.additional_info.recording_mbid")) {
     return (
       <a
-        href={`http://musicbrainz.org/recording/${listen.track_metadata.additional_info.recording_mbid}`}
+        href={`https://musicbrainz.org/recording/${listen.track_metadata.additional_info?.recording_mbid}`}
         target="_blank"
         rel="noopener noreferrer"
       >
