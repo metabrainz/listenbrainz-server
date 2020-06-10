@@ -7,6 +7,8 @@ import * as userArtistsResponse from "../__mocks__/userArtists.json";
 import * as userArtistsProcessDataOutput from "../__mocks__/userArtistsProcessData.json";
 import * as userReleasesResponse from "../__mocks__/userReleases.json";
 import * as userReleasesProcessDataOutput from "../__mocks__/userReleasesProcessData.json";
+import * as userRecordingsResponse from "../__mocks__/userRecordings.json";
+import * as userRecordingsProcessDataOutput from "../__mocks__/userRecordingsProcessData.json";
 
 const props = {
   user: {
@@ -283,6 +285,30 @@ describe("getInitData", () => {
       new Date(userReleasesResponse.payload.from_ts * 1000)
     );
   });
+
+  it("gets data correctly for recording", async () => {
+    const wrapper = shallow<UserEntityCharts>(<UserEntityCharts {...props} />);
+    const instance = wrapper.instance();
+
+    const spy = jest.spyOn(instance.APIService, "getUserEntity");
+    spy.mockImplementation((): any => {
+      return Promise.resolve(userRecordingsResponse);
+    });
+
+    const {
+      maxListens,
+      totalPages,
+      entityCount,
+      startDate,
+    } = await instance.getInitData("all_time", "recording");
+
+    expect(maxListens).toEqual(25);
+    expect(totalPages).toEqual(10);
+    expect(entityCount).toEqual(227);
+    expect(startDate).toEqual(
+      new Date(userReleasesResponse.payload.from_ts * 1000)
+    );
+  });
 });
 
 describe("getData", () => {
@@ -327,6 +353,17 @@ describe("processData", () => {
     expect(
       instance.processData(userReleasesResponse as UserReleasesResponse, 1)
     ).toEqual(userReleasesProcessDataOutput);
+  });
+
+  it("processes data correctly for top recordings", () => {
+    const wrapper = shallow<UserEntityCharts>(<UserEntityCharts {...props} />);
+    const instance = wrapper.instance();
+
+    wrapper.setState({ entity: "recording" });
+
+    expect(
+      instance.processData(userRecordingsResponse as UserRecordingsResponse, 1)
+    ).toEqual(userRecordingsProcessDataOutput);
   });
 });
 
