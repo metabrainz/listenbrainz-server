@@ -156,150 +156,175 @@ exports[`UserHistory Page renders correctly for artists 1`] = `
                   "count": 6,
                   "entity": "The Lumineers",
                   "entityType": "artist",
+                  "id": "24",
                   "idx": 25,
                 },
                 Object {
                   "count": 6,
                   "entity": "Train",
                   "entityType": "artist",
+                  "id": "23",
                   "idx": 24,
                 },
                 Object {
                   "count": 8,
                   "entity": "Backstreet Boys",
                   "entityType": "artist",
+                  "id": "22",
                   "idx": 23,
                 },
                 Object {
                   "count": 8,
                   "entity": "The Weeknd",
                   "entityType": "artist",
+                  "id": "21",
                   "idx": 22,
                 },
                 Object {
                   "count": 10,
                   "entity": "Linkin Park",
                   "entityType": "artist",
+                  "id": "20",
                   "idx": 21,
                 },
                 Object {
                   "count": 10,
                   "entity": "M.I.A.",
                   "entityType": "artist",
+                  "id": "19",
                   "idx": 20,
                 },
                 Object {
                   "count": 11,
                   "entity": "Of Monsters and Men",
                   "entityType": "artist",
+                  "id": "18",
                   "idx": 19,
                 },
                 Object {
                   "count": 12,
                   "entity": "Sia",
                   "entityType": "artist",
+                  "id": "17",
                   "idx": 18,
                 },
                 Object {
                   "count": 12,
                   "entity": "The Chainsmokers",
                   "entityType": "artist",
+                  "id": "16",
                   "idx": 17,
                 },
                 Object {
                   "count": 12,
                   "entity": "Tommee Profitt",
                   "entityType": "artist",
+                  "id": "15",
                   "idx": 16,
                 },
                 Object {
                   "count": 13,
                   "entity": "The Local train",
                   "entityType": "artist",
+                  "id": "14",
                   "idx": 15,
                 },
                 Object {
                   "count": 15,
                   "entity": "The Script",
                   "entityType": "artist",
+                  "id": "13",
                   "idx": 14,
                 },
                 Object {
                   "count": 16,
                   "entity": "Christina Perri",
                   "entityType": "artist",
+                  "id": "12",
                   "idx": 13,
                 },
                 Object {
                   "count": 17,
                   "entity": "George Ezra",
                   "entityType": "artist",
+                  "id": "11",
                   "idx": 12,
                 },
                 Object {
                   "count": 19,
                   "entity": "Ed Sheeran",
                   "entityType": "artist",
+                  "id": "10",
                   "idx": 11,
                 },
                 Object {
                   "count": 20,
                   "entity": "Taylor Swift",
                   "entityType": "artist",
+                  "id": "9",
                   "idx": 10,
                 },
                 Object {
                   "count": 20,
                   "entity": "Vance Joy",
                   "entityType": "artist",
+                  "id": "8",
                   "idx": 9,
                 },
                 Object {
                   "count": 25,
                   "entity": "Lenka",
                   "entityType": "artist",
+                  "id": "7",
                   "idx": 8,
                 },
                 Object {
                   "count": 26,
                   "entity": "Imagine Dragons",
                   "entityType": "artist",
+                  "id": "6",
                   "idx": 7,
                 },
                 Object {
                   "count": 26,
                   "entity": "Ritviz",
                   "entityType": "artist",
+                  "id": "5",
                   "idx": 6,
                 },
                 Object {
                   "count": 31,
                   "entity": "The Fray",
                   "entityType": "artist",
+                  "id": "4",
                   "idx": 5,
                 },
                 Object {
                   "count": 36,
                   "entity": "OneRepublic",
                   "entityType": "artist",
+                  "id": "3",
                   "idx": 4,
                 },
                 Object {
                   "count": 38,
                   "entity": "Maroon 5",
                   "entityType": "artist",
+                  "id": "2",
                   "idx": 3,
                 },
                 Object {
                   "count": 54,
                   "entity": "Ellie Goulding",
                   "entityType": "artist",
+                  "id": "1",
                   "idx": 2,
                 },
                 Object {
                   "count": 70,
                   "entity": "Coldplay",
                   "entityType": "artist",
+                  "id": "0",
                   "idx": 1,
                 },
               ]
@@ -320,156 +345,181 @@ exports[`UserHistory Page renders correctly for artists 1`] = `
                     "count": 6,
                     "entity": "The Lumineers",
                     "entityType": "artist",
+                    "id": "24",
                     "idx": 25,
                   },
                   Object {
                     "count": 6,
                     "entity": "Train",
                     "entityType": "artist",
+                    "id": "23",
                     "idx": 24,
                   },
                   Object {
                     "count": 8,
                     "entity": "Backstreet Boys",
                     "entityType": "artist",
+                    "id": "22",
                     "idx": 23,
                   },
                   Object {
                     "count": 8,
                     "entity": "The Weeknd",
                     "entityType": "artist",
+                    "id": "21",
                     "idx": 22,
                   },
                   Object {
                     "count": 10,
                     "entity": "Linkin Park",
                     "entityType": "artist",
+                    "id": "20",
                     "idx": 21,
                   },
                   Object {
                     "count": 10,
                     "entity": "M.I.A.",
                     "entityType": "artist",
+                    "id": "19",
                     "idx": 20,
                   },
                   Object {
                     "count": 11,
                     "entity": "Of Monsters and Men",
                     "entityType": "artist",
+                    "id": "18",
                     "idx": 19,
                   },
                   Object {
                     "count": 12,
                     "entity": "Sia",
                     "entityType": "artist",
+                    "id": "17",
                     "idx": 18,
                   },
                   Object {
                     "count": 12,
                     "entity": "The Chainsmokers",
                     "entityType": "artist",
+                    "id": "16",
                     "idx": 17,
                   },
                   Object {
                     "count": 12,
                     "entity": "Tommee Profitt",
                     "entityType": "artist",
+                    "id": "15",
                     "idx": 16,
                   },
                   Object {
                     "count": 13,
                     "entity": "The Local train",
                     "entityType": "artist",
+                    "id": "14",
                     "idx": 15,
                   },
                   Object {
                     "count": 15,
                     "entity": "The Script",
                     "entityType": "artist",
+                    "id": "13",
                     "idx": 14,
                   },
                   Object {
                     "count": 16,
                     "entity": "Christina Perri",
                     "entityType": "artist",
+                    "id": "12",
                     "idx": 13,
                   },
                   Object {
                     "count": 17,
                     "entity": "George Ezra",
                     "entityType": "artist",
+                    "id": "11",
                     "idx": 12,
                   },
                   Object {
                     "count": 19,
                     "entity": "Ed Sheeran",
                     "entityType": "artist",
+                    "id": "10",
                     "idx": 11,
                   },
                   Object {
                     "count": 20,
                     "entity": "Taylor Swift",
                     "entityType": "artist",
+                    "id": "9",
                     "idx": 10,
                   },
                   Object {
                     "count": 20,
                     "entity": "Vance Joy",
                     "entityType": "artist",
+                    "id": "8",
                     "idx": 9,
                   },
                   Object {
                     "count": 25,
                     "entity": "Lenka",
                     "entityType": "artist",
+                    "id": "7",
                     "idx": 8,
                   },
                   Object {
                     "count": 26,
                     "entity": "Imagine Dragons",
                     "entityType": "artist",
+                    "id": "6",
                     "idx": 7,
                   },
                   Object {
                     "count": 26,
                     "entity": "Ritviz",
                     "entityType": "artist",
+                    "id": "5",
                     "idx": 6,
                   },
                   Object {
                     "count": 31,
                     "entity": "The Fray",
                     "entityType": "artist",
+                    "id": "4",
                     "idx": 5,
                   },
                   Object {
                     "count": 36,
                     "entity": "OneRepublic",
                     "entityType": "artist",
+                    "id": "3",
                     "idx": 4,
                   },
                   Object {
                     "count": 38,
                     "entity": "Maroon 5",
                     "entityType": "artist",
+                    "id": "2",
                     "idx": 3,
                   },
                   Object {
                     "count": 54,
                     "entity": "Ellie Goulding",
                     "entityType": "artist",
+                    "id": "1",
                     "idx": 2,
                   },
                   Object {
                     "count": 70,
                     "entity": "Coldplay",
                     "entityType": "artist",
+                    "id": "0",
                     "idx": 1,
                   },
                 ]
               }
               enableGridY={false}
-              indexBy="entity"
+              indexBy="id"
               keys={
                 Array [
                   "count",
@@ -736,6 +786,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "The Hits--Chapter One",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "24",
                   "idx": 25,
                 },
                 Object {
@@ -745,6 +796,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "Aalas Ka Pedh",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "23",
                   "idx": 24,
                 },
                 Object {
@@ -754,6 +806,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "Kala",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "22",
                   "idx": 23,
                 },
                 Object {
@@ -763,6 +816,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "One More Light",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "21",
                   "idx": 22,
                 },
                 Object {
@@ -772,6 +826,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "Cheap Thrills (feat. Sean Paul)",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "20",
                   "idx": 21,
                 },
                 Object {
@@ -781,6 +836,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "My Head Is an Animal",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "19",
                   "idx": 20,
                 },
                 Object {
@@ -790,6 +846,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "Overexposed",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "18",
                   "idx": 19,
                 },
                 Object {
@@ -799,6 +856,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "Singles",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "17",
                   "idx": 18,
                 },
                 Object {
@@ -808,6 +866,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "#3",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "16",
                   "idx": 17,
                 },
                 Object {
@@ -817,6 +876,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "In The End",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "15",
                   "idx": 16,
                 },
                 Object {
@@ -826,6 +886,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "13 Reasons Why (Season 2)",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "14",
                   "idx": 15,
                 },
                 Object {
@@ -835,6 +896,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "Two (Expanded Edition)",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "13",
                   "idx": 14,
                 },
                 Object {
@@ -844,6 +906,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "Staying at Tamara's",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "12",
                   "idx": 13,
                 },
                 Object {
@@ -853,6 +916,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "A Head Full Of Dreams",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "11",
                   "idx": 12,
                 },
                 Object {
@@ -862,6 +926,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "A Thousand Years",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "10",
                   "idx": 11,
                 },
                 Object {
@@ -871,6 +936,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "Halcyon Days",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "9",
                   "idx": 10,
                 },
                 Object {
@@ -880,6 +946,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "1989",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "8",
                   "idx": 9,
                 },
                 Object {
@@ -889,6 +956,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "Night Visions (Deluxe)",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "7",
                   "idx": 8,
                 },
                 Object {
@@ -898,6 +966,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "÷ (Deluxe)",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "6",
                   "idx": 7,
                 },
                 Object {
@@ -907,6 +976,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "Dream Your Life Away (Special Edition)",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "5",
                   "idx": 6,
                 },
                 Object {
@@ -916,6 +986,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "Native",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "4",
                   "idx": 5,
                 },
                 Object {
@@ -925,6 +996,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "Udd Gaye (Bacardi House Party Sessions)",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "3",
                   "idx": 4,
                 },
                 Object {
@@ -934,6 +1006,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "Delirium (Deluxe)",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "2",
                   "idx": 3,
                 },
                 Object {
@@ -943,6 +1016,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "How to Save a Life",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "1",
                   "idx": 2,
                 },
                 Object {
@@ -952,6 +1026,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                   "entity": "Live in Buenos Aires",
                   "entityMBID": "",
                   "entityType": "release",
+                  "id": "0",
                   "idx": 1,
                 },
               ]
@@ -975,6 +1050,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "The Hits--Chapter One",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "24",
                     "idx": 25,
                   },
                   Object {
@@ -984,6 +1060,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "Aalas Ka Pedh",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "23",
                     "idx": 24,
                   },
                   Object {
@@ -993,6 +1070,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "Kala",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "22",
                     "idx": 23,
                   },
                   Object {
@@ -1002,6 +1080,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "One More Light",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "21",
                     "idx": 22,
                   },
                   Object {
@@ -1011,6 +1090,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "Cheap Thrills (feat. Sean Paul)",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "20",
                     "idx": 21,
                   },
                   Object {
@@ -1020,6 +1100,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "My Head Is an Animal",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "19",
                     "idx": 20,
                   },
                   Object {
@@ -1029,6 +1110,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "Overexposed",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "18",
                     "idx": 19,
                   },
                   Object {
@@ -1038,6 +1120,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "Singles",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "17",
                     "idx": 18,
                   },
                   Object {
@@ -1047,6 +1130,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "#3",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "16",
                     "idx": 17,
                   },
                   Object {
@@ -1056,6 +1140,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "In The End",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "15",
                     "idx": 16,
                   },
                   Object {
@@ -1065,6 +1150,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "13 Reasons Why (Season 2)",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "14",
                     "idx": 15,
                   },
                   Object {
@@ -1074,6 +1160,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "Two (Expanded Edition)",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "13",
                     "idx": 14,
                   },
                   Object {
@@ -1083,6 +1170,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "Staying at Tamara's",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "12",
                     "idx": 13,
                   },
                   Object {
@@ -1092,6 +1180,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "A Head Full Of Dreams",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "11",
                     "idx": 12,
                   },
                   Object {
@@ -1101,6 +1190,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "A Thousand Years",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "10",
                     "idx": 11,
                   },
                   Object {
@@ -1110,6 +1200,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "Halcyon Days",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "9",
                     "idx": 10,
                   },
                   Object {
@@ -1119,6 +1210,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "1989",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "8",
                     "idx": 9,
                   },
                   Object {
@@ -1128,6 +1220,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "Night Visions (Deluxe)",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "7",
                     "idx": 8,
                   },
                   Object {
@@ -1137,6 +1230,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "÷ (Deluxe)",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "6",
                     "idx": 7,
                   },
                   Object {
@@ -1146,6 +1240,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "Dream Your Life Away (Special Edition)",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "5",
                     "idx": 6,
                   },
                   Object {
@@ -1155,6 +1250,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "Native",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "4",
                     "idx": 5,
                   },
                   Object {
@@ -1164,6 +1260,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "Udd Gaye (Bacardi House Party Sessions)",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "3",
                     "idx": 4,
                   },
                   Object {
@@ -1173,6 +1270,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "Delirium (Deluxe)",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "2",
                     "idx": 3,
                   },
                   Object {
@@ -1182,6 +1280,7 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "How to Save a Life",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "1",
                     "idx": 2,
                   },
                   Object {
@@ -1191,12 +1290,13 @@ exports[`UserHistory Page renders correctly for releases 1`] = `
                     "entity": "Live in Buenos Aires",
                     "entityMBID": "",
                     "entityType": "release",
+                    "id": "0",
                     "idx": 1,
                   },
                 ]
               }
               enableGridY={false}
-              indexBy="entity"
+              indexBy="id"
               keys={
                 Array [
                   "count",

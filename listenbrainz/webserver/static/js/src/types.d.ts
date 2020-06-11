@@ -177,6 +177,7 @@ declare type UserReleasesResponse = {
 declare type UserEntityAPIRange = "all_time" | "year" | "month" | "week";
 
 declare type UserEntityDatum = {
+  id: string;
   entity: string;
   entityType: Entity;
   entityMBID?: string;
