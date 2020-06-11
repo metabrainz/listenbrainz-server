@@ -56,6 +56,7 @@ type SoundcloudPlayerState = {
 export default class SoundcloudPlayer
   extends React.Component<DataSourceProps, SoundcloudPlayerState>
   implements DataSourceType {
+  iFrameRef?: React.RefObject<HTMLIFrameElement>;
   soundcloudPlayer?: SoundCloudHTML5Widget;
   supportsSearch = false;
   retries = 0;
@@ -77,18 +78,23 @@ export default class SoundcloudPlayer
   constructor(props: DataSourceProps) {
     super(props);
     this.state = { currentSoundId: undefined };
+    this.iFrameRef = React.createRef();
   }
 
   componentDidMount = () => {
+    const { onInvalidateDataSource } = this.props;
     if (!(window as any).SC) {
-      const { onInvalidateDataSource } = this.props;
       onInvalidateDataSource(this, "Soundcloud JS API did not load properly.");
       // Fallback to uncontrolled iframe player?
       return;
     }
-    const iframeElement = document.getElementById("soundcloud-iframe");
+    if (!this.iFrameRef || !this.iFrameRef.current) {
+      onInvalidateDataSource(this, "SoundCloud IFrame not found in page.");
+      return;
+    }
+
     this.soundcloudPlayer = (window as any).SC.Widget(
-      iframeElement
+      this.iFrameRef.current
     ) as SoundCloudHTML5Widget;
     this.soundcloudPlayer.bind(
       SoundCloudHTML5WidgetEvents.READY,
@@ -100,9 +106,6 @@ export default class SoundcloudPlayer
     const { show } = this.props;
     if (prevProps.show === true && show === false && this.soundcloudPlayer) {
       this.soundcloudPlayer.pause();
-      // Clear currently playing sound
-      // This will throw an error
-      // this.soundcloudPlayer.load("fnord", this.options);
     }
   }
 
@@ -227,6 +230,7 @@ export default class SoundcloudPlayer
       <div className={`soundcloud ${!show ? "hidden" : ""}`}>
         <iframe
           id="soundcloud-iframe"
+          ref={this.iFrameRef}
           title="Soundcloud player"
           width="100%"
           height="420px"
