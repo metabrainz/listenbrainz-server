@@ -100,7 +100,7 @@ describe("SoundcloudPlayer", () => {
     expect(onTrackNotFound).toHaveBeenCalledTimes(1);
     expect(onInvalidateDataSource).not.toHaveBeenCalled();
   });
-  
+
   it("should update track info if playing a new track", () => {
     const onPlayerPausedChange = jest.fn();
     const onTrackInfoChange = jest.fn();
@@ -108,43 +108,46 @@ describe("SoundcloudPlayer", () => {
     const onProgressChange = jest.fn();
     const mockProps = {
       ...props,
-	  onPlayerPausedChange,
-	  onTrackInfoChange,
-	  onDurationChange,
-	  onProgressChange
+      onPlayerPausedChange,
+      onTrackInfoChange,
+      onDurationChange,
+      onProgressChange,
     };
     const wrapper = mount<SoundcloudPlayer>(
       <SoundcloudPlayer {...mockProps} />
     );
     const instance = wrapper.instance();
-	instance.setState({currentSoundId: 1});
+    instance.setState({ currentSoundId: 1 });
     if (!instance.soundcloudPlayer) {
       throw new Error("no SoundcloudPlayer");
     }
-    instance.soundcloudPlayer.getCurrentSound = jest.fn((callback)=>callback({
-		title:"Dope track",
-		user:{username:"Emperor Norton the 1st"},
-		full_duration: 420
-	}));
+    instance.soundcloudPlayer.getCurrentSound = jest.fn((callback) =>
+      callback({
+        title: "Dope track",
+        user: { username: "Emperor Norton the 1st" },
+        full_duration: 420,
+      })
+    );
 
     instance.onPlay({
-		soundId: 2,
-		loadedProgress: 123,
-		currentPosition: 456,
-		relativePosition: 789
-	});
-	expect(instance.state.currentSoundId).toEqual(2);
+      soundId: 2,
+      loadedProgress: 123,
+      currentPosition: 456,
+      relativePosition: 789,
+    });
+    expect(instance.state.currentSoundId).toEqual(2);
     expect(onPlayerPausedChange).toHaveBeenCalledTimes(1);
     expect(onPlayerPausedChange).toHaveBeenCalledWith(false);
-    expect(onTrackInfoChange).toHaveBeenCalledWith("Dope track","Emperor Norton the 1st");
+    expect(onTrackInfoChange).toHaveBeenCalledWith(
+      "Dope track",
+      "Emperor Norton the 1st"
+    );
     expect(onProgressChange).toHaveBeenCalledWith(456);
     expect(onDurationChange).toHaveBeenCalledWith(420);
   });
-  
+
   it("should instruct the player to toggle play if togglePlay is called", () => {
-    const wrapper = mount<SoundcloudPlayer>(
-      <SoundcloudPlayer {...props} />
-    );
+    const wrapper = mount<SoundcloudPlayer>(<SoundcloudPlayer {...props} />);
     const instance = wrapper.instance();
     if (!instance.soundcloudPlayer) {
       throw new Error("no SoundcloudPlayer");
@@ -155,11 +158,9 @@ describe("SoundcloudPlayer", () => {
 
     expect(instance.soundcloudPlayer.toggle).toHaveBeenCalledTimes(1);
   });
-  
+
   it("should instruct the player seek to a position if seekToPositionMs is called", () => {
-    const wrapper = mount<SoundcloudPlayer>(
-      <SoundcloudPlayer {...props} />
-    );
+    const wrapper = mount<SoundcloudPlayer>(<SoundcloudPlayer {...props} />);
     const instance = wrapper.instance();
     if (!instance.soundcloudPlayer) {
       throw new Error("no SoundcloudPlayer");
@@ -171,5 +172,4 @@ describe("SoundcloudPlayer", () => {
     expect(instance.soundcloudPlayer.seekTo).toHaveBeenCalledTimes(1);
     expect(instance.soundcloudPlayer.seekTo).toHaveBeenCalledWith(1234);
   });
-  
 });
