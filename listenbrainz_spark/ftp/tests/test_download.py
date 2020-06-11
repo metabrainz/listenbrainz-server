@@ -69,7 +69,7 @@ class FTPDownloaderTestCase(unittest.TestCase):
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.download_dump')
     @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.get_latest_mapping')
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.list_dir')
-    @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.get_mapping_dump_name')
+    @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.get_available_dumps')
     @patch('ftplib.FTP')
     def test_download_msid_mbid_mapping(self, mock_ftp_cons, mock_mapping_dump, mock_list_dir,
                                         mock_latest_mapping, mock_download_dump):
@@ -95,7 +95,7 @@ class FTPDownloaderTestCase(unittest.TestCase):
         self.assertEqual(latest_mapping, expected_mapping)
 
     @patch('ftplib.FTP')
-    def test_get_mapping_dump_name(self, mock_ftp):
+    def test_get_available_dumps(self, mock_ftp):
         dump = [
             'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2',
             'msid-mbid-mapping-with-text-20180603-202000.tar.bz2',
@@ -103,7 +103,7 @@ class FTPDownloaderTestCase(unittest.TestCase):
             'msid-mbid-mapping-with-matchable-20100603-202732.tar.bz2.md5',
         ]
 
-        mapping = ListenbrainzDataDownloader().get_mapping_dump_name(dump, 'msid-mbid-mapping-with-matchable')
+        mapping = ListenbrainzDataDownloader().get_available_dumps(dump, 'msid-mbid-mapping-with-matchable')
 
         expected_mapping = [
             'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2',
@@ -118,7 +118,7 @@ class FTPDownloaderTestCase(unittest.TestCase):
         ]
 
         with self.assertRaises(DumpNotFoundException):
-            ListenbrainzDataDownloader().get_mapping_dump_name(dump, 'msid-mbid-mapping-with-matchable')
+            ListenbrainzDataDownloader().get_available_dumps(dump, 'msid-mbid-mapping-with-matchable')
 
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.download_dump')
     @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.get_listens_dump_file_name')

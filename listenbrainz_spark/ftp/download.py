@@ -94,15 +94,15 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         current_app.logger.info('Done. Total time: {:.2f} sec'.format(time() - t0))
         return dest_path
 
-    def get_mapping_dump_name(self, dump, mapping_name_prefix):
-        """ Get list of given mapping type dirs.
+    def get_available_dumps(self, dump, mapping_name_prefix):
+        """ Get list of available mapping dumps.
 
             Args:
                 dump: list of dumps in the current working directory.
                 mapping_name_prefix (str): prefix of mapping dump name.
 
             Returns:
-                mapping: list of mapping dump names of given type in the current working directory.
+                mapping: list of mapping dump names in the current working directory.
         """
         mapping = list()
         for mapping_name in dump:
@@ -124,7 +124,7 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
                 mapping: list of mapping dump names.
 
             Returns:
-                latest_mapping (str): latest mapping dump name.
+               latest mapping dump name.
         """
         # sort the mappings on timestamp
         def callback(mapping_name):
@@ -133,9 +133,7 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
             _time = res[1]
             return int(_date + _time)
 
-        sorted_mapping = sorted(mapping, key=callback)
-        latest_mapping = sorted_mapping[-1]
-        return latest_mapping
+        return sorted(mapping, key=callback)[-1]
 
     def download_msid_mbid_mapping(self, directory):
         """ Download latest msid_mbid_mapping to dir passed as an argument.
@@ -149,7 +147,7 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         self.connection.cwd(current_app.config['FTP_MSID_MBID_DIR'])
         dump = self.list_dir()
 
-        mapping = self.get_mapping_dump_name(dump, current_app.config['MAPPING_NAME_PREFIX'])
+        mapping = self.get_available_dumps(dump, current_app.config['MAPPING_NAME_PREFIX'])
 
         latest_mapping = self.get_latest_mapping(mapping)
 
