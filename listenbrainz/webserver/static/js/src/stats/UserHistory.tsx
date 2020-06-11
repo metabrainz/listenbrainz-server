@@ -192,6 +192,7 @@ export default class UserHistory extends React.Component<
             ? elem.artist_mbids[0]
             : undefined;
           return {
+            id: idx.toString(),
             entity: elem.artist_name,
             entityType: entity as Entity,
             idx: offset + idx + 1,
@@ -204,6 +205,7 @@ export default class UserHistory extends React.Component<
       result = (data as UserReleasesResponse).payload.releases
         .map((elem, idx: number) => {
           return {
+            id: idx.toString(),
             entity: elem.release_name,
             entityType: entity as Entity,
             entityMBID: elem.release_mbid,

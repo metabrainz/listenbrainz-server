@@ -84,32 +84,46 @@ export default class Bar extends React.Component<BarProps, BarState> {
 
     const leftAlignedTick = (tick: Tick) => {
       const datum = data[tick.tickIndex];
-      let { entity, artist } = datum;
-      const { idx } = datum;
+      const { entity, artist, idx } = datum;
 
-      if (entity.length + String(idx).length + 3 > marginLeft / 10) {
-        entity = `${entity.slice(0, marginLeft / 10)}...`;
-      }
-      if (artist && artist.length + String(idx).length + 3 > marginLeft / 10) {
-        artist = `${artist.slice(0, marginLeft / 10)}...`;
-      }
       return (
         <g transform={`translate(${tick.x - marginLeft}, ${tick.y})`}>
           <foreignObject
-            height="100%"
-            width="100%"
+            height="3em"
+            width={marginLeft}
             y={datum.entityType === "artist" ? -10 : -20}
           >
-            <table style={{ textAlign: "start" }}>
+            <table
+              style={{
+                width: "90%",
+                textAlign: "start",
+                whiteSpace: "nowrap",
+              }}
+            >
               <tbody>
                 <tr style={{ color: "black" }}>
-                  <td>{idx}.&nbsp;</td>
-                  <td>{this.getEntityLink(datum, entity)}</td>
+                  <td style={{ width: 1 }}>{idx}.&nbsp;</td>
+                  <td
+                    style={{
+                      maxWidth: 0,
+                      textOverflow: "ellipsis",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {this.getEntityLink(datum, entity)}
+                  </td>
                 </tr>
                 {artist && (
                   <tr>
                     <td />
-                    <td style={{ fontSize: 12 }}>
+                    <td
+                      style={{
+                        fontSize: 12,
+                        maxWidth: 0,
+                        textOverflow: "ellipsis",
+                        overflow: "hidden",
+                      }}
+                    >
                       {this.getArtistLink(datum, artist)}
                     </td>
                   </tr>
@@ -132,7 +146,7 @@ export default class Bar extends React.Component<BarProps, BarState> {
     const customTooltip = (datum: any) => {
       return (
         <div>
-          {datum.indexValue}: <strong>{datum.value} Listens</strong>
+          {datum.data.entity}: <strong>{datum.value} Listens</strong>
         </div>
       );
     };
@@ -158,7 +172,7 @@ export default class Bar extends React.Component<BarProps, BarState> {
         maxValue={maxValue}
         layout="horizontal"
         colors="#FD8D3C"
-        indexBy="entity"
+        indexBy="id"
         enableGridY={false}
         padding={0.15}
         labelFormat={labelFormatter}
