@@ -249,6 +249,7 @@ export default class UserEntityCharts extends React.Component<
           calculated: false,
           currPage: page,
           entityCount: 0,
+          startDate: new Date(),
           range,
           entity,
         });
@@ -322,7 +323,7 @@ export default class UserEntityCharts extends React.Component<
     return (
       <div style={{ marginTop: "1em" }}>
         <div className="row">
-          <div className="col-xs-6">
+          <div className="col-md-6">
             <ul className="nav nav-pills">
               <li className={entity === "artist" ? "active" : ""}>
                 <a
@@ -344,66 +345,63 @@ export default class UserEntityCharts extends React.Component<
               </li>
             </ul>
           </div>
-          <div className="col-xs-6 text-right">
-            <span className="dropdown" style={{ fontSize: 22 }}>
-              <button
-                className="dropdown-toggle btn-transparent capitalize-bold"
-                data-toggle="dropdown"
-                type="button"
-              >
-                {`${range.replace(/_/g, " ")}`}
-                <span className="caret" />
-              </button>
-              <ul className="dropdown-menu" role="menu">
-                <li>
-                  <a
-                    href=""
-                    role="button"
-                    onClick={(event) => this.changeRange("week", event)}
-                  >
-                    Week
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href=""
-                    role="button"
-                    onClick={(event) => this.changeRange("month", event)}
-                  >
-                    Month
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href=""
-                    role="button"
-                    onClick={(event) => this.changeRange("year", event)}
-                  >
-                    Year
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href=""
-                    role="button"
-                    onClick={(event) => this.changeRange("all_time", event)}
-                  >
-                    All Time
-                  </a>
-                </li>
-              </ul>
-            </span>
-          </div>
         </div>
         <div className="row">
           <div className="col-xs-12">
             <h3>
               Top{" "}
-              <span className="capitalize-bold">
+              <span style={{ textTransform: "capitalize" }}>
                 {entity ? `${entity}s` : ""}
               </span>{" "}
               of {range !== "all_time" ? "the" : ""}{" "}
-              <span className="capitalize-bold">{range.replace(/_/, " ")}</span>{" "}
+              <span className="dropdown" style={{ fontSize: 22 }}>
+                <button
+                  className="dropdown-toggle btn-transparent capitalize-bold"
+                  data-toggle="dropdown"
+                  type="button"
+                >
+                  {`${range.replace(/_/g, " ")}`}
+                  <span className="caret" />
+                </button>
+                <ul className="dropdown-menu" role="menu">
+                  <li>
+                    <a
+                      href=""
+                      role="button"
+                      onClick={(event) => this.changeRange("week", event)}
+                    >
+                      Week
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href=""
+                      role="button"
+                      onClick={(event) => this.changeRange("month", event)}
+                    >
+                      Month
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href=""
+                      role="button"
+                      onClick={(event) => this.changeRange("year", event)}
+                    >
+                      Year
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href=""
+                      role="button"
+                      onClick={(event) => this.changeRange("all_time", event)}
+                    >
+                      All Time
+                    </a>
+                  </li>
+                </ul>
+              </span>
               {range === "week"
                 ? `of ${startDate.getUTCDate()} ${startDate.toLocaleString(
                     "en-us",

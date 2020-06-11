@@ -21,7 +21,7 @@ exports[`UserEntityCharts Page renders correctly for artists 1`] = `
       className="row"
     >
       <div
-        className="col-xs-6"
+        className="col-md-6"
       >
         <ul
           className="nav nav-pills"
@@ -50,69 +50,6 @@ exports[`UserEntityCharts Page renders correctly for artists 1`] = `
           </li>
         </ul>
       </div>
-      <div
-        className="col-xs-6 text-right"
-      >
-        <span
-          className="dropdown"
-          style={
-            Object {
-              "fontSize": 22,
-            }
-          }
-        >
-          <button
-            className="dropdown-toggle btn-transparent capitalize-bold"
-            data-toggle="dropdown"
-            type="button"
-          >
-            <span
-              className="caret"
-            />
-          </button>
-          <ul
-            className="dropdown-menu"
-            role="menu"
-          >
-            <li>
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                Week
-              </a>
-            </li>
-            <li>
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                Month
-              </a>
-            </li>
-            <li>
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                Year
-              </a>
-            </li>
-            <li>
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                All Time
-              </a>
-            </li>
-          </ul>
-        </span>
-      </div>
     </div>
     <div
       className="row"
@@ -124,16 +61,75 @@ exports[`UserEntityCharts Page renders correctly for artists 1`] = `
           Top
            
           <span
-            className="capitalize-bold"
+            style={
+              Object {
+                "textTransform": "capitalize",
+              }
+            }
           />
            
           of 
           the
            
           <span
-            className="capitalize-bold"
-          />
-           
+            className="dropdown"
+            style={
+              Object {
+                "fontSize": 22,
+              }
+            }
+          >
+            <button
+              className="dropdown-toggle btn-transparent capitalize-bold"
+              data-toggle="dropdown"
+              type="button"
+            >
+              <span
+                className="caret"
+              />
+            </button>
+            <ul
+              className="dropdown-menu"
+              role="menu"
+            >
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Week
+                </a>
+              </li>
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Month
+                </a>
+              </li>
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Year
+                </a>
+              </li>
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  All Time
+                </a>
+              </li>
+            </ul>
+          </span>
           2020
         </h3>
       </div>
@@ -542,7 +538,7 @@ exports[`UserEntityCharts Page renders correctly for artists 1`] = `
                 ]
               }
               enableGridY={false}
-              indexBy="id"
+              indexBy="entity"
               keys={
                 Array [
                   "count",
@@ -671,7 +667,7 @@ exports[`UserEntityCharts Page renders correctly for releases 1`] = `
       className="row"
     >
       <div
-        className="col-xs-6"
+        className="col-md-6"
       >
         <ul
           className="nav nav-pills"
@@ -700,69 +696,6 @@ exports[`UserEntityCharts Page renders correctly for releases 1`] = `
           </li>
         </ul>
       </div>
-      <div
-        className="col-xs-6 text-right"
-      >
-        <span
-          className="dropdown"
-          style={
-            Object {
-              "fontSize": 22,
-            }
-          }
-        >
-          <button
-            className="dropdown-toggle btn-transparent capitalize-bold"
-            data-toggle="dropdown"
-            type="button"
-          >
-            <span
-              className="caret"
-            />
-          </button>
-          <ul
-            className="dropdown-menu"
-            role="menu"
-          >
-            <li>
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                Week
-              </a>
-            </li>
-            <li>
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                Month
-              </a>
-            </li>
-            <li>
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                Year
-              </a>
-            </li>
-            <li>
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                All Time
-              </a>
-            </li>
-          </ul>
-        </span>
-      </div>
     </div>
     <div
       className="row"
@@ -774,16 +707,75 @@ exports[`UserEntityCharts Page renders correctly for releases 1`] = `
           Top
            
           <span
-            className="capitalize-bold"
+            style={
+              Object {
+                "textTransform": "capitalize",
+              }
+            }
           />
            
           of 
           the
            
           <span
-            className="capitalize-bold"
-          />
-           
+            className="dropdown"
+            style={
+              Object {
+                "fontSize": 22,
+              }
+            }
+          >
+            <button
+              className="dropdown-toggle btn-transparent capitalize-bold"
+              data-toggle="dropdown"
+              type="button"
+            >
+              <span
+                className="caret"
+              />
+            </button>
+            <ul
+              className="dropdown-menu"
+              role="menu"
+            >
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Week
+                </a>
+              </li>
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Month
+                </a>
+              </li>
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Year
+                </a>
+              </li>
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  All Time
+                </a>
+              </li>
+            </ul>
+          </span>
           2020
         </h3>
       </div>
@@ -1342,7 +1334,7 @@ exports[`UserEntityCharts Page renders correctly for releases 1`] = `
                 ]
               }
               enableGridY={false}
-              indexBy="id"
+              indexBy="entity"
               keys={
                 Array [
                   "count",
@@ -1471,7 +1463,7 @@ exports[`UserEntityCharts Page renders correctly if stats are not calculated 1`]
       className="row"
     >
       <div
-        className="col-xs-6"
+        className="col-md-6"
       >
         <ul
           className="nav nav-pills"
@@ -1500,70 +1492,6 @@ exports[`UserEntityCharts Page renders correctly if stats are not calculated 1`]
           </li>
         </ul>
       </div>
-      <div
-        className="col-xs-6 text-right"
-      >
-        <span
-          className="dropdown"
-          style={
-            Object {
-              "fontSize": 22,
-            }
-          }
-        >
-          <button
-            className="dropdown-toggle btn-transparent capitalize-bold"
-            data-toggle="dropdown"
-            type="button"
-          >
-            all time
-            <span
-              className="caret"
-            />
-          </button>
-          <ul
-            className="dropdown-menu"
-            role="menu"
-          >
-            <li>
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                Week
-              </a>
-            </li>
-            <li>
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                Month
-              </a>
-            </li>
-            <li>
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                Year
-              </a>
-            </li>
-            <li>
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                All Time
-              </a>
-            </li>
-          </ul>
-        </span>
-      </div>
     </div>
     <div
       className="row"
@@ -1575,7 +1503,11 @@ exports[`UserEntityCharts Page renders correctly if stats are not calculated 1`]
           Top
            
           <span
-            className="capitalize-bold"
+            style={
+              Object {
+                "textTransform": "capitalize",
+              }
+            }
           >
             artists
           </span>
@@ -1583,11 +1515,65 @@ exports[`UserEntityCharts Page renders correctly if stats are not calculated 1`]
           of 
            
           <span
-            className="capitalize-bold"
+            className="dropdown"
+            style={
+              Object {
+                "fontSize": 22,
+              }
+            }
           >
-            all time
+            <button
+              className="dropdown-toggle btn-transparent capitalize-bold"
+              data-toggle="dropdown"
+              type="button"
+            >
+              all time
+              <span
+                className="caret"
+              />
+            </button>
+            <ul
+              className="dropdown-menu"
+              role="menu"
+            >
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Week
+                </a>
+              </li>
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Month
+                </a>
+              </li>
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Year
+                </a>
+              </li>
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  All Time
+                </a>
+              </li>
+            </ul>
           </span>
-           
         </h3>
       </div>
     </div>
