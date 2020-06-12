@@ -60,6 +60,7 @@ export default class Bar extends React.Component<BarProps, BarState> {
   render() {
     const { data, maxValue, width } = this.props;
     const marginLeft = Math.min((width || window.innerWidth) / 2, 350);
+    const tableDigitWidth = data[0]?.idx.toString().length;
 
     const leftAlignedTick = (tick: Tick) => {
       const datum = data[tick.tickIndex];
@@ -77,14 +78,18 @@ export default class Bar extends React.Component<BarProps, BarState> {
                 width: "90%",
                 textAlign: "start",
                 whiteSpace: "nowrap",
+                tableLayout: "fixed",
               }}
             >
               <tbody>
                 <tr style={{ color: "black" }}>
-                  <td style={{ width: 1 }}>{idx}.&nbsp;</td>
+                  <td
+                    style={{ width: `${tableDigitWidth}em`, textAlign: "end" }}
+                  >
+                    {idx}.&nbsp;
+                  </td>
                   <td
                     style={{
-                      maxWidth: 0,
                       textOverflow: "ellipsis",
                       overflow: "hidden",
                     }}
@@ -98,7 +103,6 @@ export default class Bar extends React.Component<BarProps, BarState> {
                     <td
                       style={{
                         fontSize: 12,
-                        maxWidth: 0,
                         textOverflow: "ellipsis",
                         overflow: "hidden",
                       }}
