@@ -172,7 +172,7 @@ export default class Bar extends React.Component<BarProps, BarState> {
         maxValue={maxValue}
         layout="horizontal"
         colors="#EB743B"
-        indexBy="entity"
+        indexBy="id"
         enableGridY={false}
         padding={0.15}
         labelFormat={labelFormatter}
