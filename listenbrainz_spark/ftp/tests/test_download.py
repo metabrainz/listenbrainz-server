@@ -47,40 +47,38 @@ class FTPDownloaderTestCase(unittest.TestCase):
         self.assertEqual('listenbrainz-listens-dump-17-20190101-000001-spark-incremental.tar.xz', filename)
 
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.download_dump')
-    @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.get_file_name')
-    @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.get_req_dump')
-    @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.list_dir')
-    @patch('ftplib.FTP')
-    def download_spark_dump_and_get_path(
-        self, mock_ftp_cons, mock_list_dir,
-        mock_req_dir, mock_get_f_name, mock_download_dump
-    ):
-        mock_ftp = mock_ftp_cons.return_value
-        dest_path = ListenbrainzDataDownloader().download_spark_dump_and_get_path('fakedir', None, 'fakeftpdir', 4)
-        mock_list_dir.assert_called_once()
-
-        mock_req_dir.assert_called_once_with(mock_list_dir.return_value, None, 4)
-        mock_ftp.cwd.assert_has_calls([call('fakeftpdir'), call(mock_req_dir.return_value)])
-
-        mock_get_f_name.assert_called_once_with(mock_req_dir.return_value)
-        mock_download_dump.assert_called_once_with(mock_get_f_name.return_value, 'fakedir')
-        self.assertEqual(dest_path, mock_download_dump.return_value)
-
-    @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.download_dump')
     @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.get_latest_mapping')
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.list_dir')
     @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.get_available_dumps')
     @patch('ftplib.FTP')
-    def test_download_msid_mbid_mapping(self, mock_ftp_cons, mock_mapping_dump, mock_list_dir,
+    def test_download_msid_mbid_mapping(self, mock_ftp_cons, mock_available_dump, mock_list_dir,
                                         mock_latest_mapping, mock_download_dump):
         directory = '/fakedir'
-        dest_path = ListenbrainzDataDownloader().download_msid_mbid_mapping(directory)
-        mock_ftp_cons.return_value.cwd.assert_called_once_with(config.FTP_MSID_MBID_DIR)
-        mock_mapping_dump.assert_called_once_with(mock_list_dir.return_value, 'msid-mbid-mapping-with-matchable')
+        mock_list_dir.return_value = [
+            'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2',
+            'msid-mbid-mapping-with-text-20180603-202000.tar.bz2',
+            'msid-mbid-mapping-with-matchable-20200603-202732.tar.bz2',
+            'msid-mbid-mapping-with-matchable-xxxx-20200603-202732.tar.bz2'
+            'msid-mbid-mapping-with-matchable-20200603-202732.tar.bz2.md5'
+        ]
+        mock_available_dump.return_value = [
+            'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2',
+            'msid-mbid-mapping-with-matchable-20200603-202732.tar.bz2',
+        ]
+        mock_latest_mapping.return_value = 'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2'
+        dest_path, filename = ListenbrainzDataDownloader().download_msid_mbid_mapping(directory)
 
-        mock_latest_mapping.assert_called_once_with(mock_mapping_dump.return_value)
-        mock_download_dump.assert_called_once_with(mock_latest_mapping.return_value, directory)
+        mock_ftp_cons.return_value.cwd.assert_called_once_with(config.FTP_MSID_MBID_DIR)
+        mock_available_dump.assert_called_once_with(mock_list_dir.return_value, 'msid-mbid-mapping-with-matchable')
+
+
+        mock_latest_mapping.assert_called_once_with([
+            'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2',
+            'msid-mbid-mapping-with-matchable-20200603-202732.tar.bz2',
+        ])
+        mock_download_dump.assert_called_once_with('msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2', directory)
         self.assertEqual(dest_path, mock_download_dump.return_value)
+        self.assertEqual(filename, 'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2')
 
     @patch('ftplib.FTP')
     def test_get_latest_mapping(self, mock_ftp):
@@ -88,6 +86,8 @@ class FTPDownloaderTestCase(unittest.TestCase):
             'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2',
             'msid-mbid-mapping-with-text-20180603-202000.tar.bz2',
             'msid-mbid-mapping-with-matchable-20200603-202732.tar.bz2',
+            'msid-mbid-mapping-with-matchable-xxxx-20200603-202732.tar.bz2'
+            'msid-mbid-mapping-with-matchable-20200603-202732.tar.bz2.md5'
         ]
 
         expected_mapping = 'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2'
@@ -100,6 +100,7 @@ class FTPDownloaderTestCase(unittest.TestCase):
             'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2',
             'msid-mbid-mapping-with-text-20180603-202000.tar.bz2',
             'msid-mbid-mapping-with-matchable-20200603-202732.tar.bz2',
+            'msid-mbid-mapping-with-matchable-xxxx-20200603-202732.tar.bz2'
             'msid-mbid-mapping-with-matchable-20100603-202732.tar.bz2.md5',
         ]
 
@@ -193,10 +194,26 @@ class FTPDownloaderTestCase(unittest.TestCase):
         mock_download_dump.assert_called_once_with(mock_get_f_name.return_value, 'fakedir')
         self.assertEqual(dest_path, mock_download_dump.return_value)
 
-    @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.download_spark_dump_and_get_path')
+    @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.get_dump_archive_name')
+    @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.download_dump')
+    @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.list_dir')
     @patch('ftplib.FTP')
-    def test_download_artist_relation(self, mock_ftp_cons, mock_spark_dump):
-        dest_path = ListenbrainzDataDownloader().download_artist_relation('/fakedir', 1)
-        mock_spark_dump.assert_called_once_with(
-            '/fakedir', 1, config.FTP_ARTIST_RELATION_DIR, ARTIST_RELATION_DUMP_ID_POS)
-        self.assertEqual(dest_path, mock_spark_dump.return_value)
+    def test_download_artist_relation(self, mock_ftp_cons, mock_list_dir, mock_download_dump, mock_dump_archive):
+        directory = '/fakedir'
+        mock_list_dir.return_value = [
+            'artist-credit-artist-credit-relations-01-20191230-134806/',
+            'artist-credit-artist-credit-relations-02-20191230-134806/',
+        ]
+        mock_dump_archive.return_value = 'artist-credit-artist-credit-relations-02-20191230-134806.tar.bz2'
+        dest_path, filename = ListenbrainzDataDownloader().download_artist_relation(directory)
+
+        mock_list_dir.assert_called_once()
+        mock_ftp_cons.return_value.cwd.assert_has_calls([
+            call(config.FTP_ARTIST_RELATION_DIR),
+            call('artist-credit-artist-credit-relations-02-20191230-134806/')
+        ])
+
+        self.assertEqual('artist-credit-artist-credit-relations-02-20191230-134806.tar.bz2', filename)
+        mock_dump_archive.assert_called_once_with('artist-credit-artist-credit-relations-02-20191230-134806/')
+        mock_download_dump.assert_called_once_with(mock_dump_archive.return_value, directory)
+        self.assertEqual(dest_path, mock_download_dump.return_value)

@@ -67,33 +67,6 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
             dump_type=dump_type,
         )
 
-
-    def download_spark_dump_and_get_path(self, directory, dump_id, ftp_dump_dir, dump_id_pos):
-        """ Download dump and get local (spark) path.
-
-            Args:
-                directory (str): Dir to save dump locally.
-                dump_id (int): Unique identifier of dump to be downloaded.
-                    If not provided, most recent dump will be downloaded.
-                ftp_dump_dir (str): FTP dir to find dump.
-                dump_id_pos (int): Unique identifier position in dump name.
-
-            Returns:
-                dest_path (str): Local path where dump has been downloaded.
-        """
-        self.connection.cwd(ftp_dump_dir)
-        dump = self.list_dir()
-        req_dump = self.get_dump_name_to_download(dump, dump_id, dump_id_pos)
-
-        self.connection.cwd(req_dump)
-        file_name = self.get_dump_archive_name(req_dump)
-
-        t0 = time()
-        current_app.logger.info('Downloading {} from FTP...'.format(file_name))
-        dest_path = self.download_dump(file_name, directory)
-        current_app.logger.info('Done. Total time: {:.2f} sec'.format(time() - t0))
-        return dest_path
-
     def get_available_dumps(self, dump, mapping_name_prefix):
         """ Get list of available mapping dumps.
 
@@ -143,19 +116,20 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
             Returns:
                 dest_path (str): Local path where mapping has been downloaded.
+                mapping_file_name (str): file name of downloaded mapping.
         """
         self.connection.cwd(current_app.config['FTP_MSID_MBID_DIR'])
         dump = self.list_dir()
 
         mapping = self.get_available_dumps(dump, current_app.config['MAPPING_NAME_PREFIX'])
 
-        latest_mapping = self.get_latest_mapping(mapping)
+        mapping_file_name = self.get_latest_mapping(mapping)
 
         t0 = time()
-        current_app.logger.info('Downloading {} from FTP...'.format(latest_mapping))
-        dest_path = self.download_dump(latest_mapping, directory)
+        current_app.logger.info('Downloading {} from FTP...'.format(mapping_file_name))
+        dest_path = self.download_dump(mapping_file_name, directory)
         current_app.logger.info('Done. Total time: {:.2f} sec'.format(time() - t0))
-        return dest_path
+        return dest_path, mapping_file_name
 
     def download_listens(self, directory, listens_dump_id=None, dump_type=FULL):
         """ Download listens to dir passed as an argument.
@@ -195,9 +169,19 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
             Returns:
                 dest_path (str): Local path where artist relation has been downloaded.
+                artist_relation_file_name (str): file name of downloaded artist relation.
+
         """
-        dest_path = self.download_spark_dump_and_get_path(
-                        directory, artist_relation_dump_id, current_app.config['FTP_ARTIST_RELATION_DIR'],
-                        ARTIST_RELATION_DUMP_ID_POS
-                    )
-        return dest_path
+        self.connection.cwd(current_app.config['FTP_ARTIST_RELATION_DIR'])
+        dump = self.list_dir()
+        req_dump = self.get_dump_name_to_download(dump, artist_relation_dump_id, ARTIST_RELATION_DUMP_ID_POS)
+
+        self.connection.cwd(req_dump)
+        artist_relation_file_name = self.get_dump_archive_name(req_dump)
+
+        t0 = time()
+        current_app.logger.info('Downloading {} from FTP...'.format(artist_relation_file_name))
+        dest_path = self.download_dump(artist_relation_file_name, directory)
+        current_app.logger.info('Done. Total time: {:.2f} sec'.format(time() - t0))
+
+        return dest_path, artist_relation_file_name
