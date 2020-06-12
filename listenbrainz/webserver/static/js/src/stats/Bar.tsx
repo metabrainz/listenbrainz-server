@@ -4,6 +4,7 @@ import { ResponsiveBar, LabelFormatter } from "@nivo/bar";
 export type BarProps = {
   data: UserEntityData;
   maxValue: number;
+  width?: number;
 };
 
 export type BarState = {
@@ -26,28 +27,6 @@ type Tick = {
 };
 
 export default class Bar extends React.Component<BarProps, BarState> {
-  constructor(props: BarProps) {
-    super(props);
-
-    this.state = {
-      marginLeft: window.innerWidth / 5,
-    };
-  }
-
-  componentDidMount() {
-    window.addEventListener("resize", this.handleResize);
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener("resize", this.handleResize);
-  }
-
-  handleResize = () => {
-    this.setState({
-      marginLeft: window.innerWidth / 5,
-    });
-  };
-
   getEntityLink = (data: UserEntityDatum, entity: string) => {
     if (data.entityMBID) {
       return (
@@ -79,8 +58,8 @@ export default class Bar extends React.Component<BarProps, BarState> {
   };
 
   render() {
-    const { data, maxValue } = this.props;
-    const { marginLeft } = this.state;
+    const { data, maxValue, width } = this.props;
+    const marginLeft = Math.min((width || window.innerWidth) / 2, 350);
 
     const leftAlignedTick = (tick: Tick) => {
       const datum = data[tick.tickIndex];
