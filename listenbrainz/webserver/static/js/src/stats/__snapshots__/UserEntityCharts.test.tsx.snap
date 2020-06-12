@@ -538,7 +538,7 @@ exports[`UserEntityCharts Page renders correctly for artists 1`] = `
                 ]
               }
               enableGridY={false}
-              indexBy="entity"
+              indexBy="id"
               keys={
                 Array [
                   "count",
@@ -1334,7 +1334,7 @@ exports[`UserEntityCharts Page renders correctly for releases 1`] = `
                 ]
               }
               enableGridY={false}
-              indexBy="entity"
+              indexBy="id"
               keys={
                 Array [
                   "count",
