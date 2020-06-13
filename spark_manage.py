@@ -86,7 +86,7 @@ def upload_mapping(force):
     from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
     with app.app_context():
         downloader_obj = ListenbrainzDataDownloader()
-        src = downloader_obj.download_msid_mbid_mapping(path.FTP_FILES_PATH)
+        src, _ = downloader_obj.download_msid_mbid_mapping(path.FTP_FILES_PATH)
         uploader_obj = ListenbrainzDataUploader()
         uploader_obj.upload_mapping(src, force=force)
 
@@ -117,7 +117,7 @@ def upload_artist_relation(force):
     from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
     with app.app_context():
         downloader_obj = ListenbrainzDataDownloader()
-        src = downloader_obj.download_artist_relation(path.FTP_FILES_PATH)
+        src, _ = downloader_obj.download_artist_relation(path.FTP_FILES_PATH)
         uploader_obj = ListenbrainzDataUploader()
         uploader_obj.upload_artist_relation(src, force=force)
 
