@@ -14,8 +14,9 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.spark.handlers import (handle_candidate_sets,
                                          handle_dataframes,
                                          handle_dump_imported, handle_model,
-                                         handle_recommendations,
-                                         handle_user_entity)
+                                         handle_recommendations, handle_user_entity,
+                                         handle_mapping, handle_artist_relation)
+
 from listenbrainz.webserver import create_app
 
 response_handler_map = {
@@ -25,6 +26,8 @@ response_handler_map = {
     'cf_recording_model': handle_model,
     'cf_recording_candidate_sets': handle_candidate_sets,
     'cf_recording_recommendations': handle_recommendations,
+    'import_mapping': handle_mapping,
+    'import_artist_relation': handle_artist_relation,
 }
 
 RABBITMQ_HEARTBEAT_TIME = 60 * 60 # 1 hour, in seconds

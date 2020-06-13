@@ -203,3 +203,37 @@ def handle_recommendations(data):
                                                                similar_artist_recording_mbids)
 
     current_app.logger.debug("recommendation for {} inserted".format(musicbrainz_id))
+
+def handle_mapping(data):
+    """ Send an email after msid mbid mapping has been successfully imported into the cluster.
+    """
+    if current_app.config['TESTING']:
+        return
+
+    mapping_name = data['imported_mapping']
+    import_completion_time = data['time']
+    send_mail(
+        subject='MSID MBID mapping has been imported into the Spark cluster',
+        text=render_template('emails/mapping_import_notification.txt', mapping_name=mapping_name, time=import_completion_time),
+        recipients=['listenbrainz-observability@metabrainz.org'],
+        from_name='ListenBrainz',
+        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
+    )
+
+
+def handle_artist_relation(data):
+    """ Send an email after artist relation has been sucessfully imported into the cluster.
+    """
+    if current_app.config['TESTING']:
+        return
+
+    artist_relation_name = data['import_artist_relation']
+    import_completion_time = data['time']
+    send_mail(
+        subject='Artist relation has been imported into the Spark cluster',
+        text=render_template('emails/artist_relation_import_notification.txt',
+                             artist_relation_name=artist_relation_name, time=import_completion_time),
+        recipients=['listenbrainz-observability@metabrainz.org'],
+        from_name='ListenBrainz',
+        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
+    )
