@@ -24,6 +24,7 @@ export type UserEntityChartState = {
   startDate: Date;
   loading: boolean;
   calculated: boolean;
+  graphContainerWidth?: number;
 };
 
 export default class UserEntityChart extends React.Component<
@@ -33,6 +34,8 @@ export default class UserEntityChart extends React.Component<
   APIService: APIService;
 
   ROWS_PER_PAGE = 25; // Number of rows to be shown on each page
+
+  graphContainer: React.RefObject<HTMLDivElement>;
 
   constructor(props: UserEntityChartProps) {
     super(props);
@@ -53,10 +56,13 @@ export default class UserEntityChart extends React.Component<
       loading: false,
       calculated: true,
     };
+
+    this.graphContainer = React.createRef();
   }
 
   componentDidMount() {
     window.addEventListener("popstate", this.syncStateWithURL);
+    window.addEventListener("resize", this.handleResize);
 
     // Fetch initial data and set URL correspondingly
     const { page, range, entity } = this.getURLParams();
@@ -66,10 +72,12 @@ export default class UserEntityChart extends React.Component<
       `?page=${page}&range=${range}&entity=${entity}`
     );
     this.syncStateWithURL();
+    this.handleResize();
   }
 
   componentWillUnmount() {
     window.removeEventListener("popstate", this.syncStateWithURL);
+    window.removeEventListener("resize", this.handleResize);
   }
 
   changePage = (
@@ -304,6 +312,12 @@ export default class UserEntityChart extends React.Component<
     );
   };
 
+  handleResize = () => {
+    this.setState({
+      graphContainerWidth: this.graphContainer.current?.offsetWidth,
+    });
+  };
+
   render() {
     const {
       data,
@@ -316,6 +330,7 @@ export default class UserEntityChart extends React.Component<
       startDate,
       loading,
       calculated,
+      graphContainerWidth,
     } = this.state;
     const prevPage = currPage - 1;
     const nextPage = currPage + 1;
@@ -440,9 +455,14 @@ export default class UserEntityChart extends React.Component<
             <div
               className="col-md-12 text-center"
               style={{ height: `${(75 / this.ROWS_PER_PAGE) * data.length}em` }}
+              ref={this.graphContainer}
             >
               <Loader isLoading={loading}>
-                <Bar data={data} maxValue={maxListens} />
+                <Bar
+                  data={data}
+                  maxValue={maxListens}
+                  width={graphContainerWidth}
+                />
               </Loader>
             </div>
           )}
