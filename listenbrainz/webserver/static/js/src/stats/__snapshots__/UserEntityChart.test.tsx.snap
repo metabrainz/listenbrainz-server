@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`UserEntityCharts Page renders correctly for artists 1`] = `
-<UserEntityCharts
+exports[`UserEntityChart Page renders correctly for artists 1`] = `
+<UserEntityChart
   apiUrl="apiUrl"
   user={
     Object {
@@ -643,11 +643,11 @@ exports[`UserEntityCharts Page renders correctly for artists 1`] = `
       </div>
     </div>
   </div>
-</UserEntityCharts>
+</UserEntityChart>
 `;
 
-exports[`UserEntityCharts Page renders correctly for releases 1`] = `
-<UserEntityCharts
+exports[`UserEntityChart Page renders correctly for releases 1`] = `
+<UserEntityChart
   apiUrl="apiUrl"
   user={
     Object {
@@ -1439,11 +1439,11 @@ exports[`UserEntityCharts Page renders correctly for releases 1`] = `
       </div>
     </div>
   </div>
-</UserEntityCharts>
+</UserEntityChart>
 `;
 
-exports[`UserEntityCharts Page renders correctly if stats are not calculated 1`] = `
-<UserEntityCharts
+exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] = `
+<UserEntityChart
   apiUrl="apiUrl"
   user={
     Object {
@@ -1610,5 +1610,5 @@ exports[`UserEntityCharts Page renders correctly if stats are not calculated 1`]
       </div>
     </div>
   </div>
-</UserEntityCharts>
+</UserEntityChart>
 `;

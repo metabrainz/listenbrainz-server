@@ -8,12 +8,12 @@ import Bar from "./Bar";
 import Loader from "../Loader";
 import ErrorBoundary from "../ErrorBoundary";
 
-export type UserEntityChartsProps = {
+export type UserEntityChartProps = {
   user: ListenBrainzUser;
   apiUrl: string;
 };
 
-export type UserEntityChartsState = {
+export type UserEntityChartState = {
   data: UserEntityData;
   range: UserEntityAPIRange;
   entity: Entity;
@@ -26,15 +26,15 @@ export type UserEntityChartsState = {
   calculated: boolean;
 };
 
-export default class UserEntityCharts extends React.Component<
-  UserEntityChartsProps,
-  UserEntityChartsState
+export default class UserEntityChart extends React.Component<
+  UserEntityChartProps,
+  UserEntityChartState
 > {
   APIService: APIService;
 
   ROWS_PER_PAGE = 25; // Number of rows to be shown on each page
 
-  constructor(props: UserEntityChartsProps) {
+  constructor(props: UserEntityChartProps) {
     super(props);
 
     this.APIService = new APIService(
@@ -494,7 +494,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const { user, api_url: apiUrl } = reactProps;
   ReactDOM.render(
     <ErrorBoundary>
-      <UserEntityCharts apiUrl={apiUrl} user={user} />
+      <UserEntityChart apiUrl={apiUrl} user={user} />
     </ErrorBoundary>,
     domContainer
   );
