@@ -549,7 +549,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               layout="horizontal"
               margin={
                 Object {
-                  "left": 204.8,
+                  "left": 350,
                 }
               }
               maxValue={70}
@@ -1345,7 +1345,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               layout="horizontal"
               margin={
                 Object {
-                  "left": 204.8,
+                  "left": 350,
                 }
               }
               maxValue={26}

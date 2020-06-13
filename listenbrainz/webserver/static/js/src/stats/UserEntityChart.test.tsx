@@ -84,6 +84,19 @@ describe("componentDidMount", () => {
     expect(spy).toHaveBeenCalledWith("popstate", instance.syncStateWithURL);
   });
 
+  it('adds event listener for "release" event', () => {
+    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const instance = wrapper.instance();
+
+    const spy = jest.spyOn(window, "addEventListener");
+    spy.mockImplementationOnce(() => {});
+    instance.syncStateWithURL = jest.fn();
+    instance.handleResize = jest.fn();
+    instance.componentDidMount();
+
+    expect(spy).toHaveBeenCalledWith("resize", instance.handleResize);
+  });
+
   it("calls getURLParams once", () => {
     const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
     const instance = wrapper.instance();
@@ -135,6 +148,18 @@ describe("componentWillUnmount", () => {
     instance.componentWillUnmount();
 
     expect(spy).toHaveBeenCalledWith("popstate", instance.syncStateWithURL);
+  });
+
+  it('removes "resize" event listener', () => {
+    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const instance = wrapper.instance();
+
+    const spy = jest.spyOn(window, "removeEventListener");
+    spy.mockImplementationOnce(() => {});
+    instance.handleResize = jest.fn();
+    instance.componentWillUnmount();
+
+    expect(spy).toHaveBeenCalledWith("resize", instance.handleResize);
   });
 });
 
