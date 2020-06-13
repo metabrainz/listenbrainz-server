@@ -3,7 +3,6 @@ import * as ReactDOM from "react-dom";
 import * as React from "react";
 
 import APIService from "../APIService";
-import APIError from "../APIError";
 import Bar from "./Bar";
 import Loader from "../Loader";
 import ErrorBoundary from "../ErrorBoundary";
@@ -156,6 +155,13 @@ export default class UserEntityChart extends React.Component<
         data.payload.total_release_count / this.ROWS_PER_PAGE
       );
       entityCount = data.payload.total_release_count;
+    } else if (entity === "recording") {
+      data = data as UserRecordingsResponse;
+      maxListens = data.payload.recordings[0].listen_count;
+      totalPages = Math.ceil(
+        data.payload.total_recording_count / this.ROWS_PER_PAGE
+      );
+      entityCount = data.payload.total_recording_count;
     }
 
     return {
@@ -170,7 +176,9 @@ export default class UserEntityChart extends React.Component<
     page: number,
     range: UserEntityAPIRange,
     entity: Entity
-  ): Promise<UserArtistsResponse | UserReleasesResponse> => {
+  ): Promise<
+    UserArtistsResponse | UserReleasesResponse | UserRecordingsResponse
+  > => {
     const { user } = this.props;
     const offset = (page - 1) * this.ROWS_PER_PAGE;
 
@@ -185,7 +193,7 @@ export default class UserEntityChart extends React.Component<
   };
 
   processData = (
-    data: UserArtistsResponse | UserReleasesResponse,
+    data: UserArtistsResponse | UserReleasesResponse | UserRecordingsResponse,
     page: number,
     entity?: Entity
   ): UserEntityData => {
@@ -222,6 +230,23 @@ export default class UserEntityChart extends React.Component<
             entityMBID: elem.release_mbid,
             artist: elem.artist_name,
             artistMBID: elem.artist_mbids,
+            idx: offset + idx + 1,
+            count: elem.listen_count,
+          };
+        })
+        .reverse();
+    } else if (entity === "recording") {
+      result = (data as UserRecordingsResponse).payload.recordings
+        .map((elem, idx: number) => {
+          return {
+            id: idx.toString(),
+            entity: elem.track_name,
+            entityType: entity as Entity,
+            entityMBID: elem.recording_mbid,
+            artist: elem.artist_name,
+            artistMBID: elem.artist_mbids,
+            release: elem.release_name,
+            releaseMBID: elem.release_mbid,
             idx: offset + idx + 1,
             count: elem.listen_count,
           };
@@ -356,6 +381,15 @@ export default class UserEntityChart extends React.Component<
                   onClick={(event) => this.changeEntity("release", event)}
                 >
                   Releases
+                </a>
+              </li>
+              <li className={entity === "recording" ? "active" : ""}>
+                <a
+                  href=""
+                  role="button"
+                  onClick={(event) => this.changeEntity("recording", event)}
+                >
+                  Recordings
                 </a>
               </li>
             </ul>

@@ -48,6 +48,17 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               Releases
             </a>
           </li>
+          <li
+            className=""
+          >
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              Recordings
+            </a>
+          </li>
         </ul>
       </div>
     </div>
@@ -549,10 +560,917 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               layout="horizontal"
               margin={
                 Object {
-                  "left": 350,
+                  "left": 400,
                 }
               }
               maxValue={70}
+              padding={0.15}
+              theme={
+                Object {
+                  "axis": Object {
+                    "ticks": Object {
+                      "text": Object {
+                        "fontSize": "14px",
+                      },
+                    },
+                  },
+                  "labels": Object {
+                    "text": Object {
+                      "fontSize": "14px",
+                    },
+                  },
+                }
+              }
+              tooltip={[Function]}
+            >
+              <ResponsiveWrapper>
+                <Measure
+                  bounds={true}
+                  onResize={[Function]}
+                >
+                  <Component
+                    bounds={true}
+                    contentRect={
+                      Object {
+                        "bounds": Object {},
+                        "client": Object {},
+                        "entry": Object {},
+                        "margin": Object {},
+                        "offset": Object {},
+                        "scroll": Object {},
+                      }
+                    }
+                    measure={[Function]}
+                    measureRef={[Function]}
+                  >
+                    <div
+                      style={
+                        Object {
+                          "height": "100%",
+                          "width": "100%",
+                        }
+                      }
+                    />
+                  </Component>
+                </Measure>
+              </ResponsiveWrapper>
+            </ResponsiveBar>
+          </Bar>
+        </Loader>
+      </div>
+    </div>
+    <div
+      className="row"
+    >
+      <div
+        className="col-xs-12"
+      >
+        <ul
+          className="pager"
+        >
+          <li
+            className="previous hidden"
+          >
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              ← Previous
+            </a>
+          </li>
+          <li
+            className="next hidden"
+          >
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              Next →
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</UserEntityChart>
+`;
+
+exports[`UserEntityChart Page renders correctly for recording 1`] = `
+<UserEntityChart
+  apiUrl="apiUrl"
+  user={
+    Object {
+      "id": 0,
+      "name": "dummyUser",
+    }
+  }
+>
+  <div
+    style={
+      Object {
+        "marginTop": "1em",
+      }
+    }
+  >
+    <div
+      className="row"
+    >
+      <div
+        className="col-md-6"
+      >
+        <ul
+          className="nav nav-pills"
+        >
+          <li
+            className=""
+          >
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              Artists
+            </a>
+          </li>
+          <li
+            className=""
+          >
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              Releases
+            </a>
+          </li>
+          <li
+            className=""
+          >
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              Recordings
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div
+      className="row"
+    >
+      <div
+        className="col-xs-12"
+      >
+        <h3>
+          Top
+           
+          <span
+            style={
+              Object {
+                "textTransform": "capitalize",
+              }
+            }
+          />
+           
+          of 
+          the
+           
+          <span
+            className="dropdown"
+            style={
+              Object {
+                "fontSize": 22,
+              }
+            }
+          >
+            <button
+              className="dropdown-toggle btn-transparent capitalize-bold"
+              data-toggle="dropdown"
+              type="button"
+            >
+              <span
+                className="caret"
+              />
+            </button>
+            <ul
+              className="dropdown-menu"
+              role="menu"
+            >
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Week
+                </a>
+              </li>
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Month
+                </a>
+              </li>
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  Year
+                </a>
+              </li>
+              <li>
+                <a
+                  href=""
+                  onClick={[Function]}
+                  role="button"
+                >
+                  All Time
+                </a>
+              </li>
+            </ul>
+          </span>
+          2020
+        </h3>
+      </div>
+    </div>
+    <div
+      className="row"
+    >
+      <div
+        className="col-xs-12"
+      >
+        <h4
+          style={
+            Object {
+              "textTransform": "capitalize",
+            }
+          }
+        >
+           count - 
+          <b>
+            0
+          </b>
+        </h4>
+      </div>
+    </div>
+    <div
+      className="row"
+    >
+      <div
+        className="col-md-12 text-center"
+        style={
+          Object {
+            "height": "75em",
+          }
+        }
+      >
+        <Loader
+          isLoading={false}
+        >
+          <Bar
+            data={
+              Array [
+                Object {
+                  "artist": "Ellie Goulding",
+                  "artistMBID": Array [],
+                  "count": 6,
+                  "entity": "Close to Me (with Diplo) (feat. Swae Lee)",
+                  "entityMBID": "",
+                  "entityType": "recording",
+                  "id": "24",
+                  "idx": 25,
+                  "release": "Close To Me (feat. Swae Lee)",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "Imagine Dragons",
+                  "artistMBID": Array [],
+                  "count": 6,
+                  "entity": "On Top of the World",
+                  "entityMBID": "0132a6b9-a04f-48ea-81e7-5f3a5d608f75",
+                  "entityType": "recording",
+                  "id": "23",
+                  "idx": 24,
+                  "release": "Night Visions (Deluxe)",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "Coldplay",
+                  "artistMBID": Array [],
+                  "count": 6,
+                  "entity": "Up&Up",
+                  "entityMBID": "02b47acf-3bc5-47dc-a516-e8c2c95bc07b",
+                  "entityType": "recording",
+                  "id": "22",
+                  "idx": 23,
+                  "release": "A Head Full Of Dreams",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "The Local train",
+                  "artistMBID": Array [],
+                  "count": 8,
+                  "entity": "Choo Lo",
+                  "entityMBID": "",
+                  "entityType": "recording",
+                  "id": "21",
+                  "idx": 22,
+                  "release": "Aalas Ka Pedh",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "Lenka",
+                  "artistMBID": Array [],
+                  "count": 8,
+                  "entity": "Everything at Once",
+                  "entityMBID": "036e67df-baae-4626-a2ab-951dd162e332",
+                  "entityType": "recording",
+                  "id": "20",
+                  "idx": 21,
+                  "release": "Two (Expanded Edition)",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "Backstreet Boys",
+                  "artistMBID": Array [],
+                  "count": 8,
+                  "entity": "I Want It That Way",
+                  "entityMBID": "0040980c-4f9a-43df-8be0-142dce4374f4",
+                  "entityType": "recording",
+                  "id": "19",
+                  "idx": 20,
+                  "release": "The Hits--Chapter One",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "Linkin Park",
+                  "artistMBID": Array [],
+                  "count": 10,
+                  "entity": "Battle Symphony",
+                  "entityMBID": "14c913e9-db47-40fa-ae1a-81099a67e4bf",
+                  "entityType": "recording",
+                  "id": "18",
+                  "idx": 19,
+                  "release": "One More Light",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "M.I.A.",
+                  "artistMBID": Array [],
+                  "count": 10,
+                  "entity": "Paper Planes",
+                  "entityMBID": "234ae263-ffad-472a-8077-dab64bcedf99",
+                  "entityType": "recording",
+                  "id": "17",
+                  "idx": 18,
+                  "release": "Kala",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "Maroon 5",
+                  "artistMBID": Array [],
+                  "count": 10,
+                  "entity": "Payphone",
+                  "entityMBID": "0126d206-3894-4d97-b5c2-f6cf037a323a",
+                  "entityType": "recording",
+                  "id": "16",
+                  "idx": 17,
+                  "release": "Overexposed",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "Sia",
+                  "artistMBID": Array [],
+                  "count": 11,
+                  "entity": "Cheap Thrills (feat. Sean Paul)",
+                  "entityMBID": "",
+                  "entityType": "recording",
+                  "id": "15",
+                  "idx": 16,
+                  "release": "Cheap Thrills (feat. Sean Paul)",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "Of Monsters and Men",
+                  "artistMBID": Array [],
+                  "count": 11,
+                  "entity": "Little Talks",
+                  "entityMBID": "0031fba1-dde0-3755-bcb2-63b2544159f8",
+                  "entityType": "recording",
+                  "id": "14",
+                  "idx": 15,
+                  "release": "My Head Is an Animal",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "Maroon 5",
+                  "artistMBID": Array [],
+                  "count": 11,
+                  "entity": "Moves Like Jagger - Studio Recording From The Voice Performance",
+                  "entityMBID": "",
+                  "entityType": "recording",
+                  "id": "13",
+                  "idx": 14,
+                  "release": "Singles",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "The Script",
+                  "artistMBID": Array [],
+                  "count": 12,
+                  "entity": "Hall of Fame",
+                  "entityMBID": "045cdbf9-796e-4949-91f6-e05d9ce3ed21",
+                  "entityType": "recording",
+                  "id": "12",
+                  "idx": 13,
+                  "release": "#3",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "Tommee Profitt",
+                  "artistMBID": Array [],
+                  "count": 12,
+                  "entity": "In The End - Mellen Gi Remix",
+                  "entityMBID": "",
+                  "entityType": "recording",
+                  "id": "11",
+                  "idx": 12,
+                  "release": "In The End",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "George Ezra",
+                  "artistMBID": Array [],
+                  "count": 12,
+                  "entity": "Shotgun",
+                  "entityMBID": "0a4c5dfd-02c7-43dc-ba7f-1b4ce7a02994",
+                  "entityType": "recording",
+                  "id": "10",
+                  "idx": 11,
+                  "release": "Staying at Tamara's",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "OneRepublic",
+                  "artistMBID": Array [],
+                  "count": 13,
+                  "entity": "Start Again (feat. Logic)",
+                  "entityMBID": "",
+                  "entityType": "recording",
+                  "id": "9",
+                  "idx": 10,
+                  "release": "13 Reasons Why (Season 2)",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "Ed Sheeran",
+                  "artistMBID": Array [],
+                  "count": 14,
+                  "entity": "Castle on the Hill",
+                  "entityMBID": "02ba28bc-6d79-44fb-b770-c49395661117",
+                  "entityType": "recording",
+                  "id": "8",
+                  "idx": 9,
+                  "release": "÷ (Deluxe)",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "Vance Joy",
+                  "artistMBID": Array [],
+                  "count": 15,
+                  "entity": "Riptide",
+                  "entityMBID": "003196a1-f6ab-4fe8-9683-b970d163cfa4",
+                  "entityType": "recording",
+                  "id": "7",
+                  "idx": 8,
+                  "release": "Dream Your Life Away (Special Edition)",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "Christina Perri",
+                  "artistMBID": Array [],
+                  "count": 16,
+                  "entity": "A Thousand Years",
+                  "entityMBID": "03a0cdfb-f964-434f-bfb7-379203dc139d",
+                  "entityType": "recording",
+                  "id": "6",
+                  "idx": 7,
+                  "release": "A Thousand Years",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "Taylor Swift",
+                  "artistMBID": Array [],
+                  "count": 16,
+                  "entity": "Blank Space",
+                  "entityMBID": "01236d26-9f46-435f-adc5-6c92e6e76f53",
+                  "entityType": "recording",
+                  "id": "5",
+                  "idx": 6,
+                  "release": "1989",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "Ellie Goulding",
+                  "artistMBID": Array [],
+                  "count": 16,
+                  "entity": "Burn",
+                  "entityMBID": "017cd117-e343-408f-95fe-ee4c1018e312",
+                  "entityType": "recording",
+                  "id": "4",
+                  "idx": 5,
+                  "release": "Halcyon Days",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "OneRepublic",
+                  "artistMBID": Array [],
+                  "count": 18,
+                  "entity": "Counting Stars",
+                  "entityMBID": "00d32e28-0df2-486c-9829-750301962fb2",
+                  "entityType": "recording",
+                  "id": "3",
+                  "idx": 4,
+                  "release": "Native",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "Ritviz",
+                  "artistMBID": Array [],
+                  "count": 20,
+                  "entity": "Udd Gaye - Bacardi House Party Sessions",
+                  "entityMBID": "",
+                  "entityType": "recording",
+                  "id": "2",
+                  "idx": 3,
+                  "release": "Udd Gaye (Bacardi House Party Sessions)",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "The Fray",
+                  "artistMBID": Array [],
+                  "count": 23,
+                  "entity": "How to Save a Life",
+                  "entityMBID": "0008ab49-a6ad-40b5-aa90-9d2779265c22",
+                  "entityType": "recording",
+                  "id": "1",
+                  "idx": 2,
+                  "release": "How to Save a Life",
+                  "releaseMBID": "",
+                },
+                Object {
+                  "artist": "Ellie Goulding",
+                  "artistMBID": Array [],
+                  "count": 25,
+                  "entity": "Love Me Like You Do - From \\"Fifty Shades of Grey\\"",
+                  "entityMBID": "0fe11cd3-0be4-467b-84fa-0bd524d45d74",
+                  "entityType": "recording",
+                  "id": "0",
+                  "idx": 1,
+                  "release": "Delirium (Deluxe)",
+                  "releaseMBID": "",
+                },
+              ]
+            }
+            maxValue={26}
+          >
+            <ResponsiveBar
+              animate={false}
+              axisLeft={
+                Object {
+                  "renderTick": [Function],
+                }
+              }
+              colors="#EB743B"
+              data={
+                Array [
+                  Object {
+                    "artist": "Ellie Goulding",
+                    "artistMBID": Array [],
+                    "count": 6,
+                    "entity": "Close to Me (with Diplo) (feat. Swae Lee)",
+                    "entityMBID": "",
+                    "entityType": "recording",
+                    "id": "24",
+                    "idx": 25,
+                    "release": "Close To Me (feat. Swae Lee)",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "Imagine Dragons",
+                    "artistMBID": Array [],
+                    "count": 6,
+                    "entity": "On Top of the World",
+                    "entityMBID": "0132a6b9-a04f-48ea-81e7-5f3a5d608f75",
+                    "entityType": "recording",
+                    "id": "23",
+                    "idx": 24,
+                    "release": "Night Visions (Deluxe)",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "Coldplay",
+                    "artistMBID": Array [],
+                    "count": 6,
+                    "entity": "Up&Up",
+                    "entityMBID": "02b47acf-3bc5-47dc-a516-e8c2c95bc07b",
+                    "entityType": "recording",
+                    "id": "22",
+                    "idx": 23,
+                    "release": "A Head Full Of Dreams",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "The Local train",
+                    "artistMBID": Array [],
+                    "count": 8,
+                    "entity": "Choo Lo",
+                    "entityMBID": "",
+                    "entityType": "recording",
+                    "id": "21",
+                    "idx": 22,
+                    "release": "Aalas Ka Pedh",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "Lenka",
+                    "artistMBID": Array [],
+                    "count": 8,
+                    "entity": "Everything at Once",
+                    "entityMBID": "036e67df-baae-4626-a2ab-951dd162e332",
+                    "entityType": "recording",
+                    "id": "20",
+                    "idx": 21,
+                    "release": "Two (Expanded Edition)",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "Backstreet Boys",
+                    "artistMBID": Array [],
+                    "count": 8,
+                    "entity": "I Want It That Way",
+                    "entityMBID": "0040980c-4f9a-43df-8be0-142dce4374f4",
+                    "entityType": "recording",
+                    "id": "19",
+                    "idx": 20,
+                    "release": "The Hits--Chapter One",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "Linkin Park",
+                    "artistMBID": Array [],
+                    "count": 10,
+                    "entity": "Battle Symphony",
+                    "entityMBID": "14c913e9-db47-40fa-ae1a-81099a67e4bf",
+                    "entityType": "recording",
+                    "id": "18",
+                    "idx": 19,
+                    "release": "One More Light",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "M.I.A.",
+                    "artistMBID": Array [],
+                    "count": 10,
+                    "entity": "Paper Planes",
+                    "entityMBID": "234ae263-ffad-472a-8077-dab64bcedf99",
+                    "entityType": "recording",
+                    "id": "17",
+                    "idx": 18,
+                    "release": "Kala",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "Maroon 5",
+                    "artistMBID": Array [],
+                    "count": 10,
+                    "entity": "Payphone",
+                    "entityMBID": "0126d206-3894-4d97-b5c2-f6cf037a323a",
+                    "entityType": "recording",
+                    "id": "16",
+                    "idx": 17,
+                    "release": "Overexposed",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "Sia",
+                    "artistMBID": Array [],
+                    "count": 11,
+                    "entity": "Cheap Thrills (feat. Sean Paul)",
+                    "entityMBID": "",
+                    "entityType": "recording",
+                    "id": "15",
+                    "idx": 16,
+                    "release": "Cheap Thrills (feat. Sean Paul)",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "Of Monsters and Men",
+                    "artistMBID": Array [],
+                    "count": 11,
+                    "entity": "Little Talks",
+                    "entityMBID": "0031fba1-dde0-3755-bcb2-63b2544159f8",
+                    "entityType": "recording",
+                    "id": "14",
+                    "idx": 15,
+                    "release": "My Head Is an Animal",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "Maroon 5",
+                    "artistMBID": Array [],
+                    "count": 11,
+                    "entity": "Moves Like Jagger - Studio Recording From The Voice Performance",
+                    "entityMBID": "",
+                    "entityType": "recording",
+                    "id": "13",
+                    "idx": 14,
+                    "release": "Singles",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "The Script",
+                    "artistMBID": Array [],
+                    "count": 12,
+                    "entity": "Hall of Fame",
+                    "entityMBID": "045cdbf9-796e-4949-91f6-e05d9ce3ed21",
+                    "entityType": "recording",
+                    "id": "12",
+                    "idx": 13,
+                    "release": "#3",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "Tommee Profitt",
+                    "artistMBID": Array [],
+                    "count": 12,
+                    "entity": "In The End - Mellen Gi Remix",
+                    "entityMBID": "",
+                    "entityType": "recording",
+                    "id": "11",
+                    "idx": 12,
+                    "release": "In The End",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "George Ezra",
+                    "artistMBID": Array [],
+                    "count": 12,
+                    "entity": "Shotgun",
+                    "entityMBID": "0a4c5dfd-02c7-43dc-ba7f-1b4ce7a02994",
+                    "entityType": "recording",
+                    "id": "10",
+                    "idx": 11,
+                    "release": "Staying at Tamara's",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "OneRepublic",
+                    "artistMBID": Array [],
+                    "count": 13,
+                    "entity": "Start Again (feat. Logic)",
+                    "entityMBID": "",
+                    "entityType": "recording",
+                    "id": "9",
+                    "idx": 10,
+                    "release": "13 Reasons Why (Season 2)",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "Ed Sheeran",
+                    "artistMBID": Array [],
+                    "count": 14,
+                    "entity": "Castle on the Hill",
+                    "entityMBID": "02ba28bc-6d79-44fb-b770-c49395661117",
+                    "entityType": "recording",
+                    "id": "8",
+                    "idx": 9,
+                    "release": "÷ (Deluxe)",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "Vance Joy",
+                    "artistMBID": Array [],
+                    "count": 15,
+                    "entity": "Riptide",
+                    "entityMBID": "003196a1-f6ab-4fe8-9683-b970d163cfa4",
+                    "entityType": "recording",
+                    "id": "7",
+                    "idx": 8,
+                    "release": "Dream Your Life Away (Special Edition)",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "Christina Perri",
+                    "artistMBID": Array [],
+                    "count": 16,
+                    "entity": "A Thousand Years",
+                    "entityMBID": "03a0cdfb-f964-434f-bfb7-379203dc139d",
+                    "entityType": "recording",
+                    "id": "6",
+                    "idx": 7,
+                    "release": "A Thousand Years",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "Taylor Swift",
+                    "artistMBID": Array [],
+                    "count": 16,
+                    "entity": "Blank Space",
+                    "entityMBID": "01236d26-9f46-435f-adc5-6c92e6e76f53",
+                    "entityType": "recording",
+                    "id": "5",
+                    "idx": 6,
+                    "release": "1989",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "Ellie Goulding",
+                    "artistMBID": Array [],
+                    "count": 16,
+                    "entity": "Burn",
+                    "entityMBID": "017cd117-e343-408f-95fe-ee4c1018e312",
+                    "entityType": "recording",
+                    "id": "4",
+                    "idx": 5,
+                    "release": "Halcyon Days",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "OneRepublic",
+                    "artistMBID": Array [],
+                    "count": 18,
+                    "entity": "Counting Stars",
+                    "entityMBID": "00d32e28-0df2-486c-9829-750301962fb2",
+                    "entityType": "recording",
+                    "id": "3",
+                    "idx": 4,
+                    "release": "Native",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "Ritviz",
+                    "artistMBID": Array [],
+                    "count": 20,
+                    "entity": "Udd Gaye - Bacardi House Party Sessions",
+                    "entityMBID": "",
+                    "entityType": "recording",
+                    "id": "2",
+                    "idx": 3,
+                    "release": "Udd Gaye (Bacardi House Party Sessions)",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "The Fray",
+                    "artistMBID": Array [],
+                    "count": 23,
+                    "entity": "How to Save a Life",
+                    "entityMBID": "0008ab49-a6ad-40b5-aa90-9d2779265c22",
+                    "entityType": "recording",
+                    "id": "1",
+                    "idx": 2,
+                    "release": "How to Save a Life",
+                    "releaseMBID": "",
+                  },
+                  Object {
+                    "artist": "Ellie Goulding",
+                    "artistMBID": Array [],
+                    "count": 25,
+                    "entity": "Love Me Like You Do - From \\"Fifty Shades of Grey\\"",
+                    "entityMBID": "0fe11cd3-0be4-467b-84fa-0bd524d45d74",
+                    "entityType": "recording",
+                    "id": "0",
+                    "idx": 1,
+                    "release": "Delirium (Deluxe)",
+                    "releaseMBID": "",
+                  },
+                ]
+              }
+              enableGridY={false}
+              indexBy="id"
+              keys={
+                Array [
+                  "count",
+                ]
+              }
+              labelFormat={[Function]}
+              labelSkipWidth={0}
+              layout="horizontal"
+              margin={
+                Object {
+                  "left": 400,
+                }
+              }
+              maxValue={26}
               padding={0.15}
               theme={
                 Object {
@@ -692,6 +1610,17 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               role="button"
             >
               Releases
+            </a>
+          </li>
+          <li
+            className=""
+          >
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              Recordings
             </a>
           </li>
         </ul>
@@ -1345,7 +2274,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               layout="horizontal"
               margin={
                 Object {
-                  "left": 350,
+                  "left": 400,
                 }
               }
               maxValue={26}
@@ -1488,6 +2417,17 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
               role="button"
             >
               Releases
+            </a>
+          </li>
+          <li
+            className=""
+          >
+            <a
+              href=""
+              onClick={[Function]}
+              role="button"
+            >
+              Recordings
             </a>
           </li>
         </ul>

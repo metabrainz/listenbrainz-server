@@ -57,14 +57,30 @@ export default class Bar extends React.Component<BarProps, BarState> {
     return artist;
   };
 
+  getReleaseLink = (data: UserEntityDatum, release: string) => {
+    if (data.release && data.releaseMBID) {
+      const res = (
+        <a
+          href={`http://musicbrainz.org/artist/${data.releaseMBID}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {release}
+        </a>
+      );
+      return res;
+    }
+    return release;
+  };
+
   render() {
     const { data, maxValue, width } = this.props;
-    const marginLeft = Math.min((width || window.innerWidth) / 2, 350);
+    const marginLeft = Math.min((width || window.innerWidth) / 2, 400);
     const tableDigitWidth = data[0]?.idx.toString().length;
 
     const leftAlignedTick = (tick: Tick) => {
       const datum = data[tick.tickIndex];
-      const { entity, artist, idx } = datum;
+      const { entity, artist, release, idx } = datum;
 
       return (
         <g transform={`translate(${tick.x - marginLeft}, ${tick.y})`}>
@@ -108,6 +124,11 @@ export default class Bar extends React.Component<BarProps, BarState> {
                       }}
                     >
                       {this.getArtistLink(datum, artist)}
+                      {release && (
+                        <span>
+                          &nbsp;-&nbsp;{this.getReleaseLink(datum, release)}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 )}
