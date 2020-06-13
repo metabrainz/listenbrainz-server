@@ -235,7 +235,6 @@ export default class UserEntityChart extends React.Component<
           };
         })
         .reverse();
-      console.log(result);
     } else if (entity === "recording") {
       result = (data as UserRecordingsResponse).payload.recordings
         .map((elem, idx: number) => {
