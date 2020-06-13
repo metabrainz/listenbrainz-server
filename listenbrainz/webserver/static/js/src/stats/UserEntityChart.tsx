@@ -235,11 +235,18 @@ export default class UserEntityChart extends React.Component<
           };
         })
         .reverse();
+      console.log(result);
     } else if (entity === "recording") {
       result = (data as UserRecordingsResponse).payload.recordings
         .map((elem, idx: number) => {
           return {
-            id: `${offset + idx + 1}. ${elem.track_name}`,
+            id: idx.toString(),
+            entity: elem.track_name,
+            entityType: entity as Entity,
+            entityMBID: elem.recording_mbid,
+            artist: elem.artist_name,
+            artistMBID: elem.artist_mbids,
+            idx: offset + idx + 1,
             count: elem.listen_count,
           };
         })

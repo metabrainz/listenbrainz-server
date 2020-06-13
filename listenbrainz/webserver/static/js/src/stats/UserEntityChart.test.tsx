@@ -55,6 +55,24 @@ describe("UserEntityChart Page", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
+  it("renders correctly for recording", () => {
+    // We don't need to call componentDidMount during "mount" because we are
+    // passing the data manually, so mock the implementation once.
+    jest
+      .spyOn(UserEntityChart.prototype, "componentDidMount")
+      .mockImplementationOnce((): any => {});
+
+    const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />);
+
+    wrapper.setState({
+      data: userRecordingsProcessDataOutput as UserEntityData,
+      maxListens: 26,
+    });
+    wrapper.update();
+
+    expect(wrapper).toMatchSnapshot();
+  });
+
   it("renders correctly if stats are not calculated", () => {
     jest
       .spyOn(UserEntityChart.prototype, "componentDidMount")
@@ -287,7 +305,7 @@ describe("getInitData", () => {
   });
 
   it("gets data correctly for recording", async () => {
-    const wrapper = shallow<UserEntityCharts>(<UserEntityCharts {...props} />);
+    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
     const instance = wrapper.instance();
 
     const spy = jest.spyOn(instance.APIService, "getUserEntity");
@@ -356,7 +374,7 @@ describe("processData", () => {
   });
 
   it("processes data correctly for top recordings", () => {
-    const wrapper = shallow<UserEntityCharts>(<UserEntityCharts {...props} />);
+    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
     const instance = wrapper.instance();
 
     wrapper.setState({ entity: "recording" });
