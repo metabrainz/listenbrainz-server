@@ -141,7 +141,7 @@ def get_user_artists(user_id: int) -> Optional[UserArtistStat]:
             user_id: the row ID of the user in the DB
     """
     data = get_user_stats(user_id, 'artist')
-    if not data:
+    if (not data) or (not data['artist']):
         return None
     return UserArtistStat(**data)
 
@@ -153,7 +153,7 @@ def get_user_releases(user_id: int) -> Optional[UserReleaseStat]:
             user_id: the row ID of the user in the DB
     """
     data = get_user_stats(user_id, 'release')
-    if not data:
+    if (not data) or (not data['release']):
         return None
     return UserReleaseStat(**data)
 
@@ -165,7 +165,7 @@ def get_user_recordings(user_id: int) -> Optional[UserRecordingStat]:
             user_id: the row ID of the user in the DB
     """
     data = get_user_stats(user_id, 'recording')
-    if not data:
+    if (not data) or (not data['recording']):
         return None
     return UserRecordingStat(**data)
 

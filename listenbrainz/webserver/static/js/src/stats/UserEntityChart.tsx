@@ -3,16 +3,17 @@ import * as ReactDOM from "react-dom";
 import * as React from "react";
 
 import APIService from "../APIService";
+import APIError from "../APIError";
 import Bar from "./Bar";
 import Loader from "../Loader";
 import ErrorBoundary from "../ErrorBoundary";
 
-export type UserHistoryProps = {
+export type UserEntityChartProps = {
   user: ListenBrainzUser;
   apiUrl: string;
 };
 
-export type UserHistoryState = {
+export type UserEntityChartState = {
   data: UserEntityData;
   range: UserEntityAPIRange;
   entity: Entity;
@@ -22,17 +23,18 @@ export type UserHistoryState = {
   maxListens: number;
   startDate: Date;
   loading: boolean;
+  calculated: boolean;
 };
 
-export default class UserHistory extends React.Component<
-  UserHistoryProps,
-  UserHistoryState
+export default class UserEntityChart extends React.Component<
+  UserEntityChartProps,
+  UserEntityChartState
 > {
   APIService: APIService;
 
   ROWS_PER_PAGE = 25; // Number of rows to be shown on each page
 
-  constructor(props: UserHistoryProps) {
+  constructor(props: UserEntityChartProps) {
     super(props);
 
     this.APIService = new APIService(
@@ -49,6 +51,7 @@ export default class UserHistory extends React.Component<
       maxListens: 0, // Number of listens for first artist used to scale the graph
       startDate: new Date(),
       loading: false,
+      calculated: true,
     };
   }
 
@@ -223,8 +226,8 @@ export default class UserHistory extends React.Component<
 
   syncStateWithURL = async (): Promise<void> => {
     this.setState({ loading: true });
+    const { page, range, entity } = this.getURLParams();
     try {
-      const { page, range, entity } = this.getURLParams();
       const { range: currRange, entity: currEntity } = this.state;
       let initData = {};
       if (range !== currRange || entity !== currEntity) {
@@ -235,12 +238,29 @@ export default class UserHistory extends React.Component<
         data: this.processData(data, page, entity),
         currPage: page,
         loading: false,
+        calculated: true,
         range,
         entity,
         ...initData,
       });
     } catch (error) {
-      this.handleError(error);
+      if (error.response && error.response?.status === 204) {
+        this.setState({
+          calculated: false,
+          currPage: page,
+          entityCount: 0,
+          startDate: new Date(),
+          range,
+          entity,
+        });
+      } else {
+        // Error Boundaries don't catch errors in async code.
+        // Throwing an error in setState fixes this.
+        // This is a hacky solution but should be fixed with upcoming concurrent mode in React.
+        this.setState(() => {
+          throw error;
+        });
+      }
     }
   };
 
@@ -284,15 +304,6 @@ export default class UserHistory extends React.Component<
     );
   };
 
-  handleError = (error: Error): void => {
-    // Error Boundaries don't catch errors in async code.
-    // Throwing an error in setState fixes this.
-    // This is a hacky solution but should be fixed with upcoming concurrent mode in React.
-    this.setState(() => {
-      throw error;
-    });
-  };
-
   render() {
     const {
       data,
@@ -304,48 +315,46 @@ export default class UserHistory extends React.Component<
       totalPages,
       startDate,
       loading,
+      calculated,
     } = this.state;
     const prevPage = currPage - 1;
     const nextPage = currPage + 1;
 
     return (
-      <div>
+      <div style={{ marginTop: "1em" }}>
+        <div className="row">
+          <div className="col-md-6">
+            <ul className="nav nav-pills">
+              <li className={entity === "artist" ? "active" : ""}>
+                <a
+                  href=""
+                  role="button"
+                  onClick={(event) => this.changeEntity("artist", event)}
+                >
+                  Artists
+                </a>
+              </li>
+              <li className={entity === "release" ? "active" : ""}>
+                <a
+                  href=""
+                  role="button"
+                  onClick={(event) => this.changeEntity("release", event)}
+                >
+                  Releases
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
         <div className="row">
           <div className="col-xs-12">
             <h3>
-              Top
-              <span className="dropdown">
-                <button
-                  className="dropdown-togle btn-transparent capitalize-bold"
-                  data-toggle="dropdown"
-                  type="button"
-                >
-                  {entity ? `${entity}s` : ""}
-                  <span className="caret" />
-                </button>
-                <ul className="dropdown-menu" role="menu">
-                  <li>
-                    <a
-                      href=""
-                      role="button"
-                      onClick={(event) => this.changeEntity("artist", event)}
-                    >
-                      Artists
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href=""
-                      role="button"
-                      onClick={(event) => this.changeEntity("release", event)}
-                    >
-                      Releases
-                    </a>
-                  </li>
-                </ul>
-              </span>
-              of {range !== "all_time" ? "the" : ""}
-              <span className="dropdown">
+              Top{" "}
+              <span style={{ textTransform: "capitalize" }}>
+                {entity ? `${entity}s` : ""}
+              </span>{" "}
+              of {range !== "all_time" ? "the" : ""}{" "}
+              <span className="dropdown" style={{ fontSize: 22 }}>
                 <button
                   className="dropdown-toggle btn-transparent capitalize-bold"
                   data-toggle="dropdown"
@@ -422,41 +431,52 @@ export default class UserHistory extends React.Component<
           </div>
         </div>
         <div className="row">
-          <div
-            className="col-md-12 text-center"
-            style={{ height: `${(75 / this.ROWS_PER_PAGE) * data.length}em` }}
-          >
-            <Loader isLoading={loading}>
-              <Bar data={data} maxValue={maxListens} />
-            </Loader>
-          </div>
+          {!calculated && (
+            <div className="col-md-12">
+              <p>Statistics for the user have not been calculated</p>
+            </div>
+          )}
+          {calculated && (
+            <div
+              className="col-md-12 text-center"
+              style={{ height: `${(75 / this.ROWS_PER_PAGE) * data.length}em` }}
+            >
+              <Loader isLoading={loading}>
+                <Bar data={data} maxValue={maxListens} />
+              </Loader>
+            </div>
+          )}
         </div>
-        <div className="row">
-          <div className="col-xs-12">
-            <ul className="pager">
-              <li className={`previous ${!(prevPage > 0) ? "hidden" : ""}`}>
-                <a
-                  href=""
-                  role="button"
-                  onClick={(event) => this.changePage(prevPage, event)}
+        {calculated && (
+          <div className="row">
+            <div className="col-xs-12">
+              <ul className="pager">
+                <li className={`previous ${!(prevPage > 0) ? "hidden" : ""}`}>
+                  <a
+                    href=""
+                    role="button"
+                    onClick={(event) => this.changePage(prevPage, event)}
+                  >
+                    &larr; Previous
+                  </a>
+                </li>
+                <li
+                  className={`next ${
+                    !(nextPage <= totalPages) ? "hidden" : ""
+                  }`}
                 >
-                  &larr; Previous
-                </a>
-              </li>
-              <li
-                className={`next ${!(nextPage <= totalPages) ? "hidden" : ""}`}
-              >
-                <a
-                  href=""
-                  role="button"
-                  onClick={(event) => this.changePage(nextPage, event)}
-                >
-                  Next &rarr;
-                </a>
-              </li>
-            </ul>
+                  <a
+                    href=""
+                    role="button"
+                    onClick={(event) => this.changePage(nextPage, event)}
+                  >
+                    Next &rarr;
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     );
   }
@@ -474,7 +494,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const { user, api_url: apiUrl } = reactProps;
   ReactDOM.render(
     <ErrorBoundary>
-      <UserHistory apiUrl={apiUrl} user={user} />
+      <UserEntityChart apiUrl={apiUrl} user={user} />
     </ErrorBoundary>,
     domContainer
   );
