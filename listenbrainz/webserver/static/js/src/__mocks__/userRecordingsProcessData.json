@@ -6,6 +6,8 @@
     "entityMBID": "",
     "artist": "Ellie Goulding",
     "artistMBID": [],
+    "release": "Close To Me (feat. Swae Lee)",
+    "releaseMBID": "",
     "idx": 25,
     "count": 6
   },
@@ -16,6 +18,8 @@
     "entityMBID": "0132a6b9-a04f-48ea-81e7-5f3a5d608f75",
     "artist": "Imagine Dragons",
     "artistMBID": [],
+    "release": "Night Visions (Deluxe)",
+    "releaseMBID": "",
     "idx": 24,
     "count": 6
   },
@@ -26,6 +30,8 @@
     "entityMBID": "02b47acf-3bc5-47dc-a516-e8c2c95bc07b",
     "artist": "Coldplay",
     "artistMBID": [],
+    "release": "A Head Full Of Dreams",
+    "releaseMBID": "",
     "idx": 23,
     "count": 6
   },
@@ -36,6 +42,8 @@
     "entityMBID": "",
     "artist": "The Local train",
     "artistMBID": [],
+    "release": "Aalas Ka Pedh",
+    "releaseMBID": "",
     "idx": 22,
     "count": 8
   },
@@ -46,6 +54,8 @@
     "entityMBID": "036e67df-baae-4626-a2ab-951dd162e332",
     "artist": "Lenka",
     "artistMBID": [],
+    "release": "Two (Expanded Edition)",
+    "releaseMBID": "",
     "idx": 21,
     "count": 8
   },
@@ -56,6 +66,8 @@
     "entityMBID": "0040980c-4f9a-43df-8be0-142dce4374f4",
     "artist": "Backstreet Boys",
     "artistMBID": [],
+    "release": "The Hits--Chapter One",
+    "releaseMBID": "",
     "idx": 20,
     "count": 8
   },
@@ -66,6 +78,8 @@
     "entityMBID": "14c913e9-db47-40fa-ae1a-81099a67e4bf",
     "artist": "Linkin Park",
     "artistMBID": [],
+    "release": "One More Light",
+    "releaseMBID": "",
     "idx": 19,
     "count": 10
   },
@@ -76,6 +90,8 @@
     "entityMBID": "234ae263-ffad-472a-8077-dab64bcedf99",
     "artist": "M.I.A.",
     "artistMBID": [],
+    "release": "Kala",
+    "releaseMBID": "",
     "idx": 18,
     "count": 10
   },
@@ -86,6 +102,8 @@
     "entityMBID": "0126d206-3894-4d97-b5c2-f6cf037a323a",
     "artist": "Maroon 5",
     "artistMBID": [],
+    "release": "Overexposed",
+    "releaseMBID": "",
     "idx": 17,
     "count": 10
   },
@@ -96,6 +114,8 @@
     "entityMBID": "",
     "artist": "Sia",
     "artistMBID": [],
+    "release": "Cheap Thrills (feat. Sean Paul)",
+    "releaseMBID": "",
     "idx": 16,
     "count": 11
   },
@@ -106,6 +126,8 @@
     "entityMBID": "0031fba1-dde0-3755-bcb2-63b2544159f8",
     "artist": "Of Monsters and Men",
     "artistMBID": [],
+    "release": "My Head Is an Animal",
+    "releaseMBID": "",
     "idx": 15,
     "count": 11
   },
@@ -116,6 +138,8 @@
     "entityMBID": "",
     "artist": "Maroon 5",
     "artistMBID": [],
+    "release": "Singles",
+    "releaseMBID": "",
     "idx": 14,
     "count": 11
   },
@@ -126,6 +150,8 @@
     "entityMBID": "045cdbf9-796e-4949-91f6-e05d9ce3ed21",
     "artist": "The Script",
     "artistMBID": [],
+    "release": "#3",
+    "releaseMBID": "",
     "idx": 13,
     "count": 12
   },
@@ -136,6 +162,8 @@
     "entityMBID": "",
     "artist": "Tommee Profitt",
     "artistMBID": [],
+    "release": "In The End",
+    "releaseMBID": "",
     "idx": 12,
     "count": 12
   },
@@ -146,6 +174,8 @@
     "entityMBID": "0a4c5dfd-02c7-43dc-ba7f-1b4ce7a02994",
     "artist": "George Ezra",
     "artistMBID": [],
+    "release": "Staying at Tamara's",
+    "releaseMBID": "",
     "idx": 11,
     "count": 12
   },
@@ -156,6 +186,8 @@
     "entityMBID": "",
     "artist": "OneRepublic",
     "artistMBID": [],
+    "release": "13 Reasons Why (Season 2)",
+    "releaseMBID": "",
     "idx": 10,
     "count": 13
   },
@@ -166,6 +198,8 @@
     "entityMBID": "02ba28bc-6d79-44fb-b770-c49395661117",
     "artist": "Ed Sheeran",
     "artistMBID": [],
+    "release": "÷ (Deluxe)",
+    "releaseMBID": "",
     "idx": 9,
     "count": 14
   },
@@ -176,6 +210,8 @@
     "entityMBID": "003196a1-f6ab-4fe8-9683-b970d163cfa4",
     "artist": "Vance Joy",
     "artistMBID": [],
+    "release": "Dream Your Life Away (Special Edition)",
+    "releaseMBID": "",
     "idx": 8,
     "count": 15
   },
@@ -186,6 +222,8 @@
     "entityMBID": "03a0cdfb-f964-434f-bfb7-379203dc139d",
     "artist": "Christina Perri",
     "artistMBID": [],
+    "release": "A Thousand Years",
+    "releaseMBID": "",
     "idx": 7,
     "count": 16
   },
@@ -196,6 +234,8 @@
     "entityMBID": "01236d26-9f46-435f-adc5-6c92e6e76f53",
     "artist": "Taylor Swift",
     "artistMBID": [],
+    "release": "1989",
+    "releaseMBID": "",
     "idx": 6,
     "count": 16
   },
@@ -206,6 +246,8 @@
     "entityMBID": "017cd117-e343-408f-95fe-ee4c1018e312",
     "artist": "Ellie Goulding",
     "artistMBID": [],
+    "release": "Halcyon Days",
+    "releaseMBID": "",
     "idx": 5,
     "count": 16
   },
@@ -216,6 +258,8 @@
     "entityMBID": "00d32e28-0df2-486c-9829-750301962fb2",
     "artist": "OneRepublic",
     "artistMBID": [],
+    "release": "Native",
+    "releaseMBID": "",
     "idx": 4,
     "count": 18
   },
@@ -226,6 +270,8 @@
     "entityMBID": "",
     "artist": "Ritviz",
     "artistMBID": [],
+    "release": "Udd Gaye (Bacardi House Party Sessions)",
+    "releaseMBID": "",
     "idx": 3,
     "count": 20
   },
@@ -236,6 +282,8 @@
     "entityMBID": "0008ab49-a6ad-40b5-aa90-9d2779265c22",
     "artist": "The Fray",
     "artistMBID": [],
+    "release": "How to Save a Life",
+    "releaseMBID": "",
     "idx": 2,
     "count": 23
   },
@@ -246,6 +294,8 @@
     "entityMBID": "0fe11cd3-0be4-467b-84fa-0bd524d45d74",
     "artist": "Ellie Goulding",
     "artistMBID": [],
+    "release": "Delirium (Deluxe)",
+    "releaseMBID": "",
     "idx": 1,
     "count": 25
   }

@@ -208,6 +208,8 @@ declare type UserEntityDatum = {
   entityMBID?: string;
   artist?: string;
   artistMBID?: Array<string>;
+  release?: string;
+  releaseMBID?: string;
   idx: number;
   count: number;
 };

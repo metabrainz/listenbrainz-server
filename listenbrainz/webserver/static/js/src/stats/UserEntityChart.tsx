@@ -245,6 +245,8 @@ export default class UserEntityChart extends React.Component<
             entityMBID: elem.recording_mbid,
             artist: elem.artist_name,
             artistMBID: elem.artist_mbids,
+            release: elem.release_name,
+            releaseMBID: elem.release_mbid,
             idx: offset + idx + 1,
             count: elem.listen_count,
           };
