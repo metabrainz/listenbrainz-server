@@ -143,12 +143,23 @@ def profile(user_name):
 
 @user_bp.route("/<user_name>/artists")
 def artists(user_name):
-    """ Redirect to history page """
-    return redirect(url_for('user.history', user_name=user_name, entity='artist'), code=301)
+    """ Redirect to charts page """
+    page = request.args.get('page', default=1)
+    stats_range = request.args.get('range', default="all_time")
+    return redirect(url_for('user.charts', user_name=user_name, entity='artist', page=page, range=stats_range), code=301)
 
 
 @user_bp.route("/<user_name>/history")
 def history(user_name):
+    """ Redirect to charts page """
+    entity = request.args.get('entity', default="artist")
+    page = request.args.get('page', default=1)
+    stats_range = request.args.get('range', default="all_time")
+    return redirect(url_for('user.charts', user_name=user_name, entity=entity, page=page, range=stats_range), code=301)
+
+
+@user_bp.route("/<user_name>/charts")
+def charts(user_name):
     """ Show the top entitys for the user. """
     user = _get_user(user_name)
 
@@ -163,8 +174,8 @@ def history(user_name):
     }
 
     return render_template(
-        "user/history.html",
-        active_section="history",
+        "user/charts.html",
+        active_section="charts",
         props=ujson.dumps(props),
         user=user
     )
