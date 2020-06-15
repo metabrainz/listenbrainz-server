@@ -11,7 +11,9 @@ const Loader: React.SFC<LoaderProps> = (props) => {
   // eslint-disable-next-line react/prop-types
   const { isLoading, children } = props;
   return isLoading ? (
-    <FontAwesomeIcon icon={faSpinner as IconProp} size="4x" spin />
+    <div className="text-center">
+      <FontAwesomeIcon icon={faSpinner as IconProp} size="4x" spin />
+    </div>
   ) : (
     <>{children}</>
   );

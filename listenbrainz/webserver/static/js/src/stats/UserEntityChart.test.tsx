@@ -441,6 +441,7 @@ describe("syncStateWithURL", () => {
       range: "all_time",
       entity: "artist",
       calculated: false,
+      loading: false,
       entityCount: 0,
     });
   });
