@@ -404,7 +404,7 @@ export default class UserEntityChart extends React.Component<
                 <span style={{ textTransform: "capitalize" }}>
                   {entity ? `${entity}s` : ""}
                 </span>{" "}
-                of {range !== "all_time" ? "the" : ""}{" "}
+                of {range !== "all_time" ? "the" : ""}
                 <span className="dropdown" style={{ fontSize: 22 }}>
                   <button
                     className="dropdown-toggle btn-transparent capitalize-bold"

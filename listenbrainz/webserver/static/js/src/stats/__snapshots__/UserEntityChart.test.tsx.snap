@@ -84,7 +84,6 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
              
             of 
             the
-             
             <span
               className="dropdown"
               style={
@@ -741,7 +740,6 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
              
             of 
             the
-             
             <span
               className="dropdown"
               style={
@@ -1648,7 +1646,6 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
              
             of 
             the
-             
             <span
               className="dropdown"
               style={
@@ -2456,7 +2453,6 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
             </span>
              
             of 
-             
             <span
               className="dropdown"
               style={
