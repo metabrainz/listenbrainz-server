@@ -31,14 +31,14 @@ def get_recordings(table):
     result = run_query("""
             SELECT user_name
                  , track_name
-                 , recording_msid
-                 , recording_mbid
+                 , nullif(recording_msid, '') as recording_msid
+                 , nullif(recording_mbid, '') as recording_mbid
                  , artist_name
-                 , artist_msid
+                 , nullif(artist_msid, '') as artist_msid
                  , artist_mbids
-                 , release_name
-                 , release_msid
-                 , release_mbid
+                 , nullif(release_name, '') as release_name
+                 , nullif(release_msid, '') as release_msid
+                 , nullif(release_mbid, '') as release_mbid
                  , count(track_name) as listen_count
               FROM {}
           GROUP BY user_name
