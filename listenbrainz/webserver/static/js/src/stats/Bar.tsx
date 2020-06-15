@@ -92,7 +92,6 @@ export default class Bar extends React.Component<BarProps, BarState> {
             <table
               style={{
                 width: "90%",
-                textAlign: "start",
                 whiteSpace: "nowrap",
                 tableLayout: "fixed",
               }}

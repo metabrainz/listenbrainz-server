@@ -17,167 +17,167 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
       }
     }
   >
-    <div
-      className="row"
+    <Loader
+      isLoading={false}
     >
       <div
-        className="col-md-6"
+        className="row"
       >
-        <ul
-          className="nav nav-pills"
+        <div
+          className="col-md-6"
         >
-          <li
-            className=""
+          <ul
+            className="nav nav-pills"
           >
-            <a
-              href=""
-              onClick={[Function]}
-              role="button"
+            <li
+              className=""
             >
-              Artists
-            </a>
-          </li>
-          <li
-            className=""
-          >
-            <a
-              href=""
-              onClick={[Function]}
-              role="button"
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Artists
+              </a>
+            </li>
+            <li
+              className=""
             >
-              Releases
-            </a>
-          </li>
-          <li
-            className=""
-          >
-            <a
-              href=""
-              onClick={[Function]}
-              role="button"
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Releases
+              </a>
+            </li>
+            <li
+              className=""
             >
-              Recordings
-            </a>
-          </li>
-        </ul>
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Recordings
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
-    </div>
-    <div
-      className="row"
-    >
       <div
-        className="col-xs-12"
+        className="row"
       >
-        <h3>
-          Top
-           
-          <span
+        <div
+          className="col-xs-12"
+        >
+          <h3>
+            Top
+             
+            <span
+              style={
+                Object {
+                  "textTransform": "capitalize",
+                }
+              }
+            />
+             
+            of 
+            the
+             
+            <span
+              className="dropdown"
+              style={
+                Object {
+                  "fontSize": 22,
+                }
+              }
+            >
+              <button
+                className="dropdown-toggle btn-transparent capitalize-bold"
+                data-toggle="dropdown"
+                type="button"
+              >
+                <span
+                  className="caret"
+                />
+              </button>
+              <ul
+                className="dropdown-menu"
+                role="menu"
+              >
+                <li>
+                  <a
+                    href=""
+                    onClick={[Function]}
+                    role="button"
+                  >
+                    Week
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href=""
+                    onClick={[Function]}
+                    role="button"
+                  >
+                    Month
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href=""
+                    onClick={[Function]}
+                    role="button"
+                  >
+                    Year
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href=""
+                    onClick={[Function]}
+                    role="button"
+                  >
+                    All Time
+                  </a>
+                </li>
+              </ul>
+            </span>
+            2020
+          </h3>
+        </div>
+      </div>
+      <div
+        className="row"
+      >
+        <div
+          className="col-xs-12"
+        >
+          <h4
             style={
               Object {
                 "textTransform": "capitalize",
               }
             }
-          />
-           
-          of 
-          the
-           
-          <span
-            className="dropdown"
-            style={
-              Object {
-                "fontSize": 22,
-              }
-            }
           >
-            <button
-              className="dropdown-toggle btn-transparent capitalize-bold"
-              data-toggle="dropdown"
-              type="button"
-            >
-              <span
-                className="caret"
-              />
-            </button>
-            <ul
-              className="dropdown-menu"
-              role="menu"
-            >
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  Week
-                </a>
-              </li>
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  Month
-                </a>
-              </li>
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  Year
-                </a>
-              </li>
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  All Time
-                </a>
-              </li>
-            </ul>
-          </span>
-          2020
-        </h3>
+             count - 
+            <b>
+              0
+            </b>
+          </h4>
+        </div>
       </div>
-    </div>
-    <div
-      className="row"
-    >
       <div
-        className="col-xs-12"
+        className="row"
       >
-        <h4
+        <div
+          className="col-md-12"
           style={
             Object {
-              "textTransform": "capitalize",
+              "height": "75em",
             }
           }
-        >
-           count - 
-          <b>
-            0
-          </b>
-        </h4>
-      </div>
-    </div>
-    <div
-      className="row"
-    >
-      <div
-        className="col-md-12 text-center"
-        style={
-          Object {
-            "height": "75em",
-          }
-        }
-      >
-        <Loader
-          isLoading={false}
         >
           <Bar
             data={
@@ -616,43 +616,43 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
               </ResponsiveWrapper>
             </ResponsiveBar>
           </Bar>
-        </Loader>
+        </div>
       </div>
-    </div>
-    <div
-      className="row"
-    >
       <div
-        className="col-xs-12"
+        className="row"
       >
-        <ul
-          className="pager"
+        <div
+          className="col-xs-12"
         >
-          <li
-            className="previous hidden"
+          <ul
+            className="pager"
           >
-            <a
-              href=""
-              onClick={[Function]}
-              role="button"
+            <li
+              className="previous hidden"
             >
-              ← Previous
-            </a>
-          </li>
-          <li
-            className="next hidden"
-          >
-            <a
-              href=""
-              onClick={[Function]}
-              role="button"
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                ← Previous
+              </a>
+            </li>
+            <li
+              className="next hidden"
             >
-              Next →
-            </a>
-          </li>
-        </ul>
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Next →
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
-    </div>
+    </Loader>
   </div>
 </UserEntityChart>
 `;
@@ -674,167 +674,167 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
       }
     }
   >
-    <div
-      className="row"
+    <Loader
+      isLoading={false}
     >
       <div
-        className="col-md-6"
+        className="row"
       >
-        <ul
-          className="nav nav-pills"
+        <div
+          className="col-md-6"
         >
-          <li
-            className=""
+          <ul
+            className="nav nav-pills"
           >
-            <a
-              href=""
-              onClick={[Function]}
-              role="button"
+            <li
+              className=""
             >
-              Artists
-            </a>
-          </li>
-          <li
-            className=""
-          >
-            <a
-              href=""
-              onClick={[Function]}
-              role="button"
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Artists
+              </a>
+            </li>
+            <li
+              className=""
             >
-              Releases
-            </a>
-          </li>
-          <li
-            className=""
-          >
-            <a
-              href=""
-              onClick={[Function]}
-              role="button"
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Releases
+              </a>
+            </li>
+            <li
+              className=""
             >
-              Recordings
-            </a>
-          </li>
-        </ul>
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Recordings
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
-    </div>
-    <div
-      className="row"
-    >
       <div
-        className="col-xs-12"
+        className="row"
       >
-        <h3>
-          Top
-           
-          <span
+        <div
+          className="col-xs-12"
+        >
+          <h3>
+            Top
+             
+            <span
+              style={
+                Object {
+                  "textTransform": "capitalize",
+                }
+              }
+            />
+             
+            of 
+            the
+             
+            <span
+              className="dropdown"
+              style={
+                Object {
+                  "fontSize": 22,
+                }
+              }
+            >
+              <button
+                className="dropdown-toggle btn-transparent capitalize-bold"
+                data-toggle="dropdown"
+                type="button"
+              >
+                <span
+                  className="caret"
+                />
+              </button>
+              <ul
+                className="dropdown-menu"
+                role="menu"
+              >
+                <li>
+                  <a
+                    href=""
+                    onClick={[Function]}
+                    role="button"
+                  >
+                    Week
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href=""
+                    onClick={[Function]}
+                    role="button"
+                  >
+                    Month
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href=""
+                    onClick={[Function]}
+                    role="button"
+                  >
+                    Year
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href=""
+                    onClick={[Function]}
+                    role="button"
+                  >
+                    All Time
+                  </a>
+                </li>
+              </ul>
+            </span>
+            2020
+          </h3>
+        </div>
+      </div>
+      <div
+        className="row"
+      >
+        <div
+          className="col-xs-12"
+        >
+          <h4
             style={
               Object {
                 "textTransform": "capitalize",
               }
             }
-          />
-           
-          of 
-          the
-           
-          <span
-            className="dropdown"
-            style={
-              Object {
-                "fontSize": 22,
-              }
-            }
           >
-            <button
-              className="dropdown-toggle btn-transparent capitalize-bold"
-              data-toggle="dropdown"
-              type="button"
-            >
-              <span
-                className="caret"
-              />
-            </button>
-            <ul
-              className="dropdown-menu"
-              role="menu"
-            >
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  Week
-                </a>
-              </li>
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  Month
-                </a>
-              </li>
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  Year
-                </a>
-              </li>
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  All Time
-                </a>
-              </li>
-            </ul>
-          </span>
-          2020
-        </h3>
+             count - 
+            <b>
+              0
+            </b>
+          </h4>
+        </div>
       </div>
-    </div>
-    <div
-      className="row"
-    >
       <div
-        className="col-xs-12"
+        className="row"
       >
-        <h4
+        <div
+          className="col-md-12"
           style={
             Object {
-              "textTransform": "capitalize",
+              "height": "75em",
             }
           }
-        >
-           count - 
-          <b>
-            0
-          </b>
-        </h4>
-      </div>
-    </div>
-    <div
-      className="row"
-    >
-      <div
-        className="col-md-12 text-center"
-        style={
-          Object {
-            "height": "75em",
-          }
-        }
-      >
-        <Loader
-          isLoading={false}
         >
           <Bar
             data={
@@ -1523,43 +1523,43 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
               </ResponsiveWrapper>
             </ResponsiveBar>
           </Bar>
-        </Loader>
+        </div>
       </div>
-    </div>
-    <div
-      className="row"
-    >
       <div
-        className="col-xs-12"
+        className="row"
       >
-        <ul
-          className="pager"
+        <div
+          className="col-xs-12"
         >
-          <li
-            className="previous hidden"
+          <ul
+            className="pager"
           >
-            <a
-              href=""
-              onClick={[Function]}
-              role="button"
+            <li
+              className="previous hidden"
             >
-              ← Previous
-            </a>
-          </li>
-          <li
-            className="next hidden"
-          >
-            <a
-              href=""
-              onClick={[Function]}
-              role="button"
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                ← Previous
+              </a>
+            </li>
+            <li
+              className="next hidden"
             >
-              Next →
-            </a>
-          </li>
-        </ul>
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Next →
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
-    </div>
+    </Loader>
   </div>
 </UserEntityChart>
 `;
@@ -1581,167 +1581,167 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
       }
     }
   >
-    <div
-      className="row"
+    <Loader
+      isLoading={false}
     >
       <div
-        className="col-md-6"
+        className="row"
       >
-        <ul
-          className="nav nav-pills"
+        <div
+          className="col-md-6"
         >
-          <li
-            className=""
+          <ul
+            className="nav nav-pills"
           >
-            <a
-              href=""
-              onClick={[Function]}
-              role="button"
+            <li
+              className=""
             >
-              Artists
-            </a>
-          </li>
-          <li
-            className=""
-          >
-            <a
-              href=""
-              onClick={[Function]}
-              role="button"
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Artists
+              </a>
+            </li>
+            <li
+              className=""
             >
-              Releases
-            </a>
-          </li>
-          <li
-            className=""
-          >
-            <a
-              href=""
-              onClick={[Function]}
-              role="button"
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Releases
+              </a>
+            </li>
+            <li
+              className=""
             >
-              Recordings
-            </a>
-          </li>
-        </ul>
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Recordings
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
-    </div>
-    <div
-      className="row"
-    >
       <div
-        className="col-xs-12"
+        className="row"
       >
-        <h3>
-          Top
-           
-          <span
+        <div
+          className="col-xs-12"
+        >
+          <h3>
+            Top
+             
+            <span
+              style={
+                Object {
+                  "textTransform": "capitalize",
+                }
+              }
+            />
+             
+            of 
+            the
+             
+            <span
+              className="dropdown"
+              style={
+                Object {
+                  "fontSize": 22,
+                }
+              }
+            >
+              <button
+                className="dropdown-toggle btn-transparent capitalize-bold"
+                data-toggle="dropdown"
+                type="button"
+              >
+                <span
+                  className="caret"
+                />
+              </button>
+              <ul
+                className="dropdown-menu"
+                role="menu"
+              >
+                <li>
+                  <a
+                    href=""
+                    onClick={[Function]}
+                    role="button"
+                  >
+                    Week
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href=""
+                    onClick={[Function]}
+                    role="button"
+                  >
+                    Month
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href=""
+                    onClick={[Function]}
+                    role="button"
+                  >
+                    Year
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href=""
+                    onClick={[Function]}
+                    role="button"
+                  >
+                    All Time
+                  </a>
+                </li>
+              </ul>
+            </span>
+            2020
+          </h3>
+        </div>
+      </div>
+      <div
+        className="row"
+      >
+        <div
+          className="col-xs-12"
+        >
+          <h4
             style={
               Object {
                 "textTransform": "capitalize",
               }
             }
-          />
-           
-          of 
-          the
-           
-          <span
-            className="dropdown"
-            style={
-              Object {
-                "fontSize": 22,
-              }
-            }
           >
-            <button
-              className="dropdown-toggle btn-transparent capitalize-bold"
-              data-toggle="dropdown"
-              type="button"
-            >
-              <span
-                className="caret"
-              />
-            </button>
-            <ul
-              className="dropdown-menu"
-              role="menu"
-            >
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  Week
-                </a>
-              </li>
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  Month
-                </a>
-              </li>
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  Year
-                </a>
-              </li>
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  All Time
-                </a>
-              </li>
-            </ul>
-          </span>
-          2020
-        </h3>
+             count - 
+            <b>
+              0
+            </b>
+          </h4>
+        </div>
       </div>
-    </div>
-    <div
-      className="row"
-    >
       <div
-        className="col-xs-12"
+        className="row"
       >
-        <h4
+        <div
+          className="col-md-12"
           style={
             Object {
-              "textTransform": "capitalize",
+              "height": "75em",
             }
           }
-        >
-           count - 
-          <b>
-            0
-          </b>
-        </h4>
-      </div>
-    </div>
-    <div
-      className="row"
-    >
-      <div
-        className="col-md-12 text-center"
-        style={
-          Object {
-            "height": "75em",
-          }
-        }
-      >
-        <Loader
-          isLoading={false}
         >
           <Bar
             data={
@@ -2330,43 +2330,43 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
               </ResponsiveWrapper>
             </ResponsiveBar>
           </Bar>
-        </Loader>
+        </div>
       </div>
-    </div>
-    <div
-      className="row"
-    >
       <div
-        className="col-xs-12"
+        className="row"
       >
-        <ul
-          className="pager"
+        <div
+          className="col-xs-12"
         >
-          <li
-            className="previous hidden"
+          <ul
+            className="pager"
           >
-            <a
-              href=""
-              onClick={[Function]}
-              role="button"
+            <li
+              className="previous hidden"
             >
-              ← Previous
-            </a>
-          </li>
-          <li
-            className="next hidden"
-          >
-            <a
-              href=""
-              onClick={[Function]}
-              role="button"
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                ← Previous
+              </a>
+            </li>
+            <li
+              className="next hidden"
             >
-              Next →
-            </a>
-          </li>
-        </ul>
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Next →
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
-    </div>
+    </Loader>
   </div>
 </UserEntityChart>
 `;
@@ -2388,167 +2388,171 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
       }
     }
   >
-    <div
-      className="row"
+    <Loader
+      isLoading={false}
     >
       <div
-        className="col-md-6"
+        className="row"
       >
-        <ul
-          className="nav nav-pills"
+        <div
+          className="col-md-6"
         >
-          <li
-            className="active"
+          <ul
+            className="nav nav-pills"
           >
-            <a
-              href=""
-              onClick={[Function]}
-              role="button"
+            <li
+              className="active"
             >
-              Artists
-            </a>
-          </li>
-          <li
-            className=""
-          >
-            <a
-              href=""
-              onClick={[Function]}
-              role="button"
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Artists
+              </a>
+            </li>
+            <li
+              className=""
             >
-              Releases
-            </a>
-          </li>
-          <li
-            className=""
-          >
-            <a
-              href=""
-              onClick={[Function]}
-              role="button"
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Releases
+              </a>
+            </li>
+            <li
+              className=""
             >
-              Recordings
-            </a>
-          </li>
-        </ul>
+              <a
+                href=""
+                onClick={[Function]}
+                role="button"
+              >
+                Recordings
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
-    </div>
-    <div
-      className="row"
-    >
       <div
-        className="col-xs-12"
+        className="row"
       >
-        <h3>
-          Top
-           
-          <span
+        <div
+          className="col-xs-12"
+        >
+          <h3>
+            Top
+             
+            <span
+              style={
+                Object {
+                  "textTransform": "capitalize",
+                }
+              }
+            >
+              artists
+            </span>
+             
+            of 
+             
+            <span
+              className="dropdown"
+              style={
+                Object {
+                  "fontSize": 22,
+                }
+              }
+            >
+              <button
+                className="dropdown-toggle btn-transparent capitalize-bold"
+                data-toggle="dropdown"
+                type="button"
+              >
+                all time
+                <span
+                  className="caret"
+                />
+              </button>
+              <ul
+                className="dropdown-menu"
+                role="menu"
+              >
+                <li>
+                  <a
+                    href=""
+                    onClick={[Function]}
+                    role="button"
+                  >
+                    Week
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href=""
+                    onClick={[Function]}
+                    role="button"
+                  >
+                    Month
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href=""
+                    onClick={[Function]}
+                    role="button"
+                  >
+                    Year
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href=""
+                    onClick={[Function]}
+                    role="button"
+                  >
+                    All Time
+                  </a>
+                </li>
+              </ul>
+            </span>
+          </h3>
+        </div>
+      </div>
+      <div
+        className="row"
+      >
+        <div
+          className="col-xs-12"
+        >
+          <h4
             style={
               Object {
                 "textTransform": "capitalize",
               }
             }
           >
-            artists
-          </span>
-           
-          of 
-           
-          <span
-            className="dropdown"
-            style={
-              Object {
-                "fontSize": 22,
-              }
-            }
-          >
-            <button
-              className="dropdown-toggle btn-transparent capitalize-bold"
-              data-toggle="dropdown"
-              type="button"
-            >
-              all time
-              <span
-                className="caret"
-              />
-            </button>
-            <ul
-              className="dropdown-menu"
-              role="menu"
-            >
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  Week
-                </a>
-              </li>
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  Month
-                </a>
-              </li>
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  Year
-                </a>
-              </li>
-              <li>
-                <a
-                  href=""
-                  onClick={[Function]}
-                  role="button"
-                >
-                  All Time
-                </a>
-              </li>
-            </ul>
-          </span>
-        </h3>
+            artist
+             count - 
+            <b>
+              0
+            </b>
+          </h4>
+        </div>
       </div>
-    </div>
-    <div
-      className="row"
-    >
       <div
-        className="col-xs-12"
+        className="row"
       >
-        <h4
-          style={
-            Object {
-              "textTransform": "capitalize",
-            }
-          }
+        <div
+          className="col-md-12"
         >
-          artist
-           count - 
-          <b>
-            0
-          </b>
-        </h4>
+          <p>
+            Statistics for the user have not been calculated
+          </p>
+        </div>
       </div>
-    </div>
-    <div
-      className="row"
-    >
-      <div
-        className="col-md-12"
-      >
-        <p>
-          Statistics for the user have not been calculated
-        </p>
-      </div>
-    </div>
+    </Loader>
   </div>
 </UserEntityChart>
 `;
