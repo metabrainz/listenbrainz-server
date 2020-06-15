@@ -20,7 +20,7 @@ describe("Loader", () => {
 
   it('renders child component when "isLoading" is false', () => {
     const wrapper = mount(
-      <Loader isLoading>
+      <Loader isLoading={false}>
         <ChildComponent />
       </Loader>
     );

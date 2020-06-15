@@ -280,6 +280,7 @@ export default class UserEntityChart extends React.Component<
       if (error.response && error.response?.status === 204) {
         this.setState({
           calculated: false,
+          loading: false,
           currPage: page,
           entityCount: 0,
           startDate: new Date(),
@@ -362,175 +363,187 @@ export default class UserEntityChart extends React.Component<
 
     return (
       <div style={{ marginTop: "1em" }}>
-        <div className="row">
-          <div className="col-md-6">
-            <ul className="nav nav-pills">
-              <li className={entity === "artist" ? "active" : ""}>
-                <a
-                  href=""
-                  role="button"
-                  onClick={(event) => this.changeEntity("artist", event)}
-                >
-                  Artists
-                </a>
-              </li>
-              <li className={entity === "release" ? "active" : ""}>
-                <a
-                  href=""
-                  role="button"
-                  onClick={(event) => this.changeEntity("release", event)}
-                >
-                  Releases
-                </a>
-              </li>
-              <li className={entity === "recording" ? "active" : ""}>
-                <a
-                  href=""
-                  role="button"
-                  onClick={(event) => this.changeEntity("recording", event)}
-                >
-                  Recordings
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div className="row">
-          <div className="col-xs-12">
-            <h3>
-              Top{" "}
-              <span style={{ textTransform: "capitalize" }}>
-                {entity ? `${entity}s` : ""}
-              </span>{" "}
-              of {range !== "all_time" ? "the" : ""}{" "}
-              <span className="dropdown" style={{ fontSize: 22 }}>
-                <button
-                  className="dropdown-toggle btn-transparent capitalize-bold"
-                  data-toggle="dropdown"
-                  type="button"
-                >
-                  {`${range.replace(/_/g, " ")}`}
-                  <span className="caret" />
-                </button>
-                <ul className="dropdown-menu" role="menu">
-                  <li>
-                    <a
-                      href=""
-                      role="button"
-                      onClick={(event) => this.changeRange("week", event)}
-                    >
-                      Week
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href=""
-                      role="button"
-                      onClick={(event) => this.changeRange("month", event)}
-                    >
-                      Month
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href=""
-                      role="button"
-                      onClick={(event) => this.changeRange("year", event)}
-                    >
-                      Year
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href=""
-                      role="button"
-                      onClick={(event) => this.changeRange("all_time", event)}
-                    >
-                      All Time
-                    </a>
-                  </li>
-                </ul>
-              </span>
-              {range === "week"
-                ? `of ${startDate.getUTCDate()} ${startDate.toLocaleString(
-                    "en-us",
-                    { month: "long", timeZone: "UTC" }
-                  )} `
-                : ""}
-              {range === "month"
-                ? `${startDate.toLocaleString("en-us", {
-                    month: "long",
-                    timeZone: "UTC",
-                  })} `
-                : ""}
-              {range !== "all_time"
-                ? startDate.toLocaleString("en-us", {
-                    year: "numeric",
-                    timeZone: "UTC",
-                  })
-                : ""}
-            </h3>
-          </div>
-        </div>
-        <div className="row">
-          <div className="col-xs-12">
-            <h4 style={{ textTransform: "capitalize" }}>
-              {entity} count - <b>{entityCount}</b>
-            </h4>
-          </div>
-        </div>
-        <div className="row">
-          {!calculated && (
-            <div className="col-md-12">
-              <p>Statistics for the user have not been calculated</p>
-            </div>
-          )}
-          {calculated && (
-            <div
-              className="col-md-12 text-center"
-              style={{ height: `${(75 / this.ROWS_PER_PAGE) * data.length}em` }}
-              ref={this.graphContainer}
-            >
-              <Loader isLoading={loading}>
-                <Bar
-                  data={data}
-                  maxValue={maxListens}
-                  width={graphContainerWidth}
-                />
-              </Loader>
-            </div>
-          )}
-        </div>
-        {calculated && (
+        <Loader isLoading={loading}>
           <div className="row">
-            <div className="col-xs-12">
-              <ul className="pager">
-                <li className={`previous ${!(prevPage > 0) ? "hidden" : ""}`}>
+            <div className="col-md-6">
+              <ul className="nav nav-pills">
+                <li className={entity === "artist" ? "active" : ""}>
                   <a
                     href=""
                     role="button"
-                    onClick={(event) => this.changePage(prevPage, event)}
+                    onClick={(event) => this.changeEntity("artist", event)}
                   >
-                    &larr; Previous
+                    Artists
                   </a>
                 </li>
-                <li
-                  className={`next ${
-                    !(nextPage <= totalPages) ? "hidden" : ""
-                  }`}
-                >
+                <li className={entity === "release" ? "active" : ""}>
                   <a
                     href=""
                     role="button"
-                    onClick={(event) => this.changePage(nextPage, event)}
+                    onClick={(event) => this.changeEntity("release", event)}
                   >
-                    Next &rarr;
+                    Releases
+                  </a>
+                </li>
+                <li className={entity === "recording" ? "active" : ""}>
+                  <a
+                    href=""
+                    role="button"
+                    onClick={(event) => this.changeEntity("recording", event)}
+                  >
+                    Recordings
                   </a>
                 </li>
               </ul>
             </div>
           </div>
-        )}
+          <div className="row">
+            <div className="col-xs-12">
+              <h3>
+                Top{" "}
+                <span style={{ textTransform: "capitalize" }}>
+                  {entity ? `${entity}s` : ""}
+                </span>{" "}
+                of {range !== "all_time" ? "the" : ""}
+                <span className="dropdown" style={{ fontSize: 22 }}>
+                  <button
+                    className="dropdown-toggle btn-transparent capitalize-bold"
+                    data-toggle="dropdown"
+                    type="button"
+                  >
+                    {`${range.replace(/_/g, " ")}`}
+                    <span className="caret" />
+                  </button>
+                  <ul className="dropdown-menu" role="menu">
+                    <li>
+                      <a
+                        href=""
+                        role="button"
+                        onClick={(event) => this.changeRange("week", event)}
+                      >
+                        Week
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        href=""
+                        role="button"
+                        onClick={(event) => this.changeRange("month", event)}
+                      >
+                        Month
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        href=""
+                        role="button"
+                        onClick={(event) => this.changeRange("year", event)}
+                      >
+                        Year
+                      </a>
+                    </li>
+                    <li>
+                      <a
+                        href=""
+                        role="button"
+                        onClick={(event) => this.changeRange("all_time", event)}
+                      >
+                        All Time
+                      </a>
+                    </li>
+                  </ul>
+                </span>
+                {range === "week"
+                  ? `of ${startDate.getUTCDate()} ${startDate.toLocaleString(
+                      "en-us",
+                      { month: "long", timeZone: "UTC" }
+                    )} `
+                  : ""}
+                {range === "month"
+                  ? `${startDate.toLocaleString("en-us", {
+                      month: "long",
+                      timeZone: "UTC",
+                    })} `
+                  : ""}
+                {range !== "all_time"
+                  ? startDate.toLocaleString("en-us", {
+                      year: "numeric",
+                      timeZone: "UTC",
+                    })
+                  : ""}
+              </h3>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-xs-12">
+              <h4 style={{ textTransform: "capitalize" }}>
+                {entity} count - <b>{entityCount}</b>
+              </h4>
+            </div>
+          </div>
+          <div className="row">
+            {!calculated && (
+              <div className="col-md-12">
+                <p>Statistics for the user have not been calculated</p>
+              </div>
+            )}
+            {calculated && (
+              <div
+                className="col-md-12"
+                style={{
+                  height: `${(75 / this.ROWS_PER_PAGE) * data.length}em`,
+                }}
+                ref={this.graphContainer}
+              >
+                <Bar
+                  data={data}
+                  maxValue={maxListens}
+                  width={graphContainerWidth}
+                />
+              </div>
+            )}
+          </div>
+          {calculated && entity === "release" && (
+            <div className="row">
+              <div className="col-xs-12">
+                <small>
+                  <sup>*</sup>The listen count denotes the number of times you
+                  have listened to a recording from the release.
+                </small>
+              </div>
+            </div>
+          )}
+          {calculated && (
+            <div className="row">
+              <div className="col-xs-12">
+                <ul className="pager">
+                  <li className={`previous ${!(prevPage > 0) ? "hidden" : ""}`}>
+                    <a
+                      href=""
+                      role="button"
+                      onClick={(event) => this.changePage(prevPage, event)}
+                    >
+                      &larr; Previous
+                    </a>
+                  </li>
+                  <li
+                    className={`next ${
+                      !(nextPage <= totalPages) ? "hidden" : ""
+                    }`}
+                  >
+                    <a
+                      href=""
+                      role="button"
+                      onClick={(event) => this.changePage(nextPage, event)}
+                    >
+                      Next &rarr;
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          )}
+        </Loader>
       </div>
     );
   }
