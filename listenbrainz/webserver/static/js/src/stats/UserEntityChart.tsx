@@ -503,6 +503,16 @@ export default class UserEntityChart extends React.Component<
               </div>
             )}
           </div>
+          {calculated && entity === "release" && (
+            <div className="row">
+              <div className="col-xs-12">
+                <small>
+                  <sup>*</sup>The listen count denotes the number of times you
+                  have listened to a recording from the release.
+                </small>
+              </div>
+            </div>
+          )}
           {calculated && (
             <div className="row">
               <div className="col-xs-12">
