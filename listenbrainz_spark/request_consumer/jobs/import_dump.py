@@ -34,7 +34,7 @@ def import_mapping_to_hdfs():
     return [{
         'type': 'import_mapping',
         'imported_mapping': mapping_name,
-        'time': str(datetime.utcnow())
+        'time': '{:.2f}'.format(datetime.utcnow() / 60)
     }]
 
 def import_artist_relation_to_hdfs():
@@ -46,7 +46,5 @@ def import_artist_relation_to_hdfs():
     return [{
         'type': 'import_artist_relation',
         'imported_artist_relation': artist_relation_name,
-        'time': str(datetime.utcnow())
-
-
+        'time': '{:.2f}'.format(datetime.utcnow() / 60)
     }]

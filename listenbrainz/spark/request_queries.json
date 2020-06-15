@@ -52,11 +52,11 @@
   "import.mapping": {
     "name": "import.mapping",
     "description": "Import msid mbid mapping into the spark cluster.",
-    "params": [],
+    "params": []
   },
   "import.artist_relation": {
     "name": "import.artist_relation",
     "description": "Import artist relation into the spark cluster.",
-    "params": [],
-  },
+    "params": []
+  }
 }

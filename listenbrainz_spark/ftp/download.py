@@ -17,10 +17,12 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
     def get_dump_name_to_download(self, dump, dump_id, dump_id_pos):
         """ Get name of the dump to be downloaded.
+
             Args:
                 dump (list): Contents of the directory from which dump will be downloaded.
                 dump_id (int): Unique indentifier of dump to be downloaded .
                 dump_id_pos (int): Unique identifier position in dump name.
+
             Returns:
                 req_dump (str): Name of the dump to be downloaded.
         """
@@ -39,8 +41,10 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
     def get_dump_archive_name(self, dump_name):
         """ Get the name of the Spark dump archive from the dump directory name.
+
             Args:
                 dump_name (str): FTP dump directory name.
+
             Returns:
                 '' : Spark dump archive name.
         """
@@ -48,6 +52,7 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
     def get_listens_dump_file_name(self, dump_name):
         """ Get the name of Spark listens dump name archive.
+
             Returns:
                 str : Spark listens dump archive name.
         """
@@ -64,9 +69,11 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
     def get_available_dumps(self, dump, mapping_name_prefix):
         """ Get list of available mapping dumps.
+
             Args:
                 dump: list of dumps in the current working directory.
                 mapping_name_prefix (str): prefix of mapping dump name.
+
             Returns:
                 mapping: list of mapping dump names in the current working directory.
         """
@@ -85,8 +92,10 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
     def get_latest_mapping(self, mapping):
         """ Get latest mapping name.
+
             Args:
                 mapping: list of mapping dump names.
+
             Returns:
                latest mapping dump name.
         """
@@ -101,8 +110,10 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
     def download_msid_mbid_mapping(self, directory):
         """ Download latest msid_mbid_mapping to dir passed as an argument.
+
             Args:
                 directory (str): Dir to save mappings locally.
+
             Returns:
                 dest_path (str): Local path where mapping has been downloaded.
                 mapping_file_name (str): file name of downloaded mapping.
@@ -122,10 +133,12 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
     def download_listens(self, directory, listens_dump_id=None, dump_type=FULL):
         """ Download listens to dir passed as an argument.
+
             Args:
                 directory (str): Dir to save listens locally.
                 listens_dump_id (int): Unique identifier of listens to be downloaded.
                     If not provided, most recent listens will be downloaded.
+
             Returns:
                 dest_path (str): Local path where listens have been downloaded.
         """
@@ -148,10 +161,12 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
     def download_artist_relation(self, directory, artist_relation_dump_id=None):
         """ Download artist relation to dir passed as an argument.
+
             Args:
                 directory (str): Dir to save artist relation locally.
                 artist_relation_dump_id (int): Unique identifier of artist relation to be downloaded.
                     If not provided, most recent artist relation will be downloaded.
+
             Returns:
                 dest_path (str): Local path where artist relation has been downloaded.
                 artist_relation_file_name (str): file name of downloaded artist relation.
