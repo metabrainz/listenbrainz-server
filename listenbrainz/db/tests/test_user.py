@@ -136,13 +136,13 @@ class UserTestCase(DatabaseTestCase):
             user_id=user_id,
             artists=UserArtistStatJson(**{'all_time': artists_data}),
         )
-        user_stats = db_stats.get_user_artists(user_id)
+        user_stats = db_stats.get_user_artists(user_id, 'all_time')
         self.assertIsNotNone(user_stats)
 
         db_user.delete(user_id)
         user = db_user.get(user_id)
         self.assertIsNone(user)
-        user_stats = db_stats.get_user_artists(user_id)
+        user_stats = db_stats.get_user_artists(user_id, 'all_time')
         self.assertIsNone(user_stats)
 
     def test_delete_when_spotify_import_activated(self):
