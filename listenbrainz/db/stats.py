@@ -135,7 +135,7 @@ def get_user_stats(user_id, columns):
 
 
 def get_user_artists(user_id: int, stats_range: str) -> Optional[UserArtistStat]:
-    """Get top artists in a tine range for user with given ID.
+    """Get top artists in a time range for user with given ID.
 
         Args:
             user_id: the row ID of the user in the DB
@@ -156,7 +156,7 @@ def get_user_artists(user_id: int, stats_range: str) -> Optional[UserArtistStat]
 
 
 def get_user_releases(user_id: int, stats_range: str) -> Optional[UserReleaseStat]:
-    """Get top releases in a tine range for user with given ID.
+    """Get top releases in a time range for user with given ID.
 
         Args:
             user_id: the row ID of the user in the DB
@@ -177,7 +177,7 @@ def get_user_releases(user_id: int, stats_range: str) -> Optional[UserReleaseSta
 
 
 def get_user_recordings(user_id: int, stats_range: str) -> Optional[UserRecordingStat]:
-    """Get top recordings in a tine range for user with given ID.
+    """Get top recordings in a time range for user with given ID.
 
         Args:
             user_id: the row ID of the user in the DB

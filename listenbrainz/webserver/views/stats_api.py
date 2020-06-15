@@ -291,7 +291,7 @@ def get_recording(user_name):
     .. note::
         - This endpoint is currently in beta
         - ``artist_mbids``, ``artist_msid``,``release_name``, ``release_mbid``, ``release_msid``,
-          ``recording_mbid`` and ``recording_msid`` are optional fields and may not be present in all the respon
+          ``recording_mbid`` and ``recording_msid`` are optional fields and may not be present in all the responses
 
     :param count: Optional, number of recordings to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
         Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
