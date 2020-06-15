@@ -38,9 +38,8 @@ class UserRecordingStatJson(pydantic.BaseModel):
     all_time: Optional[UserRecordingStatRange]
 
 
-class UserRecordingStat(pydantic.BaseModel):
+class UserRecordingStat(UserRecordingStatJson):
     """ Model for stats around a user's most listened recordings
     """
     user_id: int
-    recording: UserRecordingStatJson
     last_updated: datetime
