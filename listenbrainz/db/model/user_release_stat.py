@@ -35,9 +35,8 @@ class UserReleaseStatJson(pydantic.BaseModel):
     all_time: Optional[UserReleaseStatRange]
 
 
-class UserReleaseStat(pydantic.BaseModel):
+class UserReleaseStat(UserReleaseStatJson):
     """ Model for stats around a user's most listened releases
     """
     user_id: int
-    release: UserReleaseStatJson
     last_updated: datetime

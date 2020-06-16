@@ -18,6 +18,7 @@ from listenbrainz.webserver.views.api_tools import publish_data_to_queue
 import time
 from datetime import datetime
 from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
+from pydantic import ValidationError
 
 LISTENS_PER_PAGE = 25
 
@@ -104,10 +105,10 @@ def profile(user_name):
             }
             listens.insert(0, listen)
 
-    user_stats = db_stats.get_user_artists(user.id)
+    user_stats = db_stats.get_user_artists(user.id, 'all_time')
     try:
-        artist_count = user_stats.artist.all_time.count
-    except AttributeError:
+        artist_count = user_stats.all_time.count
+    except (AttributeError, ValidationError):
         artist_count = None
 
     spotify_data = {}

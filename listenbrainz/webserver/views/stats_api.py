@@ -1,14 +1,18 @@
 from datetime import datetime
 from enum import Enum
-from typing import Union, List
+from pydantic import ValidationError
+from typing import List, Union
 
 from flask import Blueprint, current_app, jsonify, request
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
-from listenbrainz.db.model.user_artist_stat import UserArtistStat, UserArtistRecord
-from listenbrainz.db.model.user_release_stat import UserReleaseStat, UserReleaseRecord
-from listenbrainz.db.model.user_recording_stat import UserRecordingStat, UserRecordingRecord
+from listenbrainz.db.model.user_artist_stat import (UserArtistRecord,
+                                                    UserArtistStat)
+from listenbrainz.db.model.user_recording_stat import (UserRecordingRecord,
+                                                       UserRecordingStat)
+from listenbrainz.db.model.user_release_stat import (UserReleaseRecord,
+                                                     UserReleaseStat)
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
@@ -19,6 +23,7 @@ from listenbrainz.webserver.rate_limiter import ratelimit
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,
                                                     _get_non_negative_param)
+
 stats_api_bp = Blueprint('stats_api_v1', __name__)
 
 
@@ -94,10 +99,6 @@ def get_artist(user_name):
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
-    stats = db_stats.get_user_artists(user['id'])
-    if stats is None:
-        raise APINoContent('')
-
     stats_range = request.args.get('range', default='all_time')
     if not _is_valid_range(stats_range):
         raise APIBadRequest("Invalid range: {}".format(stats_range))
@@ -105,13 +106,18 @@ def get_artist(user_name):
     offset = _get_non_negative_param('offset', default=0)
     count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
-    entity_list, total_entity_count = _process_entity(user_name, stats, stats_range, offset, count, entity='artist')
     try:
-        from_ts = int(getattr(stats.artist, stats_range).from_ts)
-        to_ts = int(getattr(stats.artist, stats_range).to_ts)
-        last_updated = int(stats.last_updated.timestamp())
-    except AttributeError:
+        stats = db_stats.get_user_artists(user['id'], stats_range)
+    except ValidationError:
+        # If the stored stats are not correct, we should should not return them
         raise APINoContent('')
+    if stats is None or getattr(stats, stats_range) is None:
+        raise APINoContent('')
+
+    entity_list, total_entity_count = _process_entity(stats, stats_range, offset, count, entity='artist')
+    from_ts = int(getattr(stats, stats_range).from_ts)
+    to_ts = int(getattr(stats, stats_range).to_ts)
+    last_updated = int(stats.last_updated.timestamp())
 
     return jsonify({'payload': {
         "user_id": user_name,
@@ -201,10 +207,6 @@ def get_release(user_name):
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
-    stats = db_stats.get_user_releases(user['id'])
-    if stats is None:
-        raise APINoContent('')
-
     stats_range = request.args.get('range', default='all_time')
     if not _is_valid_range(stats_range):
         raise APIBadRequest("Invalid range: {}".format(stats_range))
@@ -212,13 +214,18 @@ def get_release(user_name):
     offset = _get_non_negative_param('offset', default=0)
     count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
-    entity_list, total_entity_count = _process_entity(user_name, stats, stats_range, offset, count, entity='release')
     try:
-        from_ts = int(getattr(stats.release, stats_range).from_ts)
-        to_ts = int(getattr(stats.release, stats_range).to_ts)
-        last_updated = int(stats.last_updated.timestamp())
-    except AttributeError:
+        stats = db_stats.get_user_releases(user['id'], stats_range)
+    except ValidationError:
+        # If the stored stats are not correct, we should should not return them
         raise APINoContent('')
+    if stats is None or getattr(stats, stats_range) is None:
+        raise APINoContent('')
+
+    entity_list, total_entity_count = _process_entity(stats, stats_range, offset, count, entity='release')
+    from_ts = int(getattr(stats, stats_range).from_ts)
+    to_ts = int(getattr(stats, stats_range).to_ts)
+    last_updated = int(stats.last_updated.timestamp())
 
     return jsonify({'payload': {
         "user_id": user_name,
@@ -283,8 +290,8 @@ def get_recording(user_name):
 
     .. note::
         - This endpoint is currently in beta
-        - ``artist_mbids``, ``artist_msid``, ``recording_mbid`` and ``recording_msid`` are optional fields and
-            may not be present in all the responses
+        - ``artist_mbids``, ``artist_msid``,``release_name``, ``release_mbid``, ``release_msid``,
+          ``recording_mbid`` and ``recording_msid`` are optional fields and may not be present in all the responses
 
     :param count: Optional, number of recordings to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
         Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
@@ -305,10 +312,6 @@ def get_recording(user_name):
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
-    stats = db_stats.get_user_recordings(user['id'])
-    if stats is None:
-        raise APINoContent('')
-
     stats_range = request.args.get('range', default='all_time')
     if not _is_valid_range(stats_range):
         raise APIBadRequest("Invalid range: {}".format(stats_range))
@@ -316,13 +319,18 @@ def get_recording(user_name):
     offset = _get_non_negative_param('offset', default=0)
     count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
-    entity_list, total_entity_count = _process_entity(user_name, stats, stats_range, offset, count, entity='recording')
     try:
-        from_ts = int(getattr(stats.recording, stats_range).from_ts)
-        to_ts = int(getattr(stats.recording, stats_range).to_ts)
-        last_updated = int(stats.last_updated.timestamp())
-    except AttributeError:
+        stats = db_stats.get_user_recordings(user['id'], stats_range)
+    except ValidationError:
+        # If the stored stats are not correct, we should should not return them
         raise APINoContent('')
+    if stats is None or getattr(stats, stats_range) is None:
+        raise APINoContent('')
+
+    entity_list, total_entity_count = _process_entity(stats, stats_range, offset, count, entity='recording')
+    from_ts = int(getattr(stats, stats_range).from_ts)
+    to_ts = int(getattr(stats, stats_range).to_ts)
+    last_updated = int(stats.last_updated.timestamp())
 
     return jsonify({'payload': {
         "user_id": user_name,
@@ -337,11 +345,10 @@ def get_recording(user_name):
     }})
 
 
-def _process_entity(user_name, stats, stats_range, offset, count, entity):
+def _process_entity(stats, stats_range, offset, count, entity):
     """ Process the statistics data according to query params
 
         Args:
-            user_name (str): musicbrainz_id of the user
             stats (dict): the dictionary containing statistic data
             stats_range (str): time interval for which statistics should be collected
             offset (int): number of entities to skip from the beginning
@@ -356,7 +363,7 @@ def _process_entity(user_name, stats, stats_range, offset, count, entity):
 
     count = min(count, MAX_ITEMS_PER_GET)
     count = count + offset
-    total_entity_count = _get_total_entity_count(stats, stats_range, entity)
+    total_entity_count = getattr(stats, stats_range).count
     entity_list = [x.dict() for x in _get_entity_list(stats, stats_range, entity, offset, count)]
 
     return entity_list, total_entity_count
@@ -374,25 +381,6 @@ def _is_valid_range(stats_range: str) -> bool:
     return stats_range in StatisticsRange.__members__
 
 
-def _get_total_entity_count(
-    stats: Union[UserArtistStat, UserReleaseStat, UserRecordingStat],
-    stats_range: StatisticsRange,
-    entity: int
-) -> int:
-    """ Returns the total entity count
-    """
-    try:
-        if entity == 'artist':
-            return getattr(stats.artist, stats_range).count
-        elif entity == 'release':
-            return getattr(stats.release, stats_range).count
-        elif entity == 'recording':
-            return getattr(stats.recording, stats_range).count
-        raise APIBadRequest("Unknown entity: %s" % entity)
-    except AttributeError:
-        raise APINoContent('')
-
-
 def _get_entity_list(
     stats: Union[UserArtistStat, UserReleaseStat, UserRecordingStat],
     stats_range: StatisticsRange,
@@ -402,13 +390,10 @@ def _get_entity_list(
 ) -> List[Union[UserArtistRecord, UserReleaseRecord, UserRecordingRecord]]:
     """ Gets a list of entity records from the stat passed based on the offset and count
     """
-    try:
-        if entity == 'artist':
-            return getattr(stats.artist, stats_range).artists[offset:count]
-        elif entity == 'release':
-            return getattr(stats.release, stats_range).releases[offset:count]
-        elif entity == 'recording':
-            return getattr(stats.recording, stats_range).recordings[offset:count]
-        raise APIBadRequest("Unknown entity: %s" % entity)
-    except AttributeError:
-        raise APINoContent('')
+    if entity == 'artist':
+        return getattr(stats, stats_range).artists[offset:count]
+    elif entity == 'release':
+        return getattr(stats, stats_range).releases[offset:count]
+    elif entity == 'recording':
+        return getattr(stats, stats_range).recordings[offset:count]
+    raise APIBadRequest("Unknown entity: %s" % entity)
