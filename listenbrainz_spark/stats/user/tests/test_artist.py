@@ -48,7 +48,7 @@ class ArtistTestCase(SparkTestCase):
         for entry in data:
             expected[entry['user_name']].append({
                 'artist_name': entry['artist_name'],
-                'artist_msid': entry['artist_msid'],
+                'artist_msid': entry['artist_msid'] or None,
                 'artist_mbids': entry['artist_mbids'],
                 'listen_count': entry['count']
             })
