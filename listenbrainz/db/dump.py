@@ -90,6 +90,13 @@ PUBLIC_TABLES = {
         'listen_count',
         'last_updated',
     ),
+    'recording_feedback': (
+        'id',
+        'user_id',
+        'recording_msid',
+        'score',
+        'created'
+    ),
 }
 
 # this dict contains the tables dumped in the private dump as keys
@@ -278,7 +285,7 @@ def create_private_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
 
 def create_public_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Create postgres database dump for statistics and user info in db.
-        This includes a sanitized dump of the "user"' table and dumps of all tables
+        This includes a sanitized dump of the "user" table and dumps of all tables
         in the statistics schema:
             statistics.user
             statistics.artist
