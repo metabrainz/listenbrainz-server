@@ -204,6 +204,7 @@ def handle_recommendations(data):
 
     current_app.logger.debug("recommendation for {} inserted".format(musicbrainz_id))
 
+
 def handle_mapping(data):
     """ Send an email after msid mbid mapping has been successfully imported into the cluster.
     """

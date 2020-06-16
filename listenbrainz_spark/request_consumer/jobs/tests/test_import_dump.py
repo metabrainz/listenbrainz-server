@@ -13,9 +13,9 @@ class DumpImporterJobTestCase(unittest.TestCase):
     @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.download_listens')
     @patch('listenbrainz_spark.hdfs.upload.ListenbrainzDataUploader.upload_listens')
     @patch('listenbrainz_spark.request_consumer.jobs.import_dump.shutil.rmtree')
-    @patch('listenbrainz_spark.request_consumer.jobs.import_dump.tempfile.mkdtemp')
-    def test_import_full_dump_handler(self, mock_mkdtemp, mock_rmtree, mock_upload, mock_download, mock_ftp_constructor):
-        mock_mkdtemp.return_value = 'best_dir_ever'
+    @patch('listenbrainz_spark.request_consumer.jobs.import_dump.tempfile')
+    def test_import_full_dump_handler(self, mock_temp, mock_rmtree, mock_upload, mock_download, mock_ftp_constructor):
+        mock_temp.mkdtemp.return_value = 'best_dir_ever'
         mock_download.return_value = (MagicMock(), 'listenbrainz-listens-dump-20190101-000000-spark-full.tar.xz')
         messages = import_newest_full_dump_handler()
         mock_download.assert_called_once()
@@ -31,19 +31,18 @@ class DumpImporterJobTestCase(unittest.TestCase):
     @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.download_msid_mbid_mapping')
     @patch('listenbrainz_spark.hdfs.upload.ListenbrainzDataUploader.upload_mapping')
     @patch('listenbrainz_spark.request_consumer.jobs.import_dump.shutil.rmtree')
-    @patch('listenbrainz_spark.request_consumer.jobs.import_dump.tempfile.mkdtemp')
-    def test_import_mapping_to_hdfs(self, mock_mkdtemp, mock_rmtree, mock_upload, mock_download, mock_ftp_constructor):
-        mock_mkdtemp.return_value = 'fake_dir'
+    @patch('listenbrainz_spark.request_consumer.jobs.import_dump.tempfile')
+    def test_import_mapping_to_hdfs(self, mock_temp, mock_rmtree, mock_upload, mock_download, mock_ftp_constructor):
+        mock_temp.mkdtemp.return_value = 'fake_dir'
         mock_download.return_value = ('download_dir', 'msid-mbid-mapping-with-matchable-20200603-202731.tar.bz2')
         message = import_mapping_to_hdfs()
 
         mock_download.assert_called_once()
         self.assertEqual(mock_download.call_args[1]['directory'], 'fake_dir')
 
-        mock_upload.assert_called_once_with()
+        mock_upload.assert_called_once()
         self.assertEqual(mock_upload.call_args[1]['archive'], 'download_dir')
         self.assertEqual(mock_upload.call_args[1]['force'], True)
-        mock_rmtree.assert_called_once_with('fake_dir')
 
         self.assertEqual(len(message), 1)
         self.assertEqual(message[0]['imported_mapping'], 'msid-mbid-mapping-with-matchable-20200603-202731.tar.bz2')
@@ -54,19 +53,18 @@ class DumpImporterJobTestCase(unittest.TestCase):
     @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.download_artist_relation')
     @patch('listenbrainz_spark.hdfs.upload.ListenbrainzDataUploader.upload_artist_relation')
     @patch('listenbrainz_spark.request_consumer.jobs.import_dump.shutil.rmtree')
-    @patch('listenbrainz_spark.request_consumer.jobs.import_dump.tempfile.mkdtemp')
-    def test_import_artist_relation_to_hdfs(self, mock_mkdtemp, mock_rmtree, mock_upload, mock_download, mock_ftp_constructor):
-        mock_mkdtemp.return_value = 'fake_dir'
+    @patch('listenbrainz_spark.request_consumer.jobs.import_dump.tempfile')
+    def test_import_artist_relation_to_hdfs(self, mock_temp, mock_rmtree, mock_upload, mock_download, mock_ftp_constructor):
+        mock_temp.mkdtemp.return_value = 'fake_dir'
         mock_download.return_value = ('download_dir', 'artist-credit-artist-credit-relations-01-20191230-134806.tar.bz2')
         message = import_artist_relation_to_hdfs()
 
         mock_download.assert_called_once()
         self.assertEqual(mock_download.call_args[1]['directory'], 'fake_dir')
 
-        mock_upload.assert_called_once_with()
+        mock_upload.assert_called_once()
         self.assertEqual(mock_upload.call_args[1]['archive'], 'download_dir')
         self.assertEqual(mock_upload.call_args[1]['force'], True)
-        mock_rmtree.assert_called_once_with('fake_dir')
 
         self.assertEqual(len(message), 1)
         self.assertEqual(message[0]['imported_artist_relation'],

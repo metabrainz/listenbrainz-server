@@ -25,6 +25,7 @@ def import_newest_full_dump_handler():
         'time': str(datetime.utcnow()),
     }]
 
+
 def import_mapping_to_hdfs():
     temp_dir = tempfile.mkdtemp()
     src, mapping_name = ListenbrainzDataDownloader().download_msid_mbid_mapping(directory=temp_dir)
@@ -34,8 +35,9 @@ def import_mapping_to_hdfs():
     return [{
         'type': 'import_mapping',
         'imported_mapping': mapping_name,
-        'time': '{:.2f}'.format(datetime.utcnow() / 60)
+        'time': str(datetime.utcnow())
     }]
+
 
 def import_artist_relation_to_hdfs():
     temp_dir = tempfile.mkdtemp()
@@ -46,5 +48,5 @@ def import_artist_relation_to_hdfs():
     return [{
         'type': 'import_artist_relation',
         'imported_artist_relation': artist_relation_name,
-        'time': '{:.2f}'.format(datetime.utcnow() / 60)
+        'time': str(datetime.utcnow())
     }]
