@@ -5,6 +5,7 @@ import ujson
 import collections
 
 from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz.webserver import API_PREFIX
 
 LastFMError = collections.namedtuple('LastFMError', ['code', 'message'])
 
@@ -161,7 +162,11 @@ def init_error_handlers(app):
 
     @app.errorhandler(500)
     def internal_server_error(error):
-        return handle_error(error, 500)
+        if request.path.startswith(API_PREFIX):
+            error = APIError("An unknown error occured.", 500)
+            return jsonify(error.to_dict()), error.status_code
+        else:
+            return handle_error(error, 500)
 
     @app.errorhandler(503)
     def service_unavailable(error):
