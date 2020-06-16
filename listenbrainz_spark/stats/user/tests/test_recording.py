@@ -51,13 +51,13 @@ class RecordingTestCase(SparkTestCase):
         for entry in data:
             expected[entry['user_name']].append({
                 'track_name': entry['track_name'],
-                'recording_msid': entry['recording_msid'],
-                'recording_mbid': entry['recording_mbid'],
-                'release_name': entry['release_name'],
-                'release_msid': entry['release_msid'],
-                'release_mbid': entry['release_mbid'],
+                'recording_msid': entry['recording_msid'] or None,
+                'recording_mbid': entry['recording_mbid'] or None,
+                'release_name': entry['release_name'] or None,
+                'release_msid': entry['release_msid'] or None,
+                'release_mbid': entry['release_mbid'] or None,
                 'artist_name': entry['artist_name'],
-                'artist_msid': entry['artist_msid'],
+                'artist_msid': entry['artist_msid'] or None,
                 'artist_mbids': entry['artist_mbids'],
                 'listen_count': entry['count']
             })
