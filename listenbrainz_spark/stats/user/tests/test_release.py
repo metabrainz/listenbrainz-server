@@ -51,10 +51,10 @@ class releaseTestCase(SparkTestCase):
             if entry['release_name'] != '':
                 expected[entry['user_name']].append({
                     'release_name': entry['release_name'],
-                    'release_msid': entry['release_msid'],
-                    'release_mbid': entry['release_mbid'],
+                    'release_msid': entry['release_msid'] or None,
+                    'release_mbid': entry['release_mbid'] or None,
                     'artist_name': entry['artist_name'],
-                    'artist_msid': entry['artist_msid'],
+                    'artist_msid': entry['artist_msid'] or None,
                     'artist_mbids': entry['artist_mbids'],
                     'listen_count': entry['count']
                 })
