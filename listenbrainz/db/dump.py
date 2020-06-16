@@ -285,7 +285,7 @@ def create_private_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
 
 def create_public_dump(location, dump_time, threads=DUMP_DEFAULT_THREAD_COUNT):
     """ Create postgres database dump for statistics and user info in db.
-        This includes a sanitized dump of the "user"' and recording_feedback table and dumps of all tables
+        This includes a sanitized dump of the "user" table and dumps of all tables
         in the statistics schema:
             statistics.user
             statistics.artist
