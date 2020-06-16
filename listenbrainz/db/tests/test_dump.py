@@ -28,10 +28,12 @@ import os.path
 import shutil
 import sqlalchemy
 import tempfile
+import listenbrainz.db.feedback as db_feedback
 
 from datetime import datetime
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.webserver import create_app
+from listenbrainz.db.model.feedback import Feedback
 
 class DumpTestCase(DatabaseTestCase):
 
@@ -40,30 +42,25 @@ class DumpTestCase(DatabaseTestCase):
         self.tempdir = tempfile.mkdtemp()
         self.app = create_app()
 
-
     def tearDown(self):
         super().tearDown()
         shutil.rmtree(self.tempdir)
-
 
     def test_create_private_dump(self):
         time_now = datetime.today()
         dump_location = db_dump.create_private_dump(self.tempdir, time_now)
         self.assertTrue(os.path.isfile(dump_location))
 
-
     def test_create_stats_dump(self):
         time_now = datetime.today()
         dump_location = db_dump.create_private_dump(self.tempdir, time_now)
         self.assertTrue(os.path.isfile(dump_location))
-
 
     def test_add_dump_entry(self):
         prev_dumps = db_dump.get_dump_entries()
         db_dump.add_dump_entry(datetime.today().strftime('%s'))
         now_dumps = db_dump.get_dump_entries()
         self.assertEqual(len(now_dumps), len(prev_dumps) + 1)
-
 
     def test_copy_table(self):
         db_dump.add_dump_entry(datetime.today().strftime('%s'))
@@ -78,7 +75,6 @@ class DumpTestCase(DatabaseTestCase):
         with open(os.path.join(self.tempdir, 'data_dump'), 'r') as f:
             file_contents = [line for line in f]
         self.assertEqual(len(dumps), len(file_contents))
-
 
     def test_import_postgres_db(self):
 
@@ -109,3 +105,49 @@ class DumpTestCase(DatabaseTestCase):
             self.assertEqual(user_count, 1)
             two_id = db_user.create(2, 'vnskprk')
             self.assertGreater(two_id, one_id)
+
+    def test_dump_recording_feedback(self):
+
+        # create a user
+        with self.app.app_context():
+            one_id = db_user.create(1, 'test_user')
+            user_count = db_user.get_user_count()
+            self.assertEqual(user_count, 1)
+
+            # insert a feedback record
+            feedback = Feedback(
+                    user_id=one_id,
+                    recording_msid="d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
+                    score=1
+                )
+            db_feedback.insert(feedback)
+
+            # do a db dump and reset the db
+            private_dump, public_dump = db_dump.dump_postgres_db(self.tempdir)
+            self.reset_db()
+            user_count = db_user.get_user_count()
+            self.assertEqual(user_count, 0)
+            self.assertEqual(db_feedback.get_feedback_count_for_user(user_id=one_id), 0)
+
+            # import the dump and check the records are inserted
+            db_dump.import_postgres_dump(private_dump, public_dump)
+            user_count = db_user.get_user_count()
+            self.assertEqual(user_count, 1)
+            dumped_feedback = db_feedback.get_feedback_for_user(user_id=one_id, limit=1,offset=0)
+            self.assertEqual(len(dumped_feedback), 1)
+            self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)
+            self.assertEqual(dumped_feedback[0].recording_msid, feedback.recording_msid)
+            self.assertEqual(dumped_feedback[0].score, feedback.score)
+
+            # reset again, and use more threads to import
+            self.reset_db()
+            user_count = db_user.get_user_count()
+            self.assertEqual(user_count, 0)
+
+            db_dump.import_postgres_dump(private_dump, public_dump, threads=2)
+            user_count = db_user.get_user_count()
+            self.assertEqual(user_count, 1)
+            self.assertEqual(len(dumped_feedback), 1)
+            self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)
+            self.assertEqual(dumped_feedback[0].recording_msid, feedback.recording_msid)
+            self.assertEqual(dumped_feedback[0].score, feedback.score)
