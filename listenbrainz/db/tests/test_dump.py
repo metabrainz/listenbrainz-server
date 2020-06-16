@@ -133,7 +133,8 @@ class DumpTestCase(DatabaseTestCase):
             db_dump.import_postgres_dump(private_dump, public_dump)
             user_count = db_user.get_user_count()
             self.assertEqual(user_count, 1)
-            dumped_feedback = db_feedback.get_feedback_for_user(user_id=one_id, limit=1,offset=0)
+
+            dumped_feedback = db_feedback.get_feedback_for_user(user_id=one_id, limit=1, offset=0)
             self.assertEqual(len(dumped_feedback), 1)
             self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)
             self.assertEqual(dumped_feedback[0].recording_msid, feedback.recording_msid)
@@ -143,10 +144,13 @@ class DumpTestCase(DatabaseTestCase):
             self.reset_db()
             user_count = db_user.get_user_count()
             self.assertEqual(user_count, 0)
+            dumped_feedback = []
 
             db_dump.import_postgres_dump(private_dump, public_dump, threads=2)
             user_count = db_user.get_user_count()
             self.assertEqual(user_count, 1)
+
+            dumped_feedback = db_feedback.get_feedback_for_user(user_id=one_id, limit=1, offset=0)
             self.assertEqual(len(dumped_feedback), 1)
             self.assertEqual(dumped_feedback[0].user_id, feedback.user_id)
             self.assertEqual(dumped_feedback[0].recording_msid, feedback.recording_msid)
