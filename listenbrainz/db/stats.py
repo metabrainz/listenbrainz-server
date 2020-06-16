@@ -134,40 +134,67 @@ def get_user_stats(user_id, columns):
     return dict(row) if row else None
 
 
-def get_user_artists(user_id: int) -> Optional[UserArtistStat]:
-    """Get top artists for user with given ID.
+def get_user_artists(user_id: int, stats_range: str) -> Optional[UserArtistStat]:
+    """Get top artists in a time range for user with given ID.
 
         Args:
             user_id: the row ID of the user in the DB
+            stats_range: the time range to fetch the stats for
     """
-    data = get_user_stats(user_id, 'artist')
-    if (not data) or (not data['artist']):
-        return None
-    return UserArtistStat(**data)
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT user_id, artist->:range AS {range}, last_updated
+              FROM statistics.user
+             WHERE user_id = :user_id
+            """.format(range=stats_range)), {
+            'range': stats_range,
+            'user_id': user_id
+        })
+        row = result.fetchone()
+
+    return UserArtistStat(**dict(row)) if row else None
 
 
-def get_user_releases(user_id: int) -> Optional[UserReleaseStat]:
-    """Get top releases for user with given ID.
+def get_user_releases(user_id: int, stats_range: str) -> Optional[UserReleaseStat]:
+    """Get top releases in a time range for user with given ID.
 
         Args:
             user_id: the row ID of the user in the DB
+            stats_range: the time range to fetch the stats for
     """
-    data = get_user_stats(user_id, 'release')
-    if (not data) or (not data['release']):
-        return None
-    return UserReleaseStat(**data)
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT user_id, release->:range AS {range}, last_updated
+              FROM statistics.user
+             WHERE user_id = :user_id
+            """.format(range=stats_range)), {
+            'range': stats_range,
+            'user_id': user_id
+        })
+        row = result.fetchone()
+
+    return UserReleaseStat(**dict(row)) if row else None
 
 
-def get_user_recordings(user_id: int) -> Optional[UserRecordingStat]:
-    """Get top recordings for user with given ID.
+def get_user_recordings(user_id: int, stats_range: str) -> Optional[UserRecordingStat]:
+    """Get top recordings in a time range for user with given ID.
 
         Args:
             user_id: the row ID of the user in the DB
+            stats_range: the time range to fetch the stats for
     """
-    data = get_user_stats(user_id, 'recording')
-    if (not data) or (not data['recording']):
-        return None
-    return UserRecordingStat(**data)
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT user_id, recording->:range AS {range}, last_updated
+              FROM statistics.user
+             WHERE user_id = :user_id
+            """.format(range=stats_range)), {
+            'range': stats_range,
+            'user_id': user_id
+        })
+        row = result.fetchone()
+
+    return UserRecordingStat(**dict(row)) if row else None
 
 
 def valid_stats_exist(user_id, days):
