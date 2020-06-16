@@ -1,10 +1,10 @@
-Recommendation engine
+ListenBrainz Collaborative Filtering
 =====================
-ListenBrainz recommendation engine using collaborative filtering.
+ListenBrainz collaborative filtering component to generate recommendations.
 
 ## About
 
-The recommendation engine uses collaborative filtering to recommend recordings to users based on their listening history. ListenBrainz uses Apache Spark to process the listening history of users and generate recommendations.
+The component uses collaborative filtering to recommend recordings to users based on their listening history. ListenBrainz uses Apache Spark to process the listening history of users and generate recommendations.
 
 **Note**:  The listening history and supporting data used by ListenBrainz is heavy for the local environment. We are trying to release small test datasets soon to make the development experience smooth.
 
@@ -17,7 +17,7 @@ The recommendation generation process has been divided into four stages.
 
 - **Stage 1**: Process user listening history.
 
-  Send a request to spark cluster for generating dataframes.
+  Send a request to spark cluster for generating dataframes and upload to HDFS.
 
   `./develop.sh manage spark request_dataframes --days=X`
 
@@ -25,13 +25,40 @@ The recommendation generation process has been divided into four stages.
 
 - **Stage 2**: Train the model.
 
-  Send a request to spark cluster to train the model.
+  Send a request to spark cluster to train the model and upload to HDFS.
 
-  `./develop.sh manage spark request_model`
+  `./develop.sh manage spark request_model --rank=X --itr=Y --lmbda=Z --alpha=M`
+
+  where X is rank or number of hidden features. For example, if rank = [12, 7, 8], it should be passed as follows:
+
+  `--rank=12 --rank=7 --rank=8`
+
+  By default , rank = [5, 10]
+
+  where Y is iteration or number of iterations to run. For example, if itr = [3, 6, 8], it should be passed as follows:
+
+  `--itr=3 --itr=6 --itr=8`
+
+  By default, itr = [5, 10]
+
+  where Z is lamba or over fitting control factor. For example, if lmbda = [4.8, 1.2, 4.4], it should be passed as follows:
+
+  `--lmbda=4.8 --lmbda=1.2 --lmbda=4.4`
+
+  By default, lmbda = [0.1, 10.0]
+
+  where M is alpha or baseline level of confidence weighting applied. For example if alpha = 7.1, it should be passed as follows:
+
+  `--alpha=7.1`
+
+  By default, alpha = 3.0
+
+  For more information on model parameters refer to the [official documentation](https://spark.apache.org/docs/2.1.0/mllib-collaborative-filtering.html):
+
 
 - **Stage 3**: Generate candidate sets.
 
-  Send a request to spark cluster to generate candidate sets. For each user, personalized sets are generated which contain recordings of top artists listened to by the user and recordings of artists similar to top artists listened to by the user.
+  Send a request to spark cluster to generate candidate sets and upload to HDFS. For each user, personalized sets are generated which contain recordings of top artists listened to by the user and recordings of artists similar to top artists listened to by the user.
 
   `./develop.sh manage spark request_candidate_sets --days=X --top=Y --similar=Z`
 
@@ -43,7 +70,7 @@ The recommendation generation process has been divided into four stages.
 
 - **Stage 4**: Generate recommendations
 
-  Send a request to spark cluster to generate recommendations.
+  Send a request to spark cluster to generate and return recommendations.
 
   `./develop.sh manage spark request_recommendations --top=X --similar=Y`
 
