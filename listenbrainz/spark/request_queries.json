@@ -24,6 +24,26 @@
     "description": "All time entity statistics for all users",
     "params": ["entity"]
   },
+  "stats.user.listening_activity.week": {
+    "name": "stats.user.listening_activity.week",
+    "description": "Weekly listening_activity statistics for all users",
+    "params": []
+  },
+  "stats.user.listening_activity.month": {
+    "name": "stats.user.listening_activity.month",
+    "description": "Monthly listening_activity statistics for all users",
+    "params": []
+  },
+  "stats.user.listening_activity.year": {
+    "name": "stats.user.listening_activity.year",
+    "description": "Yearly listening_activity statistics for all users",
+    "params": []
+  },
+  "stats.user.listening_activity.all_time": {
+    "name": "stats.user.listening_activity.all_time",
+    "description": "All time listening_activity statistics for all users",
+    "params": []
+  },
   "import.dump.full": {
     "name": "import.dump.full",
     "description": "Import a new full dump into the spark cluster",

@@ -99,28 +99,32 @@ def request_user_stats(week, month, year, all_time, test):
         send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.week', params={'entity': 'artists'}))
         send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.week', params={'entity': 'releases'}))
         send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.week', params={'entity': 'recordings'}))
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.listening_activity.week'))
         return
 
     if month:
         send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.month', params={'entity': 'artists'}))
         send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.month', params={'entity': 'releases'}))
         send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.month', params={'entity': 'recordings'}))
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.listening_activity.month'))
         return
 
     if year:
         send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.year', params={'entity': 'artists'}))
         send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.year', params={'entity': 'releases'}))
         send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.year', params={'entity': 'recordings'}))
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.listening_activity.year'))
         return
 
     if all_time:
         send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.all_time', params={'entity': 'artists'}))
         send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.all_time', params={'entity': 'releases'}))
         send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.all_time', params={'entity': 'recordings'}))
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.listening_activity.all_time'))
         return
 
     if test:
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.week', params={'entity': 'recordings'}))
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.listening_activity.week'))
         return
 
     # Default if no specific flag is provided

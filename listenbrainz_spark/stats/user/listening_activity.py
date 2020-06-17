@@ -160,7 +160,7 @@ def create_messages(data, stats_range: str, from_ts: int, to_ts: int):
             'range': stats_range,
             'from_ts': from_ts,
             'to_ts': to_ts,
-            'data': _dict['listening_activity']
+            'listening_activity': _dict['listening_activity']
         }
 
 
