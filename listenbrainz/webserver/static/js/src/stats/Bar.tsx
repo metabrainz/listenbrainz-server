@@ -61,7 +61,7 @@ export default class Bar extends React.Component<BarProps, BarState> {
     if (data.release && data.releaseMBID) {
       const res = (
         <a
-          href={`http://musicbrainz.org/artist/${data.releaseMBID}`}
+          href={`http://musicbrainz.org/release/${data.releaseMBID}`}
           target="_blank"
           rel="noopener noreferrer"
         >
