@@ -50,7 +50,7 @@ def create_messages(data, entity, stats_type, stats_range, from_ts, to_ts):
     Create messages to send the data to the webserver via RabbitMQ
 
     Args:
-        release_data (dict): Data to sent to the webserver
+        data (iterator): Data to sent to the webserver
         entity (str): The entity for which statistics are calculated, i.e 'artists',
             'releases' or 'recordings'
         stats_type (str): The type of statistics calculated
@@ -59,7 +59,7 @@ def create_messages(data, entity, stats_type, stats_range, from_ts, to_ts):
         to_ts (int): The UNIX timestamp of end time of the stats
 
     Returns:
-        messages (list): A list of messages to be sent via RabbitMQ
+        messages (generator): A list of messages to be sent via RabbitMQ
     """
     for entry in data:
         _dict = entry.asDict(recursive=True)
