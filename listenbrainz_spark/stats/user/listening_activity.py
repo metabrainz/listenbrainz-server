@@ -21,7 +21,7 @@ time_range_schema = StructType((StructField('time_range', StringType()), StructF
 
 
 def get_listening_activity(time_range: str):
-    result = run_query("""
+    int_result = run_query("""
             SELECT listens.user_name
                  , time_range.time_range
                  , count(listens.user_name) as listen_count
@@ -31,6 +31,25 @@ def get_listening_activity(time_range: str):
                AND listens.listened_at <= time_range.end
           GROUP BY listens.user_name
                  , time_range.time_range
+            """)
+    int_result.createOrReplaceTempView('int_result')
+
+    to_join = run_query("""
+            SELECT distinct(listens.user_name)
+                 , time_range.time_range
+              FROM listens
+        CROSS JOIN time_range
+            """)
+    to_join.createOrReplaceTempView('to_join')
+
+    result = run_query("""
+            SELECT to_join.user_name
+                 , to_join.time_range
+                 , isnull(int_result.listen_count, 0) as listen_count
+              FROM int_result
+        RIGHT JOIN to_join
+                ON int_result.user_name = to_join.user_name
+               AND int_result.time_range = to_join.time_range
             """)
 
     iterator = result \
@@ -48,6 +67,8 @@ def get_listening_activity_week():
 
     date = get_latest_listen_ts()
     to_date = get_last_monday(date)
+    # Set time to 00:00
+    to_date = datetime(to_date.year, to_date.month, to_date.day)
     from_date = adjust_days(to_date, 7)
     time_range = []
     for offset in range(0, 7):
@@ -73,6 +94,8 @@ def get_listening_activity_month():
     current_app.logger.debug("Calculating listening_activity_month")
 
     to_date = get_latest_listen_ts()
+    # Set time to 00:00
+    to_date = datetime(to_date.year, to_date.month, to_date.day)
     from_date = replace_days(to_date, 1)
     time_range = []
     for offset in range(1, to_date.day+1):
