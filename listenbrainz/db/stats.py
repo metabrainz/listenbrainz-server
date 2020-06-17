@@ -101,6 +101,18 @@ def insert_user_recordings(user_id: int, recordings: UserRecordingStatJson):
     _insert_jsonb_data(user_id=user_id, column='recording', data=recordings.dict(exclude_none=True))
 
 
+def insert_user_listening_activity(user_id: int, listening_activity):
+    """Inserts listening_activity stats calculated from Spark into the database.
+
+       If stats are already present for some user, they are updated to the new
+       values passed.
+
+       Args: user_id: the row id of the user,
+             listening_activity: the listening_activity stats of the user
+    """
+    _insert_jsonb_data(user_id=user_id, column='listening_activity', data=listening_activity)
+
+
 def get_user_stats(user_id, columns):
     """ Get a particular stat for user with the given row ID.
 

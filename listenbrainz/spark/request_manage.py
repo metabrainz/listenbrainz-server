@@ -124,7 +124,7 @@ def request_user_stats(week, month, year, all_time, test):
         return
 
     if test:
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.listening_activity.week'))
+        send_request_to_spark_cluster(_prepare_query_message('stats.user.listening_activity.year'))
         return
 
     # Default if no specific flag is provided

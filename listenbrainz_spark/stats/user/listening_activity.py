@@ -6,7 +6,7 @@ from pyspark.sql.functions import collect_list, sort_array, struct
 from pyspark.sql.types import (StringType, StructField, StructType,
                                TimestampType)
 
-from listenbrainz_spark import session, sql_context
+import listenbrainz_spark
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
 from listenbrainz_spark.stats import (adjust_days, adjust_months, replace_days,
@@ -16,7 +16,7 @@ from listenbrainz_spark.stats.user.utils import (filter_listens,
                                                  get_latest_listen_ts)
 from listenbrainz_spark.utils import get_listens
 
-time_range_schema = StringType((StructField('time_range', StringType()), StructField(
+time_range_schema = StructType((StructField('time_range', StringType()), StructField(
     'start', TimestampType()), StructField('end', TimestampType())))
 
 
@@ -24,7 +24,7 @@ def get_listening_activity(time_range: str):
     result = run_query("""
             SELECT listens.user_name
                  , time_range.time_range
-                 , count({listens}.user_name) as listen_count
+                 , count(listens.user_name) as listen_count
               FROM listens
               JOIN time_range
                 ON listens.listened_at >= time_range.start
@@ -54,10 +54,10 @@ def get_listening_activity_week():
         day = adjust_days(from_date, offset, shift_backwards=False)
         time_range.append([day.strftime('%A'), day, _get_day_end(day)])
 
-    time_range_df = session.createDataFrame(time_range, time_range_schema)
+    time_range_df = listenbrainz_spark.session.createDataFrame(time_range, time_range_schema)
     time_range_df.createOrReplaceTempView('time_range')
 
-    listens_df = get_listens(from_date, to_date, path=LISTENBRAINZ_DATA_DIRECTORY)
+    listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
     listens_df.createOrReplaceTempView('listens')
 
     data = get_listening_activity('week')
@@ -79,10 +79,10 @@ def get_listening_activity_month():
         day = replace_days(from_date, offset)
         time_range.append([day.strftime('%d'), day, _get_day_end(day)])
 
-    time_range_df = session.createDataFrame(time_range, time_range_schema)
+    time_range_df = listenbrainz_spark.session.createDataFrame(time_range, time_range_schema)
     time_range_df.createOrReplaceTempView('time_range')
 
-    listens_df = get_listens(from_date, to_date, path=LISTENBRAINZ_DATA_DIRECTORY)
+    listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
     listens_df.createOrReplaceTempView('listens')
 
     data = get_listening_activity('month')
@@ -104,10 +104,10 @@ def get_listening_activity_year():
         month = replace_months(from_date, offset)
         time_range.append([month.strftime('%B'), month, _get_month_end(month)])
 
-    time_range_df = session.createDataFrame(time_range, time_range_schema)
+    time_range_df = listenbrainz_spark.session.createDataFrame(time_range, time_range_schema)
     time_range_df.createOrReplaceTempView('time_range')
 
-    listens_df = get_listens(from_date, to_date, path=LISTENBRAINZ_DATA_DIRECTORY)
+    listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
     listens_df.createOrReplaceTempView('listens')
 
     data = get_listening_activity('year')
@@ -128,10 +128,10 @@ def get_listening_activity_all_time():
     for year in range(from_date.year, to_date.year+1):
         time_range.append([str(year), datetime(year, 1, 1), _get_year_end(year)])
 
-    time_range_df = session.createDataFrame(time_range, time_range_schema)
+    time_range_df = listenbrainz_spark.session.createDataFrame(time_range, time_range_schema)
     time_range_df.createOrReplaceTempView('time_range')
 
-    listens_df = get_listens(from_date, to_date, path=LISTENBRAINZ_DATA_DIRECTORY)
+    listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
     listens_df.createOrReplaceTempView('listens')
 
     data = get_listening_activity('all_time')
