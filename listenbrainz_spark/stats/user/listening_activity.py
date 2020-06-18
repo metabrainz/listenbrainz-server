@@ -34,28 +34,23 @@ def get_listening_activity(time_range: str):
             """)
     int_result.createOrReplaceTempView('int_result')
 
-    to_join = run_query("""
-            SELECT distinct(listens.user_name)
-                 , time_range.time_range
-              FROM listens
-        CROSS JOIN time_range
-            """)
-    to_join.createOrReplaceTempView('to_join')
-
     result = run_query("""
-            SELECT to_join.user_name
-                 , to_join.time_range
-                 , isnull(int_result.listen_count, 0) as listen_count
-              FROM int_result
-        RIGHT JOIN to_join
-                ON int_result.user_name = to_join.user_name
-               AND int_result.time_range = to_join.time_range
+            SELECT dist_user_name.user_name
+                 , time_range.time_range
+                 , to_unix_timestamp(time_range.start) as from_ts
+                 , to_unix_timestamp(time_range.end) as to_ts
+                 , ifnull(int_result.listen_count, 0) as listen_count
+              FROM (SELECT DISTINCT user_name FROM listens) dist_user_name
+        CROSS JOIN time_range
+         LEFT JOIN int_result
+                ON int_result.user_name = dist_user_name.user_name
+               AND int_result.time_range = time_range.time_range
             """)
 
     iterator = result \
-        .withColumn("listening_activity", struct("listen_count", "time_range")) \
+        .withColumn("listening_activity", struct("from_ts", "to_ts", "listen_count", "time_range")) \
         .groupBy("user_name") \
-        .agg(collect_list("listening_activity").alias("listening_activity")) \
+        .agg(sort_array(collect_list("listening_activity")).alias("listening_activity")) \
         .toLocalIterator()
 
     return iterator
