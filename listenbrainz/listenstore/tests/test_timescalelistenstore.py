@@ -470,8 +470,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
             archive_path (str): the full path to the archive
             schema_version (int): the version of the schema to be written into SCHEMA_SEQUENCE
                                   if not provided, the SCHEMA_SEQUENCE file is not added to the archive
-            index (dict): the index dict to be written into index.json
-                          if not provided, index.json is not added to the archive
 
         Returns:
             the full path to the archive created
@@ -490,13 +488,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
                     tar.add(schema_version_path,
                             arcname=os.path.join(archive_name, 'SCHEMA_SEQUENCE'))
 
-                if index is not None:
-                    index_json_path = os.path.join(temp_dir, 'index.json')
-                    with open(index_json_path, 'w') as f:
-                        f.write(ujson.dumps({}))
-                    tar.add(index_json_path,
-                            arcname=os.path.join(archive_name, 'index.json'))
-
             pxz.stdin.close()
 
         return archive_path
@@ -511,8 +502,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         archive_path = self.create_test_dump(
             archive_name=archive_name,
             archive_path=archive_path,
-            schema_version=LISTENS_DUMP_SCHEMA_VERSION - 1,
-            index={},
+            schema_version=LISTENS_DUMP_SCHEMA_VERSION - 1
         )
         sleep(1)
         with self.assertRaises(SchemaMismatchException):
@@ -528,31 +518,13 @@ class TestTimescaleListenStore(DatabaseTestCase):
         archive_path = self.create_test_dump(
             archive_name=archive_name,
             archive_path=archive_path,
-            schema_version=None,
-            index={},
+            schema_version=None
         )
 
         sleep(1)
         with self.assertRaises(SchemaMismatchException):
             self.logstore.import_listens_dump(archive_path)
 
-    def test_schema_mismatch_exception_for_dump_no_index(self):
-        """ Tests that SchemaMismatchException is raised when there is no index.json in the archive """
-
-        temp_dir = tempfile.mkdtemp()
-        archive_name = 'temp_dump'
-        archive_path = os.path.join(temp_dir, archive_name + '.tar.xz')
-
-        archive_path = self.create_test_dump(
-            archive_name=archive_name,
-            archive_path=archive_path,
-            schema_version=LISTENS_DUMP_SCHEMA_VERSION,
-            index=None,
-        )
-
-        sleep(1)
-        with self.assertRaises(SchemaMismatchException):
-            self.logstore.import_listens_dump(archive_path)
 
     def test_listen_counts_in_cache(self):
         count = self._create_test_data(self.testuser_name)

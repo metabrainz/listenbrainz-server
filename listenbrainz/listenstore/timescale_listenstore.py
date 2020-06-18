@@ -595,20 +595,14 @@ class TimescaleListenStore(ListenStore):
 
         # construct the pxz command to decompress the archive
         pxz_command = ['pxz', '--decompress', '--stdout', archive_path, '-T{threads}'.format(threads=threads)]
-
-        # run the command once to ensure schema version is correct
-        # and load the index
         pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
 
-        index = None
-        top_level_dir = None
+        schema_checked = False
         with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
-            schema_check_done = False
             for member in tar:
+                listens = []
                 print(member.name)
-                top_level_dir = member.name.split('/')[0]
-                file_name = member.name.split('/')[-1]
-                if file_name == 'SCHEMA_SEQUENCE':
+                if member.name.endswith('SCHEMA_SEQUENCE'):
                     self.log.info('Checking if schema version of dump matches...')
                     schema_seq = int(tar.extractfile(member).read().strip())
                     if schema_seq != LISTENS_DUMP_SCHEMA_VERSION:
@@ -616,39 +610,32 @@ class TimescaleListenStore(ListenStore):
                                                       'Please ensure that the data dump version matches the code version'
                                                       'in order to import the data.'
                                                       % (LISTENS_DUMP_SCHEMA_VERSION, schema_seq))
-                    schema_check_done = True
+                    schema_checked = True
 
-                if schema_check_done:
-                    self.log.info('Schema version matched!')
-                    self.log.info('Starting import of listens...')
-                    break
-            else:
-                raise SchemaMismatchException('Metadata files missing in dump, please ensure that the dump file is valid.')
-
-        # close pxz command and start over again, this time with the aim of importing all listens
-        pxz.stdout.close()
-
-        pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
-        with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
-            for member in tar:
-                listens = []
-                print(member.name)
                 if member.name.endswith(".listens"):
+                    if not schema_checked:
+                        raise SchemaMismatchException("SCHEMA_SEQUENCE file missing from listen dump.")
+
                     with tar.extractfile(member) as tarf:  # tarf, really? That's the name you're going with? Yep.
                         while True:
                             line = tarf.readline()
+                            print(line)
                             if not line:
                                 break
                                 
                             listen = Listen.from_json(ujson.loads(line))
+                            print(listen)
                             listens.append(listen)
 
                             if len(listens) > DUMP_CHUNK_SIZE:
                                 self.insert(listens)
                                 listens = []
 
-                if len(listens) > 0:
-                    self.insert(listens)
+                    if len(listens) > 0:
+                        self.insert(listens)
+
+        if not schema_checked:
+            raise SchemaMismatchException("SCHEMA_SEQUENCE file missing from listen dump.")
 
         self.log.info('Import of listens from dump %s done!', archive_path)
         pxz.stdout.close()
