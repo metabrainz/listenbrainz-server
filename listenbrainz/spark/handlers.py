@@ -205,7 +205,7 @@ def handle_recommendations(data):
     current_app.logger.debug("recommendation for {} inserted".format(musicbrainz_id))
 
 
-def handle_mapping(data):
+def notify_mapping_import(data):
     """ Send an email after msid mbid mapping has been successfully imported into the cluster.
     """
     if current_app.config['TESTING']:
@@ -222,7 +222,7 @@ def handle_mapping(data):
     )
 
 
-def handle_artist_relation(data):
+def notify_artist_relation_import(data):
     """ Send an email after artist relation has been sucessfully imported into the cluster.
     """
     if current_app.config['TESTING']:
