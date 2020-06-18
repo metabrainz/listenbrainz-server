@@ -64,11 +64,11 @@ def get_listening_activity_week():
     to_date = get_last_monday(date)
     # Set time to 00:00
     to_date = datetime(to_date.year, to_date.month, to_date.day)
-    from_date = adjust_days(to_date, 7)
+    from_date = day = adjust_days(to_date, 14)
     time_range = []
-    for offset in range(0, 7):
-        day = adjust_days(from_date, offset, shift_backwards=False)
-        time_range.append([day.strftime('%A'), day, _get_day_end(day)])
+    while day < to_date:
+        time_range.append([day.strftime('%A %d %B %Y'), day, _get_day_end(day)])
+        day = adjust_days(day, 1, shift_backwards=False)
 
     time_range_df = listenbrainz_spark.session.createDataFrame(time_range, time_range_schema)
     time_range_df.createOrReplaceTempView('time_range')
@@ -91,11 +91,11 @@ def get_listening_activity_month():
     to_date = get_latest_listen_ts()
     # Set time to 00:00
     to_date = datetime(to_date.year, to_date.month, to_date.day)
-    from_date = replace_days(to_date, 1)
+    from_date = day = adjust_months(replace_days(to_date, 1), 1)
     time_range = []
-    for offset in range(1, to_date.day+1):
-        day = replace_days(from_date, offset)
-        time_range.append([day.strftime('%d'), day, _get_day_end(day)])
+    while day < to_date:
+        time_range.append([day.strftime('%d %B %Y'), day, _get_day_end(day)])
+        day = adjust_days(day, 1, shift_backwards=False)
 
     time_range_df = listenbrainz_spark.session.createDataFrame(time_range, time_range_schema)
     time_range_df.createOrReplaceTempView('time_range')
@@ -116,11 +116,11 @@ def get_listening_activity_year():
     current_app.logger.debug("Calculating listening_activity_year")
 
     to_date = get_latest_listen_ts()
-    from_date = datetime(to_date.year, 1, 1)
+    from_date = month = datetime(to_date.year-1, 1, 1)
     time_range = []
-    for offset in range(1, to_date.month+1):
-        month = replace_months(from_date, offset)
-        time_range.append([month.strftime('%B'), month, _get_month_end(month)])
+    while month < to_date:
+        time_range.append([month.strftime('%B %Y'), month, _get_month_end(month)])
+        month = adjust_months(month, 1, shift_backwards=False)
 
     time_range_df = listenbrainz_spark.session.createDataFrame(time_range, time_range_schema)
     time_range_df.createOrReplaceTempView('time_range')
