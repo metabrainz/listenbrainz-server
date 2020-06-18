@@ -33,6 +33,7 @@ from py4j.protocol import Py4JJavaError
 
 RABBITMQ_HEARTBEAT_TIME = 2 * 60 * 60  # 2 hours -- a full dump import takes 40 minutes right now
 
+
 class RequestConsumer:
 
     def get_result(self, request):
@@ -61,17 +62,21 @@ class RequestConsumer:
             current_app.logger.error("Error in the query handler for query '%s': %s", query, str(e), exc_info=True)
             return None
 
-
     def push_to_result_queue(self, messages):
         current_app.logger.debug("Pushing result to RabbitMQ...")
         for message in messages:
+            if isinstance(message, dict):
+                data = message
+            else:
+                # If message is not a dictionary it's a pydantic model, convert to dictionary
+                data = message.dict(exclude_none=True)
             while True:
                 try:
                     self.result_channel.basic_publish(
                         exchange=current_app.config['SPARK_RESULT_EXCHANGE'],
                         routing_key='',
-                        body=json.dumps(message),
-                        properties=pika.BasicProperties(delivery_mode = 2,),
+                        body=json.dumps(data),
+                        properties=pika.BasicProperties(delivery_mode=2,),
                     )
                     break
                 except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed) as e:
@@ -81,7 +86,6 @@ class RequestConsumer:
                     self.connect_to_rabbitmq()
                     self.init_rabbitmq_channels()
         current_app.logger.debug("Done!")
-
 
     def callback(self, channel, method, properties, body):
         request = json.loads(body.decode('utf-8'))
@@ -100,7 +104,6 @@ class RequestConsumer:
                 self.connect_to_rabbitmq()
                 self.init_rabbitmq_channels()
         current_app.logger.info('Request done!')
-
 
     def connect_to_rabbitmq(self):
         self.rabbitmq = init_rabbitmq(

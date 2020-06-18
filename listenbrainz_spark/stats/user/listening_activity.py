@@ -1,26 +1,29 @@
 from calendar import monthrange
 from datetime import datetime
+from typing import Iterator
 
 from flask import current_app
-from pyspark.sql.functions import collect_list, sort_array, struct
-from pyspark.sql.types import (StringType, StructField, StructType,
-                               TimestampType)
 
 import listenbrainz_spark
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
 from listenbrainz_spark.stats import (adjust_days, adjust_months, replace_days,
                                       replace_months, run_query)
+from listenbrainz_spark.stats.user.models.user_listening_activity import \
+    UserListeningActivityStatMessage
 from listenbrainz_spark.stats.user.utils import (filter_listens,
                                                  get_last_monday,
                                                  get_latest_listen_ts)
 from listenbrainz_spark.utils import get_listens
+from pyspark.sql.functions import collect_list, sort_array, struct
+from pyspark.sql.types import (StringType, StructField, StructType,
+                               TimestampType)
 
 time_range_schema = StructType((StructField('time_range', StringType()), StructField(
     'start', TimestampType()), StructField('end', TimestampType())))
 
 
-def get_listening_activity(time_range: str):
+def get_listening_activity():
     int_result = run_query("""
             SELECT listens.user_name
                  , time_range.time_range
@@ -56,7 +59,7 @@ def get_listening_activity(time_range: str):
     return iterator
 
 
-def get_listening_activity_week():
+def get_listening_activity_week() -> Iterator[UserListeningActivityStatMessage]:
     """ Get the weekly listening activity for all users """
     current_app.logger.debug("Calculating listening_activity_week")
 
@@ -76,7 +79,7 @@ def get_listening_activity_week():
     listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
     listens_df.createOrReplaceTempView('listens')
 
-    data = get_listening_activity('week')
+    data = get_listening_activity()
     messages = create_messages(data=data, stats_range='week', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
     current_app.logger.debug("Done!")
@@ -84,7 +87,7 @@ def get_listening_activity_week():
     return messages
 
 
-def get_listening_activity_month():
+def get_listening_activity_month() -> Iterator[UserListeningActivityStatMessage]:
     """ Get the monthly listening activity for all users """
     current_app.logger.debug("Calculating listening_activity_month")
 
@@ -103,7 +106,7 @@ def get_listening_activity_month():
     listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
     listens_df.createOrReplaceTempView('listens')
 
-    data = get_listening_activity('month')
+    data = get_listening_activity()
     messages = create_messages(data=data, stats_range='month', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
     current_app.logger.debug("Done!")
@@ -111,7 +114,7 @@ def get_listening_activity_month():
     return messages
 
 
-def get_listening_activity_year():
+def get_listening_activity_year() -> Iterator[UserListeningActivityStatMessage]:
     """ Get the yearly listening activity for all users """
     current_app.logger.debug("Calculating listening_activity_year")
 
@@ -128,7 +131,7 @@ def get_listening_activity_year():
     listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
     listens_df.createOrReplaceTempView('listens')
 
-    data = get_listening_activity('year')
+    data = get_listening_activity()
     messages = create_messages(data=data, stats_range='year', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
     current_app.logger.debug("Done!")
@@ -136,7 +139,7 @@ def get_listening_activity_year():
     return messages
 
 
-def get_listening_activity_all_time():
+def get_listening_activity_all_time() -> Iterator[UserListeningActivityStatMessage]:
     """ Get the all_timely listening activity for all users """
     current_app.logger.debug("Calculating listening_activity_all_time")
 
@@ -152,7 +155,7 @@ def get_listening_activity_all_time():
     listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
     listens_df.createOrReplaceTempView('listens')
 
-    data = get_listening_activity('all_time')
+    data = get_listening_activity()
     messages = create_messages(data=data, stats_range='all_time', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
     current_app.logger.debug("Done!")
@@ -160,7 +163,7 @@ def get_listening_activity_all_time():
     return messages
 
 
-def create_messages(data, stats_range: str, from_ts: int, to_ts: int):
+def create_messages(data, stats_range: str, from_ts: int, to_ts: int) -> Iterator[UserListeningActivityStatMessage]:
     """
     Create messages to send the data to webserver via RabbitMQ
 
@@ -172,14 +175,14 @@ def create_messages(data, stats_range: str, from_ts: int, to_ts: int):
     """
     for entry in data:
         _dict = entry.asDict(recursive=True)
-        yield {
+        yield UserListeningActivityStatMessage(**{
             'musicbrainz_id': _dict['user_name'],
             'type': 'user_listening_activity',
             'range': stats_range,
             'from_ts': from_ts,
             'to_ts': to_ts,
             'listening_activity': _dict['listening_activity']
-        }
+        })
 
 
 def _get_day_end(day: datetime) -> datetime:
