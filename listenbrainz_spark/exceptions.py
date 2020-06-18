@@ -79,3 +79,9 @@ class DumpNotFoundException(SparkException):
     """
     def __init__(self, message):
         super(DumpNotFoundException, self).__init__(message)
+
+class RecommendationsNotGeneratedException(SparkException):
+    """ No recommendations generated for the given user.
+    """
+    def __init__(self, message):
+        super(RecommendationsNotGeneratedException, self).__init__(message)
