@@ -21,7 +21,7 @@ from listenbrainz.db import timescale
 from listenbrainz import DUMP_LICENSE_FILE_PATH
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.db.dump import SchemaMismatchException
-from listenbrainz.listen import Listen, convert_timescale_row_to_spark_row
+from listenbrainz.listen import Listen
 from listenbrainz.listenstore import ListenStore
 from listenbrainz.listenstore import ORDER_ASC, ORDER_TEXT, \
     USER_CACHE_TIME, REDIS_USER_TIMESTAMPS, LISTENS_DUMP_SCHEMA_VERSION
@@ -31,6 +31,7 @@ REDIS_TIMESCALE_USER_LISTEN_COUNT = "ls.listencount."  # append username
 DUMP_CHUNK_SIZE = 100000
 NUMBER_OF_USERS_PER_DIRECTORY = 1000
 DUMP_FILE_SIZE_LIMIT = 1024 * 1024 * 1024  # 1 GB
+DATA_START_YEAR = 2005
 
 
 class TimescaleListenStore(ListenStore):
@@ -239,7 +240,7 @@ class TimescaleListenStore(ListenStore):
             else:
                 from_ts = to_ts - max_timestamp_window
 
-        query = """SELECT listened_at, track_name, data
+        query = """SELECT listened_at, track_name, created, data
                      FROM listen
                     WHERE user_name = :user_name """
 
@@ -262,7 +263,7 @@ class TimescaleListenStore(ListenStore):
                 if not result:
                     break
 
-                listens.append(Listen.from_timescale(result[0], result[1], user_name, result[2]))
+                listens.append(Listen.from_timescale(result[0], result[1], user_name, result[2], result[3]))
 
         if order == ORDER_ASC:
             listens.reverse()
@@ -280,12 +281,12 @@ class TimescaleListenStore(ListenStore):
 
         args = {'user_list': tuple(user_list), 'ts': int(time.time()) - max_age, 'limit': limit}
         query = """SELECT * FROM (
-                              SELECT listened_at, track_name, user_name, data,
+                              SELECT listened_at, track_name, user_name, created, data,
                                      row_number() OVER (partition by user_name ORDER BY listened_at DESC) AS rownum
                                 FROM listen
                                WHERE user_name IN :user_list
                                  AND listened_at > :ts
-                            GROUP BY user_name, listened_at, track_name, data
+                            GROUP BY user_name, listened_at, track_name, created, data
                             ORDER BY listened_at DESC) tmp
                            WHERE rownum <= :limit"""
 
@@ -297,7 +298,7 @@ class TimescaleListenStore(ListenStore):
                 if not result:
                     break
 
-                listens.append(Listen.from_timescale(result[0], result[1], result[2], result[3]))
+                listens.append(Listen.from_timescale(result[0], result[1], result[2], result[3], result[4]))
 
         return listens
 
@@ -319,7 +320,7 @@ class TimescaleListenStore(ListenStore):
 
         return (query, args)
 
-    def get_incremental_listens_query_batch(self, user_name, start_time, end_time, offset):
+    def get_incremental_listens_query_batch(self, start_time, end_time, offset):
         """
             Get a query for a batch of listens for an incremental listen dump.
             This uses the `created` column to fetch listens.
@@ -434,8 +435,8 @@ class TimescaleListenStore(ListenStore):
                     if not result:
                         break
 
-                    listen = convert_timescale_row_to_spark_row(result)
-                    timestamp = listen['listened_at']
+                    listen = Listen.from_timescale(result[0], result[1], result[2], result[3], result[4]).to_json()
+                    timestamp = listen['timestamp']
 
                     if timestamp.year not in unwritten_listens:
                         unwritten_listens[timestamp.year] = {}
@@ -456,7 +457,7 @@ class TimescaleListenStore(ListenStore):
                       listen_count / (time.time() - t0))
 
 
-    def write_listens(self, temp_dir):
+    def write_listens(self, temp_dir, tar_file, archive_name):
         """ Dump listens in the format for the ListenBrainz dump.
 
         Args:
@@ -466,7 +467,7 @@ class TimescaleListenStore(ListenStore):
         t0 = time.time()
         listen_count = 0
 
-        year = 2005
+        year = DATA_START_YEAR
         month = 1
         while True:
             start_time = datetime(year, month, 1)
@@ -482,7 +483,7 @@ class TimescaleListenStore(ListenStore):
             end_time = datetime(next_year, next_month, 1)
             end_time = end_time - timedelta(seconds=1)
 
-            filename = os.path.join(temp_dir, str(year), str(month))
+            filename = os.path.join(temp_dir, str(year), "%d.listens" % month)
             try:
                 os.makedirs(os.path.join(temp_dir, str(year)))
             except FileExistsError:
@@ -494,19 +495,22 @@ class TimescaleListenStore(ListenStore):
             rows_added = 0
             with timescale.engine.connect() as connection:
                 curs = connection.execute(sqlalchemy.text(query), args)
-                with open(filename, "w") as out_file:
-                    while True:
-                        result = curs.fetchone()
-                        if not result:
-                            break
+                if curs.rowcount:
+                    print(filename)
+                    with open(filename, "w") as out_file:
+                        while True:
+                            result = curs.fetchone()
+                            if not result:
+                                break
 
-                        listen = convert_timescale_row_to_spark_row(result)
-                        out_file.write(ujson.dumps(listen) + "\n")
-                        rows_added += 1
+                            listen = Listen.from_timescale(result[0], result[1], result[2], result[3], result[4]).to_json()
+                            out_file.write(ujson.dumps(listen) + "\n")
+                            rows_added += 1
+                    tar_file.add(filename, arcname=os.path.join(archive_name, 'listens', str(year), "%d.listens" % month))
 
-            listen_count += rows_added
-            self.log.info("%d listens dumped for %s at %.2f listens/s", listen_count, start_time.strftime("%Y-%m-%d"),
-                          listen_count / (time.time() - t0))
+                    listen_count += rows_added
+                    self.log.info("%d listens dumped for %s at %.2f listens/s", listen_count, start_time.strftime("%Y-%m-%d"),
+                                  listen_count / (time.time() - t0))
 
             month = next_month
             year = next_year
@@ -561,10 +565,9 @@ class TimescaleListenStore(ListenStore):
 
                 listens_path = os.path.join(temp_dir, 'listens')
                 if full_dump:
-                    self.write_listens(listens_path)
+                    self.write_listens(listens_path, tar, archive_name)
                 else:
                     self.write_incremental_listens(start_time, end_time, listens_path)
-                tar.add(listens_path, arcname=os.path.join(archive_name, 'listens'))
 
                 # remove the temporary directory
                 shutil.rmtree(temp_dir)
@@ -598,10 +601,12 @@ class TimescaleListenStore(ListenStore):
         pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
 
         index = None
+        top_level_dir = None
         with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
             schema_check_done = False
-            index_loaded = False
             for member in tar:
+                print(member.name)
+                top_level_dir = member.name.split('/')[0]
                 file_name = member.name.split('/')[-1]
                 if file_name == 'SCHEMA_SEQUENCE':
                     self.log.info('Checking if schema version of dump matches...')
@@ -613,13 +618,8 @@ class TimescaleListenStore(ListenStore):
                                                       % (LISTENS_DUMP_SCHEMA_VERSION, schema_seq))
                     schema_check_done = True
 
-                elif file_name == 'index.json':
-                    with tar.extractfile(member) as f:
-                        index = ujson.load(f)
-                    index_loaded = True
-
-                if schema_check_done and index_loaded:
-                    self.log.info('Schema version matched and index.json loaded!')
+                if schema_check_done:
+                    self.log.info('Schema version matched!')
                     self.log.info('Starting import of listens...')
                     break
             else:
@@ -628,51 +628,30 @@ class TimescaleListenStore(ListenStore):
         # close pxz command and start over again, this time with the aim of importing all listens
         pxz.stdout.close()
 
-        file_contents = defaultdict(list)
-        for user, info in index.items():
-            file_contents[info['file_name']].append({
-                'user_name': user,
-                'offset': info['offset'],
-                'size': info['size'],
-            })
-
-        for file_name in file_contents:
-            file_contents[file_name] = sorted(file_contents[file_name], key=lambda x: x['offset'])
-
         pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
-
-        users_done = 0
         with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
             for member in tar:
-                file_name = member.name.split('/')[-1]
-                if file_name.endswith('.listens'):
+                listens = []
+                print(member.name)
+                if member.name.endswith(".listens"):
+                    with tar.extractfile(member) as tarf:  # tarf, really? That's the name you're going with? Yep.
+                        while True:
+                            line = tarf.readline()
+                            if not line:
+                                break
+                                
+                            listen = Listen.from_json(ujson.loads(line))
+                            listens.append(listen)
 
-                    file_name = file_name[:-8]
-                    with tar.extractfile(member) as f:
-                        for user in file_contents[file_name]:
-                            self.log.info('Importing user %s...', user['user_name'])
-                            assert f.tell() == user['offset']
-                            bytes_read = 0
-                            listens = []
-                            while bytes_read < user['size']:
-                                line = f.readline()
-                                bytes_read += len(line)
-                                listen = Listen.from_json(ujson.loads(line))
-                                listens.append(listen)
-
-                                if len(listens) > DUMP_CHUNK_SIZE:
-                                    self.insert(listens)
-                                    listens = []
-
-                            if len(listens) > 0:
+                            if len(listens) > DUMP_CHUNK_SIZE:
                                 self.insert(listens)
+                                listens = []
 
-                            self.log.info('Import of user %s done!', user['user_name'])
-                            users_done += 1
+                if len(listens) > 0:
+                    self.insert(listens)
 
         self.log.info('Import of listens from dump %s done!', archive_path)
         pxz.stdout.close()
-        return users_done
 
     def delete(self, musicbrainz_id):
         """ Delete all listens for user with specified MusicBrainz ID.

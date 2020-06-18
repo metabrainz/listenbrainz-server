@@ -21,6 +21,7 @@ create and import postgres data dumps.
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import click
+from datetime import datetime
 import listenbrainz.db.dump as db_dump
 import logging
 import os
@@ -29,9 +30,9 @@ import shutil
 import subprocess
 import sys
 
-from brainzutils.mail import send_mail
-from datetime import datetime
+import psycopg2
 from flask import current_app, render_template
+from brainzutils.mail import send_mail
 from listenbrainz import db
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.utils import create_path

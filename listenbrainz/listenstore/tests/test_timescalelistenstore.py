@@ -231,38 +231,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertTrue(os.path.isfile(dump))
         shutil.rmtree(temp_dir)
 
-    def test_dump_listens_spark_format(self):
-        expected_count = self._create_test_data(self.testuser_name)
-        sleep(1)
-        temp_dir = tempfile.mkdtemp()
-        dump = self.logstore.dump_listens(
-            location=temp_dir,
-            dump_id=1,
-            spark_format=True,
-            end_time=datetime.now(),
-        )
-        self.assertTrue(os.path.isfile(dump))
-        self.assert_spark_dump_contains_listens(dump, expected_count)
-        shutil.rmtree(temp_dir)
-
-    def assert_spark_dump_contains_listens(self, dump, expected_listen_count):
-        """ This method checks that the spark dump specified contains the
-        expected number of listens. We also do some schema checks for the
-        listens here too
-        """
-        pxz_command = ['pxz', '--decompress', '--stdout', dump]
-        pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
-
-        listen_count = 0
-        with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
-            for member in tar:
-                file_name = member.name.split('/')[-1]
-                if file_name.endswith('.json'):
-                    for line in tar.extractfile(member).readlines():
-                        listen = ujson.loads(line)
-                        self.assertIn('inserted_timestamp', listen)
-                        listen_count += 1
-        self.assertEqual(listen_count, expected_listen_count)
 
     def test_incremental_dump(self):
         listens = generate_data(1, self.testuser_name, 1, 5)  # generate 5 listens with ts 1-5
@@ -280,16 +248,8 @@ class TestTimescaleListenStore(DatabaseTestCase):
             start_time=start_time,
             end_time=datetime.now(),
         )
-        spark_dump_location = self.logstore.dump_listens(
-            location=temp_dir,
-            dump_id=1,
-            start_time=start_time,
-            end_time=datetime.now(),
-            spark_format=True,
-        )
         sleep(1)
         self.assertTrue(os.path.isfile(dump_location))
-        self.assertTrue(os.path.isfile(spark_dump_location))
         self.reset_timescale_db()
         sleep(1)
         self.logstore.import_listens_dump(dump_location)
@@ -302,7 +262,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 7)
         self.assertEqual(listens[4].ts_since_epoch, 6)
 
-        self.assert_spark_dump_contains_listens(spark_dump_location, 5)
         shutil.rmtree(temp_dir)
 
     def test_time_range_full_dumps(self):
@@ -320,12 +279,12 @@ class TestTimescaleListenStore(DatabaseTestCase):
             dump_id=1,
             end_time=between_time,
         )
-        self.logstore.dump_listens(
-            location=temp_dir,
-            dump_id=1,
-            end_time=between_time,
-            spark_format=True,
-        )
+#        self.logstore.dump_listens(
+#            location=temp_dir,
+#            dump_id=1,
+#            end_time=between_time,
+#            spark_format=True,
+#        )
         sleep(1)
         self.assertTrue(os.path.isfile(dump_location))
         self.reset_timescale_db()
@@ -372,12 +331,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
             dump_id=1,
             end_time=datetime.now(),
         )
-        spark_dump_location = self.logstore.dump_listens(
-            location=temp_dir,
-            dump_id=1,
-            end_time=datetime.now(),
-            spark_format=True,
-        )
         self.assertTrue(os.path.isfile(dump_location))
         self.reset_timescale_db()
         sleep(1)
@@ -385,7 +338,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
         sleep(1)
         listens_from_timescale = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
         self.assertEqual(len(listens_from_timescale), 5)
-        self.assert_spark_dump_contains_listens(spark_dump_location, 5)
         shutil.rmtree(temp_dir)
 
     def test_incremental_dumps_listen_with_no_created(self):
@@ -420,13 +372,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
             start_time=t,
             end_time=datetime.now(),
         )
-        spark_dump_location = self.logstore.dump_listens(
-            location=temp_dir,
-            dump_id=1,
-            start_time=t,
-            end_time=datetime.now(),
-            spark_format=True,
-        )
         self.assertTrue(os.path.isfile(dump_location))
         self.reset_timescale_db()
         sleep(1)
@@ -434,7 +379,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
         sleep(1)
         listens_from_timescale = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=11)
         self.assertEqual(len(listens_from_timescale), 1)
-        self.assert_spark_dump_contains_listens(spark_dump_location, 1)
         shutil.rmtree(temp_dir)
 
     def test_import_listens(self):

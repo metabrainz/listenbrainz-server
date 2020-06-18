@@ -130,7 +130,7 @@ class Listen(object):
         )
 
     @classmethod
-    def from_timescale(cls, listened_at, track_name, user_name, j):
+    def from_timescale(cls, listened_at, track_name, user_name, created, j):
         """Factory to make Listen() objects from a timescale dict"""
 
         j['listened_at'] = datetime.utcfromtimestamp(float(listened_at))
@@ -143,6 +143,7 @@ class Listen(object):
             release_msid=j['track_metadata']['additional_info'].get('release_msid'),
             recording_msid=j['track_metadata']['additional_info'].get('recording_msid'),
             dedup_tag=j.get('dedup_tag', 0),
+            inserted_timestamp = created,
             data=j.get('track_metadata')
         )
 
@@ -204,32 +205,3 @@ class Listen(object):
     def __unicode__(self):
         return "<Listen: user_name: %s, time: %s, artist_msid: %s, release_msid: %s, recording_msid: %s, artist_name: %s, track_name: %s>" % \
                (self.user_name, self.ts_since_epoch, self.artist_msid, self.release_msid, self.recording_msid, self.data['artist_name'], self.data['track_name'])
-
-
-def convert_timescale_row_to_spark_row(row):
-    """
-        Convert a timescale listen row (listened_at, track_name, user_name, created, data)
-        to a spark row.
-    """
-    data = row[4]['track_metadata']
-
-    if 'created' in row and row['created'] is not None:
-        created = row['created']
-    else:
-        created = str(datetime.utcfromtimestamp(0))
-
-    return {
-        'listened_at': datetime.utcfromtimestamp(row[0]),
-        'user_name': row[2],
-        'artist_msid': data['additional_info'].get('artist_msid'),
-        'artist_name': data['artist_name'],
-        'artist_mbids': convert_comma_seperated_string_to_list(data.get('artist_mbids', '')),
-        'release_msid': data['additional_info'].get('release_msid'),
-        'release_name': data.get('release_name', ''),
-        'release_mbid': data.get('release_mbid', ''),
-        'track_name': row[1],
-        'recording_msid': data['additional_info']['recording_msid'],
-        'recording_mbid': data['additional_info'].get('recording_mbid', ''),
-        'tags': convert_comma_seperated_string_to_list(data.get('tags', [])),
-        'inserted_timestamp': created
-    }
