@@ -70,7 +70,7 @@ def get_listening_activity_week() -> Iterator[UserListeningActivityStatMessage]:
     to_date = datetime(to_date.year, to_date.month, to_date.day)
     from_date = day = adjust_days(to_date, 14)
 
-    # Genarate a dataframe containing days from last week and current week along with start and end time
+    # Genarate a dataframe containing days of last and current week along with start and end time
     time_range = []
     while day < to_date:
         time_range.append([day.strftime('%A %d %B %Y'), day, _get_day_end(day)])
@@ -98,6 +98,8 @@ def get_listening_activity_month() -> Iterator[UserListeningActivityStatMessage]
     # Set time to 00:00
     to_date = datetime(to_date.year, to_date.month, to_date.day)
     from_date = day = adjust_months(replace_days(to_date, 1), 1)
+
+    # Genarate a dataframe containing days of last and current month along with start and end time
     time_range = []
     while day < to_date:
         time_range.append([day.strftime('%d %B %Y'), day, _get_day_end(day)])
@@ -124,6 +126,8 @@ def get_listening_activity_year() -> Iterator[UserListeningActivityStatMessage]:
     to_date = get_latest_listen_ts()
     from_date = month = datetime(to_date.year-1, 1, 1)
     time_range = []
+
+    # Genarate a dataframe containing months of last and current year along with start and end time
     while month < to_date:
         time_range.append([month.strftime('%B %Y'), month, _get_month_end(month)])
         month = adjust_months(month, 1, shift_backwards=False)
@@ -148,6 +152,7 @@ def get_listening_activity_all_time() -> Iterator[UserListeningActivityStatMessa
 
     to_date = get_latest_listen_ts()
     from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
+
     time_range = []
     for year in range(from_date.year, to_date.year+1):
         time_range.append([str(year), datetime(year, 1, 1), _get_year_end(year)])
