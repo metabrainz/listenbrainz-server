@@ -1,4 +1,3 @@
-from calendar import monthrange
 from datetime import datetime
 from typing import Iterator
 
@@ -8,8 +7,9 @@ import listenbrainz_spark
 from data.model.user_listening_activity import UserListeningActivityStatMessage
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
-from listenbrainz_spark.stats import (adjust_days, adjust_months, replace_days,
-                                      replace_months, run_query)
+from listenbrainz_spark.stats import (adjust_days, adjust_months, get_day_end,
+                                      get_month_end, get_year_end,
+                                      replace_days, replace_months, run_query)
 from listenbrainz_spark.stats.user.utils import (filter_listens,
                                                  get_last_monday,
                                                  get_latest_listen_ts)
@@ -72,7 +72,7 @@ def get_listening_activity_week() -> Iterator[UserListeningActivityStatMessage]:
     # Genarate a dataframe containing days of last and current week along with start and end time
     time_range = []
     while day < to_date:
-        time_range.append([day.strftime('%A %d %B %Y'), day, _get_day_end(day)])
+        time_range.append([day.strftime('%A %d %B %Y'), day, get_day_end(day)])
         day = adjust_days(day, 1, shift_backwards=False)
 
     time_range_df = listenbrainz_spark.session.createDataFrame(time_range, time_range_schema)
@@ -101,7 +101,7 @@ def get_listening_activity_month() -> Iterator[UserListeningActivityStatMessage]
     # Genarate a dataframe containing days of last and current month along with start and end time
     time_range = []
     while day < to_date:
-        time_range.append([day.strftime('%d %B %Y'), day, _get_day_end(day)])
+        time_range.append([day.strftime('%d %B %Y'), day, get_day_end(day)])
         day = adjust_days(day, 1, shift_backwards=False)
 
     time_range_df = listenbrainz_spark.session.createDataFrame(time_range, time_range_schema)
@@ -128,7 +128,7 @@ def get_listening_activity_year() -> Iterator[UserListeningActivityStatMessage]:
 
     # Genarate a dataframe containing months of last and current year along with start and end time
     while month < to_date:
-        time_range.append([month.strftime('%B %Y'), month, _get_month_end(month)])
+        time_range.append([month.strftime('%B %Y'), month, get_month_end(month)])
         month = adjust_months(month, 1, shift_backwards=False)
 
     time_range_df = listenbrainz_spark.session.createDataFrame(time_range, time_range_schema)
@@ -154,7 +154,7 @@ def get_listening_activity_all_time() -> Iterator[UserListeningActivityStatMessa
 
     time_range = []
     for year in range(from_date.year, to_date.year+1):
-        time_range.append([str(year), datetime(year, 1, 1), _get_year_end(year)])
+        time_range.append([str(year), datetime(year, 1, 1), get_year_end(year)])
 
     time_range_df = listenbrainz_spark.session.createDataFrame(time_range, time_range_schema)
     time_range_df.createOrReplaceTempView('time_range')
@@ -190,19 +190,3 @@ def create_messages(data, stats_range: str, from_ts: int, to_ts: int) -> Iterato
             'to_ts': to_ts,
             'listening_activity': _dict['listening_activity']
         })
-
-
-def _get_day_end(day: datetime) -> datetime:
-    """ Returns a datetime object denoting the end of the day """
-    return datetime(day.year, day.month, day.day, hour=23, minute=59, second=59)
-
-
-def _get_month_end(month: datetime) -> datetime:
-    """ Returns a datetime object denoting the end of the month """
-    _, num_of_days = monthrange(month.year, month.month)
-    return datetime(month.year, month.month, num_of_days, hour=23, minute=59, second=59)
-
-
-def _get_year_end(year: int) -> datetime:
-    """ Returns a datetime object denoting the end of the year """
-    return datetime(year, month=12, day=31, hour=23, minute=59, second=59)

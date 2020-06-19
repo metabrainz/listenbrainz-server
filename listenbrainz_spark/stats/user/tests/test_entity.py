@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 import listenbrainz_spark.stats.user.entity as entity_stats
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
-from listenbrainz_spark.stats.user.utils import get_latest_listen_ts
 from listenbrainz_spark.tests import SparkTestCase
 
 
