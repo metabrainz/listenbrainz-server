@@ -270,80 +270,12 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[2].ts_since_epoch, base + 3)
         self.assertEqual(listens[3].ts_since_epoch, base + 2)
         self.assertEqual(listens[4].ts_since_epoch, base + 1)
-
-    def set_created_to_NULL_in_DB(self):
-        try:
-            with ts.engine.connect() as connection:
-                connection.execute(sqlalchemy.text("UPDATE listen SET created = NULL"))
-        except psycopg2.OperationalError as e:
-            self.log.error("Cannot query timescale listen_count: %s" % str(e), exc_info=True)
-            raise
-
-    def test_full_dump_listen_with_no_created(self):
-        """ We have listens with no `created` inside the production
-        database. This means that full dumps should always be able to dump these
-        listens as well. This is a test to test that.
-        """
-        base = 1500000000
-        listens = generate_data(1, self.testuser_name, base + 1, 5)
-
-        self.logstore.insert(listens)
-
-        # Set the created field to NULL in DB
-        self.set_created_to_NULL_in_DB()
-
-        listens_from_timescale = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=base + 11)
-        self.assertEqual(len(listens_from_timescale), 5)
-
-        # full dump (with no start time) should contain these listens
-        temp_dir = tempfile.mkdtemp()
-        dump_location = self.logstore.dump_listens(
-            location=temp_dir,
-            dump_id=1,
-            end_time=datetime.now(),
-        )
-        self.assertTrue(os.path.isfile(dump_location))
-        self.reset_timescale_db()
-        self.logstore.import_listens_dump(dump_location)
-        listens_from_timescale = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=base + 11)
-        self.assertEqual(len(listens_from_timescale), 5)
-        shutil.rmtree(temp_dir)
-
-    def test_incremental_dumps_listen_with_no_created(self):
-        """ Incremental dumps should only consider listens that have
-        'created' value.
-        """
-
-        base = 1500000000
-        listens = generate_data(1, self.testuser_name, base + 1, 4)
-
-        self.logstore.insert(listens)
-
-        # Set the created field to NULL in DB
-        self.set_created_to_NULL_in_DB()
-
-        # Add a new listen with created as NOT NULL
-        listens = generate_data(1, self.testuser_name, base + 5, 1)
-
-        self.logstore.insert(listens)
-
-        listens_from_timescale = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=base + 11)
-        self.assertEqual(len(listens_from_timescale), 5)
-
-        # incremental dump (with a start time) should not contain these listens
-        temp_dir = tempfile.mkdtemp()
-        dump_location = self.logstore.dump_listens(
-            location=temp_dir,
-            dump_id=1,
-            start_time=datetime.utcfromtimestamp(0),
-            end_time=datetime.utcfromtimestamp(base + 5)
-        )
-        self.assertTrue(os.path.isfile(dump_location))
-        self.reset_timescale_db()
-        self.logstore.import_listens_dump(dump_location)
-        listens_from_timescale = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=base + 11)
-        self.assertEqual(len(listens_from_timescale), 1)
-        shutil.rmtree(temp_dir)
+    
+    # tests test_full_dump_listen_with_no_created
+    # and test_incremental_dumps_listen_with_no_created have been removed because
+    # with timescale all the missing inserted timestamps will have been 
+    # been assigned sane created timestamps by the migration script
+    # and timescale will not allow blank created timestamps, so this test is pointless
 
     def test_import_listens(self):
         self._create_test_data(self.testuser_name)
@@ -398,25 +330,10 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
         shutil.rmtree(temp_dir)
+ 
+    # test test_import_dump_many_users is gone -- why are we testing user dump/restore here??
 
-    def test_import_dump_many_users(self):
-        for i in range(2, 52):
-            db_user.create(i, 'user%d' % i)
-
-        temp_dir = tempfile.mkdtemp()
-        dump_location = self.logstore.dump_listens(
-            location=temp_dir,
-            dump_id=1,
-            end_time=datetime.now(),
-        )
-        self.assertTrue(os.path.isfile(dump_location))
-        self.reset_timescale_db()
-
-        done = self.logstore.import_listens_dump(dump_location)
-        self.assertEqual(done, len(db_user.get_all_users()))
-        shutil.rmtree(temp_dir)
-
-    def create_test_dump(self, archive_name, archive_path, schema_version=None, index=None):
+    def create_test_dump(self, archive_name, archive_path, schema_version=None):
         """ Creates a test dump to test the import listens functionality.
 
         Args:
@@ -430,19 +347,12 @@ class TestTimescaleListenStore(DatabaseTestCase):
         """
 
         temp_dir = tempfile.mkdtemp()
-        with open(archive_path, 'w') as archive:
-            pxz_command = ['pxz', '--compress']
-            pxz = subprocess.Popen(pxz_command, stdin=subprocess.PIPE, stdout=archive)
-
-            with tarfile.open(fileobj=pxz.stdin, mode='w|') as tar:
-                if schema_version is not None:
-                    schema_version_path = os.path.join(temp_dir, 'SCHEMA_SEQUENCE')
-                    with open(schema_version_path, 'w') as f:
-                        f.write(str(schema_version))
-                    tar.add(schema_version_path,
-                            arcname=os.path.join(archive_name, 'SCHEMA_SEQUENCE'))
-
-            pxz.stdin.close()
+        with tarfile.open(archive_path, mode='w|xz') as tar:
+            schema_version_path = os.path.join(temp_dir, 'SCHEMA_SEQUENCE')
+            with open(schema_version_path, 'w') as f:
+                f.write(str(schema_version or ' '))
+            tar.add(schema_version_path,
+                    arcname=os.path.join(archive_name, 'SCHEMA_SEQUENCE'))
 
         return archive_path
 

@@ -603,7 +603,7 @@ class TimescaleListenStore(ListenStore):
             for member in tar:
                 if member.name.endswith('SCHEMA_SEQUENCE'):
                     self.log.info('Checking if schema version of dump matches...')
-                    schema_seq = int(tar.extractfile(member).read().strip())
+                    schema_seq = int(tar.extractfile(member).read().strip() or '-1')
                     if schema_seq != LISTENS_DUMP_SCHEMA_VERSION:
                         raise SchemaMismatchException('Incorrect schema version! Expected: %d, got: %d.'
                                                       'Please ensure that the data dump version matches the code version'
