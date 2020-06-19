@@ -1,15 +1,74 @@
+import json
+from collections import defaultdict
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import listenbrainz_spark.stats.user.listening_activity as listening_activity_stats
+import listenbrainz_spark
+from listenbrainz_spark import utils
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
 from listenbrainz_spark.stats import (adjust_days, adjust_months, get_day_end,
                                       get_month_end, get_year_end, run_query)
 from listenbrainz_spark.tests import SparkTestCase
+from pyspark.sql import Row
 
 
 class ListeningActivityTestCase(SparkTestCase):
+    # use path_ as prefix for all paths in this class.
+    path_ = LISTENBRAINZ_DATA_DIRECTORY
+
+    def tearDown(self):
+        path_found = utils.path_exists(self.path_)
+        if path_found:
+            utils.delete_dir(self.path_, recursive=True)
+
+    def test_get_listening_activity(self):
+        self.maxDiff = None
+        with open(self.path_to_data_file('user_listening_activity.json')) as f:
+            data = json.load(f)
+
+        time_range = [
+            ['time_range_1', datetime.fromtimestamp(1592587270), datetime.fromtimestamp(1592587279)],
+            ['time_range_2', datetime.fromtimestamp(1592587280), datetime.fromtimestamp(1592587289)],
+            ['time_range_3', datetime.fromtimestamp(1592587290), datetime.fromtimestamp(1592587299)],
+            ['time_range_4', datetime.fromtimestamp(1592587300), datetime.fromtimestamp(1592587309)]
+        ]
+        time_range_df = listenbrainz_spark.session.createDataFrame(time_range, schema=listening_activity_stats.time_range_schema)
+        time_range_df.createOrReplaceTempView('time_range')
+
+        listens_df = None
+        for entry in data:
+            row = utils.create_dataframe(Row(user_name=entry['user_name'],
+                                             listened_at=datetime.fromtimestamp(entry['timestamp'])), schema=None)
+            listens_df = listens_df.union(row) if listens_df else row
+        listens_df.createOrReplaceTempView('listens')
+
+        expected = {}
+        for entry in data:
+            try:
+                expected[entry['user_name']]
+            except KeyError:
+                expected[entry['user_name']] = [
+                    {'time_range': 'time_range_1', 'from_ts': 1592587270, 'to_ts': 1592587279, 'listen_count': 0},
+                    {'time_range': 'time_range_2', 'from_ts': 1592587280, 'to_ts': 1592587289, 'listen_count': 0},
+                    {'time_range': 'time_range_3', 'from_ts': 1592587290, 'to_ts': 1592587299, 'listen_count': 0},
+                    {'time_range': 'time_range_4', 'from_ts': 1592587300, 'to_ts': 1592587309, 'listen_count': 0}
+                ]
+
+        for entry in data:
+            for range_ in expected[entry['user_name']]:
+                if range_['from_ts'] <= entry['timestamp'] <= range_['to_ts']:
+                    range_['listen_count'] += 1
+
+        data = listening_activity_stats.get_listening_activity()
+        received = {}
+        for entry in data:
+            _dict = entry.asDict(recursive=True)
+            received[_dict['user_name']] = _dict['listening_activity']
+
+        self.assertDictEqual(received, expected)
+
     @patch('listenbrainz_spark.stats.user.listening_activity.get_latest_listen_ts', return_value=datetime(2020, 6, 19))
     @patch('listenbrainz_spark.stats.user.listening_activity.get_listens')
     @patch('listenbrainz_spark.stats.user.listening_activity.get_listening_activity', return_value='listening_activity_table')
