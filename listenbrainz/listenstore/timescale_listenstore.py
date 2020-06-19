@@ -457,21 +457,22 @@ class TimescaleListenStore(ListenStore):
                       listen_count / (time.time() - t0))
 
 
-    def write_listens(self, temp_dir, tar_file, archive_name):
+    def write_listens(self, temp_dir, tar_file, archive_name, start_time_range = None, end_time_range = None):
         """ Dump listens in the format for the ListenBrainz dump.
 
         Args:
-            start_time and end_time (datetime): the range of time for the listens dump.
+            end_time_range (datetime): the range of time for the listens dump.
             temp_dir (str): the dir to use to write files before adding to archive
         """
         t0 = time.time()
         listen_count = 0
 
-        year = DATA_START_YEAR
-        month = 1
+        year = start_time_range.year
+        month = start_time_range.month
         while True:
             start_time = datetime(year, month, 1)
-            if start_time > datetime.now():
+            start_time = max(start_time_range, start_time)
+            if start_time > end_time_range:
                 break
 
             next_month = month + 1
@@ -482,6 +483,7 @@ class TimescaleListenStore(ListenStore):
 
             end_time = datetime(next_year, next_month, 1)
             end_time = end_time - timedelta(seconds=1)
+            end_time = min(end_time, end_time_range)
 
             filename = os.path.join(temp_dir, str(year), "%d.listens" % month)
             try:
@@ -564,10 +566,7 @@ class TimescaleListenStore(ListenStore):
                 self.write_dump_metadata(archive_name, start_time, end_time, temp_dir, tar, full_dump)
 
                 listens_path = os.path.join(temp_dir, 'listens')
-                if full_dump:
-                    self.write_listens(listens_path, tar, archive_name)
-                else:
-                    self.write_incremental_listens(start_time, end_time, listens_path)
+                self.write_listens(listens_path, tar, archive_name, start_time, end_time)
 
                 # remove the temporary directory
                 shutil.rmtree(temp_dir)
@@ -598,10 +597,10 @@ class TimescaleListenStore(ListenStore):
         pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
 
         schema_checked = False
+        total_imported = 0
         with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
+            listens = []
             for member in tar:
-                listens = []
-                print(member.name)
                 if member.name.endswith('SCHEMA_SEQUENCE'):
                     self.log.info('Checking if schema version of dump matches...')
                     schema_seq = int(tar.extractfile(member).read().strip())
@@ -619,20 +618,20 @@ class TimescaleListenStore(ListenStore):
                     with tar.extractfile(member) as tarf:  # tarf, really? That's the name you're going with? Yep.
                         while True:
                             line = tarf.readline()
-                            print(line)
                             if not line:
                                 break
                                 
                             listen = Listen.from_json(ujson.loads(line))
-                            print(listen)
                             listens.append(listen)
 
                             if len(listens) > DUMP_CHUNK_SIZE:
+                                total_imported += len(listens)
                                 self.insert(listens)
                                 listens = []
 
-                    if len(listens) > 0:
-                        self.insert(listens)
+            if len(listens) > 0:
+                total_imported += len(listens)
+                self.insert(listens)
 
         if not schema_checked:
             raise SchemaMismatchException("SCHEMA_SEQUENCE file missing from listen dump.")
@@ -640,6 +639,9 @@ class TimescaleListenStore(ListenStore):
         self.log.info('Import of listens from dump %s done!', archive_path)
         pxz.stdout.close()
 
+        return total_imported
+
+     
     def delete(self, musicbrainz_id):
         """ Delete all listens for user with specified MusicBrainz ID.
 
