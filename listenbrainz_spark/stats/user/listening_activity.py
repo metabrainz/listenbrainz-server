@@ -24,6 +24,7 @@ time_range_schema = StructType((StructField('time_range', StringType()), StructF
 
 
 def get_listening_activity():
+    """ Calculate number of listens for each user in time ranges given in the 'time_range' table """
     int_result = run_query("""
             SELECT listens.user_name
                  , time_range.time_range
@@ -60,7 +61,7 @@ def get_listening_activity():
 
 
 def get_listening_activity_week() -> Iterator[UserListeningActivityStatMessage]:
-    """ Get the weekly listening activity for all users """
+    """ Calculate number of listens for an user on each day of the past and current week. """
     current_app.logger.debug("Calculating listening_activity_week")
 
     date = get_latest_listen_ts()
@@ -68,6 +69,8 @@ def get_listening_activity_week() -> Iterator[UserListeningActivityStatMessage]:
     # Set time to 00:00
     to_date = datetime(to_date.year, to_date.month, to_date.day)
     from_date = day = adjust_days(to_date, 14)
+
+    # Genarate a dataframe containing days from last week and current week along with start and end time
     time_range = []
     while day < to_date:
         time_range.append([day.strftime('%A %d %B %Y'), day, _get_day_end(day)])
@@ -88,7 +91,7 @@ def get_listening_activity_week() -> Iterator[UserListeningActivityStatMessage]:
 
 
 def get_listening_activity_month() -> Iterator[UserListeningActivityStatMessage]:
-    """ Get the monthly listening activity for all users """
+    """ Calculate number of listens for an user on each day of the past month and current month. """
     current_app.logger.debug("Calculating listening_activity_month")
 
     to_date = get_latest_listen_ts()
@@ -115,7 +118,7 @@ def get_listening_activity_month() -> Iterator[UserListeningActivityStatMessage]
 
 
 def get_listening_activity_year() -> Iterator[UserListeningActivityStatMessage]:
-    """ Get the yearly listening activity for all users """
+    """ Calculate the number of listens for an user in each month of the past and current year. """
     current_app.logger.debug("Calculating listening_activity_year")
 
     to_date = get_latest_listen_ts()
@@ -140,7 +143,7 @@ def get_listening_activity_year() -> Iterator[UserListeningActivityStatMessage]:
 
 
 def get_listening_activity_all_time() -> Iterator[UserListeningActivityStatMessage]:
-    """ Get the all_timely listening activity for all users """
+    """ Calculate the number of listens for an user in each year starting from LAST_FM_FOUNDING_YEAR (2002). """
     current_app.logger.debug("Calculating listening_activity_all_time")
 
     to_date = get_latest_listen_ts()
@@ -168,10 +171,10 @@ def create_messages(data, stats_range: str, from_ts: int, to_ts: int) -> Iterato
     Create messages to send the data to webserver via RabbitMQ
 
     Args:
-        data (iterator): Data to send to webserver
+        data: Data to send to webserver
 
     Returns:
-        messages (generator): A list of messages to be sent via RabbitMQ
+        messages: A list of messages to be sent via RabbitMQ
     """
     for entry in data:
         _dict = entry.asDict(recursive=True)
