@@ -179,36 +179,6 @@ def export_data():
         return render_template("user/export.html", user=current_user)
 
 
-@profile_bp.route('/request-stats', methods=['GET'])
-@login_required
-def request_stats():
-    """ Check if the current user's statistics have been calculated and if not,
-        put them in the stats queue for stats_calculator.
-    """
-    status = _redis.redis.get(construct_stats_queue_key(current_user.musicbrainz_id)) == 'queued'
-    if status == 'queued':
-        flash.info('You have already been added to the stats calculation queue! Please check back later.')
-    elif db_stats.valid_stats_exist(current_user.id, current_app.config['STATS_CALCULATION_INTERVAL']):
-        flash.info('Your stats were calculated in the most recent stats calculation interval,'
-            ' please wait until the next interval! We calculate new statistics every Monday at 00:00 UTC.')
-    else:
-        # publish to rabbitmq queue that the stats-calculator consumes
-        data = {
-            'type': 'user',
-            'id': current_user.id,
-            'musicbrainz_id': current_user.musicbrainz_id,
-        }
-        publish_data_to_queue(
-            data=data,
-            exchange=current_app.config['BIGQUERY_EXCHANGE'],
-            queue=current_app.config['BIGQUERY_QUEUE'],
-            error_msg='Could not put user %s into statistics calculation queue, please try again later',
-        )
-        _redis.redis.set(construct_stats_queue_key(current_user.musicbrainz_id), 'queued')
-        flash.info('You have been added to the stats calculation queue! Please check back later.')
-    return redirect(url_for('profile.info'))
-
-
 @profile_bp.route('/delete', methods=['GET', 'POST'])
 @login_required
 def delete():
