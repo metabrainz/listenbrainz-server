@@ -34,8 +34,8 @@ class EntityTestCase(SparkTestCase):
         mock_get_listens.assert_called_with(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
         mock_filter_listens.assert_called_with(mock_df, from_date, to_date)
         mock_filtered_df.createOrReplaceTempView.assert_called_with('user_test_week')
-        mock_create_messages.assert_called_with(data='user_test_week_data', entity='test', stats_type='user_entity',
-                                                stats_range='week', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
+        mock_create_messages.assert_called_with(data='user_test_week_data', entity='test', stats_range='week',
+                                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
     @patch('listenbrainz_spark.stats.user.entity.get_latest_listen_ts', return_value=datetime(2020, 5, 20))
     @patch('listenbrainz_spark.stats.user.entity.get_listens')
@@ -51,8 +51,8 @@ class EntityTestCase(SparkTestCase):
         mock_get_latest_listen_ts.assert_called_once()
         mock_get_listens.assert_called_with(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
         mock_df.createOrReplaceTempView.assert_called_with('user_test_month')
-        mock_create_messages.assert_called_with(data='user_test_month_data', entity='test', stats_type='user_entity',
-                                                stats_range='month', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
+        mock_create_messages.assert_called_with(data='user_test_month_data', entity='test', stats_range='month',
+                                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
     @patch('listenbrainz_spark.stats.user.entity.get_latest_listen_ts', return_value=datetime(2020, 5, 20))
     @patch('listenbrainz_spark.stats.user.entity.get_listens')
@@ -68,8 +68,8 @@ class EntityTestCase(SparkTestCase):
         mock_get_latest_listen_ts.assert_called_once()
         mock_get_listens.assert_called_with(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
         mock_df.createOrReplaceTempView.assert_called_with('user_test_year')
-        mock_create_messages.assert_called_with(data='user_test_year_data', entity='test', stats_type='user_entity',
-                                                stats_range='year', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
+        mock_create_messages.assert_called_with(data='user_test_year_data', entity='test', stats_range='year',
+                                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
     @patch('listenbrainz_spark.stats.user.entity.get_latest_listen_ts', return_value=datetime(2020, 5, 20))
     @patch('listenbrainz_spark.stats.user.entity.get_listens')
@@ -85,5 +85,5 @@ class EntityTestCase(SparkTestCase):
         mock_get_latest_listen_ts.assert_called_once()
         mock_get_listens.assert_called_with(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
         mock_df.createOrReplaceTempView.assert_called_with('user_test_all_time')
-        mock_create_messages.assert_called_with(data='user_test_all_time_data', entity='test', stats_type='user_entity',
-                                                stats_range='all_time', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
+        mock_create_messages.assert_called_with(data='user_test_all_time_data', entity='test', stats_range='all_time',
+                                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
