@@ -42,7 +42,7 @@ def get_artist(user_name):
     Get top artists for user ``user_name``.
 
 
-    An sample response from the endpoint may look like::
+    A sample response from the endpoint may look like::
 
         {
             "payload": {
@@ -140,7 +140,7 @@ def get_release(user_name):
     Get top releases for user ``user_name``.
 
 
-    An sample response from the endpoint may look like::
+    A sample response from the endpoint may look like::
 
         {
             "payload": {
@@ -186,7 +186,7 @@ def get_release(user_name):
     .. note::
         - This endpoint is currently in beta
         - ``artist_mbids``, ``artist_msid``, ``release_mbid`` and ``release_msid`` are optional fields and
-            may not be present in all the responses
+          may not be present in all the responses
 
     :param count: Optional, number of releases to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
         Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
@@ -248,7 +248,7 @@ def get_recording(user_name):
     Get top recordings for user ``user_name``.
 
 
-    An sample response from the endpoint may look like::
+    A sample response from the endpoint may look like::
 
         {
             "payload": {
@@ -290,7 +290,7 @@ def get_recording(user_name):
 
     .. note::
         - This endpoint is currently in beta
-        - ``artist_mbids``, ``artist_msid``,``release_name``, ``release_mbid``, ``release_msid``,
+        - ``artist_mbids``, ``artist_msid``, ``release_name``, ``release_mbid``, ``release_msid``,
           ``recording_mbid`` and ``recording_msid`` are optional fields and may not be present in all the responses
 
     :param count: Optional, number of recordings to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
