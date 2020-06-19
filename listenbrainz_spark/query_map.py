@@ -17,6 +17,8 @@ functions = {
     'cf_recording.recommendations.train_model': listenbrainz_spark.recommendations.train_models.main,
     'cf_recording.recommendations.candidate_sets': listenbrainz_spark.recommendations.candidate_sets.main,
     'cf_recording.recommendations.recommend': listenbrainz_spark.recommendations.recommend.main,
+    'import.mapping': listenbrainz_spark.request_consumer.jobs.import_dump.import_mapping_to_hdfs,
+    'import.artist_relation': listenbrainz_spark.request_consumer.jobs.import_dump.import_artist_relation_to_hdfs,
 }
 
 

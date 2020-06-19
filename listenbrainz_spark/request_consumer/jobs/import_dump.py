@@ -1,4 +1,4 @@
-""" Spark job that downloads the latest listenbrainz dump and imports into HDFS
+""" Spark job that downloads the latest listenbrainz dumps and imports into HDFS
 """
 
 import shutil
@@ -23,4 +23,30 @@ def import_newest_full_dump_handler():
         'type': 'import_full_dump',
         'imported_dump': dump_name,
         'time': str(datetime.utcnow()),
+    }]
+
+
+def import_mapping_to_hdfs():
+    temp_dir = tempfile.mkdtemp()
+    src, mapping_name = ListenbrainzDataDownloader().download_msid_mbid_mapping(directory=temp_dir)
+    ListenbrainzDataUploader().upload_mapping(archive=src, force=True)
+    shutil.rmtree(temp_dir)
+
+    return [{
+        'type': 'import_mapping',
+        'imported_mapping': mapping_name,
+        'time': str(datetime.utcnow())
+    }]
+
+
+def import_artist_relation_to_hdfs():
+    temp_dir = tempfile.mkdtemp()
+    src, artist_relation_name = ListenbrainzDataDownloader().download_artist_relation(directory=temp_dir)
+    ListenbrainzDataUploader().upload_artist_relation(archive=src, force=True)
+    shutil.rmtree(temp_dir)
+
+    return [{
+        'type': 'import_artist_relation',
+        'imported_artist_relation': artist_relation_name,
+        'time': str(datetime.utcnow())
     }]

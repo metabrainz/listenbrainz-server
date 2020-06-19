@@ -194,3 +194,19 @@ def request_recommendations(top, similar):
         'recommendation_similar_artist_limit': similar,
     }
     send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.recommend', params=params))
+
+
+@cli.command(name='request_import_mapping')
+def request_import_mapping():
+    """ Send the spark cluster a request to import msid mbid mapping.
+    """
+
+    send_request_to_spark_cluster(_prepare_query_message('import.mapping'))
+
+
+@cli.command(name='request_import_artist_relation')
+def request_import_artist_relation():
+    """ Send the spark cluster a request to import artist relation.
+    """
+
+    send_request_to_spark_cluster(_prepare_query_message('import.artist_relation'))

@@ -130,3 +130,11 @@ class RequestManageTestCase(unittest.TestCase):
         received_message = request_manage._prepare_query_message('cf_recording.recommendations.recommend',
                                                                  message['params'])
         self.assertEqual(expected_message, received_message)
+
+        expected_message = ujson.dumps({'query': 'import.mapping'})
+        received_message = request_manage._prepare_query_message('import.mapping')
+        self.assertEqual(expected_message, received_message)
+
+        expected_message = ujson.dumps({'query': 'import.artist_relation'})
+        received_message = request_manage._prepare_query_message('import.artist_relation')
+        self.assertEqual(expected_message, received_message)

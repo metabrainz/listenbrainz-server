@@ -170,7 +170,6 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
             Returns:
                 dest_path (str): Local path where artist relation has been downloaded.
                 artist_relation_file_name (str): file name of downloaded artist relation.
-
         """
         self.connection.cwd(current_app.config['FTP_ARTIST_RELATION_DIR'])
         dump = self.list_dir()
