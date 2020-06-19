@@ -46,25 +46,21 @@ class RequestManageTestCase(unittest.TestCase):
 
         # extra parameter given
         with self.assertRaises(request_manage.InvalidSparkRequestError):
-            request_manage._prepare_query_message('stats.user.all', {'musicbrainz_id': 'wtf'})
+            request_manage._prepare_query_message('stats.user.listening_activity.week', {'musicbrainz_id': 'wtf'})
 
         # invalid parameter given
         with self.assertRaises(request_manage.InvalidSparkRequestError):
-            request_manage._prepare_query_message('stats.user.for_one_user', {'invalid_param': 'wtf'})
+            request_manage._prepare_query_message('stats.user.entity.week', {'invalid_param': 'wtf'})
 
         # extra (unexpected) parameter passed
         with self.assertRaises(request_manage.InvalidSparkRequestError):
-            request_manage._prepare_query_message('stats.user.for_one_user', {'musicbrainz_id': 'wtf', 'param2': 'bbq'})
+            request_manage._prepare_query_message('stats.user.entity.week', {'entity': 'recordings', 'param2': 'bbq'})
 
         # expected parameter not passed
         with self.assertRaises(request_manage.InvalidSparkRequestError):
-            request_manage._prepare_query_message('stats.user.for_one_user', {})
+            request_manage._prepare_query_message('stats.user.entity.week', {})
 
     def test_prepare_query_message_happy_path(self):
-        expected_message = ujson.dumps({'query': 'stats.user.all'})
-        received_message = request_manage._prepare_query_message('stats.user.all')
-        self.assertEqual(expected_message, received_message)
-
         expected_message = ujson.dumps({'query': 'stats.user.entity.week', 'params': {'entity': 'test'}})
         received_message = request_manage._prepare_query_message('stats.user.entity.week', params={'entity': 'test'})
         self.assertEqual(expected_message, received_message)

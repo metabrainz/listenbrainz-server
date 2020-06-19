@@ -65,17 +65,12 @@ class RequestConsumer:
     def push_to_result_queue(self, messages):
         current_app.logger.debug("Pushing result to RabbitMQ...")
         for message in messages:
-            if isinstance(message, dict):
-                data = message
-            else:
-                # If message is not a dictionary it's a pydantic model, convert to dictionary
-                data = message.dict(exclude_none=True)
             while True:
                 try:
                     self.result_channel.basic_publish(
                         exchange=current_app.config['SPARK_RESULT_EXCHANGE'],
                         routing_key='',
-                        body=json.dumps(data),
+                        body=json.dumps(messages),
                         properties=pika.BasicProperties(delivery_mode=2,),
                     )
                     break

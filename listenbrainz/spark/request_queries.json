@@ -1,9 +1,4 @@
 {
-  "stats.user.all": {
-    "name": "stats.user.all",
-    "description": "All user statistics that ListenBrainz calculates for all ListenBrainz users",
-    "params": []
-  },
   "stats.user.entity.week": {
     "name": "stats.user.entity.week",
     "description": "Entity statistics for all users in the last week",
@@ -26,22 +21,22 @@
   },
   "stats.user.listening_activity.week": {
     "name": "stats.user.listening_activity.week",
-    "description": "Weekly listening_activity statistics for all users",
+    "description": "Calculate number of listens for an user on each day of the past and current week.",
     "params": []
   },
   "stats.user.listening_activity.month": {
     "name": "stats.user.listening_activity.month",
-    "description": "Monthly listening_activity statistics for all users",
+    "description": "Calculate number of listens for an user on each day of the past month and current month.",
     "params": []
   },
   "stats.user.listening_activity.year": {
     "name": "stats.user.listening_activity.year",
-    "description": "Yearly listening_activity statistics for all users",
+    "description": "Calculate the number of listens for an user in each month of the past and current year.",
     "params": []
   },
   "stats.user.listening_activity.all_time": {
     "name": "stats.user.listening_activity.all_time",
-    "description": "All time listening_activity statistics for all users",
+    "description": "Calculate the number of listens for an user in each year starting from LAST_FM_FOUNDING_YEAR (2002).",
     "params": []
   },
   "import.dump.full": {

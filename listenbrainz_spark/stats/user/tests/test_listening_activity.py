@@ -24,7 +24,6 @@ class ListeningActivityTestCase(SparkTestCase):
             utils.delete_dir(self.path_, recursive=True)
 
     def test_get_listening_activity(self):
-        self.maxDiff = None
         with open(self.path_to_data_file('user_listening_activity.json')) as f:
             data = json.load(f)
 
@@ -46,9 +45,7 @@ class ListeningActivityTestCase(SparkTestCase):
 
         expected = {}
         for entry in data:
-            try:
-                expected[entry['user_name']]
-            except KeyError:
+            if not entry['user_name'] in expected:
                 expected[entry['user_name']] = [
                     {'time_range': 'time_range_1', 'from_ts': 1592587270, 'to_ts': 1592587279, 'listen_count': 0},
                     {'time_range': 'time_range_2', 'from_ts': 1592587280, 'to_ts': 1592587289, 'listen_count': 0},

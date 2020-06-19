@@ -106,8 +106,8 @@ class StatsDatabaseTestCase(DatabaseTestCase):
 
         db_stats.insert_user_listening_activity(
             user_id=self.user['id'], listening_activity=UserListeningActivityStatJson(**{'year': listening_activity_data}))
-        db_stats.insert_user_listening_activity(user_id=self.user['id'],
-                                                listening_activity=UserListeningActivityStatJson(**{'all_time': listening_activity_data}))
+        db_stats.insert_user_listening_activity(
+            self.user['id'], UserListeningActivityStatJson(**{'all_time': listening_activity_data}))
 
         result = db_stats.get_user_listening_activity(1, 'all_time')
         self.assertDictEqual(result.all_time.dict(), listening_activity_data)

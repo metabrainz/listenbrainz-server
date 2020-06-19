@@ -3,12 +3,10 @@ import listenbrainz_spark.recommendations.create_dataframes
 import listenbrainz_spark.recommendations.recommend
 import listenbrainz_spark.recommendations.train_models
 import listenbrainz_spark.request_consumer.jobs.import_dump
-import listenbrainz_spark.stats.user.all
 import listenbrainz_spark.stats.user.entity
 import listenbrainz_spark.stats.user.listening_activity
 
 functions = {
-    'stats.user.all': listenbrainz_spark.stats.user.all.calculate,
     'stats.user.entity.week': listenbrainz_spark.stats.user.entity.get_entity_week,
     'stats.user.entity.month': listenbrainz_spark.stats.user.entity.get_entity_month,
     'stats.user.entity.year': listenbrainz_spark.stats.user.entity.get_entity_year,

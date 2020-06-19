@@ -87,23 +87,15 @@ def send_request_to_spark_cluster(message):
 
 
 @cli.command(name="request_user_stats")
-@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity']), help="Type of statistics to calculate")
-@click.option("--range", 'range_', type=click.Choice(['week', 'month', 'year', 'all_time']), help="Time range of statistics to calculate")
+@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity']),
+              help="Type of statistics to calculate", required=True)
+@click.option("--range", 'range_', type=click.Choice(['week', 'month', 'year', 'all_time']),
+              help="Time range of statistics to calculate", required=True)
 @click.option("--entity", type=click.Choice(['artists', 'releases', 'recordings']),
               help="Entity for which statistics should be calculated")
 def request_user_stats(type_, range_, entity):
     """ Send a user stats request to the spark cluster
     """
-    if not type_:
-        click.echo("Type not provided, falling back to calculating all user statistics")
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.all'))
-        return
-
-    if not range_:
-        click.echo("Range not provided, falling back to calculating all user statistics")
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.all'))
-        return
-
     params = {}
     if type_ == 'entity' and entity:
         params['entity'] = entity

@@ -5,7 +5,7 @@ from typing import Optional, List
 
 
 class UserListeningActivityRecord(pydantic.BaseModel):
-    """ Each individual record for user's listening activity contains the time range, 
+    """ Each individual record for user's listening activity contains the time range,
         timestamp for start and end of the time range and listen count.
     """
     time_range: str
