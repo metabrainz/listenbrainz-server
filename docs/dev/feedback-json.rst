@@ -36,19 +36,19 @@ Fetching feedback JSON
 
 The JSON documents returned from our API for recording feedback look like the following::
 
-{
-   count: 1,
-   feedback: [
-      {
-         "user_id": "-- the MusicBrainz ID of the user --",
-         "recording_msid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
-         "score": 1
-      },
-      "-- more feedback data here ---"
-   ],
-   offset: 0,
-   total_count: 1
-}
+    {
+      count: 1,
+      feedback: [
+        {
+            "user_id": "-- the MusicBrainz ID of the user --",
+            "recording_msid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f",
+            "score": 1
+        },
+        "-- more feedback data here ---"
+      ],
+      offset: 0,
+      total_count: 1
+    }
 
 The number of feedback items in the document are returned by the top-level ``count`` element. The total number of
 feedback items for the user/recording are returned by the top-level ``total_count``. ``offset`` specifies the
