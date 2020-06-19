@@ -4,16 +4,19 @@ from unittest import mock
 
 from flask import current_app
 
-from listenbrainz.spark.handlers import (handle_candidate_sets, handle_dataframes,
-                                         handle_dump_imported, handle_model,
-                                         handle_recommendations, handle_user_entity,
-                                         notify_mapping_import, notify_artist_relation_import,
-                                         is_new_cf_recording_recommendation_batch,
-                                         is_new_user_stats_batch)
-
+from data.model.user_listening_activity import (UserListeningActivityRecord,
+                                                UserListeningActivityStatJson,
+                                                UserListeningActivityStatRange)
+from listenbrainz.db.model.user_artist_stat import (UserArtistRecord,
+                                                    UserArtistStatJson,
+                                                    UserArtistStatRange)
+from listenbrainz.spark.handlers import (
+    handle_candidate_sets, handle_dataframes, handle_dump_imported,
+    handle_model, handle_recommendations, handle_user_entity,
+    handle_user_listening_activity, is_new_cf_recording_recommendation_batch,
+    is_new_user_stats_batch, notify_artist_relation_import,
+    notify_mapping_import)
 from listenbrainz.webserver import create_app
-
-from listenbrainz.db.model.user_artist_stat import UserArtistStatJson, UserArtistStatRange, UserArtistRecord
 
 
 class HandlersTestCase(unittest.TestCase):

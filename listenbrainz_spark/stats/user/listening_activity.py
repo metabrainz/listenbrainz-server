@@ -5,8 +5,7 @@ from typing import Iterator
 from flask import current_app
 
 import listenbrainz_spark
-from listenbrainz_spark.stats.user.model.user_listening_activity import \
-    UserListeningActivityStatMessage
+from data.model.user_listening_activity import UserListeningActivityStatMessage
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
 from listenbrainz_spark.stats import (adjust_days, adjust_months, replace_days,

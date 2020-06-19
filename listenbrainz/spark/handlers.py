@@ -8,10 +8,10 @@ import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_rec
 from flask import current_app, render_template
 from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
+from data.model.user_listening_activity import UserListeningActivityStatJson
 from listenbrainz.db.model.user_artist_stat import UserArtistStatJson
 from listenbrainz.db.model.user_release_stat import UserReleaseStatJson
 from listenbrainz.db.model.user_recording_stat import UserRecordingStatJson
-from listenbrainz.db.model.user_listening_activity import UserListeningActivityStatJson
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days

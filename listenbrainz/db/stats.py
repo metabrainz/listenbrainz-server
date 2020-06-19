@@ -25,11 +25,11 @@ from typing import Optional
 
 import sqlalchemy
 import ujson
+from data.model.user_listening_activity import (UserListeningActivityStat,
+                                                UserListeningActivityStatJson)
 from listenbrainz import db
 from listenbrainz.db.model.user_artist_stat import (UserArtistStat,
                                                     UserArtistStatJson)
-from listenbrainz.db.model.user_listening_activity import (
-    UserListeningActivityStat, UserListeningActivityStatJson)
 from listenbrainz.db.model.user_recording_stat import (UserRecordingStat,
                                                        UserRecordingStatJson)
 from listenbrainz.db.model.user_release_stat import (UserReleaseStat,
