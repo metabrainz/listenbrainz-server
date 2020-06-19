@@ -1,0 +1,8 @@
+Hey! 👋
+
+Artist relation has been successfully imported to the spark cluster.
+
+import completion time = {{ time }}
+artist relation name = {{ artist_relation_name }}
+
+Your Friendly Neighbourhood Brainzbot 🤖

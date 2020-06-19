@@ -4,10 +4,13 @@ from unittest import mock
 
 from flask import current_app
 
-from listenbrainz.spark.handlers import (
-    handle_candidate_sets, handle_dataframes, handle_dump_imported,
-    handle_model, handle_recommendations, handle_user_entity,
-    is_new_cf_recording_recommendation_batch, is_new_user_stats_batch)
+from listenbrainz.spark.handlers import (handle_candidate_sets, handle_dataframes,
+                                         handle_dump_imported, handle_model,
+                                         handle_recommendations, handle_user_entity,
+                                         notify_mapping_import, notify_artist_relation_import,
+                                         is_new_cf_recording_recommendation_batch,
+                                         is_new_user_stats_batch)
+
 from listenbrainz.webserver import create_app
 
 from listenbrainz.db.model.user_artist_stat import UserArtistStatJson, UserArtistStatRange, UserArtistRecord
@@ -189,5 +192,49 @@ class HandlersTestCase(unittest.TestCase):
                 'total_time': '3.1',
                 'from_date': str(time),
                 'to_date': str(time)
+            })
+            mock_send_mail.assert_called_once()
+
+    @mock.patch('listenbrainz.spark.handlers.send_mail')
+    def test_notify_mapping_import(self, mock_send_mail):
+        with self.app.app_context():
+            time = datetime.now()
+            mapping_name = 'msid-mbid-mapping-with-matchable-20200603-202731.tar.bz2'
+
+            # testing, should not send a mail
+            self.app.config['TESTING'] = True
+            notify_mapping_import({
+                'imported_mapping': mapping_name,
+                'time': str(time),
+            })
+            mock_send_mail.assert_not_called()
+
+            # in prod now, should send it
+            self.app.config['TESTING'] = False
+            notify_mapping_import({
+                'imported_mapping': mapping_name,
+                'time': str(time),
+            })
+            mock_send_mail.assert_called_once()
+
+    @mock.patch('listenbrainz.spark.handlers.send_mail')
+    def test_notify_artist_relation_import(self, mock_send_mail):
+        with self.app.app_context():
+            time = datetime.now()
+            artist_relation_name = 'artist-credit-artist-credit-relations-01-20191230-134806.tar.bz2'
+
+            # testing, should not send a mail
+            self.app.config['TESTING'] = True
+            notify_artist_relation_import({
+                'import_artist_relation': artist_relation_name,
+                'time': str(time),
+            })
+            mock_send_mail.assert_not_called()
+
+            # in prod now, should send it
+            self.app.config['TESTING'] = False
+            notify_artist_relation_import({
+                'import_artist_relation': artist_relation_name,
+                'time': str(time),
             })
             mock_send_mail.assert_called_once()

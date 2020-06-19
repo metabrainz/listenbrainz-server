@@ -48,5 +48,15 @@
     "name": "cf_recording.recommendations.recommend",
     "description": "Generate recommendations for all active ListenBrainz users.",
     "params": ["recommendation_top_artist_limit", "recommendation_similar_artist_limit"]
+  },
+  "import.mapping": {
+    "name": "import.mapping",
+    "description": "Import msid mbid mapping into the spark cluster.",
+    "params": []
+  },
+  "import.artist_relation": {
+    "name": "import.artist_relation",
+    "description": "Import artist relation into the spark cluster.",
+    "params": []
   }
 }
