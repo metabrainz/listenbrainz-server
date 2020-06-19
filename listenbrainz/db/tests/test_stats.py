@@ -4,6 +4,7 @@ import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 
 from datetime import datetime, timezone
+from data.model.user_listening_activity import UserListeningActivityStatJson
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db.model.user_artist_stat import UserArtistStatJson
 from listenbrainz.db.model.user_release_stat import UserReleaseStatJson
@@ -44,6 +45,16 @@ class StatsDatabaseTestCase(DatabaseTestCase):
 
         result = db_stats.get_user_recordings(user_id=self.user['id'], stats_range='all_time')
         self.assertDictEqual(result.all_time.dict(), recordings_data)
+
+    def test_insert_user_listening_activity(self):
+        """ Test if listening activity stats are inserted correctly """
+        with open(self.path_to_data_file('user_listening_activity_db.json')) as f:
+            listening_activity_data = json.load(f)
+        db_stats.insert_user_listening_activity(
+            user_id=self.user['id'], listening_activity=UserListeningActivityStatJson(**{'all_time': listening_activity_data}))
+
+        result = db_stats.get_user_listening_activity(user_id=self.user['id'], stats_range='all_time')
+        self.assertDictEqual(result.all_time.dict(), listening_activity_data)
 
     def test_insert_user_stats_mult_ranges_artist(self):
         """ Test if multiple time range data is inserted correctly """
@@ -88,6 +99,22 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         result = db_stats.get_user_recordings(1, 'year')
         self.assertDictEqual(result.year.dict(), recordings_data)
 
+    def test_insert_user_stats_mult_ranges_listening_activity(self):
+        """ Test if multiple time range data is inserted correctly """
+        with open(self.path_to_data_file('user_listening_activity_db.json')) as f:
+            listening_activity_data = json.load(f)
+
+        db_stats.insert_user_listening_activity(
+            user_id=self.user['id'], listening_activity=UserListeningActivityStatJson(**{'year': listening_activity_data}))
+        db_stats.insert_user_listening_activity(user_id=self.user['id'],
+                                                listening_activity=UserListeningActivityStatJson(**{'all_time': listening_activity_data}))
+
+        result = db_stats.get_user_listening_activity(1, 'all_time')
+        self.assertDictEqual(result.all_time.dict(), listening_activity_data)
+
+        result = db_stats.get_user_listening_activity(1, 'year')
+        self.assertDictEqual(result.year.dict(), listening_activity_data)
+
     def insert_test_data(self):
         """ Insert test data into the database """
 
@@ -97,15 +124,20 @@ class StatsDatabaseTestCase(DatabaseTestCase):
             releases = json.load(f)
         with open(self.path_to_data_file('user_top_recordings_db.json')) as f:
             recordings = json.load(f)
+        with open(self.path_to_data_file('user_listening_activity_db.json')) as f:
+            listening_activity = json.load(f)
 
         db_stats.insert_user_artists(self.user['id'], UserArtistStatJson(**{'all_time': artists}))
         db_stats.insert_user_releases(self.user['id'], UserReleaseStatJson(**{'all_time': releases}))
         db_stats.insert_user_recordings(self.user['id'], UserRecordingStatJson(**{'all_time': recordings}))
+        db_stats.insert_user_listening_activity(
+            self.user['id'], UserListeningActivityStatJson(**{'all_time': listening_activity}))
 
         return {
             'user_artists': artists,
             'user_releases': releases,
-            'user_recordings': recordings
+            'user_recordings': recordings,
+            'user_listening_activity': listening_activity
         }
 
     def test_get_timestamp_for_last_user_stats_update(self):
@@ -128,6 +160,11 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         data_inserted = self.insert_test_data()
         result = db_stats.get_user_recordings(self.user['id'], 'all_time')
         self.assertDictEqual(result.all_time.dict(), data_inserted['user_recordings'])
+
+    def test_get_user_listening_activity(self):
+        data_inserted = self.insert_test_data()
+        result = db_stats.get_user_listening_activity(self.user['id'], 'all_time')
+        self.assertDictEqual(result.all_time.dict(), data_inserted['user_listening_activity'])
 
     def test_valid_stats_exist(self):
         self.assertFalse(db_stats.valid_stats_exist(self.user['id'], 7))

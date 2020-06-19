@@ -214,6 +214,27 @@ def get_user_recordings(user_id: int, stats_range: str) -> Optional[UserRecordin
     return UserRecordingStat(**dict(row)) if row else None
 
 
+def get_user_listening_activity(user_id: int, stats_range: str) -> Optional[UserListeningActivityStat]:
+    """Get listening activity in the given time range for user with given ID.
+
+        Args:
+            user_id: the row ID of the user in the DB
+            stats_range: the time range to fetch the stats for
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT user_id, listening_activity->:range AS {range}, last_updated
+              FROM statistics.user
+             WHERE user_id = :user_id
+            """.format(range=stats_range)), {
+            'range': stats_range,
+            'user_id': user_id
+        })
+        row = result.fetchone()
+
+    return UserListeningActivityStat(**dict(row)) if row else None
+
+
 def valid_stats_exist(user_id, days):
     """ Returns True if statistics for a user have been calculated in
     the last X days (where x is passed to the function), and are present in the db

@@ -81,6 +81,22 @@ class RequestManageTestCase(unittest.TestCase):
         received_message = request_manage._prepare_query_message('stats.user.entity.all_time', params={'entity': 'test'})
         self.assertEqual(expected_message, received_message)
 
+        expected_message = ujson.dumps({'query': 'stats.user.listening_activity.week'})
+        received_message = request_manage._prepare_query_message('stats.user.listening_activity.week')
+        self.assertEqual(expected_message, received_message)
+
+        expected_message = ujson.dumps({'query': 'stats.user.listening_activity.month'})
+        received_message = request_manage._prepare_query_message('stats.user.listening_activity.month')
+        self.assertEqual(expected_message, received_message)
+
+        expected_message = ujson.dumps({'query': 'stats.user.listening_activity.year'})
+        received_message = request_manage._prepare_query_message('stats.user.listening_activity.year')
+        self.assertEqual(expected_message, received_message)
+
+        expected_message = ujson.dumps({'query': 'stats.user.listening_activity.all_time'})
+        received_message = request_manage._prepare_query_message('stats.user.listening_activity.all_time')
+        self.assertEqual(expected_message, received_message)
+
         message = {
             'query': 'cf_recording.recommendations.create_dataframes',
             'params': {

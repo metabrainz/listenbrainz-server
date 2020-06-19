@@ -69,6 +69,50 @@ class HandlersTestCase(unittest.TestCase):
         ))
         mock_send_mail.assert_called_once()
 
+    @mock.patch('listenbrainz.spark.handlers.db_stats.insert_user_listening_activity')
+    @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')
+    @mock.patch('listenbrainz.spark.handlers.is_new_user_stats_batch')
+    @mock.patch('listenbrainz.spark.handlers.send_mail')
+    def test_handle_user_listening_activity(self, mock_send_mail, mock_new_user_stats, mock_get_by_mb_id, mock_db_insert):
+        data = {
+            'musicbrainz_id': 'iliekcomputers',
+            'type': 'listening_activity',
+            'range': 'all_time',
+            'from_ts': 1,
+            'to_ts': 10,
+            'listening_activity': [{
+                'from_ts': 1,
+                'to_ts': 5,
+                'time_range': '2020',
+                'listen_count': 200,
+            }],
+        }
+        mock_get_by_mb_id.return_value = {'id': 1, 'musicbrainz_id': 'iliekcomputers'}
+        mock_new_user_stats.return_value = True
+
+        with self.app.app_context():
+            current_app.config['TESTING'] = False  # set testing to false to check the notifications
+            handle_user_listening_activity(data)
+
+        mock_db_insert.assert_called_with(1, UserListeningActivityStatJson(
+            week=None,
+            year=None,
+            month=None,
+            all_time=UserListeningActivityStatRange(
+                to_ts=10,
+                from_ts=1,
+                listening_activity=[
+                    UserListeningActivityRecord(
+                        from_ts=1,
+                        to_ts=5,
+                        time_range='2020',
+                        listen_count=200
+                    )
+                ]
+            )
+        ))
+        mock_send_mail.assert_called_once()
+
     @mock.patch('listenbrainz.spark.handlers.db_stats.get_timestamp_for_last_user_stats_update')
     def test_is_new_user_stats_batch(self, mock_db_get_timestamp):
         mock_db_get_timestamp.return_value = datetime.now(timezone.utc)
