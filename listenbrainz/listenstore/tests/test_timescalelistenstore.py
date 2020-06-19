@@ -1,7 +1,7 @@
 # coding=utf-8
 
 import os
-from time import sleep, time
+from time import time
 from datetime import datetime
 import logging
 import shutil
@@ -227,12 +227,8 @@ class TestTimescaleListenStore(DatabaseTestCase):
         base = 1500000000
         listens = generate_data(1, self.testuser_name, base + 1, 5)  # generate 5 listens with ts 1-5
         self.logstore.insert(listens)
-        sleep(1)
-        start_time = datetime.now()
-        sleep(1)
         listens = generate_data(1, self.testuser_name, base + 6, 5)  # generate 5 listens with ts 6-10
         self.logstore.insert(listens)
-        sleep(1)
         temp_dir = tempfile.mkdtemp()
         dump_location = self.logstore.dump_listens(
             location=temp_dir,
@@ -240,12 +236,9 @@ class TestTimescaleListenStore(DatabaseTestCase):
             start_time=datetime.utcfromtimestamp(base + 6),
             end_time=datetime.utcfromtimestamp(base + 10)
         )
-        sleep(1)
         self.assertTrue(os.path.isfile(dump_location))
         self.reset_timescale_db()
-        sleep(1)
         self.logstore.import_listens_dump(dump_location)
-        sleep(1)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=base + 11)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, base + 10)
@@ -259,22 +252,17 @@ class TestTimescaleListenStore(DatabaseTestCase):
         base = 1500000000
         listens = generate_data(1, self.testuser_name, base + 1, 5)  # generate 5 listens with ts 1-5
         self.logstore.insert(listens)
-        sleep(1)
         listens = generate_data(1, self.testuser_name, base + 6, 5)  # generate 5 listens with ts 6-10
         self.logstore.insert(listens)
-        sleep(1)
         temp_dir = tempfile.mkdtemp()
         dump_location = self.logstore.dump_listens(
             location=temp_dir,
             dump_id=1,
             end_time=datetime.utcfromtimestamp(base + 5)
         )
-        sleep(1)
         self.assertTrue(os.path.isfile(dump_location))
         self.reset_timescale_db()
-        sleep(1)
         self.logstore.import_listens_dump(dump_location)
-        sleep(1)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=base + 11)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, base + 5)
@@ -300,11 +288,9 @@ class TestTimescaleListenStore(DatabaseTestCase):
         listens = generate_data(1, self.testuser_name, base + 1, 5)
 
         self.logstore.insert(listens)
-        sleep(1)
 
         # Set the created field to NULL in DB
         self.set_created_to_NULL_in_DB()
-#        sleep(1)
 
         listens_from_timescale = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=base + 11)
         self.assertEqual(len(listens_from_timescale), 5)
@@ -318,9 +304,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         )
         self.assertTrue(os.path.isfile(dump_location))
         self.reset_timescale_db()
-        sleep(1)
         self.logstore.import_listens_dump(dump_location)
-        sleep(1)
         listens_from_timescale = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=base + 11)
         self.assertEqual(len(listens_from_timescale), 5)
         shutil.rmtree(temp_dir)
@@ -334,17 +318,14 @@ class TestTimescaleListenStore(DatabaseTestCase):
         listens = generate_data(1, self.testuser_name, base + 1, 4)
 
         self.logstore.insert(listens)
-        sleep(1)
 
         # Set the created field to NULL in DB
         self.set_created_to_NULL_in_DB()
-        sleep(1)
 
         # Add a new listen with created as NOT NULL
         listens = generate_data(1, self.testuser_name, base + 5, 1)
 
         self.logstore.insert(listens)
-        sleep(1)
 
         listens_from_timescale = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=base + 11)
         self.assertEqual(len(listens_from_timescale), 5)
@@ -359,28 +340,22 @@ class TestTimescaleListenStore(DatabaseTestCase):
         )
         self.assertTrue(os.path.isfile(dump_location))
         self.reset_timescale_db()
-        sleep(1)
         self.logstore.import_listens_dump(dump_location)
-        sleep(1)
         listens_from_timescale = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=base + 11)
         self.assertEqual(len(listens_from_timescale), 1)
         shutil.rmtree(temp_dir)
 
     def test_import_listens(self):
         self._create_test_data(self.testuser_name)
-        sleep(1)
         temp_dir = tempfile.mkdtemp()
         dump_location = self.logstore.dump_listens(
             location=temp_dir,
             dump_id=1,
             end_time=datetime.now(),
         )
-        sleep(1)
         self.assertTrue(os.path.isfile(dump_location))
         self.reset_timescale_db()
-        sleep(1)
         self.logstore.import_listens_dump(dump_location)
-        sleep(1)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=1400000300)
         self.assertEqual(len(listens), 5)
         self.assertEqual(listens[0].ts_since_epoch, 1400000200)
@@ -393,10 +368,8 @@ class TestTimescaleListenStore(DatabaseTestCase):
     def test_dump_and_import_listens_escaped(self):
         user = db_user.get_or_create(3, 'i have a\\weird\\user, na/me"\n')
         self._create_test_data(user['musicbrainz_id'])
-        sleep(1)
 
         self._create_test_data(self.testuser_name)
-        sleep(1)
 
         temp_dir = tempfile.mkdtemp()
         dump_location = self.logstore.dump_listens(
@@ -404,12 +377,10 @@ class TestTimescaleListenStore(DatabaseTestCase):
             dump_id=1,
             end_time=datetime.now(),
         )
-        sleep(1)
         self.assertTrue(os.path.isfile(dump_location))
         self.reset_timescale_db()
 
         self.logstore.import_listens_dump(dump_location)
-        sleep(1)
 
         listens = self.logstore.fetch_listens(user_name=user['musicbrainz_id'], to_ts=1400000300)
         self.assertEqual(len(listens), 5)
@@ -438,12 +409,10 @@ class TestTimescaleListenStore(DatabaseTestCase):
             dump_id=1,
             end_time=datetime.now(),
         )
-        sleep(1)
         self.assertTrue(os.path.isfile(dump_location))
         self.reset_timescale_db()
 
         done = self.logstore.import_listens_dump(dump_location)
-        sleep(1)
         self.assertEqual(done, len(db_user.get_all_users()))
         shutil.rmtree(temp_dir)
 
@@ -489,7 +458,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
             archive_path=archive_path,
             schema_version=LISTENS_DUMP_SCHEMA_VERSION - 1
         )
-        sleep(1)
         with self.assertRaises(SchemaMismatchException):
             self.logstore.import_listens_dump(archive_path)
 
@@ -506,7 +474,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
             schema_version=None
         )
 
-        sleep(1)
         with self.assertRaises(SchemaMismatchException):
             self.logstore.import_listens_dump(archive_path)
 
