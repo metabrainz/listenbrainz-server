@@ -1,7 +1,6 @@
 import pydantic
 
 from datetime import datetime
-from enum import Enum
 from typing import Optional, List
 
 
@@ -14,6 +13,16 @@ class UserListeningActivityRecord(pydantic.BaseModel):
     from_ts: int
     to_ts: int
     listen_count: int
+
+
+class UserListeningActivityStatMessage(pydantic.BaseModel):
+    """ Format of messages sent to the ListenBrainz Server """
+    musicbrainz_id: str
+    type: str
+    range: str
+    from_ts: int
+    to_ts: int
+    listening_activity: List[UserListeningActivityRecord]
 
 
 class UserListeningActivityStatRange(pydantic.BaseModel):

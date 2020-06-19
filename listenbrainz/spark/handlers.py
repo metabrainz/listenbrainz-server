@@ -11,7 +11,7 @@ from datetime import datetime, timezone, timedelta
 from listenbrainz.db.model.user_artist_stat import UserArtistStatJson
 from listenbrainz.db.model.user_release_stat import UserReleaseStatJson
 from listenbrainz.db.model.user_recording_stat import UserRecordingStatJson
-
+from listenbrainz.db.model.user_listening_activity import UserListeningActivityStatJson
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
@@ -124,7 +124,7 @@ def handle_user_listening_activity(data):
     to_remove = {'musicbrainz_id', 'type', 'range'}
     data_mod = {key: data[key] for key in data if key not in to_remove}
 
-    db_stats.insert_user_listening_activity(user['id'], {stats_range: data_mod})
+    db_stats.insert_user_listening_activity(user['id'], UserListeningActivityStatJson(**{stats_range: data_mod}))
 
 
 def handle_dump_imported(data):
