@@ -11,7 +11,24 @@ The component uses collaborative filtering to recommend recordings to users base
 
 ## Production environemnt
 
-These instructions help to request recommendations from spark cluster in prod.
+These instructions help to request recommendations from Spark cluster in prod.
+
+To generate recommendations following data dumps must be imported into the spark cluster.
+
+- **ListenBrainz Listens Data Dump**: The listens are regularly being imported into the cluster. We need not worry about it!
+- **ListenBrainz MSID MBID Mapping Dump**: To import mapping into the cluster, issue the following command:
+
+  `./develop.sh manage spark request_import_mapping`
+
+  The mapping is live on [FTP](http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/labs/mappings/msid-mbid-mapping/)
+
+- **ListenBrainz Artist Relation Dump**: To import artist relation into the cluster, issue the following command:
+
+  `./develop.sh manage spark request_import_artist_relation`
+
+  The artist relation is live on [FTP](http://ftp.musicbrainz.org/pub/musicbrainz/listenbrainz/labs/artist-credit-artist-credit-relations/)
+
+Once the data dumps have been imported into the cluster, we are good to move on to the recommendation generation process. Yay!
 
 The recommendation generation process has been divided into four stages.
 
@@ -29,7 +46,7 @@ The recommendation generation process has been divided into four stages.
 
   `./develop.sh manage spark request_model --rank=X --itr=Y --lmbda=Z --alpha=M`
 
-  where X is rank or number of hidden features. For example, if rank = [12, 7, 8], it should be passed as follows:
+  where X is the rank or number of hidden features. For example, if rank = [12, 7, 8], it should be passed as follows:
 
   `--rank=12 --rank=7 --rank=8`
 
@@ -41,19 +58,19 @@ The recommendation generation process has been divided into four stages.
 
   By default, itr = [5, 10]
 
-  where Z is lamba or over fitting control factor. For example, if lmbda = [4.8, 1.2, 4.4], it should be passed as follows:
+  where Z is lambda or overfitting control factor. For example, if lmbda = [4.8, 1.2, 4.4], it should be passed as follows:
 
   `--lmbda=4.8 --lmbda=1.2 --lmbda=4.4`
 
   By default, lmbda = [0.1, 10.0]
 
-  where M is alpha or baseline level of confidence weighting applied. For example if alpha = 7.1, it should be passed as follows:
+  where M is alpha or baseline level of confidence weighting applied. For example, if alpha = 7.1, it should be passed as follows:
 
   `--alpha=7.1`
 
   By default, alpha = 3.0
 
-  For more information on model parameters refer to the [official documentation](https://spark.apache.org/docs/2.1.0/mllib-collaborative-filtering.html):
+  For more information on model parameters refer to the [official documentation](https://spark.apache.org/docs/2.1.0/mllib-collaborative-filtering.html).
 
 
 - **Stage 3**: Generate candidate sets.
@@ -74,9 +91,11 @@ The recommendation generation process has been divided into four stages.
 
   `./develop.sh manage spark request_recommendations --top=X --similar=Y`
 
-  where X is the number of recommended recordings for a user from the top artists candidate set. By default, X is equal to 200.
+  where X is the number of recommended recordings for a user from the top artist candidate set. By default, X is equal to 200.
 
-  where Y is the number of recommended recordings for a user from the similar artists candidate set. By default, Y is equal to 200.
+  where Y is the number of recommended recordings for a user from the similar artist candidate set. By default, Y is equal to 200.
+
+If you pass through all the four stages successfully; congratulations, the recommendations are all yours. Feel free to give us feedback to improve the music we serve :)
 
 ## License Notice
 
