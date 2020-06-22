@@ -58,22 +58,33 @@ def get_recording_mbids(params, recommended_recording_ids):
 
 
 def generate_recommendations(candidate_set, params, limit):
+    """
+        Args:
+            candidate_set (rdd): RDD of user_id and recording_id.
+            params: RecommendationParams class object.
+            limit (int): Number of recommendations to be generated.
+
+        Returns:
+            list of recommendations.
+    """
+    recommendations = params.model.predictAll(candidate_set).takeOrdered(limit, lambda product: -product.rating)
+    return recommendations
+
+
+def get_recommended_mbids(candidate_set, params, limit):
     """ Generate recommendations from the candidate set.
 
         Args:
-            candidate_set (rdd): RDD with elements as:
-                [
-                    'user_id', 'recording_id'
-                ]
+            candidate_set (rdd): RDD of user_id and recording_id.
             params: RecommendationParams class object.
             limit (int): Number of recommendations to be generated.
 
         Returns:
             recommended_recordings_mbids: list of recommended recording mbids.
     """
-    recommendations = params.model.predictAll(candidate_set).takeOrdered(limit, lambda product: -product.rating)
-    recommended_recording_ids = [(recommendations[i].product) for i in range(len(recommendations))]
 
+    recommendations = generate_recommendations(candidate_set, params, limit)
+    recommended_recording_ids = [(recommendations[i].product) for i in range(len(recommendations))]
     if len(recommended_recording_ids) == 0:
         raise RecommendationsNotGeneratedException('')
 
@@ -97,7 +108,7 @@ def get_candidate_set_rdd_for_user(candidate_set, user_id):
                                  .where(col('user_id') == user_id)
     try:
         candidate_set.take(1)[0]
-    except:
+    except IndexError:
         raise IndexError()
 
     candidate_set_rdd = candidate_set.rdd.map(lambda r: (r['user_id'], r['recording_id']))
@@ -121,8 +132,8 @@ def get_recommendations_for_user(user_id, user_name, params):
     user_recommendations_top_artist = list()
     try:
         top_artist_candidate_set_user = get_candidate_set_rdd_for_user(params.top_artist_candidate_set, user_id)
-        user_recommendations_top_artist = generate_recommendations(top_artist_candidate_set_user, params,
-                                                                   params.recommendation_top_artist_limit)
+        user_recommendations_top_artist = get_recommended_mbids(top_artist_candidate_set_user, params,
+                                                                params.recommendation_top_artist_limit)
     except IndexError:
         current_app.logger.info('Top artist candidate set not found for "{}"'.format(user_name))
     except RecommendationsNotGeneratedException:
@@ -131,8 +142,8 @@ def get_recommendations_for_user(user_id, user_name, params):
     user_recommendations_similar_artist = list()
     try:
         similar_artist_candidate_set_user = get_candidate_set_rdd_for_user(params.similar_artist_candidate_set, user_id)
-        user_recommendations_similar_artist = generate_recommendations(similar_artist_candidate_set_user, params,
-                                                                       params.recommendation_similar_artist_limit)
+        user_recommendations_similar_artist = get_recommended_mbids(similar_artist_candidate_set_user, params,
+                                                                    params.recommendation_similar_artist_limit)
     except IndexError:
         current_app.logger.info('Similar artist candidate set not found for "{}"'.format(user_name))
     except RecommendationsNotGeneratedException:
