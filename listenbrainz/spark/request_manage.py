@@ -87,44 +87,23 @@ def send_request_to_spark_cluster(message):
 
 
 @cli.command(name="request_user_stats")
-@click.option("--week", is_flag=True, help="Request weekly statistics")
-@click.option("--month", is_flag=True, help="Request monthly statistics")
-@click.option("--year", is_flag=True, help="Request yearly statistics")
-@click.option("--all-time", is_flag=True, help="Request all time statistics")
-@click.option("--test", is_flag=True, help="Request test stats")
-def request_user_stats(week, month, year, all_time, test):
+@click.option("--type", 'type_', type=click.Choice(['entity', 'listening_activity']),
+              help="Type of statistics to calculate", required=True)
+@click.option("--range", 'range_', type=click.Choice(['week', 'month', 'year', 'all_time']),
+              help="Time range of statistics to calculate", required=True)
+@click.option("--entity", type=click.Choice(['artists', 'releases', 'recordings']),
+              help="Entity for which statistics should be calculated")
+def request_user_stats(type_, range_, entity):
     """ Send a user stats request to the spark cluster
     """
-    if week:
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.week', params={'entity': 'artists'}))
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.week', params={'entity': 'releases'}))
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.week', params={'entity': 'recordings'}))
-        return
-
-    if month:
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.month', params={'entity': 'artists'}))
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.month', params={'entity': 'releases'}))
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.month', params={'entity': 'recordings'}))
-        return
-
-    if year:
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.year', params={'entity': 'artists'}))
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.year', params={'entity': 'releases'}))
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.year', params={'entity': 'recordings'}))
-        return
-
-    if all_time:
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.all_time', params={'entity': 'artists'}))
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.all_time', params={'entity': 'releases'}))
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.all_time', params={'entity': 'recordings'}))
-        return
-
-    if test:
-        send_request_to_spark_cluster(_prepare_query_message('stats.user.entity.week', params={'entity': 'recordings'}))
-        return
-
-    # Default if no specific flag is provided
-    send_request_to_spark_cluster(_prepare_query_message('stats.user.all'))
+    params = {}
+    if type_ == 'entity' and entity:
+        params['entity'] = entity
+    try:
+        send_request_to_spark_cluster(_prepare_query_message(
+            'stats.user.{type}.{range}'.format(range=range_, type=type_), params=params))
+    except InvalidSparkRequestError:
+        click.echo("Incorrect arguments provided")
 
 
 @cli.command(name="request_import_full")

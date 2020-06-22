@@ -1,0 +1,18 @@
+{
+  "from_ts": 0,
+  "to_ts": 10,
+  "listening_activity": [
+    {
+      "listen_count": 230,
+      "time_range": "2020",
+      "from_ts": 5,
+      "to_ts": 10
+    },
+    {
+      "listen_count": 460,
+      "time_range": "2019",
+      "from_ts": 0,
+      "to_ts": 5
+    }
+  ]
+}

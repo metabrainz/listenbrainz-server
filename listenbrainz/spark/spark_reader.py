@@ -11,15 +11,19 @@ from listenbrainz import utils
 from listenbrainz.db import stats as db_stats
 from listenbrainz.db import user as db_user
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz.spark.handlers import (handle_candidate_sets, handle_dataframes,
+from listenbrainz.spark.handlers import (handle_candidate_sets,
+                                         handle_dataframes,
                                          handle_dump_imported, handle_model,
-                                         handle_recommendations, handle_user_entity,
-                                         notify_mapping_import, notify_artist_relation_import)
-
+                                         handle_recommendations,
+                                         handle_user_entity,
+                                         handle_user_listening_activity,
+                                         notify_artist_relation_import,
+                                         notify_mapping_import)
 from listenbrainz.webserver import create_app
 
 response_handler_map = {
     'user_entity': handle_user_entity,
+    'user_listening_activity': handle_user_listening_activity,
     'import_full_dump': handle_dump_imported,
     'cf_recording_dataframes': handle_dataframes,
     'cf_recording_model': handle_model,
@@ -29,7 +33,7 @@ response_handler_map = {
     'import_artist_relation': notify_artist_relation_import,
 }
 
-RABBITMQ_HEARTBEAT_TIME = 60 * 60 # 1 hour, in seconds
+RABBITMQ_HEARTBEAT_TIME = 60 * 60  # 1 hour, in seconds
 
 
 class SparkReader:
