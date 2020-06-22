@@ -346,7 +346,7 @@ def get_recording(user_name):
     }})
 
 
-@stats_api_bp.route("/user/<user_name>/listening_activity")
+@stats_api_bp.route("/user/<user_name>/listening-activity")
 @crossdomain()
 @ratelimit()
 def get_listening_activity(user_name: str):
@@ -389,7 +389,7 @@ def get_listening_activity(user_name: str):
           the current time range and the previous time range. For example for weekly statistics the data
           is calculated for the current as well as the past week.
 
-    :param range: Optional, time interval for which statistics should be collected, possible values are ``week``,
+    :param range: Optional, time interval for which statistics should be returned, possible values are ``week``,
         ``month``, ``year``, ``all_time``, defaults to ``all_time``
     :type range: ``str``
     :statuscode 200: Successful query, you have data!
@@ -410,7 +410,7 @@ def get_listening_activity(user_name: str):
     try:
         stats = db_stats.get_user_listening_activity(user['id'], stats_range)
     except ValidationError:
-        # If the stored stats are not correct, we should should not return them
+        # If the stored stats are not correct, we should not return them
         raise APINoContent('')
     if stats is None or getattr(stats, stats_range) is None:
         raise APINoContent('')
