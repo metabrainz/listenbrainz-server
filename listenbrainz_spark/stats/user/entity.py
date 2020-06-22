@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Iterator
 
 from flask import current_app
 from pydantic import ValidationError
@@ -23,7 +24,7 @@ entity_handler_map = {
 }
 
 
-def get_entity_week(entity):
+def get_entity_week(entity: str) -> Iterator[UserEntityStatMessage]:
     """ Get the weekly top entity for all users """
     current_app.logger.debug("Calculating {}_week...".format(entity))
 
@@ -47,7 +48,7 @@ def get_entity_week(entity):
     return messages
 
 
-def get_entity_month(entity):
+def get_entity_month(entity: str) -> Iterator[UserEntityStatMessage]:
     """ Get the month top entity for all users """
     current_app.logger.debug("Calculating {}_month...".format(entity))
 
@@ -69,7 +70,7 @@ def get_entity_month(entity):
     return messages
 
 
-def get_entity_year(entity):
+def get_entity_year(entity: str) -> Iterator[UserEntityStatMessage]:
     """ Get the year top entity for all users """
     current_app.logger.debug("Calculating {}_year...".format(entity))
 
@@ -90,7 +91,7 @@ def get_entity_year(entity):
     return messages
 
 
-def get_entity_all_time(entity):
+def get_entity_all_time(entity: str) -> Iterator[UserEntityStatMessage]:
     """ Get the all_time top entity for all users """
     current_app.logger.debug("Calculating {}_all_time...".format(entity))
 
@@ -111,21 +112,20 @@ def get_entity_all_time(entity):
     return messages
 
 
-def create_messages(data, entity, stats_range, from_ts, to_ts):
+def create_messages(data, entity: str, stats_range: str, from_ts: int, to_ts: int) -> Iterator[UserEntityStatMessage]:
     """
     Create messages to send the data to the webserver via RabbitMQ
 
     Args:
         data (iterator): Data to sent to the webserver
-        entity (str): The entity for which statistics are calculated, i.e 'artists',
+        entity: The entity for which statistics are calculated, i.e 'artists',
             'releases' or 'recordings'
-        stats_type (str): The type of statistics calculated
-        stats_range (str): The range for which the statistics have been calculated
-        from_ts (int): The UNIX timestamp of start time of the stats
-        to_ts (int): The UNIX timestamp of end time of the stats
+        stats_range: The range for which the statistics have been calculated
+        from_ts: The UNIX timestamp of start time of the stats
+        to_ts: The UNIX timestamp of end time of the stats
 
     Returns:
-        messages (generator): A list of messages to be sent via RabbitMQ
+        messages: A list of messages to be sent via RabbitMQ
     """
     for entry in data:
         _dict = entry.asDict(recursive=True)
