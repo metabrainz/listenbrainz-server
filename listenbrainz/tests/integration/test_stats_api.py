@@ -5,9 +5,9 @@ from redis import Redis
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
-from listenbrainz.db.model.user_artist_stat import UserArtistStatJson
-from listenbrainz.db.model.user_release_stat import UserReleaseStatJson
-from listenbrainz.db.model.user_recording_stat import UserRecordingStatJson
+from data.model.user_artist_stat import UserArtistStatJson
+from data.model.user_release_stat import UserReleaseStatJson
+from data.model.user_recording_stat import UserRecordingStatJson
 from listenbrainz.tests.integration import IntegrationTestCase
 
 

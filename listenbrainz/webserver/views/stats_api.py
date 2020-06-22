@@ -7,12 +7,12 @@ from flask import Blueprint, current_app, jsonify, request
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
-from listenbrainz.db.model.user_artist_stat import (UserArtistRecord,
-                                                    UserArtistStat)
-from listenbrainz.db.model.user_recording_stat import (UserRecordingRecord,
-                                                       UserRecordingStat)
-from listenbrainz.db.model.user_release_stat import (UserReleaseRecord,
-                                                     UserReleaseStat)
+from data.model.user_artist_stat import (UserArtistRecord,
+                                         UserArtistStat)
+from data.model.user_recording_stat import (UserRecordingRecord,
+                                            UserRecordingStat)
+from data.model.user_release_stat import (UserReleaseRecord,
+                                          UserReleaseStat)
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,

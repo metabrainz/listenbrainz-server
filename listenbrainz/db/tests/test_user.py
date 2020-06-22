@@ -9,7 +9,7 @@ import ujson
 
 from listenbrainz import db
 from listenbrainz.db.testing import DatabaseTestCase
-from listenbrainz.db.model.user_artist_stat import UserArtistStatJson
+from data.model.user_artist_stat import UserArtistStatJson
 
 
 class UserTestCase(DatabaseTestCase):
