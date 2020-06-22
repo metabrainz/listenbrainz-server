@@ -7,9 +7,9 @@ from flask import current_app
 from data.model.user_listening_activity import (UserListeningActivityRecord,
                                                 UserListeningActivityStatJson,
                                                 UserListeningActivityStatRange)
-from listenbrainz.db.model.user_artist_stat import (UserArtistRecord,
-                                                    UserArtistStatJson,
-                                                    UserArtistStatRange)
+from data.model.user_artist_stat import (UserArtistRecord,
+                                         UserArtistStatJson,
+                                         UserArtistStatRange)
 from listenbrainz.spark.handlers import (
     handle_candidate_sets, handle_dataframes, handle_dump_imported,
     handle_model, handle_recommendations, handle_user_entity,
@@ -33,7 +33,7 @@ class HandlersTestCase(unittest.TestCase):
             'musicbrainz_id': 'iliekcomputers',
             'type': 'user_entity',
             'entity': 'artists',
-            'range': 'all_time',
+            'stats_range': 'all_time',
             'from_ts': 1,
             'to_ts': 10,
             'count': 1,

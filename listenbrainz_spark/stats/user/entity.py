@@ -1,7 +1,9 @@
 from datetime import datetime
 
 from flask import current_app
+from pydantic import ValidationError
 
+from data.model.user_entity import UserEntityStatMessage
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
 from listenbrainz_spark.stats import (adjust_days, replace_days,
@@ -127,13 +129,18 @@ def create_messages(data, entity, stats_range, from_ts, to_ts):
     """
     for entry in data:
         _dict = entry.asDict(recursive=True)
-        yield {
-            'musicbrainz_id': _dict['user_name'],
-            'type': 'user_entity',
-            'range': stats_range,
-            'from_ts': from_ts,
-            'to_ts': to_ts,
-            'data': _dict[entity],
-            'entity': entity,
-            'count': len(_dict[entity])
-        }
+        try:
+            model = UserEntityStatMessage(**{
+                'musicbrainz_id': _dict['user_name'],
+                'type': 'user_entity',
+                'stats_range': stats_range,
+                'from_ts': from_ts,
+                'to_ts': to_ts,
+                'data': _dict[entity],
+                'entity': entity,
+                'count': len(_dict[entity])
+            })
+        except ValidationError:
+            current_app.logger.warn("Format for user_entity_{} for user {} incorrect, skipping", stats_range, _dict['user_name'])
+        result = model.dict(exclude_none=True)
+        yield result
