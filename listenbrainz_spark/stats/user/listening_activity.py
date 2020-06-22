@@ -53,7 +53,7 @@ def get_listening_activity():
                AND result_without_zero_days.time_range = time_range.time_range
             """)
 
-    # Create a table with a list of time ranges and corresponding listen count for each table
+    # Create a table with a list of time ranges and corresponding listen count for each user
     iterator = result \
         .withColumn("listening_activity", struct("from_ts", "to_ts", "listen_count", "time_range")) \
         .groupBy("user_name") \
@@ -189,7 +189,7 @@ def create_messages(data, stats_range: str, from_ts: int, to_ts: int) -> Iterato
             model = UserListeningActivityStatMessage(**{
                 'musicbrainz_id': _dict['user_name'],
                 'type': 'user_listening_activity',
-                'range': stats_range,
+                'stats_range': stats_range,
                 'from_ts': from_ts,
                 'to_ts': to_ts,
                 'listening_activity': _dict['listening_activity']

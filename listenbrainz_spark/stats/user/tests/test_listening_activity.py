@@ -1,5 +1,4 @@
 import json
-from collections import defaultdict
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
@@ -27,6 +26,7 @@ class ListeningActivityTestCase(SparkTestCase):
         with open(self.path_to_data_file('user_listening_activity.json')) as f:
             data = json.load(f)
 
+        # Create a dataframe of four time ranges
         time_range = [
             ['time_range_1', datetime.fromtimestamp(1592587270), datetime.fromtimestamp(1592587279)],
             ['time_range_2', datetime.fromtimestamp(1592587280), datetime.fromtimestamp(1592587289)],
@@ -36,6 +36,7 @@ class ListeningActivityTestCase(SparkTestCase):
         time_range_df = listenbrainz_spark.session.createDataFrame(time_range, schema=listening_activity_stats.time_range_schema)
         time_range_df.createOrReplaceTempView('time_range')
 
+        # Read the listens from the file and parse it into a dataframe
         listens_df = None
         for entry in data:
             row = utils.create_dataframe(Row(user_name=entry['user_name'],
@@ -43,21 +44,9 @@ class ListeningActivityTestCase(SparkTestCase):
             listens_df = listens_df.union(row) if listens_df else row
         listens_df.createOrReplaceTempView('listens')
 
-        expected = {}
-        for entry in data:
-            if not entry['user_name'] in expected:
-                expected[entry['user_name']] = [
-                    {'time_range': 'time_range_1', 'from_ts': 1592587270, 'to_ts': 1592587279, 'listen_count': 0},
-                    {'time_range': 'time_range_2', 'from_ts': 1592587280, 'to_ts': 1592587289, 'listen_count': 0},
-                    {'time_range': 'time_range_3', 'from_ts': 1592587290, 'to_ts': 1592587299, 'listen_count': 0},
-                    {'time_range': 'time_range_4', 'from_ts': 1592587300, 'to_ts': 1592587309, 'listen_count': 0}
-                ]
+        expected = _calculate_expected(data)
 
-        for entry in data:
-            for range_ in expected[entry['user_name']]:
-                if range_['from_ts'] <= entry['timestamp'] <= range_['to_ts']:
-                    range_['listen_count'] += 1
-
+        # Get the result calculated by the function we want to test
         data = listening_activity_stats.get_listening_activity()
         received = {}
         for entry in data:
@@ -172,3 +161,20 @@ class ListeningActivityTestCase(SparkTestCase):
         mock_df.createOrReplaceTempView.assert_called_with('listens')
         mock_create_messages.assert_called_with(data='listening_activity_table', stats_range='all_time',
                                                 from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
+
+    def _calculate_expected(self, data: dict) -> dict:
+        expected = {}
+        for entry in data:
+            if not entry['user_name'] in expected:
+                expected[entry['user_name']] = [
+                    {'time_range': 'time_range_1', 'from_ts': 1592587270, 'to_ts': 1592587279, 'listen_count': 0},
+                    {'time_range': 'time_range_2', 'from_ts': 1592587280, 'to_ts': 1592587289, 'listen_count': 0},
+                    {'time_range': 'time_range_3', 'from_ts': 1592587290, 'to_ts': 1592587299, 'listen_count': 0},
+                    {'time_range': 'time_range_4', 'from_ts': 1592587300, 'to_ts': 1592587309, 'listen_count': 0}
+                ]
+        for entry in data:
+            for range_ in expected[entry['user_name']]:
+                if range_['from_ts'] <= entry['timestamp'] <= range_['to_ts']:
+                    range_['listen_count'] += 1
+
+        return expected

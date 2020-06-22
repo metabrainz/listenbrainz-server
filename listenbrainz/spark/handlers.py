@@ -118,10 +118,10 @@ def handle_user_listening_activity(data):
         notify_user_stats_update(stat_type=data.get('type', ''))
     current_app.logger.debug("inserting stats for user %s", musicbrainz_id)
 
-    stats_range = data['range']
+    stats_range = data['stats_range']
 
     # Strip extra data
-    to_remove = {'musicbrainz_id', 'type', 'range'}
+    to_remove = {'musicbrainz_id', 'type', 'stats_range'}
     data_mod = {key: data[key] for key in data if key not in to_remove}
 
     db_stats.insert_user_listening_activity(user['id'], UserListeningActivityStatJson(**{stats_range: data_mod}))
