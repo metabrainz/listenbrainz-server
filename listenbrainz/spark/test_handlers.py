@@ -77,7 +77,7 @@ class HandlersTestCase(unittest.TestCase):
         data = {
             'musicbrainz_id': 'iliekcomputers',
             'type': 'listening_activity',
-            'range': 'all_time',
+            'stats_range': 'all_time',
             'from_ts': 1,
             'to_ts': 10,
             'listening_activity': [{

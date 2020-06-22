@@ -197,7 +197,8 @@ def create_messages(data, stats_range: str, from_ts: int, to_ts: int) -> Iterato
         except ValidationError:
             current_app.logger.warn("Format for listening_activity_{} for user {} incorrect, skipping",
                                     stats_range, _dict['user_name'])
-        yield model.dict(exclude_none=True)
+        result = model.dict(exclude_none=True)
+        yield result
 
 
 def _get_listens(from_date: datetime, to_date: datetime):

@@ -44,7 +44,7 @@ class ListeningActivityTestCase(SparkTestCase):
             listens_df = listens_df.union(row) if listens_df else row
         listens_df.createOrReplaceTempView('listens')
 
-        expected = _calculate_expected(data)
+        expected = self._calculate_expected(data)
 
         # Get the result calculated by the function we want to test
         data = listening_activity_stats.get_listening_activity()

@@ -70,7 +70,7 @@ class RequestConsumer:
                     self.result_channel.basic_publish(
                         exchange=current_app.config['SPARK_RESULT_EXCHANGE'],
                         routing_key='',
-                        body=json.dumps(messages),
+                        body=json.dumps(message),
                         properties=pika.BasicProperties(delivery_mode=2,),
                     )
                     break
