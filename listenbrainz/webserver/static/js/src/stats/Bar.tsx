@@ -27,7 +27,7 @@ type Tick = {
 };
 
 export default class Bar extends React.Component<BarProps, BarState> {
-  getEntityLink = (data: UserEntityDatum, entity: string) => {
+  getEntityLink = (data: UserEntityDatum, entity: string): JSX.Element => {
     if (data.entityMBID) {
       return (
         <a
@@ -39,10 +39,10 @@ export default class Bar extends React.Component<BarProps, BarState> {
         </a>
       );
     }
-    return entity;
+    return <>{entity}</>;
   };
 
-  getArtistLink = (data: UserEntityDatum, artist: string) => {
+  getArtistLink = (data: UserEntityDatum, artist: string): JSX.Element => {
     if (data.artistMBID && data.artistMBID.length) {
       return (
         <a
@@ -54,14 +54,14 @@ export default class Bar extends React.Component<BarProps, BarState> {
         </a>
       );
     }
-    return artist;
+    return <>{artist}</>;
   };
 
-  getReleaseLink = (data: UserEntityDatum, release: string) => {
+  getReleaseLink = (data: UserEntityDatum, release: string): JSX.Element => {
     if (data.release && data.releaseMBID) {
       const res = (
         <a
-          href={`http://musicbrainz.org/artist/${data.releaseMBID}`}
+          href={`http://musicbrainz.org/release/${data.releaseMBID}`}
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -70,7 +70,7 @@ export default class Bar extends React.Component<BarProps, BarState> {
       );
       return res;
     }
-    return release;
+    return <>{release}</>;
   };
 
   render() {
