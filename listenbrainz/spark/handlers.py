@@ -8,10 +8,10 @@ import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_rec
 from flask import current_app, render_template
 from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
+from data.model.user_listening_activity import UserListeningActivityStatJson
 from listenbrainz.db.model.user_artist_stat import UserArtistStatJson
 from listenbrainz.db.model.user_release_stat import UserReleaseStatJson
 from listenbrainz.db.model.user_recording_stat import UserRecordingStatJson
-
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
@@ -103,6 +103,28 @@ def handle_user_entity(data):
     # Get function to insert statistics
     db_handler = getattr(db_stats, 'insert_user_{}'.format(entity))
     db_handler(user['id'], entity_model(**{stats_range: data_mod}))
+
+
+def handle_user_listening_activity(data):
+    """ Take listening activity stats for user and save it in database. """
+    musicbrainz_id = data['musicbrainz_id']
+    user = db_user.get_by_mb_id(musicbrainz_id)
+    if not user:
+        current_app.logger.critical("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
+        return
+
+    # send a notification if this is a new batch of stats
+    if is_new_user_stats_batch():
+        notify_user_stats_update(stat_type=data.get('type', ''))
+    current_app.logger.debug("inserting stats for user %s", musicbrainz_id)
+
+    stats_range = data['stats_range']
+
+    # Strip extra data
+    to_remove = {'musicbrainz_id', 'type', 'stats_range'}
+    data_mod = {key: data[key] for key in data if key not in to_remove}
+
+    db_stats.insert_user_listening_activity(user['id'], UserListeningActivityStatJson(**{stats_range: data_mod}))
 
 
 def handle_dump_imported(data):

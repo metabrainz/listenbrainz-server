@@ -4,16 +4,19 @@ from unittest import mock
 
 from flask import current_app
 
-from listenbrainz.spark.handlers import (handle_candidate_sets, handle_dataframes,
-                                         handle_dump_imported, handle_model,
-                                         handle_recommendations, handle_user_entity,
-                                         notify_mapping_import, notify_artist_relation_import,
-                                         is_new_cf_recording_recommendation_batch,
-                                         is_new_user_stats_batch)
-
+from data.model.user_listening_activity import (UserListeningActivityRecord,
+                                                UserListeningActivityStatJson,
+                                                UserListeningActivityStatRange)
+from listenbrainz.db.model.user_artist_stat import (UserArtistRecord,
+                                                    UserArtistStatJson,
+                                                    UserArtistStatRange)
+from listenbrainz.spark.handlers import (
+    handle_candidate_sets, handle_dataframes, handle_dump_imported,
+    handle_model, handle_recommendations, handle_user_entity,
+    handle_user_listening_activity, is_new_cf_recording_recommendation_batch,
+    is_new_user_stats_batch, notify_artist_relation_import,
+    notify_mapping_import)
 from listenbrainz.webserver import create_app
-
-from listenbrainz.db.model.user_artist_stat import UserArtistStatJson, UserArtistStatRange, UserArtistRecord
 
 
 class HandlersTestCase(unittest.TestCase):
@@ -60,6 +63,50 @@ class HandlersTestCase(unittest.TestCase):
                         artist_mbids=[],
                         listen_count=200,
                         artist_name='Kanye West',
+                    )
+                ]
+            )
+        ))
+        mock_send_mail.assert_called_once()
+
+    @mock.patch('listenbrainz.spark.handlers.db_stats.insert_user_listening_activity')
+    @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')
+    @mock.patch('listenbrainz.spark.handlers.is_new_user_stats_batch')
+    @mock.patch('listenbrainz.spark.handlers.send_mail')
+    def test_handle_user_listening_activity(self, mock_send_mail, mock_new_user_stats, mock_get_by_mb_id, mock_db_insert):
+        data = {
+            'musicbrainz_id': 'iliekcomputers',
+            'type': 'listening_activity',
+            'stats_range': 'all_time',
+            'from_ts': 1,
+            'to_ts': 10,
+            'listening_activity': [{
+                'from_ts': 1,
+                'to_ts': 5,
+                'time_range': '2020',
+                'listen_count': 200,
+            }],
+        }
+        mock_get_by_mb_id.return_value = {'id': 1, 'musicbrainz_id': 'iliekcomputers'}
+        mock_new_user_stats.return_value = True
+
+        with self.app.app_context():
+            current_app.config['TESTING'] = False  # set testing to false to check the notifications
+            handle_user_listening_activity(data)
+
+        mock_db_insert.assert_called_with(1, UserListeningActivityStatJson(
+            week=None,
+            year=None,
+            month=None,
+            all_time=UserListeningActivityStatRange(
+                to_ts=10,
+                from_ts=1,
+                listening_activity=[
+                    UserListeningActivityRecord(
+                        from_ts=1,
+                        to_ts=5,
+                        time_range='2020',
+                        listen_count=200
                     )
                 ]
             )

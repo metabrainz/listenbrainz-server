@@ -1,3 +1,4 @@
+from calendar import monthrange
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -63,3 +64,19 @@ def adjust_days(date, days, shift_backwards=True):
     else:
         date = date + relativedelta(days=days)
     return date
+
+
+def get_day_end(day: datetime) -> datetime:
+    """ Returns a datetime object denoting the end of the day """
+    return datetime(day.year, day.month, day.day, hour=23, minute=59, second=59)
+
+
+def get_month_end(month: datetime) -> datetime:
+    """ Returns a datetime object denoting the end of the month """
+    _, num_of_days = monthrange(month.year, month.month)
+    return datetime(month.year, month.month, num_of_days, hour=23, minute=59, second=59)
+
+
+def get_year_end(year: int) -> datetime:
+    """ Returns a datetime object denoting the end of the year """
+    return datetime(year, month=12, day=31, hour=23, minute=59, second=59)

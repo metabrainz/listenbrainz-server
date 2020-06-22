@@ -21,14 +21,19 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 
+from typing import Optional
+
 import sqlalchemy
 import ujson
-
-from typing import Optional
+from data.model.user_listening_activity import (UserListeningActivityStat,
+                                                UserListeningActivityStatJson)
 from listenbrainz import db
-from listenbrainz.db.model.user_release_stat import UserReleaseStatJson, UserReleaseStat
-from listenbrainz.db.model.user_recording_stat import UserRecordingStatJson, UserRecordingStat
-from listenbrainz.db.model.user_artist_stat import UserArtistStatJson, UserArtistStat
+from listenbrainz.db.model.user_artist_stat import (UserArtistStat,
+                                                    UserArtistStatJson)
+from listenbrainz.db.model.user_recording_stat import (UserRecordingStat,
+                                                       UserRecordingStatJson)
+from listenbrainz.db.model.user_release_stat import (UserReleaseStat,
+                                                     UserReleaseStatJson)
 
 
 def get_timestamp_for_last_user_stats_update():
@@ -44,12 +49,12 @@ def get_timestamp_for_last_user_stats_update():
         return row['last_update_ts'] if row else None
 
 
-def _insert_jsonb_data(user_id, column, data):
+def _insert_jsonb_data(user_id: int, column: str, data: dict):
     """ Inserts jsonb data into the given column
 
-        Args: user_id (int): the row id of the user,
-              column (string): the column in database to insert into
-              data (dict): the data to be inserted
+        Args: user_id: the row id of the user,
+              column: the column in database to insert into
+              data: the data to be inserted
     """
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
@@ -99,6 +104,18 @@ def insert_user_recordings(user_id: int, recordings: UserRecordingStatJson):
              recordings: the top releases listened to by the user
     """
     _insert_jsonb_data(user_id=user_id, column='recording', data=recordings.dict(exclude_none=True))
+
+
+def insert_user_listening_activity(user_id: int, listening_activity: UserListeningActivityStatJson):
+    """Inserts listening_activity stats calculated from Spark into the database.
+
+       If stats are already present for some user, they are updated to the new
+       values passed.
+
+       Args: user_id: the row id of the user,
+             listening_activity: the listening_activity stats of the user
+    """
+    _insert_jsonb_data(user_id=user_id, column='listening_activity', data=listening_activity.dict(exclude_none=True))
 
 
 def get_user_stats(user_id, columns):
@@ -195,6 +212,27 @@ def get_user_recordings(user_id: int, stats_range: str) -> Optional[UserRecordin
         row = result.fetchone()
 
     return UserRecordingStat(**dict(row)) if row else None
+
+
+def get_user_listening_activity(user_id: int, stats_range: str) -> Optional[UserListeningActivityStat]:
+    """Get listening activity in the given time range for user with given ID.
+
+        Args:
+            user_id: the row ID of the user in the DB
+            stats_range: the time range to fetch the stats for
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT user_id, listening_activity->:range AS {range}, last_updated
+              FROM statistics.user
+             WHERE user_id = :user_id
+            """.format(range=stats_range)), {
+            'range': stats_range,
+            'user_id': user_id
+        })
+        row = result.fetchone()
+
+    return UserListeningActivityStat(**dict(row)) if row else None
 
 
 def valid_stats_exist(user_id, days):
