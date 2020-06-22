@@ -467,6 +467,15 @@ class TimescaleListenStore(ListenStore):
         t0 = time.time()
         listen_count = 0
 
+        # This right here is why we should ONLY be using seconds timestamps. Someone could
+        # pass in a timezone aware timestamp (when listens have no timezones) or one without.
+        # If you pass the wrong one and a test invokes a command line any failures are
+        # invisible causing massive hair-pulling. FUCK DATETIME.
+        if start_time_range:
+            start_time_range = datetime.utcfromtimestamp(datetime.timestamp(start_time_range))
+        if end_time_range:
+            end_time_range = datetime.utcfromtimestamp(datetime.timestamp(end_time_range))
+
         year = start_time_range.year
         month = start_time_range.month
         while True:
@@ -483,7 +492,8 @@ class TimescaleListenStore(ListenStore):
 
             end_time = datetime(next_year, next_month, 1)
             end_time = end_time - timedelta(seconds=1)
-            end_time = min(end_time, end_time_range)
+            if end_time > end_time_range:
+                end_time = end_time_range
 
             filename = os.path.join(temp_dir, str(year), "%d.listens" % month)
             try:
@@ -498,7 +508,6 @@ class TimescaleListenStore(ListenStore):
             with timescale.engine.connect() as connection:
                 curs = connection.execute(sqlalchemy.text(query), args)
                 if curs.rowcount:
-                    print(filename)
                     with open(filename, "w") as out_file:
                         while True:
                             result = curs.fetchone()
@@ -517,7 +526,6 @@ class TimescaleListenStore(ListenStore):
             month = next_month
             year = next_year
             rows_added = 0
-
 
 
     def dump_listens(self, location, dump_id, start_time=datetime.utcfromtimestamp(0), end_time=None,
