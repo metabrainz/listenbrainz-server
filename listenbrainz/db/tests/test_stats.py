@@ -6,9 +6,9 @@ import listenbrainz.db.user as db_user
 from datetime import datetime, timezone
 from data.model.user_listening_activity import UserListeningActivityStatJson
 from listenbrainz.db.testing import DatabaseTestCase
-from listenbrainz.db.model.user_artist_stat import UserArtistStatJson
-from listenbrainz.db.model.user_release_stat import UserReleaseStatJson
-from listenbrainz.db.model.user_recording_stat import UserRecordingStatJson
+from data.model.user_artist_stat import UserArtistStatJson
+from data.model.user_release_stat import UserReleaseStatJson
+from data.model.user_recording_stat import UserRecordingStatJson
 
 
 class StatsDatabaseTestCase(DatabaseTestCase):

@@ -6,8 +6,9 @@ from unittest import mock
 
 from flask import url_for, current_app
 from influxdb import InfluxDBClient
+
+from data.model.user_artist_stat import UserArtistStatJson
 from listenbrainz.db.testing import DatabaseTestCase
-from listenbrainz.db.model.user_artist_stat import UserArtistStatJson
 from listenbrainz.listenstore.tests.util import create_test_data_for_influxlistenstore
 from listenbrainz.webserver.influx_connection import init_influx_connection
 from listenbrainz.webserver.login import User

@@ -9,9 +9,9 @@ from flask import current_app, render_template
 from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
 from data.model.user_listening_activity import UserListeningActivityStatJson
-from listenbrainz.db.model.user_artist_stat import UserArtistStatJson
-from listenbrainz.db.model.user_release_stat import UserReleaseStatJson
-from listenbrainz.db.model.user_recording_stat import UserRecordingStatJson
+from data.model.user_artist_stat import UserArtistStatJson
+from data.model.user_release_stat import UserReleaseStatJson
+from data.model.user_recording_stat import UserRecordingStatJson
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
@@ -90,12 +90,12 @@ def handle_user_entity(data):
         notify_user_stats_update(stat_type=data.get('type', ''))
     current_app.logger.debug("inserting stats for user %s", musicbrainz_id)
 
-    stats_range = data['range']
+    stats_range = data['stats_range']
     entity = data['entity']
     data[entity] = data['data']
 
     # Strip extra data
-    to_remove = {'musicbrainz_id', 'type', 'entity', 'data', 'range'}
+    to_remove = {'musicbrainz_id', 'type', 'entity', 'data', 'stats_range'}
     data_mod = {key: data[key] for key in data if key not in to_remove}
 
     entity_model = _get_entity_model(entity)
