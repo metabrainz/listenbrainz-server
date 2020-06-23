@@ -29,10 +29,16 @@ def get_releases(table):
     result = run_query("""
             SELECT user_name
                  , nullif(release_name, '') as release_name
-                 , nullif(release_msid, '') as release_msid
+                 , CASE
+                     WHEN release_mbid IS NOT NULL AND release_mbid != '' THEN NULL
+                     ELSE nullif(release_msid, '')
+                   END as release_msid
                  , nullif(release_mbid, '') as release_mbid
                  , artist_name
-                 , nullif(artist_msid, '') as artist_msid
+                 , CASE
+                     WHEN cardinality(artist_mbids) > 0 THEN NULL
+                     ELSE nullif(artist_msid, '')
+                   END as artist_msid
                  , artist_mbids
                  , count(release_name) as listen_count
               FROM {}

@@ -8,6 +8,8 @@ from listenbrainz_spark import utils
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
 from listenbrainz_spark.tests import SparkTestCase
 from pyspark.sql import Row
+from pyspark.sql.types import (ArrayType, StringType, StructField,
+                               StructType)
 
 
 class RecordingTestCase(SparkTestCase):
@@ -25,6 +27,11 @@ class RecordingTestCase(SparkTestCase):
         with open(self.path_to_data_file(filename)) as f:
             data = json.load(f)
 
+        schema = StructType((StructField('user_name', StringType()), StructField('artist_name', StringType()),
+                             StructField('artist_msid', StringType()), StructField('artist_mbids', ArrayType(StringType())),
+                             StructField('release_name', StringType()), StructField('release_msid', StringType()),
+                             StructField('release_mbid', StringType()), StructField('track_name', StringType()),
+                             StructField('recording_mbid', StringType()), StructField('recording_msid', StringType())))
         df = None
         for entry in data:
             for idx in range(0, entry['count']):
@@ -51,13 +58,13 @@ class RecordingTestCase(SparkTestCase):
         for entry in data:
             expected[entry['user_name']].append({
                 'track_name': entry['track_name'],
-                'recording_msid': entry['recording_msid'] or None,
+                'recording_msid': entry['recording_msid'] or None if entry['recording_mbid'] == "" else None,
                 'recording_mbid': entry['recording_mbid'] or None,
                 'release_name': entry['release_name'] or None,
-                'release_msid': entry['release_msid'] or None,
+                'release_msid': entry['release_msid'] or None if entry['release_mbid'] == "" else None,
                 'release_mbid': entry['release_mbid'] or None,
                 'artist_name': entry['artist_name'],
-                'artist_msid': entry['artist_msid'] or None,
+                'artist_msid': entry['artist_msid'] or None if len(entry['artist_mbids']) == 0 else None,
                 'artist_mbids': entry['artist_mbids'],
                 'listen_count': entry['count']
             })
