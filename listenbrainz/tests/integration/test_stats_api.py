@@ -6,6 +6,7 @@ from redis import Redis
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 from data.model.user_artist_stat import UserArtistStatJson
+from data.model.user_listening_activity import UserListeningActivityStatJson
 from data.model.user_release_stat import UserReleaseStatJson
 from data.model.user_recording_stat import UserRecordingStatJson
 from listenbrainz.tests.integration import IntegrationTestCase
@@ -30,6 +31,12 @@ class StatsAPITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('user_top_recordings_db_data_for_api_test.json'), 'r') as f:
             self.recording_payload = json.load(f)
         db_stats.insert_user_recordings(self.user['id'], UserRecordingStatJson(**{'all_time': self.recording_payload}))
+
+        # Insert listening activity data
+        with open(self.path_to_data_file('user_listening_activity_db_data_for_api_test.json')) as f:
+            self.listening_activity_payload = json.load(f)
+        db_stats.insert_user_listening_activity(self.user['id'], UserListeningActivityStatJson(
+            **{'all_time': self.listening_activity_payload}))
 
     def tearDown(self):
         r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
@@ -705,3 +712,108 @@ class StatsAPITestCase(IntegrationTestCase):
         response = self.client.get(url_for('stats_api_v1.get_release',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'year'})
         self.assertEqual(response.status_code, 204)
+
+    def test_listening_activity_stat(self):
+        """ Test to make sure valid response is received """
+        response = self.client.get(url_for('stats_api_v1.get_listening_activity', user_name=self.user['musicbrainz_id']))
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+
+        sent_from = self.listening_activity_payload['from_ts']
+        received_from = data['from_ts']
+        self.assertEqual(sent_from, received_from)
+        sent_to = self.listening_activity_payload['to_ts']
+        received_to = data['to_ts']
+        self.assertEqual(sent_to, received_to)
+        sent_listening_activty = self.listening_activity_payload['listening_activity']
+        received_listening_activity = data['listening_activity']
+        self.assertListEqual(sent_listening_activty, received_listening_activity)
+        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+
+    def test_artist_stat_all_time(self):
+        """ Test to make sure valid response is received when range is 'all_time' """
+        response = self.client.get(url_for('stats_api_v1.get_listening_activity',
+                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time'})
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        sent_listening_activty = self.listening_activity_payload['listening_activity']
+        received_listening_activity = data['listening_activity']
+        self.assertListEqual(sent_listening_activty, received_listening_activity)
+        self.assertEqual(data['range'], 'all_time')
+        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+
+    def test_artist_stat_week(self):
+        """ Test to make sure valid response is received when range is 'week' """
+        with open(self.path_to_data_file('user_listening_activity_db_data_for_api_test_week.json'), 'r') as f:
+            payload = json.load(f)
+
+        db_stats.insert_user_listening_activity(self.user['id'], UserListeningActivityStatJson(**{'week': payload}))
+
+        response = self.client.get(url_for('stats_api_v1.get_listening_activity',
+                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'week'})
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        sent_listening_activty = payload['listening_activity']
+        received_listening_activity = data['listening_activity']
+        self.assertListEqual(sent_listening_activty, received_listening_activity)
+        self.assertEqual(data['range'], 'week')
+        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+
+    def test_artist_stat_month(self):
+        """ Test to make sure valid response is received when range is 'month' """
+        with open(self.path_to_data_file('user_listening_activity_db_data_for_api_test_month.json'), 'r') as f:
+            payload = json.load(f)
+
+        db_stats.insert_user_listening_activity(self.user['id'], UserListeningActivityStatJson(**{'month': payload}))
+
+        response = self.client.get(url_for('stats_api_v1.get_listening_activity',
+                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'month'})
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        sent_listening_activty = payload['listening_activity']
+        received_listening_activity = data['listening_activity']
+        self.assertListEqual(sent_listening_activty, received_listening_activity)
+        self.assertEqual(data['range'], 'month')
+        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+
+    def test_artist_stat_year(self):
+        """ Test to make sure valid response is received when range is 'year' """
+        with open(self.path_to_data_file('user_listening_activity_db_data_for_api_test_year.json'), 'r') as f:
+            payload = json.load(f)
+
+        db_stats.insert_user_listening_activity(self.user['id'], UserListeningActivityStatJson(**{'year': payload}))
+
+        response = self.client.get(url_for('stats_api_v1.get_listening_activity',
+                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'year'})
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        sent_listening_activty = payload['listening_activity']
+        received_listening_activity = data['listening_activity']
+        self.assertListEqual(sent_listening_activty, received_listening_activity)
+        self.assertEqual(data['range'], 'year')
+        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+
+    def test_listening_activity_stat_invalid_user(self):
+        """ Test to make sure that the API sends 404 if user does not exist. """
+        response = self.client.get(url_for('stats_api_v1.get_listening_activity', user_name='nouser'))
+        self.assert404(response)
+        self.assertEqual('Cannot find user: nouser', response.json['error'])
+
+    def test_listening_activity_stat_not_calculated(self):
+        """ Test to make sure that the API sends 204 if statistics for user have not been calculated yet """
+        db_stats.delete_user_stats(self.user['id'])
+        response = self.client.get(url_for('stats_api_v1.get_listening_activity', user_name=self.user['musicbrainz_id']))
+        self.assertEqual(response.status_code, 204)
+
+    def test_listening_activity_range_stat_not_calculated(self):
+        """ Test to make sure that the API sends 204 if particular range statistics for user have not been calculated yet """
+        response = self.client.get(url_for('stats_api_v1.get_listening_activity',
+                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'year'})
+        self.assertEqual(response.status_code, 204)
+
+    def test_listening_activity_stat_invalid_range(self):
+        """ Test to make sure 400 is received if range argument is invalid """
+        response = self.client.get(url_for('stats_api_v1.get_listening_activity',
+                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'foobar'})
+        self.assert400(response)
+        self.assertEqual("Invalid range: foobar", response.json['error'])
