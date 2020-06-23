@@ -6,10 +6,10 @@
     "recording_mbid": "1",
     "release_name": "release1",
     "release_msid": "1",
-    "release_mbid": "1",
+    "release_mbid": "",
     "artist_name": "artist1",
     "artist_msid": "1",
-    "artist_mbids": "1",
+    "artist_mbids": ["1"],
     "count": 8
   },
   {
@@ -22,20 +22,20 @@
     "release_mbid": "",
     "artist_name": "artist1",
     "artist_msid": "",
-    "artist_mbids": "1",
+    "artist_mbids": ["1"],
     "count": 2
   },
   {
     "user_name": "user1",
     "track_name": "track2",
     "recording_msid": "2",
-    "recording_mbid": "2",
+    "recording_mbid": "",
     "release_name": "release2",
     "release_msid": "2",
     "release_mbid": "2",
     "artist_name": "artist2",
     "artist_msid": "2",
-    "artist_mbids": "2",
+    "artist_mbids": ["2"],
     "count": 3
   },
   {
@@ -48,7 +48,7 @@
     "release_mbid": "",
     "artist_name": "artist3",
     "artist_msid": "",
-    "artist_mbids": "3",
+    "artist_mbids": ["3"],
     "count": 4
   },
   {
@@ -61,7 +61,7 @@
     "release_mbid": "1",
     "artist_name": "artist1",
     "artist_msid": "",
-    "artist_mbids": "1",
+    "artist_mbids": ["1"],
     "count": 4
   },
   {
@@ -74,7 +74,7 @@
     "release_mbid": "",
     "artist_name": "artist3",
     "artist_msid": "",
-    "artist_mbids": "3",
+    "artist_mbids": ["3"],
     "count": 7
   },
   {
@@ -84,10 +84,10 @@
     "recording_mbid": "4",
     "release_name": "release4",
     "release_msid": "4",
-    "release_mbid": "4",
+    "release_mbid": "",
     "artist_name": "artist4",
     "artist_msid": "4",
-    "artist_mbids": "4",
+    "artist_mbids": ["4"],
     "count": 2
   },
   {
@@ -100,7 +100,7 @@
     "release_mbid": "",
     "artist_name": "artist1",
     "artist_msid": "1",
-    "artist_mbids": "1",
+    "artist_mbids": [""],
     "count": 2
   },
   {
@@ -113,7 +113,7 @@
     "release_mbid": "1",
     "artist_name": "artist1",
     "artist_msid": "",
-    "artist_mbids": "1",
+    "artist_mbids": ["1"],
     "count": 1
   }
 ]

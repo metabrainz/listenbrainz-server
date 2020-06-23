@@ -25,7 +25,10 @@ def get_artists(table):
     result = run_query("""
             SELECT user_name
                  , artist_name
-                 , nullif(artist_msid, '') as artist_msid
+                 , CASE
+                     WHEN cardinality(artist_mbids) > 0 THEN NULL
+                     ELSE nullif(artist_msid, '')
+                   END as artist_msid
                  , artist_mbids
                  , count(artist_name) as listen_count
               FROM {table}
