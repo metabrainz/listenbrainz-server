@@ -38,10 +38,10 @@ class TrainModelsTestCase(SparkTestCase):
     def test_compute_rmse(self, mock_add,  mock_rdd, mock_sqrt):
         n = 1
         model_id = "281c4177-f33a-441d-b15d-910acaf18b07"
-        mock_train = MagicMock()
-        _ = train_models.compute_rmse(mock_train, mock_rdd, n, model_id)
+        mock_model = MagicMock()
+        _ = train_models.compute_rmse(mock_model, mock_rdd, n, model_id)
 
-        mock_predict_all = mock_train.predictAll
+        mock_predict_all = mock_model.predictAll
         mock_map = mock_rdd.map()
         mock_predict_all.assert_called_once_with(mock_map)
 
@@ -58,7 +58,7 @@ class TrainModelsTestCase(SparkTestCase):
         mock_reduce.assert_called_once_with(mock_add)
         # test division operator
         mock_sqrt.assert_called_once_with(mock_reduce.return_value.__truediv__())
-    '''
+
     def test_preprocess_data(self):
         test_playcounts_df = utils.read_files_from_HDFS(TEST_PLAYCOUNTS_PATH)
         training_data, validation_data, test_data = train_models.preprocess_data(test_playcounts_df)
@@ -91,10 +91,10 @@ class TrainModelsTestCase(SparkTestCase):
         expected_dataframe_id = train_models.get_latest_dataframe_id(df_metadata)
         self.assertEqual(expected_dataframe_id, df_id_2)
 
-    @patch('listenbrainz_spark.recommendations.train_models.train')
-    def test_get_best_model_metadata(self, mock_train):
+    def test_get_best_model_metadata(self):
+        mock_model = MagicMock()
         best_model = train_models.Model(
-            model=mock_train.return_value,
+            model=mock_model,
             validation_rmse=3.9,
             rank=4,
             lmbda=2.1,
@@ -138,11 +138,9 @@ class TrainModelsTestCase(SparkTestCase):
         lambdas = [4.8]
         iterations = [2]
         alpha = 3.0
-
         mock_rmse.return_value = 6.999
         best_model, model_metadata = train_models.get_best_model(mock_rdd_training, mock_rdd_validation, num_validation,
                                                                  ranks, lambdas, iterations, alpha)
-
         mock_id.assert_called_once()
         mock_train.assert_called_once_with(mock_rdd_training, ranks[0], iterations[0], lambdas[0],
                                            alpha, mock_id.return_value)
@@ -168,15 +166,14 @@ class TrainModelsTestCase(SparkTestCase):
         df = utils.read_files_from_HDFS(path.MODEL_METADATA)
         self.assertTrue(sorted(df.columns), sorted(schema.model_metadata_schema.fieldNames()))
 
-    @patch('listenbrainz_spark.recommendations.train_models.train')
     @patch('listenbrainz_spark.recommendations.train_models.listenbrainz_spark')
     @patch('listenbrainz_spark.recommendations.train_models.get_model_path')
     @patch('listenbrainz_spark.recommendations.train_models.delete_best_model')
-    def test_save_best_model(self, mock_del, mock_path, mock_context, mock_train):
+    def test_save_best_model(self, mock_del, mock_path, mock_context):
         model_id = 'xxxxxx'
-        train_models.save_best_model(model_id, mock_train.return_value)
+        mock_model = MagicMock()
+        train_models.save_best_model(model_id, mock_model)
 
         mock_del.assert_called_once()
         mock_path.assert_called_once_with(model_id)
-        mock_train.return_value.save.assert_called_once_with(mock_context.context, mock_path.return_value)
-    '''
+        mock_model.save.assert_called_once_with(mock_context.context, mock_path.return_value)
