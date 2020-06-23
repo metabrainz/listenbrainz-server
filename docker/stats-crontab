@@ -32,7 +32,7 @@
 20 14 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=year --entity=recordings
 
 # Request user all_time recordings every day at 14:30
-# 30 14 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=all_time --entity=recordings
+30 14 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=all_time --entity=recordings
 
 # Request user weekly listening_activity every day at 15:00
 00 15 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=listening_activity --range=week 
@@ -44,7 +44,7 @@
 20 15 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=listening_activity --range=year
 
 # Request user all_time listening_activity every day at 15:30
-30 15 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=listening_activity --range=all_time
+# 30 15 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=listening_activity --range=all_time
 
 # Request full data dump import into spark cluster, every Wednesday
 00 00 * * 3 /usr/local/bin/python /code/listenbrainz/manage.py spark request_import_full
