@@ -86,20 +86,20 @@ def generate_model_id():
     return '{}-{}'.format(config.MODEL_ID_PREFIX, uuid.uuid4())
 
 
-def get_best_model_path(model_id):
-    """ Get path to save best model
+def get_model_path(model_id):
+    """ Get path to best model
 
         Args:
-            model_id (str): Model identification string of best model.
+            model_id (str): Model identification string.
 
         Returns:
-            path to save best model.
+            path to save model.
     """
 
     return config.HDFS_CLUSTER_URI + path.DATA_DIR + '/' + model_id
 
 
-def get_latest_dataframe_id(dataframe_metadata_df, best_model_metadata):
+def get_latest_dataframe_id(dataframe_metadata_df):
     """ Get dataframe id of dataframe on which model has been trained.
 
         Args:
@@ -112,7 +112,7 @@ def get_latest_dataframe_id(dataframe_metadata_df, best_model_metadata):
     df = dataframe_metadata_df.select('dataframe_id') \
                               .where(f.col('dataframe_created') == timestamp.recent_dataframe_timestamp).take(1)[0]
 
-    best_model_metadata['dataframe_id'] = df.dataframe_id
+    return df.dataframe_id
 
 
 def get_best_model_metadata(best_model):
@@ -227,7 +227,7 @@ def save_best_model(model_id, model):
     """
     delete_best_model()
 
-    dest_path = get_best_model_path(model_id)
+    dest_path = get_model_path(model_id)
     try:
         current_app.logger.info('Saving model...')
         model.save(listenbrainz_spark.context, dest_path)
@@ -363,7 +363,7 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
     best_model_metadata['training_data_count'] = num_training
     best_model_metadata['validation_data_count'] = num_validation
     best_model_metadata['test_data_count'] = num_test
-    get_latest_dataframe_id(dataframe_metadata_df, best_model_metadata)
+    best_model_metadata['dataframe_id'] = get_latest_dataframe_id(dataframe_metadata_df)
 
     # Cached data must be cleared to avoid OOM.
     training_data.unpersist()

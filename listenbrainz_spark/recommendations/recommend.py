@@ -16,9 +16,7 @@ from listenbrainz_spark.exceptions import (PathNotFoundException,
                                            SparkSessionNotInitializedException,
                                            RecommendationsNotGeneratedException)
 
-from listenbrainz_spark.recommendations.train_models import get_best_model_path
-from listenbrainz_spark.exceptions import SQLException, SparkSessionNotInitializedException, PathNotFoundException, \
-    FileNotFetchedException, ViewNotRegisteredException
+from listenbrainz_spark.recommendations.train_models import get_model_path
 
 from flask import current_app
 import pyspark.sql.functions as func
@@ -39,11 +37,11 @@ class RecommendationParams:
         self.recommendation_similar_artist_limit = recommendation_similar_artist_limit
 
 
-def get_best_model_id():
+def get_most_recent_model_id():
     """ Get model id of recently created model.
 
         Returns:
-            best_model_id (str): Model identification string.
+            model_id (str): Model identification string.
     """
     try:
         model_metadata = utils.read_files_from_HDFS(path.MODEL_METADATA)
@@ -55,22 +53,22 @@ def get_best_model_id():
         sys.exit(-1)
 
     latest_ts = model_metadata.select(func.max('model_created').alias('model_created')).take(1)[0].model_created
-    best_model_id = model_metadata.select('model_id') \
-                                  .where(col('model_created') == latest_ts).take(1)[0].model_id
+    model_id = model_metadata.select('model_id') \
+                             .where(col('model_created') == latest_ts).take(1)[0].model_id
 
-    return best_model_id
+    return model_id
 
 
 def load_model():
     """ Load best model from given path in HDFS.
     """
-    best_model_id = get_best_model_id()
-    dest_path = get_best_model_path(best_model_id)
+    model_id = get_most_recent_model_id()
+    dest_path = get_model_path(model_id)
     try:
         model = MatrixFactorizationModel.load(listenbrainz_spark.context, dest_path)
         return model
     except Py4JJavaError as err:
-        current_app.logger.error('Unable to load model "{}"\n{}\nAborting...'.format(best_model_id, str(err.java_exception)),
+        current_app.logger.error('Unable to load model "{}"\n{}\nAborting...'.format(model_id, str(err.java_exception)),
                                  exc_info=True)
         sys.exit(-1)
 

@@ -59,8 +59,8 @@ class RecommendTestClass(SparkTestCase):
 
     @patch('listenbrainz_spark.recommendations.recommend.MatrixFactorizationModel')
     @patch('listenbrainz_spark.recommendations.recommend.listenbrainz_spark')
-    @patch('listenbrainz_spark.recommendations.recommend.get_best_model_path')
-    @patch('listenbrainz_spark.recommendations.recommend.get_best_model_id')
+    @patch('listenbrainz_spark.recommendations.recommend.get_model_path')
+    @patch('listenbrainz_spark.recommendations.recommend.get_most_recent_model_id')
     def test_load_model(self, mock_id, mock_model_path, mock_lb, mock_matrix_model):
         model = recommend.load_model()
         mock_id.assert_called_once()
