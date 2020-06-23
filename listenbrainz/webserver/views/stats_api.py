@@ -13,6 +13,7 @@ from data.model.user_recording_stat import (UserRecordingRecord,
                                             UserRecordingStat)
 from data.model.user_release_stat import (UserReleaseRecord,
                                           UserReleaseStat)
+from data.model.user_listening_activity import (UserListeningActivityRecord, UserListeningActivityStat)
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
@@ -342,6 +343,86 @@ def get_recording(user_name):
         "from_ts": from_ts,
         "to_ts": to_ts,
         "last_updated": last_updated,
+    }})
+
+
+@stats_api_bp.route("/user/<user_name>/listening-activity")
+@crossdomain()
+@ratelimit()
+def get_listening_activity(user_name: str):
+    """
+    Get the listening activity for user ``user_name``. The listening activity shows the number of listens
+    the user has submitted over a period of time.
+
+    A sample response from the endpoint may look like::
+
+        {
+            "payload": {
+                "from_ts": 1587945600,
+                "last_updated": 1592807084,
+                "listening_activity": [
+                    {
+                        "from_ts": 1587945600,
+                        "listen_count": 26,
+                        "time_range": "Monday 27 April 2020",
+                        "to_ts": 1588031999
+                    },
+                    {
+                        "from_ts": 1588032000,
+                        "listen_count": 57,
+                        "time_range": "Tuesday 28 April 2020",
+                        "to_ts": 1588118399
+                    },
+                    {
+                        "from_ts": 1588118400,
+                        "listen_count": 33,
+                        "time_range": "Wednesday 29 April 2020",
+                        "to_ts": 1588204799
+                    },
+                "to_ts": 1589155200,
+                "user_id": "ishaanshah"
+            }
+        }
+    .. note::
+        - This endpoint is currently in beta
+        - The example above shows the data for three days only, however we calculate the statistics for
+          the current time range and the previous time range. For example for weekly statistics the data
+          is calculated for the current as well as the past week.
+
+    :param range: Optional, time interval for which statistics should be returned, possible values are ``week``,
+        ``month``, ``year``, ``all_time``, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+
+    """
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APINotFound("Cannot find user: {}".format(user_name))
+
+    stats_range = request.args.get('range', default='all_time')
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest("Invalid range: {}".format(stats_range))
+
+    try:
+        stats = db_stats.get_user_listening_activity(user['id'], stats_range)
+    except ValidationError:
+        # If the stored stats are not correct, we should not return them
+        raise APINoContent('')
+    if stats is None or getattr(stats, stats_range) is None:
+        raise APINoContent('')
+
+    listening_activity = [x.dict() for x in getattr(stats, stats_range).listening_activity]
+    return jsonify({"payload": {
+        "user_id": user_name,
+        "listening_activity": listening_activity,
+        "from_ts": int(getattr(stats, stats_range).from_ts),
+        "to_ts": int(getattr(stats, stats_range).to_ts),
+        "range": stats_range,
+        "last_updated": int(stats.last_updated.timestamp())
     }})
 
 
