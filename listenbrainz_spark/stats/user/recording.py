@@ -31,13 +31,22 @@ def get_recordings(table):
     result = run_query("""
             SELECT user_name
                  , track_name
-                 , nullif(recording_msid, '') as recording_msid
+                 , CASE
+                     WHEN recording_mbid IS NOT NULL AND recording_mbid != '' THEN NULL
+                     ELSE nullif(recording_msid, '')
+                   END as recording_msid
                  , nullif(recording_mbid, '') as recording_mbid
                  , artist_name
-                 , nullif(artist_msid, '') as artist_msid
+                 , CASE
+                     WHEN cardinality(artist_mbids) > 0 THEN NULL
+                     ELSE nullif(artist_msid, '')
+                   END as artist_msid
                  , artist_mbids
                  , nullif(release_name, '') as release_name
-                 , nullif(release_msid, '') as release_msid
+                 , CASE
+                     WHEN release_mbid IS NOT NULL AND release_mbid != '' THEN NULL
+                     ELSE nullif(release_msid, '')
+                   END as release_msid
                  , nullif(release_mbid, '') as release_mbid
                  , count(track_name) as listen_count
               FROM {}
