@@ -200,7 +200,7 @@ def create_messages(data, stats_range: str, from_ts: int, to_ts: int) -> Iterato
         except ValidationError:
             current_app.logger.error("""ValidationError while calculating {stats_range} listening_activity for user: {user_name}.
                                      Data: {data}""".format(stats_range=stats_range, user_name=_dict['user_name'],
-                                                            data=json.dump(_dict, indent=3)),
+                                                            data=json.dumps(_dict, indent=3)),
                                      exc_info=True)
             yield None
 
