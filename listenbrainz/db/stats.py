@@ -175,7 +175,8 @@ def get_user_artists(user_id: int, stats_range: str) -> Optional[UserArtistStat]
         return UserArtistStat(**dict(row)) if row else None
     except ValidationError:
         current_app.logger.error("""ValidationError when getting {stats_range} top artists for user with user_id: {user_id}.
-                                 Data: {data}""".format(stats_range=stats_range, user_id=user_id, data=ujson.dumps(row, indent=3)),
+                                 Data: {data}""".format(stats_range=stats_range, user_id=user_id,
+                                                        data=ujson.dumps(row, indent=3)),
                                  exc_info=True)
         return None
 
@@ -202,7 +203,8 @@ def get_user_releases(user_id: int, stats_range: str) -> Optional[UserReleaseSta
         return UserReleaseStat(**dict(row)) if row else None
     except ValidationError:
         current_app.logger.error("""ValidationError when getting {stats_range} top releases for user with user_id: {user_id}.
-                                 Data: {data}""".format(stats_range=stats_range, user_id=user_id, data=ujson.dumps(row, indent=3)),
+                                 Data: {data}""".format(stats_range=stats_range, user_id=user_id,
+                                                        data=ujson.dumps(row, indent=3)),
                                  exc_info=True)
         return None
 
@@ -229,7 +231,8 @@ def get_user_recordings(user_id: int, stats_range: str) -> Optional[UserRecordin
         return UserRecordingStat(**dict(row)) if row else None
     except ValidationError:
         current_app.logger.error("""ValidationError when getting {stats_range} top recordings for user with user_id: {user_id}.
-                                 Data: {data}""".format(stats_range=stats_range, user_id=user_id, data=ujson.dumps(row, indent=3)),
+                                 Data: {data}""".format(stats_range=stats_range, user_id=user_id,
+                                                        data=ujson.dumps(row, indent=3)),
                                  exc_info=True)
         return None
 
@@ -256,7 +259,8 @@ def get_user_listening_activity(user_id: int, stats_range: str) -> Optional[User
         return UserListeningActivityStat(**dict(row)) if row else None
     except ValidationError:
         current_app.logger.error("""ValidationError when getting {stats_range} top recordings for user with user_id: {user_id}.
-                                 Data: {data}""".format(stats_range=stats_range, user_id=user_id, data=ujson.dumps(row, indent=3)),
+                                 Data: {data}""".format(stats_range=stats_range, user_id=user_id,
+                                                        data=ujson.dumps(row, indent=3)),
                                  exc_info=True)
         return None
 

@@ -139,7 +139,8 @@ def handle_user_listening_activity(data):
     except ValidationError:
         current_app.logger.error("""ValidationError while inserting {stats_range} listening_activity for user with
                                     user_id: {user_id}. Data: {data}""".format(stats_range=stats_range, user_id=user['id'],
-                                                                               data=json.dumps({stats_range: data_mod}, indent=3)),
+                                                                               data=json.dumps({stats_range: data_mod},
+                                                                                               indent=3)),
                                  exc_info=True)
 
 
