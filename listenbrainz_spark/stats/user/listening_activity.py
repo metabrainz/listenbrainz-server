@@ -1,5 +1,6 @@
+import json
 from datetime import datetime
-from typing import Iterator
+from typing import Iterator, Optional
 
 from flask import current_app
 from pydantic import ValidationError
@@ -63,7 +64,7 @@ def get_listening_activity():
     return iterator
 
 
-def get_listening_activity_week() -> Iterator[UserListeningActivityStatMessage]:
+def get_listening_activity_week() -> Iterator[Optional[UserListeningActivityStatMessage]]:
     """ Calculate number of listens for an user on each day of the past and current week. """
     current_app.logger.debug("Calculating listening_activity_week")
 
@@ -93,7 +94,7 @@ def get_listening_activity_week() -> Iterator[UserListeningActivityStatMessage]:
     return messages
 
 
-def get_listening_activity_month() -> Iterator[UserListeningActivityStatMessage]:
+def get_listening_activity_month() -> Iterator[Optional[UserListeningActivityStatMessage]]:
     """ Calculate number of listens for an user on each day of the past month and current month. """
     current_app.logger.debug("Calculating listening_activity_month")
 
@@ -122,7 +123,7 @@ def get_listening_activity_month() -> Iterator[UserListeningActivityStatMessage]
     return messages
 
 
-def get_listening_activity_year() -> Iterator[UserListeningActivityStatMessage]:
+def get_listening_activity_year() -> Iterator[Optional[UserListeningActivityStatMessage]]:
     """ Calculate the number of listens for an user in each month of the past and current year. """
     current_app.logger.debug("Calculating listening_activity_year")
 
@@ -149,7 +150,7 @@ def get_listening_activity_year() -> Iterator[UserListeningActivityStatMessage]:
     return messages
 
 
-def get_listening_activity_all_time() -> Iterator[UserListeningActivityStatMessage]:
+def get_listening_activity_all_time() -> Iterator[Optional[UserListeningActivityStatMessage]]:
     """ Calculate the number of listens for an user in each year starting from LAST_FM_FOUNDING_YEAR (2002). """
     current_app.logger.debug("Calculating listening_activity_all_time")
 
@@ -173,7 +174,7 @@ def get_listening_activity_all_time() -> Iterator[UserListeningActivityStatMessa
     return messages
 
 
-def create_messages(data, stats_range: str, from_ts: int, to_ts: int) -> Iterator[UserListeningActivityStatMessage]:
+def create_messages(data, stats_range: str, from_ts: int, to_ts: int) -> Iterator[Optional[UserListeningActivityStatMessage]]:
     """
     Create messages to send the data to webserver via RabbitMQ
 
@@ -194,11 +195,14 @@ def create_messages(data, stats_range: str, from_ts: int, to_ts: int) -> Iterato
                 'to_ts': to_ts,
                 'listening_activity': _dict['listening_activity']
             })
+            result = model.dict(exclude_none=True)
+            yield result
         except ValidationError:
-            current_app.logger.warn("Format for listening_activity_{} for user {} incorrect, skipping",
-                                    stats_range, _dict['user_name'])
-        result = model.dict(exclude_none=True)
-        yield result
+            current_app.logger.error("""ValidationError while calculating {stats_range} listening_activity for user: {user_name}.
+                                     Data: {data}""".format(stats_range=stats_range, user_name=_dict['user_name'],
+                                                            data=json.dumps(_dict, indent=3)),
+                                     exc_info=True)
+            yield None
 
 
 def _get_listens(from_date: datetime, to_date: datetime):

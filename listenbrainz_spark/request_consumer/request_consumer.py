@@ -65,7 +65,7 @@ class RequestConsumer:
     def push_to_result_queue(self, messages):
         current_app.logger.debug("Pushing result to RabbitMQ...")
         for message in messages:
-            while True:
+            while message is not None:
                 try:
                     self.result_channel.basic_publish(
                         exchange=current_app.config['SPARK_RESULT_EXCHANGE'],

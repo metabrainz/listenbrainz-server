@@ -21,10 +21,12 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 
+import json
 from typing import Optional
 
 import sqlalchemy
-import ujson
+from flask import current_app
+from pydantic import ValidationError
 from data.model.user_listening_activity import (UserListeningActivityStat,
                                                 UserListeningActivityStatJson)
 from listenbrainz import db
@@ -65,7 +67,7 @@ def _insert_jsonb_data(user_id: int, column: str, data: dict):
                         last_updated = NOW()
             """.format(column=column)), {
             'user_id': user_id,
-            'data': ujson.dumps(data),
+            'data': json.dumps(data),
         }
         )
 
@@ -169,7 +171,14 @@ def get_user_artists(user_id: int, stats_range: str) -> Optional[UserArtistStat]
         })
         row = result.fetchone()
 
-    return UserArtistStat(**dict(row)) if row else None
+    try:
+        return UserArtistStat(**dict(row)) if row else None
+    except ValidationError:
+        current_app.logger.error("""ValidationError when getting {stats_range} top artists for user with user_id: {user_id}.
+                                 Data: {data}""".format(stats_range=stats_range, user_id=user_id,
+                                                        data=json.dumps(row, indent=3)),
+                                 exc_info=True)
+        return None
 
 
 def get_user_releases(user_id: int, stats_range: str) -> Optional[UserReleaseStat]:
@@ -190,7 +199,14 @@ def get_user_releases(user_id: int, stats_range: str) -> Optional[UserReleaseSta
         })
         row = result.fetchone()
 
-    return UserReleaseStat(**dict(row)) if row else None
+    try:
+        return UserReleaseStat(**dict(row)) if row else None
+    except ValidationError:
+        current_app.logger.error("""ValidationError when getting {stats_range} top releases for user with user_id: {user_id}.
+                                 Data: {data}""".format(stats_range=stats_range, user_id=user_id,
+                                                        data=json.dumps(row, indent=3)),
+                                 exc_info=True)
+        return None
 
 
 def get_user_recordings(user_id: int, stats_range: str) -> Optional[UserRecordingStat]:
@@ -211,7 +227,14 @@ def get_user_recordings(user_id: int, stats_range: str) -> Optional[UserRecordin
         })
         row = result.fetchone()
 
-    return UserRecordingStat(**dict(row)) if row else None
+    try:
+        return UserRecordingStat(**dict(row)) if row else None
+    except ValidationError:
+        current_app.logger.error("""ValidationError when getting {stats_range} top recordings for user with user_id: {user_id}.
+                                 Data: {data}""".format(stats_range=stats_range, user_id=user_id,
+                                                        data=json.dumps(row, indent=3)),
+                                 exc_info=True)
+        return None
 
 
 def get_user_listening_activity(user_id: int, stats_range: str) -> Optional[UserListeningActivityStat]:
@@ -232,7 +255,14 @@ def get_user_listening_activity(user_id: int, stats_range: str) -> Optional[User
         })
         row = result.fetchone()
 
-    return UserListeningActivityStat(**dict(row)) if row else None
+    try:
+        return UserListeningActivityStat(**dict(row)) if row else None
+    except ValidationError:
+        current_app.logger.error("""ValidationError when getting {stats_range} top recordings for user with user_id: {user_id}.
+                                 Data: {data}""".format(stats_range=stats_range, user_id=user_id,
+                                                        data=json.dumps(row, indent=3)),
+                                 exc_info=True)
+        return None
 
 
 def valid_stats_exist(user_id, days):
