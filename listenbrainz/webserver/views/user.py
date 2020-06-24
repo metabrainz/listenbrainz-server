@@ -182,6 +182,29 @@ def charts(user_name):
     )
 
 
+@user_bp.route("/<user_name>/stats")
+def stats(user_name: str):
+    """ Show user statistics """
+    user = _get_user(user_name)
+
+    user_data = {
+        "name": user.musicbrainz_id,
+        "id": user.id,
+    }
+
+    props = {
+        "user": user_data,
+        "api_url": current_app.config["API_URL"]
+    }
+
+    return render_template(
+        "user/stats.html",
+        active_section="stats",
+        props=ujson.dumps(props),
+        user=user
+    )
+
+
 def _get_user(user_name):
     """ Get current username """
     if current_user.is_authenticated and \
