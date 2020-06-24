@@ -29,27 +29,31 @@ def get_recordings(table):
                 }
     """
     result = run_query("""
-            SELECT user_name
-                 , track_name
-                 , CASE
-                     WHEN recording_mbid IS NOT NULL AND recording_mbid != '' THEN NULL
-                     ELSE nullif(recording_msid, '')
-                   END as recording_msid
-                 , nullif(recording_mbid, '') as recording_mbid
-                 , artist_name
-                 , CASE
-                     WHEN cardinality(artist_mbids) > 0 THEN NULL
-                     ELSE nullif(artist_msid, '')
-                   END as artist_msid
-                 , artist_mbids
-                 , nullif(release_name, '') as release_name
-                 , CASE
-                     WHEN release_mbid IS NOT NULL AND release_mbid != '' THEN NULL
-                     ELSE nullif(release_msid, '')
-                   END as release_msid
-                 , nullif(release_mbid, '') as release_mbid
-                 , count(track_name) as listen_count
-              FROM {}
+              WITH intermediate_table as (
+                SELECT user_name
+                     , track_name
+                     , CASE
+                         WHEN recording_mbid IS NOT NULL AND recording_mbid != '' THEN NULL
+                         ELSE nullif(recording_msid, '')
+                       END as recording_msid
+                     , nullif(recording_mbid, '') as recording_mbid
+                     , artist_name
+                     , CASE
+                         WHEN cardinality(artist_mbids) > 0 THEN NULL
+                         ELSE nullif(artist_msid, '')
+                       END as artist_msid
+                     , artist_mbids
+                     , nullif(release_name, '') as release_name
+                     , CASE
+                         WHEN release_mbid IS NOT NULL AND release_mbid != '' THEN NULL
+                         ELSE nullif(release_msid, '')
+                       END as release_msid
+                     , nullif(release_mbid, '') as release_mbid
+                  FROM {}
+              )
+            SELECT *
+                 , count(*) as listen_count
+              FROM intermediate_table
           GROUP BY user_name
                  , track_name
                  , recording_msid
