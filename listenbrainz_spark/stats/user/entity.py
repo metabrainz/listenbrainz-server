@@ -1,5 +1,6 @@
+import json
 from datetime import datetime
-from typing import Iterator
+from typing import Iterator, Optional
 
 from flask import current_app
 from pydantic import ValidationError
@@ -24,7 +25,7 @@ entity_handler_map = {
 }
 
 
-def get_entity_week(entity: str) -> Iterator[UserEntityStatMessage]:
+def get_entity_week(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the weekly top entity for all users """
     current_app.logger.debug("Calculating {}_week...".format(entity))
 
@@ -48,7 +49,7 @@ def get_entity_week(entity: str) -> Iterator[UserEntityStatMessage]:
     return messages
 
 
-def get_entity_month(entity: str) -> Iterator[UserEntityStatMessage]:
+def get_entity_month(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the month top entity for all users """
     current_app.logger.debug("Calculating {}_month...".format(entity))
 
@@ -70,7 +71,7 @@ def get_entity_month(entity: str) -> Iterator[UserEntityStatMessage]:
     return messages
 
 
-def get_entity_year(entity: str) -> Iterator[UserEntityStatMessage]:
+def get_entity_year(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the year top entity for all users """
     current_app.logger.debug("Calculating {}_year...".format(entity))
 
@@ -91,7 +92,7 @@ def get_entity_year(entity: str) -> Iterator[UserEntityStatMessage]:
     return messages
 
 
-def get_entity_all_time(entity: str) -> Iterator[UserEntityStatMessage]:
+def get_entity_all_time(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the all_time top entity for all users """
     current_app.logger.debug("Calculating {}_all_time...".format(entity))
 
@@ -112,7 +113,7 @@ def get_entity_all_time(entity: str) -> Iterator[UserEntityStatMessage]:
     return messages
 
 
-def create_messages(data, entity: str, stats_range: str, from_ts: int, to_ts: int) -> Iterator[UserEntityStatMessage]:
+def create_messages(data, entity: str, stats_range: str, from_ts: int, to_ts: int) -> Iterator[Optional[UserEntityStatMessage]]:
     """
     Create messages to send the data to the webserver via RabbitMQ
 
@@ -140,7 +141,11 @@ def create_messages(data, entity: str, stats_range: str, from_ts: int, to_ts: in
                 'entity': entity,
                 'count': len(_dict[entity])
             })
+            result = model.dict(exclude_none=True)
+            yield result
         except ValidationError:
-            current_app.logger.warn("Format for user_entity_{} for user {} incorrect, skipping", stats_range, _dict['user_name'])
-        result = model.dict(exclude_none=True)
-        yield result
+            current_app.logger.error("""ValidationError while calculating {stats_range} top {entity} for user: {user_name}.
+                                     Data: {data}""".format(stats_range=stats_range, entity=entity, user_name=_dict['user_name'],
+                                                            data=json.dump(_dict, indent=3)),
+                                     exc_info=True)
+            yield None

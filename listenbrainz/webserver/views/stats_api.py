@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from pydantic import ValidationError
 from typing import List, Union
 
 from flask import Blueprint, current_app, jsonify, request
@@ -107,11 +106,7 @@ def get_artist(user_name):
     offset = _get_non_negative_param('offset', default=0)
     count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
-    try:
-        stats = db_stats.get_user_artists(user['id'], stats_range)
-    except ValidationError:
-        # If the stored stats are not correct, we should should not return them
-        raise APINoContent('')
+    stats = db_stats.get_user_artists(user['id'], stats_range)
     if stats is None or getattr(stats, stats_range) is None:
         raise APINoContent('')
 
@@ -215,11 +210,7 @@ def get_release(user_name):
     offset = _get_non_negative_param('offset', default=0)
     count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
-    try:
-        stats = db_stats.get_user_releases(user['id'], stats_range)
-    except ValidationError:
-        # If the stored stats are not correct, we should should not return them
-        raise APINoContent('')
+    stats = db_stats.get_user_releases(user['id'], stats_range)
     if stats is None or getattr(stats, stats_range) is None:
         raise APINoContent('')
 
@@ -320,11 +311,7 @@ def get_recording(user_name):
     offset = _get_non_negative_param('offset', default=0)
     count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
-    try:
-        stats = db_stats.get_user_recordings(user['id'], stats_range)
-    except ValidationError:
-        # If the stored stats are not correct, we should should not return them
-        raise APINoContent('')
+    stats = db_stats.get_user_recordings(user['id'], stats_range)
     if stats is None or getattr(stats, stats_range) is None:
         raise APINoContent('')
 
@@ -407,11 +394,7 @@ def get_listening_activity(user_name: str):
     if not _is_valid_range(stats_range):
         raise APIBadRequest("Invalid range: {}".format(stats_range))
 
-    try:
-        stats = db_stats.get_user_listening_activity(user['id'], stats_range)
-    except ValidationError:
-        # If the stored stats are not correct, we should not return them
-        raise APINoContent('')
+    stats = db_stats.get_user_listening_activity(user['id'], stats_range)
     if stats is None or getattr(stats, stats_range) is None:
         raise APINoContent('')
 
