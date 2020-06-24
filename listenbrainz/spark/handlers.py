@@ -1,11 +1,14 @@
 """ This file contains handler functions for rabbitmq messages we
     receive from the Spark cluster.
 """
+import json
+
 import listenbrainz.db.user as db_user
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
 
 from flask import current_app, render_template
+from pydantic import ValidationError
 from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
 from data.model.user_listening_activity import UserListeningActivityStatJson
@@ -102,7 +105,14 @@ def handle_user_entity(data):
 
     # Get function to insert statistics
     db_handler = getattr(db_stats, 'insert_user_{}'.format(entity))
-    db_handler(user['id'], entity_model(**{stats_range: data_mod}))
+
+    try:
+        db_handler(user['id'], entity_model(**{stats_range: data_mod}))
+    except ValidationError:
+        current_app.logger.error("""ValidationError while inserting {stats_range} top {entity} for user with user_id: {user_id}.
+                                 Data: {data}""".format(stats_range=stats_range, entity=entity,
+                                                        user_id=user['id'], data=json.dumps({stats_range: data_mod}, indent=3)),
+                                 exc_info=True)
 
 
 def handle_user_listening_activity(data):
@@ -124,7 +134,14 @@ def handle_user_listening_activity(data):
     to_remove = {'musicbrainz_id', 'type', 'stats_range'}
     data_mod = {key: data[key] for key in data if key not in to_remove}
 
-    db_stats.insert_user_listening_activity(user['id'], UserListeningActivityStatJson(**{stats_range: data_mod}))
+    try:
+        db_stats.insert_user_listening_activity(user['id'], UserListeningActivityStatJson(**{stats_range: data_mod}))
+    except ValidationError:
+        current_app.logger.error("""ValidationError while inserting {stats_range} listening_activity for user with
+                                    user_id: {user_id}. Data: {data}""".format(stats_range=stats_range, user_id=user['id'],
+                                                                               data=json.dumps({stats_range: data_mod},
+                                                                                               indent=3)),
+                                 exc_info=True)
 
 
 def handle_dump_imported(data):
