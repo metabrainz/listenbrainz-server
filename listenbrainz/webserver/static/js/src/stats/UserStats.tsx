@@ -2,7 +2,7 @@ import * as ReactDOM from "react-dom";
 import * as React from "react";
 
 import ErrorBoundary from "../ErrorBoundary";
-import Card from "../components/Card";
+import UserListeningActivity from "./UserListeningActivity";
 
 export type UserStatsProps = {
   user: ListenBrainzUser;
@@ -14,9 +14,7 @@ class UserStats extends React.Component<UserStatsProps> {
     return (
       <div style={{ marginTop: "1em" }}>
         <div className="row">
-          <Card>
-            <h2>Hello</h2>
-          </Card>
+          <UserListeningActivity />
         </div>
       </div>
     );

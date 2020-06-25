@@ -4,7 +4,7 @@ import * as React from "react";
 
 import APIService from "../APIService";
 import Bar from "./Bar";
-import Loader from "../Loader";
+import Loader from "../components/Loader";
 import ErrorBoundary from "../ErrorBoundary";
 
 export type UserEntityChartProps = {
@@ -14,7 +14,7 @@ export type UserEntityChartProps = {
 
 export type UserEntityChartState = {
   data: UserEntityData;
-  range: UserEntityAPIRange;
+  range: UserStatsAPIRange;
   entity: Entity;
   currPage: number;
   entityCount: number;
@@ -45,7 +45,7 @@ export default class UserEntityChart extends React.Component<
 
     this.state = {
       data: [],
-      range: "" as UserEntityAPIRange,
+      range: "" as UserStatsAPIRange,
       entity: "" as Entity,
       currPage: 1,
       entityCount: 0,
@@ -93,7 +93,7 @@ export default class UserEntityChart extends React.Component<
   };
 
   changeRange = (
-    newRange: UserEntityAPIRange,
+    newRange: UserStatsAPIRange,
     event?: React.MouseEvent<HTMLElement>
   ): void => {
     if (event) {
@@ -119,7 +119,7 @@ export default class UserEntityChart extends React.Component<
   };
 
   getInitData = async (
-    range: UserEntityAPIRange,
+    range: UserStatsAPIRange,
     entity: Entity
   ): Promise<{
     maxListens: number;
@@ -174,7 +174,7 @@ export default class UserEntityChart extends React.Component<
 
   getData = async (
     page: number,
-    range: UserEntityAPIRange,
+    range: UserStatsAPIRange,
     entity: Entity
   ): Promise<
     UserArtistsResponse | UserReleasesResponse | UserRecordingsResponse
@@ -300,7 +300,7 @@ export default class UserEntityChart extends React.Component<
 
   getURLParams = (): {
     page: number;
-    range: UserEntityAPIRange;
+    range: UserStatsAPIRange;
     entity: Entity;
   } => {
     const url = new URL(window.location.href);
@@ -312,9 +312,9 @@ export default class UserEntityChart extends React.Component<
     }
 
     // Get range from URL
-    let range: UserEntityAPIRange = "all_time";
+    let range: UserStatsAPIRange = "all_time";
     if (url.searchParams.get("range")) {
-      range = url.searchParams.get("range") as UserEntityAPIRange;
+      range = url.searchParams.get("range") as UserStatsAPIRange;
     }
 
     // Get entity from URL
@@ -328,7 +328,7 @@ export default class UserEntityChart extends React.Component<
 
   setURLParams = (
     page: number,
-    range: UserEntityAPIRange,
+    range: UserStatsAPIRange,
     entity: Entity
   ): void => {
     window.history.pushState(

@@ -144,7 +144,7 @@ declare type UserArtistsResponse = {
     count: number;
     last_updated: number;
     offset: number;
-    range: UserEntityAPIRange;
+    range: UserStatsAPIRange;
     total_artist_count: number;
     user_id: string;
     from_ts: number;
@@ -166,7 +166,7 @@ declare type UserReleasesResponse = {
     count: number;
     last_updated: number;
     offset: number;
-    range: UserEntityAPIRange;
+    range: UserStatsAPIRange;
     total_release_count: number;
     user_id: string;
     from_ts: number;
@@ -191,7 +191,7 @@ declare type UserRecordingsResponse = {
     count: number;
     last_updated: number;
     offset: number;
-    range: UserEntityAPIRange;
+    range: UserStatsAPIRange;
     total_recording_count: number;
     user_id: string;
     from_ts: number;
@@ -199,7 +199,7 @@ declare type UserRecordingsResponse = {
   };
 };
 
-declare type UserEntityAPIRange = "all_time" | "year" | "month" | "week";
+declare type UserStatsAPIRange = "all_time" | "year" | "month" | "week";
 
 declare type UserEntityDatum = {
   id: string;
