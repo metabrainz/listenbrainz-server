@@ -231,9 +231,6 @@ def handle_recommendations(data):
                                     .format(musicbrainz_id))
         return
 
-    if is_new_cf_recording_recommendation_batch():
-        notify_cf_recording_recommendations_update()
-
     current_app.logger.debug("inserting recommendation for {}".format(musicbrainz_id))
     top_artist_recording_mbids = data['top_artist']
     similar_artist_recording_mbids = data['similar_artist']
