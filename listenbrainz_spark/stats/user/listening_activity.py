@@ -7,6 +7,7 @@ from pydantic import ValidationError
 import listenbrainz_spark
 from data.model.user_listening_activity import UserListeningActivityStatMessage
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
+from listenbrainz_spark.exceptions import HDFSException
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
 from listenbrainz_spark.stats import (adjust_days, adjust_months, get_day_end,
                                       get_month_end, get_year_end,
@@ -15,7 +16,7 @@ from listenbrainz_spark.stats.user.utils import (filter_listens,
                                                  get_last_monday,
                                                  get_latest_listen_ts)
 from listenbrainz_spark.utils import get_listens
-from pyspark.sql.functions import collect_list, sort_array, struct
+from pyspark.sql.functions import collect_list, sort_array, struct, lit
 from pyspark.sql.types import (StringType, StructField, StructType,
                                TimestampType)
 
@@ -156,16 +157,32 @@ def get_listening_activity_all_time() -> Iterator[UserListeningActivityStatMessa
     to_date = get_latest_listen_ts()
     from_date = datetime(LAST_FM_FOUNDING_YEAR, 1, 1)
 
-    time_range = []
+    result_without_zero_years = None
     for year in range(from_date.year, to_date.year+1):
-        time_range.append([str(year), datetime(year, 1, 1), get_year_end(year)])
+        year_start = datetime(year, 1, 1)
+        year_end = get_year_end(year)
+        try:
+            _get_listens(year_start, year_end)
+        except HDFSException:
+            # Skip if no listens present in df
+            continue
+        year_df = run_query("""
+                    SELECT user_name,
+                           count(user_name) as listen_count
+                      FROM listens
+                  GROUP BY user_name
+                """.format(year=year))
+        year_df = year_df.withColumn('time_range', lit(str(year))).withColumn(
+            'from_ts', lit(year_start.timestamp())).withColumn('to_ts', lit(year_end.timestamp()))
+        result_without_zero_years = result_without_zero_years.union(year_df) if result_without_zero_years else year_df
 
-    time_range_df = listenbrainz_spark.session.createDataFrame(time_range, time_range_schema)
-    time_range_df.createOrReplaceTempView('time_range')
+    # Create a table with a list of time ranges and corresponding listen count for each user
+    data = result_without_zero_years \
+        .withColumn("listening_activity", struct("from_ts", "to_ts", "listen_count", "time_range")) \
+        .groupBy("user_name") \
+        .agg(sort_array(collect_list("listening_activity")).alias("listening_activity")) \
+        .toLocalIterator()
 
-    _get_listens(from_date, to_date)
-
-    data = get_listening_activity()
     messages = create_messages(data=data, stats_range='all_time', from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
     current_app.logger.debug("Done!")
