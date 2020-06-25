@@ -171,7 +171,7 @@ def get_listening_activity_all_time() -> Iterator[UserListeningActivityStatMessa
                            count(user_name) as listen_count
                       FROM listens
                   GROUP BY user_name
-                """.format(year=year))
+                  """)
         year_df = year_df.withColumn('time_range', lit(str(year))).withColumn(
             'from_ts', lit(year_start.timestamp())).withColumn('to_ts', lit(year_end.timestamp()))
         result_without_zero_years = result_without_zero_years.union(year_df) if result_without_zero_years else year_df
