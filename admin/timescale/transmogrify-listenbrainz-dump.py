@@ -38,11 +38,21 @@ def convert_dump_row_to_spark_row(row):
     return data
 
 
-def transmogrify(in_file, out_file):
-    with open(out_file, "w") as out_f:
-        with tarfile.open(in_file, "r:xz") as tarf:  # yep, going with that one again!
-            for member in tarf:
-                if member.name.endswith(".listens"):
+def transmogrify(in_file, out_dir):
+
+
+    with tarfile.open(in_file, "r:xz") as tarf:  # yep, going with that one again!
+        for member in tarf:
+            if member.name.endswith(".listens"):
+                print(member.name)
+                year = os.path.split(os.path.dirname(member.name))[1]
+                file_name = os.path.split(member.name)[1]
+                out_file = os.path.join(out_dir, year, file_name)
+                try:
+                    os.makedirs(os.path.join(out_dir, year))
+                except FileExistsError: 
+                    pass
+                with open(out_file, "w") as out_f:
                     with tarf.extractfile(member) as f:
                         while True:
                             line = f.readline()
