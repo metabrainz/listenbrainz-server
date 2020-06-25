@@ -205,3 +205,27 @@ class Listen(object):
     def __unicode__(self):
         return "<Listen: user_name: %s, time: %s, artist_msid: %s, release_msid: %s, recording_msid: %s, artist_name: %s, track_name: %s>" % \
                (self.user_name, self.ts_since_epoch, self.artist_msid, self.release_msid, self.recording_msid, self.data['artist_name'], self.data['track_name'])
+
+
+def convert_dump_row_to_spark_row(row):
+    data = {
+        'listened_at': str(row['timestamp']),
+        'user_name': row['user_name'],
+        'artist_msid': row['track_metadata']['additional_info']['artist_msid'],
+        'artist_name': row['track_metadata']['artist_name'],
+        'artist_mbids': convert_comma_seperated_string_to_list(row['track_metadata']['additional_info'].get('artist_mbids', '')),
+        'release_msid': row['track_metadata']['additional_info'].get('release_msid'),
+        'release_name': row['track_metadata'].get('release_name', ''),
+        'release_mbid': row['track_metadata']['additional_info'].get('release_mbid', ''),
+        'track_name': row['track_metadata']['track_name'],
+        'recording_msid': row['recording_msid'],
+        'recording_mbid': row['track_metadata']['additional_info'].get('recording_mbid', ''),
+        'tags': convert_comma_seperated_string_to_list(row['track_metadata']['additional_info'].get('tags', [])),
+    }
+
+    if 'inserted_timestamp' in row and row['inserted_timestamp'] is not None:
+        data['inserted_timestamp'] = str(datetime.utcfromtimestamp(row['inserted_timestamp']))
+    else:
+        data['inserted_timestamp'] = str(datetime.utcfromtimestamp(0))
+
+    return data

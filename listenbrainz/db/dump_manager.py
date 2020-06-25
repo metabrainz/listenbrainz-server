@@ -29,11 +29,14 @@ import re
 import shutil
 import subprocess
 import sys
+import tarfile
 
 import psycopg2
+import ujson
 from flask import current_app, render_template
 from brainzutils.mail import send_mail
 from listenbrainz import db
+from listenbrainz.listen import convert_dump_row_to_spark_row
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app
@@ -263,3 +266,36 @@ def write_hashes(location):
         except IOError as e:
             current_app.logger.error('IOError while trying to write hash files for file %s: %s', file, str(e), exc_info=True)
             raise
+
+
+@cli.command(name="convert_dump")
+@click.argument('in_file', type=str)
+@click.argument('out_dir', type=str)
+def transmogrify_dump_file_to_spark_import_format(in_file, out_dir):
+    """ Decompress and convert an LB dump,  ready for spark.
+
+    Args:
+        in_file: The tar.xz dump file to import
+        out_dir: The directory where the dump file should be mogrified to. If it doesn't exist,
+                 it will be created.
+    """
+    with tarfile.open(in_file, "r:xz") as tarf:  # yep, going with that one again!
+        for member in tarf:
+            if member.name.endswith(".listens"):
+                print(member.name)
+                year = os.path.split(os.path.dirname(member.name))[1]
+                file_name = os.path.split(member.name)[1]
+                out_file = os.path.join(out_dir, year, file_name)
+                try:
+                    os.makedirs(os.path.join(out_dir, year))
+                except FileExistsError: 
+                    pass
+                with open(out_file, "w") as out_f:
+                    with tarf.extractfile(member) as f:
+                        while True:
+                            line = f.readline()
+                            if not line:
+                                break
+
+                            listen = ujson.loads(line)
+                            out_f.write(ujson.dumps(convert_dump_row_to_spark_row(listen)) + "\n")
