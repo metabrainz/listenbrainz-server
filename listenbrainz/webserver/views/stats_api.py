@@ -375,6 +375,8 @@ def get_listening_activity(user_name: str):
         - The example above shows the data for three days only, however we calculate the statistics for
           the current time range and the previous time range. For example for weekly statistics the data
           is calculated for the current as well as the past week.
+        - For ``all_time`` listening activity statistics we only return the years which have more than
+          zero listens.
 
     :param range: Optional, time interval for which statistics should be returned, possible values are ``week``,
         ``month``, ``year``, ``all_time``, defaults to ``all_time``
