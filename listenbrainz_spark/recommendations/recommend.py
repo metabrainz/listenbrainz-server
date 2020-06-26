@@ -60,7 +60,7 @@ def get_most_recent_model_id():
 
 
 def load_model():
-    """ Load best model from given path in HDFS.
+    """ Load model from given path in HDFS.
     """
     model_id = get_most_recent_model_id()
     dest_path = get_model_path(model_id)

@@ -225,6 +225,7 @@ def save_best_model(model_id, model):
             model_id (str): Best model identification string.
             model: Trained best model
     """
+    # delete previously saved model before saving a new model
     delete_best_model()
 
     dest_path = get_model_path(model_id)

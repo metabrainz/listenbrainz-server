@@ -17,9 +17,6 @@ from pyspark.mllib.recommendation import Rating
 
 class RecommendTestClass(SparkTestCase):
 
-    recommendation_top_artist_limit = 10
-    recommendation_similar_artist_limit = 10
-
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -31,7 +28,7 @@ class RecommendTestClass(SparkTestCase):
 
     def test_recommendation_params_init(self):
         recordings = utils.create_dataframe(Row(col1=3, col2=9), schema=None)
-        mock_model = MagicMock()
+        model = MagicMock()
         top_artist_candidate_set = utils.create_dataframe(Row(col1=4, col2=5, col3=5), schema=None)
         similar_artist_candidate_set = utils.create_dataframe(Row(col1=1), schema=None)
         recommendation_top_artist_limit = 20
@@ -43,7 +40,7 @@ class RecommendTestClass(SparkTestCase):
                                                 recommendation_similar_artist_limit)
 
         self.assertEqual(sorted(params.recordings.columns), sorted(recordings.columns))
-        self.assertEqual(params.model, mock_model)
+        self.assertEqual(params.model, model)
         self.assertEqual(sorted(params.top_artist_candidate_set.columns), sorted(top_artist_candidate_set.columns))
         self.assertEqual(sorted(params.similar_artist_candidate_set.columns), sorted(similar_artist_candidate_set.columns))
         self.assertEqual(params.recommendation_top_artist_limit, recommendation_top_artist_limit)
@@ -132,6 +129,27 @@ class RecommendTestClass(SparkTestCase):
             call(mock_candidate_set.return_value, params, params.recommendation_top_artist_limit),
             call(mock_candidate_set.return_value, params, params.recommendation_similar_artist_limit)
         ])
+
+    @patch('listenbrainz_spark.recommendations.recommend.get_recording_mbids')
+    @patch('listenbrainz_spark.recommendations.recommend.generate_recommendations')
+    def test_get_recommended_mbids(self, mock_gen_rec, mock_get_mbids):
+        candidate_set = self.get_candidate_set()
+        params = self.get_recommendation_params()
+        limit = 2
+
+        rdd = candidate_set.rdd.map(lambda r: (r['user_id'], r['recording_id']))
+        mock_gen_rec.return_value = [Rating(user=2, product=2, rating=1.2)]
+
+        mock_get_mbids.return_value = utils.create_dataframe(Row(mb_recording_mbid='xxxx'), schema=None)
+        recommended_mbids = recommend.get_recommended_mbids(rdd, params, limit)
+
+        mock_gen_rec.assert_called_once_with(rdd, params, limit)
+        mock_get_mbids.assert_called_once_with(params, [2])
+        self.assertEqual(recommended_mbids, ['xxxx'])
+
+        mock_gen_rec.return_value = []
+        with self.assertRaises(RecommendationsNotGeneratedException):
+            _ = recommend.get_recommended_mbids(rdd, params, limit)
 
     def test_get_users(self):
         params = self.get_recommendation_params()
