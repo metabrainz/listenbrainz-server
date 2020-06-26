@@ -62,7 +62,7 @@
   "cf_recording.recommendations.recommend": {
     "name": "cf_recording.recommendations.recommend",
     "description": "Generate recommendations for all active ListenBrainz users.",
-    "params": ["recommendation_top_artist_limit", "recommendation_similar_artist_limit"]
+    "params": ["recommendation_top_artist_limit", "recommendation_similar_artist_limit", "musicbrainz_id"]
   },
   "import.mapping": {
     "name": "import.mapping",

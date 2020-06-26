@@ -183,36 +183,74 @@ def get_recommendations_for_user(user_id, user_name, params):
     return user_recommendations_top_artist, user_recommendations_similar_artist
 
 
-def get_users(params):
+def get_users(params, musicbrainz_id):
     """ Get users from top artist candidate set.
 
         Args:
             params: RecommendationParams class object.
+            musicbrainz_id = list of users names to generate recommendations.
 
         Returns:
             users: dataframe of user id and user names.
     """
-    users = params.top_artist_candidate_set.select('user_id', 'user_name').distinct()
+    if len(musicbrainz_id) == 0 :
+        users = params.top_artist_candidate_set.select('user_id', 'user_name').distinct()
+
+    else:
+        users = params.top_artist_candidate_set.select('user_id', 'user_name') \
+                                               .where(params.top_artist_candidate_set.user_name.isin(musicbrainz_id)) \
+                                               .distinct()
     return users
 
 
-def get_recommendations_for_all(params):
+def get_message_for_inactive_users(messages, active_users, musicbrainz_id):
+    """ Get message to send over rabbitMQ for in active users.
+
+        We'd want to update recommendations for requested users with empty recording mbids list
+        who are not active in the past week/month
+
+        Args:
+            messages: list of rabbitMQ messages for active users
+            active_users: list of active user names
+            musicbrainz_id = list of users names for whom recommendations are requested.
+
+        Returns:
+            updated messages list with messages for inactive users.
+    """
+    inactive_users = [user_name for user_name in musicbrainz_id if user_name not in active_users]
+
+    for user_name in inactive_users:
+        messages.append({
+            'musicbrainz_id': user_name,
+            'type': 'cf_recording_recommendations',
+            'top_artist': [],
+            'similar_artist': [],
+        })
+
+    return messages
+
+
+def get_recommendations_for_all(params, musicbrainz_id):
     """ Get recommendations for all active users.
 
         Args:
             params: RecommendationParams class object.
+            musicbrainz_id = list of users names to generate recommendations.
 
         Returns:
             messages (list): user recommendations.
     """
     messages = []
-    current_app.logger.info('Generating recommendations...')
     # active users in the last week/month.
+    # users who are a part of top artist candidate set
+    active_users = []
+    current_app.logger.info('Generating recommendations...')
     # users for whom recommendations will be generated.
-    users = get_users(params)
+    users = get_users(params, musicbrainz_id)
     for row in users.collect():
         user_name = row.user_name
         user_id = row.user_id
+        active_users.append(user_name)
 
         user_recommendations_top_artist, user_recommendations_similar_artist = get_recommendations_for_user(user_id,
                                                                                                             user_name,
@@ -226,10 +264,12 @@ def get_recommendations_for_all(params):
         })
 
     current_app.logger.info('Recommendations Generated!')
+    if musicbrainz_id:
+        messages = get_message_for_inactive_users(messages, active_users, musicbrainz_id)
     return messages
 
 
-def main(recommendation_top_artist_limit=None, recommendation_similar_artist_limit=None):
+def main(recommendation_top_artist_limit=None, recommendation_similar_artist_limit=None, musicbrainz_id=None):
 
     if recommendation_top_artist_limit is None:
         current_app.logger.critical('Please provide top artist recommendations limit.')
@@ -268,7 +308,7 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
                                   recommendation_top_artist_limit,
                                   recommendation_similar_artist_limit)
 
-    messages = get_recommendations_for_all(params)
+    messages = get_recommendations_for_all(params, musicbrainz_id)
     # persisted data must be cleared from memory after usage to avoid OOM
     recordings.unpersist()
 
