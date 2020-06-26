@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { ResponsiveLine, Serie } from "@nivo/line";
+import { LegendProps } from "@nivo/legends";
 
 export type LineDualToneProps = {
   data: Serie[];
@@ -39,27 +40,40 @@ export default class LineDualTone extends React.Component {
         yScale={{
           type: "linear",
           stacked: false,
+          min: 0,
         }}
-        axisLeft={null}
         axisBottom={{
-          format: "%A",
+          format: "%a",
           tickSize: 5,
           tickPadding: 5,
           tickValues: "every 1 day",
         }}
         margin={{
           top: 20,
-          left: 30,
+          left: 40,
           right: 30,
           bottom: 60,
         }}
         colors={({ id }) =>
           id.toLowerCase().includes("this") ? "#EB743B" : "#353070"
         }
+        lineWidth={2.7}
         curve="natural"
         enableCrosshair={false}
-        layers={["axes", "lines", "points", "mesh"]}
+        layers={["axes", "lines", "points", "mesh", "legends"]}
         tooltip={customTooltip}
+        legends={[
+          {
+            anchor: "top-right",
+            symbolShape: "circle",
+            symbolSize: 10,
+            direction: "row",
+            itemWidth: 90,
+            itemHeight: 10,
+            translateX: 20,
+            translateY: -10,
+          } as LegendProps,
+        ]}
         useMesh
       />
     );
