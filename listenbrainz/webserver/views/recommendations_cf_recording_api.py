@@ -2,6 +2,9 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
 
 from listenbrainz.webserver.errors import APIBadRequest, APINotFound, APINoContent
+from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
+                                                    _get_non_negative_param,
+                                                    MAX_ITEMS_PER_GET)
 
 from enum import Enum
 
@@ -10,6 +13,11 @@ from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.rate_limiter import ratelimit
 
 recommendations_cf_recording_api_bp = Blueprint('recommendations_cf_recording_v1', __name__)
+
+
+class RecommendationArtistType(Enum):
+    top = 'top'
+    similar = 'similar'
 
 
 @recommendations_cf_recording_api_bp.route("/user/<user_name>/artist")
@@ -36,6 +44,8 @@ def get_recommendations(user_name):
             },
 
             "user_name": "unclejohn69"
+            'count': 10,
+            'total_recording_mbids_count': 30
           }
         }
 
@@ -49,6 +59,11 @@ def get_recommendations(user_name):
                        listened to by the user.
                 type = similar will fetch recommended recording mbids that belong to artists
                        similar to top artists listened to by the user.
+        :type type: ``str``
+
+        :param count: Optional, number of recording mbids to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
+            Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+        :type count: ``int``
 
         :statuscode 200: Successful query, you have data!
         :statuscode 400: Bad request, check ``response['error']`` for more details
@@ -63,91 +78,68 @@ def get_recommendations(user_name):
     if not _is_valid_artist_type(artist_type):
         raise APIBadRequest("Invalid artist type: {}".format(artist_type))
 
+    count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+
     recommendations = db_recommendations_cf_recording.get_user_recommendation(user['id'])
 
     if recommendations is None:
         err_msg = 'No recommendations due to absence of recent listening history for user {}'.format(user_name)
         raise APINoContent(err_msg)
 
-    if artist_type == 'top':
-        payload = _format_top_artist_recommendations(recommendations, user_name)
+    recording_list, total_recording_count = _process_recommendations(recommendations, count, artist_type, user_name)
 
-    if artist_type == 'similar':
-        payload = _format_similar_artist_recommendations(recommendations, user_name)
+    if artist_type == 'top':
+        artist_type = 'top_artist'
+
+    elif artist_type == 'similar':
+        artist_type = 'similar_artist'
+
+    payload = {
+        'payload': {
+            artist_type : {
+                'recording_mbid': recording_list
+            },
+            'user_name': user_name,
+            'last_updated': int(recommendations['created'].timestamp()),
+            'count': len(recording_list),
+            'total_recording_mbids_count': total_recording_count
+        }
+    }
 
     return jsonify(payload)
 
 
-def _format_top_artist_recommendations(recommendations, user_name):
-    """ Format top artist recommendations payload.
+def _process_recommendations(recommendations, count, artist_type, user_name):
+    """ Process recommendations based on artist type.
+
+        Args:
+            recommendations: dict containing user recommendations.
+            count (int): number of recommended recording mbids to return.
+            artist_type (str): artist type i.e 'top', 'similar'
+            user_name (str): musicbrainz id of the user.
 
         Returns:
-            payload = {
-                'payload': {
-                    'top_artist': {
-                        'recording_mbid': ["526bd613-fddd-4bd6-9137-ab709ac74cab"]
-                    },
-                    'user_name': 'vansika,
-                    'last_updated': 1588494361,
-                }
-            }
+            - total_recording_count (int): Total number of recommended mbids in the db for the user.
+            - list of recommended mbids based on count.
+
         Raises:
-            APINoContent: if top artist recommendations not found.
+            APINoContent: if recommendations not found.
     """
-    top_artist_recommendations = recommendations['recording_mbid']['top_artist']
-    last_updated = int(recommendations['created'].timestamp())
+    if artist_type == 'similar':
+        recording_list = recommendations['recording_mbid']['similar_artist']
 
-    if len(top_artist_recommendations) == 0:
-        err_msg = 'No top artist recommendations for user {}, please try again later.'.format(user_name)
-        raise APINoContent(err_msg, payload={'last_updated': last_updated})
+    elif artist_type == 'top':
+        recording_list = recommendations['recording_mbid']['top_artist']
 
-    payload = {
-        'payload': {
-            'top_artist': {
-                'recording_mbid': top_artist_recommendations
-            },
-            'user_name': user_name,
-            'last_updated': last_updated,
-        }
-    }
+    total_recording_count = len(recording_list)
 
-    return payload
+    if total_recording_count == 0:
+        err_msg = 'No recommendations for user {}, please try again later.'.format(user_name)
+        raise APINoContent(err_msg, payload={'last_updated': int(recommendations['created'].timestamp())})
 
+    count = min(count, MAX_ITEMS_PER_GET)
 
-def _format_similar_artist_recommendations(recommendations, user_name):
-    """ Format similar artist recommendations payload.
-
-        Returns:
-            payload = {
-                'payload': {
-                    'similar_artist': {
-                        'recording_mbid': ["526bd613-fddd-4bd6-9137-ab709ac74cab"]
-                    },
-                    'user_name': 'vansika,
-                    'last_updated': 1588494361,
-                }
-            }
-        Raises:
-            APINoContent: if similar artist recommendations not found.
-    """
-    similar_artist_recommendations = recommendations['recording_mbid']['similar_artist']
-    last_updated = int(recommendations['created'].timestamp())
-
-    if len(similar_artist_recommendations) == 0:
-        err_msg = 'No similar artist recommendations for user {}, please try again later.'.format(user_name)
-        raise APINoContent(err_msg, payload={'last_updated': last_updated})
-
-    payload = {
-        'payload': {
-            'similar_artist': {
-                'recording_mbid': similar_artist_recommendations
-            },
-            'user_name': user_name,
-            'last_updated': last_updated,
-        }
-    }
-
-    return payload
+    return recording_list[:count], total_recording_count
 
 
 def _is_valid_artist_type(artist_type):
@@ -156,5 +148,4 @@ def _is_valid_artist_type(artist_type):
     if artist_type is None:
         raise APIBadRequest('Please provide artist type')
 
-    RecommendationArtistType = Enum('RecommendationArtistType', 'top similar')
     return artist_type in RecommendationArtistType.__members__
