@@ -1,84 +1,191 @@
 import * as React from "react";
 
+import APIService from "../APIService";
 import Card from "../components/Card";
 import LineDualTone from "./LineDualTone";
 
-const data = [
-  {
-    id: "Last Week",
-    data: [
-      {
-        x: 1590364800,
-        y: 5,
-      },
-      {
-        x: 1590451200,
-        y: 25,
-      },
-      {
-        x: 1590537600,
-        y: 53,
-      },
-      {
-        x: 1590624000,
-        y: 21,
-      },
-      {
-        x: 1590710400,
-        y: 8,
-      },
-      {
-        x: 1590796800,
-        y: 11,
-      },
-      {
-        x: 1590883200,
-        y: 11,
-      },
-    ],
-  },
-  {
-    id: "This Week",
-    data: [
-      {
-        x: 1590364800,
-        y: 22,
-      },
-      {
-        x: 1590451200,
-        y: 10,
-      },
-      {
-        x: 1590537600,
-        y: 18,
-      },
-      {
-        x: 1590624000,
-        y: 35,
-      },
-      {
-        x: 1590710400,
-        y: 30,
-      },
-      {
-        x: 1590796800,
-        y: 3,
-      },
-      {
-        x: 1590883200,
-        y: 0,
-      },
-    ],
-  },
-];
+export type UserListeningActivityProps = {
+  range: UserStatsAPIRange;
+  user: ListenBrainzUser;
+  apiUrl: string;
+};
 
-export default class UserListeningActivity extends React.Component {
+export type UserListeningActivityState = {
+  data: UserListeningActivityData;
+  prevRange: UserStatsAPIRange;
+};
+
+export default class UserListeningActivity extends React.Component<
+  UserListeningActivityProps,
+  UserListeningActivityState
+> {
+  APIService: APIService;
+
+  dateFormat = {
+    week: {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    },
+    month: {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    },
+    year: {
+      month: "long",
+      year: "numeric",
+    },
+    all_time: {
+      year: "numeric",
+    },
+  };
+
+  constructor(props: UserListeningActivityProps) {
+    super(props);
+
+    this.APIService = new APIService(
+      props.apiUrl || `${window.location.origin}/1`
+    );
+
+    this.state = {
+      data: [],
+      prevRange: "" as UserStatsAPIRange,
+    };
+  }
+
+  componentDidMount() {
+    this.loadData();
+  }
+
+  componentDidUpdate() {
+    const { data } = this.state;
+    if (!data.length) {
+      this.loadData();
+    }
+  }
+
+  getData = async (): Promise<UserListeningActivityResponse> => {
+    const { range, user } = this.props;
+    const data = await this.APIService.getUserListeningActivity(
+      user.name,
+      range
+    );
+
+    return data;
+  };
+
+  static getDerivedStateFromProps(
+    props: UserListeningActivityProps,
+    state: UserListeningActivityState
+  ): UserListeningActivityState | null {
+    if (props.range !== state.prevRange) {
+      return {
+        data: [],
+        prevRange: props.range,
+      };
+    }
+
+    return null;
+  }
+
+  processData = (
+    data: UserListeningActivityResponse
+  ): UserListeningActivityData => {
+    const { range } = this.props;
+    if (range === "week") {
+      const lastWeek = data.payload.listening_activity
+        .slice(0, 7)
+        .map((day) => {
+          const date = new Date(day.from_ts * 1000);
+          return {
+            x: date.toLocaleString("en-us", {
+              weekday: "short",
+              timeZone: "UTC",
+            }),
+            y: day.listen_count,
+            date,
+          };
+        });
+      const thisWeek = data.payload.listening_activity.slice(7).map((day) => {
+        const date = new Date(day.from_ts * 1000);
+        return {
+          x: date.toLocaleString("en-us", {
+            weekday: "short",
+            timeZone: "UTC",
+          }),
+          y: day.listen_count,
+          date,
+        };
+      });
+
+      return [
+        {
+          id: "Last Week",
+          data: lastWeek,
+        },
+        {
+          id: "This Week",
+          data: thisWeek,
+        },
+      ];
+    } else if (range === "year") {
+      const lastYear = data.payload.listening_activity
+        .slice(0, 12)
+        .map((month) => {
+          const date = new Date(month.from_ts * 1000);
+          return {
+            x: date.toLocaleString("en-us", {
+              month: "short",
+              timeZone: "UTC",
+            }),
+            y: month.listen_count,
+            date,
+          };
+        });
+      const thisYear = data.payload.listening_activity
+        .slice(12)
+        .map((month) => {
+          const date = new Date(month.from_ts * 1000);
+          return {
+            x: date.toLocaleString("en-us", {
+              month: "short",
+              timeZone: "UTC",
+            }),
+            y: month.listen_count,
+            date,
+          };
+        });
+      return [
+        {
+          id: "Last Year",
+          data: lastYear,
+        },
+        {
+          id: "This Year",
+          data: thisYear,
+        },
+      ];
+    }
+  };
+
+  loadData = async (): Promise<void> => {
+    const data = await this.getData();
+    console.log("test2");
+    this.setState({
+      data: this.processData(data),
+    });
+  };
+
   render() {
+    const { data } = this.state;
+    const { range } = this.props;
+
     return (
       <div>
         <div className="col-md-8" style={{ height: "20em" }}>
           <Card>
-            <LineDualTone data={data} />
+            <LineDualTone data={data} dateFormat={this.dateFormat[range]} />
           </Card>
         </div>
         <div className="col-md-4" style={{ height: "20em" }}>

@@ -217,3 +217,27 @@ declare type UserEntityDatum = {
 declare type UserEntityData = Array<UserEntityDatum>;
 
 declare type Entity = "artist" | "release" | "recording";
+
+declare type UserListeningActivityResponse = {
+  payload: {
+    from_ts: number;
+    to_ts: number;
+    last_updated: number;
+    listening_activity: Array<{
+      from_ts: number;
+      to_ts: number;
+      time_range: string;
+      listen_count: number;
+    }>;
+  };
+};
+
+declare type UserListeningActivityDatum = {
+  id: string;
+  data: Array<{
+    x: string;
+    y: number;
+  }>;
+};
+
+declare type UserListeningActivityData = Array<UserListeningActivityDatum>;

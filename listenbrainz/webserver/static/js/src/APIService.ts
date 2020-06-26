@@ -205,6 +205,23 @@ export default class APIService {
     return data;
   };
 
+  getUserListeningActivity = async (
+    userName: string,
+    range: UserStatsAPIRange = "all_time"
+  ): Promise<UserListeningActivityResponse> => {
+    const url = `${this.APIBaseURI}/stats/user/${userName}/listening-activity?range=${range}`;
+    const response = await fetch(url);
+    this.checkStatus(response);
+    if (response.status === 204) {
+      const error = new APIError(`HTTP Error ${response.statusText}`);
+      error.status = response.statusText;
+      error.response = response;
+      throw error;
+    }
+    const data = response.json();
+    return data;
+  };
+
   checkStatus = (response: Response): void => {
     if (response.status >= 200 && response.status < 300) {
       return;

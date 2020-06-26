@@ -4,12 +4,13 @@ import { ResponsiveLine, Serie } from "@nivo/line";
 import { LegendProps } from "@nivo/legends";
 
 export type LineDualToneProps = {
-  data: Serie[];
+  data: UserListeningActivityData;
+  dateFormat: {};
 };
 
-export default class LineDualTone extends React.Component {
+export default class LineDualTone extends React.Component<LineDualToneProps> {
   render() {
-    const { data } = this.props;
+    const { data, dateFormat } = this.props;
 
     const customTooltip = (datum: any) => {
       const { point } = datum;
@@ -21,10 +22,8 @@ export default class LineDualTone extends React.Component {
             border: "1px solid #ccc",
           }}
         >
-          {(point.data.x as Date).toLocaleString("en-us", {
-            day: "2-digit",
-            month: "long",
-            year: "numeric",
+          {(point.data.date as Date).toLocaleString("en-us", {
+            ...dateFormat,
             timeZone: "UTC",
           })}
           : <strong>{point.data.y} Listens</strong>
@@ -35,18 +34,15 @@ export default class LineDualTone extends React.Component {
     return (
       <ResponsiveLine
         data={data}
-        xScale={{ type: "time", format: "%s", useUTC: true }}
-        xFormat="time:%s"
+        xScale={{ type: "point" }}
         yScale={{
           type: "linear",
           stacked: false,
           min: 0,
         }}
         axisBottom={{
-          format: "%a",
           tickSize: 5,
           tickPadding: 5,
-          tickValues: "every 1 day",
         }}
         margin={{
           top: 20,

@@ -10,22 +10,101 @@ export type UserStatsProps = {
   apiUrl: string;
 };
 
-class UserStats extends React.Component<UserStatsProps> {
+export type UserStatsState = {
+  range: UserStatsAPIRange;
+};
+
+class UserStats extends React.Component<UserStatsProps, UserStatsState> {
+  constructor(props: UserStatsProps) {
+    super(props);
+
+    this.state = {
+      range: "week",
+    };
+  }
+
+  componentDidMount() {
+    window.addEventListener("popstate", this.syncStateWithURL);
+
+    const range = this.getURLParams();
+    window.history.replaceState(null, "", `?range=${range}`);
+    this.syncStateWithURL();
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener("popstate", this.syncStateWithURL);
+  }
+
+  changeRange = (newRange: UserStatsAPIRange): void => {
+    this.setURLParams(newRange);
+    this.syncStateWithURL();
+  };
+
+  syncStateWithURL = async (): Promise<void> => {
+    const range = this.getURLParams();
+    this.setState({ range });
+  };
+
+  getURLParams = (): UserStatsAPIRange => {
+    const url = new URL(window.location.href);
+
+    let range: UserStatsAPIRange = "week";
+    if (url.searchParams.get("range")) {
+      range = url.searchParams.get("range") as UserStatsAPIRange;
+    }
+
+    return range;
+  };
+
+  setURLParams = (range: UserStatsAPIRange): void => {
+    window.history.pushState(null, "", `?range=${range}`);
+  };
+
   render() {
+    const { range } = this.state;
+    const { apiUrl, user } = this.props;
+
     return (
-      <div style={{ marginTop: "1em" }}>
-        <div className="row">
+      <div>
+        <div className="row mt-15">
           <div className="col-xs-12">
-            <Pill active type="secondary">
+            <Pill
+              active={range === "week"}
+              type="secondary"
+              onClick={() => this.changeRange("week")}
+            >
               Week
             </Pill>
-            <Pill type="secondary">Month</Pill>
-            <Pill type="secondary">Year</Pill>
-            <Pill type="secondary">All Time</Pill>
+            <Pill
+              active={range === "month"}
+              type="secondary"
+              onClick={() => this.changeRange("month")}
+            >
+              Month
+            </Pill>
+            <Pill
+              active={range === "year"}
+              type="secondary"
+              onClick={() => this.changeRange("year")}
+            >
+              Year
+            </Pill>
+            <Pill
+              active={range === "all_time"}
+              type="secondary"
+              onClick={() => this.changeRange("all_time")}
+            >
+              All Time
+            </Pill>
           </div>
         </div>
         <div className="row">
-          <UserListeningActivity />
+          <div className="col-xs-12">
+            <h3>Listening Activity</h3>
+          </div>
+        </div>
+        <div className="row">
+          <UserListeningActivity range={range} apiUrl={apiUrl} user={user} />
         </div>
       </div>
     );
