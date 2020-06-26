@@ -176,7 +176,7 @@ def get_user_artists(user_id: int, stats_range: str) -> Optional[UserArtistStat]
     except ValidationError:
         current_app.logger.error("""ValidationError when getting {stats_range} top artists for user with user_id: {user_id}.
                                  Data: {data}""".format(stats_range=stats_range, user_id=user_id,
-                                                        data=json.dumps(row, indent=3)),
+                                                        data=json.dumps(dict(row), indent=3)),
                                  exc_info=True)
         return None
 
@@ -204,7 +204,7 @@ def get_user_releases(user_id: int, stats_range: str) -> Optional[UserReleaseSta
     except ValidationError:
         current_app.logger.error("""ValidationError when getting {stats_range} top releases for user with user_id: {user_id}.
                                  Data: {data}""".format(stats_range=stats_range, user_id=user_id,
-                                                        data=json.dumps(row, indent=3)),
+                                                        data=json.dumps(dict(row), indent=3)),
                                  exc_info=True)
         return None
 
@@ -232,7 +232,7 @@ def get_user_recordings(user_id: int, stats_range: str) -> Optional[UserRecordin
     except ValidationError:
         current_app.logger.error("""ValidationError when getting {stats_range} top recordings for user with user_id: {user_id}.
                                  Data: {data}""".format(stats_range=stats_range, user_id=user_id,
-                                                        data=json.dumps(row, indent=3)),
+                                                        data=json.dumps(dict(row), indent=3)),
                                  exc_info=True)
         return None
 
@@ -260,7 +260,7 @@ def get_user_listening_activity(user_id: int, stats_range: str) -> Optional[User
     except ValidationError:
         current_app.logger.error("""ValidationError when getting {stats_range} top recordings for user with user_id: {user_id}.
                                  Data: {data}""".format(stats_range=stats_range, user_id=user_id,
-                                                        data=json.dumps(row, indent=3)),
+                                                        data=json.dumps(dict(row), indent=3)),
                                  exc_info=True)
         return None
 
