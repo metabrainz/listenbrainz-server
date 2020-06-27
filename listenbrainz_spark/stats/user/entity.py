@@ -137,7 +137,7 @@ def create_messages(data, entity: str, stats_range: str, from_ts: int, to_ts: in
                 'stats_range': stats_range,
                 'from_ts': from_ts,
                 'to_ts': to_ts,
-                'data': _dict[entity],
+                'data': _dict[entity][:750],
                 'entity': entity,
                 'count': len(_dict[entity])
             })

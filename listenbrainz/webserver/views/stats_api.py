@@ -78,6 +78,7 @@ def get_artist(user_name):
 
     .. note::
         - This endpoint is currently in beta
+        - We only calculate the top 750 artists
         - ``artist_mbids`` and ``artist_msid`` are optional fields and may not be present in all the responses
 
     :param count: Optional, number of artists to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
@@ -181,6 +182,7 @@ def get_release(user_name):
 
     .. note::
         - This endpoint is currently in beta
+        - We only calculate the top 750 releases
         - ``artist_mbids``, ``artist_msid``, ``release_mbid`` and ``release_msid`` are optional fields and
           may not be present in all the responses
 
@@ -282,6 +284,7 @@ def get_recording(user_name):
 
     .. note::
         - This endpoint is currently in beta
+        - We only calculate the top 750 recordings
         - ``artist_mbids``, ``artist_msid``, ``release_name``, ``release_mbid``, ``release_msid``,
           ``recording_mbid`` and ``recording_msid`` are optional fields and may not be present in all the responses
 
