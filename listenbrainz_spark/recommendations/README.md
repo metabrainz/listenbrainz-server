@@ -89,11 +89,18 @@ The recommendation generation process has been divided into four stages.
 
   Send a request to spark cluster to generate and return recommendations.
 
-  `./develop.sh manage spark request_recommendations --top=X --similar=Y`
+  `./develop.sh manage spark request_recommendations --top=X --similar=Y --user-id=Z`
 
   where X is the number of recommended recordings for a user from the top artist candidate set. By default, X is equal to 200.
 
   where Y is the number of recommended recordings for a user from the similar artist candidate set. By default, Y is equal to 200.
+
+  where Z is user id or musicbrainz id of the users to generate recommendations for. For example, if recommendations shall be generated for 'vansika', 'rob', 'ram', it should be passed as follows:
+
+  `--user-id=vansika --user-id=rob --user-id=ram`
+
+  By default, user id is an empty list i.e. generate recommendations for all active users.
+
 
 If you pass through all the four stages successfully; congratulations, the recommendations are all yours. Feel free to give us feedback to improve the music we serve :)
 

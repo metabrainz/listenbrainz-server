@@ -151,7 +151,7 @@ class RecommendTestClass(SparkTestCase):
         with self.assertRaises(RecommendationsNotGeneratedException):
             _ = recommend.get_recommended_mbids(rdd, params, limit)
 
-    def test_get_users(self):
+    def test_get_user_name_and_user_id(self):
         params = self.get_recommendation_params()
         df = utils.create_dataframe(
             Row(
@@ -182,15 +182,40 @@ class RecommendTestClass(SparkTestCase):
 
         params.top_artist_candidate_set = df
 
-        users = recommend.get_users(params)
-        users.show()
+        users = recommend.get_user_name_and_user_id(params, [])
         self.assertEqual(users.count(), 2)
         self.assertEqual(sorted(users.columns), sorted(['user_id', 'user_name']))
 
+        users = recommend.get_user_name_and_user_id(params, ['vansika'])
+        self.assertEqual(users.count(), 1)
+        self.assertEqual(sorted(users.columns), sorted(['user_id', 'user_name']))
+
+    def test_get_message_for_inactive_users(self):
+        message_arg = [{
+            'musicbrainz_id': 'vansika',
+            'type': 'cf_recording_recommendations',
+            'top_artist': ["181c4177-f33a-441d-b15d-910acaf18b07"],
+            'similar_artist': ["281c4177-f33a-441d-b15d-910acaf18b07"],
+        }]
+
+        active_users = ['vansika']
+        users = ['vansika', 'vansika_1']
+        messages = recommend.get_message_for_inactive_users(message_arg, active_users, users)
+        print(messages[0])
+        print(messages[1])
+        self.assertEqual(len(messages), 2)
+        self.assertEqual(messages[0], message_arg[0])
+        self.assertEqual(messages[1], {
+            'musicbrainz_id': 'vansika_1',
+            'type': 'cf_recording_recommendations',
+            'top_artist': [],
+            'similar_artist': [],
+        })
+
     @patch('listenbrainz_spark.recommendations.recommend.get_recommendations_for_user')
-    @patch('listenbrainz_spark.recommendations.recommend.get_users')
-    def test_get_recommendations_for_all(self, mock_users, mock_rec_user):
-        mock_users.return_value = utils.create_dataframe(
+    def test_get_recommendations_for_all_without_users(self, mock_rec_user):
+        params = self.get_recommendation_params()
+        df = utils.create_dataframe(
             Row(
                 user_id=1,
                 user_name='vansika',
@@ -198,18 +223,48 @@ class RecommendTestClass(SparkTestCase):
             ),
             schema=None
         )
-        params = self.get_recommendation_params()
+        params.top_artist_candidate_set = df
 
         mock_rec_user.return_value = 'recording_mbid_1', 'recording_mbid_2'
-        messages = recommend.get_recommendations_for_all(params)
-
+        messages = recommend.get_recommendations_for_all(params, [])
         mock_rec_user.assert_called_once_with(1, 'vansika', params)
+
+        self.assertEqual(len(messages), 1)
+        message = messages[0]
+        self.assertEqual(message['musicbrainz_id'], 'vansika')
+        self.assertEqual(message['type'], 'cf_recording_recommendations')
+        self.assertEqual(message['top_artist'], 'recording_mbid_1')
+        self.assertEqual(message['similar_artist'], 'recording_mbid_2')
+
+    @patch('listenbrainz_spark.recommendations.recommend.get_recommendations_for_user')
+    def test_get_recommendations_for_all_with_users(self, mock_rec_user):
+        params = self.get_recommendation_params()
+        df = utils.create_dataframe(
+            Row(
+                user_id=1,
+                user_name='vansika',
+                recording_id=1
+            ),
+            schema=None
+        )
+        params.top_artist_candidate_set = df
+        mock_rec_user.return_value = 'recording_mbid_3', 'recording_mbid_4'
+        messages = recommend.get_recommendations_for_all(params, ['vansika_1', 'vansika'])
+        mock_rec_user.assert_called_once_with(1, 'vansika', params)
+
+        self.assertEqual(len(messages), 2)
 
         message = messages[0]
         self.assertEqual(message['musicbrainz_id'], 'vansika')
-        self.assertTrue(message['type'], 'cf_recording_recommendations')
-        self.assertTrue(message['top_artist'], 'recording_mbid_1')
-        self.assertTrue(message['similar_artist'], 'recording_mbid_2')
+        self.assertEqual(message['type'], 'cf_recording_recommendations')
+        self.assertEqual(message['top_artist'], 'recording_mbid_3')
+        self.assertEqual(message['similar_artist'], 'recording_mbid_4')
+
+        message = messages[1]
+        self.assertEqual(message['musicbrainz_id'], 'vansika_1')
+        self.assertEqual(message['type'], 'cf_recording_recommendations')
+        self.assertEqual(message['top_artist'], [])
+        self.assertEqual(message['similar_artist'], [])
 
     def get_recommendation_params(self):
         recordings = self.get_recordings_df()

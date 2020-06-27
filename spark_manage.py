@@ -165,12 +165,14 @@ def candidate(days, top, similar):
 @cli.command(name='recommend')
 @click.option("--top", type=int, default=200, help="Generate given number of top artist recommendations")
 @click.option("--similar", type=int, default=200, help="Generate given number of similar artist recommendations")
-def recommend(top, similar):
+@click.option("--user-id", 'users', callback=parse_list, default=[], multiple=True, help="Generate recommendations for given users" \
+              " Generate recommendations for all users by default.")
+def recommend(top, similar, users):
     """ Invoke script responsible for generating recommendations.
     """
     from listenbrainz_spark.recommendations import recommend
     with app.app_context():
-        _ = recommend.main(recommendation_top_artist_limit=top, recommendation_similar_artist_limit=similar)
+        _ = recommend.main(recommendation_top_artist_limit=top, recommendation_similar_artist_limit=similar, users=users)
 
 
 @cli.command(name='user')
