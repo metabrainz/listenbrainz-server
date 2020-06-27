@@ -193,7 +193,7 @@ def get_user_name_and_user_id(params, users):
         Returns:
             users: dataframe of user id and user names.
     """
-    if len(users) == 0 :
+    if len(users) == 0:
         users_df = params.top_artist_candidate_set.select('user_id', 'user_name').distinct()
 
     else:
