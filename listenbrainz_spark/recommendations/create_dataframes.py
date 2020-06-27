@@ -56,10 +56,11 @@ SAVE_DATAFRAME_HTML = True
 #       'user_id', 'recording_id', 'count'
 #   ]
 
-def generate_best_model_id(metadata):
-    """ Generate best model id.
+
+def generate_dataframe_id(metadata):
+    """ Generate dataframe id.
     """
-    metadata['model_id'] = '{}-{}'.format(config.MODEL_ID_PREFIX, uuid.uuid4())
+    metadata['dataframe_id'] = '{}-{}'.format(config.DATAFRAME_ID_PREFIX, uuid.uuid4())
 
 
 def save_dataframe(df, dest_path):
@@ -96,21 +97,21 @@ def save_dataframe_html(users_df_time, recordings_df_time, playcounts_df_time, t
     save_html(queries_html, context, 'queries.html')
 
 
-def save_dataframe_metadata_to_HDFS(metadata):
-    """ Save dataframe metadata to model_metadata dataframe.
+def save_dataframe_metadata_to_hdfs(metadata):
+    """ Save dataframe metadata.
     """
     # Convert metadata to row object.
-    metadata_row = schema.convert_model_metadata_to_row(metadata)
+    metadata_row = schema.convert_dataframe_metadata_to_row(metadata)
     try:
         # Create dataframe from the row object.
-        dataframe_metadata = utils.create_dataframe(metadata_row, schema.model_metadata_schema)
+        dataframe_metadata = utils.create_dataframe(metadata_row, schema.dataframe_metadata_schema)
     except DataFrameNotCreatedException as err:
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
     try:
-        # Append the dataframe to existing dataframe if already exist or create a new one.
-        utils.append(dataframe_metadata, path.MODEL_METADATA)
+        # Append the dataframe to existing dataframe if already exists or create a new one.
+        utils.append(dataframe_metadata, path.DATAFRAME_METADATA)
     except DataFrameNotAppendedException as err:
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
@@ -308,8 +309,8 @@ def main(train_model_window=None):
     playcounts_df = get_playcounts_df(listens_df, recordings_df, users_df, metadata)
     playcounts_df_time = '{:.2f}'.format((time() - t0) / 60)
 
-    generate_best_model_id(metadata)
-    save_dataframe_metadata_to_HDFS(metadata)
+    generate_dataframe_id(metadata)
+    save_dataframe_metadata_to_hdfs(metadata)
     total_time = '{:.2f}'.format((time() - ti) / 60)
 
     if SAVE_DATAFRAME_HTML:

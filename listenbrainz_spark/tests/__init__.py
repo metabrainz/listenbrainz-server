@@ -18,11 +18,6 @@ PLAYCOUNTS_COUNT = 100
 
 class SparkTestCase(unittest.TestCase):
 
-    ranks = [8]
-    lambdas = [0.1]
-    iterations = [5]
-    alpha = 3.0
-
     @classmethod
     def setUpClass(cls):
         listenbrainz_spark.init_test_session('spark-test-run-{}'.format(str(uuid.uuid4())))
@@ -167,3 +162,33 @@ class SparkTestCase(unittest.TestCase):
                 file_name: the name of the data file
         """
         return os.path.join(TEST_DATA_PATH, file_name)
+
+    @classmethod
+    def get_dataframe_metadata(cls, df_id):
+        metadata = {
+            'dataframe_id': df_id,
+            'from_date': datetime.utcnow(),
+            'listens_count': 100,
+            'playcounts_count': 100,
+            'recordings_count': 100,
+            'to_date': datetime.utcnow(),
+            'users_count': 100,
+        }
+        return metadata
+
+    @classmethod
+    def get_model_metadata(cls, model_id):
+        metadata = {
+            'dataframe_id': 'xxxxx',
+            'model_id': model_id,
+            'alpha': 3.0,
+            'lmbda': 2.0,
+            'iteration': 2,
+            'rank': 4,
+            'test_data_count': 3,
+            'test_rmse': 2.0,
+            'training_data_count': 4,
+            'validation_data_count': 3,
+            'validation_rmse': 2.0,
+        }
+        return metadata

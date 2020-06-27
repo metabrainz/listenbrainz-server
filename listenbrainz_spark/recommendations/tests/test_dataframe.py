@@ -1,3 +1,4 @@
+import re
 import uuid
 import unittest
 from datetime import datetime
@@ -154,16 +155,18 @@ class CreateDataframeTestCase(SparkTestCase):
         status = utils.path_exists(path.PLAYCOUNTS_DATAFRAME_PATH)
         self.assertTrue(status)
 
-    def test_generate_best_model_id(self):
+    def test_generate_dataframe_id(self):
         metadata = {}
-        create_dataframes.generate_best_model_id(metadata)
-        self.assertTrue(metadata['model_id'])
+        create_dataframes.generate_dataframe_id(metadata)
+        assert re.match('{}-*'.format(config.DATAFRAME_ID_PREFIX), metadata['dataframe_id'])
 
     def test_save_dataframe_metadata_to_HDFS(self):
-        metadata = {
-            'from_date': self.date, 'to_date': self.date, 'listens_count': 1, 'model_id': '1', 'playcounts_count': 1,
-            'recordings_count': 1, 'updated': True, 'users_count': 1
-        }
-        create_dataframes.save_dataframe_metadata_to_HDFS(metadata)
-        status = utils.path_exists(path.MODEL_METADATA)
+        df_id = "3acb406f-c716-45f8-a8bd-96ca3939c2e5"
+        metadata = self.get_dataframe_metadata(df_id)
+        create_dataframes.save_dataframe_metadata_to_hdfs(metadata)
+
+        status = utils.path_exists(path.DATAFRAME_METADATA)
         self.assertTrue(status)
+
+        df = utils.read_files_from_HDFS(path.DATAFRAME_METADATA)
+        self.assertTrue(sorted(df.columns), sorted(schema.dataframe_metadata_schema.fieldNames()))
