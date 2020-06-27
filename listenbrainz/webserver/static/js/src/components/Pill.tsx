@@ -25,7 +25,7 @@ export default class Pill extends React.Component<PillProps> {
     }
 
     let style: React.CSSProperties = {
-      borderRadius: "12px",
+      borderRadius: "24px",
       outline: "none",
       padding: "2px 9px",
       margin: "0px 6px",

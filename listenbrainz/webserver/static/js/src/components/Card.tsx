@@ -7,22 +7,21 @@ type CardProps = {
 
 export default class Card extends React.Component<CardProps> {
   render() {
-    const { children, className } = this.props;
-    let { style } = this.props;
+    const { children, style: propStyle, ...cardProps } = this.props;
 
-    style = {
+    const style: React.CSSProperties = {
       background: "#FFFFFF",
       border: "1px solid #EEEEEE",
       boxSizing: "border-box",
-      boxShadow: "0px 4px 4px rgba(0,0,0,0.25)",
+      boxShadow: "0px 4px 4px rgba(192,192,192,0.25)",
       borderRadius: "12px",
       height: "100%",
       width: "100%",
-      ...style,
+      ...propStyle,
     };
 
     return (
-      <div className={className || ""} style={style}>
+      <div style={style} {...cardProps}>
         <>{children}</>
       </div>
     );
