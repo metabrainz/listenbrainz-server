@@ -32,12 +32,12 @@ TOP_ARTIST_CANDIDATE_SET = os.path.join(CANDIDATE_SET_DIR, 'top_artist', 'top_ar
 SIMILAR_ARTIST_CANDIDATE_SET = os.path.join(CANDIDATE_SET_DIR, 'similar_artist', 'similar_artist.parquet')
 # Absolute path to model metadata.
 MODEL_METADATA = MODEL_DIR + '/' + 'model_metadata.parquet'
-# Absolute path to save model index
-INDEX = MODEL_DIR + '/' + 'index.parquet'
 # Absolute path to recording mbid->msid and artist mbid-msid mapping.
 MBID_MSID_MAPPING = os.path.join('/', 'mapping', 'msid_mbid_mapping.parquet')
 # Absolute path to mapped listens.
 MAPPED_LISTENS = DATAFRAME_DIR + '/' + 'mapped_listens_df.parquet'
+# Absolute path to save dataframe metadata
+DATAFRAME_METADATA = DATAFRAME_DIR + '/' + 'dataframe_metadata.parquet'
 
 # Path to files downloaded from FTP.
 FTP_FILES_PATH = '/rec/listenbrainz_spark'
