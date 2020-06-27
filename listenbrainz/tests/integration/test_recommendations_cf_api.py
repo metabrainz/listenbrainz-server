@@ -39,27 +39,26 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         self.assert400(response)
 
         response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
-                                           user_name=self.user['musicbrainz_id']), query_string={'type': 'invalid_type'})
+                                           user_name=self.user['musicbrainz_id']), query_string={'artist_type': 'invalid_type'})
         self.assert400(response)
 
     def test_inactive_user(self):
         response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
-                                           user_name=self.user3['musicbrainz_id']), query_string={'type': 'top'})
+                                           user_name=self.user3['musicbrainz_id']), query_string={'artist_type': 'top'})
         self.assertEqual(response.status_code, 204)
-
 
     def test_recommendations_not_generated(self):
         response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
-                                           user_name=self.user2['musicbrainz_id']), query_string={'type': 'top'})
+                                           user_name=self.user2['musicbrainz_id']), query_string={'artist_type': 'top'})
         self.assertEqual(response.status_code, 204)
 
         response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
-                                           user_name=self.user['musicbrainz_id']), query_string={'type': 'similar'})
+                                           user_name=self.user['musicbrainz_id']), query_string={'artist_type': 'similar'})
         self.assertEqual(response.status_code, 204)
 
     def test_recommendations_without_count(self):
         response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
-                                           user_name=self.user['musicbrainz_id']), query_string={'type': 'top'})
+                                           user_name=self.user['musicbrainz_id']), query_string={'artist_type': 'top'})
         self.assert200(response)
         data = json.loads(response.data)['payload']
 
@@ -82,7 +81,8 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
 
     def test_recommendations_with_count(self):
         response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
-                                           user_name=self.user2['musicbrainz_id']), query_string={'type': 'similar', 'count': 10})
+                                           user_name=self.user2['musicbrainz_id']),
+                                           query_string={'artist_type': 'similar', 'count': 10})
         self.assert200(response)
         data = json.loads(response.data)['payload']
 
@@ -105,7 +105,8 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
 
     def test_recommendations_too_many(self):
         response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
-                                           user_name=self.user2['musicbrainz_id']), query_string={'type': 'similar', 'count': 108})
+                                           user_name=self.user2['musicbrainz_id']),
+                                           query_string={'artist_type': 'similar', 'count': 108})
         self.assert200(response)
         data = json.loads(response.data)['payload']
 

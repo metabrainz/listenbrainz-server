@@ -20,7 +20,7 @@ class RecommendationArtistType(Enum):
     similar = 'similar'
 
 
-@recommendations_cf_recording_api_bp.route("/user/<user_name>/artist")
+@recommendations_cf_recording_api_bp.route("/user/<user_name>/recording")
 @crossdomain()
 @ratelimit()
 def get_recommendations(user_name):
@@ -54,12 +54,12 @@ def get_recommendations(user_name):
         .. note::
             - This endpoint is experimental and probably will change in the future.
 
-        :param type: Mandatory, artist type in ['top', 'similar']
-            Ex. type = top will fetch recommended recording mbids that belong to top artists
+        :param artist_type: Mandatory, artist type in ['top', 'similar']
+            Ex. artist_type = top will fetch recommended recording mbids that belong to top artists
                        listened to by the user.
-                type = similar will fetch recommended recording mbids that belong to artists
+                artist_type = similar will fetch recommended recording mbids that belong to artists
                        similar to top artists listened to by the user.
-        :type type: ``str``
+        :type artist_type: ``str``
 
         :param count: Optional, number of recording mbids to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
             Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
@@ -74,7 +74,7 @@ def get_recommendations(user_name):
     if user is None:
         raise APINotFound("Cannot find user: {}".format(user_name))
 
-    artist_type = request.args.get('type')
+    artist_type = request.args.get('artist_type')
     if not _is_valid_artist_type(artist_type):
         raise APIBadRequest("Invalid artist type: {}".format(artist_type))
 
@@ -96,7 +96,7 @@ def get_recommendations(user_name):
 
     payload = {
         'payload': {
-            artist_type : {
+            artist_type: {
                 'recording_mbid': recording_list
             },
             'user_name': user_name,
