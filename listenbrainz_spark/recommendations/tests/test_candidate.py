@@ -30,7 +30,7 @@ class CandidateSetsTestClass(SparkTestCase):
             mb_recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
             mb_release_mbid="xxxxxx",
             msb_artist_credit_name_matchable="lessthanjake",
-            track_name="Al's War",
+            msb_recording_name_matchable="Al's War",
             user_name=user_name,
         )
         return test_mapped_listens
@@ -139,6 +139,7 @@ class CandidateSetsTestClass(SparkTestCase):
 
         similar_artist_limit = 10
         similar_artist_df = candidate_sets.get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
+
         self.assertEqual(similar_artist_df.count(), 5)
 
         cols = [
@@ -194,11 +195,8 @@ class CandidateSetsTestClass(SparkTestCase):
     def test_get_similar_artist_candidate_set_df(self):
         df = utils.create_dataframe(
             Row(
-                top_artist_credit_id=1,
-                top_artist_name="lessthanjake",
                 similar_artist_credit_id=2,
                 similar_artist_name='kishorekumar',
-                score=1.0,
                 user_name='rob'
             ),
             schema=None
@@ -206,11 +204,8 @@ class CandidateSetsTestClass(SparkTestCase):
 
         similar_artist_df = df.union(utils.create_dataframe(
             Row(
-                top_artist_credit_id=2,
-                top_artist_name="lessthanjake",
                 similar_artist_credit_id=3,
                 similar_artist_name="kattyperi",
-                score=0.5,
                 user_name='vansika'
             ),
             schema=None

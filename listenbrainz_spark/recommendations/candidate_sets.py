@@ -213,7 +213,7 @@ def get_top_artist_candidate_set(top_artist_df, recordings_df, users_df):
         Returns:
             top_artist_candidate_set_df (dataframe): recording ids that belong to top artists
                                                      corresponding to user ids.
-            top_artist_candidate_set_df_html (dataframe): top artists and related info.
+            top_artists_candidate_set_df_html (dataframe): top artist info required for html file
     """
     condition = [
         top_artist_df.top_artist_credit_id == recordings_df.mb_artist_credit_id,
@@ -250,7 +250,7 @@ def get_similar_artist_candidate_set(similar_artist_df, recordings_df, users_df)
         Returns:
             similar_artist_candidate_set_df (dataframe): recording ids that belong to similar artists
                                                          corresponding to user ids.
-            similar_artist_candidate_set_df_html (dataframe): similar artists and related info.
+            similar_artist_candidate_set_df_html (dataframe): similar artist info for html file
     """
     condition = [
         similar_artist_df.similar_artist_credit_id == recordings_df.mb_artist_credit_id,
@@ -313,7 +313,7 @@ def save_candidate_sets(top_artist_candidate_set_df, similar_artist_candidate_se
 def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_candidate_set_df_html,
                             top_artist_df, similar_artist_df):
 
-    """ Get top and similar artists associated to users. The function is invoked
+    """ Get artists and recordings associated with users for HTML. The function is invoked
         when candidate set HTML is to be generated.
 
         Args:
@@ -323,7 +323,18 @@ def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_can
             similar_artist_df (dataframe): artists similar to top artists.
 
         Returns:
-            user_data: Dictionary of
+            user_data: Dictionary can be depicted as:
+                {
+                    'user 1' : {
+                        'top_artist': [],
+                        'top_similar_artist': [],
+                        'top_artist_candidate_set': [],
+                        'top_similar_artist_candidate_set': []
+                    }
+                    .
+                    .
+                    .
+                }
     """
     user_data = defaultdict(list)
     for row in top_artist_df.collect():
@@ -339,7 +350,7 @@ def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_can
             row.similar_artist_name,
             row.similar_artist_credit_id
         )
-        user_data[row.user_name]['similar_artist'].append(data)
+        user_data[row.user_name]['top_similar_artist'].append(data)
 
     for row in top_artist_candidate_set_df_html.collect():
         data = (
