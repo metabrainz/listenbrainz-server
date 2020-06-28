@@ -1,6 +1,5 @@
 import sys
 import uuid
-import json
 import logging
 from time import time
 from datetime import datetime
@@ -26,8 +25,8 @@ SAVE_CANDIDATE_HTML = True
 # Some useful dataframe fields/columns.
 # top_artist_df:
 #   [
-#       'mb_artist_credit_id',
-#       'msb_artist_credit_name_matchable',
+#       'top_artist_credit_id',
+#       'top_artist_name',
 #       'user_name'
 #   ]
 #
@@ -37,13 +36,24 @@ SAVE_CANDIDATE_HTML = True
 #       'recording_id'
 #   ]
 #
-# similar_artist_df:
+# top_artist_candidate_set_df_html:
 #   [
 #       'top_artist_credit_id',
 #       'top_artist_name',
+#       'mb_artist_credit_id',
+#       'mb_artist_credit_mbids',
+#       'mb_recording_mbid',
+#       'msb_artist_credit_name_matchable',
+#       'msb_recording_name_matchable',
+#       'recording_id',
+#       'user_name',
+#       'user_id'
+#   ]
+#
+# similar_artist_df:
+#   [
 #       'similar_artist_credit_id',
 #       'similar_artist_name'
-#       'score',
 #       'user_name'
 #   ]
 #
@@ -51,6 +61,20 @@ SAVE_CANDIDATE_HTML = True
 #   [
 #       'user_id',
 #       'recording_id'
+#   ]
+#
+# similar_artist_candidate_set_df_html:
+#   [
+#       'similar_artist_credit_id',
+#       'similar_artist_name',
+#       'mb_artist_credit_id',
+#       'mb_artist_credit_mbids',
+#       'mb_recording_mbid',
+#       'msb_artist_credit_name_matchable',
+#       'msb_recording_name_matchable',
+#       'recording_id',
+#       'user_name',
+#       'user_id'
 #   ]
 
 
@@ -116,12 +140,12 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
 
     top_artist_df = df.withColumn('rank', row_number().over(window)) \
                       .where(col('rank') <= top_artist_limit) \
-                      .select('mb_artist_credit_id',
-                              'msb_artist_credit_name_matchable',
-                              'user_name')
+                      .select(col('mb_artist_credit_id').alias('top_artist_credit_id'),
+                              col('msb_artist_credit_name_matchable').alias('top_artist_name'),
+                              col('user_name'))
     if users:
-        top_artist_given_users_df = top_artist_df.select('mb_artist_credit_id',
-                                                         'msb_artist_credit_name_matchable',
+        top_artist_given_users_df = top_artist_df.select('top_artist_credit_id',
+                                                         'top_artist_name',
                                                          'user_name') \
                                                  .where(top_artist_df.user_name.isin(users))
         return top_artist_given_users_df
@@ -142,7 +166,7 @@ def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
             similar_artist_df (dataframe): Top Z artists similar to top artists where
                                            Z = SIMILAR_ARTISTS_LIMIT.
     """
-    condition = [top_artist_df.mb_artist_credit_id == artist_relation_df.id_0]
+    condition = [top_artist_df.top_artist_credit_id == artist_relation_df.id_0]
 
     df1 = top_artist_df.join(artist_relation_df, condition, 'inner') \
                        .select(col('id_0').alias('top_artist_credit_id'),
@@ -152,7 +176,7 @@ def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
                                'score',
                                'user_name')
 
-    condition = [top_artist_df.mb_artist_credit_id == artist_relation_df.id_1]
+    condition = [top_artist_df.top_artist_credit_id == artist_relation_df.id_1]
 
     df2 = top_artist_df.join(artist_relation_df, condition, 'inner') \
                        .select(col('id_1').alias('top_artist_credit_id'),
@@ -169,12 +193,10 @@ def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
 
     similar_artist_df = df.withColumn('rank', row_number().over(window)) \
                           .where(col('rank') <= similar_artist_limit)\
-                          .select('top_artist_credit_id',
-                                  'top_artist_name',
-                                  'similar_artist_credit_id',
+                          .select('similar_artist_credit_id',
                                   'similar_artist_name',
-                                  'score',
-                                  'user_name')
+                                  'user_name') \
+                          .distinct()
 
     return similar_artist_df
 
@@ -191,18 +213,30 @@ def get_top_artist_candidate_set(top_artist_df, recordings_df, users_df):
         Returns:
             top_artist_candidate_set_df (dataframe): recording ids that belong to top artists
                                                      corresponding to user ids.
+            top_artist_candidate_set_df_html (dataframe): top artists and related info.
     """
-    condition = ['mb_artist_credit_id', 'msb_artist_credit_name_matchable']
+    condition = [
+        top_artist_df.top_artist_credit_id == recordings_df.mb_artist_credit_id,
+        top_artist_df.top_artist_name == recordings_df.msb_artist_credit_name_matchable
+    ]
 
     df = top_artist_df.join(recordings_df, condition, 'inner')
 
-    top_artist_candidate_set_df = df.join(users_df, 'user_name', 'inner')\
-                                    .select('recording_id',
-                                            'user_id',
-                                            'user_name')
+    top_artist_candidate_set_df_html = df.join(users_df, 'user_name', 'inner') \
+                                         .select('top_artist_credit_id',
+                                                 'top_artist_name',
+                                                 'mb_artist_credit_id',
+                                                 'mb_artist_credit_mbids',
+                                                 'mb_recording_mbid',
+                                                 'msb_artist_credit_name_matchable',
+                                                 'msb_recording_name_matchable',
+                                                 'recording_id',
+                                                 'user_name',
+                                                 'user_id')
 
-    return top_artist_candidate_set_df
+    top_artist_candidate_set_df = top_artist_candidate_set_df_html.select('recording_id', 'user_id', 'user_name')
 
+    return top_artist_candidate_set_df, top_artist_candidate_set_df_html
 
 def get_similar_artist_candidate_set(similar_artist_df, recordings_df, users_df):
     """ Get recording ids that belong to similar artists.
@@ -216,6 +250,7 @@ def get_similar_artist_candidate_set(similar_artist_df, recordings_df, users_df)
         Returns:
             similar_artist_candidate_set_df (dataframe): recording ids that belong to similar artists
                                                          corresponding to user ids.
+            similar_artist_candidate_set_df_html (dataframe): similar artists and related info.
     """
     condition = [
         similar_artist_df.similar_artist_credit_id == recordings_df.mb_artist_credit_id,
@@ -224,12 +259,21 @@ def get_similar_artist_candidate_set(similar_artist_df, recordings_df, users_df)
 
     df = similar_artist_df.join(recordings_df, condition, 'inner')
 
-    similar_artist_candidate_set_df = df.join(users_df, 'user_name', 'inner')\
-                                        .select('recording_id',
-                                                'user_id',
-                                                'user_name')
+    similar_artist_candidate_set_df_html = df.join(users_df, 'user_name', 'inner') \
+                                             .select('similar_artist_credit_id',
+                                                     'similar_artist_name',
+                                                     'mb_artist_credit_id',
+                                                     'mb_artist_credit_mbids',
+                                                     'mb_recording_mbid',
+                                                     'msb_artist_credit_name_matchable',
+                                                     'msb_recording_name_matchable',
+                                                     'recording_id',
+                                                     'user_name',
+                                                     'user_id')
 
-    return similar_artist_candidate_set_df
+    similar_artist_candidate_set_df = similar_artist_candidate_set_df_html.select('recording_id', 'user_id', 'user_name')
+
+    return similar_artist_candidate_set_df, similar_artist_candidate_set_df_html
 
 
 def save_candidate_sets(top_artist_candidate_set_df, similar_artist_candidate_set_df):
@@ -266,26 +310,63 @@ def save_candidate_sets(top_artist_candidate_set_df, similar_artist_candidate_se
         sys.exit(-1)
 
 
-def get_candidate_html_data(similar_artist_df):
+def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_candidate_set_df_html,
+                            top_artist_df, similar_artist_df):
+
     """ Get top and similar artists associated to users. The function is invoked
         when candidate set HTML is to be generated.
 
         Args:
-            similar_artist_df: Dataframe containing artists similar to top artists
+            similar_artist_candidate_set_df_html (dataframe): similar artists and related info.
+            top_artist_candidate_set_df_html (dataframe): top artists and related info.
+            top_artist_df (dataframe) : top artists listened to by users.
+            similar_artist_df (dataframe): artists similar to top artists.
 
         Returns:
-            user_data: Dictionary can be depicted as:
-                {
-                    'user 1' : ['top_artist 1', 'similar_artist 1', 'score'],
-                    .
-                    .
-                    .
-                    'user n' : ['top_artist Y', 'similar_artist Z' ... 'score'],
-                }
+            user_data: Dictionary of
     """
     user_data = defaultdict(list)
+    for row in top_artist_df.collect():
+        user_data[row.user_name] = defaultdict(list)
+        data = (
+            row.top_artist_name,
+            row.top_artist_credit_id
+        )
+        user_data[row.user_name]['top_artist'].append(data)
+
     for row in similar_artist_df.collect():
-        user_data[row.user_name].append((row.top_artist_name, row.similar_artist_name, row.score))
+        data = (
+            row.similar_artist_name,
+            row.similar_artist_credit_id
+        )
+        user_data[row.user_name]['similar_artist'].append(data)
+
+    for row in top_artist_candidate_set_df_html.collect():
+        data = (
+            row.top_artist_credit_id,
+            row.top_artist_name,
+            row.mb_artist_credit_id,
+            row.mb_artist_credit_mbids,
+            row.mb_recording_mbid,
+            row.msb_artist_credit_name_matchable,
+            row.msb_recording_name_matchable,
+            row.recording_id
+        )
+        user_data[row.user_name]['top_artist_candidate_set'].append(data)
+
+    for row in similar_artist_candidate_set_df_html.collect():
+        data = (
+            row.similar_artist_credit_id,
+            row.similar_artist_name,
+            row.mb_artist_credit_id,
+            row.mb_artist_credit_mbids,
+            row.mb_recording_mbid,
+            row.msb_artist_credit_name_matchable,
+            row.msb_recording_name_matchable,
+            row.recording_id
+        )
+        user_data[row.user_name]['imilar_artist_candidate_set'].append(data)
+
     return user_data
 
 
@@ -335,14 +416,16 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
     top_artist_df = get_top_artists(mapped_listens_subset, top_artist_limit, users)
 
     current_app.logger.info('Preparing top artists candidate set...')
-    top_artist_candidate_set_df = get_top_artist_candidate_set(top_artist_df, recordings_df, users_df)
+    top_artist_candidate_set_df, top_artist_candidate_set_df_html = get_top_artist_candidate_set(top_artist_df, recordings_df,
+                                                                                                 users_df)
 
     current_app.logger.info('Fetching similar artists...')
     similar_artist_df = get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
 
     current_app.logger.info('Preparing similar artists candidate set...')
-    similar_artist_candidate_set_df = get_similar_artist_candidate_set(similar_artist_df, recordings_df, users_df)
-
+    similar_artist_candidate_set_df, similar_artist_candidate_set_df_html = get_similar_artist_candidate_set(similar_artist_df,
+                                                                                                             recordings_df,
+                                                                                                             users_df)
     try:
         current_app.logger.info('Saving candidate sets...')
         save_candidate_sets(top_artist_candidate_set_df, similar_artist_candidate_set_df)
@@ -354,7 +437,8 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
     # time taken to generate candidate_sets
     total_time = '{:.2f}'.format((time() - time_initial) / 60)
     if SAVE_CANDIDATE_HTML:
-        user_data = get_candidate_html_data(similar_artist_df)
+        user_data = get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_candidate_set_df_html,
+                                            top_artist_df, similar_artist_df)
         current_app.logger.info('Saving HTML...')
         save_candidate_html(user_data, total_time)
         current_app.logger.info('Done!')

@@ -90,7 +90,7 @@ class SparkTestCase(unittest.TestCase):
                 mb_release_mbid="xxxxxx",
                 msb_artist_credit_name_matchable="lessthanjake",
                 recording_id=1,
-                track_name="Al's War",
+                msb_recording_name_matchable="Al's War",
             ),
             schema=None
         )
@@ -102,7 +102,7 @@ class SparkTestCase(unittest.TestCase):
                 mb_release_mbid="xxxxxx",
                 msb_artist_credit_name_matchable="kishorekumar",
                 recording_id=2,
-                track_name="Mere Sapno ki Rani",
+                msb_recording_name_matchable="Mere Sapno ki Rani",
             ),
             schema=None
         ))
@@ -137,7 +137,7 @@ class SparkTestCase(unittest.TestCase):
             mb_recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
             mb_release_mbid="xxxxxx",
             msb_artist_credit_name_matchable="lessthanjake",
-            track_name="Al's War",
+            msb_recording_name_matchable="Al's War",
             user_name='vansika',
         )
         df = utils.create_dataframe(mapped_listens_row_1, schema=None)
@@ -149,7 +149,7 @@ class SparkTestCase(unittest.TestCase):
             mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
             mb_release_mbid="xxxxxx",
             msb_artist_credit_name_matchable="kishorekumar",
-            track_name="Mere Sapno ki Rani",
+            msb_recording_name_matchable="Mere Sapno ki Rani",
             user_name='rob',
         )
         mapped_listens_df = df.union(utils.create_dataframe(mapped_listens_row_2, schema=None))

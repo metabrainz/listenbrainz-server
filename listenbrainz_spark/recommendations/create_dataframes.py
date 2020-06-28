@@ -41,7 +41,7 @@ from pyspark.sql.functions import rank
 #       'mb_recording_mbid',
 #       'mb_release_mbid',
 #       'msb_artist_credit_name_matchable',
-#       'track_name',
+#       'msb_recording_name_matchable',
 #       'user_name'
 #   ]
 #
@@ -58,7 +58,7 @@ from pyspark.sql.functions import rank
 #       'mb_recording_mbid',
 #       'mb_release_mbid',
 #       'msb_artist_credit_name_matchable',
-#       'track_name'
+#       'msb_recording_name_matchable'
 #   ]
 #
 # users_df:
@@ -183,7 +183,7 @@ def get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_
                                   'mb_recording_mbid',
                                   'mb_release_mbid',
                                   'msb_artist_credit_name_matchable',
-                                  'track_name',
+                                  'msb_recording_name_matchable',
                                   'user_name')
 
     save_dataframe(mapped_listens_df, path.MAPPED_LISTENS)
@@ -247,7 +247,7 @@ def get_recordings_df(mapped_listens_df, metadata):
                                              'mb_recording_mbid',
                                              'mb_release_mbid',
                                              'msb_artist_credit_name_matchable',
-                                             'track_name') \
+                                             'msb_recording_name_matchable') \
                                      .distinct() \
                                      .withColumn('recording_id', rank().over(recording_window))
 
