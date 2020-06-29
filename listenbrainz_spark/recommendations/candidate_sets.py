@@ -86,17 +86,22 @@ def get_listens_to_fetch_top_artists(mapped_listens_df, from_date, to_date):
     return mapped_listens_subset
 
 
-def get_top_artists(mapped_listens_subset, top_artist_limit):
+def get_top_artists(mapped_listens_subset, top_artist_limit, users):
     """ Get top artists listened to by users who have a listening history in
         the past X days where X = RECOMMENDATION_GENERATION_WINDOW.
 
         Args:
             df (dataframe): A subset of mapped_listens_df containing user history.
             top_artist_limit (int): number of top artist to calculate
+            users: list of users to generate candidate sets.
 
         Returns:
-            top_artist_df (dataframe): Top Y artists listened to by a user for all users where
-                                       Y = TOP_ARTISTS_LIMIT
+            if users is an empty list:
+                top_artists_df (dataframe): Top Y artists listened to by a user for all users where
+                                            Y = TOP_ARTISTS_LIMIT
+            else:
+                top_artist_given_users_df (dataframe): Top Y artists listened to by a user for given users where
+                                                       Y = TOP_ARTISTS_LIMIT
     """
     df = mapped_listens_subset.select('mb_artist_credit_id',
                                       'msb_artist_credit_name_matchable',
@@ -113,8 +118,14 @@ def get_top_artists(mapped_listens_subset, top_artist_limit):
                       .select('mb_artist_credit_id',
                               'msb_artist_credit_name_matchable',
                               'user_name')
+    if users:
+        top_artist_given_users_df = top_artists_df.select('mb_artist_credit_id',
+                                                          'msb_artist_credit_name_matchable',
+                                                          'user_name') \
+                                                  .where(top_artists_df.user_name.isin(users))
+        return top_artist_given_users_df
 
-    return top_artist_df
+    return top_artists_df
 
 
 def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit):
@@ -229,8 +240,29 @@ def save_candidate_sets(top_artist_candidate_set_df, similar_artist_candidate_se
             similar_artist_candidate_set_df (dataframe): recording ids that belong to similar artists
                                                              corresponding to user ids.
     """
-    utils.save_parquet(top_artist_candidate_set_df, path.TOP_ARTIST_CANDIDATE_SET)
-    utils.save_parquet(similar_artist_candidate_set_df, path.SIMILAR_ARTIST_CANDIDATE_SET)
+    try:
+        top_artists_candidate_set_df.take(1)[0]
+    except IndexError:
+        current_app.logger.error('Cannot save empty top artist candidate set', exc_info=True)
+        sys.exit(-1)
+
+    try:
+        top_similar_artists_candidate_set_df.take(1)[0]
+    except IndexError:
+        current_app.logger.error('Cannot save empty similar artist candidate set', exc_info=True)
+        sys.exit(-1)
+
+    try:
+        utils.save_parquet(top_artists_candidate_set_df, path.TOP_ARTIST_CANDIDATE_SET)
+    except FileNotSavedException as err:
+        current_app.logger.error(str(err), exc_info=True)
+        sys.exit(-1)
+
+    try:
+        utils.save_parquet(top_similar_artists_candidate_set_df, path.SIMILAR_ARTIST_CANDIDATE_SET)
+    except FileNotSavedException as err:
+        current_app.logger.error(str(err), exc_info=True)
+        sys.exit(-1)
 
 
 def get_candidate_html_data(similar_artist_df):
@@ -272,7 +304,7 @@ def save_candidate_html(user_data, total_time):
     save_html(candidate_html, context, 'candidate.html')
 
 
-def main(recommendation_generation_window=None, top_artist_limit=None, similar_artist_limit=None):
+def main(recommendation_generation_window=None, top_artist_limit=None, similar_artist_limit=None, users=None):
 
     time_initial = time()
     try:
@@ -299,7 +331,7 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
     mapped_listens_subset = get_listens_to_fetch_top_artists(mapped_listens_df, from_date, to_date)
 
     current_app.logger.info('Fetching top artists...')
-    top_artist_df = get_top_artists(mapped_listens_subset, top_artist_limit)
+    top_artists_df = get_top_artists(mapped_listens_subset, top_artist_limit, users)
 
     current_app.logger.info('Preparing top artists candidate set...')
     top_artist_candidate_set_df = get_top_artist_candidate_set(top_artist_df, recordings_df, users_df)
