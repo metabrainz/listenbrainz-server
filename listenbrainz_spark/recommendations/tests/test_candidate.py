@@ -68,7 +68,7 @@ class CandidateSetsTestClass(SparkTestCase):
         top_artist_limit = 10
         test_top_artist = candidate_sets.get_top_artists(mapped_listens, top_artist_limit, [])
 
-        cols = ['top_artist_credit_id', 'top_artist_name', 'user_name']
+        cols = ['top_artist_credit_id', 'top_artist_name', 'user_name', 'total_count']
         self.assertListEqual(cols, test_top_artist.columns)
         self.assertEqual(test_top_artist.count(), 2)
 

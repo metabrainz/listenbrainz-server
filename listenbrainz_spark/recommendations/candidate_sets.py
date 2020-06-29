@@ -128,25 +128,28 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
                 top_artist_given_users_df (dataframe): Top Y artists listened to by a user for given users where
                                                        Y = TOP_ARTISTS_LIMIT
     """
+<<<<<<< HEAD
     df = mapped_listens_subset.select('mb_artist_credit_id',
                                       'msb_artist_credit_name_matchable',
                                       'user_name') \
                               .groupBy('mb_artist_credit_id',
                                        'msb_artist_credit_name_matchable',
                                        'user_name') \
-                              .agg(func.count('mb_artist_credit_id').alias('count'))
+                              .agg(func.count('mb_artist_credit_id').alias('total_count'))
 
-    window = Window.partitionBy('user_name').orderBy(col('count').desc())
+    window = Window.partitionBy('user_name').orderBy(col('total_count').desc())
 
     top_artist_df = df.withColumn('rank', row_number().over(window)) \
                       .where(col('rank') <= top_artist_limit) \
                       .select(col('mb_artist_credit_id').alias('top_artist_credit_id'),
                               col('msb_artist_credit_name_matchable').alias('top_artist_name'),
-                              col('user_name'))
+                              col('user_name'),
+                              col('total_count'))
     if users:
         top_artist_given_users_df = top_artist_df.select('top_artist_credit_id',
                                                          'top_artist_name',
-                                                         'user_name') \
+                                                         'user_name',
+                                                         'total_count') \
                                                  .where(top_artist_df.user_name.isin(users))
         return top_artist_given_users_df
 
@@ -341,7 +344,8 @@ def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_can
         user_data[row.user_name] = defaultdict(list)
         data = (
             row.top_artist_name,
-            row.top_artist_credit_id
+            row.top_artist_credit_id,
+            row.total_count
         )
         user_data[row.user_name]['top_artist'].append(data)
 
@@ -381,7 +385,7 @@ def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_can
     return user_data
 
 
-def save_candidate_html(user_data, total_time):
+def save_candidate_html(user_data, total_time, from_date, to_date):
     """ Save user data to an HTML file.
 
         Args:
@@ -393,6 +397,8 @@ def save_candidate_html(user_data, total_time):
     context = {
         'user_data': user_data,
         'total_time': total_time,
+        'from_date': from_date,
+        'to_date': to_date
     }
     save_html(candidate_html, context, 'candidate.html')
 
@@ -451,7 +457,7 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
         user_data = get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_candidate_set_df_html,
                                             top_artist_df, similar_artist_df)
         current_app.logger.info('Saving HTML...')
-        save_candidate_html(user_data, total_time)
+        save_candidate_html(user_data, total_time, from_date, to_date)
         current_app.logger.info('Done!')
 
     message = [{

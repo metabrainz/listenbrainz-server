@@ -20,7 +20,8 @@ td, th {
 	<center>
 		<h1>Data Preprocessing to generate recommendations</h1>
 	</center>
-	<p>To get personalized recommendations for users, candidate sets are generated for each user consisting of recording ids and the user id using the underlying procedure.</p>
+	<p>To get personalized recommendations for users, candidate sets are generated for each user consisting of recording ids and the user id.</p>
+    <p>The candidate sets have been generated using listens from <b>{{ from_date }}</b> to <b>{{ to_date }}</b></p>
     <p>Total time taken to generate candidates set for all users: <b>{{ total_time }}m</b></p>
 	{% for user_name, data in user_data.items() -%}
 	<p><center><h4>{{ user_name }}</h4></center></p>
@@ -29,11 +30,13 @@ td, th {
                 <tr>
                     <th>Top artist name</th>
                     <th>Top artist credit id</th>
+                    <th>Count</th>
                 </tr>
                 {% for i in data['top_artist'] -%}
                 <tr>
                     <td>{{ i[0] }}</td>
                     <td>{{ i[1] }}</td>
+                    <td>{{ i[2] }}</td>
                 </tr>
                 {% endfor -%}
             </table>
