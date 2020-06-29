@@ -7,8 +7,7 @@ type LoaderProps = {
   isLoading: boolean;
 };
 
-const Loader: React.SFC<LoaderProps> = (props) => {
-  // eslint-disable-next-line react/prop-types
+export default function Loader(props: React.PropsWithChildren<LoaderProps>) {
   const { isLoading, children } = props;
   return isLoading ? (
     <div className="text-center">
@@ -17,6 +16,4 @@ const Loader: React.SFC<LoaderProps> = (props) => {
   ) : (
     <>{children}</>
   );
-};
-
-export default Loader;
+}

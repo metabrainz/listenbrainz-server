@@ -237,6 +237,7 @@ declare type UserListeningActivityDatum = {
   data: Array<{
     x: string;
     y: number;
+    date: Date;
   }>;
 };
 

@@ -1,16 +1,18 @@
+/* eslint-disable react/prefer-stateless-function */
 import * as React from "react";
 
-import { ResponsiveLine, Serie } from "@nivo/line";
+import { ResponsiveLine } from "@nivo/line";
 import { LegendProps } from "@nivo/legends";
 
 export type LineDualToneProps = {
   data: UserListeningActivityData;
   dateFormat: {};
+  showLegend?: boolean;
 };
 
 export default class LineDualTone extends React.Component<LineDualToneProps> {
   render() {
-    const { data, dateFormat } = this.props;
+    const { data, dateFormat, showLegend } = this.props;
 
     const customTooltip = (datum: any) => {
       const { point } = datum;
@@ -45,31 +47,37 @@ export default class LineDualTone extends React.Component<LineDualToneProps> {
           tickPadding: 5,
         }}
         margin={{
-          top: 20,
-          left: 40,
+          top: showLegend ? 30 : 20,
+          left: 50,
           right: 30,
-          bottom: 60,
+          bottom: 40,
         }}
         colors={({ id }) =>
-          id.toLowerCase().includes("this") ? "#EB743B" : "#353070"
+          id.toLowerCase().includes("this") || id.toLowerCase() === "all time"
+            ? "#EB743B"
+            : "#353070"
         }
         lineWidth={2.7}
         curve="natural"
         enableCrosshair={false}
         layers={["axes", "lines", "points", "mesh", "legends"]}
         tooltip={customTooltip}
-        legends={[
-          {
-            anchor: "top-right",
-            symbolShape: "circle",
-            symbolSize: 10,
-            direction: "row",
-            itemWidth: 90,
-            itemHeight: 10,
-            translateX: 20,
-            translateY: -10,
-          } as LegendProps,
-        ]}
+        legends={
+          showLegend
+            ? [
+                {
+                  anchor: "top-right",
+                  symbolShape: "circle",
+                  symbolSize: 10,
+                  direction: "row",
+                  itemWidth: 90,
+                  itemHeight: 10,
+                  translateX: 20,
+                  translateY: -20,
+                } as LegendProps,
+              ]
+            : []
+        }
         useMesh
       />
     );
