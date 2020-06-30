@@ -89,7 +89,7 @@ The recommendation generation process has been divided into four stages.
 
   `--user-name=vansika --user-name=rob --user-name=ram`
 
-  By default, user id is an empty list i.e. generate candidate sets for all active users.
+  By default, user name is an empty list i.e. generate candidate sets for all active users.
 
   ***Note***: Recommendations will be only generated for users with candidate sets.
 
