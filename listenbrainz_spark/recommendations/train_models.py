@@ -1,6 +1,4 @@
-import os
 import sys
-import json
 import uuid
 import logging
 import itertools
@@ -15,14 +13,18 @@ import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark import config, utils, path, schema
 from listenbrainz_spark.recommendations.utils import save_html
-from listenbrainz_spark.exceptions import SparkSessionNotInitializedException, PathNotFoundException, FileNotFetchedException, \
-    HDFSDirectoryNotDeletedException, PathNotFoundException, DataFrameNotCreatedException, DataFrameNotAppendedException
+from listenbrainz_spark.exceptions import (SparkSessionNotInitializedException,
+                                           PathNotFoundException,
+                                           FileNotFetchedException,
+                                           HDFSDirectoryNotDeletedException,
+                                           PathNotFoundException,
+                                           DataFrameNotCreatedException,
+                                           DataFrameNotAppendedException)
 
-import pyspark.sql.functions as f
+import pyspark.sql.functions as func
 from pyspark import RDD
 from pyspark.sql import Row
 from flask import current_app
-from pyspark.sql.utils import AnalysisException
 from pyspark.mllib.recommendation import ALS, Rating
 
 Model = namedtuple('Model', 'model validation_rmse rank lmbda iteration model_id training_time rmse_time, alpha')
@@ -65,10 +67,7 @@ def preprocess_data(playcounts_df):
     """ Convert and split the dataframe into three RDDs; training data, validation data, test data.
 
         Args:
-            playcounts_df (dataframe): Columns can be depicted as:
-                [
-                    'user_id', 'recording_id', 'count'
-                ]
+            playcounts_df: Dataframe containing play(listen) counts of users.
 
         Returns:
             training_data (rdd): Used for training.
@@ -87,13 +86,13 @@ def generate_model_id():
 
 
 def get_model_path(model_id):
-    """ Get path to best model
+    """ Get path to save or load model
 
         Args:
             model_id (str): Model identification string.
 
         Returns:
-            path to save model.
+            path to save or load model.
     """
 
     return config.HDFS_CLUSTER_URI + path.DATA_DIR + '/' + model_id
@@ -104,13 +103,15 @@ def get_latest_dataframe_id(dataframe_metadata_df):
 
         Args:
             dataframe_metadata_df (dataframe): Refer to listenbrainz_spark.schema.dataframe_metadata_schema
-            best_model_metadata: Dict of best model metadata.
+
+        Returns:
+            dataframe id
     """
     # get timestamp of recently saved dataframe.
-    timestamp = dataframe_metadata_df.select(f.max('dataframe_created').alias('recent_dataframe_timestamp')).take(1)[0]
+    timestamp = dataframe_metadata_df.select(func.max('dataframe_created').alias('recent_dataframe_timestamp')).take(1)[0]
     # get dataframe id corresponding to most recent timestamp.
     df = dataframe_metadata_df.select('dataframe_id') \
-                              .where(f.col('dataframe_created') == timestamp.recent_dataframe_timestamp).take(1)[0]
+                              .where(func.col('dataframe_created') == timestamp.recent_dataframe_timestamp).take(1)[0]
 
     return df.dataframe_id
 
@@ -209,8 +210,8 @@ def get_best_model(training_data, validation_data, num_validation, ranks, lambda
     return best_model, model_metadata
 
 
-def delete_best_model():
-    """ Delete best model.
+def delete_model():
+    """ Delete model.
         Note: At any point in time, only one model is in HDFS
     """
     dir_exists = utils.path_exists(path.DATA_DIR)
@@ -218,15 +219,15 @@ def delete_best_model():
         utils.delete_dir(path.DATA_DIR, recursive=True)
 
 
-def save_best_model(model_id, model):
-    """ Save best model to HDFS.
+def save_model(model_id, model):
+    """ Save model to HDFS.
 
         Args:
-            model_id (str): Best model identification string.
-            model: Trained best model
+            model_id (str): Model identification string.
+            model: Trained model
     """
     # delete previously saved model before saving a new model
-    delete_best_model()
+    delete_model()
 
     dest_path = get_model_path(model_id)
     try:
@@ -234,7 +235,7 @@ def save_best_model(model_id, model):
         model.save(listenbrainz_spark.context, dest_path)
         current_app.logger.info('Model saved!')
     except Py4JJavaError as err:
-        current_app.logger.error('Unable to save best model "{}"\n{}. Aborting...'.format(model_id,
+        current_app.logger.error('Unable to save model "{}"\n{}. Aborting...'.format(model_id,
                                  str(err.java_exception)), exc_info=True)
         sys.exit(-1)
 
@@ -243,7 +244,7 @@ def save_model_metadata_to_hdfs(metadata):
     """ Save model metadata.
 
         Args:
-            metadata: dict containing best model metadata.
+            metadata: dict containing model metadata.
     """
     metadata_row = schema.convert_model_metadata_to_row(metadata)
     try:
@@ -268,11 +269,7 @@ def save_training_html(time_, num_training, num_validation, num_test, model_meta
     """ Prepare and save taraining HTML.
 
         Args:
-            time_ (dict): Dictionary containing execution time information, can be depicted as:
-                {
-                    'save_model' : '3.09',
-                    ...
-                }
+            time_ (dict): Dictionary containing execution time information.
             num_training (int): Number of elements/rows in training_data.
             num_validation (int): Number of elements/rows in validation_data.
             num_test (int): Number of elements/rows in test_data.
@@ -372,7 +369,7 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
 
     hdfs_connection.init_hdfs(config.HDFS_HTTP_URI)
     t0 = time()
-    save_best_model(best_model.model_id, best_model.model)
+    save_model(best_model.model_id, best_model.model)
     time_['save_model'] = '{:.2f}'.format((time() - t0) / 60)
 
     save_model_metadata_to_hdfs(best_model_metadata)

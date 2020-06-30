@@ -146,10 +146,10 @@ class TrainModelsTestCase(SparkTestCase):
                                            alpha, mock_id.return_value)
         mock_rmse.assert_called_once_with(mock_train.return_value, mock_rdd_validation, num_validation, mock_id.return_value)
 
-    def test_delete_best_model(self):
+    def test_delete_model(self):
         df = utils.create_dataframe(Row(col1=1, col2=1), None)
         utils.save_parquet(df, path.DATA_DIR)
-        train_models.delete_best_model()
+        train_models.delete_model()
 
         dir_exists = utils.path_exists(path.DATA_DIR)
         self.assertFalse(dir_exists)
@@ -168,11 +168,11 @@ class TrainModelsTestCase(SparkTestCase):
 
     @patch('listenbrainz_spark.recommendations.train_models.listenbrainz_spark')
     @patch('listenbrainz_spark.recommendations.train_models.get_model_path')
-    @patch('listenbrainz_spark.recommendations.train_models.delete_best_model')
-    def test_save_best_model(self, mock_del, mock_path, mock_context):
+    @patch('listenbrainz_spark.recommendations.train_models.delete_model')
+    def test_save_model(self, mock_del, mock_path, mock_context):
         model_id = 'xxxxxx'
         mock_model = MagicMock()
-        train_models.save_best_model(model_id, mock_model)
+        train_models.save_model(model_id, mock_model)
 
         mock_del.assert_called_once()
         mock_path.assert_called_once_with(model_id)
