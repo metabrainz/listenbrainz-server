@@ -155,7 +155,7 @@ def model(rank, itr, lmbda, alpha):
 @click.option("--top", type=int, default=20, help="Calculate given number of top artist.")
 @click.option("--similar", type=int, default=20, help="Calculate given number of similar artist.")
 @click.option("--user-name", "users", callback=parse_list, default=[], multiple=True,
-                                    help="Generate candidate set for given users. Generate for all active users by default.")
+                                      help="Generate candidate set for given users. Generate for all active users by default.")
 def candidate(days, top, similar, users):
     """ Invoke script responsible for generating candidate sets.
     """
