@@ -403,7 +403,12 @@ export default class RecentListens extends React.Component<
                             ) : (
                               <td>
                                 <abbr
-                                  title={listen.listened_at_iso?.toString()}
+                                  title={
+                                    listen.listened_at_iso?.toString() ||
+                                    new Date(
+                                      listen.listened_at * 1000
+                                    ).toISOString()
+                                  }
                                 >
                                   {listen.listened_at_iso
                                     ? timeago.ago(listen.listened_at_iso)
