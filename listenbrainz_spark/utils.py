@@ -184,7 +184,7 @@ def get_listens(from_date, to_date, dest_path):
     """
     if to_date < from_date:
         raise ValueError('{}: Data generation window is negative i.e. from_date (date from which start fetching listens)' \
-            ' is greater than to_date (date upto which fetch listens).\nAborting...'.format(type(ValueError).__name__))
+                         ' is greater than to_date (date upto which fetch listens).'.format(type(ValueError).__name__))
     df = None
     while from_date <= to_date:
         try:
