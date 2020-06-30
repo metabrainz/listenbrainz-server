@@ -2,7 +2,7 @@ import * as React from "react";
 
 import APIService from "../APIService";
 import Card from "../components/Card";
-import LineDualTone from "./LineDualTone";
+import BarDualTone from "./BarDualTone";
 
 export type UserListeningActivityProps = {
   range: UserStatsAPIRange;
@@ -12,7 +12,6 @@ export type UserListeningActivityProps = {
 
 export type UserListeningActivityState = {
   data: UserListeningActivityData;
-  prevRange: UserStatsAPIRange;
   totalListens: number;
   avgListens: number;
 };
@@ -23,23 +22,34 @@ export default class UserListeningActivity extends React.Component<
 > {
   APIService: APIService;
 
-  dateFormat = {
+  rangeMap = {
     week: {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
+      dateFormat: {
+        weekday: "short",
+        timeZone: "UTC",
+      },
+      perRange: "day",
     },
     month: {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
+      dateFormat: {
+        day: "2-digit",
+        timeZone: "UTC",
+      },
+      perRange: "day",
     },
     year: {
-      month: "long",
-      year: "numeric",
+      dateFormat: {
+        month: "short",
+        timeZone: "UTC",
+      },
+      perRange: "month",
     },
     all_time: {
-      year: "numeric",
+      dateFormat: {
+        year: "numeric",
+        timeZone: "UTC",
+      },
+      perRange: "year",
     },
   };
 
@@ -52,19 +62,15 @@ export default class UserListeningActivity extends React.Component<
 
     this.state = {
       data: [],
-      prevRange: "" as UserStatsAPIRange,
       totalListens: 0,
       avgListens: 0,
     };
   }
 
-  componentDidMount() {
-    this.loadData();
-  }
-
-  componentDidUpdate() {
-    const { data } = this.state;
-    if (!data.length) {
+  componentDidUpdate(prevProps: UserListeningActivityProps) {
+    const { range: prevRange } = prevProps;
+    const { range: currRange } = this.props;
+    if (prevRange !== currRange) {
       this.loadData();
     }
   }
@@ -79,62 +85,53 @@ export default class UserListeningActivity extends React.Component<
     return data;
   };
 
-  static getDerivedStateFromProps(
-    props: UserListeningActivityProps,
-    state: UserListeningActivityState
-  ): Partial<UserListeningActivityState | null> {
-    if (props.range !== state.prevRange) {
-      return {
-        data: [],
-        prevRange: props.range,
-      };
-    }
-
-    return null;
-  }
-
   processData = (
     data: UserListeningActivityResponse
   ): UserListeningActivityData => {
     const { range } = this.props;
     if (range === "week") {
       return this.processWeek(data);
-    } else if (range === "month") {
-      return this.processMonth(data);
-    } else if (range === "year") {
-      return this.processYear(data);
-    } else {
-      return this.processAllTime(data);
     }
+    if (range === "month") {
+      return this.processMonth(data);
+    }
+    if (range === "year") {
+      return this.processYear(data);
+    }
+    return this.processAllTime(data);
   };
 
   processWeek = (
     data: UserListeningActivityResponse
   ): UserListeningActivityData => {
+    const { dateFormat } = this.rangeMap.week;
     let totalListens = 0;
     let totalDays = 0;
-    const lastWeek = data.payload.listening_activity.slice(0, 7).map((day) => {
-      const date = new Date(day.from_ts * 1000);
+
+    const lastWeek = data.payload.listening_activity.slice(0, 7);
+    const thisWeek = data.payload.listening_activity.slice(7);
+
+    const result = lastWeek.map((lastWeekDay, index) => {
+      const thisWeekDay = thisWeek[index];
+      let thisWeekData = {};
+      if (thisWeekDay) {
+        const thisWeekDate = new Date(thisWeekDay.from_ts * 1000);
+        const thisWeekCount = thisWeekDay.listen_count;
+        totalListens += thisWeekCount;
+        totalDays += 1;
+
+        thisWeekData = {
+          thisRangeCount: thisWeekCount,
+          thisRangeDate: thisWeekDate,
+        };
+      }
+
+      const lastWeekDate = new Date(lastWeekDay.from_ts * 1000);
       return {
-        x: date.toLocaleString("en-us", {
-          weekday: "short",
-          timeZone: "UTC",
-        }),
-        y: day.listen_count,
-        date,
-      };
-    });
-    const thisWeek = data.payload.listening_activity.slice(7).map((day) => {
-      const date = new Date(day.from_ts * 1000);
-      totalListens += day.listen_count;
-      totalDays += 1;
-      return {
-        x: date.toLocaleString("en-us", {
-          weekday: "short",
-          timeZone: "UTC",
-        }),
-        y: day.listen_count,
-        date,
+        id: lastWeekDate.toLocaleString("en-us", dateFormat),
+        lastRangeCount: lastWeekDay.listen_count,
+        lastRangeDate: lastWeekDate,
+        ...thisWeekData,
       };
     });
 
@@ -143,23 +140,16 @@ export default class UserListeningActivity extends React.Component<
       totalListens,
     });
 
-    return [
-      {
-        id: "Last Week",
-        data: lastWeek,
-      },
-      {
-        id: "This Week",
-        data: thisWeek,
-      },
-    ];
+    return result;
   };
 
   processMonth = (
     data: UserListeningActivityResponse
   ): UserListeningActivityData => {
+    const { dateFormat } = this.rangeMap.month;
     let totalListens = 0;
     let totalDays = 0;
+
     const startOfLastMonth = new Date(
       data.payload.listening_activity[0].from_ts * 1000
     );
@@ -170,32 +160,16 @@ export default class UserListeningActivity extends React.Component<
         0
       ).getDate() + 1;
 
-    const lastMonth = data.payload.listening_activity
+    const result = data.payload.listening_activity
       .slice(0, numOfDaysInLastMonth)
-      .map((day) => {
-        const date = new Date(day.from_ts * 1000);
-        return {
-          x: date.toLocaleString("en-us", {
-            day: "2-digit",
-            timeZone: "UTC",
-          }),
-          y: day.listen_count,
-          date,
-        };
-      });
-    const thisMonth = data.payload.listening_activity
-      .slice(numOfDaysInLastMonth)
       .map((day) => {
         const date = new Date(day.from_ts * 1000);
         totalListens += day.listen_count;
         totalDays += 1;
         return {
-          x: date.toLocaleString("en-us", {
-            day: "2-digit",
-            timeZone: "UTC",
-          }),
-          y: day.listen_count,
-          date,
+          id: date.toLocaleString("en-us", dateFormat),
+          thisRangeCount: day.listen_count,
+          thisRangeDate: date,
         };
       });
 
@@ -204,47 +178,40 @@ export default class UserListeningActivity extends React.Component<
       totalListens,
     });
 
-    return [
-      {
-        id: "Last Month",
-        data: lastMonth,
-      },
-      {
-        id: "This Month",
-        data: thisMonth,
-      },
-    ];
+    return result;
   };
 
   processYear = (
     data: UserListeningActivityResponse
   ): UserListeningActivityData => {
+    const { dateFormat } = this.rangeMap.year;
     let totalListens = 0;
     let totalMonths = 0;
-    const lastYear = data.payload.listening_activity
-      .slice(0, 12)
-      .map((month) => {
-        const date = new Date(month.from_ts * 1000);
-        return {
-          x: date.toLocaleString("en-us", {
-            month: "short",
-            timeZone: "UTC",
-          }),
-          y: month.listen_count,
-          date,
+
+    const lastYear = data.payload.listening_activity.slice(0, 12);
+    const thisYear = data.payload.listening_activity.slice(12);
+
+    const result = lastYear.map((lastYearMonth, index) => {
+      const thisYearMonth = thisYear[index];
+      let thisYearData = {};
+      if (thisYearMonth) {
+        const thisYearDate = new Date(thisYearMonth.listen_count * 1000);
+        const thisYearCount = thisYearMonth.listen_count;
+        totalListens += thisYearCount;
+        totalMonths += 1;
+
+        thisYearData = {
+          thisRangeCount: thisYearCount,
+          thisRangeDate: thisYearDate,
         };
-      });
-    const thisYear = data.payload.listening_activity.slice(12).map((month) => {
-      const date = new Date(month.from_ts * 1000);
-      totalListens += month.listen_count;
-      totalMonths += 1;
+      }
+
+      const lastYearDate = new Date(lastYearMonth.from_ts * 1000);
       return {
-        x: date.toLocaleString("en-us", {
-          month: "short",
-          timeZone: "UTC",
-        }),
-        y: month.listen_count,
-        date,
+        id: lastYearDate.toLocaleString("en-us", dateFormat),
+        lastRangeCount: lastYearMonth.listen_count,
+        lastRangeDate: lastYearDate,
+        ...thisYearData,
       };
     });
 
@@ -253,21 +220,13 @@ export default class UserListeningActivity extends React.Component<
       totalListens,
     });
 
-    return [
-      {
-        id: "Last Year",
-        data: lastYear,
-      },
-      {
-        id: "This Year",
-        data: thisYear,
-      },
-    ];
+    return result;
   };
 
   processAllTime = (
     data: UserListeningActivityResponse
   ): UserListeningActivityData => {
+    const { dateFormat } = this.rangeMap.all_time;
     let totalListens = 0;
     let totalYears = 0;
 
@@ -282,23 +241,20 @@ export default class UserListeningActivity extends React.Component<
       if (yearData) {
         const date = new Date(yearData.from_ts * 1000);
         allTimeData.push({
-          x: date.toLocaleString("en-us", {
-            year: "2-digit",
-            timeZone: "UTC",
-          }),
-          y: yearData.listen_count,
-          date,
+          id: date.toLocaleString("en-us", dateFormat),
+          thisRangeCount: yearData.listen_count,
+          thisRangeDate: date,
         });
         totalListens += yearData.listen_count;
       } else {
         const date = new Date(`${i}-01-01T00:00:00.000+00:00`);
         allTimeData.push({
-          x: date.toLocaleString("en-us", {
-            year: "2-digit",
+          id: date.toLocaleString("en-us", {
+            year: "numeric",
             timeZone: "UTC",
           }),
-          y: 0,
-          date,
+          thisRangeCount: 0,
+          thisRangeDate: date,
         });
       }
     }
@@ -308,12 +264,7 @@ export default class UserListeningActivity extends React.Component<
       totalListens,
     });
 
-    return [
-      {
-        id: "All Time",
-        data: allTimeData,
-      },
-    ];
+    return allTimeData;
   };
 
   loadData = async (): Promise<void> => {
@@ -326,14 +277,15 @@ export default class UserListeningActivity extends React.Component<
   render() {
     const { data, totalListens, avgListens } = this.state;
     const { range } = this.props;
+    const { perRange } = this.rangeMap[range || "week"];
 
     return (
       <div>
         <div className="col-md-8" style={{ height: "20em" }}>
           <Card>
-            <LineDualTone
+            <BarDualTone
               data={data}
-              dateFormat={this.dateFormat[range]}
+              range={range}
               showLegend={range !== "all_time"}
             />
           </Card>
@@ -371,7 +323,9 @@ export default class UserListeningActivity extends React.Component<
                     {avgListens}
                   </td>
                   <td>
-                    <span style={{ fontSize: 24 }}>&nbsp;Listens per day</span>
+                    <span style={{ fontSize: 24 }}>
+                      &nbsp;Listens per {perRange}
+                    </span>
                   </td>
                 </tr>
               </tbody>

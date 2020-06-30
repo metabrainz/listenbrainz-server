@@ -234,11 +234,10 @@ declare type UserListeningActivityResponse = {
 
 declare type UserListeningActivityDatum = {
   id: string;
-  data: Array<{
-    x: string;
-    y: number;
-    date: Date;
-  }>;
+  lastRangeCount?: number;
+  thisRangeCount?: number;
+  lastRangeDate?: Date;
+  thisRangeDate?: Date;
 };
 
 declare type UserListeningActivityData = Array<UserListeningActivityDatum>;
