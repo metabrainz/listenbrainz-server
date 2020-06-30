@@ -23,13 +23,12 @@ export interface RecentListensProps {
   followListId?: number;
   followListName?: string;
   haveListenCount?: boolean;
-  latestListenTs?: number;
+  latestListenTs: number;
   latestSpotifyUri?: string;
   listenCount?: string;
   listens?: Array<Listen>;
   mode: ListensListMode;
-  nextListenTs?: number;
-  previousListenTs?: number;
+  oldestListenTs: number;
   profileUrl?: string;
   saveUrl?: string;
   spotify: SpotifyUser;
@@ -47,7 +46,9 @@ export interface RecentListensState {
   listName: string;
   listens: Array<Listen>;
   mode: "listens" | "follow" | "recent";
+  nextListenTs?: number;
   playingNowByUser: FollowUsersPlayingNow;
+  previousListenTs?: number;
   saveUrl: string;
 }
 
@@ -72,6 +73,9 @@ export default class RecentListens extends React.Component<
       saveUrl: props.saveUrl || "",
       listName: props.followListName || "",
       listId: props.followListId || undefined,
+      nextListenTs: props.listens && props.listens[0].listened_at,
+      previousListenTs:
+        props.listens && props.listens[props.listens.length - 1].listened_at,
       direction: "down",
     };
 
@@ -285,15 +289,16 @@ export default class RecentListens extends React.Component<
       listName,
       listens,
       mode,
+      nextListenTs,
       playingNowByUser,
+      previousListenTs,
       saveUrl,
     } = this.state;
     const {
       artistCount,
+      latestListenTs,
       listenCount,
-      nextListenTs,
-      previousListenTs,
-      profileUrl,
+      oldestListenTs,
       spotify,
       user,
       searchLargerTimeRange,
@@ -443,15 +448,24 @@ export default class RecentListens extends React.Component<
                   <ul className="pager">
                     <li
                       className={`previous ${
-                        !previousListenTs ? "hidden" : ""
+                        listens[0]?.listened_at >= latestListenTs
+                          ? "hidden"
+                          : ""
                       }`}
                     >
                       <a href={`${profileUrl}?min_ts=${previousListenTs}`}>
                         &larr; Previous
                       </a>
                     </li>
-                    <li className={`next ${!nextListenTs ? "hidden" : ""}`}>
-                      <a href={`${profileUrl}?max_ts=${nextListenTs}`}>
+                    <li
+                      className={`next ${
+                        listens[listens.length - 1]?.listened_at <=
+                        oldestListenTs
+                          ? "hidden"
+                          : ""
+                      }`}
+                    >
+                      <a href="#" onClick={this.handleClickNext}>
                         Next &rarr;
                       </a>
                     </li>
@@ -530,9 +544,8 @@ document.addEventListener("DOMContentLoaded", () => {
     latest_spotify_uri,
     listen_count,
     listens,
+    oldest_listen_ts,
     mode,
-    next_listen_ts,
-    previous_listen_ts,
     profile_url,
     save_url,
     spotify,
@@ -554,8 +567,7 @@ document.addEventListener("DOMContentLoaded", () => {
       listenCount={listen_count}
       listens={listens}
       mode={mode}
-      nextListenTs={next_listen_ts}
-      previousListenTs={previous_listen_ts}
+      oldestListenTs={oldest_listen_ts}
       profileUrl={profile_url}
       saveUrl={save_url}
       spotify={spotify}

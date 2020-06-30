@@ -65,6 +65,7 @@ def profile(user_name):
     except ValueError:
         raise BadRequest("search_larger_time_range must be an integer value 0 or greater: %s" % search_larger_time_range)
 
+    # Send min and max listen times to allow React component to hide prev/next buttons accordingly
     (min_ts_per_user, max_ts_per_user) = db_conn.get_timestamps_for_user(user_name)
 
     if max_ts is None and min_ts is None:
@@ -91,23 +92,9 @@ def profile(user_name):
             })
         if len(listens) < LISTENS_PER_PAGE and search_larger_time_range == 0:
             listens_missing = 1
-    # Calculate if we need to show next/prev buttons
-    previous_listen_ts = None
-    next_listen_ts = None
-    if listens:
-        if min_ts_per_user >= 0:
-            if listens[-1]['listened_at'] > min_ts_per_user:
-                next_listen_ts = listens[-1]['listened_at']
-            else:
-                next_listen_ts = None
-
-            if listens[0]['listened_at'] < max_ts_per_user:
-                previous_listen_ts = listens[0]['listened_at']
-            else:
-                previous_listen_ts = None
 
     # If there are no previous listens then display now_playing
-    if not previous_listen_ts:
+    if  not listens or listens[0]['listened_at'] >= max_ts_per_user:
         playing_now = playing_now_conn.get_playing_now(user.id)
         if playing_now:
             listen = {
@@ -132,9 +119,8 @@ def profile(user_name):
             "name": user.musicbrainz_id,
         },
         "listens": listens,
-        "previous_listen_ts": previous_listen_ts,
-        "next_listen_ts": next_listen_ts,
         "latest_listen_ts": max_ts_per_user,
+        "oldest_listen_ts": min_ts_per_user,
         "latest_spotify_uri": _get_spotify_uri_for_listens(listens),
         "search_larger_time_range": listens_missing,
         "have_listen_count": have_listen_count,
