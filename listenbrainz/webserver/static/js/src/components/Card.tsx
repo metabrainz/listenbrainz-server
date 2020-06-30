@@ -3,6 +3,7 @@ import * as React from "react";
 type CardProps = {
   style?: React.CSSProperties;
   className?: string;
+  [key: string]: any;
 };
 
 export default function Card(props: React.PropsWithChildren<CardProps>) {

@@ -103,9 +103,7 @@ class UserStats extends React.Component<UserStatsProps, UserStatsState> {
             <h3>Listening Activity</h3>
           </div>
         </div>
-        <div className="row">
-          <UserListeningActivity range={range} apiUrl={apiUrl} user={user} />
-        </div>
+        <UserListeningActivity range={range} apiUrl={apiUrl} user={user} />
       </div>
     );
   }

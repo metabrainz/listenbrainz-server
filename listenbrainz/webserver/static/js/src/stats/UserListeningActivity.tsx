@@ -160,18 +160,38 @@ export default class UserListeningActivity extends React.Component<
         0
       ).getDate() + 1;
 
-    const result = data.payload.listening_activity
-      .slice(0, numOfDaysInLastMonth)
-      .map((day) => {
-        const date = new Date(day.from_ts * 1000);
-        totalListens += day.listen_count;
+    const lastMonth = data.payload.listening_activity.slice(
+      0,
+      numOfDaysInLastMonth
+    );
+    const thisMonth = data.payload.listening_activity.slice(
+      numOfDaysInLastMonth
+    );
+
+    const result = lastMonth.map((lastMonthDay, index) => {
+      const thisMonthDay = thisMonth[index];
+      let thisMonthData = {};
+      if (thisMonthDay) {
+        const thisMonthCount = thisMonthDay.listen_count;
+        const thisMonthDate = new Date(thisMonthDay.from_ts * 1000);
+        totalListens += thisMonthCount;
         totalDays += 1;
-        return {
-          id: date.toLocaleString("en-us", dateFormat),
-          thisRangeCount: day.listen_count,
-          thisRangeDate: date,
+
+        thisMonthData = {
+          thisRangeCount: thisMonthCount,
+          thisRangeDate: thisMonthDate,
         };
-      });
+      }
+
+      const lastMonthCount = lastMonthDay.listen_count;
+      const lastMonthDate = new Date(lastMonthDay.from_ts * 1000);
+      return {
+        id: lastMonthDate.toLocaleString("en-us", dateFormat),
+        lastRangeCount: lastMonthCount,
+        lastRangeDate: lastMonthDate,
+        ...thisMonthData,
+      };
+    });
 
     this.setState({
       avgListens: Math.ceil(totalListens / totalDays),
@@ -281,57 +301,43 @@ export default class UserListeningActivity extends React.Component<
 
     return (
       <div>
-        <div className="col-md-8" style={{ height: "20em" }}>
-          <Card>
-            <BarDualTone
-              data={data}
-              range={range}
-              showLegend={range !== "all_time"}
-            />
-          </Card>
-        </div>
-        <div className="col-md-4" style={{ height: "20em" }}>
-          <Card style={{ display: "flex", alignItems: "center" }}>
-            <table
-              style={{ height: "50%", width: "100%", tableLayout: "fixed" }}
-            >
-              <tbody>
-                <tr>
-                  <td
-                    style={{
-                      width: "30%",
-                      textAlign: "end",
-                      fontSize: 30,
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {totalListens}
-                  </td>
-                  <td>
-                    <span style={{ fontSize: 24 }}>&nbsp;Listens</span>
-                  </td>
-                </tr>
-                <tr>
-                  <td
-                    style={{
-                      width: "30%",
-                      textAlign: "end",
-                      fontSize: 30,
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {avgListens}
-                  </td>
-                  <td>
-                    <span style={{ fontSize: 24 }}>
-                      &nbsp;Listens per {perRange}
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </Card>
-        </div>
+        <Card>
+          <div className="row">
+            <div className="col-xs-12" style={{ height: "25em" }}>
+              <BarDualTone
+                data={data}
+                range={range}
+                showLegend={range !== "all_time"}
+              />
+            </div>
+          </div>
+          <div className="row text-center mt-5 mb-15">
+            <div className="col-md-6">
+              <span
+                style={{
+                  fontSize: 30,
+                  fontWeight: "bold",
+                }}
+              >
+                {totalListens}
+              </span>
+              <span>
+                <span style={{ fontSize: 24 }}>&nbsp;Listens</span>
+              </span>
+            </div>
+            <div className="col-md-6 col-xs-12">
+              <span
+                style={{
+                  fontSize: 30,
+                  fontWeight: "bold",
+                }}
+              >
+                {avgListens}
+              </span>
+              <span style={{ fontSize: 24 }}>&nbsp;Listens per {perRange}</span>
+            </div>
+          </div>
+        </Card>
       </div>
     );
   }
