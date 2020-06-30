@@ -12,6 +12,14 @@ export type UserListeningActivityProps = {
 
 export type UserListeningActivityState = {
   data: UserListeningActivityData;
+  lastRangePeriod: {
+    start?: Date;
+    end?: Date;
+  };
+  thisRangePeriod: {
+    start?: Date;
+    end?: Date;
+  };
   totalListens: number;
   avgListens: number;
 };
@@ -62,6 +70,8 @@ export default class UserListeningActivity extends React.Component<
 
     this.state = {
       data: [],
+      lastRangePeriod: {},
+      thisRangePeriod: {},
       totalListens: 0,
       avgListens: 0,
     };
@@ -137,6 +147,14 @@ export default class UserListeningActivity extends React.Component<
 
     this.setState({
       avgListens: Math.ceil(totalListens / totalDays),
+      lastRangePeriod: {
+        start: new Date(lastWeek[0].from_ts * 1000),
+        end: new Date(lastWeek[6].from_ts * 1000),
+      },
+      thisRangePeriod: {
+        start: new Date(thisWeek[0].from_ts * 1000),
+        end: new Date(thisWeek[totalDays - 1].from_ts * 1000),
+      },
       totalListens,
     });
 
@@ -195,6 +213,12 @@ export default class UserListeningActivity extends React.Component<
 
     this.setState({
       avgListens: Math.ceil(totalListens / totalDays),
+      lastRangePeriod: {
+        start: new Date(lastMonth[0].from_ts * 1000),
+      },
+      thisRangePeriod: {
+        start: new Date(thisMonth[0].from_ts * 1000),
+      },
       totalListens,
     });
 
@@ -237,6 +261,12 @@ export default class UserListeningActivity extends React.Component<
 
     this.setState({
       avgListens: Math.ceil(totalListens / totalMonths),
+      lastRangePeriod: {
+        start: new Date(lastYear[0].from_ts * 1000),
+      },
+      thisRangePeriod: {
+        start: new Date(thisYear[0].from_ts * 1000),
+      },
       totalListens,
     });
 
@@ -295,7 +325,13 @@ export default class UserListeningActivity extends React.Component<
   };
 
   render() {
-    const { data, totalListens, avgListens } = this.state;
+    const {
+      data,
+      totalListens,
+      avgListens,
+      lastRangePeriod,
+      thisRangePeriod,
+    } = this.state;
     const { range } = this.props;
     const { perRange } = this.rangeMap[range || "week"];
 
@@ -308,6 +344,8 @@ export default class UserListeningActivity extends React.Component<
                 data={data}
                 range={range}
                 showLegend={range !== "all_time"}
+                lastRangePeriod={lastRangePeriod}
+                thisRangePeriod={thisRangePeriod}
               />
             </div>
           </div>
