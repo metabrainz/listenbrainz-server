@@ -27,22 +27,22 @@ class RecommendTestClass(SparkTestCase):
         super().tearDownClass()
 
     def test_recommendation_params_init(self):
-        recordings = utils.create_dataframe(Row(col1=3, col2=9), schema=None)
+        recordings_df = utils.create_dataframe(Row(col1=3, col2=9), schema=None)
         model = MagicMock()
-        top_artist_candidate_set = utils.create_dataframe(Row(col1=4, col2=5, col3=5), schema=None)
-        similar_artist_candidate_set = utils.create_dataframe(Row(col1=1), schema=None)
+        top_artist_candidate_set_df = utils.create_dataframe(Row(col1=4, col2=5, col3=5), schema=None)
+        similar_artist_candidate_set_df = utils.create_dataframe(Row(col1=1), schema=None)
         recommendation_top_artist_limit = 20
         recommendation_similar_artist_limit = 40
 
-        params = recommend.RecommendationParams(recordings, model, top_artist_candidate_set,
-                                                similar_artist_candidate_set,
+        params = recommend.RecommendationParams(recordings_df, model, top_artist_candidate_set_df,
+                                                similar_artist_candidate_set_df,
                                                 recommendation_top_artist_limit,
                                                 recommendation_similar_artist_limit)
 
-        self.assertEqual(sorted(params.recordings.columns), sorted(recordings.columns))
+        self.assertEqual(sorted(params.recordings_df.columns), sorted(recordings_df.columns))
         self.assertEqual(params.model, model)
-        self.assertEqual(sorted(params.top_artist_candidate_set.columns), sorted(top_artist_candidate_set.columns))
-        self.assertEqual(sorted(params.similar_artist_candidate_set.columns), sorted(similar_artist_candidate_set.columns))
+        self.assertEqual(sorted(params.top_artist_candidate_set_df.columns), sorted(top_artist_candidate_set_df.columns))
+        self.assertEqual(sorted(params.similar_artist_candidate_set_df.columns), sorted(similar_artist_candidate_set_df.columns))
         self.assertEqual(params.recommendation_top_artist_limit, recommendation_top_artist_limit)
         self.assertEqual(params.recommendation_similar_artist_limit, recommendation_similar_artist_limit)
 
@@ -121,8 +121,8 @@ class RecommendTestClass(SparkTestCase):
         _, _ = recommend.get_recommendations_for_user(user_id, user_name, params)
 
         mock_candidate_set.assert_has_calls([
-            call(params.top_artist_candidate_set, user_id),
-            call(params.similar_artist_candidate_set, user_id)
+            call(params.top_artist_candidate_set_df, user_id),
+            call(params.similar_artist_candidate_set_df, user_id)
         ])
 
         mock_mbids.assert_has_calls([
@@ -180,9 +180,10 @@ class RecommendTestClass(SparkTestCase):
             schema=None
         ))
 
-        params.top_artist_candidate_set = df
+        params.top_artist_candidate_set_df = df
 
         users = recommend.get_user_name_and_user_id(params, [])
+
         self.assertEqual(users.count(), 2)
         self.assertEqual(sorted(users.columns), sorted(['user_id', 'user_name']))
 
@@ -222,7 +223,7 @@ class RecommendTestClass(SparkTestCase):
             ),
             schema=None
         )
-        params.top_artist_candidate_set = df
+        params.top_artist_candidate_set_df = df
 
         mock_rec_user.return_value = 'recording_mbid_1', 'recording_mbid_2'
         messages = recommend.get_recommendations_for_all(params, [])
@@ -266,15 +267,15 @@ class RecommendTestClass(SparkTestCase):
         self.assertEqual(message['similar_artist'], [])
 
     def get_recommendation_params(self):
-        recordings = self.get_recordings_df()
+        recordings_df = self.get_recordings_df()
         model = MagicMock()
-        top_artist_candidate_set = self.get_candidate_set()
-        similar_artist_candidate_set = self.get_candidate_set()
+        top_artist_candidate_set_df = self.get_candidate_set()
+        similar_artist_candidate_set_df = self.get_candidate_set()
         recommendation_top_artist_limit = 2
         recommendation_similar_artist_limit = 1
 
-        params = recommend.RecommendationParams(recordings, model, top_artist_candidate_set,
-                                                similar_artist_candidate_set,
+        params = recommend.RecommendationParams(recordings_df, model, top_artist_candidate_set_df,
+                                                similar_artist_candidate_set_df,
                                                 recommendation_top_artist_limit,
                                                 recommendation_similar_artist_limit)
         return params
