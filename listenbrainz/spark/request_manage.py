@@ -165,8 +165,8 @@ def request_candidate_sets(days, top, similar):
 @cli.command(name='request_recommendations')
 @click.option("--top", type=int, default=200, help="Generate given number of top artist recommendations")
 @click.option("--similar", type=int, default=200, help="Generate given number of similar artist recommendations")
-@click.option("--user-id", 'users', callback=parse_list, default=[], multiple=True, help="Generate recommendations for given users."
-              " Generate recommendations for all users by default.")
+@click.option("--user-name", 'users', callback=parse_list, default=[], multiple=True,
+              help="Generate recommendations for given users. Generate recommendations for all users by default.")
 def request_recommendations(top, similar, users):
     """ Send the cluster a request to generate recommendations.
     """

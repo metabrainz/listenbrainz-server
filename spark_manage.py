@@ -165,8 +165,8 @@ def candidate(days, top, similar):
 @cli.command(name='recommend')
 @click.option("--top", type=int, default=200, help="Generate given number of top artist recommendations")
 @click.option("--similar", type=int, default=200, help="Generate given number of similar artist recommendations")
-@click.option("--user-id", 'users', callback=parse_list, default=[], multiple=True, help="Generate recommendations for given users."
-              " Generate recommendations for all users by default.")
+@click.option("--user-name", 'users', callback=parse_list, default=[], multiple=True,
+              help="Generate recommendations for given users. Generate recommendations for all users by default.")
 def recommend(top, similar, users):
     """ Invoke script responsible for generating recommendations.
     """

@@ -201,8 +201,7 @@ class RecommendTestClass(SparkTestCase):
         active_users = ['vansika']
         users = ['vansika', 'vansika_1']
         messages = recommend.get_message_for_inactive_users(message_arg, active_users, users)
-        print(messages[0])
-        print(messages[1])
+
         self.assertEqual(len(messages), 2)
         self.assertEqual(messages[0], message_arg[0])
         self.assertEqual(messages[1], {
