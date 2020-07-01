@@ -5,21 +5,21 @@ import ErrorBoundary from "../ErrorBoundary";
 import Pill from "../components/Pill";
 import UserListeningActivity from "./UserListeningActivity";
 
-export type UserStatsProps = {
+export type UserReportsProps = {
   user: ListenBrainzUser;
   apiUrl: string;
 };
 
-export type UserStatsState = {
-  range: UserStatsAPIRange;
+export type UserReportsState = {
+  range: UserReportsAPIRange;
 };
 
-class UserStats extends React.Component<UserStatsProps, UserStatsState> {
-  constructor(props: UserStatsProps) {
+class UserReports extends React.Component<UserReportsProps, UserReportsState> {
+  constructor(props: UserReportsProps) {
     super(props);
 
     this.state = {
-      range: "" as UserStatsAPIRange,
+      range: "" as UserReportsAPIRange,
     };
   }
 
@@ -35,7 +35,7 @@ class UserStats extends React.Component<UserStatsProps, UserStatsState> {
     window.removeEventListener("popstate", this.syncStateWithURL);
   }
 
-  changeRange = (newRange: UserStatsAPIRange): void => {
+  changeRange = (newRange: UserReportsAPIRange): void => {
     this.setURLParams(newRange);
     this.syncStateWithURL();
   };
@@ -45,18 +45,18 @@ class UserStats extends React.Component<UserStatsProps, UserStatsState> {
     this.setState({ range });
   };
 
-  getURLParams = (): UserStatsAPIRange => {
+  getURLParams = (): UserReportsAPIRange => {
     const url = new URL(window.location.href);
 
-    let range: UserStatsAPIRange = "week";
+    let range: UserReportsAPIRange = "week";
     if (url.searchParams.get("range")) {
-      range = url.searchParams.get("range") as UserStatsAPIRange;
+      range = url.searchParams.get("range") as UserReportsAPIRange;
     }
 
     return range;
   };
 
-  setURLParams = (range: UserStatsAPIRange): void => {
+  setURLParams = (range: UserReportsAPIRange): void => {
     window.history.pushState(null, "", `?range=${range}`);
   };
 
@@ -123,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const { user, api_url: apiUrl } = reactProps;
   ReactDOM.render(
     <ErrorBoundary>
-      <UserStats apiUrl={apiUrl} user={user} />
+      <UserReports apiUrl={apiUrl} user={user} />
     </ErrorBoundary>,
     domContainer
   );

@@ -182,9 +182,9 @@ def charts(user_name):
     )
 
 
-@user_bp.route("/<user_name>/stats")
-def stats(user_name: str):
-    """ Show user statistics """
+@user_bp.route("/<user_name>/reports")
+def reports(user_name: str):
+    """ Show user reports """
     user = _get_user(user_name)
 
     user_data = {
@@ -198,8 +198,8 @@ def stats(user_name: str):
     }
 
     return render_template(
-        "user/stats.html",
-        active_section="stats",
+        "user/reports.html",
+        active_section="reports",
         props=ujson.dumps(props),
         user=user
     )
