@@ -1,4 +1,6 @@
 /* eslint-disable camelcase */
+
+declare module "react-responsive";
 declare module "spotify-web-playback-sdk";
 declare module "react-bs-notifier";
 declare module "time-ago";
