@@ -9,5 +9,5 @@ git+https://github.com/metabrainz/brainzutils-python.git@v1.14.1
 pytest == 5.4.2
 pytest-cov == 2.9.0
 py4j == 0.10.9
-pyspark == 2.4.5
+pyspark == 3.0.0
 pydantic == 1.5.1
