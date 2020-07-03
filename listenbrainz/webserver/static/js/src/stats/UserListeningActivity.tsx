@@ -102,12 +102,12 @@ export default class UserListeningActivity extends React.Component<
           hasError: true,
           errorMessage: `Invalid range: ${currRange}`,
         });
-        return;
+      } else {
+        this.loadData();
+        this.setState({
+          hasError: false,
+        });
       }
-      this.loadData();
-      this.setState({
-        hasError: false,
-      });
     }
   }
 
@@ -124,7 +124,7 @@ export default class UserListeningActivity extends React.Component<
         this.setState({
           loading: false,
           hasError: true,
-          errorMessage: "Statstics for the user has not been calculated",
+          errorMessage: "Statstics for the user have not been calculated",
         });
       } else {
         this.setState(() => {
