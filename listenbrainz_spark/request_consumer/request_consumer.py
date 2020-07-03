@@ -80,7 +80,12 @@ class RequestConsumer:
                     self.rabbitmq.close()
                     self.connect_to_rabbitmq()
                     self.init_rabbitmq_channels()
-        current_app.logger.debug("Done!")
+
+        avg_size_of_message //= num_of_messages
+
+        current_app.logger.info("Done!")
+        current_app.logger.info("Number of messages sent: {}".format(num_of_messages))
+        current_app.logger.info("Average size of message: {} bytes".format(avg_size_of_message))
 
     def callback(self, channel, method, properties, body):
         request = json.loads(body.decode('utf-8'))
