@@ -11,7 +11,7 @@ export type UserReportsProps = {
 };
 
 export type UserReportsState = {
-  range: UserReportsAPIRange;
+  range: UserStatsAPIRange;
 };
 
 class UserReports extends React.Component<UserReportsProps, UserReportsState> {
@@ -19,7 +19,7 @@ class UserReports extends React.Component<UserReportsProps, UserReportsState> {
     super(props);
 
     this.state = {
-      range: "" as UserReportsAPIRange,
+      range: "week" as UserStatsAPIRange,
     };
   }
 
@@ -35,7 +35,7 @@ class UserReports extends React.Component<UserReportsProps, UserReportsState> {
     window.removeEventListener("popstate", this.syncStateWithURL);
   }
 
-  changeRange = (newRange: UserReportsAPIRange): void => {
+  changeRange = (newRange: UserStatsAPIRange): void => {
     this.setURLParams(newRange);
     this.syncStateWithURL();
   };
@@ -45,18 +45,18 @@ class UserReports extends React.Component<UserReportsProps, UserReportsState> {
     this.setState({ range });
   };
 
-  getURLParams = (): UserReportsAPIRange => {
+  getURLParams = (): UserStatsAPIRange => {
     const url = new URL(window.location.href);
 
-    let range: UserReportsAPIRange = "week";
+    let range: UserStatsAPIRange = "week";
     if (url.searchParams.get("range")) {
-      range = url.searchParams.get("range") as UserReportsAPIRange;
+      range = url.searchParams.get("range") as UserStatsAPIRange;
     }
 
     return range;
   };
 
-  setURLParams = (range: UserReportsAPIRange): void => {
+  setURLParams = (range: UserStatsAPIRange): void => {
     window.history.pushState(null, "", `?range=${range}`);
   };
 

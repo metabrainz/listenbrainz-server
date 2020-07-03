@@ -5,12 +5,13 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 type LoaderProps = {
   isLoading: boolean;
+  style?: React.CSSProperties;
 };
 
 export default function Loader(props: React.PropsWithChildren<LoaderProps>) {
-  const { isLoading, children } = props;
+  const { isLoading, children, ...otherProps } = props;
   return isLoading ? (
-    <div className="text-center">
+    <div className="text-center" {...otherProps}>
       <FontAwesomeIcon icon={faSpinner as IconProp} size="4x" spin />
     </div>
   ) : (

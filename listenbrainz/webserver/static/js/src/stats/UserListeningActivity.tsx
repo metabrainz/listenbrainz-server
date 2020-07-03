@@ -356,14 +356,22 @@ export default class UserListeningActivity extends React.Component<
       loading,
     } = this.state;
     const { range } = this.props;
-    const { perRange } = this.rangeMap[range || "week"];
+    const { perRange } = this.rangeMap[range];
 
     return (
       <div>
-        <Card>
-          <Loader isLoading={loading}>
+        <Card style={{ minHeight: 400 }}>
+          <Loader
+            isLoading={loading}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: "inherit",
+            }}
+          >
             <div className="row">
-              <div className="col-xs-12" style={{ height: "25em" }}>
+              <div className="col-xs-12" style={{ height: 350 }}>
                 <BarDualTone
                   data={data}
                   range={range}

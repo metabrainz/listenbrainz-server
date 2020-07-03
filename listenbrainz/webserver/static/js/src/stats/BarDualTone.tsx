@@ -1,11 +1,10 @@
-/* eslint-disable react/prefer-stateless-function */
 import * as React from "react";
 
 import { ResponsiveBar, Layer } from "@nivo/bar";
 import { BoxLegendSvg, LegendProps } from "@nivo/legends";
 import { useMediaQuery } from "react-responsive";
 
-export type LineDualToneProps = {
+export type BarDualToneProps = {
   data: UserListeningActivityData;
   range: UserStatsAPIRange;
   lastRangePeriod: {
@@ -40,8 +39,8 @@ const BarLegend = ({
   </>
 );
 
-export default function LineDualTone(
-  props: React.PropsWithChildren<LineDualToneProps>
+export default function BarDualTone(
+  props: React.PropsWithChildren<BarDualToneProps>
 ) {
   const isMobile = useMediaQuery({ maxWidth: 767 });
 
@@ -122,7 +121,7 @@ export default function LineDualTone(
   let { showLegend } = props;
   showLegend = showLegend && !(isMobile && range === "month");
 
-  const { dateFormat, keys, itemWidth } = rangeMap[range || "week"];
+  const { dateFormat, keys, itemWidth } = rangeMap[range];
 
   const customTooltip = (elem: any) => {
     const { id, data: datum } = elem;
@@ -169,7 +168,7 @@ export default function LineDualTone(
             : undefined,
       }}
       axisLeft={{
-        format: ".2s",
+        format: ".2~s",
       }}
       minValue={0}
       padding={0.3}
