@@ -1,5 +1,8 @@
 import * as React from "react";
 import MediaQuery from "react-responsive";
+import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 import APIService from "../APIService";
 import Card from "../components/Card";
@@ -25,6 +28,8 @@ export type UserListeningActivityState = {
   loading: boolean;
   totalListens: number;
   avgListens: number;
+  errorMessage: string;
+  hasError: boolean;
 };
 
 export default class UserListeningActivity extends React.Component<
@@ -78,14 +83,31 @@ export default class UserListeningActivity extends React.Component<
       totalListens: 0,
       avgListens: 0,
       loading: false,
+      hasError: false,
+      errorMessage: "",
     };
+  }
+
+  componentDidMount() {
+    this.loadData();
   }
 
   componentDidUpdate(prevProps: UserListeningActivityProps) {
     const { range: prevRange } = prevProps;
     const { range: currRange } = this.props;
     if (prevRange !== currRange) {
+      if (["week", "month", "year", "all_time"].indexOf(currRange) < 0) {
+        this.setState({
+          loading: false,
+          hasError: true,
+          errorMessage: `Invalid range: ${currRange}`,
+        });
+        return;
+      }
       this.loadData();
+      this.setState({
+        hasError: false,
+      });
     }
   }
 
@@ -99,12 +121,10 @@ export default class UserListeningActivity extends React.Component<
       return data;
     } catch (error) {
       if (error.response && error.response.status === 204) {
-        const toThrow = new Error(
-          "Statistics for the user haven't been calculated yet."
-        );
-
-        this.setState(() => {
-          throw toThrow;
+        this.setState({
+          loading: false,
+          hasError: true,
+          errorMessage: "Statstics for the user has not been calculated",
         });
       } else {
         this.setState(() => {
@@ -128,7 +148,10 @@ export default class UserListeningActivity extends React.Component<
     if (range === "year") {
       return this.processYear(data);
     }
-    return this.processAllTime(data);
+    if (range === "all_time") {
+      return this.processAllTime(data);
+    }
+    return {} as UserListeningActivityData;
   };
 
   processWeek = (
@@ -354,9 +377,11 @@ export default class UserListeningActivity extends React.Component<
       lastRangePeriod,
       thisRangePeriod,
       loading,
+      hasError,
+      errorMessage,
     } = this.state;
     const { range } = this.props;
-    const { perRange } = this.rangeMap[range];
+    const { perRange } = this.rangeMap[range] || {};
 
     return (
       <div>
@@ -370,91 +395,114 @@ export default class UserListeningActivity extends React.Component<
               minHeight: "inherit",
             }}
           >
-            <div className="row">
-              <div className="col-xs-12" style={{ height: 350 }}>
-                <BarDualTone
-                  data={data}
-                  range={range}
-                  showLegend={range !== "all_time"}
-                  lastRangePeriod={lastRangePeriod}
-                  thisRangePeriod={thisRangePeriod}
-                />
+            {hasError && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minHeight: "inherit",
+                }}
+              >
+                <span style={{ fontSize: 24 }}>
+                  <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
+                  {errorMessage}
+                </span>
               </div>
-            </div>
-            <div className="row mt-5 mb-15">
-              <MediaQuery minWidth={768}>
-                <div className="col-md-6 text-center">
-                  <span
-                    style={{
-                      fontSize: 30,
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {totalListens}
-                  </span>
-                  <span>
-                    <span style={{ fontSize: 24 }}>&nbsp;Listens</span>
-                  </span>
+            )}
+            {!hasError && (
+              <>
+                <div className="row">
+                  <div className="col-xs-12" style={{ height: 350 }}>
+                    <BarDualTone
+                      data={data}
+                      range={range}
+                      showLegend={range !== "all_time"}
+                      lastRangePeriod={lastRangePeriod}
+                      thisRangePeriod={thisRangePeriod}
+                    />
+                  </div>
                 </div>
-                <div className="col-md-6 text-center">
-                  <span
-                    style={{
-                      fontSize: 30,
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {avgListens}
-                  </span>
-                  <span style={{ fontSize: 24 }}>
-                    &nbsp;Listens per {perRange}
-                  </span>
+                <div className="row mt-5 mb-15">
+                  <MediaQuery minWidth={768}>
+                    <div className="col-md-6 text-center">
+                      <span
+                        style={{
+                          fontSize: 30,
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {totalListens}
+                      </span>
+                      <span>
+                        <span style={{ fontSize: 24 }}>&nbsp;Listens</span>
+                      </span>
+                    </div>
+                    <div className="col-md-6 text-center">
+                      <span
+                        style={{
+                          fontSize: 30,
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {avgListens}
+                      </span>
+                      <span style={{ fontSize: 24 }}>
+                        &nbsp;Listens per {perRange}
+                      </span>
+                    </div>
+                  </MediaQuery>
+                  <MediaQuery maxWidth={767}>
+                    <div
+                      className="col-xs-12"
+                      style={{ display: "flex", justifyContent: "center" }}
+                    >
+                      <table style={{ width: "90%" }}>
+                        <tbody>
+                          <tr>
+                            <td
+                              style={{
+                                textAlign: "end",
+                                fontSize: 28,
+                                fontWeight: "bold",
+                              }}
+                            >
+                              {totalListens}
+                            </td>
+                            <td>
+                              <span
+                                style={{ fontSize: 22, textAlign: "start" }}
+                              >
+                                &nbsp;Listens
+                              </span>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td
+                              style={{
+                                width: "30%",
+                                textAlign: "end",
+                                fontSize: 28,
+                                fontWeight: "bold",
+                              }}
+                            >
+                              {avgListens}
+                            </td>
+                            <td>
+                              <span
+                                style={{ fontSize: 22, textAlign: "start" }}
+                              >
+                                &nbsp;Listens per day
+                              </span>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </MediaQuery>
                 </div>
-              </MediaQuery>
-              <MediaQuery maxWidth={767}>
-                <div
-                  className="col-xs-12"
-                  style={{ display: "flex", justifyContent: "center" }}
-                >
-                  <table style={{ width: "90%" }}>
-                    <tbody>
-                      <tr>
-                        <td
-                          style={{
-                            textAlign: "end",
-                            fontSize: 28,
-                            fontWeight: "bold",
-                          }}
-                        >
-                          {totalListens}
-                        </td>
-                        <td>
-                          <span style={{ fontSize: 22, textAlign: "start" }}>
-                            &nbsp;Listens
-                          </span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td
-                          style={{
-                            width: "30%",
-                            textAlign: "end",
-                            fontSize: 28,
-                            fontWeight: "bold",
-                          }}
-                        >
-                          {avgListens}
-                        </td>
-                        <td>
-                          <span style={{ fontSize: 22, textAlign: "start" }}>
-                            &nbsp;Listens per day
-                          </span>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </MediaQuery>
-            </div>
+              </>
+            )}
           </Loader>
         </Card>
       </div>
