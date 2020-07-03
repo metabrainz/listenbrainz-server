@@ -1,0 +1,70 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Pill renders correctly for inactive 1`] = `
+<Pill>
+  <button
+    style={
+      Object {
+        "background": "transparent",
+        "border": "2px solid #BBBBBB",
+        "borderRadius": "24px",
+        "boxSizing": "border-box",
+        "color": "#BBBBBB",
+        "fontWeight": "bold",
+        "margin": "0px 6px",
+        "outline": "none",
+        "padding": "2px 9px",
+      }
+    }
+    type="button"
+  />
+</Pill>
+`;
+
+exports[`Pill renders correctly for primary active 1`] = `
+<Pill
+  active={true}
+  type="primary"
+>
+  <button
+    style={
+      Object {
+        "background": "#EB743B",
+        "border": "2px solid #EB743B",
+        "borderRadius": "24px",
+        "boxSizing": "border-box",
+        "color": "white",
+        "fontWeight": "bold",
+        "margin": "0px 6px",
+        "outline": "none",
+        "padding": "2px 9px",
+      }
+    }
+    type="button"
+  />
+</Pill>
+`;
+
+exports[`Pill renders correctly for secondary active 1`] = `
+<Pill
+  active={true}
+  type="secondary"
+>
+  <button
+    style={
+      Object {
+        "background": "#353070",
+        "border": "2px solid #353070",
+        "borderRadius": "24px",
+        "boxSizing": "border-box",
+        "color": "white",
+        "fontWeight": "bold",
+        "margin": "0px 6px",
+        "outline": "none",
+        "padding": "2px 9px",
+      }
+    }
+    type="button"
+  />
+</Pill>
+`;
