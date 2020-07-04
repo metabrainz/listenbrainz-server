@@ -8,12 +8,12 @@ export type BarDualToneProps = {
   data: UserListeningActivityData;
   range: UserStatsAPIRange;
   lastRangePeriod: {
-    start?: Date;
-    end?: Date;
+    start?: number;
+    end?: number;
   };
   thisRangePeriod: {
-    start?: Date;
-    end?: Date;
+    start?: number;
+    end?: number;
   };
   showLegend?: boolean;
 };
@@ -93,24 +93,27 @@ export default function BarDualTone(
     },
   };
 
-  const generateLegendLabel = (start?: Date, end?: Date): string => {
+  const generateLegendLabel = (start?: number, end?: number): string => {
     const { range } = props;
     let legendDateFormat = {};
     if (range && range !== "all_time") {
-      ({ legendDateFormat } = rangeMap[range]);
+      ({ legendDateFormat } = rangeMap[range] || {});
     }
 
-    if (end) {
-      return `${start?.toLocaleString("en-us", {
+    const startDate = start ? new Date(start * 1000) : undefined;
+    const endDate = end ? new Date(end * 1000) : undefined;
+
+    if (endDate) {
+      return `${startDate?.toLocaleString("en-us", {
         ...legendDateFormat,
         timeZone: "UTC",
-      })} - ${end.toLocaleString("en-us", {
+      })} - ${endDate.toLocaleString("en-us", {
         ...legendDateFormat,
         timeZone: "UTC",
       })}`;
     }
     return (
-      start?.toLocaleString("en-us", {
+      startDate?.toLocaleString("en-us", {
         ...legendDateFormat,
         timeZone: "UTC",
       }) || ""
@@ -121,7 +124,7 @@ export default function BarDualTone(
   let { showLegend } = props;
   showLegend = showLegend && !(isMobile && range === "month");
 
-  const { dateFormat, keys, itemWidth } = rangeMap[range];
+  const { dateFormat, keys, itemWidth } = rangeMap[range] || {};
 
   const customTooltip = (elem: any) => {
     const { id, data: datum } = elem;
@@ -129,13 +132,15 @@ export default function BarDualTone(
     let dateString: string;
     let listenCount: number;
     if (id === "lastRangeCount") {
-      dateString = datum.lastRangeDate!.toLocaleString("en-us", {
+      const lastRangeDate = new Date(datum.lastRangeTs * 1000);
+      dateString = lastRangeDate.toLocaleString("en-us", {
         ...dateFormat,
         timeZone: "UTC",
       });
       listenCount = datum.lastRangeCount!;
     } else {
-      dateString = datum.thisRangeDate!.toLocaleString("en-us", {
+      const thisRangeDate = new Date(datum.thisRangeTs * 1000);
+      dateString = thisRangeDate.toLocaleString("en-us", {
         ...dateFormat,
         timeZone: "UTC",
       });

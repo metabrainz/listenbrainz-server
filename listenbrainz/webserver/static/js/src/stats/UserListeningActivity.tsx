@@ -18,12 +18,12 @@ export type UserListeningActivityProps = {
 export type UserListeningActivityState = {
   data: UserListeningActivityData;
   lastRangePeriod: {
-    start?: Date;
-    end?: Date;
+    start?: number;
+    end?: number;
   };
   thisRangePeriod: {
-    start?: Date;
-    end?: Date;
+    start?: number;
+    end?: number;
   };
   loading: boolean;
   totalListens: number;
@@ -86,10 +86,6 @@ export default class UserListeningActivity extends React.Component<
       hasError: false,
       errorMessage: "",
     };
-  }
-
-  componentDidMount() {
-    this.loadData();
   }
 
   componentDidUpdate(prevProps: UserListeningActivityProps) {
@@ -168,14 +164,13 @@ export default class UserListeningActivity extends React.Component<
       const thisWeekDay = thisWeek[index];
       let thisWeekData = {};
       if (thisWeekDay) {
-        const thisWeekDate = new Date(thisWeekDay.from_ts * 1000);
         const thisWeekCount = thisWeekDay.listen_count;
         totalListens += thisWeekCount;
         totalDays += 1;
 
         thisWeekData = {
           thisRangeCount: thisWeekCount,
-          thisRangeDate: thisWeekDate,
+          thisRangeTs: thisWeekDay.from_ts,
         };
       }
 
@@ -183,7 +178,7 @@ export default class UserListeningActivity extends React.Component<
       return {
         id: lastWeekDate.toLocaleString("en-us", dateFormat),
         lastRangeCount: lastWeekDay.listen_count,
-        lastRangeDate: lastWeekDate,
+        lastRangeTs: lastWeekDay.from_ts,
         ...thisWeekData,
       };
     });
@@ -191,12 +186,12 @@ export default class UserListeningActivity extends React.Component<
     this.setState({
       avgListens: Math.ceil(totalListens / totalDays),
       lastRangePeriod: {
-        start: new Date(lastWeek[0].from_ts * 1000),
-        end: new Date(lastWeek[6].from_ts * 1000),
+        start: lastWeek[0].from_ts,
+        end: lastWeek[6].from_ts,
       },
       thisRangePeriod: {
-        start: new Date(thisWeek[0].from_ts * 1000),
-        end: new Date(thisWeek[totalDays - 1].from_ts * 1000),
+        start: thisWeek[0].from_ts,
+        end: thisWeek[totalDays - 1].from_ts,
       },
       totalListens,
     });
@@ -234,13 +229,12 @@ export default class UserListeningActivity extends React.Component<
       let thisMonthData = {};
       if (thisMonthDay) {
         const thisMonthCount = thisMonthDay.listen_count;
-        const thisMonthDate = new Date(thisMonthDay.from_ts * 1000);
         totalListens += thisMonthCount;
         totalDays += 1;
 
         thisMonthData = {
           thisRangeCount: thisMonthCount,
-          thisRangeDate: thisMonthDate,
+          thisRangeTs: thisMonthDay.from_ts,
         };
       }
 
@@ -249,7 +243,7 @@ export default class UserListeningActivity extends React.Component<
       return {
         id: lastMonthDate.toLocaleString("en-us", dateFormat),
         lastRangeCount: lastMonthCount,
-        lastRangeDate: lastMonthDate,
+        lastRangeTs: lastMonthDay.from_ts,
         ...thisMonthData,
       };
     });
@@ -257,10 +251,10 @@ export default class UserListeningActivity extends React.Component<
     this.setState({
       avgListens: Math.ceil(totalListens / totalDays),
       lastRangePeriod: {
-        start: new Date(lastMonth[0].from_ts * 1000),
+        start: lastMonth[0].from_ts,
       },
       thisRangePeriod: {
-        start: new Date(thisMonth[0].from_ts * 1000),
+        start: thisMonth[0].from_ts,
       },
       totalListens,
     });
@@ -282,14 +276,13 @@ export default class UserListeningActivity extends React.Component<
       const thisYearMonth = thisYear[index];
       let thisYearData = {};
       if (thisYearMonth) {
-        const thisYearDate = new Date(thisYearMonth.from_ts * 1000);
         const thisYearCount = thisYearMonth.listen_count;
         totalListens += thisYearCount;
         totalMonths += 1;
 
         thisYearData = {
           thisRangeCount: thisYearCount,
-          thisRangeDate: thisYearDate,
+          thisRangeTs: thisYearMonth.from_ts,
         };
       }
 
@@ -297,7 +290,7 @@ export default class UserListeningActivity extends React.Component<
       return {
         id: lastYearDate.toLocaleString("en-us", dateFormat),
         lastRangeCount: lastYearMonth.listen_count,
-        lastRangeDate: lastYearDate,
+        lastRangeTs: lastYearMonth.from_ts,
         ...thisYearData,
       };
     });
@@ -305,10 +298,10 @@ export default class UserListeningActivity extends React.Component<
     this.setState({
       avgListens: Math.ceil(totalListens / totalMonths),
       lastRangePeriod: {
-        start: new Date(lastYear[0].from_ts * 1000),
+        start: lastYear[0].from_ts,
       },
       thisRangePeriod: {
-        start: new Date(thisYear[0].from_ts * 1000),
+        start: thisYear[0].from_ts,
       },
       totalListens,
     });
@@ -336,7 +329,7 @@ export default class UserListeningActivity extends React.Component<
         allTimeData.push({
           id: date.toLocaleString("en-us", dateFormat),
           thisRangeCount: yearData.listen_count,
-          thisRangeDate: date,
+          thisRangeTs: yearData.from_ts,
         });
         totalListens += yearData.listen_count;
       } else {
@@ -347,7 +340,7 @@ export default class UserListeningActivity extends React.Component<
             timeZone: "UTC",
           }),
           thisRangeCount: 0,
-          thisRangeDate: date,
+          thisRangeTs: date.getTime() / 1000,
         });
       }
     }

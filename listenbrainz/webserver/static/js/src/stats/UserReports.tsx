@@ -19,7 +19,7 @@ class UserReports extends React.Component<UserReportsProps, UserReportsState> {
     super(props);
 
     this.state = {
-      range: "week" as UserStatsAPIRange,
+      range: "" as UserStatsAPIRange,
     };
   }
 

@@ -238,8 +238,8 @@ declare type UserListeningActivityDatum = {
   id: string;
   lastRangeCount?: number;
   thisRangeCount?: number;
-  lastRangeDate?: Date;
-  thisRangeDate?: Date;
+  lastRangeTs?: number;
+  thisRangeTs?: number;
 };
 
 declare type UserListeningActivityData = Array<UserListeningActivityDatum>;
