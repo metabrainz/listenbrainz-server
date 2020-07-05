@@ -282,7 +282,7 @@ def get_recording(user_name):
 
     .. note::
         - This endpoint is currently in beta
-        - We only calculate the top 1000 recordings
+        - We only calculate the top 1000 all_time recordings
         - ``artist_mbids``, ``artist_msid``, ``release_name``, ``release_mbid``, ``release_msid``,
           ``recording_mbid`` and ``recording_msid`` are optional fields and may not be present in all the responses
 
