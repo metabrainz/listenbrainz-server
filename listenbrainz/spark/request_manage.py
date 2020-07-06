@@ -165,12 +165,15 @@ def request_candidate_sets(days, top, similar):
 @cli.command(name='request_recommendations')
 @click.option("--top", type=int, default=200, help="Generate given number of top artist recommendations")
 @click.option("--similar", type=int, default=200, help="Generate given number of similar artist recommendations")
-def request_recommendations(top, similar):
+@click.option("--user-name", 'users', callback=parse_list, default=[], multiple=True,
+              help="Generate recommendations for given users. Generate recommendations for all users by default.")
+def request_recommendations(top, similar, users):
     """ Send the cluster a request to generate recommendations.
     """
     params = {
         'recommendation_top_artist_limit': top,
         'recommendation_similar_artist_limit': similar,
+        'users': users
     }
     send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.recommend', params=params))
 
