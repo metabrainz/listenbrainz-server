@@ -1,5 +1,4 @@
 import APIService from "./APIService";
-import APIError from "./APIError";
 
 const apiService = new APIService("foobar");
 
