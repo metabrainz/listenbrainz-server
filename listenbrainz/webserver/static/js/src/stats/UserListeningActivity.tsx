@@ -100,9 +100,6 @@ export default class UserListeningActivity extends React.Component<
         });
       } else {
         this.loadData();
-        this.setState({
-          hasError: false,
-        });
       }
     }
   }
@@ -354,7 +351,10 @@ export default class UserListeningActivity extends React.Component<
   };
 
   loadData = async (): Promise<void> => {
-    this.setState({ loading: true });
+    this.setState({
+      hasError: false,
+      loading: true,
+    });
     const data = await this.getData();
     this.setState({
       data: this.processData(data),

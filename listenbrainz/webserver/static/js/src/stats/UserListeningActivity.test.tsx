@@ -4,6 +4,7 @@ import { mount, shallow } from "enzyme";
 import UserListeningActivity, {
   UserListeningActivityProps,
 } from "./UserListeningActivity";
+import APIError from "../APIError";
 import * as userListeningActivityResponseWeek from "../__mocks__/userListeningActivityWeek.json";
 import * as userListeningActivityResponseMonth from "../__mocks__/userListeningActivityMonth.json";
 import * as userListeningActivityResponseYear from "../__mocks__/userListeningActivityYear.json";
@@ -88,5 +89,180 @@ describe("UserListeningActivity", () => {
     wrapper.update();
 
     expect(wrapper).toMatchSnapshot();
+  });
+
+  it("renders corectly when range is invalid", () => {
+    const wrapper = mount<UserListeningActivity>(
+      <UserListeningActivity {...props} />
+    );
+
+    wrapper.setProps({ range: "invalid_range" as UserStatsAPIRange });
+    wrapper.update();
+
+    expect(wrapper).toMatchSnapshot();
+  });
+});
+
+describe("componentDidUpdate", () => {
+  it("it sets correct state if range is incorrect", () => {
+    const wrapper = shallow<UserListeningActivity>(
+      <UserListeningActivity {...props} />
+    );
+
+    wrapper.setProps({ range: "invalid_range" as UserStatsAPIRange });
+    wrapper.update();
+
+    expect(wrapper.state()).toMatchObject({
+      loading: false,
+      hasError: true,
+      errorMessage: "Invalid range: invalid_range",
+    });
+  });
+
+  it("calls loadData once if range is valid", () => {
+    const wrapper = shallow<UserListeningActivity>(
+      <UserListeningActivity {...props} />
+    );
+    const instance = wrapper.instance();
+
+    instance.loadData = jest.fn();
+    wrapper.setProps({ range: "month" });
+    wrapper.update();
+
+    expect(instance.loadData).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("getData", () => {
+  it("calls getUserListeningActivity with correct params", async () => {
+    const wrapper = shallow<UserListeningActivity>(
+      <UserListeningActivity {...props} />
+    );
+    const instance = wrapper.instance();
+
+    const spy = jest.spyOn(instance.APIService, "getUserListeningActivity");
+    spy.mockImplementation(() =>
+      Promise.resolve(userListeningActivityResponseWeek)
+    );
+    await instance.getData();
+
+    expect(spy).toHaveBeenCalledWith("foobar", "week");
+  });
+
+  it("sets state correctly if data is not calculated", async () => {
+    const wrapper = shallow<UserListeningActivity>(
+      <UserListeningActivity {...props} />
+    );
+    const instance = wrapper.instance();
+
+    const spy = jest.spyOn(instance.APIService, "getUserListeningActivity");
+    const noContentError = new APIError("NO CONTENT");
+    noContentError.response = {
+      status: 204,
+    } as Response;
+    spy.mockImplementation(() => Promise.reject(noContentError));
+    await instance.getData();
+
+    expect(wrapper.state()).toMatchObject({
+      loading: false,
+      hasError: true,
+      errorMessage: "Statistics for the user have not been calculated",
+    });
+  });
+
+  it("throws error", async () => {
+    const wrapper = shallow<UserListeningActivity>(
+      <UserListeningActivity {...props} />
+    );
+    const instance = wrapper.instance();
+
+    const spy = jest.spyOn(instance.APIService, "getUserListeningActivity");
+    const notFoundError = new APIError("NOT FOUND");
+    notFoundError.response = {
+      status: 404,
+    } as Response;
+    spy.mockImplementation(() => Promise.reject(notFoundError));
+
+    await expect(instance.getData()).rejects.toThrow("NOT FOUND");
+  });
+});
+
+describe("processData", () => {
+  it("processes data correctly for week", () => {
+    const wrapper = shallow<UserListeningActivity>(
+      <UserListeningActivity {...props} />
+    );
+    const instance = wrapper.instance();
+
+    const result = instance.processData(userListeningActivityResponseWeek);
+
+    expect(result).toEqual(userListeningActivityProcessedDataWeek);
+  });
+
+  it("processes data correctly for month", () => {
+    const wrapper = shallow<UserListeningActivity>(
+      <UserListeningActivity {...{ ...props, range: "month" }} />
+    );
+    const instance = wrapper.instance();
+
+    const result = instance.processData(userListeningActivityResponseMonth);
+
+    expect(result).toEqual(userListeningActivityProcessedDataMonth);
+  });
+
+  it("processes data correctly for year", () => {
+    const wrapper = shallow<UserListeningActivity>(
+      <UserListeningActivity {...{ ...props, range: "year" }} />
+    );
+    const instance = wrapper.instance();
+
+    const result = instance.processData(userListeningActivityResponseYear);
+
+    expect(result).toEqual(userListeningActivityProcessedDataYear);
+  });
+
+  it("processes data correctly for all_time", () => {
+    const wrapper = shallow<UserListeningActivity>(
+      <UserListeningActivity {...{ ...props, range: "all_time" }} />
+    );
+    const instance = wrapper.instance();
+
+    const result = instance.processData(userListeningActivityResponseAllTime);
+
+    expect(result).toEqual(userListeningActivityProcessedDataAllTime);
+  });
+});
+
+describe("loadData", () => {
+  it("calls getData once", async () => {
+    const wrapper = shallow<UserListeningActivity>(
+      <UserListeningActivity {...props} />
+    );
+    const instance = wrapper.instance();
+
+    instance.getData = jest.fn();
+    instance.processData = jest.fn();
+    await instance.loadData();
+
+    expect(instance.getData).toHaveBeenCalledTimes(1);
+  });
+
+  it("set state correctly", async () => {
+    const wrapper = shallow<UserListeningActivity>(
+      <UserListeningActivity {...props} />
+    );
+    const instance = wrapper.instance();
+
+    instance.getData = jest
+      .fn()
+      .mockImplementationOnce(() =>
+        Promise.resolve(userListeningActivityResponseWeek)
+      );
+    await instance.loadData();
+
+    expect(wrapper.state()).toMatchObject({
+      data: userListeningActivityProcessedDataWeek,
+      loading: false,
+    });
   });
 });
