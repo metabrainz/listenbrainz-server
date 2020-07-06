@@ -76,7 +76,7 @@ class CandidateSetsTestClass(SparkTestCase):
         self.assertEqual(top_artist_id[0], 1)
         self.assertEqual(top_artist_id[1], 2)
 
-    def test_get_top_similar_artists(self):
+    def test_get_similar_artists(self):
         df = utils.create_dataframe(
             Row(
                 score=1.0,
@@ -109,7 +109,7 @@ class CandidateSetsTestClass(SparkTestCase):
         )
 
         similar_artist_limit = 10
-        similar_artist_df = candidate_sets.get_top_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
+        similar_artist_df = candidate_sets.get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
         self.assertEqual(similar_artist_df.count(), 2)
 
         cols = [
@@ -122,7 +122,7 @@ class CandidateSetsTestClass(SparkTestCase):
         self.assertEqual(similar_artist_id[0], 2)
         self.assertEqual(similar_artist_id[1], 3)
 
-    def test_get_top_artists_candidate_set(self):
+    def test_get_top_artist_candidate_set(self):
         recordings_df = self.get_recordings_df()
         users = self.get_users_df()
 
@@ -144,12 +144,12 @@ class CandidateSetsTestClass(SparkTestCase):
             schema=None
         ))
 
-        recording_ids = candidate_sets.get_top_artists_candidate_set(top_artist_df, recordings_df, users)
+        recording_ids = candidate_sets.get_top_artist_candidate_set(top_artist_df, recordings_df, users)
         cols = ['recording_id', 'user_id', 'user_name']
         self.assertListEqual(sorted(cols), sorted(recording_ids.columns))
         self.assertEqual(recording_ids.count(), 2)
 
-    def test_get_top_similar_artists_candidate_set(self):
+    def test_get_similar_artist_candidate_set(self):
         df = utils.create_dataframe(
             Row(
                 top_artist_credit_id=1,
@@ -177,7 +177,7 @@ class CandidateSetsTestClass(SparkTestCase):
         recordings_df = self.get_recordings_df()
         users = self.get_users_df()
 
-        recording_ids = candidate_sets.get_top_similar_artists_candidate_set(similar_artist_df, recordings_df, users)
+        recording_ids = candidate_sets.get_similar_artist_candidate_set(similar_artist_df, recordings_df, users)
         cols = ['recording_id', 'user_id', 'user_name']
         self.assertListEqual(sorted(cols), sorted(recording_ids.columns))
         self.assertEqual(recording_ids.count(), 1)
