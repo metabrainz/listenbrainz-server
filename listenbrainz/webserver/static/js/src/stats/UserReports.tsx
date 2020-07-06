@@ -14,7 +14,10 @@ export type UserReportsState = {
   range: UserStatsAPIRange;
 };
 
-class UserReports extends React.Component<UserReportsProps, UserReportsState> {
+export default class UserReports extends React.Component<
+  UserReportsProps,
+  UserReportsState
+> {
   constructor(props: UserReportsProps) {
     super(props);
 
