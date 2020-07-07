@@ -92,7 +92,55 @@ export default class RecentListens extends React.Component<
     if (mode === "follow" && !listens.length) {
       this.getRecentListensForFollowList();
     }
+    if (mode === "listens") {
+      // Listen to browser previous/next events and load page accordingly
+      window.addEventListener("popstate", this.handleURLChange);
+    }
   }
+
+  componentWillUnmount() {
+    window.removeEventListener("popstate", this.handleURLChange);
+  }
+
+  handleURLChange = async (): Promise<void> => {
+    const url = new URL(window.location.href);
+    let maxTs;
+    let minTs;
+    if (url.searchParams.get("max_ts")) {
+      maxTs = Number(url.searchParams.get("max_ts"));
+    } else if (url.searchParams.get("min_ts")) {
+      minTs = Number(url.searchParams.get("min_ts"));
+    }
+
+    const { user } = this.props;
+    const newListens = await this.APIService.getListensForUser(
+      user.name,
+      minTs,
+      maxTs
+    );
+    if (!newListens.length) {
+      // No more listens to fetch
+      if (minTs !== undefined) {
+        this.setState({
+          previousListenTs: undefined,
+        });
+      } else {
+        this.setState({
+          nextListenTs: undefined,
+        });
+      }
+      return;
+    }
+    if (minTs !== undefined) {
+      // When calling the API with minTs, listens are returned sorted by ascending listened_at
+      newListens.reverse();
+    }
+    this.setState({
+      listens: newListens,
+      nextListenTs: newListens[newListens.length - 1].listened_at,
+      previousListenTs: newListens[0].listened_at,
+    });
+  };
 
   connectWebsockets = (): void => {
     this.createWebsocketsConnection();
@@ -279,6 +327,54 @@ export default class RecentListens extends React.Component<
     window.location.href = url;
   };
 
+  handleClickNext = async () => {
+    const { user } = this.props;
+    const { nextListenTs } = this.state;
+    const newListens = await this.APIService.getListensForUser(
+      user.name,
+      undefined,
+      nextListenTs
+    );
+    if (!newListens.length) {
+      // No more listens to fetch
+      this.setState({
+        nextListenTs: undefined,
+      });
+      return;
+    }
+    this.setState({
+      listens: newListens,
+      nextListenTs: newListens[newListens.length - 1].listened_at,
+      previousListenTs: newListens[0].listened_at,
+    });
+    window.history.pushState(null, "", `?max_ts=${nextListenTs}`);
+  };
+
+  handleClickPrevious = async () => {
+    const { user } = this.props;
+    const { previousListenTs } = this.state;
+    const newListens = await this.APIService.getListensForUser(
+      user.name,
+      previousListenTs,
+      undefined
+    );
+    if (!newListens.length) {
+      // No more listens to fetch
+      this.setState({
+        previousListenTs: undefined,
+      });
+      return;
+    }
+    // When calling the API with minTs, listens are returned sorted by ascending listened_at
+    newListens.reverse();
+    this.setState({
+      listens: newListens,
+      nextListenTs: newListens[newListens.length - 1].listened_at,
+      previousListenTs: newListens[0].listened_at,
+    });
+    window.history.pushState(null, "", `?min_ts=${previousListenTs}`);
+  };
+
   render() {
     const {
       alerts,
@@ -453,7 +549,12 @@ export default class RecentListens extends React.Component<
                           : ""
                       }`}
                     >
-                      <a href={`${profileUrl}?min_ts=${previousListenTs}`}>
+                      <a
+                        role="button"
+                        onClick={this.handleClickPrevious}
+                        onKeyPress={this.handleClickPrevious}
+                        tabIndex={0}
+                      >
                         &larr; Previous
                       </a>
                     </li>
@@ -465,7 +566,12 @@ export default class RecentListens extends React.Component<
                           : ""
                       }`}
                     >
-                      <a href="#" onClick={this.handleClickNext}>
+                      <a
+                        role="button"
+                        onClick={this.handleClickNext}
+                        onKeyPress={this.handleClickNext}
+                        tabIndex={0}
+                      >
                         Next &rarr;
                       </a>
                     </li>
