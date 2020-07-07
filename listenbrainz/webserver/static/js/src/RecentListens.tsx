@@ -327,7 +327,7 @@ export default class RecentListens extends React.Component<
     window.location.href = url;
   };
 
-  handleClickNext = async () => {
+  handleClickOlder = async () => {
     const { user } = this.props;
     const { nextListenTs } = this.state;
     const newListens = await this.APIService.getListensForUser(
@@ -350,7 +350,7 @@ export default class RecentListens extends React.Component<
     window.history.pushState(null, "", `?max_ts=${nextListenTs}`);
   };
 
-  handleClickPrevious = async () => {
+  handleClickNewer = async () => {
     const { user } = this.props;
     const { previousListenTs } = this.state;
     const newListens = await this.APIService.getListensForUser(
@@ -375,15 +375,42 @@ export default class RecentListens extends React.Component<
     window.history.pushState(null, "", `?min_ts=${previousListenTs}`);
   };
 
+  handleClickNewest = async () => {
+    const { user } = this.props;
+    const newListens = await this.APIService.getListensForUser(user.name);
+    this.setState({
+      listens: newListens,
+      nextListenTs: newListens[newListens.length - 1].listened_at,
+      previousListenTs: undefined,
+    });
+    window.history.pushState(null, "", "");
+  };
+
+  handleClickOldest = async () => {
+    const { user, oldestListenTs } = this.props;
+    const newListens = await this.APIService.getListensForUser(
+      user.name,
+      oldestListenTs
+    );
+    // When calling the API with minTs, listens are returned sorted by ascending listened_at
+    newListens.reverse();
+    this.setState({
+      listens: newListens,
+      nextListenTs: undefined,
+      previousListenTs: newListens[0].listened_at,
+    });
+    window.history.pushState(null, "", `?min_ts=${oldestListenTs}`);
+  };
+
   handleKeyDown = (event: React.KeyboardEvent) => {
     const { mode } = this.state;
     if (mode === "listens") {
       switch (event.key) {
         case "ArrowLeft":
-          this.handleClickPrevious();
+          this.handleClickNewer();
           break;
         case "ArrowRight":
-          this.handleClickNext();
+          this.handleClickOlder();
           break;
         default:
           break;
@@ -528,9 +555,9 @@ export default class RecentListens extends React.Component<
                                     ).toISOString()
                                   }
                                 >
-                                  {listen.listened_at_iso
-                                    ? timeago.ago(listen.listened_at_iso)
-                                    : timeago.ago(listen.listened_at * 1000)}
+                                  {new Date(
+                                    listen.listened_at * 1000
+                                  ).toISOString()}
                                 </abbr>
                               </td>
                             )}
@@ -561,39 +588,74 @@ export default class RecentListens extends React.Component<
                   <ul className="pager">
                     <li
                       className={`previous ${
-                        listens[0]?.listened_at >= latestListenTs
+                        !previousListenTs || previousListenTs >= latestListenTs
                           ? "hidden"
                           : ""
                       }`}
                     >
                       <a
                         role="button"
-                        onClick={this.handleClickPrevious}
+                        onClick={this.handleClickNewest}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") this.handleClickPrevious();
+                          if (e.key === "Enter") this.handleClickNewest();
                         }}
                         tabIndex={0}
                       >
-                        &larr; Previous
+                        &#x21E4; Newest
+                      </a>
+                    </li>
+                    <li
+                      className={`previous ${
+                        !previousListenTs || previousListenTs >= latestListenTs
+                          ? "hidden"
+                          : ""
+                      }`}
+                    >
+                      <a
+                        role="button"
+                        onClick={this.handleClickNewer}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") this.handleClickNewer();
+                        }}
+                        tabIndex={0}
+                      >
+                        &larr; Newer
                       </a>
                     </li>
                     <li
                       className={`next ${
-                        listens[listens.length - 1]?.listened_at <=
-                        oldestListenTs
+                        !nextListenTs || nextListenTs <= oldestListenTs
                           ? "hidden"
                           : ""
                       }`}
                     >
                       <a
                         role="button"
-                        onClick={this.handleClickNext}
+                        onClick={this.handleClickOldest}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") this.handleClickNext();
+                          if (e.key === "Enter") this.handleClickOldest();
                         }}
                         tabIndex={0}
                       >
-                        Next &rarr;
+                        Oldest &#x21E5;
+                      </a>
+                    </li>
+                    <li
+                      className={`next ${
+                        !nextListenTs || nextListenTs <= oldestListenTs
+                          ? "hidden"
+                          : ""
+                      }`}
+                    >
+                      <a
+                        role="button"
+                        onClick={this.handleClickOlder}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") this.handleClickOlder();
+                        }}
+                        tabIndex={0}
+                      >
+                        Older &rarr;
                       </a>
                     </li>
                   </ul>
