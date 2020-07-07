@@ -375,6 +375,22 @@ export default class RecentListens extends React.Component<
     window.history.pushState(null, "", `?min_ts=${previousListenTs}`);
   };
 
+  handleKeyDown = (event: React.KeyboardEvent) => {
+    const { mode } = this.state;
+    if (mode === "listens") {
+      switch (event.key) {
+        case "ArrowLeft":
+          this.handleClickPrevious();
+          break;
+        case "ArrowRight":
+          this.handleClickNext();
+          break;
+        default:
+          break;
+      }
+    }
+  };
+
   render() {
     const {
       alerts,
@@ -401,7 +417,8 @@ export default class RecentListens extends React.Component<
     } = this.props;
 
     return (
-      <div>
+      // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex
+      <div onKeyDown={this.handleKeyDown} role="main" tabIndex={0}>
         <AlertList
           position="bottom-right"
           alerts={alerts}
@@ -552,7 +569,9 @@ export default class RecentListens extends React.Component<
                       <a
                         role="button"
                         onClick={this.handleClickPrevious}
-                        onKeyPress={this.handleClickPrevious}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") this.handleClickPrevious();
+                        }}
                         tabIndex={0}
                       >
                         &larr; Previous
@@ -569,7 +588,9 @@ export default class RecentListens extends React.Component<
                       <a
                         role="button"
                         onClick={this.handleClickNext}
-                        onKeyPress={this.handleClickNext}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") this.handleClickNext();
+                        }}
                         tabIndex={0}
                       >
                         Next &rarr;
