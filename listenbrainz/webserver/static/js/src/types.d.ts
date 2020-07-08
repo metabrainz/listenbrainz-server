@@ -201,6 +201,11 @@ declare type UserRecordingsResponse = {
   };
 };
 
+declare type UserEntityResponse =
+  | UserArtistsResponse
+  | UserReleasesResponse
+  | UserRecordingsResponse;
+
 declare type UserStatsAPIRange = "all_time" | "year" | "month" | "week";
 
 declare type UserEntityDatum = {

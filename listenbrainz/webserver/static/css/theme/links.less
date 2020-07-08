@@ -45,4 +45,24 @@ a {
   &.alert-link:visited {
     color: inherit;
   }
+
+  &.underlined-link {
+    color: inherit;
+    font-weight: inherit;
+
+    &:link {
+        text-decoration: none;
+    }
+
+    &:visited {
+        text-decoration: none;
+    }
+
+    &:hover {
+        text-decoration: underline;
+    }
+
+    &:active {
+        text-decoration: underline;
+    }}
 }

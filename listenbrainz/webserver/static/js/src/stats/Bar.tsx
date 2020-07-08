@@ -27,6 +27,7 @@ type Tick = {
 };
 
 export default class Bar extends React.Component<BarProps, BarState> {
+  // TODO: Use function from utils.tsx
   getEntityLink = (data: UserEntityDatum, entity: string): JSX.Element => {
     if (data.entityMBID) {
       return (
