@@ -73,9 +73,8 @@ export default class RecentListens extends React.Component<
       saveUrl: props.saveUrl || "",
       listName: props.followListName || "",
       listId: props.followListId || undefined,
-      nextListenTs: props.listens && props.listens[0].listened_at,
-      previousListenTs:
-        props.listens && props.listens[props.listens.length - 1].listened_at,
+      nextListenTs: props.listens?.[0]?.listened_at,
+      previousListenTs: props.listens?.[props.listens.length - 1]?.listened_at,
       direction: "down",
     };
 
@@ -333,6 +332,10 @@ export default class RecentListens extends React.Component<
   handleClickOlder = async () => {
     const { user } = this.props;
     const { nextListenTs } = this.state;
+    // No more listens to fetch
+    if (!nextListenTs) {
+      return;
+    }
     const newListens = await this.APIService.getListensForUser(
       user.name,
       undefined,
@@ -356,6 +359,10 @@ export default class RecentListens extends React.Component<
   handleClickNewer = async () => {
     const { user } = this.props;
     const { previousListenTs } = this.state;
+    // No more listens to fetch
+    if (!previousListenTs) {
+      return;
+    }
     const newListens = await this.APIService.getListensForUser(
       user.name,
       previousListenTs,
@@ -585,13 +592,7 @@ export default class RecentListens extends React.Component<
 
                 {mode === "listens" && searchLargerTimeRange === 0 && (
                   <ul className="pager">
-                    <li
-                      className={`previous ${
-                        !previousListenTs || previousListenTs >= latestListenTs
-                          ? "hidden"
-                          : ""
-                      }`}
-                    >
+                    <li className="previous">
                       <a
                         role="button"
                         onClick={this.handleClickNewest}
@@ -621,13 +622,7 @@ export default class RecentListens extends React.Component<
                         &larr; Newer
                       </a>
                     </li>
-                    <li
-                      className={`next ${
-                        !nextListenTs || nextListenTs <= oldestListenTs
-                          ? "hidden"
-                          : ""
-                      }`}
-                    >
+                    <li className="next">
                       <a
                         role="button"
                         onClick={this.handleClickOldest}
@@ -641,7 +636,7 @@ export default class RecentListens extends React.Component<
                     </li>
                     <li
                       className={`next ${
-                        !nextListenTs || nextListenTs <= oldestListenTs
+                        !nextListenTs || nextListenTs < oldestListenTs
                           ? "hidden"
                           : ""
                       }`}
