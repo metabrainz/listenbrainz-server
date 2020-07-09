@@ -108,7 +108,8 @@ export default class RecentListens extends React.Component<
     let minTs;
     if (url.searchParams.get("max_ts")) {
       maxTs = Number(url.searchParams.get("max_ts"));
-    } else if (url.searchParams.get("min_ts")) {
+    }
+    if (url.searchParams.get("min_ts")) {
       minTs = Number(url.searchParams.get("min_ts"));
     }
 
