@@ -1,6 +1,4 @@
 import sys
-import os
-import json
 import logging
 from time import time
 from datetime import datetime
@@ -21,18 +19,17 @@ from listenbrainz_spark.recommendations.train_models import get_model_path
 from flask import current_app
 import pyspark.sql.functions as func
 from pyspark.sql.functions import col
-from pyspark.sql.utils import AnalysisException
 from pyspark.mllib.recommendation import MatrixFactorizationModel
 
 
 class RecommendationParams:
 
-    def __init__(self, recordings, model, top_artist_candidate_set, similar_artist_candidate_set,
+    def __init__(self, recordings_df, model, top_artist_candidate_set_df, similar_artist_candidate_set_df,
                  recommendation_top_artist_limit, recommendation_similar_artist_limit):
-        self.recordings = recordings
+        self.recordings_df = recordings_df
         self.model = model
-        self.top_artist_candidate_set = top_artist_candidate_set
-        self.similar_artist_candidate_set = similar_artist_candidate_set
+        self.top_artist_candidate_set_df = top_artist_candidate_set_df
+        self.similar_artist_candidate_set_df = similar_artist_candidate_set_df
         self.recommendation_top_artist_limit = recommendation_top_artist_limit
         self.recommendation_similar_artist_limit = recommendation_similar_artist_limit
 
@@ -83,9 +80,9 @@ def get_recording_mbids(params, recommended_recording_ids):
         Returns:
             dataframe of recording mbids.
     """
-    recording_mbids = params.recordings.select('mb_recording_mbid')\
-                                       .where(params.recordings.recording_id.isin(recommended_recording_ids))
-    return recording_mbids
+    recording_mbids_df = params.recordings_df.select('mb_recording_mbid')\
+                                             .where(params.recordings_df.recording_id.isin(recommended_recording_ids))
+    return recording_mbids_df
 
 
 def generate_recommendations(candidate_set, params, limit):
@@ -119,30 +116,30 @@ def get_recommended_mbids(candidate_set, params, limit):
     if len(recommended_recording_ids) == 0:
         raise RecommendationsNotGeneratedException('')
 
-    recording_mbids = get_recording_mbids(params, recommended_recording_ids)
+    recording_mbids_df = get_recording_mbids(params, recommended_recording_ids)
 
-    recommended_recording_mbids = [row.mb_recording_mbid for row in recording_mbids.collect()]
+    recommended_recording_mbids = [row.mb_recording_mbid for row in recording_mbids_df.collect()]
     return recommended_recording_mbids
 
 
-def get_candidate_set_rdd_for_user(candidate_set, user_id):
+def get_candidate_set_rdd_for_user(candidate_set_df, user_id):
     """ Get candidate set RDD for a given user.
 
         Args:
-            candidate_set: A dataframe of user_id and recording_id for all users.
+            candidate_set_df: A dataframe of user_id and recording_id for all users.
             user_id (int): user id of the user.
 
         Returns:
             candidate_set_rdd: An RDD of user_id and recording_id for a given user.
     """
-    candidate_set = candidate_set.select('user_id', 'recording_id') \
-                                 .where(col('user_id') == user_id)
+    candidate_set_user_df = candidate_set_df.select('user_id', 'recording_id') \
+                                            .where(col('user_id') == user_id)
     try:
-        candidate_set.take(1)[0]
+        candidate_set_user_df.take(1)[0]
     except IndexError:
         raise IndexError()
 
-    candidate_set_rdd = candidate_set.rdd.map(lambda r: (r['user_id'], r['recording_id']))
+    candidate_set_rdd = candidate_set_user_df.rdd.map(lambda r: (r['user_id'], r['recording_id']))
 
     return candidate_set_rdd
 
@@ -162,7 +159,7 @@ def get_recommendations_for_user(user_id, user_name, params):
     """
     user_recommendations_top_artist = list()
     try:
-        top_artist_candidate_set_user = get_candidate_set_rdd_for_user(params.top_artist_candidate_set, user_id)
+        top_artist_candidate_set_user = get_candidate_set_rdd_for_user(params.top_artist_candidate_set_df, user_id)
         user_recommendations_top_artist = get_recommended_mbids(top_artist_candidate_set_user, params,
                                                                 params.recommendation_top_artist_limit)
     except IndexError:
@@ -172,7 +169,7 @@ def get_recommendations_for_user(user_id, user_name, params):
 
     user_recommendations_similar_artist = list()
     try:
-        similar_artist_candidate_set_user = get_candidate_set_rdd_for_user(params.similar_artist_candidate_set, user_id)
+        similar_artist_candidate_set_user = get_candidate_set_rdd_for_user(params.similar_artist_candidate_set_df, user_id)
         user_recommendations_similar_artist = get_recommended_mbids(similar_artist_candidate_set_user, params,
                                                                     params.recommendation_similar_artist_limit)
     except IndexError:
@@ -191,15 +188,15 @@ def get_user_name_and_user_id(params, users):
             users = list of users names to generate recommendations.
 
         Returns:
-            users: dataframe of user id and user names.
+            users_df: dataframe of user id and user names.
     """
     if len(users) == 0:
-        users_df = params.top_artist_candidate_set.select('user_id', 'user_name').distinct()
+        users_df = params.top_artist_candidate_set_df.select('user_id', 'user_name').distinct()
 
     else:
-        users_df = params.top_artist_candidate_set.select('user_id', 'user_name') \
-                                                  .where(params.top_artist_candidate_set.user_name.isin(users)) \
-                                                  .distinct()
+        users_df = params.top_artist_candidate_set_df.select('user_id', 'user_name') \
+                                                     .where(params.top_artist_candidate_set_df.user_name.isin(users)) \
+                                                     .distinct()
     return users_df
 
 
@@ -271,14 +268,6 @@ def get_recommendations_for_all(params, users):
 
 def main(recommendation_top_artist_limit=None, recommendation_similar_artist_limit=None, users=None):
 
-    if recommendation_top_artist_limit is None:
-        current_app.logger.critical('Please provide top artist recommendations limit.')
-        sys.exit(-1)
-
-    if recommendation_similar_artist_limit is None:
-        current_app.logger.critical('Please provide similar artist recommendations limit.')
-        sys.exit(-1)
-
     try:
         listenbrainz_spark.init_spark_session('Recommendations')
     except SparkSessionNotInitializedException as err:
@@ -286,9 +275,9 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
         sys.exit(-1)
 
     try:
-        recordings = utils.read_files_from_HDFS(path.RECORDINGS_DATAFRAME_PATH)
-        top_artist_candidate_set = utils.read_files_from_HDFS(path.TOP_ARTIST_CANDIDATE_SET)
-        similar_artist_candidate_set = utils.read_files_from_HDFS(path.SIMILAR_ARTIST_CANDIDATE_SET)
+        recordings_df = utils.read_files_from_HDFS(path.RECORDINGS_DATAFRAME_PATH)
+        top_artist_candidate_set_df = utils.read_files_from_HDFS(path.TOP_ARTIST_CANDIDATE_SET)
+        similar_artist_candidate_set_df = utils.read_files_from_HDFS(path.SIMILAR_ARTIST_CANDIDATE_SET)
     except PathNotFoundException as err:
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
@@ -300,16 +289,16 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
     model = load_model()
 
     # an action must be called to persist data in memory
-    recordings.count()
-    recordings.persist()
+    recordings_df.count()
+    recordings_df.persist()
 
-    params = RecommendationParams(recordings, model, top_artist_candidate_set,
-                                  similar_artist_candidate_set,
+    params = RecommendationParams(recordings_df, model, top_artist_candidate_set_df,
+                                  similar_artist_candidate_set_df,
                                   recommendation_top_artist_limit,
                                   recommendation_similar_artist_limit)
 
     messages = get_recommendations_for_all(params, users)
     # persisted data must be cleared from memory after usage to avoid OOM
-    recordings.unpersist()
+    recordings_df.unpersist()
 
     return messages
