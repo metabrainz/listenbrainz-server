@@ -1,4 +1,7 @@
 import * as React from "react";
+import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 import APIService from "../APIService";
 import Card from "../components/Card";
@@ -57,8 +60,12 @@ export default class UserTopEntity extends React.Component<
   }
 
   loadData = async (): Promise<void> => {
+    this.setState({
+      hasError: false,
+      loading: true,
+    });
     const data = await this.getData();
-    this.setState({ data });
+    this.setState({ loading: false, data });
   };
 
   getData = async (): Promise<UserEntityResponse> => {
@@ -90,7 +97,7 @@ export default class UserTopEntity extends React.Component<
 
   render() {
     const { entity, range, user } = this.props;
-    const { data } = this.state;
+    const { data, loading, hasError, errorMessage } = this.state;
 
     return (
       <Card
@@ -112,41 +119,36 @@ export default class UserTopEntity extends React.Component<
           }}
         >
           <tbody>
-            {entity === "artist" &&
-              Object.keys(data).length > 0 &&
-              (data as UserArtistsResponse).payload.artists.map(
-                (artist, index) => {
-                  return (
-                    // eslint-disable-next-line react/no-array-index-key
-                    <tr key={index}>
-                      <td style={{ width: "10%", textAlign: "end" }}>
-                        {index + 1}.&nbsp;
-                      </td>
-                      <td
-                        style={{
-                          textOverflow: "ellipsis",
-                          overflow: "hidden",
-                          paddingRight: 10,
-                        }}
-                      >
-                        {getEntityLink(
-                          "artist",
-                          artist.artist_name,
-                          artist.artist_mbids && artist.artist_mbids[0]
-                        )}
-                      </td>
-                      <td style={{ width: "10%" }}>{artist.listen_count}</td>
-                    </tr>
-                  );
-                }
+            <Loader
+              isLoading={loading}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "100%",
+              }}
+            >
+              {hasError && (
+                <tr>
+                  <td
+                    style={{
+                      fontSize: 24,
+                      textAlign: "center",
+                      whiteSpace: "initial",
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
+                    {errorMessage}
+                  </td>
+                </tr>
               )}
-            {entity === "release" &&
-              Object.keys(data).length > 0 &&
-              (data as UserReleasesResponse).payload.releases.map(
-                (release, index) => {
-                  return (
-                    <>
-                      {/* eslint-disable-next-line react/no-array-index-key */}
+              {!hasError &&
+                entity === "artist" &&
+                Object.keys(data).length > 0 &&
+                (data as UserArtistsResponse).payload.artists.map(
+                  (artist, index) => {
+                    return (
+                      // eslint-disable-next-line react/no-array-index-key
                       <tr key={index}>
                         <td style={{ width: "10%", textAlign: "end" }}>
                           {index + 1}.&nbsp;
@@ -159,69 +161,104 @@ export default class UserTopEntity extends React.Component<
                           }}
                         >
                           {getEntityLink(
-                            "release",
-                            release.release_name,
-                            release.release_mbid
-                          )}
-                        </td>
-                        <td style={{ width: "10%" }}>{release.listen_count}</td>
-                      </tr>
-                      <tr>
-                        <td />
-                        <td style={{ fontSize: 12 }}>
-                          {getEntityLink(
                             "artist",
-                            release.artist_name,
-                            release.artist_mbids && release.artist_mbids[0]
+                            artist.artist_name,
+                            artist.artist_mbids && artist.artist_mbids[0]
                           )}
                         </td>
+                        <td style={{ width: "10%" }}>{artist.listen_count}</td>
                       </tr>
-                    </>
-                  );
-                }
-              )}
-            {entity === "recording" &&
-              Object.keys(data).length > 0 &&
-              (data as UserRecordingsResponse).payload.recordings.map(
-                (recording, index) => {
-                  return (
-                    <>
-                      {/* eslint-disable-next-line react/no-array-index-key */}
-                      <tr key={index}>
-                        <td style={{ width: "10%", textAlign: "end" }}>
-                          {index + 1}.&nbsp;
-                        </td>
-                        <td
-                          style={{
-                            textOverflow: "ellipsis",
-                            overflow: "hidden",
-                            paddingRight: 10,
-                          }}
-                        >
-                          {getEntityLink(
-                            "recording",
-                            recording.track_name,
-                            recording.recording_mbid
-                          )}
-                        </td>
-                        <td style={{ width: "10%" }}>
-                          {recording.listen_count}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td />
-                        <td style={{ fontSize: 12 }}>
-                          {getEntityLink(
-                            "artist",
-                            recording.artist_name,
-                            recording.artist_mbids && recording.artist_mbids[0]
-                          )}
-                        </td>
-                      </tr>
-                    </>
-                  );
-                }
-              )}
+                    );
+                  }
+                )}
+              {!hasError &&
+                entity === "release" &&
+                Object.keys(data).length > 0 &&
+                (data as UserReleasesResponse).payload.releases.map(
+                  (release, index) => {
+                    return (
+                      // eslint-disable-next-line react/no-array-index-key
+                      <React.Fragment key={index}>
+                        <tr>
+                          <td style={{ width: "10%", textAlign: "end" }}>
+                            {index + 1}.&nbsp;
+                          </td>
+                          <td
+                            style={{
+                              textOverflow: "ellipsis",
+                              overflow: "hidden",
+                              paddingRight: 10,
+                            }}
+                          >
+                            {getEntityLink(
+                              "release",
+                              release.release_name,
+                              release.release_mbid
+                            )}
+                          </td>
+                          <td style={{ width: "10%" }}>
+                            {release.listen_count}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td />
+                          <td style={{ fontSize: 12 }}>
+                            {getEntityLink(
+                              "artist",
+                              release.artist_name,
+                              release.artist_mbids && release.artist_mbids[0]
+                            )}
+                          </td>
+                        </tr>
+                      </React.Fragment>
+                    );
+                  }
+                )}
+              {!hasError &&
+                entity === "recording" &&
+                Object.keys(data).length > 0 &&
+                (data as UserRecordingsResponse).payload.recordings.map(
+                  (recording, index) => {
+                    return (
+                      // eslint-disable-next-line react/no-array-index-key
+                      <React.Fragment key={index}>
+                        <tr>
+                          <td style={{ width: "10%", textAlign: "end" }}>
+                            {index + 1}.&nbsp;
+                          </td>
+                          <td
+                            style={{
+                              textOverflow: "ellipsis",
+                              overflow: "hidden",
+                              paddingRight: 10,
+                            }}
+                          >
+                            {getEntityLink(
+                              "recording",
+                              recording.track_name,
+                              recording.recording_mbid
+                            )}
+                          </td>
+                          <td style={{ width: "10%" }}>
+                            {recording.listen_count}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td />
+                          <td style={{ fontSize: 12 }}>
+                            {getEntityLink(
+                              "artist",
+                              recording.artist_name,
+                              recording.artist_mbids &&
+                                recording.artist_mbids[0]
+                            )}
+                          </td>
+                        </tr>
+                      </React.Fragment>
+                    );
+                  }
+                )}
+            </Loader>
           </tbody>
         </table>
         <a

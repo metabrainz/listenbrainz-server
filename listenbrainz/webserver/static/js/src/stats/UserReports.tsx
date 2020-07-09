@@ -104,7 +104,7 @@ export default class UserReports extends React.Component<
         </div>
         <div className="row">
           <div className="col-xs-12">
-            <h3>Listening Activity</h3>
+            <h3 className="capitalize-bold">Listening Activity</h3>
           </div>
         </div>
         <ErrorBoundary>

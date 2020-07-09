@@ -47,22 +47,16 @@ a {
   }
 
   &.underlined-link {
-    color: inherit;
-    font-weight: inherit;
-
-    &:link {
-        text-decoration: none;
+    &:link, &:visited {
+      text-decoration: none;
+      color: inherit;
+      font-weight: inherit;
     }
 
-    &:visited {
-        text-decoration: none;
+    &:hover, &:active {
+      text-decoration: underline;
+      color: inherit ! important;
+      font-weight: inherit;
     }
-
-    &:hover {
-        text-decoration: underline;
-    }
-
-    &:active {
-        text-decoration: underline;
-    }}
+  }
 }
