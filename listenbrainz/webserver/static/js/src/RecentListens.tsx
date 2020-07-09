@@ -95,11 +95,13 @@ export default class RecentListens extends React.Component<
     if (mode === "listens") {
       // Listen to browser previous/next events and load page accordingly
       window.addEventListener("popstate", this.handleURLChange);
+      document.addEventListener("keydown", this.handleKeyDown);
     }
   }
 
   componentWillUnmount() {
     window.removeEventListener("popstate", this.handleURLChange);
+    document.removeEventListener("keydown", this.handleKeyDown);
   }
 
   handleURLChange = async (): Promise<void> => {
@@ -403,19 +405,16 @@ export default class RecentListens extends React.Component<
     window.history.pushState(null, "", `?min_ts=${oldestListenTs}`);
   };
 
-  handleKeyDown = (event: React.KeyboardEvent) => {
-    const { mode } = this.state;
-    if (mode === "listens") {
-      switch (event.key) {
-        case "ArrowLeft":
-          this.handleClickNewer();
-          break;
-        case "ArrowRight":
-          this.handleClickOlder();
-          break;
-        default:
-          break;
-      }
+  handleKeyDown = (event: KeyboardEvent) => {
+    switch (event.key) {
+      case "ArrowLeft":
+        this.handleClickNewer();
+        break;
+      case "ArrowRight":
+        this.handleClickOlder();
+        break;
+      default:
+        break;
     }
   };
 
@@ -445,8 +444,7 @@ export default class RecentListens extends React.Component<
     } = this.props;
 
     return (
-      // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex
-      <div onKeyDown={this.handleKeyDown} role="main" tabIndex={0}>
+      <div role="main">
         <AlertList
           position="bottom-right"
           alerts={alerts}
