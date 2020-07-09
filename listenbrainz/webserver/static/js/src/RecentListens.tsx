@@ -561,9 +561,9 @@ export default class RecentListens extends React.Component<
                                     ).toISOString()
                                   }
                                 >
-                                  {new Date(
-                                    listen.listened_at * 1000
-                                  ).toISOString()}
+                                  {listen.listened_at_iso
+                                    ? timeago.ago(listen.listened_at_iso)
+                                    : timeago.ago(listen.listened_at * 1000)}
                                 </abbr>
                               </td>
                             )}
@@ -706,7 +706,7 @@ export default class RecentListens extends React.Component<
     );
   }
 }
-
+/* eslint-disable camelcase */
 document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#react-container");
   const propsElement = document.getElementById("react-props");
