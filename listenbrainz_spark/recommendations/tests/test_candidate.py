@@ -170,8 +170,8 @@ class CandidateSetsTestClass(SparkTestCase):
         ))
 
         top_artist_candidate_set_df, top_artist_candidate_set_df_html = candidate_sets.get_top_artist_candidate_set(top_artist_df,
-                                                                                                                 recordings_df,
-                                                                                                                 users)
+                                                                                                                    recordings_df,
+                                                                                                                    users)
         cols = ['recording_id', 'user_id', 'user_name']
         self.assertListEqual(sorted(cols), sorted(top_artist_candidate_set_df.columns))
         self.assertEqual(top_artist_candidate_set_df.count(), 2)
