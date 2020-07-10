@@ -128,7 +128,6 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
                 top_artist_given_users_df (dataframe): Top Y artists listened to by a user for given users where
                                                        Y = TOP_ARTISTS_LIMIT
     """
-<<<<<<< HEAD
     df = mapped_listens_subset.select('mb_artist_credit_id',
                                       'msb_artist_credit_name_matchable',
                                       'user_name') \
@@ -354,7 +353,7 @@ def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_can
             row.similar_artist_name,
             row.similar_artist_credit_id
         )
-        user_data[row.user_name]['top_similar_artist'].append(data)
+        user_data[row.user_name]['similar_artist'].append(data)
 
     for row in top_artist_candidate_set_df_html.collect():
         data = (
@@ -380,7 +379,7 @@ def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_can
             row.msb_recording_name_matchable,
             row.recording_id
         )
-        user_data[row.user_name]['imilar_artist_candidate_set'].append(data)
+        user_data[row.user_name]['similar_artist_candidate_set'].append(data)
 
     return user_data
 
