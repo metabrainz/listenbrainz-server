@@ -19,7 +19,7 @@ SPARK_RESULT_QUEUE = "spark_result"
 # calculate stats on X months data
 STATS_CALCULATION_WINDOW = 1
 
-STEPS_TO_REACH_NEXT_MONTH = 32
+STEPS_TO_REACH_NEXT_MONTH = 31
 
 LOG_SENTRY = {
     'dsn':'',
