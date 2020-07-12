@@ -155,7 +155,8 @@ class SparkTestCase(unittest.TestCase):
         mapped_listens_df = df.union(utils.create_dataframe(mapped_listens_row_2, schema=None))
         return mapped_listens_df
 
-    def path_to_data_file(self, file_name):
+    @classmethod
+    def path_to_data_file(cls, file_name):
         """ Returns the path of the test data file relative to listenbrainz_spark/test/__init__.py.
 
             Args:

@@ -196,6 +196,7 @@ def get_listens(from_date, to_date, dest_path):
         from_date = stats.adjust_days(from_date, config.STEPS_TO_REACH_NEXT_MONTH, shift_backwards=False)
         # shift to the first of the month
         from_date = stats.replace_days(from_date, 1)
+        print(from_date)
     if not df:
         current_app.logger.error('Listening history missing form HDFS')
         raise HDFSException("Listening history missing from HDFS")

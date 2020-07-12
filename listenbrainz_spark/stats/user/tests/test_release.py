@@ -24,7 +24,7 @@ class releaseTestCase(SparkTestCase):
     def save_dataframe(self, filename):
         now = datetime.now()
 
-        with open(self.path_to_data_file(filename)) as f:
+        with open(cls.path_to_data_file(filename)) as f:
             data = json.load(f)
 
         schema = StructType((StructField('user_name', StringType()), StructField('artist_name', StringType()),
@@ -50,7 +50,7 @@ class releaseTestCase(SparkTestCase):
         df.createOrReplaceTempView('test_view')
 
         expected = defaultdict(list)
-        with open(self.path_to_data_file('user_top_releases.json')) as f:
+        with open(cls.path_to_data_file('user_top_releases.json')) as f:
             data = json.load(f)
 
         for entry in data:
@@ -82,7 +82,7 @@ class releaseTestCase(SparkTestCase):
         df = utils.get_listens(datetime.now(), datetime.now(), self.path_)
         df.createOrReplaceTempView('test_view')
 
-        with open(self.path_to_data_file('user_top_releases.json')) as f:
+        with open(cls.path_to_data_file('user_top_releases.json')) as f:
             data = json.load(f)
 
         received = defaultdict(list)

@@ -1,9 +1,11 @@
 import re
 import uuid
 import unittest
+import tempfile
 from datetime import datetime
 
 import listenbrainz_spark
+from listenbrainz_spark.stats import adjust_days
 from listenbrainz_spark.tests import SparkTestCase
 from listenbrainz_spark.recommendations import create_dataframes
 from listenbrainz_spark import schema, utils, config, path, hdfs_connection, stats
@@ -20,10 +22,9 @@ class CreateDataframeTestCase(SparkTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.date = datetime.utcnow()
-        cls.upload_test_listen_to_HDFS()
-        cls.upload_test_mapping_to_HDFS()
-        cls.upload_test_mapped_listens_to_HDFS()
+        #cls.upload_test_listen_to_HDFS()
+        cls.upload_test_mapping_to_hdfs()
+        #cls.upload_test_mapped_listens_to_HDFS()
 
     @classmethod
     def tearDownClass(cls):
@@ -31,43 +32,32 @@ class CreateDataframeTestCase(SparkTestCase):
         super().tearDownClass()
 
     @classmethod
-    def upload_test_listen_to_HDFS(cls):
-        month, year = cls.date.strftime('%m').lstrip('0'), cls.date.strftime('%Y')
+    def get_test_listen(cls, date):
 
         test_listen = {
-            "artist_msid": "a36d6fc9-49d0-4789-a7dd-a2b72369ca45",
             "artist_mbids": [],
-            "artist_name": "Less Than Jake",
-            "listened_at": cls.date,
-            "release_mbid": "", "track_name": "Al's War",
-            "recording_msid": "cb6985cd-cc71-4d59-b4fb-2e72796af741",
+            "artist_msid": "6276299c-57e9-4014-9fdd-ab9ed800f61d",
+            "artist_name": "Cake",
+            "listened_at": date,
+            "recording_msid": "c559b2f8-41ff-4b55-ab3c-0b57d9b85d11",
+            "recording_mbid": "1750f8ca-410e-4bdc-bf90-b0146cb5ee35",
+            "release_mbid": "",
+            "release_msid": "",
+            "release_name": "",
             "tags": [],
+            "track_name": "Tougher Than It Is",
             "user_name": "vansika",
         }
 
-        test_listens_df = utils.create_dataframe(schema.convert_to_spark_json(test_listen), schema.listen_schema)
-        utils.save_parquet(test_listens_df, cls.listens_path + '/{}/{}.parquet'.format(year, month))
+        return test_listen
 
     @classmethod
-    def upload_test_mapping_to_HDFS(cls):
-        test_mapping = {
-            "msb_recording_msid": "cb6985cd-cc71-4d59-b4fb-2e72796af741",
-            "mb_recording_mbid": "3acb406f-c716-45f8-a8bd-96ca3939c2e5",
-            "msb_artist_msid": "a36d6fc9-49d0-4789-a7dd-a2b72369ca45",
-            "mb_artist_credit_mbids": ["181c4177-f33a-441d-b15d-910acaf18b07"],
-            "mb_artist_credit_id": 2157963,
-            "mb_release_mbid": "xxxxx",
-            "msb_release_msid": "xxxxx",
-            "msb_artist_credit_name": "Less Than Jake",
-            "msb_artist_credit_name_matchable": "lessthanjake",
-            "msb_recording_name": "Al's War",
-            "msb_recording_name_matchable": "alswar",
-            "msb_release_name": "Easier",
-            "msb_release_name_matchable": "easier",
-        }
+    def upload_test_mapping_to_hdfs(cls):
+        tmp_hdfs_path = tempfile.mkdtemp()
+        utils.upload_to_HDFS(tmp_hdfs_path, cls.path_to_data_file('msid_mbid_mapping.json'))
+        msid_mbid_mapping_df = utils.read_json(tmp_hdfs_path, schema=schema.msid_mbid_mapping_schema)
 
-        test_mapping_df = utils.create_dataframe(schema.convert_mapping_to_row(test_mapping), schema.msid_mbid_mapping_schema)
-        utils.save_parquet(test_mapping_df, cls.mapping_path)
+        utils.save_parquet(msid_mbid_mapping_df, cls.mapping_path)
 
     @classmethod
     def upload_test_mapped_listens_to_HDFS(cls):
@@ -77,20 +67,84 @@ class CreateDataframeTestCase(SparkTestCase):
         mapped_listens = create_dataframes.get_mapped_artist_and_recording_mbids(partial_listen_df, mapping_df)
         utils.save_parquet(mapped_listens, cls.mapped_listens_path)
 
+    @classmethod
+    def get_partial_listens_df(cls):
+        schema = StructType(
+            (
+                StructField('artist_msid', StringType(), nullable=True),
+                StructField('artist_name', StringType(), nullable=False),
+                StructField('listened_at', TimestampType(), nullable=False),
+                StructField('recording_msid', StringType(), nullable=True),
+                StructField('release_mbid', StringType(), nullable=True),
+                StructField('release_msid', StringType(), nullable=True),
+                StructField('release_name', StringType(), nullable=True),
+                StructField('tags', ArrayType(StringType()), nullable=True),
+                StructField('track_name', StringType(), nullable=False),
+                StructField('user_name', StringType(), nullable=False)
+            )
+        )
+
+        tmp_hdfs_path = tempfile.mkdtemp()
+        utils.upload_to_HDFS(tmp_hdfs_path, cls.path_to_data_file('msid_mbid_mapping.json'))
+        partial_listens_df = utils.read_json(tmp_hdfs_path, schema=schema)
+        return partial_listens_df
+
     def test_get_dates_to_train_data(self):
-        train_model_window = 20
+        date_1 = datetime(2020, 7, 11)
+        df = utils.create_dataframe(Row(listened_at=date_1), schema=None)
+        df = df.union(utils.create_dataframe(Row(listened_at=adjust_days(date_1, 7)), schema=None))
+        utils.save_parquet(df, '{}/2020/7.parquet'.format(self.listens_path))
+
+        date_2 = datetime(2020, 6, 30)
+        df = utils.create_dataframe(Row(listened_at=date_2), schema=None)
+        df = df.union(utils.create_dataframe(Row(listened_at=adjust_days(date_2, 1)), schema=None))
+        utils.save_parquet(df, '{}/2020/6.parquet'.format(self.listens_path))
+
+        train_model_window = 12
         to_date, from_date = create_dataframes.get_dates_to_train_data(train_model_window)
-        d = stats.adjust_days(to_date, train_model_window)
-        d = stats.replace_days(d, 1)
-        self.assertEqual(from_date, d)
+        self.assertEqual(to_date, date_1)
+        # shift to the first of the month
+        self.assertEqual(from_date, datetime(2020, 6, 1))
+
+        utils.delete_dir(self.listens_path, recursive=True)
 
     def test_get_listens_for_training_model_window(self):
         metadata = {}
-        test_df = create_dataframes.get_listens_for_training_model_window(self.date, self.date, metadata, self.listens_path)
-        self.assertEqual(metadata['to_date'], self.date)
-        self.assertEqual(metadata['from_date'], self.date)
-        self.assertNotIn('artist_mbids', test_df.columns)
-        self.assertNotIn('recording_mbid', test_df.columns)
+        to_date = datetime(2020, 7, 11)
+        df = utils.create_dataframe(self.get_test_listen(to_date), schema.listen_schema)
+        df = df.union(utils.create_dataframe(self.get_test_listen(adjust_days(to_date, 7)), schema.listen_schema))
+        utils.save_parquet(df, '{}/2020/7.parquet'.format(self.listens_path))
+
+        from_date = datetime(2020, 6, 30)
+        df = utils.create_dataframe(self.get_test_listen(from_date), schema.listen_schema)
+        df = df.union(utils.create_dataframe(self.get_test_listen(adjust_days(from_date, 1)), schema.listen_schema))
+        utils.save_parquet(df, '{}/2020/6.parquet'.format(self.listens_path))
+
+        date = datetime(2020, 5, 30)
+        df = utils.create_dataframe(self.get_test_listen(from_date), schema.listen_schema)
+        utils.save_parquet(df, '{}/2020/5.parquet'.format(self.listens_path))
+
+        df = create_dataframes.get_listens_for_training_model_window(to_date, from_date, metadata, self.listens_path)
+        self.assertEqual(metadata['to_date'], to_date)
+        self.assertEqual(metadata['from_date'], from_date)
+        df.show()
+        self.assertEqual(df.count(), 4)
+
+        cols = [
+            "artist_msid",
+            "artist_name",
+            "listened_at",
+            "recording_msid",
+            "release_mbid",
+            "release_msid",
+            "release_name",
+            "tags",
+            "track_name",
+            "user_name",
+        ]
+        self.assertEqual(sorted(cols), sorted(df.columns))
+
+        utils.delete_dir(self.listens_path, recursive=True)
 
     def test_save_dataframe(self):
         path_ = '/test_df.parquet'
@@ -101,13 +155,13 @@ class CreateDataframeTestCase(SparkTestCase):
         self.assertTrue(status)
 
     def test_get_mapped_artist_and_recording_mbids(self):
-        partial_listen_df = create_dataframes.get_listens_for_training_model_window(self.date, self.date, {}, self.listens_path)
-        mapping_df = utils.read_files_from_HDFS(self.mapping_path)
+        partial_listen_df = cls.get_partial_listens_df()
+        msid_mbid_mapping_df = utils.read_files_from_HDFS(self.mapping_path)
 
-        mapped_listens = create_dataframes.get_mapped_artist_and_recording_mbids(partial_listen_df, mapping_df)
-        self.assertEqual(mapped_listens.count(), 1)
-        self.assertListEqual(sorted(self.get_mapped_listens().columns), sorted(mapped_listens.columns))
-        status = utils.path_exists(path.MAPPED_LISTENS)
+        mapped_listens_df = create_dataframes.get_mapped_artist_and_recording_mbids(partial_listen_df, msid_mbid_mapping_df)
+        self.assertEqual(mapped_listens_df.count(), 1)
+        self.assertListEqual(sorted(schema.msid_mbid_mapping_schema.fieldNames()), sorted(mapped_listens_df.columns))
+        status = utils.path_exists(mapped_listens_path)
         self.assertTrue(status)
 
     def test_get_users_dataframe(self):

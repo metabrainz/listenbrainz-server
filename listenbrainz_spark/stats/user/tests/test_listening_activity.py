@@ -43,7 +43,7 @@ class ListeningActivityTestCase(SparkTestCase):
             utils.delete_dir(self.path_, recursive=True)
 
     def test_get_listening_activity(self):
-        with open(self.path_to_data_file('user_listening_activity.json')) as f:
+        with open(cls.path_to_data_file('user_listening_activity.json')) as f:
             data = json.load(f)
 
         # Create a dataframe of four time ranges
@@ -161,7 +161,7 @@ class ListeningActivityTestCase(SparkTestCase):
     @patch('listenbrainz_spark.stats.user.listening_activity.create_messages',
            side_effect=lambda data, stats_range, from_ts, to_ts: data)
     def test_get_listening_activity_all_time(self, mock_create_messages, mock_get_listens, mock_get_latest_listen_ts):
-        with open(self.path_to_data_file('user_listening_activity_all_time.json')) as f:
+        with open(cls.path_to_data_file('user_listening_activity_all_time.json')) as f:
             data = json.load(f)
 
         expected = self._calculate_expected_all_time(data)

@@ -25,7 +25,7 @@ class ArtistTestCase(SparkTestCase):
     def save_dataframe(self):
         now = datetime.now()
 
-        with open(self.path_to_data_file('user_top_artists.json')) as f:
+        with open(cls.path_to_data_file('user_top_artists.json')) as f:
             data = json.load(f)
 
         schema = StructType((StructField('user_name', StringType()), StructField('artist_name', StringType()),

@@ -24,7 +24,7 @@ class RecordingTestCase(SparkTestCase):
     def save_dataframe(self, filename):
         now = datetime.now()
 
-        with open(self.path_to_data_file(filename)) as f:
+        with open(cls.path_to_data_file(filename)) as f:
             data = json.load(f)
 
         schema = StructType((StructField('user_name', StringType()), StructField('artist_name', StringType()),
@@ -52,7 +52,7 @@ class RecordingTestCase(SparkTestCase):
         df.createOrReplaceTempView('test_view')
 
         expected = defaultdict(list)
-        with open(self.path_to_data_file('user_top_recordings.json')) as f:
+        with open(cls.path_to_data_file('user_top_recordings.json')) as f:
             data = json.load(f)
 
         for entry in data:
