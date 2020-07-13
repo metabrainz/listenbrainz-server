@@ -21,6 +21,7 @@ create and import postgres data dumps.
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import click
+from datetime import datetime
 import listenbrainz.db.dump as db_dump
 import logging
 import os
@@ -28,16 +29,18 @@ import re
 import shutil
 import subprocess
 import sys
+import tarfile
 
-from brainzutils.mail import send_mail
-from datetime import datetime
+import psycopg2
+import ujson
 from flask import current_app, render_template
-from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
+from brainzutils.mail import send_mail
 from listenbrainz import db
+from listenbrainz.listen import convert_dump_row_to_spark_row
 from listenbrainz.db import DUMP_DEFAULT_THREAD_COUNT
 from listenbrainz.utils import create_path
 from listenbrainz.webserver import create_app
-from listenbrainz.webserver.influx_connection import init_influx_connection
+from listenbrainz.webserver.timescale_connection import init_timescale_connection
 
 
 NUMBER_OF_FULL_DUMPS_TO_KEEP = 2
@@ -64,7 +67,7 @@ def send_dump_creation_notification(dump_name, dump_type):
 @click.option('--last-dump-id', is_flag=True)
 def create_full(location, threads, dump_id, last_dump_id):
     """ Create a ListenBrainz data dump which includes a private dump, a statistics dump
-        and a dump of the actual listens from InfluxDB
+        and a dump of the actual listens from the listenstore
 
         Args:
             location (str): path to the directory where the dump should be made
@@ -74,7 +77,7 @@ def create_full(location, threads, dump_id, last_dump_id):
     """
     app = create_app()
     with app.app_context():
-        from listenbrainz.webserver.influx_connection import _influx as ls
+        from listenbrainz.webserver.timescale_connection import _ts as ls
         if last_dump_id:
             all_dumps = db_dump.get_dump_entries()
             if len(all_dumps) == 0:
@@ -96,8 +99,7 @@ def create_full(location, threads, dump_id, last_dump_id):
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
         db_dump.dump_postgres_db(dump_path, end_time, threads)
-        ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads, spark_format=False)
-        ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads, spark_format=True)
+        ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads)
         try:
             write_hashes(dump_path)
         except IOError as e:
@@ -117,7 +119,7 @@ def create_full(location, threads, dump_id, last_dump_id):
 def create_incremental(location, threads, dump_id):
     app = create_app()
     with app.app_context():
-        from listenbrainz.webserver.influx_connection import _influx as ls
+        from listenbrainz.webserver.timescale_connection import _ts as ls
         if dump_id is None:
             end_time = datetime.now()
             dump_id = db_dump.add_dump_entry(int(end_time.strftime('%s')))
@@ -138,8 +140,7 @@ def create_incremental(location, threads, dump_id):
         dump_name = 'listenbrainz-dump-{dump_id}-{time}-incremental'.format(dump_id=dump_id, time=end_time.strftime('%Y%m%d-%H%M%S'))
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
-        ls.dump_listens(dump_path, dump_id=dump_id, start_time=start_time, end_time=end_time, threads=threads, spark_format=False)
-        ls.dump_listens(dump_path, dump_id=dump_id, start_time=start_time, end_time=end_time, threads=threads, spark_format=True)
+        ls.dump_listens(dump_path, dump_id=dump_id, start_time=start_time, end_time=end_time, threads=threads)
         try:
             write_hashes(dump_path)
         except IOError as e:
@@ -150,24 +151,6 @@ def create_incremental(location, threads, dump_id):
         send_dump_creation_notification(dump_name, 'incremental')
 
         current_app.logger.info('Dumps created and hashes written at %s' % dump_path)
-
-
-@cli.command()
-@click.option('--location', '-l', default=os.path.join(os.getcwd(), 'listenbrainz-export'))
-@click.option('--threads', '-t', type=int, default=DUMP_DEFAULT_THREAD_COUNT)
-def create_spark_dump(location, threads):
-    with create_app().app_context():
-        from listenbrainz.webserver.influx_connection import _influx as ls
-        time_now = datetime.today()
-        dump_path = os.path.join(location, 'listenbrainz-spark-dump-{time}'.format(time=time_now.strftime('%Y%m%d-%H%M%S')))
-        create_path(dump_path)
-        ls.dump_listens(dump_path, time_now, threads, spark_format=True)
-        try:
-            write_hashes(dump_path)
-        except IOError as e:
-            current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
-            return
-        current_app.logger.info('Dump created and hash written at %s', dump_path)
 
 
 @cli.command(name="import_dump")
@@ -198,17 +181,14 @@ def import_dump(private_archive, public_archive, listen_archive, threads):
     with app.app_context():
         db_dump.import_postgres_dump(private_archive, public_archive, threads)
 
-        from listenbrainz.webserver.influx_connection import _influx as ls
+        from listenbrainz.webserver.timescale_connection import _ts as ls
         try:
             ls.import_listens_dump(listen_archive, threads)
+        except psycopg2.OperationalError as e:
+            current_app.logger.critical('OperationalError while trying to import data: %s', str(e), exc_info=True)
+            raise
         except IOError as e:
-            current_app.logger.critical('IOError while trying to import data into Influx: %s', str(e), exc_info=True)
-            raise
-        except InfluxDBClientError as e:
-            current_app.logger.critical('Error while sending data to Influx: %s', str(e), exc_info=True)
-            raise
-        except InfluxDBServerError as e:
-            current_app.logger.critical('InfluxDB Server Error while importing data: %s', str(e), exc_info=True)
+            current_app.logger.critical('IOError while trying to import data: %s', str(e), exc_info=True)
             raise
         except Exception as e:
             current_app.logger.critical('Unexpected error while importing data: %s', str(e), exc_info=True)
@@ -286,3 +266,36 @@ def write_hashes(location):
         except IOError as e:
             current_app.logger.error('IOError while trying to write hash files for file %s: %s', file, str(e), exc_info=True)
             raise
+
+
+@cli.command(name="convert_dump")
+@click.argument('in_file', type=str)
+@click.argument('out_dir', type=str)
+def transmogrify_dump_file_to_spark_import_format(in_file, out_dir):
+    """ Decompress and convert an LB dump,  ready for spark.
+
+    Args:
+        in_file: The tar.xz dump file to import
+        out_dir: The directory where the dump file should be mogrified to. If it doesn't exist,
+                 it will be created.
+    """
+    with tarfile.open(in_file, "r:xz") as tarf:  # yep, going with that one again!
+        for member in tarf:
+            if member.name.endswith(".listens"):
+                print(member.name)
+                year = os.path.split(os.path.dirname(member.name))[1]
+                file_name = os.path.split(member.name)[1]
+                out_file = os.path.join(out_dir, year, file_name)
+                try:
+                    os.makedirs(os.path.join(out_dir, year))
+                except FileExistsError: 
+                    pass
+                with open(out_file, "w") as out_f:
+                    with tarf.extractfile(member) as f:
+                        while True:
+                            line = f.readline()
+                            if not line:
+                                break
+
+                            listen = ujson.loads(line)
+                            out_f.write(ujson.dumps(convert_dump_row_to_spark_row(listen)) + "\n")

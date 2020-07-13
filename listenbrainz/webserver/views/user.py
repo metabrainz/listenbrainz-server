@@ -2,10 +2,11 @@ import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import urllib
 import ujson
+import psycopg2
+import datetime
 
 from flask import Blueprint, render_template, request, url_for, Response, redirect, flash, current_app, jsonify
 from flask_login import current_user, login_required
-from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain import spotify
@@ -13,7 +14,7 @@ from listenbrainz.webserver import flash
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver.redis_connection import _redis
-from listenbrainz.webserver.influx_connection import _influx
+from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.views.api_tools import publish_data_to_queue
 import time
 from datetime import datetime
@@ -28,7 +29,7 @@ user_bp = Blueprint("user", __name__)
 @user_bp.route("/<user_name>")
 def profile(user_name):
     # Which database to use to showing user listens.
-    db_conn = webserver.influx_connection._influx
+    db_conn = webserver.timescale_connection._ts
     # Which database to use to show playing_now stream.
     playing_now_conn = webserver.redis_connection._redis
 
@@ -39,7 +40,7 @@ def profile(user_name):
     try:
         have_listen_count = True
         listen_count = db_conn.get_listen_count_for_user(user_name)
-    except (InfluxDBServerError, InfluxDBClientError):
+    except psycopg2.OperationalError:
         have_listen_count = False
         listen_count = 0
 
@@ -58,32 +59,42 @@ def profile(user_name):
         except ValueError:
             raise BadRequest("Incorrect timestamp argument min_ts: %s" % request.args.get("min_ts"))
 
+    search_larger_time_range = request.args.get("search_larger_time_range", 0)
+    try:
+        search_larger_time_range = int(search_larger_time_range)
+    except ValueError:
+        raise BadRequest("search_larger_time_range must be an integer value 0 or greater: %s" % search_larger_time_range)
+
+    (min_ts_per_user, max_ts_per_user) = db_conn.get_timestamps_for_user(user_name)
+
     if max_ts is None and min_ts is None:
-        max_ts = int(time.time())
+        if max_ts_per_user:
+            max_ts = max_ts_per_user + 1
+        else:
+            max_ts = int(time.time())
 
-    args = {}
-    if max_ts:
-        args['to_ts'] = max_ts
-    else:
-        args['from_ts'] = min_ts
-
+    listens_missing = 0
     listens = []
-    for listen in db_conn.fetch_listens(user_name, limit=LISTENS_PER_PAGE, **args):
-        # Let's fetch one more listen, so we know to show a next page link or not
-        listens.append({
-            "track_metadata": listen.data,
-            "listened_at": listen.ts_since_epoch,
-            "listened_at_iso": listen.timestamp.isoformat() + "Z",
-        })
-
-    latest_listen = db_conn.fetch_listens(user_name=user_name, limit=1, to_ts=int(time.time()))
-    latest_listen_ts = latest_listen[0].ts_since_epoch if len(latest_listen) > 0 else 0
-
+    if min_ts_per_user != max_ts_per_user:
+        args = {}
+        # if we're supposed to search larger time range then search 50 days. (each increment in time_range == 5 days)
+        args['time_range'] = 10 if search_larger_time_range else None
+        if max_ts:
+            args['to_ts'] = max_ts
+        else:
+            args['from_ts'] = min_ts
+        for listen in db_conn.fetch_listens(user_name, limit=LISTENS_PER_PAGE, **args):
+            listens.append({
+                "track_metadata": listen.data,
+                "listened_at": listen.ts_since_epoch,
+                "listened_at_iso": listen.timestamp.isoformat() + "Z",
+            })
+        if len(listens) < LISTENS_PER_PAGE and search_larger_time_range == 0:
+            listens_missing = 1
     # Calculate if we need to show next/prev buttons
     previous_listen_ts = None
     next_listen_ts = None
     if listens:
-        (min_ts_per_user, max_ts_per_user) = db_conn.get_timestamps_for_user(user_name)
         if min_ts_per_user >= 0:
             if listens[-1]['listened_at'] > min_ts_per_user:
                 next_listen_ts = listens[-1]['listened_at']
@@ -123,8 +134,9 @@ def profile(user_name):
         "listens": listens,
         "previous_listen_ts": previous_listen_ts,
         "next_listen_ts": next_listen_ts,
-        "latest_listen_ts": latest_listen_ts,
+        "latest_listen_ts": max_ts_per_user,
         "latest_spotify_uri": _get_spotify_uri_for_listens(listens),
+        "search_larger_time_range": listens_missing,
         "have_listen_count": have_listen_count,
         "listen_count": format(int(listen_count), ",d"),
         "artist_count": format(artist_count, ",d") if artist_count else None,
@@ -215,7 +227,7 @@ def _get_spotify_uri_for_listens(listens):
 
 def delete_user(musicbrainz_id):
     """ Delete a user from ListenBrainz completely.
-    First, drops the user's influx measurement and then deletes the user from the
+    First, drops the user's listens and then deletes the user from the
     database.
 
     Args:
@@ -226,7 +238,7 @@ def delete_user(musicbrainz_id):
     """
 
     user = _get_user(musicbrainz_id)
-    _influx.delete(user.musicbrainz_id)
+    _ts.delete(user.musicbrainz_id)
     publish_data_to_queue(
         data={
             'type': 'delete.user',
@@ -241,7 +253,6 @@ def delete_user(musicbrainz_id):
 
 def delete_listens_history(musicbrainz_id):
     """ Delete a user's listens from ListenBrainz completely.
-    This, drops the user's influx measurement and resets their listen count.
 
     Args:
         musicbrainz_id (str): the MusicBrainz ID of the user
@@ -251,7 +262,7 @@ def delete_listens_history(musicbrainz_id):
     """
 
     user = _get_user(musicbrainz_id)
-    _influx.delete(user.musicbrainz_id)
-    _influx.reset_listen_count(user.musicbrainz_id)
+    _ts.delete(user.musicbrainz_id)
+    _ts.reset_listen_count(user.musicbrainz_id)
     db_user.reset_latest_import(user.musicbrainz_id)
     db_stats.delete_user_stats(user.id)
