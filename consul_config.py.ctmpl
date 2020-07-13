@@ -33,8 +33,8 @@ MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrain
 
 {{if service "timescale-listenbrainz"}}
 {{with index (service "timescale-listenbrainz") 0}}
-SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{{.Port}}/listenbrainz"
-MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@{{.Address}}:{{.Port}}/messybrainz"
+#SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{{.Port}}/listenbrainz"
+#MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@{{.Address}}:{{.Port}}/messybrainz"
 POSTGRES_ADMIN_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/template1"
 POSTGRES_ADMIN_LB_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/listenbrainz"
 
