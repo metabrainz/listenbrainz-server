@@ -62,14 +62,14 @@ class ListenbrainzHDFSUploader:
             raise NotImplementedError('Callback to process JSON missing. Aboritng...')
 
         # Extract all files in tmp_dump_dir
-        t = time.time()
+        t0 = time.time()
         current_app.logger.info("Extracting dump in temporary directory")
         try:
             tar.extractall(path=tmp_dump_dir)
         except TarError as err:
-            current_app.logger.error("{} while extracting tarfile, aborting import".format(type(err).__name__))
+            current_app.logger.error("{} while extracting tarfile, aborting import".format(type(err).__name__), exc_info=True)
             return
-        time_taken = time.time() - t
+        time_taken = time.time() - t0
         current_app.logger.info("Extraction completed in {:.2f} seconds".format(time_taken))
 
         if force:

@@ -2,10 +2,11 @@ import os
 import json
 import tarfile
 import tempfile
+import shutil
 import subprocess
 import unittest
 from datetime import datetime
-from unittest.mock import patch, Mock, call
+from unittest.mock import patch, Mock, call, MagicMock
 
 import listenbrainz_spark
 from listenbrainz_spark import config, utils, schema
@@ -87,7 +88,6 @@ class HDFSTestCase(unittest.TestCase):
         pxz.wait()
         return temp_archive
 
-    @unittest.skip('this test is flaky') #TODO
     def test_upload_archive(self):
         archive_path = self.create_test_tar()
         pxz = ListenbrainzHDFSUploader().get_pxz_output(archive_path)
@@ -95,7 +95,7 @@ class HDFSTestCase(unittest.TestCase):
 
         with tarfile.open(fileobj=pxz.stdout, mode='r|') as tar:
             ListenbrainzHDFSUploader().upload_archive(tmp_dump_dir, tar, '/test', schema.listen_schema,
-            ListenbrainzDataUploader().process_json_listens)
+                                                      ListenbrainzDataUploader().process_json_listens)
 
         walk = utils.hdfs_walk('/test', depth=1)
         dirs = next(walk)[1]
@@ -108,3 +108,14 @@ class HDFSTestCase(unittest.TestCase):
         self.assertFalse(status)
 
         utils.delete_dir('/test', recursive=True)
+
+    def test_upload_archive_failed(self):
+        faulty_tar = MagicMock()
+        faulty_tar.extractall.side_effect = tarfile.ReadError()
+
+        tmp_dump_dir = tempfile.mkdtemp()
+        ListenbrainzHDFSUploader().upload_archive(tmp_dump_dir, faulty_tar, '/test', schema.listen_schema,
+                                                  ListenbrainzDataUploader().process_json_listens)
+
+        status = utils.path_exists('/test')
+        self.assertFalse(status)
