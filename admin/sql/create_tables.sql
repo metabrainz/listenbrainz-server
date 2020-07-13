@@ -132,6 +132,7 @@ CREATE TABLE statistics.user (
     release                 JSONB,
     recording               JSONB,
     listening_activity      JSONB,
+    daily_activity          JSONB,
     last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
