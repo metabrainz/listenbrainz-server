@@ -39,6 +39,11 @@
     "description": "Calculate the number of listens for an user in each year starting from LAST_FM_FOUNDING_YEAR (2002).",
     "params": []
   },
+  "stats.user.daily_activity": {
+    "name": "stats.user.daily_activity",
+    "description": "Calculate the number of listens per hour for an user.",
+    "params": []
+  },
   "import.dump.full_newest": {
     "name": "import.dump.full_newest",
     "description": "Import the newest available full dump into the spark cluster",
@@ -62,12 +67,21 @@
   "cf_recording.recommendations.candidate_sets": {
     "name": "cf_recording.recommendations.candidate_sets",
     "description": "Create candidate sets to generate recommendations",
-    "params": ["recommendation_generation_window", "top_artist_limit", "similar_artist_limit", "users"]
+    "params": [
+      "recommendation_generation_window",
+      "top_artist_limit",
+      "similar_artist_limit",
+      "users"
+    ]
   },
   "cf_recording.recommendations.recommend": {
     "name": "cf_recording.recommendations.recommend",
     "description": "Generate recommendations for all active ListenBrainz users.",
-    "params": ["recommendation_top_artist_limit", "recommendation_similar_artist_limit", "users"]
+    "params": [
+      "recommendation_top_artist_limit",
+      "recommendation_similar_artist_limit",
+      "users"
+    ]
   },
   "import.mapping": {
     "name": "import.mapping",

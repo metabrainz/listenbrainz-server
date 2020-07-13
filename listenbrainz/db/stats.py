@@ -27,9 +27,11 @@ from typing import Optional
 import sqlalchemy
 from flask import current_app
 from pydantic import ValidationError
+from listenbrainz import db
+from data.model.user_daily_activity import (UserDailyActivityStat,
+                                            UserDailyActivityStatJson)
 from data.model.user_listening_activity import (UserListeningActivityStat,
                                                 UserListeningActivityStatJson)
-from listenbrainz import db
 from data.model.user_artist_stat import (UserArtistStat,
                                          UserArtistStatJson)
 from data.model.user_recording_stat import (UserRecordingStat,
@@ -118,6 +120,18 @@ def insert_user_listening_activity(user_id: int, listening_activity: UserListeni
              listening_activity: the listening_activity stats of the user
     """
     _insert_jsonb_data(user_id=user_id, column='listening_activity', data=listening_activity.dict(exclude_none=True))
+
+
+def insert_user_daily_activity(user_id: int, daily_activity: UserDailyActivityStatJson):
+    """Inserts daily_activity stats calculated from Spark into the database.
+
+       If stats are already present for some user, they are updated to the new
+       values passed.
+
+       Args: user_id: the row id of the user,
+             daily_activity: the daily_activity stats of the user
+    """
+    _insert_jsonb_data(user_id=user_id, column='daily_activity', data=daily_activity.dict(exclude_none=True))
 
 
 def get_user_stats(user_id, columns):
