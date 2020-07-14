@@ -111,7 +111,9 @@ class HDFSTestCase(unittest.TestCase):
 
     def test_upload_archive_failed(self):
         faulty_tar = MagicMock()
-        faulty_tar.extractall.side_effect = tarfile.ReadError()
+        faulty_tar.extract.side_effect = tarfile.ReadError()
+        member = MagicMock()
+        faulty_tar.__iter__.return_value = [member]
 
         tmp_dump_dir = tempfile.mkdtemp()
         ListenbrainzHDFSUploader().upload_archive(tmp_dump_dir, faulty_tar, '/test', schema.listen_schema,
