@@ -80,7 +80,7 @@ class TimescaleListenStore(ListenStore):
                 result = connection.execute(sqlalchemy.text(query), {
                     "user_name": user_name,
                 })
-                count = int(result.fetchone()[0] or -1)
+                count = int(result.fetchone()[0] or 0)
 
         except psycopg2.OperationalError as e:
             self.log.error("Cannot query timescale listen_count: %s" % str(e), exc_info=True)

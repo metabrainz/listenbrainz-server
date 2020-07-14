@@ -118,8 +118,10 @@ class APITestCase(IntegrationTestCase):
         self.assertEqual(data['count'], 1)
 
         url = url_for('api_v1.get_listen_count', user_name="sir_dumpsterfire")
-        with self.assertRaises(APINotFound):
-            self.client.get(url)
+        response = self.client.get(url)
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        self.assertEqual(data['count'], 0)
 
 
     def send_data(self, payload):

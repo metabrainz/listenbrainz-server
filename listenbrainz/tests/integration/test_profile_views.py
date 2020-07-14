@@ -98,10 +98,7 @@ class ProfileViewsTestCase(IntegrationTestCase):
         # check that listens have been successfully deleted
         resp = self.client.get(url_for('api_v1.get_listen_count', user_name=self.user['musicbrainz_id']))
         self.assert200(resp)
-        self.assertEqual(json.loads(resp.data)['payload']['count'] == 0)
-
-        # check that the artist_count has been reset
-        self.assertIsNone(props['artist_count'])
+        self.assertEqual(json.loads(resp.data)['payload']['count'], 0)
 
         # check that the latest_import timestamp has been reset too
         resp = self.client.get(url_for('api_v1.latest_import', user_name=self.user['musicbrainz_id']))
