@@ -78,7 +78,7 @@ export default class Bar extends React.Component<BarProps, BarState> {
     const marginLeft = Math.min((width || window.innerWidth) / 2, 400);
     const tableDigitWidth = data[0]?.idx.toString().length;
 
-    const leftAlignedTick = (tick: Tick) => {
+    const leftAlignedTick = <Tick extends any>(tick: Tick) => {
       const datum = data[tick.tickIndex];
       const { entity, artist, release, idx } = datum;
 

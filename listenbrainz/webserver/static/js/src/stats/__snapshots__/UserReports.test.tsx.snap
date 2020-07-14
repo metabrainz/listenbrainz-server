@@ -1,0 +1,64 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`UserReports renders without crashing 1`] = `
+<div>
+  <div
+    className="row mt-15"
+  >
+    <div
+      className="col-xs-12"
+    >
+      <Pill
+        active={true}
+        onClick={[Function]}
+        type="secondary"
+      >
+        Week
+      </Pill>
+      <Pill
+        active={false}
+        onClick={[Function]}
+        type="secondary"
+      >
+        Month
+      </Pill>
+      <Pill
+        active={false}
+        onClick={[Function]}
+        type="secondary"
+      >
+        Year
+      </Pill>
+      <Pill
+        active={false}
+        onClick={[Function]}
+        type="secondary"
+      >
+        All Time
+      </Pill>
+    </div>
+  </div>
+  <div
+    className="row"
+  >
+    <div
+      className="col-xs-12"
+    >
+      <h3>
+        Listening Activity
+      </h3>
+    </div>
+  </div>
+  <ErrorBoundary>
+    <UserListeningActivity
+      apiUrl="foobar"
+      range="week"
+      user={
+        Object {
+          "name": "test_user",
+        }
+      }
+    />
+  </ErrorBoundary>
+</div>
+`;
