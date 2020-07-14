@@ -39,10 +39,15 @@
     "description": "Calculate the number of listens for an user in each year starting from LAST_FM_FOUNDING_YEAR (2002).",
     "params": []
   },
-  "import.dump.full": {
-    "name": "import.dump.full",
-    "description": "Import a new full dump into the spark cluster",
+  "import.dump.full_newest": {
+    "name": "import.dump.full_newest",
+    "description": "Import the newest available full dump into the spark cluster",
     "params": []
+  },
+  "import.dump.full_id": {
+    "name": "import.dump.full_id",
+    "description": "Import full dump with the specified ID into the spark cluster",
+    "params": ["id"]
   },
   "cf_recording.recommendations.create_dataframes": {
     "name": "cf_recording.recommendations.create_dataframes",

@@ -107,10 +107,15 @@ def request_user_stats(type_, range_, entity):
 
 
 @cli.command(name="request_import_full")
-def request_import_new_full_dump():
+@click.option("--id", "id_", type=int, required=False,
+              help="Optional. ID of the full dump to import, defaults to latest dump available on FTP server")
+def request_import_new_full_dump(id_: int):
     """ Send the cluster a request to import a new full data dump
     """
-    send_request_to_spark_cluster(_prepare_query_message('import.dump.full'))
+    if id_:
+        send_request_to_spark_cluster(_prepare_query_message('import.dump.full_id', params={'id': id_}))
+    else:
+        send_request_to_spark_cluster(_prepare_query_message('import.dump.full_newest'))
 
 
 @cli.command(name="request_dataframes")
