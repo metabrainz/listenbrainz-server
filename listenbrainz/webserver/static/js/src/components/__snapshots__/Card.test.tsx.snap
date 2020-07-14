@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Card renders correctly 1`] = `
+<Card>
+  <div
+    style={
+      Object {
+        "background": "#FFFFFF",
+        "border": "1px solid #EEEEEE",
+        "borderRadius": "12px",
+        "boxShadow": "0px 4px 4px rgba(192,192,192,0.25)",
+        "boxSizing": "border-box",
+        "height": "100%",
+        "width": "100%",
+      }
+    }
+  >
+    Test
+  </div>
+</Card>
+`;

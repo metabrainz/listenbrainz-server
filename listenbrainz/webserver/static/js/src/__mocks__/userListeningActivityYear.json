@@ -1,0 +1,119 @@
+{
+  "payload": {
+    "from_ts": 1546300800,
+    "last_updated": 1593539726,
+    "listening_activity": [
+      {
+        "from_ts": 1546300800,
+        "listen_count": 0,
+        "time_range": "January 2019",
+        "to_ts": 1548979199
+      },
+      {
+        "from_ts": 1548979200,
+        "listen_count": 0,
+        "time_range": "February 2019",
+        "to_ts": 1551398399
+      },
+      {
+        "from_ts": 1551398400,
+        "listen_count": 0,
+        "time_range": "March 2019",
+        "to_ts": 1554076799
+      },
+      {
+        "from_ts": 1554076800,
+        "listen_count": 0,
+        "time_range": "April 2019",
+        "to_ts": 1556668799
+      },
+      {
+        "from_ts": 1556668800,
+        "listen_count": 0,
+        "time_range": "May 2019",
+        "to_ts": 1559347199
+      },
+      {
+        "from_ts": 1559347200,
+        "listen_count": 0,
+        "time_range": "June 2019",
+        "to_ts": 1561939199
+      },
+      {
+        "from_ts": 1561939200,
+        "listen_count": 0,
+        "time_range": "July 2019",
+        "to_ts": 1564617599
+      },
+      {
+        "from_ts": 1564617600,
+        "listen_count": 0,
+        "time_range": "August 2019",
+        "to_ts": 1567295999
+      },
+      {
+        "from_ts": 1567296000,
+        "listen_count": 0,
+        "time_range": "September 2019",
+        "to_ts": 1569887999
+      },
+      {
+        "from_ts": 1569888000,
+        "listen_count": 0,
+        "time_range": "October 2019",
+        "to_ts": 1572566399
+      },
+      {
+        "from_ts": 1572566400,
+        "listen_count": 0,
+        "time_range": "November 2019",
+        "to_ts": 1575158399
+      },
+      {
+        "from_ts": 1575158400,
+        "listen_count": 0,
+        "time_range": "December 2019",
+        "to_ts": 1577836799
+      },
+      {
+        "from_ts": 1577836800,
+        "listen_count": 0,
+        "time_range": "January 2020",
+        "to_ts": 1580515199
+      },
+      {
+        "from_ts": 1580515200,
+        "listen_count": 425,
+        "time_range": "February 2020",
+        "to_ts": 1583020799
+      },
+      {
+        "from_ts": 1583020800,
+        "listen_count": 1429,
+        "time_range": "March 2020",
+        "to_ts": 1585699199
+      },
+      {
+        "from_ts": 1585699200,
+        "listen_count": 722,
+        "time_range": "April 2020",
+        "to_ts": 1588291199
+      },
+      {
+        "from_ts": 1588291200,
+        "listen_count": 645,
+        "time_range": "May 2020",
+        "to_ts": 1590969599
+      },
+      {
+        "from_ts": 1590969600,
+        "listen_count": 359,
+        "time_range": "June 2020",
+        "to_ts": 1593561599
+      }
+    ],
+    "range": "year",
+    "to_ts": 1592611115,
+    "user_id": "ishaanshah"
+  }
+}

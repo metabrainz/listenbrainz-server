@@ -182,7 +182,7 @@ export default class APIService {
   getUserEntity = async (
     userName: string,
     entity: Entity,
-    range: UserEntityAPIRange = "all_time",
+    range: UserStatsAPIRange = "all_time",
     offset: number = 0,
     count?: number
   ): Promise<
@@ -195,6 +195,23 @@ export default class APIService {
     const response = await fetch(url);
     this.checkStatus(response);
     // if response code is 204, then statistics havent been calculated, send empty object
+    if (response.status === 204) {
+      const error = new APIError(`HTTP Error ${response.statusText}`);
+      error.status = response.statusText;
+      error.response = response;
+      throw error;
+    }
+    const data = response.json();
+    return data;
+  };
+
+  getUserListeningActivity = async (
+    userName: string,
+    range: UserStatsAPIRange = "all_time"
+  ): Promise<UserListeningActivityResponse> => {
+    const url = `${this.APIBaseURI}/stats/user/${userName}/listening-activity?range=${range}`;
+    const response = await fetch(url);
+    this.checkStatus(response);
     if (response.status === 204) {
       const error = new APIError(`HTTP Error ${response.statusText}`);
       error.status = response.statusText;
