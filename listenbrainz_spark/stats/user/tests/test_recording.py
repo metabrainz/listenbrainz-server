@@ -41,7 +41,7 @@ class RecordingTestCase(SparkTestCase):
                                                  release_name=entry['release_name'], release_msid=entry['release_msid'],
                                                  release_mbid=entry['release_mbid'], artist_name=entry['artist_name'],
                                                  artist_msid=entry['artist_msid'], artist_mbids=entry['artist_mbids']),
-                                             schema=None)
+                                             schema=schema)
                 df = df.union(row) if df else row
 
         utils.save_parquet(df, os.path.join(self.path_, '{}/{}.parquet'.format(now.year, now.month)))
@@ -51,27 +51,11 @@ class RecordingTestCase(SparkTestCase):
         df = utils.get_listens(datetime.now(), datetime.now(), self.path_)
         df.createOrReplaceTempView('test_view')
 
-        expected = defaultdict(list)
         with open(self.path_to_data_file('user_top_recordings.json')) as f:
             data = json.load(f)
 
-        for entry in data:
-            expected[entry['user_name']].append({
-                'track_name': entry['track_name'],
-                'recording_msid': entry['recording_msid'] or None if entry['recording_mbid'] == "" else None,
-                'recording_mbid': entry['recording_mbid'] or None,
-                'release_name': entry['release_name'] or None,
-                'release_msid': entry['release_msid'] or None if entry['release_mbid'] == "" else None,
-                'release_mbid': entry['release_mbid'] or None,
-                'artist_name': entry['artist_name'],
-                'artist_msid': entry['artist_msid'] or None if len(entry['artist_mbids']) == 0 else None,
-                'artist_mbids': entry['artist_mbids'],
-                'listen_count': entry['count']
-            })
-
-        # Sort in descending order w.r.t to listen_count
-        for user_name, user_recordings in expected.items():
-            user_recordings.sort(key=lambda recording: recording['listen_count'], reverse=True)
+        with open(self.path_to_data_file('user_top_recordings_output.json')) as f:
+            expected = json.load(f)
 
         data = recording_stats.get_recordings('test_view')
         received = defaultdict(list)

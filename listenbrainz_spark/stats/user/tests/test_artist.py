@@ -46,21 +46,11 @@ class ArtistTestCase(SparkTestCase):
         df = utils.get_listens(datetime.now(), datetime.now(), self.path_)
         df.createOrReplaceTempView('test_view')
 
-        expected = defaultdict(list)
         with open(self.path_to_data_file('user_top_artists.json')) as f:
             data = json.load(f)
 
-        for entry in data:
-            expected[entry['user_name']].append({
-                'artist_name': entry['artist_name'],
-                'artist_msid': entry['artist_msid'] or None if len(entry['artist_mbids']) == 0 else None,
-                'artist_mbids': entry['artist_mbids'],
-                'listen_count': entry['count']
-            })
-
-        # Sort in descending order w.r.t to listen_count
-        for user_name, user_artists in expected.items():
-            user_artists.sort(key=lambda artist: artist['listen_count'], reverse=True)
+        with open(self.path_to_data_file('user_top_artists_output.json')) as f:
+            expected = json.load(f)
 
         data = artist_stats.get_artists('test_view')
         received = defaultdict(list)

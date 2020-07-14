@@ -9,7 +9,21 @@
   {
     "user_name": "user1",
     "artist_name": "artist2",
+    "artist_msid": "2",
+    "artist_mbids": ["2"],
+    "count": 3
+  },
+  {
+    "user_name": "user1",
+    "artist_name": "artist2",
     "artist_msid": "",
+    "artist_mbids": ["2"],
+    "count": 3
+  },
+  {
+    "user_name": "user1",
+    "artist_name": "artist2",
+    "artist_msid": null,
     "artist_mbids": ["2"],
     "count": 3
   },
@@ -24,7 +38,7 @@
     "user_name": "user2",
     "artist_name": "artist1",
     "artist_msid": "",
-    "artist_mbids": [""],
+    "artist_mbids": [],
     "count": 4
   },
   {
