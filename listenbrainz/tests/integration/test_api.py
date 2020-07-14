@@ -1,9 +1,11 @@
 import sys
 import os
 import uuid
+import unittest
 
 from listenbrainz.tests.integration import IntegrationTestCase
 from listenbrainz.db import timescale as ts
+from listenbrainz.webserver.errors import APINotFound
 from flask import url_for, current_app
 from redis import Redis
 import listenbrainz.db.user as db_user
@@ -108,6 +110,17 @@ class APITestCase(IntegrationTestCase):
         self.assert200(response)
         data = json.loads(response.data)['payload']
         self.assertEqual(data['count'], 1)
+
+        url = url_for('api_v1.get_listen_count', user_name=self.user['musicbrainz_id'])
+        response = self.client.get(url)
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        self.assertEqual(data['count'], 1)
+
+        url = url_for('api_v1.get_listen_count', user_name="sir_dumpsterfire")
+        with self.assertRaises(APINotFound):
+            self.client.get(url)
+
 
     def send_data(self, payload):
         """ Sends payload to api.submit_listen and return the response
