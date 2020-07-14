@@ -130,6 +130,11 @@ def create_messages(data, entity: str, stats_range: str, from_ts: int, to_ts: in
     """
     for entry in data:
         _dict = entry.asDict(recursive=True)
+
+        # Clip the recordings to top 1000 so that we don't drop messages
+        if entity == "recordings" and stats_range == "all_time":
+            _dict[entity] = _dict[entity][:1000]
+
         try:
             model = UserEntityStatMessage(**{
                 'musicbrainz_id': _dict['user_name'],

@@ -86,3 +86,34 @@ class EntityTestCase(SparkTestCase):
         mock_df.createOrReplaceTempView.assert_called_with('user_test_all_time')
         mock_create_messages.assert_called_with(data='user_test_all_time_data', entity='test', stats_range='all_time',
                                                 from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
+
+    def test_create_messages_recordings(self):
+        """ Test to check if the number of recordings are clipped to top 1000 """
+        recordings = []
+        for i in range(0, 2000):
+            recordings.append({
+                'artist_name': 'artist_{}'.format(i),
+                'artist_msid': str(i),
+                'artist_mbids': [str(i)],
+                'release_name': 'release_{}'.format(i),
+                'release_msid': str(i),
+                'release_mbid': str(i),
+                'track_name': 'recording_{}'.format(i),
+                'recording_mbid': str(i),
+                'recording_msid': str(i),
+                'listen_count': i
+            })
+
+        mock_result = MagicMock()
+        mock_result.asDict.return_value = {
+            'user_name': "test",
+            'recordings': recordings
+        }
+
+        messages = entity_stats.create_messages([mock_result], 'recordings', 'all_time', 0, 10)
+
+        received_list = next(messages)['data']
+        expected_list = recordings[:1000]
+
+        self.assertEqual(len(received_list), 1000)
+        self.assertListEqual(expected_list, received_list)
