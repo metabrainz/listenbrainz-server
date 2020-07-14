@@ -406,7 +406,7 @@ export default class RecentListens extends React.Component<
     const { user, oldestListenTs } = this.props;
     const newListens = await this.APIService.getListensForUser(
       user.name,
-      oldestListenTs
+      oldestListenTs - 1
     );
     // When calling the API with minTs, listens are returned sorted by ascending listened_at
     newListens.reverse();
@@ -415,7 +415,7 @@ export default class RecentListens extends React.Component<
       nextListenTs: undefined,
       previousListenTs: newListens[0].listened_at,
     });
-    window.history.pushState(null, "", `?min_ts=${oldestListenTs}`);
+    window.history.pushState(null, "", `?min_ts=${oldestListenTs - 1}`);
   };
 
   handleKeyDown = (event: KeyboardEvent) => {
