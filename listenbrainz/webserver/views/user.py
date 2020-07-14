@@ -37,13 +37,6 @@ def profile(user_name):
     # User name used to get user may not have the same case as original user name.
     user_name = user.musicbrainz_id
 
-    try:
-        have_listen_count = True
-        listen_count = db_conn.get_listen_count_for_user(user_name)
-    except psycopg2.OperationalError:
-        have_listen_count = False
-        listen_count = 0
-
     # Getting data for current page
     max_ts = request.args.get("max_ts")
     if max_ts is not None:
@@ -123,8 +116,6 @@ def profile(user_name):
         "oldest_listen_ts": min_ts_per_user,
         "latest_spotify_uri": _get_spotify_uri_for_listens(listens),
         "search_larger_time_range": listens_missing,
-        "have_listen_count": have_listen_count,
-        "listen_count": format(int(listen_count), ",d"),
         "artist_count": format(artist_count, ",d") if artist_count else None,
         "profile_url": url_for('user.profile', user_name=user_name),
         "mode": "listens",

@@ -22,10 +22,8 @@ export interface RecentListensProps {
   followList?: string[];
   followListId?: number;
   followListName?: string;
-  haveListenCount?: boolean;
   latestListenTs: number;
   latestSpotifyUri?: string;
-  listenCount?: string;
   listens?: Array<Listen>;
   mode: ListensListMode;
   oldestListenTs: number;
@@ -45,6 +43,7 @@ export interface RecentListensState {
   listId?: number;
   listName: string;
   listens: Array<Listen>;
+  listenCount?: number;
   mode: "listens" | "follow" | "recent";
   nextListenTs?: number;
   playingNowByUser: FollowUsersPlayingNow;
@@ -434,6 +433,7 @@ export default class RecentListens extends React.Component<
       listId,
       listName,
       listens,
+      listenCount,
       mode,
       nextListenTs,
       playingNowByUser,
@@ -443,7 +443,6 @@ export default class RecentListens extends React.Component<
     const {
       artistCount,
       latestListenTs,
-      listenCount,
       oldestListenTs,
       spotify,
       user,
@@ -722,10 +721,8 @@ document.addEventListener("DOMContentLoaded", () => {
     follow_list,
     follow_list_id,
     follow_list_name,
-    have_listen_count,
     latest_listen_ts,
     latest_spotify_uri,
-    listen_count,
     listens,
     oldest_listen_ts,
     mode,
@@ -744,10 +741,8 @@ document.addEventListener("DOMContentLoaded", () => {
       followList={follow_list}
       followListId={follow_list_id}
       followListName={follow_list_name}
-      haveListenCount={have_listen_count}
       latestListenTs={latest_listen_ts}
       latestSpotifyUri={latest_spotify_uri}
-      listenCount={listen_count}
       listens={listens}
       mode={mode}
       oldestListenTs={oldest_listen_ts}
