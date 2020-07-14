@@ -193,7 +193,7 @@ def get_listens(from_date, to_date, dest_path):
         except PathNotFoundException as err:
             current_app.logger.debug('{}\nFetching file for next date...'.format(err))
         # go to the next month of from_date
-        from_date = stats.adjust_days(from_date, config.STEPS_TO_REACH_NEXT_MONTH, shift_backwards=False)
+        from_date = stats.adjust_months(date=from_date, months=1, shift_backwards=False)
         # shift to the first of the month
         from_date = stats.replace_days(from_date, 1)
     if not df:
