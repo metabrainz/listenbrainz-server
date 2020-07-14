@@ -18,7 +18,6 @@ export type ListensListMode = "listens" | "follow" | "recent";
 
 export interface RecentListensProps {
   apiUrl: string;
-  artistCount?: number | null | undefined;
   followList?: string[];
   followListId?: number;
   followListName?: string;
@@ -94,6 +93,14 @@ export default class RecentListens extends React.Component<
       // Listen to browser previous/next events and load page accordingly
       window.addEventListener("popstate", this.handleURLChange);
       document.addEventListener("keydown", this.handleKeyDown);
+
+      const { user } = this.props;
+      // Get the user listen count
+      if (user?.name) {
+        this.APIService.getUserListenCount(user.name).then((listenCount) => {
+          this.setState({ listenCount });
+        });
+      }
     }
   }
 
@@ -441,7 +448,6 @@ export default class RecentListens extends React.Component<
       saveUrl,
     } = this.state;
     const {
-      artistCount,
       latestListenTs,
       oldestListenTs,
       spotify,
@@ -458,34 +464,13 @@ export default class RecentListens extends React.Component<
           dismissTitle="Dismiss"
           onDismiss={this.onAlertDismissed}
         />
-        {mode === "listens" && (
-          <div className="row">
-            <div className="col-md-8">
-              <h3> Statistics </h3>
-              <table className="table table-border table-condensed table-striped">
-                <tbody>
-                  {listenCount && (
-                    <tr>
-                      <td>Listen count</td>
-                      <td>{listenCount}</td>
-                    </tr>
-                  )}
-                  {artistCount && (
-                    <tr>
-                      <td>Artist count</td>
-                      <td>{artistCount}</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
         <div className="row">
           <div className="col-md-8">
             <h3>
               {mode === "listens" || mode === "recent"
-                ? "Recent listens"
+                ? `Recent listens${
+                    _.isNil(listenCount) ? "" : ` (${listenCount} total)`
+                  }`
                 : "Playlist"}
             </h3>
 
@@ -717,7 +702,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   const {
     api_url,
-    artist_count,
     follow_list,
     follow_list_id,
     follow_list_name,
@@ -737,7 +721,6 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <RecentListens
       apiUrl={api_url}
-      artistCount={artist_count}
       followList={follow_list}
       followListId={follow_list_id}
       followListName={follow_list_name}
