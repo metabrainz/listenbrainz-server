@@ -285,6 +285,47 @@ describe("getUserListeningActivity", () => {
   });
 });
 
+describe("getUseListenCount", () => {
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ payload: { count: 42 } }),
+      });
+    });
+  });
+
+  it("calls fetch correctly", async () => {
+    await apiService.getUserListenCount("fnord");
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/user/fnord/listen-count",
+      {
+        method: "GET",
+      }
+    );
+  });
+
+  it("returns a number", async () => {
+    const result = await apiService.getUserListenCount("fnord");
+    expect(result).toEqual(42);
+  });
+
+  it("throws appropriate error if username is missing", async () => {
+    await expect(apiService.getUserListenCount("")).rejects.toThrow(
+      SyntaxError("Username missing")
+    );
+  });
+
+  it("calls checkStatus once", async () => {
+    apiService.checkStatus = jest.fn();
+
+    await apiService.getUserListenCount("fnord");
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("getLatestImport", () => {
   beforeEach(() => {
     // Mock function for fetch
