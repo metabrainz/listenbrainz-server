@@ -96,15 +96,20 @@ def create_full(location, threads, dump_id, last_dump_id):
             end_time = dump_entry['created']
 
         dump_name = 'listenbrainz-dump-{dump_id}-{time}-full'.format(dump_id=dump_id, time=end_time.strftime('%Y%m%d-%H%M%S'))
+        spark_dump_name = 'listenbrainz-dump-{dump_id}-{time}-spark'.format(dump_id=dump_id, time=end_time.strftime('%Y%m%d-%H%M%S'))
         dump_path = os.path.join(location, dump_name)
+        spark_dump_path = os.path.join(location, spark_dump_name)
         create_path(dump_path)
         db_dump.dump_postgres_db(dump_path, end_time, threads)
         ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads)
+        transmogrify_dump_file_to_spark_import_format(dump_name, spark_dump_name)
         try:
             write_hashes(dump_path)
+            write_hashes(spark_dump_path)
         except IOError as e:
             current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
             return
+
 
         # if in production, send an email to interested people for observability
         send_dump_creation_notification(dump_name, 'fullexport')
@@ -268,34 +273,31 @@ def write_hashes(location):
             raise
 
 
-@cli.command(name="convert_dump")
-@click.argument('in_file', type=str)
-@click.argument('out_dir', type=str)
-def transmogrify_dump_file_to_spark_import_format(in_file, out_dir):
+def transmogrify_dump_file_to_spark_import_format(in_file, out_file):
     """ Decompress and convert an LB dump,  ready for spark.
 
     Args:
         in_file: The tar.xz dump file to import
-        out_dir: The directory where the dump file should be mogrified to. If it doesn't exist,
-                 it will be created.
+        out_file: The directory where the dump file should be mogrified to. If it doesn't exist,
+                  it will be created.
     """
-    with tarfile.open(in_file, "r:xz") as tarf:  # yep, going with that one again!
-        for member in tarf:
-            if member.name.endswith(".listens"):
-                print(member.name)
-                year = os.path.split(os.path.dirname(member.name))[1]
-                file_name = os.path.split(member.name)[1]
-                out_file = os.path.join(out_dir, year, file_name)
-                try:
-                    os.makedirs(os.path.join(out_dir, year))
-                except FileExistsError: 
-                    pass
-                with open(out_file, "w") as out_f:
-                    with tarf.extractfile(member) as f:
-                        while True:
-                            line = f.readline()
-                            if not line:
-                                break
+    try:
+        with tarfile.open(in_file, "r:xz") as tarf:  # yep, going with that one again!
+            for member in tarf:
+                if member.name.endswith(".listens"):
+                    print(member.name)
+                    year = os.path.split(os.path.dirname(member.name))[1]
+                    file_name = os.path.split(member.name)[1]
+                    with open(out_file, "w") as out_f:
+                        with tarf.extractfile(member) as f:
+                            while True:
+                                line = f.readline()
+                                if not line:
+                                    break
 
-                            listen = ujson.loads(line)
-                            out_f.write(ujson.dumps(convert_dump_row_to_spark_row(listen)) + "\n")
+                                listen = ujson.loads(line)
+                                out_f.write(ujson.dumps(convert_dump_row_to_spark_row(listen)) + "\n")
+    except IOError as e:
+        current_app.logger.error('IOError while trying to mogrify spark dump file for file %s -> %s: %s',
+                                 in_file, out_file, str(e), exc_info=True)
+        raise
