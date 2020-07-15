@@ -7,7 +7,7 @@ from tarfile import TarError
 
 import listenbrainz_spark
 from listenbrainz_spark import utils, config, hdfs_connection
-from listenbrainz_spark.exceptions import SparkSessionNotInitializedException
+from listenbrainz_spark.exceptions import SparkSessionNotInitializedException, DumpInvalidException
 
 from flask import current_app
 
@@ -72,15 +72,13 @@ class ListenbrainzHDFSUploader:
                 try:
                     tar.extract(member)
                 except TarError as err:
-                    current_app.logger.error("{} while extracting {}, aborting import".format(
-                        type(err).__name__, member.name), exc_info=True)
                     # Cleanup
                     if utils.path_exists('/temp'):
                         utils.delete_dir('/temp', recursive=True)
                     if utils.path_exists(tmp_dump_dir):
                         utils.delete_dir(tmp_dump_dir, recursive=True)
                     shutil.rmtree(tmp_dump_dir)
-                    return
+                    raise DumpInvalidException("{} while extracting {}, aborting import".format(type(err).__name__, member.name))
 
                 tmp_hdfs_path = os.path.join(tmp_dump_dir, member.name)
                 utils.upload_to_HDFS(tmp_hdfs_path, member.name)
