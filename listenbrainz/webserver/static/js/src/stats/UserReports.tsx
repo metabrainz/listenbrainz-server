@@ -4,6 +4,7 @@ import * as React from "react";
 import ErrorBoundary from "../ErrorBoundary";
 import Pill from "../components/Pill";
 import UserListeningActivity from "./UserListeningActivity";
+import UserTopEntity from "./UserTopEntity";
 
 export type UserReportsProps = {
   user: ListenBrainzUser;
@@ -103,12 +104,44 @@ export default class UserReports extends React.Component<
         </div>
         <div className="row">
           <div className="col-xs-12">
-            <h3>Listening Activity</h3>
+            <h3 className="capitalize-bold">Listening Activity</h3>
           </div>
         </div>
         <ErrorBoundary>
           <UserListeningActivity range={range} apiUrl={apiUrl} user={user} />
         </ErrorBoundary>
+        <div className="row">
+          <div className="col-md-4">
+            <ErrorBoundary>
+              <UserTopEntity
+                range={range}
+                entity="artist"
+                apiUrl={apiUrl}
+                user={user}
+              />
+            </ErrorBoundary>
+          </div>
+          <div className="col-md-4">
+            <ErrorBoundary>
+              <UserTopEntity
+                range={range}
+                entity="release"
+                apiUrl={apiUrl}
+                user={user}
+              />
+            </ErrorBoundary>
+          </div>
+          <div className="col-md-4">
+            <ErrorBoundary>
+              <UserTopEntity
+                range={range}
+                entity="recording"
+                apiUrl={apiUrl}
+                user={user}
+              />
+            </ErrorBoundary>
+          </div>
+        </div>
       </div>
     );
   }
