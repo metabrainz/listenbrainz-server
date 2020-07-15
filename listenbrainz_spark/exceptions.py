@@ -83,7 +83,7 @@ class DumpNotFoundException(SparkException):
 
 class DumpInvalidException(SparkException):
     """ The given dump is invalid, i.e the SHA256 checksum
-        doesn't match or is not present 
+        doesn't match or is not present
     """
 
     def __init__(self, message):
