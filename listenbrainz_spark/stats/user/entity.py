@@ -130,6 +130,7 @@ def create_messages(data, entity: str, stats_range: str, from_ts: int, to_ts: in
     """
     for entry in data:
         _dict = entry.asDict(recursive=True)
+        total_entity_count = len(_dict[entity])
 
         # Clip the recordings to top 1000 so that we don't drop messages
         if entity == "recordings" and stats_range == "all_time":
@@ -144,7 +145,7 @@ def create_messages(data, entity: str, stats_range: str, from_ts: int, to_ts: in
                 'to_ts': to_ts,
                 'data': _dict[entity],
                 'entity': entity,
-                'count': len(_dict[entity])
+                'count': total_entity_count
             })
             result = model.dict(exclude_none=True)
             yield result
