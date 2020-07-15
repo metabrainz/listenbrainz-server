@@ -1,9 +1,12 @@
 import os
 import ftplib
+import hashlib
 
 from listenbrainz_spark import config
+from listenbrainz_spark.exceptions import DumpInvalidException
 
 from flask import current_app
+
 
 class ListenBrainzFTPDownloader:
 
@@ -61,7 +64,38 @@ class ListenBrainzFTPDownloader:
             Returns:
                 dest_path (str): Local path where dump has been downloaded.
         """
+        # Check if sha256 is present to validate the download, if not present don't download
+        sha_filename = filename + '.sha256'
+        dir_content = self.list_dir()
+        sha_dest_path = os.path.join(directory, sha_filename)
+        if sha_filename in dir_content:
+            self.download_file_binary(sha_filename, sha_dest_path)
+        else:
+            raise DumpInvalidException("SHA256 checksum for the given file missing, aborting download.")
         dest_path = os.path.join(directory, filename)
         self.download_file_binary(filename, dest_path)
+
+        current_app.logger.info("Verifying dump integrity...")
+        calculated_sha = self._calc_sha256(dest_path)
+        with open(sha_dest_path, "r") as f:
+            received_sha = f.read().replace('\n', '')
+
+        os.remove(sha_dest_path)
+        if calculated_sha != received_sha:
+            # Cleanup
+            os.remove(dest_path)
+            raise DumpInvalidException("Received SHA256 checksum doesn't match the calculated checksum, aborting.")
+
         self.connection.cwd('/')
         return dest_path
+
+    def _calc_sha256(self, filepath: str) -> str:
+        """ Takes in path of a file and calculates the SHA256 checksum for it
+        """
+        calculated_sha = hashlib.sha256()
+        with open(filepath, "rb") as f:
+            # Read and update hash string value in blocks of 4K
+            for byte_block in iter(lambda: f.read(4096), b""):
+                calculated_sha.update(byte_block)
+
+        return calculated_sha.hexdigest()

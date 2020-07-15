@@ -38,6 +38,7 @@ from time import sleep
 # }
 # All the keys in the dict are column/field names in a Spark dataframe.
 
+
 def append(df, dest_path):
     """ Append a dataframe to existing dataframe in HDFS or write a new one
         if dataframe does not exist.
@@ -51,6 +52,7 @@ def append(df, dest_path):
         df.write.mode('append').parquet(config.HDFS_CLUSTER_URI + dest_path)
     except Py4JJavaError as err:
         raise DataFrameNotAppendedException(err.java_exception, df.schema)
+
 
 def create_app(debug=None):
     """ Uses brainzutils (https://github.com/metabrainz/brainzutils-python) to log exceptions to sentry.
@@ -109,12 +111,14 @@ def create_dataframe(row, schema):
     except Py4JJavaError as err:
         raise DataFrameNotCreatedException(err.java_exception, row)
 
+
 def create_path(path):
     try:
         os.makedirs(path)
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
+
 
 def register_dataframe(df, table_name):
     """ Creates a view to be used for Spark SQL, etc. Replaces the view if a view with the
@@ -128,6 +132,7 @@ def register_dataframe(df, table_name):
         df.createOrReplaceTempView(table_name)
     except Py4JJavaError as err:
         raise ViewNotRegisteredException(err.java_exception, table_name)
+
 
 def read_files_from_HDFS(path):
     """ Loads the dataframe stored at the given path in HDFS.
@@ -214,6 +219,7 @@ def save_parquet(df, path):
     except Py4JJavaError as err:
         raise FileNotSavedException(err.java_exception, path)
 
+
 def create_dir(path):
     """ Creates a directory in HDFS.
 
@@ -224,6 +230,7 @@ def create_dir(path):
               >> The function does not throw an error if the directory path already exists.
     """
     hdfs_connection.client.makedirs(path)
+
 
 def delete_dir(path, recursive=False):
     """ Deletes a directory recursively from HDFS.
@@ -239,6 +246,7 @@ def delete_dir(path, recursive=False):
     if not deleted:
         raise HDFSDirectoryNotDeletedException('', path)
 
+
 def path_exists(path):
     """ Checks if the path exists in HDFS. The function returns False if the path
         does not exist otherwise returns True.
@@ -252,6 +260,7 @@ def path_exists(path):
     if path_found:
         return True
     return False
+
 
 def hdfs_walk(path, depth=0):
     """ Depth-first walk of HDFS filesystem.
@@ -269,6 +278,7 @@ def hdfs_walk(path, depth=0):
     except HdfsError as err:
         raise PathNotFoundException(str(err), path)
 
+
 def read_json(hdfs_path, schema):
     """ Upload JSON file to HDFS as parquet.
 
@@ -282,6 +292,7 @@ def read_json(hdfs_path, schema):
     df = listenbrainz_spark.session.read.json(config.HDFS_CLUSTER_URI + hdfs_path, schema=schema)
     return df
 
+
 def upload_to_HDFS(hdfs_path, local_path):
     """ Upload local file to HDFS.
 
@@ -290,3 +301,13 @@ def upload_to_HDFS(hdfs_path, local_path):
             local_path (str): Local path of file to be uploaded.
     """
     hdfs_connection.client.upload(hdfs_path=hdfs_path, local_path=local_path)
+
+
+def rename(hdfs_src_path: str, hdfs_dst_path: str):
+    """ Move a file or folder in HDFS
+
+        Args:
+            hdfs_src_path – Source path.
+            hdfs_dst_path – Destination path. If the path already exists and is a directory, the source will be moved into it.
+    """
+    hdfs_connection.client.rename(hdfs_src_path, hdfs_dst_path)
