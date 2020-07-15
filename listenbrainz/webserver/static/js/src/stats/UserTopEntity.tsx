@@ -99,6 +99,8 @@ export default class UserTopEntity extends React.Component<
     const { entity, range, user } = this.props;
     const { data, loading, hasError, errorMessage } = this.state;
 
+    const entityTextOnCard = `${entity}s`;
+
     return (
       <Card
         style={{
@@ -109,7 +111,7 @@ export default class UserTopEntity extends React.Component<
           alignItems: "center",
         }}
       >
-        <h3 className="capitalize-bold">Top {entity}</h3>
+        <h3 className="capitalize-bold">Top {entityTextOnCard}</h3>
         <table
           style={{
             whiteSpace: "nowrap",
