@@ -60,8 +60,10 @@ class FTPTestCase(SparkTestCase):
         mock_sha_calc.assert_called_once()
         mock_ftp.cwd.assert_called_once_with('/')
 
+    @patch('ftplib.FTP')
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.list_dir', return_value=['fakefile.txt'])
-    def test_download_dump_sha_not_available(self, mock_list_dir):
+    def test_download_dump_sha_not_available(self, mock_list_dir, mock_ftp_cons):
+        mock_ftp = mock_ftp_cons.return_value
         filename = 'fakefile.txt'
         directory = 'fakedir'
 
@@ -81,4 +83,3 @@ class FTPTestCase(SparkTestCase):
         with patch('listenbrainz_spark.ftp.open', mock_open(read_data='test'), create=True) as mock_file:
             self.assertRaises(DumpInvalidException,
                               listenbrainz_spark.ftp.ListenBrainzFTPDownloader().download_dump, filename, directory)
-

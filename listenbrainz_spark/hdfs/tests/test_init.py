@@ -10,6 +10,7 @@ from unittest.mock import patch, Mock, call, MagicMock
 
 import listenbrainz_spark
 from listenbrainz_spark import config, utils, schema
+from listenbrainz_spark.exceptions import DumpInvalidException
 from listenbrainz_spark.hdfs import ListenbrainzHDFSUploader
 from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
 
@@ -116,8 +117,8 @@ class HDFSTestCase(unittest.TestCase):
         faulty_tar.__iter__.return_value = [member]
 
         tmp_dump_dir = tempfile.mkdtemp()
-        ListenbrainzHDFSUploader().upload_archive(tmp_dump_dir, faulty_tar, '/test', schema.listen_schema,
-                                                  ListenbrainzDataUploader().process_json_listens)
+        self.assertRaises(DumpInvalidException, ListenbrainzHDFSUploader().upload_archive, tmp_dump_dir,
+                          faulty_tar, '/test', schema.listen_schema, ListenbrainzDataUploader().process_json_listens)
 
         status = utils.path_exists('/test')
         self.assertFalse(status)
