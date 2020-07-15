@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
@@ -116,9 +117,57 @@ class EntityTestCase(SparkTestCase):
         received_list = message['data']
         expected_list = recordings[:1000]
 
-        self.assertEqual(len(received_list), 1000)
-        self.assertListEqual(expected_list, received_list)
-
         received_count = message['count']
         expected_count = 2000
         self.assertEqual(received_count, expected_count)
+
+    def test_skip_incorrect_artists_stats(self):
+        """ Test to check if entries with incorrect data is skipped for top user artists """
+        with open(self.path_to_data_file('user_top_artists_incorrect.json')) as f:
+            data = json.load(f)
+
+        mock_result = MagicMock()
+        mock_result.asDict.return_value = {
+            'user_name': "test",
+            'artists': data
+        }
+
+        messages = entity_stats.create_messages([mock_result], 'artists', 'all_time', 0, 10)
+        received_list = next(messages)['data']
+
+        # Only the first entry in file is valid, all others must be skipped
+        self.assertListEqual(data[:1], received_list)
+
+    def test_skip_incorrect_releases_stats(self):
+        """ Test to check if entries with incorrect data is skipped for top user releases """
+        with open(self.path_to_data_file('user_top_releases_incorrect.json')) as f:
+            data = json.load(f)
+
+        mock_result = MagicMock()
+        mock_result.asDict.return_value = {
+            'user_name': "test",
+            'releases': data
+        }
+
+        messages = entity_stats.create_messages([mock_result], 'releases', 'all_time', 0, 10)
+        received_list = next(messages)['data']
+
+        # Only the first entry in file is valid, all others must be skipped
+        self.assertListEqual(data[:1], received_list)
+
+    def test_skip_incorrect_recordings_stats(self):
+        """ Test to check if entries with incorrect data is skipped for top user recordings """
+        with open(self.path_to_data_file('user_top_recordings_incorrect.json')) as f:
+            data = json.load(f)
+
+        mock_result = MagicMock()
+        mock_result.asDict.return_value = {
+            'user_name': "test",
+            'recordings': data
+        }
+
+        messages = entity_stats.create_messages([mock_result], 'recordings', 'all_time', 0, 10)
+        received_list = next(messages)['data']
+
+        # Only the first entry in file is valid, all others must be skipped
+        self.assertListEqual(data[:1], received_list)

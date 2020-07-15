@@ -6,6 +6,9 @@ from flask import current_app
 from pydantic import ValidationError
 
 from data.model.user_entity import UserEntityStatMessage
+from data.model.user_artist_stat import UserArtistRecord
+from data.model.user_release_stat import UserReleaseRecord
+from data.model.user_recording_stat import UserRecordingRecord
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
 from listenbrainz_spark.stats import (adjust_days, replace_days,
@@ -22,6 +25,12 @@ entity_handler_map = {
     'artists': get_artists,
     'releases': get_releases,
     'recordings': get_recordings
+}
+
+entity_model_map = {
+    'artists': UserArtistRecord,
+    'releases': UserReleaseRecord,
+    'recordings': UserRecordingRecord
 }
 
 
@@ -136,6 +145,14 @@ def create_messages(data, entity: str, stats_range: str, from_ts: int, to_ts: in
         if entity == "recordings" and stats_range == "all_time":
             _dict[entity] = _dict[entity][:1000]
 
+        entity_list = []
+        for item in _dict[entity]:
+            try:
+                entity_list.append(entity_model_map[entity](**item))
+            except ValidationError:
+                current_app.logger.warning("""Invalid entry present in {stats_range} top {entity} for
+                                        user: {user_name}, skipping""".format(stats_range=stats_range, entity=entity,
+                                                                              user_name=_dict['user_name']))
         try:
             model = UserEntityStatMessage(**{
                 'musicbrainz_id': _dict['user_name'],
@@ -143,7 +160,7 @@ def create_messages(data, entity: str, stats_range: str, from_ts: int, to_ts: in
                 'stats_range': stats_range,
                 'from_ts': from_ts,
                 'to_ts': to_ts,
-                'data': _dict[entity],
+                'data': entity_list,
                 'entity': entity,
                 'count': total_entity_count
             })

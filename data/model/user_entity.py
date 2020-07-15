@@ -15,5 +15,7 @@ class UserEntityStatMessage(pydantic.BaseModel):
     stats_range: str  # The range for which the stats are calculated, i.e week, month, year or all_time
     from_ts: int
     to_ts: int
+    # Order of the records in union is important and should be from more specific to less specific
+    # For more info read https://pydantic-docs.helpmanual.io/usage/types/#unions
     data: List[Union[UserRecordingRecord, UserReleaseRecord, UserArtistRecord]]
     count: int
