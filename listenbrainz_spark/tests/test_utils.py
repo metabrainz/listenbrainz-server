@@ -7,6 +7,7 @@ from listenbrainz_spark import utils, hdfs_connection, config
 
 from pyspark.sql import Row
 
+
 class UtilsTestCase(SparkTestCase):
     # use path_ as prefix for all paths in this class.
     path_ = '/test'
@@ -83,3 +84,14 @@ class UtilsTestCase(SparkTestCase):
         utils.upload_to_HDFS(self.path_, local_path)
         status = utils.path_exists(self.path_)
         self.assertTrue(status)
+
+    def test_rename(self):
+        utils.create_dir(self.path_)
+        test_exists = utils.path_exists(self.path_)
+        self.assertTrue(test_exists)
+        utils.rename(self.path_, '/temp')
+        test_exists = utils.path_exists(self.path_)
+        self.assertFalse(test_exists)
+        temp_exists = utils.path_exists('/temp')
+        self.assertTrue(temp_exists)
+        utils.delete_dir('/temp')
