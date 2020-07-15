@@ -113,11 +113,13 @@ class EntityTestCase(SparkTestCase):
 
         messages = entity_stats.create_messages([mock_result], 'recordings', 'all_time', 0, 10)
 
-        received_list = next(messages)['data']
+        message = next(messages)
+        received_list = message['data']
         expected_list = recordings[:1000]
 
-        self.assertEqual(len(received_list), 1000)
-        self.assertListEqual(expected_list, received_list)
+        received_count = message['count']
+        expected_count = 2000
+        self.assertEqual(received_count, expected_count)
 
     def test_skip_incorrect_artists_stats(self):
         """ Test to check if entries with incorrect data is skipped for top user artists """

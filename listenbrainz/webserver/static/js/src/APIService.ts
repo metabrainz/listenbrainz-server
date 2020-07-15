@@ -185,9 +185,7 @@ export default class APIService {
     range: UserStatsAPIRange = "all_time",
     offset: number = 0,
     count?: number
-  ): Promise<
-    UserArtistsResponse | UserReleasesResponse | UserRecordingsResponse
-  > => {
+  ): Promise<UserEntityResponse> => {
     let url = `${this.APIBaseURI}/stats/user/${userName}/${entity}s?offset=${offset}&range=${range}`;
     if (count !== null && count !== undefined) {
       url += `&count=${count}`;
