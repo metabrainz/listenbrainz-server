@@ -6,6 +6,7 @@ import APIService from "../APIService";
 import Bar from "./Bar";
 import Loader from "../components/Loader";
 import ErrorBoundary from "../ErrorBoundary";
+import Pill from "../components/Pill";
 
 export type UserEntityChartProps = {
   user: ListenBrainzUser;
@@ -105,14 +106,7 @@ export default class UserEntityChart extends React.Component<
     this.syncStateWithURL();
   };
 
-  changeEntity = (
-    newEntity: Entity,
-    event?: React.MouseEvent<HTMLElement>
-  ): void => {
-    if (event) {
-      event.preventDefault();
-    }
-
+  changeEntity = (newEntity: Entity): void => {
     const { range } = this.state;
     this.setURLParams(1, range, newEntity);
     this.syncStateWithURL();
@@ -365,36 +359,28 @@ export default class UserEntityChart extends React.Component<
       <div style={{ marginTop: "1em" }}>
         <Loader isLoading={loading}>
           <div className="row">
-            <div className="col-md-6">
-              <ul className="nav nav-pills">
-                <li className={entity === "artist" ? "active" : ""}>
-                  <a
-                    href=""
-                    role="button"
-                    onClick={(event) => this.changeEntity("artist", event)}
-                  >
-                    Artists
-                  </a>
-                </li>
-                <li className={entity === "release" ? "active" : ""}>
-                  <a
-                    href=""
-                    role="button"
-                    onClick={(event) => this.changeEntity("release", event)}
-                  >
-                    Releases
-                  </a>
-                </li>
-                <li className={entity === "recording" ? "active" : ""}>
-                  <a
-                    href=""
-                    role="button"
-                    onClick={(event) => this.changeEntity("recording", event)}
-                  >
-                    Recordings
-                  </a>
-                </li>
-              </ul>
+            <div className="col-xs-12">
+              <Pill
+                active={entity === "artist"}
+                type="secondary"
+                onClick={() => this.changeEntity("artist")}
+              >
+                Artists
+              </Pill>
+              <Pill
+                active={entity === "release"}
+                type="secondary"
+                onClick={() => this.changeEntity("release")}
+              >
+                Releases
+              </Pill>
+              <Pill
+                active={entity === "recording"}
+                type="secondary"
+                onClick={() => this.changeEntity("recording")}
+              >
+                Recordings
+              </Pill>
             </div>
           </div>
           <div className="row">
