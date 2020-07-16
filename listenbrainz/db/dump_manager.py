@@ -30,6 +30,7 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import tempfile
 
 import psycopg2
 import ujson
@@ -96,16 +97,18 @@ def create_full(location, threads, dump_id, last_dump_id):
             end_time = dump_entry['created']
 
         dump_name = 'listenbrainz-dump-{dump_id}-{time}-full'.format(dump_id=dump_id, time=end_time.strftime('%Y%m%d-%H%M%S'))
-        spark_dump_name = 'listenbrainz-dump-{dump_id}-{time}-spark'.format(dump_id=dump_id, time=end_time.strftime('%Y%m%d-%H%M%S'))
         dump_path = os.path.join(location, dump_name)
-        spark_dump_path = os.path.join(location, spark_dump_name)
         create_path(dump_path)
         db_dump.dump_postgres_db(dump_path, end_time, threads)
-        ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads)
-        transmogrify_dump_file_to_spark_import_format(dump_name, spark_dump_name)
+
+        listens_dump_file = ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads)
+        spark_dump_file = 'listenbrainz-listens-dump-{dump_id}-{time}-spark.tar.xz'.format(dump_id=dump_id,
+                           time=end_time.strftime('%Y%m%d-%H%M%S'))
+        spark_dump_path = os.path.join(location, dump_path, spark_dump_file)
+        transmogrify_dump_file_to_spark_import_format(listens_dump_file, spark_dump_path, threads)
+
         try:
             write_hashes(dump_path)
-            write_hashes(spark_dump_path)
         except IOError as e:
             current_app.logger.error('Unable to create hash files! Error: %s', str(e), exc_info=True)
             return
@@ -273,30 +276,43 @@ def write_hashes(location):
             raise
 
 
-def transmogrify_dump_file_to_spark_import_format(in_file, out_file):
+def transmogrify_dump_file_to_spark_import_format(in_file, out_file, threads):
     """ Decompress and convert an LB dump,  ready for spark.
 
     Args:
         in_file: The tar.xz dump file to import
-        out_file: The directory where the dump file should be mogrified to. If it doesn't exist,
-                  it will be created.
+        out_file: The spark dump file the dump should be mogrified to.
+        threads: The number of threads to use to compress the spark dump
     """
     try:
         with tarfile.open(in_file, "r:xz") as tarf:  # yep, going with that one again!
-            for member in tarf:
-                if member.name.endswith(".listens"):
-                    print(member.name)
-                    year = os.path.split(os.path.dirname(member.name))[1]
-                    file_name = os.path.split(member.name)[1]
-                    with open(out_file, "w") as out_f:
-                        with tarf.extractfile(member) as f:
-                            while True:
-                                line = f.readline()
-                                if not line:
-                                    break
+            with open(out_file, 'w') as archive:
+                pxz_command = ['pxz', '--compress', '-T{threads}'.format(threads=threads)]
+                pxz = subprocess.Popen(pxz_command, stdin=subprocess.PIPE, stdout=archive)
 
-                                listen = ujson.loads(line)
-                                out_f.write(ujson.dumps(convert_dump_row_to_spark_row(listen)) + "\n")
+                with tarfile.open(fileobj=pxz.stdin, mode='w|') as out_tar:
+                    for member in tarf:
+                        if member.name.endswith(".listens"):
+                            filename = member.name.replace(".listens", ".json")
+                            filename = filename.replace("-full", "-spark-full")
+                            print("mogrify: ", filename)
+                            tmp_file = tempfile.mkstemp()
+                            with os.fdopen(tmp_file[0], "w") as out_f:
+                                with tarf.extractfile(member) as f:
+                                    while True:
+                                        line = f.readline()
+                                        if not line:
+                                            break
+
+                                        listen = ujson.loads(line)
+                                        out_f.write(ujson.dumps(convert_dump_row_to_spark_row(listen)) + "\n")
+                            out_tar.add(tmp_file[1], arcname=filename)
+                            os.unlink(tmp_file[1])
+
+                pxz.stdin.close()
+
+            pxz.wait()
+
     except IOError as e:
         current_app.logger.error('IOError while trying to mogrify spark dump file for file %s -> %s: %s',
                                  in_file, out_file, str(e), exc_info=True)
