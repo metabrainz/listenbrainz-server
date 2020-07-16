@@ -1,6 +1,9 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import * as ReactDOM from "react-dom";
 import * as React from "react";
+import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 import APIService from "../APIService";
 import Bar from "./Bar";
@@ -23,8 +26,9 @@ export type UserEntityChartState = {
   maxListens: number;
   startDate: Date;
   loading: boolean;
-  calculated: boolean;
   graphContainerWidth?: number;
+  hasError: boolean;
+  errorMessage: string;
 };
 
 export default class UserEntityChart extends React.Component<
@@ -54,7 +58,8 @@ export default class UserEntityChart extends React.Component<
       maxListens: 0, // Number of listens for first artist used to scale the graph
       startDate: new Date(),
       loading: false,
-      calculated: true,
+      hasError: false,
+      errorMessage: "",
     };
 
     this.graphContainer = React.createRef();
@@ -258,6 +263,30 @@ export default class UserEntityChart extends React.Component<
       const { range: currRange, entity: currEntity } = this.state;
       let initData = {};
       if (range !== currRange || entity !== currEntity) {
+        // Check if given range is valid
+        if (["week", "month", "year", "all_time"].indexOf(range) < 0) {
+          this.setState({
+            hasError: true,
+            loading: false,
+            errorMessage: `Invalid range: ${range}`,
+            currPage: page,
+            range,
+            entity,
+          });
+          return;
+        }
+        // Check if given entity is valid
+        if (["artist", "release", "recording"].indexOf(entity) < 0) {
+          this.setState({
+            hasError: true,
+            loading: false,
+            errorMessage: `Invalid entity: ${entity}`,
+            currPage: page,
+            range,
+            entity,
+          });
+          return;
+        }
         initData = await this.getInitData(range, entity);
       }
       const data = await this.getData(page, range, entity);
@@ -265,7 +294,7 @@ export default class UserEntityChart extends React.Component<
         data: this.processData(data, page, entity),
         currPage: page,
         loading: false,
-        calculated: true,
+        hasError: false,
         range,
         entity,
         ...initData,
@@ -273,7 +302,8 @@ export default class UserEntityChart extends React.Component<
     } catch (error) {
       if (error.response && error.response?.status === 204) {
         this.setState({
-          calculated: false,
+          hasError: true,
+          errorMessage: "Statistics for the user have not been calculated",
           loading: false,
           currPage: page,
           entityCount: 0,
@@ -349,8 +379,9 @@ export default class UserEntityChart extends React.Component<
       totalPages,
       startDate,
       loading,
-      calculated,
       graphContainerWidth,
+      hasError,
+      errorMessage,
     } = this.state;
     const prevPage = currPage - 1;
     const nextPage = currPage + 1;
@@ -460,74 +491,81 @@ export default class UserEntityChart extends React.Component<
               </h3>
             </div>
           </div>
-          <div className="row">
-            <div className="col-xs-12">
-              <h4 style={{ textTransform: "capitalize" }}>
-                {entity} count - <b>{entityCount}</b>
-              </h4>
-            </div>
-          </div>
-          <div className="row">
-            {!calculated && (
-              <div className="col-md-12">
-                <p>Statistics for the user have not been calculated</p>
-              </div>
-            )}
-            {calculated && (
-              <div
-                className="col-md-12"
-                style={{
-                  height: `${(75 / this.ROWS_PER_PAGE) * data.length}em`,
-                }}
-                ref={this.graphContainer}
-              >
-                <Bar
-                  data={data}
-                  maxValue={maxListens}
-                  width={graphContainerWidth}
-                />
-              </div>
-            )}
-          </div>
-          {calculated && entity === "release" && (
-            <div className="row">
-              <div className="col-xs-12">
-                <small>
-                  <sup>*</sup>The listen count denotes the number of times you
-                  have listened to a recording from the release.
-                </small>
+          {hasError && (
+            <div className="row mt-15 mb-15">
+              <div className="col-xs-12 text-center">
+                <span style={{ fontSize: 24 }}>
+                  <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
+                  {errorMessage}
+                </span>
               </div>
             </div>
           )}
-          {calculated && (
-            <div className="row">
-              <div className="col-xs-12">
-                <ul className="pager">
-                  <li className={`previous ${!(prevPage > 0) ? "hidden" : ""}`}>
-                    <a
-                      href=""
-                      role="button"
-                      onClick={(event) => this.changePage(prevPage, event)}
-                    >
-                      &larr; Previous
-                    </a>
-                  </li>
-                  <li
-                    className={`next ${
-                      !(nextPage <= totalPages) ? "hidden" : ""
-                    }`}
-                  >
-                    <a
-                      href=""
-                      role="button"
-                      onClick={(event) => this.changePage(nextPage, event)}
-                    >
-                      Next &rarr;
-                    </a>
-                  </li>
-                </ul>
+          {!hasError && (
+            <>
+              <div className="row">
+                <div className="col-xs-12">
+                  <h4 style={{ textTransform: "capitalize" }}>
+                    {entity} count - <b>{entityCount}</b>
+                  </h4>
+                </div>
               </div>
-            </div>
+              <div className="row">
+                <div
+                  className="col-md-12"
+                  style={{
+                    height: `${(75 / this.ROWS_PER_PAGE) * data.length}em`,
+                  }}
+                  ref={this.graphContainer}
+                >
+                  <Bar
+                    data={data}
+                    maxValue={maxListens}
+                    width={graphContainerWidth}
+                  />
+                </div>
+              </div>
+              {entity === "release" && (
+                <div className="row">
+                  <div className="col-xs-12">
+                    <small>
+                      <sup>*</sup>The listen count denotes the number of times
+                      you have listened to a recording from the release.
+                    </small>
+                  </div>
+                </div>
+              )}
+              <div className="row">
+                <div className="col-xs-12">
+                  <ul className="pager">
+                    <li
+                      className={`previous ${!(prevPage > 0) ? "hidden" : ""}`}
+                    >
+                      <a
+                        href=""
+                        role="button"
+                        onClick={(event) => this.changePage(prevPage, event)}
+                      >
+                        &larr; Previous
+                      </a>
+                    </li>
+                    <li
+                      className={`next ${
+                        !(nextPage <= totalPages) ? "hidden" : ""
+                      }`}
+                    >
+                      <a
+                        href=""
+                        role="button"
+                        onClick={(event) => this.changePage(nextPage, event)}
+                      >
+                        Next &rarr;
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </>
           )}
         </Loader>
       </div>
