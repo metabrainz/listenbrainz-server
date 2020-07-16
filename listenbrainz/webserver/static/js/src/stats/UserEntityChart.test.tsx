@@ -80,7 +80,8 @@ describe("UserEntityChart Page", () => {
 
     const wrapper = mount<UserEntityChart>(<UserEntityChart {...props} />);
     wrapper.setState({
-      calculated: false,
+      hasError: true,
+      errorMessage: "Statistics for the user have not been calculated",
       entity: "artist",
       range: "all_time",
       currPage: 1,
@@ -420,7 +421,7 @@ describe("syncStateWithURL", () => {
       totalPages: 2,
       maxListens: 100,
       entityCount: 50,
-      calculated: true,
+      hasError: false,
     });
   });
 
@@ -440,9 +441,48 @@ describe("syncStateWithURL", () => {
       currPage: 1,
       range: "all_time",
       entity: "artist",
-      calculated: false,
       loading: false,
       entityCount: 0,
+      hasError: true,
+      errorMessage: "Statistics for the user have not been calculated",
+    });
+  });
+
+  it("sets state correctly if range is incorrect", async () => {
+    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const instance = wrapper.instance();
+
+    instance.getURLParams = jest.fn().mockImplementationOnce(() => {
+      return { range: "invalid_range", entity: "artist", page: 1 };
+    });
+
+    await instance.syncStateWithURL();
+    expect(wrapper.state()).toMatchObject({
+      currPage: 1,
+      range: "invalid_range",
+      entity: "artist",
+      loading: false,
+      hasError: true,
+      errorMessage: "Invalid range: invalid_range",
+    });
+  });
+
+  it("sets state correctly if entity is incorrect", async () => {
+    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const instance = wrapper.instance();
+
+    instance.getURLParams = jest.fn().mockImplementationOnce(() => {
+      return { range: "all_time", entity: "invalid_entity", page: 1 };
+    });
+
+    await instance.syncStateWithURL();
+    expect(wrapper.state()).toMatchObject({
+      currPage: 1,
+      range: "all_time",
+      entity: "invalid_entity",
+      loading: false,
+      hasError: true,
+      errorMessage: "Invalid entity: invalid_entity",
     });
   });
 
