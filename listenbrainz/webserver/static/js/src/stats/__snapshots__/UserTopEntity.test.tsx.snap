@@ -43,7 +43,7 @@ exports[`UserTopEntity renders corectly when range is invalid 1`] = `
         className="capitalize-bold"
       >
         Top 
-        artist
+        artists
       </h3>
       <table
         style={
@@ -191,7 +191,7 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
         className="capitalize-bold"
       >
         Top 
-        artist
+        artists
       </h3>
       <table
         style={
@@ -1151,7 +1151,7 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
         className="capitalize-bold"
       >
         Top 
-        recording
+        recordings
       </h3>
       <table
         style={
@@ -2487,7 +2487,7 @@ exports[`UserTopEntity renders correctly for release 1`] = `
         className="capitalize-bold"
       >
         Top 
-        release
+        releases
       </h3>
       <table
         style={

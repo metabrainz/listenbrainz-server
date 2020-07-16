@@ -485,7 +485,7 @@ export default class UserListeningActivity extends React.Component<
                               <span
                                 style={{ fontSize: 22, textAlign: "start" }}
                               >
-                                &nbsp;Listens per day
+                                &nbsp;Listens per {perRange}
                               </span>
                             </td>
                           </tr>
