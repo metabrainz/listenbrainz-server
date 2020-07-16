@@ -58,11 +58,11 @@ class CreateDataframeTestCase(SparkTestCase):
             "mb_artist_credit_id": 2157963,
             "mb_release_mbid": "xxxxx",
             "msb_release_msid": "xxxxx",
-            "msb_artist_credit_name": "Less Than Jake",
+            "mb_artist_credit_name": "Less Than Jake",
             "msb_artist_credit_name_matchable": "lessthanjake",
-            "msb_recording_name": "Al's War",
+            "mb_recording_name": "Al's War",
             "msb_recording_name_matchable": "alswar",
-            "msb_release_name": "Easier",
+            "mb_release_name": "Easier",
             "msb_release_name_matchable": "easier",
         }
 
