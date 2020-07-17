@@ -1,3 +1,4 @@
+import os
 import sys
 import uuid
 import logging
@@ -12,7 +13,9 @@ from py4j.protocol import Py4JJavaError
 import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark import config, utils, path, schema
-from listenbrainz_spark.recommendations.utils import save_html
+from listenbrainz_spark.recommendations.utils import (save_html,
+                                                      check_html_files_dir_path,
+                                                      HTML_FILES_PATH)
 from listenbrainz_spark.exceptions import (SparkSessionNotInitializedException,
                                            PathNotFoundException,
                                            FileNotFetchedException,
@@ -381,8 +384,13 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
         sys.exit(-1)
 
     if SAVE_TRAINING_HTML:
+        dir_exists = check_html_files_dir_path()
+        if not dir_exists:
+            os.mkdir(HTML_FILES_PATH)
+        current_app.logger.info('Saving HTML...')
         save_training_html(time_, num_training, num_validation, num_test, model_metadata, best_model_metadata, ti,
                            models_training_time)
+        current_app.logger.info('Done!')
 
     message = [{
         'type': 'cf_recording_model',

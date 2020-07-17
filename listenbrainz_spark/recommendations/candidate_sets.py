@@ -1,3 +1,4 @@
+import os
 import sys
 import uuid
 import logging
@@ -8,7 +9,9 @@ from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
 from listenbrainz_spark import stats, utils, path
-from listenbrainz_spark.recommendations.utils import save_html
+from listenbrainz_spark.recommendations.utils import (save_html,
+                                                      check_html_files_dir_path,
+                                                      HTML_FILES_PATH)
 from listenbrainz_spark.exceptions import (SparkSessionNotInitializedException,
                                            ViewNotRegisteredException,
                                            PathNotFoundException,
@@ -455,6 +458,11 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
     if SAVE_CANDIDATE_HTML:
         user_data = get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_candidate_set_df_html,
                                             top_artist_df, similar_artist_df)
+
+        dir_exists = check_html_files_dir_path()
+        if not dir_exists:
+            os.mkdir(HTML_FILES_PATH)
+
         current_app.logger.info('Saving HTML...')
         save_candidate_html(user_data, total_time, from_date, to_date)
         current_app.logger.info('Done!')
