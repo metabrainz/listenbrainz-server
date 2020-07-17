@@ -25,6 +25,7 @@ export type UserEntityChartState = {
   totalPages: number;
   maxListens: number;
   startDate: Date;
+  endDate: Date;
   loading: boolean;
   graphContainerWidth?: number;
   hasError: boolean;
@@ -57,6 +58,7 @@ export default class UserEntityChart extends React.Component<
       totalPages: 0,
       maxListens: 0, // Number of listens for first artist used to scale the graph
       startDate: new Date(),
+      endDate: new Date(),
       loading: false,
       hasError: false,
       errorMessage: "",
@@ -125,6 +127,7 @@ export default class UserEntityChart extends React.Component<
     totalPages: number;
     entityCount: number;
     startDate: Date;
+    endDate: Date;
   }> => {
     const { user } = this.props;
 
@@ -168,6 +171,7 @@ export default class UserEntityChart extends React.Component<
       totalPages,
       entityCount,
       startDate: new Date(data.payload.from_ts * 1000),
+      endDate: new Date(data.payload.to_ts * 1000),
     };
   };
 
@@ -259,6 +263,18 @@ export default class UserEntityChart extends React.Component<
   syncStateWithURL = async (): Promise<void> => {
     this.setState({ loading: true });
     const { page, range, entity } = this.getURLParams();
+    // Check that the given page is an integer
+    if (!Number.isInteger(page)) {
+      this.setState({
+        hasError: true,
+        loading: false,
+        errorMessage: `Invalid page: ${page}`,
+        currPage: page,
+        range,
+        entity,
+      });
+      return;
+    }
     try {
       const { range: currRange, entity: currEntity } = this.state;
       let initData = {};
@@ -307,7 +323,6 @@ export default class UserEntityChart extends React.Component<
           loading: false,
           currPage: page,
           entityCount: 0,
-          startDate: new Date(),
           range,
           entity,
         });
@@ -378,6 +393,7 @@ export default class UserEntityChart extends React.Component<
       maxListens,
       totalPages,
       startDate,
+      endDate,
       loading,
       graphContainerWidth,
       hasError,
@@ -470,24 +486,17 @@ export default class UserEntityChart extends React.Component<
                     </li>
                   </ul>
                 </span>
-                {range === "week"
-                  ? `of ${startDate.getUTCDate()} ${startDate.toLocaleString(
-                      "en-us",
-                      { month: "long", timeZone: "UTC" }
-                    )} `
-                  : ""}
-                {range === "month"
-                  ? `${startDate.toLocaleString("en-us", {
-                      month: "long",
-                      timeZone: "UTC",
-                    })} `
-                  : ""}
-                {range !== "all_time"
-                  ? startDate.toLocaleString("en-us", {
-                      year: "numeric",
-                      timeZone: "UTC",
-                    })
-                  : ""}
+                {range !== "all_time" &&
+                  !hasError &&
+                  `(${startDate.toLocaleString("en-us", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })} - ${endDate.toLocaleString("en-us", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })})`}
               </h3>
             </div>
           </div>

@@ -271,6 +271,7 @@ describe("getInitData", () => {
       totalPages,
       entityCount,
       startDate,
+      endDate,
     } = await instance.getInitData("all_time", "artist");
 
     expect(maxListens).toEqual(70);
@@ -279,6 +280,7 @@ describe("getInitData", () => {
     expect(startDate).toEqual(
       new Date(userArtistsResponse.payload.from_ts * 1000)
     );
+    expect(endDate).toEqual(new Date(userArtistsResponse.payload.to_ts * 1000));
   });
 
   it("gets data correctly for release", async () => {
@@ -295,6 +297,7 @@ describe("getInitData", () => {
       totalPages,
       entityCount,
       startDate,
+      endDate,
     } = await instance.getInitData("all_time", "release");
 
     expect(maxListens).toEqual(26);
@@ -302,6 +305,9 @@ describe("getInitData", () => {
     expect(entityCount).toEqual(164);
     expect(startDate).toEqual(
       new Date(userReleasesResponse.payload.from_ts * 1000)
+    );
+    expect(endDate).toEqual(
+      new Date(userReleasesResponse.payload.to_ts * 1000)
     );
   });
 
@@ -319,13 +325,17 @@ describe("getInitData", () => {
       totalPages,
       entityCount,
       startDate,
+      endDate,
     } = await instance.getInitData("all_time", "recording");
 
     expect(maxListens).toEqual(25);
     expect(totalPages).toEqual(10);
     expect(entityCount).toEqual(227);
     expect(startDate).toEqual(
-      new Date(userReleasesResponse.payload.from_ts * 1000)
+      new Date(userRecordingsResponse.payload.from_ts * 1000)
+    );
+    expect(endDate).toEqual(
+      new Date(userRecordingsResponse.payload.to_ts * 1000)
     );
   });
 });
@@ -399,6 +409,7 @@ describe("syncStateWithURL", () => {
     instance.getInitData = jest.fn().mockImplementationOnce(() =>
       Promise.resolve({
         startDate: new Date(0),
+        endDate: new Date(10),
         totalPages: 2,
         maxListens: 100,
         entityCount: 50,
@@ -418,6 +429,7 @@ describe("syncStateWithURL", () => {
       range: "all_time",
       entity: "artist",
       startDate: new Date(0),
+      endDate: new Date(10),
       totalPages: 2,
       maxListens: 100,
       entityCount: 50,
@@ -486,6 +498,24 @@ describe("syncStateWithURL", () => {
     });
   });
 
+  it("sets state correctly if page is incorrect", async () => {
+    const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
+    const instance = wrapper.instance();
+
+    instance.getURLParams = jest.fn().mockImplementationOnce(() => {
+      return { range: "all_time", entity: "artist", page: 1.5 };
+    });
+
+    await instance.syncStateWithURL();
+    expect(wrapper.state()).toMatchObject({
+      currPage: 1.5,
+      range: "all_time",
+      entity: "artist",
+      loading: false,
+      hasError: true,
+      errorMessage: "Invalid page: 1.5",
+    });
+  });
   it("throws error if fetch fails", async () => {
     const wrapper = shallow<UserEntityChart>(<UserEntityChart {...props} />);
     const instance = wrapper.instance();
