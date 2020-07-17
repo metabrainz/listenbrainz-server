@@ -32,6 +32,8 @@ def flatten_dict(d, seperator='', parent_key=''):
 def convert_comma_seperated_string_to_list(string):
     if not string:
         return []
+    if isinstance(string, list):
+        return string
     return [val for val in string.split(',')]
 
 
