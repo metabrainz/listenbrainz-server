@@ -60,4 +60,10 @@ ALTER TABLE recording_feedback
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
+ALTER TABLE similar_user
+    ADD CONSTRAINT similar_user_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
 COMMIT;

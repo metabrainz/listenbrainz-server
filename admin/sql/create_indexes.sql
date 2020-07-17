@@ -1,6 +1,5 @@
 BEGIN;
 
-CREATE UNIQUE INDEX auth_token_ndx_user ON "user" (auth_token);
 CREATE UNIQUE INDEX lower_musicbrainz_id_ndx_user ON "user" (lower(musicbrainz_id));
 CREATE UNIQUE INDEX login_id_ndx_user ON "user" (login_id);
 
@@ -21,5 +20,7 @@ CREATE INDEX creator_ndx_follow_list ON follow_list (creator);
 CREATE INDEX last_saved_ndx_follow_list ON follow_list (last_saved DESC);
 
 CREATE UNIQUE INDEX user_id_rec_msid_ndx_feedback ON recording_feedback (user_id, recording_msid);
+
+CREATE UNIQUE INDEX user_id_ndx_similar_user ON similar_user (user_id);
 
 COMMIT;

@@ -1,10 +1,13 @@
 import logging
 import sqlalchemy
 import uuid
+import json
 
 from datetime import datetime
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
+from data.model.similar_user_model import SimilarUserRecord, SimilarUsers
+from typing import Tuple, List
 
 
 logger = logging.getLogger(__name__)
@@ -424,3 +427,51 @@ def get_users_in_order(user_ids):
             'user_ids': user_ids,
         })
         return [dict(row) for row in r.fetchall() if row['musicbrainz_id'] is not None]
+
+
+def insert_similar_users(user_id: int, similar_user_tuples: Tuple[int, float]):
+    """ Insert a list of similar users for user_id into the database
+    """
+    similar_user_data = SimilarUsers(
+        similar_users=[
+            SimilarUserRecord(user_id=row[0], similarity_score=row[1]) for row in similar_user_tuples
+        ],
+    )
+    with db.engine.connect() as connection:
+        connection.execute(sqlalchemy.text("""
+            INSERT INTO similar_user (user_id, similar_users)
+                 VALUES (:user_id, :similar_users)
+            ON CONFLICT (user_id)
+          DO UPDATE SET similar_users = :similar_users
+        """), {
+            'user_id': user_id,
+            'similar_users': json.dumps(similar_user_data.dict()),
+        })
+
+
+def get_similar_users(user_id: int) -> SimilarUsers:
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT user_id, similar_users
+              FROM similar_user
+             WHERE user_id = :user_id
+        """), {
+            'user_id': user_id,
+        })
+        row = result.fetchone()
+        return SimilarUsers(**row['similar_users']) if row else None
+
+
+def get_users_by_id(user_ids: List[int]):
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT id, musicbrainz_id
+              FROM "user"
+             WHERE id IN :user_ids
+        """), {
+            'user_ids': tuple(user_ids)
+        })
+        row_id_username_map = {}
+        for row in result.fetchall():
+            row_id_username_map[row['id']] = row['musicbrainz_id']
+        return row_id_username_map

@@ -20,7 +20,6 @@ from werkzeug.utils import secure_filename
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain import spotify
-from listenbrainz.stats.utils import construct_stats_queue_key
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.login import api_login_required
 from listenbrainz.webserver.redis_connection import _redis
@@ -214,10 +213,10 @@ def delete_listens():
     """ Delete all the listens for the currently logged-in user from ListenBrainz.
 
     If POST request, this view checks for the correct authorization token and
-    deletes the listens. If deletion is successful, redirects to user's profile page, 
+    deletes the listens. If deletion is successful, redirects to user's profile page,
     else flashes an error and redirects to user's info page.
 
-    If GET request, this view renders a page asking the user to confirm that they 
+    If GET request, this view renders a page asking the user to confirm that they
     wish to delete their listens.
     """
     if request.method == 'POST':

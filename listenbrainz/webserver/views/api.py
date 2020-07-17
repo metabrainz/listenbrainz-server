@@ -238,6 +238,22 @@ def get_recent_listens_for_user_list(user_list):
         'listens': listen_data,
     }})
 
+@api_bp.route("/user/<user_name>/similar-users")
+@crossdomain(headers='Authorization, Content-Type')
+@ratelimit()
+def get_similar_users(user_name):
+    user = db_user.get_by_mb_id(user_name)
+    result = db_user.get_similar_users(user['id'])
+    row_id_username_map = db_user.get_users_by_id([record.user_id for record in result.similar_users])
+
+    response = []
+    for record in result.similar_users:
+        response.append({
+            'musicbrainz_id': row_id_username_map[record.user_id],
+            'similarity_score': record.similarity_score,
+        })
+    return jsonify({'payload': response})
+
 
 @api_bp.route('/latest-import', methods=['GET', 'POST', 'OPTIONS'])
 @crossdomain(headers='Authorization, Content-Type')

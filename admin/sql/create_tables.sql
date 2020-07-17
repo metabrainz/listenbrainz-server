@@ -144,6 +144,12 @@ CREATE TABLE recording_feedback (
     created                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE similar_user (
+  user_id         INTEGER NOT NULL, -- FK to "user".id
+  similar_users   JSONB,
+  last_updated    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+)
+
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz;
 
 COMMIT;

@@ -2,6 +2,7 @@ from listenbrainz import db
 from listenbrainz.db import timescale as ts
 from listenbrainz import webserver
 from listenbrainz import stats
+import listenbrainz.stats.user_similarity as user_similarity
 from werkzeug.serving import run_simple
 import subprocess
 import os
@@ -212,6 +213,12 @@ def init_db(force, create_db):
         ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
 
         print("Done!")
+
+@cli.command(name="calculate_user_similarity")
+def calculate_user_similarity():
+    application = webserver.create_app()
+    with application.app_context():
+        user_similarity.calculate_similar_users()
 
 
 # Add other commands here
