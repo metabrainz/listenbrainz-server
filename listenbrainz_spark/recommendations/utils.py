@@ -13,6 +13,7 @@ def save_html(filename, context, template):
         html = template_environment.get_template(template).render(context)
         f.write(html)
 
+
 def check_html_files_dir_path():
     dir_exists = os.path.isdir(HTML_FILES_PATH)
     return dir_exists
