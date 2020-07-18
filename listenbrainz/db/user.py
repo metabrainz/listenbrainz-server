@@ -439,7 +439,7 @@ def insert_similar_users(user_id: int, similar_user_tuples: Tuple[int, float]):
     )
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            INSERT INTO similar_user (user_id, similar_users)
+            INSERT INTO recommendation.similar_user (user_id, similar_users)
                  VALUES (:user_id, :similar_users)
             ON CONFLICT (user_id)
           DO UPDATE SET similar_users = :similar_users

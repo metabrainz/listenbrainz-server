@@ -22,6 +22,6 @@ CREATE INDEX last_saved_ndx_follow_list ON follow_list (last_saved DESC);
 
 CREATE UNIQUE INDEX user_id_rec_msid_ndx_feedback ON recording_feedback (user_id, recording_msid);
 
-CREATE UNIQUE INDEX user_id_ndx_similar_user ON similar_user (user_id);
+CREATE UNIQUE INDEX user_id_ndx_similar_user ON recommendation.similar_user (user_id);
 
 COMMIT;
