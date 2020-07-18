@@ -102,7 +102,7 @@ def create_full(location, threads, dump_id, last_dump_id):
         db_dump.dump_postgres_db(dump_path, end_time, threads)
 
         listens_dump_file = ls.dump_listens(dump_path, dump_id=dump_id, end_time=end_time, threads=threads)
-        spark_dump_file = 'listenbrainz-listens-dump-{dump_id}-{time}-spark.tar.xz'.format(dump_id=dump_id,
+        spark_dump_file = 'listenbrainz-listens-dump-{dump_id}-{time}-spark-full.tar.xz'.format(dump_id=dump_id,
                            time=end_time.strftime('%Y%m%d-%H%M%S'))
         spark_dump_path = os.path.join(location, dump_path, spark_dump_file)
         transmogrify_dump_file_to_spark_import_format(listens_dump_file, spark_dump_path, threads)
