@@ -1,7 +1,7 @@
 import logging
 import sqlalchemy
 import uuid
-import json
+import ujson
 
 from datetime import datetime
 from listenbrainz import db
@@ -445,7 +445,7 @@ def insert_similar_users(user_id: int, similar_user_tuples: Tuple[int, float]):
           DO UPDATE SET similar_users = :similar_users
         """), {
             'user_id': user_id,
-            'similar_users': json.dumps(similar_user_data.dict()),
+            'similar_users': ujson.dumps(similar_user_data.dict()),
         })
 
 
