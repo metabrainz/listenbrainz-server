@@ -453,7 +453,7 @@ def get_similar_users(user_id: int) -> SimilarUsers:
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT user_id, similar_users
-              FROM similar_user
+              FROM recommendation.similar_user
              WHERE user_id = :user_id
         """), {
             'user_id': user_id,
