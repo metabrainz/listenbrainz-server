@@ -15,6 +15,8 @@ def get_artist_user_matrix(user_artist_stats):
     row_ind = []
     col_ind = []
     for stat_record in user_artist_stats:
+        if stat_record.all_time is None:
+            continue
         for artist in stat_record.all_time.artists:
             if artist.artist_name in artist_ids: #TODO: use artist MSID or MBID
                 continue
@@ -34,6 +36,7 @@ def calculate_similar_users():
 
     print("Constructing artist-user matrix...")
     csr_matrix = get_artist_user_matrix(user_artist_stats)
+    print("Shape of csr_matrix: %s" % str(csr_matrix.get_shape()))
     print("Done!")
 
     print("Training model...")
