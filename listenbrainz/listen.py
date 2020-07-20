@@ -145,7 +145,7 @@ class Listen(object):
             release_msid=j['track_metadata']['additional_info'].get('release_msid'),
             recording_msid=j['track_metadata']['additional_info'].get('recording_msid'),
             dedup_tag=j.get('dedup_tag', 0),
-            inserted_timestamp = created,
+            inserted_timestamp=created,
             data=j.get('track_metadata')
         )
 

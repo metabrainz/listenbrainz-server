@@ -144,7 +144,7 @@ def get_listens(user_name):
 def get_listen_count(user_name):
     """
         Get the number of listens for a user ``user_name``.
-    
+
         The returned listen count has an element 'payload' with only key: 'count'
         which unsurprisingly contains the listen count for the user.
 

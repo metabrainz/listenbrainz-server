@@ -248,6 +248,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[4].ts_since_epoch, base + 6)
 
         shutil.rmtree(temp_dir)
+
     def test_time_range_full_dumps(self):
         base = 1500000000
         listens = generate_data(1, self.testuser_name, base + 1, 5)  # generate 5 listens with ts 1-5
@@ -270,10 +271,10 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[2].ts_since_epoch, base + 3)
         self.assertEqual(listens[3].ts_since_epoch, base + 2)
         self.assertEqual(listens[4].ts_since_epoch, base + 1)
-    
+
     # tests test_full_dump_listen_with_no_created
     # and test_incremental_dumps_listen_with_no_created have been removed because
-    # with timescale all the missing inserted timestamps will have been 
+    # with timescale all the missing inserted timestamps will have been
     # been assigned sane created timestamps by the migration script
     # and timescale will not allow blank created timestamps, so this test is pointless
 
@@ -330,7 +331,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
         shutil.rmtree(temp_dir)
- 
+
     # test test_import_dump_many_users is gone -- why are we testing user dump/restore here??
 
     def create_test_dump(self, archive_name, archive_path, schema_version=None):
@@ -386,7 +387,6 @@ class TestTimescaleListenStore(DatabaseTestCase):
 
         with self.assertRaises(SchemaMismatchException):
             self.logstore.import_listens_dump(archive_path)
-
 
     def test_listen_counts_in_cache(self):
         count = self._create_test_data(self.testuser_name)

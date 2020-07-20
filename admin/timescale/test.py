@@ -8,17 +8,17 @@ def remove_empty_keys(listen):
         if "additional_info" in listen["track_metadata"]:
             listen["track_metadata"]["additional_info"] = remove_empty_keys(listen["track_metadata"]["additional_info"])
 
-    return {k: v for k, v in listen.items() if v }
+    return { k: v for k, v in listen.items() if v }
 
 
 a = {
-    "foo" : {},
-    "bar" : 1,
-    "track_metadata" : {
+    "foo": {},
+    "bar": 1,
+    "track_metadata": {
         "rump": "",
         "sump": "save me!",
         "plump": [],
-        "additional_info" : {
+        "additional_info": {
             "moo": "",
             "mah": 1
         }
