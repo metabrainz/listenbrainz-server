@@ -45,6 +45,7 @@ MAXIMUM_RABBITMQ_CONNECTIONS = 20
 # RabbitMQ exchanges and queues
 INCOMING_EXCHANGE = "incoming"
 INCOMING_QUEUE = "incoming"
+INCOMING_QUEUE_INFLUX = "incoming_influx"
 UNIQUE_EXCHANGE = "unique"
 UNIQUE_QUEUE = "unique"
 FOLLOW_LIST_QUEUE = "follow_list"
