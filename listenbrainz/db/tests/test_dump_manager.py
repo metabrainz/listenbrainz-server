@@ -231,12 +231,12 @@ class DumpManagerTestCase(DatabaseTestCase):
         print("%d created dump id" % created_dump_id)
         self.assertEqual(created_dump_id, dump_id + 1)
 
-        # make sure that the dump contains a full listens dump
+        # make sure that the dump contains a full listens and spark dump
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
             if file_name.endswith('.tar.xz'):
                 archive_count += 1
-        self.assertEqual(archive_count, 1)
+        self.assertEqual(archive_count, 2)
 
     def test_create_incremental_dump_with_id(self):
 
@@ -260,9 +260,9 @@ class DumpManagerTestCase(DatabaseTestCase):
         created_dump_id = int(dump_name.split('-')[2])
         self.assertEqual(dump_id, created_dump_id)
 
-        # dump should contain only the listen archive
+        # dump should contain the listen and spark archive
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
             if file_name.endswith('.tar.xz'):
                 archive_count += 1
-        self.assertEqual(archive_count, 1)
+        self.assertEqual(archive_count, 2)
