@@ -148,7 +148,11 @@ def create_incremental(location, threads, dump_id):
         dump_name = 'listenbrainz-dump-{dump_id}-{time}-incremental'.format(dump_id=dump_id, time=end_time.strftime('%Y%m%d-%H%M%S'))
         dump_path = os.path.join(location, dump_name)
         create_path(dump_path)
-        ls.dump_listens(dump_path, dump_id=dump_id, start_time=start_time, end_time=end_time, threads=threads)
+        listens_dump_file = ls.dump_listens(dump_path, dump_id=dump_id, start_time=start_time, end_time=end_time, threads=threads)
+        spark_dump_file = 'listenbrainz-listens-dump-{dump_id}-{time}-spark-incremental.tar.xz'.format(dump_id=dump_id,
+                           time=end_time.strftime('%Y%m%d-%H%M%S'))
+        spark_dump_path = os.path.join(location, dump_path, spark_dump_file)
+        transmogrify_dump_file_to_spark_import_format(listens_dump_file, spark_dump_path, threads)
         try:
             write_hashes(dump_path)
         except IOError as e:

@@ -212,7 +212,7 @@ class Listen(object):
 
 def convert_dump_row_to_spark_row(row):
     data = {
-        'listened_at': str(row['timestamp']),
+        'listened_at': str(datetime.utcfromtimestamp(row['timestamp'])),
         'user_name': row['user_name'],
         'artist_msid': row['track_metadata']['additional_info']['artist_msid'],
         'artist_name': row['track_metadata'].get('artist_name', ''),
