@@ -227,20 +227,20 @@ class InfluxWriterSubscriber(ListenWriter):
         if not unique_count:
             return True
 
-        while True:
-            try:
-                self.unique_ch.basic_publish(
-                    exchange=current_app.config['UNIQUE_EXCHANGE'],
-                    routing_key='',
-                    body=ujson.dumps(unique),
-                    properties=pika.BasicProperties(delivery_mode = 2,),
-                )
-                break
-            except pika.exceptions.ConnectionClosed:
-                self.connect_to_rabbitmq()
+#        while True:
+#            try:
+#                self.unique_ch.basic_publish(
+#                    exchange=current_app.config['UNIQUE_EXCHANGE'],
+#                    routing_key='',
+#                    body=ujson.dumps(unique),
+#                    properties=pika.BasicProperties(delivery_mode = 2,),
+#                )
+#                break
+#            except pika.exceptions.ConnectionClosed:
+#                self.connect_to_rabbitmq()
 
 
-        self.redis_listenstore.update_recent_listens(unique)
+#        self.redis_listenstore.update_recent_listens(unique)
 
         return True
 
@@ -290,15 +290,15 @@ class InfluxWriterSubscriber(ListenWriter):
                 self.connect_to_rabbitmq()
                 self.incoming_ch = self.connection.channel()
                 self.incoming_ch.exchange_declare(exchange=current_app.config['INCOMING_EXCHANGE'], exchange_type='fanout')
-                self.incoming_ch.queue_declare(current_app.config['INCOMING_QUEUE'], durable=True)
-                self.incoming_ch.queue_bind(exchange=current_app.config['INCOMING_EXCHANGE'], queue=current_app.config['INCOMING_QUEUE'])
+                self.incoming_ch.queue_declare(current_app.config['INCOMING_QUEUE_INFLUX'], durable=True)
+                self.incoming_ch.queue_bind(exchange=current_app.config['INCOMING_EXCHANGE'], queue=current_app.config['INCOMING_QUEUE_INFLUX'])
                 self.incoming_ch.basic_consume(
                     lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self),
-                    queue=current_app.config['INCOMING_QUEUE'],
+                    queue=current_app.config['INCOMING_QUEUE_INFLUX'],
                 )
 
-                self.unique_ch = self.connection.channel()
-                self.unique_ch.exchange_declare(exchange=current_app.config['UNIQUE_EXCHANGE'], exchange_type='fanout')
+#                self.unique_ch = self.connection.channel()
+#                self.unique_ch.exchange_declare(exchange=current_app.config['UNIQUE_EXCHANGE'], exchange_type='fanout')
 
                 current_app.logger.info("influx-writer started")
                 try:
