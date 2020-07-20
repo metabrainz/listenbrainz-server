@@ -162,12 +162,12 @@ class DumpManagerTestCase(DatabaseTestCase):
         mock_notify.assert_called_with(dump_name, 'fullexport')
 
         # make sure that the dump contains a full listens dump, a public dump
-        # and a private dump
+        # a private dump and a spark dump.
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
             if file_name.endswith('.tar.xz'):
                 archive_count += 1
-        self.assertEqual(archive_count, 3)
+        self.assertEqual(archive_count, 4)
 
         # now, remove the old dump and create a new one with the same id
         shutil.rmtree(os.path.join(self.tempdir, dump_name))
@@ -178,12 +178,12 @@ class DumpManagerTestCase(DatabaseTestCase):
         # dump names should be the exact same
         self.assertEqual(dump_name, recreated_dump_name)
 
-        # dump should contain the 3 archives
+        # dump should contain the 4 archives
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
             if file_name.endswith('.tar.xz'):
                 archive_count += 1
-        self.assertEqual(archive_count, 3)
+        self.assertEqual(archive_count, 4)
 
     def test_create_full_dump_with_id(self):
 
@@ -201,12 +201,12 @@ class DumpManagerTestCase(DatabaseTestCase):
         created_dump_id = int(dump_name.split('-')[2])
         self.assertEqual(dump_id, created_dump_id)
 
-        # dump should contain the 3 archives
+        # dump should contain the 4 archives
         archive_count = 0
         for file_name in os.listdir(os.path.join(self.tempdir, dump_name)):
             if file_name.endswith('.tar.xz'):
                 archive_count += 1
-        self.assertEqual(archive_count, 3)
+        self.assertEqual(archive_count, 4)
 
     @patch('listenbrainz.db.dump_manager.send_dump_creation_notification')
     def test_create_incremental(self, mock_notify):
