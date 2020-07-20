@@ -24,45 +24,83 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
         className="row"
       >
         <div
-          className="col-md-6"
+          className="col-xs-12"
         >
-          <ul
-            className="nav nav-pills"
+          <Pill
+            active={false}
+            onClick={[Function]}
+            type="secondary"
           >
-            <li
-              className=""
+            <button
+              onClick={[Function]}
+              style={
+                Object {
+                  "background": "transparent",
+                  "border": "2px solid #BBBBBB",
+                  "borderRadius": "24px",
+                  "boxSizing": "border-box",
+                  "color": "#BBBBBB",
+                  "fontWeight": "bold",
+                  "margin": "0px 6px",
+                  "outline": "none",
+                  "padding": "2px 9px",
+                }
+              }
+              type="button"
             >
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                Artists
-              </a>
-            </li>
-            <li
-              className=""
+              Artists
+            </button>
+          </Pill>
+          <Pill
+            active={false}
+            onClick={[Function]}
+            type="secondary"
+          >
+            <button
+              onClick={[Function]}
+              style={
+                Object {
+                  "background": "transparent",
+                  "border": "2px solid #BBBBBB",
+                  "borderRadius": "24px",
+                  "boxSizing": "border-box",
+                  "color": "#BBBBBB",
+                  "fontWeight": "bold",
+                  "margin": "0px 6px",
+                  "outline": "none",
+                  "padding": "2px 9px",
+                }
+              }
+              type="button"
             >
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                Releases
-              </a>
-            </li>
-            <li
-              className=""
+              Releases
+            </button>
+          </Pill>
+          <Pill
+            active={false}
+            onClick={[Function]}
+            type="secondary"
+          >
+            <button
+              onClick={[Function]}
+              style={
+                Object {
+                  "background": "transparent",
+                  "border": "2px solid #BBBBBB",
+                  "borderRadius": "24px",
+                  "boxSizing": "border-box",
+                  "color": "#BBBBBB",
+                  "fontWeight": "bold",
+                  "margin": "0px 6px",
+                  "outline": "none",
+                  "padding": "2px 9px",
+                }
+              }
+              type="button"
             >
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                Recordings
-              </a>
-            </li>
-          </ul>
+              Recordings
+            </button>
+          </Pill>
         </div>
       </div>
       <div
@@ -143,7 +181,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 </li>
               </ul>
             </span>
-            2020
+            (July 17, 2020 - July 17, 2020)
           </h3>
         </div>
       </div>
@@ -680,45 +718,83 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
         className="row"
       >
         <div
-          className="col-md-6"
+          className="col-xs-12"
         >
-          <ul
-            className="nav nav-pills"
+          <Pill
+            active={false}
+            onClick={[Function]}
+            type="secondary"
           >
-            <li
-              className=""
+            <button
+              onClick={[Function]}
+              style={
+                Object {
+                  "background": "transparent",
+                  "border": "2px solid #BBBBBB",
+                  "borderRadius": "24px",
+                  "boxSizing": "border-box",
+                  "color": "#BBBBBB",
+                  "fontWeight": "bold",
+                  "margin": "0px 6px",
+                  "outline": "none",
+                  "padding": "2px 9px",
+                }
+              }
+              type="button"
             >
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                Artists
-              </a>
-            </li>
-            <li
-              className=""
+              Artists
+            </button>
+          </Pill>
+          <Pill
+            active={false}
+            onClick={[Function]}
+            type="secondary"
+          >
+            <button
+              onClick={[Function]}
+              style={
+                Object {
+                  "background": "transparent",
+                  "border": "2px solid #BBBBBB",
+                  "borderRadius": "24px",
+                  "boxSizing": "border-box",
+                  "color": "#BBBBBB",
+                  "fontWeight": "bold",
+                  "margin": "0px 6px",
+                  "outline": "none",
+                  "padding": "2px 9px",
+                }
+              }
+              type="button"
             >
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                Releases
-              </a>
-            </li>
-            <li
-              className=""
+              Releases
+            </button>
+          </Pill>
+          <Pill
+            active={false}
+            onClick={[Function]}
+            type="secondary"
+          >
+            <button
+              onClick={[Function]}
+              style={
+                Object {
+                  "background": "transparent",
+                  "border": "2px solid #BBBBBB",
+                  "borderRadius": "24px",
+                  "boxSizing": "border-box",
+                  "color": "#BBBBBB",
+                  "fontWeight": "bold",
+                  "margin": "0px 6px",
+                  "outline": "none",
+                  "padding": "2px 9px",
+                }
+              }
+              type="button"
             >
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                Recordings
-              </a>
-            </li>
-          </ul>
+              Recordings
+            </button>
+          </Pill>
         </div>
       </div>
       <div
@@ -799,7 +875,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 </li>
               </ul>
             </span>
-            2020
+            (July 17, 2020 - July 17, 2020)
           </h3>
         </div>
       </div>
@@ -1586,45 +1662,83 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
         className="row"
       >
         <div
-          className="col-md-6"
+          className="col-xs-12"
         >
-          <ul
-            className="nav nav-pills"
+          <Pill
+            active={false}
+            onClick={[Function]}
+            type="secondary"
           >
-            <li
-              className=""
+            <button
+              onClick={[Function]}
+              style={
+                Object {
+                  "background": "transparent",
+                  "border": "2px solid #BBBBBB",
+                  "borderRadius": "24px",
+                  "boxSizing": "border-box",
+                  "color": "#BBBBBB",
+                  "fontWeight": "bold",
+                  "margin": "0px 6px",
+                  "outline": "none",
+                  "padding": "2px 9px",
+                }
+              }
+              type="button"
             >
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                Artists
-              </a>
-            </li>
-            <li
-              className=""
+              Artists
+            </button>
+          </Pill>
+          <Pill
+            active={false}
+            onClick={[Function]}
+            type="secondary"
+          >
+            <button
+              onClick={[Function]}
+              style={
+                Object {
+                  "background": "transparent",
+                  "border": "2px solid #BBBBBB",
+                  "borderRadius": "24px",
+                  "boxSizing": "border-box",
+                  "color": "#BBBBBB",
+                  "fontWeight": "bold",
+                  "margin": "0px 6px",
+                  "outline": "none",
+                  "padding": "2px 9px",
+                }
+              }
+              type="button"
             >
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                Releases
-              </a>
-            </li>
-            <li
-              className=""
+              Releases
+            </button>
+          </Pill>
+          <Pill
+            active={false}
+            onClick={[Function]}
+            type="secondary"
+          >
+            <button
+              onClick={[Function]}
+              style={
+                Object {
+                  "background": "transparent",
+                  "border": "2px solid #BBBBBB",
+                  "borderRadius": "24px",
+                  "boxSizing": "border-box",
+                  "color": "#BBBBBB",
+                  "fontWeight": "bold",
+                  "margin": "0px 6px",
+                  "outline": "none",
+                  "padding": "2px 9px",
+                }
+              }
+              type="button"
             >
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                Recordings
-              </a>
-            </li>
-          </ul>
+              Recordings
+            </button>
+          </Pill>
         </div>
       </div>
       <div
@@ -1705,7 +1819,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 </li>
               </ul>
             </span>
-            2020
+            (July 17, 2020 - July 17, 2020)
           </h3>
         </div>
       </div>
@@ -2392,45 +2506,83 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
         className="row"
       >
         <div
-          className="col-md-6"
+          className="col-xs-12"
         >
-          <ul
-            className="nav nav-pills"
+          <Pill
+            active={true}
+            onClick={[Function]}
+            type="secondary"
           >
-            <li
-              className="active"
+            <button
+              onClick={[Function]}
+              style={
+                Object {
+                  "background": "#353070",
+                  "border": "2px solid #353070",
+                  "borderRadius": "24px",
+                  "boxSizing": "border-box",
+                  "color": "white",
+                  "fontWeight": "bold",
+                  "margin": "0px 6px",
+                  "outline": "none",
+                  "padding": "2px 9px",
+                }
+              }
+              type="button"
             >
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                Artists
-              </a>
-            </li>
-            <li
-              className=""
+              Artists
+            </button>
+          </Pill>
+          <Pill
+            active={false}
+            onClick={[Function]}
+            type="secondary"
+          >
+            <button
+              onClick={[Function]}
+              style={
+                Object {
+                  "background": "transparent",
+                  "border": "2px solid #BBBBBB",
+                  "borderRadius": "24px",
+                  "boxSizing": "border-box",
+                  "color": "#BBBBBB",
+                  "fontWeight": "bold",
+                  "margin": "0px 6px",
+                  "outline": "none",
+                  "padding": "2px 9px",
+                }
+              }
+              type="button"
             >
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                Releases
-              </a>
-            </li>
-            <li
-              className=""
+              Releases
+            </button>
+          </Pill>
+          <Pill
+            active={false}
+            onClick={[Function]}
+            type="secondary"
+          >
+            <button
+              onClick={[Function]}
+              style={
+                Object {
+                  "background": "transparent",
+                  "border": "2px solid #BBBBBB",
+                  "borderRadius": "24px",
+                  "boxSizing": "border-box",
+                  "color": "#BBBBBB",
+                  "fontWeight": "bold",
+                  "margin": "0px 6px",
+                  "outline": "none",
+                  "padding": "2px 9px",
+                }
+              }
+              type="button"
             >
-              <a
-                href=""
-                onClick={[Function]}
-                role="button"
-              >
-                Recordings
-              </a>
-            </li>
-          </ul>
+              Recordings
+            </button>
+          </Pill>
         </div>
       </div>
       <div
@@ -2517,35 +2669,70 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
         </div>
       </div>
       <div
-        className="row"
+        className="row mt-15 mb-15"
       >
         <div
-          className="col-xs-12"
+          className="col-xs-12 text-center"
         >
-          <h4
+          <span
             style={
               Object {
-                "textTransform": "capitalize",
+                "fontSize": 24,
               }
             }
           >
-            artist
-             count - 
-            <b>
-              0
-            </b>
-          </h4>
-        </div>
-      </div>
-      <div
-        className="row"
-      >
-        <div
-          className="col-md-12"
-        >
-          <p>
+            <FontAwesomeIcon
+              border={false}
+              className=""
+              fixedWidth={false}
+              flip={null}
+              icon={
+                Object {
+                  "icon": Array [
+                    512,
+                    512,
+                    Array [],
+                    "f06a",
+                    "M504 256c0 136.997-111.043 248-248 248S8 392.997 8 256C8 119.083 119.043 8 256 8s248 111.083 248 248zm-248 50c-25.405 0-46 20.595-46 46s20.595 46 46 46 46-20.595 46-46-20.595-46-46-46zm-43.673-165.346l7.418 136c.347 6.364 5.609 11.346 11.982 11.346h48.546c6.373 0 11.635-4.982 11.982-11.346l7.418-136c.375-6.874-5.098-12.654-11.982-12.654h-63.383c-6.884 0-12.356 5.78-11.981 12.654z",
+                  ],
+                  "iconName": "exclamation-circle",
+                  "prefix": "fas",
+                }
+              }
+              inverse={false}
+              listItem={false}
+              mask={null}
+              pull={null}
+              pulse={false}
+              rotation={null}
+              size={null}
+              spin={false}
+              swapOpacity={false}
+              symbol={false}
+              title=""
+              transform={null}
+            >
+              <svg
+                aria-hidden="true"
+                className="svg-inline--fa fa-exclamation-circle fa-w-16 "
+                data-icon="exclamation-circle"
+                data-prefix="fas"
+                focusable="false"
+                role="img"
+                style={Object {}}
+                viewBox="0 0 512 512"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M504 256c0 136.997-111.043 248-248 248S8 392.997 8 256C8 119.083 119.043 8 256 8s248 111.083 248 248zm-248 50c-25.405 0-46 20.595-46 46s20.595 46 46 46 46-20.595 46-46-20.595-46-46-46zm-43.673-165.346l7.418 136c.347 6.364 5.609 11.346 11.982 11.346h48.546c6.373 0 11.635-4.982 11.982-11.346l7.418-136c.375-6.874-5.098-12.654-11.982-12.654h-63.383c-6.884 0-12.356 5.78-11.981 12.654z"
+                  fill="currentColor"
+                  style={Object {}}
+                />
+              </svg>
+            </FontAwesomeIcon>
+             
             Statistics for the user have not been calculated
-          </p>
+          </span>
         </div>
       </div>
     </Loader>

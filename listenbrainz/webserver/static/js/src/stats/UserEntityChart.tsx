@@ -1,11 +1,15 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
 import * as ReactDOM from "react-dom";
 import * as React from "react";
+import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 import APIService from "../APIService";
 import Bar from "./Bar";
-import Loader from "../Loader";
+import Loader from "../components/Loader";
 import ErrorBoundary from "../ErrorBoundary";
+import Pill from "../components/Pill";
 
 export type UserEntityChartProps = {
   user: ListenBrainzUser;
@@ -14,16 +18,18 @@ export type UserEntityChartProps = {
 
 export type UserEntityChartState = {
   data: UserEntityData;
-  range: UserEntityAPIRange;
+  range: UserStatsAPIRange;
   entity: Entity;
   currPage: number;
   entityCount: number;
   totalPages: number;
   maxListens: number;
   startDate: Date;
+  endDate: Date;
   loading: boolean;
-  calculated: boolean;
   graphContainerWidth?: number;
+  hasError: boolean;
+  errorMessage: string;
 };
 
 export default class UserEntityChart extends React.Component<
@@ -45,15 +51,17 @@ export default class UserEntityChart extends React.Component<
 
     this.state = {
       data: [],
-      range: "" as UserEntityAPIRange,
+      range: "" as UserStatsAPIRange,
       entity: "" as Entity,
       currPage: 1,
       entityCount: 0,
       totalPages: 0,
       maxListens: 0, // Number of listens for first artist used to scale the graph
       startDate: new Date(),
+      endDate: new Date(),
       loading: false,
-      calculated: true,
+      hasError: false,
+      errorMessage: "",
     };
 
     this.graphContainer = React.createRef();
@@ -93,7 +101,7 @@ export default class UserEntityChart extends React.Component<
   };
 
   changeRange = (
-    newRange: UserEntityAPIRange,
+    newRange: UserStatsAPIRange,
     event?: React.MouseEvent<HTMLElement>
   ): void => {
     if (event) {
@@ -105,27 +113,21 @@ export default class UserEntityChart extends React.Component<
     this.syncStateWithURL();
   };
 
-  changeEntity = (
-    newEntity: Entity,
-    event?: React.MouseEvent<HTMLElement>
-  ): void => {
-    if (event) {
-      event.preventDefault();
-    }
-
+  changeEntity = (newEntity: Entity): void => {
     const { range } = this.state;
     this.setURLParams(1, range, newEntity);
     this.syncStateWithURL();
   };
 
   getInitData = async (
-    range: UserEntityAPIRange,
+    range: UserStatsAPIRange,
     entity: Entity
   ): Promise<{
     maxListens: number;
     totalPages: number;
     entityCount: number;
     startDate: Date;
+    endDate: Date;
   }> => {
     const { user } = this.props;
 
@@ -169,12 +171,13 @@ export default class UserEntityChart extends React.Component<
       totalPages,
       entityCount,
       startDate: new Date(data.payload.from_ts * 1000),
+      endDate: new Date(data.payload.to_ts * 1000),
     };
   };
 
   getData = async (
     page: number,
-    range: UserEntityAPIRange,
+    range: UserStatsAPIRange,
     entity: Entity
   ): Promise<
     UserArtistsResponse | UserReleasesResponse | UserRecordingsResponse
@@ -260,10 +263,46 @@ export default class UserEntityChart extends React.Component<
   syncStateWithURL = async (): Promise<void> => {
     this.setState({ loading: true });
     const { page, range, entity } = this.getURLParams();
+    // Check that the given page is an integer
+    if (!Number.isInteger(page)) {
+      this.setState({
+        hasError: true,
+        loading: false,
+        errorMessage: `Invalid page: ${page}`,
+        currPage: page,
+        range,
+        entity,
+      });
+      return;
+    }
     try {
       const { range: currRange, entity: currEntity } = this.state;
       let initData = {};
       if (range !== currRange || entity !== currEntity) {
+        // Check if given range is valid
+        if (["week", "month", "year", "all_time"].indexOf(range) < 0) {
+          this.setState({
+            hasError: true,
+            loading: false,
+            errorMessage: `Invalid range: ${range}`,
+            currPage: page,
+            range,
+            entity,
+          });
+          return;
+        }
+        // Check if given entity is valid
+        if (["artist", "release", "recording"].indexOf(entity) < 0) {
+          this.setState({
+            hasError: true,
+            loading: false,
+            errorMessage: `Invalid entity: ${entity}`,
+            currPage: page,
+            range,
+            entity,
+          });
+          return;
+        }
         initData = await this.getInitData(range, entity);
       }
       const data = await this.getData(page, range, entity);
@@ -271,7 +310,7 @@ export default class UserEntityChart extends React.Component<
         data: this.processData(data, page, entity),
         currPage: page,
         loading: false,
-        calculated: true,
+        hasError: false,
         range,
         entity,
         ...initData,
@@ -279,11 +318,11 @@ export default class UserEntityChart extends React.Component<
     } catch (error) {
       if (error.response && error.response?.status === 204) {
         this.setState({
-          calculated: false,
+          hasError: true,
+          errorMessage: "Statistics for the user have not been calculated",
           loading: false,
           currPage: page,
           entityCount: 0,
-          startDate: new Date(),
           range,
           entity,
         });
@@ -300,7 +339,7 @@ export default class UserEntityChart extends React.Component<
 
   getURLParams = (): {
     page: number;
-    range: UserEntityAPIRange;
+    range: UserStatsAPIRange;
     entity: Entity;
   } => {
     const url = new URL(window.location.href);
@@ -312,9 +351,9 @@ export default class UserEntityChart extends React.Component<
     }
 
     // Get range from URL
-    let range: UserEntityAPIRange = "all_time";
+    let range: UserStatsAPIRange = "all_time";
     if (url.searchParams.get("range")) {
-      range = url.searchParams.get("range") as UserEntityAPIRange;
+      range = url.searchParams.get("range") as UserStatsAPIRange;
     }
 
     // Get entity from URL
@@ -328,7 +367,7 @@ export default class UserEntityChart extends React.Component<
 
   setURLParams = (
     page: number,
-    range: UserEntityAPIRange,
+    range: UserStatsAPIRange,
     entity: Entity
   ): void => {
     window.history.pushState(
@@ -354,9 +393,11 @@ export default class UserEntityChart extends React.Component<
       maxListens,
       totalPages,
       startDate,
+      endDate,
       loading,
-      calculated,
       graphContainerWidth,
+      hasError,
+      errorMessage,
     } = this.state;
     const prevPage = currPage - 1;
     const nextPage = currPage + 1;
@@ -365,36 +406,28 @@ export default class UserEntityChart extends React.Component<
       <div style={{ marginTop: "1em" }}>
         <Loader isLoading={loading}>
           <div className="row">
-            <div className="col-md-6">
-              <ul className="nav nav-pills">
-                <li className={entity === "artist" ? "active" : ""}>
-                  <a
-                    href=""
-                    role="button"
-                    onClick={(event) => this.changeEntity("artist", event)}
-                  >
-                    Artists
-                  </a>
-                </li>
-                <li className={entity === "release" ? "active" : ""}>
-                  <a
-                    href=""
-                    role="button"
-                    onClick={(event) => this.changeEntity("release", event)}
-                  >
-                    Releases
-                  </a>
-                </li>
-                <li className={entity === "recording" ? "active" : ""}>
-                  <a
-                    href=""
-                    role="button"
-                    onClick={(event) => this.changeEntity("recording", event)}
-                  >
-                    Recordings
-                  </a>
-                </li>
-              </ul>
+            <div className="col-xs-12">
+              <Pill
+                active={entity === "artist"}
+                type="secondary"
+                onClick={() => this.changeEntity("artist")}
+              >
+                Artists
+              </Pill>
+              <Pill
+                active={entity === "release"}
+                type="secondary"
+                onClick={() => this.changeEntity("release")}
+              >
+                Releases
+              </Pill>
+              <Pill
+                active={entity === "recording"}
+                type="secondary"
+                onClick={() => this.changeEntity("recording")}
+              >
+                Recordings
+              </Pill>
             </div>
           </div>
           <div className="row">
@@ -453,95 +486,95 @@ export default class UserEntityChart extends React.Component<
                     </li>
                   </ul>
                 </span>
-                {range === "week"
-                  ? `of ${startDate.getUTCDate()} ${startDate.toLocaleString(
-                      "en-us",
-                      { month: "long", timeZone: "UTC" }
-                    )} `
-                  : ""}
-                {range === "month"
-                  ? `${startDate.toLocaleString("en-us", {
-                      month: "long",
-                      timeZone: "UTC",
-                    })} `
-                  : ""}
-                {range !== "all_time"
-                  ? startDate.toLocaleString("en-us", {
-                      year: "numeric",
-                      timeZone: "UTC",
-                    })
-                  : ""}
+                {range !== "all_time" &&
+                  !hasError &&
+                  `(${startDate.toLocaleString("en-us", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })} - ${endDate.toLocaleString("en-us", {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  })})`}
               </h3>
             </div>
           </div>
-          <div className="row">
-            <div className="col-xs-12">
-              <h4 style={{ textTransform: "capitalize" }}>
-                {entity} count - <b>{entityCount}</b>
-              </h4>
-            </div>
-          </div>
-          <div className="row">
-            {!calculated && (
-              <div className="col-md-12">
-                <p>Statistics for the user have not been calculated</p>
-              </div>
-            )}
-            {calculated && (
-              <div
-                className="col-md-12"
-                style={{
-                  height: `${(75 / this.ROWS_PER_PAGE) * data.length}em`,
-                }}
-                ref={this.graphContainer}
-              >
-                <Bar
-                  data={data}
-                  maxValue={maxListens}
-                  width={graphContainerWidth}
-                />
-              </div>
-            )}
-          </div>
-          {calculated && entity === "release" && (
-            <div className="row">
-              <div className="col-xs-12">
-                <small>
-                  <sup>*</sup>The listen count denotes the number of times you
-                  have listened to a recording from the release.
-                </small>
+          {hasError && (
+            <div className="row mt-15 mb-15">
+              <div className="col-xs-12 text-center">
+                <span style={{ fontSize: 24 }}>
+                  <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
+                  {errorMessage}
+                </span>
               </div>
             </div>
           )}
-          {calculated && (
-            <div className="row">
-              <div className="col-xs-12">
-                <ul className="pager">
-                  <li className={`previous ${!(prevPage > 0) ? "hidden" : ""}`}>
-                    <a
-                      href=""
-                      role="button"
-                      onClick={(event) => this.changePage(prevPage, event)}
-                    >
-                      &larr; Previous
-                    </a>
-                  </li>
-                  <li
-                    className={`next ${
-                      !(nextPage <= totalPages) ? "hidden" : ""
-                    }`}
-                  >
-                    <a
-                      href=""
-                      role="button"
-                      onClick={(event) => this.changePage(nextPage, event)}
-                    >
-                      Next &rarr;
-                    </a>
-                  </li>
-                </ul>
+          {!hasError && (
+            <>
+              <div className="row">
+                <div className="col-xs-12">
+                  <h4 style={{ textTransform: "capitalize" }}>
+                    {entity} count - <b>{entityCount}</b>
+                  </h4>
+                </div>
               </div>
-            </div>
+              <div className="row">
+                <div
+                  className="col-md-12"
+                  style={{
+                    height: `${(75 / this.ROWS_PER_PAGE) * data.length}em`,
+                  }}
+                  ref={this.graphContainer}
+                >
+                  <Bar
+                    data={data}
+                    maxValue={maxListens}
+                    width={graphContainerWidth}
+                  />
+                </div>
+              </div>
+              {entity === "release" && (
+                <div className="row">
+                  <div className="col-xs-12">
+                    <small>
+                      <sup>*</sup>The listen count denotes the number of times
+                      you have listened to a recording from the release.
+                    </small>
+                  </div>
+                </div>
+              )}
+              <div className="row">
+                <div className="col-xs-12">
+                  <ul className="pager">
+                    <li
+                      className={`previous ${!(prevPage > 0) ? "hidden" : ""}`}
+                    >
+                      <a
+                        href=""
+                        role="button"
+                        onClick={(event) => this.changePage(prevPage, event)}
+                      >
+                        &larr; Previous
+                      </a>
+                    </li>
+                    <li
+                      className={`next ${
+                        !(nextPage <= totalPages) ? "hidden" : ""
+                      }`}
+                    >
+                      <a
+                        href=""
+                        role="button"
+                        onClick={(event) => this.changePage(nextPage, event)}
+                      >
+                        Next &rarr;
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </>
           )}
         </Loader>
       </div>

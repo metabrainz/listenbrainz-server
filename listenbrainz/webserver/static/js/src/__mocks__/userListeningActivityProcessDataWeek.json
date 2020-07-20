@@ -1,0 +1,51 @@
+[
+  {
+    "id": "Mon",
+    "lastRangeCount": 22,
+    "lastRangeTs": 1590969600,
+    "thisRangeCount": 36,
+    "thisRangeTs": 1591574400
+  },
+  {
+    "id": "Tue",
+    "lastRangeCount": 10,
+    "lastRangeTs": 1591056000,
+    "thisRangeCount": 13,
+    "thisRangeTs": 1591660800
+  },
+  {
+    "id": "Wed",
+    "lastRangeCount": 18,
+    "lastRangeTs": 1591142400,
+    "thisRangeCount": 8,
+    "thisRangeTs": 1591747200
+  },
+  {
+    "id": "Thu",
+    "lastRangeCount": 35,
+    "lastRangeTs": 1591228800,
+    "thisRangeCount": 37,
+    "thisRangeTs": 1591833600
+  },
+  {
+    "id": "Fri",
+    "lastRangeCount": 30,
+    "lastRangeTs": 1591315200,
+    "thisRangeCount": 17,
+    "thisRangeTs": 1591920000
+  },
+  {
+    "id": "Sat",
+    "lastRangeCount": 3,
+    "lastRangeTs": 1591401600,
+    "thisRangeCount": 22,
+    "thisRangeTs": 1592006400
+  },
+  {
+    "id": "Sun",
+    "lastRangeCount": 0,
+    "lastRangeTs": 1591488000,
+    "thisRangeCount": 8,
+    "thisRangeTs": 1592092800
+  }
+]

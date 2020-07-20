@@ -27,22 +27,26 @@ def get_releases(table):
                 }
     """
     result = run_query("""
-            SELECT user_name
-                 , nullif(release_name, '') as release_name
-                 , CASE
-                     WHEN release_mbid IS NOT NULL AND release_mbid != '' THEN NULL
-                     ELSE nullif(release_msid, '')
-                   END as release_msid
-                 , nullif(release_mbid, '') as release_mbid
-                 , artist_name
-                 , CASE
-                     WHEN cardinality(artist_mbids) > 0 THEN NULL
-                     ELSE nullif(artist_msid, '')
-                   END as artist_msid
-                 , artist_mbids
-                 , count(release_name) as listen_count
-              FROM {}
-             WHERE release_name IS NOT NULL AND release_name != ''
+              WITH intermediate_table as (
+                SELECT user_name
+                     , nullif(release_name, '') as release_name
+                     , CASE
+                         WHEN release_mbid IS NOT NULL AND release_mbid != '' THEN NULL
+                         ELSE nullif(release_msid, '')
+                       END as release_msid
+                     , nullif(release_mbid, '') as release_mbid
+                     , artist_name
+                     , CASE
+                         WHEN cardinality(artist_mbids) > 0 THEN NULL
+                         ELSE nullif(artist_msid, '')
+                       END as artist_msid
+                     , artist_mbids
+                  FROM {}
+              )
+            SELECT *
+                 , count(*) as listen_count
+              FROM intermediate_table
+             WHERE release_name IS NOT NULL
           GROUP BY user_name
                  , release_name
                  , release_msid

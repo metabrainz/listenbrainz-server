@@ -1,4 +1,6 @@
 /* eslint-disable camelcase */
+
+declare module "react-responsive";
 declare module "spotify-web-playback-sdk";
 declare module "react-bs-notifier";
 declare module "time-ago";
@@ -144,7 +146,7 @@ declare type UserArtistsResponse = {
     count: number;
     last_updated: number;
     offset: number;
-    range: UserEntityAPIRange;
+    range: UserStatsAPIRange;
     total_artist_count: number;
     user_id: string;
     from_ts: number;
@@ -166,7 +168,7 @@ declare type UserReleasesResponse = {
     count: number;
     last_updated: number;
     offset: number;
-    range: UserEntityAPIRange;
+    range: UserStatsAPIRange;
     total_release_count: number;
     user_id: string;
     from_ts: number;
@@ -191,7 +193,7 @@ declare type UserRecordingsResponse = {
     count: number;
     last_updated: number;
     offset: number;
-    range: UserEntityAPIRange;
+    range: UserStatsAPIRange;
     total_recording_count: number;
     user_id: string;
     from_ts: number;
@@ -199,7 +201,12 @@ declare type UserRecordingsResponse = {
   };
 };
 
-declare type UserEntityAPIRange = "all_time" | "year" | "month" | "week";
+declare type UserEntityResponse =
+  | UserArtistsResponse
+  | UserReleasesResponse
+  | UserRecordingsResponse;
+
+declare type UserStatsAPIRange = "all_time" | "year" | "month" | "week";
 
 declare type UserEntityDatum = {
   id: string;
@@ -217,3 +224,27 @@ declare type UserEntityDatum = {
 declare type UserEntityData = Array<UserEntityDatum>;
 
 declare type Entity = "artist" | "release" | "recording";
+
+declare type UserListeningActivityResponse = {
+  payload: {
+    from_ts: number;
+    to_ts: number;
+    last_updated: number;
+    listening_activity: Array<{
+      from_ts: number;
+      to_ts: number;
+      time_range: string;
+      listen_count: number;
+    }>;
+  };
+};
+
+declare type UserListeningActivityDatum = {
+  id: string;
+  lastRangeCount?: number;
+  thisRangeCount?: number;
+  lastRangeTs?: number;
+  thisRangeTs?: number;
+};
+
+declare type UserListeningActivityData = Array<UserListeningActivityDatum>;

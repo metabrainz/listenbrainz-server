@@ -194,6 +194,29 @@ def charts(user_name):
     )
 
 
+@user_bp.route("/<user_name>/reports")
+def reports(user_name: str):
+    """ Show user reports """
+    user = _get_user(user_name)
+
+    user_data = {
+        "name": user.musicbrainz_id,
+        "id": user.id,
+    }
+
+    props = {
+        "user": user_data,
+        "api_url": current_app.config["API_URL"]
+    }
+
+    return render_template(
+        "user/reports.html",
+        active_section="reports",
+        props=ujson.dumps(props),
+        user=user
+    )
+
+
 def _get_user(user_name):
     """ Get current username """
     if current_user.is_authenticated and \

@@ -1,0 +1,305 @@
+{
+  "payload": {
+    "from_ts": 1588291200,
+    "last_updated": 1593539726,
+    "listening_activity": [
+      {
+        "from_ts": 1588291200,
+        "listen_count": 26,
+        "time_range": "01 May 2020",
+        "to_ts": 1588377599
+      },
+      {
+        "from_ts": 1588377600,
+        "listen_count": 17,
+        "time_range": "02 May 2020",
+        "to_ts": 1588463999
+      },
+      {
+        "from_ts": 1588464000,
+        "listen_count": 26,
+        "time_range": "03 May 2020",
+        "to_ts": 1588550399
+      },
+      {
+        "from_ts": 1588550400,
+        "listen_count": 32,
+        "time_range": "04 May 2020",
+        "to_ts": 1588636799
+      },
+      {
+        "from_ts": 1588636800,
+        "listen_count": 26,
+        "time_range": "05 May 2020",
+        "to_ts": 1588723199
+      },
+      {
+        "from_ts": 1588723200,
+        "listen_count": 28,
+        "time_range": "06 May 2020",
+        "to_ts": 1588809599
+      },
+      {
+        "from_ts": 1588809600,
+        "listen_count": 21,
+        "time_range": "07 May 2020",
+        "to_ts": 1588895999
+      },
+      {
+        "from_ts": 1588896000,
+        "listen_count": 26,
+        "time_range": "08 May 2020",
+        "to_ts": 1588982399
+      },
+      {
+        "from_ts": 1588982400,
+        "listen_count": 0,
+        "time_range": "09 May 2020",
+        "to_ts": 1589068799
+      },
+      {
+        "from_ts": 1589068800,
+        "listen_count": 4,
+        "time_range": "10 May 2020",
+        "to_ts": 1589155199
+      },
+      {
+        "from_ts": 1589155200,
+        "listen_count": 28,
+        "time_range": "11 May 2020",
+        "to_ts": 1589241599
+      },
+      {
+        "from_ts": 1589241600,
+        "listen_count": 21,
+        "time_range": "12 May 2020",
+        "to_ts": 1589327999
+      },
+      {
+        "from_ts": 1589328000,
+        "listen_count": 0,
+        "time_range": "13 May 2020",
+        "to_ts": 1589414399
+      },
+      {
+        "from_ts": 1589414400,
+        "listen_count": 15,
+        "time_range": "14 May 2020",
+        "to_ts": 1589500799
+      },
+      {
+        "from_ts": 1589500800,
+        "listen_count": 31,
+        "time_range": "15 May 2020",
+        "to_ts": 1589587199
+      },
+      {
+        "from_ts": 1589587200,
+        "listen_count": 8,
+        "time_range": "16 May 2020",
+        "to_ts": 1589673599
+      },
+      {
+        "from_ts": 1589673600,
+        "listen_count": 5,
+        "time_range": "17 May 2020",
+        "to_ts": 1589759999
+      },
+      {
+        "from_ts": 1589760000,
+        "listen_count": 37,
+        "time_range": "18 May 2020",
+        "to_ts": 1589846399
+      },
+      {
+        "from_ts": 1589846400,
+        "listen_count": 50,
+        "time_range": "19 May 2020",
+        "to_ts": 1589932799
+      },
+      {
+        "from_ts": 1589932800,
+        "listen_count": 26,
+        "time_range": "20 May 2020",
+        "to_ts": 1590019199
+      },
+      {
+        "from_ts": 1590019200,
+        "listen_count": 34,
+        "time_range": "21 May 2020",
+        "to_ts": 1590105599
+      },
+      {
+        "from_ts": 1590105600,
+        "listen_count": 36,
+        "time_range": "22 May 2020",
+        "to_ts": 1590191999
+      },
+      {
+        "from_ts": 1590192000,
+        "listen_count": 14,
+        "time_range": "23 May 2020",
+        "to_ts": 1590278399
+      },
+      {
+        "from_ts": 1590278400,
+        "listen_count": 0,
+        "time_range": "24 May 2020",
+        "to_ts": 1590364799
+      },
+      {
+        "from_ts": 1590364800,
+        "listen_count": 5,
+        "time_range": "25 May 2020",
+        "to_ts": 1590451199
+      },
+      {
+        "from_ts": 1590451200,
+        "listen_count": 25,
+        "time_range": "26 May 2020",
+        "to_ts": 1590537599
+      },
+      {
+        "from_ts": 1590537600,
+        "listen_count": 53,
+        "time_range": "27 May 2020",
+        "to_ts": 1590623999
+      },
+      {
+        "from_ts": 1590624000,
+        "listen_count": 21,
+        "time_range": "28 May 2020",
+        "to_ts": 1590710399
+      },
+      {
+        "from_ts": 1590710400,
+        "listen_count": 8,
+        "time_range": "29 May 2020",
+        "to_ts": 1590796799
+      },
+      {
+        "from_ts": 1590796800,
+        "listen_count": 11,
+        "time_range": "30 May 2020",
+        "to_ts": 1590883199
+      },
+      {
+        "from_ts": 1590883200,
+        "listen_count": 11,
+        "time_range": "31 May 2020",
+        "to_ts": 1590969599
+      },
+      {
+        "from_ts": 1590969600,
+        "listen_count": 22,
+        "time_range": "01 June 2020",
+        "to_ts": 1591055999
+      },
+      {
+        "from_ts": 1591056000,
+        "listen_count": 10,
+        "time_range": "02 June 2020",
+        "to_ts": 1591142399
+      },
+      {
+        "from_ts": 1591142400,
+        "listen_count": 18,
+        "time_range": "03 June 2020",
+        "to_ts": 1591228799
+      },
+      {
+        "from_ts": 1591228800,
+        "listen_count": 35,
+        "time_range": "04 June 2020",
+        "to_ts": 1591315199
+      },
+      {
+        "from_ts": 1591315200,
+        "listen_count": 30,
+        "time_range": "05 June 2020",
+        "to_ts": 1591401599
+      },
+      {
+        "from_ts": 1591401600,
+        "listen_count": 3,
+        "time_range": "06 June 2020",
+        "to_ts": 1591487999
+      },
+      {
+        "from_ts": 1591488000,
+        "listen_count": 0,
+        "time_range": "07 June 2020",
+        "to_ts": 1591574399
+      },
+      {
+        "from_ts": 1591574400,
+        "listen_count": 36,
+        "time_range": "08 June 2020",
+        "to_ts": 1591660799
+      },
+      {
+        "from_ts": 1591660800,
+        "listen_count": 13,
+        "time_range": "09 June 2020",
+        "to_ts": 1591747199
+      },
+      {
+        "from_ts": 1591747200,
+        "listen_count": 8,
+        "time_range": "10 June 2020",
+        "to_ts": 1591833599
+      },
+      {
+        "from_ts": 1591833600,
+        "listen_count": 37,
+        "time_range": "11 June 2020",
+        "to_ts": 1591919999
+      },
+      {
+        "from_ts": 1591920000,
+        "listen_count": 17,
+        "time_range": "12 June 2020",
+        "to_ts": 1592006399
+      },
+      {
+        "from_ts": 1592006400,
+        "listen_count": 22,
+        "time_range": "13 June 2020",
+        "to_ts": 1592092799
+      },
+      {
+        "from_ts": 1592092800,
+        "listen_count": 8,
+        "time_range": "14 June 2020",
+        "to_ts": 1592179199
+      },
+      {
+        "from_ts": 1592179200,
+        "listen_count": 66,
+        "time_range": "15 June 2020",
+        "to_ts": 1592265599
+      },
+      {
+        "from_ts": 1592265600,
+        "listen_count": 34,
+        "time_range": "16 June 2020",
+        "to_ts": 1592351999
+      },
+      {
+        "from_ts": 1592352000,
+        "listen_count": 0,
+        "time_range": "17 June 2020",
+        "to_ts": 1592438399
+      },
+      {
+        "from_ts": 1592438400,
+        "listen_count": 0,
+        "time_range": "18 June 2020",
+        "to_ts": 1592524799
+      }
+    ],
+    "range": "month",
+    "to_ts": 1592524800,
+    "user_id": "ishaanshah"
+  }
+}

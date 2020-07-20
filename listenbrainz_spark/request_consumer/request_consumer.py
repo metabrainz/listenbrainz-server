@@ -56,7 +56,8 @@ class RequestConsumer:
         try:
             return query_handler(**params)
         except TypeError as e:
-            current_app.logger.error("TypeError in the query handler for query '%s', maybe bad params. Error: %s", query, str(e), exc_info=True)
+            current_app.logger.error(
+                "TypeError in the query handler for query '%s', maybe bad params. Error: %s", query, str(e), exc_info=True)
             return None
         except Exception as e:
             current_app.logger.error("Error in the query handler for query '%s': %s", query, str(e), exc_info=True)
@@ -64,13 +65,18 @@ class RequestConsumer:
 
     def push_to_result_queue(self, messages):
         current_app.logger.debug("Pushing result to RabbitMQ...")
+        num_of_messages = 0
+        avg_size_of_message = 0
         for message in messages:
+            num_of_messages += 1
+            body = json.dumps(message)
+            avg_size_of_message += len(body)
             while message is not None:
                 try:
                     self.result_channel.basic_publish(
                         exchange=current_app.config['SPARK_RESULT_EXCHANGE'],
                         routing_key='',
-                        body=json.dumps(message),
+                        body=body,
                         properties=pika.BasicProperties(delivery_mode=2,),
                     )
                     break
@@ -80,7 +86,12 @@ class RequestConsumer:
                     self.rabbitmq.close()
                     self.connect_to_rabbitmq()
                     self.init_rabbitmq_channels()
-        current_app.logger.debug("Done!")
+
+        avg_size_of_message //= num_of_messages
+
+        current_app.logger.info("Done!")
+        current_app.logger.info("Number of messages sent: {}".format(num_of_messages))
+        current_app.logger.info("Average size of message: {} bytes".format(avg_size_of_message))
 
     def callback(self, channel, method, properties, body):
         request = json.loads(body.decode('utf-8'))
@@ -139,7 +150,8 @@ class RequestConsumer:
                     continue
                 self.rabbitmq.close()
             except Py4JJavaError as e:
-                current_app.logger.critical("Critical: JAVA error in spark-request consumer: %s, message: %s", str(e), str(e.java_exception), exc_info=True)
+                current_app.logger.critical("Critical: JAVA error in spark-request consumer: %s, message: %s",
+                                            str(e), str(e.java_exception), exc_info=True)
                 time.sleep(2)
             except Exception as e:
                 current_app.logger.critical("Error in spark-request-consumer: %s", str(e), exc_info=True)

@@ -80,6 +80,16 @@ class DumpNotFoundException(SparkException):
     def __init__(self, message):
         super(DumpNotFoundException, self).__init__(message)
 
+
+class DumpInvalidException(SparkException):
+    """ The given dump is invalid, i.e the SHA256 checksum
+        doesn't match or is not present
+    """
+
+    def __init__(self, message):
+        super(DumpInvalidException, self).__init__(message)
+
+
 class RecommendationsNotGeneratedException(SparkException):
     """ No recommendations generated for the given user.
     """
