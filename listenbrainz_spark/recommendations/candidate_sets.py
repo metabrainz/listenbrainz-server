@@ -1,3 +1,4 @@
+import os
 import sys
 import uuid
 import logging
@@ -455,6 +456,7 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
     if SAVE_CANDIDATE_HTML:
         user_data = get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_candidate_set_df_html,
                                             top_artist_df, similar_artist_df)
+
         current_app.logger.info('Saving HTML...')
         save_candidate_html(user_data, total_time, from_date, to_date)
         current_app.logger.info('Done!')
