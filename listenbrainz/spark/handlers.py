@@ -158,12 +158,14 @@ def handle_user_daily_activity(data):
         notify_user_stats_update(stat_type=data.get('type', ''))
     current_app.logger.debug("inserting stats for user %s", musicbrainz_id)
 
+    stats_range = data['stats_range']
+
     # Strip extra data
-    to_remove = {'musicbrainz_id', 'type'}
+    to_remove = {'musicbrainz_id', 'type', 'stats_range'}
     data_mod = {key: data[key] for key in data if key not in to_remove}
 
     try:
-        db_stats.insert_user_daily_activity(user['id'], UserDailyActivityStatJson(**data_mod))
+        db_stats.insert_user_daily_activity(user['id'], UserDailyActivityStatJson(**{stats_range: data_mod}))
     except ValidationError:
         current_app.logger.error("""ValidationError while inserting {stats_range} daily_activity for user with
                                     user_id: {user_id}. Data: {data}""".format(user_id=user['id'],

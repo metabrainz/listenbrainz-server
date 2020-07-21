@@ -39,9 +39,24 @@
     "description": "Calculate the number of listens for an user in each year starting from LAST_FM_FOUNDING_YEAR (2002).",
     "params": []
   },
-  "stats.user.daily_activity": {
-    "name": "stats.user.daily_activity",
-    "description": "Calculate the number of listens per hour for an user.",
+  "stats.user.daily_activity.week": {
+    "name": "stats.user.daily_activity.week",
+    "description": "Calculate number of listens for an user per hour on each day of the past week.",
+    "params": []
+  },
+  "stats.user.daily_activity.month": {
+    "name": "stats.user.daily_activity.month",
+    "description": "Calculate number of listens for an user per hour on each day of week of the current month.",
+    "params": []
+  },
+  "stats.user.daily_activity.year": {
+    "name": "stats.user.daily_activity.year",
+    "description": "Calculate number of listens for an user per hour on each day of week of the current year.",
+    "params": []
+  },
+  "stats.user.daily_activity.all_time": {
+    "name": "stats.user.daily_activity.all_time",
+    "description": "Calculate number of listens for an user per hour on each day of week.",
     "params": []
   },
   "import.dump.full_newest": {
