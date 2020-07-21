@@ -272,7 +272,35 @@ def get_user_listening_activity(user_id: int, stats_range: str) -> Optional[User
     try:
         return UserListeningActivityStat(**dict(row)) if row else None
     except ValidationError:
-        current_app.logger.error("""ValidationError when getting {stats_range} top recordings for user with user_id: {user_id}.
+        current_app.logger.error("""ValidationError when getting {stats_range} listening_activity for user with user_id: {user_id}.
+                                 Data: {data}""".format(stats_range=stats_range, user_id=user_id,
+                                                        data=json.dumps(dict(row)[stats_range], indent=3)),
+                                 exc_info=True)
+        return None
+
+
+def get_user_daily_activity(user_id: int, stats_range: str) -> Optional[UserDailyActivityStat]:
+    """Get daily activity in the given time range for user with given ID.
+
+        Args:
+            user_id: the row ID of the user in the DB
+            stats_range: the time range to fetch the stats for
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT user_id, daily_activity->:range AS {range}, last_updated
+              FROM statistics.user
+             WHERE user_id = :user_id
+            """.format(range=stats_range)), {
+            'range': stats_range,
+            'user_id': user_id
+        })
+        row = result.fetchone()
+
+    try:
+        return UserDailyActivityStat(**dict(row)) if row else None
+    except ValidationError:
+        current_app.logger.error("""ValidationError when getting {stats_range} daily_activity for user with user_id: {user_id}.
                                  Data: {data}""".format(stats_range=stats_range, user_id=user_id,
                                                         data=json.dumps(dict(row)[stats_range], indent=3)),
                                  exc_info=True)
