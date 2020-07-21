@@ -181,7 +181,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                 </li>
               </ul>
             </span>
-            (July 17, 2020 - July 17, 2020)
+            (January 01, 1970 - January 01, 1970)
           </h3>
         </div>
       </div>
@@ -875,7 +875,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                 </li>
               </ul>
             </span>
-            (July 17, 2020 - July 17, 2020)
+            (January 01, 1970 - January 01, 1970)
           </h3>
         </div>
       </div>
@@ -1819,7 +1819,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                 </li>
               </ul>
             </span>
-            (July 17, 2020 - July 17, 2020)
+            (January 01, 1970 - January 01, 1970)
           </h3>
         </div>
       </div>
