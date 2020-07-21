@@ -272,9 +272,9 @@ def get_user_listening_activity(user_id: int, stats_range: str) -> Optional[User
     try:
         return UserListeningActivityStat(**dict(row)) if row else None
     except ValidationError:
-        current_app.logger.error("""ValidationError when getting {stats_range} listening_activity for user with user_id: {user_id}.
-                                 Data: {data}""".format(stats_range=stats_range, user_id=user_id,
-                                                        data=json.dumps(dict(row)[stats_range], indent=3)),
+        current_app.logger.error("""ValidationError when getting {stats_range} listening_activity for user with user_id:
+                                    {user_id}. Data: {data}""".format(stats_range=stats_range, user_id=user_id,
+                                                                      data=json.dumps(dict(row)[stats_range], indent=3)),
                                  exc_info=True)
         return None
 
