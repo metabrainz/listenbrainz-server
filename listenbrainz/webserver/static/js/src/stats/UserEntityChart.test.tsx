@@ -30,6 +30,8 @@ describe("UserEntityChart Page", () => {
 
     wrapper.setState({
       data: userArtistsProcessDataOutput as UserEntityData,
+      startDate: new Date(0),
+      endDate: new Date(10),
       maxListens: 70,
     });
     wrapper.update();
@@ -48,6 +50,8 @@ describe("UserEntityChart Page", () => {
 
     wrapper.setState({
       data: userReleasesProcessDataOutput as UserEntityData,
+      startDate: new Date(0),
+      endDate: new Date(10),
       maxListens: 26,
     });
     wrapper.update();
@@ -66,6 +70,8 @@ describe("UserEntityChart Page", () => {
 
     wrapper.setState({
       data: userRecordingsProcessDataOutput as UserEntityData,
+      startDate: new Date(0),
+      endDate: new Date(10),
       maxListens: 26,
     });
     wrapper.update();
