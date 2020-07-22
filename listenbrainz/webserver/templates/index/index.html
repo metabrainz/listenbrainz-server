@@ -10,16 +10,17 @@
         We're completely open-source and publish our data as open data.
       </p>
       <p>
-        To get started, you'll need to <a href="{{ url_for('login.index') }}">sign in</a> with
-        a <a href="https://musicbrainz.org">MusicBrainz</a> account. If you don't have a MusicBrainz
-        account, you can <a href="https://musicbrainz.org/register">create one</a>!
-      </p>
-      <p>
-        Once you have an account, you can track your music listening habits and
+        You can use ListenBrainz to track your music listening habits and
         share your taste with others using our visualizations. We also have an
         <a href="https://listenbrainz.readthedocs.io/en/production/dev/api/">API</a>
-        if you want to do more with your data. You can <a href="{{ url_for('profile.import_data') }}">import</a>
-        data from Last.FM or connect your Spotify account to ListenBrainz to track your history.
+        if you want to do more with your data.
+      </p>
+      <p>
+        To get started, you'll need to <a href="{{ url_for('login.index') }}">sign in</a> with
+        a <a href="https://musicbrainz.org">MusicBrainz</a> account. If you don't have a MusicBrainz
+        account, you can <a href="https://musicbrainz.org/register">create one</a>! Once you have an
+        account, you can <a href="{{ url_for('profile.import_data') }}">import</a>
+        data from Last.FM or connect your Spotify account to ListenBrainz to track your listening history.
       </p>
       <p>
         Need help? Ask our <a href="https://community.metabrainz.org/c/listenbrainz">community</a>!
