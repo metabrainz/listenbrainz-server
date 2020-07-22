@@ -39,12 +39,12 @@ class TimescaleWriterSubscriber(ListenWriter):
         if not ret:
             return ret
 
-        while True:
-            try:
-                self.incoming_ch.basic_ack(delivery_tag=method.delivery_tag)
-                break
-            except pika.exceptions.ConnectionClosed:
-                self.connect_to_rabbitmq()
+#        while True:
+#            try:
+#                self.incoming_ch.basic_ack(delivery_tag=method.delivery_tag)
+#                break
+#            except pika.exceptions.ConnectionClosed:
+#                self.connect_to_rabbitmq()
 
         return ret
 
