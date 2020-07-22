@@ -284,11 +284,11 @@ class InfluxWriterSubscriber(ListenWriter):
                 self.connect_to_rabbitmq()
                 self.incoming_ch = self.connection.channel()
                 self.incoming_ch.exchange_declare(exchange=current_app.config['INCOMING_EXCHANGE'], exchange_type='fanout')
-                self.incoming_ch.queue_declare(current_app.config['INCOMING_QUEUE_INFLUX'], durable=True)
-                self.incoming_ch.queue_bind(exchange=current_app.config['INCOMING_EXCHANGE'], queue=current_app.config['INCOMING_QUEUE_INFLUX'])
+                self.incoming_ch.queue_declare('incoming_ts_migration', durable=True)
+                self.incoming_ch.queue_bind(exchange=current_app.config['INCOMING_EXCHANGE'], queue='incoming_ts_migration')
                 self.incoming_ch.basic_consume(
                     lambda ch, method, properties, body: self.static_callback(ch, method, properties, body, obj=self),
-                    queue=current_app.config['INCOMING_QUEUE_INFLUX'],
+                    queue='incoming_ts_migration',
                 )
 
 #                self.unique_ch = self.connection.channel()
