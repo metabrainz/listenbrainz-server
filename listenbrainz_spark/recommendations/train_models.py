@@ -1,3 +1,4 @@
+import os
 import sys
 import uuid
 import logging
@@ -381,8 +382,10 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
         sys.exit(-1)
 
     if SAVE_TRAINING_HTML:
+        current_app.logger.info('Saving HTML...')
         save_training_html(time_, num_training, num_validation, num_test, model_metadata, best_model_metadata, ti,
                            models_training_time)
+        current_app.logger.info('Done!')
 
     message = [{
         'type': 'cf_recording_model',
