@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 import * as timeago from "time-ago";
 
 import { faListUl, faMusic } from "@fortawesome/free-solid-svg-icons";
@@ -12,7 +13,7 @@ import * as io from "socket.io-client";
 import BrainzPlayer from "./BrainzPlayer";
 import FollowUsers from "./FollowUsers";
 import APIService from "./APIService";
-import Loader from "./Loader";
+import Loader from "./components/Loader";
 import { getArtistLink, getPlayButton, getTrackLink } from "./utils";
 
 export type ListensListMode = "listens" | "follow" | "recent";
@@ -757,7 +758,7 @@ export default class RecentListens extends React.Component<
     );
   }
 }
-/* eslint-disable camelcase */
+
 document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#react-container");
   const propsElement = document.getElementById("react-props");

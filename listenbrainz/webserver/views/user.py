@@ -87,7 +87,7 @@ def profile(user_name):
             listens_missing = 1
 
     # If there are no previous listens then display now_playing
-    if  not listens or listens[0]['listened_at'] >= max_ts_per_user:
+    if not listens or listens[0]['listened_at'] >= max_ts_per_user:
         playing_now = playing_now_conn.get_playing_now(user.id)
         if playing_now:
             listen = {
