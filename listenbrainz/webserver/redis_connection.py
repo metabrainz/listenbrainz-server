@@ -1,4 +1,3 @@
-
 from redis import Redis
 import redis
 import time
@@ -6,16 +5,17 @@ from listenbrainz.listenstore import RedisListenStore
 
 _redis = None
 
-def init_redis_connection(logger, host, port):
+
+def init_redis_connection(logger, host, port, namespace):
     """Create a connection to the Redis server."""
 
     global _redis
     while True:
         try:
-            logger.info("Connecting to redis {}:{}".format(host, port))
             _redis = RedisListenStore(logger, {
                 'REDIS_HOST': host,
-                'REDIS_PORT': port
+                'REDIS_PORT': port,
+                'REDIS_NAMESPACE': namespace
             })
             _redis.check_connection()
             break

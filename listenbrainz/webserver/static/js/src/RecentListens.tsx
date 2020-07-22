@@ -35,6 +35,7 @@ export interface RecentListensProps {
   spotify: SpotifyUser;
   user: ListenBrainzUser;
   webSocketsServerUrl: string;
+  searchLargerTimeRange: number;
 }
 
 export interface RecentListensState {
@@ -264,6 +265,16 @@ export default class RecentListens extends React.Component<
     }
   };
 
+  reloadPageWithSearchLargerTimeRange = (): void => {
+    let url = window.location.href;
+    if (url.indexOf("?") > -1) {
+      url += "&search_larger_time_range=1";
+    } else {
+      url += "?search_larger_time_range=1";
+    }
+    window.location.href = url;
+  };
+
   render() {
     const {
       alerts,
@@ -285,6 +296,7 @@ export default class RecentListens extends React.Component<
       profileUrl,
       spotify,
       user,
+      searchLargerTimeRange,
     } = this.props;
 
     return (
@@ -327,7 +339,7 @@ export default class RecentListens extends React.Component<
                 : "Playlist"}
             </h3>
 
-            {!listens.length && (
+            {!listens.length && searchLargerTimeRange === 0 && (
               <div className="lead text-center">
                 <p>No listens yet</p>
                 {mode === "follow" && (
@@ -422,7 +434,7 @@ export default class RecentListens extends React.Component<
                   </tbody>
                 </table>
 
-                {mode === "listens" && (
+                {mode === "listens" && searchLargerTimeRange === 0 && (
                   <ul className="pager">
                     <li
                       className={`previous ${
@@ -440,6 +452,19 @@ export default class RecentListens extends React.Component<
                     </li>
                   </ul>
                 )}
+              </div>
+            )}
+            {mode === "listens" && searchLargerTimeRange > 0 && (
+              <div className="lead text-center">
+                <p>We could not find any more listen, but there may be more</p>
+                <button
+                  title="Search Larger Time Range"
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={this.reloadPageWithSearchLargerTimeRange}
+                >
+                  Search Larger Time Range
+                </button>
               </div>
             )}
             <br />
@@ -508,6 +533,7 @@ document.addEventListener("DOMContentLoaded", () => {
     spotify,
     user,
     web_sockets_server_url,
+    search_larger_time_range,
   } = reactProps;
 
   ReactDOM.render(
@@ -530,6 +556,7 @@ document.addEventListener("DOMContentLoaded", () => {
       spotify={spotify}
       user={user}
       webSocketsServerUrl={web_sockets_server_url}
+      searchLargerTimeRange={search_larger_time_range}
     />,
     domContainer
   );

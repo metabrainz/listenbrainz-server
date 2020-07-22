@@ -11,6 +11,7 @@ import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET,\
     DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
 import time
+import psycopg2
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -108,7 +109,7 @@ def get_listens(user_name):
     if max_ts == None and min_ts == None:
         max_ts = current_time
 
-    db_conn = webserver.create_influx(current_app)
+    db_conn = webserver.create_timescale(current_app)
     listens = db_conn.fetch_listens(
         user_name,
         limit=min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET),
@@ -134,6 +135,34 @@ def get_listens(user_name):
         'count': len(listen_data),
         'listens': listen_data,
         'latest_listen_ts': latest_listen_ts,
+    }})
+
+
+@api_bp.route("/user/<user_name>/listen-count")
+@crossdomain()
+@ratelimit()
+def get_listen_count(user_name):
+    """
+        Get the number of listens for a user ``user_name``.
+
+        The returned listen count has an element 'payload' with only key: 'count'
+        which unsurprisingly contains the listen count for the user.
+
+    :statuscode 200: Yay, you have listen counts!
+    :resheader Content-Type: *application/json*
+    """
+
+    try:
+        db_conn = webserver.create_timescale(current_app)
+        listen_count = db_conn.get_listen_count_for_user(user_name)
+        if listen_count < 0:
+            raise APINotFound("Cannot find user: %s" % user_name)
+    except psycopg2.OperationalError as err:
+        current_app.logger.error("cannot fetch user listen count: ", str(err))
+        raise APIServiceUnavailable("Cannot fetch user listen count right now.")
+
+    return jsonify({'payload': {
+        'count': listen_count
     }})
 
 
@@ -194,7 +223,7 @@ def get_recent_listens_for_user_list(user_list):
     if not len(users):
         raise APIBadRequest("user_list is empty or invalid.")
 
-    db_conn = webserver.create_influx(current_app)
+    db_conn = webserver.create_timescale(current_app)
     listens = db_conn.fetch_recent_listens_for_users(
         users,
         limit=limit

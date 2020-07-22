@@ -1,6 +1,7 @@
 #!/bin/bash
 
 POSTGRES_LB_URI="postgresql://listenbrainz:listenbrainz@db/listenbrainz"
+SQLALCHEMY_TIMESCALE_URI="postgresql://listenbrainz_ts:listenbrainz_ts@timescale/listenbrainz_ts"
 
 if [[ ! -d "docker" ]]; then
     echo "This script must be run from the top level directory of the listenbrainz-server source."
@@ -22,6 +23,11 @@ function invoke_manage {
 function open_psql_shell {
     invoke_docker_compose run --rm web psql \
         $POSTGRES_LB_URI
+}
+
+function open_timescale_shell {
+    invoke_docker_compose run --rm web psql \
+        $SQLALCHEMY_TIMESCALE_URI
 }
 
 function npm_install {
@@ -52,6 +58,11 @@ if [ "$1" == "manage" ]; then shift
 elif [ "$1" == "psql" ]; then
     echo "Entering into PSQL shell to query DB..."
     open_psql_shell
+    exit
+
+elif [ "$1" == "timescale" ]; then
+    echo "Entering into PSQL shell to query Timescale DB..."
+    open_timescale_shell
     exit
 
 elif [ "$1" == "npm" ]; then
