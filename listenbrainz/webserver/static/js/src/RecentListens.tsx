@@ -57,6 +57,7 @@ export default class RecentListens extends React.Component<
   private APIService: APIService;
 
   private brainzPlayer = React.createRef<BrainzPlayer>();
+  private listensTable = React.createRef<HTMLTableElement>();
 
   private socket!: SocketIOClient.Socket;
 
@@ -79,6 +80,8 @@ export default class RecentListens extends React.Component<
     this.APIService = new APIService(
       props.apiUrl || `${window.location.origin}/1`
     );
+
+    this.listensTable = React.createRef();
   }
 
   componentDidMount(): void {
@@ -359,6 +362,7 @@ export default class RecentListens extends React.Component<
       nextListenTs: newListens[newListens.length - 1].listened_at,
       previousListenTs: newListens[0].listened_at,
     });
+    this.scrollToTop();
     window.history.pushState(null, "", `?max_ts=${nextListenTs}`);
   };
 
@@ -388,6 +392,7 @@ export default class RecentListens extends React.Component<
       nextListenTs: newListens[newListens.length - 1].listened_at,
       previousListenTs: newListens[0].listened_at,
     });
+    this.scrollToTop();
     window.history.pushState(null, "", `?min_ts=${previousListenTs}`);
   };
 
@@ -403,6 +408,7 @@ export default class RecentListens extends React.Component<
       nextListenTs: newListens[newListens.length - 1].listened_at,
       previousListenTs: undefined,
     });
+    this.scrollToTop();
     window.history.pushState(null, "", "");
   };
 
@@ -424,6 +430,7 @@ export default class RecentListens extends React.Component<
       nextListenTs: undefined,
       previousListenTs: newListens[0].listened_at,
     });
+    this.scrollToTop();
     window.history.pushState(null, "", `?min_ts=${oldestListenTs - 1}`);
   };
 
@@ -439,6 +446,12 @@ export default class RecentListens extends React.Component<
         break;
     }
   };
+
+  scrollToTop() {
+    if (this.listensTable?.current) {
+      this.listensTable.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }
 
   render() {
     const {
@@ -504,6 +517,7 @@ export default class RecentListens extends React.Component<
                 <table
                   className="table table-condensed table-striped listens-table"
                   id="listens"
+                  ref={this.listensTable}
                 >
                   <thead>
                     <tr>
