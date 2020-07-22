@@ -28,7 +28,6 @@ def get_daily_activity():
     time_range = itertools.product(weekdays, hours)
     time_range_df = listenbrainz_spark.session.createDataFrame(time_range, schema=["day", "hour"])
     time_range_df.createOrReplaceTempView('time_range')
-    date = get_latest_listen_ts()
 
     # Truncate listened_at to day and hour to improve matching speed
     formatted_listens = run_query("""
@@ -109,7 +108,7 @@ def get_daily_activity_year() -> Iterator[Optional[UserDailyActivityStatMessage]
     current_app.logger.debug("Calculating listening_activity_year")
 
     to_date = get_latest_listen_ts()
-    from_date = datetime(to_date.year-1, 1, 1)
+    from_date = datetime(to_date.year, 1, 1)
 
     _get_listens(from_date, to_date)
 
