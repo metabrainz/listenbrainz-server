@@ -66,6 +66,7 @@ MAXIMUM_RABBITMQ_CONNECTIONS = 20
 
 INCOMING_EXCHANGE = '''{{template "KEY" "incoming_exchange"}}'''
 INCOMING_QUEUE = '''{{template "KEY" "incoming_queue"}}'''
+INCOMING_QUEUE_INFLUX = '''{{template "KEY" "incoming_queue_influx"}}'''
 UNIQUE_EXCHANGE = '''{{template "KEY" "unique_exchange"}}'''
 UNIQUE_QUEUE = '''{{template "KEY" "unique_queue"}}'''
 FOLLOW_LIST_QUEUE = '''{{template "KEY" "follow_list_queue"}}'''
