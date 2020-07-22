@@ -46,6 +46,8 @@ class TimescaleWriterSubscriber(ListenWriter):
 #            except pika.exceptions.ConnectionClosed:
 #                self.connect_to_rabbitmq()
 
+        current_app.logger.info("wrote %s listens %d" % ret)
+
         return ret
 
     def insert_to_listenstore(self, data):
