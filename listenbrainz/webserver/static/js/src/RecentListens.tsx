@@ -12,6 +12,7 @@ import * as io from "socket.io-client";
 import BrainzPlayer from "./BrainzPlayer";
 import FollowUsers from "./FollowUsers";
 import APIService from "./APIService";
+import Loader from "./Loader";
 import { getArtistLink, getPlayButton, getTrackLink } from "./utils";
 
 export type ListensListMode = "listens" | "follow" | "recent";
@@ -43,6 +44,7 @@ export interface RecentListensState {
   listName: string;
   listens: Array<Listen>;
   listenCount?: number;
+  loading: boolean;
   mode: "listens" | "follow" | "recent";
   nextListenTs?: number;
   playingNowByUser: FollowUsersPlayingNow;
@@ -72,6 +74,7 @@ export default class RecentListens extends React.Component<
       saveUrl: props.saveUrl || "",
       listName: props.followListName || "",
       listId: props.followListId || undefined,
+      loading: false,
       nextListenTs: props.listens?.[props.listens.length - 1]?.listened_at,
       previousListenTs: props.listens?.[0]?.listened_at,
       direction: "down",
@@ -123,6 +126,7 @@ export default class RecentListens extends React.Component<
       minTs = Number(url.searchParams.get("min_ts"));
     }
 
+    this.setState({ loading: true });
     const { user } = this.props;
     const newListens = await this.APIService.getListensForUser(
       user.name,
@@ -345,6 +349,7 @@ export default class RecentListens extends React.Component<
     if (!nextListenTs) {
       return;
     }
+    this.setState({ loading: true });
     const newListens = await this.APIService.getListensForUser(
       user.name,
       undefined,
@@ -353,16 +358,19 @@ export default class RecentListens extends React.Component<
     if (!newListens.length) {
       // No more listens to fetch
       this.setState({
+        loading: false,
         nextListenTs: undefined,
       });
       return;
     }
-    this.setState({
-      listens: newListens,
-      nextListenTs: newListens[newListens.length - 1].listened_at,
-      previousListenTs: newListens[0].listened_at,
-    });
-    this.scrollToTop();
+    this.setState(
+      {
+        listens: newListens,
+        nextListenTs: newListens[newListens.length - 1].listened_at,
+        previousListenTs: newListens[0].listened_at,
+      },
+      this.scrollToTop
+    );
     window.history.pushState(null, "", `?max_ts=${nextListenTs}`);
   };
 
@@ -373,6 +381,7 @@ export default class RecentListens extends React.Component<
     if (!previousListenTs) {
       return;
     }
+    this.setState({ loading: true });
     const newListens = await this.APIService.getListensForUser(
       user.name,
       previousListenTs,
@@ -381,18 +390,21 @@ export default class RecentListens extends React.Component<
     if (!newListens.length) {
       // No more listens to fetch
       this.setState({
+        loading: false,
         previousListenTs: undefined,
       });
       return;
     }
     // When calling the API with minTs, listens are returned sorted by ascending listened_at
     newListens.reverse();
-    this.setState({
-      listens: newListens,
-      nextListenTs: newListens[newListens.length - 1].listened_at,
-      previousListenTs: newListens[0].listened_at,
-    });
-    this.scrollToTop();
+    this.setState(
+      {
+        listens: newListens,
+        nextListenTs: newListens[newListens.length - 1].listened_at,
+        previousListenTs: newListens[0].listened_at,
+      },
+      this.scrollToTop
+    );
     window.history.pushState(null, "", `?min_ts=${previousListenTs}`);
   };
 
@@ -402,13 +414,16 @@ export default class RecentListens extends React.Component<
     if (listens?.[0]?.listened_at >= latestListenTs) {
       return;
     }
+    this.setState({ loading: true });
     const newListens = await this.APIService.getListensForUser(user.name);
-    this.setState({
-      listens: newListens,
-      nextListenTs: newListens[newListens.length - 1].listened_at,
-      previousListenTs: undefined,
-    });
-    this.scrollToTop();
+    this.setState(
+      {
+        listens: newListens,
+        nextListenTs: newListens[newListens.length - 1].listened_at,
+        previousListenTs: undefined,
+      },
+      this.scrollToTop
+    );
     window.history.pushState(null, "", "");
   };
 
@@ -419,18 +434,21 @@ export default class RecentListens extends React.Component<
     if (listens?.[listens.length - 1]?.listened_at <= oldestListenTs) {
       return;
     }
+    this.setState({ loading: true });
     const newListens = await this.APIService.getListensForUser(
       user.name,
       oldestListenTs - 1
     );
     // When calling the API with minTs, listens are returned sorted by ascending listened_at
     newListens.reverse();
-    this.setState({
-      listens: newListens,
-      nextListenTs: undefined,
-      previousListenTs: newListens[0].listened_at,
-    });
-    this.scrollToTop();
+    this.setState(
+      {
+        listens: newListens,
+        nextListenTs: undefined,
+        previousListenTs: newListens[0].listened_at,
+      },
+      this.scrollToTop
+    );
     window.history.pushState(null, "", `?min_ts=${oldestListenTs - 1}`);
   };
 
@@ -451,6 +469,7 @@ export default class RecentListens extends React.Component<
     if (this.listensTable?.current) {
       this.listensTable.current.scrollIntoView({ behavior: "smooth" });
     }
+    this.setState({ loading: false });
   }
 
   render() {
@@ -463,6 +482,7 @@ export default class RecentListens extends React.Component<
       listName,
       listens,
       listenCount,
+      loading,
       mode,
       nextListenTs,
       playingNowByUser,
@@ -514,10 +534,21 @@ export default class RecentListens extends React.Component<
             )}
             {listens.length > 0 && (
               <div>
+                <div
+                  style={{
+                    position: "fixed",
+                    top: "50%",
+                    left: "calc(50% - 56px)",
+                    zIndex: 1,
+                  }}
+                >
+                  <Loader isLoading={loading} />
+                </div>
                 <table
                   className="table table-condensed table-striped listens-table"
                   id="listens"
                   ref={this.listensTable}
+                  style={{ opacity: loading ? "0.4" : "1" }}
                 >
                   <thead>
                     <tr>
