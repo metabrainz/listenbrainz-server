@@ -5,51 +5,52 @@
     <div class="col-md-7 col-lg-8">
       <img src="{{ url_for('static', filename='img/logo_big.svg') }}" id="big-logo" />
       <h2 class="page-title">Welcome to ListenBrainz!</h2>
-          <p>
-            The ListenBrainz project is similar to the original AudioScrobbler&reg;. Unlike
-            the original project, ListenBrainz is open source and will publish its data as
-            open data.
-          </p>
-          <p>
-            A team of former Last.fm and current <a href="https://musicbrainz.org">MusicBrainz</a>
-            hackers created the first version of ListenBrainz in the space of a weekend. Since
-            the original project was created, technology has advanced at an incredibly
-            rapid pace, which made re-creating the original project fairly straightforward.
-          <p>
-          <p>
-            The project has two main goals:
-          </p>
-          <ol>
-            <li>Allow users to preserve their existing Last.fm&reg; data. ListenBrainz is
-                operated by the <a href="https://metabrainz.org">MetaBrainz Foundation</a> which
-                has a long-standing history of curating, protecting and making data
-                available to the public. MetaBrainz commits itself to safe-guarding the
-                ListenBrainz data indefinitely.
-            </li>
-            <li>Make this incredibly useful music usage data available to anyone who cares to
-                play with it. We hope that the combination of ListenBrainz, MusicBrainz and
-                <a href="http://acousticbrainz.org">AcousticBrainz</a> will provide enough
-                data for developers to create new music recommendation systems. Music recommendation
-                systems are hard to develop because comprehensive music data sets do not
-                exist in the open. Normally start-ups spend vast amounts of money to create
-                these data sets before building recommendation systems. We aim to short-cut
-                this process and put the power to create recommendation engines into the hands
-                of everyone. We plan to release the data under the
-                <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0 License</a>.
-            </li>
-        </ol>
-        <p>
-          For more information about this project and its goals, please take a look at our
-          <a href="{{ url_for('index.goals') }}">goals page</a>.
-        </p>
+      <p>
+        ListenBrainz is an open repository of your music listening history.
+        We're completely open-source and publish our data as open data.
+      </p>
+      <p>
+        To get started, you'll need to <a href="{{ url_for('login.index') }}">sign in</a> with
+        a <a href="https://musicbrainz.org">MusicBrainz</a> account. If you don't have a MusicBrainz
+        account, you can <a href="https://musicbrainz.org/register">create one</a>!
+      </p>
+      <p>
+        Once you have an account, you can track your music listening habits and
+        share your taste with others using our visualizations. We also have an
+        <a href="https://listenbrainz.readthedocs.io/en/production/dev/api/">API</a>
+        if you want to do more with your data. You can <a href="{{ url_for('profile.import_data') }}">import</a>
+        data from Last.FM or connect your Spotify account to ListenBrainz to track your history.
+      </p>
+      <p>
+        Need help? Ask our <a href="https://community.metabrainz.org/c/listenbrainz">community</a>!
+      </p>
+      <h2>About us</h2>
+      <p>
+        ListenBrainz is operated by the <a href="https://metabrainz.org">MetaBrainz Foundation</a>
+        which has a long-standing history of curating, protecting and making music data available to the
+        public. MetaBrainz commits itself to safe-guarding the ListenBrainz data indefinitely.
+      </p>
+      <p>
+        We also make this incredibly useful data available to anyone who cares to play with it. You
+        can use our API or our regular public <a href="https://listenbrainz.readthedocs.io/en/production/dev/listenbrainz-dumps/">data dumps</a>.
+        All non-commercial use of this data is free, but commercial users are asked to <a href="https://metabrainz.org/supporters/account-type">support</a>
+        us in order to help fund the project.
+      </p>
+      <p>
+        For more information about this project and its goals, please take a look at our
+        <a href="{{ url_for('index.goals') }}">goals page</a>.
+      </p>
 
-        <p>
-          At this point the project is in its infancy -- we have lots of things that will
-          need to be built and improved before this project will be useful to the general
-          public. If you are a hacker and interested in helping out, please have a look
-          at the <a href="https://github.com/metabrainz/listenbrainz-server">code repository</a>
-          or come visit us in the #metabrainz IRC channel on irc.freenode.net.
-        </p>
+      <h2>Contributing</h2>
+      <p>
+        If you are interested in helping out, consider <a href="https://metabrainz.org/donate">donating</a>
+        to the MetaBrainz Foundation.
+      </p>
+      <p>
+        If you are interesting in contributing code or documentation, please have a look
+        at the <a href="https://github.com/metabrainz/listenbrainz-server">code repository</a>
+        or come visit us in the #metabrainz IRC channel on irc.freenode.net.
+      </p>
     </div>
 
     <div class="col-md-5 col-lg-4">
@@ -82,7 +83,7 @@
       </div>
 
       <div id="twitter-block">
-        <a class="twitter-timeline" data-dnt="true" data-lang="en" href="https://twitter.com/ListenBrainz" data-widget-id="640261552604643328">Tweets by @ListenBrainz</a>
+        <a class="twitter-timeline" data-dnt="true" data-lang="en" href="https://twitter.com/ListenBrainz" data-widget-id="640261552604643328" data-height="450px">Tweets by @ListenBrainz</a>
         <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+"://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
       </div>
     </div>
