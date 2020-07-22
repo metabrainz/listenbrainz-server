@@ -11,10 +11,6 @@ site [#]_.
 
 *Note*: All ListenBrainz services are only available on **HTTPS**!
 
-.. [#] The beta endpoints (i.e. ``beta.listenbrainz.org``) were deprecated in
-   Fall 2017. If you were using this endpoint, please use the current,
-   production endpoints instead.
-
 Reference
 ---------
 
@@ -127,4 +123,3 @@ Constants that are relevant to using the API:
 .. autodata:: listenbrainz.webserver.views.api_tools.DEFAULT_ITEMS_PER_GET
 .. autodata:: listenbrainz.webserver.views.api_tools.MAX_TAGS_PER_LISTEN
 .. autodata:: listenbrainz.webserver.views.api_tools.MAX_TAG_SIZE
-
