@@ -51,13 +51,7 @@ class InfluxWriterSubscriber(ListenWriter):
         if not ret:
             return ret
 
-        while True:
-            try:
-                self.incoming_ch.basic_ack(delivery_tag = method.delivery_tag)
-                break
-            except pika.exceptions.ConnectionClosed:
-                self.connect_to_rabbitmq()
-
+        current_app.logger.info("should have ack'ed but won't.")
         count = len(listens)
 
         self._collect_and_log_stats(count, call_method=self.ls.update_listen_counts)
