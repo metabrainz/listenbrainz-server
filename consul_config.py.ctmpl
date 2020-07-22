@@ -31,6 +31,19 @@ MB_DATABASE_URI = 'postgresql://musicbrainz_ro@{{.Address}}:{{.Port}}/musicbrain
 {{end}}
 {{end}}
 
+{{if service "timescale-listenbrainz"}}
+{{with index (service "timescale-listenbrainz") 0}}
+#SQLALCHEMY_DATABASE_URI = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{{.Port}}/listenbrainz"
+#MESSYBRAINZ_SQLALCHEMY_DATABASE_URI = "postgresql://messybrainz:messybrainz@{{.Address}}:{{.Port}}/messybrainz"
+POSTGRES_ADMIN_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/template1"
+POSTGRES_ADMIN_LB_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/listenbrainz"
+
+SQLALCHEMY_TIMESCALE_URI = "postgresql://listenbrainz_ts:listenbrainz_ts@{{.Address}}:{{.Port}}/listenbrainz_ts"
+TIMESCALE_ADMIN_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/template1"
+TIMESCALE_ADMIN_LB_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/listenbrainz_ts"
+{{end}}
+{{end}}
+
 # Not currently used
 MAX_POSTGRES_LISTEN_HISTORY = "-1"
 PG_QUERY_TIMEOUT = "3000"

@@ -15,18 +15,10 @@ services:
   redis:
     image: redis:5.0.3
 
-  influx:
-    image: influxdb:1.7.9
+  timescale:
+    image: timescale/timescaledb:latest-pg12
     environment:
-      INFLUXDB_REPORTING_DISABLED: 'true'
-      INFLUXDB_META_LOGGING_ENABLED: 'false'
-      INFLUXDB_DATA_QUERY_LOG_ENABLED: 'false'
-      INFLUXDB_DATA_WAL_LOGGING_ENABLED: 'false'
-      INFLUXDB_DATA_DATA_LOGGING_ENABLED: 'false'
-      INFLUXDB_HTTP_LOG_ENABLED: 'false'
-      INFLUXDB_CONTINUOUS_QUERIES_LOG_ENABLED: 'false'
-      INFLUXDB_DATA_INDEX_VERSION: 'tsi1' 
-      INFLUXDB_DATA_MAX_INDEX_LOG_FILE_SIZE: '5m'
+      POSTGRES_PASSWORD: 'postgres'
 
   listenbrainz:
     build:
@@ -40,15 +32,16 @@ services:
     depends_on:
       - redis
       - db
-      - influx
+      - timescale
       - rabbitmq
 
-  influx_writer:
+  timescale_writer:
     image: listenbrainz
-    command: python3 -m "listenbrainz.influx_writer.influx_writer"
+    command: python3 -m "listenbrainz.timescale_writer.timescale_writer"
     depends_on:
       - redis
-      - influx
+      - timescale
+      - rabbitmq 
 
   rabbitmq:
     image: rabbitmq:3.6.5

@@ -1,16 +1,20 @@
 import sys
 import os
 import uuid
+import unittest
 
 from listenbrainz.tests.integration import IntegrationTestCase
-from flask import url_for
+from listenbrainz.db import timescale as ts
+from listenbrainz.webserver.errors import APINotFound
+from flask import url_for, current_app
 from redis import Redis
 import listenbrainz.db.user as db_user
 import time
 import json
 from listenbrainz import config
 from listenbrainz.webserver.views.api_tools import is_valid_uuid
-from influxdb import InfluxDBClient
+
+TIMESCALE_SQL_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', '..', 'admin', 'timescale')
 
 
 class APITestCase(IntegrationTestCase):
@@ -20,20 +24,28 @@ class APITestCase(IntegrationTestCase):
         self.user = db_user.get_or_create(1, 'testuserpleaseignore')
 
     def tearDown(self):
-        r = Redis(host=self.app.config['REDIS_HOST'], port=self.app.config['REDIS_PORT'])
+        r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
         r.flushall()
-        self.reset_influx_db()
+        self.reset_timescale_db()
         super(APITestCase, self).tearDown()
 
-    def reset_influx_db(self):
-        """ Resets the entire influx db """
-        influx = InfluxDBClient(
-            host=config.INFLUX_HOST,
-            port=config.INFLUX_PORT,
-            database=config.INFLUX_DB_NAME
-        )
-        influx.query('DROP DATABASE %s' % config.INFLUX_DB_NAME)
-        influx.query('CREATE DATABASE %s' % config.INFLUX_DB_NAME)
+    def reset_timescale_db(self):
+
+        ts.init_db_connection(config.TIMESCALE_ADMIN_URI)
+        ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'drop_db.sql'))
+        ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_db.sql'))
+        ts.engine.dispose()
+
+        ts.init_db_connection(config.TIMESCALE_ADMIN_LB_URI)
+        ts.run_sql_script_without_transaction(os.path.join(TIMESCALE_SQL_DIR, 'create_extensions.sql'))
+        ts.engine.dispose()
+
+        ts.init_db_connection(config.SQLALCHEMY_TIMESCALE_URI)
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_tables.sql'))
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_functions.sql'))
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_views.sql'))
+        ts.run_sql_script(os.path.join(TIMESCALE_SQL_DIR, 'create_indexes.sql'))
+        ts.engine.dispose()
 
     def test_get_listens(self):
         """ Test to make sure that the api sends valid listens on get requests.
@@ -48,8 +60,8 @@ class APITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
-        # This sleep allows for the influx subscriber to take its time in getting
-        # the listen submitted from redis and writing it to influx.
+        # This sleep allows for the timescale subscriber to take its time in getting
+        # the listen submitted from redis and writing it to timescale.
         # Removing it causes an empty list of listens to be returned.
         time.sleep(2)
 
@@ -98,6 +110,19 @@ class APITestCase(IntegrationTestCase):
         self.assert200(response)
         data = json.loads(response.data)['payload']
         self.assertEqual(data['count'], 1)
+
+        url = url_for('api_v1.get_listen_count', user_name=self.user['musicbrainz_id'])
+        response = self.client.get(url)
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        self.assertEqual(data['count'], 1)
+
+        url = url_for('api_v1.get_listen_count', user_name="sir_dumpsterfire")
+        response = self.client.get(url)
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        self.assertEqual(data['count'], 0)
+
 
     def send_data(self, payload):
         """ Sends payload to api.submit_listen and return the response
@@ -316,7 +341,7 @@ class APITestCase(IntegrationTestCase):
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')
 
-        # wait for influx-writer to get its work done before getting the listen back
+        # wait for timescale-writer to get its work done before getting the listen back
         time.sleep(2)
 
         url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
@@ -333,7 +358,7 @@ class APITestCase(IntegrationTestCase):
         self.assertListEqual(sent_additional_info['release_type'], received_additional_info['release_type'])
         self.assertEqual(sent_additional_info['spotify_id'], received_additional_info['spotify_id'])
         self.assertEqual(sent_additional_info['isrc'], received_additional_info['isrc'])
-        self.assertEqual(int(sent_additional_info['tracknumber']), received_additional_info['tracknumber'])
+        self.assertEqual(sent_additional_info['tracknumber'], received_additional_info['tracknumber'])
         self.assertEqual(sent_additional_info['release_group_mbid'], received_additional_info['release_group_mbid'])
         self.assertListEqual(sent_additional_info['work_mbids'], received_additional_info['work_mbids'])
         self.assertListEqual(sent_additional_info['artist_mbids'], received_additional_info['artist_mbids'])

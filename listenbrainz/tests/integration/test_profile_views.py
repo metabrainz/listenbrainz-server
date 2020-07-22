@@ -85,10 +85,9 @@ class ProfileViewsTestCase(IntegrationTestCase):
         self.assertEqual(resp.json['latest_import'], val)
 
         # check that listens have been successfully submitted
-        resp = self.client.get(url_for('user.profile', user_name=self.user['musicbrainz_id']))
+        resp = self.client.get(url_for('api_v1.get_listen_count', user_name=self.user['musicbrainz_id']))
         self.assert200(resp)
-        props = json.loads(self.get_context_variable('props'))
-        self.assertEqual(props['listen_count'], '3')
+        self.assertEqual(json.loads(resp.data)['payload']['count'], 3)
 
         # now delete all the listens we just sent
         resp = self.client.post(url_for('profile.delete_listens'), data={'token': self.user['auth_token']})
@@ -97,13 +96,9 @@ class ProfileViewsTestCase(IntegrationTestCase):
         time.sleep(2)
 
         # check that listens have been successfully deleted
-        resp = self.client.get(url_for('user.profile', user_name=self.user['musicbrainz_id']))
+        resp = self.client.get(url_for('api_v1.get_listen_count', user_name=self.user['musicbrainz_id']))
         self.assert200(resp)
-        props = json.loads(self.get_context_variable('props'))
-        self.assertEqual(props['listen_count'], '0')
-
-        # check that the artist_count has been reset
-        self.assertIsNone(props['artist_count'])
+        self.assertEqual(json.loads(resp.data)['payload']['count'], 0)
 
         # check that the latest_import timestamp has been reset too
         resp = self.client.get(url_for('api_v1.latest_import', user_name=self.user['musicbrainz_id']))

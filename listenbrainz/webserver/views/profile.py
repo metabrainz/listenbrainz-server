@@ -24,7 +24,6 @@ from listenbrainz.stats.utils import construct_stats_queue_key
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.login import api_login_required
 from listenbrainz.webserver.redis_connection import _redis
-from listenbrainz.webserver.influx_connection import _influx
 from listenbrainz.webserver.utils import sizeof_readable
 from listenbrainz.webserver.views.user import delete_user, _get_user, delete_listens_history
 from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, \
@@ -132,15 +131,15 @@ def import_data():
     )
 
 
-def fetch_listens(musicbrainz_id, to_ts):
+def fetch_listens(musicbrainz_id, to_ts, time_range=None):
     """
     Fetch all listens for the user from listenstore by making repeated queries
     to listenstore until we get all the data. Returns a generator that streams
     the results.
     """
-    db_conn = webserver.create_influx(current_app)
+    db_conn = webserver.create_timescale(current_app)
     while True:
-        batch = db_conn.fetch_listens(current_user.musicbrainz_id, to_ts=to_ts, limit=EXPORT_FETCH_COUNT)
+        batch = db_conn.fetch_listens(current_user.musicbrainz_id, to_ts=to_ts, limit=EXPORT_FETCH_COUNT, time_range=time_range)
         if not batch:
             break
         yield from batch
@@ -160,14 +159,14 @@ def stream_json_array(elements):
 def export_data():
     """ Exporting the data to json """
     if request.method == "POST":
-        db_conn = webserver.create_influx(current_app)
+        db_conn = webserver.create_timescale(current_app)
         filename = current_user.musicbrainz_id + "_lb-" + datetime.today().strftime('%Y-%m-%d') + ".json"
 
         # Build a generator that streams the json response. We never load all
         # listens into memory at once, and we can start serving the response
         # immediately.
         to_ts = int(time())
-        listens = fetch_listens(current_user.musicbrainz_id, to_ts)
+        listens = fetch_listens(current_user.musicbrainz_id, to_ts, time_range=-1)
         output = stream_json_array(listen.to_api() for listen in listens)
 
         response = Response(stream_with_context(output))
