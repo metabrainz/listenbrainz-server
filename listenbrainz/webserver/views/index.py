@@ -99,19 +99,6 @@ def current_status():
 
     load = "%.2f %.2f %.2f" % os.getloadavg()
 
-    try:
-        with rabbitmq_connection._rabbitmq.get() as connection:
-            queue = connection.channel.queue_declare(current_app.config['INCOMING_QUEUE'], passive=True, durable=True)
-            incoming_len_msg = format(int(queue.method.message_count), ',d')
-
-            queue = connection.channel.queue_declare(current_app.config['UNIQUE_QUEUE'], passive=True, durable=True)
-            unique_len_msg = format(int(queue.method.message_count), ',d')
-
-    except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed):
-        current_app.logger.error('Unable to get the length of queues', exc_info=True)
-        incoming_len_msg = 'Unknown'
-        unique_len_msg = 'Unknown'
-
     listen_count = _ts.get_total_listen_count()
     try:
         user_count = format(int(_get_user_count()), ',d')
@@ -122,8 +109,6 @@ def current_status():
         "index/current-status.html",
         load=load,
         listen_count=format(int(listen_count), ",d"),
-        incoming_len=incoming_len_msg,
-        unique_len=unique_len_msg,
         user_count=user_count,
     )
 
