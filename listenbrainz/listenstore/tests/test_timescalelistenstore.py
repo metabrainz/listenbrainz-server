@@ -192,6 +192,20 @@ class TestTimescaleListenStore(DatabaseTestCase):
         listen_count = self.logstore.get_listen_count_for_user(user_name=testuser_name)
         self.assertEqual(count, listen_count)
 
+    def test_get_timestamps_for_user(self):
+        uid = random.randint(2000, 1 << 31)
+        testuser = db_user.get_or_create(uid, "user_%d" % uid)
+        testuser_name = testuser['musicbrainz_id']
+
+        (min_ts, max_ts) = self.logstore.get_timestamps_for_user(user_name=testuser_name)
+        self.assertEqual(min_ts, 0)
+        self.assertEqual(max_ts, 0)
+
+        self._create_test_data(testuser_name)
+        (min_ts, max_ts) = self.logstore.get_timestamps_for_user(user_name=testuser_name)
+        self.assertEqual(min_ts, 1400000000)
+        self.assertEqual(max_ts, 1400000200)
+
     def test_fetch_recent_listens(self):
         user = db_user.get_or_create(2, 'someuser')
         user_name = user['musicbrainz_id']
