@@ -79,20 +79,6 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         resp = self.client.get(url_for('index.current_status'))
         self.assert200(resp)
 
-    @mock.patch('listenbrainz.webserver.views.index.rabbitmq_connection')
-    def test_current_status_ise(self, mock_rabbitmq_connection_module):
-        mock_rabbitmq_connection_module._rabbitmq.get.side_effect = InternalServerError
-        r = self.client.get(url_for('index.current_status'))
-        self.assert500(r)
-
-        mock_rabbitmq_connection_module._rabbitmq.get.side_effect = ConnectionClosed
-        r = self.client.get(url_for('index.current_status'))
-        self.assert200(r)
-
-        mock_rabbitmq_connection_module._rabbitmq.get.side_effect = ConnectionClosed
-        r = self.client.get(url_for('index.current_status'))
-        self.assert200(r)
-
     @mock.patch('listenbrainz.db.user.get')
     def test_menu_not_logged_in(self, mock_user_get):
         resp = self.client.get(url_for('index.index'))
