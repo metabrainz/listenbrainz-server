@@ -1,25 +1,23 @@
+import locale
+import os
+import requests
+import subprocess
 
-#TODO(param): alphabetize these
 from brainzutils import cache
 from flask import Blueprint, render_template, current_app, redirect, url_for, request, jsonify
 from flask_login import current_user, login_required
-from werkzeug.exceptions import Unauthorized, NotFound
 from requests.exceptions import HTTPError
-import os
-import subprocess
-import requests
-import locale
 import ujson
+from werkzeug.exceptions import Unauthorized, NotFound
+
 import listenbrainz.db.user as db_user
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz import webserver
 from listenbrainz.domain import spotify
+from listenbrainz import webserver
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.views.user import delete_user
-import pika
-import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
 
 
 index_bp = Blueprint('index', __name__)
@@ -99,19 +97,6 @@ def current_status():
 
     load = "%.2f %.2f %.2f" % os.getloadavg()
 
-    try:
-        with rabbitmq_connection._rabbitmq.get() as connection:
-            queue = connection.channel.queue_declare(current_app.config['INCOMING_QUEUE'], passive=True, durable=True)
-            incoming_len_msg = format(int(queue.method.message_count), ',d')
-
-            queue = connection.channel.queue_declare(current_app.config['UNIQUE_QUEUE'], passive=True, durable=True)
-            unique_len_msg = format(int(queue.method.message_count), ',d')
-
-    except (pika.exceptions.ConnectionClosed, pika.exceptions.ChannelClosed):
-        current_app.logger.error('Unable to get the length of queues', exc_info=True)
-        incoming_len_msg = 'Unknown'
-        unique_len_msg = 'Unknown'
-
     listen_count = _ts.get_total_listen_count()
     try:
         user_count = format(int(_get_user_count()), ',d')
@@ -122,8 +107,6 @@ def current_status():
         "index/current-status.html",
         load=load,
         listen_count=format(int(listen_count), ",d"),
-        incoming_len=incoming_len_msg,
-        unique_len=unique_len_msg,
         user_count=user_count,
     )
 
