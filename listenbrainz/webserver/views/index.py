@@ -1,25 +1,23 @@
+import locale
+import os
+import requests
+import subprocess
 
-#TODO(param): alphabetize these
 from brainzutils import cache
 from flask import Blueprint, render_template, current_app, redirect, url_for, request, jsonify
 from flask_login import current_user, login_required
-from werkzeug.exceptions import Unauthorized, NotFound
 from requests.exceptions import HTTPError
-import os
-import subprocess
-import requests
-import locale
 import ujson
+from werkzeug.exceptions import Unauthorized, NotFound
+
 import listenbrainz.db.user as db_user
 from listenbrainz.db.exceptions import DatabaseException
-from listenbrainz import webserver
 from listenbrainz.domain import spotify
+from listenbrainz import webserver
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.views.user import delete_user
-import pika
-import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
 
 
 index_bp = Blueprint('index', __name__)
