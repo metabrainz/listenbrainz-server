@@ -117,7 +117,7 @@ class TimescaleListenStore(ListenStore):
                 result = connection.execute(sqlalchemy.text(query), {
                     "user_name": user_name
                 })
-                val = result.fetchone()["value"]
+                val = result.fetchone()["value"] or 0
                 return val
         except psycopg2.OperationalError as e:
             self.log.error("Cannot query timescale listened_at_min/max: %s" % str(e), exc_info=True)
