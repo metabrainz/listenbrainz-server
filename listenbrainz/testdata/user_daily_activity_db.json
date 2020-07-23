@@ -1,0 +1,21 @@
+{
+  "from_ts": 0,
+  "to_ts": 10,
+  "daily_activity": [
+    {
+      "day": "Friday",
+      "hour": 1,
+      "listen_count": 5
+    },
+    {
+      "day": "Friday",
+      "hour": 2,
+      "listen_count": 5
+    },
+    {
+      "day": "Thursday",
+      "hour": 2,
+      "listen_count": 1
+    }
+  ]
+}

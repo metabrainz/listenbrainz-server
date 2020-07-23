@@ -412,6 +412,82 @@ def get_listening_activity(user_name: str):
     }})
 
 
+@stats_api_bp.route("/user/<user_name>/daily-activity")
+@crossdomain()
+@ratelimit()
+def get_daily_activity(user_name: str):
+    """
+    Get the daily activity for user ``user_name``. The daily activity shows the number of listens
+    submitted by the user for each hour of the day over a period of time. We assume that all listens are in UTC.
+
+    A sample response from the endpoint may look like::
+
+        {
+            "payload": {
+                "from_ts": 1587945600,
+                "last_updated": 1592807084,
+                "daily_activity": [
+                    {
+                        "hour": 3
+                        "day": "Monday",
+                        "listen_count": 26,
+                    },
+                    {
+                        "hour": 3
+                        "day": "Thursday",
+                        "listen_count": 30,
+                    },
+                    {
+                        "hour": 5
+                        "day": "Monday",
+                        "listen_count": 4,
+                    },
+                    {
+                        "hour": 14
+                        "day": "Sunday",
+                        "listen_count": 2,
+                    },
+                "to_ts": 1589155200,
+                "user_id": "ishaanshah"
+            }
+        }
+    .. note::
+        - This endpoint is currently in beta
+        - We only return the hours which have more than zero listens.
+
+    :param range: Optional, time interval for which statistics should be returned, possible values are ``week``,
+        ``month``, ``year``, ``all_time``, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+
+    """
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APINotFound("Cannot find user: {}".format(user_name))
+
+    stats_range = request.args.get('range', default='all_time')
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest("Invalid range: {}".format(stats_range))
+
+    stats = db_stats.get_user_daily_activity(user['id'], stats_range)
+    if stats is None or getattr(stats, stats_range) is None:
+        raise APINoContent('')
+
+    daily_activity = [x.dict() for x in getattr(stats, stats_range).daily_activity]
+    return jsonify({"payload": {
+        "user_id": user_name,
+        "daily_activity": daily_activity,
+        "from_ts": int(getattr(stats, stats_range).from_ts),
+        "to_ts": int(getattr(stats, stats_range).to_ts),
+        "range": stats_range,
+        "last_updated": int(stats.last_updated.timestamp())
+    }})
+
+
 def _process_entity(stats, stats_range, offset, count, entity):
     """ Process the statistics data according to query params
 

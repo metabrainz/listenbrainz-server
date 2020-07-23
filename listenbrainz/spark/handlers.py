@@ -11,6 +11,7 @@ from flask import current_app, render_template
 from pydantic import ValidationError
 from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
+from data.model.user_daily_activity import UserDailyActivityStatJson
 from data.model.user_listening_activity import UserListeningActivityStatJson
 from data.model.user_artist_stat import UserArtistStatJson
 from data.model.user_release_stat import UserReleaseStatJson
@@ -141,6 +142,34 @@ def handle_user_listening_activity(data):
                                     user_id: {user_id}. Data: {data}""".format(stats_range=stats_range, user_id=user['id'],
                                                                                data=json.dumps({stats_range: data_mod},
                                                                                                indent=3)),
+                                 exc_info=True)
+
+
+def handle_user_daily_activity(data):
+    """ Take daily activity stats for user and save it in database. """
+    musicbrainz_id = data['musicbrainz_id']
+    user = db_user.get_by_mb_id(musicbrainz_id)
+    if not user:
+        current_app.logger.critical("Calculated stats for a user that doesn't exist in the Postgres database: %s", musicbrainz_id)
+        return
+
+    # send a notification if this is a new batch of stats
+    if is_new_user_stats_batch():
+        notify_user_stats_update(stat_type=data.get('type', ''))
+    current_app.logger.debug("inserting stats for user %s", musicbrainz_id)
+
+    stats_range = data['stats_range']
+
+    # Strip extra data
+    to_remove = {'musicbrainz_id', 'type', 'stats_range'}
+    data_mod = {key: data[key] for key in data if key not in to_remove}
+
+    try:
+        db_stats.insert_user_daily_activity(user['id'], UserDailyActivityStatJson(**{stats_range: data_mod}))
+    except ValidationError:
+        current_app.logger.error("""ValidationError while inserting {stats_range} daily_activity for user with
+                                    user_id: {user_id}. Data: {data}""".format(user_id=user['id'],
+                                                                               data=json.dumps(data_mod, indent=3)),
                                  exc_info=True)
 
 

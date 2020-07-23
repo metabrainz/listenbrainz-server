@@ -4,6 +4,9 @@ from unittest import mock
 
 from flask import current_app
 
+from data.model.user_daily_activity import (UserDailyActivityRecord,
+                                            UserDailyActivityStatJson,
+                                            UserDailyActivityStatRange)
 from data.model.user_listening_activity import (UserListeningActivityRecord,
                                                 UserListeningActivityStatJson,
                                                 UserListeningActivityStatRange)
@@ -12,7 +15,7 @@ from data.model.user_artist_stat import (UserArtistRecord,
                                          UserArtistStatRange)
 from listenbrainz.spark.handlers import (
     handle_candidate_sets, handle_dataframes, handle_dump_imported,
-    handle_model, handle_recommendations, handle_user_entity,
+    handle_model, handle_recommendations, handle_user_daily_activity, handle_user_entity,
     handle_user_listening_activity, is_new_cf_recording_recommendation_batch,
     is_new_user_stats_batch, notify_artist_relation_import,
     notify_mapping_import)
@@ -107,6 +110,48 @@ class HandlersTestCase(unittest.TestCase):
                         to_ts=5,
                         time_range='2020',
                         listen_count=200
+                    )
+                ]
+            )
+        ))
+        mock_send_mail.assert_called_once()
+
+    @mock.patch('listenbrainz.spark.handlers.db_stats.insert_user_daily_activity')
+    @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')
+    @mock.patch('listenbrainz.spark.handlers.is_new_user_stats_batch')
+    @mock.patch('listenbrainz.spark.handlers.send_mail')
+    def test_handle_user_daily_activity(self, mock_send_mail, mock_new_user_stats, mock_get_by_mb_id, mock_db_insert):
+        data = {
+            'musicbrainz_id': 'iliekcomputers',
+            'type': 'daily_activity',
+            'stats_range': 'all_time',
+            'from_ts': 1,
+            'to_ts': 10,
+            'daily_activity': [{
+                'day': 'Monday',
+                'hour': 20,
+                'listen_count': 20,
+            }],
+        }
+        mock_get_by_mb_id.return_value = {'id': 1, 'musicbrainz_id': 'iliekcomputers'}
+        mock_new_user_stats.return_value = True
+
+        with self.app.app_context():
+            current_app.config['TESTING'] = False  # set testing to false to check the notifications
+            handle_user_daily_activity(data)
+
+        mock_db_insert.assert_called_with(1, UserDailyActivityStatJson(
+            week=None,
+            year=None,
+            month=None,
+            all_time=UserDailyActivityStatRange(
+                to_ts=10,
+                from_ts=1,
+                daily_activity=[
+                    UserDailyActivityRecord(
+                        day='Monday',
+                        hour=20,
+                        listen_count=20,
                     )
                 ]
             )
