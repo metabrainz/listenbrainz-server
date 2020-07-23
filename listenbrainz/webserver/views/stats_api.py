@@ -418,7 +418,7 @@ def get_listening_activity(user_name: str):
 def get_daily_activity(user_name: str):
     """
     Get the daily activity for user ``user_name``. The daily activity shows the number of listens
-    submitted by the user per hour over a period of time.
+    submitted by the user for each hour of the day over a period of time. We assume that all listens are in UTC.
 
     A sample response from the endpoint may look like::
 
