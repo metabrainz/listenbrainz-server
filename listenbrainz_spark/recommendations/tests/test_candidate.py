@@ -259,3 +259,194 @@ class CandidateSetsTestClass(SparkTestCase):
 
         similar_artist_exist = utils.path_exists(path.SIMILAR_ARTIST_CANDIDATE_SET)
         self.assertTrue(top_artist_exist)
+
+    def test_get_candidate_html_data(self):
+        df = utils.create_dataframe(
+            Row(
+                top_artist_credit_id=2,
+                top_artist_name="blahblah",
+                total_count=10,
+                user_name='vansika_1'
+            ),
+            schema=None
+        )
+
+        df = df.union(utils.create_dataframe(
+            Row(
+                top_artist_credit_id=2,
+                top_artist_name="Less Than Jake",
+                total_count=2,
+                user_name='vansika'
+            ),
+            schema=None
+        ))
+
+        top_artist_df = df.union(utils.create_dataframe(
+            Row(
+                top_artist_credit_id=1,
+                top_artist_name="Less Than Jake",
+                total_count=4,
+                user_name='vansika'
+            ),
+            schema=None
+        ))
+
+        df = utils.create_dataframe(
+            Row(
+                top_artist_credit_id=2,
+                top_artist_name="blahblah",
+                similar_artist_credit_id=10,
+                similar_artist_name='Monali',
+                user_name='vansika_1'
+            ),
+            schema=None
+        )
+
+        df = df.union(utils.create_dataframe(
+            Row(
+                top_artist_credit_id=2,
+                top_artist_name="Less Than Jake",
+                similar_artist_credit_id=1,
+                similar_artist_name='shan',
+                user_name='vansika'
+            ),
+            schema=None
+        ))
+
+        similar_artist_df_html = df.union(utils.create_dataframe(
+            Row(
+                top_artist_credit_id=1,
+                top_artist_name="Less Than Jake",
+                similar_artist_credit_id=90,
+                similar_artist_name='john',
+                user_name='vansika'
+            ),
+            schema=None
+        ))
+
+        df = utils.create_dataframe(
+            Row(
+                top_artist_credit_id=2,
+                top_artist_name="blahblah",
+                mb_artist_credit_id=1,
+                mb_artist_credit_mbids=['xxx'],
+                mb_recording_mbid='yyy',
+                msb_artist_credit_name_matchable='blahblah',
+                msb_recording_name_matchable='looloo',
+                recording_id=2,
+                user_name='vansika_1'
+            ),
+            schema=None
+        )
+
+        df = df.union(utils.create_dataframe(
+            Row(
+                top_artist_credit_id=2,
+                top_artist_name="Less Than Jake",
+                mb_artist_credit_id=1,
+                mb_artist_credit_mbids=['xxx'],
+                mb_recording_mbid='yyy',
+                msb_artist_credit_name_matchable='lessthanjake',
+                msb_recording_name_matchable='lalal',
+                recording_id=2,
+                user_name='vansika'
+            ),
+            schema=None
+        ))
+
+        top_artist_candidate_set_df_html = df.union(utils.create_dataframe(
+            Row(
+                top_artist_credit_id=1,
+                top_artist_name="Less Than Jake",
+                mb_artist_credit_id=1,
+                mb_artist_credit_mbids=['xxx'],
+                mb_recording_mbid='yyy',
+                msb_artist_credit_name_matchable='lessthanjake',
+                msb_recording_name_matchable='lalal',
+                recording_id=2,
+                user_name='vansika',
+            ),
+            schema=None
+        ))
+
+        df = utils.create_dataframe(
+            Row(
+                similar_artist_credit_id=2,
+                similar_artist_name="blahblah",
+                mb_artist_credit_id=1,
+                mb_artist_credit_mbids=['xxx'],
+                mb_recording_mbid='yyy',
+                msb_artist_credit_name_matchable='blahblah',
+                msb_recording_name_matchable='looloo',
+                recording_id=2,
+                user_name='vansika_1'
+            ),
+            schema=None
+        )
+
+        similar_artist_candidate_set_df_html = df.union(utils.create_dataframe(
+            Row(
+                similar_artist_credit_id=1,
+                similar_artist_name="Less Than Jake",
+                mb_artist_credit_id=1,
+                mb_artist_credit_mbids=['xxx'],
+                mb_recording_mbid='yyy',
+                msb_artist_credit_name_matchable='lessthanjake',
+                msb_recording_name_matchable='lalal',
+                recording_id=2,
+                user_name='vansika',
+            ),
+            schema=None
+        ))
+
+        recieved_user_data = candidate_sets.get_candidate_html_data(similar_artist_candidate_set_df_html,
+                                                                    top_artist_candidate_set_df_html,
+                                                                    top_artist_df, similar_artist_df_html)
+
+        expected_user_data = {
+            'vansika': {
+                'top_artist': [
+                    ("Less Than Jake", 2, 2), ("Less Than Jake", 1, 4)
+                ],
+                'similar_artist': [
+                    ("Less Than Jake", 2, 'shan', 1), ("Less Than Jake", 1, 'john', 90)
+                ],
+                'top_artist_candidate_set': [
+                    (2, "Less Than Jake", 1, ['xxx'], 'yyy', 'lessthanjake', 'lalal', 2),
+                    (1, "Less Than Jake", 1, ['xxx'], 'yyy', 'lessthanjake', 'lalal', 2)
+                ],
+                'similar_artist_candidate_set': [
+                    (1, "Less Than Jake", 1, ['xxx'], 'yyy', 'lessthanjake', 'lalal', 2)
+                ]
+            },
+
+            'vansika_1': {
+                'top_artist': [
+                    ("blahblah", 2, 10)
+                ],
+                'similar_artist': [
+                    ("blahblah", 2, 'Monali', 10)
+                ],
+                'top_artist_candidate_set': [
+                    (2, "blahblah", 1, ['xxx'], 'yyy', 'blahblah', 'looloo', 2)
+                ],
+                'similar_artist_candidate_set': [
+                    (2, "blahblah", 1, ['xxx'], 'yyy', 'blahblah', 'looloo', 2)
+                ]
+            }
+        }
+
+        self.assertEqual(recieved_user_data['vansika']['top_artist'], expected_user_data['vansika']['top_artist'])
+        self.assertEqual(recieved_user_data['vansika']['similar_artist'], expected_user_data['vansika']['similar_artist'])
+        self.assertEqual(recieved_user_data['vansika']['top_artist_candidate_set'],
+                         expected_user_data['vansika']['top_artist_candidate_set'])
+        self.assertEqual(recieved_user_data['vansika']['similar_artist_candidate_set'],
+                         expected_user_data['vansika']['similar_artist_candidate_set'])
+
+
+        self.assertEqual(recieved_user_data['vansika_1']['top_artist'], expected_user_data['vansika_1']['top_artist'])
+        self.assertEqual(recieved_user_data['vansika_1']['similar_artist'], expected_user_data['vansika_1']['similar_artist'])
+        self.assertEqual(recieved_user_data['vansika_1']['top_artist_candidate_set'],
+                         expected_user_data['vansika_1']['top_artist_candidate_set'])
+        self.assertEqual(recieved_user_data['vansika_1']['similar_artist_candidate_set'],
+                         expected_user_data['vansika_1']['similar_artist_candidate_set'])
