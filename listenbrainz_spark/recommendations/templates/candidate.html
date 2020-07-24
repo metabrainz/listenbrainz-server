@@ -43,6 +43,8 @@ td, th {
         <p>Similar Artist</p>
             <table>
                 <tr>
+                    <th>Top artist name</th>
+                    <th>Top artist credit id</th>
                     <th>Similar artist name</th>
                     <th>Similar artist credit id</th>
                 </tr>
@@ -50,6 +52,8 @@ td, th {
                 <tr>
                     <td>{{ i[0] }}</td>
                     <td>{{ i[1] }}</td>
+                    <td>{{ i[2] }}</td>
+                    <td>{{ i[3] }}</td>
                 </tr>
                 {% endfor -%}
             </table>
