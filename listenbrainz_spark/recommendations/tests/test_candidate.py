@@ -110,32 +110,7 @@ class CandidateSetsTestClass(SparkTestCase):
             schema=None
         ))
 
-        df = utils.create_dataframe(
-            Row(
-                top_artist_credit_id=2,
-                top_artist_name="blahblah",
-                user_name='vansika_1'
-            ),
-            schema=None
-        )
-
-        df = df.union(utils.create_dataframe(
-            Row(
-                top_artist_credit_id=2,
-                top_artist_name="Less Than Jake",
-                user_name='vansika'
-            ),
-            schema=None
-        ))
-
-        top_artist_df = df.union(utils.create_dataframe(
-            Row(
-                top_artist_credit_id=1,
-                top_artist_name="Less Than Jake",
-                user_name='vansika'
-            ),
-            schema=None
-        ))
+        top_artist_df = self.get_top_artist()
 
         similar_artist_limit = 10
         similar_artist_df, similar_artist_df_html = candidate_sets.get_similar_artists(top_artist_df, artist_relation_df,
@@ -260,7 +235,7 @@ class CandidateSetsTestClass(SparkTestCase):
         similar_artist_exist = utils.path_exists(path.SIMILAR_ARTIST_CANDIDATE_SET)
         self.assertTrue(top_artist_exist)
 
-    def test_get_candidate_html_data(self):
+    def get_top_artist(self):
         df = utils.create_dataframe(
             Row(
                 top_artist_credit_id=2,
@@ -291,6 +266,9 @@ class CandidateSetsTestClass(SparkTestCase):
             schema=None
         ))
 
+        return top_artist_df
+
+    def get_similar_artist_df_html(self):
         df = utils.create_dataframe(
             Row(
                 top_artist_credit_id=2,
@@ -324,6 +302,9 @@ class CandidateSetsTestClass(SparkTestCase):
             schema=None
         ))
 
+        return similar_artist_df_html
+
+    def get_top_artist_candidate_set_df_html(self):
         df = utils.create_dataframe(
             Row(
                 top_artist_credit_id=2,
@@ -369,6 +350,9 @@ class CandidateSetsTestClass(SparkTestCase):
             schema=None
         ))
 
+        return top_artist_candidate_set_df_html
+
+    def get_similar_artist_candidate_set_df_html(self):
         df = utils.create_dataframe(
             Row(
                 similar_artist_credit_id=2,
@@ -399,7 +383,15 @@ class CandidateSetsTestClass(SparkTestCase):
             schema=None
         ))
 
-        recieved_user_data = candidate_sets.get_candidate_html_data(similar_artist_candidate_set_df_html,
+        return similar_artist_candidate_set_df_html
+
+    def test_get_candidate_html_data(self):
+        top_artist_df = self.get_top_artist()
+        similar_artist_df_html = self.get_similar_artist_df_html()
+        top_artist_candidate_set_df_html = self.get_top_artist_candidate_set_df_html()
+        similar_artist_candidate_set_df_html = self.get_similar_artist_candidate_set_df_html()
+
+        received_user_data = candidate_sets.get_candidate_html_data(similar_artist_candidate_set_df_html,
                                                                     top_artist_candidate_set_df_html,
                                                                     top_artist_df, similar_artist_df_html)
 
@@ -436,16 +428,16 @@ class CandidateSetsTestClass(SparkTestCase):
             }
         }
 
-        self.assertEqual(recieved_user_data['vansika']['top_artist'], expected_user_data['vansika']['top_artist'])
-        self.assertEqual(recieved_user_data['vansika']['similar_artist'], expected_user_data['vansika']['similar_artist'])
-        self.assertEqual(recieved_user_data['vansika']['top_artist_candidate_set'],
+        self.assertEqual(received_user_data['vansika']['top_artist'], expected_user_data['vansika']['top_artist'])
+        self.assertEqual(received_user_data['vansika']['similar_artist'], expected_user_data['vansika']['similar_artist'])
+        self.assertEqual(received_user_data['vansika']['top_artist_candidate_set'],
                          expected_user_data['vansika']['top_artist_candidate_set'])
-        self.assertEqual(recieved_user_data['vansika']['similar_artist_candidate_set'],
+        self.assertEqual(received_user_data['vansika']['similar_artist_candidate_set'],
                          expected_user_data['vansika']['similar_artist_candidate_set'])
 
-        self.assertEqual(recieved_user_data['vansika_1']['top_artist'], expected_user_data['vansika_1']['top_artist'])
-        self.assertEqual(recieved_user_data['vansika_1']['similar_artist'], expected_user_data['vansika_1']['similar_artist'])
-        self.assertEqual(recieved_user_data['vansika_1']['top_artist_candidate_set'],
+        self.assertEqual(received_user_data['vansika_1']['top_artist'], expected_user_data['vansika_1']['top_artist'])
+        self.assertEqual(received_user_data['vansika_1']['similar_artist'], expected_user_data['vansika_1']['similar_artist'])
+        self.assertEqual(received_user_data['vansika_1']['top_artist_candidate_set'],
                          expected_user_data['vansika_1']['top_artist_candidate_set'])
-        self.assertEqual(recieved_user_data['vansika_1']['similar_artist_candidate_set'],
+        self.assertEqual(received_user_data['vansika_1']['similar_artist_candidate_set'],
                          expected_user_data['vansika_1']['similar_artist_candidate_set'])
