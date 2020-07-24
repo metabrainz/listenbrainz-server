@@ -109,14 +109,14 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
     def _create_test_data(self, user_name):
         min_ts = -1
         max_ts = -1
-        test_data = create_test_data_for_timescalelistenstore(user_name)
-        for listen in test_data:
+        self.test_data = create_test_data_for_timescalelistenstore(user_name)
+        for listen in self.test_data:
             if min_ts < 0 or listen.ts_since_epoch < min_ts:
                 min_ts = listen.ts_since_epoch
             if max_ts < 0 or listen.ts_since_epoch > max_ts:
                 max_ts = listen.ts_since_epoch
 
-        self.logstore.insert(test_data)
+        self.logstore.insert(self.test_data)
         return (min_ts, max_ts)
 
     def test_username_case(self):
@@ -201,7 +201,7 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
 
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.get_timestamps_for_user')
     @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
-    def test_ts_filters_errors(self, timescale, timestamps):
+    def test_search_larger_time_range_filter_errors(self, timescale, timestamps):
         """If search_larger_time_range is not integer, show an error page"""
         (min_ts, max_ts) = self._create_test_data('iliekcomputers')
         timestamps.return_value = (min_ts, max_ts)
@@ -211,3 +211,119 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertIn(b'search_larger_time_range must be an integer value 0 or greater: a', response.data)
 
         timescale.assert_not_called()
+
+
+    def test_delete_listen(self):
+        self.temporary_login(self.user.login_id)
+        self._create_test_data(self.user.musicbrainz_id)
+        delete_listen_url = url_for('user.delete_listen', user_name=self.user.musicbrainz_id)
+
+        listens = self.logstore.fetch_listens(user_name=self.user.musicbrainz_id, from_ts=1399999999)
+        self.assertEqual(len(listens), 5)
+
+        delete_listen = self.test_data[0]
+        response = self.client.post(delete_listen_url,
+                                    data={
+                                        'token': self.user.auth_token,
+                                        'listened_at': delete_listen.ts_since_epoch,
+                                        'recording_msid': delete_listen.recording_msid
+                                        })
+        self.assert200(response)
+        self.assertEqual(response.json["status"], "ok")
+
+        listens = self.logstore.fetch_listens(user_name=self.user.musicbrainz_id, from_ts=1399999999)
+        self.assertEqual(len(listens), 4)
+
+        self.assertNotIn(delete_listen, listens)
+
+    def test_delete_listen_not_logged_in(self):
+        self._create_test_data(self.user.musicbrainz_id)
+        delete_listen_url = url_for('user.delete_listen', user_name=self.user.musicbrainz_id)
+
+        listens = self.logstore.fetch_listens(user_name=self.user.musicbrainz_id, from_ts=1399999999)
+        self.assertEqual(len(listens), 5)
+
+        delete_listen = self.test_data[0]
+        response = self.client.post(delete_listen_url,
+                                    data={
+                                        'token': self.user.auth_token,
+                                        'listened_at': delete_listen.ts_since_epoch,
+                                        'recording_msid': delete_listen.recording_msid
+                                        })
+        self.assertStatus(response, 302)
+        self.assertRedirects(response, url_for('login.index', next=delete_listen_url))
+
+    def test_delete_listen_missing_keys(self):
+        self.temporary_login(self.user.login_id)
+        self._create_test_data(self.user.musicbrainz_id)
+        delete_listen_url = url_for('user.delete_listen', user_name=self.user.musicbrainz_id)
+
+        listens = self.logstore.fetch_listens(user_name=self.user.musicbrainz_id, from_ts=1399999999)
+        self.assertEqual(len(listens), 5)
+
+        delete_listen = self.test_data[0]
+
+        # send request without auth_token
+        response = self.client.post(delete_listen_url,
+                                    data={
+                                        'listened_at': delete_listen.ts_since_epoch,
+                                        'recording_msid': delete_listen.recording_msid
+                                        })
+        self.assertStatus(response, 401)
+
+        # send request without listened_at
+        response = self.client.post(delete_listen_url,
+                                    data={
+                                        'token': self.user.auth_token,
+                                        'recording_msid': delete_listen.recording_msid
+                                        })
+        self.assertStatus(response, 400)
+        self.assertEqual(response.json["error"], "Listen timestamp missing.")
+
+        # send request without recording_msid
+        response = self.client.post(delete_listen_url,
+                                    data={
+                                        'token': self.user.auth_token,
+                                        'listened_at': delete_listen.ts_since_epoch
+                                        })
+        self.assertStatus(response, 400)
+        self.assertEqual(response.json["error"], "Recording MSID missing.")
+
+    def test_delete_listen_invalid_keys(self):
+        self.temporary_login(self.user.login_id)
+        self._create_test_data(self.user.musicbrainz_id)
+        delete_listen_url = url_for('user.delete_listen', user_name=self.user.musicbrainz_id)
+
+        listens = self.logstore.fetch_listens(user_name=self.user.musicbrainz_id, from_ts=1399999999)
+        self.assertEqual(len(listens), 5)
+
+        delete_listen = self.test_data[0]
+
+        # send request with invalid auth_token
+        response = self.client.post(delete_listen_url,
+                                    data={
+                                        'token': 'invalid token',
+                                        'listened_at': delete_listen.ts_since_epoch,
+                                        'recording_msid': delete_listen.recording_msid
+                                        })
+        self.assertStatus(response, 401)
+
+        # send request with invalid listened_at
+        response = self.client.post(delete_listen_url,
+                                    data={
+                                        'token': self.user.auth_token,
+                                        'listened_at': 'invalid listened_at',
+                                        'recording_msid': delete_listen.recording_msid
+                                        })
+        self.assertStatus(response, 400)
+        self.assertEqual(response.json["error"], "invalid listened_at: Listen timestamp invalid.")
+
+        # send request with invalid recording_msid
+        response = self.client.post(delete_listen_url,
+                                    data={
+                                        'token': self.user.auth_token,
+                                        'listened_at': delete_listen.ts_since_epoch,
+                                        'recording_msid': 'invalid recording_msid'
+                                        })
+        self.assertStatus(response, 400)
+        self.assertEqual(response.json["error"], "invalid recording_msid: Recording MSID format invalid.")

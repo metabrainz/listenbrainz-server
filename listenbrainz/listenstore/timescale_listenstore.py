@@ -671,6 +671,30 @@ class TimescaleListenStore(ListenStore):
             self.log.error("Cannot delete listens for user: %s" % str(e))
             raise
 
+    def delete_listen(self, listened_at: int, user_name: str, recording_msid: str):
+        """ Delete a particular listen for user with specified MusicBrainz ID.
+        Args:
+            listened_at: The timestamp of the listen
+            user_name: the username of the user
+            recording_msid: the MessyBrainz ID of the recording
+        Raises: TimescaleListenStoreException if unable to delete the listen
+        """
+
+        args = {'listened_at': listened_at, 'user_name': user_name, 'recording_msid': recording_msid}
+        query = """DELETE FROM listen
+                    WHERE listened_at = :listened_at
+                      AND user_name = :user_name
+                      AND data -> 'track_metadata' -> 'additional_info' ->> 'recording_msid' = :recording_msid """
+
+        try:
+            with timescale.engine.connect() as connection:
+                connection.execute(sqlalchemy.text(query), args)
+
+            user_key = "{}{}".format(self.ns + REDIS_TIMESCALE_USER_LISTEN_COUNT, user_name)
+            cache.delete(user_key)
+        except psycopg2.OperationalError as e:
+            self.log.error("Cannot delete listen for user: %s" % str(e))
+            raise TimescaleListenStoreException
 
 class TimescaleListenStoreException(Exception):
     pass
