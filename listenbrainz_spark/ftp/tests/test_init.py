@@ -42,7 +42,8 @@ class FTPTestCase(SparkTestCase):
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.list_dir', return_value=['fakefile.txt', 'fakefile.txt.sha256'])
     @patch('listenbrainz_spark.ftp.os.remove')
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader._calc_sha256', return_value='test')
-    def test_download_dump(self, mock_sha_calc, mock_remove, mock_list_dir, mock_binary, mock_ftp_cons):
+    @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader._read_sha_file', return_value='test')
+    def test_download_dump(self, mock_sha_read, mock_sha_calc, mock_remove, mock_list_dir, mock_binary, mock_ftp_cons):
         mock_ftp = mock_ftp_cons.return_value
         filename = 'fakefile.txt'
         sha_filename = filename + '.sha256'
@@ -56,6 +57,7 @@ class FTPTestCase(SparkTestCase):
         self.assertEqual(os.path.join(directory, filename), dest_path)
         mock_list_dir.assert_called_once()
         mock_binary.assert_has_calls(calls)
+        mock_sha_read.assert_called_once_with(sha_dest_path)
         mock_remove.assert_called_once_with(sha_dest_path)
         mock_sha_calc.assert_called_once()
         mock_ftp.cwd.assert_called_once_with('/')
@@ -75,7 +77,8 @@ class FTPTestCase(SparkTestCase):
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader.list_dir', return_value=['fakefile.txt', 'fakefile.txt.sha256'])
     @patch('listenbrainz_spark.ftp.os.remove')
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader._calc_sha256', return_value='tset')
-    def test_download_dump_sha_not_matching(self, mock_sha_calc, mock_remove, mock_list_dir, mock_binary, mock_ftp_cons):
+    @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader._read_sha_file', return_value='test')
+    def test_download_dump_sha_not_matching(self, mock_sha_read, mock_sha_calc, mock_remove, mock_list_dir, mock_binary, mock_ftp_cons):
         mock_ftp = mock_ftp_cons.return_value
         filename = 'fakefile.txt'
         directory = 'fakedir'
@@ -83,3 +86,8 @@ class FTPTestCase(SparkTestCase):
         with patch('listenbrainz_spark.ftp.open', mock_open(read_data='test'), create=True) as mock_file:
             self.assertRaises(DumpInvalidException,
                               listenbrainz_spark.ftp.ListenBrainzFTPDownloader().download_dump, filename, directory)
+
+    def test_read_sha_file_(self):
+        with patch('listenbrainz_spark.ftp.open', mock_open(read_data='  test  filename  \n'), create=True) as mock_file:
+            result = listenbrainz_spark.ftp.ListenBrainzFTPDownloader()._read_sha_file("/sha_file.sha256")
+            self.assertEqual('test', result)
