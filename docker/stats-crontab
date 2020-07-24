@@ -57,6 +57,3 @@
 
 # user weekly daily_activity
 30 16 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=daily_activity --range=all_time
-
-# Request full data dump import into spark cluster, every Wednesday
-00 00 * * 3 /usr/local/bin/python /code/listenbrainz/manage.py spark request_import_full
