@@ -4,6 +4,7 @@ import urllib
 import ujson
 import psycopg2
 import datetime
+import time
 
 from flask import Blueprint, render_template, request, url_for, Response, redirect, flash, current_app, jsonify
 from flask_login import current_user, login_required
@@ -15,10 +16,11 @@ from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.timescale_connection import _ts
-from listenbrainz.webserver.views.api_tools import publish_data_to_queue
-import time
+from listenbrainz.webserver.views.api_tools import publish_data_to_queue, log_raise_400, is_valid_uuid
 from datetime import datetime
-from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, InternalServerError
+from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, ServiceUnavailable, Unauthorized, InternalServerError
+from listenbrainz.webserver.views.stats_api import _get_non_negative_param
+from listenbrainz.listenstore.timescale_listenstore import TimescaleListenStoreException
 from pydantic import ValidationError
 
 LISTENS_PER_PAGE = 25
@@ -215,6 +217,43 @@ def reports(user_name: str):
         props=ujson.dumps(props),
         user=user
     )
+
+
+@user_bp.route('/<user_name>/delete-listen', methods=['POST'])
+@login_required
+def delete_listen(user_name):
+    """ Delete a particular listen from the currently logged-in user's listen history.
+    This checks for the correct authorization token and deletes the listen.
+    """
+    if request.form.get('token') and (request.form.get('token') == current_user.auth_token):
+        listened_at = request.form.get('listened_at')
+        recording_msid = request.form.get('recording_msid')
+
+        if listened_at is None:
+            log_raise_400("Listen timestamp missing.")
+        try:
+            listened_at = int(listened_at)
+        except ValueError:
+            log_raise_400("%s: Listen timestamp invalid." % listened_at)
+
+        if recording_msid is None:
+            log_raise_400("Recording MSID missing.")
+        if not is_valid_uuid(recording_msid):
+            log_raise_400("%s: Recording MSID format invalid." % recording_msid)
+
+        try:
+            user = _get_user(user_name)
+            _ts.delete_listen(listened_at=listened_at, recording_msid=recording_msid, user_name=user.musicbrainz_id)
+        except TimescaleListenStoreException as e:
+            current_app.logger.error("Cannot delete listen for user: %s" % str(e))
+            raise ServiceUnavailable("We couldn't delete the listen. Please try again later.")
+        except Exception as e:
+            current_app.logger.error("Cannot delete listen for user: %s" % str(e))
+            raise InternalServerError("We couldn't delete the listen. Please try again later.")
+
+        return jsonify({'status': 'ok'})
+    else:
+        raise Unauthorized("Auth token invalid or missing.")
 
 
 def _get_user(user_name):
