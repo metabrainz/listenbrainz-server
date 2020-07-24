@@ -78,7 +78,8 @@ class FTPTestCase(SparkTestCase):
     @patch('listenbrainz_spark.ftp.os.remove')
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader._calc_sha256', return_value='tset')
     @patch('listenbrainz_spark.ftp.ListenBrainzFTPDownloader._read_sha_file', return_value='test')
-    def test_download_dump_sha_not_matching(self, mock_sha_read, mock_sha_calc, mock_remove, mock_list_dir, mock_binary, mock_ftp_cons):
+    def test_download_dump_sha_not_matching(self, mock_sha_read, mock_sha_calc, mock_remove,
+                                            mock_list_dir, mock_binary, mock_ftp_cons):
         mock_ftp = mock_ftp_cons.return_value
         filename = 'fakefile.txt'
         directory = 'fakedir'
