@@ -1,3 +1,4 @@
+import calendar
 from datetime import datetime
 from enum import Enum
 from typing import List, Union
@@ -426,34 +427,30 @@ def get_daily_activity(user_name: str):
             "payload": {
                 "from_ts": 1587945600,
                 "last_updated": 1592807084,
-                "daily_activity": [
-                    {
-                        "hour": 3
-                        "day": "Monday",
-                        "listen_count": 26,
-                    },
-                    {
-                        "hour": 3
-                        "day": "Thursday",
-                        "listen_count": 30,
-                    },
-                    {
-                        "hour": 5
-                        "day": "Monday",
-                        "listen_count": 4,
-                    },
-                    {
-                        "hour": 14
-                        "day": "Sunday",
-                        "listen_count": 2,
-                    },
+                "daily_activity": {
+                    "Monday": [
+                        {
+                            "hour": 0
+                            "listen_count": 26,
+                        },
+                        {
+                            "hour": 1
+                            "listen_count": 30,
+                        },
+                        {
+                            "hour": 2
+                            "listen_count": 4,
+                        }...
+                    ],
+                    "Tuesday": [...],
+                    ...
+                }
                 "to_ts": 1589155200,
                 "user_id": "ishaanshah"
             }
         }
     .. note::
         - This endpoint is currently in beta
-        - We only return the hours which have more than zero listens.
 
     :param range: Optional, time interval for which statistics should be returned, possible values are ``week``,
         ``month``, ``year``, ``all_time``, defaults to ``all_time``
@@ -477,7 +474,23 @@ def get_daily_activity(user_name: str):
     if stats is None or getattr(stats, stats_range) is None:
         raise APINoContent('')
 
-    daily_activity = [x.dict() for x in getattr(stats, stats_range).daily_activity]
+    daily_activity_unprocessed = [x.dict() for x in getattr(stats, stats_range).daily_activity]
+    daily_activity = {calendar.day_name[day]: [{"hour": hour, "listen_count": 0} for hour in range(0, 24)] for day in range(0, 7)}
+
+    for day, day_data in daily_activity.items():
+        for hour_data in day_data:
+            hour = hour_data["hour"]
+
+            found = False
+            for entry in daily_activity_unprocessed:
+                if entry["hour"] == hour and entry["day"] == day:
+                    found = True
+                    hour_data["listen_count"] = entry["listen_count"]
+                    break
+
+            if not found:
+                hour_data["listen_count"] = 0
+
     return jsonify({"payload": {
         "user_id": user_name,
         "daily_activity": daily_activity,
@@ -530,6 +543,8 @@ def _get_entity_list(
     entity: str,
     offset: int,
     count: int,
+
+
 ) -> List[Union[UserArtistRecord, UserReleaseRecord, UserRecordingRecord]]:
     """ Gets a list of entity records from the stat passed based on the offset and count
     """
