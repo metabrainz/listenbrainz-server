@@ -37,6 +37,7 @@
     "@fortawesome/react-fontawesome": "^0.1.9",
     "@nivo/bar": "^0.62.0",
     "@nivo/legends": "^0.62.0",
+    "@nivo/line": "^0.62.0",
     "@types/enzyme-to-json": "^1.5.3",
     "clean-css": "^4.2.1",
     "eslint-plugin-jest": "^23.8.2",

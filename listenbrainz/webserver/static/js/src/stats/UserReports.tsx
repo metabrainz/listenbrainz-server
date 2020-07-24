@@ -5,6 +5,7 @@ import ErrorBoundary from "../ErrorBoundary";
 import Pill from "../components/Pill";
 import UserListeningActivity from "./UserListeningActivity";
 import UserTopEntity from "./UserTopEntity";
+import UserDailyActivity from "./UserDailyActivity";
 
 export type UserReportsProps = {
   user: ListenBrainzUser;
@@ -142,6 +143,9 @@ export default class UserReports extends React.Component<
             </ErrorBoundary>
           </div>
         </div>
+        <ErrorBoundary>
+          <UserDailyActivity range={range} apiUrl={apiUrl} user={user} />
+        </ErrorBoundary>
       </div>
     );
   }

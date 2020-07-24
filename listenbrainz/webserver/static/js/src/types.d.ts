@@ -248,3 +248,26 @@ declare type UserListeningActivityDatum = {
 };
 
 declare type UserListeningActivityData = Array<UserListeningActivityDatum>;
+
+declare type UserDailyActivityResponse = {
+  payload: {
+    from_ts: number;
+    to_ts: number;
+    last_updated: number;
+    daily_activity: Array<{
+      hour: number;
+      day: string;
+      listen_count: number;
+    }>;
+  };
+};
+
+declare type UserDailyActivityDatum = {
+  id: string;
+  data: Array<{
+    x: string;
+    y: number;
+  }>;
+};
+
+declare type UserDailyActivityData = Array<UserDailyActivityDatum>;
