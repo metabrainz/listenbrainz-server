@@ -349,7 +349,7 @@ def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_can
     user_data = defaultdict(list)
     for row in top_artist_df.collect():
 
-        if  user_data.get(row.user_name) is None:
+        if user_data.get(row.user_name) is None:
             user_data[row.user_name] = defaultdict(list)
 
         data = (
