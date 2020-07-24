@@ -443,7 +443,6 @@ class CandidateSetsTestClass(SparkTestCase):
         self.assertEqual(recieved_user_data['vansika']['similar_artist_candidate_set'],
                          expected_user_data['vansika']['similar_artist_candidate_set'])
 
-
         self.assertEqual(recieved_user_data['vansika_1']['top_artist'], expected_user_data['vansika_1']['top_artist'])
         self.assertEqual(recieved_user_data['vansika_1']['similar_artist'], expected_user_data['vansika_1']['similar_artist'])
         self.assertEqual(recieved_user_data['vansika_1']['top_artist_candidate_set'],
