@@ -102,38 +102,19 @@ export default class UserDailyActivity extends React.Component<
       "Sunday",
     ];
 
-    const result: UserDailyActivityData = weekdays.map((day: string) => {
-      return {
+    const result: UserDailyActivityData = [];
+
+    weekdays.forEach((day) => {
+      const dayData = data.payload.daily_activity[day];
+      result.push({
         id: day,
-        data: [],
-      };
-    });
-
-    data.payload.daily_activity.forEach((elem) => {
-      const { day, hour, listen_count: listenCount } = elem;
-
-      const index = weekdays.indexOf(day);
-      result[index].data.push({ x: hour, y: listenCount });
-    });
-
-    // Fill in gaps in the data
-    result.forEach((elem) => {
-      const dataWithZeroHours = [];
-      for (let i = 0; i < 24; i += 1) {
-        const index = elem.data.findIndex((hourData) => hourData.x === i);
-
-        if (index < 0) {
-          dataWithZeroHours.push({
-            x: i,
-            y: 0,
-          });
-        } else {
-          dataWithZeroHours.push(elem.data[index]);
-        }
-      }
-
-      // eslint-disable-next-line no-param-reassign
-      elem.data = dataWithZeroHours;
+        data: dayData.map((elem) => {
+          return {
+            x: elem.hour,
+            y: elem.listen_count,
+          };
+        }),
+      });
     });
 
     return result;
