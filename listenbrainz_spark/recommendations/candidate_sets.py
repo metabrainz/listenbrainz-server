@@ -228,8 +228,7 @@ def get_top_artist_candidate_set(top_artist_df, recordings_df, users_df):
             top_artists_candidate_set_df_html (dataframe): top artist info required for html file
     """
     condition = [
-        top_artist_df.top_artist_credit_id == recordings_df.mb_artist_credit_id,
-        top_artist_df.top_artist_name == recordings_df.msb_artist_credit_name_matchable
+        top_artist_df.top_artist_credit_id == recordings_df.mb_artist_credit_id
     ]
 
     df = top_artist_df.join(recordings_df, condition, 'inner')
@@ -265,8 +264,7 @@ def get_similar_artist_candidate_set(similar_artist_df, recordings_df, users_df)
             similar_artist_candidate_set_df_html (dataframe): similar artist info for html file
     """
     condition = [
-        similar_artist_df.similar_artist_credit_id == recordings_df.mb_artist_credit_id,
-        similar_artist_df.similar_artist_name == recordings_df.msb_artist_credit_name_matchable
+        similar_artist_df.similar_artist_credit_id == recordings_df.mb_artist_credit_id
     ]
 
     df = similar_artist_df.join(recordings_df, condition, 'inner')
