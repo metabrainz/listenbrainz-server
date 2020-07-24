@@ -1,6 +1,14 @@
-# Full Data dumps creation for backup and public use, every Sunday
-00 00 * * 0 /code/listenbrainz/admin/create-dumps.sh full
+# Full dump creation takes the ID of the last incremental
+# dump and creates a full dump for that ID. So, we'll
+# start creating full dumps and incremental dumps in pairs
+# for now.
 
-# Incremental listen data dumps at 00:00 every Monday and Thursday
-00 00 * * 4,6 /code/listenbrainz/admin/create-dumps.sh incremental
+# Every Monday and Thursday
+## incremental
+10 00 * * 1,4 /code/listenbrainz/admin/create-dumps.sh incremental
 
+## full -- a few hours after incremental for safety
+10 02 * * 1,4 /code/listenbrainz/admin/create-dumps.sh full
+
+## Around 24 hours later, trigger an import into the spark cluster
+00 02 * * 2,5 /usr/local/bin/python /code/listenbrainz/manage.py spark request_import_full
