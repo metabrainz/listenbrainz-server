@@ -138,7 +138,8 @@ class CandidateSetsTestClass(SparkTestCase):
         ))
 
         similar_artist_limit = 10
-        similar_artist_df = candidate_sets.get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
+        similar_artist_df, similar_artist_df_html = candidate_sets.get_similar_artists(top_artist_df, artist_relation_df,
+                                                                                       similar_artist_limit)
 
         self.assertEqual(similar_artist_df.count(), 5)
 
@@ -146,6 +147,16 @@ class CandidateSetsTestClass(SparkTestCase):
             'similar_artist_credit_id', 'similar_artist_name', 'user_name'
         ]
         self.assertListEqual(cols, similar_artist_df.columns)
+
+        self.assertEqual(similar_artist_df_html.count(), 6)
+        cols = [
+            'top_artist_credit_id',
+            'top_artist_name',
+            'similar_artist_credit_id',
+            'similar_artist_name',
+            'user_name'
+        ]
+        self.assertListEqual(cols, similar_artist_df_html.columns)
 
     def test_get_top_artist_candidate_set(self):
         recordings_df = self.get_recordings_df()

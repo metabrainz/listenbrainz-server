@@ -194,14 +194,23 @@ def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
     window = Window.partitionBy('top_artist_credit_id', 'user_name')\
                    .orderBy(col('score').desc())
 
-    similar_artist_df = df.withColumn('rank', row_number().over(window)) \
-                          .where(col('rank') <= similar_artist_limit)\
-                          .select('similar_artist_credit_id',
-                                  'similar_artist_name',
-                                  'user_name') \
-                          .distinct()
+    similar_artist_df_html = df.withColumn('rank', row_number().over(window)) \
+                               .where(col('rank') <= similar_artist_limit)\
+                               .select('top_artist_credit_id',
+                                       'top_artist_name',
+                                       'similar_artist_credit_id',
+                                       'similar_artist_name',
+                                       'user_name')
 
-    return similar_artist_df
+    # Two or more artists can have same similar artist(s) leading to non-unique recordings
+    # therefore we have filtered the distinct similar artists.
+    similar_artist_df = similar_artist_df_html.select('similar_artist_credit_id',
+                                                      'similar_artist_name',
+                                                      'user_name') \
+                                              .distinct()
+
+
+    return similar_artist_df, similar_artist_df_html
 
 
 def get_top_artist_candidate_set(top_artist_df, recordings_df, users_df):
@@ -314,7 +323,7 @@ def save_candidate_sets(top_artist_candidate_set_df, similar_artist_candidate_se
 
 
 def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_candidate_set_df_html,
-                            top_artist_df, similar_artist_df):
+                            top_artist_df, similar_artist_df_html):
 
     """ Get artists and recordings associated with users for HTML. The function is invoked
         when candidate set HTML is to be generated.
@@ -323,7 +332,7 @@ def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_can
             similar_artist_candidate_set_df_html (dataframe): similar artists and related info.
             top_artist_candidate_set_df_html (dataframe): top artists and related info.
             top_artist_df (dataframe) : top artists listened to by users.
-            similar_artist_df (dataframe): artists similar to top artists.
+            similar_artist_df_html (dataframe): similar artists and corresponding top artists
 
         Returns:
             user_data: Dictionary can be depicted as:
@@ -349,8 +358,10 @@ def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_can
         )
         user_data[row.user_name]['top_artist'].append(data)
 
-    for row in similar_artist_df.collect():
+    for row in similar_artist_df_html.collect():
         data = (
+            row.top_artist_name,
+            row.top_artist_credit_id,
             row.similar_artist_name,
             row.similar_artist_credit_id
         )
@@ -437,7 +448,7 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
                                                                                                  users_df)
 
     current_app.logger.info('Fetching similar artists...')
-    similar_artist_df = get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
+    similar_artist_df, similar_artist_df_html = get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
 
     current_app.logger.info('Preparing similar artists candidate set...')
     similar_artist_candidate_set_df, similar_artist_candidate_set_df_html = get_similar_artist_candidate_set(similar_artist_df,
@@ -455,7 +466,7 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
     total_time = '{:.2f}'.format((time() - time_initial) / 60)
     if SAVE_CANDIDATE_HTML:
         user_data = get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_candidate_set_df_html,
-                                            top_artist_df, similar_artist_df)
+                                            top_artist_df, similar_artist_df_html)
 
         current_app.logger.info('Saving HTML...')
         save_candidate_html(user_data, total_time, from_date, to_date)
