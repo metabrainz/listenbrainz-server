@@ -829,30 +829,25 @@ class StatsAPITestCase(IntegrationTestCase):
         """ Test to make sure valid response is received """
         response = self.client.get(url_for('stats_api_v1.get_daily_activity', user_name=self.user['musicbrainz_id']))
         self.assert200(response)
-        data = json.loads(response.data)['payload']
 
-        sent_from = self.daily_activity_payload['from_ts']
-        received_from = data['from_ts']
-        self.assertEqual(sent_from, received_from)
-        sent_to = self.daily_activity_payload['to_ts']
-        received_to = data['to_ts']
-        self.assertEqual(sent_to, received_to)
-        sent_daily_activity = self.daily_activity_payload['daily_activity']
-        received_daily_activity = data['daily_activity']
-        self.assertListEqual(sent_daily_activity, received_daily_activity)
-        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+        with open(self.path_to_data_file('user_daily_activity_api_output.json')) as f:
+            expected = json.load(f)["payload"]
+
+        received = json.loads(response.data)["payload"]
+        self.assertDictEqual(expected["daily_activity"], received["daily_activity"])
 
     def test_daily_activity_stat_all_time(self):
         """ Test to make sure valid response is received when range is 'all_time' """
         response = self.client.get(url_for('stats_api_v1.get_daily_activity',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time'})
         self.assert200(response)
-        data = json.loads(response.data)['payload']
-        sent_daily_activity = self.daily_activity_payload['daily_activity']
-        received_daily_activity = data['daily_activity']
-        self.assertListEqual(sent_daily_activity, received_daily_activity)
-        self.assertEqual(data['range'], 'all_time')
-        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+
+        with open(self.path_to_data_file('user_daily_activity_api_output.json')) as f:
+            expected = json.load(f)["payload"]
+
+        received = json.loads(response.data)["payload"]
+        self.assertDictEqual(expected["daily_activity"], received["daily_activity"])
+        self.assertEqual(received["range"], "all_time")
 
     def test_daily_activity_stat_week(self):
         """ Test to make sure valid response is received when range is 'week' """
@@ -864,12 +859,13 @@ class StatsAPITestCase(IntegrationTestCase):
         response = self.client.get(url_for('stats_api_v1.get_daily_activity',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'week'})
         self.assert200(response)
-        data = json.loads(response.data)['payload']
-        sent_daily_activity = payload['daily_activity']
-        received_daily_activity = data['daily_activity']
-        self.assertListEqual(sent_daily_activity, received_daily_activity)
-        self.assertEqual(data['range'], 'week')
-        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+
+        with open(self.path_to_data_file('user_daily_activity_api_output_week.json')) as f:
+            expected = json.load(f)["payload"]
+
+        received = json.loads(response.data)["payload"]
+        self.assertDictEqual(expected["daily_activity"], received["daily_activity"])
+        self.assertEqual(received["range"], "week")
 
     def test_daily_activity_stat_month(self):
         """ Test to make sure valid response is received when range is 'month' """
@@ -881,12 +877,13 @@ class StatsAPITestCase(IntegrationTestCase):
         response = self.client.get(url_for('stats_api_v1.get_daily_activity',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'month'})
         self.assert200(response)
-        data = json.loads(response.data)['payload']
-        sent_daily_activity = payload['daily_activity']
-        received_daily_activity = data['daily_activity']
-        self.assertListEqual(sent_daily_activity, received_daily_activity)
-        self.assertEqual(data['range'], 'month')
-        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+
+        with open(self.path_to_data_file('user_daily_activity_api_output_month.json')) as f:
+            expected = json.load(f)["payload"]
+
+        received = json.loads(response.data)["payload"]
+        self.assertDictEqual(expected["daily_activity"], received["daily_activity"])
+        self.assertEqual(received["range"], "month")
 
     def test_daily_activity_stat_year(self):
         """ Test to make sure valid response is received when range is 'year' """
@@ -898,12 +895,13 @@ class StatsAPITestCase(IntegrationTestCase):
         response = self.client.get(url_for('stats_api_v1.get_daily_activity',
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'year'})
         self.assert200(response)
-        data = json.loads(response.data)['payload']
-        sent_daily_activity = payload['daily_activity']
-        received_daily_activity = data['daily_activity']
-        self.assertListEqual(sent_daily_activity, received_daily_activity)
-        self.assertEqual(data['range'], 'year')
-        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+
+        with open(self.path_to_data_file('user_daily_activity_api_output_year.json')) as f:
+            expected = json.load(f)["payload"]
+
+        received = json.loads(response.data)["payload"]
+        self.assertDictEqual(expected["daily_activity"], received["daily_activity"])
+        self.assertEqual(received["range"], "year")
 
     def test_daily_activity_stat_invalid_user(self):
         """ Test to make sure that the API sends 404 if user does not exist. """
