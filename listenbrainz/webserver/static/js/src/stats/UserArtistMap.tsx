@@ -130,8 +130,8 @@ export default class UserArtistMap extends React.Component<
                     data={data}
                     features={features.features}
                     margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-                    colors="nivo"
-                    domain={[0, 25]}
+                    colors="oranges"
+                    domain={[0, 50]}
                     unknownColor="#666666"
                     label="properties.name"
                     valueFormat=".2s"
