@@ -36,6 +36,7 @@
     "@fortawesome/free-solid-svg-icons": "^5.13.0",
     "@fortawesome/react-fontawesome": "^0.1.9",
     "@nivo/bar": "^0.62.0",
+    "@nivo/geo": "^0.62.0",
     "@nivo/legends": "^0.62.0",
     "@nivo/heatmap": "^0.62.0",
     "@types/enzyme-to-json": "^1.5.3",

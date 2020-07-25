@@ -1,7 +1,10 @@
+import json
 import calendar
 from datetime import datetime
 from enum import Enum
 from typing import List, Union
+from collections import defaultdict
+import requests
 
 from flask import Blueprint, current_app, jsonify, request
 
@@ -13,7 +16,8 @@ from data.model.user_recording_stat import (UserRecordingRecord,
                                             UserRecordingStat)
 from data.model.user_release_stat import (UserReleaseRecord,
                                           UserReleaseStat)
-from data.model.user_listening_activity import (UserListeningActivityRecord, UserListeningActivityStat)
+from data.model.user_listening_activity import (
+    UserListeningActivityRecord, UserListeningActivityStat)
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
@@ -24,6 +28,7 @@ from listenbrainz.webserver.rate_limiter import ratelimit
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,
                                                     _get_non_negative_param)
+from listenbrainz.country_map import alpha_2_to_3
 
 stats_api_bp = Blueprint('stats_api_v1', __name__)
 
@@ -498,6 +503,35 @@ def get_daily_activity(user_name: str):
     }})
 
 
+@stats_api_bp.route("/user/<user_name>/artist-map")
+@crossdomain()
+@ratelimit()
+def get_artist_map(user_name: str):
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APINotFound("Cannot find user: {}".format(user_name))
+
+    stats_range = request.args.get('range', default='all_time')
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest("Invalid range: {}".format(stats_range))
+
+    stats = db_stats.get_user_artists(user['id'], stats_range)
+    if stats is None or getattr(stats, stats_range) is None:
+        raise APINoContent('')
+
+    artist_msids = [artist.artist_msid for artist in getattr(
+        stats, stats_range).artists if artist.artist_msid is not None]
+    country_code_data = _get_country_codes_by_msids(artist_msids)
+    return jsonify({"payload": {
+        "country_code_data": country_code_data,
+        "user_id": user_name,
+        "from_ts": int(getattr(stats, stats_range).from_ts),
+        "to_ts": int(getattr(stats, stats_range).to_ts),
+        "range": stats_range,
+        "last_updated": int(stats.last_updated.timestamp())
+    }})
+
+
 def _process_entity(stats, stats_range, offset, count, entity):
     """ Process the statistics data according to query params
 
@@ -550,3 +584,29 @@ def _get_entity_list(
     elif entity == 'recording':
         return getattr(stats, stats_range).recordings[offset:count]
     raise APIBadRequest("Unknown entity: %s" % entity)
+
+
+def _get_country_codes_by_msids(artist_msids):
+    country_map = defaultdict(int)
+    for index in range(0, len(artist_msids), 50):
+        current_batch = artist_msids[index: index + 50]
+        try:
+            artist_credit_id_data = requests.get('http://bono.metabrainz.org:8000/artist-msid-lookup/json', {
+                '[artist_msid]': ','.join(current_batch)
+            }).json()
+            artist_credit_ids = [
+                x['artist_credit_id'] for x in artist_credit_id_data]
+
+            location_data = requests.get('http://bono.metabrainz.org:8000/artist-credit-id-country-code/json', {
+                '[artist_credit_id]': ','.join([str(id) for id in artist_credit_ids])
+            }).json()
+            for location in location_data:
+                country = alpha_2_to_3[location['area_code'].split(',')[0]]
+                country_map[country] += 1
+        except json.decoder.JSONDecodeError:
+            continue
+
+    return [{
+        "id": country,
+        "value": value
+    } for country, value in country_map.items()]

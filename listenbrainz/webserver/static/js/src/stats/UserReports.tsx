@@ -5,7 +5,11 @@ import ErrorBoundary from "../ErrorBoundary";
 import Pill from "../components/Pill";
 import UserListeningActivity from "./UserListeningActivity";
 import UserTopEntity from "./UserTopEntity";
+<<<<<<< HEAD
 import UserDailyActivity from "./UserDailyActivity";
+=======
+import UserArtistMap from "./UserArtistMap";
+>>>>>>> 3f528f99... Add Artist map graph
 
 export type UserReportsProps = {
   user: ListenBrainzUser;
