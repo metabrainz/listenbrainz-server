@@ -481,14 +481,11 @@ def get_daily_activity(user_name: str):
         for hour_data in day_data:
             hour = hour_data["hour"]
 
-            found = False
             for entry in daily_activity_unprocessed:
                 if entry["hour"] == hour and entry["day"] == day:
-                    found = True
                     hour_data["listen_count"] = entry["listen_count"]
                     break
-
-            if not found:
+            else:
                 hour_data["listen_count"] = 0
 
     return jsonify({"payload": {
@@ -543,8 +540,6 @@ def _get_entity_list(
     entity: str,
     offset: int,
     count: int,
-
-
 ) -> List[Union[UserArtistRecord, UserReleaseRecord, UserRecordingRecord]]:
     """ Gets a list of entity records from the stat passed based on the offset and count
     """
