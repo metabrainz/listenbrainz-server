@@ -105,8 +105,6 @@ class ListenBrainzFTPDownloader:
         """ Reads the SHA file and returns the string stripped of any whitespace and extra characters
         """
         with open(filepath, "r") as f:
-            sha = f.read().replace('\n', '')  # Get rid of new line characters
-            sha = sha.lstrip().rstrip()  # Get rid of any leading or trailing whitespace
-            sha = sha.split(' ')[0]  # Get rid of filenames if present
+            sha = f.read().lstrip().split(" ", 1)[0]
 
         return sha
