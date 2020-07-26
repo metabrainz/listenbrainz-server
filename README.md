@@ -1,5 +1,4 @@
-listenbrainz-server
-===================
+# listenbrainz-server
 
 Server for the ListenBrainz project
 
@@ -7,27 +6,33 @@ Server for the ListenBrainz project
 [Documentation](https://listenbrainz.readthedocs.io) |
 [Bug tracker](https://tickets.metabrainz.org/projects/LB/issues)
 
-
 ## About
 
-The ListenBrainz project is similar to the original AudioScrobbler®. Unlike the
-original project, ListenBrainz is open source and publishes its data as open
-data.
+ListenBrainz keeps tracks of what music you listen to and
+provides you with insights into your listening habits. We're
+completely open-source and publish our data as open data.
 
-A team of former Last.fm and current MusicBrainz hackers created the first
-version of ListenBrainz in a weekend. Since the original project was created,
-technology has advanced at an incredibly rapid pace, which made re-creating the
-original project fairly straightforward.
+You can use ListenBrainz to track your music listening habits and
+share your taste with others using our visualizations. We also have an
+[API](https://listenbrainz.readthedocs.io/en/production/dev/api/)
+if you want to do more with our data.
 
-The project has two main goals:
-
-1. Allow users to preserve their existing Last.fm® data
-2. Make this incredibly useful music usage data available to the world
+ListenBrainz is operated by the [MetaBrainz Foundation](https://metabrainz.org)
+which has a long-standing history of curating, protecting and making music data available to the
+public.
 
 For more information about this project and its goals, look at our
 [website](https://listenbrainz.org/), specifically the
 [goals page](https://listenbrainz.org/goals).
 
+## Contributing
+
+If you are interested in helping out, consider
+[donating](https://metabrainz.org/donate) to the MetaBrainz Foundation.
+
+If you are interesting in contributing code or documentation,
+please have a look at the [issue tracker](https://tickets.metabrainz.org/browse/LB)
+or come visit us in the #metabrainz IRC channel on irc.freenode.net.
 
 ## Development environment
 
@@ -35,8 +40,7 @@ These instructions help you get started with the development process.
 Installation in a production environment may be different.
 
 **Read the [development environment
-documentation](https://listenbrainz.readthedocs.io/en/production/dev/devel-env.html
-"Setting up a development environment - ListenBrainz documentation")**
+documentation](https://listenbrainz.readthedocs.io/en/production/dev/devel-env.html "Setting up a development environment - ListenBrainz documentation")**
 
 In order to work with Spark, you'll have to setup the Spark development environment.
 Read the [documentation](https://listenbrainz.readthedocs.io/en/production/dev/spark-devel-env.html).
@@ -50,7 +54,6 @@ also build the documentation locally:
     cd listenbrainz-server/docs
     pip install -r requirements.txt
     make clean html
-
 
 ## License Notice
 
