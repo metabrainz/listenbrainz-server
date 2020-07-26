@@ -77,14 +77,15 @@ class ListenBrainzFTPDownloader:
 
         current_app.logger.info("Verifying dump integrity...")
         calculated_sha = self._calc_sha256(dest_path)
-        with open(sha_dest_path, "r") as f:
-            received_sha = f.read().replace('\n', '')
+        received_sha = self._read_sha_file(sha_dest_path)
 
         os.remove(sha_dest_path)
         if calculated_sha != received_sha:
             # Cleanup
             os.remove(dest_path)
-            raise DumpInvalidException("Received SHA256 checksum doesn't match the calculated checksum, aborting.")
+            raise DumpInvalidException("""Received SHA256 checksum doesn't match the calculated checksum, aborting.
+                                       Calculated SHA: {calculated_sha}. Received SHA: {received_sha}""".format(
+                calculated_sha=calculated_sha, received_sha=received_sha))
 
         self.connection.cwd('/')
         return dest_path
@@ -99,3 +100,11 @@ class ListenBrainzFTPDownloader:
                 calculated_sha.update(byte_block)
 
         return calculated_sha.hexdigest()
+
+    def _read_sha_file(self, filepath: str) -> str:
+        """ Reads the SHA file and returns the string stripped of any whitespace and extra characters
+        """
+        with open(filepath, "r") as f:
+            sha = f.read().lstrip().split(" ", 1)[0]
+
+        return sha
