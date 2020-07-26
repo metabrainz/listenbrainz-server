@@ -588,22 +588,29 @@ def _get_entity_list(
 
 def _get_country_codes_by_msids(artist_msids):
     country_map = defaultdict(int)
-    for index in range(0, len(artist_msids), 50):
-        current_batch = artist_msids[index: index + 50]
+    for index in range(0, len(artist_msids), 25):
+        current_batch = artist_msids[index: index + 25]
         try:
             artist_credit_id_data = requests.get('http://bono.metabrainz.org:8000/artist-msid-lookup/json', {
                 '[artist_msid]': ','.join(current_batch)
-            }).json()
+            })
+            current_app.logger.error(artist_credit_id_data.text)
             artist_credit_ids = [
-                x['artist_credit_id'] for x in artist_credit_id_data]
-
+                x['artist_credit_id'] for x in artist_credit_id_data.json()]
+            current_app.logger.error("%d %d",
+                                     len(current_batch), len(artist_credit_ids))
             location_data = requests.get('http://bono.metabrainz.org:8000/artist-credit-id-country-code/json', {
                 '[artist_credit_id]': ','.join([str(id) for id in artist_credit_ids])
             }).json()
             for location in location_data:
-                country = alpha_2_to_3[location['area_code'].split(',')[0]]
+                current_app.logger.error(location)
+                try:
+                    country = alpha_2_to_3[location['country_code'][0]]
+                except KeyError:
+                    continue
                 country_map[country] += 1
         except json.decoder.JSONDecodeError:
+            current_app.logger.error("json decode error")
             continue
 
     return [{
