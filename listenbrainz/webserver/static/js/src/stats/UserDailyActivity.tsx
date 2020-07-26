@@ -104,10 +104,12 @@ export default class UserDailyActivity extends React.Component<
 
     const result: UserDailyActivityData = [];
 
+    let lightness = 34;
     weekdays.forEach((day) => {
       const dayData = data.payload.daily_activity[day];
       result.push({
         id: day,
+        color: `hsl(19, 81%, ${lightness}%)`,
         data: dayData.map((elem) => {
           return {
             x: elem.hour,
@@ -115,6 +117,25 @@ export default class UserDailyActivity extends React.Component<
           };
         }),
       });
+      lightness += 8;
+    });
+
+    const average = Array(24).fill(0);
+    Object.values(data.payload.daily_activity).forEach((dayData) => {
+      dayData.forEach((hourData) => {
+        average[hourData.hour] += hourData.listen_count;
+      });
+    });
+
+    result.push({
+      id: "Average",
+      color: "hsl(245, 40%, 31%)",
+      data: average.map((listenCount, index) => {
+        return {
+          x: index,
+          y: Math.ceil(listenCount / 7),
+        };
+      }),
     });
 
     return result;

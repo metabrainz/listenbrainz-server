@@ -251,6 +251,7 @@ declare type UserListeningActivityData = Array<UserListeningActivityDatum>;
 
 declare type UserDailyActivityDatum = {
   id: string;
+  color: string;
   data: Array<{
     x: number;
     y: number;
