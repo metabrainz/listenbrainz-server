@@ -131,8 +131,8 @@ export default class UserArtistMap extends React.Component<
                     features={features.features}
                     margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
                     colors="oranges"
-                    domain={[0, 50]}
-                    unknownColor="#666666"
+                    domain={[0, 250]}
+                    unknownColor="#eeeeee"
                     label="properties.name"
                     valueFormat=".2s"
                     projectionTranslation={[0.5, 0.5]}
