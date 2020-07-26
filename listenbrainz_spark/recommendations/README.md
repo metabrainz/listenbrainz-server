@@ -77,7 +77,7 @@ The recommendation generation process has been divided into four stages.
 
   Send a request to spark cluster to generate candidate sets and upload to HDFS. For each user, personalized sets are generated which contain recordings of top artists listened to by the user and recordings of artists similar to top artists listened to by the user.
 
-  `./develop.sh manage spark request_candidate_sets --days=X --top=Y --similar=Z --user-name=M --html=True`
+  `./develop.sh manage spark request_candidate_sets --days=X --top=Y --similar=Z --user-name=M --html`
 
   where X is the number of days on which recommendations should be generated. By default, X is equal to 7 i.e. last week from the date on which the script is invoked.
 
@@ -87,11 +87,11 @@ The recommendation generation process has been divided into four stages.
 
   where M is user name or musicbrainz id of the users to generate candidate sets for. For example, if candidate sets shall be generated for 'vansika', 'rob', 'ram', it should be passed as follows:
 
-  Note: To generate HTML file of candidate sets, set `html` flag as `True`. By default the flag is `False`.
-
   `--user-name=vansika --user-name=rob --user-name=ram`
 
   By default, user name is an empty list i.e. generate candidate sets for all active users.
+
+  To generate HTML file for candidate sets, set the `html` flag.
 
   ***Note***: Recommendations will be only generated for users with candidate sets.
 
