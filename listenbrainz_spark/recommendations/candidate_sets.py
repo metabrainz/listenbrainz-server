@@ -20,8 +20,6 @@ import pyspark.sql.functions as func
 from pyspark.sql.window import Window
 from pyspark.sql.functions import col, row_number
 
-# Candidate Set HTML is generated if set to true.
-SAVE_CANDIDATE_HTML = True
 
 # Some useful dataframe fields/columns.
 # top_artist_df:
@@ -415,7 +413,8 @@ def save_candidate_html(user_data, total_time, from_date, to_date):
     save_html(candidate_html, context, 'candidate.html')
 
 
-def main(recommendation_generation_window=None, top_artist_limit=None, similar_artist_limit=None, users=None):
+def main(recommendation_generation_window=None, top_artist_limit=None, similar_artist_limit=None,
+         users=None, html_flag=False):
 
     time_initial = time()
     try:
@@ -465,7 +464,7 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
 
     # time taken to generate candidate_sets
     total_time = '{:.2f}'.format((time() - time_initial) / 60)
-    if SAVE_CANDIDATE_HTML:
+    if html_flag:
         user_data = get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_candidate_set_df_html,
                                             top_artist_df, similar_artist_df_html)
 

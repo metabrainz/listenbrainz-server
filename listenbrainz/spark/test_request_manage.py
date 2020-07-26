@@ -140,7 +140,8 @@ class RequestManageTestCase(unittest.TestCase):
                 'recommendation_generation_window': 7,
                 'top_artist_limit': 10,
                 'similar_artist_limit': 10,
-                "users": ['vansika']
+                "users": ['vansika'],
+                "html_flag": True
             }
         }
         expected_message = ujson.dumps(message)

@@ -86,7 +86,8 @@
       "recommendation_generation_window",
       "top_artist_limit",
       "similar_artist_limit",
-      "users"
+      "users",
+      "html_flag"
     ]
   },
   "cf_recording.recommendations.recommend": {
