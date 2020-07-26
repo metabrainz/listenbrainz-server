@@ -135,9 +135,10 @@ export default class UserArtistMap extends React.Component<
                     unknownColor="#eeeeee"
                     label="properties.name"
                     valueFormat=".2s"
-                    projectionTranslation={[0.5, 0.5]}
+                    projectionScale={175}
+                    projectionType="naturalEarth1"
+                    projectionTranslation={[0.5, 0.7]}
                     projectionRotation={[0, 0, 0]}
-                    enableGraticule
                     graticuleLineColor="#dddddd"
                     borderWidth={0.5}
                     borderColor="#152538"
