@@ -110,7 +110,7 @@ def get_listens(user_name):
 
     # If none are given, start with now and go down
     if max_ts == None and min_ts == None:
-        max_ts = max_ts_per_user
+        max_ts = max_ts_per_user + 1
 
     listens = db_conn.fetch_listens(
         user_name,
