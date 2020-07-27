@@ -250,12 +250,8 @@ declare type UserListeningActivityDatum = {
 declare type UserListeningActivityData = Array<UserListeningActivityDatum>;
 
 declare type UserDailyActivityDatum = {
-  id: string;
-  color: string;
-  data: Array<{
-    x: number;
-    y: number;
-  }>;
+  day: string;
+  [hour: number]: number;
 };
 
 declare type UserDailyActivityData = Array<UserDailyActivityDatum>;

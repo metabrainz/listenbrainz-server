@@ -5,7 +5,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 import APIService from "../APIService";
 import Card from "../components/Card";
-import Line from "./Line";
+import HeatMap from "./HeatMap";
 import Loader from "../components/Loader";
 
 export type UserDailyActivityProps = {
@@ -17,6 +17,7 @@ export type UserDailyActivityProps = {
 export type UserDailyActivityState = {
   data: UserDailyActivityData;
   loading: boolean;
+  graphContainerWidth?: number;
   errorMessage: string;
   hasError: boolean;
 };
@@ -26,6 +27,8 @@ export default class UserDailyActivity extends React.Component<
   UserDailyActivityState
 > {
   APIService: APIService;
+
+  graphContainer: React.RefObject<HTMLDivElement>;
 
   constructor(props: UserDailyActivityProps) {
     super(props);
@@ -40,6 +43,16 @@ export default class UserDailyActivity extends React.Component<
       errorMessage: "",
       hasError: false,
     };
+
+    this.graphContainer = React.createRef();
+  }
+
+  componentDidMount() {
+    window.addEventListener("resize", this.handleResize);
+
+    this.setState({
+      graphContainerWidth: this.graphContainer.current!.offsetWidth,
+    });
   }
 
   componentDidUpdate(prevProps: UserDailyActivityProps) {
@@ -104,20 +117,18 @@ export default class UserDailyActivity extends React.Component<
 
     const result: UserDailyActivityData = [];
 
-    let lightness = 34;
     weekdays.forEach((day) => {
       const dayData = data.payload.daily_activity[day];
-      result.push({
-        id: day,
-        color: `hsl(19, 81%, ${lightness}%)`,
-        data: dayData.map((elem) => {
-          return {
-            x: elem.hour,
-            y: elem.listen_count,
-          };
-        }),
+      const hourData: any = {};
+
+      dayData.forEach((elem) => {
+        hourData[elem.hour] = elem.listen_count;
       });
-      lightness += 8;
+
+      result.push({
+        day,
+        ...hourData,
+      });
     });
 
     const average = Array(24).fill(0);
@@ -127,25 +138,36 @@ export default class UserDailyActivity extends React.Component<
       });
     });
 
-    result.push({
-      id: "Average",
-      color: "hsl(245, 40%, 31%)",
-      data: average.map((listenCount, index) => {
-        return {
-          x: index,
-          y: Math.ceil(listenCount / 7),
-        };
-      }),
+    const averageData: any = {};
+    average.forEach((elem, index) => {
+      averageData[index] = Math.ceil(elem / 7);
+    });
+
+    result.unshift({
+      day: "Average",
+      ...averageData,
     });
 
     return result;
   };
 
+  handleResize = () => {
+    this.setState({
+      graphContainerWidth: this.graphContainer.current!.offsetWidth,
+    });
+  };
+
   render() {
-    const { data, loading, hasError, errorMessage } = this.state;
+    const {
+      data,
+      loading,
+      graphContainerWidth,
+      hasError,
+      errorMessage,
+    } = this.state;
 
     return (
-      <Card style={{ minHeight: 400, marginTop: 20 }}>
+      <Card style={{ marginTop: 20 }} ref={this.graphContainer}>
         <div className="row">
           <div className="col-xs-12">
             <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
@@ -179,8 +201,10 @@ export default class UserDailyActivity extends React.Component<
           )}
           {!hasError && (
             <div className="row">
-              <div className="col-xs-12" style={{ height: 350 }}>
-                <Line data={data} />
+              <div className="col-xs-12">
+                {graphContainerWidth && (
+                  <HeatMap data={data} width={graphContainerWidth} />
+                )}
               </div>
             </div>
           )}
