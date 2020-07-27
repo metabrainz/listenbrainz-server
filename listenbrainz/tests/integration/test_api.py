@@ -123,6 +123,46 @@ class APITestCase(IntegrationTestCase):
         data = json.loads(response.data)['payload']
         self.assertEqual(data['count'], 0)
 
+    def test_get_listens_order(self):
+        """ Test to make sure that the api sends listens in valid order.
+        """
+        with open(self.path_to_data_file('valid_single.json'), 'r') as f:
+            payload = json.load(f)
+
+        # send three listens
+        ts = 1400000000
+        for i in range(3):
+            payload['payload'][0]['listened_at'] = ts + (100 * i)
+            response = self.send_data(payload)
+            self.assert200(response)
+            self.assertEqual(response.json['status'], 'ok')
+
+        # This sleep allows for the timescale subscriber to take its time in getting
+        # the listen submitted from redis and writing it to timescale.
+        # Removing it causes an empty list of listens to be returned.
+        time.sleep(2)
+
+        # Fetch the listens with to_ts and make sure the order is descending
+        url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
+        response = self.client.get(url, query_string={'count': '3', 'to_ts':ts+1})
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+
+        self.assertEqual(data['count'], 3)
+        self.assertEqual(data['listens'][0]['listened_at'], 1400000200)
+        self.assertEqual(data['listens'][1]['listened_at'], 1400000100)
+        self.assertEqual(data['listens'][2]['listened_at'], 1400000000)
+
+        # Fetch the listens with from_ts and make sure the order is descending
+        url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
+        response = self.client.get(url, query_string={'count': '3', 'from_ts':ts-500})
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+
+        self.assertEqual(data['count'], 3)
+        self.assertEqual(data['listens'][0]['listened_at'], 1400000200)
+        self.assertEqual(data['listens'][1]['listened_at'], 1400000100)
+        self.assertEqual(data['listens'][2]['listened_at'], 1400000000)
 
     def send_data(self, payload):
         """ Sends payload to api.submit_listen and return the response
@@ -336,7 +376,7 @@ class APITestCase(IntegrationTestCase):
         with open(self.path_to_data_file('additional_info.json'), 'r') as f:
             payload = json.load(f)
 
-        payload['payload'][0]['listened_at'] = int(time.time())
+        payload['payload'][0]['listened_at'] = 1280258690
         response = self.send_data(payload)
         self.assert200(response)
         self.assertEqual(response.json['status'], 'ok')

@@ -105,11 +105,13 @@ def get_listens(user_name):
     if max_ts and min_ts:
         log_raise_400("You may only specify max_ts or min_ts, not both.")
 
+    db_conn = webserver.create_timescale(current_app)
+    (min_ts_per_user, max_ts_per_user) = db_conn.get_timestamps_for_user(user_name)
+
     # If none are given, start with now and go down
     if max_ts == None and min_ts == None:
-        max_ts = current_time
+        max_ts = max_ts_per_user + 1
 
-    db_conn = webserver.create_timescale(current_app)
     listens = db_conn.fetch_listens(
         user_name,
         limit=min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET),
@@ -120,21 +122,11 @@ def get_listens(user_name):
     for listen in listens:
         listen_data.append(listen.to_api())
 
-    latest_listen = db_conn.fetch_listens(
-        user_name,
-        limit=1,
-        to_ts=current_time,
-    )
-    latest_listen_ts = latest_listen[0].ts_since_epoch if len(latest_listen) > 0 else 0
-
-    if min_ts:
-        listen_data = listen_data[::-1]
-
     return jsonify({'payload': {
         'user_id': user_name,
         'count': len(listen_data),
         'listens': listen_data,
-        'latest_listen_ts': latest_listen_ts,
+        'latest_listen_ts': max_ts_per_user,
     }})
 
 
