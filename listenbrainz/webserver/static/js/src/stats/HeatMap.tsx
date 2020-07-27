@@ -12,20 +12,20 @@ export default function Heatmap(props: any) {
 
   const margin = {
     desktop: {
-      left: 100,
-      bottom: 40,
+      left: 80,
+      bottom: 50,
       top: 10,
       right: 20,
     },
     mobile: {
       left: 40,
       right: 10,
-      bottom: 30,
+      bottom: 40,
     },
   };
 
   const { data, width } = props;
-  const height = isMobile ? width / 2.7 : width / 3;
+  const height = (isMobile ? width / 2.7 : width / 3) + 10;
 
   return (
     <HeatMap
@@ -37,7 +37,11 @@ export default function Heatmap(props: any) {
       height={height}
       enableLabels={false}
       padding={1}
+      cellOpacity={1}
       axisBottom={{
+        legend: `Hour (${Intl.DateTimeFormat().resolvedOptions().timeZone})`,
+        legendPosition: "middle",
+        legendOffset: 35,
         format: isMobile
           ? (tick: any) => {
               return Number(tick) % 3 === 0 ? tick : "";
@@ -55,6 +59,15 @@ export default function Heatmap(props: any) {
           : undefined,
       }}
       axisTop={null}
+      theme={{
+        axis: {
+          legend: {
+            text: {
+              fontWeight: "bold",
+            },
+          },
+        },
+      }}
       hoverTarget="column"
       margin={isMobile ? margin.mobile : margin.desktop}
       forceSquare

@@ -71,6 +71,10 @@ export default class UserDailyActivity extends React.Component<
     }
   }
 
+  componentWillUnmount() {
+    window.removeEventListener("resize", this.handleResize);
+  }
+
   getData = async (): Promise<UserDailyActivityResponse> => {
     const { range, user } = this.props;
     try {
@@ -117,12 +121,15 @@ export default class UserDailyActivity extends React.Component<
 
     const result: UserDailyActivityData = [];
 
+    const tzOffset = -Math.floor(new Date().getTimezoneOffset() / 60);
+
     weekdays.forEach((day) => {
       const dayData = data.payload.daily_activity[day];
       const hourData: any = {};
 
       dayData.forEach((elem) => {
-        hourData[elem.hour] = elem.listen_count;
+        const hour = (elem.hour + tzOffset + 24) % 24;
+        hourData[hour] = elem.listen_count;
       });
 
       result.push({
@@ -140,7 +147,8 @@ export default class UserDailyActivity extends React.Component<
 
     const averageData: any = {};
     average.forEach((elem, index) => {
-      averageData[index] = Math.ceil(elem / 7);
+      const hour = (index + tzOffset + 24) % 24;
+      averageData[hour] = Math.ceil(elem / 7);
     });
 
     result.unshift({
