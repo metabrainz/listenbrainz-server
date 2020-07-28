@@ -1,11 +1,12 @@
 import json
 import calendar
+import requests
 from datetime import datetime
 from enum import Enum
 from typing import List, Union
 from collections import defaultdict
-import requests
 
+import pycountry
 from flask import Blueprint, current_app, jsonify, request
 
 import listenbrainz.db.stats as db_stats
@@ -28,7 +29,6 @@ from listenbrainz.webserver.rate_limiter import ratelimit
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,
                                                     _get_non_negative_param)
-from listenbrainz.country_map import alpha_2_to_3
 
 stats_api_bp = Blueprint('stats_api_v1', __name__)
 
@@ -592,7 +592,7 @@ def _get_country_codes_by_msids(artist_msids):
         current_batch = artist_msids[index: index + 25]
         try:
             artist_credit_id_data = requests.get('http://bono.metabrainz.org:8000/artist-msid-lookup/json', {
-                '[artist_msid]': ','.join(current_batch)
+                'artist_msid': ','.join(current_batch)
             })
             current_app.logger.error(artist_credit_id_data.text)
             artist_credit_ids = [
@@ -600,13 +600,12 @@ def _get_country_codes_by_msids(artist_msids):
             current_app.logger.error("%d %d",
                                      len(current_batch), len(artist_credit_ids))
             location_data = requests.get('http://bono.metabrainz.org:8000/artist-credit-id-country-code/json', {
-                '[artist_credit_id]': ','.join([str(id) for id in artist_credit_ids])
+                'artist_credit_id': ','.join([str(id) for id in artist_credit_ids])
             }).json()
             for location in location_data:
                 current_app.logger.error(location)
-                try:
-                    country = alpha_2_to_3[location['country_code'][0]]
-                except KeyError:
+                country = pycountry.countries.get(alpha_2=location['country_code'][0]).alpha_3
+                if country is None:
                     continue
                 country_map[country] += 1
         except json.decoder.JSONDecodeError:
