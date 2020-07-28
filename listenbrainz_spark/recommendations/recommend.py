@@ -302,6 +302,7 @@ def get_recommendations_for_all(params, users):
     current_app.logger.info('Recommendations Generated!')
     if users:
         messages = get_message_for_inactive_users(messages, active_users, users)
+
     return messages
 
 
