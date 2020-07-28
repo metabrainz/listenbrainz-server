@@ -37,7 +37,6 @@ export default function Heatmap(props: any) {
       height={height}
       enableLabels={false}
       padding={1}
-      cellOpacity={1}
       axisBottom={{
         legend: `Hour (${Intl.DateTimeFormat().resolvedOptions().timeZone})`,
         legendPosition: "middle",

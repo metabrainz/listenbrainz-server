@@ -103,11 +103,6 @@ export default class UserReports extends React.Component<
             </Pill>
           </div>
         </div>
-        <div className="row">
-          <div className="col-xs-12">
-            <h3 className="capitalize-bold">Listening Activity</h3>
-          </div>
-        </div>
         <ErrorBoundary>
           <UserListeningActivity range={range} apiUrl={apiUrl} user={user} />
         </ErrorBoundary>
