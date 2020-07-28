@@ -50,9 +50,7 @@ export default class UserDailyActivity extends React.Component<
   componentDidMount() {
     window.addEventListener("resize", this.handleResize);
 
-    this.setState({
-      graphContainerWidth: this.graphContainer.current!.offsetWidth,
-    });
+    this.handleResize();
   }
 
   componentDidUpdate(prevProps: UserDailyActivityProps) {
@@ -161,7 +159,7 @@ export default class UserDailyActivity extends React.Component<
 
   handleResize = () => {
     this.setState({
-      graphContainerWidth: this.graphContainer.current!.offsetWidth,
+      graphContainerWidth: this.graphContainer.current?.offsetWidth,
     });
   };
 

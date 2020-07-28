@@ -258,6 +258,7 @@ describe("loadData", () => {
       .mockImplementationOnce(() =>
         Promise.resolve(userListeningActivityResponseWeek)
       );
+
     await instance.loadData();
 
     expect(wrapper.state()).toMatchObject({

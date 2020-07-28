@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Card renders correctly 1`] = `
-<Card>
+<ForwardRef>
   <div
     style={
       Object {
@@ -17,5 +17,5 @@ exports[`Card renders correctly 1`] = `
   >
     Test
   </div>
-</Card>
+</ForwardRef>
 `;
