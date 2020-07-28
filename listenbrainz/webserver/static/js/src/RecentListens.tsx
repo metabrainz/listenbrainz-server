@@ -147,10 +147,6 @@ export default class RecentListens extends React.Component<
       }
       return;
     }
-    if (minTs !== undefined) {
-      // When calling the API with minTs, listens are returned sorted by ascending listened_at
-      newListens.reverse();
-    }
     this.setState({
       listens: newListens,
       nextListenTs: newListens[newListens.length - 1].listened_at,
@@ -396,8 +392,6 @@ export default class RecentListens extends React.Component<
       });
       return;
     }
-    // When calling the API with minTs, listens are returned sorted by ascending listened_at
-    newListens.reverse();
     this.setState(
       {
         listens: newListens,
@@ -440,8 +434,6 @@ export default class RecentListens extends React.Component<
       user.name,
       oldestListenTs - 1
     );
-    // When calling the API with minTs, listens are returned sorted by ascending listened_at
-    newListens.reverse();
     this.setState(
       {
         listens: newListens,
