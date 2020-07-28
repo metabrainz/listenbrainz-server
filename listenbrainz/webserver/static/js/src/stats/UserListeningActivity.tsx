@@ -378,7 +378,14 @@ export default class UserListeningActivity extends React.Component<
 
     return (
       <div>
-        <Card style={{ minHeight: 400 }}>
+        <Card style={{ marginTop: 20, minHeight: 400 }}>
+          <div className="row">
+            <div className="col-xs-12">
+              <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
+                Listening Activity
+              </h3>
+            </div>
+          </div>
           <Loader
             isLoading={loading}
             style={{

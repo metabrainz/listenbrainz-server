@@ -38,19 +38,6 @@ exports[`UserReports renders without crashing 1`] = `
       </Pill>
     </div>
   </div>
-  <div
-    className="row"
-  >
-    <div
-      className="col-xs-12"
-    >
-      <h3
-        className="capitalize-bold"
-      >
-        Listening Activity
-      </h3>
-    </div>
-  </div>
   <ErrorBoundary>
     <UserListeningActivity
       apiUrl="foobar"
@@ -114,5 +101,16 @@ exports[`UserReports renders without crashing 1`] = `
       </ErrorBoundary>
     </div>
   </div>
+  <ErrorBoundary>
+    <UserDailyActivity
+      apiUrl="foobar"
+      range="week"
+      user={
+        Object {
+          "name": "test_user",
+        }
+      }
+    />
+  </ErrorBoundary>
 </div>
 `;
