@@ -4,6 +4,8 @@ import { shallow } from "enzyme";
 import * as timeago from "time-ago";
 import * as io from "socket.io-client";
 
+import { sortBy } from "lodash";
+
 import * as recentListensProps from "./__mocks__/recentListensProps.json";
 import * as recentListensPropsTooManyListens from "./__mocks__/recentListensPropsTooManyListens.json";
 import * as recentListensPropsOneListen from "./__mocks__/recentListensPropsOneListen.json";
@@ -560,5 +562,307 @@ describe("onAlertDismissed", () => {
 
     instance.onAlertDismissed(alert2);
     expect(wrapper.state().alerts).toEqual([]);
+  });
+});
+
+describe("Pagination", () => {
+  const pushStateSpy = jest.spyOn(window.history, "pushState");
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe("handleClickOlder", () => {
+    it("does nothing if there is no older listens timestamp", async () => {
+      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const instance = wrapper.instance();
+
+      wrapper.setState({ nextListenTs: undefined });
+
+      const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
+      // eslint-disable-next-line dot-notation
+      instance["APIService"].getListensForUser = spy;
+
+      await instance.handleClickOlder();
+      expect(wrapper.state("loading")).toBeFalsy();
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it("calls the API to get older listens", async () => {
+      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const instance = wrapper.instance();
+
+      wrapper.setState({ nextListenTs: 123456 });
+
+      const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
+      // eslint-disable-next-line dot-notation
+      instance["APIService"].getListensForUser = spy;
+
+      await instance.handleClickOlder();
+      expect(wrapper.state("loading")).toBeFalsy();
+      expect(spy).toHaveBeenCalledWith(user.name, undefined, 123456);
+    });
+
+    it("sets nextListenTs to undefined if it receives no listens from API", async () => {
+      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const instance = wrapper.instance();
+
+      wrapper.setState({ nextListenTs: 123456 });
+
+      const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
+      // eslint-disable-next-line dot-notation
+      instance["APIService"].getListensForUser = spy;
+
+      await instance.handleClickOlder();
+      expect(wrapper.state("loading")).toBeFalsy();
+      expect(wrapper.state("nextListenTs")).toBeUndefined();
+      expect(pushStateSpy).not.toHaveBeenCalled();
+    });
+
+    it("sets the listens, nextListenTs and  previousListenTs on the state and updates browser history", async () => {
+      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const instance = wrapper.instance();
+
+      wrapper.setState({ nextListenTs: 123456 });
+
+      const sortedListens = sortBy(listens, "listened_at");
+      const nextListenTs = sortedListens[listens.length - 1].listened_at;
+      const previousListenTs = sortedListens[0].listened_at;
+
+      const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {
+        return Promise.resolve(sortedListens);
+      });
+      // eslint-disable-next-line dot-notation
+      instance["APIService"].getListensForUser = spy;
+      const scrollSpy = jest.spyOn(instance, "scrollToTop");
+
+      await instance.handleClickOlder();
+      await new Promise(setImmediate);
+      wrapper.update();
+
+      expect(wrapper.state("listens")).toEqual(sortedListens);
+      expect(wrapper.state("loading")).toBeFalsy();
+      expect(wrapper.state("nextListenTs")).toEqual(nextListenTs);
+      expect(wrapper.state("previousListenTs")).toEqual(previousListenTs);
+      expect(pushStateSpy).toHaveBeenCalledWith(null, "", `?max_ts=123456`);
+      expect(scrollSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe("handleClickNewer", () => {
+    it("does nothing if there is no newer listens timestamp", async () => {
+      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const instance = wrapper.instance();
+
+      wrapper.setState({ previousListenTs: undefined });
+
+      const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
+      // eslint-disable-next-line dot-notation
+      instance["APIService"].getListensForUser = spy;
+
+      await instance.handleClickNewer();
+      expect(wrapper.state("loading")).toBeFalsy();
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it("calls the API to get older listens", async () => {
+      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const instance = wrapper.instance();
+
+      wrapper.setState({ previousListenTs: 123456 });
+
+      const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
+      // eslint-disable-next-line dot-notation
+      instance["APIService"].getListensForUser = spy;
+
+      await instance.handleClickNewer();
+      expect(wrapper.state("loading")).toBeFalsy();
+      expect(spy).toHaveBeenCalledWith(user.name, 123456, undefined);
+    });
+
+    it("sets nextListenTs to undefined if it receives no listens from API", async () => {
+      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const instance = wrapper.instance();
+
+      wrapper.setState({ previousListenTs: 123456 });
+
+      const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
+      // eslint-disable-next-line dot-notation
+      instance["APIService"].getListensForUser = spy;
+
+      await instance.handleClickNewer();
+      expect(wrapper.state("loading")).toBeFalsy();
+      expect(wrapper.state("previousListenTs")).toBeUndefined();
+      expect(pushStateSpy).not.toHaveBeenCalled();
+    });
+
+    it("sets the listens, nextListenTs and  previousListenTs on the state and updates browser history", async () => {
+      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const instance = wrapper.instance();
+
+      wrapper.setState({ previousListenTs: 123456 });
+
+      const sortedListens = sortBy(listens, "listened_at");
+      const nextListenTs = sortedListens[listens.length - 1].listened_at;
+      const previousListenTs = sortedListens[0].listened_at;
+
+      const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {
+        return Promise.resolve(sortedListens);
+      });
+      // eslint-disable-next-line dot-notation
+      instance["APIService"].getListensForUser = spy;
+      const scrollSpy = jest.spyOn(instance, "scrollToTop");
+
+      await instance.handleClickNewer();
+      await new Promise(setImmediate);
+      wrapper.update();
+
+      expect(wrapper.state("listens")).toEqual(sortedListens);
+      expect(wrapper.state("loading")).toBeFalsy();
+      expect(wrapper.state("nextListenTs")).toEqual(nextListenTs);
+      expect(wrapper.state("previousListenTs")).toEqual(previousListenTs);
+      expect(pushStateSpy).toHaveBeenCalledWith(null, "", `?min_ts=123456`);
+      expect(scrollSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe("handleClickOldest", () => {
+    it("does nothing if last listens is the oldest", async () => {
+      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const instance = wrapper.instance();
+
+      wrapper.setState({
+        listens: [
+          {
+            track_metadata: {
+              artist_name: "Beyonc\u00e9, Frank Ocean",
+              track_name: "Superpower (feat. Frank Ocean)",
+              release_name: "BEYONC\u00c9 [Platinum Edition]",
+            },
+            listened_at: 123456,
+          },
+        ],
+      });
+      wrapper.setProps({ oldestListenTs: 123456 });
+
+      const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
+      // eslint-disable-next-line dot-notation
+      instance["APIService"].getListensForUser = spy;
+
+      await instance.handleClickOldest();
+      expect(wrapper.state("loading")).toBeFalsy();
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it("sets the listens, nextListenTs and  previousListenTs on the state and updates browser history", async () => {
+      const listen = {
+        track_metadata: {
+          artist_name: "Beyonc\u00e9, Frank Ocean",
+          track_name: "Superpower (feat. Frank Ocean)",
+          release_name: "BEYONC\u00c9 [Platinum Edition]",
+        },
+        listened_at: 1586440600,
+      };
+      const extraProps = { ...props, listens: [listen] };
+      const wrapper = shallow<RecentListens>(<RecentListens {...extraProps} />);
+
+      const instance = wrapper.instance();
+
+      const oldestlisten = [
+        {
+          track_metadata: {
+            artist_name: "Beyonc\u00e9, Frank Ocean",
+            track_name: "Superpower (feat. Frank Ocean)",
+            release_name: "BEYONC\u00c9 [Platinum Edition]",
+          },
+          listened_at: 1586440536,
+        },
+      ];
+      const spy = jest
+        .fn()
+        .mockImplementation(() => Promise.resolve(oldestlisten));
+      // eslint-disable-next-line dot-notation
+      instance["APIService"].getListensForUser = spy;
+      const scrollSpy = jest.spyOn(instance, "scrollToTop");
+
+      await instance.handleClickOldest();
+      expect(wrapper.state("loading")).toBeFalsy();
+      expect(spy).toHaveBeenCalledWith(user.name, 1586440535);
+      expect(wrapper.state("listens")).toEqual(oldestlisten);
+      expect(wrapper.state("nextListenTs")).toEqual(undefined);
+      expect(wrapper.state("previousListenTs")).toEqual(1586440536);
+      expect(pushStateSpy).toHaveBeenCalledWith(null, "", `?min_ts=1586440535`);
+      expect(scrollSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe("handleClickNewest", () => {
+    it("does nothing if first listens is the newest", async () => {
+      const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
+      const instance = wrapper.instance();
+
+      wrapper.setState({
+        listens: [
+          {
+            track_metadata: {
+              artist_name: "Beyonc\u00e9, Frank Ocean",
+              track_name: "Superpower (feat. Frank Ocean)",
+              release_name: "BEYONC\u00c9 [Platinum Edition]",
+            },
+            listened_at: 123456,
+          },
+        ],
+      });
+      wrapper.setProps({ latestListenTs: 123456 });
+
+      const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
+      // eslint-disable-next-line dot-notation
+      instance["APIService"].getListensForUser = spy;
+
+      await instance.handleClickNewest();
+      expect(wrapper.state("loading")).toBeFalsy();
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it("sets the listens, nextListenTs and  previousListenTs on the state and updates browser history", async () => {
+      const listen = {
+        track_metadata: {
+          artist_name: "Beyonc\u00e9, Frank Ocean",
+          track_name: "Superpower (feat. Frank Ocean)",
+          release_name: "BEYONC\u00c9 [Platinum Edition]",
+        },
+        listened_at: 123450,
+      };
+      const extraProps = { ...props, listens: [listen] };
+      const wrapper = shallow<RecentListens>(<RecentListens {...extraProps} />);
+      wrapper.setProps({ latestListenTs: 123456 });
+      const instance = wrapper.instance();
+
+      const newestListen = [
+        {
+          track_metadata: {
+            artist_name: "Beyonc\u00e9, Frank Ocean",
+            track_name: "Superpower (feat. Frank Ocean)",
+            release_name: "BEYONC\u00c9 [Platinum Edition]",
+          },
+          listened_at: 123456,
+        },
+      ];
+      const spy = jest
+        .fn()
+        .mockImplementation(() => Promise.resolve(newestListen));
+      // eslint-disable-next-line dot-notation
+      instance["APIService"].getListensForUser = spy;
+      const scrollSpy = jest.spyOn(instance, "scrollToTop");
+
+      await instance.handleClickNewest();
+      expect(spy).toHaveBeenCalledWith(user.name);
+      expect(wrapper.state("listens")).toEqual(newestListen);
+      expect(wrapper.state("loading")).toBeFalsy();
+      expect(wrapper.state("nextListenTs")).toEqual(123456);
+      expect(wrapper.state("previousListenTs")).toEqual(undefined);
+      expect(pushStateSpy).toHaveBeenCalledWith(null, "", "");
+      expect(scrollSpy).toHaveBeenCalled();
+    });
   });
 });
