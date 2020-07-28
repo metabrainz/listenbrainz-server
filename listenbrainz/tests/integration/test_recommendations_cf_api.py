@@ -68,6 +68,9 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         received_count = data['count']
         self.assertEqual(received_count, 25)
 
+        received_offset = data['offset']
+        self.assertEqual(received_offset, 0)
+
         received_type = data['type']
         self.assertEqual(received_type, 'top')
 
@@ -97,6 +100,9 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
 
         received_count = data['count']
         self.assertEqual(received_count, 10)
+
+        received_offset = data['offset']
+        self.assertEqual(received_offset, 0)
 
         received_type = data['type']
         self.assertEqual(received_type, 'similar')
@@ -128,6 +134,9 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         received_count = data['count']
         self.assertEqual(received_count, 100)
 
+        received_offset = data['offset']
+        self.assertEqual(received_offset, 0)
+
         received_type = data['type']
         self.assertEqual(received_type, 'similar')
 
@@ -158,6 +167,9 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
 
         received_count = data['count']
         self.assertEqual(received_count, 15)
+
+        received_offset = data['offset']
+        self.assertEqual(received_offset, 10)
 
         received_type = data['type']
         self.assertEqual(received_type, 'top')
