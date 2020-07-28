@@ -1,3 +1,4 @@
+import { enableFetchMocks } from "jest-fetch-mock";
 import * as React from "react";
 import { shallow } from "enzyme";
 import * as timeago from "time-ago";
@@ -12,6 +13,8 @@ import RecentListens, {
   ListensListMode,
   RecentListensProps,
 } from "./RecentListens";
+
+enableFetchMocks();
 
 const {
   apiUrl,
@@ -47,7 +50,14 @@ const props = {
   searchLargerTimeRange,
 };
 
-describe("RecentListens", () => {
+fetchMock.mockIf(
+  (input) => input.url.endsWith("/listen-count"),
+  () => {
+    return Promise.resolve(JSON.stringify({ payload: { count: 42 } }));
+  }
+);
+
+describe("Recentlistens", () => {
   it("renders correctly on the profile page", () => {
     timeago.ago = jest.fn().mockImplementation(() => "1 day ago");
     const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
@@ -79,6 +89,26 @@ describe("componentDidMount", () => {
     instance.componentDidMount();
 
     expect(instance.getRecentListensForFollowList).toHaveBeenCalledTimes(1);
+  });
+
+  it('calls getUserListenCount if mode "listens"', async () => {
+    const extraProps = { ...props, mode: "listens" as ListensListMode };
+    const wrapper = shallow<RecentListens>(<RecentListens {...extraProps} />);
+    const instance = wrapper.instance();
+    instance.getRecentListensForFollowList = jest.fn();
+
+    const spy = jest.fn().mockImplementation(() => {
+      return Promise.resolve(42);
+    });
+    // eslint-disable-next-line dot-notation
+    instance["APIService"].getUserListenCount = spy;
+    expect(wrapper.state("listenCount")).toBeUndefined();
+    instance.componentDidMount();
+    await new Promise(setImmediate);
+    wrapper.update();
+
+    expect(spy).toHaveBeenCalledWith(user.name);
+    expect(wrapper.state("listenCount")).toEqual(42);
   });
 });
 
