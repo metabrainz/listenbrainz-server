@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 import * as timeago from "time-ago";
 
 import { faListUl, faMusic } from "@fortawesome/free-solid-svg-icons";
@@ -12,24 +13,21 @@ import * as io from "socket.io-client";
 import BrainzPlayer from "./BrainzPlayer";
 import FollowUsers from "./FollowUsers";
 import APIService from "./APIService";
+import Loader from "./components/Loader";
 import { getArtistLink, getPlayButton, getTrackLink } from "./utils";
 
 export type ListensListMode = "listens" | "follow" | "recent";
 
 export interface RecentListensProps {
   apiUrl: string;
-  artistCount?: number | null | undefined;
   followList?: string[];
   followListId?: number;
   followListName?: string;
-  haveListenCount?: boolean;
-  latestListenTs?: number;
+  latestListenTs: number;
   latestSpotifyUri?: string;
-  listenCount?: string;
   listens?: Array<Listen>;
   mode: ListensListMode;
-  nextListenTs?: number;
-  previousListenTs?: number;
+  oldestListenTs: number;
   profileUrl?: string;
   saveUrl?: string;
   spotify: SpotifyUser;
@@ -46,8 +44,12 @@ export interface RecentListensState {
   listId?: number;
   listName: string;
   listens: Array<Listen>;
+  listenCount?: number;
+  loading: boolean;
   mode: "listens" | "follow" | "recent";
+  nextListenTs?: number;
   playingNowByUser: FollowUsersPlayingNow;
+  previousListenTs?: number;
   saveUrl: string;
 }
 
@@ -58,6 +60,7 @@ export default class RecentListens extends React.Component<
   private APIService: APIService;
 
   private brainzPlayer = React.createRef<BrainzPlayer>();
+  private listensTable = React.createRef<HTMLTableElement>();
 
   private socket!: SocketIOClient.Socket;
 
@@ -72,12 +75,17 @@ export default class RecentListens extends React.Component<
       saveUrl: props.saveUrl || "",
       listName: props.followListName || "",
       listId: props.followListId || undefined,
+      loading: false,
+      nextListenTs: props.listens?.[props.listens.length - 1]?.listened_at,
+      previousListenTs: props.listens?.[0]?.listened_at,
       direction: "down",
     };
 
     this.APIService = new APIService(
       props.apiUrl || `${window.location.origin}/1`
     );
+
+    this.listensTable = React.createRef();
   }
 
   componentDidMount(): void {
@@ -88,7 +96,63 @@ export default class RecentListens extends React.Component<
     if (mode === "follow" && !listens.length) {
       this.getRecentListensForFollowList();
     }
+    if (mode === "listens") {
+      // Listen to browser previous/next events and load page accordingly
+      window.addEventListener("popstate", this.handleURLChange);
+      document.addEventListener("keydown", this.handleKeyDown);
+
+      const { user } = this.props;
+      // Get the user listen count
+      if (user?.name) {
+        this.APIService.getUserListenCount(user.name).then((listenCount) => {
+          this.setState({ listenCount });
+        });
+      }
+    }
   }
+
+  componentWillUnmount() {
+    window.removeEventListener("popstate", this.handleURLChange);
+    document.removeEventListener("keydown", this.handleKeyDown);
+  }
+
+  handleURLChange = async (): Promise<void> => {
+    const url = new URL(window.location.href);
+    let maxTs;
+    let minTs;
+    if (url.searchParams.get("max_ts")) {
+      maxTs = Number(url.searchParams.get("max_ts"));
+    }
+    if (url.searchParams.get("min_ts")) {
+      minTs = Number(url.searchParams.get("min_ts"));
+    }
+
+    this.setState({ loading: true });
+    const { user } = this.props;
+    const newListens = await this.APIService.getListensForUser(
+      user.name,
+      minTs,
+      maxTs
+    );
+    if (!newListens.length) {
+      // No more listens to fetch
+      if (minTs !== undefined) {
+        this.setState({
+          previousListenTs: undefined,
+        });
+      } else {
+        this.setState({
+          nextListenTs: undefined,
+        });
+      }
+      return;
+    }
+    this.setState({
+      listens: newListens,
+      nextListenTs: newListens[newListens.length - 1].listened_at,
+      previousListenTs: newListens[0].listened_at,
+    });
+  };
 
   connectWebsockets = (): void => {
     this.createWebsocketsConnection();
@@ -275,6 +339,132 @@ export default class RecentListens extends React.Component<
     window.location.href = url;
   };
 
+  handleClickOlder = async () => {
+    const { user } = this.props;
+    const { nextListenTs } = this.state;
+    // No more listens to fetch
+    if (!nextListenTs) {
+      return;
+    }
+    this.setState({ loading: true });
+    const newListens = await this.APIService.getListensForUser(
+      user.name,
+      undefined,
+      nextListenTs
+    );
+    if (!newListens.length) {
+      // No more listens to fetch
+      this.setState({
+        loading: false,
+        nextListenTs: undefined,
+      });
+      return;
+    }
+    this.setState(
+      {
+        listens: newListens,
+        nextListenTs: newListens[newListens.length - 1].listened_at,
+        previousListenTs: newListens[0].listened_at,
+      },
+      this.scrollToTop
+    );
+    window.history.pushState(null, "", `?max_ts=${nextListenTs}`);
+  };
+
+  handleClickNewer = async () => {
+    const { user } = this.props;
+    const { previousListenTs } = this.state;
+    // No more listens to fetch
+    if (!previousListenTs) {
+      return;
+    }
+    this.setState({ loading: true });
+    const newListens = await this.APIService.getListensForUser(
+      user.name,
+      previousListenTs,
+      undefined
+    );
+    if (!newListens.length) {
+      // No more listens to fetch
+      this.setState({
+        loading: false,
+        previousListenTs: undefined,
+      });
+      return;
+    }
+    this.setState(
+      {
+        listens: newListens,
+        nextListenTs: newListens[newListens.length - 1].listened_at,
+        previousListenTs: newListens[0].listened_at,
+      },
+      this.scrollToTop
+    );
+    window.history.pushState(null, "", `?min_ts=${previousListenTs}`);
+  };
+
+  handleClickNewest = async () => {
+    const { user, latestListenTs } = this.props;
+    const { listens } = this.state;
+    if (listens?.[0]?.listened_at >= latestListenTs) {
+      return;
+    }
+    this.setState({ loading: true });
+    const newListens = await this.APIService.getListensForUser(user.name);
+    this.setState(
+      {
+        listens: newListens,
+        nextListenTs: newListens[newListens.length - 1].listened_at,
+        previousListenTs: undefined,
+      },
+      this.scrollToTop
+    );
+    window.history.pushState(null, "", "");
+  };
+
+  handleClickOldest = async () => {
+    const { user, oldestListenTs } = this.props;
+    const { listens } = this.state;
+    // No more listens to fetch
+    if (listens?.[listens.length - 1]?.listened_at <= oldestListenTs) {
+      return;
+    }
+    this.setState({ loading: true });
+    const newListens = await this.APIService.getListensForUser(
+      user.name,
+      oldestListenTs - 1
+    );
+    this.setState(
+      {
+        listens: newListens,
+        nextListenTs: undefined,
+        previousListenTs: newListens[0].listened_at,
+      },
+      this.scrollToTop
+    );
+    window.history.pushState(null, "", `?min_ts=${oldestListenTs - 1}`);
+  };
+
+  handleKeyDown = (event: KeyboardEvent) => {
+    switch (event.key) {
+      case "ArrowLeft":
+        this.handleClickNewer();
+        break;
+      case "ArrowRight":
+        this.handleClickOlder();
+        break;
+      default:
+        break;
+    }
+  };
+
+  scrollToTop() {
+    if (this.listensTable?.current) {
+      this.listensTable.current.scrollIntoView({ behavior: "smooth" });
+    }
+    this.setState({ loading: false });
+  }
+
   render() {
     const {
       alerts,
@@ -284,23 +474,24 @@ export default class RecentListens extends React.Component<
       listId,
       listName,
       listens,
+      listenCount,
+      loading,
       mode,
+      nextListenTs,
       playingNowByUser,
+      previousListenTs,
       saveUrl,
     } = this.state;
     const {
-      artistCount,
-      listenCount,
-      nextListenTs,
-      previousListenTs,
-      profileUrl,
+      latestListenTs,
+      oldestListenTs,
       spotify,
       user,
       searchLargerTimeRange,
     } = this.props;
 
     return (
-      <div>
+      <div role="main">
         <AlertList
           position="bottom-right"
           alerts={alerts}
@@ -308,34 +499,13 @@ export default class RecentListens extends React.Component<
           dismissTitle="Dismiss"
           onDismiss={this.onAlertDismissed}
         />
-        {mode === "listens" && (
-          <div className="row">
-            <div className="col-md-8">
-              <h3> Statistics </h3>
-              <table className="table table-border table-condensed table-striped">
-                <tbody>
-                  {listenCount && (
-                    <tr>
-                      <td>Listen count</td>
-                      <td>{listenCount}</td>
-                    </tr>
-                  )}
-                  {artistCount && (
-                    <tr>
-                      <td>Artist count</td>
-                      <td>{artistCount}</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
         <div className="row">
           <div className="col-md-8">
             <h3>
               {mode === "listens" || mode === "recent"
-                ? "Recent listens"
+                ? `Recent listens${
+                    _.isNil(listenCount) ? "" : ` (${listenCount} total)`
+                  }`
                 : "Playlist"}
             </h3>
 
@@ -357,9 +527,21 @@ export default class RecentListens extends React.Component<
             )}
             {listens.length > 0 && (
               <div>
+                <div
+                  style={{
+                    position: "fixed",
+                    top: "50%",
+                    left: "calc(50% - 56px)",
+                    zIndex: 1,
+                  }}
+                >
+                  <Loader isLoading={loading} />
+                </div>
                 <table
                   className="table table-condensed table-striped listens-table"
                   id="listens"
+                  ref={this.listensTable}
+                  style={{ opacity: loading ? "0.4" : "1" }}
                 >
                   <thead>
                     <tr>
@@ -403,7 +585,12 @@ export default class RecentListens extends React.Component<
                             ) : (
                               <td>
                                 <abbr
-                                  title={listen.listened_at_iso?.toString()}
+                                  title={
+                                    listen.listened_at_iso?.toString() ||
+                                    new Date(
+                                      listen.listened_at * 1000
+                                    ).toISOString()
+                                  }
                                 >
                                   {listen.listened_at_iso
                                     ? timeago.ago(listen.listened_at_iso)
@@ -438,16 +625,75 @@ export default class RecentListens extends React.Component<
                   <ul className="pager">
                     <li
                       className={`previous ${
-                        !previousListenTs ? "hidden" : ""
+                        listens[0].listened_at >= latestListenTs
+                          ? "disabled"
+                          : ""
                       }`}
                     >
-                      <a href={`${profileUrl}?min_ts=${previousListenTs}`}>
-                        &larr; Previous
+                      <a
+                        role="button"
+                        onClick={this.handleClickNewest}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") this.handleClickNewest();
+                        }}
+                        tabIndex={0}
+                      >
+                        &#x21E4; Newest
                       </a>
                     </li>
-                    <li className={`next ${!nextListenTs ? "hidden" : ""}`}>
-                      <a href={`${profileUrl}?max_ts=${nextListenTs}`}>
-                        Next &rarr;
+                    <li
+                      className={`previous ${
+                        !previousListenTs || previousListenTs >= latestListenTs
+                          ? "disabled"
+                          : ""
+                      }`}
+                    >
+                      <a
+                        role="button"
+                        onClick={this.handleClickNewer}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") this.handleClickNewer();
+                        }}
+                        tabIndex={0}
+                      >
+                        &larr; Newer
+                      </a>
+                    </li>
+                    <li
+                      className={`next ${
+                        listens[listens.length - 1].listened_at <=
+                        oldestListenTs
+                          ? "disabled"
+                          : ""
+                      }`}
+                    >
+                      <a
+                        role="button"
+                        onClick={this.handleClickOldest}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") this.handleClickOldest();
+                        }}
+                        tabIndex={0}
+                      >
+                        Oldest &#x21E5;
+                      </a>
+                    </li>
+                    <li
+                      className={`next ${
+                        !nextListenTs || nextListenTs <= oldestListenTs
+                          ? "disabled"
+                          : ""
+                      }`}
+                    >
+                      <a
+                        role="button"
+                        onClick={this.handleClickOlder}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") this.handleClickOlder();
+                        }}
+                        tabIndex={0}
+                      >
+                        Older &rarr;
                       </a>
                     </li>
                   </ul>
@@ -516,18 +762,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   const {
     api_url,
-    artist_count,
     follow_list,
     follow_list_id,
     follow_list_name,
-    have_listen_count,
     latest_listen_ts,
     latest_spotify_uri,
-    listen_count,
     listens,
+    oldest_listen_ts,
     mode,
-    next_listen_ts,
-    previous_listen_ts,
     profile_url,
     save_url,
     spotify,
@@ -539,18 +781,14 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <RecentListens
       apiUrl={api_url}
-      artistCount={artist_count}
       followList={follow_list}
       followListId={follow_list_id}
       followListName={follow_list_name}
-      haveListenCount={have_listen_count}
       latestListenTs={latest_listen_ts}
       latestSpotifyUri={latest_spotify_uri}
-      listenCount={listen_count}
       listens={listens}
       mode={mode}
-      nextListenTs={next_listen_ts}
-      previousListenTs={previous_listen_ts}
+      oldestListenTs={oldest_listen_ts}
       profileUrl={profile_url}
       saveUrl={save_url}
       spotify={spotify}

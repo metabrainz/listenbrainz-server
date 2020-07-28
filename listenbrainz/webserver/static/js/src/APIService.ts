@@ -74,6 +74,22 @@ export default class APIService {
     return result.payload.listens;
   };
 
+  getUserListenCount = async (userName: string): Promise<number> => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+
+    const query: string = `${this.APIBaseURI}/user/${userName}/listen-count`;
+
+    const response = await fetch(query, {
+      method: "GET",
+    });
+    this.checkStatus(response);
+    const result = await response.json();
+
+    return parseInt(result.payload.count, 10);
+  };
+
   refreshSpotifyToken = async (): Promise<string> => {
     const response = await fetch("/profile/refresh-spotify-token", {
       method: "POST",

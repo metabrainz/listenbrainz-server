@@ -1056,8 +1056,7 @@
             "listened_at_iso": "2020-04-09T13:55:36Z"
         }
     ],
-    "previousListenTs": 1586513524,
-    "nextListenTs": 1586440536,
+    "oldestListenTs": 1586440536,
     "latestListenTs": 1586632818,
     "latestSpotifyUri": "spotify:track:5svEhroDfeTt0ePvASUtZ6",
     "haveListenCount": true,
