@@ -11,7 +11,7 @@ exports[`UserTopEntity renders corectly when range is invalid 1`] = `
     }
   }
 >
-  <Card
+  <ForwardRef
     style={
       Object {
         "alignItems": "center",
@@ -144,7 +144,7 @@ exports[`UserTopEntity renders corectly when range is invalid 1`] = `
         View More
       </a>
     </div>
-  </Card>
+  </ForwardRef>
 </UserTopEntity>
 `;
 
@@ -159,7 +159,7 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
     }
   }
 >
-  <Card
+  <ForwardRef
     style={
       Object {
         "alignItems": "center",
@@ -1104,7 +1104,7 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
         View More
       </a>
     </div>
-  </Card>
+  </ForwardRef>
 </UserTopEntity>
 `;
 
@@ -1119,7 +1119,7 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
     }
   }
 >
-  <Card
+  <ForwardRef
     style={
       Object {
         "alignItems": "center",
@@ -2440,7 +2440,7 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
         View More
       </a>
     </div>
-  </Card>
+  </ForwardRef>
 </UserTopEntity>
 `;
 
@@ -2455,7 +2455,7 @@ exports[`UserTopEntity renders correctly for release 1`] = `
     }
   }
 >
-  <Card
+  <ForwardRef
     style={
       Object {
         "alignItems": "center",
@@ -3650,6 +3650,6 @@ exports[`UserTopEntity renders correctly for release 1`] = `
         View More
       </a>
     </div>
-  </Card>
+  </ForwardRef>
 </UserTopEntity>
 `;
