@@ -52,6 +52,8 @@ const props = {
   searchLargerTimeRange,
 };
 
+// fetchMock will be exported in globals
+// eslint-disable-next-line no-undef
 fetchMock.mockIf(
   (input) => input.url.endsWith("/listen-count"),
   () => {
