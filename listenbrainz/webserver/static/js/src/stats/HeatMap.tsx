@@ -7,7 +7,7 @@ export type HeatMapProps = {
   width: number;
 };
 
-export default function Heatmap(props: any) {
+export default function Heatmap(props: HeatMapProps) {
   const isMobile = useMediaQuery({ maxWidth: 767 });
 
   const margin = {
