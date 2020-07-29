@@ -20,9 +20,8 @@ class UserArtistMapStatRange(pydantic.BaseModel):
     """
     to_ts: int
     from_ts: int
-    count: int
     artist_map: List[UserArtistMapRecord]
-    last_updated: datetime
+    last_updated: int
 
 
 class UserArtistMapStatJson(pydantic.BaseModel):

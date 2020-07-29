@@ -3,7 +3,7 @@ import calendar
 import requests
 from datetime import datetime
 from enum import Enum
-from typing import List, Union
+from typing import List, Union, Tuple
 from collections import defaultdict
 
 import pycountry
@@ -519,31 +519,64 @@ def get_artist_map(user_name: str):
     if not _is_valid_range(stats_range):
         raise APIBadRequest("Invalid range: {}".format(stats_range))
 
-    stats = db_stats.get_user_artists(user['id'], stats_range)
+    # Check if stats are present in DB, if not calculate them
+    not_calculated = False
+    stats = db_stats.get_user_artist_map(user['id'], stats_range)
     if stats is None or getattr(stats, stats_range) is None:
-        raise APINoContent('')
+        not_calculated = True
 
-    artist_msids = []
-    artist_mbids = []
-    top_artists = getattr(stats, stats_range).artists
-    for artist in top_artists:
-        if artist.artist_msid is not None:
-            artist_msids.append(artist.artist_msid)
+    # Check if the stats present in DB have been calculated in the past week, if not recalculate them
+    stale = False
+    if not not_calculated:
+        last_updated = getattr(stats, stats_range).last_updated
+        if (datetime.now() - datetime.fromtimestamp(last_updated)).days >= 7:
+            stale = True
+
+    if stale or not_calculated:
+        artist_stats = db_stats.get_user_artists(user['id'], stats_range)
+
+        # If top artists are missing, return the stale stats if present, otherwise return 204
+        if artist_stats is None or getattr(artist_stats, stats_range) is None:
+            if stale:
+                result = stats
+            else:
+                raise APINoContent('')
         else:
-            artist_mbids += artist.artist_mbids
+            # Calculate the data
+            artist_msids = []
+            artist_mbids = []
+            top_artists = getattr(artist_stats, stats_range).artists
+            for artist in top_artists:
+                if artist.artist_msid is not None:
+                    artist_msids.append(artist.artist_msid)
+                else:
+                    artist_mbids += artist.artist_mbids
 
-    country_code_data = _get_country_codes(artist_msids, artist_mbids)
-    return jsonify({"payload": {
-        "country_code_data": country_code_data,
-        "user_id": user_name,
-        "from_ts": int(getattr(stats, stats_range).from_ts),
-        "to_ts": int(getattr(stats, stats_range).to_ts),
-        "range": stats_range,
-        "last_updated": int(stats.last_updated.timestamp())
-    }})
+            country_code_data = _get_country_codes(artist_msids, artist_mbids)
+            result = UserArtistMapStatJson(**{
+                stats_range: {
+                    "artist_map": country_code_data,
+                    "from_ts": int(getattr(artist_stats, stats_range).from_ts),
+                    "to_ts": int(getattr(artist_stats, stats_range).to_ts),
+                    "last_updated": int(datetime.now().timestamp())
+                }
+            })
+
+            # Store in DB for future use
+            db_stats.insert_user_artist_map(user['id'], result)
+    else:
+        result = stats
+
+    return jsonify({
+        "payload": {
+            "user_id": user_name,
+            "range": stats_range,
+            **(getattr(result, stats_range).dict())
+        }
+    })
 
 
-def _process_entity(stats, stats_range, offset, count, entity):
+def _process_entity(stats, stats_range, offset, count, entity) -> Tuple[list, int]:
     """ Process the statistics data according to query params
 
         Args:
@@ -554,7 +587,7 @@ def _process_entity(stats, stats_range, offset, count, entity):
             entity (str): name of the entity, i.e 'artist', 'release' or 'recording'
 
         Returns:
-            entity_list, total_entity_count (list, int): a tupple of a list and integer
+            entity_list, total_entity_count: a tupple of a list and integer
                 containing the entities processed according to the query params and
                 total number of entities respectively
     """
@@ -616,10 +649,10 @@ def _get_country_codes(artist_msids: list, artist_mbids: list) -> List[UserArtis
         country_map[country_alpaha_3] += 1
 
     return [
-        {
+        UserArtistMapRecord(**{
             "country": country,
             "artist_count": value
-        } for country, value in country_map.items()
+        }) for country, value in country_map.items()
     ]
 
 
@@ -646,16 +679,14 @@ def _get_country_code_from_mbids(artist_mbids: set) -> list:
     """
     request_data = [{"artist_mbid": artist_mbid} for artist_mbid in artist_mbids]
     country_codes = []
-    for entry in request_data:
-        try:
-            result = requests.post("http://bono.metabrainz.org:8000/artist-mbid-country-code/json", json=[entry])
-            # Raise error if non 200 response is received
-            result.raise_for_status()
-            data = result.json()
-            for entry in data:
-                country_codes.append(entry['country_code'])
-        except requests.RequestException as err:
-            current_app.logger.error("Error while getting artist_country_codes, {}, {}".format(err, entry), exc_info=True)
-            continue
+    try:
+        result = requests.post("http://bono.metabrainz.org:8000/artist-mbid-country-code/json", json=request_data)
+        # Raise error if non 200 response is received
+        result.raise_for_status()
+        data = result.json()
+        for entry in data:
+            country_codes.append(entry['country_code'])
+    except requests.RequestException as err:
+        current_app.logger.error("Error while getting artist_country_codes, {}".format(err), exc_info=True)
 
     return country_codes

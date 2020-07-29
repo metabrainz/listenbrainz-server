@@ -34,6 +34,8 @@ from data.model.user_listening_activity import (UserListeningActivityStat,
                                                 UserListeningActivityStatJson)
 from data.model.user_artist_stat import (UserArtistStat,
                                          UserArtistStatJson)
+from data.model.user_artist_map import(UserArtistMapStat,
+                                       UserArtistMapStatJson)
 from data.model.user_recording_stat import (UserRecordingStat,
                                             UserRecordingStatJson)
 from data.model.user_release_stat import (UserReleaseStat,
@@ -132,6 +134,18 @@ def insert_user_daily_activity(user_id: int, daily_activity: UserDailyActivitySt
              daily_activity: the daily_activity stats of the user
     """
     _insert_jsonb_data(user_id=user_id, column='daily_activity', data=daily_activity.dict(exclude_none=True))
+
+
+def insert_user_artist_map(user_id: int, artist_map: UserArtistMapStatJson):
+    """Inserts artist_map stats calculated from Spark into the database.
+
+       If stats are already present for some user, they are updated to the new
+       values passed.
+
+       Args: user_id: the row id of the user,
+             artist_map: the artist_map stats of the user
+    """
+    _insert_jsonb_data(user_id=user_id, column='artist_map', data=artist_map.dict(exclude_none=True))
 
 
 def get_user_stats(user_id, columns):
@@ -301,6 +315,34 @@ def get_user_daily_activity(user_id: int, stats_range: str) -> Optional[UserDail
         return UserDailyActivityStat(**dict(row)) if row else None
     except ValidationError:
         current_app.logger.error("""ValidationError when getting {stats_range} daily_activity for user with user_id: {user_id}.
+                                 Data: {data}""".format(stats_range=stats_range, user_id=user_id,
+                                                        data=json.dumps(dict(row)[stats_range], indent=3)),
+                                 exc_info=True)
+        return None
+
+
+def get_user_artist_map(user_id: int, stats_range: str) -> Optional[UserArtistMapStat]:
+    """Get artist map in the given time range for user with given ID.
+
+        Args:
+            user_id: the row ID of the user in the DB
+            stats_range: the time range to fetch the stats for
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT user_id, artist_map->:range AS {range}, last_updated
+              FROM statistics.user
+             WHERE user_id = :user_id
+            """.format(range=stats_range)), {
+            'range': stats_range,
+            'user_id': user_id
+        })
+        row = result.fetchone()
+
+    try:
+        return UserArtistMapStat(**dict(row)) if row else None
+    except ValidationError:
+        current_app.logger.error("""ValidationError when getting {stats_range} artist_map for user with user_id: {user_id}.
                                  Data: {data}""".format(stats_range=stats_range, user_id=user_id,
                                                         data=json.dumps(dict(row)[stats_range], indent=3)),
                                  exc_info=True)
