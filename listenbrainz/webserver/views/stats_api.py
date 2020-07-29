@@ -19,6 +19,10 @@ from data.model.user_release_stat import (UserReleaseRecord,
                                           UserReleaseStat)
 from data.model.user_listening_activity import (
     UserListeningActivityRecord, UserListeningActivityStat)
+from data.model.user_artist_map import (UserArtistMapRecord,
+                                        UserArtistMapStat,
+                                        UserArtistMapStatJson,
+                                        UserArtistMapStatRange)
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
@@ -593,7 +597,7 @@ def _get_entity_list(
     raise APIBadRequest("Unknown entity: %s" % entity)
 
 
-def _get_country_codes(artist_msids: list, artist_mbids: list):
+def _get_country_codes(artist_msids: list, artist_mbids: list) -> List[UserArtistMapRecord]:
     """ Get country codes from list of given artist_msids and artist_mbids
     """
     country_map = defaultdict(int)
@@ -613,8 +617,8 @@ def _get_country_codes(artist_msids: list, artist_mbids: list):
 
     return [
         {
-            "id": country,
-            "value": value
+            "country": country,
+            "artist_count": value
         } for country, value in country_map.items()
     ]
 
