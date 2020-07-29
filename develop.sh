@@ -48,6 +48,9 @@ if [[ "$1" == "manage" ]]; then shift
 elif [[ "$1" == "bash" ]]; then
     echo "Running bash..."
     invoke_docker_compose run --rm web bash
+elif [[ "$1" == "shell" ]]; then
+    echo "Running flask shell..."
+    invoke_docker_compose run --rm web flask shell
 elif [[ "$1" == "psql" ]]; then
     echo "Connecting to postgresql..."
     open_psql_shell
