@@ -340,10 +340,10 @@ export default class RecentListens extends React.Component<
   };
 
   handleClickOlder = async () => {
-    const { user } = this.props;
+    const { oldestListenTs, user } = this.props;
     const { nextListenTs } = this.state;
     // No more listens to fetch
-    if (!nextListenTs) {
+    if (!nextListenTs || nextListenTs <= oldestListenTs) {
       return;
     }
     this.setState({ loading: true });
@@ -372,10 +372,10 @@ export default class RecentListens extends React.Component<
   };
 
   handleClickNewer = async () => {
-    const { user } = this.props;
+    const { latestListenTs, user } = this.props;
     const { previousListenTs } = this.state;
     // No more listens to fetch
-    if (!previousListenTs) {
+    if (!previousListenTs || previousListenTs >= latestListenTs) {
       return;
     }
     this.setState({ loading: true });
