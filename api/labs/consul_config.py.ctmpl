@@ -1,0 +1,23 @@
+{{- define "KEY" -}}
+    {{ key (printf "docker-server-configs/LB/config.%s.json/%s" (env "DEPLOY_ENV") .) }}
+{{- end -}}
+
+DEBUG = False
+
+SECRET_KEY = '''{{template "KEY" "secret_key"}}'''
+
+{{if service "pgbouncer-master"}}
+{{with index (service "pgbouncer-master") 0}}
+DB_CONNECT_MB = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{{.Port}}/listenbrainz"
+{{end}}
+{{end}}
+
+{{if service "pgbouncer-slave"}}
+{{with index (service "pgbouncer-slave") 0}}
+DB_CONNECT_MB = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{{.Port}}/listenbrainz"
+{{end}}
+{{else if service "pgbouncer-master"}}
+{{with index (service "pgbouncer-master") 0}}
+DB_CONNECT_MB = "postgresql://listenbrainz:listenbrainz@{{.Address}}:{{.Port}}/listenbrainz"
+{{end}}
+{{end}}
