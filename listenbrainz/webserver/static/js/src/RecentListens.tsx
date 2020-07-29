@@ -529,9 +529,9 @@ export default class RecentListens extends React.Component<
               <div>
                 <div
                   style={{
-                    position: "fixed",
+                    height: 0,
+                    position: "sticky",
                     top: "50%",
-                    left: "calc(50% - 56px)",
                     zIndex: 1,
                   }}
                 >
