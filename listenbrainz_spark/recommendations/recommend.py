@@ -16,10 +16,12 @@ from listenbrainz_spark.exceptions import (PathNotFoundException,
 
 from listenbrainz_spark.recommendations.train_models import get_model_path
 
+from pyspark.sql import Row
 from flask import current_app
 import pyspark.sql.functions as func
 from pyspark.sql.functions import col
 from pyspark.mllib.recommendation import MatrixFactorizationModel
+from pyspark.sql.types import StructField, StructType, FloatType, IntegerType
 
 
 class RecommendationParams:
@@ -32,6 +34,12 @@ class RecommendationParams:
         self.similar_artist_candidate_set_df = similar_artist_candidate_set_df
         self.recommendation_top_artist_limit = recommendation_top_artist_limit
         self.recommendation_similar_artist_limit = recommendation_similar_artist_limit
+
+
+recommendation_schema = StructType([
+    StructField('recording_id', IntegerType(), nullable=False),
+    StructField('rating', FloatType(), nullable=False),
+])
 
 
 def get_most_recent_model_id():
@@ -70,18 +78,20 @@ def load_model():
         sys.exit(-1)
 
 
-def get_recording_mbids(params, recommended_recording_ids):
-    """ Get recording mbids corresponding to recommended recording ids.
+def get_recording_mbids(params, recommendation_df):
+    """ Get recording mbids corresponding to recommended recording ids sorted on rating.
 
         Args:
             params: RecommendationParams class object.
-            recommended_recording_ids: list of recommended recording ids.
+            recommendation_df: Dataframe of recommended recording ids and corresponding ratings.
 
         Returns:
             dataframe of recording mbids.
     """
-    recording_mbids_df = params.recordings_df.select('mb_recording_mbid')\
-                                             .where(params.recordings_df.recording_id.isin(recommended_recording_ids))
+    recording_mbids_df = params.recordings_df.join(recommendation_df, 'recording_id', 'inner') \
+                                             .orderBy(col('rating').desc()) \
+                                             .select('mb_recording_mbid')
+
     return recording_mbids_df
 
 
@@ -99,6 +109,31 @@ def generate_recommendations(candidate_set, params, limit):
     return recommendations
 
 
+def get_recommendation_df(recording_ids_and_ratings):
+    """ Get dataframe from recommendation list.
+
+        Args:
+            recording_ids_and_ratings: List of recommended recording ids and ratings.
+
+        Returns:
+            df: dataframe of recommended recording ids and ratings.
+    """
+    df = None
+
+    for entry in recording_ids_and_ratings:
+        row = utils.create_dataframe(
+            Row(
+                recording_id=entry[0],
+                rating=entry[1]
+            ),
+            schema=recommendation_schema
+        )
+
+        df = df.union(row) if df else row
+
+    return df
+
+
 def get_recommended_mbids(candidate_set, params, limit):
     """ Generate recommendations from the candidate set.
 
@@ -110,15 +145,19 @@ def get_recommended_mbids(candidate_set, params, limit):
         Returns:
             recommended_recordings_mbids: list of recommended recording mbids.
     """
-
     recommendations = generate_recommendations(candidate_set, params, limit)
-    recommended_recording_ids = [(recommendations[i].product) for i in range(len(recommendations))]
-    if len(recommended_recording_ids) == 0:
+
+    recording_ids_and_ratings = [[recommendations[i].product, recommendations[i].rating] for i in range(len(recommendations))]
+
+    if len(recording_ids_and_ratings) == 0:
         raise RecommendationsNotGeneratedException('')
 
-    recording_mbids_df = get_recording_mbids(params, recommended_recording_ids)
+    recommendation_df = get_recommendation_df(recording_ids_and_ratings)
+
+    recording_mbids_df = get_recording_mbids(params, recommendation_df)
 
     recommended_recording_mbids = [row.mb_recording_mbid for row in recording_mbids_df.collect()]
+
     return recommended_recording_mbids
 
 
@@ -163,9 +202,9 @@ def get_recommendations_for_user(user_id, user_name, params):
         user_recommendations_top_artist = get_recommended_mbids(top_artist_candidate_set_user, params,
                                                                 params.recommendation_top_artist_limit)
     except IndexError:
-        current_app.logger.info('Top artist candidate set not found for "{}"'.format(user_name))
+        current_app.logger.error('Top artist candidate set not found for "{}"'.format(user_name))
     except RecommendationsNotGeneratedException:
-        current_app.logger.info('Top artist recommendations not generated for "{}"'.format(user_name))
+        current_app.logger.error('Top artist recommendations not generated for "{}"'.format(user_name))
 
     user_recommendations_similar_artist = list()
     try:
@@ -173,9 +212,9 @@ def get_recommendations_for_user(user_id, user_name, params):
         user_recommendations_similar_artist = get_recommended_mbids(similar_artist_candidate_set_user, params,
                                                                     params.recommendation_similar_artist_limit)
     except IndexError:
-        current_app.logger.info('Similar artist candidate set not found for "{}"'.format(user_name))
+        current_app.logger.error('Similar artist candidate set not found for "{}"'.format(user_name))
     except RecommendationsNotGeneratedException:
-        current_app.logger.info('Similar artist recommendations not generated for "{}"'.format(user_name))
+        current_app.logger.error('Similar artist recommendations not generated for "{}"'.format(user_name))
 
     return user_recommendations_top_artist, user_recommendations_similar_artist
 
@@ -263,6 +302,7 @@ def get_recommendations_for_all(params, users):
     current_app.logger.info('Recommendations Generated!')
     if users:
         messages = get_message_for_inactive_users(messages, active_users, users)
+
     return messages
 
 
