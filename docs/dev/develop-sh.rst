@@ -21,6 +21,12 @@ To open a bash shell in the webserver container, run:
 
     ./develop.sh bash
 
+To open flask shell in the webserver container using ipython with the listenbrainz app loaded, run:
+
+.. code-block:: bash
+
+    ./develop.sh shell
+
 ``develop.sh`` provides a direct interface to invoke manage.py inside a docker container.
 manage.py is a click script containing a number of listenbrainz management commands.
 To invoke manage.py, run:
