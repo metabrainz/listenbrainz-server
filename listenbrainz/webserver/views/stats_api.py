@@ -519,9 +519,16 @@ def get_artist_map(user_name: str):
     if stats is None or getattr(stats, stats_range) is None:
         raise APINoContent('')
 
-    artist_msids = [artist.artist_msid for artist in getattr(
-        stats, stats_range).artists if artist.artist_msid is not None]
-    country_code_data = _get_country_codes_by_msids(artist_msids)
+    artist_msids = []
+    artist_mbids = []
+    top_artists = getattr(stats, stats_range).artists
+    for artist in top_artists:
+        if artist.artist_msid is not None:
+            artist_msids.append(artist.artist_msid)
+        else:
+            artist_mbids += artist.artist_mbids
+
+    country_code_data = _get_country_codes(artist_msids, artist_mbids)
     return jsonify({"payload": {
         "country_code_data": country_code_data,
         "user_id": user_name,
@@ -586,33 +593,65 @@ def _get_entity_list(
     raise APIBadRequest("Unknown entity: %s" % entity)
 
 
-def _get_country_codes_by_msids(artist_msids):
+def _get_country_codes(artist_msids: list, artist_mbids: list):
+    """ Get country codes from list of given artist_msids and artist_mbids
+    """
     country_map = defaultdict(int)
-    for index in range(0, len(artist_msids), 25):
-        current_batch = artist_msids[index: index + 25]
+
+    # Map artist_msids to artist_mbids
+    all_artist_mbids = _get_mbids_from_msids(artist_msids) + artist_mbids
+
+    # Get artist_origin_countries from artist_credit_ids
+    countries = _get_country_code_from_mbids(set(all_artist_mbids))
+
+    # Convert alpha_2 country code to alpha_3 and create a result dictionary
+    for country in countries:
+        country_alpaha_3 = pycountry.countries.get(alpha_2=country).alpha_3
+        if country is None:
+            continue
+        country_map[country_alpaha_3] += 1
+
+    return [
+        {
+            "id": country,
+            "value": value
+        } for country, value in country_map.items()
+    ]
+
+
+def _get_mbids_from_msids(artist_msids: list) -> list:
+    """ Get list of artist_mbids corresponding to the input artist_msids
+    """
+    request_data = [{"artist_msid": artist_msid} for artist_msid in artist_msids]
+    artist_mbids = []
+    try:
+        result = requests.post("http://bono.metabrainz.org:8000/artist-msid-lookup/json", json=request_data)
+        # Raise error if non 200 response is received
+        result.raise_for_status()
+        data = result.json()
+        for entry in data:
+            artist_mbids += entry['[artist_credit_mbids]']
+    except requests.RequestException as err:
+        current_app.logger.error("Error while getting artist_mbids, {}".format(err), exc_info=True)
+
+    return artist_mbids
+
+
+def _get_country_code_from_mbids(artist_mbids: set) -> list:
+    """ Get a list of artist_country_code corresponding to the input artist_mbids
+    """
+    request_data = [{"artist_mbid": artist_mbid} for artist_mbid in artist_mbids]
+    country_codes = []
+    for entry in request_data:
         try:
-            artist_credit_id_data = requests.get('http://bono.metabrainz.org:8000/artist-msid-lookup/json', {
-                'artist_msid': ','.join(current_batch)
-            })
-            current_app.logger.error(artist_credit_id_data.text)
-            artist_credit_ids = [
-                x['artist_credit_id'] for x in artist_credit_id_data.json()]
-            current_app.logger.error("%d %d",
-                                     len(current_batch), len(artist_credit_ids))
-            location_data = requests.get('http://bono.metabrainz.org:8000/artist-credit-id-country-code/json', {
-                'artist_credit_id': ','.join([str(id) for id in artist_credit_ids])
-            }).json()
-            for location in location_data:
-                current_app.logger.error(location)
-                country = pycountry.countries.get(alpha_2=location['country_code'][0]).alpha_3
-                if country is None:
-                    continue
-                country_map[country] += 1
-        except json.decoder.JSONDecodeError:
-            current_app.logger.error("json decode error")
+            result = requests.post("http://bono.metabrainz.org:8000/artist-mbid-country-code/json", json=[entry])
+            # Raise error if non 200 response is received
+            result.raise_for_status()
+            data = result.json()
+            for entry in data:
+                country_codes.append(entry['country_code'])
+        except requests.RequestException as err:
+            current_app.logger.error("Error while getting artist_country_codes, {}, {}".format(err, entry), exc_info=True)
             continue
 
-    return [{
-        "id": country,
-        "value": value
-    } for country, value in country_map.items()]
+    return country_codes
