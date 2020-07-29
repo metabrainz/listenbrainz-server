@@ -45,6 +45,7 @@ def get_recommendations(user_name):
             "user_name": "unclejohn69"
             'count': 10,
             'total_mbid_count': 30
+            'offset': 10
           }
         }
 
@@ -100,7 +101,8 @@ def get_recommendations(user_name):
             'user_name': user_name,
             'last_updated': int(recommendations['created'].timestamp()),
             'count': len(mbid_list),
-            'total_mbid_count': total_mbid_count
+            'total_mbid_count': total_mbid_count,
+            'offset': offset
         }
     }
 
