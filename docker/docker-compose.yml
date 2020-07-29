@@ -9,6 +9,7 @@ volumes:
   redis:
   timescaledb:
   rabbitmq:
+  web_home:
 
 services:
 
@@ -47,6 +48,7 @@ services:
     command: flask run -h 0.0.0.0 -p 80
     image: web
     volumes:
+      - web_home:/root
       - ..:/code/listenbrainz:z
       - ../listenbrainz/webserver/static:/static
     ports:
