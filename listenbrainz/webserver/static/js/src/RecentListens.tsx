@@ -622,7 +622,7 @@ export default class RecentListens extends React.Component<
                 </table>
 
                 {mode === "listens" && searchLargerTimeRange === 0 && (
-                  <ul className="pager">
+                  <ul className="pager" style={{ display: "flex" }}>
                     <li
                       className={`previous ${
                         listens[0].listened_at >= latestListenTs
@@ -638,7 +638,7 @@ export default class RecentListens extends React.Component<
                         }}
                         tabIndex={0}
                       >
-                        &#x21E4; Newest
+                        &#x21E4;
                       </a>
                     </li>
                     <li
@@ -661,6 +661,25 @@ export default class RecentListens extends React.Component<
                     </li>
                     <li
                       className={`next ${
+                        !nextListenTs || nextListenTs <= oldestListenTs
+                          ? "disabled"
+                          : ""
+                      }`}
+                      style={{ marginLeft: "auto" }}
+                    >
+                      <a
+                        role="button"
+                        onClick={this.handleClickOlder}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") this.handleClickOlder();
+                        }}
+                        tabIndex={0}
+                      >
+                        Older &rarr;
+                      </a>
+                    </li>
+                    <li
+                      className={`next ${
                         listens[listens.length - 1].listened_at <=
                         oldestListenTs
                           ? "disabled"
@@ -675,25 +694,7 @@ export default class RecentListens extends React.Component<
                         }}
                         tabIndex={0}
                       >
-                        Oldest &#x21E5;
-                      </a>
-                    </li>
-                    <li
-                      className={`next ${
-                        !nextListenTs || nextListenTs <= oldestListenTs
-                          ? "disabled"
-                          : ""
-                      }`}
-                    >
-                      <a
-                        role="button"
-                        onClick={this.handleClickOlder}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") this.handleClickOlder();
-                        }}
-                        tabIndex={0}
-                      >
-                        Older &rarr;
+                        &#x21E5;
                       </a>
                     </li>
                   </ul>
