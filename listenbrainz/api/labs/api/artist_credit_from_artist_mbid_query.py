@@ -2,9 +2,8 @@ from operator import itemgetter
 
 import psycopg2
 import psycopg2.extras
+from flask import current_app
 from datasethoster import Query
-from datasethoster.main import app, register_query
-import config
 
 
 class ArtistCreditIdFromArtistMBIDQuery(Query):
@@ -23,7 +22,7 @@ class ArtistCreditIdFromArtistMBIDQuery(Query):
 
     def fetch(self, params, offset=-1, limit=-1):
 
-        with psycopg2.connect(config.DB_CONNECT_MB) as conn:
+        with psycopg2.connect(current_app.config.DB_CONNECT_MB) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
 
                 acs = tuple([ p['artist_mbid'] for p in params ])
