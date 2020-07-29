@@ -49,4 +49,10 @@ then
     exec python3 -m listenbrainz.spark.spark_reader
 fi
 
+if [ "${CONTAINER_NAME}" = "listenbrainz-labs-api-test" ]
+then
+    cd /code/listenbrainz
+    exec uwsgi /etc/uwsgi/uwsgi-labs-api.ini
+fi
+
 echo "init script has no clue which service to start. Set env var CONTAINER_NAME!"
