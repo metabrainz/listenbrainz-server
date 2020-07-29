@@ -453,7 +453,8 @@ def get_daily_activity(user_name: str):
                     ],
                     "Tuesday": [...],
                     ...
-                }
+                },
+                "stats_range": "all_time",
                 "to_ts": 1589155200,
                 "user_id": "ishaanshah"
             }
@@ -511,6 +512,52 @@ def get_daily_activity(user_name: str):
 @crossdomain()
 @ratelimit()
 def get_artist_map(user_name: str):
+    """
+    Get the artist map for user ``user_name``. The artist map shows the number of artists the user has listened to
+    from different countries of the world.
+
+    A sample response from the endpoint may look like::
+
+        {
+            "payload": {
+                "from_ts": 1587945600,
+                "last_updated": 1592807084,
+                "artist_map": [
+                    {
+                        "country": "USA",
+                        "artist_count": 34
+                    },
+                    {
+                        "country": "GBR",
+                        "artist_count": 69
+                    },
+                    {
+                        "country": "IND",
+                        "artist_count": 32
+                    }
+                ],
+                "stats_range": "all_time"
+                "to_ts": 1589155200,
+                "user_id": "ishaanshah"
+            }
+        }
+    .. note::
+        - This endpoint is currently in beta
+        - We cache the results for this query for a week to improve page load times, if you want to request fresh data you
+          can use the ``force_recalculate`` flag.
+
+    :param range: Optional, time interval for which statistics should be returned, possible values are ``week``,
+        ``month``, ``year``, ``all_time``, defaults to ``all_time``
+    :type range: ``str``
+    :param force_recalculate: Optional, recalculate the data instead of returning the cached result.
+    :type range: ``bool``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics for the user haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :statuscode 404: User not found
+    :resheader Content-Type: *application/json*
+
+    """
     user = db_user.get_by_mb_id(user_name)
     if user is None:
         raise APINotFound("Cannot find user: {}".format(user_name))
@@ -519,8 +566,13 @@ def get_artist_map(user_name: str):
     if not _is_valid_range(stats_range):
         raise APIBadRequest("Invalid range: {}".format(stats_range))
 
+    recalculate_param = request.args.get('force_recalculate', default='false')
+    if recalculate_param.lower() not in ['true', 'false']:
+        raise APIBadRequest("Invalid value of force_recalculate: {}".format(recalculate_param))
+    force_recalculate = recalculate_param.lower() == 'true'
+
     # Check if stats are present in DB, if not calculate them
-    not_calculated = False
+    not_calculated = force_recalculate
     stats = db_stats.get_user_artist_map(user['id'], stats_range)
     if stats is None or getattr(stats, stats_range) is None:
         not_calculated = True
