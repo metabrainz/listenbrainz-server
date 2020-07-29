@@ -204,7 +204,14 @@ export default class UserTopEntity extends React.Component<
                         </tr>
                         <tr>
                           <td />
-                          <td style={{ fontSize: 12 }}>
+                          <td
+                            style={{
+                              fontSize: 12,
+                              textOverflow: "ellipsis",
+                              overflow: "hidden",
+                              paddingRight: 10,
+                            }}
+                          >
                             {getEntityLink(
                               "artist",
                               release.artist_name,
@@ -247,7 +254,14 @@ export default class UserTopEntity extends React.Component<
                         </tr>
                         <tr>
                           <td />
-                          <td style={{ fontSize: 12 }}>
+                          <td
+                            style={{
+                              fontSize: 12,
+                              textOverflow: "ellipsis",
+                              overflow: "hidden",
+                              paddingRight: 10,
+                            }}
+                          >
                             {getEntityLink(
                               "artist",
                               recording.artist_name,
