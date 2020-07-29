@@ -46,13 +46,48 @@ class RecommendTestClass(SparkTestCase):
         self.assertEqual(params.recommendation_top_artist_limit, recommendation_top_artist_limit)
         self.assertEqual(params.recommendation_similar_artist_limit, recommendation_similar_artist_limit)
 
+    def get_recommendation_df(self):
+        df = utils.create_dataframe(
+            Row(
+                recording_id=1,
+                rating=3.1
+            ),
+            schema=None
+        )
+
+        recommendation_df = df.union(utils.create_dataframe(
+            Row(
+                recording_id=2,
+                rating=6.0
+            ),
+            schema=None
+        ))
+
+        return recommendation_df
+
     def test_get_recording_mbids(self):
         params = self.get_recommendation_params()
-        recommended_recording_ids = [1]
-        recording_mbids = recommend.get_recording_mbids(params, recommended_recording_ids)
+        recommendation_df = self.get_recommendation_df()
 
-        self.assertEqual(recording_mbids.count(), 1)
-        self.assertEqual(recording_mbids.collect()[0].mb_recording_mbid, "3acb406f-c716-45f8-a8bd-96ca3939c2e5")
+        recording_mbids = recommend.get_recording_mbids(params, recommendation_df)
+
+        self.assertEqual(recording_mbids.count(), 2)
+        self.assertEqual(recording_mbids.columns, ["mb_recording_mbid"])
+        self.assertEqual(recording_mbids.collect()[0].mb_recording_mbid, "2acb406f-c716-45f8-a8bd-96ca3939c2e5")
+        self.assertEqual(recording_mbids.collect()[1].mb_recording_mbid, "3acb406f-c716-45f8-a8bd-96ca3939c2e5")
+
+    def test_get_recommendation_df(self):
+        recording_ids_and_ratings = [[1, 3.1], [2, 6.0]]
+
+        df = recommend.get_recommendation_df(recording_ids_and_ratings)
+
+        self.assertEqual(sorted(df.columns), ['rating', 'recording_id'])
+
+        row = df.collect()
+        self.assertEqual(row[0][0], 1)
+        self.assertEqual(round(row[0][1], 1), 3.1)
+        self.assertEqual(row[1][0], 2)
+        self.assertEqual(round(row[1][1], 1), 6.0)
 
     @patch('listenbrainz_spark.recommendations.recommend.MatrixFactorizationModel')
     @patch('listenbrainz_spark.recommendations.recommend.listenbrainz_spark')
@@ -130,21 +165,26 @@ class RecommendTestClass(SparkTestCase):
             call(mock_candidate_set.return_value, params, params.recommendation_similar_artist_limit)
         ])
 
+    @patch('listenbrainz_spark.recommendations.recommend.get_recommendation_df')
     @patch('listenbrainz_spark.recommendations.recommend.get_recording_mbids')
     @patch('listenbrainz_spark.recommendations.recommend.generate_recommendations')
-    def test_get_recommended_mbids(self, mock_gen_rec, mock_get_mbids):
+    def test_get_recommended_mbids(self, mock_gen_rec, mock_get_mbids, mock_get_rec_df):
         candidate_set = self.get_candidate_set()
         params = self.get_recommendation_params()
         limit = 2
 
         rdd = candidate_set.rdd.map(lambda r: (r['user_id'], r['recording_id']))
-        mock_gen_rec.return_value = [Rating(user=2, product=2, rating=1.2)]
+        mock_gen_rec.return_value = [
+            Rating(user=2, product=1, rating=3.1),
+            Rating(user=2, product=2, rating=6.0)
+        ]
 
+        mock_get_rec_df.return_value = self.get_recommendation_df()
         mock_get_mbids.return_value = utils.create_dataframe(Row(mb_recording_mbid='xxxx'), schema=None)
         recommended_mbids = recommend.get_recommended_mbids(rdd, params, limit)
 
         mock_gen_rec.assert_called_once_with(rdd, params, limit)
-        mock_get_mbids.assert_called_once_with(params, [2])
+        mock_get_mbids.assert_called_once_with(params, mock_get_rec_df.return_value)
         self.assertEqual(recommended_mbids, ['xxxx'])
 
         mock_gen_rec.return_value = []
