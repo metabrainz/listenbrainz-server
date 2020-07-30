@@ -19,7 +19,7 @@ services:
 
   hadoop-master:
     image: metabrainz/hadoop-yarn:beta
-    command: hdfs namenode
+    command: bash -c "rm -f /tmp/hadoop-root-namenode.pid && hdfs namenode"
     volumes:
       - namenode:/home/hadoop/hdfs:z
 
@@ -31,9 +31,11 @@ services:
 
   datanode:
     image: metabrainz/hadoop-yarn:beta
-    command: hdfs datanode
+    command: bash -c "rm -f /tmp/hadoop-root-datanode.pid && hdfs datanode"
     volumes:
       - datanode:/home/hadoop/hdfs:z
+    depends_on:
+      - hadoop-master
 
   request_consumer:
     build:
