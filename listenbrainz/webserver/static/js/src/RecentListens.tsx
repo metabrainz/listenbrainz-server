@@ -33,7 +33,6 @@ export interface RecentListensProps {
   spotify: SpotifyUser;
   user: ListenBrainzUser;
   webSocketsServerUrl: string;
-  searchLargerTimeRange: number;
 }
 
 export interface RecentListensState {
@@ -329,16 +328,6 @@ export default class RecentListens extends React.Component<
     }
   };
 
-  reloadPageWithSearchLargerTimeRange = (): void => {
-    let url = window.location.href;
-    if (url.indexOf("?") > -1) {
-      url += "&search_larger_time_range=1";
-    } else {
-      url += "?search_larger_time_range=1";
-    }
-    window.location.href = url;
-  };
-
   handleClickOlder = async () => {
     const { oldestListenTs, user } = this.props;
     const { nextListenTs } = this.state;
@@ -482,13 +471,7 @@ export default class RecentListens extends React.Component<
       previousListenTs,
       saveUrl,
     } = this.state;
-    const {
-      latestListenTs,
-      oldestListenTs,
-      spotify,
-      user,
-      searchLargerTimeRange,
-    } = this.props;
+    const { latestListenTs, oldestListenTs, spotify, user } = this.props;
 
     return (
       <div role="main">
@@ -509,7 +492,7 @@ export default class RecentListens extends React.Component<
                 : "Playlist"}
             </h3>
 
-            {!listens.length && searchLargerTimeRange === 0 && (
+            {!listens.length && (
               <div className="lead text-center">
                 <p>No listens yet</p>
                 {mode === "follow" && (
@@ -621,7 +604,7 @@ export default class RecentListens extends React.Component<
                   </tbody>
                 </table>
 
-                {mode === "listens" && searchLargerTimeRange === 0 && (
+                {mode === "listens" && (
                   <ul className="pager" style={{ display: "flex" }}>
                     <li
                       className={`previous ${
@@ -701,19 +684,6 @@ export default class RecentListens extends React.Component<
                 )}
               </div>
             )}
-            {mode === "listens" && searchLargerTimeRange > 0 && (
-              <div className="lead text-center">
-                <p>We could not find any more listen, but there may be more</p>
-                <button
-                  title="Search Larger Time Range"
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={this.reloadPageWithSearchLargerTimeRange}
-                >
-                  Search Larger Time Range
-                </button>
-              </div>
-            )}
             <br />
             {mode === "follow" && (
               <FollowUsers
@@ -776,7 +746,6 @@ document.addEventListener("DOMContentLoaded", () => {
     spotify,
     user,
     web_sockets_server_url,
-    search_larger_time_range,
   } = reactProps;
 
   ReactDOM.render(
@@ -795,7 +764,6 @@ document.addEventListener("DOMContentLoaded", () => {
       spotify={spotify}
       user={user}
       webSocketsServerUrl={web_sockets_server_url}
-      searchLargerTimeRange={search_larger_time_range}
     />,
     domContainer
   );
