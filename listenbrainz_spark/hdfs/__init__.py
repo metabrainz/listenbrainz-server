@@ -1,8 +1,9 @@
 import os
+import pathlib
 import sys
-import time
 import shutil
 import subprocess
+import time
 from tarfile import TarError
 
 import listenbrainz_spark
@@ -100,6 +101,12 @@ class ListenbrainzHDFSUploader:
 
         current_app.logger.info("Moving the processed files to {}".format(dest_path))
         t0 = time.time()
+
+        # Check if parent directory exists, if not create a directory
+        dest_path_parent = pathlib.Path(dest_path).parent
+        if not utils.path_exists(dest_path_parent):
+            utils.create_dir(dest_path_parent)
+
         utils.rename('/temp', dest_path)
         utils.current_app.logger.info("Done! Time taken: {:.2f}".format(time.time() - t0))
 
