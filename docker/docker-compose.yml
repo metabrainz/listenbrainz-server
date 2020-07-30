@@ -9,6 +9,7 @@ volumes:
   redis:
   timescaledb:
   rabbitmq:
+  # The contents of /root, so that bash and ipython can store history
   web_home:
 
 services:
