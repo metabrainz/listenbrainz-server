@@ -20,7 +20,6 @@ from werkzeug.utils import secure_filename
 from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain import spotify
-from listenbrainz.stats.utils import construct_stats_queue_key
 from listenbrainz.webserver import flash
 from listenbrainz.webserver.login import api_login_required
 from listenbrainz.webserver.redis_connection import _redis
@@ -86,18 +85,9 @@ def reset_latest_import_timestamp():
 @login_required
 def info():
 
-    # check if user is in stats calculation queue or if valid stats already exist
-    in_stats_queue = _redis.redis.get(construct_stats_queue_key(current_user.musicbrainz_id)) == 'queued'
-    try:
-        stats_exist = db_stats.valid_stats_exist(current_user.id, current_app.config['STATS_CALCULATION_INTERVAL'])
-    except DatabaseException:
-        stats_exist = False
-
     return render_template(
         "profile/info.html",
-        user=current_user,
-        in_stats_queue=in_stats_queue,
-        stats_exist=stats_exist,
+        user=current_user
     )
 
 

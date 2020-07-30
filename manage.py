@@ -1,7 +1,6 @@
 from listenbrainz import db
 from listenbrainz.db import timescale as ts
 from listenbrainz import webserver
-from listenbrainz import stats
 from werkzeug.serving import run_simple
 import subprocess
 import os
