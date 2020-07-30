@@ -32,7 +32,6 @@ const {
   spotify,
   user,
   webSocketsServerUrl,
-  searchLargerTimeRange,
 } = recentListensProps;
 
 const props = {
@@ -49,7 +48,6 @@ const props = {
   spotify: spotify as SpotifyUser,
   user,
   webSocketsServerUrl,
-  searchLargerTimeRange,
 };
 
 // fetchMock will be exported in globals
