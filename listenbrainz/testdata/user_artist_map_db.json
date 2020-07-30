@@ -1,0 +1,19 @@
+{
+  "from_ts": 0,
+  "to_ts": 10,
+  "last_updated": 0,
+  "artist_map": [
+    {
+      "country": "USA",
+      "artist_count": 56
+    },
+    {
+      "country": "GBR",
+      "artist_count": 67
+    },
+    {
+      "country": "IND",
+      "artist_count": 32
+    }
+  ]
+}

@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from data.model.user_listening_activity import UserListeningActivityStatJson
 from data.model.user_daily_activity import UserDailyActivityStatJson
 from data.model.user_artist_stat import UserArtistStatJson
+from data.model.user_artist_map import UserArtistMapStatJson
 from data.model.user_release_stat import UserReleaseStatJson
 from data.model.user_recording_stat import UserRecordingStatJson
 from listenbrainz.db.testing import DatabaseTestCase
@@ -63,6 +64,16 @@ class StatsDatabaseTestCase(DatabaseTestCase):
 
         result = db_stats.get_user_daily_activity(user_id=self.user['id'], stats_range='all_time')
         self.assertDictEqual(result.all_time.dict(), daily_activity_data)
+
+    def test_insert_user_artist_map(self):
+        """ Test if daily activity stats are inserted correctly """
+        with open(self.path_to_data_file('user_artist_map_db.json')) as f:
+            artist_map_data = json.load(f)
+        db_stats.insert_user_artist_map(
+            user_id=self.user['id'], artist_map=UserArtistMapStatJson(**{'all_time': artist_map_data}))
+
+        result = db_stats.get_user_artist_map(user_id=self.user['id'], stats_range='all_time')
+        self.assertDictEqual(result.all_time.dict(), artist_map_data)
 
     def test_insert_user_stats_mult_ranges_artist(self):
         """ Test if multiple time range data is inserted correctly """
@@ -139,6 +150,22 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         result = db_stats.get_user_daily_activity(1, 'year')
         self.assertDictEqual(result.year.dict(), daily_activity_data)
 
+    def test_insert_user_stats_mult_ranges_artist_map(self):
+        """ Test if multiple time range data is inserted correctly """
+        with open(self.path_to_data_file('user_artist_map_db.json')) as f:
+            artist_map_data = json.load(f)
+
+        db_stats.insert_user_artist_map(
+            user_id=self.user['id'], artist_map=UserArtistMapStatJson(**{'year': artist_map_data}))
+        db_stats.insert_user_artist_map(
+            self.user['id'], UserArtistMapStatJson(**{'all_time': artist_map_data}))
+
+        result = db_stats.get_user_artist_map(1, 'all_time')
+        self.assertDictEqual(result.all_time.dict(), artist_map_data)
+
+        result = db_stats.get_user_artist_map(1, 'year')
+        self.assertDictEqual(result.year.dict(), artist_map_data)
+
     def insert_test_data(self):
         """ Insert test data into the database """
 
@@ -152,6 +179,8 @@ class StatsDatabaseTestCase(DatabaseTestCase):
             listening_activity = json.load(f)
         with open(self.path_to_data_file('user_daily_activity_db.json')) as f:
             daily_activity = json.load(f)
+        with open(self.path_to_data_file('user_artist_map_db.json')) as f:
+            artist_map = json.load(f)
 
         db_stats.insert_user_artists(self.user['id'], UserArtistStatJson(**{'all_time': artists}))
         db_stats.insert_user_releases(self.user['id'], UserReleaseStatJson(**{'all_time': releases}))
@@ -159,13 +188,15 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         db_stats.insert_user_listening_activity(
             self.user['id'], UserListeningActivityStatJson(**{'all_time': listening_activity}))
         db_stats.insert_user_daily_activity(self.user['id'], UserDailyActivityStatJson(**{'all_time': daily_activity}))
+        db_stats.insert_user_artist_map(self.user['id'], UserArtistMapStatJson(**{'all_time': artist_map}))
 
         return {
             'user_artists': artists,
             'user_releases': releases,
             'user_recordings': recordings,
             'user_listening_activity': listening_activity,
-            'user_daily_activity': daily_activity
+            'user_daily_activity': daily_activity,
+            'user_artist_map': artist_map
         }
 
     def test_get_timestamp_for_last_user_stats_update(self):
@@ -198,6 +229,11 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         data_inserted = self.insert_test_data()
         result = db_stats.get_user_daily_activity(self.user['id'], 'all_time')
         self.assertDictEqual(result.all_time.dict(), data_inserted['user_daily_activity'])
+
+    def test_get_user_artist_map(self):
+        data_inserted = self.insert_test_data()
+        result = db_stats.get_user_artist_map(self.user['id'], 'all_time')
+        self.assertDictEqual(result.all_time.dict(), data_inserted['user_artist_map'])
 
     def test_valid_stats_exist(self):
         self.assertFalse(db_stats.valid_stats_exist(self.user['id'], 7))
