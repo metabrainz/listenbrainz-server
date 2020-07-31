@@ -23,7 +23,7 @@ class ArtistCountryFromArtistMBIDQuery(Query):
     def outputs(self):
         return ['artist_mbid', 'country_code']
 
-    def fetch(self, params, offset=-1, limit=-1):
+    def fetch(self, params, count=-1, offset=-1):
 
         with psycopg2.connect(current_app.config['MB_DATABASE_URI']) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
