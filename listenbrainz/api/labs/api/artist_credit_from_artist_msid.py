@@ -3,13 +3,13 @@
 import psycopg2
 import psycopg2.extras
 from datasethoster import Query
-from datasethoster.main import app, register_query
-import config
+from datasethoster.main import register_query
+from flask import current_app
 
 class ArtistCreditFromArtistMSIDQuery(Query):
 
     def names(self):
-        return ("artist-msid-lookup", "MessyBrainz Artist <=> MusicBrainz Artist Lookup")
+        return ("artist-credit-from-artist-msid", "MessyBrainz Artist Credit from MusicBrainz Artist MSID")
 
     def inputs(self):
         return ['artist_msid']
@@ -24,7 +24,7 @@ class ArtistCreditFromArtistMSIDQuery(Query):
     def fetch(self, params, offset=-1, limit=-1):
 
         msid = tuple([ p['artist_msid'] for p in params ])
-        with psycopg2.connect(config.DB_CONNECT_MB) as conn:
+        with psycopg2.connect(current_app.config['MB_DATABASE_URI']) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
                 curs.execute("""SELECT map.artist_msid as artist_msid,
                                        ac.id AS artist_credit_id,
