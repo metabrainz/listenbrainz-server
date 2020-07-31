@@ -1,0 +1,26 @@
+[
+  {
+    "[artist_credit_mbids]": ["cc197bad-dc9c-440d-a5b5-d52ba2e14234"],
+    "[artist_msid]": "[UUID('cc197bad-dc9c-440d-a5b5-d52ba2e14234')]",
+    "artist_credit_id": 2129,
+    "artist_credit_name": "Coldplay",
+    "artist_msid": "6599e41e-390c-4855-a2ac-68ee798538b4"
+  },
+  {
+    "[artist_credit_mbids]": [
+      "0383dadf-2a4e-4d10-a46a-e9e041da8eb3",
+      "5441c29d-3602-4898-b1a1-b77fa23b8e50"
+    ],
+    "[artist_msid]": "[UUID('0383dadf-2a4e-4d10-a46a-e9e041da8eb3'), UUID('5441c29d-3602-4898-b1a1-b77fa23b8e50')]",
+    "artist_credit_id": 810828,
+    "artist_credit_name": "Queen & David Bowie",
+    "artist_msid": "9c1d9739-e40a-47b8-b3be-8076344e51ed"
+  },
+  {
+    "[artist_credit_mbids]": ["52bb713d-b0c9-4bf6-9f58-392388d5cc11"],
+    "[artist_msid]": "[UUID('52bb713d-b0c9-4bf6-9f58-392388d5cc11')]",
+    "artist_credit_id": 49872,
+    "artist_credit_name": "John Powell",
+    "artist_msid": "bc927b14-774b-47d4-9160-af866e84381b"
+  }
+]

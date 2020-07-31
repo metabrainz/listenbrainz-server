@@ -1,16 +1,28 @@
 import json
-
-from flask import url_for, current_app
-from redis import Redis
+from datetime import datetime
+from unittest.mock import patch
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
+import requests_mock
+from data.model.user_artist_map import (UserArtistMapRecord,
+                                        UserArtistMapStatJson)
 from data.model.user_artist_stat import UserArtistStatJson
 from data.model.user_daily_activity import UserDailyActivityStatJson
 from data.model.user_listening_activity import UserListeningActivityStatJson
-from data.model.user_release_stat import UserReleaseStatJson
 from data.model.user_recording_stat import UserRecordingStatJson
+from data.model.user_release_stat import UserReleaseStatJson
+from flask import current_app, url_for
 from listenbrainz.tests.integration import IntegrationTestCase
+from listenbrainz.webserver.views.stats_api import _get_country_codes
+from redis import Redis
+
+
+class MockDate(datetime):
+    """ Mock class for datetime which returns epoch """
+    @classmethod
+    def now(cls):
+        return cls.fromtimestamp(0)
 
 
 class StatsAPITestCase(IntegrationTestCase):
@@ -44,6 +56,12 @@ class StatsAPITestCase(IntegrationTestCase):
             self.daily_activity_payload = json.load(f)
         db_stats.insert_user_daily_activity(self.user['id'], UserDailyActivityStatJson(
             **{'all_time': self.daily_activity_payload}))
+
+        # Insert artist map data
+        with open(self.path_to_data_file('user_artist_map_db_data_for_api_test.json')) as f:
+            self.artist_map_payload = json.load(f)
+        db_stats.insert_user_artist_map(self.user['id'], UserArtistMapStatJson(
+            **{'all_time': self.artist_map_payload}))
 
     def tearDown(self):
         r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
@@ -927,3 +945,165 @@ class StatsAPITestCase(IntegrationTestCase):
                                            user_name=self.user['musicbrainz_id']), query_string={'range': 'foobar'})
         self.assert400(response)
         self.assertEqual("Invalid range: foobar", response.json['error'])
+
+    @patch('listenbrainz.webserver.views.stats_api.datetime', MockDate)
+    def test_artist_map_all_time_cached(self):
+        """ Test to make sure the endpoint returns correct cached response """
+        response = self.client.get(url_for('stats_api_v1.get_artist_map',
+                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time'})
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        sent_artist_map = self.artist_map_payload['artist_map']
+        received_artist_map = data['artist_map']
+        self.assertListEqual(sent_artist_map, received_artist_map)
+        self.assertEqual(data['range'], 'all_time')
+        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+
+    @patch('listenbrainz.webserver.views.stats_api.datetime', MockDate)
+    def test_artist_map_week_cached(self):
+        """ Test to make sure the endpoint returns correct cached response """
+        with open(self.path_to_data_file('user_artist_map_db_data_for_api_test_week.json'), 'r') as f:
+            payload = json.load(f)
+
+        db_stats.insert_user_artist_map(self.user['id'], UserArtistMapStatJson(**{'week': payload}))
+        response = self.client.get(url_for('stats_api_v1.get_artist_map',
+                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'week'})
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        sent_artist_map = payload['artist_map']
+        received_artist_map = data['artist_map']
+        self.assertListEqual(sent_artist_map, received_artist_map)
+        self.assertEqual(data['range'], 'week')
+        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+
+    @patch('listenbrainz.webserver.views.stats_api.datetime', MockDate)
+    def test_artist_map_month_cached(self):
+        """ Test to make sure the endpoint returns correct cached response """
+        with open(self.path_to_data_file('user_artist_map_db_data_for_api_test_month.json'), 'r') as f:
+            payload = json.load(f)
+
+        db_stats.insert_user_artist_map(self.user['id'], UserArtistMapStatJson(**{'month': payload}))
+        response = self.client.get(url_for('stats_api_v1.get_artist_map',
+                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'month'})
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        sent_artist_map = payload['artist_map']
+        received_artist_map = data['artist_map']
+        self.assertListEqual(sent_artist_map, received_artist_map)
+        self.assertEqual(data['range'], 'month')
+        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+
+    @patch('listenbrainz.webserver.views.stats_api.datetime', MockDate)
+    def test_artist_map_year_cached(self):
+        """ Test to make sure the endpoint returns correct cached response """
+        with open(self.path_to_data_file('user_artist_map_db_data_for_api_test_year.json'), 'r') as f:
+            payload = json.load(f)
+
+        db_stats.insert_user_artist_map(self.user['id'], UserArtistMapStatJson(**{'year': payload}))
+        response = self.client.get(url_for('stats_api_v1.get_artist_map',
+                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'year'})
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        sent_artist_map = payload['artist_map']
+        received_artist_map = data['artist_map']
+        self.assertListEqual(sent_artist_map, received_artist_map)
+        self.assertEqual(data['range'], 'year')
+        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+
+    @patch('listenbrainz.webserver.views.stats_api._get_country_codes')
+    def test_artist_map_not_calculated(self, mock_get_country_codes):
+        """ Test to make sure stats are calculated if not present in DB """
+        mock_get_country_codes.return_value = [UserArtistMapRecord(
+            **country) for country in self.artist_map_payload["artist_map"]]
+
+        # Delete stats
+        db_stats.delete_user_stats(user_id=self.user['id'])
+        # Reinsert artist stats
+        db_stats.insert_user_artists(self.user['id'], UserArtistStatJson(**{'all_time': self.artist_payload}))
+
+        response = self.client.get(url_for('stats_api_v1.get_artist_map',
+                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time'})
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        sent_artist_map = self.artist_map_payload['artist_map']
+        received_artist_map = data['artist_map']
+        self.assertListEqual(sent_artist_map, received_artist_map)
+        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+        self.assertGreater(data['last_updated'], 0)
+        mock_get_country_codes.assert_called_once()
+
+        # Check if stats have been saved in DB
+        data = db_stats.get_user_artist_map(self.user['id'], 'all_time')
+        self.assertEqual(data.all_time.dict()['artist_map'], sent_artist_map)
+
+    def test_artist_map_not_calculated_artist_stat_not_present(self):
+        """ Test to make sure that if artist stats and artist_map stats both are missing from DB, we return 204 """
+
+        # Delete stats
+        db_stats.delete_user_stats(user_id=self.user['id'])
+
+        response = self.client.get(url_for('stats_api_v1.get_artist_map',
+                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time'})
+        self.assertEqual(response.status_code, 204)
+
+    def test_artist_map_stat_invalid_user(self):
+        """ Test to make sure that the API sends 404 if user does not exist. """
+        response = self.client.get(url_for('stats_api_v1.get_artist_map', user_name='nouser'))
+        self.assert404(response)
+        self.assertEqual('Cannot find user: nouser', response.json['error'])
+
+    def test_artist_map_stat_invalid_range(self):
+        """ Test to make sure 400 is received if range argument is invalid """
+        response = self.client.get(url_for('stats_api_v1.get_artist_map',
+                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'foobar'})
+        self.assert400(response)
+        self.assertEqual("Invalid range: foobar", response.json['error'])
+
+    def test_artist_map_stat_invalid_force_recalculate(self):
+        """ Test to make sure 400 is received if force_recalculate argument is invalid """
+        response = self.client.get(url_for('stats_api_v1.get_artist_map',
+                                           user_name=self.user['musicbrainz_id']), query_string={'force_recalculate': 'foobar'})
+        self.assert400(response)
+        self.assertEqual("Invalid value of force_recalculate: foobar", response.json['error'])
+
+    @requests_mock.Mocker()
+    def test_get_country_code(self, mock_requests):
+        """ Test to check if "_get_country_codes" is working correctly """
+        # Mock fetching mapping from "bono"
+        with open(self.path_to_data_file("msid_mbid_mapping_result.json")) as f:
+            msid_mbid_mapping_result = json.load(f)
+        mock_requests.post("http://bono.metabrainz.org:8000/artist-msid-lookup/json", json=msid_mbid_mapping_result)
+
+        # Mock fetching country data from labs.api.listenbrainz.org
+        with open(self.path_to_data_file("mbid_country_mapping_result.json")) as f:
+            mbid_country_mapping_result = json.load(f)
+        mock_requests.post("https://labs.api.listenbrainz.org/artist-country-code-from-artist-mbid/json",
+                           json=mbid_country_mapping_result)
+
+        received = [entry.dict() for entry in _get_country_codes(['a', 'b'], ['c', 'd'])]
+        expected = [
+            {
+                "country": "GBR",
+                "artist_count": 4
+            }
+        ]
+        self.assertListEqual(expected, received)
+
+    @requests_mock.Mocker()
+    def test_get_country_code_msid_mbid_mapping_failure(self, mock_requests):
+        """ Test to check if appropriate message is returned if fetching msid_mbid_mapping fails """
+        # Mock fetching mapping from "bono"
+        mock_requests.post("http://bono.metabrainz.org:8000/artist-msid-lookup/json", status_code=500)
+
+        # Mock fetching country data from labs.api.listenbrainz.org
+        with open(self.path_to_data_file("mbid_country_mapping_result.json")) as f:
+            mbid_country_mapping_result = json.load(f)
+        mock_requests.post("https://labs.api.listenbrainz.org/artist-country-code-from-artist-mbid/json",
+                           json=mbid_country_mapping_result)
+
+        response = self.client.get(url_for('stats_api_v1.get_artist_map',
+                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time',
+                                                                                                 'force_recalculate': 'true'})
+        error_msg = ("An error occurred while calculating artist_map data, "
+                     "try setting 'force_recalculate' to 'false' to get a cached copy if available")
+        self.assert500(response, message=error_msg)
