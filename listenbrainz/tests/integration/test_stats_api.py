@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
-#import requests_mock
+import requests_mock
 from data.model.user_artist_map import (UserArtistMapRecord,
                                         UserArtistMapStatJson)
 from data.model.user_artist_stat import UserArtistStatJson
@@ -14,7 +14,6 @@ from data.model.user_recording_stat import UserRecordingStatJson
 from data.model.user_release_stat import UserReleaseStatJson
 from flask import current_app, url_for
 from listenbrainz.tests.integration import IntegrationTestCase
-from listenbrainz.webserver.views.stats_api import _get_country_codes
 from redis import Redis
 
 
@@ -1066,44 +1065,67 @@ class StatsAPITestCase(IntegrationTestCase):
         self.assert400(response)
         self.assertEqual("Invalid value of force_recalculate: foobar", response.json['error'])
 
-   #  @requests_mock.Mocker()
-   #  def test_get_country_code(self, mock_requests):
-   #      """ Test to check if "_get_country_codes" is working correctly """
-   #      # Mock fetching mapping from "bono"
-   #      with open(self.path_to_data_file("msid_mbid_mapping_result.json")) as f:
-   #          msid_mbid_mapping_result = json.load(f)
-   #      mock_requests.post("http://bono.metabrainz.org:8000/artist-msid-lookup/json", json=msid_mbid_mapping_result)
+    @requests_mock.Mocker()
+    def test_get_country_code(self, mock_requests):
+        """ Test to check if "_get_country_codes" is working correctly """
+        # Mock fetching mapping from "bono"
+        with open(self.path_to_data_file("msid_mbid_mapping_result.json")) as f:
+            msid_mbid_mapping_result = json.load(f)
+        mock_requests.post("http://bono.metabrainz.org:8000/artist-msid-lookup/json", json=msid_mbid_mapping_result)
 
-   #      # Mock fetching country data from labs.api.listenbrainz.org
-   #      with open(self.path_to_data_file("mbid_country_mapping_result.json")) as f:
-   #          mbid_country_mapping_result = json.load(f)
-   #      mock_requests.post("https://labs.api.listenbrainz.org/artist-country-code-from-artist-mbid/json",
-   #                         json=mbid_country_mapping_result)
+        # Mock fetching country data from labs.api.listenbrainz.org
+        with open(self.path_to_data_file("mbid_country_mapping_result.json")) as f:
+            mbid_country_mapping_result = json.load(f)
+        mock_requests.post("https://labs.api.listenbrainz.org/artist-country-code-from-artist-mbid/json",
+                           json=mbid_country_mapping_result)
 
-   #      received = [entry.dict() for entry in _get_country_codes(['a', 'b'], ['c', 'd'])]
-   #      expected = [
-   #          {
-   #              "country": "GBR",
-   #              "artist_count": 4
-   #          }
-   #      ]
-   #      self.assertListEqual(expected, received)
+        response = self.client.get(url_for('stats_api_v1.get_artist_map',
+                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time',
+                                                                                                 'force_recalculate': 'true'})
+        data = response.json["payload"]
+        received = data["artist_map"]
+        expected = [
+            {
+                "country": "GBR",
+                "artist_count": 4
+            }
+        ]
+        self.assertListEqual(expected, received)
 
-   #  @requests_mock.Mocker()
-   #  def test_get_country_code_msid_mbid_mapping_failure(self, mock_requests):
-   #      """ Test to check if appropriate message is returned if fetching msid_mbid_mapping fails """
-   #      # Mock fetching mapping from "bono"
-   #      mock_requests.post("http://bono.metabrainz.org:8000/artist-msid-lookup/json", status_code=500)
+    @requests_mock.Mocker()
+    def test_get_country_code_msid_mbid_mapping_failure(self, mock_requests):
+        """ Test to check if appropriate message is returned if fetching msid_mbid_mapping fails """
+        # Mock fetching mapping from "bono"
+        mock_requests.post("http://bono.metabrainz.org:8000/artist-msid-lookup/json", status_code=500)
 
-   #      # Mock fetching country data from labs.api.listenbrainz.org
-   #      with open(self.path_to_data_file("mbid_country_mapping_result.json")) as f:
-   #          mbid_country_mapping_result = json.load(f)
-   #      mock_requests.post("https://labs.api.listenbrainz.org/artist-country-code-from-artist-mbid/json",
-   #                         json=mbid_country_mapping_result)
+        # Mock fetching country data from labs.api.listenbrainz.org
+        with open(self.path_to_data_file("mbid_country_mapping_result.json")) as f:
+            mbid_country_mapping_result = json.load(f)
+        mock_requests.post("https://labs.api.listenbrainz.org/artist-country-code-from-artist-mbid/json",
+                           json=mbid_country_mapping_result)
 
-   #      response = self.client.get(url_for('stats_api_v1.get_artist_map',
-   #                                         user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time',
-   #                                                                                               'force_recalculate': 'true'})
-   #      error_msg = ("An error occurred while calculating artist_map data, "
-   #                   "try setting 'force_recalculate' to 'false' to get a cached copy if available")
-   #      self.assert500(response, message=error_msg)
+        response = self.client.get(url_for('stats_api_v1.get_artist_map',
+                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time',
+                                                                                                 'force_recalculate': 'true'})
+        error_msg = ("An error occurred while calculating artist_map data, "
+                     "try setting 'force_recalculate' to 'false' to get a cached copy if available")
+        self.assert500(response, message=error_msg)
+
+    @requests_mock.Mocker()
+    def test_get_country_code_mbid_country_mapping_failure(self, mock_requests):
+        """ Test to check if appropriate message is returned if fetching msid_mbid_mapping fails """
+        # Mock fetching mapping from "bono"
+        with open(self.path_to_data_file("msid_mbid_mapping_result.json")) as f:
+            msid_mbid_mapping_result = json.load(f)
+        mock_requests.post("http://bono.metabrainz.org:8000/artist-msid-lookup/json", json=msid_mbid_mapping_result)
+
+        # Mock fetching country data from labs.api.listenbrainz.org
+        mock_requests.post("https://labs.api.listenbrainz.org/artist-country-code-from-artist-mbid/json",
+                           status_code=500)
+
+        response = self.client.get(url_for('stats_api_v1.get_artist_map',
+                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time',
+                                                                                                 'force_recalculate': 'true'})
+        error_msg = ("An error occurred while calculating artist_map data, "
+                     "try setting 'force_recalculate' to 'false' to get a cached copy if available")
+        self.assert500(response, message=error_msg)
