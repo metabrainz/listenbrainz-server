@@ -18,11 +18,11 @@ class ArtistCreditIdFromArtistMBIDQuery(Query):
         return """Look up all available artist credit ids from an artist mbid."""
 
     def outputs(self):
-        return ['artist_mbid', 'artist_credit_ids']
+        return ['artist_mbid', 'artist_credit_id']
 
     def fetch(self, params, offset=-1, limit=-1):
 
-        with psycopg2.connect(current_app.config.DB_CONNECT_MB) as conn:
+        with psycopg2.connect(current_app.config['DB_CONNECT_MB']) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
 
                 acs = tuple([ p['artist_mbid'] for p in params ])
