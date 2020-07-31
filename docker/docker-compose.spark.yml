@@ -5,29 +5,15 @@ version: "3.4"
 # `../` to refer to a directory in the main code checkout
 
 volumes:
-  spark-master:
   namenode:
-  spark-worker:
   datanode:
 
 services:
-  spark-master:
-    image: metabrainz/spark-master
-    command: sleep 1000000000
-    volumes:
-      - spark-master:/home/hadoop/spark:z
-
   hadoop-master:
     image: metabrainz/hadoop-yarn:beta
     command: hdfs namenode
     volumes:
       - namenode:/home/hadoop/hdfs:z
-
-  spark-worker:
-    image: metabrainz/spark-worker
-    command: sleep 1000000000
-    volumes:
-      - spark-worker:/home/hadoop/spark:z
 
   datanode:
     image: metabrainz/hadoop-yarn:beta
