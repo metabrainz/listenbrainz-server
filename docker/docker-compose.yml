@@ -93,18 +93,6 @@ services:
       - timescale
       - rabbitmq
 
-  bigquery:
-    image: web
-    volumes:
-      - ../credentials:/code/credentials:z
-      - ..:/code/listenbrainz:z
-    environment:
-      GOOGLE_APPLICATION_CREDENTIALS: '/code/credentials/bigquery-credentials.json'
-    command: python3 -m "listenbrainz.bigquery_writer.bigquery_writer"
-    depends_on:
-      - redis
-      - rabbitmq
-
   follow_server:
     image: web
     volumes:

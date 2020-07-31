@@ -12,68 +12,36 @@ will have…
 * Initialized development databases
 * Running ListenBrainz Server
 
+Clone listenbrainz-server
+-------------------------
 
-Install dependencies
---------------------
-
-The ``listenbrainz-server`` is shipped in Docker containers. This helps create
-your development environment and later deploy the application. Therefore, to
-work on the project, you need to install Docker and use containers for building
-the project. Containers save you from installing all of this on your own
-workstation.
-
-See the different installation instructions for your distribution below.
-
-CentOS / RHEL
-^^^^^^^^^^^^^
+ListenBrainz is hosted on GitHub at https://github.com/metabrainz/listenbrainz-server/.
+You can use ``git`` to clone it to your computer
 
 .. code-block:: bash
 
-    sudo yum install epel-release
-    sudo yum install docker docker-compose
+    git clone https://github.com/metabrainz/listenbrainz-server.git
 
-Debian / Debian-based systems
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Install docker
+--------------
 
-.. code-block:: bash
+ListenBrainz uses Docker for development. This helps you to easily create your development
+environment. Therefore, to work on the project, you first need to install Docker.
+If you haven't already, follow the `docker installation instructions for your platform`_.
 
-    sudo apt-get update && sudo apt-get install docker docker-compose
-
-Fedora
-^^^^^^
-
-.. code-block:: bash
-
-    sudo dnf install docker docker-compose
-
-openSUSE
-^^^^^^^^
-
-.. code-block:: bash
-
-    sudo zypper install docker docker-compose
-
-Ubuntu / Ubuntu-based systems
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. code-block:: bash
-
-    sudo apt-get update && sudo apt-get install docker docker-compose
-
+.. _docker installation instructions for your platform: https://docs.docker.com/get-docker/
 
 Register a MusicBrainz application
 ----------------------------------
 
 Next, you need to register your application and get an OAuth token from
-MusicBrainz. Using the OAuth token lets you sign into your development
-environment with your MusicBrainz account. Then, you can import your plays from
-somewhere else.
+MusicBrainz. This allows you to sign into your development
+environment with your MusicBrainz account.
 
 To register, visit the `MusicBrainz applications page`_. There, look for the
-option to `register`_ your application. Fill out the form with these three
-options.
+option to `register`_ your application. Fill out the form with the following data:
 
-- **Name**: (any name you want and will recognize, e.g.
+- **Name**: (any name that you want and will recognize, e.g.
   ``listenbrainz-server-devel``)
 
 - **Type**: ``Web Application``
@@ -82,7 +50,6 @@ options.
 
 After entering this information, you'll have an OAuth client ID and OAuth client
 secret. You'll use these for configuring ListenBrainz.
-
 
 .. _MusicBrainz applications page: https://musicbrainz.org/account/applications
 .. _register: https://musicbrainz.org/account/applications/register
@@ -111,8 +78,8 @@ Update the strings with your client ID and secret. After doing this, your
 ListenBrainz development environment is able to authenticate and log in from
 your MusicBrainz login.
 
-Also, in order for the Last.FM import to work, you should also update your
-Last.FM API key in this file. Look for the following section in the file.
+To use the Last.fm importer you need an API account at Last.fm. You can
+register for one at the `Last.fm API page`_. Look for the following section in ``config.py``.
 
 .. code-block:: yaml
 
@@ -120,16 +87,11 @@ Last.FM API key in this file. Look for the following section in the file.
     LASTFM_API_URL = "https://ws.audioscrobbler.com/2.0/"
     LASTFM_API_KEY = "USE_LASTFM_API_KEY"
 
-Update the Last.FM API key with your key. After doing this, your
-ListenBrainz development environment is able to import your listens from Last.FM.
-
-In case you don't have a Last.FM API key, you can get it from `Last.FM API page`_.
+Update the ``LASTFM_API_KEY`` field with your Last.fm API key.
 
 You also need to update the ``API_URL`` field value to ``http://localhost``.
 
-We also have a Spotify importer script which imports listens from
-Spotify automatically using the Spotify API. In order to run this in your
-local development environment, you'll have to register an application on the
+To use the Spotify importer you need to register an application on the
 `Spotify Developer Dashboard`_. Use ``http://localhost/profile/connect-spotify/callback``
 as the callback URL.
 
@@ -149,32 +111,29 @@ section of the file.
     should update the ``SPOTIFY_CALLBACK_URL`` field accordingly.
 
 .. _Last.FM API page: https://last.fm/api
-
 .. _Spotify Developer Dashboard: https://developer.spotify.com/dashboard/applications
 
 
 Initialize ListenBrainz containers
 ----------------------------------
 
-Next, run ``develop.sh build`` in the root of the repository. Using
-``docker-compose``, it creates multiple Docker containers for the different
-services and parts of the ListenBrainz server. This script starts Redis,
-PostgreSQL, TimescaleDB, and web server containers. This also makes it easy to stop
-them all later.
-
-The first time you run it, it downloads and creates the containers. But it's not
-finished yet.
+Next, run
 
 .. code-block:: bash
 
     ./develop.sh build
 
+in the root of the repository. Using ``docker-compose``, this will build multiple
+Docker images for the different services that make up the ListenBrainz server.
+
+The first time you run this script it might take some time while it downloads all of the
+required dependencies and builds the services.
 
 Initialize ListenBrainz databases
 ---------------------------------
 
 Your development environment needs some specific databases to work. Before
-proceeding, run these three commands to initialize the databases.
+proceeding, run these commands to initialize the databases.
 
 .. code-block:: bash
 
@@ -186,45 +145,62 @@ Your development environment is now ready. Now, let's actually see ListenBrainz
 load locally!
 
 
-Install node dependencies
--------------------------
-
-You also need to install some JavaScript dependencies.
-
-.. code-block:: bash
-
-    ./develop.sh npm
-
-
 Run the magic script
 --------------------
 
-Now that the databases are initialized, always start your development
-environment by executing ``develop.sh up``. Now, it will work as
-expected.
+Now that the databases are initialized, you can start your development
+environment by running ``develop.sh up``.
 
 .. code-block:: bash
 
     ./develop.sh up
 
-You will see the containers eventually run again. Leave the script running to
-see your development environment in the browser. Later, shut it down by pressing
-CTRL^C. Once everything is running, visit your new site from your browser!
+You will see the output of ``docker-compose``. You can shut down listenbrainz
+by pressing CTRL^C. Once everything is running, visit your new site in a browser!
 
 .. code-block:: none
 
    http://localhost
 
 Now, you are all set to begin making changes and seeing them in real-time inside
-of your development environment!
+of your development environment. If you make changes to python code, the server will be
+automatically restarted. If you make changes to javascript code it will be
+automatically compiled.
 
-Once you are done with your work, shut down the containers using the following command.
+Look at the :doc:`develop.sh documentation <develop-sh>` for more details.
 
-.. code-block:: bash
+Listenbrainz containers
+-----------------------
 
-    ./develop.sh down
+A listenbrainz development environment contains a number of different containers running
+different services. We provide a small description of each container here:
 
-You can look at the :doc:`develop.sh documentation <develop-sh>` for more details.
+* ``db``: A PostgreSQL server that contains data about users
+* ``redis``: A redis server to store temporary server data
+* ``timescale``: A PostgreSQL server with the TimescaleDB extension that stores users listens
+* ``rabbitmq``: Used for passing listens between different services
+* ``web``: This is the main ListenBrainz server
+* ``api_compat``: A Last.fm-compatible API server
+* ``follow_server``: A helper server used for the user-following component of ListenBrainz
+* ``static_builder``: A helper service to build Javascript/Typescript and CSS assets if they are changed
+* ``type_checker``: A helper service to type-check Typescript assets
+
+.. note::
+
+    If you add new python dependencies to ListenBrainz by adding them to ``requirements.txt`` you will have
+    rebuild the web server. Use
+
+    .. code-block:: bash
+
+        ./develop.sh build static_builder
+
+    to do this.
+
+    If you add new Javascript dependencies you will have to rebuild the ``static_builder``:
+
+    .. code-block:: bash
+
+        ./develop.sh build static_builder
 
 Test your changes with unit tests
 ---------------------------------
@@ -289,15 +265,6 @@ all new frontend code using
 
 This command should list all issues with the code you've modified. Make sure to fix
 all errors.
-
-.. note::
-
-    You might need to rebuild the `static_builder` image before running the linter,
-    this can be done using,
-
-    .. code-block:: bash
-
-        ./develop.sh build static_builder
 
 We have a :doc:`FAQ page <faqs>` for questions that come up often. Please take a look
 if you have any issues.
