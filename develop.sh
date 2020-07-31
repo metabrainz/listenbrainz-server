@@ -37,7 +37,8 @@ function invoke_docker_compose_spark {
 }
 
 function format_namenode {
-    invoke_docker_compose_spark down
+    # run in a subshell to swallow the exec
+    (invoke_docker_compose_spark down)
     docker volume rm -f listenbrainzspark_datanode
     docker volume rm -f listenbrainzspark_namenode
     invoke_docker_compose_spark run --rm hadoop-master \
