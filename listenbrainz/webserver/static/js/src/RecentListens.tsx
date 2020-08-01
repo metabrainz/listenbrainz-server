@@ -33,7 +33,6 @@ export interface RecentListensProps {
   spotify: SpotifyUser;
   user: ListenBrainzUser;
   webSocketsServerUrl: string;
-  searchLargerTimeRange: number;
 }
 
 export interface RecentListensState {
@@ -329,21 +328,11 @@ export default class RecentListens extends React.Component<
     }
   };
 
-  reloadPageWithSearchLargerTimeRange = (): void => {
-    let url = window.location.href;
-    if (url.indexOf("?") > -1) {
-      url += "&search_larger_time_range=1";
-    } else {
-      url += "?search_larger_time_range=1";
-    }
-    window.location.href = url;
-  };
-
   handleClickOlder = async () => {
-    const { user } = this.props;
+    const { oldestListenTs, user } = this.props;
     const { nextListenTs } = this.state;
     // No more listens to fetch
-    if (!nextListenTs) {
+    if (!nextListenTs || nextListenTs <= oldestListenTs) {
       return;
     }
     this.setState({ loading: true });
@@ -372,10 +361,10 @@ export default class RecentListens extends React.Component<
   };
 
   handleClickNewer = async () => {
-    const { user } = this.props;
+    const { latestListenTs, user } = this.props;
     const { previousListenTs } = this.state;
     // No more listens to fetch
-    if (!previousListenTs) {
+    if (!previousListenTs || previousListenTs >= latestListenTs) {
       return;
     }
     this.setState({ loading: true });
@@ -482,13 +471,7 @@ export default class RecentListens extends React.Component<
       previousListenTs,
       saveUrl,
     } = this.state;
-    const {
-      latestListenTs,
-      oldestListenTs,
-      spotify,
-      user,
-      searchLargerTimeRange,
-    } = this.props;
+    const { latestListenTs, oldestListenTs, spotify, user } = this.props;
 
     return (
       <div role="main">
@@ -509,7 +492,7 @@ export default class RecentListens extends React.Component<
                 : "Playlist"}
             </h3>
 
-            {!listens.length && searchLargerTimeRange === 0 && (
+            {!listens.length && (
               <div className="lead text-center">
                 <p>No listens yet</p>
                 {mode === "follow" && (
@@ -529,9 +512,9 @@ export default class RecentListens extends React.Component<
               <div>
                 <div
                   style={{
-                    position: "fixed",
+                    height: 0,
+                    position: "sticky",
                     top: "50%",
-                    left: "calc(50% - 56px)",
                     zIndex: 1,
                   }}
                 >
@@ -621,8 +604,8 @@ export default class RecentListens extends React.Component<
                   </tbody>
                 </table>
 
-                {mode === "listens" && searchLargerTimeRange === 0 && (
-                  <ul className="pager">
+                {mode === "listens" && (
+                  <ul className="pager" style={{ display: "flex" }}>
                     <li
                       className={`previous ${
                         listens[0].listened_at >= latestListenTs
@@ -638,7 +621,7 @@ export default class RecentListens extends React.Component<
                         }}
                         tabIndex={0}
                       >
-                        &#x21E4; Newest
+                        &#x21E4;
                       </a>
                     </li>
                     <li
@@ -661,6 +644,25 @@ export default class RecentListens extends React.Component<
                     </li>
                     <li
                       className={`next ${
+                        !nextListenTs || nextListenTs <= oldestListenTs
+                          ? "disabled"
+                          : ""
+                      }`}
+                      style={{ marginLeft: "auto" }}
+                    >
+                      <a
+                        role="button"
+                        onClick={this.handleClickOlder}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") this.handleClickOlder();
+                        }}
+                        tabIndex={0}
+                      >
+                        Older &rarr;
+                      </a>
+                    </li>
+                    <li
+                      className={`next ${
                         listens[listens.length - 1].listened_at <=
                         oldestListenTs
                           ? "disabled"
@@ -675,42 +677,11 @@ export default class RecentListens extends React.Component<
                         }}
                         tabIndex={0}
                       >
-                        Oldest &#x21E5;
-                      </a>
-                    </li>
-                    <li
-                      className={`next ${
-                        !nextListenTs || nextListenTs <= oldestListenTs
-                          ? "disabled"
-                          : ""
-                      }`}
-                    >
-                      <a
-                        role="button"
-                        onClick={this.handleClickOlder}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") this.handleClickOlder();
-                        }}
-                        tabIndex={0}
-                      >
-                        Older &rarr;
+                        &#x21E5;
                       </a>
                     </li>
                   </ul>
                 )}
-              </div>
-            )}
-            {mode === "listens" && searchLargerTimeRange > 0 && (
-              <div className="lead text-center">
-                <p>We could not find any more listen, but there may be more</p>
-                <button
-                  title="Search Larger Time Range"
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={this.reloadPageWithSearchLargerTimeRange}
-                >
-                  Search Larger Time Range
-                </button>
               </div>
             )}
             <br />
@@ -775,7 +746,6 @@ document.addEventListener("DOMContentLoaded", () => {
     spotify,
     user,
     web_sockets_server_url,
-    search_larger_time_range,
   } = reactProps;
 
   ReactDOM.render(
@@ -794,7 +764,6 @@ document.addEventListener("DOMContentLoaded", () => {
       spotify={spotify}
       user={user}
       webSocketsServerUrl={web_sockets_server_url}
-      searchLargerTimeRange={search_larger_time_range}
     />,
     domContainer
   );

@@ -9,7 +9,7 @@ if [[ ! -d "docker" ]]; then
 fi
 
 function invoke_docker_compose {
-    docker-compose -f docker/docker-compose.yml \
+    exec docker-compose -f docker/docker-compose.yml \
                 -p listenbrainz \
                 "$@"
 }
@@ -22,69 +22,52 @@ function invoke_manage {
 
 function open_psql_shell {
     invoke_docker_compose run --rm web psql \
-        $POSTGRES_LB_URI
+        ${POSTGRES_LB_URI}
 }
 
 function open_timescale_shell {
     invoke_docker_compose run --rm web psql \
-        $SQLALCHEMY_TIMESCALE_URI
-}
-
-function npm_install {
-    invoke_docker_compose run --rm -e \
-                HOME=/tmp static_builder npm install
+        ${SQLALCHEMY_TIMESCALE_URI}
 }
 
 function invoke_docker_compose_spark {
-    docker-compose -f docker/docker-compose.spark.yml \
+    exec docker-compose -f docker/docker-compose.spark.yml \
                 -p listenbrainzspark \
                 "$@"
 }
 
 function format_namenode {
+    # run in a subshell to swallow the exec
+    (invoke_docker_compose_spark down)
+    docker volume rm -f listenbrainzspark_datanode
+    docker volume rm -f listenbrainzspark_namenode
     invoke_docker_compose_spark run --rm hadoop-master \
             hdfs namenode -format -nonInteractive -force
 }
 
-# Arguments following "manage" are as it is passed to function "invoke_manage" and executed.
-# Check on each argument of manage.py is not performed here because with manage.py, develop.sh will expand too.
-# Also, if any of the arguments passed to develop.sh which invoke manage.py are incorrect, exception would be raised by manage.py
-# so we may skip extra checks in here.
-if [ "$1" == "manage" ]; then shift
-    echo "Invoking manage.py..."
+# Arguments following "manage" are passed to manage.py inside a new web container.
+if [[ "$1" == "manage" ]]; then shift
+    echo "Running manage.py..."
     invoke_manage "$@"
-    exit
-
-elif [ "$1" == "psql" ]; then
-    echo "Entering into PSQL shell to query DB..."
+elif [[ "$1" == "bash" ]]; then
+    echo "Running bash..."
+    invoke_docker_compose run --rm web bash
+elif [[ "$1" == "shell" ]]; then
+    echo "Running flask shell..."
+    invoke_docker_compose run --rm web flask shell
+elif [[ "$1" == "psql" ]]; then
+    echo "Connecting to postgresql..."
     open_psql_shell
-    exit
-
-elif [ "$1" == "timescale" ]; then
-    echo "Entering into PSQL shell to query Timescale DB..."
+elif [[ "$1" == "timescale" ]]; then
+    echo "Connecting to timescale..."
     open_timescale_shell
-    exit
-
-elif [ "$1" == "npm" ]; then
-    echo "Installing node dependencies..."
-    npm_install
-    exit
-
-elif [ "$1" == "spark" ]; then shift
-    if [ "$1" == 'format' ]; then
+elif [[ "$1" == "spark" ]]; then shift
+    if [[ "$1" == 'format' ]]; then
         format_namenode
-        exit
     else
         invoke_docker_compose_spark "$@"
-        exit
     fi
-
 else
-    if [ "$#" == 0 ]; then
-        echo "No argument provided. Trying to run docker-compose..."
-    else
-        echo "Trying to run the passed command with docker-compose..."
-    fi
+    echo "Running docker-compose with the given command..."
     invoke_docker_compose "$@"
-    exit
 fi

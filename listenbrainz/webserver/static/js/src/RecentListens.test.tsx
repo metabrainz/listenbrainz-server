@@ -32,7 +32,6 @@ const {
   spotify,
   user,
   webSocketsServerUrl,
-  searchLargerTimeRange,
 } = recentListensProps;
 
 const props = {
@@ -49,7 +48,6 @@ const props = {
   spotify: spotify as SpotifyUser,
   user,
   webSocketsServerUrl,
-  searchLargerTimeRange,
 };
 
 // fetchMock will be exported in globals
@@ -107,9 +105,7 @@ describe("componentDidMount", () => {
     // eslint-disable-next-line dot-notation
     instance["APIService"].getUserListenCount = spy;
     expect(wrapper.state("listenCount")).toBeUndefined();
-    instance.componentDidMount();
-    await new Promise(setImmediate);
-    wrapper.update();
+    await instance.componentDidMount();
 
     expect(spy).toHaveBeenCalledWith(user.name);
     expect(wrapper.state("listenCount")).toEqual(42);
@@ -594,28 +590,41 @@ describe("Pagination", () => {
       const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
       const instance = wrapper.instance();
 
-      wrapper.setState({ nextListenTs: 123456 });
-
-      const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
+      wrapper.setState({ nextListenTs: 1586450000 });
+      const expectedListensArray = [
+        {
+          track_metadata: {
+            artist_name: "Beyonc\u00e9, Frank Ocean",
+            track_name: "Superpower (feat. Frank Ocean)",
+            release_name: "BEYONC\u00c9 [Platinum Edition]",
+          },
+          listened_at: 1586450001,
+        },
+      ];
+      const spy = jest
+        .fn()
+        .mockImplementation(() => Promise.resolve(expectedListensArray));
       // eslint-disable-next-line dot-notation
       instance["APIService"].getListensForUser = spy;
 
       await instance.handleClickOlder();
+      expect(spy).toHaveBeenCalledWith(user.name, undefined, 1586450000);
       expect(wrapper.state("loading")).toBeFalsy();
-      expect(spy).toHaveBeenCalledWith(user.name, undefined, 123456);
+      expect(wrapper.state("listens")).toEqual(expectedListensArray);
     });
 
     it("sets nextListenTs to undefined if it receives no listens from API", async () => {
       const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
       const instance = wrapper.instance();
 
-      wrapper.setState({ nextListenTs: 123456 });
+      wrapper.setState({ nextListenTs: 1586450000 });
 
       const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
       // eslint-disable-next-line dot-notation
       instance["APIService"].getListensForUser = spy;
 
       await instance.handleClickOlder();
+      expect(spy).toHaveBeenCalledWith(user.name, undefined, 1586450000);
       expect(wrapper.state("loading")).toBeFalsy();
       expect(wrapper.state("nextListenTs")).toBeUndefined();
       expect(pushStateSpy).not.toHaveBeenCalled();
@@ -625,10 +634,11 @@ describe("Pagination", () => {
       const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
       const instance = wrapper.instance();
 
-      wrapper.setState({ nextListenTs: 123456 });
+      // Random nextListenTs to ensure that is the value set in browser history
+      wrapper.setState({ listens: [], nextListenTs: 1586440600 });
 
-      const sortedListens = sortBy(listens, "listened_at");
-      const nextListenTs = sortedListens[listens.length - 1].listened_at;
+      const sortedListens = sortBy(listens, "listened_at").reverse();
+      const nextListenTs = sortedListens[sortedListens.length - 1].listened_at;
       const previousListenTs = sortedListens[0].listened_at;
 
       const spy = jest.fn().mockImplementation((username, minTs, maxTs) => {
@@ -639,14 +649,12 @@ describe("Pagination", () => {
       const scrollSpy = jest.spyOn(instance, "scrollToTop");
 
       await instance.handleClickOlder();
-      await new Promise(setImmediate);
-      wrapper.update();
 
       expect(wrapper.state("listens")).toEqual(sortedListens);
       expect(wrapper.state("loading")).toBeFalsy();
       expect(wrapper.state("nextListenTs")).toEqual(nextListenTs);
       expect(wrapper.state("previousListenTs")).toEqual(previousListenTs);
-      expect(pushStateSpy).toHaveBeenCalledWith(null, "", `?max_ts=123456`);
+      expect(pushStateSpy).toHaveBeenCalledWith(null, "", `?max_ts=1586440600`);
       expect(scrollSpy).toHaveBeenCalled();
     });
   });
@@ -670,14 +678,27 @@ describe("Pagination", () => {
     it("calls the API to get older listens", async () => {
       const wrapper = shallow<RecentListens>(<RecentListens {...props} />);
       const instance = wrapper.instance();
-
       wrapper.setState({ previousListenTs: 123456 });
 
-      const spy = jest.fn().mockImplementation(() => Promise.resolve([]));
+      const expectedListensArray = [
+        {
+          track_metadata: {
+            artist_name: "Beyonc\u00e9, Frank Ocean",
+            track_name: "Superpower (feat. Frank Ocean)",
+            release_name: "BEYONC\u00c9 [Platinum Edition]",
+          },
+          listened_at: 1586450001,
+        },
+      ];
+      const spy = jest
+        .fn()
+        .mockImplementation(() => Promise.resolve(expectedListensArray));
       // eslint-disable-next-line dot-notation
       instance["APIService"].getListensForUser = spy;
 
       await instance.handleClickNewer();
+
+      expect(wrapper.state("listens")).toEqual(expectedListensArray);
       expect(wrapper.state("loading")).toBeFalsy();
       expect(spy).toHaveBeenCalledWith(user.name, 123456, undefined);
     });
@@ -716,8 +737,6 @@ describe("Pagination", () => {
       const scrollSpy = jest.spyOn(instance, "scrollToTop");
 
       await instance.handleClickNewer();
-      await new Promise(setImmediate);
-      wrapper.update();
 
       expect(wrapper.state("listens")).toEqual(sortedListens);
       expect(wrapper.state("loading")).toBeFalsy();

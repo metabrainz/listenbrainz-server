@@ -9,6 +9,8 @@ volumes:
   redis:
   timescaledb:
   rabbitmq:
+  # The contents of /root, so that bash and ipython can store history
+  web_home:
 
 services:
 
@@ -41,9 +43,13 @@ services:
       context: ..
       dockerfile: Dockerfile
       target: listenbrainz-dev
-    command: python3 /code/listenbrainz/manage.py runserver -h 0.0.0.0 -p 80 -d
+    environment:
+      FLASK_APP: listenbrainz.webserver
+      FLASK_ENV: development
+    command: flask run -h 0.0.0.0 -p 80
     image: web
     volumes:
+      - web_home:/root
       - ..:/code/listenbrainz:z
       - ../listenbrainz/webserver/static:/static
     ports:
@@ -85,18 +91,6 @@ services:
     depends_on:
       - redis
       - timescale
-      - rabbitmq
-
-  bigquery:
-    image: web
-    volumes:
-      - ../credentials:/code/credentials:z
-      - ..:/code/listenbrainz:z
-    environment:
-      GOOGLE_APPLICATION_CREDENTIALS: '/code/credentials/bigquery-credentials.json'
-    command: python3 -m "listenbrainz.bigquery_writer.bigquery_writer"
-    depends_on:
-      - redis
       - rabbitmq
 
   follow_server:
