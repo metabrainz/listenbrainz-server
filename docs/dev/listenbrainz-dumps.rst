@@ -48,37 +48,18 @@ all listens into monthly JSON files that can easily be loaded into dataframes.
 Structure of the listens dump
 =============================
 
-The ListenBrainz listens dump consists of a number of files containing listens
-in JSON format, one document per line. Each user's listens are listed in one file in chronological
-order, with the latest listen first. The exact location of each user's listens is
-listed in the ``index.json`` file which is a JSON document containing a file name,
-an offset and size (in bytes) to uniquely identify the location and size of each user's
-listens.
+The ListenBrainz listen dump consists of listens broken down by year and month.
+At the top level there are directories for each of the year for which we have
+data. Inside each year there are listens files with month number as its name:
 
+#. ``listenbrainz-listens-dump-183-20200727-001004-full/listens/2005/1.listens``
+#. ``listenbrainz-listens-dump-183-20200727-001004-full/listens/2005/2.listens``
+#. ``listenbrainz-listens-dump-183-20200727-001004-full/listens/2005/3.listens``
+#. ``listenbrainz-listens-dump-183-20200727-001004-full/listens/2005/4.listens``
+#. ``listenbrainz-listens-dump-183-20200727-001004-full/listens/2005/5.listens``
 
-The format of the ``index.json`` file is as follows::
-
-    {
-        'user1': {
-            'file_name': "file which contains user1's listens",
-            'offset': "the byte at which user1's listens begin in the file",
-            'size': "the size (in bytes) of the user's listens"
-        }
-    }
-
-
-Hence, if you wanted to extract a particular user's listens, you would look up that
-user in the ``index.json`` file, find the filename and offset from there, open the
-file and seek to that byte and read the bytes specified by the ``index.json`` files.
-Each line in the part of the file we read is a listen submitted for that particular
-user.
-
-
-Here is some example code to parse the listens dump:
-
-.. include:: ./dump_examples/read_listens_dump.py
-   :code: python
-
+Each of the .listens files contains one JSON document per line -- each
+of the JSON documents is one listen, formatted in the standard listens format.
 
 Incremental dumps (BETA)
 ========================
