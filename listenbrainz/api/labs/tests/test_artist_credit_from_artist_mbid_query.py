@@ -1,6 +1,6 @@
 import os
 import unittest
-from unittest.mock import patch, call
+from unittest.mock import patch, call, MagicMock
 
 import flask_testing
 import flask
@@ -11,18 +11,27 @@ from listenbrainz.api.labs.api.artist_credit_from_artist_mbid import ArtistCredi
 json_request = [
     {
         "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
+    },
+    {
+        "artist_mbid": "a3cb23fc-acd3-4ce0-8f36-1e5aa6a18432"
     }
 ]
 
-json_response = {
-    "artist_credit_ids": [ 2751078, 2666208, 2570655 ],
+json_response = [
+  {
+    "artist_credit_ids": [ 65, 816454, 2666208 ], 
     "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
-}
+  }, 
+  {
+    "artist_credit_ids": [ 197, 883396, 883398 ], 
+    "artist_mbid": "a3cb23fc-acd3-4ce0-8f36-1e5aa6a18432"
+  }
+]
 
 class MainTestCase(flask_testing.TestCase):
 
     def create_app(self):
-        app.config['DB_CONNECT_MB'] = 'yermom'
+        app.config['MB_DATABASE_URI'] = 'yermom'
         return app
 
     def setUp(self):
@@ -40,9 +49,25 @@ class MainTestCase(flask_testing.TestCase):
         self.assertEqual(q.outputs(), ['artist_mbid', 'artist_credit_id'])
 
     @patch('psycopg2.connect')
-    def test_fetch(self, connect):
-
-        connect.cursor.return_value.fetchone.return_value = json_response
+    def test_fetch(self, mock_connect):
+        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [ json_response[0], json_response[1], None ]
         q = ArtistCreditIdFromArtistMBIDQuery()
         resp = q.fetch(json_request)
-        self.assertEqual(q.fetch(json_request), json_response)
+        self.assertEqual(resp, json_response)
+        self.assertEqual(len(resp), 2)
+
+    @patch('psycopg2.connect')
+    def test_count(self, mock_connect):
+        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [ json_response[0], None ]
+        q = ArtistCreditIdFromArtistMBIDQuery()
+        resp = q.fetch(json_request, count=1)
+        self.assertEqual(len(resp), 1)
+        self.assertEqual(resp[0], json_response[0])
+
+    @patch('psycopg2.connect')
+    def test_offset(self, mock_connect):
+        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [ json_response[1], None ]
+        q = ArtistCreditIdFromArtistMBIDQuery()
+        resp = q.fetch(json_request, offset=1)
+        self.assertEqual(len(resp), 1)
+        self.assertEqual(resp[0], json_response[1])
