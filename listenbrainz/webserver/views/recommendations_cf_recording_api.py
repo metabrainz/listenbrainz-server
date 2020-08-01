@@ -24,7 +24,7 @@ class RecommendationArtistType(Enum):
 @crossdomain()
 @ratelimit()
 def get_recommendations(user_name):
-    """ Get recommendations for user ``user_name``.
+    """ Get recommendations sorted on rating and ratings for user ``user_name``.
 
         A sample response from the endpoint may look like::
 
@@ -36,10 +36,10 @@ def get_recommendations(user_name):
             "entity": "recording",
 
             "mbids": [
-                "526bd613-fddd-4bd6-9137-ab709ac74cab",
-                "a6081bc1-2a76-4984-b21f-38bc3dcca3a5",
-                "a6ad0205-6e96-416d-a4e8-edd1773dac09",
-                "d8783d03-8a3b-4269-8261-00709d2cfee8"
+                ["526bd613-fddd-4bd6-9137-ab709ac74cab", 9.345],
+                ["a6081bc1-2a76-4984-b21f-38bc3dcca3a5", 6.998],
+                ["a6ad0205-6e96-416d-a4e8-edd1773dac09", 4.556],
+                ["d8783d03-8a3b-4269-8261-00709d2cfee8", -2.333]
             ],
 
             "user_name": "unclejohn69"
