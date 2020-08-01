@@ -27,7 +27,7 @@ class ArtistCreditIdFromArtistMBIDQuery(Query):
 
                 acs = tuple([ p['artist_mbid'] for p in params ])
                 query = """SELECT a.gid AS artist_mbid,
-                                       array_agg(ac.id) AS artist_credit_ids
+                                       array_agg(ac.id) AS artist_credit_id
                                   FROM artist_credit ac
                                   JOIN artist_credit_name acn
                                     ON ac.id = acn.artist_credit
