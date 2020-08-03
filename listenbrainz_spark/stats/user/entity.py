@@ -11,7 +11,7 @@ from data.model.user_release_stat import UserReleaseRecord
 from data.model.user_recording_stat import UserRecordingRecord
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
-from listenbrainz_spark.stats import (adjust_days, replace_days,
+from listenbrainz_spark.stats import (offset_days, replace_days,
                                       replace_months, run_query)
 from listenbrainz_spark.stats.user.artist import get_artists
 from listenbrainz_spark.stats.user.recording import get_recordings
@@ -41,7 +41,7 @@ def get_entity_week(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     date = get_latest_listen_ts()
 
     to_date = get_last_monday(date)
-    from_date = adjust_days(to_date, 7)
+    from_date = offset_days(to_date, 7)
 
     listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
     filtered_df = filter_listens(listens_df, from_date, to_date)

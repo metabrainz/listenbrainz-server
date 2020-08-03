@@ -50,7 +50,10 @@ def replace_months(date, month):
     return date
 
 
-def adjust_months(date, months, shift_backwards=True):
+def offset_months(date, months, shift_backwards=True):
+    """Returns the date :
+    1) decreased by number of months if shift_backwards is True
+    2) increased by number of months if shift backwards is False"""
     if shift_backwards:
         date = date + relativedelta(months=-months)
     else:
@@ -58,7 +61,10 @@ def adjust_months(date, months, shift_backwards=True):
     return date
 
 
-def adjust_days(date, days, shift_backwards=True):
+def offset_days(date, days, shift_backwards=True):
+    """Returns the date :
+    1) decreased by number of days if shift_backwards is True
+    2) increased by number of days if shift backwards is False"""
     if shift_backwards:
         date = date + relativedelta(days=-days)
     else:
