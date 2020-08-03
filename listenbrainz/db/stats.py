@@ -34,8 +34,8 @@ from data.model.user_listening_activity import (UserListeningActivityStat,
                                                 UserListeningActivityStatJson)
 from data.model.user_artist_stat import (UserArtistStat,
                                          UserArtistStatJson)
-from data.model.user_artist_map import(UserArtistMapStat,
-                                       UserArtistMapStatJson)
+from data.model.user_artist_map import (UserArtistMapStat,
+                                        UserArtistMapStatJson)
 from data.model.user_recording_stat import (UserRecordingStat,
                                             UserRecordingStatJson)
 from data.model.user_release_stat import (UserReleaseStat,
