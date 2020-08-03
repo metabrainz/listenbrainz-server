@@ -419,7 +419,7 @@ class TimescaleListenStore(ListenStore):
             start_time and end_time (datetime): the range of time for the listens dump.
             temp_dir (str): the dir to use to write files before adding to archive
         """
-        t0 = time.time()
+        t0 = time.monotonic()
         offset = 0
         listen_count = 0
 
@@ -454,7 +454,7 @@ class TimescaleListenStore(ListenStore):
 
         self.write_incremental_listens_to_disk(unwritten_listens, temp_dir)
         self.log.info("%d listens dumped at %.2f listens / sec", listen_count,
-                      listen_count / (time.time() - t0))
+                      listen_count / (time.monotonic() - t0))
 
 
     def write_listens(self, temp_dir, tar_file, archive_name, start_time_range = None, end_time_range = None):
@@ -464,7 +464,7 @@ class TimescaleListenStore(ListenStore):
             end_time_range (datetime): the range of time for the listens dump.
             temp_dir (str): the dir to use to write files before adding to archive
         """
-        t0 = time.time()
+        t0 = time.monotonic()
         listen_count = 0
 
         # This right here is why we should ONLY be using seconds timestamps. Someone could
@@ -521,7 +521,7 @@ class TimescaleListenStore(ListenStore):
 
                     listen_count += rows_added
                     self.log.info("%d listens dumped for %s at %.2f listens/s", listen_count, start_time.strftime("%Y-%m-%d"),
-                                  listen_count / (time.time() - t0))
+                                  listen_count / (time.monotonic() - t0))
 
             month = next_month
             year = next_year
