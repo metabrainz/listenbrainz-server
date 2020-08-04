@@ -87,7 +87,7 @@ export default class UserArtistMap extends React.Component<
   getData = async (): Promise<UserArtistMapResponse> => {
     const { range, user } = this.props;
     try {
-      const data = await this.APIService.getUserArtistMapData(user.name, range);
+      const data = await this.APIService.getUserArtistMap(user.name, range);
       return data;
     } catch (error) {
       if (error.response && error.response.status === 204) {
@@ -130,7 +130,13 @@ export default class UserArtistMap extends React.Component<
     } = this.state;
 
     return (
-      <Card style={{ marginTop: 20, minHeight: 400 }} ref={this.graphContainer}>
+      <Card
+        style={{
+          marginTop: 20,
+          minHeight: (graphContainerWidth || 1200) * 0.5,
+        }}
+        ref={this.graphContainer}
+      >
         <div className="row">
           <div className="col-xs-12">
             <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>

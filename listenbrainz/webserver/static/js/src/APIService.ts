@@ -253,11 +253,12 @@ export default class APIService {
     return data;
   };
 
-  getUserArtistMapData = async (
+  getUserArtistMap = async (
     userName: string,
-    range: UserStatsAPIRange = "all_time"
+    range: UserStatsAPIRange = "all_time",
+    forceRecalculate: boolean = false
   ) => {
-    const url = `${this.APIBaseURI}/stats/user/${userName}/artist-map?range=${range}`;
+    const url = `${this.APIBaseURI}/stats/user/${userName}/artist-map?range=${range}&force_recalculate=${forceRecalculate}`;
     const response = await fetch(url);
     this.checkStatus(response);
     if (response.status === 204) {
