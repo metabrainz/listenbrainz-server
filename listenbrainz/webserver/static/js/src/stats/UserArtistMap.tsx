@@ -130,7 +130,7 @@ export default class UserArtistMap extends React.Component<
     } = this.state;
 
     return (
-      <Card style={{ marginTop: 20 }} ref={this.graphContainer}>
+      <Card style={{ marginTop: 20, minHeight: 400 }} ref={this.graphContainer}>
         <div className="row">
           <div className="col-xs-12">
             <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
@@ -140,35 +140,31 @@ export default class UserArtistMap extends React.Component<
         </div>
         <Loader
           isLoading={loading}
+          className="flex-center"
           style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
             minHeight: "inherit",
           }}
         >
-          <div className="row">
-            <div className="col-xs-12">
-              {hasError && (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    minHeight: "inherit",
-                  }}
-                >
-                  <span style={{ fontSize: 24 }}>
-                    <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
-                    {errorMessage}
-                  </span>
-                </div>
-              )}
-              {!hasError && (
-                <Choropleth data={data} width={graphContainerWidth} />
-              )}
+          {hasError && (
+            <div
+              className="flex-center"
+              style={{
+                minHeight: "inherit",
+              }}
+            >
+              <span style={{ fontSize: 24 }} className="text-center">
+                <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
+                {errorMessage}
+              </span>
             </div>
-          </div>
+          )}
+          {!hasError && (
+            <div className="row">
+              <div className="col-xs-12">
+                <Choropleth data={data} width={graphContainerWidth} />
+              </div>
+            </div>
+          )}
         </Loader>
       </Card>
     );
