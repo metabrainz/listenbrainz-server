@@ -39,7 +39,7 @@ export default class UserDailyActivity extends React.Component<
 
     this.state = {
       data: [],
-      loading: true,
+      loading: false,
       errorMessage: "",
       hasError: false,
     };

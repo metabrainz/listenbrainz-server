@@ -1,5 +1,4 @@
 import * as React from "react";
-import { ResponsiveChoropleth } from "@nivo/geo";
 import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -7,10 +6,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import APIService from "../APIService";
 import Card from "../components/Card";
 import Loader from "../components/Loader";
-import * as features from "./world_countries.json";
-import * as alpha2To3Map from "./alpha_2_to_3_map.json";
-
-const DATASET_HOSTER_URL = "http://bono.metabrainz.org:5000";
+import Choropleth from "./Choropleth";
 
 export type UserArtistMapProps = {
   range: UserStatsAPIRange;
@@ -22,7 +18,8 @@ export type UserArtistMapState = {
   loading: boolean;
   hasError?: boolean;
   errorMessage?: string;
-  data: Array<{ id: string; value: number }>;
+  data: UserArtistMapData;
+  graphContainerWidth?: number;
 };
 
 export default class UserArtistMap extends React.Component<
@@ -31,6 +28,8 @@ export default class UserArtistMap extends React.Component<
 > {
   APIService: APIService;
 
+  graphContainer: React.RefObject<HTMLDivElement>;
+
   constructor(props: UserArtistMapProps) {
     super(props);
     this.APIService = new APIService(
@@ -38,9 +37,19 @@ export default class UserArtistMap extends React.Component<
     );
 
     this.state = {
-      loading: false,
       data: [],
+      loading: false,
+      errorMessage: "",
+      hasError: false,
     };
+
+    this.graphContainer = React.createRef();
+  }
+
+  componentDidMount() {
+    window.addEventListener("resize", this.handleResize);
+
+    this.handleResize();
   }
 
   componentDidUpdate(prevProps: UserArtistMapProps) {
@@ -59,24 +68,27 @@ export default class UserArtistMap extends React.Component<
     }
   }
 
-  loadData = async () => {
+  componentWillUnmount() {
+    window.removeEventListener("resize", this.handleResize);
+  }
+
+  loadData = async (): Promise<void> => {
     this.setState({
       hasError: false,
       loading: true,
     });
     const data = await this.getData();
     this.setState({
-      data,
+      data: this.processData(data),
       loading: false,
     });
   };
 
-  getData = async () => {
+  getData = async (): Promise<UserArtistMapResponse> => {
     const { range, user } = this.props;
     try {
       const data = await this.APIService.getUserArtistMapData(user.name, range);
-      console.log(data);
-      return data.payload.country_code_data;
+      return data;
     } catch (error) {
       if (error.response && error.response.status === 204) {
         this.setState({
@@ -90,90 +102,75 @@ export default class UserArtistMap extends React.Component<
         });
       }
     }
-    return {};
+    return {} as UserArtistMapResponse;
+  };
+
+  processData = (data: UserArtistMapResponse): UserArtistMapData => {
+    return data.payload.artist_map.map((country) => {
+      return {
+        id: country.country,
+        value: country.artist_count,
+      };
+    });
+  };
+
+  handleResize = () => {
+    this.setState({
+      graphContainerWidth: this.graphContainer.current?.offsetWidth,
+    });
   };
 
   render() {
-    const { loading, hasError, errorMessage, data } = this.state;
+    const {
+      loading,
+      hasError,
+      errorMessage,
+      data,
+      graphContainerWidth,
+    } = this.state;
 
     return (
-      <div>
-        <Card style={{ minHeight: 400 }}>
-          <Loader
-            isLoading={loading}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minHeight: "inherit",
-            }}
-          >
-            <div className="row">
-              <div className="col-xs-12" style={{ height: 700 }}>
-                {hasError && (
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      minHeight: "inherit",
-                    }}
-                  >
-                    <span style={{ fontSize: 24 }}>
-                      <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
-                      {errorMessage}
-                    </span>
-                  </div>
-                )}
-                {!hasError && (
-                  <ResponsiveChoropleth
-                    data={data}
-                    features={features.features}
-                    margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-                    colors="oranges"
-                    domain={[0, 250]}
-                    unknownColor="#eeeeee"
-                    label="properties.name"
-                    valueFormat=".2s"
-                    projectionScale={175}
-                    projectionType="naturalEarth1"
-                    projectionTranslation={[0.5, 0.7]}
-                    projectionRotation={[0, 0, 0]}
-                    graticuleLineColor="#dddddd"
-                    borderWidth={0.5}
-                    borderColor="#152538"
-                    legends={[
-                      {
-                        anchor: "bottom-left",
-                        direction: "column",
-                        justify: true,
-                        translateX: 20,
-                        translateY: -100,
-                        itemsSpacing: 0,
-                        itemWidth: 94,
-                        itemHeight: 18,
-                        itemDirection: "left-to-right",
-                        itemTextColor: "#444444",
-                        itemOpacity: 0.85,
-                        symbolSize: 18,
-                        effects: [
-                          {
-                            on: "hover",
-                            style: {
-                              itemTextColor: "#000000",
-                              itemOpacity: 1,
-                            },
-                          },
-                        ],
-                      },
-                    ]}
-                  />
-                )}
-              </div>
+      <Card style={{ marginTop: 20 }} ref={this.graphContainer}>
+        <div className="row">
+          <div className="col-xs-12">
+            <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
+              Artist Origins
+            </h3>
+          </div>
+        </div>
+        <Loader
+          isLoading={loading}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "inherit",
+          }}
+        >
+          <div className="row">
+            <div className="col-xs-12">
+              {hasError && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    minHeight: "inherit",
+                  }}
+                >
+                  <span style={{ fontSize: 24 }}>
+                    <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
+                    {errorMessage}
+                  </span>
+                </div>
+              )}
+              {!hasError && (
+                <Choropleth data={data} width={graphContainerWidth} />
+              )}
             </div>
-          </Loader>
-        </Card>
-      </div>
+          </div>
+        </Loader>
+      </Card>
     );
   }
 }
