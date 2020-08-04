@@ -4,7 +4,7 @@ import uuid
 import logging
 import itertools
 from math import sqrt
-from time import time
+import time
 from operator import add
 from datetime import datetime
 from collections import namedtuple, defaultdict
@@ -185,13 +185,13 @@ def get_best_model(training_data, validation_data, num_validation, ranks, lambda
     for rank, lmbda, iteration in itertools.product(ranks, lambdas, iterations):
         model_id = generate_model_id()
 
-        t0 = time()
+        t0 = time.monotonic()
         model = train(training_data, rank, iteration, lmbda, alpha, model_id)
-        mt = '{:.2f}'.format((time() - t0) / 60)
+        mt = '{:.2f}'.format((time.monotonic() - t0) / 60)
 
-        t0 = time()
+        t0 = time.monotonic()
         validation_rmse = compute_rmse(model, validation_data, num_validation, model_id)
-        vt = '{:.2f}'.format((time() - t0) / 60)
+        vt = '{:.2f}'.format((time.monotonic() - t0) / 60)
 
         model_metadata.append((model_id, mt, rank, '{:.1f}'.format(lmbda), iteration, round(validation_rmse, 2), vt))
 
@@ -276,7 +276,7 @@ def save_training_html(time_, num_training, num_validation, num_test, model_meta
             num_test (int): Number of elements/rows in test_data.
             model_metadata (dict): Models information such as model id, error etc.
             best_model_metadata (dict): Best Model information such as model id, error etc.
-            ti (str): Seconds since epoch when the script was run.
+            ti (str): Value of the monotonic clock when the script was run.
             models_training_data (str): Time taken to train all the models.
     """
     date = datetime.utcnow().strftime('%Y-%m-%d')
@@ -289,7 +289,7 @@ def save_training_html(time_, num_training, num_validation, num_test, model_meta
         'models' : model_metadata,
         'best_model' : best_model_metadata,
         'models_training_time' : models_training_time,
-        'total_time' : '{:.2f}'.format((time() - ti) / 3600)
+        'total_time' : '{:.2f}'.format((time.monotonic() - ti) / 3600)
     }
     save_html(model_html, context, 'model.html')
 
@@ -313,7 +313,7 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
         current_app.logger.critical('model param "alpha" missing')
         sys.exit(-1)
 
-    ti = time()
+    ti = time.monotonic()
     time_ = defaultdict(dict)
     try:
         listenbrainz_spark.init_spark_session('Train Models')
@@ -334,11 +334,11 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
         current_app.logger.error(str(err), exc_info=True)
         sys.exit(-1)
 
-    time_['load_playcounts'] = '{:.2f}'.format((time() - ti) / 60)
+    time_['load_playcounts'] = '{:.2f}'.format((time.monotonic() - ti) / 60)
 
-    t0 = time()
+    t0 = time.monotonic()
     training_data, validation_data, test_data = preprocess_data(playcounts_df)
-    time_['preprocessing'] = '{:.2f}'.format((time() - t0) / 60)
+    time_['preprocessing'] = '{:.2f}'.format((time.monotonic() - t0) / 60)
 
     # Rdds that are used in model training iterative process are cached to improve performance.
     # Caching large files may cause Out of Memory exception.
@@ -351,10 +351,10 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
     num_test = test_data.count()
 
     current_app.logger.info('Training models...')
-    t0 = time()
+    t0 = time.monotonic()
     best_model, model_metadata = get_best_model(training_data, validation_data, num_validation, ranks,
                                                 lambdas, iterations, alpha)
-    models_training_time = '{:.2f}'.format((time() - t0) / 3600)
+    models_training_time = '{:.2f}'.format((time.monotonic() - t0) / 3600)
 
     best_model_metadata = get_best_model_metadata(best_model)
     best_model_metadata['test_rmse'] = compute_rmse(best_model.model, test_data, num_test, best_model.model_id)
@@ -369,9 +369,9 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
     validation_data.unpersist()
 
     hdfs_connection.init_hdfs(config.HDFS_HTTP_URI)
-    t0 = time()
+    t0 = time.monotonic()
     save_model(best_model.model_id, best_model.model)
-    time_['save_model'] = '{:.2f}'.format((time() - t0) / 60)
+    time_['save_model'] = '{:.2f}'.format((time.monotonic() - t0) / 60)
 
     save_model_metadata_to_hdfs(best_model_metadata)
     # Delete checkpoint dir as saved lineages would eat up space, we won't be using them anyway.
@@ -390,7 +390,7 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
     message = [{
         'type': 'cf_recording_model',
         'model_upload_time': str(datetime.utcnow()),
-        'total_time': '{:.2f}'.format((time() - ti) / 3600),
+        'total_time': '{:.2f}'.format((time.monotonic() - ti) / 3600),
     }]
 
     return message

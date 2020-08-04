@@ -2,7 +2,7 @@ import os
 import sys
 import uuid
 import logging
-from time import time
+import time
 from datetime import datetime
 from collections import defaultdict
 from py4j.protocol import Py4JJavaError
@@ -416,7 +416,7 @@ def save_candidate_html(user_data, total_time, from_date, to_date):
 def main(recommendation_generation_window=None, top_artist_limit=None, similar_artist_limit=None,
          users=None, html_flag=False):
 
-    time_initial = time()
+    time_initial = time.monotonic()
     try:
         listenbrainz_spark.init_spark_session('Candidate_set')
     except SparkSessionNotInitializedException as err:
@@ -463,7 +463,7 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
         sys.exit(-1)
 
     # time taken to generate candidate_sets
-    total_time = '{:.2f}'.format((time() - time_initial) / 60)
+    total_time = '{:.2f}'.format((time.monotonic() - time_initial) / 60)
     if html_flag:
         user_data = get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_candidate_set_df_html,
                                             top_artist_df, similar_artist_df_html)
