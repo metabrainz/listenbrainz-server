@@ -126,7 +126,9 @@ describe("getData", () => {
     const instance = wrapper.instance();
 
     const spy = jest.spyOn(instance.APIService, "getUserDailyActivity");
-    spy.mockImplementation(() => Promise.resolve(userDailyActivityResponse));
+    spy.mockImplementation(() =>
+      Promise.resolve(userDailyActivityResponse as UserDailyActivityResponse)
+    );
     const result = await instance.getData();
 
     expect(spy).toHaveBeenCalledWith("foobar", "week");
@@ -178,7 +180,9 @@ describe("processData", () => {
     );
     const instance = wrapper.instance();
 
-    const result = instance.processData(userDailyActivityResponse);
+    const result = instance.processData(
+      userDailyActivityResponse as UserDailyActivityResponse
+    );
 
     expect(result).toEqual(userDailyActivityProcessedData);
   });
