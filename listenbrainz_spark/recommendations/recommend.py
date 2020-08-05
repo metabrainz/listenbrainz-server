@@ -90,7 +90,7 @@ def get_recording_mbids(params, recommendation_df):
     """
     recording_mbids_df = params.recordings_df.join(recommendation_df, 'recording_id', 'inner') \
                                              .orderBy(col('rating').desc()) \
-                                             .select('mb_recording_mbid')
+                                             .select('mb_recording_mbid', 'rating')
 
     return recording_mbids_df
 
@@ -156,7 +156,7 @@ def get_recommended_mbids(candidate_set, params, limit):
 
     recording_mbids_df = get_recording_mbids(params, recommendation_df)
 
-    recommended_recording_mbids = [row.mb_recording_mbid for row in recording_mbids_df.collect()]
+    recommended_recording_mbids = [[row.mb_recording_mbid, round(row.rating, 3)] for row in recording_mbids_df.collect()]
 
     return recommended_recording_mbids
 
