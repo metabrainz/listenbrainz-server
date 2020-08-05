@@ -50,7 +50,7 @@ class RecommendTestClass(SparkTestCase):
         df = utils.create_dataframe(
             Row(
                 recording_id=1,
-                rating=3.1
+                rating=3.13456
             ),
             schema=None
         )
@@ -58,7 +58,7 @@ class RecommendTestClass(SparkTestCase):
         recommendation_df = df.union(utils.create_dataframe(
             Row(
                 recording_id=2,
-                rating=6.0
+                rating=6.994590001
             ),
             schema=None
         ))
@@ -72,7 +72,7 @@ class RecommendTestClass(SparkTestCase):
         recording_mbids = recommend.get_recording_mbids(params, recommendation_df)
 
         self.assertEqual(recording_mbids.count(), 2)
-        self.assertEqual(recording_mbids.columns, ["mb_recording_mbid"])
+        self.assertEqual(sorted(recording_mbids.columns), sorted(["mb_recording_mbid", "rating"]))
         self.assertEqual(recording_mbids.collect()[0].mb_recording_mbid, "2acb406f-c716-45f8-a8bd-96ca3939c2e5")
         self.assertEqual(recording_mbids.collect()[1].mb_recording_mbid, "3acb406f-c716-45f8-a8bd-96ca3939c2e5")
 
@@ -165,27 +165,26 @@ class RecommendTestClass(SparkTestCase):
             call(mock_candidate_set.return_value, params, params.recommendation_similar_artist_limit)
         ])
 
-    @patch('listenbrainz_spark.recommendations.recommend.get_recommendation_df')
-    @patch('listenbrainz_spark.recommendations.recommend.get_recording_mbids')
+
     @patch('listenbrainz_spark.recommendations.recommend.generate_recommendations')
-    def test_get_recommended_mbids(self, mock_gen_rec, mock_get_mbids, mock_get_rec_df):
+    def test_get_recommended_mbids(self, mock_gen_rec):
         candidate_set = self.get_candidate_set()
         params = self.get_recommendation_params()
         limit = 2
 
         rdd = candidate_set.rdd.map(lambda r: (r['user_id'], r['recording_id']))
         mock_gen_rec.return_value = [
-            Rating(user=2, product=1, rating=3.1),
-            Rating(user=2, product=2, rating=6.0)
+            Rating(user=2, product=1, rating=3.13456),
+            Rating(user=2, product=2, rating=6.994590001)
         ]
 
-        mock_get_rec_df.return_value = self.get_recommendation_df()
-        mock_get_mbids.return_value = utils.create_dataframe(Row(mb_recording_mbid='xxxx'), schema=None)
         recommended_mbids = recommend.get_recommended_mbids(rdd, params, limit)
 
         mock_gen_rec.assert_called_once_with(rdd, params, limit)
-        mock_get_mbids.assert_called_once_with(params, mock_get_rec_df.return_value)
-        self.assertEqual(recommended_mbids, ['xxxx'])
+        self.assertEqual(recommended_mbids[0][0], '2acb406f-c716-45f8-a8bd-96ca3939c2e5')
+        self.assertEqual(recommended_mbids[0][1], 6.995)
+        self.assertEqual(recommended_mbids[1][0], '3acb406f-c716-45f8-a8bd-96ca3939c2e5')
+        self.assertEqual(recommended_mbids[1][1], 3.135)
 
         mock_gen_rec.return_value = []
         with self.assertRaises(RecommendationsNotGeneratedException):
