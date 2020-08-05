@@ -112,26 +112,25 @@ export default class UserTopEntity extends React.Component<
         }}
       >
         <h3 className="capitalize-bold">Top {entityTextOnCard}</h3>
-        <table
+        <Loader
+          isLoading={loading}
           style={{
-            whiteSpace: "nowrap",
-            tableLayout: "fixed",
-            width: "90%",
-            height: 450,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "80%",
           }}
         >
-          <tbody>
-            <Loader
-              isLoading={loading}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "100%",
-              }}
-            >
+          <table
+            style={{
+              whiteSpace: "nowrap",
+              tableLayout: "fixed",
+              width: "90%",
+            }}
+          >
+            <tbody>
               {hasError && (
-                <tr>
+                <tr style={{ height: 440 }}>
                   <td
                     style={{
                       fontSize: 24,
@@ -151,7 +150,7 @@ export default class UserTopEntity extends React.Component<
                   (artist, index) => {
                     return (
                       // eslint-disable-next-line react/no-array-index-key
-                      <tr key={index}>
+                      <tr key={index} style={{ height: 44 }}>
                         <td style={{ width: "10%", textAlign: "end" }}>
                           {index + 1}.&nbsp;
                         </td>
@@ -181,7 +180,7 @@ export default class UserTopEntity extends React.Component<
                     return (
                       // eslint-disable-next-line react/no-array-index-key
                       <React.Fragment key={index}>
-                        <tr>
+                        <tr style={{ height: 22 }}>
                           <td style={{ width: "10%", textAlign: "end" }}>
                             {index + 1}.&nbsp;
                           </td>
@@ -202,7 +201,7 @@ export default class UserTopEntity extends React.Component<
                             {release.listen_count}
                           </td>
                         </tr>
-                        <tr>
+                        <tr style={{ height: 22 }}>
                           <td />
                           <td
                             style={{
@@ -231,7 +230,7 @@ export default class UserTopEntity extends React.Component<
                     return (
                       // eslint-disable-next-line react/no-array-index-key
                       <React.Fragment key={index}>
-                        <tr>
+                        <tr style={{ height: 22 }}>
                           <td style={{ width: "10%", textAlign: "end" }}>
                             {index + 1}.&nbsp;
                           </td>
@@ -252,7 +251,7 @@ export default class UserTopEntity extends React.Component<
                             {recording.listen_count}
                           </td>
                         </tr>
-                        <tr>
+                        <tr style={{ height: 22 }}>
                           <td />
                           <td
                             style={{
@@ -274,9 +273,9 @@ export default class UserTopEntity extends React.Component<
                     );
                   }
                 )}
-            </Loader>
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </Loader>
         <a
           href={`${window.location.origin}/user/${user.name}/charts?range=${range}&entity=${entity}`}
           style={{ marginTop: 10 }}
