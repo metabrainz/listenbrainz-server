@@ -19,11 +19,11 @@ json_request = [
 
 json_response = [
   {
-    "artist_credit_id": [ 65, 816454, 2666208 ], 
+    "artist_credit_id": [ 65, 816454, 2666208 ],
     "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
-  }, 
+  },
   {
-    "artist_credit_id": [ 197, 883396, 883398 ], 
+    "artist_credit_id": [ 197, 883396, 883398 ],
     "artist_mbid": "a3cb23fc-acd3-4ce0-8f36-1e5aa6a18432"
   }
 ]

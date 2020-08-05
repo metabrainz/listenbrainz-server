@@ -69,7 +69,7 @@ class ArtistCountryFromArtistMBIDQuery(Query):
                                           FROM l_area_area laa
                                           JOIN link ON laa.link = link.id
                                          WHERE link.link_type = 356
-                                           AND entity1 IN %s 
+                                           AND entity1 IN %s
                                          UNION
                                         SELECT entity0 AS parent, descendant, (depth + 1) AS depth
                                           FROM l_area_area laa

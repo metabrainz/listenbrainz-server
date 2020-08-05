@@ -15,7 +15,7 @@ class ArtistCreditIdFromArtistMSIDQuery(Query):
         return ['artist_msid']
 
     def introduction(self):
-        return """This page allows you to lookup an artist_msid and get a list of possible 
+        return """This page allows you to lookup an artist_msid and get a list of possible
                   artist_credit_ids."""
 
     def outputs(self):
@@ -30,12 +30,12 @@ class ArtistCreditIdFromArtistMSIDQuery(Query):
                                        ac.id AS artist_credit_id,
                                        ac.name AS artist_credit_name,
                                        array_agg(a.gid) AS artist_credit_mbid
-                                  FROM artist_credit ac 
-                                  JOIN artist_credit_name acn 
-                                    ON ac.id = acn.artist_credit 
-                                  JOIN artist a 
-                                    ON acn.artist = a.id 
-                                  JOIN (SELECT DISTINCT mb_artist_credit_id AS artist_credit_id, 
+                                  FROM artist_credit ac
+                                  JOIN artist_credit_name acn
+                                    ON ac.id = acn.artist_credit
+                                  JOIN artist a
+                                    ON acn.artist = a.id
+                                  JOIN (SELECT DISTINCT mb_artist_credit_id AS artist_credit_id,
                                                         msb_artist_msid AS artist_msid
                                                    FROM mapping.msid_mbid_mapping m
                                                   WHERE msb_artist_msid in %s) AS map(artist_credit_id, artist_msid)
