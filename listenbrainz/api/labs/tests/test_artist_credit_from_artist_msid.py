@@ -8,6 +8,7 @@ import psycopg2
 from datasethoster.main import app
 from listenbrainz.api.labs.api.artist_credit_from_artist_msid import ArtistCreditIdFromArtistMSIDQuery
 
+
 json_request = [
     {
         "artist_msid": "ea7e58c9-949d-4843-a869-6a93b96ae786"
@@ -77,7 +78,7 @@ class MainTestCase(flask_testing.TestCase):
 
     @patch('psycopg2.connect')
     def test_0fetch(self, mock_connect):
-        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [ json_data[0], json_data[1], None ]
+        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [json_data[0], json_data[1], None]
         q = ArtistCreditIdFromArtistMSIDQuery()
         resp = q.fetch(json_request)
         self.assertEqual(len(resp), 2)
@@ -86,7 +87,7 @@ class MainTestCase(flask_testing.TestCase):
 
     @patch('psycopg2.connect')
     def test_count(self, mock_connect):
-        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [ json_data[0], None ]
+        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [json_data[0], None]
         q = ArtistCreditIdFromArtistMSIDQuery()
         resp = q.fetch(json_request, count=1)
         self.assertEqual(len(resp), 1)
@@ -94,7 +95,7 @@ class MainTestCase(flask_testing.TestCase):
 
     @patch('psycopg2.connect')
     def test_offset(self, mock_connect):
-        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [ json_data[1], None ]
+        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [json_data[1], None]
         q = ArtistCreditIdFromArtistMSIDQuery()
         resp = q.fetch(json_request, offset=1)
         self.assertEqual(len(resp), 1)

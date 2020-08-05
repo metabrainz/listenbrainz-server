@@ -8,6 +8,7 @@ import psycopg2
 from datasethoster.main import app
 from listenbrainz.api.labs.api.artist_country_from_artist_mbid import ArtistCountryFromArtistMBIDQuery
 
+
 json_request = [
     {
         "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
@@ -31,12 +32,12 @@ json_response = [
 ]
 
 area_response = [
-    { 'artist_mbid': '164f0d73-1234-4e2c-8743-d77bf2191051', 'area_id': 5099, 'country_code': None },
-    { 'artist_mbid': '8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11', 'area_id': 221, 'country_code': 'GB' }
+    {'artist_mbid': '164f0d73-1234-4e2c-8743-d77bf2191051', 'area_id': 5099, 'country_code': None},
+    {'artist_mbid': '8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11', 'area_id': 221, 'country_code': 'GB'}
 ]
 
 country_response = [
-    { 'area': 5099, 'country_code': 'US' }
+    {'area': 5099, 'country_code': 'US'}
 ]
 
 class MainTestCase(flask_testing.TestCase):
@@ -61,11 +62,11 @@ class MainTestCase(flask_testing.TestCase):
 
     @patch('psycopg2.connect')
     def test_fetch(self, mock_connect):
-        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [ area_response[0],
-                                                                                 area_response[1],
-                                                                                 None,
-                                                                                 country_response[0],
-                                                                                 None
+        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [area_response[0],
+                                                                                area_response[1],
+                                                                                None,
+                                                                                country_response[0],
+                                                                                None
                                                                                ]
         q = ArtistCountryFromArtistMBIDQuery()
         resp = q.fetch(json_request)
@@ -74,10 +75,10 @@ class MainTestCase(flask_testing.TestCase):
 
     @patch('psycopg2.connect')
     def test_count(self, mock_connect):
-        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [ area_response[0],
-                                                                                 None,
-                                                                                 country_response[0],
-                                                                                 None
+        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [area_response[0],
+                                                                                None,
+                                                                                country_response[0],
+                                                                                None
                                                                                ]
         q = ArtistCountryFromArtistMBIDQuery()
         resp = q.fetch(json_request, count=1)
@@ -86,10 +87,10 @@ class MainTestCase(flask_testing.TestCase):
 
     @patch('psycopg2.connect')
     def test_offset(self, mock_connect):
-        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [ area_response[1],
-                                                                                 None,
-                                                                                 country_response[0],
-                                                                                 None
+        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [area_response[1],
+                                                                                None,
+                                                                                country_response[0],
+                                                                                None
                                                                                ]
         q = ArtistCountryFromArtistMBIDQuery()
         resp = q.fetch(json_request, offset=1)

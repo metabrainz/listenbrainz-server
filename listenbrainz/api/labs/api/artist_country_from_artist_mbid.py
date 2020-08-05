@@ -28,7 +28,7 @@ class ArtistCountryFromArtistMBIDQuery(Query):
         with psycopg2.connect(current_app.config['MB_DATABASE_URI']) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
 
-                acs = tuple([ r['artist_mbid'] for r in params ])
+                acs = tuple([r['artist_mbid'] for r in params])
                 query = """ SELECT a.gid AS artist_mbid,
                                    ar.id AS area_id,
                                    code AS country_code

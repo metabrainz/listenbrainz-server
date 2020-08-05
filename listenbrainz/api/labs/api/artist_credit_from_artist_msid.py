@@ -6,6 +6,7 @@ from datasethoster import Query
 from datasethoster.main import register_query
 from flask import current_app
 
+
 class ArtistCreditIdFromArtistMSIDQuery(Query):
 
     def names(self):
@@ -23,7 +24,7 @@ class ArtistCreditIdFromArtistMSIDQuery(Query):
 
     def fetch(self, params, offset=-1, count=-1):
 
-        msid = tuple([ p['artist_msid'] for p in params ])
+        msid = tuple([p['artist_msid'] for p in params])
         with psycopg2.connect(current_app.config['DB_CONNECT_MAPPING']) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
                 query = """SELECT map.artist_msid as artist_msid,

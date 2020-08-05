@@ -8,6 +8,7 @@ import psycopg2
 from datasethoster.main import app
 from listenbrainz.api.labs.api.artist_credit_from_artist_mbid import ArtistCreditIdFromArtistMBIDQuery
 
+
 json_request = [
     {
         "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
@@ -19,11 +20,11 @@ json_request = [
 
 json_response = [
   {
-    "artist_credit_id": [ 65, 816454, 2666208 ],
+    "artist_credit_id": [65, 816454, 2666208],
     "artist_mbid": "8f6bd1e4-fbe1-4f50-aa9b-94c450ec0f11"
   },
   {
-    "artist_credit_id": [ 197, 883396, 883398 ],
+    "artist_credit_id": [197, 883396, 883398],
     "artist_mbid": "a3cb23fc-acd3-4ce0-8f36-1e5aa6a18432"
   }
 ]
@@ -50,7 +51,7 @@ class MainTestCase(flask_testing.TestCase):
 
     @patch('psycopg2.connect')
     def test_fetch(self, mock_connect):
-        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [ json_response[0], json_response[1], None ]
+        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [json_response[0], json_response[1], None]
         q = ArtistCreditIdFromArtistMBIDQuery()
         resp = q.fetch(json_request)
         self.assertDictEqual(resp[0], json_response[0])
@@ -59,7 +60,7 @@ class MainTestCase(flask_testing.TestCase):
 
     @patch('psycopg2.connect')
     def test_count(self, mock_connect):
-        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [ json_response[0], None ]
+        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [json_response[0], None]
         q = ArtistCreditIdFromArtistMBIDQuery()
         resp = q.fetch(json_request, count=1)
         self.assertEqual(len(resp), 1)
@@ -67,7 +68,7 @@ class MainTestCase(flask_testing.TestCase):
 
     @patch('psycopg2.connect')
     def test_offset(self, mock_connect):
-        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [ json_response[1], None ]
+        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [json_response[1], None]
         q = ArtistCreditIdFromArtistMBIDQuery()
         resp = q.fetch(json_request, offset=1)
         self.assertEqual(len(resp), 1)
