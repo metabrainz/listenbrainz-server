@@ -29,6 +29,7 @@ json_response = [
   }
 ]
 
+
 class MainTestCase(flask_testing.TestCase):
 
     def create_app(self):

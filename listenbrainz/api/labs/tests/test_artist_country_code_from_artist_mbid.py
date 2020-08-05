@@ -40,6 +40,7 @@ country_response = [
     {'area': 5099, 'country_code': 'US'}
 ]
 
+
 class MainTestCase(flask_testing.TestCase):
 
     def create_app(self):
@@ -62,12 +63,13 @@ class MainTestCase(flask_testing.TestCase):
 
     @patch('psycopg2.connect')
     def test_fetch(self, mock_connect):
-        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [area_response[0],
-                                                                                area_response[1],
-                                                                                None,
-                                                                                country_response[0],
-                                                                                None
-                                                                               ]
+        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [
+            area_response[0],
+            area_response[1],
+            None,
+            country_response[0],
+            None
+        ]
         q = ArtistCountryFromArtistMBIDQuery()
         resp = q.fetch(json_request)
         self.assertEqual(resp, json_response)
@@ -75,11 +77,12 @@ class MainTestCase(flask_testing.TestCase):
 
     @patch('psycopg2.connect')
     def test_count(self, mock_connect):
-        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [area_response[0],
-                                                                                None,
-                                                                                country_response[0],
-                                                                                None
-                                                                               ]
+        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [
+            area_response[0],
+            None,
+            country_response[0],
+            None
+        ]
         q = ArtistCountryFromArtistMBIDQuery()
         resp = q.fetch(json_request, count=1)
         self.assertEqual(len(resp), 1)
@@ -87,11 +90,12 @@ class MainTestCase(flask_testing.TestCase):
 
     @patch('psycopg2.connect')
     def test_offset(self, mock_connect):
-        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [area_response[1],
-                                                                                None,
-                                                                                country_response[0],
-                                                                                None
-                                                                               ]
+        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [
+            area_response[1],
+            None,
+            country_response[0],
+            None
+        ]
         q = ArtistCountryFromArtistMBIDQuery()
         resp = q.fetch(json_request, offset=1)
         self.assertEqual(len(resp), 1)

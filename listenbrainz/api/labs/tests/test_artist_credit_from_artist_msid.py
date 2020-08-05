@@ -56,6 +56,7 @@ json_response = [
     }
 ]
 
+
 class MainTestCase(flask_testing.TestCase):
 
     def create_app(self):
@@ -77,7 +78,7 @@ class MainTestCase(flask_testing.TestCase):
         self.assertEqual(q.outputs(), ['artist_msid', 'artist_credit_id', '[artist_credit_mbid]', 'artist_credit_name'])
 
     @patch('psycopg2.connect')
-    def test_0fetch(self, mock_connect):
+    def test_fetch(self, mock_connect):
         mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [json_data[0], json_data[1], None]
         q = ArtistCreditIdFromArtistMSIDQuery()
         resp = q.fetch(json_request)
