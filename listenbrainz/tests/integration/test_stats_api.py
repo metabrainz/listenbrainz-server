@@ -1071,7 +1071,7 @@ class StatsAPITestCase(IntegrationTestCase):
         # Mock fetching mapping from "bono"
         with open(self.path_to_data_file("msid_mbid_mapping_result.json")) as f:
             msid_mbid_mapping_result = json.load(f)
-        mock_requests.post("http://bono.metabrainz.org:8000/artist-msid-lookup/json", json=msid_mbid_mapping_result)
+        mock_requests.post("https://labs.api.listenbrainz.org/artist-credit-from-artist-msid/json", json=msid_mbid_mapping_result)
 
         # Mock fetching country data from labs.api.listenbrainz.org
         with open(self.path_to_data_file("mbid_country_mapping_result.json")) as f:
@@ -1096,7 +1096,7 @@ class StatsAPITestCase(IntegrationTestCase):
     def test_get_country_code_msid_mbid_mapping_failure(self, mock_requests):
         """ Test to check if appropriate message is returned if fetching msid_mbid_mapping fails """
         # Mock fetching mapping from "bono"
-        mock_requests.post("http://bono.metabrainz.org:8000/artist-msid-lookup/json", status_code=500)
+        mock_requests.post("https://labs.api.listenbrainz.org/artist-credit-from-artist-msid/json", status_code=500)
 
         # Mock fetching country data from labs.api.listenbrainz.org
         with open(self.path_to_data_file("mbid_country_mapping_result.json")) as f:
@@ -1117,7 +1117,7 @@ class StatsAPITestCase(IntegrationTestCase):
         # Mock fetching mapping from "bono"
         with open(self.path_to_data_file("msid_mbid_mapping_result.json")) as f:
             msid_mbid_mapping_result = json.load(f)
-        mock_requests.post("http://bono.metabrainz.org:8000/artist-msid-lookup/json", json=msid_mbid_mapping_result)
+        mock_requests.post("https://labs.api.listenbrainz.org/artist-credit-from-artist-msid/json", json=msid_mbid_mapping_result)
 
         # Mock fetching country data from labs.api.listenbrainz.org
         mock_requests.post("https://labs.api.listenbrainz.org/artist-country-code-from-artist-mbid/json",

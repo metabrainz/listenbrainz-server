@@ -714,12 +714,12 @@ def _get_mbids_from_msids(artist_msids: list) -> list:
     request_data = [{"artist_msid": artist_msid} for artist_msid in artist_msids]
     artist_mbids = []
     try:
-        result = requests.post("http://bono.metabrainz.org:8000/artist-msid-lookup/json", json=request_data)
+        result = requests.post("https://labs.api.listenbrainz.org/artist-credit-from-artist-msid/json", json=request_data)
         # Raise error if non 200 response is received
         result.raise_for_status()
         data = result.json()
         for entry in data:
-            artist_mbids += entry['[artist_credit_mbids]']
+            artist_mbids += entry['[artist_credit_mbid]']
     except requests.RequestException as err:
         current_app.logger.error("Error while getting artist_mbids, {}".format(err), exc_info=True)
         error_msg = ("An error occurred while calculating artist_map data, "
