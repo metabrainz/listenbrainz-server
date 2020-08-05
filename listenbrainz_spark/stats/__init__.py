@@ -51,9 +51,16 @@ def replace_months(date, month):
 
 
 def offset_months(date, months, shift_backwards=True):
-    """Returns a datetime object :
-        - Decreased by number of months if shift_backwards is True
-        - Increased by number of months if shift backwards is False
+    """
+    Args:
+        date   : The datetime object to be modified
+        months :  Number of months the date has to be shifted
+        shift_backwards: 
+                - If True the number of months are subtracted from the date  
+                - If False the number of months are added to the date
+
+    Returns: 
+            A datetime object with the input date shifted by the number of months.
     """
     if shift_backwards:
         date = date + relativedelta(months=-months)
@@ -63,9 +70,15 @@ def offset_months(date, months, shift_backwards=True):
 
 
 def offset_days(date, days, shift_backwards=True):
-    """Returns a datetime object :
-        - Decreased by number of months if shift_backwards is True
-        - Increased by number of months if shift backwards is False
+    """
+    Args:
+        date   : The datetime object to be modified
+        days   :  Number of days the date has to be shifted
+        shift_backwards: 
+                - If True the number of days are subtracted from the date  
+                - If False the number of days are added to the date
+    Returns: 
+            A datetime object with the input date shifted by the number of days
     """
     if shift_backwards:
         date = date + relativedelta(days=-days)
