@@ -30,8 +30,6 @@ services:
       context: ..
       dockerfile: Dockerfile
       target: listenbrainz-dev
-    environment:
-      GOOGLE_APPLICATION_CREDENTIALS: '/code/credentials/bigquery-credentials.json'
     volumes:
       - ..:/code/listenbrainz:z
     depends_on:

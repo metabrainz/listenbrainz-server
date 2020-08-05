@@ -11,18 +11,6 @@ then
     exec python3 -u -m listenbrainz.timescale_writer.timescale_writer
 fi
 
-if [ "${CONTAINER_NAME}" = "listenbrainz-bigquery-writer-prod" ]
-then
-    cd /code/listenbrainz
-    exec python3 -m listenbrainz.bigquery_writer.bigquery_writer
-fi
-
-if [ "${CONTAINER_NAME}" = "listenbrainz-bigquery-job-runner-prod" ]
-then
-    cd /code/listenbrainz
-    exec python3 -m listenbrainz.bigquery_job_runner.bigquery_job_runner
-fi
-
 if [ "${CONTAINER_NAME}" = "listenbrainz-api-compat-prod" ]
 then
     exec uwsgi /etc/uwsgi/uwsgi-api-compat.ini

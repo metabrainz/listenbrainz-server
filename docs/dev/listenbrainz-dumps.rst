@@ -26,8 +26,7 @@ listenbrainz-public-dump.tar.xz
 -------------------------------
 
 This file contains information about ListenBrainz users and statistics derived
-from listens submitted to ListenBrainz calculated using Google BigQuery about
-users, artists, recordings etc.
+from listens submitted to ListenBrainz calculated from users, artists, recordings etc.
 
 
 listenbrainz-listens-dump.tar.xz
