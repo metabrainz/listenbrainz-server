@@ -83,6 +83,7 @@ COPY ./docker/consul-template.conf /etc/consul-template.conf
 COPY ./docker/$deploy_env/uwsgi/uwsgi.service /etc/service/uwsgi/run
 RUN chmod 755 /etc/service/uwsgi/run
 COPY ./docker/$deploy_env/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
+COPY ./docker/$deploy_env/uwsgi/uwsgi-labs-api.ini /etc/uwsgi/uwsgi-labs-api.ini
 COPY ./docker/prod/uwsgi/uwsgi-api-compat.ini /etc/uwsgi/uwsgi-api-compat.ini
 RUN touch /etc/service/uwsgi/down
 
