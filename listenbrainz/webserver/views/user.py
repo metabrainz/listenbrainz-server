@@ -278,15 +278,6 @@ def delete_user(musicbrainz_id):
 
     user = _get_user(musicbrainz_id)
     _ts.delete(user.musicbrainz_id)
-    publish_data_to_queue(
-        data={
-            'type': 'delete.user',
-            'musicbrainz_id': musicbrainz_id,
-        },
-        exchange=current_app.config['BIGQUERY_EXCHANGE'],
-        queue=current_app.config['BIGQUERY_QUEUE'],
-        error_msg='Could not put user %s into queue for deletion, please try again later' % musicbrainz_id,
-    )
     db_user.delete(user.id)
 
 

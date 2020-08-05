@@ -82,8 +82,6 @@ INCOMING_QUEUE = '''{{template "KEY" "incoming_queue"}}'''
 UNIQUE_EXCHANGE = '''{{template "KEY" "unique_exchange"}}'''
 UNIQUE_QUEUE = '''{{template "KEY" "unique_queue"}}'''
 FOLLOW_LIST_QUEUE = '''{{template "KEY" "follow_list_queue"}}'''
-BIGQUERY_EXCHANGE = '''{{template "KEY" "bigquery_exchange"}}'''
-BIGQUERY_QUEUE = '''{{template "KEY" "bigquery_queue"}}'''
 PLAYING_NOW_EXCHANGE = '''{{template "KEY" "playing_now_exchange"}}'''
 PLAYING_NOW_QUEUE = '''{{template "KEY" "playing_now_queue"}}'''
 
@@ -98,10 +96,6 @@ MUSICBRAINZ_CLIENT_SECRET = '''{{template "KEY" "musicbrainz/client_secret"}}'''
 
 LASTFM_API_URL = '''{{template "KEY" "lastfm_api_url"}}'''
 LASTFM_API_KEY = '''{{template "KEY" "lastfm_api_key"}}'''
-WRITE_TO_BIGQUERY = '''{{template "KEY" "write_to_bigquery"}}'''
-BIGQUERY_PROJECT_ID = '''{{template "KEY" "bigquery_project_id"}}'''
-BIGQUERY_DATASET_ID = '''{{template "KEY" "bigquery_dataset_id"}}'''
-BIGQUERY_TABLE_ID = '''{{template "KEY" "bigquery_table_id"}}'''
 
 # Default is fine for now
 PLAYING_NOW_MAX_DURATION = 10 * 60

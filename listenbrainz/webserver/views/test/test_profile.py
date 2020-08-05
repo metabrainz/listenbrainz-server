@@ -82,19 +82,6 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertStatus(response, 302)
         self.assertRedirects(response, url_for('login.index', next=profile_info_url))
 
-    @patch('listenbrainz.webserver.views.user.publish_data_to_queue')
-    def test_delete(self, mock_publish_data_to_queue):
-        self.temporary_login(self.user['login_id'])
-        r = self.client.get(url_for('profile.delete'))
-        self.assert200(r)
-
-        r = self.client.post(url_for('profile.delete'), data={'token': self.user['auth_token']})
-        mock_publish_data_to_queue.assert_called_once()
-        self.assertRedirects(r, '/')
-        user = db_user.get(self.user['id'])
-        self.assertIsNone(user)
-
-    
     def test_delete_listens(self):
         """Tests delete listens end point"""
         self.temporary_login(self.user['login_id'])
