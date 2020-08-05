@@ -44,6 +44,12 @@ TIMESCALE_ADMIN_LB_URI="postgresql://postgres:postgres@{{.Address}}:{{.Port}}/li
 {{end}}
 {{end}}
 
+{{if service "pgbouncer-williams"}}
+{{with index (service "pgbouncer-williams") 0}}
+DB_CONNECT_MAPPING = "dbname=musicbrainz_json_dump user=musicbrainz host={{.Address}} port={{.Port}} password=musicbrainz"
+{{end}}
+{{end}}
+
 # Not currently used
 MAX_POSTGRES_LISTEN_HISTORY = "-1"
 PG_QUERY_TIMEOUT = "3000"
