@@ -53,7 +53,8 @@ class MainTestCase(flask_testing.TestCase):
         mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [ json_response[0], json_response[1], None ]
         q = ArtistCreditIdFromArtistMBIDQuery()
         resp = q.fetch(json_request)
-        self.assertEqual(resp, json_response)
+        self.assertDictEqual(resp[0], json_response[0])
+        self.assertDictEqual(resp[1], json_response[1])
         self.assertEqual(len(resp), 2)
 
     @patch('psycopg2.connect')
@@ -62,7 +63,7 @@ class MainTestCase(flask_testing.TestCase):
         q = ArtistCreditIdFromArtistMBIDQuery()
         resp = q.fetch(json_request, count=1)
         self.assertEqual(len(resp), 1)
-        self.assertEqual(resp[0], json_response[0])
+        self.assertDictEqual(resp[0], json_response[0])
 
     @patch('psycopg2.connect')
     def test_offset(self, mock_connect):
@@ -70,4 +71,4 @@ class MainTestCase(flask_testing.TestCase):
         q = ArtistCreditIdFromArtistMBIDQuery()
         resp = q.fetch(json_request, offset=1)
         self.assertEqual(len(resp), 1)
-        self.assertEqual(resp[0], json_response[1])
+        self.assertDictEqual(resp[0], json_response[1])
