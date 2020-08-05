@@ -6,7 +6,7 @@ import flask_testing
 import flask
 import psycopg2
 from datasethoster.main import app
-from listenbrainz.api.labs.api.artist_credit_from_artist_mbid import ArtistCreditIdFromArtistMBIDQuery
+from listenbrainz.labs_api.labs.api.artist_credit_from_artist_mbid import ArtistCreditIdFromArtistMBIDQuery
 
 
 json_request = [
