@@ -66,8 +66,6 @@ def profile(user_name):
     listens = []
     if min_ts_per_user != max_ts_per_user:
         args = {}
-        # if we're supposed to search larger time range then search 50 days. (each increment in time_range == 5 days)
-        args['time_range'] = 10 if search_larger_time_range else None
         if max_ts:
             args['to_ts'] = max_ts
         else:
