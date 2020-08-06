@@ -1,0 +1,47 @@
+{
+  "artist_map": [
+    {
+      "artist_count": 16,
+      "country": "USA"
+    },
+    {
+      "artist_count": 4,
+      "country": "IND"
+    },
+    {
+      "artist_count": 7,
+      "country": "GBR"
+    },
+    {
+      "artist_count": 3,
+      "country": "DEU"
+    },
+    {
+      "artist_count": 1,
+      "country": "ISL"
+    },
+    {
+      "artist_count": 2,
+      "country": "AUS"
+    },
+    {
+      "artist_count": 1,
+      "country": "ARG"
+    },
+    {
+      "artist_count": 1,
+      "country": "CAN"
+    },
+    {
+      "artist_count": 1,
+      "country": "ESP"
+    },
+    {
+      "artist_count": 1,
+      "country": "NLD"
+    }
+  ],
+  "from_ts": 1592265583,
+  "last_updated": 0,
+  "to_ts": 1592870383
+}

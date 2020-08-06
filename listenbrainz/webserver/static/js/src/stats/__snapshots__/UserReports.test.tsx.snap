@@ -112,5 +112,16 @@ exports[`UserReports renders without crashing 1`] = `
       }
     />
   </ErrorBoundary>
+  <ErrorBoundary>
+    <UserArtistMap
+      apiUrl="foobar"
+      range="week"
+      user={
+        Object {
+          "name": "test_user",
+        }
+      }
+    />
+  </ErrorBoundary>
 </div>
 `;

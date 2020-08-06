@@ -388,23 +388,12 @@ export default class UserListeningActivity extends React.Component<
           </div>
           <Loader
             isLoading={loading}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minHeight: "inherit",
-            }}
+            style={{ minHeight: "inherit" }}
+            className="flex-center"
           >
             {hasError && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  minHeight: "inherit",
-                }}
-              >
-                <span style={{ fontSize: 24 }}>
+              <div className="flex-center" style={{ minHeight: "inherit" }}>
+                <span style={{ fontSize: 24 }} className="text-center">
                   <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
                   {errorMessage}
                 </span>

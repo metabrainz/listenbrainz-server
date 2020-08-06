@@ -1,12 +1,12 @@
 import * as React from "react";
 import { mount, shallow } from "enzyme";
 
-import UserDailyActivity, { UserDailyActivityProps } from "./UserDailyActivity";
+import UserArtistMap, { UserArtistMapProps } from "./UserArtistMap";
 import APIError from "../APIError";
-import * as userDailyActivityResponse from "../__mocks__/userDailyActivity.json";
-import * as userDailyActivityProcessedData from "../__mocks__/userDailyActivityProcessData.json";
+import * as userArtistMapResponse from "../__mocks__/userArtistMap.json";
+import * as userArtistMapProcessedData from "../__mocks__/userArtistMapProcessData.json";
 
-const props: UserDailyActivityProps = {
+const props: UserArtistMapProps = {
   user: {
     name: "foobar",
   },
@@ -14,18 +14,14 @@ const props: UserDailyActivityProps = {
   apiUrl: "barfoo",
 };
 
-// Set timeZone to UTC+5:30 because the testdata is in that format
-// eslint-disable-next-line no-extend-native
-Date.prototype.getTimezoneOffset = () => -330;
-
-describe("UserDailyActivity", () => {
+describe("UserArtistMap", () => {
   it("renders correctly", () => {
-    const wrapper = shallow<UserDailyActivity>(
-      <UserDailyActivity {...{ ...props, range: "all_time" }} />
+    const wrapper = shallow<UserArtistMap>(
+      <UserArtistMap {...{ ...props, range: "all_time" }} />
     );
 
     wrapper.setState({
-      data: userDailyActivityProcessedData,
+      data: userArtistMapProcessedData,
       graphContainerWidth: 1200,
       loading: false,
     });
@@ -35,7 +31,7 @@ describe("UserDailyActivity", () => {
   });
 
   it("renders corectly when range is invalid", () => {
-    const wrapper = mount<UserDailyActivity>(<UserDailyActivity {...props} />);
+    const wrapper = mount<UserArtistMap>(<UserArtistMap {...props} />);
 
     wrapper.setProps({ range: "invalid_range" as UserStatsAPIRange });
     wrapper.update();
@@ -46,9 +42,7 @@ describe("UserDailyActivity", () => {
 
 describe("componentDidMount", () => {
   it('adds event listener for "resize" event', () => {
-    const wrapper = shallow<UserDailyActivity>(
-      <UserDailyActivity {...props} />
-    );
+    const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
     const instance = wrapper.instance();
 
     const spy = jest.spyOn(window, "addEventListener");
@@ -60,9 +54,7 @@ describe("componentDidMount", () => {
   });
 
   it('calls "handleResize" once', () => {
-    const wrapper = shallow<UserDailyActivity>(
-      <UserDailyActivity {...props} />
-    );
+    const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
     const instance = wrapper.instance();
 
     instance.handleResize = jest.fn();
@@ -74,9 +66,7 @@ describe("componentDidMount", () => {
 
 describe("componentDidUpdate", () => {
   it("it sets correct state if range is incorrect", () => {
-    const wrapper = shallow<UserDailyActivity>(
-      <UserDailyActivity {...props} />
-    );
+    const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
 
     wrapper.setProps({ range: "invalid_range" as UserStatsAPIRange });
     wrapper.update();
@@ -89,9 +79,7 @@ describe("componentDidUpdate", () => {
   });
 
   it("calls loadData once if range is valid", () => {
-    const wrapper = shallow<UserDailyActivity>(
-      <UserDailyActivity {...props} />
-    );
+    const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
     const instance = wrapper.instance();
 
     instance.loadData = jest.fn();
@@ -104,9 +92,7 @@ describe("componentDidUpdate", () => {
 
 describe("componentWillUnmount", () => {
   it('removes event listener for "resize" event', () => {
-    const wrapper = shallow<UserDailyActivity>(
-      <UserDailyActivity {...props} />
-    );
+    const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
     const instance = wrapper.instance();
 
     const spy = jest.spyOn(window, "removeEventListener");
@@ -119,29 +105,25 @@ describe("componentWillUnmount", () => {
 });
 
 describe("getData", () => {
-  it("calls getUserDailyActivity with correct params", async () => {
-    const wrapper = shallow<UserDailyActivity>(
-      <UserDailyActivity {...props} />
-    );
+  it("calls getUserArtistMap with correct params", async () => {
+    const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "getUserDailyActivity");
+    const spy = jest.spyOn(instance.APIService, "getUserArtistMap");
     spy.mockImplementation(() =>
-      Promise.resolve(userDailyActivityResponse as UserDailyActivityResponse)
+      Promise.resolve(userArtistMapResponse as UserArtistMapResponse)
     );
     const result = await instance.getData();
 
     expect(spy).toHaveBeenCalledWith("foobar", "week");
-    expect(result).toEqual(userDailyActivityResponse);
+    expect(result).toEqual(userArtistMapResponse);
   });
 
   it("sets state correctly if data is not calculated", async () => {
-    const wrapper = shallow<UserDailyActivity>(
-      <UserDailyActivity {...props} />
-    );
+    const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "getUserDailyActivity");
+    const spy = jest.spyOn(instance.APIService, "getUserArtistMap");
     const noContentError = new APIError("NO CONTENT");
     noContentError.response = {
       status: 204,
@@ -157,12 +139,10 @@ describe("getData", () => {
   });
 
   it("throws error", async () => {
-    const wrapper = shallow<UserDailyActivity>(
-      <UserDailyActivity {...props} />
-    );
+    const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
     const instance = wrapper.instance();
 
-    const spy = jest.spyOn(instance.APIService, "getUserDailyActivity");
+    const spy = jest.spyOn(instance.APIService, "getUserArtistMap");
     const notFoundError = new APIError("NOT FOUND");
     notFoundError.response = {
       status: 404,
@@ -175,24 +155,22 @@ describe("getData", () => {
 
 describe("processData", () => {
   it("processes data correctly for all_time", () => {
-    const wrapper = shallow<UserDailyActivity>(
-      <UserDailyActivity {...{ ...props, range: "all_time" }} />
+    const wrapper = shallow<UserArtistMap>(
+      <UserArtistMap {...{ ...props, range: "all_time" }} />
     );
     const instance = wrapper.instance();
 
     const result = instance.processData(
-      userDailyActivityResponse as UserDailyActivityResponse
+      userArtistMapResponse as UserArtistMapResponse
     );
 
-    expect(result).toEqual(userDailyActivityProcessedData);
+    expect(result).toEqual(userArtistMapProcessedData);
   });
 });
 
 describe("loadData", () => {
   it("calls getData once", async () => {
-    const wrapper = shallow<UserDailyActivity>(
-      <UserDailyActivity {...props} />
-    );
+    const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
     const instance = wrapper.instance();
 
     instance.getData = jest.fn();
@@ -203,18 +181,16 @@ describe("loadData", () => {
   });
 
   it("set state correctly", async () => {
-    const wrapper = shallow<UserDailyActivity>(
-      <UserDailyActivity {...props} />
-    );
+    const wrapper = shallow<UserArtistMap>(<UserArtistMap {...props} />);
     const instance = wrapper.instance();
 
     instance.getData = jest
       .fn()
-      .mockImplementationOnce(() => Promise.resolve(userDailyActivityResponse));
+      .mockImplementationOnce(() => Promise.resolve(userArtistMapResponse));
     await instance.loadData();
 
     expect(wrapper.state()).toMatchObject({
-      data: userDailyActivityProcessedData,
+      data: userArtistMapProcessedData,
       loading: false,
     });
   });

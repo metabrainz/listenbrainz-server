@@ -53,27 +53,24 @@ exports[`UserListeningActivity renders corectly when range is invalid 1`] = `
           </div>
         </div>
         <Loader
+          className="flex-center"
           isLoading={false}
           style={
             Object {
-              "alignItems": "center",
-              "display": "flex",
-              "justifyContent": "center",
               "minHeight": "inherit",
             }
           }
         >
           <div
+            className="flex-center"
             style={
               Object {
-                "alignItems": "center",
-                "display": "flex",
-                "justifyContent": "center",
                 "minHeight": "inherit",
               }
             }
           >
             <span
+              className="text-center"
               style={
                 Object {
                   "fontSize": 24,
@@ -193,12 +190,10 @@ exports[`UserListeningActivity renders correctly for all_time 1`] = `
           </div>
         </div>
         <Loader
+          className="flex-center"
           isLoading={false}
           style={
             Object {
-              "alignItems": "center",
-              "display": "flex",
-              "justifyContent": "center",
               "minHeight": "inherit",
             }
           }
@@ -567,12 +562,10 @@ exports[`UserListeningActivity renders correctly for month 1`] = `
           </div>
         </div>
         <Loader
+          className="flex-center"
           isLoading={false}
           style={
             Object {
-              "alignItems": "center",
-              "display": "flex",
-              "justifyContent": "center",
               "minHeight": "inherit",
             }
           }
@@ -1166,12 +1159,10 @@ exports[`UserListeningActivity renders correctly for week 1`] = `
           </div>
         </div>
         <Loader
+          className="flex-center"
           isLoading={false}
           style={
             Object {
-              "alignItems": "center",
-              "display": "flex",
-              "justifyContent": "center",
               "minHeight": "inherit",
             }
           }
@@ -1483,12 +1474,10 @@ exports[`UserListeningActivity renders correctly for year 1`] = `
           </div>
         </div>
         <Loader
+          className="flex-center"
           isLoading={false}
           style={
             Object {
-              "alignItems": "center",
-              "display": "flex",
-              "justifyContent": "center",
               "minHeight": "inherit",
             }
           }
