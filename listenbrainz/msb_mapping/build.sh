@@ -1,3 +1,3 @@
 #!/bin/sh
 
-docker build -t metabrainz/listenbrainz-messybrainz-mapper .
+docker build -t metabrainz/listenbrainz-msb-mapper .
