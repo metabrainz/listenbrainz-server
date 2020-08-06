@@ -99,6 +99,7 @@ def get_listens(user_name):
     current_time = int(time.time())
     max_ts = _parse_int_arg("max_ts")
     min_ts = _parse_int_arg("min_ts")
+    time_range = _parse_int_arg("time_range", -1)
 
     # if no max given, use now()
 
@@ -117,6 +118,7 @@ def get_listens(user_name):
         limit=min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET),
         from_ts=min_ts,
         to_ts=max_ts,
+        time_range=time_range
     )
     listen_data = []
     for listen in listens:
