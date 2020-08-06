@@ -1044,7 +1044,8 @@ class StatsAPITestCase(IntegrationTestCase):
             **country) for country in self.artist_map_payload["artist_map"]]
 
         response = self.client.get(url_for('stats_api_v1.get_artist_map',
-                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time', 'force_recalculate': 'true'})
+                                           user_name=self.user['musicbrainz_id']),
+                                   query_string={'range': 'all_time', 'force_recalculate': 'true'})
         self.assert200(response)
         data = json.loads(response.data)['payload']
         sent_artist_map = self.artist_map_payload['artist_map']
