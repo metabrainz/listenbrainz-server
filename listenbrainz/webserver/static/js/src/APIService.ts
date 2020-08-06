@@ -41,7 +41,8 @@ export default class APIService {
     userName: string,
     minTs?: number,
     maxTs?: number,
-    count?: number
+    count?: number,
+    timeRange?: number
   ): Promise<Array<Listen>> => {
     if (maxTs && minTs) {
       throw new SyntaxError(
@@ -60,6 +61,9 @@ export default class APIService {
     }
     if (count) {
       queryParams.push(`count=${count}`);
+    }
+    if (timeRange) {
+      queryParams.push(`time_range=${timeRange}`);
     }
     if (queryParams.length) {
       query += `?${queryParams.join("&")}`;
