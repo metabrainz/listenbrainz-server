@@ -15,6 +15,9 @@ import psycopg2
 
 api_bp = Blueprint('api_v1', __name__)
 
+DEFAULT_TIME_RANGE = 3
+MAX_TIME_RANGE = 73
+
 
 @api_bp.route("/submit-listens", methods=["POST", "OPTIONS"])
 @crossdomain(headers="Authorization, Content-Type")
@@ -99,10 +102,13 @@ def get_listens(user_name):
     current_time = int(time.time())
     max_ts = _parse_int_arg("max_ts")
     min_ts = _parse_int_arg("min_ts")
-    time_range = _parse_int_arg("time_range", -1)
+    time_range = _parse_int_arg("time_range", DEFAULT_TIME_RANGE)
+
+    if time_range < 1 or time_range > MAX_TIME_RANGE:
+        log_raise_400("time_range must be between 1 and %d." % MAX_TIME_RANGE)
+        
 
     # if no max given, use now()
-
     if max_ts and min_ts:
         log_raise_400("You may only specify max_ts or min_ts, not both.")
 
