@@ -1,0 +1,3 @@
+# Create the mapping.
+# TBD: Determine exact time
+5 0 * * * listenbrainz python3 /code/mapper/manage.py create_all /dumps

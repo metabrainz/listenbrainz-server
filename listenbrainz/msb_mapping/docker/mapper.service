@@ -1,0 +1,7 @@
+#!/bin/bash
+
+sleep 5
+cd /code/mapper
+#python3 ./run.py create-pairs 
+python3 ./run.py create-mapping
+sleep 99999

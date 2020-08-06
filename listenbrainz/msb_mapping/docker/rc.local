@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# MessyBrainz Mapper rc.local
+# Enables a specific runit service depending on what the
+# CONTAINER_ROLE variable is set to
+
+if [ "${CONTAINER_ROLE}" = "listenbrainz-mapper-cron" ]
+then
+    rm -f /etc/service/cron/down
+    exit 0
+fi
+
+echo "init script has no clue which service to start. Set env vars CONTAINER_ROLE and DEPLOY_ENV"
+exit 1
