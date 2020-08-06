@@ -230,6 +230,8 @@ declare type UserListeningActivityResponse = {
     from_ts: number;
     to_ts: number;
     last_updated: number;
+    user_id: string;
+    range: UserStatsAPIRange;
     listening_activity: Array<{
       from_ts: number;
       to_ts: number;
@@ -261,6 +263,8 @@ declare type UserDailyActivityResponse = {
     from_ts: number;
     to_ts: number;
     last_updated: number;
+    user_id: string;
+    range: UserStatsAPIRange;
     daily_activity: {
       [day: string]: Array<{
         hour: number;
@@ -269,3 +273,24 @@ declare type UserDailyActivityResponse = {
     };
   };
 };
+
+declare type UserArtistMapResponse = {
+  payload: {
+    from_ts: number;
+    to_ts: number;
+    last_updated: number;
+    user_id: string;
+    range: UserStatsAPIRange;
+    artist_map: Array<{
+      country: string;
+      artist_count: number;
+    }>;
+  };
+};
+
+declare type UserArtistMapDatum = {
+  id: string;
+  value: number;
+};
+
+declare type UserArtistMapData = Array<UserArtistMapDatum>;

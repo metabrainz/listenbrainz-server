@@ -5,34 +5,33 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 import APIService from "../APIService";
 import Card from "../components/Card";
-import HeatMap from "./HeatMap";
 import Loader from "../components/Loader";
+import Choropleth from "./Choropleth";
 
-export type UserDailyActivityProps = {
+export type UserArtistMapProps = {
   range: UserStatsAPIRange;
   user: ListenBrainzUser;
   apiUrl: string;
 };
 
-export type UserDailyActivityState = {
-  data: UserDailyActivityData;
+export type UserArtistMapState = {
   loading: boolean;
+  hasError?: boolean;
+  errorMessage?: string;
+  data: UserArtistMapData;
   graphContainerWidth?: number;
-  errorMessage: string;
-  hasError: boolean;
 };
 
-export default class UserDailyActivity extends React.Component<
-  UserDailyActivityProps,
-  UserDailyActivityState
+export default class UserArtistMap extends React.Component<
+  UserArtistMapProps,
+  UserArtistMapState
 > {
   APIService: APIService;
 
   graphContainer: React.RefObject<HTMLDivElement>;
 
-  constructor(props: UserDailyActivityProps) {
+  constructor(props: UserArtistMapProps) {
     super(props);
-
     this.APIService = new APIService(
       props.apiUrl || `${window.location.origin}/1`
     );
@@ -53,7 +52,7 @@ export default class UserDailyActivity extends React.Component<
     this.handleResize();
   }
 
-  componentDidUpdate(prevProps: UserDailyActivityProps) {
+  componentDidUpdate(prevProps: UserArtistMapProps) {
     const { range: prevRange } = prevProps;
     const { range: currRange } = this.props;
     if (prevRange !== currRange) {
@@ -73,10 +72,22 @@ export default class UserDailyActivity extends React.Component<
     window.removeEventListener("resize", this.handleResize);
   }
 
-  getData = async (): Promise<UserDailyActivityResponse> => {
+  loadData = async (): Promise<void> => {
+    this.setState({
+      hasError: false,
+      loading: true,
+    });
+    const data = await this.getData();
+    this.setState({
+      data: this.processData(data),
+      loading: false,
+    });
+  };
+
+  getData = async (): Promise<UserArtistMapResponse> => {
     const { range, user } = this.props;
     try {
-      const data = await this.APIService.getUserDailyActivity(user.name, range);
+      const data = await this.APIService.getUserArtistMap(user.name, range);
       return data;
     } catch (error) {
       if (error.response && error.response.status === 204) {
@@ -91,70 +102,16 @@ export default class UserDailyActivity extends React.Component<
         });
       }
     }
-    return {} as UserDailyActivityResponse;
+    return {} as UserArtistMapResponse;
   };
 
-  loadData = async (): Promise<void> => {
-    this.setState({
-      hasError: false,
-      loading: true,
+  processData = (data: UserArtistMapResponse): UserArtistMapData => {
+    return data.payload.artist_map.map((country) => {
+      return {
+        id: country.country,
+        value: country.artist_count,
+      };
     });
-    const data = await this.getData();
-    this.setState({
-      data: this.processData(data),
-      loading: false,
-    });
-  };
-
-  processData = (data: UserDailyActivityResponse): UserDailyActivityData => {
-    const weekdays = [
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-      "Sunday",
-    ];
-
-    const result: UserDailyActivityData = [];
-
-    const tzOffset = -Math.floor(new Date().getTimezoneOffset() / 60);
-
-    weekdays.forEach((day) => {
-      const dayData = data.payload.daily_activity[day];
-      const hourData: any = {};
-
-      dayData.forEach((elem) => {
-        const hour = (elem.hour + tzOffset + 24) % 24;
-        hourData[hour] = elem.listen_count;
-      });
-
-      result.push({
-        day,
-        ...hourData,
-      });
-    });
-
-    const average = Array(24).fill(0);
-    Object.values(data.payload.daily_activity).forEach((dayData) => {
-      dayData.forEach((hourData) => {
-        average[hourData.hour] += hourData.listen_count;
-      });
-    });
-
-    const averageData: any = {};
-    average.forEach((elem, index) => {
-      const hour = (index + tzOffset + 24) % 24;
-      averageData[hour] = Math.ceil(elem / 7);
-    });
-
-    result.unshift({
-      day: "Average",
-      ...averageData,
-    });
-
-    return result;
   };
 
   handleResize = () => {
@@ -165,41 +122,43 @@ export default class UserDailyActivity extends React.Component<
 
   render() {
     const {
-      data,
       loading,
-      graphContainerWidth,
       hasError,
       errorMessage,
+      data,
+      graphContainerWidth,
     } = this.state;
 
     return (
-      <Card style={{ marginTop: 20 }} ref={this.graphContainer}>
+      <Card
+        style={{
+          marginTop: 20,
+          minHeight: (graphContainerWidth || 1200) * 0.5,
+        }}
+        ref={this.graphContainer}
+      >
         <div className="row">
           <div className="col-xs-12">
             <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
-              Daily Activity
+              Artist Origins
             </h3>
           </div>
         </div>
         <Loader
           isLoading={loading}
+          className="flex-center"
           style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
             minHeight: "inherit",
           }}
         >
           {hasError && (
             <div
+              className="flex-center"
               style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
                 minHeight: "inherit",
               }}
             >
-              <span style={{ fontSize: 24 }}>
+              <span style={{ fontSize: 24 }} className="text-center">
                 <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
                 {errorMessage}
               </span>
@@ -208,9 +167,7 @@ export default class UserDailyActivity extends React.Component<
           {!hasError && (
             <div className="row">
               <div className="col-xs-12">
-                {graphContainerWidth && (
-                  <HeatMap data={data} width={graphContainerWidth} />
-                )}
+                <Choropleth data={data} width={graphContainerWidth} />
               </div>
             </div>
           )}

@@ -17,7 +17,7 @@ exports[`Loader renders loader when "isLoading" is true 1`] = `
   isLoading={true}
 >
   <div
-    className="text-center"
+    className="text-center "
   >
     <FontAwesomeIcon
       border={false}
