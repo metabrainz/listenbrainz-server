@@ -180,38 +180,6 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
 
         timescale.assert_not_called()
 
-    @mock.patch('listenbrainz.webserver.timescale_connection._ts.get_timestamps_for_user')
-    @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
-    def test_search_larger_time_range_filter(self, timescale, timestamps):
-        """Check that search_larger_time_range is passed to timescale """
-        (min_ts, max_ts) = self._create_test_data('iliekcomputers')
-        timestamps.return_value = (min_ts, max_ts)
-
-        # If search_larger_time_range is not given, use search_larger_time_range=0
-        self.client.get(url_for('user.profile', user_name='iliekcomputers'))
-        req_call = mock.call('iliekcomputers', limit=25, to_ts=1400000201, time_range=None)
-        timescale.assert_has_calls([req_call])
-        timescale.reset_mock()
-
-        # search_larger_time_range query param -> search_larger_time_range timescale param
-        self.client.get(url_for('user.profile', user_name='iliekcomputers'), query_string={'search_larger_time_range': 1})
-        req_call = mock.call('iliekcomputers', limit=25, to_ts=1400000201, time_range=10)
-        timescale.assert_has_calls([req_call])
-        timescale.reset_mock()
-
-    @mock.patch('listenbrainz.webserver.timescale_connection._ts.get_timestamps_for_user')
-    @mock.patch('listenbrainz.webserver.timescale_connection._ts.fetch_listens')
-    def test_search_larger_time_range_filter_errors(self, timescale, timestamps):
-        """If search_larger_time_range is not integer, show an error page"""
-        (min_ts, max_ts) = self._create_test_data('iliekcomputers')
-        timestamps.return_value = (min_ts, max_ts)
-        response = self.client.get(url_for('user.profile', user_name='iliekcomputers'),
-                                   query_string={'search_larger_time_range': 'a'})
-        self.assert400(response)
-        self.assertIn(b'search_larger_time_range must be an integer value 0 or greater: a', response.data)
-
-        timescale.assert_not_called()
-
 
     def test_delete_listen(self):
         self.temporary_login(self.user.login_id)
