@@ -23,6 +23,7 @@ from data.model.user_artist_map import (UserArtistMapRecord,
                                         UserArtistMapStat,
                                         UserArtistMapStatJson,
                                         UserArtistMapStatRange)
+from listenbrainz.config import LISTENBRAINZ_LABS_API_URL
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
@@ -33,6 +34,9 @@ from listenbrainz.webserver.rate_limiter import ratelimit
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,
                                                     _get_non_negative_param)
+
+
+STATS_CALCULATION_INTERVAL = 7  # Stats are recalculated every 7 days
 
 stats_api_bp = Blueprint('stats_api_v1', __name__)
 
@@ -572,19 +576,19 @@ def get_artist_map(user_name: str):
     force_recalculate = recalculate_param.lower() == 'true'
 
     # Check if stats are present in DB, if not calculate them
-    not_calculated = force_recalculate
+    calculated = not force_recalculate
     stats = db_stats.get_user_artist_map(user['id'], stats_range)
     if stats is None or getattr(stats, stats_range) is None:
-        not_calculated = True
+        calculated = False
 
     # Check if the stats present in DB have been calculated in the past week, if not recalculate them
     stale = False
-    if not not_calculated:
+    if calculated:
         last_updated = getattr(stats, stats_range).last_updated
-        if (datetime.now() - datetime.fromtimestamp(last_updated)).days >= 7:
+        if (datetime.now() - datetime.fromtimestamp(last_updated)).days >= STATS_CALCULATION_INTERVAL:
             stale = True
 
-    if stale or not_calculated:
+    if stale or not calculated:
         artist_stats = db_stats.get_user_artists(user['id'], stats_range)
 
         # If top artists are missing, return the stale stats if present, otherwise return 204
@@ -615,7 +619,11 @@ def get_artist_map(user_name: str):
             })
 
             # Store in DB for future use
-            db_stats.insert_user_artist_map(user['id'], result)
+            try:
+                db_stats.insert_user_artist_map(user['id'], result)
+            except Exception as err:
+                current_app.logger.error("Error while inserting artist map stats for {user}. Error: {err}. Data: {data}".format(
+                    user=user_name, err=err, data=result), exc_info=True)
     else:
         result = stats
 
@@ -714,7 +722,7 @@ def _get_mbids_from_msids(artist_msids: list) -> list:
     request_data = [{"artist_msid": artist_msid} for artist_msid in artist_msids]
     artist_mbids = []
     try:
-        result = requests.post("https://labs.api.listenbrainz.org/artist-credit-from-artist-msid/json", json=request_data)
+        result = requests.post("{}/artist-credit-from-artist-msid/json".format(LISTENBRAINZ_LABS_API_URL), json=request_data)
         # Raise error if non 200 response is received
         result.raise_for_status()
         data = result.json()
@@ -735,7 +743,8 @@ def _get_country_code_from_mbids(artist_mbids: set) -> list:
     request_data = [{"artist_mbid": artist_mbid} for artist_mbid in artist_mbids]
     country_codes = []
     try:
-        result = requests.post("https://labs.api.listenbrainz.org/artist-country-code-from-artist-mbid/json", json=request_data)
+        result = requests.post("{}/artist-country-code-from-artist-mbid/json".format(LISTENBRAINZ_LABS_API_URL),
+                               json=request_data)
         # Raise error if non 200 response is received
         result.raise_for_status()
         data = result.json()

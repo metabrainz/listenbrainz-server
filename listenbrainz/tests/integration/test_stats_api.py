@@ -13,6 +13,7 @@ from data.model.user_listening_activity import UserListeningActivityStatJson
 from data.model.user_recording_stat import UserRecordingStatJson
 from data.model.user_release_stat import UserReleaseStatJson
 from flask import current_app, url_for
+from listenbrainz.config import LISTENBRAINZ_LABS_API_URL
 from listenbrainz.tests.integration import IntegrationTestCase
 from redis import Redis
 
@@ -1035,6 +1036,24 @@ class StatsAPITestCase(IntegrationTestCase):
         data = db_stats.get_user_artist_map(self.user['id'], 'all_time')
         self.assertEqual(data.all_time.dict()['artist_map'], sent_artist_map)
 
+    @patch('listenbrainz.webserver.views.stats_api.db_stats.insert_user_artist_map', side_effect=NotImplementedError)
+    @patch('listenbrainz.webserver.views.stats_api._get_country_codes')
+    def test_artist_map_db_insertion_failed(self, mock_get_country_codes, mock_db_insert):
+        """ Test to make sure that stats are calculated returned even if DB insertion fails """
+        mock_get_country_codes.return_value = [UserArtistMapRecord(
+            **country) for country in self.artist_map_payload["artist_map"]]
+
+        response = self.client.get(url_for('stats_api_v1.get_artist_map',
+                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time', 'force_recalculate': 'true'})
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        sent_artist_map = self.artist_map_payload['artist_map']
+        received_artist_map = data['artist_map']
+        self.assertListEqual(sent_artist_map, received_artist_map)
+        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+        self.assertGreater(data['last_updated'], 0)
+        mock_get_country_codes.assert_called_once()
+
     def test_artist_map_not_calculated_artist_stat_not_present(self):
         """ Test to make sure that if artist stats and artist_map stats both are missing from DB, we return 204 """
 
@@ -1071,12 +1090,13 @@ class StatsAPITestCase(IntegrationTestCase):
         # Mock fetching mapping from "bono"
         with open(self.path_to_data_file("msid_mbid_mapping_result.json")) as f:
             msid_mbid_mapping_result = json.load(f)
-        mock_requests.post("https://labs.api.listenbrainz.org/artist-credit-from-artist-msid/json", json=msid_mbid_mapping_result)
+        mock_requests.post("{}/artist-credit-from-artist-msid/json".format(LISTENBRAINZ_LABS_API_URL),
+                           json=msid_mbid_mapping_result)
 
         # Mock fetching country data from labs.api.listenbrainz.org
         with open(self.path_to_data_file("mbid_country_mapping_result.json")) as f:
             mbid_country_mapping_result = json.load(f)
-        mock_requests.post("https://labs.api.listenbrainz.org/artist-country-code-from-artist-mbid/json",
+        mock_requests.post("{}/artist-country-code-from-artist-mbid/json".format(LISTENBRAINZ_LABS_API_URL),
                            json=mbid_country_mapping_result)
 
         response = self.client.get(url_for('stats_api_v1.get_artist_map',
@@ -1096,12 +1116,12 @@ class StatsAPITestCase(IntegrationTestCase):
     def test_get_country_code_msid_mbid_mapping_failure(self, mock_requests):
         """ Test to check if appropriate message is returned if fetching msid_mbid_mapping fails """
         # Mock fetching mapping from "bono"
-        mock_requests.post("https://labs.api.listenbrainz.org/artist-credit-from-artist-msid/json", status_code=500)
+        mock_requests.post("{}/artist-credit-from-artist-msid/json".format(LISTENBRAINZ_LABS_API_URL), status_code=500)
 
         # Mock fetching country data from labs.api.listenbrainz.org
         with open(self.path_to_data_file("mbid_country_mapping_result.json")) as f:
             mbid_country_mapping_result = json.load(f)
-        mock_requests.post("https://labs.api.listenbrainz.org/artist-country-code-from-artist-mbid/json",
+        mock_requests.post("{}/artist-country-code-from-artist-mbid/json".format(LISTENBRAINZ_LABS_API_URL),
                            json=mbid_country_mapping_result)
 
         response = self.client.get(url_for('stats_api_v1.get_artist_map',
@@ -1117,10 +1137,11 @@ class StatsAPITestCase(IntegrationTestCase):
         # Mock fetching mapping from "bono"
         with open(self.path_to_data_file("msid_mbid_mapping_result.json")) as f:
             msid_mbid_mapping_result = json.load(f)
-        mock_requests.post("https://labs.api.listenbrainz.org/artist-credit-from-artist-msid/json", json=msid_mbid_mapping_result)
+        mock_requests.post("{}/artist-credit-from-artist-msid/json".format(LISTENBRAINZ_LABS_API_URL),
+                           json=msid_mbid_mapping_result)
 
         # Mock fetching country data from labs.api.listenbrainz.org
-        mock_requests.post("https://labs.api.listenbrainz.org/artist-country-code-from-artist-mbid/json",
+        mock_requests.post("{}/artist-country-code-from-artist-mbid/json".format(LISTENBRAINZ_LABS_API_URL),
                            status_code=500)
 
         response = self.client.get(url_for('stats_api_v1.get_artist_map',
