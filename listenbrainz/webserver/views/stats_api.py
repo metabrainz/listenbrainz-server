@@ -23,7 +23,6 @@ from data.model.user_artist_map import (UserArtistMapRecord,
                                         UserArtistMapStat,
                                         UserArtistMapStatJson,
                                         UserArtistMapStatRange)
-from listenbrainz.config import LISTENBRAINZ_LABS_API_URL
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
@@ -722,7 +721,8 @@ def _get_mbids_from_msids(artist_msids: list) -> list:
     request_data = [{"artist_msid": artist_msid} for artist_msid in artist_msids]
     artist_mbids = []
     try:
-        result = requests.post("{}/artist-credit-from-artist-msid/json".format(LISTENBRAINZ_LABS_API_URL), json=request_data)
+        result = requests.post(
+            "{}/artist-credit-from-artist-msid/json".format(current_app.config['LISTENBRAINZ_LABS_API_URL']), json=request_data)
         # Raise error if non 200 response is received
         result.raise_for_status()
         data = result.json()
@@ -743,8 +743,9 @@ def _get_country_code_from_mbids(artist_mbids: set) -> list:
     request_data = [{"artist_mbid": artist_mbid} for artist_mbid in artist_mbids]
     country_codes = []
     try:
-        result = requests.post("{}/artist-country-code-from-artist-mbid/json".format(LISTENBRAINZ_LABS_API_URL),
-                               json=request_data)
+        result = requests.post("{}/artist-country-code-from-artist-mbid/json".format(
+            current_app.config['LISTENBRAINZ_LABS_API_URL']),
+            json=request_data)
         # Raise error if non 200 response is received
         result.raise_for_status()
         data = result.json()
