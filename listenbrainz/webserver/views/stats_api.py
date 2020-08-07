@@ -701,11 +701,14 @@ def _get_country_codes(artist_msids: list, artist_mbids: list) -> List[UserArtis
     countries = _get_country_code_from_mbids(set(all_artist_mbids))
 
     # Convert alpha_2 country code to alpha_3 and create a result dictionary
-    for country in countries:
-        country_alpaha_3 = pycountry.countries.get(alpha_2=country).alpha_3
+    for country_alpha_2 in countries:
+        if country_alpha_2 is None:
+            continue
+        # TODO: add a test to handle the case where pycountry doesn't recognize the country
+        country = pycountry.countries.get(alpha_2=country_alpha_2)
         if country is None:
             continue
-        country_map[country_alpaha_3] += 1
+        country_map[country.alpha_3] += 1
 
     return [
         UserArtistMapRecord(**{
