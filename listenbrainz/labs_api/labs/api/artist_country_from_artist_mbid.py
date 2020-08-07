@@ -61,7 +61,7 @@ class ArtistCountryFromArtistMBIDQuery(Query):
                     mapping.append(dict(row))
 
                 if not areas:
-                    raise NotFound("None of the given artist_credits_ids were found.")
+                    return []
 
                 areas = tuple(areas)
                 curs.execute("""WITH RECURSIVE area_descendants AS (
@@ -90,9 +90,13 @@ class ArtistCountryFromArtistMBIDQuery(Query):
                     r = dict(row)
                     area_index[r['area']] = r['country_code']
 
+
                 result = []
                 for i, row in enumerate(mapping):
                     if not row['country_code']:
-                        mapping[i]['country_code'] = area_index[row['area_id']]
+                        try:
+                            mapping[i]['country_code'] = area_index[row['area_id']]
+                        except KeyError:
+                            mapping[i]['country_code'] = ''
 
                 return mapping
