@@ -126,7 +126,7 @@ def get_dates_to_train_data(train_model_window):
             to_date (datetime): Date upto which fetch listens.
     """
     to_date = get_latest_listen_ts()
-    from_date = stats.adjust_days(to_date, train_model_window)
+    from_date = stats.offset_days(to_date, train_model_window)
     # shift to the first of the month
     from_date = stats.replace_days(from_date, 1)
     return to_date, from_date

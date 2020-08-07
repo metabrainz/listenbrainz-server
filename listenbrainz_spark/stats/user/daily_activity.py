@@ -11,7 +11,7 @@ import listenbrainz_spark
 from data.model.user_daily_activity import UserDailyActivityStatMessage
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
-from listenbrainz_spark.stats import adjust_days, replace_days, run_query
+from listenbrainz_spark.stats import offset_days, replace_days, run_query
 from listenbrainz_spark.stats.user.utils import (filter_listens,
                                                  get_last_monday,
                                                  get_latest_listen_ts)
@@ -71,7 +71,7 @@ def get_daily_activity_week() -> Iterator[Optional[UserDailyActivityStatMessage]
     date = get_latest_listen_ts()
     # Set time to 00:00
     to_date = get_last_monday(date)
-    from_date = adjust_days(to_date, 7)
+    from_date = offset_days(to_date, 7)
 
     _get_listens(from_date, to_date)
 
