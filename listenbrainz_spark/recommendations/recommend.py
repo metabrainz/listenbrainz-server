@@ -135,18 +135,13 @@ def get_recommendation_df(recording_ids_and_ratings):
     return df
 
 
-def scale_ratings(mbids_and_ratings):
+def scale_ratings(mbids_and_ratings, ratings_beyond_range):
     """ Scale the ratings so that they fall on a range from 0.0 -> 1.0.
 
         Args:
             mbids_and_ratings: list of recommended recording mbids and ratings.
-
-        Raises:
-            RatingOutOfRangeException if ratings are beyond the expected range
-                                      i.e rating > 1 or rating
+            ratings_beyond_range: list to update with ratings beyond expected range.
     """
-    ratings_beyond_range = []
-
     for row in mbids_and_ratings:
         rating = row[1]
 
@@ -157,18 +152,15 @@ def scale_ratings(mbids_and_ratings):
 
         row[1] = round(min(max(scaled_rating, -1.0), 1.0), 3)
 
-    if ratings_beyond_range:
-        raise RatingOutOfRangeException('The following ratings are beyond the expected range i.e rating > 1 or rating < -1: \n{}'
-                                        .format(ratings_beyond_range))
 
-
-def get_recommended_mbids(candidate_set, params, limit):
+def get_recommended_mbids(candidate_set, params, limit, ratings_beyond_range):
     """ Generate recommendations from the candidate set.
 
         Args:
             candidate_set (rdd): RDD of user_id and recording_id.
             params: RecommendationParams class object.
             limit (int): Number of recommendations to be generated.
+            ratings_beyond_range: list to update with ratings beyond expected range.
 
         Returns:
             mbids_and_ratings: list of recommended recording mbids and ratings.
@@ -186,10 +178,7 @@ def get_recommended_mbids(candidate_set, params, limit):
 
     mbids_and_ratings = [[row.mb_recording_mbid, round(row.rating, 3)] for row in recording_mbids_df.collect()]
 
-    try:
-        scale_ratings(mbids_and_ratings)
-    except RatingOutOfRangeException as err:
-        current_app.logger.error(err, exc_info=True)
+    scale_ratings(mbids_and_ratings, ratings_beyond_range)
 
     return mbids_and_ratings
 
@@ -216,7 +205,7 @@ def get_candidate_set_rdd_for_user(candidate_set_df, user_id):
     return candidate_set_rdd
 
 
-def get_recommendations_for_user(user_id, user_name, params):
+def get_recommendations_for_user(user_id, user_name, params, ratings_beyond_range):
     """ Get recommended recordings which belong to top artists and artists similar to top
         artists listened to by the user.
 
@@ -224,6 +213,7 @@ def get_recommendations_for_user(user_id, user_name, params):
             user_id (int): user id of the user.
             user_name (str): User name of the user.
             params: RecommendationParams class object.
+            ratings_beyond_range: list to update with ratings beyond expected range.
 
         Returns:
             user_recommendations_top_artist: list of recommended recordings of top artist.
@@ -233,7 +223,8 @@ def get_recommendations_for_user(user_id, user_name, params):
     try:
         top_artist_candidate_set_user = get_candidate_set_rdd_for_user(params.top_artist_candidate_set_df, user_id)
         user_recommendations_top_artist = get_recommended_mbids(top_artist_candidate_set_user, params,
-                                                                params.recommendation_top_artist_limit)
+                                                                params.recommendation_top_artist_limit,
+                                                                ratings_beyond_range)
     except IndexError:
         current_app.logger.error('Top artist candidate set not found for "{}"'.format(user_name))
     except RecommendationsNotGeneratedException:
@@ -243,7 +234,8 @@ def get_recommendations_for_user(user_id, user_name, params):
     try:
         similar_artist_candidate_set_user = get_candidate_set_rdd_for_user(params.similar_artist_candidate_set_df, user_id)
         user_recommendations_similar_artist = get_recommended_mbids(similar_artist_candidate_set_user, params,
-                                                                    params.recommendation_similar_artist_limit)
+                                                                    params.recommendation_similar_artist_limit,
+                                                                    ratings_beyond_range)
     except IndexError:
         current_app.logger.error('Similar artist candidate set not found for "{}"'.format(user_name))
     except RecommendationsNotGeneratedException:
@@ -310,6 +302,7 @@ def get_recommendations_for_all(params, users):
             messages (list): user recommendations.
     """
     messages = []
+    ratings_beyond_range = []
     # users active in the last week/month.
     # users who are a part of top artist candidate set
     active_users = []
@@ -323,7 +316,8 @@ def get_recommendations_for_all(params, users):
 
         user_recommendations_top_artist, user_recommendations_similar_artist = get_recommendations_for_user(user_id,
                                                                                                             user_name,
-                                                                                                            params)
+                                                                                                            params,
+                                                                                                            ratings_beyond_range)
 
         messages.append({
             'musicbrainz_id': user_name,
@@ -335,6 +329,10 @@ def get_recommendations_for_all(params, users):
     current_app.logger.info('Recommendations Generated!')
     if users:
         messages = get_message_for_inactive_users(messages, active_users, users)
+
+    if ratings_beyond_range:
+        current_app.logger.error('The following ratings are beyond the expected range i.e rating > 1 or rating < -1: \n{}'
+                                 .format(ratings_beyond_range))
 
     return messages
 
