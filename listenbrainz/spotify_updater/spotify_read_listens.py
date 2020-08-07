@@ -347,11 +347,11 @@ def main():
     with app.app_context():
         current_app.logger.info('Spotify Reader started...')
         while True:
-            t = time.time()
+            t = time.monotonic()
             success, failure = process_all_spotify_users()
             if success + failure > 0:
                 current_app.logger.info('All %d users in batch have been processed.', success + failure)
-                current_app.logger.info('Total time taken: %.2f s, average time per user: %.2f s.', time.time() - t, (time.time() - t) / (success + failure))
+                current_app.logger.info('Total time taken: %.2f s, average time per user: %.2f s.', time.monotonic() - t, (time.monotonic() - t) / (success + failure))
             time.sleep(10)
 
 

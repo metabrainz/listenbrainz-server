@@ -19,13 +19,13 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
                 dest_path (str): HDFS path to upload JSON as parquet.
                 tmp_hdfs_path (str): HDFS path where JSON has been uploaded.
         """
-        start_time = time.time()
+        start_time = time.monotonic()
         df = utils.read_json(tmp_hdfs_path, schema=schema)
         current_app.logger.info("Processing {} rows...".format(df.count()))
 
         current_app.logger.info("Uploading to {}...".format(dest_path))
         utils.save_parquet(df, dest_path)
-        current_app.logger.info("File processed in {:.2f} seconds!".format(time.time() - start_time))
+        current_app.logger.info("File processed in {:.2f} seconds!".format(time.monotonic() - start_time))
 
     def process_json_listens(self, filename, data_dir, tmp_hdfs_path, schema):
         """ Process a file containing listens from the ListenBrainz dump and add listens to
@@ -36,7 +36,7 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
                 data_dir (str): Dir to save listens to in HDFS as parquet.
                 tmp_HDFS_path (str): HDFS path where listens JSON has been uploaded.
         """
-        start_time = time.time()
+        start_time = time.monotonic()
         df = utils.read_json(tmp_hdfs_path, schema=schema)
 
         if filename.split('/')[-1] == 'invalid.json':
@@ -48,7 +48,7 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
 
         current_app.logger.info("Uploading to {}...".format(dest_path))
         utils.save_parquet(df, dest_path)
-        current_app.logger.info("File processed in {:.2f} seconds!".format(time.time() - start_time))
+        current_app.logger.info("File processed in {:.2f} seconds!".format(time.monotonic() - start_time))
 
     def upload_mapping(self, archive, force=False):
         """ Decompress archive and upload mapping to HDFS.
