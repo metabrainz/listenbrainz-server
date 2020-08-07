@@ -95,3 +95,10 @@ class RecommendationsNotGeneratedException(SparkException):
     """
     def __init__(self, message):
         super(RecommendationsNotGeneratedException, self).__init__(message)
+
+
+class RatingOutOfRangeException(SparkException):
+    """ CF generated rating is out of range i.e. rating > 1 or rating < -1
+    """
+    def __init__(self, message):
+        super(RatingOutOfRangeException, self).__init__(message)
