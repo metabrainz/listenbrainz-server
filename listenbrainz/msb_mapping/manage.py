@@ -38,6 +38,11 @@ def test_mapping():
 
 
 @cli.command()
+def test_pairs():
+    action_test_pairs()
+
+
+@cli.command()
 @click.argument("dest_dir", nargs=1)
 def write(dest_dir):
     action_write_all_mappings(dest_dir)
