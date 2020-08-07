@@ -91,7 +91,7 @@ def get_dates_to_generate_candidate_sets(mapped_listens_df, recommendation_gener
     """
     # get timestamp of latest listen in HDFS
     to_date = mapped_listens_df.select(func.max('listened_at').alias('listened_at')).collect()[0].listened_at
-    from_date = stats.adjust_days(to_date, recommendation_generation_window).replace(hour=0, minute=0, second=0)
+    from_date = stats.offset_days(to_date, recommendation_generation_window).replace(hour=0, minute=0, second=0)
     return from_date, to_date
 
 

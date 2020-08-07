@@ -80,7 +80,7 @@ class CreateDataframeTestCase(SparkTestCase):
     def test_get_dates_to_train_data(self):
         train_model_window = 20
         to_date, from_date = create_dataframes.get_dates_to_train_data(train_model_window)
-        d = stats.adjust_days(to_date, train_model_window)
+        d = stats.offset_days(to_date, train_model_window)
         d = stats.replace_days(d, 1)
         self.assertEqual(from_date, d)
 
