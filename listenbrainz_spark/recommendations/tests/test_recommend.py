@@ -6,7 +6,8 @@ from listenbrainz_spark.tests import SparkTestCase
 from listenbrainz_spark.recommendations import recommend
 from listenbrainz_spark.recommendations import train_models
 from listenbrainz_spark import schema, utils, config, path, stats
-from listenbrainz_spark.exceptions import RecommendationsNotGeneratedException
+from listenbrainz_spark.exceptions import (RecommendationsNotGeneratedException,
+                                           RatingOutOfRangeException)
 
 from pyspark.sql import Row
 import pyspark.sql.functions as f
@@ -165,6 +166,26 @@ class RecommendTestClass(SparkTestCase):
             call(mock_candidate_set.return_value, params, params.recommendation_similar_artist_limit)
         ])
 
+    def test_scale_ratings(self):
+        mbids_and_ratings = [['xxxx', -0.32], ['yyyy', 0.932]]
+
+        recommend.scale_ratings(mbids_and_ratings)
+
+        self.assertEqual(mbids_and_ratings[0][1], 0.34)
+        self.assertEqual(mbids_and_ratings[1][1], 0.966)
+
+        mbids_and_ratings = [['xxxx', -0.32], ['yyyy', 1.932], ['zzzz', 2.967]]
+
+        with self.assertRaises(RatingOutOfRangeException) as err:
+            recommend.scale_ratings(mbids_and_ratings)
+
+        expected_err_mesaage = 'The following ratings are beyond the expected range i.e rating > 1 or rating < -1: \n{}' \
+                               .format([1.932, 2.967])
+
+        self.assertEqual(expected_err_mesaage, str(err.exception))
+
+        updated_mbids_and_ratings = [['xxxx', 0.34], ['yyyy', 1.0], ['zzzz', 1.0]]
+        self.assertEqual(mbids_and_ratings, updated_mbids_and_ratings)
 
     @patch('listenbrainz_spark.recommendations.recommend.generate_recommendations')
     def test_get_recommended_mbids(self, mock_gen_rec):
@@ -174,21 +195,22 @@ class RecommendTestClass(SparkTestCase):
 
         rdd = candidate_set.rdd.map(lambda r: (r['user_id'], r['recording_id']))
         mock_gen_rec.return_value = [
-            Rating(user=2, product=1, rating=3.13456),
-            Rating(user=2, product=2, rating=6.994590001)
+            Rating(user=2, product=1, rating=-0.13456),
+            Rating(user=2, product=2, rating=0.994590001)
         ]
 
         recommended_mbids = recommend.get_recommended_mbids(rdd, params, limit)
 
         mock_gen_rec.assert_called_once_with(rdd, params, limit)
         self.assertEqual(recommended_mbids[0][0], '2acb406f-c716-45f8-a8bd-96ca3939c2e5')
-        self.assertEqual(recommended_mbids[0][1], 6.995)
+        self.assertEqual(recommended_mbids[0][1], 0.998)
         self.assertEqual(recommended_mbids[1][0], '3acb406f-c716-45f8-a8bd-96ca3939c2e5')
-        self.assertEqual(recommended_mbids[1][1], 3.135)
+        self.assertEqual(recommended_mbids[1][1], 0.432)
 
         mock_gen_rec.return_value = []
         with self.assertRaises(RecommendationsNotGeneratedException):
-            _ = recommend.get_recommended_mbids(rdd, params, limit)
+            recommend.get_recommended_mbids(rdd, params, limit)
+
 
     def test_get_user_name_and_user_id(self):
         params = self.get_recommendation_params()

@@ -12,7 +12,8 @@ from listenbrainz_spark.exceptions import (PathNotFoundException,
                                            FileNotFetchedException,
                                            ViewNotRegisteredException,
                                            SparkSessionNotInitializedException,
-                                           RecommendationsNotGeneratedException)
+                                           RecommendationsNotGeneratedException,
+                                           RatingOutOfRangeException)
 
 from listenbrainz_spark.recommendations.train_models import get_model_path
 
@@ -134,6 +135,33 @@ def get_recommendation_df(recording_ids_and_ratings):
     return df
 
 
+def scale_ratings(mbids_and_ratings):
+    """ Scale the ratings so that they fall on a range from 0.0 -> 1.0.
+
+        Args:
+            mbids_and_ratings: list of recommended recording mbids and ratings.
+
+        Raises:
+            RatingOutOfRangeException if ratings are beyond the expected range
+                                      i.e rating > 1 or rating
+    """
+    ratings_beyond_range = []
+
+    for row in mbids_and_ratings:
+        rating = row[1]
+
+        scaled_rating = (rating / 2.0) + 0.5
+
+        if scaled_rating > 1.0 or scaled_rating < -1.0:
+            ratings_beyond_range.append(rating)
+
+        row[1] = round(min(max(scaled_rating, -1.0), 1.0), 3)
+
+    if ratings_beyond_range:
+        raise RatingOutOfRangeException('The following ratings are beyond the expected range i.e rating > 1 or rating < -1: \n{}'
+                                        .format(ratings_beyond_range))
+
+
 def get_recommended_mbids(candidate_set, params, limit):
     """ Generate recommendations from the candidate set.
 
@@ -143,7 +171,7 @@ def get_recommended_mbids(candidate_set, params, limit):
             limit (int): Number of recommendations to be generated.
 
         Returns:
-            recommended_recordings_mbids: list of recommended recording mbids.
+            mbids_and_ratings: list of recommended recording mbids and ratings.
     """
     recommendations = generate_recommendations(candidate_set, params, limit)
 
@@ -156,9 +184,14 @@ def get_recommended_mbids(candidate_set, params, limit):
 
     recording_mbids_df = get_recording_mbids(params, recommendation_df)
 
-    recommended_recording_mbids = [[row.mb_recording_mbid, round(row.rating, 3)] for row in recording_mbids_df.collect()]
+    mbids_and_ratings = [[row.mb_recording_mbid, round(row.rating, 3)] for row in recording_mbids_df.collect()]
 
-    return recommended_recording_mbids
+    try:
+        scale_ratings(mbids_and_ratings)
+    except RatingOutOfRangeException as err:
+        current_app.logger.error(err, exc_info=True)
+
+    return mbids_and_ratings
 
 
 def get_candidate_set_rdd_for_user(candidate_set_df, user_id):
