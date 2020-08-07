@@ -1,7 +1,7 @@
 import sys
 import uuid
 import logging
-from time import time
+import time
 from datetime import datetime
 
 import listenbrainz_spark
@@ -278,7 +278,7 @@ def get_users_dataframe(mapped_listens_df, metadata):
 
 def main(train_model_window=None):
 
-    ti = time()
+    ti = time.monotonic()
     # dict to save dataframe metadata which would be later merged in model_metadata dataframe.
     metadata = {}
     # "updated" should always be set to False in this script.
@@ -310,7 +310,7 @@ def main(train_model_window=None):
 
     generate_dataframe_id(metadata)
     save_dataframe_metadata_to_hdfs(metadata)
-    total_time = '{:.2f}'.format((time() - ti) / 60)
+    total_time = '{:.2f}'.format((time.monotonic() - ti) / 60)
 
     message = [{
         'type': 'cf_recording_dataframes',

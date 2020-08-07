@@ -68,7 +68,7 @@ class ListenbrainzHDFSUploader:
         for member in tar:
             if member.isfile() and self._is_json_file(member.name):
                 current_app.logger.info("Uploading {}...".format(member.name))
-                t0 = time.time()
+                t0 = time.monotonic()
 
                 try:
                     tar.extract(member)
@@ -86,7 +86,7 @@ class ListenbrainzHDFSUploader:
                 callback(member.name, '/temp', tmp_hdfs_path, schema)
                 utils.delete_dir(tmp_hdfs_path, recursive=True)
                 os.remove(member.name)
-                time_taken = time.time() - t0
+                time_taken = time.monotonic() - t0
                 total_files += 1
                 total_time += time_taken
                 current_app.logger.info("Done! Current file processed in {:.2f} sec".format(time_taken))
@@ -100,7 +100,7 @@ class ListenbrainzHDFSUploader:
             current_app.logger.info('Done!')
 
         current_app.logger.info("Moving the processed files to {}".format(dest_path))
-        t0 = time.time()
+        t0 = time.monotonic()
 
         # Check if parent directory exists, if not create a directory
         dest_path_parent = pathlib.Path(dest_path).parent
@@ -108,7 +108,7 @@ class ListenbrainzHDFSUploader:
             utils.create_dir(dest_path_parent)
 
         utils.rename('/temp', dest_path)
-        utils.current_app.logger.info("Done! Time taken: {:.2f}".format(time.time() - t0))
+        utils.current_app.logger.info("Done! Time taken: {:.2f}".format(time.monotonic() - t0))
 
         # Cleanup
         utils.delete_dir(tmp_dump_dir, recursive=True)
