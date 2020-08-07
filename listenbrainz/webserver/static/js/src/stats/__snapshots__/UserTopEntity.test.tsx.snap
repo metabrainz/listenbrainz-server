@@ -45,29 +45,32 @@ exports[`UserTopEntity renders corectly when range is invalid 1`] = `
         Top 
         artists
       </h3>
-      <table
+      <Loader
+        className="flex-center"
+        isLoading={false}
         style={
           Object {
-            "height": 450,
-            "tableLayout": "fixed",
-            "whiteSpace": "nowrap",
-            "width": "90%",
+            "height": "80%",
           }
         }
       >
-        <tbody>
-          <Loader
-            isLoading={false}
-            style={
-              Object {
-                "alignItems": "center",
-                "display": "flex",
-                "height": "100%",
-                "justifyContent": "center",
-              }
+        <table
+          style={
+            Object {
+              "tableLayout": "fixed",
+              "whiteSpace": "nowrap",
+              "width": "90%",
             }
-          >
-            <tr>
+          }
+        >
+          <tbody>
+            <tr
+              style={
+                Object {
+                  "height": 440,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -130,9 +133,9 @@ exports[`UserTopEntity renders corectly when range is invalid 1`] = `
                 Invalid range: invalid_range
               </td>
             </tr>
-          </Loader>
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </Loader>
       <a
         href="http://localhost/user/test_user/charts?range=invalid_range&entity=artist"
         style={
@@ -193,30 +196,32 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
         Top 
         artists
       </h3>
-      <table
+      <Loader
+        className="flex-center"
+        isLoading={false}
         style={
           Object {
-            "height": 450,
-            "tableLayout": "fixed",
-            "whiteSpace": "nowrap",
-            "width": "90%",
+            "height": "80%",
           }
         }
       >
-        <tbody>
-          <Loader
-            isLoading={false}
-            style={
-              Object {
-                "alignItems": "center",
-                "display": "flex",
-                "height": "100%",
-                "justifyContent": "center",
-              }
+        <table
+          style={
+            Object {
+              "tableLayout": "fixed",
+              "whiteSpace": "nowrap",
+              "width": "90%",
             }
-          >
+          }
+        >
+          <tbody>
             <tr
               key="0"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -252,6 +257,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="1"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -287,6 +297,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="2"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -322,6 +337,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="3"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -357,6 +377,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="4"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -392,6 +417,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="5"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -427,6 +457,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="6"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -462,6 +497,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="7"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -497,6 +537,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="8"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -532,6 +577,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="9"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -567,6 +617,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="10"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -602,6 +657,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="11"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -637,6 +697,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="12"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -672,6 +737,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="13"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -707,6 +777,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="14"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -742,6 +817,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="15"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -777,6 +857,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="16"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -812,6 +897,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="17"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -847,6 +937,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="18"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -882,6 +977,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="19"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -917,6 +1017,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="20"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -952,6 +1057,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="21"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -987,6 +1097,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="22"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -1022,6 +1137,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="23"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -1057,6 +1177,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
             <tr
               key="24"
+              style={
+                Object {
+                  "height": 44,
+                }
+              }
             >
               <td
                 style={
@@ -1090,9 +1215,9 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
                 6
               </td>
             </tr>
-          </Loader>
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </Loader>
       <a
         href="http://localhost/user/test_user/charts?range=week&entity=artist"
         style={
@@ -1153,29 +1278,32 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
         Top 
         recordings
       </h3>
-      <table
+      <Loader
+        className="flex-center"
+        isLoading={false}
         style={
           Object {
-            "height": 450,
-            "tableLayout": "fixed",
-            "whiteSpace": "nowrap",
-            "width": "90%",
+            "height": "80%",
           }
         }
       >
-        <tbody>
-          <Loader
-            isLoading={false}
-            style={
-              Object {
-                "alignItems": "center",
-                "display": "flex",
-                "height": "100%",
-                "justifyContent": "center",
-              }
+        <table
+          style={
+            Object {
+              "tableLayout": "fixed",
+              "whiteSpace": "nowrap",
+              "width": "90%",
             }
-          >
-            <tr>
+          }
+        >
+          <tbody>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -1215,19 +1343,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 25
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Ellie Goulding
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -1267,19 +1410,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 23
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 The Fray
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -1312,19 +1470,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 20
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Ritviz
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -1364,19 +1537,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 18
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 OneRepublic
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -1416,19 +1604,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 16
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Ellie Goulding
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -1468,19 +1671,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 16
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Taylor Swift
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -1520,19 +1738,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 16
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Christina Perri
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -1572,19 +1805,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 15
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Vance Joy
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -1624,19 +1872,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 14
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Ed Sheeran
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -1669,19 +1932,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 13
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 OneRepublic
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -1721,19 +1999,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 12
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 George Ezra
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -1766,19 +2059,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 12
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Tommee Profitt
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -1818,19 +2126,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 12
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 The Script
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -1863,19 +2186,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 11
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Maroon 5
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -1915,19 +2253,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 11
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Of Monsters and Men
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -1960,19 +2313,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 11
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Sia
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -2012,19 +2380,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 10
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Maroon 5
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -2064,19 +2447,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 10
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 M.I.A.
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -2116,19 +2514,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 10
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Linkin Park
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -2168,19 +2581,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 8
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Backstreet Boys
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -2220,19 +2648,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 8
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Lenka
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -2265,19 +2708,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 8
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 The Local train
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -2317,19 +2775,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 6
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Coldplay
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -2369,19 +2842,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 6
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Imagine Dragons
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -2414,21 +2902,30 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
                 6
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Ellie Goulding
               </td>
             </tr>
-          </Loader>
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </Loader>
       <a
         href="http://localhost/user/test_user/charts?range=week&entity=recording"
         style={
@@ -2489,29 +2986,32 @@ exports[`UserTopEntity renders correctly for release 1`] = `
         Top 
         releases
       </h3>
-      <table
+      <Loader
+        className="flex-center"
+        isLoading={false}
         style={
           Object {
-            "height": 450,
-            "tableLayout": "fixed",
-            "whiteSpace": "nowrap",
-            "width": "90%",
+            "height": "80%",
           }
         }
       >
-        <tbody>
-          <Loader
-            isLoading={false}
-            style={
-              Object {
-                "alignItems": "center",
-                "display": "flex",
-                "height": "100%",
-                "justifyContent": "center",
-              }
+        <table
+          style={
+            Object {
+              "tableLayout": "fixed",
+              "whiteSpace": "nowrap",
+              "width": "90%",
             }
-          >
-            <tr>
+          }
+        >
+          <tbody>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -2544,19 +3044,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 26
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Coldplay
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -2589,19 +3104,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 25
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 The Fray
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -2634,19 +3164,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 25
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Ellie Goulding
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -2679,19 +3224,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 20
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Ritviz
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -2724,19 +3284,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 18
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 OneRepublic
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -2769,19 +3344,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 18
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Vance Joy
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -2814,19 +3404,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 17
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Ed Sheeran
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -2859,19 +3464,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 17
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Imagine Dragons
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -2904,19 +3524,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 17
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Taylor Swift
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -2949,19 +3584,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 16
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Ellie Goulding
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -2994,19 +3644,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 16
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Christina Perri
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -3039,19 +3704,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 16
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Coldplay
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -3084,19 +3764,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 15
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 George Ezra
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -3129,19 +3824,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 13
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Lenka
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -3174,19 +3884,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 13
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 OneRepublic
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -3219,19 +3944,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 12
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Tommee Profitt
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -3264,19 +4004,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 12
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 The Script
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -3309,19 +4064,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 11
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Maroon 5
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -3354,19 +4124,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 11
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Maroon 5
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -3399,19 +4184,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 11
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Of Monsters and Men
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -3444,19 +4244,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 11
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Sia
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -3489,19 +4304,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 10
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Linkin Park
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -3534,19 +4364,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 10
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 M.I.A.
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -3579,19 +4424,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 9
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 The Local train
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td
                 style={
                   Object {
@@ -3624,21 +4484,30 @@ exports[`UserTopEntity renders correctly for release 1`] = `
                 8
               </td>
             </tr>
-            <tr>
+            <tr
+              style={
+                Object {
+                  "height": 22,
+                }
+              }
+            >
               <td />
               <td
                 style={
                   Object {
                     "fontSize": 12,
+                    "overflow": "hidden",
+                    "paddingRight": 10,
+                    "textOverflow": "ellipsis",
                   }
                 }
               >
                 Backstreet Boys
               </td>
             </tr>
-          </Loader>
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </Loader>
       <a
         href="http://localhost/user/test_user/charts?range=week&entity=release"
         style={
