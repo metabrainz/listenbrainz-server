@@ -114,12 +114,8 @@ export default class UserTopEntity extends React.Component<
         <h3 className="capitalize-bold">Top {entityTextOnCard}</h3>
         <Loader
           isLoading={loading}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            height: "80%",
-          }}
+          className="flex-center"
+          style={{ height: "80%" }}
         >
           <table
             style={{

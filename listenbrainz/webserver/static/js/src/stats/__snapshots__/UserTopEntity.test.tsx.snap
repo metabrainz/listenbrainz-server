@@ -46,13 +46,11 @@ exports[`UserTopEntity renders corectly when range is invalid 1`] = `
         artists
       </h3>
       <Loader
+        className="flex-center"
         isLoading={false}
         style={
           Object {
-            "alignItems": "center",
-            "display": "flex",
             "height": "80%",
-            "justifyContent": "center",
           }
         }
       >
@@ -199,13 +197,11 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
         artists
       </h3>
       <Loader
+        className="flex-center"
         isLoading={false}
         style={
           Object {
-            "alignItems": "center",
-            "display": "flex",
             "height": "80%",
-            "justifyContent": "center",
           }
         }
       >
@@ -1283,13 +1279,11 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
         recordings
       </h3>
       <Loader
+        className="flex-center"
         isLoading={false}
         style={
           Object {
-            "alignItems": "center",
-            "display": "flex",
             "height": "80%",
-            "justifyContent": "center",
           }
         }
       >
@@ -2993,13 +2987,11 @@ exports[`UserTopEntity renders correctly for release 1`] = `
         releases
       </h3>
       <Loader
+        className="flex-center"
         isLoading={false}
         style={
           Object {
-            "alignItems": "center",
-            "display": "flex",
             "height": "80%",
-            "justifyContent": "center",
           }
         }
       >
