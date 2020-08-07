@@ -1112,6 +1112,8 @@ class StatsAPITestCase(IntegrationTestCase):
             }
         ]
         self.assertListEqual(expected, received)
+        self.assertTrue('count' in mock_requests.request_history[0].qs)
+        self.assertTrue('count' in mock_requests.request_history[1].qs)
 
     @requests_mock.Mocker()
     def test_get_country_code_msid_mbid_mapping_failure(self, mock_requests):
