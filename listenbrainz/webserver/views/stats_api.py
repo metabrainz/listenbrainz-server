@@ -721,9 +721,9 @@ def _get_mbids_from_msids(artist_msids: list) -> list:
     request_data = [{"artist_msid": artist_msid} for artist_msid in artist_msids]
     artist_mbids = []
     try:
-        result = requests.post("{}/artist-credit-from-artist-msid/json?count={}"
-                               .format(current_app.config['LISTENBRAINZ_LABS_API_URL'], len(request_data)),
-                               json=request_data)
+        result = requests.post("{}/artist-credit-from-artist-msid/json"
+                               .format(current_app.config['LISTENBRAINZ_LABS_API_URL']),
+                               json=request_data, params={'count': len(request_data)})
         # Raise error if non 200 response is received
         result.raise_for_status()
         data = result.json()
@@ -733,7 +733,7 @@ def _get_mbids_from_msids(artist_msids: list) -> list:
         current_app.logger.error("Error while getting artist_mbids, {}".format(err), exc_info=True)
         error_msg = ("An error occurred while calculating artist_map data, "
                      "try setting 'force_recalculate' to 'false' to get a cached copy if available."
-                     "Payload: {}".format(request_data))
+                     "Payload: {}. Response: {}".format(request_data, result.text))
         raise APIInternalServerError(error_msg)
 
     return artist_mbids
@@ -745,9 +745,9 @@ def _get_country_code_from_mbids(artist_mbids: set) -> list:
     request_data = [{"artist_mbid": artist_mbid} for artist_mbid in artist_mbids]
     country_codes = []
     try:
-        result = requests.post("{}/artist-country-code-from-artist-mbid/json?count={}"
-                               .format(current_app.config['LISTENBRAINZ_LABS_API_URL'], len(request_data)),
-                               json=request_data)
+        result = requests.post("{}/artist-country-code-from-artist-mbid/json"
+                               .format(current_app.config['LISTENBRAINZ_LABS_API_URL']),
+                               json=request_data, params={'count': len(request_data)})
         # Raise error if non 200 response is received
         result.raise_for_status()
         data = result.json()
@@ -757,7 +757,7 @@ def _get_country_code_from_mbids(artist_mbids: set) -> list:
         current_app.logger.error("Error while getting artist_country_codes, {}".format(err), exc_info=True)
         error_msg = ("An error occurred while calculating artist_map data, "
                      "try setting 'force_recalculate' to 'false' to get a cached copy if available"
-                     "Payload: {}".format(request_data))
+                     "Payload: {}. Response: {}".format(request_data, result.text))
         raise APIInternalServerError(error_msg)
 
     return country_codes
