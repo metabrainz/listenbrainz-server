@@ -66,6 +66,11 @@ class APITestCase(IntegrationTestCase):
         time.sleep(2)
 
         url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
+
+        # validating that the API raise a error 400 if listen count is negative
+        response = self.client.get(url, query_string={'count': '-1'})
+        self.assert400(response)
+ 
         response = self.client.get(url, query_string={'count': '1'})
         self.assert200(response)
         data = json.loads(response.data)['payload']
@@ -122,6 +127,7 @@ class APITestCase(IntegrationTestCase):
         self.assert200(response)
         data = json.loads(response.data)['payload']
         self.assertEqual(data['count'], 0)
+
 
     def test_get_listens_order(self):
         """ Test to make sure that the api sends listens in valid order.
