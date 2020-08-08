@@ -70,7 +70,7 @@ class APITestCase(IntegrationTestCase):
         # validating that the API raise a error 400 if listen count is negative
         response = self.client.get(url, query_string={'count': '-1'})
         self.assert400(response)
- 
+
         response = self.client.get(url, query_string={'count': '1'})
         self.assert200(response)
         data = json.loads(response.data)['payload']
