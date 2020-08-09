@@ -18,6 +18,19 @@ from mapping.formats import create_formats_table
 
 BATCH_SIZE = 5000
 
+debugging_aid = """
+                        SELECT r.id, r.name, country, date_year, date_month, date_day,
+                                  to_date(date_year::TEXT || '-' ||
+                                          COALESCE(date_month,12)::TEXT || '-' ||
+                                          COALESCE(date_day,28)::TEXT, 'YYYY-MM-DD')
+                          FROM mapping.recording_pair_releases rpr
+                          JOIN musicbrainz.release r 
+                            ON r.id = rpr.release
+                          JOIN musicbrainz.release_country rc 
+                            ON rc.release = r.id 
+                      ORDER BY rpr.id
+"""
+
 def create_tables(mb_conn):
 
     # drop/create finished table
@@ -55,6 +68,7 @@ def create_indexes(conn):
         raise
 
 
+
 def create_temp_release_table(conn, stats):
 
     with conn.cursor() as curs:
@@ -74,9 +88,9 @@ def create_temp_release_table(conn, stats):
                          WHERE rg.artist_credit != 1 
                                %s
                          ORDER BY rg.type, rgst.id desc, fs.sort, 
-                                  to_date(coalesce(date_year, 9999)::TEXT || '-' || 
-                                          coalesce(date_month, 1)::TEXT || '-' || 
-                                          coalesce(date_day, 1)::TEXT, 'YYYY-MM-DD'), 
+                                  to_date(date_year::TEXT || '-' ||
+                                          COALESCE(date_month,12)::TEXT || '-' ||
+                                          COALESCE(date_day,28)::TEXT, 'YYYY-MM-DD'),
                                   country, rg.artist_credit, rg.name"""
 
         if config.USE_MINIMAL_DATASET:

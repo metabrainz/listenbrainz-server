@@ -181,7 +181,7 @@ def load_MB_recordings(stats):
                     "release_id" : release_id,
                 })
 
-    print(asctime(), "sort MB recordings %d items" % len(mb_recordings))
+    print(asctime(), "loaded %d MB recordings, now sorting" % len(mb_recordings))
     mb_recording_index = list(range(len(mb_recordings)))
     mb_recording_index = sorted(mb_recording_index, key=lambda rec: (mb_recordings[rec]["artist_name"], mb_recordings[rec]["recording_name"]))
 
@@ -243,11 +243,6 @@ def match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_reco
             recording_mapping[k] = [ 1, msb_recording_index[msb_index], mb_recording_index[mb_index] ]
 
         msb_row = None
-
-    print(asctime(), "  mapping found %d matches out of %d (%d%%)" % (
-                len(recording_mapping), 
-                len(msb_recordings), 
-                len(recording_mapping) * 100 / len(msb_recordings)))
 
     return recording_mapping
 
@@ -327,33 +322,29 @@ def create_mapping():
     msb_offset = 0
     with open("unmatched_recording_msids.txt", "w") as unmatched:
         while True:
-            print(asctime(), "Load MSB recordings offset %d" % (msb_offset))
+            print(asctime(), "Load MSB recordings at offset %d" % (msb_offset))
             stats, msb_recordings = load_MSB_recordings(stats, msb_offset)
             if not msb_recordings:
+                print(asctime(), "  loaded none, we're done!")
                 break
 
-            print(asctime(), "  sort MSB recordings %d items" % (len(msb_recordings)))
+            print(asctime(), "  loaded %d items, sorting" % (len(msb_recordings)))
             msb_recording_index = list(range(len(msb_recordings)))
             msb_recording_index = sorted(msb_recording_index, key=lambda rec: (msb_recordings[rec]["artist_name"], msb_recordings[rec]["recording_name"]))
 
-            print(asctime(), "  match recordings")
             recording_mapping = match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_recording_index, unmatched)
-
-            print(asctime(), "  insert matches")
             inserted, msb_recording_index = insert_matches(recording_mapping, mb_recordings, msb_recordings, SOURCE_NAME)
             stats['msid_mbid_mapping_count'] += inserted
             stats['exact_match_count'] += inserted
+            print(asctime(), "  inserted %d exact matches. Total: %d" % (inserted, stats['msid_mbid_mapping_count']))
 
-            print(asctime(), "  remove parens")
             msb_recordings = remove_parens(msb_recordings)
-
-            print(asctime(), "  match recordings")
             recording_mapping = match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_recording_index)
-
-            print(asctime(), "  insert matches")
             inserted, msb_recording_index = insert_matches(recording_mapping, mb_recordings, msb_recordings, NO_PARENS_SOURCE_NAME)
             stats['msid_mbid_mapping_count'] += inserted
             stats['noparen_match_count'] += inserted
+            print(asctime(), "  inserted %d no paren matches. Total: %d" % (inserted, stats['msid_mbid_mapping_count']))
+            print(asctime(), "  mapping coverage: %d%%" % (int(stats["msid_mbid_mapping_count"] / stats["msb_recording_count"] * 100)))
 
             msb_recordings = None
             msb_recording_index = None

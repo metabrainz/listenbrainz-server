@@ -54,8 +54,8 @@ def test_mapping():
                     failed += 1
                     continue
 
-                if row['release_id'] != int(rdata[2]):
-                    print("'%s' '%s' expected %s, got %s rel %s rec %s" % (rdata[0], rdata[1], rdata[2], row['release_id'], 
+                if row['release_mbid'] != rdata[2]:
+                    print("'%s' '%s' expected %s, got %s rel %s rec %s" % (rdata[0], rdata[1], rdata[2], row['release_mbid'], 
                           row['release_mbid'], row['recording_mbid']))
                     failed += 1
                 else:
