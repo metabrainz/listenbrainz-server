@@ -106,9 +106,8 @@ def get_listens(user_name):
     if time_range < 1 or time_range > MAX_TIME_RANGE:
         log_raise_400("time_range must be between 1 and %d." % MAX_TIME_RANGE)
 
-    # if no max given, use now()
-    if max_ts and min_ts:
-        log_raise_400("You may only specify max_ts or min_ts, not both.")
+    if max_ts and min_ts and max_ts < min_ts:
+        log_raise_400("If both are given, max_ts should be greater than min_ts")
 
     db_conn = webserver.create_timescale(current_app)
     (min_ts_per_user, max_ts_per_user) = db_conn.get_timestamps_for_user(user_name)

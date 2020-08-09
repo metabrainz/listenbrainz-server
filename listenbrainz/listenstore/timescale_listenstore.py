@@ -237,9 +237,9 @@ class TimescaleListenStore(ListenStore):
             max_timestamp_window = 432000 * time_range
             if from_ts is not None:
                 to_ts = from_ts + max_timestamp_window
-            else:
+            elif to_ts is not None:
                 from_ts = to_ts - max_timestamp_window
-
+                
         query = """SELECT listened_at, track_name, created, data
                      FROM listen
                     WHERE user_name = :user_name """
