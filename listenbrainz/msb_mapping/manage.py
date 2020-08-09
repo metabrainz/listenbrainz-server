@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+import subprocess
 
 import click
 
@@ -15,11 +16,11 @@ def cli():
     pass
 
 @cli.command()
-@click.argument("dest_dir", nargs=1)
-def create_all(dest_dir):
+#@click.argument("dest_dir", nargs=1)
+def create_all():
     action_create_pairs()
     action_create_mapping()
-    action_write_all_mappings(dest_dir)
+#    action_write_all_mappings(dest_dir)
 
 
 @cli.command()
@@ -46,6 +47,11 @@ def test_pairs():
 @click.argument("dest_dir", nargs=1)
 def write(dest_dir):
     action_write_all_mappings(dest_dir)
+
+
+@cli.command()
+def cron_log():
+    subprocess.run(["cat", "lb-cron.log"])
 
 
 def usage(command):

@@ -49,6 +49,8 @@ def create_tables(mb_conn):
                                             id      SERIAL, 
                                             release INTEGER)""")
             create_formats_table(mb_conn)
+            curs.execute("""CREATE TABLE IF NOT EXISTS mapping.mapping_stats (stats    JSONB,
+                                                                              created  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW())""")
             mb_conn.commit()
     except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
         print(asctime(), "failed to create recording pair tables", err)
@@ -229,7 +231,10 @@ def create_pairs():
 
 
     stats["completed"] = datetime.datetime.utcnow().isoformat()
-    with open("stats/recording-pairs-stats.json", "w") as f:
-        f.write(ujson.dumps(stats, indent=2) + "\n")
+    with psycopg2.connect(config.DB_CONNECT_MB) as conn:
+        with conn.cursor() as curs:
+            curs.execute("""INSERT INTO mapping.mapping_stats (stats) VALUES (%s)""", ((ujson.dumps(stats),)))
+        conn.commit()
 
     print(asctime(), "done")
+    print()

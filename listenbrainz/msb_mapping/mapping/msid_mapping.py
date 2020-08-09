@@ -44,6 +44,8 @@ def create_table(conn):
                                          mb_release_name     TEXT,
                                          mb_release_id       INTEGER,
                                          source              TEXT)""")
+            curs.execute("""CREATE TABLE IF NOT EXISTS mapping.mapping_stats (stats    JSONB,
+                                                                              created  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW())""")
             conn.commit() 
     except DuplicateTable as err:
         print(asctime(), "Cannot drop/create tables: ", str(err))
@@ -313,12 +315,12 @@ def create_mapping():
 
     stats = {}
     stats["started"] = datetime.datetime.utcnow().isoformat()
-    stats["git commit hash"] = subprocess.getoutput("git rev-parse HEAD")
     stats['msb_recording_count'] = 0
     stats['mb_recording_count'] = 0
     stats['msid_mbid_mapping_count'] = 0
     stats['exact_match_count'] = 0
     stats['noparen_match_count'] = 0
+    stats['nobrackets_match_count'] = 0
 
     print(asctime(), "Drop old temp table, create new one")
     with psycopg2.connect(config.DB_CONNECT_MB) as conn:
@@ -383,5 +385,10 @@ def create_mapping():
         print(asctime(), "swap tables/indexes")
         swap_table_and_indexes(conn)
 
-    with open("stats/mapping-stats.json", "w") as f:
-        f.write(ujson.dumps(stats, indent=2) + "\n")
+    with psycopg2.connect(config.DB_CONNECT_MB) as conn:
+        with conn.cursor() as curs:
+            curs.execute("""INSERT INTO mapping.mapping_stats (stats) VALUES (%s)""", ((ujson.dumps(stats),)))
+        conn.commit()
+
+    print(asctime(), "done")
+    print()
