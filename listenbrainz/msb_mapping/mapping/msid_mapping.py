@@ -21,6 +21,7 @@ import config
 # The name of the script to be saved in the source field.
 SOURCE_NAME = "exact"
 NO_PARENS_SOURCE_NAME = "noparens"
+NO_BRACKETS_SOURCE_NAME = "nobrackets"
 
 MSB_BATCH_SIZE = 20000000
 
@@ -90,7 +91,7 @@ def swap_table_and_indexes(conn):
         conn.rollback()
         raise
             
-def load_MSB_recordings(stats, offset):
+def load_MSB_recordings(offset):
 
     msb_recordings = []
 
@@ -138,13 +139,12 @@ def load_MSB_recordings(stats, offset):
                 count += 1
 
     if count == 0:
-        return (stats, None)
+        return None
 
-    stats["msb_recording_count"] = len(msb_recordings)
-    return stats, msb_recordings
+    return msb_recordings
 
 
-def load_MB_recordings(stats):
+def load_MB_recordings():
 
     mb_recordings = []
     with psycopg2.connect(config.DB_CONNECT_MB) as conn:
@@ -302,12 +302,20 @@ def remove_parens(msb_recordings):
     return msb_recordings
 
 
+def remove_brackets(msb_recordings):
+    for recording in msb_recordings:
+        recording["recording_name"] = recording["recording_name"][:recording["recording_name"].find("["):].strip()
+
+    return msb_recordings
+
 
 def create_mapping():
 
     stats = {}
     stats["started"] = datetime.datetime.utcnow().isoformat()
     stats["git commit hash"] = subprocess.getoutput("git rev-parse HEAD")
+    stats['msb_recording_count'] = 0
+    stats['mb_recording_count'] = 0
     stats['msid_mbid_mapping_count'] = 0
     stats['exact_match_count'] = 0
     stats['noparen_match_count'] = 0
@@ -317,34 +325,49 @@ def create_mapping():
         create_table(conn)
 
     print(asctime(), "Load MB recordings")
-    mb_recordings, mb_recording_index = load_MB_recordings(stats)
+    mb_recordings, mb_recording_index = load_MB_recordings()
+    stats['mb_recording_count'] = len(mb_recordings)
 
     msb_offset = 0
     with open("unmatched_recording_msids.txt", "w") as unmatched:
         while True:
             print(asctime(), "Load MSB recordings at offset %d" % (msb_offset))
-            stats, msb_recordings = load_MSB_recordings(stats, msb_offset)
+            msb_recordings = load_MSB_recordings(msb_offset)
             if not msb_recordings:
                 print(asctime(), "  loaded none, we're done!")
                 break
+
+            stats['msb_recording_count'] += len(msb_recordings)
 
             print(asctime(), "  loaded %d items, sorting" % (len(msb_recordings)))
             msb_recording_index = list(range(len(msb_recordings)))
             msb_recording_index = sorted(msb_recording_index, key=lambda rec: (msb_recordings[rec]["artist_name"], msb_recordings[rec]["recording_name"]))
 
+            print(asctime(), "  run exact match")
             recording_mapping = match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_recording_index, unmatched)
             inserted, msb_recording_index = insert_matches(recording_mapping, mb_recordings, msb_recordings, SOURCE_NAME)
             stats['msid_mbid_mapping_count'] += inserted
             stats['exact_match_count'] += inserted
-            print(asctime(), "  inserted %d exact matches. Total: %d" % (inserted, stats['msid_mbid_mapping_count']))
+            print(asctime(), "  inserted %d exact matches. total: %d" % (inserted, stats['msid_mbid_mapping_count']))
 
+            print(asctime(), "  run no parens match")
             msb_recordings = remove_parens(msb_recordings)
             recording_mapping = match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_recording_index)
             inserted, msb_recording_index = insert_matches(recording_mapping, mb_recordings, msb_recordings, NO_PARENS_SOURCE_NAME)
             stats['msid_mbid_mapping_count'] += inserted
             stats['noparen_match_count'] += inserted
-            print(asctime(), "  inserted %d no paren matches. Total: %d" % (inserted, stats['msid_mbid_mapping_count']))
-            print(asctime(), "  mapping coverage: %d%%" % (int(stats["msid_mbid_mapping_count"] / stats["msb_recording_count"] * 100)))
+            print(asctime(), "  inserted %d no paren matches. total: %d" % (inserted, stats['msid_mbid_mapping_count']))
+
+            print(asctime(), "  run no bracket match")
+            msb_recordings = remove_brackets(msb_recordings)
+            recording_mapping = match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_recording_index)
+            inserted, msb_recording_index = insert_matches(recording_mapping, mb_recordings, msb_recordings, NO_BRACKETS_SOURCE_NAME)
+            stats['msid_mbid_mapping_count'] += inserted
+            stats['nobrackets_match_count'] += inserted
+            print(asctime(), "  inserted %d no brackets matches. total: %d" % (inserted, stats['msid_mbid_mapping_count']))
+
+            stats["msb_coverage"] = int(stats["msid_mbid_mapping_count"] / stats["msb_recording_count"] * 100) 
+            print(asctime(), "mapping coverage: %d%%" % stats["msb_coverage"])
 
             msb_recordings = None
             msb_recording_index = None
@@ -352,7 +375,6 @@ def create_mapping():
 
             msb_offset += MSB_BATCH_SIZE
 
-    stats["msb_coverage"] = int(stats["msid_mbid_mapping_count"] / stats["msb_recording_count"] * 100) 
     stats["completed"] = datetime.datetime.utcnow().isoformat()
 
     with psycopg2.connect(config.DB_CONNECT_MB) as conn:
