@@ -1,3 +1,2 @@
 # Create the mapping.
-# TBD: Determine exact time
-34 8 * * * listenbrainz /usr/local/bin/python /code/mapper/manage.py create-all >> /code/mapper/lb-cron.log 2>&1
+0 4 * * * listenbrainz /usr/local/bin/python /code/mapper/manage.py create-all >> /code/mapper/lb-cron.log 2>&1
