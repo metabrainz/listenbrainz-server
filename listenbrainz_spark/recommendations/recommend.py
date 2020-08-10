@@ -153,7 +153,7 @@ def scale_ratings(mbids_and_ratings, ratings_beyond_range):
         row[1] = round(min(max(scaled_rating, -1.0), 1.0), 3)
 
 
-def get_recommended_mbids(candidate_set, params, limit, ratings_beyond_range):
+def get_recommended_mbids(candidate_set, params, limit, ratings_beyond_range, user_name):
     """ Generate recommendations from the candidate set.
 
         Args:
@@ -178,7 +178,11 @@ def get_recommended_mbids(candidate_set, params, limit, ratings_beyond_range):
 
     mbids_and_ratings = [[row.mb_recording_mbid, round(row.rating, 3)] for row in recording_mbids_df.collect()]
 
+    current_app.logger.critical('Recommendations for {} before scaling.\n{}'.format(user_name, mbids_and_ratings))
+
     scale_ratings(mbids_and_ratings, ratings_beyond_range)
+
+    current_app.logger.critical('Recommendations for {} after scaling.\n{}'.format(user_name, mbids_and_ratings))
 
     return mbids_and_ratings
 
@@ -224,7 +228,8 @@ def get_recommendations_for_user(user_id, user_name, params, ratings_beyond_rang
         top_artist_candidate_set_user = get_candidate_set_rdd_for_user(params.top_artist_candidate_set_df, user_id)
         user_recommendations_top_artist = get_recommended_mbids(top_artist_candidate_set_user, params,
                                                                 params.recommendation_top_artist_limit,
-                                                                ratings_beyond_range)
+                                                                ratings_beyond_range,
+                                                                user_name)
     except IndexError:
         current_app.logger.error('Top artist candidate set not found for "{}"'.format(user_name))
     except RecommendationsNotGeneratedException:
@@ -235,7 +240,8 @@ def get_recommendations_for_user(user_id, user_name, params, ratings_beyond_rang
         similar_artist_candidate_set_user = get_candidate_set_rdd_for_user(params.similar_artist_candidate_set_df, user_id)
         user_recommendations_similar_artist = get_recommended_mbids(similar_artist_candidate_set_user, params,
                                                                     params.recommendation_similar_artist_limit,
-                                                                    ratings_beyond_range)
+                                                                    ratings_beyond_range,
+                                                                    user_name)
     except IndexError:
         current_app.logger.error('Similar artist candidate set not found for "{}"'.format(user_name))
     except RecommendationsNotGeneratedException:
