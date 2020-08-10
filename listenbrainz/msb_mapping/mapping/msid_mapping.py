@@ -246,7 +246,8 @@ def match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_reco
                 break
 
         pp = "%-37s %-37s = %-27s %-37s %s" % (msb_row["artist_name"][0:25], msb_row["recording_name"][0:25],
-            mb_row["artist_name"][0:25], mb_row["recording_name"][0:25], msb_row["recording_msid"][0:8])
+                                               mb_row["artist_name"][0:25], mb_row["recording_name"][0:25],
+                                               msb_row["recording_msid"][0:8])
         if msb_row["artist_name"] > mb_row["artist_name"]:
             if config.SHOW_MATCHES:
                 log("> %s" % pp)
@@ -275,7 +276,8 @@ def match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_reco
             msb_row = None
             continue
 
-        if config.SHOW_MATCHES: log("= %s %s %s" % (pp, mb_row["recording_id"], mb_row['release_id']))
+        if config.SHOW_MATCHES:
+            log("= %s %s %s" % (pp, mb_row["recording_id"], mb_row['release_id']))
 
         k = "%s=%s" % (msb_row["recording_msid"], mb_row["recording_id"])
         try:
