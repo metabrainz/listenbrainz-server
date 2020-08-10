@@ -212,8 +212,8 @@ def load_MB_recordings():
 
     log("loaded %d MB recordings, now sorting" % len(mb_recordings))
     mb_recording_index = list(range(len(mb_recordings)))
-    mb_recording_index = sorted(mb_recording_index, key=lambda rec: (mb_recordings[rec]["artist_name"], 
-                                                                     mb_recordings[rec]["recording_name"]))
+    mb_recording_index = sorted(mb_recording_index, key=lambda rec: (mb_recordings[rec]["artist_name"],
+                                mb_recordings[rec]["recording_name"]))
 
     return (mb_recordings, mb_recording_index)
 
@@ -248,28 +248,30 @@ def match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_reco
         pp = "%-37s %-37s = %-27s %-37s %s" % (msb_row["artist_name"][0:25], msb_row["recording_name"][0:25],
             mb_row["artist_name"][0:25], mb_row["recording_name"][0:25], msb_row["recording_msid"][0:8])
         if msb_row["artist_name"] > mb_row["artist_name"]:
-            if config.SHOW_MATCHES: 
+            if config.SHOW_MATCHES:
                 log("> %s" % pp)
             mb_row = None
             continue
 
         if msb_row["artist_name"] < mb_row["artist_name"]:
-            if config.SHOW_MATCHES: 
+            if config.SHOW_MATCHES:
                 log("< %s" % pp)
             msb_row = None
             continue
 
         if msb_row["recording_name"] > mb_row["recording_name"]:
-            if config.SHOW_MATCHES: 
+            if config.SHOW_MATCHES:
                 log("} %s" % pp)
-            if unmatched: unmatched.write("%s\n" % msb_row['recording_msid'])
+            if unmatched:
+                unmatched.write("%s\n" % msb_row['recording_msid'])
             mb_row = None
             continue
 
         if msb_row["recording_name"] < mb_row["recording_name"]:
-            if config.SHOW_MATCHES: 
+            if config.SHOW_MATCHES:
                 log("{ %s" % pp)
-            if unmatched: unmatched.write("%s\n" % msb_row['recording_msid'])
+            if unmatched:
+                unmatched.write("%s\n" % msb_row['recording_msid'])
             msb_row = None
             continue
 
