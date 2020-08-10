@@ -43,33 +43,39 @@ def create_table(conn):
                                          msb_release_name    TEXT,
                                          msb_release_msid    UUID,
                                          mb_artist_name      TEXT,
-                                         mb_artist_credit_id INTEGER, 
+                                         mb_artist_credit_id INTEGER,
                                          mb_recording_name   TEXT,
                                          mb_recording_id     INTEGER,
                                          mb_release_name     TEXT,
                                          mb_release_id       INTEGER,
                                          source              TEXT)""")
             create_stats_table(curs)
-            conn.commit() 
+            conn.commit()
     except DuplicateTable as err:
         log("Cannot drop/create tables: ", str(err))
-        conn.rollback() 
+        conn.rollback()
         raise
 
 
 def create_indexes(conn):
-    """ 
+    """
         Create the indexes on the mapping.
     """
 
     try:
         with conn.cursor() as curs:
-            curs.execute("CREATE INDEX tmp_msid_mbid_mapping_idx_msb_recording_name ON mapping.tmp_msid_mbid_mapping(msb_recording_name)")
-            curs.execute("CREATE INDEX tmp_msid_mbid_mapping_idx_msb_recording_msid ON mapping.tmp_msid_mbid_mapping(msb_recording_msid)")
-            curs.execute("CREATE INDEX tmp_msid_mbid_mapping_idx_msb_artist_name ON mapping.tmp_msid_mbid_mapping(msb_artist_name)")
-            curs.execute("CREATE INDEX tmp_msid_mbid_mapping_idx_msb_artist_msid ON mapping.tmp_msid_mbid_mapping(msb_artist_msid)")
-            curs.execute("CREATE INDEX tmp_msid_mbid_mapping_idx_msb_release_name ON mapping.tmp_msid_mbid_mapping(msb_release_name)")
-            curs.execute("CREATE INDEX tmp_msid_mbid_mapping_idx_msb_release_msid ON mapping.tmp_msid_mbid_mapping(msb_release_msid)")
+            curs.execute("""CREATE INDEX tmp_msid_mbid_mapping_idx_msb_recording_name
+                                      ON mapping.tmp_msid_mbid_mapping(msb_recording_name)""")
+            curs.execute("""CREATE INDEX tmp_msid_mbid_mapping_idx_msb_recording_msid
+                                      ON mapping.tmp_msid_mbid_mapping(msb_recording_msid)""")
+            curs.execute("""CREATE INDEX tmp_msid_mbid_mapping_idx_msb_artist_name
+                                      ON mapping.tmp_msid_mbid_mapping(msb_artist_name)""")
+            curs.execute("""CREATE INDEX tmp_msid_mbid_mapping_idx_msb_artist_msid
+                                      ON mapping.tmp_msid_mbid_mapping(msb_artist_msid)""")
+            curs.execute("""CREATE INDEX tmp_msid_mbid_mapping_idx_msb_release_name
+                                      ON mapping.tmp_msid_mbid_mapping(msb_release_name)""")
+            curs.execute("""CREATE INDEX tmp_msid_mbid_mapping_idx_msb_release_msid
+                                      ON mapping.tmp_msid_mbid_mapping(msb_release_msid)""")
             conn.commit()
     except OperationalError as err:
         conn.rollback()
@@ -79,7 +85,7 @@ def create_indexes(conn):
 
 def swap_table_and_indexes(conn):
     """
-        This function swaps the temporary files that the mapping was written for the 
+        This function swaps the temporary files that the mapping was written for the
         production tables, inside a single transaction. This should isolate the
         end users from ever seeing any down time in mapping availability.
     """
@@ -106,7 +112,7 @@ def swap_table_and_indexes(conn):
         log("failed to swap in new mapping table", str(err))
         conn.rollback()
         raise
-      
+
 
 def load_MSB_recordings(offset):
     """
@@ -142,19 +148,19 @@ def load_MSB_recordings(offset):
                 recording_msid = msb_row[3]
                 release = msb_row[4] or ""
                 release_msid = msb_row[5] or None
-                    
+
                 if config.REMOVE_NON_WORD_CHARS:
                     artist = re.sub(r'\W+', '', artist)
                     recording = re.sub(r'\W+', '', recording)
                     release = re.sub(r'\W+', '', release)
 
-                msb_recordings.append({ 
-                    "artist_name" : artist,
-                    "artist_msid" : artist_msid,
-                    "recording_name" : recording,
-                    "recording_msid" : recording_msid,
-                    "release_name" : release,
-                    "release_msid" : release_msid
+                msb_recordings.append({
+                    "artist_name": artist,
+                    "artist_msid": artist_msid,
+                    "recording_name": recording,
+                    "recording_msid": recording_msid,
+                    "release_name": release,
+                    "release_msid": release_msid
                 })
                 count += 1
 
@@ -195,13 +201,13 @@ def load_MB_recordings():
                     recording = re.sub(r'\W+', '', recording)
                     release = re.sub(r'\W+', '', release)
 
-                mb_recordings.append({ 
-                    "artist_name" : artist,
-                    "artist_credit_id" : artist_credit_id,
-                    "recording_name" : recording,
-                    "recording_id" : recording_id,
-                    "release_name" : release,
-                    "release_id" : release_id,
+                mb_recordings.append({
+                    "artist_name": artist,
+                    "artist_credit_id": artist_credit_id,
+                    "recording_name": recording,
+                    "recording_id": recording_id,
+                    "release_name": release,
+                    "release_id": release_id,
                 })
 
     log("loaded %d MB recordings, now sorting" % len(mb_recordings))
@@ -230,7 +236,7 @@ def match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_reco
                 msb_row = msb_recordings[msb_recording_index[msb_index]]
             except IndexError:
                 break
-            
+
         if not mb_row:
             try:
                 mb_index += 1
@@ -238,7 +244,7 @@ def match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_reco
             except IndexError:
                 break
 
-        pp = "%-37s %-37s = %-27s %-37s %s" % (msb_row["artist_name"][0:25], msb_row["recording_name"][0:25], 
+        pp = "%-37s %-37s = %-27s %-37s %s" % (msb_row["artist_name"][0:25], msb_row["recording_name"][0:25],
             mb_row["artist_name"][0:25], mb_row["recording_name"][0:25], msb_row["recording_msid"][0:8])
         if msb_row["artist_name"] > mb_row["artist_name"]:
             if config.SHOW_MATCHES: log("> %s" % pp)
@@ -290,12 +296,12 @@ def insert_matches(recording_mapping, mb_recordings, msb_recordings, source):
                 a = recording_mapping[k]
                 completed[a[0]] = 1
                 rows.append((a[0],
-                    msb_recordings[a[1]]["artist_name"], 
-                    msb_recordings[a[1]]["artist_msid"], 
-                    msb_recordings[a[1]]["recording_name"], 
-                    msb_recordings[a[1]]["recording_msid"], 
-                    msb_recordings[a[1]]["release_name"], 
-                    msb_recordings[a[1]]["release_msid"], 
+                    msb_recordings[a[1]]["artist_name"],
+                    msb_recordings[a[1]]["artist_msid"],
+                    msb_recordings[a[1]]["recording_name"],
+                    msb_recordings[a[1]]["recording_msid"],
+                    msb_recordings[a[1]]["release_name"],
+                    msb_recordings[a[1]]["release_msid"],
 
                     mb_recordings[a[2]]["artist_name"],
                     mb_recordings[a[2]]["artist_credit_id"],
@@ -321,15 +327,17 @@ def insert_matches(recording_mapping, mb_recordings, msb_recordings, source):
 
         msb_recording_index.append(i)
 
-    msb_recording_index = sorted(msb_recording_index, key=lambda rec: (msb_recordings[rec]["artist_name"], msb_recordings[rec]["recording_name"]))
+    msb_recording_index = sorted(msb_recording_index,
+                                 key=lambda rec: (msb_recordings[rec]["artist_name"],
+                                                  msb_recordings[rec]["recording_name"]))
 
     return (total, msb_recording_index)
 
 
 def remove_parens(msb_recordings):
     """
-        Take the MSB recordings and if they contain text in () at the end, remove the parens in order
-        for running the matching again. This picks up a few more matches.
+        Take the MSB recordings and if they contain text in () at the end, remove the
+        parens in order for running the matching again. This picks up a few more matches.
     """
 
     for recording in msb_recordings:
@@ -378,24 +386,29 @@ def create_mapping():
 
             log("  loaded %d items, sorting" % (len(msb_recordings)))
             msb_recording_index = list(range(len(msb_recordings)))
-            msb_recording_index = sorted(msb_recording_index, key=lambda rec: (msb_recordings[rec]["artist_name"], msb_recordings[rec]["recording_name"]))
+            msb_recording_index = sorted(msb_recording_index, key=lambda rec: (msb_recordings[rec]["artist_name"],
+                                                                               msb_recordings[rec]["recording_name"]))
 
             log("  run exact match")
-            recording_mapping = match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_recording_index, unmatched)
-            inserted, msb_recording_index = insert_matches(recording_mapping, mb_recordings, msb_recordings, SOURCE_NAME)
+            recording_mapping = match_recordings(msb_recordings, msb_recording_index, mb_recordings,
+                                                 mb_recording_index, unmatched)
+            inserted, msb_recording_index = insert_matches(recording_mapping, mb_recordings,
+                                                           msb_recordings, SOURCE_NAME)
             stats['msid_mbid_mapping_count'] += inserted
             stats['exact_match_count'] += inserted
             log("  inserted %d exact matches. total: %d" % (inserted, stats['msid_mbid_mapping_count']))
 
             log("  run no parens match")
             msb_recordings = remove_parens(msb_recordings)
-            recording_mapping = match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_recording_index)
-            inserted, msb_recording_index = insert_matches(recording_mapping, mb_recordings, msb_recordings, NO_PARENS_SOURCE_NAME)
+            recording_mapping = match_recordings(msb_recordings, msb_recording_index,
+                                                 mb_recordings, mb_recording_index)
+            inserted, msb_recording_index = insert_matches(recording_mapping, mb_recordings, msb_recordings,
+                                                           NO_PARENS_SOURCE_NAME)
             stats['msid_mbid_mapping_count'] += inserted
             stats['noparen_match_count'] += inserted
             log("  inserted %d no paren matches. total: %d" % (inserted, stats['msid_mbid_mapping_count']))
 
-            stats["msb_coverage"] = int(stats["msid_mbid_mapping_count"] / stats["msb_recording_count"] * 100) 
+            stats["msb_coverage"] = int(stats["msid_mbid_mapping_count"] / stats["msb_recording_count"] * 100)
             log("mapping coverage: %d%%" % stats["msb_coverage"])
 
             msb_recordings = None

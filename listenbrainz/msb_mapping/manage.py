@@ -13,9 +13,11 @@ from mapping.test.test_pairs import test_pairs as action_test_pairs
 from mapping.write_mapping import write_all_mappings as action_write_all_mappings
 from mapping.utils import log, CRON_LOG_FILE
 
+
 @click.group()
 def cli():
     pass
+
 
 @cli.command()
 def create_all():

@@ -1,11 +1,12 @@
 import bz2
-import datetime, time
+import datetime
 import os
 import ujson
 from subprocess import run
 import sys
 import tarfile
 from tempfile import mkstemp
+import time
 
 import click
 import psycopg2
@@ -24,27 +25,28 @@ SELECT_QUERY = """
                     msb_artist_msid, mb_artist_credit_id,
                     msb_release_msid, mb_release_id
                FROM mapping.msid_mbid_mapping
-""";
+"""
 
 SELECT_QUERY_WITH_TEXT = """
     SELECT DISTINCT msb_recording_msid, mb_recording_id, msb_recording_name,
                     msb_artist_msid, mb_artist_credit_id, msb_artist_name,
                     msb_release_msid, mb_release_id, msb_release_name
                FROM mapping.msid_mbid_mapping
-""";
+"""
 
 SELECT_XREF_QUERY = """SELECT id, gid FROM %s"""
 SELECT_XREF_QUERY_WITH_TEXT = """SELECT id, gid, name FROM %s"""
 SELECT_ARTIST_CREDITS_QUERY = """
-    SELECT ac.id AS ac_id, ac.name AS ac_name, 
+    SELECT ac.id AS ac_id, ac.name AS ac_name,
            array_agg(a.gid) AS artist_mbids
-      FROM artist_credit ac 
-      JOIN artist_credit_name acn 
-        ON ac.id = acn.artist_credit 
-      JOIN artist a 
-        ON acn.artist = a.id 
+      FROM artist_credit ac
+      JOIN artist_credit_name acn
+        ON ac.id = acn.artist_credit
+      JOIN artist a
+        ON acn.artist = a.id
   GROUP BY ac.id, ac.name
-""";
+"""
+
 
 def load_id_xref(table, include_text):
 
@@ -130,21 +132,21 @@ def dump_mapping(dest_dir, timestamp, include_text, include_matchable, partial =
                     if not data:
                         break
 
-                    data_dict = { 
-                        "msb_artist_msid" : data["msb_artist_msid"], 
-                        "mb_artist_credit_id" : int(data["mb_artist_credit_id"]),
-                        "mb_artist_credit_mbids" : artist_credit_index[int(data["mb_artist_credit_id"])][1],
-                        "msb_release_msid" : data["msb_release_msid"], 
-                        "mb_release_mbid" : release_index[int(data["mb_release_id"])][0],
-                        "msb_recording_msid" : data["msb_recording_msid"], 
-                        "mb_recording_mbid" : recording_index[int(data["mb_recording_id"])][0], 
+                    data_dict = {
+                        "msb_artist_msid": data["msb_artist_msid"],
+                        "mb_artist_credit_id": int(data["mb_artist_credit_id"]),
+                        "mb_artist_credit_mbids": artist_credit_index[int(data["mb_artist_credit_id"])][1],
+                        "msb_release_msid": data["msb_release_msid"],
+                        "mb_release_mbid": release_index[int(data["mb_release_id"])][0],
+                        "msb_recording_msid": data["msb_recording_msid"],
+                        "mb_recording_mbid": recording_index[int(data["mb_recording_id"])][0],
                     }
                     if include_text:
                         data_dict["mb_recording_name"] = recording_index[int(data["mb_recording_id"])][1]
                         data_dict["mb_artist_credit_name"] = artist_credit_index[int(data["mb_artist_credit_id"])][0]
                         data_dict["mb_release_name"] = release_index[int(data["mb_release_id"])][1]
                     if include_matchable:
-                        data_dict["msb_recording_name_matchable"] = data["msb_recording_name"] 
+                        data_dict["msb_recording_name_matchable"] = data["msb_recording_name"]
                         data_dict["msb_artist_credit_name_matchable"] = data["msb_artist_name"]
 
                     f.write(ujson.dumps(data_dict) + "\n")
@@ -194,6 +196,6 @@ def write_mapping(dest_dir, timestamp, with_text=False, with_matchable=False):
 
 def write_all_mappings(dest_dir):
     ts = ("%06d" % (int(time.time() % 1000000)))
-    write_mapping(dest_dir, ts, with_text=False, with_matchable=False) 
-    write_mapping(dest_dir, ts, with_text=True, with_matchable=False) 
+    write_mapping(dest_dir, ts, with_text=False, with_matchable=False)
+    write_mapping(dest_dir, ts, with_text=True, with_matchable=False)
     write_mapping(dest_dir, ts, with_text=True, with_matchable=True)

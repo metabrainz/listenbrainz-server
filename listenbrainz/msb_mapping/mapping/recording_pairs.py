@@ -19,7 +19,7 @@ BATCH_SIZE = 5000
 
 def create_tables(mb_conn):
     """
-        Create tables needed to create the recording artist pairs. First 
+        Create tables needed to create the recording artist pairs. First
         is the temp table that the results will be stored in (in order
         to not conflict with the production version of this table).
         Second its format sort table to enables us to sort releases
@@ -33,14 +33,14 @@ def create_tables(mb_conn):
             curs.execute("DROP TABLE IF EXISTS mapping.tmp_recording_artist_credit_pairs")
             curs.execute("""CREATE TABLE mapping.tmp_recording_artist_credit_pairs (
                                          recording_name            TEXT NOT NULL,
-                                         recording_id              INTEGER NOT NULL, 
+                                         recording_id              INTEGER NOT NULL,
                                          artist_credit_name        TEXT NOT NULL,
                                          artist_credit_id          INTEGER NOT NULL,
                                          release_name              TEXT NOT NULL,
                                          release_id                INTEGER NOT NULL)""")
             curs.execute("DROP TABLE IF EXISTS mapping.tmp_recording_pair_releases")
             curs.execute("""CREATE TABLE mapping.tmp_recording_pair_releases (
-                                            id      SERIAL, 
+                                            id      SERIAL,
                                             release INTEGER)""")
             create_formats_table(mb_conn)
             create_stats_table(curs)
@@ -67,13 +67,12 @@ def create_indexes(conn):
         raise
 
 
-
 def create_temp_release_table(conn, stats):
     """
         Creates an intermediate table that orders releases by types, format,
         releases date, country and artist_credit. This sorting should in theory
         sort the most desired releases (albums, digital releases, first released)
-        over the other types in order to consistently match to the 
+        over the other types in order to consistently match to the
         same releases. This goal is of this is direct tracks that should
         be long on the same release to the same release avoiding scattering
         them across many different relases.
@@ -83,19 +82,19 @@ def create_temp_release_table(conn, stats):
         log("Create temp release table: select")
         query = """INSERT INTO mapping.tmp_recording_pair_releases (release)
                         SELECT r.id
-                          FROM musicbrainz.release_group rg 
-                          JOIN musicbrainz.release r ON rg.id = r.release_group 
-                          JOIN musicbrainz.release_country rc ON rc.release = r.id 
-                          JOIN musicbrainz.medium m ON m.release = r.id 
-                          JOIN musicbrainz.medium_format mf ON m.format = mf.id 
+                          FROM musicbrainz.release_group rg
+                          JOIN musicbrainz.release r ON rg.id = r.release_group
+                          JOIN musicbrainz.release_country rc ON rc.release = r.id
+                          JOIN musicbrainz.medium m ON m.release = r.id
+                          JOIN musicbrainz.medium_format mf ON m.format = mf.id
                           JOIN mapping.format_sort fs ON mf.id = fs.format
                           JOIN musicbrainz.artist_credit ac ON rg.artist_credit = ac.id
-                          JOIN musicbrainz.release_group_primary_type rgpt ON rg.type = rgpt.id   
-               FULL OUTER JOIN musicbrainz.release_group_secondary_type_join rgstj ON rg.id = rgstj.release_group   
+                          JOIN musicbrainz.release_group_primary_type rgpt ON rg.type = rgpt.id
+               FULL OUTER JOIN musicbrainz.release_group_secondary_type_join rgstj ON rg.id = rgstj.release_group
                FULL OUTER JOIN musicbrainz.release_group_secondary_type rgst ON rgstj.secondary_type = rgst.id
-                         WHERE rg.artist_credit != 1 
+                         WHERE rg.artist_credit != 1
                                %s
-                         ORDER BY rg.type, rgst.id desc, fs.sort, 
+                         ORDER BY rg.type, rgst.id desc, fs.sort,
                                   to_date(date_year::TEXT || '-' ||
                                           COALESCE(date_month,12)::TEXT || '-' ||
                                           COALESCE(date_day,28)::TEXT, 'YYYY-MM-DD'),
@@ -132,7 +131,7 @@ def swap_table_and_indexes(conn):
             curs.execute("DROP TABLE mapping.recording_artist_credit_pairs")
             curs.execute("""ALTER TABLE mapping.tmp_recording_artist_credit_pairs
                               RENAME TO recording_artist_credit_pairs""")
-            curs.execute("""ALTER TABLE mapping.tmp_recording_pair_releases 
+            curs.execute("""ALTER TABLE mapping.tmp_recording_pair_releases
                               RENAME TO recording_pair_releases""")
 
             curs.execute("""ALTER INDEX mapping.tmp_recording_artist_credit_pairs_idx_artist_credit_name
@@ -181,10 +180,13 @@ def create_pairs():
                 artist_recordings = {}
                 count = 0
                 log("Create pairs: fetch recordings")
-                mb_curs.execute("""SELECT lower(musicbrainz.musicbrainz_unaccent(r.name)) as recording_name, r.id as recording_id, 
-                                           lower(musicbrainz.musicbrainz_unaccent(ac.name)) as artist_credit_name, ac.id as artist_credit_id,
-                                           lower(musicbrainz.musicbrainz_unaccent(rl.name)) as release_name, rl.id as release_id,
-                                           rpr.id
+                mb_curs.execute("""SELECT lower(musicbrainz.musicbrainz_unaccent(r.name)) AS recording_name,
+                                          r.id AS recording_id,
+                                          lower(musicbrainz.musicbrainz_unaccent(ac.name)) AS artist_credit_name,
+                                          ac.id AS artist_credit_id,
+                                          lower(musicbrainz.musicbrainz_unaccent(rl.name)) AS release_name,
+                                          rl.id as release_id,
+                                          rpr.id
                                      FROM recording r
                                      JOIN artist_credit ac ON r.artist_credit = ac.id
                                      JOIN artist_credit_name acn ON ac.id = acn.artist_credit
@@ -224,18 +226,16 @@ def create_pairs():
                         if config.REMOVE_NON_WORD_CHARS:
                             artist_credit_name = re.sub(r'\W+', '', artist_credit_name)
                             release_name = re.sub(r'\W+', '', release_name)
-                        artist_recordings[recording_name] = (recording_name, row['recording_id'], 
+                        artist_recordings[recording_name] = (recording_name, row['recording_id'],
                             artist_credit_name, row['artist_credit_id'], release_name, row['release_id'])
 
                     last_ac_id = row['artist_credit_id']
-
 
                 rows.extend(artist_recordings.values())
                 if rows:
                     insert_rows(mb_curs2, "mapping.tmp_recording_artist_credit_pairs", rows)
                     mb_conn.commit()
                     count += len(rows)
-
 
             log("Create pairs: inserted %d rows total." % count)
             stats["recording_artist_pair_count"] = count

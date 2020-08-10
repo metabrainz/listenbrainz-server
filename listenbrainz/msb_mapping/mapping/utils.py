@@ -26,18 +26,18 @@ def create_stats_table(curs):
     '''
         Create the stats table if it doesn't exist
     '''
-    curs.execute("""CREATE TABLE IF NOT EXISTS mapping.mapping_stats 
+    curs.execute("""CREATE TABLE IF NOT EXISTS mapping.mapping_stats
                                  (stats    JSONB,
                                   created  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW())""")
 
 
-def insert_rows(curs, table, values): 
+def insert_rows(curs, table, values):
     '''
         Helper function to insert a large number of rows into postgres in one go.
     '''
- 
-    query = "INSERT INTO " + table + " VALUES %s" 
-    execute_values(curs, query, values, template=None) 
+
+    query = "INSERT INTO " + table + " VALUES %s"
+    execute_values(curs, query, values, template=None)
 
 
 def log(*args):
