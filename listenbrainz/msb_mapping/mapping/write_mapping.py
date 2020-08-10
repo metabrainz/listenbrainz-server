@@ -1,20 +1,20 @@
-#!/usr/bin/env python3
-
-import sys
+import bz2
 import datetime, time
 import os
-import bz2
 import ujson
+from subprocess import run
+import sys
 import tarfile
 from tempfile import mkstemp
-from subprocess import run
 
 import click
 import psycopg2
 import psycopg2.extras
 
-sys.path.append("..")
 import config
+
+
+# THIS MODULE IS NOT COMPLETE YET AND WILL BE IMPROVED DURING THE NEXT PASS
 
 
 DUMP_FILE = "msid-mbid-mapping%s"

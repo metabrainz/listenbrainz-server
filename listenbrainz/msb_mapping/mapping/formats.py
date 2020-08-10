@@ -92,6 +92,9 @@ ANALOG_FORMATS = [
 ]
 
 def insert_rows(id, curs, formats):
+    '''
+        Helper function for inserting format rows.
+    '''
 
     for format_id, format in formats:
         curs.execute("INSERT INTO mapping.format_sort values (%s, %s);",  tuple((id, format_id)))

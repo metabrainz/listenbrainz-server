@@ -1,37 +1,31 @@
-import sys
-import pprint
-import operator
 import datetime
-import subprocess
-from time import time, asctime
+import operator
 import re
+import subprocess
+import sys
+from time import time, asctime
 
-import ujson
 import psycopg2
 from psycopg2.extras import execute_values
 from psycopg2.errors import OperationalError, DuplicateTable, UndefinedObject
-from mapping.utils import create_schema, insert_rows
+import ujson
 
-import config
+from mapping.utils import create_schema, insert_rows, create_stats_table, log
 from mapping.formats import create_formats_table
-
+import config
 
 BATCH_SIZE = 5000
 
-debugging_aid = """
-                        SELECT r.id, r.name, country, date_year, date_month, date_day,
-                                  to_date(date_year::TEXT || '-' ||
-                                          COALESCE(date_month,12)::TEXT || '-' ||
-                                          COALESCE(date_day,28)::TEXT, 'YYYY-MM-DD')
-                          FROM mapping.recording_pair_releases rpr
-                          JOIN musicbrainz.release r 
-                            ON r.id = rpr.release
-                          JOIN musicbrainz.release_country rc 
-                            ON rc.release = r.id 
-                      ORDER BY rpr.id
-"""
 
 def create_tables(mb_conn):
+    """
+        Create tables needed to create the recording artist pairs. First 
+        is the temp table that the results will be stored in (in order
+        to not conflict with the production version of this table).
+        Second its format sort table to enables us to sort releases
+        according to preferred format, release date and type. Finally
+        a stats table is created if it doesn't exist.
+    """
 
     # drop/create finished table
     try:
@@ -49,32 +43,44 @@ def create_tables(mb_conn):
                                             id      SERIAL, 
                                             release INTEGER)""")
             create_formats_table(mb_conn)
-            curs.execute("""CREATE TABLE IF NOT EXISTS mapping.mapping_stats (stats    JSONB,
-                                                                              created  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW())""")
+            create_stats_table(curs)
             mb_conn.commit()
     except (psycopg2.errors.OperationalError, psycopg2.errors.UndefinedTable) as err:
-        print(asctime(), "failed to create recording pair tables", err)
+        log("failed to create recording pair tables", err)
         mb_conn.rollback()
         raise
 
 
 def create_indexes(conn):
+    """
+        Create indexes for the recording artist pairs
+    """
+
     try:
         with conn.cursor() as curs:
             curs.execute("""CREATE INDEX tmp_recording_artist_credit_pairs_idx_artist_credit_name
                                       ON mapping.tmp_recording_artist_credit_pairs(artist_credit_name)""")
         conn.commit()
     except OperationalError as err:
-        print(asctime(), "failed to create recording pair index", err)
+        log("failed to create recording pair index", err)
         conn.rollback()
         raise
 
 
 
 def create_temp_release_table(conn, stats):
+    """
+        Creates an intermediate table that orders releases by types, format,
+        releases date, country and artist_credit. This sorting should in theory
+        sort the most desired releases (albums, digital releases, first released)
+        over the other types in order to consistently match to the 
+        same releases. This goal is of this is direct tracks that should
+        be long on the same release to the same release avoiding scattering
+        them across many different relases.
+    """
 
     with conn.cursor() as curs:
-        print(asctime(), "Create temp release table: select")
+        log("Create temp release table: select")
         query = """INSERT INTO mapping.tmp_recording_pair_releases (release)
                         SELECT r.id
                           FROM musicbrainz.release_group rg 
@@ -96,12 +102,12 @@ def create_temp_release_table(conn, stats):
                                   country, rg.artist_credit, rg.name"""
 
         if config.USE_MINIMAL_DATASET:
-            print(asctime(), "Create temp release table: Using a minimal dataset!")
+            log("Create temp release table: Using a minimal dataset!")
             curs.execute(query % 'AND rg.artist_credit = 1160983')
         else:
             curs.execute(query % "")
 
-        print(asctime(), "Create temp release table: create indexes")
+        log("Create temp release table: create indexes")
         curs.execute("""CREATE INDEX tmp_recording_pair_releases_idx_release
                                   ON mapping.tmp_recording_pair_releases(release)""")
         curs.execute("""CREATE INDEX tmp_recording_pair_releases_idx_id
@@ -116,6 +122,9 @@ def create_temp_release_table(conn, stats):
 
 
 def swap_table_and_indexes(conn):
+    """
+        Swap temp tables and indexes for production tables and indexes.
+    """
 
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
@@ -134,11 +143,19 @@ def swap_table_and_indexes(conn):
                               RENAME TO recording_pair_releases_idx_id""")
         conn.commit()
     except OperationalError as err:
-        print(asctime(), "failed to swap in new recording pair tables", str(err))
+        log("failed to swap in new recording pair tables", str(err))
         conn.rollback()
         raise
 
+
 def create_pairs():
+    """
+        This function is the heard of the recording artist pair mapping. It
+        calculates the intermediate table and then fetches all the recordings
+        from these tables so that duplicate recording-artist pairs all
+        resolve to the "canonical" release-artist pairs that make
+        them suitable for inclusion in the msid-mapping.
+    """
 
     stats = {}
     stats["started"] = datetime.datetime.utcnow().isoformat()
@@ -148,7 +165,7 @@ def create_pairs():
         with mb_conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as mb_curs:
 
             # Create the dest table (perhaps dropping the old one first)
-            print(asctime(), "Create pairs: drop old tables, create new tables")
+            log("Create pairs: drop old tables, create new tables")
             create_schema(mb_conn)
             create_tables(mb_conn)
 
@@ -163,7 +180,7 @@ def create_pairs():
                 last_ac_id = None
                 artist_recordings = {}
                 count = 0
-                print(asctime(), "Create pairs: fetch recordings")
+                log("Create pairs: fetch recordings")
                 mb_curs.execute("""SELECT lower(musicbrainz.musicbrainz_unaccent(r.name)) as recording_name, r.id as recording_id, 
                                            lower(musicbrainz.musicbrainz_unaccent(ac.name)) as artist_credit_name, ac.id as artist_credit_id,
                                            lower(musicbrainz.musicbrainz_unaccent(rl.name)) as release_name, rl.id as release_id,
@@ -177,7 +194,7 @@ def create_pairs():
                                      JOIN mapping.tmp_recording_pair_releases rpr ON rl.id = rpr.release
                                     GROUP BY rpr.id, ac.id, rl.id, artist_credit_name, r.id, r.name, release_name
                                     ORDER BY ac.id, rpr.id""")
-                print(asctime(), "Create pairs: Insert rows into DB.")
+                log("Create pairs: Insert rows into DB.")
                 while True:
                     row = mb_curs.fetchone()
                     if not row:
@@ -195,7 +212,7 @@ def create_pairs():
                             insert_rows(mb_curs2, "mapping.tmp_recording_artist_credit_pairs", rows)
                             count += len(rows)
                             mb_conn.commit()
-                            print(asctime(), "Create pairs: inserted %d rows." % count)
+                            log("Create pairs: inserted %d rows." % count)
                             rows = []
 
                     recording_name = row['recording_name']
@@ -220,13 +237,13 @@ def create_pairs():
                     count += len(rows)
 
 
-            print(asctime(), "Create pairs: inserted %d rows total." % count)
+            log("Create pairs: inserted %d rows total." % count)
             stats["recording_artist_pair_count"] = count
 
-            print(asctime(), "Create pairs: create indexes")
+            log("Create pairs: create indexes")
             create_indexes(mb_conn)
 
-            print(asctime(), "Create pairs: swap tables and indexes into production.")
+            log("Create pairs: swap tables and indexes into production.")
             swap_table_and_indexes(mb_conn)
 
 
@@ -236,5 +253,5 @@ def create_pairs():
             curs.execute("""INSERT INTO mapping.mapping_stats (stats) VALUES (%s)""", ((ujson.dumps(stats),)))
         conn.commit()
 
-    print(asctime(), "done")
+    log("done")
     print()

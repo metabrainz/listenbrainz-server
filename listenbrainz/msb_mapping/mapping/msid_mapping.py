@@ -12,20 +12,25 @@ import subprocess
 import re
 import gc
 from sys import stdout
-from time import time, asctime
+from time import time
 from psycopg2.errors import OperationalError, DuplicateTable, UndefinedObject
 from psycopg2.extras import execute_values, register_uuid
-from mapping.utils import insert_rows
+from mapping.utils import insert_rows, create_stats_table, log
 import config
 
 # The name of the script to be saved in the source field.
 SOURCE_NAME = "exact"
 NO_PARENS_SOURCE_NAME = "noparens"
-NO_BRACKETS_SOURCE_NAME = "nobrackets"
-
 MSB_BATCH_SIZE = 20000000
 
+
 def create_table(conn):
+    """
+        Given a valid postgres connection, create temporary tables to generate
+        the mapping into. These temporary tables will later be swapped out
+        with the producton tables in a single transaction.
+    """
+
     try:
         with conn.cursor() as curs:
             curs.execute("DROP TABLE IF EXISTS mapping.tmp_msid_mbid_mapping")
@@ -44,16 +49,19 @@ def create_table(conn):
                                          mb_release_name     TEXT,
                                          mb_release_id       INTEGER,
                                          source              TEXT)""")
-            curs.execute("""CREATE TABLE IF NOT EXISTS mapping.mapping_stats (stats    JSONB,
-                                                                              created  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW())""")
+            create_stats_table(curs)
             conn.commit() 
     except DuplicateTable as err:
-        print(asctime(), "Cannot drop/create tables: ", str(err))
+        log("Cannot drop/create tables: ", str(err))
         conn.rollback() 
         raise
 
 
 def create_indexes(conn):
+    """ 
+        Create the indexes on the mapping.
+    """
+
     try:
         with conn.cursor() as curs:
             curs.execute("CREATE INDEX tmp_msid_mbid_mapping_idx_msb_recording_name ON mapping.tmp_msid_mbid_mapping(msb_recording_name)")
@@ -65,10 +73,16 @@ def create_indexes(conn):
             conn.commit()
     except OperationalError as err:
         conn.rollback()
-        print(asctime(), "creating indexes failed.")
+        log("creating indexes failed.")
         raise
 
+
 def swap_table_and_indexes(conn):
+    """
+        This function swaps the temporary files that the mapping was written for the 
+        production tables, inside a single transaction. This should isolate the
+        end users from ever seeing any down time in mapping availability.
+    """
 
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
@@ -89,11 +103,15 @@ def swap_table_and_indexes(conn):
                               RENAME TO msid_mbid_mapping_idx_msb_release_msid""")
         conn.commit()
     except OperationalError as err:
-        print(asctime(), "failed to swap in new mapping table", str(err))
+        log("failed to swap in new mapping table", str(err))
         conn.rollback()
         raise
-            
+      
+
 def load_MSB_recordings(offset):
+    """
+        Load a chunk of MSB recordings into ram and sort them, starting at the given offset.
+    """
 
     msb_recordings = []
 
@@ -147,6 +165,9 @@ def load_MSB_recordings(offset):
 
 
 def load_MB_recordings():
+    """
+        Load all of the recording artists pairs into ram and sort them for matching.
+    """
 
     mb_recordings = []
     with psycopg2.connect(config.DB_CONNECT_MB) as conn:
@@ -183,7 +204,7 @@ def load_MB_recordings():
                     "release_id" : release_id,
                 })
 
-    print(asctime(), "loaded %d MB recordings, now sorting" % len(mb_recordings))
+    log("loaded %d MB recordings, now sorting" % len(mb_recordings))
     mb_recording_index = list(range(len(mb_recordings)))
     mb_recording_index = sorted(mb_recording_index, key=lambda rec: (mb_recordings[rec]["artist_name"], mb_recordings[rec]["recording_name"]))
 
@@ -191,6 +212,11 @@ def load_MB_recordings():
 
 
 def match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_recording_index, unmatched = None):
+    """
+        This function will take the MB recordings, the MSB recordings and their indexes and walk both
+        lists in parallel in order to find exact matches between the two. The matches found
+        will be return by this function.
+    """
 
     recording_mapping = {}
     mb_index = -1
@@ -215,28 +241,28 @@ def match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_reco
         pp = "%-37s %-37s = %-27s %-37s %s" % (msb_row["artist_name"][0:25], msb_row["recording_name"][0:25], 
             mb_row["artist_name"][0:25], mb_row["recording_name"][0:25], msb_row["recording_msid"][0:8])
         if msb_row["artist_name"] > mb_row["artist_name"]:
-            if config.SHOW_MATCHES: print(asctime(), "> %s" % pp)
+            if config.SHOW_MATCHES: log("> %s" % pp)
             mb_row = None
             continue
 
         if msb_row["artist_name"] < mb_row["artist_name"]:
-            if config.SHOW_MATCHES: print(asctime(), "< %s" % pp)
+            if config.SHOW_MATCHES: log("< %s" % pp)
             msb_row = None
             continue
 
         if msb_row["recording_name"] > mb_row["recording_name"]:
-            if config.SHOW_MATCHES: print(asctime(), "} %s" % pp)
+            if config.SHOW_MATCHES: log("} %s" % pp)
             if unmatched: unmatched.write("%s\n" % msb_row['recording_msid'])
             mb_row = None
             continue
 
         if msb_row["recording_name"] < mb_row["recording_name"]:
-            if config.SHOW_MATCHES: print(asctime(), "{ %s" % pp)
+            if config.SHOW_MATCHES: log("{ %s" % pp)
             if unmatched: unmatched.write("%s\n" % msb_row['recording_msid'])
             msb_row = None
             continue
 
-        if config.SHOW_MATCHES: print(asctime(), "= %s %s %s" % (pp, mb_row["recording_id"], mb_row['release_id']))
+        if config.SHOW_MATCHES: log("= %s %s %s" % (pp, mb_row["recording_id"], mb_row['release_id']))
 
         k = "%s=%s" % (msb_row["recording_msid"], mb_row["recording_id"])
         try:
@@ -250,6 +276,9 @@ def match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_reco
 
 
 def insert_matches(recording_mapping, mb_recordings, msb_recordings, source):
+    """
+        Take the matched recording mapping and insert them into postgres
+    """
 
     completed = {}
     with psycopg2.connect(config.DB_CONNECT_MB) as conn:
@@ -298,20 +327,27 @@ def insert_matches(recording_mapping, mb_recordings, msb_recordings, source):
 
 
 def remove_parens(msb_recordings):
+    """
+        Take the MSB recordings and if they contain text in () at the end, remove the parens in order
+        for running the matching again. This picks up a few more matches.
+    """
+
     for recording in msb_recordings:
         recording["recording_name"] = recording["recording_name"][:recording["recording_name"].find("("):].strip()
 
     return msb_recordings
 
 
-def remove_brackets(msb_recordings):
-    for recording in msb_recordings:
-        recording["recording_name"] = recording["recording_name"][:recording["recording_name"].find("["):].strip()
-
-    return msb_recordings
-
-
 def create_mapping():
+    """
+        This is the heart of the mapper. It sets up the database, loads MB and MSB recordings,
+        carries out the matching and writes matches to disk. At the end of this process
+        the mapping is swapped from temp tables to the production tables in one transaction.
+
+        During the mapping process stats are kept about how many recordings were matched.
+        These are written to the mapping.stats table so they can be displayed as part of
+        the labs-api.
+    """
 
     stats = {}
     stats["started"] = datetime.datetime.utcnow().isoformat()
@@ -320,56 +356,47 @@ def create_mapping():
     stats['msid_mbid_mapping_count'] = 0
     stats['exact_match_count'] = 0
     stats['noparen_match_count'] = 0
-    stats['nobrackets_match_count'] = 0
 
-    print(asctime(), "Drop old temp table, create new one")
+    log("Drop old temp table, create new one")
     with psycopg2.connect(config.DB_CONNECT_MB) as conn:
         create_table(conn)
 
-    print(asctime(), "Load MB recordings")
+    log("Load MB recordings")
     mb_recordings, mb_recording_index = load_MB_recordings()
     stats['mb_recording_count'] = len(mb_recordings)
 
     msb_offset = 0
     with open("unmatched_recording_msids.txt", "w") as unmatched:
         while True:
-            print(asctime(), "Load MSB recordings at offset %d" % (msb_offset))
+            log("Load MSB recordings at offset %d" % (msb_offset))
             msb_recordings = load_MSB_recordings(msb_offset)
             if not msb_recordings:
-                print(asctime(), "  loaded none, we're done!")
+                log("  loaded none, we're done!")
                 break
 
             stats['msb_recording_count'] += len(msb_recordings)
 
-            print(asctime(), "  loaded %d items, sorting" % (len(msb_recordings)))
+            log("  loaded %d items, sorting" % (len(msb_recordings)))
             msb_recording_index = list(range(len(msb_recordings)))
             msb_recording_index = sorted(msb_recording_index, key=lambda rec: (msb_recordings[rec]["artist_name"], msb_recordings[rec]["recording_name"]))
 
-            print(asctime(), "  run exact match")
+            log("  run exact match")
             recording_mapping = match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_recording_index, unmatched)
             inserted, msb_recording_index = insert_matches(recording_mapping, mb_recordings, msb_recordings, SOURCE_NAME)
             stats['msid_mbid_mapping_count'] += inserted
             stats['exact_match_count'] += inserted
-            print(asctime(), "  inserted %d exact matches. total: %d" % (inserted, stats['msid_mbid_mapping_count']))
+            log("  inserted %d exact matches. total: %d" % (inserted, stats['msid_mbid_mapping_count']))
 
-            print(asctime(), "  run no parens match")
+            log("  run no parens match")
             msb_recordings = remove_parens(msb_recordings)
             recording_mapping = match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_recording_index)
             inserted, msb_recording_index = insert_matches(recording_mapping, mb_recordings, msb_recordings, NO_PARENS_SOURCE_NAME)
             stats['msid_mbid_mapping_count'] += inserted
             stats['noparen_match_count'] += inserted
-            print(asctime(), "  inserted %d no paren matches. total: %d" % (inserted, stats['msid_mbid_mapping_count']))
-
-            print(asctime(), "  run no bracket match")
-            msb_recordings = remove_brackets(msb_recordings)
-            recording_mapping = match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_recording_index)
-            inserted, msb_recording_index = insert_matches(recording_mapping, mb_recordings, msb_recordings, NO_BRACKETS_SOURCE_NAME)
-            stats['msid_mbid_mapping_count'] += inserted
-            stats['nobrackets_match_count'] += inserted
-            print(asctime(), "  inserted %d no brackets matches. total: %d" % (inserted, stats['msid_mbid_mapping_count']))
+            log("  inserted %d no paren matches. total: %d" % (inserted, stats['msid_mbid_mapping_count']))
 
             stats["msb_coverage"] = int(stats["msid_mbid_mapping_count"] / stats["msb_recording_count"] * 100) 
-            print(asctime(), "mapping coverage: %d%%" % stats["msb_coverage"])
+            log("mapping coverage: %d%%" % stats["msb_coverage"])
 
             msb_recordings = None
             msb_recording_index = None
@@ -380,9 +407,9 @@ def create_mapping():
     stats["completed"] = datetime.datetime.utcnow().isoformat()
 
     with psycopg2.connect(config.DB_CONNECT_MB) as conn:
-        print(asctime(), "create indexes")
+        log("create indexes")
         create_indexes(conn)
-        print(asctime(), "swap tables/indexes")
+        log("swap tables/indexes")
         swap_table_and_indexes(conn)
 
     with psycopg2.connect(config.DB_CONNECT_MB) as conn:
@@ -390,5 +417,5 @@ def create_mapping():
             curs.execute("""INSERT INTO mapping.mapping_stats (stats) VALUES (%s)""", ((ujson.dumps(stats),)))
         conn.commit()
 
-    print(asctime(), "done")
+    log("done")
     print()
