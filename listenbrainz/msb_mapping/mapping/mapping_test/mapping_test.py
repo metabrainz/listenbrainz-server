@@ -29,7 +29,7 @@ def _read_test_data(filename):
 def test_mapping():
     ''' This test will actually run as many test as there are in the CSV file '''
 
-    data = _read_test_data("mapping/test/mapping_test_cases.csv")
+    data = _read_test_data("mapping/mapping_test/mapping_test_cases.csv")
 
     passed = 0
     failed = 0
