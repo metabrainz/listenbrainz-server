@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as _ from "lodash";
 import { Choropleth } from "@nivo/geo";
 import { LegendProps } from "@nivo/legends";
 import { Theme } from "@nivo/core";
@@ -82,12 +83,22 @@ export default function CustomChoropleth(props: ChoroplethProps) {
       theme={isMobile ? themes.mobile : themes.desktop}
       domain={[
         0,
-        data.reduce(
-          (prevValue, currValue) => {
-            return prevValue.value > currValue.value ? prevValue : currValue;
-          },
-          { id: "default", value: -Infinity }
-        ).value,
+        (() => {
+          const sortedArray = _.sortBy(data, (datum) => datum.value);
+
+          const len = sortedArray.length;
+          if (len === 0) {
+            return 0;
+          }
+          if (len % 2 === 0) {
+            return Math.max(
+              sortedArray[Math.floor(len / 2)].value +
+                sortedArray[Math.ceil(len / 2)].value,
+              9
+            );
+          }
+          return Math.max(sortedArray[Math.ceil(len / 2)].value * 2, 9);
+        })(),
       ]}
       unknownColor="#efefef"
       label="properties.name"
