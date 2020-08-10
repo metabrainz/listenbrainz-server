@@ -1155,14 +1155,14 @@ class StatsAPITestCase(IntegrationTestCase):
                      "try setting 'force_recalculate' to 'false' to get a cached copy if available")
         self.assert500(response, message=error_msg)
 
-    def test_get_country_code_no_msids_and_mbids(self, mock_requests):
+    def test_get_country_code_no_msids_and_mbids(self):
         """ Test to check if no error is thrown if no msids and mbids are present"""
 
         # Overwrite the artist stats so that no artist has msids or mbids present
         artist_stats = deepcopy(self.artist_payload)
         for artist in artist_stats["artists"]:
             artist['artist_mbids'] = []
-            artist['artist_msid'] = ""
+            artist['artist_msid'] = None
         db_stats.insert_user_artists(self.user['id'], UserArtistStatJson(**{'all_time': artist_stats}))
 
         response = self.client.get(url_for('stats_api_v1.get_artist_map',
