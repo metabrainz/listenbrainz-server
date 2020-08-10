@@ -1,2 +1,2 @@
-# Create the mapping.
-0 4 * * * listenbrainz /usr/local/bin/python /code/mapper/manage.py create-all >> /code/mapper/lb-cron.log 2>&1
+# Create the recording pairs and mapping each monday and thursday
+0 4 * * 1,5 listenbrainz /usr/local/bin/python /code/mapper/manage.py create-all >> /code/mapper/lb-cron.log 2>&1
