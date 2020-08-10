@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 from datetime import datetime
 from unittest.mock import patch
 
@@ -1153,3 +1154,19 @@ class StatsAPITestCase(IntegrationTestCase):
         error_msg = ("An error occurred while calculating artist_map data, "
                      "try setting 'force_recalculate' to 'false' to get a cached copy if available")
         self.assert500(response, message=error_msg)
+
+    def test_get_country_code_no_msids_and_mbids(self, mock_requests):
+        """ Test to check if no error is thrown if no msids and mbids are present"""
+
+        # Overwrite the artist stats so that no artist has msids or mbids present
+        artist_stats = deepcopy(self.artist_payload)
+        for artist in artist_stats["artists"]:
+            artist['artist_mbids'] = []
+            artist['artist_msid'] = ""
+        db_stats.insert_user_artists(self.user['id'], UserArtistStatJson(**{'all_time': artist_stats}))
+
+        response = self.client.get(url_for('stats_api_v1.get_artist_map',
+                                           user_name=self.user['musicbrainz_id']), query_string={'range': 'all_time',
+                                                                                                 'force_recalculate': 'true'})
+        self.assert200(response)
+        self.assertListEqual([], json.loads(response.data)['payload']['artist_map'])
