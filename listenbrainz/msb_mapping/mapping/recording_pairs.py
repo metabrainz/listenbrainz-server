@@ -227,7 +227,8 @@ def create_pairs():
                             artist_credit_name = re.sub(r'\W+', '', artist_credit_name)
                             release_name = re.sub(r'\W+', '', release_name)
                         artist_recordings[recording_name] = (recording_name, row['recording_id'],
-                            artist_credit_name, row['artist_credit_id'], release_name, row['release_id'])
+                                                             artist_credit_name, row['artist_credit_id'], 
+                                                             release_name, row['release_id'])
 
                     last_ac_id = row['artist_credit_id']
 
@@ -245,7 +246,6 @@ def create_pairs():
 
             log("Create pairs: swap tables and indexes into production.")
             swap_table_and_indexes(mb_conn)
-
 
     stats["completed"] = datetime.datetime.utcnow().isoformat()
     with psycopg2.connect(config.DB_CONNECT_MB) as conn:

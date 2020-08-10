@@ -212,12 +212,13 @@ def load_MB_recordings():
 
     log("loaded %d MB recordings, now sorting" % len(mb_recordings))
     mb_recording_index = list(range(len(mb_recordings)))
-    mb_recording_index = sorted(mb_recording_index, key=lambda rec: (mb_recordings[rec]["artist_name"], mb_recordings[rec]["recording_name"]))
+    mb_recording_index = sorted(mb_recording_index, key=lambda rec: (mb_recordings[rec]["artist_name"], 
+                                                                     mb_recordings[rec]["recording_name"]))
 
     return (mb_recordings, mb_recording_index)
 
 
-def match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_recording_index, unmatched = None):
+def match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_recording_index, unmatched=None):
     """
         This function will take the MB recordings, the MSB recordings and their indexes and walk both
         lists in parallel in order to find exact matches between the two. The matches found
@@ -247,23 +248,27 @@ def match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_reco
         pp = "%-37s %-37s = %-27s %-37s %s" % (msb_row["artist_name"][0:25], msb_row["recording_name"][0:25],
             mb_row["artist_name"][0:25], mb_row["recording_name"][0:25], msb_row["recording_msid"][0:8])
         if msb_row["artist_name"] > mb_row["artist_name"]:
-            if config.SHOW_MATCHES: log("> %s" % pp)
+            if config.SHOW_MATCHES: 
+                log("> %s" % pp)
             mb_row = None
             continue
 
         if msb_row["artist_name"] < mb_row["artist_name"]:
-            if config.SHOW_MATCHES: log("< %s" % pp)
+            if config.SHOW_MATCHES: 
+                log("< %s" % pp)
             msb_row = None
             continue
 
         if msb_row["recording_name"] > mb_row["recording_name"]:
-            if config.SHOW_MATCHES: log("} %s" % pp)
+            if config.SHOW_MATCHES: 
+                log("} %s" % pp)
             if unmatched: unmatched.write("%s\n" % msb_row['recording_msid'])
             mb_row = None
             continue
 
         if msb_row["recording_name"] < mb_row["recording_name"]:
-            if config.SHOW_MATCHES: log("{ %s" % pp)
+            if config.SHOW_MATCHES: 
+                log("{ %s" % pp)
             if unmatched: unmatched.write("%s\n" % msb_row['recording_msid'])
             msb_row = None
             continue
@@ -274,7 +279,7 @@ def match_recordings(msb_recordings, msb_recording_index, mb_recordings, mb_reco
         try:
             recording_mapping[k][0] += 1
         except KeyError:
-            recording_mapping[k] = [ 1, msb_recording_index[msb_index], mb_recording_index[mb_index] ]
+            recording_mapping[k] = [1, msb_recording_index[msb_index], mb_recording_index[mb_index]]
 
         msb_row = None
 
@@ -296,21 +301,19 @@ def insert_matches(recording_mapping, mb_recordings, msb_recordings, source):
                 a = recording_mapping[k]
                 completed[a[0]] = 1
                 rows.append((a[0],
-                    msb_recordings[a[1]]["artist_name"],
-                    msb_recordings[a[1]]["artist_msid"],
-                    msb_recordings[a[1]]["recording_name"],
-                    msb_recordings[a[1]]["recording_msid"],
-                    msb_recordings[a[1]]["release_name"],
-                    msb_recordings[a[1]]["release_msid"],
-
-                    mb_recordings[a[2]]["artist_name"],
-                    mb_recordings[a[2]]["artist_credit_id"],
-                    mb_recordings[a[2]]["recording_name"],
-                    mb_recordings[a[2]]["recording_id"],
-                    mb_recordings[a[2]]["release_name"],
-                    mb_recordings[a[2]]["release_id"],
-                    source
-                    ))
+                            msb_recordings[a[1]]["artist_name"],
+                            msb_recordings[a[1]]["artist_msid"],
+                            msb_recordings[a[1]]["recording_name"],
+                            msb_recordings[a[1]]["recording_msid"],
+                            msb_recordings[a[1]]["release_name"],
+                            msb_recordings[a[1]]["release_msid"],
+                            mb_recordings[a[2]]["artist_name"],
+                            mb_recordings[a[2]]["artist_credit_id"],
+                            mb_recordings[a[2]]["recording_name"],
+                            mb_recordings[a[2]]["recording_id"],
+                            mb_recordings[a[2]]["release_name"],
+                            mb_recordings[a[2]]["release_id"],
+                            source))
                 total += 1
 
                 if len(rows) == 2000:

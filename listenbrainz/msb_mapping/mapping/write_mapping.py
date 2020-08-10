@@ -83,11 +83,10 @@ def load_artist_credit_xref():
 
                 index[row['ac_id']] = (row['ac_name'], row['artist_mbids'][1:-1].split(","))
 
-
     return index
 
 
-def dump_mapping(dest_dir, timestamp, include_text, include_matchable, partial = False):
+def dump_mapping(dest_dir, timestamp, include_text, include_matchable, partial=False):
 
     print("load artist index...")
     artist_credit_index = load_artist_credit_xref()
@@ -111,7 +110,7 @@ def dump_mapping(dest_dir, timestamp, include_text, include_matchable, partial =
 
     count = 0
     fh, temp_file = mkstemp()
-    os.close(fh) # pesky!
+    os.close(fh)  # pesky!
 
     print("writing mapping to %s" % temp_file)
     with open(temp_file, "wt") as f:
