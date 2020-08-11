@@ -144,13 +144,7 @@ export default class UserArtistMap extends React.Component<
             </h3>
           </div>
         </div>
-        <Loader
-          isLoading={loading}
-          className="flex-center"
-          style={{
-            minHeight: "inherit",
-          }}
-        >
+        <Loader isLoading={loading}>
           {hasError && (
             <div
               className="flex-center"

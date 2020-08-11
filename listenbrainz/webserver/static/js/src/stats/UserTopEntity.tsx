@@ -104,19 +104,13 @@ export default class UserTopEntity extends React.Component<
     return (
       <Card
         style={{
-          height: 550,
+          minHeight: 550,
           marginTop: 20,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
+          textAlign: "center",
         }}
       >
         <h3 className="capitalize-bold">Top {entityTextOnCard}</h3>
-        <Loader
-          isLoading={loading}
-          className="flex-center"
-          style={{ height: "80%" }}
-        >
+        <Loader isLoading={loading}>
           <table
             style={{
               whiteSpace: "nowrap",
@@ -271,13 +265,13 @@ export default class UserTopEntity extends React.Component<
                 )}
             </tbody>
           </table>
+          <a
+            href={`${window.location.origin}/user/${user.name}/charts?range=${range}&entity=${entity}`}
+            style={{ marginTop: 10 }}
+          >
+            View More
+          </a>
         </Loader>
-        <a
-          href={`${window.location.origin}/user/${user.name}/charts?range=${range}&entity=${entity}`}
-          style={{ marginTop: 10 }}
-        >
-          View More
-        </a>
       </Card>
     );
   }
