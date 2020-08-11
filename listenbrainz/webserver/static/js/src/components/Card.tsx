@@ -14,8 +14,9 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       background: "#FFFFFF",
       border: "1px solid #EEEEEE",
       boxSizing: "border-box",
-      boxShadow: "0px 4px 4px rgba(192,192,192,0.25)",
-      borderRadius: "12px",
+      boxShadow:
+        "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
+      borderRadius: "8px",
       height: "100%",
       width: "100%",
       ...propStyle,
