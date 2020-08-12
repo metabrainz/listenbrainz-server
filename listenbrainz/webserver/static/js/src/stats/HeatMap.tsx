@@ -67,7 +67,10 @@ export default function Heatmap(props: HeatMapProps) {
           },
         },
       }}
-      hoverTarget="column"
+      hoverTarget="cell"
+      cellOpacity={0.85}
+      cellHoverOpacity={1}
+      cellHoverOthersOpacity={0.85}
       margin={isMobile ? margin.mobile : margin.desktop}
       forceSquare
     />

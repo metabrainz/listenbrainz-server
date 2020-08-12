@@ -106,7 +106,6 @@ def get_listens(user_name):
 
     if time_range < 1 or time_range > MAX_TIME_RANGE:
         log_raise_400("time_range must be between 1 and %d." % MAX_TIME_RANGE)
-        
 
     # if no max given, use now()
     if max_ts and min_ts:
@@ -119,9 +118,14 @@ def get_listens(user_name):
     if max_ts == None and min_ts == None:
         max_ts = max_ts_per_user + 1
 
+    # Validate requetsed listen count is positive
+    count = min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET)
+    if count < 0:
+        log_raise_400("Number of listens requested should be positive")
+
     listens = db_conn.fetch_listens(
         user_name,
-        limit=min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET),
+        limit=count,
         from_ts=min_ts,
         to_ts=max_ts,
         time_range=time_range

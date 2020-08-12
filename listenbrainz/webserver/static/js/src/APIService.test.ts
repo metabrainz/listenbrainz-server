@@ -285,7 +285,103 @@ describe("getUserListeningActivity", () => {
   });
 });
 
-describe("getUseListenCount", () => {
+describe("getUserDailyActivity", () => {
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ latest_import: "0" }),
+      });
+    });
+  });
+
+  it("calls fetch correctly when optional parameters are passed", async () => {
+    await apiService.getUserDailyActivity("foobar", "week");
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/stats/user/foobar/daily-activity?range=week"
+    );
+  });
+
+  it("calls fetch correctly when optional parameters are not passed", async () => {
+    await apiService.getUserDailyActivity("foobar");
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/stats/user/foobar/daily-activity?range=all_time"
+    );
+  });
+
+  it("throws appropriate error if statistics haven't been calculated", async () => {
+    window.fetch = jest.fn().mockImplementationOnce(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 204,
+        statusText: "NO CONTENT",
+      });
+    });
+
+    await expect(apiService.getUserDailyActivity("foobar")).rejects.toThrow(
+      Error("HTTP Error NO CONTENT")
+    );
+  });
+
+  it("calls checkStatus once", async () => {
+    apiService.checkStatus = jest.fn();
+
+    await apiService.getUserDailyActivity("foobar");
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("getUserArtistMap", () => {
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ latest_import: "0" }),
+      });
+    });
+  });
+
+  it("calls fetch correctly when optional parameters are passed", async () => {
+    await apiService.getUserArtistMap("foobar", "week", true);
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/stats/user/foobar/artist-map?range=week&force_recalculate=true"
+    );
+  });
+
+  it("calls fetch correctly when optional parameters are not passed", async () => {
+    await apiService.getUserArtistMap("foobar");
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/stats/user/foobar/artist-map?range=all_time&force_recalculate=false"
+    );
+  });
+
+  it("throws appropriate error if statistics haven't been calculated", async () => {
+    window.fetch = jest.fn().mockImplementationOnce(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 204,
+        statusText: "NO CONTENT",
+      });
+    });
+
+    await expect(apiService.getUserArtistMap("foobar")).rejects.toThrow(
+      Error("HTTP Error NO CONTENT")
+    );
+  });
+
+  it("calls checkStatus once", async () => {
+    apiService.checkStatus = jest.fn();
+
+    await apiService.getUserArtistMap("foobar");
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("getUserListenCount", () => {
   beforeEach(() => {
     // Mock function for fetch
     window.fetch = jest.fn().mockImplementation(() => {

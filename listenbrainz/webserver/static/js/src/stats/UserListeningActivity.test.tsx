@@ -142,7 +142,9 @@ describe("getData", () => {
 
     const spy = jest.spyOn(instance.APIService, "getUserListeningActivity");
     spy.mockImplementation(() =>
-      Promise.resolve(userListeningActivityResponseWeek)
+      Promise.resolve(
+        userListeningActivityResponseWeek as UserListeningActivityResponse
+      )
     );
     await instance.getData();
 
@@ -194,7 +196,9 @@ describe("processData", () => {
     );
     const instance = wrapper.instance();
 
-    const result = instance.processData(userListeningActivityResponseWeek);
+    const result = instance.processData(
+      userListeningActivityResponseWeek as UserListeningActivityResponse
+    );
 
     expect(result).toEqual(userListeningActivityProcessedDataWeek);
   });
@@ -205,7 +209,9 @@ describe("processData", () => {
     );
     const instance = wrapper.instance();
 
-    const result = instance.processData(userListeningActivityResponseMonth);
+    const result = instance.processData(
+      userListeningActivityResponseMonth as UserListeningActivityResponse
+    );
 
     expect(result).toEqual(userListeningActivityProcessedDataMonth);
   });
@@ -216,7 +222,9 @@ describe("processData", () => {
     );
     const instance = wrapper.instance();
 
-    const result = instance.processData(userListeningActivityResponseYear);
+    const result = instance.processData(
+      userListeningActivityResponseYear as UserListeningActivityResponse
+    );
 
     expect(result).toEqual(userListeningActivityProcessedDataYear);
   });
@@ -227,7 +235,9 @@ describe("processData", () => {
     );
     const instance = wrapper.instance();
 
-    const result = instance.processData(userListeningActivityResponseAllTime);
+    const result = instance.processData(
+      userListeningActivityResponseAllTime as UserListeningActivityResponse
+    );
 
     expect(result).toEqual(userListeningActivityProcessedDataAllTime);
   });

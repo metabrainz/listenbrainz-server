@@ -6,6 +6,7 @@ import Pill from "../components/Pill";
 import UserListeningActivity from "./UserListeningActivity";
 import UserTopEntity from "./UserTopEntity";
 import UserDailyActivity from "./UserDailyActivity";
+import UserArtistMap from "./UserArtistMap";
 
 export type UserReportsProps = {
   user: ListenBrainzUser;
@@ -140,6 +141,9 @@ export default class UserReports extends React.Component<
         </div>
         <ErrorBoundary>
           <UserDailyActivity range={range} apiUrl={apiUrl} user={user} />
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <UserArtistMap range={range} apiUrl={apiUrl} user={user} />
         </ErrorBoundary>
       </div>
     );

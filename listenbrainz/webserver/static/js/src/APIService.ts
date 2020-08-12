@@ -259,6 +259,24 @@ export default class APIService {
     return data;
   };
 
+  getUserArtistMap = async (
+    userName: string,
+    range: UserStatsAPIRange = "all_time",
+    forceRecalculate: boolean = false
+  ) => {
+    const url = `${this.APIBaseURI}/stats/user/${userName}/artist-map?range=${range}&force_recalculate=${forceRecalculate}`;
+    const response = await fetch(url);
+    this.checkStatus(response);
+    if (response.status === 204) {
+      const error = new APIError(`HTTP Error ${response.statusText}`);
+      error.status = response.statusText;
+      error.response = response;
+      throw error;
+    }
+    const data = response.json();
+    return data;
+  };
+
   checkStatus = (response: Response): void => {
     if (response.status >= 200 && response.status < 300) {
       return;

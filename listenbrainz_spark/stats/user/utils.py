@@ -4,7 +4,7 @@ from datetime import datetime
 
 from listenbrainz_spark.exceptions import HDFSException
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
-from listenbrainz_spark.stats import adjust_days, adjust_months, run_query
+from listenbrainz_spark.stats import offset_days, offset_months, run_query
 from listenbrainz_spark.utils import get_listens
 
 
@@ -16,7 +16,7 @@ def get_latest_listen_ts():
             df = get_listens(now, now, LISTENBRAINZ_DATA_DIRECTORY)
             break
         except HDFSException:
-            now = adjust_months(now, 1)
+            now = offset_months(now, 1)
 
     df.createOrReplaceTempView('latest_listen_ts')
     result = run_query("SELECT MAX(listened_at) as max_timestamp FROM latest_listen_ts")
@@ -42,4 +42,4 @@ def filter_listens(df, from_date, to_date):
 
 def get_last_monday(date):
     """ Get date for Monday before 'date' """
-    return adjust_days(date, date.weekday())
+    return offset_days(date, date.weekday())

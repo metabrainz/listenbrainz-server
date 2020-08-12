@@ -9,7 +9,7 @@ from listenbrainz_spark import utils
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.exceptions import HDFSException
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
-from listenbrainz_spark.stats import (adjust_days, adjust_months, get_day_end,
+from listenbrainz_spark.stats import (offset_days, offset_months, get_day_end,
                                       get_month_end, get_year_end, run_query)
 from listenbrainz_spark.tests import SparkTestCase
 from pyspark.sql import Row
@@ -91,7 +91,7 @@ class ListeningActivityTestCase(SparkTestCase):
         time_range = []
         while day < to_date:
             time_range.append([day.strftime('%A %d %B %Y'), day, get_day_end(day)])
-            day = adjust_days(day, 1, shift_backwards=False)
+            day = offset_days(day, 1, shift_backwards=False)
         time_range_df = run_query("SELECT * FROM time_range")
         time_range_result = time_range_df.rdd.map(list).collect()
         self.assertListEqual(time_range_result, time_range)
@@ -118,7 +118,7 @@ class ListeningActivityTestCase(SparkTestCase):
         time_range = []
         while day < to_date:
             time_range.append([day.strftime('%d %B %Y'), day, get_day_end(day)])
-            day = adjust_days(day, 1, shift_backwards=False)
+            day = offset_days(day, 1, shift_backwards=False)
         time_range_df = run_query("SELECT * FROM time_range")
         time_range_result = time_range_df.rdd.map(list).collect()
         self.assertListEqual(time_range_result, time_range)
@@ -145,7 +145,7 @@ class ListeningActivityTestCase(SparkTestCase):
         time_range = []
         while month < to_date:
             time_range.append([month.strftime('%B %Y'), month, get_month_end(month)])
-            month = adjust_months(month, 1, shift_backwards=False)
+            month = offset_months(month, 1, shift_backwards=False)
         time_range_df = run_query("SELECT * FROM time_range")
         time_range_result = time_range_df.rdd.map(list).collect()
         self.assertListEqual(time_range_result, time_range)

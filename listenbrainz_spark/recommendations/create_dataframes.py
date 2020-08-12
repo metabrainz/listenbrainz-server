@@ -1,7 +1,7 @@
 import sys
 import uuid
 import logging
-from time import time
+import time
 from datetime import datetime
 
 import listenbrainz_spark
@@ -126,7 +126,7 @@ def get_dates_to_train_data(train_model_window):
             to_date (datetime): Date upto which fetch listens.
     """
     to_date = get_latest_listen_ts()
-    from_date = stats.adjust_days(to_date, train_model_window)
+    from_date = stats.offset_days(to_date, train_model_window)
     # shift to the first of the month
     from_date = stats.replace_days(from_date, 1)
     return to_date, from_date
@@ -278,7 +278,7 @@ def get_users_dataframe(mapped_listens_df, metadata):
 
 def main(train_model_window=None):
 
-    ti = time()
+    ti = time.monotonic()
     # dict to save dataframe metadata which would be later merged in model_metadata dataframe.
     metadata = {}
     # "updated" should always be set to False in this script.
@@ -310,7 +310,7 @@ def main(train_model_window=None):
 
     generate_dataframe_id(metadata)
     save_dataframe_metadata_to_hdfs(metadata)
-    total_time = '{:.2f}'.format((time() - ti) / 60)
+    total_time = '{:.2f}'.format((time.monotonic() - ti) / 60)
 
     message = [{
         'type': 'cf_recording_dataframes',
