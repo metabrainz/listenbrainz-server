@@ -173,7 +173,13 @@ export default class UserDailyActivity extends React.Component<
     } = this.state;
 
     return (
-      <Card style={{ marginTop: 20 }} ref={this.graphContainer}>
+      <Card
+        style={{
+          marginTop: 20,
+          minHeight: (graphContainerWidth || 1200) * 0.4,
+        }}
+        ref={this.graphContainer}
+      >
         <div className="row">
           <div className="col-xs-12">
             <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
