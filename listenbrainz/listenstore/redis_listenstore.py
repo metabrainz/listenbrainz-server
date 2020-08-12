@@ -16,6 +16,8 @@ class RedisListenStore(ListenStore):
     RECENT_LISTENS_KEY = "lb_recent_sorted"
     RECENT_LISTENS_MAX = 100
     LISTEN_COUNT_PER_DAY_EXPIRY_TIME = 3 * 24 * 60 * 60  # 3 days in seconds
+    LISTEN_COUNT_PER_DAY_KEY_FORMAT = "lb_listen_count_for_day_{}"
+
 
     def __init__(self, log, conf):
         super(RedisListenStore, self).__init__(log)
@@ -93,14 +95,14 @@ class RedisListenStore(ListenStore):
         return recent
 
     def increment_listen_count_for_day(self, day: datetime, count: int):
-        key = "listens_for_{}".format(day.strftime('%Y%m%d'))
+        key = self.LISTEN_COUNT_PER_DAY_KEY_FORMAT.format(day.strftime('%Y%m%d'))
         if self.redis.exists(key):
             self.redis.incrby(key, count)
         else:
             self.redis.setex(key, self.LISTEN_COUNT_PER_DAY_EXPIRY_TIME, count)
 
     def get_listen_count_for_day(self, day: datetime) -> Optional[int]:
-        key = "listens_for_{}".format(day.strftime('%Y%m%d'))
+        key = self.LISTEN_COUNT_PER_DAY_KEY_FORMAT.format(day.strftime('%Y%m%d'))
         listen_count = self.redis.get(key)
         if listen_count:
             return int(listen_count)

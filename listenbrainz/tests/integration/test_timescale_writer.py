@@ -29,6 +29,9 @@ class TimescaleWriterTestCase(IntegrationTestCase):
                                    'REDIS_PORT': config.REDIS_PORT,
                                    'REDIS_NAMESPACE': config.REDIS_NAMESPACE})
 
+    def tearDown(self):
+        self.rs.redis.flushall()
+
     def send_listen(self, user, filename):
         with open(self.path_to_data_file(filename)) as f:
             payload = json.load(f)
