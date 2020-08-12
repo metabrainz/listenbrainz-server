@@ -58,6 +58,16 @@ class TimescaleWriterTestCase(IntegrationTestCase):
         self.assertEqual(len(recent), 1)
         self.assertIsInstance(recent[0], Listen)
 
+    def test_update_listen_count_per_day(self):
+        """ Tests that timescale writer updates the listen count for the
+        day in redis for each successful batch written
+        """
+        user = db_user.get_or_create(1, 'testtimescaleuser %d' % randint(1,50000))
+        r = self.send_listen(user, 'valid_single.json')
+        self.assert200(r)
+        time.sleep(2)
+
+        self.assertEqual(1, self.rs.get_listen_count_for_day(datetime.utcnow()))
 
     def test_dedup_user_special_characters(self):
 

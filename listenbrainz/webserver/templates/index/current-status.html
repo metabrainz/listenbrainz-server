@@ -28,6 +28,14 @@
             <td>{{ listen_count }}</td>
           </tr>
         {% endif %}
+        {% if listen_counts_per_day %}
+          {% for data in listen_counts_per_day %}
+          <tr>
+            <td>Number of listens submitted on {{ data['date'] }}</td>
+            <td>{{ data['listen_count'] }}</td>
+          </tr>
+          {% endfor %}
+        {% endif %}
         </tbody>
       </table>
 
