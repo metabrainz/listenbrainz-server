@@ -110,13 +110,13 @@ def current_status():
     for delta in range(2):
         try:
             day = datetime.utcnow() - relativedelta(days=delta)
-            listen_count = _redis.get_listen_count_for_day(day)
+            day_listen_count = _redis.get_listen_count_for_day(day)
         except:
             current_app.logger.error("Could not get today's listen count from redis", exc_info=True)
-            listen_count = None
+            day_listen_count = None
         listen_counts_per_day.append({
             "date": day.strftime('%Y-%m-%d'),
-            "listen_count": format(listen_count, ',d') if listen_count else "0"
+            "listen_count": format(day_listen_count, ',d') if day_listen_count else "0"
         })
 
     return render_template(
