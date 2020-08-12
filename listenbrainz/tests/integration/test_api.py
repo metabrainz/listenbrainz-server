@@ -174,6 +174,14 @@ class APITestCase(IntegrationTestCase):
         self.assertEqual(data['listens'][2]['listened_at'], 1400000000)
         self.assertEqual(data['listens'][3]['listened_at'], old_ts)
 
+        # Check time_range ranges
+        url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
+        response = self.client.get(url, query_string={'time_range': 0 })
+        self.assert400(response)
+
+        url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
+        response = self.client.get(url, query_string={'time_range': 74 })
+        self.assert400(response)
 
     def test_get_listens_order(self):
         """ Test to make sure that the api sends listens in valid order.
