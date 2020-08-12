@@ -25,7 +25,7 @@ To inspect the cron log of the container do:
 Future improvements
 -------------------
 
-Very soon, (in the next few weeks at the latest) this code needs a few more improvements:
+This code needs a few more improvements:
 
 1. Add sentry support to give feedback about the status of cron jobs and if something has failed.
 2. Add a develop.sh file and documentation on how to use it for local development.
