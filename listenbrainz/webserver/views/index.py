@@ -119,9 +119,6 @@ def current_status():
             "listen_count": format(listen_count, ',d') if listen_count else "0"
         })
 
-    current_app.logger.error(listen_counts_per_day)
-
-
     return render_template(
         "index/current-status.html",
         load=load,
