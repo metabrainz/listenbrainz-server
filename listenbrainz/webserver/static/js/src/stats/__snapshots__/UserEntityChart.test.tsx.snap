@@ -14,6 +14,7 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
     style={
       Object {
         "marginTop": "1em",
+        "minHeight": 500,
       }
     }
   >
@@ -40,10 +41,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   "borderRadius": "24px",
                   "boxSizing": "border-box",
                   "color": "#BBBBBB",
-                  "fontWeight": "bold",
-                  "margin": "0px 6px",
+                  "margin": "2px 6px 12px 6px",
                   "outline": "none",
-                  "padding": "2px 9px",
+                  "padding": "3px 12px",
                 }
               }
               type="button"
@@ -65,10 +65,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   "borderRadius": "24px",
                   "boxSizing": "border-box",
                   "color": "#BBBBBB",
-                  "fontWeight": "bold",
-                  "margin": "0px 6px",
+                  "margin": "2px 6px 12px 6px",
                   "outline": "none",
-                  "padding": "2px 9px",
+                  "padding": "3px 12px",
                 }
               }
               type="button"
@@ -90,10 +89,9 @@ exports[`UserEntityChart Page renders correctly for artists 1`] = `
                   "borderRadius": "24px",
                   "boxSizing": "border-box",
                   "color": "#BBBBBB",
-                  "fontWeight": "bold",
-                  "margin": "0px 6px",
+                  "margin": "2px 6px 12px 6px",
                   "outline": "none",
-                  "padding": "2px 9px",
+                  "padding": "3px 12px",
                 }
               }
               type="button"
@@ -708,6 +706,7 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
     style={
       Object {
         "marginTop": "1em",
+        "minHeight": 500,
       }
     }
   >
@@ -734,10 +733,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   "borderRadius": "24px",
                   "boxSizing": "border-box",
                   "color": "#BBBBBB",
-                  "fontWeight": "bold",
-                  "margin": "0px 6px",
+                  "margin": "2px 6px 12px 6px",
                   "outline": "none",
-                  "padding": "2px 9px",
+                  "padding": "3px 12px",
                 }
               }
               type="button"
@@ -759,10 +757,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   "borderRadius": "24px",
                   "boxSizing": "border-box",
                   "color": "#BBBBBB",
-                  "fontWeight": "bold",
-                  "margin": "0px 6px",
+                  "margin": "2px 6px 12px 6px",
                   "outline": "none",
-                  "padding": "2px 9px",
+                  "padding": "3px 12px",
                 }
               }
               type="button"
@@ -784,10 +781,9 @@ exports[`UserEntityChart Page renders correctly for recording 1`] = `
                   "borderRadius": "24px",
                   "boxSizing": "border-box",
                   "color": "#BBBBBB",
-                  "fontWeight": "bold",
-                  "margin": "0px 6px",
+                  "margin": "2px 6px 12px 6px",
                   "outline": "none",
-                  "padding": "2px 9px",
+                  "padding": "3px 12px",
                 }
               }
               type="button"
@@ -1652,6 +1648,7 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
     style={
       Object {
         "marginTop": "1em",
+        "minHeight": 500,
       }
     }
   >
@@ -1678,10 +1675,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   "borderRadius": "24px",
                   "boxSizing": "border-box",
                   "color": "#BBBBBB",
-                  "fontWeight": "bold",
-                  "margin": "0px 6px",
+                  "margin": "2px 6px 12px 6px",
                   "outline": "none",
-                  "padding": "2px 9px",
+                  "padding": "3px 12px",
                 }
               }
               type="button"
@@ -1703,10 +1699,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   "borderRadius": "24px",
                   "boxSizing": "border-box",
                   "color": "#BBBBBB",
-                  "fontWeight": "bold",
-                  "margin": "0px 6px",
+                  "margin": "2px 6px 12px 6px",
                   "outline": "none",
-                  "padding": "2px 9px",
+                  "padding": "3px 12px",
                 }
               }
               type="button"
@@ -1728,10 +1723,9 @@ exports[`UserEntityChart Page renders correctly for releases 1`] = `
                   "borderRadius": "24px",
                   "boxSizing": "border-box",
                   "color": "#BBBBBB",
-                  "fontWeight": "bold",
-                  "margin": "0px 6px",
+                  "margin": "2px 6px 12px 6px",
                   "outline": "none",
-                  "padding": "2px 9px",
+                  "padding": "3px 12px",
                 }
               }
               type="button"
@@ -2496,6 +2490,7 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
     style={
       Object {
         "marginTop": "1em",
+        "minHeight": 500,
       }
     }
   >
@@ -2522,10 +2517,10 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                   "borderRadius": "24px",
                   "boxSizing": "border-box",
                   "color": "white",
-                  "fontWeight": "bold",
-                  "margin": "0px 6px",
+                  "fontWeight": 700,
+                  "margin": "2px 6px 12px 6px",
                   "outline": "none",
-                  "padding": "2px 9px",
+                  "padding": "3px 12px",
                 }
               }
               type="button"
@@ -2547,10 +2542,9 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                   "borderRadius": "24px",
                   "boxSizing": "border-box",
                   "color": "#BBBBBB",
-                  "fontWeight": "bold",
-                  "margin": "0px 6px",
+                  "margin": "2px 6px 12px 6px",
                   "outline": "none",
-                  "padding": "2px 9px",
+                  "padding": "3px 12px",
                 }
               }
               type="button"
@@ -2572,10 +2566,9 @@ exports[`UserEntityChart Page renders correctly if stats are not calculated 1`] 
                   "borderRadius": "24px",
                   "boxSizing": "border-box",
                   "color": "#BBBBBB",
-                  "fontWeight": "bold",
-                  "margin": "0px 6px",
+                  "margin": "2px 6px 12px 6px",
                   "outline": "none",
-                  "padding": "2px 9px",
+                  "padding": "3px 12px",
                 }
               }
               type="button"

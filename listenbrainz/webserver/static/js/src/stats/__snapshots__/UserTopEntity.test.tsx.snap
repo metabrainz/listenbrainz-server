@@ -14,45 +14,34 @@ exports[`UserTopEntity renders corectly when range is invalid 1`] = `
   <ForwardRef
     style={
       Object {
-        "alignItems": "center",
-        "display": "flex",
-        "flexDirection": "column",
-        "height": 550,
         "marginTop": 20,
+        "minHeight": 550,
       }
     }
   >
     <div
       style={
         Object {
-          "alignItems": "center",
           "background": "#FFFFFF",
           "border": "1px solid #EEEEEE",
-          "borderRadius": "12px",
-          "boxShadow": "0px 4px 4px rgba(192,192,192,0.25)",
+          "borderRadius": "8px",
+          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
           "boxSizing": "border-box",
-          "display": "flex",
-          "flexDirection": "column",
-          "height": 550,
+          "height": "100%",
           "marginTop": 20,
+          "minHeight": 550,
           "width": "100%",
         }
       }
     >
       <h3
-        className="capitalize-bold"
+        className="text-center capitalize-bold"
       >
         Top 
         artists
       </h3>
       <Loader
-        className="flex-center"
         isLoading={false}
-        style={
-          Object {
-            "height": "80%",
-          }
-        }
       >
         <table
           style={
@@ -136,16 +125,6 @@ exports[`UserTopEntity renders corectly when range is invalid 1`] = `
           </tbody>
         </table>
       </Loader>
-      <a
-        href="http://localhost/user/test_user/charts?range=invalid_range&entity=artist"
-        style={
-          Object {
-            "marginTop": 10,
-          }
-        }
-      >
-        View More
-      </a>
     </div>
   </ForwardRef>
 </UserTopEntity>
@@ -165,45 +144,34 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
   <ForwardRef
     style={
       Object {
-        "alignItems": "center",
-        "display": "flex",
-        "flexDirection": "column",
-        "height": 550,
         "marginTop": 20,
+        "minHeight": 550,
       }
     }
   >
     <div
       style={
         Object {
-          "alignItems": "center",
           "background": "#FFFFFF",
           "border": "1px solid #EEEEEE",
-          "borderRadius": "12px",
-          "boxShadow": "0px 4px 4px rgba(192,192,192,0.25)",
+          "borderRadius": "8px",
+          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
           "boxSizing": "border-box",
-          "display": "flex",
-          "flexDirection": "column",
-          "height": 550,
+          "height": "100%",
           "marginTop": 20,
+          "minHeight": 550,
           "width": "100%",
         }
       }
     >
       <h3
-        className="capitalize-bold"
+        className="text-center capitalize-bold"
       >
         Top 
         artists
       </h3>
       <Loader
-        className="flex-center"
         isLoading={false}
-        style={
-          Object {
-            "height": "80%",
-          }
-        }
       >
         <table
           style={
@@ -1217,17 +1185,13 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
             </tr>
           </tbody>
         </table>
+        <a
+          className="text-center mt-15 col-xs-12"
+          href="http://localhost/user/test_user/charts?range=week&entity=artist"
+        >
+          View More
+        </a>
       </Loader>
-      <a
-        href="http://localhost/user/test_user/charts?range=week&entity=artist"
-        style={
-          Object {
-            "marginTop": 10,
-          }
-        }
-      >
-        View More
-      </a>
     </div>
   </ForwardRef>
 </UserTopEntity>
@@ -1247,45 +1211,34 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
   <ForwardRef
     style={
       Object {
-        "alignItems": "center",
-        "display": "flex",
-        "flexDirection": "column",
-        "height": 550,
         "marginTop": 20,
+        "minHeight": 550,
       }
     }
   >
     <div
       style={
         Object {
-          "alignItems": "center",
           "background": "#FFFFFF",
           "border": "1px solid #EEEEEE",
-          "borderRadius": "12px",
-          "boxShadow": "0px 4px 4px rgba(192,192,192,0.25)",
+          "borderRadius": "8px",
+          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
           "boxSizing": "border-box",
-          "display": "flex",
-          "flexDirection": "column",
-          "height": 550,
+          "height": "100%",
           "marginTop": 20,
+          "minHeight": 550,
           "width": "100%",
         }
       }
     >
       <h3
-        className="capitalize-bold"
+        className="text-center capitalize-bold"
       >
         Top 
         recordings
       </h3>
       <Loader
-        className="flex-center"
         isLoading={false}
-        style={
-          Object {
-            "height": "80%",
-          }
-        }
       >
         <table
           style={
@@ -2925,17 +2878,13 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
             </tr>
           </tbody>
         </table>
+        <a
+          className="text-center mt-15 col-xs-12"
+          href="http://localhost/user/test_user/charts?range=week&entity=recording"
+        >
+          View More
+        </a>
       </Loader>
-      <a
-        href="http://localhost/user/test_user/charts?range=week&entity=recording"
-        style={
-          Object {
-            "marginTop": 10,
-          }
-        }
-      >
-        View More
-      </a>
     </div>
   </ForwardRef>
 </UserTopEntity>
@@ -2955,45 +2904,34 @@ exports[`UserTopEntity renders correctly for release 1`] = `
   <ForwardRef
     style={
       Object {
-        "alignItems": "center",
-        "display": "flex",
-        "flexDirection": "column",
-        "height": 550,
         "marginTop": 20,
+        "minHeight": 550,
       }
     }
   >
     <div
       style={
         Object {
-          "alignItems": "center",
           "background": "#FFFFFF",
           "border": "1px solid #EEEEEE",
-          "borderRadius": "12px",
-          "boxShadow": "0px 4px 4px rgba(192,192,192,0.25)",
+          "borderRadius": "8px",
+          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
           "boxSizing": "border-box",
-          "display": "flex",
-          "flexDirection": "column",
-          "height": 550,
+          "height": "100%",
           "marginTop": 20,
+          "minHeight": 550,
           "width": "100%",
         }
       }
     >
       <h3
-        className="capitalize-bold"
+        className="text-center capitalize-bold"
       >
         Top 
         releases
       </h3>
       <Loader
-        className="flex-center"
         isLoading={false}
-        style={
-          Object {
-            "height": "80%",
-          }
-        }
       >
         <table
           style={
@@ -4507,17 +4445,13 @@ exports[`UserTopEntity renders correctly for release 1`] = `
             </tr>
           </tbody>
         </table>
+        <a
+          className="text-center mt-15 col-xs-12"
+          href="http://localhost/user/test_user/charts?range=week&entity=release"
+        >
+          View More
+        </a>
       </Loader>
-      <a
-        href="http://localhost/user/test_user/charts?range=week&entity=release"
-        style={
-          Object {
-            "marginTop": 10,
-          }
-        }
-      >
-        View More
-      </a>
     </div>
   </ForwardRef>
 </UserTopEntity>
