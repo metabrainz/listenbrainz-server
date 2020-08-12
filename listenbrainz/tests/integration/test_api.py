@@ -128,7 +128,6 @@ class APITestCase(IntegrationTestCase):
         data = json.loads(response.data)['payload']
         self.assertEqual(data['count'], 0)
 
-
     def test_get_listens_with_time_range(self):
         """ Test to make sure that the api sends valid listens on get requests.
         """
@@ -165,7 +164,7 @@ class APITestCase(IntegrationTestCase):
         self.assertEqual(data['listens'][2]['listened_at'], 1400000000)
 
         url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
-        response = self.client.get(url, query_string={'time_range': 10 })
+        response = self.client.get(url, query_string={'time_range': 10})
         self.assert200(response)
         data = json.loads(response.data)['payload']
         self.assertEqual(data['count'], 4)
@@ -176,11 +175,11 @@ class APITestCase(IntegrationTestCase):
 
         # Check time_range ranges
         url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
-        response = self.client.get(url, query_string={'time_range': 0 })
+        response = self.client.get(url, query_string={'time_range': 0})
         self.assert400(response)
 
         url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
-        response = self.client.get(url, query_string={'time_range': 74 })
+        response = self.client.get(url, query_string={'time_range': 74})
         self.assert400(response)
 
     def test_get_listens_order(self):
