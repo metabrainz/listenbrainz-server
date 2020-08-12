@@ -14,6 +14,7 @@ import time
 import json
 
 from listenbrainz import config
+from datetime import datetime
 
 
 class TimescaleWriterTestCase(IntegrationTestCase):
@@ -62,7 +63,7 @@ class TimescaleWriterTestCase(IntegrationTestCase):
         """ Tests that timescale writer updates the listen count for the
         day in redis for each successful batch written
         """
-        user = db_user.get_or_create(1, 'testtimescaleuser %d' % randint(1,50000))
+        user = db_user.get_or_create(1, 'testtimescaleuser %d' % randint(1, 50000))
         r = self.send_listen(user, 'valid_single.json')
         self.assert200(r)
         time.sleep(2)
