@@ -5,6 +5,8 @@ export default class APIService {
 
   MAX_LISTEN_SIZE: number = 10000; // Maximum size of listens that can be sent
 
+  MAX_TIME_RANGE: number = 73;
+
   constructor(APIBaseURI: string) {
     let finalUri = APIBaseURI;
     if (finalUri.endsWith("/")) {
@@ -41,7 +43,8 @@ export default class APIService {
     userName: string,
     minTs?: number,
     maxTs?: number,
-    count?: number
+    count?: number,
+    timeRange?: number
   ): Promise<Array<Listen>> => {
     if (maxTs && minTs) {
       throw new SyntaxError(
@@ -60,6 +63,9 @@ export default class APIService {
     }
     if (count) {
       queryParams.push(`count=${count}`);
+    }
+    if (timeRange) {
+      queryParams.push(`time_range=${timeRange}`);
     }
     if (queryParams.length) {
       query += `?${queryParams.join("&")}`;
