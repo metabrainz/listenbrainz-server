@@ -137,13 +137,9 @@ export default class UserArtistMap extends React.Component<
         }}
         ref={this.graphContainer}
       >
-        <div className="row">
-          <div className="col-xs-12">
-            <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
-              Artist Origins
-            </h3>
-          </div>
-        </div>
+        <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
+          Artist Origins
+        </h3>
         <Loader isLoading={loading}>
           {hasError && (
             <div
