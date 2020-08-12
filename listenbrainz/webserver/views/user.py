@@ -54,12 +54,6 @@ def profile(user_name):
         except ValueError:
             raise BadRequest("Incorrect timestamp argument min_ts: %s" % request.args.get("min_ts"))
 
-    search_larger_time_range = request.args.get("search_larger_time_range", 0)
-    try:
-        search_larger_time_range = int(search_larger_time_range)
-    except ValueError:
-        raise BadRequest("search_larger_time_range must be an integer value 0 or greater: %s" % search_larger_time_range)
-
     # Send min and max listen times to allow React component to hide prev/next buttons accordingly
     (min_ts_per_user, max_ts_per_user) = db_conn.get_timestamps_for_user(user_name)
 
@@ -69,12 +63,9 @@ def profile(user_name):
         else:
             max_ts = int(time.time())
 
-    listens_missing = 0
     listens = []
     if min_ts_per_user != max_ts_per_user:
         args = {}
-        # if we're supposed to search larger time range then search 50 days. (each increment in time_range == 5 days)
-        args['time_range'] = 10 if search_larger_time_range else None
         if max_ts:
             args['to_ts'] = max_ts
         else:
@@ -85,8 +76,6 @@ def profile(user_name):
                 "listened_at": listen.ts_since_epoch,
                 "listened_at_iso": listen.timestamp.isoformat() + "Z",
             })
-        if len(listens) < LISTENS_PER_PAGE and search_larger_time_range == 0:
-            listens_missing = 1
 
     # If there are no previous listens then display now_playing
     if not listens or listens[0]['listened_at'] >= max_ts_per_user:
@@ -117,7 +106,6 @@ def profile(user_name):
         "latest_listen_ts": max_ts_per_user,
         "oldest_listen_ts": min_ts_per_user,
         "latest_spotify_uri": _get_spotify_uri_for_listens(listens),
-        "search_larger_time_range": listens_missing,
         "artist_count": format(artist_count, ",d") if artist_count else None,
         "profile_url": url_for('user.profile', user_name=user_name),
         "mode": "listens",

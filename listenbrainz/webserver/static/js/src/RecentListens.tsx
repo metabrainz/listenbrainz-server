@@ -39,7 +39,9 @@ export interface RecentListensState {
   alerts: Array<Alert>;
   currentListen?: Listen;
   direction: BrainzPlayDirection;
+  endOfTheLine?: boolean; // To indicate we can't fetch listens older than 12 months
   followList: Array<string>;
+  lastFetchedDirection?: "older" | "newer";
   listId?: number;
   listName: string;
   listens: Array<Listen>;
@@ -63,6 +65,8 @@ export default class RecentListens extends React.Component<
 
   private socket!: SocketIOClient.Socket;
 
+  private expectedListensPerPage = 25;
+
   constructor(props: RecentListensProps) {
     super(props);
     this.state = {
@@ -72,6 +76,7 @@ export default class RecentListens extends React.Component<
       followList: props.followList || [],
       playingNowByUser: {},
       saveUrl: props.saveUrl || "",
+      lastFetchedDirection: "older",
       listName: props.followListName || "",
       listId: props.followListId || undefined,
       loading: false,
@@ -146,11 +151,15 @@ export default class RecentListens extends React.Component<
       }
       return;
     }
-    this.setState({
-      listens: newListens,
-      nextListenTs: newListens[newListens.length - 1].listened_at,
-      previousListenTs: newListens[0].listened_at,
-    });
+    this.setState(
+      {
+        listens: newListens,
+        nextListenTs: newListens[newListens.length - 1].listened_at,
+        previousListenTs: newListens[0].listened_at,
+        lastFetchedDirection: !_.isUndefined(minTs) ? "newer" : "older",
+      },
+      this.afterListensFetch
+    );
   };
 
   connectWebsockets = (): void => {
@@ -354,8 +363,9 @@ export default class RecentListens extends React.Component<
         listens: newListens,
         nextListenTs: newListens[newListens.length - 1].listened_at,
         previousListenTs: newListens[0].listened_at,
+        lastFetchedDirection: "older",
       },
-      this.scrollToTop
+      this.afterListensFetch
     );
     window.history.pushState(null, "", `?max_ts=${nextListenTs}`);
   };
@@ -386,8 +396,9 @@ export default class RecentListens extends React.Component<
         listens: newListens,
         nextListenTs: newListens[newListens.length - 1].listened_at,
         previousListenTs: newListens[0].listened_at,
+        lastFetchedDirection: "newer",
       },
-      this.scrollToTop
+      this.afterListensFetch
     );
     window.history.pushState(null, "", `?min_ts=${previousListenTs}`);
   };
@@ -405,8 +416,9 @@ export default class RecentListens extends React.Component<
         listens: newListens,
         nextListenTs: newListens[newListens.length - 1].listened_at,
         previousListenTs: undefined,
+        lastFetchedDirection: "newer",
       },
-      this.scrollToTop
+      this.afterListensFetch
     );
     window.history.pushState(null, "", "");
   };
@@ -428,8 +440,9 @@ export default class RecentListens extends React.Component<
         listens: newListens,
         nextListenTs: undefined,
         previousListenTs: newListens[0].listened_at,
+        lastFetchedDirection: "older",
       },
-      this.scrollToTop
+      this.afterListensFetch
     );
     window.history.pushState(null, "", `?min_ts=${oldestListenTs - 1}`);
   };
@@ -447,7 +460,70 @@ export default class RecentListens extends React.Component<
     }
   };
 
-  scrollToTop() {
+  /** This method checks that we have enough listens to fill the page (listens are fetched in a 15 days period)
+   * If we don't have enough, we fetch again with an increased time range and do the check agin, ending when time range is maxed.
+   * The time range (each increment = 5 days) defaults to 6 (the default for the API is 3) or 6*5 = 30 days
+   * and is increased exponentially each retry.
+   */
+  checkListensRange = async (timeRange: number = 6) => {
+    const { oldestListenTs, user } = this.props;
+    const {
+      listens,
+      lastFetchedDirection,
+      nextListenTs,
+      previousListenTs,
+    } = this.state;
+    if (
+      // If we have enough listens of we're on the last page (could have run out of listens),
+      // Consider our job done and return.
+      listens.length === this.expectedListensPerPage ||
+      listens[listens.length - 1]?.listened_at <= oldestListenTs
+    ) {
+      this.setState({ endOfTheLine: false });
+      return;
+    }
+    if (timeRange > this.APIService.MAX_TIME_RANGE) {
+      // We reached the maximum time_range allowed by the API.
+      // Show a nice message requesting a user action to load listens from next/previous year.
+      this.setState({ endOfTheLine: true });
+    } else {
+      // Otherwise…
+      let newListens;
+      // Fetch with a time range bigger than
+      if (lastFetchedDirection === "older") {
+        newListens = await this.APIService.getListensForUser(
+          user.name,
+          undefined,
+          nextListenTs,
+          this.expectedListensPerPage,
+          timeRange
+        );
+      } else {
+        newListens = await this.APIService.getListensForUser(
+          user.name,
+          previousListenTs,
+          undefined,
+          this.expectedListensPerPage,
+          timeRange
+        );
+      }
+      // Check again after fetch, doubling the time range each retry up to max
+      let newIncrement;
+      if (timeRange === this.APIService.MAX_TIME_RANGE) {
+        // Set new increment above the limit, to be detected at next checkListensRange call
+        newIncrement = 100;
+      } else {
+        newIncrement = Math.min(timeRange * 2, this.APIService.MAX_TIME_RANGE);
+      }
+      this.setState(
+        { listens: newListens },
+        this.checkListensRange.bind(this, newIncrement)
+      );
+    }
+  };
+
+  afterListensFetch() {
+    this.checkListensRange();
     if (this.listensTable?.current) {
       this.listensTable.current.scrollIntoView({ behavior: "smooth" });
     }
@@ -459,7 +535,9 @@ export default class RecentListens extends React.Component<
       alerts,
       currentListen,
       direction,
+      endOfTheLine,
       followList,
+      lastFetchedDirection,
       listId,
       listName,
       listens,
@@ -603,6 +681,14 @@ export default class RecentListens extends React.Component<
                       })}
                   </tbody>
                 </table>
+                {endOfTheLine && (
+                  <div>
+                    No more listens to show in a 12 months period. <br />
+                    Navigate to the
+                    {lastFetchedDirection === "older" ? " next" : " previous"}
+                    page to see {lastFetchedDirection} listens.
+                  </div>
+                )}
 
                 {mode === "listens" && (
                   <ul className="pager" style={{ display: "flex" }}>
