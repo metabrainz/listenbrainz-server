@@ -63,7 +63,7 @@ class APITestCase(IntegrationTestCase):
         # This sleep allows for the timescale subscriber to take its time in getting
         # the listen submitted from redis and writing it to timescale.
         # Removing it causes an empty list of listens to be returned.
-        time.sleep(2)
+        time.sleep(3)
 
         url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
 
@@ -129,6 +129,52 @@ class APITestCase(IntegrationTestCase):
         self.assertEqual(data['count'], 0)
 
 
+    def test_get_listens_with_time_range(self):
+        """ Test to make sure that the api sends valid listens on get requests.
+        """
+        with open(self.path_to_data_file('valid_single.json'), 'r') as f:
+            payload = json.load(f)
+
+        # send three listens
+        user = db_user.get_or_create(1, 'test_time_range')
+        ts = 1400000000
+        for i in range(3):
+            payload['payload'][0]['listened_at'] = ts + (100 * i)
+            response = self.send_data(payload, user)
+            self.assert200(response)
+            self.assertEqual(response.json['status'], 'ok')
+
+        old_ts = ts - 2592000  # 30 days
+        payload['payload'][0]['listened_at'] = old_ts
+        response = self.send_data(payload, user)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        # This sleep allows for the timescale subscriber to take its time in getting
+        # the listen submitted from redis and writing it to timescale.
+        # Removing it causes an empty list of listens to be returned.
+        time.sleep(2)
+
+        url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
+        response = self.client.get(url)
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        self.assertEqual(data['count'], 3)
+        self.assertEqual(data['listens'][0]['listened_at'], 1400000200)
+        self.assertEqual(data['listens'][1]['listened_at'], 1400000100)
+        self.assertEqual(data['listens'][2]['listened_at'], 1400000000)
+
+        url = url_for('api_v1.get_listens', user_name=user['musicbrainz_id'])
+        response = self.client.get(url, query_string={'time_range': 10 })
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+        self.assertEqual(data['count'], 4)
+        self.assertEqual(data['listens'][0]['listened_at'], 1400000200)
+        self.assertEqual(data['listens'][1]['listened_at'], 1400000100)
+        self.assertEqual(data['listens'][2]['listened_at'], 1400000000)
+        self.assertEqual(data['listens'][3]['listened_at'], old_ts)
+
+
     def test_get_listens_order(self):
         """ Test to make sure that the api sends listens in valid order.
         """
@@ -137,9 +183,10 @@ class APITestCase(IntegrationTestCase):
 
         # send three listens
         ts = 1400000000
+        user = db_user.get_or_create(1, 'test_order')
         for i in range(3):
             payload['payload'][0]['listened_at'] = ts + (100 * i)
-            response = self.send_data(payload)
+            response = self.send_data(payload, user)
             self.assert200(response)
             self.assertEqual(response.json['status'], 'ok')
 
@@ -170,9 +217,11 @@ class APITestCase(IntegrationTestCase):
         self.assertEqual(data['listens'][1]['listened_at'], 1400000100)
         self.assertEqual(data['listens'][2]['listened_at'], 1400000000)
 
-    def send_data(self, payload):
+    def send_data(self, payload, user=None):
         """ Sends payload to api.submit_listen and return the response
         """
+        if not user:
+            user=self.user
         return self.client.post(
             url_for('api_v1.submit_listen'),
             data=json.dumps(payload),
