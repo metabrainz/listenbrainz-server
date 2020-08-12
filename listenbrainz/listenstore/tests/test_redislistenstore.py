@@ -69,7 +69,7 @@ class RedisListenStoreTestCase(DatabaseTestCase):
             )
             listens.append(listen)
             self._redis.update_recent_listens(listens)
-      
+
         recent = self._redis.get_recent_listens()
         self.assertEqual(len(recent), RedisListenStore.RECENT_LISTENS_MAX)
         self.assertIsInstance(recent[0], Listen)
@@ -98,5 +98,5 @@ class RedisListenStoreTestCase(DatabaseTestCase):
         yesterday = today - relativedelta(days=1)
         self.assertIsNone(self._redis.get_listen_count_for_day(yesterday))
 
-        self._redis.increment_listen_count_for_day(today, 2)
+        self._redis.increment_listen_count_for_day(yesterday, 2)
         self.assertEqual(2, self._redis.get_listen_count_for_day(yesterday))
