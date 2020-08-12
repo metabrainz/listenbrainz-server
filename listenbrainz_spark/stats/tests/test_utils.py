@@ -1,6 +1,6 @@
 from datetime import datetime
 
-import listenbrainz_spark.stats.user.utils as user_utils
+import listenbrainz_spark.stats.utils as stats_utils
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
 from listenbrainz_spark import utils
 from listenbrainz_spark.tests import SparkTestCase
@@ -24,7 +24,7 @@ class UtilsTestCase(SparkTestCase):
         df = df.union(utils.create_dataframe(Row(listened_at=offset_days(date, 7)), schema=None))
         utils.save_parquet(df, '{}/2020/5.parquet'.format(self.path_))
 
-        result = user_utils.get_latest_listen_ts()
+        result = stats_utils.get_latest_listen_ts()
         self.assertEqual(date, result)
 
     def test_filter_listens(self):
@@ -36,7 +36,7 @@ class UtilsTestCase(SparkTestCase):
         df = df.union(utils.create_dataframe(Row(listened_at=offset_days(from_date, 5, shift_backwards=False)), None))
         df = df.union(utils.create_dataframe(Row(listened_at=offset_days(to_date, 5)), None))
 
-        result = user_utils.filter_listens(df, from_date, to_date)
+        result = stats_utils.filter_listens(df, from_date, to_date)
         rows = result.collect()
 
         self.assertEqual(rows[0]['listened_at'], offset_days(from_date, 5, shift_backwards=False))
@@ -44,4 +44,4 @@ class UtilsTestCase(SparkTestCase):
 
     def test_get_last_monday(self):
         date = datetime(2020, 5, 19)
-        self.assertEqual(datetime(2020, 5, 18), user_utils.get_last_monday(date))
+        self.assertEqual(datetime(2020, 5, 18), stats_utils.get_last_monday(date))
