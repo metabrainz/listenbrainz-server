@@ -162,8 +162,8 @@ class RecommendTestClass(SparkTestCase):
         ])
 
         mock_mbids.assert_has_calls([
-            call(mock_candidate_set.return_value, params, params.recommendation_top_artist_limit, [], 'vansika'),
-            call(mock_candidate_set.return_value, params, params.recommendation_similar_artist_limit, [], 'vansika')
+            call(mock_candidate_set.return_value, params, params.recommendation_top_artist_limit, []),
+            call(mock_candidate_set.return_value, params, params.recommendation_similar_artist_limit, [])
         ])
 
     def test_scale_ratings(self):
@@ -193,7 +193,7 @@ class RecommendTestClass(SparkTestCase):
 
         ratings_beyond_range = []
 
-        recommended_mbids = recommend.get_recommended_mbids(rdd, params, limit, ratings_beyond_range, 'vansika')
+        recommended_mbids = recommend.get_recommended_mbids(rdd, params, limit, ratings_beyond_range)
 
         mock_gen_rec.assert_called_once_with(rdd, params, limit)
         self.assertEqual(recommended_mbids[0][0], '2acb406f-c716-45f8-a8bd-96ca3939c2e5')
@@ -205,7 +205,7 @@ class RecommendTestClass(SparkTestCase):
 
         mock_gen_rec.return_value = []
         with self.assertRaises(RecommendationsNotGeneratedException):
-            recommend.get_recommended_mbids(rdd, params, limit, ratings_beyond_range, 'vansika')
+            recommend.get_recommended_mbids(rdd, params, limit, ratings_beyond_range)
 
 
     def test_get_user_name_and_user_id(self):
