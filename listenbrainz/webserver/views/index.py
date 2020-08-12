@@ -116,7 +116,8 @@ def current_status():
             day_listen_count = None
         listen_counts_per_day.append({
             "date": day.strftime('%Y-%m-%d'),
-            "listen_count": format(day_listen_count, ',d') if day_listen_count else "0"
+            "listen_count": format(day_listen_count, ',d') if day_listen_count else "0",
+            "label": "today" if delta == 0 else "yesterday",
         })
 
     return render_template(
