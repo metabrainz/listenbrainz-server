@@ -95,6 +95,9 @@ class RedisListenStore(ListenStore):
         return recent
 
     def increment_listen_count_for_day(self, day: datetime, count: int):
+        """ Increment the number of listens submitted on the day `day`
+        by `count`.
+        """
         key = self.LISTEN_COUNT_PER_DAY_KEY_FORMAT.format(day.strftime('%Y%m%d'))
         if self.redis.exists(key):
             self.redis.incrby(key, count)
@@ -102,6 +105,8 @@ class RedisListenStore(ListenStore):
             self.redis.setex(key, self.LISTEN_COUNT_PER_DAY_EXPIRY_TIME, count)
 
     def get_listen_count_for_day(self, day: datetime) -> Optional[int]:
+        """ Get the number of listens submitted for day `day`, return None if not available.
+        """
         key = self.LISTEN_COUNT_PER_DAY_KEY_FORMAT.format(day.strftime('%Y%m%d'))
         listen_count = self.redis.get(key)
         if listen_count:
