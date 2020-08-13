@@ -6,6 +6,7 @@ import time
 import ujson
 import uuid
 
+from dateutil.relativedelta import relativedelta
 from redis.connection import Connection
 
 import listenbrainz.db.user as db_user
@@ -68,7 +69,7 @@ class RedisListenStoreTestCase(DatabaseTestCase):
             )
             listens.append(listen)
             self._redis.update_recent_listens(listens)
-      
+
         recent = self._redis.get_recent_listens()
         self.assertEqual(len(recent), RedisListenStore.RECENT_LISTENS_MAX)
         self.assertIsInstance(recent[0], Listen)
@@ -79,3 +80,23 @@ class RedisListenStoreTestCase(DatabaseTestCase):
         self.assertEqual(len(recent), 5)
         for i, r in enumerate(recent):
             self.assertEqual(r.timestamp, listens[i].timestamp)
+
+    def test_incr_listen_count_for_day(self):
+        today = datetime.datetime.utcnow()
+        # get without setting any value, should return None
+        self.assertIsNone(self._redis.get_listen_count_for_day(today))
+
+        # set a value to a key that doesn't exists
+        self._redis.increment_listen_count_for_day(today, 2)
+        self.assertEqual(2, self._redis.get_listen_count_for_day(today))
+
+        # increment again
+        self._redis.increment_listen_count_for_day(today, 3)
+        self.assertEqual(5, self._redis.get_listen_count_for_day(today))
+
+        # check for a different day
+        yesterday = today - relativedelta(days=1)
+        self.assertIsNone(self._redis.get_listen_count_for_day(yesterday))
+
+        self._redis.increment_listen_count_for_day(yesterday, 2)
+        self.assertEqual(2, self._redis.get_listen_count_for_day(yesterday))

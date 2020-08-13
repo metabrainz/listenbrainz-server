@@ -4,6 +4,9 @@ import requests
 import subprocess
 
 from brainzutils import cache
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+from typing import List
 from flask import Blueprint, render_template, current_app, redirect, url_for, request, jsonify
 from flask_login import current_user, login_required
 from requests.exceptions import HTTPError
@@ -103,11 +106,26 @@ def current_status():
     except DatabaseException as e:
         user_count = 'Unknown'
 
+    listen_counts_per_day: List[dict] = []
+    for delta in range(2):
+        try:
+            day = datetime.utcnow() - relativedelta(days=delta)
+            day_listen_count = _redis.get_listen_count_for_day(day)
+        except:
+            current_app.logger.error("Could not get %s listen count from redis", day.strftime('%Y-%m-%d'), exc_info=True)
+            day_listen_count = None
+        listen_counts_per_day.append({
+            "date": day.strftime('%Y-%m-%d'),
+            "listen_count": format(day_listen_count, ',d') if day_listen_count else "0",
+            "label": "today" if delta == 0 else "yesterday",
+        })
+
     return render_template(
         "index/current-status.html",
         load=load,
-        listen_count=format(int(listen_count), ",d"),
+        listen_count=format(int(listen_count), ",d") if listen_count else "0",
         user_count=user_count,
+        listen_counts_per_day=listen_counts_per_day,
     )
 
 

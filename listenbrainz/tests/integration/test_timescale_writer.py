@@ -14,6 +14,7 @@ import time
 import json
 
 from listenbrainz import config
+from datetime import datetime
 
 
 class TimescaleWriterTestCase(IntegrationTestCase):
@@ -27,6 +28,9 @@ class TimescaleWriterTestCase(IntegrationTestCase):
         self.rs = RedisListenStore(self.app.logger, { 'REDIS_HOST': config.REDIS_HOST,
                                    'REDIS_PORT': config.REDIS_PORT,
                                    'REDIS_NAMESPACE': config.REDIS_NAMESPACE})
+
+    def tearDown(self):
+        self.rs.redis.flushall()
 
     def send_listen(self, user, filename):
         with open(self.path_to_data_file(filename)) as f:
@@ -58,6 +62,16 @@ class TimescaleWriterTestCase(IntegrationTestCase):
         self.assertEqual(len(recent), 1)
         self.assertIsInstance(recent[0], Listen)
 
+    def test_update_listen_count_per_day(self):
+        """ Tests that timescale writer updates the listen count for the
+        day in redis for each successful batch written
+        """
+        user = db_user.get_or_create(1, 'testtimescaleuser %d' % randint(1, 50000))
+        r = self.send_listen(user, 'valid_single.json')
+        self.assert200(r)
+        time.sleep(2)
+
+        self.assertEqual(1, self.rs.get_listen_count_for_day(datetime.utcnow()))
 
     def test_dedup_user_special_characters(self):
 
