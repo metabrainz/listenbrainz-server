@@ -106,9 +106,12 @@ export default class UserTopEntity extends React.Component<
         style={{
           minHeight: 550,
           marginTop: 20,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
         }}
       >
-        <h3 className="text-center capitalize-bold">Top {entityTextOnCard}</h3>
+        <h3 className="capitalize-bold">Top {entityTextOnCard}</h3>
         <Loader isLoading={loading}>
           <table
             style={{
@@ -267,7 +270,7 @@ export default class UserTopEntity extends React.Component<
           {!hasError && (
             <a
               href={`${window.location.origin}/user/${user.name}/charts?range=${range}&entity=${entity}`}
-              className="text-center mt-15 col-xs-12"
+              className="mt-15"
             >
               View More
             </a>

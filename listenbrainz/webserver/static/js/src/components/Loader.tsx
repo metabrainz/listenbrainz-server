@@ -31,12 +31,10 @@ export default function Loader(props: React.PropsWithChildren<LoaderProps>) {
   return isLoading ? (
     <div className={`text-center ${className || ""}`} style={style} {...rest}>
       <Spinner type="Oval" color="#cccccc" height={30} width={30} />
-      {!loaderText ? (
+      {loaderText && (
         <small>
           <p className="text-muted mt-5">{loaderText}</p>
         </small>
-      ) : (
-        <></>
       )}
     </div>
   ) : (
