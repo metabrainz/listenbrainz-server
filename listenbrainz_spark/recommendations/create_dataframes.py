@@ -3,6 +3,7 @@ import uuid
 import logging
 import time
 from datetime import datetime
+from collections import defaultdict
 
 import listenbrainz_spark
 from listenbrainz_spark import path, stats, utils, config, schema
@@ -16,7 +17,7 @@ from listenbrainz_spark.exceptions import (FileNotSavedException,
 from flask import current_app
 import pyspark.sql.functions as func
 from pyspark.sql.window import Window
-from pyspark.sql.functions import rank
+from pyspark.sql.functions import rank, col, row_number
 
 # Some useful dataframe fields/columns.
 # partial_listens_df:
@@ -156,6 +157,82 @@ def get_listens_for_training_model_window(to_date, from_date, metadata, dest_pat
 
     partial_listens_df = utils.get_listens_without_artist_and_recording_mbids(training_df)
     return partial_listens_df
+
+
+def get_release_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df, from_date, to_date, ti):
+    """ Get release data that has been submitted to ListenBrainz but is missing from
+        MusicBrainz.
+
+        Args:
+            partial_listens_df (dataframe): listens without artist mbid and recording mbid.
+            msid_mbid_mapping_df (dataframe): msid->mbid mapping. For columns refer to
+                                              msid_mbid_mapping_schema in listenbrainz_spark/schema.py
+            from_date (datetime): Date from which start fetching listens.
+            to_date (datetime): Date upto which fetch listens.
+            ti (datetime): Timestamp when the first func (main) of the script was called.
+
+        Returns:
+            missing_release_data_itr (iterator): Release data missing from the MusicBrainz.
+    """
+    condition = [
+        partial_listens_df.recording_msid == msid_mbid_mapping_df.msb_recording_msid,
+        partial_listens_df.artist_msid == msid_mbid_mapping_df.msb_artist_msid
+    ]
+
+    df = partial_listens_df.join(msid_mbid_mapping_df, condition, 'left')
+
+    window = Window.partitionBy('user_name').orderBy(col('listened_at').desc())
+
+    # limiting listens to 25 for each user so that messages don't drop
+    # Also, we don't want to overwhelm users with the release data that they
+    # have submitted to LB and should consider submitting to MB.
+    # Users will be shown the recent 25 release info.
+    # The releases will be sorted on "listened_at"
+
+    missing_release_data_itr = df.withColumn('rank', row_number().over(window)) \
+                                 .where(col('rank') <= 25) \
+                                 .select('artist_msid',
+                                         'artist_name',
+                                         'listened_at',
+                                         'recording_msid',
+                                         'release_msid',
+                                         'release_name',
+                                         'track_name',
+                                         'user_name') \
+                                 .toLocalIterator()
+
+    missing_release_data = defaultdict(list)
+
+    current_ts = str(datetime.utcnow())
+
+    for row in missing_release_data_itr:
+        missing_release_data[row.user_name].append(
+            [
+                row.artist_msid,
+                row.artist_name,
+                row.listened_at,
+                row.recording_msid,
+                row.release_msid,
+                row.release_name,
+                row.track_name,
+            ]
+        )
+
+    total_time = '{:.2f}'.format((time.monotonic() - ti) / 60)
+    message = []
+
+    for user_name, data in missing_release_data.items():
+        message.append({
+            'type': 'cf_recording_dataframes',
+            'dataframe_upload_time': current_ts,
+            'total_time': total_time,
+            'from_date': str(from_date.strftime('%b %Y')),
+            'to_date': str(to_date.strftime('%b %Y')),
+            'musicbrainz_id': user_name,
+            'missing_release_data': data
+        })
+
+    return message
 
 
 def get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df):
@@ -310,14 +387,7 @@ def main(train_model_window=None):
 
     generate_dataframe_id(metadata)
     save_dataframe_metadata_to_hdfs(metadata)
-    total_time = '{:.2f}'.format((time.monotonic() - ti) / 60)
 
-    message = [{
-        'type': 'cf_recording_dataframes',
-        'dataframe_upload_time': str(datetime.utcnow()),
-        'total_time': total_time,
-        'from_date': str(from_date.strftime('%b %Y')),
-        'to_date': str(to_date.strftime('%b %Y')),
-    }]
+    message = get_release_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df, from_date, to_date, ti)
 
     return message
