@@ -137,6 +137,11 @@ CREATE TABLE statistics.user (
     last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE statistics.sitewide (
+    artist                  JSONB,
+    last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE recording_feedback (
     id                      SERIAL, -- PK
     user_id                 INTEGER NOT NULL, -- FK to "user".id
