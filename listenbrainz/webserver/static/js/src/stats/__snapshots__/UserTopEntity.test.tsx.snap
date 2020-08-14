@@ -14,6 +14,9 @@ exports[`UserTopEntity renders corectly when range is invalid 1`] = `
   <ForwardRef
     style={
       Object {
+        "alignItems": "center",
+        "display": "flex",
+        "flexDirection": "column",
         "marginTop": 20,
         "minHeight": 550,
       }
@@ -22,20 +25,22 @@ exports[`UserTopEntity renders corectly when range is invalid 1`] = `
     <div
       style={
         Object {
+          "alignItems": "center",
           "background": "#FFFFFF",
           "border": "1px solid #EEEEEE",
           "borderRadius": "8px",
           "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
           "boxSizing": "border-box",
+          "display": "flex",
+          "flexDirection": "column",
           "height": "100%",
           "marginTop": 20,
           "minHeight": 550,
-          "width": "100%",
         }
       }
     >
       <h3
-        className="text-center capitalize-bold"
+        className="capitalize-bold"
       >
         Top 
         artists
@@ -144,6 +149,9 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
   <ForwardRef
     style={
       Object {
+        "alignItems": "center",
+        "display": "flex",
+        "flexDirection": "column",
         "marginTop": 20,
         "minHeight": 550,
       }
@@ -152,20 +160,22 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
     <div
       style={
         Object {
+          "alignItems": "center",
           "background": "#FFFFFF",
           "border": "1px solid #EEEEEE",
           "borderRadius": "8px",
           "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
           "boxSizing": "border-box",
+          "display": "flex",
+          "flexDirection": "column",
           "height": "100%",
           "marginTop": 20,
           "minHeight": 550,
-          "width": "100%",
         }
       }
     >
       <h3
-        className="text-center capitalize-bold"
+        className="capitalize-bold"
       >
         Top 
         artists
@@ -1186,7 +1196,7 @@ exports[`UserTopEntity renders correctly for artist 1`] = `
           </tbody>
         </table>
         <a
-          className="text-center mt-15 col-xs-12"
+          className="mt-15"
           href="http://localhost/user/test_user/charts?range=week&entity=artist"
         >
           View More
@@ -1211,6 +1221,9 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
   <ForwardRef
     style={
       Object {
+        "alignItems": "center",
+        "display": "flex",
+        "flexDirection": "column",
         "marginTop": 20,
         "minHeight": 550,
       }
@@ -1219,20 +1232,22 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
     <div
       style={
         Object {
+          "alignItems": "center",
           "background": "#FFFFFF",
           "border": "1px solid #EEEEEE",
           "borderRadius": "8px",
           "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
           "boxSizing": "border-box",
+          "display": "flex",
+          "flexDirection": "column",
           "height": "100%",
           "marginTop": 20,
           "minHeight": 550,
-          "width": "100%",
         }
       }
     >
       <h3
-        className="text-center capitalize-bold"
+        className="capitalize-bold"
       >
         Top 
         recordings
@@ -2879,7 +2894,7 @@ exports[`UserTopEntity renders correctly for recording 1`] = `
           </tbody>
         </table>
         <a
-          className="text-center mt-15 col-xs-12"
+          className="mt-15"
           href="http://localhost/user/test_user/charts?range=week&entity=recording"
         >
           View More
@@ -2904,6 +2919,9 @@ exports[`UserTopEntity renders correctly for release 1`] = `
   <ForwardRef
     style={
       Object {
+        "alignItems": "center",
+        "display": "flex",
+        "flexDirection": "column",
         "marginTop": 20,
         "minHeight": 550,
       }
@@ -2912,20 +2930,22 @@ exports[`UserTopEntity renders correctly for release 1`] = `
     <div
       style={
         Object {
+          "alignItems": "center",
           "background": "#FFFFFF",
           "border": "1px solid #EEEEEE",
           "borderRadius": "8px",
           "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
           "boxSizing": "border-box",
+          "display": "flex",
+          "flexDirection": "column",
           "height": "100%",
           "marginTop": 20,
           "minHeight": 550,
-          "width": "100%",
         }
       }
     >
       <h3
-        className="text-center capitalize-bold"
+        className="capitalize-bold"
       >
         Top 
         releases
@@ -4446,7 +4466,7 @@ exports[`UserTopEntity renders correctly for release 1`] = `
           </tbody>
         </table>
         <a
-          className="text-center mt-15 col-xs-12"
+          className="mt-15"
           href="http://localhost/user/test_user/charts?range=week&entity=release"
         >
           View More

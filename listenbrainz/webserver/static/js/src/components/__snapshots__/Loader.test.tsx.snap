@@ -95,11 +95,6 @@ exports[`Loader renders loader when "isLoading" is true 1`] = `
         </Oval>
       </div>
     </Loader>
-    <small>
-      <p
-        className="text-muted mt-5"
-      />
-    </small>
   </div>
 </Loader>
 `;

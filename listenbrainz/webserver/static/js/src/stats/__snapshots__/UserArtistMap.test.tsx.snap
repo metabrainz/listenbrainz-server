@@ -29,7 +29,6 @@ exports[`UserArtistMap renders corectly when range is invalid 1`] = `
           "height": "100%",
           "marginTop": 20,
           "minHeight": 600,
-          "width": "100%",
         }
       }
     >

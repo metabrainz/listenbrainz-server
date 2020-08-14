@@ -29,7 +29,6 @@ exports[`UserDailyActivity renders corectly when range is invalid 1`] = `
           "height": "100%",
           "marginTop": 20,
           "minHeight": 480,
-          "width": "100%",
         }
       }
     >

@@ -29,7 +29,6 @@ exports[`UserListeningActivity renders corectly when range is invalid 1`] = `
           "height": "100%",
           "marginTop": 20,
           "minHeight": 400,
-          "width": "100%",
         }
       }
     >
@@ -150,7 +149,6 @@ exports[`UserListeningActivity renders correctly for all_time 1`] = `
           "height": "100%",
           "marginTop": 20,
           "minHeight": 400,
-          "width": "100%",
         }
       }
     >
@@ -506,7 +504,6 @@ exports[`UserListeningActivity renders correctly for month 1`] = `
           "height": "100%",
           "marginTop": 20,
           "minHeight": 400,
-          "width": "100%",
         }
       }
     >
@@ -1087,7 +1084,6 @@ exports[`UserListeningActivity renders correctly for week 1`] = `
           "height": "100%",
           "marginTop": 20,
           "minHeight": 400,
-          "width": "100%",
         }
       }
     >
@@ -1386,7 +1382,6 @@ exports[`UserListeningActivity renders correctly for year 1`] = `
           "height": "100%",
           "marginTop": 20,
           "minHeight": 400,
-          "width": "100%",
         }
       }
     >
