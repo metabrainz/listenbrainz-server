@@ -91,7 +91,7 @@ export default class Scrobble {
         release_name: this.releaseName(),
         additional_info: {
           listening_from: "lastfm",
-          lastfm_recording_mbid: this.trackMBID(),
+          lastfm_track_mbid: this.trackMBID(),
           lastfm_release_mbid: this.releaseMBID(),
           lastfm_artist_mbid: this.artistMBID(),
         },
