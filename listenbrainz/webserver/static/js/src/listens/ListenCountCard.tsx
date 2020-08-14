@@ -15,7 +15,7 @@ const ListenCountCard = (props: ListenCountCardProps) => {
         <hr />
       </h4>
       <div>
-        <h4>{listenCount || `&nbsp;`}</h4>
+        <h4>{listenCount}</h4>
         <small className="text-muted">songs so far</small>
       </div>
     </Card>
