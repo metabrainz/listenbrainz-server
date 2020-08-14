@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ListenCountCard renders correctly 1`] = `
+<ListenCountCard
+  listenCount={100}
+>
+  <ForwardRef
+    id="listen-count-card"
+  >
+    <div
+      id="listen-count-card"
+      style={
+        Object {
+          "background": "#FFFFFF",
+          "border": "1px solid #EEEEEE",
+          "borderRadius": "12px",
+          "boxShadow": "0px 4px 4px rgba(192,192,192,0.25)",
+          "boxSizing": "border-box",
+          "height": "100%",
+          "width": "100%",
+        }
+      }
+    >
+      <h4>
+        You have listened to
+        <hr />
+      </h4>
+      <div>
+        <h4>
+          100
+        </h4>
+        <small
+          className="text-muted"
+        >
+          songs so far
+        </small>
+      </div>
+    </div>
+  </ForwardRef>
+</ListenCountCard>
+`;
