@@ -4,15 +4,14 @@ from listenbrainz_spark.utils import read_files_from_HDFS
 from pyspark.sql.functions import collect_list, sort_array, struct
 
 
-def get_artists(table: str, date_format: str, skip_mapping: bool):
+def get_artists(table: str, date_format: str, use_mapping: bool):
     """ Get artist information (artist_name, artist_msid etc) for every time range specified
         the "time_range" table ordered by listen count
 
         Args:
             table: Name of the temporary table.
             date_format: Format in which the listened_at field should be formatted.
-            skip_mapping: Flag to optinally skip the mapping step if mapping is missing or
-                          enough RAM is not present.
+            use_mapping: Flag to optionally use the mapping step to improve the results
 
         Returns:
             iterator (iter): An iterator over result
@@ -38,7 +37,7 @@ def get_artists(table: str, date_format: str, skip_mapping: bool):
     formatted_listens.createOrReplaceTempView('listens')
 
     # Use MSID-MBID mapping to improve results
-    if not skip_mapping:
+    if use_mapping:
         mapped_df = _create_mapped_dataframe()
         mapped_df.createOrReplaceTempView('listens')
 

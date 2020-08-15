@@ -26,7 +26,7 @@ entity_model_map = {
 }
 
 
-def get_entity_week(entity: str, skip_mapping: bool = False) -> Optional[List[SitewideEntityStatMessage]]:
+def get_entity_week(entity: str, use_mapping: bool = False) -> Optional[List[SitewideEntityStatMessage]]:
     """ Get the weekly sitewide top entity """
     current_app.logger.debug("Calculating sitewide_{}_week...".format(entity))
 
@@ -48,7 +48,7 @@ def get_entity_week(entity: str, skip_mapping: bool = False) -> Optional[List[Si
     filtered_df.createOrReplaceTempView(table_name)
 
     handler = entity_handler_map[entity]
-    data = handler(table_name, "EEEE", skip_mapping)
+    data = handler(table_name, "EEEE", use_mapping)
     message = create_message(data=data, entity=entity, stats_range='week',
                              from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
@@ -57,7 +57,7 @@ def get_entity_week(entity: str, skip_mapping: bool = False) -> Optional[List[Si
     return message
 
 
-def get_entity_month(entity: str, skip_mapping: bool = False) -> Optional[List[SitewideEntityStatMessage]]:
+def get_entity_month(entity: str, use_mapping: bool = False) -> Optional[List[SitewideEntityStatMessage]]:
     """ Get the montly sitewide top entity """
     current_app.logger.debug("Calculating sitewide_{}_month...".format(entity))
 
@@ -81,7 +81,7 @@ def get_entity_month(entity: str, skip_mapping: bool = False) -> Optional[List[S
     listens_df.createOrReplaceTempView(table_name, "dd MMMM")
 
     handler = entity_handler_map[entity]
-    data = handler(table_name, skip_mapping)
+    data = handler(table_name, use_mapping)
 
     message = create_message(data=data, entity=entity, stats_range='month',
                              from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
@@ -91,7 +91,7 @@ def get_entity_month(entity: str, skip_mapping: bool = False) -> Optional[List[S
     return message
 
 
-def get_entity_year(entity: str, skip_mapping: bool = False) -> Optional[List[SitewideEntityStatMessage]]:
+def get_entity_year(entity: str, use_mapping: bool = False) -> Optional[List[SitewideEntityStatMessage]]:
     """ Get the yearly sitewide top entity """
     current_app.logger.debug("Calculating sitewide_{}_year...".format(entity))
 
@@ -113,7 +113,7 @@ def get_entity_year(entity: str, skip_mapping: bool = False) -> Optional[List[Si
     listens_df.createOrReplaceTempView(table_name, "MMMM yyyy")
 
     handler = entity_handler_map[entity]
-    data = handler(table_name, skip_mapping)
+    data = handler(table_name, use_mapping)
     message = create_message(data=data, entity=entity, stats_range='year',
                              from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
@@ -122,7 +122,7 @@ def get_entity_year(entity: str, skip_mapping: bool = False) -> Optional[List[Si
     return message
 
 
-def get_entity_all_time(entity: str, skip_mapping: bool = False) -> Optional[List[SitewideEntityStatMessage]]:
+def get_entity_all_time(entity: str, use_mapping: bool = False) -> Optional[List[SitewideEntityStatMessage]]:
     """ Get the all_time sitewide top entity """
     current_app.logger.debug("Calculating sitewide_{}_all_time...".format(entity))
 
@@ -139,7 +139,7 @@ def get_entity_all_time(entity: str, skip_mapping: bool = False) -> Optional[Lis
     listens_df.createOrReplaceTempView(table_name, "yyyy")
 
     handler = entity_handler_map[entity]
-    data = handler(table_name, skip_mapping)
+    data = handler(table_name, use_mapping)
     message = create_message(data=data, entity=entity, stats_range='all_time',
                              from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 

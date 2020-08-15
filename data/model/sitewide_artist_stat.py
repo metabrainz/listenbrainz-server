@@ -25,16 +25,9 @@ class SitewideArtistStatRange(pydantic.BaseModel):
     artists: Dict[str, List[SitewideArtistRecord]]
 
 
-class SitewideArtistStatJson(pydantic.BaseModel):
-    """ Model for the JSON stored in the statistics.sitewide table's artist column
-    """
-    week: Optional[SitewideArtistStatRange]
-    year: Optional[SitewideArtistStatRange]
-    month: Optional[SitewideArtistStatRange]
-    all_time: Optional[SitewideArtistStatRange]
-
-
-class SitewideArtistStat(SitewideArtistStatJson):
+class SitewideArtistStat(pydantic.BaseModel):
     """ Model for stats around a most listened artists on the website
     """
+    stats_range: str
+    data: Optional[SitewideArtistStatRange]
     last_updated: datetime

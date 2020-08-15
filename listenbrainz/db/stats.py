@@ -25,21 +25,20 @@ import json
 from typing import Optional
 
 import sqlalchemy
-from flask import current_app
-from pydantic import ValidationError
-from listenbrainz import db
+from data.model.sitewide_artist_stat import (SitewideArtistStat,
+                                             SitewideArtistStatRange)
+from data.model.user_artist_map import UserArtistMapStat, UserArtistMapStatJson
+from data.model.user_artist_stat import UserArtistStat, UserArtistStatJson
 from data.model.user_daily_activity import (UserDailyActivityStat,
                                             UserDailyActivityStatJson)
 from data.model.user_listening_activity import (UserListeningActivityStat,
                                                 UserListeningActivityStatJson)
-from data.model.user_artist_stat import (UserArtistStat,
-                                         UserArtistStatJson)
-from data.model.user_artist_map import (UserArtistMapStat,
-                                        UserArtistMapStatJson)
 from data.model.user_recording_stat import (UserRecordingStat,
                                             UserRecordingStatJson)
-from data.model.user_release_stat import (UserReleaseStat,
-                                          UserReleaseStatJson)
+from data.model.user_release_stat import UserReleaseStat, UserReleaseStatJson
+from flask import current_app
+from listenbrainz import db
+from pydantic import ValidationError
 
 
 def get_timestamp_for_last_user_stats_update():
@@ -55,12 +54,13 @@ def get_timestamp_for_last_user_stats_update():
         return row['last_update_ts'] if row else None
 
 
-def _insert_jsonb_data(user_id: int, column: str, data: dict):
+def _insert_user_jsonb_data(user_id: int, column: str, data: dict):
     """ Inserts jsonb data into the given column
 
-        Args: user_id: the row id of the user,
-              column: the column in database to insert into
-              data: the data to be inserted
+        Args:
+            user_id: the row id of the user,
+            column: the column in database to insert into
+            data: the data to be inserted
     """
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
@@ -72,8 +72,28 @@ def _insert_jsonb_data(user_id: int, column: str, data: dict):
             """.format(column=column)), {
             'user_id': user_id,
             'data': json.dumps(data),
-        }
-        )
+        })
+
+
+def _insert_sitewide_jsonb_data(stats_range: str, column: str, data: dict):
+    """ Inserts jsonb data into the given column
+
+        Args:
+            stats_range: the range for which the stats have been calculated
+            column: the column in the database to insert into
+            data: the data to be inserted
+    """
+    with db.engine.connect() as connection:
+        connection.execute(sqlalchemy.text("""
+            INSERT INTO statistcs.sitewide (stats_range, {column})
+                 VALUES (:stats_range, :data)
+            ON CONFLICT (stats_range)
+          DO UPDATE SET {column} = COALESCE(statistcs.user.{column} || :data, :data),
+                        last_updated = NOW()
+            """.format(column=column)), {
+            'stats_range': stats_range,
+            'data': json.dumps(data)
+        })
 
 
 def insert_user_artists(user_id: int, artists: UserArtistStatJson):
@@ -85,7 +105,7 @@ def insert_user_artists(user_id: int, artists: UserArtistStatJson):
         Args: user_id: the row id of the user,
               artists: the top artists listened to by the user
     """
-    _insert_jsonb_data(user_id=user_id, column='artist', data=artists.dict(exclude_none=True))
+    _insert_user_jsonb_data(user_id=user_id, column='artist', data=artists.dict(exclude_none=True))
 
 
 def insert_user_releases(user_id: int, releases: UserReleaseStatJson):
@@ -97,7 +117,7 @@ def insert_user_releases(user_id: int, releases: UserReleaseStatJson):
        Args: user_id: the row id of the user,
              releases: the top releases listened to by the user
     """
-    _insert_jsonb_data(user_id=user_id, column='release', data=releases.dict(exclude_none=True))
+    _insert_user_jsonb_data(user_id=user_id, column='release', data=releases.dict(exclude_none=True))
 
 
 def insert_user_recordings(user_id: int, recordings: UserRecordingStatJson):
@@ -109,7 +129,7 @@ def insert_user_recordings(user_id: int, recordings: UserRecordingStatJson):
        Args: user_id: the row id of the user,
              recordings: the top releases listened to by the user
     """
-    _insert_jsonb_data(user_id=user_id, column='recording', data=recordings.dict(exclude_none=True))
+    _insert_user_jsonb_data(user_id=user_id, column='recording', data=recordings.dict(exclude_none=True))
 
 
 def insert_user_listening_activity(user_id: int, listening_activity: UserListeningActivityStatJson):
@@ -121,7 +141,7 @@ def insert_user_listening_activity(user_id: int, listening_activity: UserListeni
        Args: user_id: the row id of the user,
              listening_activity: the listening_activity stats of the user
     """
-    _insert_jsonb_data(user_id=user_id, column='listening_activity', data=listening_activity.dict(exclude_none=True))
+    _insert_user_jsonb_data(user_id=user_id, column='listening_activity', data=listening_activity.dict(exclude_none=True))
 
 
 def insert_user_daily_activity(user_id: int, daily_activity: UserDailyActivityStatJson):
@@ -133,7 +153,7 @@ def insert_user_daily_activity(user_id: int, daily_activity: UserDailyActivitySt
        Args: user_id: the row id of the user,
              daily_activity: the daily_activity stats of the user
     """
-    _insert_jsonb_data(user_id=user_id, column='daily_activity', data=daily_activity.dict(exclude_none=True))
+    _insert_user_jsonb_data(user_id=user_id, column='daily_activity', data=daily_activity.dict(exclude_none=True))
 
 
 def insert_user_artist_map(user_id: int, artist_map: UserArtistMapStatJson):
@@ -145,7 +165,19 @@ def insert_user_artist_map(user_id: int, artist_map: UserArtistMapStatJson):
        Args: user_id: the row id of the user,
              artist_map: the artist_map stats of the user
     """
-    _insert_jsonb_data(user_id=user_id, column='artist_map', data=artist_map.dict(exclude_none=True))
+    _insert_user_jsonb_data(user_id=user_id, column='artist_map', data=artist_map.dict(exclude_none=True))
+
+
+def insert_sitewide_artists(stats_range: str, artists: SitewideArtistStatRange):
+    """Inserts sitewide artist stats calculated from Spark into the database.
+
+       If stats are already present for a time range, they are updated to the new
+       values passed.
+
+       Args: stats_range: the range for which the stats have been calculated,
+             artists: the top artists for a particular stats_range
+    """
+    _insert_sitewide_jsonb_data(stats_range, column='artist', artists=artists.dict(exclude_none=True))
 
 
 def get_user_stats(user_id, columns):
