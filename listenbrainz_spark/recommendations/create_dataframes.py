@@ -179,7 +179,15 @@ def get_release_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapp
         partial_listens_df.artist_msid == msid_mbid_mapping_df.msb_artist_msid
     ]
 
-    df = partial_listens_df.join(msid_mbid_mapping_df, condition, 'left')
+    df = partial_listens_df.join(msid_mbid_mapping_df, condition, 'left') \
+                           .select('artist_msid',
+                                   'artist_name',
+                                   'listened_at',
+                                   'recording_msid',
+                                   'release_msid',
+                                   'release_name',
+                                   'track_name',
+                                   'user_name')
 
     window = Window.partitionBy('user_name').orderBy(col('listened_at').desc())
 
@@ -189,16 +197,16 @@ def get_release_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapp
     # Users will be shown the recent 25 release info.
     # The releases will be sorted on "listened_at"
 
-    missing_release_data_itr = df.withColumn('rank', row_number().over(window)) \
+    missing_release_data_itr = df.groupBy('artist_msid',
+                                          'artist_name',
+                                          'recording_msid',
+                                          'release_msid',
+                                          'release_name',
+                                          'track_name',
+                                          'user_name') \
+                                 .agg(func.max('listened_at').alias('listened_at')) \
+                                 .withColumn('rank', row_number().over(window)) \
                                  .where(col('rank') <= 25) \
-                                 .select('artist_msid',
-                                         'artist_name',
-                                         'listened_at',
-                                         'recording_msid',
-                                         'release_msid',
-                                         'release_name',
-                                         'track_name',
-                                         'user_name') \
                                  .toLocalIterator()
 
     missing_release_data = defaultdict(list)
@@ -219,10 +227,10 @@ def get_release_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapp
         )
 
     total_time = '{:.2f}'.format((time.monotonic() - ti) / 60)
-    message = []
+    messages = []
 
     for user_name, data in missing_release_data.items():
-        message.append({
+        messages.append({
             'type': 'cf_recording_dataframes',
             'dataframe_upload_time': current_ts,
             'total_time': total_time,
@@ -232,7 +240,7 @@ def get_release_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapp
             'missing_release_data': data
         })
 
-    return message
+    return messages
 
 
 def get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df):
@@ -388,6 +396,6 @@ def main(train_model_window=None):
     generate_dataframe_id(metadata)
     save_dataframe_metadata_to_hdfs(metadata)
 
-    message = get_release_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df, from_date, to_date, ti)
+    messages = get_release_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df, from_date, to_date, ti)
 
-    return message
+    return messages
