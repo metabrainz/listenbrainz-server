@@ -206,7 +206,7 @@ def get_release_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapp
                                           'user_name') \
                                  .agg(func.max('listened_at').alias('listened_at')) \
                                  .withColumn('rank', row_number().over(window)) \
-                                 .where(col('rank') <= 25) \
+                                 .where(col('rank') <= 200) \
                                  .toLocalIterator()
 
     missing_release_data = defaultdict(list)

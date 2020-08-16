@@ -1,0 +1,115 @@
+# listenbrainz-server - Server for the ListenBrainz project.
+#
+# Copyright (C) 2020 Vansika Pareek <vansikapareek2001@gmail.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+
+import listenbrainz.db.user as db_user
+import listenbrainz.db.missing_releases_musicbrainz as db_missing_releases_musicbrainz
+
+from listenbrainz.webserver.errors import APIBadRequest, APINotFound, APINoContent
+from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
+                                                    _get_non_negative_param,
+                                                    MAX_ITEMS_PER_GET)
+
+from flask import Blueprint, jsonify, request
+from listenbrainz.webserver.decorators import crossdomain
+from listenbrainz.webserver.rate_limiter import ratelimit
+
+missing_releases_musicbrainz_api_bp = Blueprint('missing_releases_mmusicbrainz_v1', __name__)
+
+
+@missing_releases_musicbrainz_api_bp.route("/user/<user_name>/info")
+@crossdomain()
+@ratelimit()
+def get_missing_releases(user_name):
+    """ Get release info sorted on "listened_at" that the user has submitted to ListenBrainz but has not
+        submitted to MusicBrainz.
+
+        A sample response from the endpoint may look like::
+
+        {
+            "payload": {
+
+                "last_updated": 1588494361,
+                "data": [
+                    {
+                        "artist_msid": "fd32e967-b874-44b2-809c-3862f714813c",
+                        "artist_name": "Red City Radio",
+                        "listened_at": "2020-04-29 23:40:47",
+                        "recording_msid": "78f63ece-86e1-48bf-a7ff-29793d4a84e6",
+                        "release_msid": "47818692-f669-4846-acbc-cb0a69987aee",
+                        "release_name": "The Dangers Of Standing Still",
+                        "track_name": "Never Bring A Cup Of Water To A Gunfight"
+                    },
+                    {
+                        "artist_msid": "fd32e967-b874-44b2-809c-3862f714813c",
+                        "artist_name": "Red City Radio",
+                        "listened_at": "2020-04-29 23:37:57",
+                        "recording_msid": "d226200a-a9be-4e9e-9f7c-d74a71647893",
+                        "release_msid": "47818692-f669-4846-acbc-cb0a69987aee",
+                        "release_name": "The Dangers Of Standing Still",
+                        "track_name": "Nathaniel Martinez"
+                    }
+                "count": 2,
+                "last_updated": 1597569112,
+                "offset": 4,
+                "total_missing_release_count": 25,
+                "user_name": "Vansika"
+            }
+        }
+
+        :param count: Optional, number of releases to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
+            Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+        :type count: ``int``
+
+        :param offset: Optional, number of releases to skip from the beginning, for pagination.
+            Ex. An offset of 5 means the 5 releases will be skipped, defaults to 0
+        :type offset: ``int``
+
+        :statuscode 200: Successful query, you have data!
+        :statuscode 400: Bad request, check ``response['error']`` for more details
+        :statuscode 404: User not found.
+        :statuscode 204: No recent missing releases for the user , empty response will be returned
+    """
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APINotFound("Cannot find user: {}".format(user_name))
+
+    offset = _get_non_negative_param('offset', default=0)
+    count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+
+    missing_releases_musicbrainz = db_missing_releases_musicbrainz.get_user_missing_releases_data(user['id'])
+
+    if missing_releases_musicbrainz is None:
+        err_msg = 'Recent releases listened to by {} are already in MB'.format(user_name)
+        raise APINoContent(err_msg)
+
+    missing_releases_list = missing_releases_musicbrainz['data']['missing_releases']
+    missing_releases_list_filtered = missing_releases_list[offset:count]
+
+    payload = {
+        'payload': {
+            'user_name': user_name,
+            'last_updated': int(missing_releases_musicbrainz['created'].timestamp()),
+            'count': len(missing_releases_list_filtered),
+            'total_missing_release_count': len(missing_releases_list),
+            'offset': offset,
+            'data': missing_releases_list_filtered
+        }
+    }
+
+    return jsonify(payload)

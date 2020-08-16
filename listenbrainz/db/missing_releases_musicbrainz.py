@@ -33,7 +33,7 @@ def insert_user_missing_releases_data(user_id, data):
                          but is not submitted to MusicBrainz.
     """
     missing_releases_data = {
-        'data': data
+        'missing_releases': data
     }
 
     with db.engine.connect() as connection:
@@ -49,3 +49,33 @@ def insert_user_missing_releases_data(user_id, data):
                 'missing_releases_data': ujson.dumps(missing_releases_data),
             }
         )
+
+
+def get_user_missing_releases_data(user_id):
+    """ Get missing releases data that has not been submitted to LB
+        for a user with the given row ID.
+
+        Args:
+            user_id (int): the row ID of the user in the DB
+
+        Returns:
+            A dict of the following format
+            {
+                'user_id' (int): the row ID of the user in the DB,
+                'data'  (dict): missing releases data.
+                'created' (datetime): datetime object representing when the missing
+                                      releases data for this user was last updated.
+            }
+
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT user_id, data, created
+              FROM missing_releases_musicbrainz
+             WHERE user_id = :user_id
+            """), {
+                    'user_id': user_id
+                }
+        )
+        row = result.fetchone()
+        return dict(row) if row else None
