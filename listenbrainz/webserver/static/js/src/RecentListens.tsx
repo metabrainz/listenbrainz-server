@@ -47,7 +47,7 @@ export interface RecentListensState {
   listens: Array<Listen>;
   listenCount?: number;
   loading: boolean;
-  mode: "listens" | "follow" | "recent";
+  mode: ListensListMode;
   nextListenTs?: number;
   playingNowByUser: FollowUsersPlayingNow;
   previousListenTs?: number;

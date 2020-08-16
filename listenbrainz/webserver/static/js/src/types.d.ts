@@ -294,3 +294,7 @@ declare type UserArtistMapDatum = {
 };
 
 declare type UserArtistMapData = Array<UserArtistMapDatum>;
+
+declare type ListensListMode = "listens" | "follow" | "recent";
+
+type ListenFeedBack = 1 | 0 | -1;

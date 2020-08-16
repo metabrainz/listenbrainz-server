@@ -5,6 +5,9 @@
 @light: #C0CFB2;
 @dark: #053b47;
 @controlsHeight: 60px;
+@love: #353070;
+@hate: #705230;
+
 
 #music-player {
   background: @primary;
@@ -162,6 +165,111 @@
     &:hover > td.playButton > *{
       opacity: 1;
     }
+  }
+}
+
+#listens {
+  padding: 10px;
+  
+  > .listen-card {
+    padding: 15px 0px;
+    margin-bottom: 7px;
+    
+    &.playing-now {
+      background-color: rgba(255, 252, 202, 0.3) !important ;
+    }
+    
+    &.current-listen {
+      background-color: rgba(217, 237, 247, 0.3) !important ;
+    }
+
+    > .col-xs-10 {
+
+      > .col-xs-9 {
+        display: flex;
+          
+        div {
+          display: inline-block;
+          
+          &.cover-art{
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            background-color: #eeeeee;
+            background-size: cover;
+            margin-right: 10px;
+          }
+
+        }
+      }
+      
+      > .col-xs-3 {
+        display: table;
+        height: 40px;
+
+        > span {
+          display: table-cell;
+          vertical-align: middle;
+        }
+      }
+
+    }
+    .track-details {
+      width: inherit;
+      
+      p {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space:nowrap;
+        margin-bottom: 0px;
+      }
+    }
+
+    .listen-time {
+      font-style: italic;
+    }
+    
+    > .col-xs-2 {
+      display: table;
+      height: 40px;
+
+      > * {
+        display: table-cell;
+        vertical-align: middle;
+      }
+    }
+  }
+}
+
+.fa-heart, .fa-heart-broken {
+  color: #ffffff;
+  stroke: #8d8d8d;
+  stroke-width: 40px;
+  font-size: 18px;
+  margin: 7px;
+}
+
+.fa-heart {
+  
+  &:hover {
+    stroke: @love;
+  }
+
+  &.filled {
+    stroke: @love;
+    color: @love;
+  }
+}
+
+.fa-heart-broken {
+  
+  &:hover {
+    stroke: @hate;
+  }
+
+  &.filled {
+    stroke: @hate;
+    color: @hate;
   }
 }
 
