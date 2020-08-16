@@ -403,7 +403,7 @@ export default class UserEntityChart extends React.Component<
     const nextPage = currPage + 1;
 
     return (
-      <div style={{ marginTop: "1em" }}>
+      <div style={{ marginTop: "1em", minHeight: 500 }}>
         <Loader isLoading={loading}>
           <div className="row">
             <div className="col-xs-12">
