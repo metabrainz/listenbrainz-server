@@ -215,29 +215,31 @@ def get_release_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapp
 
     for row in missing_release_data_itr:
         missing_release_data[row.user_name].append(
-            [
-                row.artist_msid,
-                row.artist_name,
-                row.listened_at,
-                row.recording_msid,
-                row.release_msid,
-                row.release_name,
-                row.track_name,
-            ]
+            {
+                'artist_msid': row.artist_msid,
+                'artist_name': row.artist_name,
+                'listened_at': str(row.listened_at),
+                'recording_msid': row.recording_msid,
+                'release_msid': row.release_msid,
+                'release_name': row.release_name,
+                'track_name': row.track_name,
+            }
         )
 
     total_time = '{:.2f}'.format((time.monotonic() - ti) / 60)
-    messages = []
+    messages = [{
+        'type': 'cf_recording_dataframes',
+        'dataframe_upload_time': current_ts,
+        'total_time': total_time,
+        'from_date': str(from_date.strftime('%b %Y')),
+        'to_date': str(to_date.strftime('%b %Y')),
+    }]
 
     for user_name, data in missing_release_data.items():
         messages.append({
-            'type': 'cf_recording_dataframes',
-            'dataframe_upload_time': current_ts,
-            'total_time': total_time,
-            'from_date': str(from_date.strftime('%b %Y')),
-            'to_date': str(to_date.strftime('%b %Y')),
+            'type': 'missing_releases_musicbrainz',
             'musicbrainz_id': user_name,
-            'missing_release_data': data
+            'missing_releases': data
         })
 
     return messages
@@ -396,6 +398,7 @@ def main(train_model_window=None):
     generate_dataframe_id(metadata)
     save_dataframe_metadata_to_hdfs(metadata)
 
+    current_app.logger.info('Preparing missing releases data...')
     messages = get_release_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df, from_date, to_date, ti)
 
     return messages
