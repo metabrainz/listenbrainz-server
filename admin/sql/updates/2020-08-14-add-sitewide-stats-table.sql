@@ -10,4 +10,6 @@ CREATE TABLE statistics.sitewide (
     last_updated            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE statistics.sitewide ADD CONSTRAINT stats_range_uniq UNIQUE (stats_range);
+
 COMMIT;

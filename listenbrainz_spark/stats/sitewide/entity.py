@@ -78,10 +78,10 @@ def get_entity_month(entity: str, use_mapping: bool = False) -> Optional[List[Si
 
     listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
     table_name = 'sitewide_{}_month'.format(entity)
-    listens_df.createOrReplaceTempView(table_name, "dd MMMM")
+    listens_df.createOrReplaceTempView(table_name)
 
     handler = entity_handler_map[entity]
-    data = handler(table_name, use_mapping)
+    data = handler(table_name, "dd MMMM", use_mapping)
 
     message = create_message(data=data, entity=entity, stats_range='month',
                              from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
@@ -110,10 +110,10 @@ def get_entity_year(entity: str, use_mapping: bool = False) -> Optional[List[Sit
 
     listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
     table_name = 'sitewide_{}_year'.format(entity)
-    listens_df.createOrReplaceTempView(table_name, "MMMM yyyy")
+    listens_df.createOrReplaceTempView(table_name)
 
     handler = entity_handler_map[entity]
-    data = handler(table_name, use_mapping)
+    data = handler(table_name, "MMMM yyyy", use_mapping)
     message = create_message(data=data, entity=entity, stats_range='year',
                              from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
@@ -136,10 +136,10 @@ def get_entity_all_time(entity: str, use_mapping: bool = False) -> Optional[List
 
     listens_df = get_listens(from_date, to_date, LISTENBRAINZ_DATA_DIRECTORY)
     table_name = 'sitewide_{}_all_time'.format(entity)
-    listens_df.createOrReplaceTempView(table_name, "yyyy")
+    listens_df.createOrReplaceTempView(table_name)
 
     handler = entity_handler_map[entity]
-    data = handler(table_name, use_mapping)
+    data = handler(table_name, "yyyy", use_mapping)
     message = create_message(data=data, entity=entity, stats_range='all_time',
                              from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 

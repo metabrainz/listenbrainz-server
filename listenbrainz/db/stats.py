@@ -85,10 +85,10 @@ def _insert_sitewide_jsonb_data(stats_range: str, column: str, data: dict):
     """
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
-            INSERT INTO statistcs.sitewide (stats_range, {column})
+            INSERT INTO statistics.sitewide (stats_range, {column})
                  VALUES (:stats_range, :data)
             ON CONFLICT (stats_range)
-          DO UPDATE SET {column} = COALESCE(statistcs.user.{column} || :data, :data),
+          DO UPDATE SET {column} = COALESCE(statistics.sitewide.{column} || :data, :data),
                         last_updated = NOW()
             """.format(column=column)), {
             'stats_range': stats_range,
@@ -177,7 +177,7 @@ def insert_sitewide_artists(stats_range: str, artists: SitewideArtistStatRange):
        Args: stats_range: the range for which the stats have been calculated,
              artists: the top artists for a particular stats_range
     """
-    _insert_sitewide_jsonb_data(stats_range, column='artist', artists=artists.dict(exclude_none=True))
+    _insert_sitewide_jsonb_data(stats_range, column='artist', data=artists.dict(exclude_none=True))
 
 
 def get_user_stats(user_id, columns):

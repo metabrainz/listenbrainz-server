@@ -200,7 +200,7 @@ def handle_sitewide_entity(data):
     db_handler = getattr(db_stats, 'insert_sitewide_{}'.format(entity))
 
     try:
-        db_handler(entity_model(stats_range, entity_model(**data)))
+        db_handler(stats_range, entity_model(**data))
     except ValidationError:
         current_app.logger.error("""ValidationError while inserting {stats_range} sitewide top {entity}.
                                  Data: {data}""".format(stats_range=stats_range, entity=entity,
