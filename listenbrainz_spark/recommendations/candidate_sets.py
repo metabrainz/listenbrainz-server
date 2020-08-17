@@ -110,7 +110,7 @@ def get_listens_to_fetch_top_artists(mapped_listens_df, from_date, to_date):
     return mapped_listens_subset
 
 
-def get_top_artists(mapped_listens_subset, top_artist_limit, users):
+def get_top_artists(mapped_listens_subset, top_artist_limit, users, from_date, to_date):
     """ Get top artists listened to by users who have a listening history in
         the past X days where X = RECOMMENDATION_GENERATION_WINDOW.
 
@@ -118,6 +118,8 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
             df (dataframe): A subset of mapped_listens_df containing user history.
             top_artist_limit (int): number of top artist to calculate
             users: list of users to generate candidate sets.
+            from_date (datetime): Date from which start fetching listens.
+            to_date (datetime): Date upto which fetch listens.
 
         Returns:
             if users is an empty list:
@@ -149,12 +151,27 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
                                                          'user_name',
                                                          'total_count') \
                                                  .where(top_artist_df.user_name.isin(users))
+        try:
+            top_artist_given_users_df.take(1)[0]
+        except IndexError:
+            current_app.logger.error('Top artists for {} not generated. Either the users were inactive from {} to {}'
+                                     ' or MBIDs of release(s) listened to by these users have not been submitted to '
+                                     ' MusicBrainz'.format(users, from_date, to_date), exc_info=True)
+            raise
+
         return top_artist_given_users_df
+
+    try:
+        top_artist_df.take(1)[0]
+    except IndexError:
+        current_app.logger.error('MBIDs of release(s) listened to by users active from {} to {} have not been submitted to'
+                                 ' MusicBrainz'.format(from_date, to_date), exc_info=True)
+        raise
 
     return top_artist_df
 
 
-def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit):
+def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit, users, from_date, to_date):
     """ Get artists similar to top artists.
 
         Args:
@@ -162,6 +179,9 @@ def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
             artist_relation_df: Dataframe containing artists and similar artists.
                                 For columns refer to artist_relation_schema in listenbrainz_spark/schema.py.
             similar_artist_limit (int): number of similar artist to calculate
+            users: list of users to generate candidate sets.
+            from_date (datetime): Date from which start fetching listens.
+            to_date (datetime): Date upto which fetch listens.
 
         Returns:
             similar_artist_df (dataframe): Top Z artists similar to top artists where
@@ -207,11 +227,20 @@ def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
                                                       'user_name') \
                                               .distinct()
 
+    try:
+        similar_artist_df.take(1)[0]
+    except IndexError:
+        if users:
+            current_app.logger.error('Similar artists for {} not generated.'.format(users), exc_info=True)
+        else:
+            current_app.logger.error('Similar artists for users active from {} to {} not generated.'
+                                     .format(from_date, to_date), exc_info=True)
+        raise
 
     return similar_artist_df, similar_artist_df_html
 
 
-def get_top_artist_candidate_set(top_artist_df, recordings_df, users_df):
+def get_top_artist_candidate_set(top_artist_df, recordings_df, users_df, users, from_date, to_date):
     """ Get recording ids that belong to top artists.
 
         Args:
@@ -219,6 +248,9 @@ def get_top_artist_candidate_set(top_artist_df, recordings_df, users_df):
             recordings_df: Dataframe containing distinct recordings and corresponding
                            mbids and names.
             users_df: Dataframe containing user names and user ids.
+            users: list of users to generate candidate sets.
+            from_date (datetime): Date from which start fetching listens.
+            to_date (datetime): Date upto which fetch listens.
 
         Returns:
             top_artist_candidate_set_df (dataframe): recording ids that belong to top artists
@@ -245,9 +277,20 @@ def get_top_artist_candidate_set(top_artist_df, recordings_df, users_df):
 
     top_artist_candidate_set_df = top_artist_candidate_set_df_html.select('recording_id', 'user_id', 'user_name')
 
+    try:
+        top_artist_candidate_set_df.take(1)[0]
+    except IndexError:
+        if users:
+            current_app.logger.error('Top artists candidate set not generated for {}'.format(users), exc_info=True)
+        else:
+            current_app.logger.error('Top artists candidate set not generated for users active from {} to {}'
+                                     .format(from_date, to_date), exc_info=True)
+        raise
+
     return top_artist_candidate_set_df, top_artist_candidate_set_df_html
 
-def get_similar_artist_candidate_set(similar_artist_df, recordings_df, users_df):
+
+def get_similar_artist_candidate_set(similar_artist_df, recordings_df, users_df, users, from_date, to_date):
     """ Get recording ids that belong to similar artists.
 
         Args:
@@ -255,6 +298,9 @@ def get_similar_artist_candidate_set(similar_artist_df, recordings_df, users_df)
             recordings_df: Dataframe containing distinct recordings and corresponding
                            mbids and names.
             users_df: Dataframe containing user names and user ids.
+            users: list of users to generate candidate sets.
+            from_date (datetime): Date from which start fetching listens.
+            to_date (datetime): Date upto which fetch listens.
 
         Returns:
             similar_artist_candidate_set_df (dataframe): recording ids that belong to similar artists
@@ -281,6 +327,16 @@ def get_similar_artist_candidate_set(similar_artist_df, recordings_df, users_df)
 
     similar_artist_candidate_set_df = similar_artist_candidate_set_df_html.select('recording_id', 'user_id', 'user_name')
 
+    try:
+        similar_artist_candidate_set_df.take(1)[0]
+    except IndexError:
+        if user:
+            current_app.logger.error('Similar artist candidate set not generated for {}'.format(users), exc_info=True)
+        else:
+            current_app.logger.error('Similar artist candidate set for users active from {} to {} not generated'
+                                     .format(from_date, to_date), exc_info=True)
+        raise
+
     return similar_artist_candidate_set_df, similar_artist_candidate_set_df_html
 
 
@@ -294,28 +350,16 @@ def save_candidate_sets(top_artist_candidate_set_df, similar_artist_candidate_se
                                                          corresponding to user ids.
     """
     try:
-        top_artist_candidate_set_df.take(1)[0]
-    except IndexError:
-        current_app.logger.error('Cannot save empty top artist candidate set', exc_info=True)
-        sys.exit(-1)
-
-    try:
-        similar_artist_candidate_set_df.take(1)[0]
-    except IndexError:
-        current_app.logger.error('Cannot save empty similar artist candidate set', exc_info=True)
-        sys.exit(-1)
-
-    try:
         utils.save_parquet(top_artist_candidate_set_df, path.TOP_ARTIST_CANDIDATE_SET)
     except FileNotSavedException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
 
     try:
         utils.save_parquet(similar_artist_candidate_set_df, path.SIMILAR_ARTIST_CANDIDATE_SET)
     except FileNotSavedException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
 
 
 def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_candidate_set_df_html,
@@ -421,7 +465,7 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
         listenbrainz_spark.init_spark_session('Candidate_set')
     except SparkSessionNotInitializedException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
 
     try:
         mapped_listens_df = utils.read_files_from_HDFS(path.MAPPED_LISTENS)
@@ -430,10 +474,10 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
         artist_relation_df = utils.read_files_from_HDFS(path.SIMILAR_ARTIST_DATAFRAME_PATH)
     except PathNotFoundException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
     except FileNotFetchedException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
 
     from_date, to_date = get_dates_to_generate_candidate_sets(mapped_listens_df, recommendation_generation_window)
 
@@ -441,26 +485,27 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
     mapped_listens_subset = get_listens_to_fetch_top_artists(mapped_listens_df, from_date, to_date)
 
     current_app.logger.info('Fetching top artists...')
-    top_artist_df = get_top_artists(mapped_listens_subset, top_artist_limit, users)
+    top_artist_df = get_top_artists(mapped_listens_subset, top_artist_limit, users, from_date, to_date)
 
     current_app.logger.info('Preparing top artists candidate set...')
     top_artist_candidate_set_df, top_artist_candidate_set_df_html = get_top_artist_candidate_set(top_artist_df, recordings_df,
-                                                                                                 users_df)
+                                                                                                 users_df, users, from_date,
+                                                                                                 to_date)
 
     current_app.logger.info('Fetching similar artists...')
-    similar_artist_df, similar_artist_df_html = get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
+    similar_artist_df, similar_artist_df_html = get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit,
+                                                                    users, from_date, to_date)
 
     current_app.logger.info('Preparing similar artists candidate set...')
     similar_artist_candidate_set_df, similar_artist_candidate_set_df_html = get_similar_artist_candidate_set(similar_artist_df,
                                                                                                              recordings_df,
-                                                                                                             users_df)
-    try:
-        current_app.logger.info('Saving candidate sets...')
-        save_candidate_sets(top_artist_candidate_set_df, similar_artist_candidate_set_df)
-        current_app.logger.info('Done!')
-    except Py4JJavaError as err:
-        current_app.logger.error('{}\nAborting...'.format(str(err.java_exception)), exc_info=True)
-        sys.exit(-1)
+                                                                                                             users_df, users,
+                                                                                                             from_date, to_date)
+
+    current_app.logger.info('Saving candidate sets...')
+    save_candidate_sets(top_artist_candidate_set_df, similar_artist_candidate_set_df)
+    current_app.logger.info('Done!')
+
 
     # time taken to generate candidate_sets
     total_time = '{:.2f}'.format((time.monotonic() - time_initial) / 60)
