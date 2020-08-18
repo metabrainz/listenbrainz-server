@@ -15,9 +15,9 @@ import { getArtistLink, getTrackLink } from "../utils";
 import Card from "../components/Card";
 import APIService from "../APIService";
 
-const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
+export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
-type ListenCardProps = {
+export type ListenCardProps = {
   apiUrl: string;
   listen: Listen;
   mode: ListensListMode;
@@ -33,7 +33,7 @@ export default class ListenCard extends React.Component<
   ListenCardProps,
   ListenCardState
 > {
-  private APIService: APIService;
+  APIService: APIService;
   playListen: (listen: Listen) => void;
 
   constructor(props: ListenCardProps) {
@@ -42,7 +42,7 @@ export default class ListenCard extends React.Component<
     this.playListen = props.playListen.bind(this, props.listen);
 
     this.state = {
-      coverArtUrl: "",
+      coverArtUrl: undefined,
     };
 
     this.APIService = new APIService(
@@ -51,10 +51,10 @@ export default class ListenCard extends React.Component<
   }
 
   componentDidMount(): void {
-    this.fetchCoverArt();
+    this.getCoverArt();
   }
 
-  fetchCoverArt = async () => {
+  getCoverArt = async () => {
     const { listen } = this.props;
     const releaseMBID = _get(
       listen,
@@ -125,7 +125,7 @@ export default class ListenCard extends React.Component<
           </MediaQuery>
           <MediaQuery maxWidth={767}>
             <div className="col-xs-12">
-            <div
+              <div
                 className="cover-art img-responsive"
                 style={{
                   backgroundImage: `url("${coverArtUrl}")`,

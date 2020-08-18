@@ -295,7 +295,7 @@ export default class APIService {
     const response = await fetch(url);
     this.checkStatus(response);
     if (response.status === 200) {
-      const data = response.json();
+      const data = await response.json();
       return data.image_url;
     }
     return null;
