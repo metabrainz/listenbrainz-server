@@ -234,13 +234,12 @@ def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df, 
     }]
 
     for user_name, data in missing_musicbrainz_data.items():
-        if user_name == 'dalover' or user_name == 'danmam':
-            messages.append({
-                'type': 'missing_musicbrainz_data',
-                'musicbrainz_id': user_name,
-                'missing_musicbrainz_data': data,
-                'source': 'cf'
-            })
+        messages.append({
+            'type': 'missing_musicbrainz_data',
+            'musicbrainz_id': user_name,
+            'missing_musicbrainz_data': data,
+            'source': 'cf'
+        })
 
     return messages
 
@@ -382,21 +381,21 @@ def main(train_model_window=None):
     # Dataframe containing recording msid->mbid and artist msid->mbid mapping.
     msid_mbid_mapping_df = utils.read_files_from_HDFS(path.MBID_MSID_MAPPING)
 
-    #mapped_listens_df = get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df)
+    mapped_listens_df = get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df)
 
     current_app.logger.info('Preparing users data and saving to HDFS...')
-    #users_df = get_users_dataframe(mapped_listens_df, metadata)
+    users_df = get_users_dataframe(mapped_listens_df, metadata)
 
     current_app.logger.info('Preparing recordings data and saving to HDFS...')
-    #recordings_df = get_recordings_df(mapped_listens_df, metadata)
+    recordings_df = get_recordings_df(mapped_listens_df, metadata)
 
     current_app.logger.info('Preparing listen data dump and playcounts, saving playcounts to HDFS...')
-    #listens_df = get_listens_df(mapped_listens_df, metadata)
+    listens_df = get_listens_df(mapped_listens_df, metadata)
 
-    #playcounts_df = get_playcounts_df(listens_df, recordings_df, users_df, metadata)
+    playcounts_df = get_playcounts_df(listens_df, recordings_df, users_df, metadata)
 
-    #generate_dataframe_id(metadata)
-    #save_dataframe_metadata_to_hdfs(metadata)
+    generate_dataframe_id(metadata)
+    save_dataframe_metadata_to_hdfs(metadata)
 
     current_app.logger.info('Preparing missing releases data...')
     messages = get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df, from_date, to_date, ti)
