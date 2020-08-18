@@ -11,10 +11,7 @@ import * as recentListensPropsTooManyListens from "./__mocks__/recentListensProp
 import * as recentListensPropsOneListen from "./__mocks__/recentListensPropsOneListen.json";
 import * as recentListensPropsPlayingNow from "./__mocks__/recentListensPropsPlayingNow.json";
 
-import RecentListens, {
-  ListensListMode,
-  RecentListensProps,
-} from "./RecentListens";
+import RecentListens, { RecentListensProps } from "./RecentListens";
 
 enableFetchMocks();
 

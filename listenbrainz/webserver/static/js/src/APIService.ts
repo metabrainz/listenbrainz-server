@@ -286,4 +286,18 @@ export default class APIService {
     error.response = response;
     throw error;
   };
+
+  getCoverArt = async (
+    releaseMBID: string,
+    recordingMSID: string
+  ): Promise<string | null> => {
+    const url = `${this.APIBaseURI}/get-cover-art/?release_mbid=${releaseMBID}&recording_msid=${recordingMSID}`;
+    const response = await fetch(url);
+    this.checkStatus(response);
+    if (response.status === 200) {
+      const data = await response.json();
+      return data.image_url;
+    }
+    return null;
+  };
 }
