@@ -214,7 +214,7 @@ def get_user_stats(user_id, columns):
 
 
 def get_user_artists(user_id: int, stats_range: str) -> Optional[UserArtistStat]:
-    """Get top artists in a time range for user with given ID.
+    """ Get top artists in a time range for user with given ID.
 
         Args:
             user_id: the row ID of the user in the DB
@@ -379,6 +379,32 @@ def get_user_artist_map(user_id: int, stats_range: str) -> Optional[UserArtistMa
                                                         data=json.dumps(dict(row)[stats_range], indent=3)),
                                  exc_info=True)
         return None
+
+
+def get_sitewide_artists(stats_range: str) -> Optional[SitewideArtistStat]:
+    """ Get sitewide top artists for from the DB.
+
+        Args:
+            stats_range: The time range for which to fetch the stats for.
+
+        Returns:
+            data: The top artists for the given time_range if they are present else None
+    """
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+                SELECT stats_range, artist as data, last_updated
+                  FROM statistics.sitewide
+                 WHERE stats_range = :stats_range
+            """), {
+            'stats_range': stats_range
+        })
+        row = result.fetchone()
+
+    try:
+        return SitewideArtistStat(**dict(row)) if row else None
+    except ValidationError:
+        current_app.logger.error("""ValidationError when getting {stats_range} sitewide top artists.
+                                 Data: {data}""".format(stats_range, data=json.dumps(dict(row)['data'], indent=3)), exc_info=True)
 
 
 def valid_stats_exist(user_id, days):
