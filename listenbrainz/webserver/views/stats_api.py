@@ -689,7 +689,8 @@ def get_sitewide_artist():
           the current time range and the previous time range. For example for yearly statistics the data
           is calculated for the months in current as well as the past year.
 
-    :param count: Optional, number of artists to return for each time range, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
+    :param count: Optional, number of artists to return for each time range,
+        Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
         Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
     :type count: ``int``
     :param offset: Optional, number of artists to skip from the beginning, for pagination.
