@@ -159,9 +159,8 @@ def get_listens_for_training_model_window(to_date, from_date, metadata, dest_pat
     return partial_listens_df
 
 
-def get_release_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df, from_date, to_date, ti):
-    """ Get release data that has been submitted to ListenBrainz but is missing from
-        MusicBrainz.
+def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df, from_date, to_date, ti):
+    """ Get data that has been submitted to ListenBrainz but is missing from MusicBrainz.
 
         Args:
             partial_listens_df (dataframe): listens without artist mbid and recording mbid.
@@ -172,7 +171,7 @@ def get_release_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapp
             ti (datetime): Timestamp when the first func (main) of the script was called.
 
         Returns:
-            missing_release_data_itr (iterator): Release data missing from the MusicBrainz.
+            missing_musicbrainz_data_itr (iterator): Release data missing from the MusicBrainz.
     """
     condition = [
         partial_listens_df.recording_msid == msid_mbid_mapping_df.msb_recording_msid,
@@ -191,30 +190,29 @@ def get_release_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapp
 
     window = Window.partitionBy('user_name').orderBy(col('listened_at').desc())
 
-    # limiting listens to 25 for each user so that messages don't drop
-    # Also, we don't want to overwhelm users with the release data that they
+    # limiting listens to 200 for each user so that messages don't drop
+    # Also, we don't want to overwhelm users with the data that they
     # have submitted to LB and should consider submitting to MB.
-    # Users will be shown the recent 25 release info.
-    # The releases will be sorted on "listened_at"
+    # The data will be sorted on "listened_at"
 
-    missing_release_data_itr = df.groupBy('artist_msid',
+    missing_musicbrainz_data_itr = df.groupBy('artist_msid',
                                           'artist_name',
                                           'recording_msid',
                                           'release_msid',
                                           'release_name',
                                           'track_name',
                                           'user_name') \
-                                 .agg(func.max('listened_at').alias('listened_at')) \
-                                 .withColumn('rank', row_number().over(window)) \
-                                 .where(col('rank') <= 200) \
-                                 .toLocalIterator()
+                                     .agg(func.max('listened_at').alias('listened_at')) \
+                                     .withColumn('rank', row_number().over(window)) \
+                                     .where(col('rank') <= 200) \
+                                     .toLocalIterator()
 
-    missing_release_data = defaultdict(list)
+    missing_musicbrainz_data = defaultdict(list)
 
     current_ts = str(datetime.utcnow())
 
-    for row in missing_release_data_itr:
-        missing_release_data[row.user_name].append(
+    for row in missing_musicbrainz_data_itr:
+        missing_musicbrainz_data[row.user_name].append(
             {
                 'artist_msid': row.artist_msid,
                 'artist_name': row.artist_name,
@@ -235,12 +233,14 @@ def get_release_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapp
         'to_date': str(to_date.strftime('%b %Y')),
     }]
 
-    for user_name, data in missing_release_data.items():
-        messages.append({
-            'type': 'missing_releases_musicbrainz',
-            'musicbrainz_id': user_name,
-            'missing_releases': data
-        })
+    for user_name, data in missing_musicbrainz_data.items():
+        if user_name == 'dalover' or user_name == 'danmam':
+            messages.append({
+                'type': 'missing_musicbrainz_data',
+                'musicbrainz_id': user_name,
+                'missing_musicbrainz_data': data,
+                'source': 'cf'
+            })
 
     return messages
 
@@ -382,23 +382,23 @@ def main(train_model_window=None):
     # Dataframe containing recording msid->mbid and artist msid->mbid mapping.
     msid_mbid_mapping_df = utils.read_files_from_HDFS(path.MBID_MSID_MAPPING)
 
-    mapped_listens_df = get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df)
+    #mapped_listens_df = get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df)
 
     current_app.logger.info('Preparing users data and saving to HDFS...')
-    users_df = get_users_dataframe(mapped_listens_df, metadata)
+    #users_df = get_users_dataframe(mapped_listens_df, metadata)
 
     current_app.logger.info('Preparing recordings data and saving to HDFS...')
-    recordings_df = get_recordings_df(mapped_listens_df, metadata)
+    #recordings_df = get_recordings_df(mapped_listens_df, metadata)
 
     current_app.logger.info('Preparing listen data dump and playcounts, saving playcounts to HDFS...')
-    listens_df = get_listens_df(mapped_listens_df, metadata)
+    #listens_df = get_listens_df(mapped_listens_df, metadata)
 
-    playcounts_df = get_playcounts_df(listens_df, recordings_df, users_df, metadata)
+    #playcounts_df = get_playcounts_df(listens_df, recordings_df, users_df, metadata)
 
-    generate_dataframe_id(metadata)
-    save_dataframe_metadata_to_hdfs(metadata)
+    #generate_dataframe_id(metadata)
+    #save_dataframe_metadata_to_hdfs(metadata)
 
     current_app.logger.info('Preparing missing releases data...')
-    messages = get_release_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df, from_date, to_date, ti)
+    messages = get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df, from_date, to_date, ti)
 
     return messages

@@ -18,7 +18,7 @@
 
 
 import listenbrainz.db.user as db_user
-import listenbrainz.db.missing_releases_musicbrainz as db_missing_releases_musicbrainz
+import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
 
 from listenbrainz.webserver.errors import APIBadRequest, APINotFound, APINoContent
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
@@ -29,14 +29,14 @@ from flask import Blueprint, jsonify, request
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.rate_limiter import ratelimit
 
-missing_releases_musicbrainz_api_bp = Blueprint('missing_releases_mmusicbrainz_v1', __name__)
+missing_musicbrainz_data_api_bp = Blueprint('missing_musicbrainz_data_v1', __name__)
 
 
-@missing_releases_musicbrainz_api_bp.route("/user/<user_name>/info")
+@missing_musicbrainz_data_api_bp.route("/user/<user_name>")
 @crossdomain()
 @ratelimit()
-def get_missing_releases(user_name):
-    """ Get release info sorted on "listened_at" that the user has submitted to ListenBrainz but has not
+def get_missing_musicbrainz_data(user_name):
+    """ Get musicbrainz data sorted on "listened_at" that the user has submitted to ListenBrainz but has not
         submitted to MusicBrainz.
 
         A sample response from the endpoint may look like::
@@ -67,7 +67,7 @@ def get_missing_releases(user_name):
                 "count": 2,
                 "last_updated": 1597569112,
                 "offset": 4,
-                "total_missing_release_count": 25,
+                "total_data_count": 25,
                 "user_name": "Vansika"
             }
         }
@@ -85,6 +85,10 @@ def get_missing_releases(user_name):
         :statuscode 404: User not found.
         :statuscode 204: No recent missing releases for the user , empty response will be returned
     """
+    # source indicates the *source* script/algorithm by which the missing musicbrainz data was calculated.
+    # The source may change in future
+    source = 'cf'
+
     user = db_user.get_by_mb_id(user_name)
     if user is None:
         raise APINotFound("Cannot find user: {}".format(user_name))
@@ -92,23 +96,23 @@ def get_missing_releases(user_name):
     offset = _get_non_negative_param('offset', default=0)
     count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
-    missing_releases_musicbrainz = db_missing_releases_musicbrainz.get_user_missing_releases_data(user['id'])
+    missing_musicbrainz_data = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(user['id'], source)
 
-    if missing_releases_musicbrainz is None:
+    if missing_musicbrainz_data is None:
         err_msg = 'Recent releases listened to by {} are already in MB'.format(user_name)
         raise APINoContent(err_msg)
 
-    missing_releases_list = missing_releases_musicbrainz['data']['missing_releases']
-    missing_releases_list_filtered = missing_releases_list[offset:count]
+    missing_musicbrainz_data_list = missing_musicbrainz_data['data']['missing_musicbrainz_data']
+    missing_musicbrainz_data_list_filtered = missing_musicbrainz_data_list[offset:count]
 
     payload = {
         'payload': {
             'user_name': user_name,
-            'last_updated': int(missing_releases_musicbrainz['created'].timestamp()),
-            'count': len(missing_releases_list_filtered),
-            'total_missing_release_count': len(missing_releases_list),
+            'last_updated': int(missing_musicbrainz_data['created'].timestamp()),
+            'count': len(missing_musicbrainz_data_list_filtered),
+            'total_data_count': len(missing_musicbrainz_data_list),
             'offset': offset,
-            'data': missing_releases_list_filtered
+            'data': missing_musicbrainz_data_list_filtered
         }
     }
 

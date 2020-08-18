@@ -6,7 +6,7 @@ import json
 import listenbrainz.db.user as db_user
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
-import listenbrainz.db.missing_releases_musicbrainz as db_missing_releases_musicbrainz
+import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
 
 from flask import current_app, render_template
 from pydantic import ValidationError
@@ -213,20 +213,21 @@ def handle_dataframes(data):
     )
 
 
-def handle_missing_releases_musicbrainz(data):
+def handle_missing_musicbrainz_data(data):
     musicbrainz_id = data['musicbrainz_id']
     user = db_user.get_by_mb_id(musicbrainz_id)
     if not user:
-        current_app.logger.critical("Calculted releases missing from MusicBrainz for a user that doesn't exist"
+        current_app.logger.critical("Calculted data missing from MusicBrainz for a user that doesn't exist"
                                     " in the Postgres database: {}".format(musicbrainz_id))
         return
 
-    current_app.logger.debug("Inserting missing releases data for {}".format(musicbrainz_id))
+    current_app.logger.debug("Inserting missing musicbrainz data for {}".format(musicbrainz_id))
 
-    missing_releases_data = data['missing_releases']
-    db_missing_releases_musicbrainz.insert_user_missing_releases_data(user['id'], missing_releases_data)
+    missing_musicbrainz_data = data['missing_musicbrainz_data']
+    source = data['source']
+    db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data(user['id'], missing_musicbrainz_data, source)
 
-    current_app.logger.debug("Missing releases data for {} inserted".format(musicbrainz_id))
+    current_app.logger.debug("Missing musicbrainz data for {} inserted".format(musicbrainz_id))
 
 
 def handle_model(data):

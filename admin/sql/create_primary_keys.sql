@@ -16,6 +16,6 @@ ALTER TABLE recommendation.recommender_session ADD CONSTRAINT rec_recommender_se
 
 ALTER TABLE recording_feedback ADD CONSTRAINT recording_feedback_pkey PRIMARY KEY (id);
 
-ALTER TABLE missing_releases_musicbrainz ADD CONSTRAINT missing_releases_mb_pkey PRIMARY KEY (id);
+ALTER TABLE missing_musicbrainz_data ADD CONSTRAINT missing_mb_data_pkey PRIMARY KEY (id);
 
 COMMIT;
