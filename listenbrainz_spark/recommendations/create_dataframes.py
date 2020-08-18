@@ -196,12 +196,12 @@ def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df, 
     # The data will be sorted on "listened_at"
 
     missing_musicbrainz_data_itr = df.groupBy('artist_msid',
-                                          'artist_name',
-                                          'recording_msid',
-                                          'release_msid',
-                                          'release_name',
-                                          'track_name',
-                                          'user_name') \
+                                              'artist_name',
+                                              'recording_msid',
+                                              'release_msid',
+                                              'release_name',
+                                              'track_name',
+                                              'user_name') \
                                      .agg(func.max('listened_at').alias('listened_at')) \
                                      .withColumn('rank', row_number().over(window)) \
                                      .where(col('rank') <= 200) \
