@@ -18,38 +18,33 @@ DUMP_QUERY = '''SELECT CAST(count AS float) / (select max(count) from relations.
                   FROM relations.artist_artist_relations arr
                   JOIN artist a0 ON arr.artist_0 = a0.id
                   JOIN artist a1 ON arr.artist_1 = a1.id
-                 WHERE count > 3
               ORDER BY score DESC
              '''
 
 DUMP_QUERY_AC = '''SELECT CAST(count AS float) / (SELECT MAX(count)
                                                     FROM relations.artist_credit_artist_credit_relations) AS score,
-                          ac0.id, string_agg(concat(acn0.name, acn0.join_phrase), ''),
-                          ac1.id, string_agg(concat(acn1.name, acn1.join_phrase), '')
+                          ac0.id, ac0.name,
+                          ac1.id, ac1.name
                      FROM relations.artist_credit_artist_credit_relations arr
                      JOIN artist_credit ac0 ON arr.artist_credit_0 = ac0.id
-                     JOIN artist_credit_name acn0 ON arr.artist_credit_0 = acn0.artist_credit
                      JOIN artist_credit ac1 ON arr.artist_credit_1 = ac1.id
-                     JOIN artist_credit_name acn1 ON arr.artist_credit_1 = acn1.artist_credit
-                    WHERE count > 3
-                 GROUP BY ac0.id, acn0.position, ac1.id, acn1.position, arr.count
                  ORDER BY score DESC
                 '''
 
-def write_table(use_ac):
+def write_table(write_artist):
     '''
-        Write the relations from the table to a temp file. Is use_ac is True, dump the artist_credit_relations table,
+        Write the relations from the table to a temp file. Is write_artist is True, dump the artist_relations table,
         not the artist_relations_table.
     '''
 
     dt = datetime.datetime.now()
     date_string = "%d-%02d-%02d" % (dt.year, dt.month, dt.day)
-    if use_ac:
-        filename = "artist_credit-artist_credit-relations.json"
-        tarname = "artist_credit-artist_credit-relations.%s.tar.bz2" % date_string
-    else:
+    if write_artist:
         filename = "artist-artist-relations.json"
         tarname = "artist-artist-relations.%s.tar.bz2" % date_string
+    else:
+        filename = "artist_credit-artist_credit-relations.json"
+        tarname = "artist_credit-artist_credit-relations.%s.tar.bz2" % date_string
 
     fh, temp_file = mkstemp()
     os.close(fh)  # pesky!
@@ -58,29 +53,29 @@ def write_table(use_ac):
     with open(temp_file, "wt") as f:
         with psycopg2.connect(config.DB_CONNECT) as conn:
             with conn.cursor() as curs:
-                if use_ac:
-                    curs.execute(DUMP_QUERY_AC)
-                else:
+                if write_artist:
                     curs.execute(DUMP_QUERY)
+                else:
+                    curs.execute(DUMP_QUERY_AC)
                 while True:
                     row = curs.fetchone()
                     if not row:
                         break
 
-                    if use_ac:
-                        f.write(ujson.dumps({
-                            'score': row[0],
-                            'id_0': row[1],
-                            'name_0': row[2],
-                            'id_1': row[3],
-                            'name_1': row[4]
-                        }) + "\n")
-                    else:
+                    if write_artist:
                         f.write(ujson.dumps({
                             'score': row[0],
                             'mbid_0': row[1],
                             'name_0': row[2],
                             'mbid_1': row[3],
+                            'name_1': row[4]
+                        }) + "\n")
+                    else:
+                        f.write(ujson.dumps({
+                            'score': row[0],
+                            'id_0': row[1],
+                            'name_0': row[2],
+                            'id_1': row[3],
                             'name_1': row[4]
                         }) + "\n")
 
@@ -105,9 +100,9 @@ def write_table(use_ac):
 
 
 @click.command()
-@click.option('--use-ac', '-a', is_flag=True, default=False)
+@click.option('--write-artist', '-a', is_flag=True, default=False)
 def write(**opts):
-    write_table(opts['use_ac'])
+    write_table(opts['write_artist'])
 
 
 if __name__ == "__main__":
