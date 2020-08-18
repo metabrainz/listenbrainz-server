@@ -1,7 +1,6 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
-import * as timeago from "time-ago";
 
-import { faListUl, faMusic } from "@fortawesome/free-solid-svg-icons";
+import { faListUl } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 import { AlertList } from "react-bs-notifier";
@@ -14,9 +13,8 @@ import BrainzPlayer from "./BrainzPlayer";
 import FollowUsers from "./FollowUsers";
 import APIService from "./APIService";
 import Loader from "./components/Loader";
-import { getArtistLink, getPlayButton, getTrackLink } from "./utils";
 
-export type ListensListMode = "listens" | "follow" | "recent";
+import ListenCard from "./listens/ListenCard";
 
 export interface RecentListensProps {
   apiUrl: string;
@@ -549,7 +547,13 @@ export default class RecentListens extends React.Component<
       previousListenTs,
       saveUrl,
     } = this.state;
-    const { latestListenTs, oldestListenTs, spotify, user } = this.props;
+    const {
+      latestListenTs,
+      oldestListenTs,
+      spotify,
+      user,
+      apiUrl,
+    } = this.props;
 
     return (
       <div role="main">
@@ -598,89 +602,38 @@ export default class RecentListens extends React.Component<
                 >
                   <Loader isLoading={loading} />
                 </div>
-                <table
-                  className="table table-condensed table-striped listens-table"
+                <div
                   id="listens"
                   ref={this.listensTable}
                   style={{ opacity: loading ? "0.4" : "1" }}
                 >
-                  <thead>
-                    <tr>
-                      <th>Track</th>
-                      <th>Artist</th>
-                      <th>Time</th>
-                      {(mode === "follow" || mode === "recent") && (
-                        <th>User</th>
-                      )}
-                      {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
-                      <th style={{ width: "50px" }} />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {listens
-                      .sort((a, b) => {
-                        if (a.playing_now) {
-                          return -1;
-                        }
-                        if (b.playing_now) {
-                          return 1;
-                        }
-                        return 0;
-                      })
-                      .map((listen) => {
-                        return (
-                          <tr
-                            key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
-                            onDoubleClick={this.playListen.bind(this, listen)}
-                            className={`listen${
-                              this.isCurrentListen(listen) ? " info" : ""
-                            }${listen.playing_now ? " playing_now" : ""}`}
-                          >
-                            <td>{getTrackLink(listen)}</td>
-                            <td>{getArtistLink(listen)}</td>
-                            {listen.playing_now ? (
-                              <td>
-                                <FontAwesomeIcon icon={faMusic as IconProp} />{" "}
-                                Playing now
-                              </td>
-                            ) : (
-                              <td>
-                                <abbr
-                                  title={
-                                    listen.listened_at_iso?.toString() ||
-                                    new Date(
-                                      listen.listened_at * 1000
-                                    ).toISOString()
-                                  }
-                                >
-                                  {listen.listened_at_iso
-                                    ? timeago.ago(listen.listened_at_iso)
-                                    : timeago.ago(listen.listened_at * 1000)}
-                                </abbr>
-                              </td>
-                            )}
-                            {(mode === "follow" || mode === "recent") && (
-                              <td>
-                                <a
-                                  href={`/user/${listen.user_name}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  {listen.user_name}
-                                </a>
-                              </td>
-                            )}
-                            <td className="playButton">
-                              {getPlayButton(
-                                listen,
-                                this.playListen.bind(this, listen)
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </table>
+                  {listens
+                    .sort((a, b) => {
+                      if (a.playing_now) {
+                        return -1;
+                      }
+                      if (b.playing_now) {
+                        return 1;
+                      }
+                      return 0;
+                    })
+                    .map((listen) => {
+                      return (
+                        <ListenCard
+                          apiUrl={apiUrl}
+                          key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
+                          listen={listen}
+                          mode={mode}
+                          playListen={this.playListen}
+                          className={`${
+                            this.isCurrentListen(listen)
+                              ? " current-listen"
+                              : ""
+                          }${listen.playing_now ? " playing-now" : ""}`}
+                        />
+                      );
+                    })}
+                </div>
                 {endOfTheLine && (
                   <div>
                     No more listens to show in a 12 months period. <br />
