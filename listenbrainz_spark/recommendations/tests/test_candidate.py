@@ -76,6 +76,15 @@ class CandidateSetsTestClass(SparkTestCase):
         self.assertEqual(top_artist_id[0], 1)
         self.assertEqual(top_artist_id[1], 2)
 
+        # empty df
+        mapped_listens = mapped_listens.select('*').where(f.col('user_name') == 'lala')
+        with self.assertRaises(IndexError):
+            candidate_sets.get_top_artists(mapped_listens, top_artist_limit, [])
+
+        with self.assertRaises(IndexError):
+            candidate_sets.get_top_artists(mapped_listens, top_artist_limit, ['lala'])
+
+
     def test_get_similar_artists(self):
         df = utils.create_dataframe(
             Row(
@@ -132,6 +141,19 @@ class CandidateSetsTestClass(SparkTestCase):
             'user_name'
         ]
         self.assertListEqual(cols, similar_artist_df_html.columns)
+
+        artist_relation_df = utils.create_dataframe(
+            Row(
+                score=1.0,
+                id_0=6,
+                name_0="Less Than Jake",
+                id_1=7,
+                name_1="Wolfgang Amadeus Mozart"
+            ),
+            schema=None
+        )
+        with self.assertRaises(IndexError):
+            candidate_sets.get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
 
     def test_get_top_artist_candidate_set(self):
         recordings_df = self.get_recordings_df()
