@@ -547,13 +547,7 @@ export default class RecentListens extends React.Component<
       previousListenTs,
       saveUrl,
     } = this.state;
-    const {
-      latestListenTs,
-      oldestListenTs,
-      spotify,
-      user,
-      apiUrl,
-    } = this.props;
+    const { latestListenTs, oldestListenTs, spotify, user } = this.props;
 
     return (
       <div role="main">
@@ -620,7 +614,6 @@ export default class RecentListens extends React.Component<
                     .map((listen) => {
                       return (
                         <ListenCard
-                          apiUrl={apiUrl}
                           key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
                           listen={listen}
                           mode={mode}

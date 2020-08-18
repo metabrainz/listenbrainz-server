@@ -18,62 +18,23 @@ import APIService from "../APIService";
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
 export type ListenCardProps = {
-  apiUrl: string;
   listen: Listen;
   mode: ListensListMode;
   className?: string;
   playListen: (listen: Listen) => void;
 };
 
-type ListenCardState = {
-  coverArtUrl?: String;
-};
-
-export default class ListenCard extends React.Component<
-  ListenCardProps,
-  ListenCardState
-> {
-  APIService: APIService;
+export default class ListenCard extends React.Component<ListenCardProps> {
   playListen: (listen: Listen) => void;
 
   constructor(props: ListenCardProps) {
     super(props);
 
     this.playListen = props.playListen.bind(this, props.listen);
-
-    this.state = {
-      coverArtUrl: undefined,
-    };
-
-    this.APIService = new APIService(
-      props.apiUrl || `${window.location.origin}/1`
-    );
   }
-
-  componentDidMount(): void {
-    this.getCoverArt();
-  }
-
-  getCoverArt = async () => {
-    const { listen } = this.props;
-    const releaseMBID = _get(
-      listen,
-      "track_metadata.additional_info.release_mbid"
-    );
-    const recordingMSID = _get(
-      listen,
-      "track_metadata.additional_info.recording_msid"
-    );
-
-    this.APIService.getCoverArt(releaseMBID, recordingMSID).then((imageUrl) => {
-      const coverArtUrl = imageUrl || DEFAULT_COVER_ART_URL;
-      this.setState({ coverArtUrl });
-    });
-  };
 
   render() {
     const { listen, mode, className } = this.props;
-    const { coverArtUrl } = this.state;
 
     return (
       <Card
@@ -83,12 +44,6 @@ export default class ListenCard extends React.Component<
         <div className="col-xs-9">
           <MediaQuery minWidth={768}>
             <div className="col-xs-9">
-              <div
-                className="cover-art img-responsive"
-                style={{
-                  backgroundImage: `url("${coverArtUrl}")`,
-                }}
-              />
               <div className="track-details">
                 <p title={listen.track_metadata.track_name}>
                   {getTrackLink(listen)}
@@ -125,12 +80,6 @@ export default class ListenCard extends React.Component<
           </MediaQuery>
           <MediaQuery maxWidth={767}>
             <div className="col-xs-12">
-              <div
-                className="cover-art img-responsive"
-                style={{
-                  backgroundImage: `url("${coverArtUrl}")`,
-                }}
-              />
               <div className="track-details">
                 <p title={listen.track_metadata.track_name}>
                   {getTrackLink(listen)}
