@@ -6,6 +6,7 @@
 @dark: #053b47;
 @controlsHeight: 60px;
 
+
 #music-player {
   background: @primary;
   position: relative;
@@ -161,6 +162,71 @@
 
     &:hover > td.playButton > *{
       opacity: 1;
+    }
+  }
+}
+
+#listens {
+  padding: 10px;
+  
+  > .listen-card {
+    padding: 15px;
+    margin-bottom: 7px;
+    
+    &.playing-now {
+      background-color: rgba(255, 252, 202, 0.3) !important ;
+    }
+    
+    &.current-listen {
+      background-color: rgba(217, 237, 247, 0.3) !important ;
+    }
+
+     div {
+       padding: 0px;
+     }
+
+    > .col-xs-9 {
+
+      > .col-xs-9, .col-xs-12 {
+        display: flex;
+
+        .track-details {
+          width: 100%;
+
+          p {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space:nowrap;
+            margin-bottom: 0px;
+          }
+        }
+
+        .listen-time {
+          font-style: italic;
+        }
+      }
+
+      > .col-xs-3 {
+        display: table;
+        height: 40px;
+
+        > span {
+          display: table-cell;
+          vertical-align: middle;
+        }
+      }
+
+    }
+
+    
+    > .col-xs-3 {
+      display: table;
+      height: 40px;
+
+      > * {
+        display: table-cell;
+        vertical-align: middle;
+      }
     }
   }
 }
