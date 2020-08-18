@@ -5,8 +5,6 @@
 @light: #C0CFB2;
 @dark: #053b47;
 @controlsHeight: 60px;
-@love: #353070;
-@hate: #705230;
 
 
 #music-player {
@@ -172,7 +170,7 @@
   padding: 10px;
   
   > .listen-card {
-    padding: 15px 0px;
+    padding: 15px;
     margin-bottom: 7px;
     
     &.playing-now {
@@ -183,9 +181,13 @@
       background-color: rgba(217, 237, 247, 0.3) !important ;
     }
 
-    > .col-xs-10 {
+     div {
+       padding: 0px;
+     }
 
-      > .col-xs-9 {
+    > .col-xs-9 {
+
+      > .col-xs-9, .col-xs-12 {
         display: flex;
           
         div {
@@ -199,10 +201,24 @@
             background-size: cover;
             margin-right: 10px;
           }
+        }
 
+        .track-details {
+          width: 80%;
+
+          p {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space:nowrap;
+            margin-bottom: 0px;
+          }
+        }
+
+        .listen-time {
+          font-style: italic;
         }
       }
-      
+
       > .col-xs-3 {
         display: table;
         height: 40px;
@@ -214,22 +230,9 @@
       }
 
     }
-    .track-details {
-      width: inherit;
-      
-      p {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space:nowrap;
-        margin-bottom: 0px;
-      }
-    }
 
-    .listen-time {
-      font-style: italic;
-    }
     
-    > .col-xs-2 {
+    > .col-xs-3 {
       display: table;
       height: 40px;
 
@@ -238,38 +241,6 @@
         vertical-align: middle;
       }
     }
-  }
-}
-
-.fa-heart, .fa-heart-broken {
-  color: #ffffff;
-  stroke: #8d8d8d;
-  stroke-width: 40px;
-  font-size: 18px;
-  margin: 7px;
-}
-
-.fa-heart {
-  
-  &:hover {
-    stroke: @love;
-  }
-
-  &.filled {
-    stroke: @love;
-    color: @love;
-  }
-}
-
-.fa-heart-broken {
-  
-  &:hover {
-    stroke: @hate;
-  }
-
-  &.filled {
-    stroke: @hate;
-    color: @hate;
   }
 }
 
