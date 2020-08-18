@@ -1,0 +1,34 @@
+{
+  "artists": {
+    "2005": [
+      {
+        "artist_mbids": [],
+        "artist_msid": "cf7b0f9c-cd96-4e16-a0e7-acc7adfec457",
+        "artist_name": "Judas Priest",
+        "listen_count": 2521
+      },
+      {
+        "artist_mbids": [],
+        "artist_msid": "839badfe-0687-46a7-94f8-c95fb6b5e8b6",
+        "artist_name": "Slayer",
+        "listen_count": 813
+      }
+    ],
+    "2006": [
+      {
+        "artist_mbids": [],
+        "artist_msid": "cf7b0f9c-cd96-4e16-a0e7-acc7adfec457",
+        "artist_name": "Judas Priest",
+        "listen_count": 1354
+      },
+      {
+        "artist_mbids": [],
+        "artist_msid": "f6804334-5021-4e52-9f71-3ea924e6abc6",
+        "artist_name": "Evergrey",
+        "listen_count": 691
+      }
+    ]
+  },
+  "from_ts": 1009843200,
+  "to_ts": 1593043183
+}
