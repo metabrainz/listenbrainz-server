@@ -629,6 +629,7 @@ export default class RecentListens extends React.Component<
                           listen={listen}
                           mode={mode}
                           playListen={this.playListen}
+                          newAlert={this.newAlert}
                           className={`${
                             this.isCurrentListen(listen)
                               ? " current-listen"

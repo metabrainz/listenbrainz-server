@@ -26,6 +26,11 @@ export type ListenCardProps = {
   playListen: (listen: Listen) => void;
   isCurrentUser: Boolean;
   currentUser?: ListenBrainzUser;
+  newAlert: (
+    alertType: AlertType,
+    title: string,
+    message: string | JSX.Element
+  ) => void;
 };
 
 type ListenCardState = {
@@ -62,16 +67,31 @@ export default class ListenCard extends React.Component<
         "track_metadata.additional_info.recording_msid"
       );
 
-      const status = await this.APIService.submitFeedback(
-        currentUser.auth_token,
-        recordingMSID,
-        score
-      );
-
-      if (status === 200) {
-        this.setState({ feedback: score });
+      try {
+        const status = await this.APIService.submitFeedback(
+          currentUser.auth_token,
+          recordingMSID,
+          score
+        );
+        if (status === 200) {
+          this.setState({ feedback: score });
+        }
+      } catch (error) {
+        this.handleError(error.message);
       }
     }
+  };
+
+  handleError = (error: string | Error, title?: string): void => {
+    const { newAlert } = this.props;
+    if (!error) {
+      return;
+    }
+    newAlert(
+      "danger",
+      title || "Playback error",
+      typeof error === "object" ? error.message : error
+    );
   };
 
   render() {
