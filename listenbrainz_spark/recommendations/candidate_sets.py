@@ -110,6 +110,16 @@ def get_listens_to_fetch_top_artists(mapped_listens_df, from_date, to_date):
     return mapped_listens_subset
 
 
+def _is_empty_dataframe(df):
+    """ Check if the given dataframe is empty and raise IndexError.
+    """
+
+    try:
+        df.take(1)[0]
+    except IndexError:
+        raise IndexError
+
+
 def get_top_artists(mapped_listens_subset, top_artist_limit, users):
     """ Get top artists listened to by users who have a listening history in
         the past X days where X = RECOMMENDATION_GENERATION_WINDOW.
@@ -143,6 +153,7 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
                               col('msb_artist_credit_name_matchable').alias('top_artist_name'),
                               col('user_name'),
                               col('total_count'))
+
     if users:
         top_artist_given_users_df = top_artist_df.select('top_artist_credit_id',
                                                          'top_artist_name',
@@ -150,7 +161,7 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
                                                          'total_count') \
                                                  .where(top_artist_df.user_name.isin(users))
         try:
-            top_artist_given_users_df.take(1)[0]
+            _is_empty_dataframe(top_artist_given_users_df)
         except IndexError:
             current_app.logger.error('Top artist not fetched', exc_info=True)
             raise
@@ -158,7 +169,7 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
         return top_artist_given_users_df
 
     try:
-        top_artist_df.take(1)[0]
+        _is_empty_dataframe(top_artist_df)
     except IndexError:
         current_app.logger.error('Top artist not fetched', exc_info=True)
         raise
@@ -220,7 +231,7 @@ def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
                                               .distinct()
 
     try:
-        similar_artist_df.take(1)[0]
+        _is_empty_dataframe(similar_artist_df)
     except IndexError:
         current_app.logger.error('Similar artists not generated.', exc_info=True)
         raise
