@@ -19,16 +19,13 @@ import ListenControl from "./ListenControl";
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
 export type ListenCardProps = {
-  user: {
-    id?: string;
-    name: string;
-    auth_token: string;
-  };
   apiUrl: string;
   listen: Listen;
   mode: ListensListMode;
   className?: string;
   playListen: (listen: Listen) => void;
+  isCurrentUser: Boolean;
+  currentUser?: ListenBrainzUser;
 };
 
 type ListenCardState = {
@@ -56,45 +53,43 @@ export default class ListenCard extends React.Component<
     this.playListen = props.playListen.bind(this, props.listen);
   }
 
-  handleClickLove = async () => {
-    const { feedback } = this.state;
-    await this.submitFeedback(feedback === 0 ? 1 : 0);
-  };
-
-  handleClickHate = async () => {
-    const { feedback } = this.state;
-    await this.submitFeedback(feedback === 0 ? -1 : 0);
-  };
-
   submitFeedback = async (score: ListenFeedBack) => {
-    const { listen, user } = this.props;
-    const { feedback } = this.state;
+    const { listen, currentUser, isCurrentUser } = this.props;
 
-    const recordingMSID = _get(
-      listen,
-      "track_metadata.additional_info.recording_msid"
-    );
+    if (isCurrentUser && currentUser?.auth_token) {
+      const recordingMSID = _get(
+        listen,
+        "track_metadata.additional_info.recording_msid"
+      );
 
-    const status = await this.APIService.submitFeedback(
-      user.auth_token,
-      recordingMSID,
-      score
-    );
+      const status = await this.APIService.submitFeedback(
+        currentUser.auth_token,
+        recordingMSID,
+        score
+      );
 
-    if (status === 200) {
-      this.setState({ feedback: score });
+      if (status === 200) {
+        this.setState({ feedback: score });
+      }
     }
   };
 
   render() {
-    const { listen, mode, className } = this.props;
+    const { listen, mode, className, isCurrentUser } = this.props;
+    const { feedback } = this.state;
 
     return (
       <Card
         onDoubleClick={this.playListen}
         className={`listen-card row ${className}`}
       >
-        <div className="col-xs-9">
+        <div
+          className={`${
+            isCurrentUser || mode === "recent" || mode === "follow"
+              ? " col-xs-9"
+              : " col-xs-12"
+          }`}
+        >
           <MediaQuery minWidth={768}>
             <div className="col-xs-9">
               <div className="track-details">
@@ -173,7 +168,13 @@ export default class ListenCard extends React.Component<
             </div>
           </MediaQuery>
         </div>
-        <div className="col-xs-3 text-center">
+        <div
+          className={`${
+            isCurrentUser || mode === "recent" || mode === "follow"
+              ? " col-xs-3 text-center"
+              : "hidden"
+          }`}
+        >
           {mode === "follow" || mode === "recent" ? (
             <a
               href={`/user/${listen.user_name}`}
@@ -187,12 +188,14 @@ export default class ListenCard extends React.Component<
               <ListenControl
                 icon={faHeart}
                 title="Love"
-                action={this.handleClickLove}
+                action={() => this.submitFeedback(feedback === 1 ? 0 : 1)}
+                className={`${feedback === 1 ? " loved" : ""}`}
               />
               <ListenControl
                 icon={faHeartBroken}
                 title="Hate"
-                action={this.handleClickHate}
+                action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
+                className={`${feedback === -1 ? " hated" : ""}`}
               />
             </div>
           )}

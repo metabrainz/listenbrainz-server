@@ -31,6 +31,7 @@ export interface RecentListensProps {
   spotify: SpotifyUser;
   user: ListenBrainzUser;
   webSocketsServerUrl: string;
+  currentUser?: ListenBrainzUser;
 }
 
 export interface RecentListensState {
@@ -547,7 +548,14 @@ export default class RecentListens extends React.Component<
       previousListenTs,
       saveUrl,
     } = this.state;
-    const { latestListenTs, oldestListenTs, spotify, user } = this.props;
+    const {
+      latestListenTs,
+      oldestListenTs,
+      spotify,
+      user,
+      apiUrl,
+      currentUser,
+    } = this.props;
 
     return (
       <div role="main">
@@ -615,6 +623,9 @@ export default class RecentListens extends React.Component<
                       return (
                         <ListenCard
                           key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
+                          currentUser={currentUser}
+                          isCurrentUser={currentUser?.name === user?.name}
+                          apiUrl={apiUrl}
                           listen={listen}
                           mode={mode}
                           playListen={this.playListen}
@@ -778,6 +789,7 @@ document.addEventListener("DOMContentLoaded", () => {
     spotify,
     user,
     web_sockets_server_url,
+    current_user,
   } = reactProps;
 
   ReactDOM.render(
@@ -796,6 +808,7 @@ document.addEventListener("DOMContentLoaded", () => {
       spotify={spotify}
       user={user}
       webSocketsServerUrl={web_sockets_server_url}
+      currentUser={current_user}
     />,
     domContainer
   );
