@@ -235,9 +235,7 @@ class TimescaleListenStore(ListenStore):
             max_timestamp_window = -1
         else:
             max_timestamp_window = 432000 * time_range
-            if from_ts and to_ts:
-                pass
-            elif from_ts is not None:
+            if from_ts is not None:
                 to_ts = from_ts + max_timestamp_window
             elif to_ts is not None:
                 from_ts = to_ts - max_timestamp_window
