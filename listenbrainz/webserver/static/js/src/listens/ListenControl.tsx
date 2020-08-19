@@ -1,0 +1,27 @@
+import * as React from "react";
+import { faHeart, faHeartBroken } from "@fortawesome/free-solid-svg-icons";
+
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconDefinition } from "@fortawesome/fontawesome-common-types"; // eslint-disable-line import/no-unresolved
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+
+type ListenControlProps = {
+  className?: string;
+  action?: () => void;
+  icon?: IconDefinition;
+  title: string;
+};
+
+const ListenControl = (props: ListenControlProps) => {
+  const { className, action, icon, title } = props;
+  return (
+    <FontAwesomeIcon
+      icon={icon as IconProp}
+      className={className}
+      title={title}
+      onClick={action}
+    />
+  );
+};
+
+export default ListenControl;

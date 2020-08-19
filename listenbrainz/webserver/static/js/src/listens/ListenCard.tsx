@@ -14,24 +14,77 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { getArtistLink, getTrackLink } from "../utils";
 import Card from "../components/Card";
 import APIService from "../APIService";
+import ListenControl from "./ListenControl";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
 export type ListenCardProps = {
+  user: {
+    id?: string;
+    name: string;
+    auth_token: string;
+  };
+  apiUrl: string;
   listen: Listen;
   mode: ListensListMode;
   className?: string;
   playListen: (listen: Listen) => void;
 };
 
-export default class ListenCard extends React.Component<ListenCardProps> {
+type ListenCardState = {
+  feedback: ListenFeedBack;
+};
+
+export default class ListenCard extends React.Component<
+  ListenCardProps,
+  ListenCardState
+> {
+  APIService: APIService;
   playListen: (listen: Listen) => void;
 
   constructor(props: ListenCardProps) {
     super(props);
 
+    this.state = {
+      feedback: 0,
+    };
+
+    this.APIService = new APIService(
+      props.apiUrl || `${window.location.origin}/1`
+    );
+
     this.playListen = props.playListen.bind(this, props.listen);
   }
+
+  handleClickLove = async () => {
+    const { feedback } = this.state;
+    await this.submitFeedback(feedback === 0 ? 1 : 0);
+  };
+
+  handleClickHate = async () => {
+    const { feedback } = this.state;
+    await this.submitFeedback(feedback === 0 ? -1 : 0);
+  };
+
+  submitFeedback = async (score: ListenFeedBack) => {
+    const { listen, user } = this.props;
+    const { feedback } = this.state;
+
+    const recordingMSID = _get(
+      listen,
+      "track_metadata.additional_info.recording_msid"
+    );
+
+    const status = await this.APIService.submitFeedback(
+      user.auth_token,
+      recordingMSID,
+      score
+    );
+
+    if (status === 200) {
+      this.setState({ feedback: score });
+    }
+  };
 
   render() {
     const { listen, mode, className } = this.props;
@@ -130,7 +183,18 @@ export default class ListenCard extends React.Component<ListenCardProps> {
               {listen.user_name}
             </a>
           ) : (
-            <div />
+            <div className="listen-controls">
+              <ListenControl
+                icon={faHeart}
+                title="Love"
+                action={this.handleClickLove}
+              />
+              <ListenControl
+                icon={faHeartBroken}
+                title="Hate"
+                action={this.handleClickHate}
+              />
+            </div>
           )}
         </div>
       </Card>

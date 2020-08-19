@@ -300,4 +300,22 @@ export default class APIService {
     }
     return null;
   };
+
+  submitFeedback = async (
+    userToken: string,
+    recordingMSID: string,
+    score: ListenFeedBack
+  ): Promise<number> => {
+    const url = `${this.APIBaseURI}/feedback/recording-feedback`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ recording_msid: recordingMSID, score }),
+    });
+    this.checkStatus(response);
+    return response.status;
+  };
 }
