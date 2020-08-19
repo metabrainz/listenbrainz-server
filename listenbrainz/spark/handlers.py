@@ -2,7 +2,6 @@
     receive from the Spark cluster.
 """
 import json
-
 import listenbrainz.db.user as db_user
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
@@ -17,6 +16,9 @@ from data.model.user_listening_activity import UserListeningActivityStatJson
 from data.model.user_artist_stat import UserArtistStatJson
 from data.model.user_release_stat import UserReleaseStatJson
 from data.model.user_recording_stat import UserRecordingStatJson
+from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
+
+
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
@@ -214,8 +216,11 @@ def handle_dataframes(data):
 
 
 def handle_missing_musicbrainz_data(data):
+    """ Insert user missing musicbrainz data i.e data submitted to ListenBrainz but not MusicBrainz.
+    """
     musicbrainz_id = data['musicbrainz_id']
     user = db_user.get_by_mb_id(musicbrainz_id)
+
     if not user:
         current_app.logger.critical("Calculted data missing from MusicBrainz for a user that doesn't exist"
                                     " in the Postgres database: {}".format(musicbrainz_id))
@@ -225,7 +230,19 @@ def handle_missing_musicbrainz_data(data):
 
     missing_musicbrainz_data = data['missing_musicbrainz_data']
     source = data['source']
-    db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data(user['id'], missing_musicbrainz_data, source)
+
+    try:
+        db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data(
+            user['id'],
+            UserMissingMusicBrainzDataJson(**{'missing_musicbrainz_data': missing_musicbrainz_data}).dict(),
+            source
+        )
+    except ValidationError:
+        current_app.logger.error("""ValidationError while inserting missing MusicBrainz data from source "{source}" for user
+                                 with user_id: {user_id}. Data: {data}""".format(user_id=user['id'],
+                                                                                data=json.dumps(data, indent=3),
+                                                                                source=source
+                                                                            ), exc_info=True)
 
     current_app.logger.debug("Missing musicbrainz data for {} inserted".format(musicbrainz_id))
 

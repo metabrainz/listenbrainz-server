@@ -96,19 +96,21 @@ def get_missing_musicbrainz_data(user_name):
     offset = _get_non_negative_param('offset', default=0)
     count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
-    missing_musicbrainz_data = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(user['id'], source)
+    data = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(user['id'], source)
 
-    if missing_musicbrainz_data is None:
+    if data is None:
         err_msg = 'Recent releases listened to by {} are already in MB'.format(user_name)
         raise APINoContent(err_msg)
 
-    missing_musicbrainz_data_list = missing_musicbrainz_data['data']['missing_musicbrainz_data']
+
+    missing_musicbrainz_data_list = getattr(data, 'data').dict()['missing_musicbrainz_data']
+
     missing_musicbrainz_data_list_filtered = missing_musicbrainz_data_list[offset:count]
 
     payload = {
         'payload': {
             'user_name': user_name,
-            'last_updated': int(missing_musicbrainz_data['created'].timestamp()),
+            'last_updated': int(getattr(data, 'created').timestamp()),
             'count': len(missing_musicbrainz_data_list_filtered),
             'total_data_count': len(missing_musicbrainz_data_list),
             'offset': offset,

@@ -20,23 +20,22 @@ import ujson
 import sqlalchemy
 
 from listenbrainz import db
+from pydantic import ValidationError
+
+from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzData
 from flask import current_app
 
 
-def insert_user_missing_musicbrainz_data(user_id, data, source):
+def insert_user_missing_musicbrainz_data(user_id: int, missing_musicbrainz_data: dict, source: str):
     """ Insert missing musicbrainz data that a user has submitted to ListenBrainz but
         has not submitted to MusicBrainz in the db.
 
         Args:
-            user_id (int): row id of the user.
-            data (list): Data that is submitted to ListenBrainz by the users
-                         but is not submitted to MusicBrainz.
-            source (str): Source of generation of missing MusicBrainz data.
+            user_id : row id of the user.
+            data : Data that is submitted to ListenBrainz by the users
+                   but is not submitted to MusicBrainz.
+            source : Source of generation of missing MusicBrainz data.
     """
-    missing_musicbrainz_data = {
-        'missing_musicbrainz_data': data
-    }
-
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
             INSERT INTO missing_musicbrainz_data (user_id, data, source)
@@ -54,13 +53,13 @@ def insert_user_missing_musicbrainz_data(user_id, data, source):
         )
 
 
-def get_user_missing_musicbrainz_data(user_id, source):
+def get_user_missing_musicbrainz_data(user_id: int , source: str):
     """ Get missing musicbrainz data that has not been submitted to LB
         for a user with the given row ID.
 
         Args:
-            user_id (int): the row ID of the user in the DB
-            source (str): Source of generation of missing MusicBrainz data.
+            user_id: the row ID of the user in the DB
+            source : Source of generation of missing MusicBrainz data.
 
         Returns:
             A dict of the following format
@@ -78,7 +77,7 @@ def get_user_missing_musicbrainz_data(user_id, source):
                 "missing_musicbrainz_data": [
                     {
                         "artist_msid": "f26d35e3-5fdd-43cf-8b94-71936451bc07",
-                        "artist_name": "Welshly Arms",
+                        "artist_name": 1588204585,
                         "listened_at": "2020-04-29 23:56:23",
                         "recording_msid": "568eeea3-9255-4878-9df8-296043344e04",
                         "release_msid": "8c5ba30c-4851-48fd-ac02-1b194cdb34d1",
@@ -88,7 +87,7 @@ def get_user_missing_musicbrainz_data(user_id, source):
                     {
                         "artist_msid": "f26d35e3-5fdd-43cf-8b94-71936451bc07",
                         "artist_name": "Welshly Arms",
-                        "listened_at": "2020-04-29 23:52:16",
+                        "listened_at": 1588204583,
                         "recording_msid": "b911620d-8541-44e5-a0db-977679efb37d",
                         "release_msid": "8c5ba30c-4851-48fd-ac02-1b194cdb34d1",
                         "release_name": "No Place Is Home",
@@ -112,4 +111,11 @@ def get_user_missing_musicbrainz_data(user_id, source):
                 }
         )
         row = result.fetchone()
-        return dict(row) if row else None
+
+    try:
+        return UserMissingMusicBrainzData(**dict(row)) if row else None
+    except ValidationError:
+        current_app.logger.error("""ValidationError when getting missing musicbrainz data for source "{source}"
+                                 for user with user_id: {user_id}. Data: {data}""".format(source=source, user_id=user_id,
+                                 data=ujson.dumps(dict(row)['data'], indent=4)), exc_info=True)
+        return None
