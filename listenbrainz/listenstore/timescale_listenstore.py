@@ -235,9 +235,9 @@ class TimescaleListenStore(ListenStore):
             max_timestamp_window = -1
         else:
             max_timestamp_window = 432000 * time_range
-            if from_ts is not None:
+            if to_ts is None:
                 to_ts = from_ts + max_timestamp_window
-            elif to_ts is not None:
+            elif from_ts is None:
                 from_ts = to_ts - max_timestamp_window
                 
         query = """SELECT listened_at, track_name, created, data
