@@ -364,3 +364,14 @@ def _get_non_negative_param(param, default=None):
         if value < 0:
             raise APIBadRequest("'{}' should be a non-negative integer".format(param))
     return value
+
+
+def parse_param_list(params):
+    param_list = []
+    for param in params.split(","):
+        param = param.strip()
+        if not param:
+            continue
+        param_list.append(param)
+
+    return param_list

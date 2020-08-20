@@ -11,7 +11,7 @@ from listenbrainz.webserver.errors import (APIBadRequest,
 from listenbrainz.webserver.rate_limiter import ratelimit
 from listenbrainz.webserver.views.api import _validate_auth_header, _parse_int_arg
 from listenbrainz.webserver.views.api_tools import log_raise_400, is_valid_uuid,\
-    DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET, _get_non_negative_param
+    DEFAULT_ITEMS_PER_GET, MAX_ITEMS_PER_GET, _get_non_negative_param, parse_param_list
 from listenbrainz.db.model.feedback import Feedback
 from pydantic import ValidationError
 
@@ -165,4 +165,40 @@ def get_feedback_for_recording(recording_msid):
         "count": len(feedback),
         "total_count": total_count,
         "offset": offset
+    })
+
+@feedback_api_bp.route("/user/<user_name>/get-feedback-for-recordings", methods=["GET"])
+@crossdomain()
+@ratelimit()
+def get_feedback_for_recordings_for_user(user_name):
+    """
+    Get feedback given by user ``user_name`` for the list of recordings supplied. The format for the JSON returned is defined in our :ref:`feedback-json-doc`.
+
+    If the feedback for given recording MSID doesn't exist then a score 0 is returned for that recording.
+
+    :param recording_list: list of recording_msid for which feedback records are to be fetched.
+    :type score: ``list``
+    :statuscode 200: Yay, you have data!
+    :resheader Content-Type: *application/json*
+    """
+
+    recordings = request.args.get('recordings')
+
+    recording_list = parse_param_list(recordings)
+    if not len(recording_list):
+        raise APIBadRequest("recording_list is empty or invalid.")
+
+    user = db_user.get_by_mb_id(user_name)
+    if user is None:
+        raise APINotFound("Cannot find user: %s" % user_name)
+
+    feedback = db_feedback.get_feedback_for_multiple_recordings_for_user(user_id=user["id"], recording_list=recording_list)
+
+    for i, fb in enumerate(feedback):
+        fb.user_id = fb.user_name
+        del fb.user_name
+        feedback[i] = fb.dict()
+
+    return jsonify({
+        "feedback": feedback,
     })
