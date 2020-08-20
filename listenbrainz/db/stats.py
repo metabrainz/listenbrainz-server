@@ -26,7 +26,7 @@ from typing import Optional
 
 import sqlalchemy
 from data.model.sitewide_artist_stat import (SitewideArtistStat,
-                                             SitewideArtistStatRange)
+                                             SitewideArtistStatJson)
 from data.model.user_artist_map import UserArtistMapStat, UserArtistMapStatJson
 from data.model.user_artist_stat import UserArtistStat, UserArtistStatJson
 from data.model.user_daily_activity import (UserDailyActivityStat,
@@ -168,7 +168,7 @@ def insert_user_artist_map(user_id: int, artist_map: UserArtistMapStatJson):
     _insert_user_jsonb_data(user_id=user_id, column='artist_map', data=artist_map.dict(exclude_none=True))
 
 
-def insert_sitewide_artists(stats_range: str, artists: SitewideArtistStatRange):
+def insert_sitewide_artists(stats_range: str, artists: SitewideArtistStatJson):
     """Inserts sitewide artist stats calculated from Spark into the database.
 
        If stats are already present for a time range, they are updated to the new

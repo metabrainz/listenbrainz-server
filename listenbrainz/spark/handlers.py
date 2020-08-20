@@ -11,7 +11,7 @@ from flask import current_app, render_template
 from pydantic import ValidationError
 from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
-from data.model.sitewide_artist_stat import SitewideArtistStatRange
+from data.model.sitewide_artist_stat import SitewideArtistStatJson
 from data.model.user_daily_activity import UserDailyActivityStatJson
 from data.model.user_listening_activity import UserListeningActivityStatJson
 from data.model.user_artist_stat import UserArtistStatJson
@@ -84,7 +84,7 @@ def _get_user_entity_model(entity):
 
 def _get_sitewide_entity_model(entity):
     if entity == 'artists':
-        return SitewideArtistStatRange
+        return SitewideArtistStatJson
     raise ValueError("Unknown entity type: %s" % entity)
 
 
@@ -188,7 +188,7 @@ def handle_sitewide_entity(data):
 
     stats_range = data['stats_range']
     entity = data['entity']
-    data[entity] = data['data']
+    data['time_ranges'] = data['data']
 
     # Strip extra data
     to_remove = {'type', 'entity', 'data', 'stats_range'}

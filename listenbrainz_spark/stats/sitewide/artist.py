@@ -15,15 +15,6 @@ def get_artists(table: str, date_format: str, use_mapping: bool):
 
         Returns:
             iterator (iter): An iterator over result
-                    {
-                        time_range_1: [{
-                            'artist_name': str,
-                            'artist_msid': str,
-                            'artist_mbids': list(str),
-                            'listen_count': int
-                        }],
-                        time_range_2: [{...}],
-                    }
     """
 
     # Format the listened_at field according to the provided date_format string
@@ -46,6 +37,8 @@ def get_artists(table: str, date_format: str, use_mapping: bool):
                      , listens.artist_msid
                      , listens.artist_mbids
                      , time_range.time_range
+                     , time_range.from_ts
+                     , time_range.to_ts
                      , count(*) as listen_count
                   FROM listens
                   JOIN time_range
@@ -54,11 +47,13 @@ def get_artists(table: str, date_format: str, use_mapping: bool):
                      , listens.artist_msid
                      , listens.artist_mbids
                      , time_range.time_range
+                     , time_range.from_ts
+                     , time_range.to_ts
               """)
 
     iterator = result \
         .withColumn("artists", struct("listen_count", "artist_name", "artist_msid", "artist_mbids")) \
-        .groupBy("time_range") \
+        .groupBy("time_range", "from_ts", "to_ts") \
         .agg(sort_array(collect_list("artists"), asc=False).alias("artists")) \
         .toLocalIterator()
 

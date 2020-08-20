@@ -3,13 +3,14 @@ import json
 from collections import defaultdict
 from datetime import datetime
 from enum import Enum
-from typing import List, Tuple, Union, Dict
+from typing import Dict, List, Tuple, Union
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import pycountry
 import requests
-from data.model.sitewide_artist_stat import SitewideArtistStatRange, SitewideArtistRecord
+from data.model.sitewide_artist_stat import (SitewideArtistRecord,
+                                             SitewideArtistStatJson)
 from data.model.user_artist_map import (UserArtistMapRecord, UserArtistMapStat,
                                         UserArtistMapStatJson,
                                         UserArtistMapStatRange)
@@ -712,13 +713,14 @@ def get_sitewide_artist():
     count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
     stats = db_stats.get_sitewide_artists(stats_range)
+    current_app.logger.info(stats.data.time_ranges[0].artists[0:5])
     if stats is None or stats.data is None:
         raise APINoContent('')
 
     entity_data = _get_sitewide_entity_list(stats.data, entity="artists", offset=offset, count=count)
     return jsonify({
         'payload': {
-            "artists": entity_data,
+            "time_ranges": entity_data,
             "range": stats_range,
             "offset": offset,
             "count": count,
@@ -784,22 +786,26 @@ def _get_user_entity_list(
 
 
 def _get_sitewide_entity_list(
-    stats: Union[SitewideArtistStatRange],
+    stats: Union[SitewideArtistStatJson],
     entity: str,
     offset: int,
     count: int,
-) -> Dict[str, List[Dict[str, list]]]:
+) -> List[dict]:
     """ Gets a list of entity records from the stat passed based on the offset and count
     """
     count = min(count, MAX_ITEMS_PER_GET)
     count = count + offset
 
-    result = {}
-    data = getattr(stats, entity)
-    for time_range, entity in data.items():
-        result[time_range] = [x.dict() for x in entity[offset:count]]
+    result = []
+    for time_range in stats.time_ranges:
+        result.append({
+            "time_range": time_range.time_range,
+            "from_ts": time_range.from_ts,
+            "to_ts": time_range.to_ts,
+            entity: [x.dict() for x in getattr(time_range, entity)[offset:count]]
+        })
 
-    return result
+    return sorted(result, key=lambda x: x['from_ts'])
 
 
 def _get_country_codes(artist_msids: list, artist_mbids: list) -> List[UserArtistMapRecord]:
