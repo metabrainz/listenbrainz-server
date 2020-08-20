@@ -13,8 +13,9 @@ import BrainzPlayer from "./BrainzPlayer";
 import FollowUsers from "./FollowUsers";
 import APIService from "./APIService";
 import Loader from "./components/Loader";
-
 import ListenCard from "./listens/ListenCard";
+
+type FeedbackListEntry = { [key: string]: ListenFeedBack };
 
 export interface RecentListensProps {
   apiUrl: string;
@@ -51,6 +52,7 @@ export interface RecentListensState {
   playingNowByUser: FollowUsersPlayingNow;
   previousListenTs?: number;
   saveUrl: string;
+  feedbackList: Array<FeedbackListEntry>;
 }
 
 export default class RecentListens extends React.Component<
@@ -82,6 +84,7 @@ export default class RecentListens extends React.Component<
       nextListenTs: props.listens?.[props.listens.length - 1]?.listened_at,
       previousListenTs: props.listens?.[0]?.listened_at,
       direction: "down",
+      feedbackList: [],
     };
 
     this.APIService = new APIService(

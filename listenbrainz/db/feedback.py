@@ -156,13 +156,15 @@ def get_feedback_count_for_recording(recording_msid: str):
 
     return count
 
+
 def get_feedback_for_multiple_recordings_for_user(user_id: int, recording_list: list):
     """ Get a list of recording feedback given by the user for given recordings
 
         Args:
             user_id: the row ID of the user in the DB
-            recording_list: number of rows to be returned
-            offset: number of feedback to skip from the beginning
+            recording_list: list of recording_msid for which feedback records are to be obtained
+                            - if record is present then return it
+                            - if record is not present then return a pseudo record with score = 0
 
         Returns:
             A list of Feedback objects
