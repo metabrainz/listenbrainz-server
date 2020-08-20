@@ -644,36 +644,46 @@ def get_sitewide_artist():
 
         {
             "payload": {
-                "artists": {
-                    "April 2020": [
-                        {
-                            "artist_mbids": ["f4fdbb4c-e4b7-47a0-b83b-d91bbfcfa387"],
-                            "artist_msid": "b4ae3356-b8a7-471a-a23a-e471a69ad454",
-                            "artist_name": "Ariana Grande",
-                            "listen_count": 519
-                        },
-                        {
-                            "artist_mbids": ["f4abc0b5-3f7a-4eff-8f78-ac078dbce533"],
-                            "artist_msid": "f9ee09fb-5ab4-46a2-9088-3eac0eed4920",
-                            "artist_name": "Billie Eilish",
-                            "listen_count": 447
-                        }
-                    ],
-                    "May 2020": [
-                        {
-                            "artist_mbids": [],
-                            "artist_msid": "2b0646af-f3f0-4a5b-b629-6c31301c1c29",
-                            "artist_name": "The Weeknd",
-                            "listen_count": 621
-                        },
-                        {
-                            "artist_mbids": [],
-                            "artist_msid": "9720fd77-fe48-41ba-a7a2-b4795718dd97",
-                            "artist_name": "Drake",
-                            "listen_count": 554
-                        }
-                    ]
-                },
+                "time_ranges": [
+                    {
+                        "time_range": "April 2020",
+                        "artists": [
+                            {
+                                "artist_mbids": ["f4fdbb4c-e4b7-47a0-b83b-d91bbfcfa387"],
+                                "artist_msid": "b4ae3356-b8a7-471a-a23a-e471a69ad454",
+                                "artist_name": "Ariana Grande",
+                                "listen_count": 519
+                            },
+                            {
+                                "artist_mbids": ["f4abc0b5-3f7a-4eff-8f78-ac078dbce533"],
+                                "artist_msid": "f9ee09fb-5ab4-46a2-9088-3eac0eed4920",
+                                "artist_name": "Billie Eilish",
+                                "listen_count": 447
+                            }
+                        ],
+                        "from_ts": 1585699200,
+                        "to_ts": 1588291199,
+                    },
+                    {
+                        "time_range": "May 2020",
+                        "artists": [
+                            {
+                                "artist_mbids": [],
+                                "artist_msid": "2b0646af-f3f0-4a5b-b629-6c31301c1c29",
+                                "artist_name": "The Weeknd",
+                                "listen_count": 621
+                            },
+                            {
+                                "artist_mbids": [],
+                                "artist_msid": "9720fd77-fe48-41ba-a7a2-b4795718dd97",
+                                "artist_name": "Drake",
+                                "listen_count": 554
+                            }
+                        ],
+                        "from_ts": 1588291200,
+                        "to_ts": 1590969599
+                    }
+                ],
                 "offset": 0,
                 "count": 2,
                 "range": "year",
@@ -689,6 +699,7 @@ def get_sitewide_artist():
         - The example above shows the data for two days only, however we calculate the statistics for
           the current time range and the previous time range. For example for yearly statistics the data
           is calculated for the months in current as well as the past year.
+        - We only calculate the top 1000 artists for each time period.
 
     :param count: Optional, number of artists to return for each time range,
         Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
