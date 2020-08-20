@@ -1,0 +1,25 @@
+{
+  "time_range": "range",
+  "to_ts": 0,
+  "from_ts": 1,
+  "artists": [
+    {
+      "artist_name": "artist_1",
+      "artist_mbids": [],
+      "artist_msid": "1",
+      "listen_count": 1
+    },
+    {
+      "artist_name": null,
+      "artist_mbids": [],
+      "artist_msid": "",
+      "listen_count": 1
+    },
+    {
+      "artist_name": "artist_2",
+      "artist_mbids": [],
+      "artist_msid": "2",
+      "listen_count": null
+    }
+  ]
+}

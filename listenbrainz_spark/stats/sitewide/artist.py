@@ -32,6 +32,19 @@ def get_artists(table: str, date_format: str, use_mapping: bool):
         mapped_df = _create_mapped_dataframe()
         mapped_df.createOrReplaceTempView('listens')
 
+    # If not using MSID-MBID mapping, run this step to neglect MSID when MBID is present
+    if not use_mapping:
+        run_query("""
+            SELECT artist_name
+                 , CASE
+                     WHEN cardinality(artist_mbids) > 0 THEN NULL
+                     ELSE nullif(artist_msid, '')
+                   END as artist_msid
+                 , artist_mbids
+                 , listened_at
+              FROM listens
+                  """).createOrReplaceTempView('listens')
+
     result = run_query("""
                 SELECT listens.artist_name
                      , listens.artist_msid

@@ -1,0 +1,63 @@
+[
+  {
+    "time_range": "Wednesday",
+    "from_ts": 0,
+    "to_ts": 1,
+    "artists": [
+      {
+        "listen_count": 1,
+        "artist_name": "artist3",
+        "artist_msid": "4",
+        "artist_mbids": []
+      }
+    ]
+  },
+  {
+    "time_range": "Tuesday",
+    "from_ts": 0,
+    "to_ts": 1,
+    "artists": [
+      {
+        "listen_count": 1,
+        "artist_name": "artist2",
+        "artist_msid": "3",
+        "artist_mbids": []
+      },
+      {
+        "listen_count": 1,
+        "artist_name": "artist1",
+        "artist_msid": null,
+        "artist_mbids": [
+          "1"
+        ]
+      }
+    ]
+  },
+  {
+    "time_range": "Monday",
+    "from_ts": 0,
+    "to_ts": 1,
+    "artists": [
+      {
+        "listen_count": 3,
+        "artist_name": "artist1",
+        "artist_msid": null,
+        "artist_mbids": [
+          "1"
+        ]
+      },
+      {
+        "listen_count": 2,
+        "artist_name": "artist2",
+        "artist_msid": "3",
+        "artist_mbids": []
+      },
+      {
+        "listen_count": 1,
+        "artist_name": "artist3",
+        "artist_msid": "4",
+        "artist_mbids": []
+      }
+    ]
+  }
+]
