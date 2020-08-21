@@ -16,9 +16,9 @@ from listenbrainz_spark.stats import (offset_days, replace_days,
 from listenbrainz_spark.stats.user.artist import get_artists
 from listenbrainz_spark.stats.user.recording import get_recordings
 from listenbrainz_spark.stats.user.release import get_releases
-from listenbrainz_spark.stats.user.utils import (filter_listens,
-                                                 get_last_monday,
-                                                 get_latest_listen_ts)
+from listenbrainz_spark.stats.utils import (filter_listens,
+                                            get_last_monday,
+                                            get_latest_listen_ts)
 from listenbrainz_spark.utils import get_listens
 
 entity_handler_map = {

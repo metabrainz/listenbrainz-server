@@ -59,6 +59,26 @@
     "description": "Calculate number of listens for an user per hour on each day of week.",
     "params": []
   },
+  "stats.sitewide.entity.week": {
+    "name": "stats.sitewide.entity.week",
+    "description": "Calculate top entites listened to on the website in the past week",
+    "params": ["entity", "use_mapping"]
+  },
+  "stats.sitewide.entity.month": {
+    "name": "stats.sitewide.entity.month",
+    "description": "Calculate top entites listened to on the website in the past month",
+    "params": ["entity", "use_mapping"]
+  },
+  "stats.sitewide.entity.year": {
+    "name": "stats.sitewide.entity.year",
+    "description": "Calculate top entites listened to on the website in the past year",
+    "params": ["entity", "use_mapping"]
+  },
+  "stats.sitewide.entity.all_time": {
+    "name": "stats.sitewide.entity.all_time",
+    "description": "Calculate top entites listened to on the website in the past all_time",
+    "params": ["entity", "use_mapping"]
+  },
   "import.dump.full_newest": {
     "name": "import.dump.full_newest",
     "description": "Import the newest available full dump into the spark cluster",

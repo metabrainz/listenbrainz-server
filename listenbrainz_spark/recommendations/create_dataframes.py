@@ -5,7 +5,7 @@ from datetime import datetime
 
 import listenbrainz_spark
 from listenbrainz_spark import path, stats, utils, config, schema
-from listenbrainz_spark.stats.user.utils import get_latest_listen_ts
+from listenbrainz_spark.stats.utils import get_latest_listen_ts
 from listenbrainz_spark.exceptions import (FileNotSavedException,
                                            FileNotFetchedException,
                                            SparkSessionNotInitializedException,
