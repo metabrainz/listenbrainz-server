@@ -50,7 +50,7 @@ export default class ListenCard extends React.Component<
     super(props);
 
     this.state = {
-      feedback: props.currentFeedback,
+      feedback: props.currentFeedback || 0,
     };
 
     this.APIService = new APIService(
@@ -58,6 +58,13 @@ export default class ListenCard extends React.Component<
     );
 
     this.playListen = props.playListen.bind(this, props.listen);
+  }
+
+  componentDidUpdate(prevProps: ListenCardProps) {
+    const { currentFeedback } = this.props;
+    if (currentFeedback !== prevProps.currentFeedback) {
+      this.setState({ feedback: currentFeedback });
+    }
   }
 
   submitFeedback = async (score: ListenFeedBack) => {
