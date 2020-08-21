@@ -318,4 +318,15 @@ export default class APIService {
     this.checkStatus(response);
     return response.status;
   };
+
+  getFeedbackForUserForRecordings = async (
+    userName: string,
+    recordings: string
+  ) => {
+    const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings?recordings=${recordings}`;
+    const response = await fetch(url);
+    this.checkStatus(response);
+    const data = response.json();
+    return data;
+  };
 }

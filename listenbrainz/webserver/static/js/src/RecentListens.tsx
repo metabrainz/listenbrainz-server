@@ -15,7 +15,9 @@ import APIService from "./APIService";
 import Loader from "./components/Loader";
 import ListenCard from "./listens/ListenCard";
 
-type FeedbackListEntry = { [key: string]: ListenFeedBack };
+type FeedbackList = {
+  [recordingMsid: string]: ListenFeedBack;
+};
 
 export interface RecentListensProps {
   apiUrl: string;
@@ -52,7 +54,7 @@ export interface RecentListensState {
   playingNowByUser: FollowUsersPlayingNow;
   previousListenTs?: number;
   saveUrl: string;
-  feedbackList: Array<FeedbackListEntry>;
+  feedbackList: FeedbackList;
 }
 
 export default class RecentListens extends React.Component<
@@ -84,7 +86,7 @@ export default class RecentListens extends React.Component<
       nextListenTs: props.listens?.[props.listens.length - 1]?.listened_at,
       previousListenTs: props.listens?.[0]?.listened_at,
       direction: "down",
-      feedbackList: [],
+      feedbackList: {},
     };
 
     this.APIService = new APIService(
@@ -107,12 +109,15 @@ export default class RecentListens extends React.Component<
       window.addEventListener("popstate", this.handleURLChange);
       document.addEventListener("keydown", this.handleKeyDown);
 
-      const { user } = this.props;
+      const { user, currentUser } = this.props;
       // Get the user listen count
       if (user?.name) {
         this.APIService.getUserListenCount(user.name).then((listenCount) => {
           this.setState({ listenCount });
         });
+      }
+      if (currentUser?.name === user?.name) {
+        this.loadFeedback();
       }
     }
   }
@@ -462,6 +467,56 @@ export default class RecentListens extends React.Component<
     }
   };
 
+  getFeedback = async () => {
+    const { user, listens } = this.props;
+    let recordings = "";
+
+    if (listens) {
+      listens.forEach((listen) => {
+        recordings += `${_.get(
+          listen,
+          "track_metadata.additional_info.recording_msid"
+        )},`;
+      });
+      try {
+        const data = await this.APIService.getFeedbackForUserForRecordings(
+          user.name,
+          recordings
+        );
+        return data.feedback;
+      } catch (error) {
+        this.newAlert(
+          "danger",
+          "Playback error",
+          typeof error === "object" ? error.message : error
+        );
+      }
+    }
+    return {};
+  };
+
+  loadFeedback = async () => {
+    const feedback = await this.getFeedback();
+    const feedbackList: FeedbackList = {};
+    feedback.forEach((fb: FeedbackResponse) => {
+      feedbackList[fb.recording_msid] = fb.score;
+    });
+    this.setState({ feedbackList });
+  };
+
+  updateFeedback = (recordingMsid: string, score: ListenFeedBack) => {
+    const { feedbackList } = this.state;
+    feedbackList[recordingMsid] = score;
+    this.setState({ feedbackList });
+  };
+
+  getFeedbackForRecordingMsid = (
+    recordingMsid?: string | null
+  ): ListenFeedBack => {
+    const { feedbackList } = this.state;
+    return recordingMsid ? _.get(feedbackList, recordingMsid) : 0;
+  };
+
   /** This method checks that we have enough listens to fill the page (listens are fetched in a 15 days period)
    * If we don't have enough, we fetch again with an increased time range and do the check agin, ending when time range is maxed.
    * The time range (each increment = 5 days) defaults to 6 (the default for the API is 3) or 6*5 = 30 days
@@ -550,6 +605,7 @@ export default class RecentListens extends React.Component<
       playingNowByUser,
       previousListenTs,
       saveUrl,
+      feedbackList,
     } = this.state;
     const {
       latestListenTs,
@@ -631,7 +687,12 @@ export default class RecentListens extends React.Component<
                           apiUrl={apiUrl}
                           listen={listen}
                           mode={mode}
+                          currentFeedback={this.getFeedbackForRecordingMsid(
+                            listen.track_metadata?.additional_info
+                              ?.recording_msid
+                          )}
                           playListen={this.playListen}
+                          updateFeedback={this.updateFeedback}
                           newAlert={this.newAlert}
                           className={`${
                             this.isCurrentListen(listen)

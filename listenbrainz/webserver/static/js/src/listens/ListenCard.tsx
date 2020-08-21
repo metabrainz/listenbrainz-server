@@ -23,9 +23,11 @@ export type ListenCardProps = {
   listen: Listen;
   mode: ListensListMode;
   className?: string;
-  playListen: (listen: Listen) => void;
+  currentFeedback: ListenFeedBack;
   isCurrentUser: Boolean;
   currentUser?: ListenBrainzUser;
+  playListen: (listen: Listen) => void;
+  updateFeedback: (recordingMsid: string, score: ListenFeedBack) => void;
   newAlert: (
     alertType: AlertType,
     title: string,
@@ -48,7 +50,7 @@ export default class ListenCard extends React.Component<
     super(props);
 
     this.state = {
-      feedback: 0,
+      feedback: props.currentFeedback,
     };
 
     this.APIService = new APIService(
@@ -59,7 +61,7 @@ export default class ListenCard extends React.Component<
   }
 
   submitFeedback = async (score: ListenFeedBack) => {
-    const { listen, currentUser, isCurrentUser } = this.props;
+    const { listen, currentUser, isCurrentUser, updateFeedback } = this.props;
 
     if (isCurrentUser && currentUser?.auth_token) {
       const recordingMSID = _get(
@@ -75,6 +77,7 @@ export default class ListenCard extends React.Component<
         );
         if (status === 200) {
           this.setState({ feedback: score });
+          updateFeedback(recordingMSID, score);
         }
       } catch (error) {
         this.handleError(error.message);
@@ -89,7 +92,7 @@ export default class ListenCard extends React.Component<
     }
     newAlert(
       "danger",
-      title || "Playback error",
+      title || "Error",
       typeof error === "object" ? error.message : error
     );
   };

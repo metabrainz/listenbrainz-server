@@ -297,4 +297,10 @@ declare type UserArtistMapData = Array<UserArtistMapDatum>;
 
 declare type ListensListMode = "listens" | "follow" | "recent";
 
-type ListenFeedBack = 1 | 0 | -1;
+declare type ListenFeedBack = 1 | 0 | -1;
+
+declare type FeedbackResponse = {
+  recording_msid: string;
+  score: ListenFeedBack;
+  user_id: string;
+};
