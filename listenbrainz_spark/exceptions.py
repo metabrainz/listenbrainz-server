@@ -103,11 +103,13 @@ class RatingOutOfRangeException(SparkException):
     def __init__(self, message):
         super(RatingOutOfRangeException, self).__init__(message)
 
+
 class TopArtistNotFetchedException(SparkException):
     """ Top artists for user(s) not fetched.
     """
     def __init__(self, message):
         super(TopArtistNotFetchedException, self).__init__(message)
+
 
 class SimilarArtistNotFetchedException(SparkException):
     """ Similar artists for user(s) not fetched.
