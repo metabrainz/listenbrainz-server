@@ -724,7 +724,6 @@ def get_sitewide_artist():
     count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
     stats = db_stats.get_sitewide_artists(stats_range)
-    current_app.logger.info(stats.data.time_ranges[0].artists[0:5])
     if stats is None or stats.data is None:
         raise APINoContent('')
 
@@ -734,7 +733,7 @@ def get_sitewide_artist():
             "time_ranges": entity_data,
             "range": stats_range,
             "offset": offset,
-            "count": count,
+            "count": min(count, MAX_ITEMS_PER_GET),
             "from_ts": stats.data.from_ts,
             "to_ts": stats.data.to_ts,
             "last_updated": int(stats.last_updated.timestamp())

@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
-from data.model.sitewide_artist_stat import SitewideArtistStatRange
+from data.model.sitewide_artist_stat import SitewideArtistStatJson
 from data.model.user_artist_map import UserArtistMapStatJson
 from data.model.user_artist_stat import UserArtistStatJson
 from data.model.user_daily_activity import UserDailyActivityStatJson
@@ -172,7 +172,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
         with open(self.path_to_data_file('sitewide_top_artists_db.json')) as f:
             artists_data = json.load(f)
 
-        db_stats.insert_sitewide_artists(stats_range='all_time', artists=SitewideArtistStatRange(**artists_data))
+        db_stats.insert_sitewide_artists(stats_range='all_time', artists=SitewideArtistStatJson(**artists_data))
 
         result = db_stats.get_sitewide_artists('all_time')
         self.assertDictEqual(result.data.dict(), artists_data)
@@ -202,7 +202,7 @@ class StatsDatabaseTestCase(DatabaseTestCase):
             self.user['id'], UserListeningActivityStatJson(**{'all_time': listening_activity}))
         db_stats.insert_user_daily_activity(self.user['id'], UserDailyActivityStatJson(**{'all_time': daily_activity}))
         db_stats.insert_user_artist_map(self.user['id'], UserArtistMapStatJson(**{'all_time': artist_map}))
-        db_stats.insert_sitewide_artists('all_time', SitewideArtistStatRange(**sitewide_artists))
+        db_stats.insert_sitewide_artists('all_time', SitewideArtistStatJson(**sitewide_artists))
 
         return {
             'user_artists': user_artists,

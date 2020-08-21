@@ -447,3 +447,18 @@ def delete_user_stats(user_id):
             """), {
             'user_id': user_id
         })
+
+
+def delete_sitewide_stats(stats_range: str):
+    """ Delete stats for a particular time_range
+
+        Args:
+            stats_range: The stats_range for which stats should be deleted
+    """
+    with db.engine.connect() as connection:
+        connection.execute(sqlalchemy.text("""
+            DELETE FROM statistics.sitewide
+             WHERE stats_range = :stats_range
+            """), {
+            'stats_range': stats_range
+        })
