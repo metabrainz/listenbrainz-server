@@ -176,8 +176,8 @@ def get_feedback_for_recordings_for_user(user_name):
 
     If the feedback for given recording MSID doesn't exist then a score 0 is returned for that recording.
 
-    :param recording_list: list of recording_msid for which feedback records are to be fetched.
-    :type score: ``list``
+    :param recordings: comma separated list of recording_msids for which feedback records are to be fetched.
+    :type score: ``str``
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
     """
@@ -186,13 +186,19 @@ def get_feedback_for_recordings_for_user(user_name):
 
     recording_list = parse_param_list(recordings)
     if not len(recording_list):
-        raise APIBadRequest("recording_list is empty or invalid.")
+        raise APIBadRequest("'recordings' has no valid recording_msid.")
 
     user = db_user.get_by_mb_id(user_name)
     if user is None:
         raise APINotFound("Cannot find user: %s" % user_name)
 
-    feedback = db_feedback.get_feedback_for_multiple_recordings_for_user(user_id=user["id"], recording_list=recording_list)
+    try:
+        feedback = db_feedback.get_feedback_for_multiple_recordings_for_user(user_id=user["id"], recording_list=recording_list)
+    except ValidationError as e:
+        # Validation errors from the Pydantic model are multi-line. While passing it as a response the new lines
+        # are displayed as \n. str.replace() to tidy up the error message so that it becomes a good one line error message.
+        log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "),
+                      request.args)
 
     for i, fb in enumerate(feedback):
         fb.user_id = fb.user_name
