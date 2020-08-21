@@ -13,7 +13,9 @@ from listenbrainz_spark.recommendations.utils import save_html
 from listenbrainz_spark.exceptions import (SparkSessionNotInitializedException,
                                            ViewNotRegisteredException,
                                            PathNotFoundException,
-                                           FileNotFetchedException)
+                                           FileNotFetchedException,
+                                           TopArtistNotFetchedException,
+                                           SimilarArtistNotFetchedException)
 
 from flask import current_app
 import pyspark.sql.functions as func
@@ -111,13 +113,15 @@ def get_listens_to_fetch_top_artists(mapped_listens_df, from_date, to_date):
 
 
 def _is_empty_dataframe(df):
-    """ Check if the given dataframe is empty and raise IndexError.
+    """ Return True if the dataframe is empty, return False otherwise.
     """
 
     try:
         df.take(1)[0]
     except IndexError:
-        raise IndexError
+        return True
+
+    return False
 
 
 def get_top_artists(mapped_listens_subset, top_artist_limit, users):
@@ -160,19 +164,16 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
                                                          'user_name',
                                                          'total_count') \
                                                  .where(top_artist_df.user_name.isin(users))
-        try:
-            _is_empty_dataframe(top_artist_given_users_df)
-        except IndexError:
-            current_app.logger.error('Top artist not fetched', exc_info=True)
-            raise
+
+        if _is_empty_dataframe(top_artist_given_users_df):
+            current_app.logger.error('Top artists for {} not fetched'.format(users), exc_info=True)
+            raise TopArtistNotFetchedException('Users inactive or data missing from msid->mbid mapping')
 
         return top_artist_given_users_df
 
-    try:
-        _is_empty_dataframe(top_artist_df)
-    except IndexError:
-        current_app.logger.error('Top artist not fetched', exc_info=True)
-        raise
+    if _is_empty_dataframe(top_artist_df):
+        current_app.logger.error('Top artists not fetched', exc_info=True)
+        raise TopArtistNotFetchedException('Users inactive or data missing from msid->mbid mapping')
 
     return top_artist_df
 
@@ -230,11 +231,9 @@ def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
                                                       'user_name') \
                                               .distinct()
 
-    try:
-        _is_empty_dataframe(similar_artist_df)
-    except IndexError:
+    if _is_empty_dataframe(similar_artist_df):
         current_app.logger.error('Similar artists not generated.', exc_info=True)
-        raise
+        raise SimilarArtistNotFetchedException('Artists missing from artist relation')
 
     return similar_artist_df, similar_artist_df_html
 

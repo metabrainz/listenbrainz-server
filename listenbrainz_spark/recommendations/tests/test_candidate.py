@@ -3,6 +3,8 @@ from datetime import datetime
 from listenbrainz_spark.tests import SparkTestCase
 from listenbrainz_spark.recommendations import candidate_sets
 from listenbrainz_spark import schema, utils, config, path, stats
+from listenbrainz_spark.exceptions import (TopArtistNotFetchedException,
+                                           SimilarArtistNotFetchedException)
 
 from pyspark.sql import Row
 import pyspark.sql.functions as f
@@ -78,10 +80,10 @@ class CandidateSetsTestClass(SparkTestCase):
 
         # empty df
         mapped_listens = mapped_listens.select('*').where(f.col('user_name') == 'lala')
-        with self.assertRaises(IndexError):
+        with self.assertRaises(TopArtistNotFetchedException):
             candidate_sets.get_top_artists(mapped_listens, top_artist_limit, [])
 
-        with self.assertRaises(IndexError):
+        with self.assertRaises(TopArtistNotFetchedException):
             candidate_sets.get_top_artists(mapped_listens, top_artist_limit, ['lala'])
 
 
@@ -152,7 +154,7 @@ class CandidateSetsTestClass(SparkTestCase):
             ),
             schema=None
         )
-        with self.assertRaises(IndexError):
+        with self.assertRaises(SimilarArtistNotFetchedException):
             candidate_sets.get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
 
     def test_get_top_artist_candidate_set(self):
