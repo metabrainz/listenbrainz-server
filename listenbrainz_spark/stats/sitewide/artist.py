@@ -73,6 +73,7 @@ def get_artists(table: str, date_format: str, use_mapping: bool):
     return iterator
 
 
+# TODO: Add tests for this  function
 def _create_mapped_dataframe():
     """ Use MSID-MBID mapping to improve the data accuracy and quality
 

@@ -449,6 +449,7 @@ def delete_user_stats(user_id):
         })
 
 
+# TODO: Add tests for this function
 def delete_sitewide_stats(stats_range: str):
     """ Delete stats for a particular time_range
 
