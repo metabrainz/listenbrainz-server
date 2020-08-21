@@ -22,11 +22,12 @@ import sqlalchemy
 from listenbrainz import db
 from pydantic import ValidationError
 
-from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzData
+from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzData,
+                                                      UserMissingMusicBrainzDataJson)
 from flask import current_app
 
 
-def insert_user_missing_musicbrainz_data(user_id: int, missing_musicbrainz_data: dict, source: str):
+def insert_user_missing_musicbrainz_data(user_id: int, missing_musicbrainz_data: UserMissingMusicBrainzDataJson, source: str):
     """ Insert missing musicbrainz data that a user has submitted to ListenBrainz but
         has not submitted to MusicBrainz in the db.
 
@@ -47,7 +48,7 @@ def insert_user_missing_musicbrainz_data(user_id: int, missing_musicbrainz_data:
                         created = NOW()
             """), {
                 'user_id': user_id,
-                'missing_musicbrainz_data': ujson.dumps(missing_musicbrainz_data),
+                'missing_musicbrainz_data': ujson.dumps(missing_musicbrainz_data.dict()),
                 'source': source
             }
         )
@@ -77,8 +78,8 @@ def get_user_missing_musicbrainz_data(user_id: int , source: str):
                 "missing_musicbrainz_data": [
                     {
                         "artist_msid": "f26d35e3-5fdd-43cf-8b94-71936451bc07",
-                        "artist_name": 1588204585,
-                        "listened_at": "2020-04-29 23:56:23",
+                        "artist_name": "Katty Peri"
+                        "listened_at": 1588204593,
                         "recording_msid": "568eeea3-9255-4878-9df8-296043344e04",
                         "release_msid": "8c5ba30c-4851-48fd-ac02-1b194cdb34d1",
                         "release_name": "No Place Is Home",

@@ -234,7 +234,7 @@ def handle_missing_musicbrainz_data(data):
     try:
         db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data(
             user['id'],
-            UserMissingMusicBrainzDataJson(**{'missing_musicbrainz_data': missing_musicbrainz_data}).dict(),
+            UserMissingMusicBrainzDataJson(**{'missing_musicbrainz_data': missing_musicbrainz_data}),
             source
         )
     except ValidationError:

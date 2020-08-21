@@ -65,7 +65,6 @@ def get_missing_musicbrainz_data(user_name):
                         "track_name": "Nathaniel Martinez"
                     }
                 "count": 2,
-                "last_updated": 1597569112,
                 "offset": 4,
                 "total_data_count": 25,
                 "user_name": "Vansika"
@@ -83,7 +82,7 @@ def get_missing_musicbrainz_data(user_name):
         :statuscode 200: Successful query, you have data!
         :statuscode 400: Bad request, check ``response['error']`` for more details
         :statuscode 404: User not found.
-        :statuscode 204: No recent missing releases for the user , empty response will be returned
+        :statuscode 204: Missing releases for the user not calculated , empty response will be returned
     """
     # source indicates the *source* script/algorithm by which the missing musicbrainz data was calculated.
     # The source may change in future
@@ -96,10 +95,12 @@ def get_missing_musicbrainz_data(user_name):
     offset = _get_non_negative_param('offset', default=0)
     count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
+    count = min(count, MAX_ITEMS_PER_GET)
+
     data = db_missing_musicbrainz_data.get_user_missing_musicbrainz_data(user['id'], source)
 
     if data is None:
-        err_msg = 'Recent releases listened to by {} are already in MB'.format(user_name)
+        err_msg = 'Missing MusicBrainz data for {} not calculated'.format(user_name)
         raise APINoContent(err_msg)
 
 

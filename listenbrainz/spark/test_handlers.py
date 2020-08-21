@@ -13,12 +13,19 @@ from data.model.user_listening_activity import (UserListeningActivityRecord,
 from data.model.user_artist_stat import (UserArtistRecord,
                                          UserArtistStatJson,
                                          UserArtistStatRange)
+
+from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzDataRecord,
+                                                     UserMissingMusicBrainzDataJson,
+                                                     UserMissingMusicBrainzData)
+
 from listenbrainz.spark.handlers import (
     handle_candidate_sets, handle_dataframes, handle_dump_imported,
     handle_model, handle_recommendations, handle_user_daily_activity, handle_user_entity,
     handle_user_listening_activity, is_new_cf_recording_recommendation_batch,
     is_new_user_stats_batch, notify_artist_relation_import,
-    notify_mapping_import)
+    notify_mapping_import,
+    handle_missing_musicbrainz_data)
+
 from listenbrainz.webserver import create_app
 
 
@@ -331,3 +338,42 @@ class HandlersTestCase(unittest.TestCase):
                 'time': str(time),
             })
             mock_send_mail.assert_called_once()
+
+
+    @mock.patch('listenbrainz.spark.handlers.db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data')
+    @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')
+    def test_handle_missing_musicbrainz_data(self, mock_get_by_mb_id, mock_db_insert):
+        data = {
+            'type': 'missing_musicbrainz_data',
+            'musicbrainz_id': 'vansika',
+            'missing_musicbrainz_data': [
+                {
+                    "artist_msid": "f26d35e3-5fdd-43cf-8b94-71936451bc07",
+                    "artist_name": "Katty Peri",
+                    "listened_at": "2020-04-29 23:56:23",
+                    "recording_msid": "568eeea3-9255-4878-9df8-296043344e04",
+                    "release_msid": "8c5ba30c-4851-48fd-ac02-1b194cdb34d1",
+                    "release_name": "No Place Is Home",
+                    "track_name": "How High"
+                }
+            ],
+            'source': 'cf'
+        }
+
+        mock_get_by_mb_id.return_value = {'id': 1, 'musicbrainz_id': 'vansika'}
+
+        with self.app.app_context():
+            handle_missing_musicbrainz_data(data)
+
+        mock_db_insert.assert_called_with(1, UserMissingMusicBrainzDataJson(
+            missing_musicbrainz_data=[UserMissingMusicBrainzDataRecord(
+                artist_msid="f26d35e3-5fdd-43cf-8b94-71936451bc07",
+                artist_name="Katty Peri",
+                listened_at="2020-04-29 23:56:23",
+                recording_msid="568eeea3-9255-4878-9df8-296043344e04",
+                release_msid="8c5ba30c-4851-48fd-ac02-1b194cdb34d1",
+                release_name="No Place Is Home",
+                track_name="How High"
+            )]),
+            'cf'
+        )

@@ -9,7 +9,7 @@ class UserMissingMusicBrainzDataRecord(pydantic.BaseModel):
     """
     artist_msid: str
     artist_name: str
-    listened_at: datetime
+    listened_at: str
     recording_msid: str
     release_msid: str
     release_name: str
