@@ -1,4 +1,3 @@
-import sys
 import logging
 from time import time
 from datetime import datetime
@@ -53,10 +52,10 @@ def get_most_recent_model_id():
         model_metadata = utils.read_files_from_HDFS(path.MODEL_METADATA)
     except PathNotFoundException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
     except FileNotFetchedException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
 
     latest_ts = model_metadata.select(func.max('model_created').alias('model_created')).take(1)[0].model_created
     model_id = model_metadata.select('model_id') \
@@ -76,7 +75,7 @@ def load_model():
     except Py4JJavaError as err:
         current_app.logger.error('Unable to load model "{}"\n{}\nAborting...'.format(model_id, str(err.java_exception)),
                                  exc_info=True)
-        sys.exit(-1)
+        raise
 
 
 def get_recording_mbids(params, recommendation_df):
@@ -343,7 +342,7 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
         listenbrainz_spark.init_spark_session('Recommendations')
     except SparkSessionNotInitializedException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
 
     try:
         recordings_df = utils.read_files_from_HDFS(path.RECORDINGS_DATAFRAME_PATH)
@@ -351,10 +350,10 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
         similar_artist_candidate_set_df = utils.read_files_from_HDFS(path.SIMILAR_ARTIST_CANDIDATE_SET)
     except PathNotFoundException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
     except FileNotFetchedException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
 
     current_app.logger.info('Loading model...')
     model = load_model()

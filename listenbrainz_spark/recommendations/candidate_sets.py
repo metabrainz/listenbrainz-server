@@ -13,7 +13,9 @@ from listenbrainz_spark.recommendations.utils import save_html
 from listenbrainz_spark.exceptions import (SparkSessionNotInitializedException,
                                            ViewNotRegisteredException,
                                            PathNotFoundException,
-                                           FileNotFetchedException)
+                                           FileNotFetchedException,
+                                           TopArtistNotFetchedException,
+                                           SimilarArtistNotFetchedException)
 
 from flask import current_app
 import pyspark.sql.functions as func
@@ -110,6 +112,18 @@ def get_listens_to_fetch_top_artists(mapped_listens_df, from_date, to_date):
     return mapped_listens_subset
 
 
+def _is_empty_dataframe(df):
+    """ Return True if the dataframe is empty, return False otherwise.
+    """
+
+    try:
+        df.take(1)[0]
+    except IndexError:
+        return True
+
+    return False
+
+
 def get_top_artists(mapped_listens_subset, top_artist_limit, users):
     """ Get top artists listened to by users who have a listening history in
         the past X days where X = RECOMMENDATION_GENERATION_WINDOW.
@@ -143,13 +157,23 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
                               col('msb_artist_credit_name_matchable').alias('top_artist_name'),
                               col('user_name'),
                               col('total_count'))
+
     if users:
         top_artist_given_users_df = top_artist_df.select('top_artist_credit_id',
                                                          'top_artist_name',
                                                          'user_name',
                                                          'total_count') \
                                                  .where(top_artist_df.user_name.isin(users))
+
+        if _is_empty_dataframe(top_artist_given_users_df):
+            current_app.logger.error('Top artists for {} not fetched'.format(users), exc_info=True)
+            raise TopArtistNotFetchedException('Users inactive or data missing from msid->mbid mapping')
+
         return top_artist_given_users_df
+
+    if _is_empty_dataframe(top_artist_df):
+        current_app.logger.error('Top artists not fetched', exc_info=True)
+        raise TopArtistNotFetchedException('Users inactive or data missing from msid->mbid mapping')
 
     return top_artist_df
 
@@ -207,6 +231,9 @@ def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
                                                       'user_name') \
                                               .distinct()
 
+    if _is_empty_dataframe(similar_artist_df):
+        current_app.logger.error('Similar artists not generated.', exc_info=True)
+        raise SimilarArtistNotFetchedException('Artists missing from artist relation')
 
     return similar_artist_df, similar_artist_df_html
 
@@ -246,6 +273,7 @@ def get_top_artist_candidate_set(top_artist_df, recordings_df, users_df):
     top_artist_candidate_set_df = top_artist_candidate_set_df_html.select('recording_id', 'user_id', 'user_name')
 
     return top_artist_candidate_set_df, top_artist_candidate_set_df_html
+
 
 def get_similar_artist_candidate_set(similar_artist_df, recordings_df, users_df):
     """ Get recording ids that belong to similar artists.
@@ -294,28 +322,16 @@ def save_candidate_sets(top_artist_candidate_set_df, similar_artist_candidate_se
                                                          corresponding to user ids.
     """
     try:
-        top_artist_candidate_set_df.take(1)[0]
-    except IndexError:
-        current_app.logger.error('Cannot save empty top artist candidate set', exc_info=True)
-        sys.exit(-1)
-
-    try:
-        similar_artist_candidate_set_df.take(1)[0]
-    except IndexError:
-        current_app.logger.error('Cannot save empty similar artist candidate set', exc_info=True)
-        sys.exit(-1)
-
-    try:
         utils.save_parquet(top_artist_candidate_set_df, path.TOP_ARTIST_CANDIDATE_SET)
     except FileNotSavedException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
 
     try:
         utils.save_parquet(similar_artist_candidate_set_df, path.SIMILAR_ARTIST_CANDIDATE_SET)
     except FileNotSavedException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
 
 
 def get_candidate_html_data(similar_artist_candidate_set_df_html, top_artist_candidate_set_df_html,
@@ -421,7 +437,7 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
         listenbrainz_spark.init_spark_session('Candidate_set')
     except SparkSessionNotInitializedException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
 
     try:
         mapped_listens_df = utils.read_files_from_HDFS(path.MAPPED_LISTENS)
@@ -430,10 +446,10 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
         artist_relation_df = utils.read_files_from_HDFS(path.SIMILAR_ARTIST_DATAFRAME_PATH)
     except PathNotFoundException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
     except FileNotFetchedException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
 
     from_date, to_date = get_dates_to_generate_candidate_sets(mapped_listens_df, recommendation_generation_window)
 
@@ -454,13 +470,11 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
     similar_artist_candidate_set_df, similar_artist_candidate_set_df_html = get_similar_artist_candidate_set(similar_artist_df,
                                                                                                              recordings_df,
                                                                                                              users_df)
-    try:
-        current_app.logger.info('Saving candidate sets...')
-        save_candidate_sets(top_artist_candidate_set_df, similar_artist_candidate_set_df)
-        current_app.logger.info('Done!')
-    except Py4JJavaError as err:
-        current_app.logger.error('{}\nAborting...'.format(str(err.java_exception)), exc_info=True)
-        sys.exit(-1)
+
+    current_app.logger.info('Saving candidate sets...')
+    save_candidate_sets(top_artist_candidate_set_df, similar_artist_candidate_set_df)
+    current_app.logger.info('Done!')
+
 
     # time taken to generate candidate_sets
     total_time = '{:.2f}'.format((time.monotonic() - time_initial) / 60)
