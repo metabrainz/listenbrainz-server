@@ -1,28 +1,26 @@
-import json
 import calendar
-import requests
+import json
+from collections import defaultdict
 from datetime import datetime
 from enum import Enum
-from typing import List, Union, Tuple
-from collections import defaultdict
-
-import pycountry
-from flask import Blueprint, current_app, jsonify, request
+from typing import Dict, List, Tuple, Union
 
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
-from data.model.user_artist_stat import (UserArtistRecord,
-                                         UserArtistStat)
-from data.model.user_recording_stat import (UserRecordingRecord,
-                                            UserRecordingStat)
-from data.model.user_release_stat import (UserReleaseRecord,
-                                          UserReleaseStat)
-from data.model.user_listening_activity import (
-    UserListeningActivityRecord, UserListeningActivityStat)
-from data.model.user_artist_map import (UserArtistMapRecord,
-                                        UserArtistMapStat,
+import pycountry
+import requests
+from data.model.sitewide_artist_stat import (SitewideArtistRecord,
+                                             SitewideArtistStatJson)
+from data.model.user_artist_map import (UserArtistMapRecord, UserArtistMapStat,
                                         UserArtistMapStatJson,
                                         UserArtistMapStatRange)
+from data.model.user_artist_stat import UserArtistRecord, UserArtistStat
+from data.model.user_listening_activity import (UserListeningActivityRecord,
+                                                UserListeningActivityStat)
+from data.model.user_recording_stat import (UserRecordingRecord,
+                                            UserRecordingStat)
+from data.model.user_release_stat import UserReleaseRecord, UserReleaseStat
+from flask import Blueprint, current_app, jsonify, request
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.errors import (APIBadRequest,
                                            APIInternalServerError,
@@ -33,7 +31,6 @@ from listenbrainz.webserver.rate_limiter import ratelimit
 from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
                                                     MAX_ITEMS_PER_GET,
                                                     _get_non_negative_param)
-
 
 STATS_CALCULATION_INTERVAL = 7  # Stats are recalculated every 7 days
 
@@ -50,7 +47,7 @@ class StatisticsRange(Enum):
 @stats_api_bp.route("/user/<user_name>/artists")
 @crossdomain()
 @ratelimit()
-def get_artist(user_name):
+def get_user_artist(user_name):
     """
     Get top artists for user ``user_name``.
 
@@ -123,14 +120,14 @@ def get_artist(user_name):
     if stats is None or getattr(stats, stats_range) is None:
         raise APINoContent('')
 
-    entity_list, total_entity_count = _process_entity(stats, stats_range, offset, count, entity='artist')
+    entity_list, total_entity_count = _process_user_entity(stats, stats_range, offset, count, entity='artist')
     from_ts = int(getattr(stats, stats_range).from_ts)
     to_ts = int(getattr(stats, stats_range).to_ts)
     last_updated = int(stats.last_updated.timestamp())
 
     return jsonify({'payload': {
         "user_id": user_name,
-        'artists': entity_list,
+        "artists": entity_list,
         "count": len(entity_list),
         "total_artist_count": total_entity_count,
         "offset": offset,
@@ -227,7 +224,7 @@ def get_release(user_name):
     if stats is None or getattr(stats, stats_range) is None:
         raise APINoContent('')
 
-    entity_list, total_entity_count = _process_entity(stats, stats_range, offset, count, entity='release')
+    entity_list, total_entity_count = _process_user_entity(stats, stats_range, offset, count, entity='release')
     from_ts = int(getattr(stats, stats_range).from_ts)
     to_ts = int(getattr(stats, stats_range).to_ts)
     last_updated = int(stats.last_updated.timestamp())
@@ -329,7 +326,7 @@ def get_recording(user_name):
     if stats is None or getattr(stats, stats_range) is None:
         raise APINoContent('')
 
-    entity_list, total_entity_count = _process_entity(stats, stats_range, offset, count, entity='recording')
+    entity_list, total_entity_count = _process_user_entity(stats, stats_range, offset, count, entity='recording')
     from_ts = int(getattr(stats, stats_range).from_ts)
     to_ts = int(getattr(stats, stats_range).to_ts)
     last_updated = int(stats.last_updated.timestamp())
@@ -635,7 +632,116 @@ def get_artist_map(user_name: str):
     })
 
 
-def _process_entity(stats, stats_range, offset, count, entity) -> Tuple[list, int]:
+@stats_api_bp.route("/sitewide/artists")
+@crossdomain()
+@ratelimit()
+def get_sitewide_artist():
+    """
+    Get sitewide top artists.
+
+
+    A sample response from the endpoint may look like::
+
+        {
+            "payload": {
+                "time_ranges": [
+                    {
+                        "time_range": "April 2020",
+                        "artists": [
+                            {
+                                "artist_mbids": ["f4fdbb4c-e4b7-47a0-b83b-d91bbfcfa387"],
+                                "artist_msid": "b4ae3356-b8a7-471a-a23a-e471a69ad454",
+                                "artist_name": "Ariana Grande",
+                                "listen_count": 519
+                            },
+                            {
+                                "artist_mbids": ["f4abc0b5-3f7a-4eff-8f78-ac078dbce533"],
+                                "artist_msid": "f9ee09fb-5ab4-46a2-9088-3eac0eed4920",
+                                "artist_name": "Billie Eilish",
+                                "listen_count": 447
+                            }
+                        ],
+                        "from_ts": 1585699200,
+                        "to_ts": 1588291199,
+                    },
+                    {
+                        "time_range": "May 2020",
+                        "artists": [
+                            {
+                                "artist_mbids": [],
+                                "artist_msid": "2b0646af-f3f0-4a5b-b629-6c31301c1c29",
+                                "artist_name": "The Weeknd",
+                                "listen_count": 621
+                            },
+                            {
+                                "artist_mbids": [],
+                                "artist_msid": "9720fd77-fe48-41ba-a7a2-b4795718dd97",
+                                "artist_name": "Drake",
+                                "listen_count": 554
+                            }
+                        ],
+                        "from_ts": 1588291200,
+                        "to_ts": 1590969599
+                    }
+                ],
+                "offset": 0,
+                "count": 2,
+                "range": "year",
+                "last_updated": 1588494361,
+                "from_ts": 1009823400,
+                "to_ts": 1590029157
+            }
+        }
+
+    .. note::
+        - This endpoint is currently in beta
+        - ``artist_mbids`` and ``artist_msid`` are optional fields and may not be present in all the entries
+        - The example above shows the data for two days only, however we calculate the statistics for
+          the current time range and the previous time range. For example for yearly statistics the data
+          is calculated for the months in current as well as the past year.
+        - We only calculate the top 1000 artists for each time period.
+
+    :param count: Optional, number of artists to return for each time range,
+        Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
+        Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+    :type count: ``int``
+    :param offset: Optional, number of artists to skip from the beginning, for pagination.
+        Ex. An offset of 5 means the top 5 artists will be skipped, defaults to 0
+    :type offset: ``int``
+    :param range: Optional, time interval for which statistics should be collected, possible values are ``week``,
+        ``month``, ``year``, ``all_time``, defaults to ``all_time``
+    :type range: ``str``
+    :statuscode 200: Successful query, you have data!
+    :statuscode 204: Statistics haven't been calculated, empty response will be returned
+    :statuscode 400: Bad request, check ``response['error']`` for more details
+    :resheader Content-Type: *application/json*
+    """
+    stats_range = request.args.get('range', default='all_time')
+    if not _is_valid_range(stats_range):
+        raise APIBadRequest("Invalid range: {}".format(stats_range))
+
+    offset = _get_non_negative_param('offset', default=0)
+    count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
+
+    stats = db_stats.get_sitewide_artists(stats_range)
+    if stats is None or stats.data is None:
+        raise APINoContent('')
+
+    entity_data = _get_sitewide_entity_list(stats.data, entity="artists", offset=offset, count=count)
+    return jsonify({
+        'payload': {
+            "time_ranges": entity_data,
+            "range": stats_range,
+            "offset": offset,
+            "count": min(count, MAX_ITEMS_PER_GET),
+            "from_ts": stats.data.from_ts,
+            "to_ts": stats.data.to_ts,
+            "last_updated": int(stats.last_updated.timestamp())
+        }
+    })
+
+
+def _process_user_entity(stats, stats_range, offset, count, entity) -> Tuple[list, int]:
     """ Process the statistics data according to query params
 
         Args:
@@ -654,7 +760,7 @@ def _process_entity(stats, stats_range, offset, count, entity) -> Tuple[list, in
     count = min(count, MAX_ITEMS_PER_GET)
     count = count + offset
     total_entity_count = getattr(stats, stats_range).count
-    entity_list = [x.dict() for x in _get_entity_list(stats, stats_range, entity, offset, count)]
+    entity_list = [x.dict() for x in _get_user_entity_list(stats, stats_range, entity, offset, count)]
 
     return entity_list, total_entity_count
 
@@ -671,7 +777,7 @@ def _is_valid_range(stats_range: str) -> bool:
     return stats_range in StatisticsRange.__members__
 
 
-def _get_entity_list(
+def _get_user_entity_list(
     stats: Union[UserArtistStat, UserReleaseStat, UserRecordingStat],
     stats_range: StatisticsRange,
     entity: str,
@@ -687,6 +793,29 @@ def _get_entity_list(
     elif entity == 'recording':
         return getattr(stats, stats_range).recordings[offset:count]
     raise APIBadRequest("Unknown entity: %s" % entity)
+
+
+def _get_sitewide_entity_list(
+    stats: Union[SitewideArtistStatJson],
+    entity: str,
+    offset: int,
+    count: int,
+) -> List[dict]:
+    """ Gets a list of entity records from the stat passed based on the offset and count
+    """
+    count = min(count, MAX_ITEMS_PER_GET)
+    count = count + offset
+
+    result = []
+    for time_range in stats.time_ranges:
+        result.append({
+            "time_range": time_range.time_range,
+            "from_ts": time_range.from_ts,
+            "to_ts": time_range.to_ts,
+            entity: [x.dict() for x in getattr(time_range, entity)[offset:count]]
+        })
+
+    return sorted(result, key=lambda x: x['from_ts'])
 
 
 def _get_country_codes(artist_msids: list, artist_mbids: list) -> List[UserArtistMapRecord]:

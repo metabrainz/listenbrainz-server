@@ -192,7 +192,7 @@ different services. We provide a small description of each container here:
 
     .. code-block:: bash
 
-        ./develop.sh build static_builder
+        ./develop.sh build web
 
     to do this.
 

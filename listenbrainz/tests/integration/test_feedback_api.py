@@ -309,7 +309,7 @@ class FeedbackAPITestCase(IntegrationTestCase):
 
     def test_get_feedback_for_user_invalid_user(self):
         """ Test to make sure that the API sends 404 if user does not exist. """
-        response = self.client.get(url_for("stats_api_v1.get_artist", user_name="nouser"))
+        response = self.client.get(url_for("feedback_api_v1.get_feedback_for_user", user_name="nouser"))
         self.assert404(response)
         self.assertEqual(response.json["error"], "Cannot find user: nouser")
 

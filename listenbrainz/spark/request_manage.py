@@ -106,6 +106,26 @@ def request_user_stats(type_, range_, entity):
         click.echo("Incorrect arguments provided")
 
 
+@cli.command(name="request_sitewide_stats")
+@click.option("--range", 'range_', type=click.Choice(['week', 'month', 'year', 'all_time']),
+              help="Time range of statistics to calculate", required=True)
+@click.option("--entity", type=click.Choice(['artists']),
+              help="Entity for which statistics should be calculated")
+@click.option("--use-mapping", type=bool, help="Set to true if MSID-MBID mapping should be used while calculating statistics")
+def request_sitewide_stats(range_, entity, use_mapping):
+    """ Send request to calculate sitewide stats to the spark cluster
+    """
+    params = {
+        'use_mapping': use_mapping,
+        'entity': entity
+    }
+    try:
+        send_request_to_spark_cluster(_prepare_query_message(
+            "stats.sitewide.entity.{range}".format(range=range_), params=params))
+    except InvalidSparkRequestError:
+        click.echo("Incorrect arguments provided")
+
+
 @cli.command(name="request_import_full")
 @click.option("--id", "id_", type=int, required=False,
               help="Optional. ID of the full dump to import, defaults to latest dump available on FTP server")
