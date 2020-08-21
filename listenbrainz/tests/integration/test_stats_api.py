@@ -1165,7 +1165,7 @@ class StatsAPITestCase(IntegrationTestCase):
         """ Test to check if no error is thrown if no msids and mbids are present"""
 
         # Overwrite the artist stats so that no artist has msids or mbids present
-        artist_stats = deepcopy(self.artist_payload)
+        artist_stats = deepcopy(self.user_artist_payload)
         for artist in artist_stats["artists"]:
             artist['artist_mbids'] = []
             artist['artist_msid'] = None
