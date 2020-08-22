@@ -2,22 +2,11 @@ import ujson
 from flask import Blueprint, render_template, current_app
 from flask_login import current_user, login_required
 from listenbrainz.domain import spotify
-
+from listenbrainz.webserver.views.api_tools import parse_param_list
 import listenbrainz.db.follow_list as db_follow_list
 
 
 follow_bp = Blueprint("follow", __name__)
-
-def parse_user_list(users):
-    user_list = []
-    for user in users.split(","):
-        user = user.strip()
-        if not user:
-            continue
-        user_list.append(user)
-
-    return user_list
-
 
 @follow_bp.route("/", defaults={"user_list": ""})
 @follow_bp.route("/<user_list>")
@@ -28,7 +17,7 @@ def follow(user_list):
 
     if user_list:
         default_list = {'name': ''}
-        follow_list_members = parse_user_list(user_list)
+        follow_list_members = parse_param_list(user_list)
     else:
         default_list = db_follow_list.get_latest(creator=current_user.id)
         if not default_list:

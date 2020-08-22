@@ -94,14 +94,21 @@ def profile(user_name):
         artist_count = None
 
     spotify_data = {}
+    current_user_data = {}
     if current_user.is_authenticated:
         spotify_data = spotify.get_user_dict(current_user.id)
+        current_user_data = {
+            "id": current_user.id,
+            "name": current_user.musicbrainz_id,
+            "auth_token": current_user.auth_token,
+        }
 
     props = {
         "user": {
             "id": user.id,
             "name": user.musicbrainz_id,
         },
+        "current_user": current_user_data,
         "listens": listens,
         "latest_listen_ts": max_ts_per_user,
         "oldest_listen_ts": min_ts_per_user,
