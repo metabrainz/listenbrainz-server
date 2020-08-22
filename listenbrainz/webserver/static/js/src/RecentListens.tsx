@@ -469,10 +469,13 @@ export default class RecentListens extends React.Component<
 
     if (listens) {
       listens.forEach((listen) => {
-        recordings += `${_.get(
+        const recordingMsid = _.get(
           listen,
           "track_metadata.additional_info.recording_msid"
-        )},`;
+        );
+        if (recordingMsid) {
+          recordings += `${recordingMsid},`;
+        }
       });
       try {
         const data = await this.APIService.getFeedbackForUserForRecordings(
