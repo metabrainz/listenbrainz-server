@@ -54,7 +54,7 @@ def insert_user_missing_musicbrainz_data(user_id: int, missing_musicbrainz_data:
         )
 
 
-def get_user_missing_musicbrainz_data(user_id: int , source: str):
+def get_user_missing_musicbrainz_data(user_id: int, source: str):
     """ Get missing musicbrainz data that has not been submitted to LB
         for a user with the given row ID.
 

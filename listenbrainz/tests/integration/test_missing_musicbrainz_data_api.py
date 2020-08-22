@@ -7,6 +7,7 @@ import listenbrainz.db.missing_musicbrainz_data as db_missing_musicbrainz_data
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
 from listenbrainz.tests.integration import IntegrationTestCase
 
+
 class MissingMusicBrainzDataViewsTestCase(IntegrationTestCase):
     def setUp(self):
         super(MissingMusicBrainzDataViewsTestCase, self).setUp()
@@ -69,7 +70,7 @@ class MissingMusicBrainzDataViewsTestCase(IntegrationTestCase):
     def test_missing_musicbrainz_data_with_count(self):
         response = self.client.get(url_for('missing_musicbrainz_data_v1.get_missing_musicbrainz_data',
                                            user_name=self.user['musicbrainz_id']),
-                                           query_string={'count': 10})
+                                   query_string={'count': 10})
         self.assert200(response)
         data = json.loads(response.data)['payload']
 
@@ -97,7 +98,7 @@ class MissingMusicBrainzDataViewsTestCase(IntegrationTestCase):
     def test_missing_musicbrainz_data_too_many(self):
         response = self.client.get(url_for('missing_musicbrainz_data_v1.get_missing_musicbrainz_data',
                                            user_name=self.user['musicbrainz_id']),
-                                           query_string={'count': 108})
+                                   query_string={'count': 108})
         self.assert200(response)
         data = json.loads(response.data)['payload']
 
@@ -125,7 +126,7 @@ class MissingMusicBrainzDataViewsTestCase(IntegrationTestCase):
     def test_missing_musicbrainz_data_with_offset(self):
         response = self.client.get(url_for('missing_musicbrainz_data_v1.get_missing_musicbrainz_data',
                                            user_name=self.user['musicbrainz_id']),
-                                           query_string={'offset': 10})
+                                   query_string={'offset': 10})
 
         self.assert200(response)
         data = json.loads(response.data)['payload']

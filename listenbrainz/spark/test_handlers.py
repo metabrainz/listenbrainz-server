@@ -15,8 +15,8 @@ from data.model.user_artist_stat import (UserArtistRecord,
                                          UserArtistStatRange)
 
 from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzDataRecord,
-                                                     UserMissingMusicBrainzDataJson,
-                                                     UserMissingMusicBrainzData)
+                                                      UserMissingMusicBrainzDataJson,
+                                                      UserMissingMusicBrainzData)
 
 from listenbrainz.spark.handlers import (
     handle_candidate_sets, handle_dataframes, handle_dump_imported,
@@ -338,7 +338,6 @@ class HandlersTestCase(unittest.TestCase):
                 'time': str(time),
             })
             mock_send_mail.assert_called_once()
-
 
     @mock.patch('listenbrainz.spark.handlers.db_missing_musicbrainz_data.insert_user_missing_musicbrainz_data')
     @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')

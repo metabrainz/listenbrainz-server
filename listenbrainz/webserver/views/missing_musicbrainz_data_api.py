@@ -103,7 +103,6 @@ def get_missing_musicbrainz_data(user_name):
         err_msg = 'Missing MusicBrainz data for {} not calculated'.format(user_name)
         raise APINoContent(err_msg)
 
-
     missing_musicbrainz_data_list = getattr(data, 'data').dict()['missing_musicbrainz_data']
 
     missing_musicbrainz_data_list_filtered = missing_musicbrainz_data_list[offset:count]
