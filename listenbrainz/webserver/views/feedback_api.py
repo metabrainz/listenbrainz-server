@@ -167,12 +167,14 @@ def get_feedback_for_recording(recording_msid):
         "offset": offset
     })
 
+
 @feedback_api_bp.route("/user/<user_name>/get-feedback-for-recordings", methods=["GET"])
 @crossdomain()
 @ratelimit()
 def get_feedback_for_recordings_for_user(user_name):
     """
-    Get feedback given by user ``user_name`` for the list of recordings supplied. The format for the JSON returned is defined in our :ref:`feedback-json-doc`.
+    Get feedback given by user ``user_name`` for the list of recordings supplied. The format for the JSON returned
+    is defined in our :ref:`feedback-json-doc`.
 
     If the feedback for given recording MSID doesn't exist then a score 0 is returned for that recording.
 

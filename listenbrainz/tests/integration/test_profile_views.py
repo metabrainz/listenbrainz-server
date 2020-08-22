@@ -2,6 +2,7 @@ import json
 import time
 
 from flask import url_for
+from redis import Redis
 
 import listenbrainz.db.user as db_user
 from listenbrainz.tests.integration import IntegrationTestCase
@@ -12,6 +13,11 @@ class ProfileViewsTestCase(IntegrationTestCase):
         super().setUp()
         self.user = db_user.get_or_create(1, 'iliekcomputers')
         db_user.agree_to_gdpr(self.user['musicbrainz_id'])
+
+    def tearDown(self):
+        r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
+        r.flushall()
+        super(ProfileViewsTestCase, self).tearDown()
 
     def send_listens(self):
         with open(self.path_to_data_file('user_export_test.json')) as f:

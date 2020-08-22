@@ -304,3 +304,7 @@ declare type FeedbackResponse = {
   score: ListenFeedBack;
   user_id: string;
 };
+
+declare type FeedbackList = {
+  [recordingMsid: string]: ListenFeedBack;
+};

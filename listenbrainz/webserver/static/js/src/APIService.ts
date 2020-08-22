@@ -323,6 +323,10 @@ export default class APIService {
     userName: string,
     recordings: string
   ) => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+
     const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings?recordings=${recordings}`;
     const response = await fetch(url);
     this.checkStatus(response);

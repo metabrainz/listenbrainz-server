@@ -2,6 +2,7 @@ import json
 import listenbrainz.db.user as db_user
 import listenbrainz.db.feedback as db_feedback
 
+from redis import Redis
 from flask import url_for
 from listenbrainz.db.model.feedback import Feedback
 from listenbrainz.tests.integration import IntegrationTestCase
@@ -12,6 +13,11 @@ class FeedbackAPITestCase(IntegrationTestCase):
         super(FeedbackAPITestCase, self).setUp()
         self.user = db_user.get_or_create(1, "testuserpleaseignore")
         self.user2 = db_user.get_or_create(2, "anothertestuserpleaseignore")
+
+    def tearDown(self):
+        r = Redis(host=current_app.config['REDIS_HOST'], port=current_app.config['REDIS_PORT'])
+        r.flushall()
+        super(FeedbackAPITestCase, self).tearDown()
 
     def insert_test_data(self, user_id):
         sample_feedback = [
@@ -627,14 +633,14 @@ class FeedbackAPITestCase(IntegrationTestCase):
         recordings = ""
         # recording_msids for which feedback records are inserted
         for row in inserted_rows:
-            recordings += row["recording_msid"] +","
+            recordings += row["recording_msid"] + ","
 
         # recording_msid for which feedback record doesn't exist
         non_existing_rec_msid = "b83fd3c3-449c-49be-a874-31d7cf26d946"
         recordings += non_existing_rec_msid
 
         response = self.client.get(url_for("feedback_api_v1.get_feedback_for_recordings_for_user",
-                                            user_name=self.user["musicbrainz_id"]), query_string={"recordings": recordings})
+                                           user_name=self.user["musicbrainz_id"]), query_string={"recordings": recordings})
         self.assert200(response)
         data = json.loads(response.data)
 
@@ -662,7 +668,8 @@ class FeedbackAPITestCase(IntegrationTestCase):
     def test_get_feedback_for_recordings_for_user_no_recordings(self):
         """ Test to make sure that the API sends 400 if params recordings has nothing. """
         response = self.client.get(url_for("feedback_api_v1.get_feedback_for_recordings_for_user",
-                                            user_name=self.user["musicbrainz_id"]), query_string={"recordings": ""})  # empty string
+                                           user_name=self.user["musicbrainz_id"]),
+                                   query_string={"recordings": ""})  # empty string
         self.assert400(response)
         self.assertEqual(response.json["error"], "'recordings' has no valid recording_msid.")
 
@@ -673,15 +680,14 @@ class FeedbackAPITestCase(IntegrationTestCase):
         recordings = ""
         # recording_msids for which feedback records are inserted
         for row in inserted_rows:
-            recordings += row["recording_msid"] +","
+            recordings += row["recording_msid"] + ","
 
         # invalid recording_msid
         invalid_rec_msid = "invalid_recording_msid"
 
         recordings += invalid_rec_msid
         response = self.client.get(url_for("feedback_api_v1.get_feedback_for_recordings_for_user",
-                                            user_name=self.user["musicbrainz_id"]),
-                                  query_string={"recordings": recordings}
-                                  )  #  recordings has invalid recording_msid
+                                           user_name=self.user["musicbrainz_id"]),
+                                   query_string={"recordings": recordings})  # recordings has invalid recording_msid
         self.assert400(response)
         self.assertEqual(response.json["code"], 400)

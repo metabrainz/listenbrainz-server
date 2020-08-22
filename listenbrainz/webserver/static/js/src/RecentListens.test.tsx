@@ -10,10 +10,16 @@ import * as recentListensProps from "./__mocks__/recentListensProps.json";
 import * as recentListensPropsTooManyListens from "./__mocks__/recentListensPropsTooManyListens.json";
 import * as recentListensPropsOneListen from "./__mocks__/recentListensPropsOneListen.json";
 import * as recentListensPropsPlayingNow from "./__mocks__/recentListensPropsPlayingNow.json";
+import * as getFeedbackByMsidResponse from "./__mocks__/getFeedbackByMsidResponse.json";
 
 import RecentListens, { RecentListensProps } from "./RecentListens";
 
 enableFetchMocks();
+
+// Font Awesome generates a random hash ID for each icon everytime.
+// Mocking Math.random() fixes this
+// https://github.com/FortAwesome/react-fontawesome/issues/194#issuecomment-627235075
+jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
 const {
   apiUrl,
@@ -106,6 +112,47 @@ describe("componentDidMount", () => {
 
     expect(spy).toHaveBeenCalledWith(user.name);
     expect(wrapper.state("listenCount")).toEqual(42);
+  });
+
+  it('calls loadFeedback if user is the currentUser and mode "listens"', () => {
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
+    const wrapper = shallow<RecentListens>(
+      <RecentListens
+        {...(JSON.parse(
+          JSON.stringify(recentListensPropsOneListen)
+        ) as RecentListensProps)}
+      />
+    );
+    const instance = wrapper.instance();
+    instance.loadFeedback = jest.fn();
+
+    instance.componentDidMount();
+
+    expect(instance.loadFeedback).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not call loadFeedback if user is not the currentUser even if mode "listens"', () => {
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
+    const wrapper = shallow<RecentListens>(
+      <RecentListens
+        {...{
+          ...(JSON.parse(
+            JSON.stringify(recentListensPropsOneListen)
+          ) as RecentListensProps),
+          currentUser: { name: "foobar" },
+        }}
+      />
+    );
+    const instance = wrapper.instance();
+    instance.loadFeedback = jest.fn();
+
+    instance.componentDidMount();
+
+    expect(instance.loadFeedback).toHaveBeenCalledTimes(0);
   });
 });
 
@@ -1061,6 +1108,174 @@ describe("Pagination", () => {
         25,
         12
       );
+    });
+  });
+});
+
+describe("getFeedback", () => {
+  it("calls the API correctly", async () => {
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
+    const wrapper = shallow<RecentListens>(
+      <RecentListens
+        {...(JSON.parse(
+          JSON.stringify(recentListensPropsOneListen)
+        ) as RecentListensProps)}
+      />
+    );
+
+    const instance = wrapper.instance();
+    const spy = jest.fn().mockImplementation(() => {
+      return Promise.resolve(getFeedbackByMsidResponse);
+    });
+    // eslint-disable-next-line dot-notation
+    instance["APIService"].getFeedbackForUserForRecordings = spy;
+
+    const result = await instance.getFeedback();
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith(
+      "iliekcomputers",
+      "973e5620-829d-46dd-89a8-760d87076287,"
+    );
+    expect(result).toEqual(getFeedbackByMsidResponse.feedback);
+  });
+
+  it("doesn't call the API if there are no listens", async () => {
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
+    const wrapper = shallow<RecentListens>(
+      <RecentListens
+        {...{
+          ...(JSON.parse(
+            JSON.stringify(recentListensPropsOneListen)
+          ) as RecentListensProps),
+          listens: undefined,
+        }}
+      />
+    );
+
+    const instance = wrapper.instance();
+
+    const res = getFeedbackByMsidResponse.feedback;
+    const spy = jest.fn().mockImplementation(() => {
+      return Promise.resolve(res);
+    });
+    // eslint-disable-next-line dot-notation
+    instance["APIService"].getFeedbackForUserForRecordings = spy;
+
+    const result = await instance.getFeedback();
+
+    expect(spy).toHaveBeenCalledTimes(0);
+  });
+});
+
+describe("loadFeedback", () => {
+  it("updates the feedbackList state", async () => {
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
+    const wrapper = shallow<RecentListens>(
+      <RecentListens
+        {...(JSON.parse(
+          JSON.stringify(recentListensPropsOneListen)
+        ) as RecentListensProps)}
+      />
+    );
+
+    const instance = wrapper.instance();
+    const spy = jest.fn().mockImplementation(() => {
+      return Promise.resolve(getFeedbackByMsidResponse.feedback);
+    });
+    instance.getFeedback = spy;
+
+    expect(wrapper.state("feedbackList")).toMatchObject({});
+    await instance.loadFeedback();
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(wrapper.state("feedbackList")).toMatchObject({
+      "973e5620-829d-46dd-89a8-760d87076287": 1,
+    });
+  });
+});
+
+describe("getFeedbackForRecordingMsid", () => {
+  it("returns the feedback after fetching from feedbackList state", async () => {
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
+    const wrapper = shallow<RecentListens>(
+      <RecentListens
+        {...(JSON.parse(
+          JSON.stringify(recentListensPropsOneListen)
+        ) as RecentListensProps)}
+      />
+    );
+
+    const instance = wrapper.instance();
+
+    const feedbackList: FeedbackList = {
+      "973e5620-829d-46dd-89a8-760d87076287": 1,
+    };
+    wrapper.setState({ feedbackList });
+
+    const res = await instance.getFeedbackForRecordingMsid(
+      "973e5620-829d-46dd-89a8-760d87076287"
+    );
+
+    expect(res).toEqual(1);
+  });
+
+  it("returns 0 if the recording is not in feedbackList state", async () => {
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
+    const wrapper = shallow<RecentListens>(
+      <RecentListens
+        {...(JSON.parse(
+          JSON.stringify(recentListensPropsOneListen)
+        ) as RecentListensProps)}
+      />
+    );
+
+    const instance = wrapper.instance();
+
+    const res = await instance.getFeedbackForRecordingMsid(
+      "973e5620-829d-46dd-89a8-760d87076287"
+    );
+
+    expect(res).toEqual(0);
+  });
+});
+
+describe("updateFeedback", () => {
+  it("updates the feedbackList state for particular recording", async () => {
+    /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
+     * so that it doesn't get passed as a reference.
+     */
+    const wrapper = shallow<RecentListens>(
+      <RecentListens
+        {...(JSON.parse(
+          JSON.stringify(recentListensPropsOneListen)
+        ) as RecentListensProps)}
+      />
+    );
+
+    const instance = wrapper.instance();
+
+    const feedbackList: FeedbackList = {
+      "973e5620-829d-46dd-89a8-760d87076287": 0,
+    };
+    wrapper.setState(JSON.parse(JSON.stringify(feedbackList)));
+
+    expect(wrapper.state("feedbackList")).toMatchObject(feedbackList);
+
+    await instance.updateFeedback("973e5620-829d-46dd-89a8-760d87076287", 1);
+
+    expect(wrapper.state("feedbackList")).toMatchObject({
+      "973e5620-829d-46dd-89a8-760d87076287": 1,
     });
   });
 });

@@ -15,10 +15,6 @@ import APIService from "./APIService";
 import Loader from "./components/Loader";
 import ListenCard from "./listens/ListenCard";
 
-type FeedbackList = {
-  [recordingMsid: string]: ListenFeedBack;
-};
-
 export interface RecentListensProps {
   apiUrl: string;
   followList?: string[];
@@ -514,7 +510,7 @@ export default class RecentListens extends React.Component<
     recordingMsid?: string | null
   ): ListenFeedBack => {
     const { feedbackList } = this.state;
-    return recordingMsid ? _.get(feedbackList, recordingMsid) : 0;
+    return recordingMsid ? _.get(feedbackList, recordingMsid, 0) : 0;
   };
 
   /** This method checks that we have enough listens to fill the page (listens are fetched in a 15 days period)

@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconDefinition } from "@fortawesome/fontawesome-common-types"; // eslint-disable-line import/no-unresolved
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
-type ListenControlProps = {
+export type ListenControlProps = {
   className?: string;
   action?: () => void;
   icon?: IconDefinition;

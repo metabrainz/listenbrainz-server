@@ -2,6 +2,7 @@ import sqlalchemy
 
 from listenbrainz import db
 from listenbrainz.db.model.feedback import Feedback
+from typing import List
 
 
 def insert(feedback: Feedback):
@@ -47,7 +48,7 @@ def delete(feedback: Feedback):
         )
 
 
-def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = None):
+def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = None) -> List[Feedback]:
     """ Get a list of recording feedback given by the user in descending order of their creation
 
         Args:
@@ -80,7 +81,7 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
         return [Feedback(**dict(row)) for row in result.fetchall()]
 
 
-def get_feedback_count_for_user(user_id: int):
+def get_feedback_count_for_user(user_id: int) -> int:
     """ Get total number of recording feedback given by the user
 
         Args:
@@ -102,7 +103,7 @@ def get_feedback_count_for_user(user_id: int):
     return count
 
 
-def get_feedback_for_recording(recording_msid: str, limit: int, offset: int, score: int = None):
+def get_feedback_for_recording(recording_msid: str, limit: int, offset: int, score: int = None) -> List[Feedback]:
     """ Get a list of recording feedback for a given recording in descending order of their creation
 
         Args:
@@ -135,7 +136,7 @@ def get_feedback_for_recording(recording_msid: str, limit: int, offset: int, sco
         return [Feedback(**dict(row)) for row in result.fetchall()]
 
 
-def get_feedback_count_for_recording(recording_msid: str):
+def get_feedback_count_for_recording(recording_msid: str) -> int:
     """ Get total number of recording feedback for a given recording
 
         Args:
@@ -157,7 +158,7 @@ def get_feedback_count_for_recording(recording_msid: str):
     return count
 
 
-def get_feedback_for_multiple_recordings_for_user(user_id: int, recording_list: list):
+def get_feedback_for_multiple_recordings_for_user(user_id: int, recording_list: List[str]) -> List[Feedback]:
     """ Get a list of recording feedback given by the user for given recordings
 
         Args:
