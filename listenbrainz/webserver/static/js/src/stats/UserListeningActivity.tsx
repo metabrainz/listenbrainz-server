@@ -1,6 +1,9 @@
 import * as React from "react";
 import MediaQuery from "react-responsive";
-import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
+import {
+  faExclamationCircle,
+  faShareAlt,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
@@ -378,15 +381,34 @@ export default class UserListeningActivity extends React.Component<
 
     return (
       <Card style={{ marginTop: 20, minHeight: 400 }}>
-        <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
-          Listening Activity
-        </h3>
+        <div className="row">
+          <div className="col-xs-10">
+            <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
+              Listening Activity
+            </h3>
+          </div>
+          <div className="col-xs-2 text-right">
+            <h3>
+              <a href="#listening-activity">
+                <FontAwesomeIcon
+                  icon={faShareAlt as IconProp}
+                  size="sm"
+                  color="#000000"
+                  style={{ marginRight: 20 }}
+                />
+              </a>
+            </h3>
+          </div>
+        </div>
 
         <Loader isLoading={loading}>
           {hasError && (
             <div className="flex-center" style={{ minHeight: "inherit" }}>
               <span style={{ fontSize: 24 }} className="text-center">
-                <FontAwesomeIcon icon={faExclamationCircle as IconProp} />{" "}
+                <FontAwesomeIcon
+                  icon={faExclamationCircle as IconProp}
+                  size="2x"
+                />{" "}
                 {errorMessage}
               </span>
             </div>

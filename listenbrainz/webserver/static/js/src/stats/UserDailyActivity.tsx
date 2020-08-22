@@ -1,5 +1,8 @@
 import * as React from "react";
-import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
+import {
+  faExclamationCircle,
+  faShareAlt,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
@@ -181,9 +184,21 @@ export default class UserDailyActivity extends React.Component<
         ref={this.graphContainer}
       >
         <div className="row">
-          <div className="col-xs-12">
+          <div className="col-xs-10">
             <h3 className="capitalize-bold" style={{ marginLeft: 20 }}>
               Daily Activity
+            </h3>
+          </div>
+          <div className="col-xs-2 text-right">
+            <h3>
+              <a href="#daily-activity">
+                <FontAwesomeIcon
+                  icon={faShareAlt as IconProp}
+                  size="sm"
+                  color="#000000"
+                  style={{ marginRight: 20 }}
+                />
+              </a>
             </h3>
           </div>
         </div>

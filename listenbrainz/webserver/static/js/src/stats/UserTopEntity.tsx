@@ -1,5 +1,8 @@
 import * as React from "react";
-import { faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
+import {
+  faExclamationCircle,
+  faShareAlt,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
@@ -111,7 +114,25 @@ export default class UserTopEntity extends React.Component<
           alignItems: "center",
         }}
       >
-        <h3 className="capitalize-bold">Top {entityTextOnCard}</h3>
+        <h3 className="capitalize-bold" style={{ display: "inline" }}>
+          Top {entityTextOnCard}
+        </h3>
+        <h3
+          style={{
+            display: "inline",
+            position: "absolute",
+            right: 20,
+          }}
+        >
+          <a href="#top-entity">
+            <FontAwesomeIcon
+              icon={faShareAlt as IconProp}
+              size="sm"
+              color="#000000"
+              style={{ marginRight: 20 }}
+            />
+          </a>
+        </h3>
         <Loader isLoading={loading}>
           <table
             style={{
