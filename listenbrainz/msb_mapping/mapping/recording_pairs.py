@@ -15,6 +15,8 @@ from mapping.formats import create_formats_table
 import config
 
 BATCH_SIZE = 5000
+TEST_ARTIST_ID = 1160983  # Gun'n'roses, because of obvious spelling issues
+
 
 
 def create_tables(mb_conn):
@@ -72,10 +74,10 @@ def create_temp_release_table(conn, stats):
         Creates an intermediate table that orders releases by types, format,
         releases date, country and artist_credit. This sorting should in theory
         sort the most desired releases (albums, digital releases, first released)
-        over the other types in order to consistently match to the
-        same releases. This goal is of this is direct tracks that should
-        be long on the same release to the same release avoiding scattering
-        them across many different relases.
+        over the other types in order to match to the "canonical" releases
+        and to also ensure that tracks that came from one release
+        will be matched to the same release and will not end up being
+        scattered across many releases from the same artist.
     """
 
     with conn.cursor() as curs:
@@ -102,7 +104,7 @@ def create_temp_release_table(conn, stats):
 
         if config.USE_MINIMAL_DATASET:
             log("Create temp release table: Using a minimal dataset!")
-            curs.execute(query % 'AND rg.artist_credit = 1160983')
+            curs.execute(query % ('AND rg.artist_credit = %d' % TEST_ARTIST_ID))
         else:
             curs.execute(query % "")
 
@@ -149,7 +151,7 @@ def swap_table_and_indexes(conn):
 
 def create_pairs():
     """
-        This function is the heard of the recording artist pair mapping. It
+        This function is the heart of the recording artist pair mapping. It
         calculates the intermediate table and then fetches all the recordings
         from these tables so that duplicate recording-artist pairs all
         resolve to the "canonical" release-artist pairs that make
