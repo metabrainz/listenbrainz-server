@@ -1,3 +1,4 @@
+import json
 import re
 import uuid
 import unittest
@@ -9,7 +10,7 @@ from listenbrainz_spark.recommendations import create_dataframes
 from listenbrainz_spark import schema, utils, config, path, hdfs_connection, stats
 
 from pyspark.sql import Row
-
+import time
 
 class CreateDataframeTestCase(SparkTestCase):
     # path used in between test functions of this class
@@ -20,7 +21,7 @@ class CreateDataframeTestCase(SparkTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.date = datetime.utcnow()
+        cls.date = datetime(2019, 1, 21)
         cls.upload_test_listen_to_HDFS()
         cls.upload_test_mapping_to_HDFS()
         cls.upload_test_mapped_listens_to_HDFS()
@@ -32,42 +33,32 @@ class CreateDataframeTestCase(SparkTestCase):
 
     @classmethod
     def upload_test_listen_to_HDFS(cls):
-        month, year = cls.date.strftime('%m').lstrip('0'), cls.date.strftime('%Y')
+        ts = cls.date
 
-        test_listen = {
-            "artist_msid": "a36d6fc9-49d0-4789-a7dd-a2b72369ca45",
-            "artist_mbids": [],
-            "artist_name": "Less Than Jake",
-            "listened_at": cls.date,
-            "release_mbid": "", "track_name": "Al's War",
-            "recording_msid": "cb6985cd-cc71-4d59-b4fb-2e72796af741",
-            "tags": [],
-            "user_name": "vansika",
-        }
+        with open(cls.path_to_data_file('listens.json')) as f:
+            data = json.load(f)
 
-        test_listens_df = utils.create_dataframe(schema.convert_to_spark_json(test_listen), schema.listen_schema)
-        utils.save_parquet(test_listens_df, cls.listens_path + '/{}/{}.parquet'.format(year, month))
+        listens_df = None
+        for row in data:
+            row['listened_at'] = datetime.timestamp(ts)
+            df = utils.create_dataframe(schema.convert_listen_to_row(row), schema=schema.listen_schema)
+            listens_df = listens_df.union(df) if listens_df else df
+
+            ts = stats.offset_days(ts, 1)
+
+        utils.save_parquet(listens_df, cls.listens_path + '/2019/1.parquet')
 
     @classmethod
     def upload_test_mapping_to_HDFS(cls):
-        test_mapping = {
-            "msb_recording_msid": "cb6985cd-cc71-4d59-b4fb-2e72796af741",
-            "mb_recording_mbid": "3acb406f-c716-45f8-a8bd-96ca3939c2e5",
-            "msb_artist_msid": "a36d6fc9-49d0-4789-a7dd-a2b72369ca45",
-            "mb_artist_credit_mbids": ["181c4177-f33a-441d-b15d-910acaf18b07"],
-            "mb_artist_credit_id": 2157963,
-            "mb_release_mbid": "xxxxx",
-            "msb_release_msid": "xxxxx",
-            "mb_artist_credit_name": "Less Than Jake",
-            "msb_artist_credit_name_matchable": "lessthanjake",
-            "mb_recording_name": "Al's War",
-            "msb_recording_name_matchable": "alswar",
-            "mb_release_name": "Easier",
-            "msb_release_name_matchable": "easier",
-        }
+        with open(cls.path_to_data_file('msid_mbid_mapping.json')) as f:
+            data = json.load(f)
 
-        test_mapping_df = utils.create_dataframe(schema.convert_mapping_to_row(test_mapping), schema.msid_mbid_mapping_schema)
-        utils.save_parquet(test_mapping_df, cls.mapping_path)
+        mapping_df = None
+        for row in data:
+            df = utils.create_dataframe(schema.convert_mapping_to_row(row), schema=schema.msid_mbid_mapping_schema)
+            mapping_df = mapping_df.union(df) if mapping_df else df
+
+        utils.save_parquet(mapping_df, cls.mapping_path)
 
     @classmethod
     def upload_test_mapped_listens_to_HDFS(cls):
@@ -105,7 +96,7 @@ class CreateDataframeTestCase(SparkTestCase):
         mapping_df = utils.read_files_from_HDFS(self.mapping_path)
 
         mapped_listens = create_dataframes.get_mapped_artist_and_recording_mbids(partial_listen_df, mapping_df)
-        self.assertEqual(mapped_listens.count(), 1)
+        self.assertEqual(mapped_listens.count(), 2)
         self.assertListEqual(sorted(self.get_mapped_listens().columns), sorted(mapped_listens.columns))
         status = utils.path_exists(path.MAPPED_LISTENS)
         self.assertTrue(status)
@@ -114,7 +105,7 @@ class CreateDataframeTestCase(SparkTestCase):
         metadata = {}
         mapped_listens = utils.read_files_from_HDFS(self.mapped_listens_path)
         users_df = create_dataframes.get_users_dataframe(mapped_listens, metadata)
-        self.assertEqual(users_df.count(), 1)
+        self.assertEqual(users_df.count(), 2)
         self.assertListEqual(sorted(self.get_users_df().columns), sorted(users_df.columns))
         self.assertEqual(metadata['users_count'], users_df.count())
 
@@ -125,9 +116,9 @@ class CreateDataframeTestCase(SparkTestCase):
         metadata = {}
         mapped_listens = utils.read_files_from_HDFS(self.mapped_listens_path)
         recordings_df = create_dataframes.get_recordings_df(mapped_listens, metadata)
-        self.assertEqual(recordings_df.count(), 1)
+        self.assertEqual(recordings_df.count(), 2)
         self.assertListEqual(sorted(self.get_recordings_df().columns), sorted(recordings_df.columns))
-        self.assertEqual(metadata['recordings_count'], 1)
+        self.assertEqual(metadata['recordings_count'], 2)
 
         status = utils.path_exists(path.RECORDINGS_DATAFRAME_PATH)
         self.assertTrue(status)
@@ -136,9 +127,9 @@ class CreateDataframeTestCase(SparkTestCase):
         metadata = {}
         mapped_listens = utils.read_files_from_HDFS(self.mapped_listens_path)
         listens_df = create_dataframes.get_listens_df(mapped_listens, metadata)
-        self.assertEqual(listens_df.count(), 1)
+        self.assertEqual(listens_df.count(), 2)
         self.assertListEqual(['mb_recording_mbid', 'user_name'], listens_df.columns)
-        self.assertEqual(metadata['listens_count'], 1)
+        self.assertEqual(metadata['listens_count'], 2)
 
     def test_get_playcounts_df(self):
         metadata = {}
@@ -148,7 +139,7 @@ class CreateDataframeTestCase(SparkTestCase):
         listens_df = create_dataframes.get_listens_df(mapped_listens, {})
 
         playcounts_df = create_dataframes.get_playcounts_df(listens_df, recordings_df, users_df, metadata)
-        self.assertEqual(playcounts_df.count(), 1)
+        self.assertEqual(playcounts_df.count(), 2)
         self.assertListEqual(['user_id', 'recording_id', 'count'], playcounts_df.columns)
         self.assertEqual(metadata['playcounts_count'], playcounts_df.count())
 
@@ -170,3 +161,50 @@ class CreateDataframeTestCase(SparkTestCase):
 
         df = utils.read_files_from_HDFS(path.DATAFRAME_METADATA)
         self.assertTrue(sorted(df.columns), sorted(schema.dataframe_metadata_schema.fieldNames()))
+
+    def test_get_data_missing_from_musicbrainz(self):
+        partial_listen_df = create_dataframes.get_listens_for_training_model_window(self.date, self.date, {}, self.listens_path)
+        mapping_df = utils.read_files_from_HDFS(self.mapping_path)
+        from_date = datetime(2019, 6, 21)
+        to_date = datetime(2019, 8, 21)
+        ti = time.monotonic()
+
+        messages = create_dataframes.get_data_missing_from_musicbrainz(partial_listen_df, mapping_df, from_date, to_date, ti)
+
+        received_first_mssg = messages.pop(0)
+
+        self.assertEqual(received_first_mssg['type'], 'cf_recording_dataframes')
+        self.assertEqual(received_first_mssg['from_date'], str(from_date.strftime('%b %Y')))
+        self.assertEqual(received_first_mssg['to_date'], str(to_date.strftime('%b %Y')))
+        self.assertIsInstance(received_first_mssg['dataframe_upload_time'], str)
+        self.assertIsInstance(received_first_mssg['total_time'], str)
+
+        expected_missing_mb_data = [
+            {
+                'type': 'missing_musicbrainz_data',
+                'musicbrainz_id': 'vansika',
+                'missing_musicbrainz_data':
+                    [
+                        {
+                            'artist_msid': 'a36d6fc9-49d0-4789-a7dd-a2b72369ca45',
+                            'artist_name': 'Less Than Jake',
+                            'listened_at': '2019-01-21 00:00:00',
+                            'recording_msid': 'cb6985cd-cc71-4d59-b4fb-2e72796af741',
+                            'release_msid': '',
+                            'release_name': 'lala',
+                            'track_name': "Al's War"
+                        },
+
+                        {
+                            'artist_msid': 'f3e64219-ac00-4b6b-ad15-6e4801cb30a0',
+                            'artist_name': 'Townes Van Zandt',
+                            'listened_at': '2019-01-20 00:00:00',
+                            'recording_msid': '00000465-fcc1-41ab-a735-553f6ce677c4',
+                            'release_msid': '',
+                            'release_name': 'Sunshine Boy: The Unheard Studio Sessions & Demos 1971 - 1972',
+                            'track_name': 'Dead Flowers'
+                        }
+                    ],
+                'source': 'cf'
+            }
+        ]
