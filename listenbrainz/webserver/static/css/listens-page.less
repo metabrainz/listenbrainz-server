@@ -5,6 +5,8 @@
 @light: #C0CFB2;
 @dark: #053b47;
 @controlsHeight: 60px;
+@love: #353070;
+@hate: #705230;
 
 
 #music-player {
@@ -185,7 +187,7 @@
        padding: 0px;
      }
 
-    > .col-xs-9 {
+    > .col-xs-9, .col-xs-12 {
 
       > .col-xs-9, .col-xs-12 {
         display: flex;
@@ -226,6 +228,42 @@
       > * {
         display: table-cell;
         vertical-align: middle;
+      }
+
+      a {
+        word-break: break-word;
+      }
+
+      .fa-heart, .fa-heart-broken {
+        color: transparent;
+        stroke: #8d8d8d;
+        stroke-width: 40px;
+        font-size: 18px;
+        margin: 0% 7%;
+      }
+
+      .fa-heart {
+
+        &:hover {
+          stroke: @love;
+        }
+
+        &.loved {
+          stroke: transparent;
+          color: @love;
+        }
+      }
+      
+      .fa-heart-broken {
+
+        &:hover {
+          stroke: @hate;
+        }
+
+        &.hated {
+          stroke: transparent;
+          color: @hate;
+        }
       }
     }
   }

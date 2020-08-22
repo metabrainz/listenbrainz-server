@@ -13,7 +13,6 @@ import BrainzPlayer from "./BrainzPlayer";
 import FollowUsers from "./FollowUsers";
 import APIService from "./APIService";
 import Loader from "./components/Loader";
-
 import ListenCard from "./listens/ListenCard";
 
 export interface RecentListensProps {
@@ -31,6 +30,7 @@ export interface RecentListensProps {
   spotify: SpotifyUser;
   user: ListenBrainzUser;
   webSocketsServerUrl: string;
+  currentUser?: ListenBrainzUser;
 }
 
 export interface RecentListensState {
@@ -50,6 +50,7 @@ export interface RecentListensState {
   playingNowByUser: FollowUsersPlayingNow;
   previousListenTs?: number;
   saveUrl: string;
+  recordingFeedbackMap: RecordingFeedbackMap;
 }
 
 export default class RecentListens extends React.Component<
@@ -81,6 +82,7 @@ export default class RecentListens extends React.Component<
       nextListenTs: props.listens?.[props.listens.length - 1]?.listened_at,
       previousListenTs: props.listens?.[0]?.listened_at,
       direction: "down",
+      recordingFeedbackMap: {},
     };
 
     this.APIService = new APIService(
@@ -103,12 +105,15 @@ export default class RecentListens extends React.Component<
       window.addEventListener("popstate", this.handleURLChange);
       document.addEventListener("keydown", this.handleKeyDown);
 
-      const { user } = this.props;
+      const { user, currentUser } = this.props;
       // Get the user listen count
       if (user?.name) {
         this.APIService.getUserListenCount(user.name).then((listenCount) => {
           this.setState({ listenCount });
         });
+      }
+      if (currentUser?.name === user?.name) {
+        this.loadFeedback();
       }
     }
   }
@@ -458,6 +463,56 @@ export default class RecentListens extends React.Component<
     }
   };
 
+  getFeedback = async () => {
+    const { user, listens } = this.props;
+    let recordings = "";
+
+    if (listens) {
+      listens.forEach((listen) => {
+        recordings += `${_.get(
+          listen,
+          "track_metadata.additional_info.recording_msid"
+        )},`;
+      });
+      try {
+        const data = await this.APIService.getFeedbackForUserForRecordings(
+          user.name,
+          recordings
+        );
+        return data.feedback;
+      } catch (error) {
+        this.newAlert(
+          "danger",
+          "Playback error",
+          typeof error === "object" ? error.message : error
+        );
+      }
+    }
+    return {};
+  };
+
+  loadFeedback = async () => {
+    const feedback = await this.getFeedback();
+    const recordingFeedbackMap: RecordingFeedbackMap = {};
+    feedback.forEach((fb: FeedbackResponse) => {
+      recordingFeedbackMap[fb.recording_msid] = fb.score;
+    });
+    this.setState({ recordingFeedbackMap });
+  };
+
+  updateFeedback = (recordingMsid: string, score: ListenFeedBack) => {
+    const { recordingFeedbackMap } = this.state;
+    recordingFeedbackMap[recordingMsid] = score;
+    this.setState({ recordingFeedbackMap });
+  };
+
+  getFeedbackForRecordingMsid = (
+    recordingMsid?: string | null
+  ): ListenFeedBack => {
+    const { recordingFeedbackMap } = this.state;
+    return recordingMsid ? _.get(recordingFeedbackMap, recordingMsid, 0) : 0;
+  };
+
   /** This method checks that we have enough listens to fill the page (listens are fetched in a 15 days period)
    * If we don't have enough, we fetch again with an increased time range and do the check agin, ending when time range is maxed.
    * The time range (each increment = 5 days) defaults to 6 (the default for the API is 3) or 6*5 = 30 days
@@ -546,8 +601,16 @@ export default class RecentListens extends React.Component<
       playingNowByUser,
       previousListenTs,
       saveUrl,
+      recordingFeedbackMap,
     } = this.state;
-    const { latestListenTs, oldestListenTs, spotify, user } = this.props;
+    const {
+      latestListenTs,
+      oldestListenTs,
+      spotify,
+      user,
+      apiUrl,
+      currentUser,
+    } = this.props;
 
     return (
       <div role="main">
@@ -615,9 +678,18 @@ export default class RecentListens extends React.Component<
                       return (
                         <ListenCard
                           key={`${listen.listened_at}-${listen.track_metadata?.track_name}-${listen.track_metadata?.additional_info?.recording_msid}-${listen.user_name}`}
+                          currentUser={currentUser}
+                          isCurrentUser={currentUser?.name === user?.name}
+                          apiUrl={apiUrl}
                           listen={listen}
                           mode={mode}
+                          currentFeedback={this.getFeedbackForRecordingMsid(
+                            listen.track_metadata?.additional_info
+                              ?.recording_msid
+                          )}
                           playListen={this.playListen}
+                          updateFeedback={this.updateFeedback}
+                          newAlert={this.newAlert}
                           className={`${
                             this.isCurrentListen(listen)
                               ? " current-listen"
@@ -778,6 +850,7 @@ document.addEventListener("DOMContentLoaded", () => {
     spotify,
     user,
     web_sockets_server_url,
+    current_user,
   } = reactProps;
 
   ReactDOM.render(
@@ -796,6 +869,7 @@ document.addEventListener("DOMContentLoaded", () => {
       spotify={spotify}
       user={user}
       webSocketsServerUrl={web_sockets_server_url}
+      currentUser={current_user}
     />,
     domContainer
   );

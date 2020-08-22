@@ -14,34 +14,112 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { getArtistLink, getTrackLink } from "../utils";
 import Card from "../components/Card";
 import APIService from "../APIService";
+import ListenControl from "./ListenControl";
 
 export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
 
 export type ListenCardProps = {
+  apiUrl: string;
   listen: Listen;
   mode: ListensListMode;
   className?: string;
+  currentFeedback: ListenFeedBack;
+  isCurrentUser: Boolean;
+  currentUser?: ListenBrainzUser;
   playListen: (listen: Listen) => void;
+  updateFeedback: (recordingMsid: string, score: ListenFeedBack) => void;
+  newAlert: (
+    alertType: AlertType,
+    title: string,
+    message: string | JSX.Element
+  ) => void;
 };
 
-export default class ListenCard extends React.Component<ListenCardProps> {
+type ListenCardState = {
+  feedback: ListenFeedBack;
+};
+
+export default class ListenCard extends React.Component<
+  ListenCardProps,
+  ListenCardState
+> {
+  APIService: APIService;
   playListen: (listen: Listen) => void;
 
   constructor(props: ListenCardProps) {
     super(props);
 
+    this.state = {
+      feedback: props.currentFeedback || 0,
+    };
+
+    this.APIService = new APIService(
+      props.apiUrl || `${window.location.origin}/1`
+    );
+
     this.playListen = props.playListen.bind(this, props.listen);
   }
 
+  componentDidUpdate(prevProps: ListenCardProps) {
+    const { currentFeedback } = this.props;
+    if (currentFeedback !== prevProps.currentFeedback) {
+      this.setState({ feedback: currentFeedback });
+    }
+  }
+
+  submitFeedback = async (score: ListenFeedBack) => {
+    const { listen, currentUser, isCurrentUser, updateFeedback } = this.props;
+
+    if (isCurrentUser && currentUser?.auth_token) {
+      const recordingMSID = _get(
+        listen,
+        "track_metadata.additional_info.recording_msid"
+      );
+
+      try {
+        const status = await this.APIService.submitFeedback(
+          currentUser.auth_token,
+          recordingMSID,
+          score
+        );
+        if (status === 200) {
+          this.setState({ feedback: score });
+          updateFeedback(recordingMSID, score);
+        }
+      } catch (error) {
+        this.handleError(error.message);
+      }
+    }
+  };
+
+  handleError = (error: string | Error, title?: string): void => {
+    const { newAlert } = this.props;
+    if (!error) {
+      return;
+    }
+    newAlert(
+      "danger",
+      title || "Error",
+      typeof error === "object" ? error.message : error
+    );
+  };
+
   render() {
-    const { listen, mode, className } = this.props;
+    const { listen, mode, className, isCurrentUser } = this.props;
+    const { feedback } = this.state;
 
     return (
       <Card
         onDoubleClick={this.playListen}
         className={`listen-card row ${className}`}
       >
-        <div className="col-xs-9">
+        <div
+          className={`${
+            isCurrentUser || mode === "recent" || mode === "follow"
+              ? " col-xs-9"
+              : " col-xs-12"
+          }`}
+        >
           <MediaQuery minWidth={768}>
             <div className="col-xs-9">
               <div className="track-details">
@@ -120,7 +198,13 @@ export default class ListenCard extends React.Component<ListenCardProps> {
             </div>
           </MediaQuery>
         </div>
-        <div className="col-xs-3 text-center">
+        <div
+          className={`${
+            isCurrentUser || mode === "recent" || mode === "follow"
+              ? " col-xs-3 text-center"
+              : "hidden"
+          }`}
+        >
           {mode === "follow" || mode === "recent" ? (
             <a
               href={`/user/${listen.user_name}`}
@@ -130,7 +214,20 @@ export default class ListenCard extends React.Component<ListenCardProps> {
               {listen.user_name}
             </a>
           ) : (
-            <div />
+            <div className="listen-controls">
+              <ListenControl
+                icon={faHeart}
+                title="Love"
+                action={() => this.submitFeedback(feedback === 1 ? 0 : 1)}
+                className={`${feedback === 1 ? " loved" : ""}`}
+              />
+              <ListenControl
+                icon={faHeartBroken}
+                title="Hate"
+                action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
+                className={`${feedback === -1 ? " hated" : ""}`}
+              />
+            </div>
           )}
         </div>
       </Card>
