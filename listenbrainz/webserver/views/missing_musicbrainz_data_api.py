@@ -71,18 +71,18 @@ def get_missing_musicbrainz_data(user_name):
             }
         }
 
-        :param count: Optional, number of releases to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
+        :param count: Optional, number of records to return, Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET`
             Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
         :type count: ``int``
 
-        :param offset: Optional, number of releases to skip from the beginning, for pagination.
-            Ex. An offset of 5 means the 5 releases will be skipped, defaults to 0
+        :param offset: Optional, number of records to skip from the beginning, for pagination.
+            Ex. An offset of 5 means the 5 records will be skipped, defaults to 0
         :type offset: ``int``
 
         :statuscode 200: Successful query, you have data!
         :statuscode 400: Bad request, check ``response['error']`` for more details
         :statuscode 404: User not found.
-        :statuscode 204: Missing releases for the user not calculated , empty response will be returned
+        :statuscode 204: Missing MusicBrainz data for the user not calculated , empty response will be returned
     """
     # source indicates the *source* script/algorithm by which the missing musicbrainz data was calculated.
     # The source may change in future
