@@ -33,7 +33,11 @@ export default class UserReports extends React.Component<
     window.addEventListener("popstate", this.syncStateWithURL);
 
     const range = this.getURLParams();
-    window.history.replaceState(null, "", `?range=${range}`);
+    window.history.replaceState(
+      null,
+      "",
+      `?range=${range}${window.location.hash}`
+    );
     this.syncStateWithURL();
   }
 
@@ -104,47 +108,55 @@ export default class UserReports extends React.Component<
             </Pill>
           </div>
         </div>
-        <ErrorBoundary>
-          <UserListeningActivity range={range} apiUrl={apiUrl} user={user} />
-        </ErrorBoundary>
-        <div className="row">
-          <div className="col-md-4">
-            <ErrorBoundary>
-              <UserTopEntity
-                range={range}
-                entity="artist"
-                apiUrl={apiUrl}
-                user={user}
-              />
-            </ErrorBoundary>
+        <section id="listening-activity">
+          <ErrorBoundary>
+            <UserListeningActivity range={range} apiUrl={apiUrl} user={user} />
+          </ErrorBoundary>
+        </section>
+        <section id="top-entity">
+          <div className="row">
+            <div className="col-md-4">
+              <ErrorBoundary>
+                <UserTopEntity
+                  range={range}
+                  entity="artist"
+                  apiUrl={apiUrl}
+                  user={user}
+                />
+              </ErrorBoundary>
+            </div>
+            <div className="col-md-4">
+              <ErrorBoundary>
+                <UserTopEntity
+                  range={range}
+                  entity="release"
+                  apiUrl={apiUrl}
+                  user={user}
+                />
+              </ErrorBoundary>
+            </div>
+            <div className="col-md-4">
+              <ErrorBoundary>
+                <UserTopEntity
+                  range={range}
+                  entity="recording"
+                  apiUrl={apiUrl}
+                  user={user}
+                />
+              </ErrorBoundary>
+            </div>
           </div>
-          <div className="col-md-4">
-            <ErrorBoundary>
-              <UserTopEntity
-                range={range}
-                entity="release"
-                apiUrl={apiUrl}
-                user={user}
-              />
-            </ErrorBoundary>
-          </div>
-          <div className="col-md-4">
-            <ErrorBoundary>
-              <UserTopEntity
-                range={range}
-                entity="recording"
-                apiUrl={apiUrl}
-                user={user}
-              />
-            </ErrorBoundary>
-          </div>
-        </div>
-        <ErrorBoundary>
-          <UserDailyActivity range={range} apiUrl={apiUrl} user={user} />
-        </ErrorBoundary>
-        <ErrorBoundary>
-          <UserArtistMap range={range} apiUrl={apiUrl} user={user} />
-        </ErrorBoundary>
+        </section>
+        <section id="daily-activity">
+          <ErrorBoundary>
+            <UserDailyActivity range={range} apiUrl={apiUrl} user={user} />
+          </ErrorBoundary>
+        </section>
+        <section id="artist-origin">
+          <ErrorBoundary>
+            <UserArtistMap range={range} apiUrl={apiUrl} user={user} />
+          </ErrorBoundary>
+        </section>
       </div>
     );
   }
