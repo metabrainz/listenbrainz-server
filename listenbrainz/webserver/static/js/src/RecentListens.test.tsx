@@ -1186,15 +1186,14 @@ describe("loadFeedback", () => {
     );
 
     const instance = wrapper.instance();
-    const spy = jest.fn().mockImplementation(() => {
-      return Promise.resolve(getFeedbackByMsidResponse.feedback);
-    });
-    instance.getFeedback = spy;
 
-    expect(wrapper.state("feedbackList")).toMatchObject({});
+    instance.getFeedback = jest
+      .fn()
+      .mockImplementationOnce(() =>
+        Promise.resolve(getFeedbackByMsidResponse.feedback)
+      );
+
     await instance.loadFeedback();
-
-    expect(spy).toHaveBeenCalledTimes(1);
     expect(wrapper.state("feedbackList")).toMatchObject({
       "973e5620-829d-46dd-89a8-760d87076287": 1,
     });
@@ -1269,8 +1268,6 @@ describe("updateFeedback", () => {
       "973e5620-829d-46dd-89a8-760d87076287": 0,
     };
     wrapper.setState(JSON.parse(JSON.stringify(feedbackList)));
-
-    expect(wrapper.state("feedbackList")).toMatchObject(feedbackList);
 
     await instance.updateFeedback("973e5620-829d-46dd-89a8-760d87076287", 1);
 
