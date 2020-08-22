@@ -1,8 +1,5 @@
 import * as React from "react";
-import {
-  faExclamationCircle,
-  faShareAlt,
-} from "@fortawesome/free-solid-svg-icons";
+import { faExclamationCircle, faLink } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
@@ -190,16 +187,16 @@ export default class UserDailyActivity extends React.Component<
             </h3>
           </div>
           <div className="col-xs-2 text-right">
-            <h3>
+            <h4 style={{ marginTop: 20 }}>
               <a href="#daily-activity">
                 <FontAwesomeIcon
-                  icon={faShareAlt as IconProp}
+                  icon={faLink as IconProp}
                   size="sm"
                   color="#000000"
                   style={{ marginRight: 20 }}
                 />
               </a>
-            </h3>
+            </h4>
           </div>
         </div>
         <Loader isLoading={loading}>

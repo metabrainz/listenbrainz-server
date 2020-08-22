@@ -33,7 +33,11 @@ export default class UserReports extends React.Component<
     window.addEventListener("popstate", this.syncStateWithURL);
 
     const range = this.getURLParams();
-    window.history.replaceState(null, "", `?range=${range}`);
+    window.history.replaceState(
+      null,
+      "",
+      `?range=${range}${window.location.hash}`
+    );
     this.syncStateWithURL();
   }
 
