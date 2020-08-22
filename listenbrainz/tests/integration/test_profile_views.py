@@ -1,7 +1,7 @@
 import json
 import time
 
-from flask import url_for
+from flask import url_for, current_app
 from redis import Redis
 
 import listenbrainz.db.user as db_user

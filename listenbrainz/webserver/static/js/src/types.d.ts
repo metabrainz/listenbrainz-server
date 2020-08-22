@@ -305,6 +305,6 @@ declare type FeedbackResponse = {
   user_id: string;
 };
 
-declare type FeedbackList = {
+declare type RecordingFeedbackMap = {
   [recordingMsid: string]: ListenFeedBack;
 };

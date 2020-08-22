@@ -50,7 +50,7 @@ export interface RecentListensState {
   playingNowByUser: FollowUsersPlayingNow;
   previousListenTs?: number;
   saveUrl: string;
-  feedbackList: FeedbackList;
+  recordingFeedbackMap: RecordingFeedbackMap;
 }
 
 export default class RecentListens extends React.Component<
@@ -82,7 +82,7 @@ export default class RecentListens extends React.Component<
       nextListenTs: props.listens?.[props.listens.length - 1]?.listened_at,
       previousListenTs: props.listens?.[0]?.listened_at,
       direction: "down",
-      feedbackList: {},
+      recordingFeedbackMap: {},
     };
 
     this.APIService = new APIService(
@@ -493,24 +493,24 @@ export default class RecentListens extends React.Component<
 
   loadFeedback = async () => {
     const feedback = await this.getFeedback();
-    const feedbackList: FeedbackList = {};
+    const recordingFeedbackMap: RecordingFeedbackMap = {};
     feedback.forEach((fb: FeedbackResponse) => {
-      feedbackList[fb.recording_msid] = fb.score;
+      recordingFeedbackMap[fb.recording_msid] = fb.score;
     });
-    this.setState({ feedbackList });
+    this.setState({ recordingFeedbackMap });
   };
 
   updateFeedback = (recordingMsid: string, score: ListenFeedBack) => {
-    const { feedbackList } = this.state;
-    feedbackList[recordingMsid] = score;
-    this.setState({ feedbackList });
+    const { recordingFeedbackMap } = this.state;
+    recordingFeedbackMap[recordingMsid] = score;
+    this.setState({ recordingFeedbackMap });
   };
 
   getFeedbackForRecordingMsid = (
     recordingMsid?: string | null
   ): ListenFeedBack => {
-    const { feedbackList } = this.state;
-    return recordingMsid ? _.get(feedbackList, recordingMsid, 0) : 0;
+    const { recordingFeedbackMap } = this.state;
+    return recordingMsid ? _.get(recordingFeedbackMap, recordingMsid, 0) : 0;
   };
 
   /** This method checks that we have enough listens to fill the page (listens are fetched in a 15 days period)
@@ -601,7 +601,7 @@ export default class RecentListens extends React.Component<
       playingNowByUser,
       previousListenTs,
       saveUrl,
-      feedbackList,
+      recordingFeedbackMap,
     } = this.state;
     const {
       latestListenTs,

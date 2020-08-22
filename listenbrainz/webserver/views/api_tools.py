@@ -366,7 +366,8 @@ def _get_non_negative_param(param, default=None):
     return value
 
 
-def parse_param_list(params):
+def parse_param_list(params: str) -> list:
+    """ Splits a string of comma separated values into a list """
     param_list = []
     for param in params.split(","):
         param = param.strip()

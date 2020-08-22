@@ -1173,7 +1173,7 @@ describe("getFeedback", () => {
 });
 
 describe("loadFeedback", () => {
-  it("updates the feedbackList state", async () => {
+  it("updates the recordingFeedbackMap state", async () => {
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.
      */
@@ -1194,14 +1194,14 @@ describe("loadFeedback", () => {
       );
 
     await instance.loadFeedback();
-    expect(wrapper.state("feedbackList")).toMatchObject({
+    expect(wrapper.state("recordingFeedbackMap")).toMatchObject({
       "973e5620-829d-46dd-89a8-760d87076287": 1,
     });
   });
 });
 
 describe("getFeedbackForRecordingMsid", () => {
-  it("returns the feedback after fetching from feedbackList state", async () => {
+  it("returns the feedback after fetching from recordingFeedbackMap state", async () => {
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.
      */
@@ -1215,10 +1215,10 @@ describe("getFeedbackForRecordingMsid", () => {
 
     const instance = wrapper.instance();
 
-    const feedbackList: FeedbackList = {
+    const recordingFeedbackMap: RecordingFeedbackMap = {
       "973e5620-829d-46dd-89a8-760d87076287": 1,
     };
-    wrapper.setState({ feedbackList });
+    wrapper.setState({ recordingFeedbackMap });
 
     const res = await instance.getFeedbackForRecordingMsid(
       "973e5620-829d-46dd-89a8-760d87076287"
@@ -1227,7 +1227,7 @@ describe("getFeedbackForRecordingMsid", () => {
     expect(res).toEqual(1);
   });
 
-  it("returns 0 if the recording is not in feedbackList state", async () => {
+  it("returns 0 if the recording is not in recordingFeedbackMap state", async () => {
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.
      */
@@ -1250,7 +1250,7 @@ describe("getFeedbackForRecordingMsid", () => {
 });
 
 describe("updateFeedback", () => {
-  it("updates the feedbackList state for particular recording", async () => {
+  it("updates the recordingFeedbackMap state for particular recording", async () => {
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.
      */
@@ -1264,14 +1264,14 @@ describe("updateFeedback", () => {
 
     const instance = wrapper.instance();
 
-    const feedbackList: FeedbackList = {
+    const recordingFeedbackMap: RecordingFeedbackMap = {
       "973e5620-829d-46dd-89a8-760d87076287": 0,
     };
-    wrapper.setState(JSON.parse(JSON.stringify(feedbackList)));
+    wrapper.setState(JSON.parse(JSON.stringify(recordingFeedbackMap)));
 
     await instance.updateFeedback("973e5620-829d-46dd-89a8-760d87076287", 1);
 
-    expect(wrapper.state("feedbackList")).toMatchObject({
+    expect(wrapper.state("recordingFeedbackMap")).toMatchObject({
       "973e5620-829d-46dd-89a8-760d87076287": 1,
     });
   });

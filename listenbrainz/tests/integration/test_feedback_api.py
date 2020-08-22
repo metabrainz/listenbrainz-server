@@ -3,7 +3,7 @@ import listenbrainz.db.user as db_user
 import listenbrainz.db.feedback as db_feedback
 
 from redis import Redis
-from flask import url_for
+from flask import url_for, current_app
 from listenbrainz.db.model.feedback import Feedback
 from listenbrainz.tests.integration import IntegrationTestCase
 
