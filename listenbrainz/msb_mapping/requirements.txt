@@ -1,0 +1,5 @@
+click==7.1.2
+pytest==5.4.3
+pytest-cov==2.10.0
+psycopg2-binary==2.8.5
+ujson==2.0.3
