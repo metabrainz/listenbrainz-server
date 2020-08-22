@@ -32,6 +32,7 @@ DUMP_CHUNK_SIZE = 100000
 NUMBER_OF_USERS_PER_DIRECTORY = 1000
 DUMP_FILE_SIZE_LIMIT = 1024 * 1024 * 1024  # 1 GB
 DATA_START_YEAR = 2005
+SECONDS_IN_TIME_RANGE = 432000
 
 
 class TimescaleListenStore(ListenStore):
@@ -234,7 +235,7 @@ class TimescaleListenStore(ListenStore):
         if time_range < 0:
             max_timestamp_window = -1
         else:
-            max_timestamp_window = 432000 * time_range
+            max_timestamp_window = SECONDS_IN_TIME_RANGE * time_range
             if to_ts is None:
                 to_ts = from_ts + max_timestamp_window
             elif from_ts is None:
