@@ -1,0 +1,22 @@
+{{if service "pgbouncer-williams"}}
+{{with index (service "pgbouncer-williams") 0}}
+DB_CONNECT_MB = "dbname=musicbrainz_json_dump user=musicbrainz host={{.Address}} port={{.Port}} password=musicbrainz"
+{{end}}
+{{end}}
+
+{{if service "pgbouncer-master"}}
+{{with index (service "pgbouncer-master") 0}}
+DB_CONNECT_MSB = "dbname=messybrainz user=messybrainz host={{.Address}} port={{.Port}} password=messybrainz"
+{{end}}
+{{end}}
+
+# Mapping specific settings
+
+# For debugging, only fetches a tiny portion of the data if True
+USE_MINIMAL_DATASET = False
+
+# Turn this off during debugging, it makes the test data easier to read
+REMOVE_NON_WORD_CHARS = True  
+
+# Show matches as the algorithms go
+SHOW_MATCHES = False  
