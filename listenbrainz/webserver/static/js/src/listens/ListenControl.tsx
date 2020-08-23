@@ -14,13 +14,17 @@ export type ListenControlProps = {
 
 const ListenControl = (props: ListenControlProps) => {
   const { className, action, icon, title } = props;
-  return (
+  return icon ? (
     <FontAwesomeIcon
       icon={icon as IconProp}
       className={className}
       title={title}
       onClick={action}
     />
+  ) : (
+    <button className={className} title={title} onClick={action} type="button">
+      {title}
+    </button>
   );
 };
 
