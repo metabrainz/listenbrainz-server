@@ -476,6 +476,7 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
   newAlert={[Function]}
   playListen={[Function]}
   updateFeedback={[Function]}
+  updateListenList={[Function]}
 >
   <ForwardRef
     className="listen-card row undefined"
@@ -661,6 +662,85 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
               </svg>
             </FontAwesomeIcon>
           </ListenControl>
+          <FontAwesomeIcon
+            aria-expanded="true"
+            aria-haspopup="true"
+            border={false}
+            className="dropdown-toggle"
+            data-toggle="dropdown"
+            fixedWidth={false}
+            flip={null}
+            icon={
+              Object {
+                "icon": Array [
+                  192,
+                  512,
+                  Array [],
+                  "f142",
+                  "M96 184c39.8 0 72 32.2 72 72s-32.2 72-72 72-72-32.2-72-72 32.2-72 72-72zM24 80c0 39.8 32.2 72 72 72s72-32.2 72-72S135.8 8 96 8 24 40.2 24 80zm0 352c0 39.8 32.2 72 72 72s72-32.2 72-72-32.2-72-72-72-72 32.2-72 72z",
+                ],
+                "iconName": "ellipsis-v",
+                "prefix": "fas",
+              }
+            }
+            id="listenControlsDropdown"
+            inverse={false}
+            listItem={false}
+            mask={null}
+            pull={null}
+            pulse={false}
+            rotation={null}
+            size={null}
+            spin={false}
+            swapOpacity={false}
+            symbol={false}
+            title="Delete"
+            transform={null}
+          >
+            <svg
+              aria-expanded="true"
+              aria-haspopup="true"
+              aria-labelledby="svg-inline--fa-title-000000000000"
+              className="svg-inline--fa fa-ellipsis-v fa-w-6 dropdown-toggle"
+              data-icon="ellipsis-v"
+              data-prefix="fas"
+              data-toggle="dropdown"
+              id="listenControlsDropdown"
+              role="img"
+              style={Object {}}
+              viewBox="0 0 192 512"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <title
+                id="svg-inline--fa-title-000000000000"
+                style={Object {}}
+              >
+                Delete
+              </title>
+              <path
+                d="M96 184c39.8 0 72 32.2 72 72s-32.2 72-72 72-72-32.2-72-72 32.2-72 72-72zM24 80c0 39.8 32.2 72 72 72s72-32.2 72-72S135.8 8 96 8 24 40.2 24 80zm0 352c0 39.8 32.2 72 72 72s72-32.2 72-72-32.2-72-72-72-72 32.2-72 72z"
+                fill="currentColor"
+                style={Object {}}
+              />
+            </svg>
+          </FontAwesomeIcon>
+          <ul
+            aria-labelledby="listenControlsDropdown"
+            className="dropdown-menu dropdown-menu-right"
+          >
+            <ListenControl
+              action={[Function]}
+              title="Delete"
+            >
+              <button
+                onClick={[Function]}
+                title="Delete"
+                type="button"
+              >
+                Delete
+              </button>
+            </ListenControl>
+          </ul>
         </div>
       </div>
     </div>
