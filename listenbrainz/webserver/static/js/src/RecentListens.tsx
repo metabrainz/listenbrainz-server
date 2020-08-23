@@ -516,7 +516,7 @@ export default class RecentListens extends React.Component<
     return recordingMsid ? _.get(recordingFeedbackMap, recordingMsid, 0) : 0;
   };
 
-  updateListenList = (listen: Listen) => {
+  removeListenFromListenList = (listen: Listen) => {
     const { listens } = this.state;
     const index = listens.indexOf(listen);
 
@@ -698,7 +698,7 @@ export default class RecentListens extends React.Component<
                               ?.recording_msid
                           )}
                           playListen={this.playListen}
-                          updateListenList={this.updateListenList}
+                          removeListenFromListenList={this.removeListenFromListenList}
                           updateFeedback={this.updateFeedback}
                           newAlert={this.newAlert}
                           className={`${

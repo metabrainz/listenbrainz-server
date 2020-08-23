@@ -227,7 +227,7 @@ describe("updateFeedback", () => {
   });
 });
 
-describe("updateListenList", () => {
+describe("removeListenFromListenList", () => {
   it("updates the listens state for particular recording", async () => {
     /* JSON.parse(JSON.stringify(object) is a fast way to deep copy an object,
      * so that it doesn't get passed as a reference.
@@ -242,7 +242,7 @@ describe("updateListenList", () => {
     const instance = wrapper.instance();
     wrapper.setState({ listens: oneListenProps.listens });
 
-    instance.updateListenList(props.listens[0]);
+    instance.removeListenFromListenList(props.listens[0]);
     expect(wrapper.state("listens")).toMatchObject([]);
   });
 });

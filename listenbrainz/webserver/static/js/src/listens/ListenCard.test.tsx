@@ -29,7 +29,7 @@ const props: ListenCardProps = {
   isCurrentUser: true,
   currentUser: { auth_token: "baz", name: "test" },
   playListen: () => {},
-  updateListenList: () => {},
+  removeListenFromListenList: () => {},
   updateFeedback: () => {},
   newAlert: () => {},
 };
@@ -190,9 +190,9 @@ describe("handleError", () => {
 });
 
 describe("deleteListen", () => {
-  it("calls API and updateListenList correctly", async () => {
+  it("calls API and removeListenFromListenList correctly", async () => {
     const wrapper = shallow<ListenCard>(
-      <ListenCard {...{ ...props, updateListenList: jest.fn() }} />
+      <ListenCard {...{ ...props, removeListenFromListenList: jest.fn() }} />
     );
     const instance = wrapper.instance();
 
@@ -204,8 +204,8 @@ describe("deleteListen", () => {
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith("baz", "bar", 0);
 
-    expect(instance.props.updateListenList).toHaveBeenCalledTimes(1);
-    expect(instance.props.updateListenList).toHaveBeenCalledWith(
+    expect(instance.props.removeListenFromListenList).toHaveBeenCalledTimes(1);
+    expect(instance.props.removeListenFromListenList).toHaveBeenCalledWith(
       instance.props.listen
     );
   });
@@ -238,10 +238,10 @@ describe("deleteListen", () => {
     expect(spy).toHaveBeenCalledTimes(0);
   });
 
-  it("doesn't call updateListenList if status code is not 200", async () => {
+  it("doesn't call removeListenFromListenList if status code is not 200", async () => {
     const wrapper = shallow<ListenCard>(<ListenCard {...props} />);
     const instance = wrapper.instance();
-    props.updateListenList = jest.fn();
+    props.removeListenFromListenList = jest.fn();
 
     const spy = jest.spyOn(instance.APIService, "deleteListen");
     spy.mockImplementation(() => Promise.resolve(201));
@@ -251,7 +251,7 @@ describe("deleteListen", () => {
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith("baz", "bar", 0);
 
-    expect(props.updateListenList).toHaveBeenCalledTimes(0);
+    expect(props.removeListenFromListenList).toHaveBeenCalledTimes(0);
   });
 
   it("calls handleError if error is returned", async () => {

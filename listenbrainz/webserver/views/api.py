@@ -362,6 +362,19 @@ def delete_listen():
     """ 
     Delete a particular listen from the currently logged-in user's listen history.
     This checks for the correct authorization token and deletes the listen.
+
+    The format of the JSON to be POSTed to this endpoint is:
+
+        {
+            "listened_at": 1,
+            "recording_msid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f"
+        }
+
+    :reqheader Authorization: Token <user token>
+    :statuscode 200: listen deleted.
+    :statuscode 400: invalid JSON sent, see error message for details.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
     """
     user = _validate_auth_header()
 

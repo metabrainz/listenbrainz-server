@@ -28,8 +28,8 @@ exports[`ListenCard renders correctly for mode = 'follow ' 1`] = `
   mode="follow"
   newAlert={[Function]}
   playListen={[Function]}
+  removeListenFromListenList={[Function]}
   updateFeedback={[Function]}
-  updateListenList={[Function]}
 >
   <ForwardRef
     className="listen-card row undefined"
@@ -101,8 +101,8 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
   mode="listens"
   newAlert={[Function]}
   playListen={[Function]}
+  removeListenFromListenList={[Function]}
   updateFeedback={[Function]}
-  updateListenList={[Function]}
 >
   <ForwardRef
     className="listen-card row undefined"
@@ -356,14 +356,14 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
           >
             <ListenControl
               action={[Function]}
-              title="Delete"
+              title="Delete Listen"
             >
               <button
                 onClick={[Function]}
-                title="Delete"
+                title="Delete Listen"
                 type="button"
               >
-                Delete
+                Delete Listen
               </button>
             </ListenControl>
           </ul>
@@ -402,8 +402,8 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
   mode="recent"
   newAlert={[Function]}
   playListen={[Function]}
+  removeListenFromListenList={[Function]}
   updateFeedback={[Function]}
-  updateListenList={[Function]}
 >
   <ForwardRef
     className="listen-card row undefined"
@@ -475,8 +475,8 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
   mode="listens"
   newAlert={[Function]}
   playListen={[Function]}
+  removeListenFromListenList={[Function]}
   updateFeedback={[Function]}
-  updateListenList={[Function]}
 >
   <ForwardRef
     className="listen-card row undefined"
@@ -730,14 +730,14 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
           >
             <ListenControl
               action={[Function]}
-              title="Delete"
+              title="Delete Listen"
             >
               <button
                 onClick={[Function]}
-                title="Delete"
+                title="Delete Listen"
                 type="button"
               >
-                Delete
+                Delete Listen
               </button>
             </ListenControl>
           </ul>

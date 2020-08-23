@@ -28,7 +28,7 @@ export type ListenCardProps = {
   isCurrentUser: Boolean;
   currentUser?: ListenBrainzUser;
   playListen: (listen: Listen) => void;
-  updateListenList: (listen: Listen) => void;
+  removeListenFromListenList: (listen: Listen) => void;
   updateFeedback: (recordingMsid: string, score: ListenFeedBack) => void;
   newAlert: (
     alertType: AlertType,
@@ -95,7 +95,12 @@ export default class ListenCard extends React.Component<
   };
 
   deleteListen = async () => {
-    const { listen, currentUser, isCurrentUser, updateListenList } = this.props;
+    const {
+      listen,
+      currentUser,
+      isCurrentUser,
+      removeListenFromListenList,
+    } = this.props;
 
     if (isCurrentUser && currentUser?.auth_token) {
       const listenedAt = _get(listen, "listened_at");
@@ -111,7 +116,7 @@ export default class ListenCard extends React.Component<
           listenedAt
         );
         if (status === 200) {
-          updateListenList(listen);
+          removeListenFromListenList(listen);
         }
       } catch (error) {
         this.handleError(`Error while deleting listen - ${error.message}`);
@@ -269,7 +274,10 @@ export default class ListenCard extends React.Component<
                     className="dropdown-menu dropdown-menu-right"
                     aria-labelledby="listenControlsDropdown"
                   >
-                    <ListenControl title="Delete" action={this.deleteListen} />
+                    <ListenControl
+                      title="Delete Listen"
+                      action={this.deleteListen}
+                    />
                   </ul>
                 </>
               )}
