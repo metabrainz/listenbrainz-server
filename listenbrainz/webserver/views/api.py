@@ -359,7 +359,7 @@ def validate_token():
 @ratelimit()
 def delete_listen():
     """
-    Delete a particular listen from the currently logged-in user's listen history.
+    Delete a particular listen from a user's listen history.
     This checks for the correct authorization token and deletes the listen.
 
     The format of the JSON to be POSTed to this endpoint is:
