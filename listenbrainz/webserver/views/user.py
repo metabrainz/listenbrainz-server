@@ -28,7 +28,7 @@ LISTENS_PER_PAGE = 25
 user_bp = Blueprint("user", __name__)
 
 
-@user_bp.route("/<user_name>")
+@user_bp.route("/<user_name>/")
 def profile(user_name):
     # Which database to use to showing user listens.
     db_conn = webserver.timescale_connection._ts
@@ -128,7 +128,7 @@ def profile(user_name):
                            active_section='listens')
 
 
-@user_bp.route("/<user_name>/artists")
+@user_bp.route("/<user_name>/artists/")
 def artists(user_name):
     """ Redirect to charts page """
     page = request.args.get('page', default=1)
@@ -136,7 +136,7 @@ def artists(user_name):
     return redirect(url_for('user.charts', user_name=user_name, entity='artist', page=page, range=stats_range), code=301)
 
 
-@user_bp.route("/<user_name>/history")
+@user_bp.route("/<user_name>/history/")
 def history(user_name):
     """ Redirect to charts page """
     entity = request.args.get('entity', default="artist")
@@ -145,7 +145,7 @@ def history(user_name):
     return redirect(url_for('user.charts', user_name=user_name, entity=entity, page=page, range=stats_range), code=301)
 
 
-@user_bp.route("/<user_name>/charts")
+@user_bp.route("/<user_name>/charts/")
 def charts(user_name):
     """ Show the top entitys for the user. """
     user = _get_user(user_name)
@@ -168,7 +168,7 @@ def charts(user_name):
     )
 
 
-@user_bp.route("/<user_name>/reports")
+@user_bp.route("/<user_name>/reports/")
 def reports(user_name: str):
     """ Show user reports """
     user = _get_user(user_name)
