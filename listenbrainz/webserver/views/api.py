@@ -7,10 +7,9 @@ from listenbrainz import webserver
 import listenbrainz.db.user as db_user
 from listenbrainz.webserver.rate_limiter import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
-from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list, is_valid_uuid,\
-    MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
-from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET,\
-    DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
+from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list,\
+    is_valid_uuid, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT,\
+    LISTEN_TYPE_PLAYING_NOW
 from listenbrainz.listenstore.timescale_listenstore import SECONDS_IN_TIME_RANGE
 import time
 import psycopg2
@@ -359,7 +358,7 @@ def validate_token():
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def delete_listen():
-    """ 
+    """
     Delete a particular listen from the currently logged-in user's listen history.
     This checks for the correct authorization token and deletes the listen.
 
@@ -390,7 +389,7 @@ def delete_listen():
 
     if "recording_msid" not in data:
         log_raise_400("Recording MSID missing.")
-    
+
     recording_msid = data["recording_msid"]
     if not is_valid_uuid(recording_msid):
         log_raise_400("%s: Recording MSID format invalid." % recording_msid)
