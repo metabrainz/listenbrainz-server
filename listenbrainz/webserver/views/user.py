@@ -191,43 +191,6 @@ def reports(user_name: str):
     )
 
 
-@user_bp.route('/<user_name>/delete-listen', methods=['POST'])
-@login_required
-def delete_listen(user_name):
-    """ Delete a particular listen from the currently logged-in user's listen history.
-    This checks for the correct authorization token and deletes the listen.
-    """
-    if request.form.get('token') and (request.form.get('token') == current_user.auth_token):
-        listened_at = request.form.get('listened_at')
-        recording_msid = request.form.get('recording_msid')
-
-        if listened_at is None:
-            log_raise_400("Listen timestamp missing.")
-        try:
-            listened_at = int(listened_at)
-        except ValueError:
-            log_raise_400("%s: Listen timestamp invalid." % listened_at)
-
-        if recording_msid is None:
-            log_raise_400("Recording MSID missing.")
-        if not is_valid_uuid(recording_msid):
-            log_raise_400("%s: Recording MSID format invalid." % recording_msid)
-
-        try:
-            user = _get_user(user_name)
-            _ts.delete_listen(listened_at=listened_at, recording_msid=recording_msid, user_name=user.musicbrainz_id)
-        except TimescaleListenStoreException as e:
-            current_app.logger.error("Cannot delete listen for user: %s" % str(e))
-            raise ServiceUnavailable("We couldn't delete the listen. Please try again later.")
-        except Exception as e:
-            current_app.logger.error("Cannot delete listen for user: %s" % str(e))
-            raise InternalServerError("We couldn't delete the listen. Please try again later.")
-
-        return jsonify({'status': 'ok'})
-    else:
-        raise Unauthorized("Auth token invalid or missing.")
-
-
 def _get_user(user_name):
     """ Get current username """
     if current_user.is_authenticated and \
