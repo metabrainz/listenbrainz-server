@@ -559,3 +559,41 @@ describe("getFeedbackForUserForRecordings", () => {
     );
   });
 });
+
+describe("deleteListen", () => {
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+      });
+    });
+
+    // Mock function for checkStatus
+    apiService.checkStatus = jest.fn();
+  });
+
+  it("calls fetch with correct parameters", async () => {
+    await apiService.deleteListen("foobar", "foo", 0);
+    expect(window.fetch).toHaveBeenCalledWith("foobar/1/delete-listen", {
+      method: "POST",
+      headers: {
+        Authorization: "Token foobar",
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ listened_at: 0, recording_msid: "foo" }),
+    });
+  });
+
+  it("calls checkStatus once", async () => {
+    await apiService.deleteListen("foobar", "foo", 0);
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns the response code if successful", async () => {
+    await expect(apiService.deleteListen("foobar", "foo", 0)).resolves.toEqual(
+      200
+    );
+  });
+});
