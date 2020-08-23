@@ -38,6 +38,7 @@ export type ListenCardProps = {
 };
 
 type ListenCardState = {
+  isDeleted: Boolean;
   feedback: ListenFeedBack;
 };
 
@@ -52,6 +53,7 @@ export default class ListenCard extends React.Component<
     super(props);
 
     this.state = {
+      isDeleted: false,
       feedback: props.currentFeedback || 0,
     };
 
@@ -116,7 +118,12 @@ export default class ListenCard extends React.Component<
           listenedAt
         );
         if (status === 200) {
-          removeListenFromListenList(listen);
+          this.setState({ isDeleted: true });
+
+          // wait for the animation to finish
+          setTimeout(function () {
+            removeListenFromListenList(listen);
+          }, 1000);
         }
       } catch (error) {
         this.handleError(`Error while deleting listen - ${error.message}`);
@@ -138,12 +145,14 @@ export default class ListenCard extends React.Component<
 
   render() {
     const { listen, mode, className, isCurrentUser } = this.props;
-    const { feedback } = this.state;
+    const { feedback, isDeleted } = this.state;
 
     return (
       <Card
         onDoubleClick={this.playListen}
-        className={`listen-card row ${className}`}
+        className={`listen-card row ${className} ${
+          isDeleted ? " deleted" : ""
+        }`}
       >
         <div
           className={`${

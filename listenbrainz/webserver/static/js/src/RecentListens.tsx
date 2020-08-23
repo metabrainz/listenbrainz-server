@@ -698,7 +698,9 @@ export default class RecentListens extends React.Component<
                               ?.recording_msid
                           )}
                           playListen={this.playListen}
-                          removeListenFromListenList={this.removeListenFromListenList}
+                          removeListenFromListenList={
+                            this.removeListenFromListenList
+                          }
                           updateFeedback={this.updateFeedback}
                           newAlert={this.newAlert}
                           className={`${

@@ -32,11 +32,11 @@ exports[`ListenCard renders correctly for mode = 'follow ' 1`] = `
   updateFeedback={[Function]}
 >
   <ForwardRef
-    className="listen-card row undefined"
+    className="listen-card row undefined "
     onDoubleClick={[Function]}
   >
     <div
-      className="listen-card row undefined"
+      className="listen-card row undefined "
       onDoubleClick={[Function]}
       style={
         Object {
@@ -105,11 +105,11 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
   updateFeedback={[Function]}
 >
   <ForwardRef
-    className="listen-card row undefined"
+    className="listen-card row undefined "
     onDoubleClick={[Function]}
   >
     <div
-      className="listen-card row undefined"
+      className="listen-card row undefined "
       onDoubleClick={[Function]}
       style={
         Object {
@@ -406,11 +406,11 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
   updateFeedback={[Function]}
 >
   <ForwardRef
-    className="listen-card row undefined"
+    className="listen-card row undefined "
     onDoubleClick={[Function]}
   >
     <div
-      className="listen-card row undefined"
+      className="listen-card row undefined "
       onDoubleClick={[Function]}
       style={
         Object {
@@ -479,11 +479,11 @@ exports[`ListenCard renders correctly for playing_now listen 1`] = `
   updateFeedback={[Function]}
 >
   <ForwardRef
-    className="listen-card row undefined"
+    className="listen-card row undefined "
     onDoubleClick={[Function]}
   >
     <div
-      className="listen-card row undefined"
+      className="listen-card row undefined "
       onDoubleClick={[Function]}
       style={
         Object {
