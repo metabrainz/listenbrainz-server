@@ -601,3 +601,121 @@ class APITestCase(IntegrationTestCase):
         self.assertEqual(r.json['payload']['listens'][0]['track_metadata']['artist_name'], 'Kanye West')
         self.assertEqual(r.json['payload']['listens'][0]['track_metadata']['release_name'], 'The Life of Pablo')
         self.assertEqual(r.json['payload']['listens'][0]['track_metadata']['track_name'], 'Fade')
+
+    def test_delete_listen(self):
+        with open(self.path_to_data_file('valid_single.json'), 'r') as f:
+            payload = json.load(f)
+
+        # send a listen
+        ts = int(time.time())
+        payload['payload'][0]['listened_at'] = ts
+        response = self.send_data(payload)
+        self.assert200(response)
+        self.assertEqual(response.json['status'], 'ok')
+
+        # This sleep allows for the timescale subscriber to take its time in getting
+        # the listen submitted from redis and writing it to timescale.
+        # Removing it causes an empty list of listens to be returned.
+        time.sleep(3)
+
+        delete_listen_url = url_for('api_v1.delete_listen')
+        data = {
+            "listened_at": ts,
+            "recording_msid": payload['payload'][0]['track_metadata']['additional_info']['recording_msid']
+        }
+
+        response = self.client.post(
+            delete_listen_url,
+            data=json.dumps(data),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+            content_type='application/json'
+        )
+        self.assert200(response)
+        self.assertEqual(response.json["status"], "ok")
+
+    def test_delete_listen_not_logged_in(self):
+        delete_listen_url = url_for('api_v1.delete_listen')
+        data = {
+            "listened_at": 1486449409,
+            "recording_msid": "2cfad207-3f55-4aec-8120-86cf66e34d59"
+        }
+
+        # send a request without auth_token
+        response = self.client.post(
+            delete_listen_url,
+            data=json.dumps(data),
+            content_type='application/json'
+        )
+        self.assert401(response)
+
+        # send a request with invalid auth_token
+        response = self.client.post(
+            delete_listen_url,
+            data=json.dumps(data),
+            headers={'Authorization': 'Token {}'.format("invalidtokenpleaseignore")},
+            content_type='application/json'
+        )
+        self.assert401(response)
+
+    def test_delete_listen_missing_keys(self):
+        delete_listen_url = url_for('api_v1.delete_listen')
+
+        # send request without listened_at
+        data = {
+            "recording_msid": "2cfad207-3f55-4aec-8120-86cf66e34d59"
+        }
+
+        response = self.client.post(
+            delete_listen_url,
+            data=json.dumps(data),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+            content_type='application/json'
+        )
+        self.assertStatus(response, 400)
+        self.assertEqual(response.json["error"], "Listen timestamp missing.")
+
+        # send request without recording_msid
+        data = {
+            "listened_at": 1486449409
+        }
+
+        response = self.client.post(
+            delete_listen_url,
+            data=json.dumps(data),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+            content_type='application/json'
+        )
+        self.assertStatus(response, 400)
+        self.assertEqual(response.json["error"], "Recording MSID missing.")
+
+    def test_delete_listen_invalid_keys(self):
+        delete_listen_url = url_for('api_v1.delete_listen')
+
+        # send request with invalid listened_at
+        data = {
+            "listened_at": "invalid listened_at",
+            "recording_msid": "2cfad207-3f55-4aec-8120-86cf66e34d59"
+        }
+
+        response = self.client.post(
+            delete_listen_url,
+            data=json.dumps(data),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+            content_type='application/json'
+        )
+        self.assertStatus(response, 400)
+        self.assertEqual(response.json["error"], "invalid listened_at: Listen timestamp invalid.")
+
+        # send request with invalid recording_msid
+        data = {
+            "listened_at": 1486449409,
+            "recording_msid": "invalid recording_msid"
+        }
+
+        response = self.client.post(
+            delete_listen_url,
+            data=json.dumps(data),
+            headers={'Authorization': 'Token {}'.format(self.user['auth_token'])},
+            content_type='application/json'
+        )
+        self.assertEqual(response.json["error"], "invalid recording_msid: Recording MSID format invalid.")
