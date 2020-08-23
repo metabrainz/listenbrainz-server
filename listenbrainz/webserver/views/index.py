@@ -48,7 +48,7 @@ def index():
     )
 
 
-@index_bp.route("/import")
+@index_bp.route("/import/")
 def import_data():
     if current_user.is_authenticated:
         return redirect(url_for("profile.import_data"))
@@ -56,52 +56,57 @@ def import_data():
         return current_app.login_manager.unauthorized()
 
 
-@index_bp.route("/download")
+@index_bp.route("/download/")
 def downloads():
     return redirect(url_for('index.data'))
 
 
-@index_bp.route("/data")
+@index_bp.route("/data/")
 def data():
     return render_template("index/data.html")
 
 
-@index_bp.route("/contribute")
+@index_bp.route("/contribute/")
 def contribute():
     return render_template("index/contribute.html")
 
 
-@index_bp.route("/add-data")
+@index_bp.route("/add-data/")
 def add_data_info():
     return render_template("index/add-data.html")
 
 
-@index_bp.route("/import-data")
+@index_bp.route("/import-data/")
 def import_data_info():
     return render_template("index/import-data.html")
 
 
-@index_bp.route("/goals")
+@index_bp.route("/goals/")
 def goals():
     return render_template("index/goals.html")
 
 
-@index_bp.route("/faq")
+@index_bp.route("/faq/")
 def faq():
     return render_template("index/faq.html")
 
 
-@index_bp.route("/lastfm-proxy")
+@index_bp.route("/lastfm-proxy/")
 def proxy():
     return render_template("index/lastfm-proxy.html")
 
 
-@index_bp.route("/roadmap")
+@index_bp.route("/roadmap/")
 def roadmap():
     return render_template("index/roadmap.html")
 
 
-@index_bp.route("/current-status")
+@index_bp.route("/privacy/")
+def privacy_policy():
+    return render_template("index/privacy-policy.html")
+
+
+@index_bp.route("/current-status/")
 @web_listenstore_needed
 def current_status():
 
@@ -136,7 +141,7 @@ def current_status():
     )
 
 
-@index_bp.route("/recent")
+@index_bp.route("/recent/")
 def recent_listens():
 
     recent = []
@@ -158,16 +163,15 @@ def recent_listens():
         mode='recent',
         active_section='listens')
 
-@index_bp.route('/feed', methods=['GET', 'OPTIONS'])
+
+@index_bp.route('/feed/', methods=['GET', 'OPTIONS'])
 @login_required
 @web_listenstore_needed
 def feed():
-
     return render_template('index/feed.html')
 
 
-
-@index_bp.route('/agree-to-terms', methods=['GET', 'POST'])
+@index_bp.route('/agree-to-terms/', methods=['GET', 'POST'])
 @login_required
 def gdpr_notice():
     if request.method == 'GET':
@@ -253,7 +257,7 @@ def _get_user_count():
         return user_count
 
 
-@index_bp.route("/similar-users")
+@index_bp.route("/similar-users/")
 def similar_users():
     """ Show all of the users with the highest similarity in order to make
         them visible to all of our users. This view can show bugs in the algorithm
@@ -267,7 +271,7 @@ def similar_users():
     )
 
 
-@index_bp.route("/listens-offline")
+@index_bp.route("/listens-offline/")
 def listens_offline():
     """
         Show the "listenstore offline" message.
