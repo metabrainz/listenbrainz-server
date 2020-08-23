@@ -215,18 +215,22 @@ export default class ListenCard extends React.Component<
             </a>
           ) : (
             <div className="listen-controls">
-              <ListenControl
-                icon={faHeart}
-                title="Love"
-                action={() => this.submitFeedback(feedback === 1 ? 0 : 1)}
-                className={`${feedback === 1 ? " loved" : ""}`}
-              />
-              <ListenControl
-                icon={faHeartBroken}
-                title="Hate"
-                action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
-                className={`${feedback === -1 ? " hated" : ""}`}
-              />
+              {!listen?.playing_now && (
+                <>
+                  <ListenControl
+                    icon={faHeart}
+                    title="Love"
+                    action={() => this.submitFeedback(feedback === 1 ? 0 : 1)}
+                    className={`${feedback === 1 ? " loved" : ""}`}
+                  />
+                  <ListenControl
+                    icon={faHeartBroken}
+                    title="Hate"
+                    action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
+                    className={`${feedback === -1 ? " hated" : ""}`}
+                  />
+                </>
+              )}
             </div>
           )}
         </div>
