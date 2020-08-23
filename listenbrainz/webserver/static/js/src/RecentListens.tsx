@@ -516,6 +516,14 @@ export default class RecentListens extends React.Component<
     return recordingMsid ? _.get(recordingFeedbackMap, recordingMsid, 0) : 0;
   };
 
+  updateListenList = (listen: Listen) => {
+    const { listens } = this.state;
+    const index = listens.indexOf(listen);
+
+    listens.splice(index, 1);
+    this.setState({ listens });
+  };
+
   /** This method checks that we have enough listens to fill the page (listens are fetched in a 15 days period)
    * If we don't have enough, we fetch again with an increased time range and do the check agin, ending when time range is maxed.
    * The time range (each increment = 5 days) defaults to 6 (the default for the API is 3) or 6*5 = 30 days
@@ -604,7 +612,6 @@ export default class RecentListens extends React.Component<
       playingNowByUser,
       previousListenTs,
       saveUrl,
-      recordingFeedbackMap,
     } = this.state;
     const {
       latestListenTs,
@@ -691,6 +698,7 @@ export default class RecentListens extends React.Component<
                               ?.recording_msid
                           )}
                           playListen={this.playListen}
+                          updateListenList={this.updateListenList}
                           updateFeedback={this.updateFeedback}
                           newAlert={this.newAlert}
                           className={`${
