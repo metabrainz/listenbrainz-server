@@ -109,6 +109,27 @@ class APITestCase(IntegrationTestCase):
         self.assertListEqual(response.json['payload']['listens'], [])
         self.assertEqual(response.json['payload']['latest_listen_ts'], ts)
 
+        # test request with both max_ts and min_ts is working
+        url = url_for('api_v1.get_listens', user_name=self.user['musicbrainz_id'])
+        
+        response = self.client.get(url, query_string={'max_ts': ts + 1000,'min_ts': ts - 1000})
+        self.assert200(response)
+        data = json.loads(response.data)['payload']
+
+        self.assertEqual(data['user_id'], self.user['musicbrainz_id'])
+
+        self.assertEqual(data['count'], 1)
+        self.assertEqual(len(data['listens']), 1)
+
+        sent_time = payload['payload'][0]['listened_at']
+        self.assertEqual(data['listens'][0]['listened_at'], sent_time)
+        self.assertEqual(data['listens'][0]['track_metadata']['track_name'], 'Fade')
+        self.assertEqual(data['listens'][0]['track_metadata']['artist_name'], 'Kanye West')
+        self.assertEqual(data['listens'][0]['track_metadata']['release_name'], 'The Life of Pablo')
+
+        # CHeck api throws error 400 if min_ts is greater than max_ts    
+        response = self.client.get(url, query_string={'max_ts': '1400000000','min_ts':'1500000000'})
+            
         # check that recent listens are fetched correctly
         url = url_for('api_v1.get_recent_listens_for_user_list', user_list=self.user['musicbrainz_id'])
         response = self.client.get(url, query_string={'limit': '1'})
