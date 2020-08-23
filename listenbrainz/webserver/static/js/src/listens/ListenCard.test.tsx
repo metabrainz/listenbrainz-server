@@ -199,7 +199,7 @@ describe("deleteListen", () => {
     const spy = jest.spyOn(instance.APIService, "deleteListen");
     spy.mockImplementation(() => Promise.resolve(200));
 
-    instance.deleteListen();
+    await instance.deleteListen();
 
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith("baz", "bar", 0);
