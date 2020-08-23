@@ -61,9 +61,7 @@ Statistics API Endpoints
 ^^^^^^^^^^^^^^^^^^^^^^^^
 ListenBrainz now has a statistics infrastructure that collects and computes statistics
 from the listen data that has been stored in the database. The endpoints in this section
-offer a way to get this data programmatically. Right now, we calculate statistics
-for the top artists, releases and recordings that a user has listened to. However, we plan
-to add more statistics in the near future.
+offer a way to get this data programmatically.
 
 .. autoflask:: listenbrainz.webserver:create_app_rtfd()
    :blueprints: stats_api_v1

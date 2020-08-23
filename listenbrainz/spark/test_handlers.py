@@ -2,14 +2,18 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from unittest import mock
 
-from flask import current_app
-
+from data.model.sitewide_artist_stat import (SitewideArtistRecord,
+                                             SitewideArtistStatJson,
+                                             SitewideArtistStatRange)
+from data.model.user_artist_stat import (UserArtistRecord, UserArtistStatJson,
+                                         UserArtistStatRange)
 from data.model.user_daily_activity import (UserDailyActivityRecord,
                                             UserDailyActivityStatJson,
                                             UserDailyActivityStatRange)
 from data.model.user_listening_activity import (UserListeningActivityRecord,
                                                 UserListeningActivityStatJson,
                                                 UserListeningActivityStatRange)
+
 from data.model.user_artist_stat import (UserArtistRecord,
                                          UserArtistStatJson,
                                          UserArtistStatRange)
@@ -18,9 +22,12 @@ from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzData
                                                       UserMissingMusicBrainzDataJson,
                                                       UserMissingMusicBrainzData)
 
+from flask import current_app
+
 from listenbrainz.spark.handlers import (
     handle_candidate_sets, handle_dataframes, handle_dump_imported,
-    handle_model, handle_recommendations, handle_user_daily_activity, handle_user_entity,
+    handle_model, handle_recommendations, handle_sitewide_entity,
+    handle_user_daily_activity, handle_user_entity,
     handle_user_listening_activity, is_new_cf_recording_recommendation_batch,
     is_new_user_stats_batch, notify_artist_relation_import,
     notify_mapping_import,
@@ -162,6 +169,54 @@ class HandlersTestCase(unittest.TestCase):
                     )
                 ]
             )
+        ))
+        mock_send_mail.assert_called_once()
+
+    @mock.patch('listenbrainz.spark.handlers.db_stats.insert_sitewide_artists')
+    @mock.patch('listenbrainz.spark.handlers.is_new_user_stats_batch')
+    @mock.patch('listenbrainz.spark.handlers.send_mail')
+    def test_handle_user_daily_activity(self, mock_send_mail, mock_new_user_stats, mock_db_insert):
+        data = {
+            'type': 'sitewide_entity',
+            'stats_range': 'all_time',
+            'from_ts': 1,
+            'to_ts': 10,
+            'entity': 'artists',
+            'data': [
+                {
+                    'time_range': 'Monday',
+                    'from_ts': 1,
+                    'to_ts': 2,
+                    'artists': [
+                        {
+                            'artist_name': 'Coldplay',
+                            'artist_mbid': [],
+                            'artist_msid': None,
+                            'listen_count': 20
+                        }
+                    ]
+                }
+            ],
+        }
+
+        with self.app.app_context():
+            current_app.config['TESTING'] = False  # set testing to false to check the notifications
+            handle_sitewide_entity(data)
+
+        mock_db_insert.assert_called_with('all_time', SitewideArtistStatJson(
+            to_ts=10,
+            from_ts=1,
+            time_ranges=[SitewideArtistStatRange(
+                time_range="Monday",
+                from_ts=1,
+                to_ts=2,
+                artists=[SitewideArtistRecord(
+                    artist_name='Coldplay',
+                    artist_mbid=[],
+                    artist_msid=None,
+                    listen_count=20,
+                )]
+            )]
         ))
         mock_send_mail.assert_called_once()
 

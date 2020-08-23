@@ -492,3 +492,70 @@ describe("setLatestImport", () => {
     await expect(apiService.setLatestImport("foobar", 0)).resolves.toEqual(200);
   });
 });
+
+describe("submitFeedback", () => {
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+      });
+    });
+
+    // Mock function for checkStatus
+    apiService.checkStatus = jest.fn();
+  });
+
+  it("calls fetch with correct parameters", async () => {
+    await apiService.submitFeedback("foobar", "foo", 1);
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/feedback/recording-feedback",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Token foobar",
+          "Content-Type": "application/json;charset=UTF-8",
+        },
+        body: JSON.stringify({ recording_msid: "foo", score: 1 }),
+      }
+    );
+  });
+
+  it("calls checkStatus once", async () => {
+    await apiService.submitFeedback("foobar", "foo", 0);
+    expect(apiService.checkStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns the response code if successful", async () => {
+    await expect(
+      apiService.submitFeedback("foobar", "foo", 0)
+    ).resolves.toEqual(200);
+  });
+});
+
+describe("getFeedbackForUserForRecordings", () => {
+  beforeEach(() => {
+    // Mock function for fetch
+    window.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ feedbacl: [] }),
+      });
+    });
+  });
+
+  it("calls fetch correctly", async () => {
+    await apiService.getFeedbackForUserForRecordings("foo", "bar,baz");
+    expect(window.fetch).toHaveBeenCalledWith(
+      "foobar/1/feedback/user/foo/get-feedback-for-recordings?recordings=bar,baz"
+    );
+  });
+
+  it("throws appropriate error if username is missing", async () => {
+    await expect(apiService.getUserListenCount("")).rejects.toThrow(
+      SyntaxError("Username missing")
+    );
+  });
+});

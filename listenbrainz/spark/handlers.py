@@ -11,6 +11,7 @@ from flask import current_app, render_template
 from pydantic import ValidationError
 from brainzutils.mail import send_mail
 from datetime import datetime, timezone, timedelta
+from data.model.sitewide_artist_stat import SitewideArtistStatJson
 from data.model.user_daily_activity import UserDailyActivityStatJson
 from data.model.user_listening_activity import UserListeningActivityStatJson
 from data.model.user_artist_stat import UserArtistStatJson
@@ -74,13 +75,19 @@ def notify_user_stats_update(stat_type):
         )
 
 
-def _get_entity_model(entity):
+def _get_user_entity_model(entity):
     if entity == 'artists':
         return UserArtistStatJson
     elif entity == 'releases':
         return UserReleaseStatJson
     elif entity == 'recordings':
         return UserRecordingStatJson
+    raise ValueError("Unknown entity type: %s" % entity)
+
+
+def _get_sitewide_entity_model(entity):
+    if entity == 'artists':
+        return SitewideArtistStatJson
     raise ValueError("Unknown entity type: %s" % entity)
 
 
@@ -105,7 +112,7 @@ def handle_user_entity(data):
     to_remove = {'musicbrainz_id', 'type', 'entity', 'data', 'stats_range'}
     data_mod = {key: data[key] for key in data if key not in to_remove}
 
-    entity_model = _get_entity_model(entity)
+    entity_model = _get_user_entity_model(entity)
 
     # Get function to insert statistics
     db_handler = getattr(db_stats, 'insert_user_{}'.format(entity))
@@ -173,6 +180,34 @@ def handle_user_daily_activity(data):
         current_app.logger.error("""ValidationError while inserting {stats_range} daily_activity for user with
                                     user_id: {user_id}. Data: {data}""".format(user_id=user['id'],
                                                                                data=json.dumps(data_mod, indent=3)),
+                                 exc_info=True)
+
+
+def handle_sitewide_entity(data):
+    """ Take sitewide entity stats and save it in the database. """
+    # send a notification if this is a new batch of stats
+    if is_new_user_stats_batch():
+        notify_user_stats_update(stat_type=data.get('type', ''))
+
+    stats_range = data['stats_range']
+    entity = data['entity']
+    data['time_ranges'] = data['data']
+
+    # Strip extra data
+    to_remove = {'type', 'entity', 'data', 'stats_range'}
+    data_mod = {key: data[key] for key in data if key not in to_remove}
+
+    entity_model = _get_sitewide_entity_model(entity)
+
+    # Get function to insert statistics
+    db_handler = getattr(db_stats, 'insert_sitewide_{}'.format(entity))
+
+    try:
+        db_handler(stats_range, entity_model(**data))
+    except ValidationError:
+        current_app.logger.error("""ValidationError while inserting {stats_range} sitewide top {entity}.
+                                 Data: {data}""".format(stats_range=stats_range, entity=entity,
+                                                        data=json.dumps({stats_range: data_mod}, indent=3)),
                                  exc_info=True)
 
 

@@ -3,9 +3,10 @@ import listenbrainz_spark.recommendations.create_dataframes
 import listenbrainz_spark.recommendations.recommend
 import listenbrainz_spark.recommendations.train_models
 import listenbrainz_spark.request_consumer.jobs.import_dump
+import listenbrainz_spark.stats.sitewide.entity
+import listenbrainz_spark.stats.user.daily_activity
 import listenbrainz_spark.stats.user.entity
 import listenbrainz_spark.stats.user.listening_activity
-import listenbrainz_spark.stats.user.daily_activity
 
 functions = {
     'stats.user.entity.week': listenbrainz_spark.stats.user.entity.get_entity_week,
@@ -20,6 +21,10 @@ functions = {
     'stats.user.daily_activity.month': listenbrainz_spark.stats.user.daily_activity.get_daily_activity_month,
     'stats.user.daily_activity.year': listenbrainz_spark.stats.user.daily_activity.get_daily_activity_year,
     'stats.user.daily_activity.all_time': listenbrainz_spark.stats.user.daily_activity.get_daily_activity_all_time,
+    'stats.sitewide.entity.week': listenbrainz_spark.stats.sitewide.entity.get_entity_week,
+    'stats.sitewide.entity.month': listenbrainz_spark.stats.sitewide.entity.get_entity_month,
+    'stats.sitewide.entity.year': listenbrainz_spark.stats.sitewide.entity.get_entity_year,
+    'stats.sitewide.entity.all_time': listenbrainz_spark.stats.sitewide.entity.get_entity_all_time,
     'import.dump.full_newest': listenbrainz_spark.request_consumer.jobs.import_dump.import_newest_full_dump_handler,
     'import.dump.full_id': listenbrainz_spark.request_consumer.jobs.import_dump.import_full_dump_by_id_handler,
     'cf_recording.recommendations.create_dataframes': listenbrainz_spark.recommendations.create_dataframes.main,

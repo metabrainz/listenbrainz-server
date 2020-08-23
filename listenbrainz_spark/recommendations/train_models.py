@@ -1,5 +1,4 @@
 import os
-import sys
 import uuid
 import logging
 import itertools
@@ -61,7 +60,7 @@ def compute_rmse(model, data, n, model_id):
     except Py4JJavaError as err:
         current_app.logger.error('Root Mean Squared Error for model "{}" not computed\n{}'.format(
                                  model_id, str(err.java_exception)), exc_info=True)
-        sys.exit(-1)
+        raise
 
 
 def preprocess_data(playcounts_df):
@@ -159,7 +158,7 @@ def train(training_data, rank, iteration, lmbda, alpha, model_id):
         return model
     except Py4JJavaError as err:
         current_app.logger.error('Unable to train model "{}"\n{}'.format(model_id, str(err.java_exception)), exc_info=True)
-        sys.exit(-1)
+        raise
 
 
 def get_best_model(training_data, validation_data, num_validation, ranks, lambdas, iterations, alpha):
@@ -238,7 +237,7 @@ def save_model(model_id, model):
     except Py4JJavaError as err:
         current_app.logger.error('Unable to save model "{}"\n{}. Aborting...'.format(model_id,
                                  str(err.java_exception)), exc_info=True)
-        sys.exit(-1)
+        raise
 
 
 def save_model_metadata_to_hdfs(metadata):
@@ -253,7 +252,7 @@ def save_model_metadata_to_hdfs(metadata):
         model_metadata_df = utils.create_dataframe(metadata_row, schema.model_metadata_schema)
     except DataFrameNotCreatedException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
 
     try:
         current_app.logger.info('Saving model metadata...')
@@ -262,7 +261,7 @@ def save_model_metadata_to_hdfs(metadata):
         current_app.logger.info('Model metadata saved...')
     except DataFrameNotAppendedException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
 
 
 def save_training_html(time_, num_training, num_validation, num_test, model_metadata, best_model_metadata, ti,
@@ -299,19 +298,19 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
 
     if ranks is None:
         current_app.logger.critical('model param "ranks" missing')
-        sys.exit(-1)
+
 
     if lambdas is None:
         current_app.logger.critical('model param "lambdas" missing')
-        sys.exit(-1)
+        raise
 
     if iterations is None:
         current_app.logger.critical('model param "iterations" missing')
-        sys.exit(-1)
+        raise
 
     if alpha is None:
         current_app.logger.critical('model param "alpha" missing')
-        sys.exit(-1)
+        raise
 
     ti = time.monotonic()
     time_ = defaultdict(dict)
@@ -319,7 +318,7 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
         listenbrainz_spark.init_spark_session('Train Models')
     except SparkSessionNotInitializedException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
 
     # Add checkpoint dir to break and save RDD lineage.
     listenbrainz_spark.context.setCheckpointDir(config.HDFS_CLUSTER_URI + path.CHECKPOINT_DIR)
@@ -329,10 +328,10 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
         dataframe_metadata_df = utils.read_files_from_HDFS(path.DATAFRAME_METADATA)
     except PathNotFoundException as err:
         current_app.logger.error('{}\nConsider running create_dataframes.py'.format(str(err)), exc_info=True)
-        sys.exit(-1)
+        raise
     except FileNotFetchedException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
 
     time_['load_playcounts'] = '{:.2f}'.format((time.monotonic() - ti) / 60)
 
@@ -379,7 +378,7 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
         utils.delete_dir(path.CHECKPOINT_DIR, recursive=True)
     except HDFSDirectoryNotDeletedException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
 
     if SAVE_TRAINING_HTML:
         current_app.logger.info('Saving HTML...')

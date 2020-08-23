@@ -2,6 +2,7 @@ import sqlalchemy
 
 from listenbrainz import db
 from listenbrainz.db.model.feedback import Feedback
+from typing import List
 
 
 def insert(feedback: Feedback):
@@ -47,7 +48,7 @@ def delete(feedback: Feedback):
         )
 
 
-def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = None):
+def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = None) -> List[Feedback]:
     """ Get a list of recording feedback given by the user in descending order of their creation
 
         Args:
@@ -64,12 +65,12 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
     args = {"user_id": user_id, "limit": limit, "offset": offset}
     query = """ SELECT user_id, "user".musicbrainz_id AS user_name, recording_msid::text, score
                   FROM recording_feedback
-                 JOIN "user"
-                  ON "user".id = recording_feedback.user_id
+                  JOIN "user"
+                    ON "user".id = recording_feedback.user_id
                  WHERE user_id = :user_id """
 
     if score:
-        query += "AND score = :score"
+        query += " AND score = :score"
         args["score"] = score
 
     query += """ ORDER BY recording_feedback.created DESC
@@ -80,7 +81,7 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
         return [Feedback(**dict(row)) for row in result.fetchall()]
 
 
-def get_feedback_count_for_user(user_id: int):
+def get_feedback_count_for_user(user_id: int) -> int:
     """ Get total number of recording feedback given by the user
 
         Args:
@@ -102,7 +103,7 @@ def get_feedback_count_for_user(user_id: int):
     return count
 
 
-def get_feedback_for_recording(recording_msid: str, limit: int, offset: int, score: int = None):
+def get_feedback_for_recording(recording_msid: str, limit: int, offset: int, score: int = None) -> List[Feedback]:
     """ Get a list of recording feedback for a given recording in descending order of their creation
 
         Args:
@@ -119,12 +120,12 @@ def get_feedback_for_recording(recording_msid: str, limit: int, offset: int, sco
     args = {"recording_msid": recording_msid, "limit": limit, "offset": offset}
     query = """ SELECT user_id, "user".musicbrainz_id AS user_name, recording_msid::text, score
                   FROM recording_feedback
-                 JOIN "user"
-                  ON "user".id = recording_feedback.user_id
+                  JOIN "user"
+                    ON "user".id = recording_feedback.user_id
                  WHERE recording_msid = :recording_msid """
 
     if score:
-        query += "AND score = :score"
+        query += " AND score = :score"
         args["score"] = score
 
     query += """ ORDER BY recording_feedback.created DESC
@@ -135,7 +136,7 @@ def get_feedback_for_recording(recording_msid: str, limit: int, offset: int, sco
         return [Feedback(**dict(row)) for row in result.fetchall()]
 
 
-def get_feedback_count_for_recording(recording_msid: str):
+def get_feedback_count_for_recording(recording_msid: str) -> int:
     """ Get total number of recording feedback for a given recording
 
         Args:
@@ -155,3 +156,37 @@ def get_feedback_count_for_recording(recording_msid: str):
         count = int(result.fetchone()["value"])
 
     return count
+
+
+def get_feedback_for_multiple_recordings_for_user(user_id: int, recording_list: List[str]) -> List[Feedback]:
+    """ Get a list of recording feedback given by the user for given recordings
+
+        Args:
+            user_id: the row ID of the user in the DB
+            recording_list: list of recording_msid for which feedback records are to be obtained
+                            - if record is present then return it
+                            - if record is not present then return a pseudo record with score = 0
+
+        Returns:
+            A list of Feedback objects
+    """
+
+    args = {"user_id": user_id, "recording_list": recording_list}
+    query = """ WITH rf AS (
+              SELECT user_id, recording_msid::text, score
+                FROM recording_feedback
+               WHERE recording_feedback.user_id=:user_id
+                )
+              SELECT COALESCE(rf.user_id, :user_id) AS user_id,
+                     "user".musicbrainz_id AS user_name,
+                     rec_msid AS recording_msid,
+                     COALESCE(rf.score, 0) AS score
+                FROM UNNEST(:recording_list) rec_msid
+     LEFT OUTER JOIN rf
+                  ON rf.recording_msid::text = rec_msid
+                JOIN "user"
+                  ON "user".id = :user_id """
+
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text(query), args)
+        return [Feedback(**dict(row)) for row in result.fetchall()]

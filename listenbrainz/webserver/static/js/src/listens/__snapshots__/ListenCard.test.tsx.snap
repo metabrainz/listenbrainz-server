@@ -2,9 +2,19 @@
 
 exports[`ListenCard renders correctly for mode = 'follow ' 1`] = `
 <ListenCard
+  apiUrl="foobar"
+  currentFeedback={1}
+  currentUser={
+    Object {
+      "auth_token": "baz",
+      "name": "test",
+    }
+  }
+  isCurrentUser={true}
   listen={
     Object {
       "listened_at": 0,
+      "playing_now": false,
       "track_metadata": Object {
         "additional_info": Object {
           "recording_msid": "bar",
@@ -16,7 +26,9 @@ exports[`ListenCard renders correctly for mode = 'follow ' 1`] = `
     }
   }
   mode="follow"
+  newAlert={[Function]}
   playListen={[Function]}
+  updateFeedback={[Function]}
 >
   <ForwardRef
     className="listen-card row undefined"
@@ -37,7 +49,7 @@ exports[`ListenCard renders correctly for mode = 'follow ' 1`] = `
       }
     >
       <div
-        className="col-xs-9"
+        className=" col-xs-9"
       >
         <MediaQuery
           minWidth={768}
@@ -47,7 +59,7 @@ exports[`ListenCard renders correctly for mode = 'follow ' 1`] = `
         />
       </div>
       <div
-        className="col-xs-3 text-center"
+        className=" col-xs-3 text-center"
       >
         <a
           href="/user/undefined"
@@ -62,9 +74,19 @@ exports[`ListenCard renders correctly for mode = 'follow ' 1`] = `
 
 exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
 <ListenCard
+  apiUrl="foobar"
+  currentFeedback={1}
+  currentUser={
+    Object {
+      "auth_token": "baz",
+      "name": "test",
+    }
+  }
+  isCurrentUser={true}
   listen={
     Object {
       "listened_at": 0,
+      "playing_now": false,
       "track_metadata": Object {
         "additional_info": Object {
           "recording_msid": "bar",
@@ -76,7 +98,9 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
     }
   }
   mode="listens"
+  newAlert={[Function]}
   playListen={[Function]}
+  updateFeedback={[Function]}
 >
   <ForwardRef
     className="listen-card row undefined"
@@ -97,7 +121,7 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
       }
     >
       <div
-        className="col-xs-9"
+        className=" col-xs-9"
       >
         <MediaQuery
           minWidth={768}
@@ -107,9 +131,162 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
         />
       </div>
       <div
-        className="col-xs-3 text-center"
+        className=" col-xs-3 text-center"
       >
-        <div />
+        <div
+          className="listen-controls"
+        >
+          <ListenControl
+            action={[Function]}
+            className=" loved"
+            icon={
+              Object {
+                "icon": Array [
+                  512,
+                  512,
+                  Array [],
+                  "f004",
+                  "M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z",
+                ],
+                "iconName": "heart",
+                "prefix": "fas",
+              }
+            }
+            title="Love"
+          >
+            <FontAwesomeIcon
+              border={false}
+              className=" loved"
+              fixedWidth={false}
+              flip={null}
+              icon={
+                Object {
+                  "icon": Array [
+                    512,
+                    512,
+                    Array [],
+                    "f004",
+                    "M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z",
+                  ],
+                  "iconName": "heart",
+                  "prefix": "fas",
+                }
+              }
+              inverse={false}
+              listItem={false}
+              mask={null}
+              onClick={[Function]}
+              pull={null}
+              pulse={false}
+              rotation={null}
+              size={null}
+              spin={false}
+              swapOpacity={false}
+              symbol={false}
+              title="Love"
+              transform={null}
+            >
+              <svg
+                aria-labelledby="svg-inline--fa-title-000000000000"
+                className="svg-inline--fa fa-heart fa-w-16  loved"
+                data-icon="heart"
+                data-prefix="fas"
+                onClick={[Function]}
+                role="img"
+                style={Object {}}
+                viewBox="0 0 512 512"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <title
+                  id="svg-inline--fa-title-000000000000"
+                  style={Object {}}
+                >
+                  Love
+                </title>
+                <path
+                  d="M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z"
+                  fill="currentColor"
+                  style={Object {}}
+                />
+              </svg>
+            </FontAwesomeIcon>
+          </ListenControl>
+          <ListenControl
+            action={[Function]}
+            className=""
+            icon={
+              Object {
+                "icon": Array [
+                  512,
+                  512,
+                  Array [],
+                  "f7a9",
+                  "M473.7 73.8l-2.4-2.5c-46-47-118-51.7-169.6-14.8L336 159.9l-96 64 48 128-144-144 96-64-28.6-86.5C159.7 19.6 87 24 40.7 71.4l-2.4 2.4C-10.4 123.6-12.5 202.9 31 256l212.1 218.6c7.1 7.3 18.6 7.3 25.7 0L481 255.9c43.5-53 41.4-132.3-7.3-182.1z",
+                ],
+                "iconName": "heart-broken",
+                "prefix": "fas",
+              }
+            }
+            title="Hate"
+          >
+            <FontAwesomeIcon
+              border={false}
+              className=""
+              fixedWidth={false}
+              flip={null}
+              icon={
+                Object {
+                  "icon": Array [
+                    512,
+                    512,
+                    Array [],
+                    "f7a9",
+                    "M473.7 73.8l-2.4-2.5c-46-47-118-51.7-169.6-14.8L336 159.9l-96 64 48 128-144-144 96-64-28.6-86.5C159.7 19.6 87 24 40.7 71.4l-2.4 2.4C-10.4 123.6-12.5 202.9 31 256l212.1 218.6c7.1 7.3 18.6 7.3 25.7 0L481 255.9c43.5-53 41.4-132.3-7.3-182.1z",
+                  ],
+                  "iconName": "heart-broken",
+                  "prefix": "fas",
+                }
+              }
+              inverse={false}
+              listItem={false}
+              mask={null}
+              onClick={[Function]}
+              pull={null}
+              pulse={false}
+              rotation={null}
+              size={null}
+              spin={false}
+              swapOpacity={false}
+              symbol={false}
+              title="Hate"
+              transform={null}
+            >
+              <svg
+                aria-labelledby="svg-inline--fa-title-000000000000"
+                className="svg-inline--fa fa-heart-broken fa-w-16 "
+                data-icon="heart-broken"
+                data-prefix="fas"
+                onClick={[Function]}
+                role="img"
+                style={Object {}}
+                viewBox="0 0 512 512"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <title
+                  id="svg-inline--fa-title-000000000000"
+                  style={Object {}}
+                >
+                  Hate
+                </title>
+                <path
+                  d="M473.7 73.8l-2.4-2.5c-46-47-118-51.7-169.6-14.8L336 159.9l-96 64 48 128-144-144 96-64-28.6-86.5C159.7 19.6 87 24 40.7 71.4l-2.4 2.4C-10.4 123.6-12.5 202.9 31 256l212.1 218.6c7.1 7.3 18.6 7.3 25.7 0L481 255.9c43.5-53 41.4-132.3-7.3-182.1z"
+                  fill="currentColor"
+                  style={Object {}}
+                />
+              </svg>
+            </FontAwesomeIcon>
+          </ListenControl>
+        </div>
       </div>
     </div>
   </ForwardRef>
@@ -118,9 +295,19 @@ exports[`ListenCard renders correctly for mode = 'listens' 1`] = `
 
 exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
 <ListenCard
+  apiUrl="foobar"
+  currentFeedback={1}
+  currentUser={
+    Object {
+      "auth_token": "baz",
+      "name": "test",
+    }
+  }
+  isCurrentUser={true}
   listen={
     Object {
       "listened_at": 0,
+      "playing_now": false,
       "track_metadata": Object {
         "additional_info": Object {
           "recording_msid": "bar",
@@ -132,7 +319,9 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
     }
   }
   mode="recent"
+  newAlert={[Function]}
   playListen={[Function]}
+  updateFeedback={[Function]}
 >
   <ForwardRef
     className="listen-card row undefined"
@@ -153,7 +342,7 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
       }
     >
       <div
-        className="col-xs-9"
+        className=" col-xs-9"
       >
         <MediaQuery
           minWidth={768}
@@ -163,13 +352,234 @@ exports[`ListenCard renders correctly for mode = 'recent ' 1`] = `
         />
       </div>
       <div
-        className="col-xs-3 text-center"
+        className=" col-xs-3 text-center"
       >
         <a
           href="/user/undefined"
           rel="noopener noreferrer"
           target="_blank"
         />
+      </div>
+    </div>
+  </ForwardRef>
+</ListenCard>
+`;
+
+exports[`ListenCard renders correctly for playing_now listen 1`] = `
+<ListenCard
+  apiUrl="foobar"
+  currentFeedback={1}
+  currentUser={
+    Object {
+      "auth_token": "baz",
+      "name": "test",
+    }
+  }
+  isCurrentUser={true}
+  listen={
+    Object {
+      "listened_at": 0,
+      "playing_now": false,
+      "track_metadata": Object {
+        "additional_info": Object {
+          "recording_msid": "bar",
+          "release_mbid": "foo",
+        },
+        "artist_name": "Moondog",
+        "track_name": "Bird's Lament",
+      },
+    }
+  }
+  mode="listens"
+  newAlert={[Function]}
+  playListen={[Function]}
+  updateFeedback={[Function]}
+>
+  <ForwardRef
+    className="listen-card row undefined"
+    onDoubleClick={[Function]}
+  >
+    <div
+      className="listen-card row undefined"
+      onDoubleClick={[Function]}
+      style={
+        Object {
+          "background": "#FFFFFF",
+          "border": "1px solid #EEEEEE",
+          "borderRadius": "8px",
+          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
+          "boxSizing": "border-box",
+          "height": "100%",
+        }
+      }
+    >
+      <div
+        className=" col-xs-9"
+      >
+        <MediaQuery
+          minWidth={768}
+        />
+        <MediaQuery
+          maxWidth={767}
+        />
+      </div>
+      <div
+        className=" col-xs-3 text-center"
+      >
+        <div
+          className="listen-controls"
+        >
+          <ListenControl
+            action={[Function]}
+            className=" loved"
+            icon={
+              Object {
+                "icon": Array [
+                  512,
+                  512,
+                  Array [],
+                  "f004",
+                  "M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z",
+                ],
+                "iconName": "heart",
+                "prefix": "fas",
+              }
+            }
+            title="Love"
+          >
+            <FontAwesomeIcon
+              border={false}
+              className=" loved"
+              fixedWidth={false}
+              flip={null}
+              icon={
+                Object {
+                  "icon": Array [
+                    512,
+                    512,
+                    Array [],
+                    "f004",
+                    "M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z",
+                  ],
+                  "iconName": "heart",
+                  "prefix": "fas",
+                }
+              }
+              inverse={false}
+              listItem={false}
+              mask={null}
+              onClick={[Function]}
+              pull={null}
+              pulse={false}
+              rotation={null}
+              size={null}
+              spin={false}
+              swapOpacity={false}
+              symbol={false}
+              title="Love"
+              transform={null}
+            >
+              <svg
+                aria-labelledby="svg-inline--fa-title-000000000000"
+                className="svg-inline--fa fa-heart fa-w-16  loved"
+                data-icon="heart"
+                data-prefix="fas"
+                onClick={[Function]}
+                role="img"
+                style={Object {}}
+                viewBox="0 0 512 512"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <title
+                  id="svg-inline--fa-title-000000000000"
+                  style={Object {}}
+                >
+                  Love
+                </title>
+                <path
+                  d="M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z"
+                  fill="currentColor"
+                  style={Object {}}
+                />
+              </svg>
+            </FontAwesomeIcon>
+          </ListenControl>
+          <ListenControl
+            action={[Function]}
+            className=""
+            icon={
+              Object {
+                "icon": Array [
+                  512,
+                  512,
+                  Array [],
+                  "f7a9",
+                  "M473.7 73.8l-2.4-2.5c-46-47-118-51.7-169.6-14.8L336 159.9l-96 64 48 128-144-144 96-64-28.6-86.5C159.7 19.6 87 24 40.7 71.4l-2.4 2.4C-10.4 123.6-12.5 202.9 31 256l212.1 218.6c7.1 7.3 18.6 7.3 25.7 0L481 255.9c43.5-53 41.4-132.3-7.3-182.1z",
+                ],
+                "iconName": "heart-broken",
+                "prefix": "fas",
+              }
+            }
+            title="Hate"
+          >
+            <FontAwesomeIcon
+              border={false}
+              className=""
+              fixedWidth={false}
+              flip={null}
+              icon={
+                Object {
+                  "icon": Array [
+                    512,
+                    512,
+                    Array [],
+                    "f7a9",
+                    "M473.7 73.8l-2.4-2.5c-46-47-118-51.7-169.6-14.8L336 159.9l-96 64 48 128-144-144 96-64-28.6-86.5C159.7 19.6 87 24 40.7 71.4l-2.4 2.4C-10.4 123.6-12.5 202.9 31 256l212.1 218.6c7.1 7.3 18.6 7.3 25.7 0L481 255.9c43.5-53 41.4-132.3-7.3-182.1z",
+                  ],
+                  "iconName": "heart-broken",
+                  "prefix": "fas",
+                }
+              }
+              inverse={false}
+              listItem={false}
+              mask={null}
+              onClick={[Function]}
+              pull={null}
+              pulse={false}
+              rotation={null}
+              size={null}
+              spin={false}
+              swapOpacity={false}
+              symbol={false}
+              title="Hate"
+              transform={null}
+            >
+              <svg
+                aria-labelledby="svg-inline--fa-title-000000000000"
+                className="svg-inline--fa fa-heart-broken fa-w-16 "
+                data-icon="heart-broken"
+                data-prefix="fas"
+                onClick={[Function]}
+                role="img"
+                style={Object {}}
+                viewBox="0 0 512 512"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <title
+                  id="svg-inline--fa-title-000000000000"
+                  style={Object {}}
+                >
+                  Hate
+                </title>
+                <path
+                  d="M473.7 73.8l-2.4-2.5c-46-47-118-51.7-169.6-14.8L336 159.9l-96 64 48 128-144-144 96-64-28.6-86.5C159.7 19.6 87 24 40.7 71.4l-2.4 2.4C-10.4 123.6-12.5 202.9 31 256l212.1 218.6c7.1 7.3 18.6 7.3 25.7 0L481 255.9c43.5-53 41.4-132.3-7.3-182.1z"
+                  fill="currentColor"
+                  style={Object {}}
+                />
+              </svg>
+            </FontAwesomeIcon>
+          </ListenControl>
+        </div>
       </div>
     </div>
   </ForwardRef>

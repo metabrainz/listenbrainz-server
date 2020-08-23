@@ -38,90 +38,106 @@ exports[`UserReports renders without crashing 1`] = `
       </Pill>
     </div>
   </div>
-  <ErrorBoundary>
-    <UserListeningActivity
-      apiUrl="foobar"
-      range="week"
-      user={
-        Object {
-          "name": "test_user",
+  <section
+    id="listening-activity"
+  >
+    <ErrorBoundary>
+      <UserListeningActivity
+        apiUrl="foobar"
+        range="week"
+        user={
+          Object {
+            "name": "test_user",
+          }
         }
-      }
-    />
-  </ErrorBoundary>
-  <div
-    className="row"
+      />
+    </ErrorBoundary>
+  </section>
+  <section
+    id="top-entity"
   >
     <div
-      className="col-md-4"
+      className="row"
     >
-      <ErrorBoundary>
-        <UserTopEntity
-          apiUrl="foobar"
-          entity="artist"
-          range="week"
-          user={
-            Object {
-              "name": "test_user",
+      <div
+        className="col-md-4"
+      >
+        <ErrorBoundary>
+          <UserTopEntity
+            apiUrl="foobar"
+            entity="artist"
+            range="week"
+            user={
+              Object {
+                "name": "test_user",
+              }
             }
-          }
-        />
-      </ErrorBoundary>
-    </div>
-    <div
-      className="col-md-4"
-    >
-      <ErrorBoundary>
-        <UserTopEntity
-          apiUrl="foobar"
-          entity="release"
-          range="week"
-          user={
-            Object {
-              "name": "test_user",
+          />
+        </ErrorBoundary>
+      </div>
+      <div
+        className="col-md-4"
+      >
+        <ErrorBoundary>
+          <UserTopEntity
+            apiUrl="foobar"
+            entity="release"
+            range="week"
+            user={
+              Object {
+                "name": "test_user",
+              }
             }
-          }
-        />
-      </ErrorBoundary>
-    </div>
-    <div
-      className="col-md-4"
-    >
-      <ErrorBoundary>
-        <UserTopEntity
-          apiUrl="foobar"
-          entity="recording"
-          range="week"
-          user={
-            Object {
-              "name": "test_user",
+          />
+        </ErrorBoundary>
+      </div>
+      <div
+        className="col-md-4"
+      >
+        <ErrorBoundary>
+          <UserTopEntity
+            apiUrl="foobar"
+            entity="recording"
+            range="week"
+            user={
+              Object {
+                "name": "test_user",
+              }
             }
-          }
-        />
-      </ErrorBoundary>
+          />
+        </ErrorBoundary>
+      </div>
     </div>
-  </div>
-  <ErrorBoundary>
-    <UserDailyActivity
-      apiUrl="foobar"
-      range="week"
-      user={
-        Object {
-          "name": "test_user",
+  </section>
+  <section
+    id="daily-activity"
+  >
+    <ErrorBoundary>
+      <UserDailyActivity
+        apiUrl="foobar"
+        range="week"
+        user={
+          Object {
+            "name": "test_user",
+          }
         }
-      }
-    />
-  </ErrorBoundary>
-  <ErrorBoundary>
-    <UserArtistMap
-      apiUrl="foobar"
-      range="week"
-      user={
-        Object {
-          "name": "test_user",
+      />
+    </ErrorBoundary>
+  </section>
+  <section
+    id="artist-origin"
+  >
+    <ErrorBoundary>
+      <UserArtistMap
+        apiUrl="foobar"
+        range="week"
+        user={
+          Object {
+            "name": "test_user",
+          }
         }
-      }
-    />
-  </ErrorBoundary>
+      />
+    </ErrorBoundary>
+  </section>
 </div>
 `;

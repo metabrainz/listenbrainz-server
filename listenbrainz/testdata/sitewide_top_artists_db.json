@@ -1,0 +1,32 @@
+{
+  "from_ts": 1009843200,
+  "time_ranges": [
+    {
+      "artists": [
+        {
+          "artist_mbids": [],
+          "artist_msid": "cf7b0f9c-cd96-4e16-a0e7-acc7adfec457",
+          "artist_name": "Judas Priest",
+          "listen_count": 2521
+        }
+      ],
+      "from_ts": 1104537600,
+      "time_range": "2005",
+      "to_ts": 1136073599
+    },
+    {
+      "artists": [
+        {
+          "artist_mbids": [],
+          "artist_msid": "cf7b0f9c-cd96-4e16-a0e7-acc7adfec457",
+          "artist_name": "Judas Priest",
+          "listen_count": 1354
+        }
+      ],
+      "from_ts": 1136073600,
+      "time_range": "2006",
+      "to_ts": 1167609599
+    }
+  ],
+  "to_ts": 1593043183
+}

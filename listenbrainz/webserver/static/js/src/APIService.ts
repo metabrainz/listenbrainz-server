@@ -300,4 +300,37 @@ export default class APIService {
     }
     return null;
   };
+
+  submitFeedback = async (
+    userToken: string,
+    recordingMSID: string,
+    score: ListenFeedBack
+  ): Promise<number> => {
+    const url = `${this.APIBaseURI}/feedback/recording-feedback`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({ recording_msid: recordingMSID, score }),
+    });
+    this.checkStatus(response);
+    return response.status;
+  };
+
+  getFeedbackForUserForRecordings = async (
+    userName: string,
+    recordings: string
+  ) => {
+    if (!userName) {
+      throw new SyntaxError("Username missing");
+    }
+
+    const url = `${this.APIBaseURI}/feedback/user/${userName}/get-feedback-for-recordings?recordings=${recordings}`;
+    const response = await fetch(url);
+    this.checkStatus(response);
+    const data = response.json();
+    return data;
+  };
 }

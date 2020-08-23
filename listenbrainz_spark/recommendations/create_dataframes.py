@@ -1,4 +1,3 @@
-import sys
 import uuid
 import logging
 import time
@@ -7,7 +6,7 @@ from collections import defaultdict
 
 import listenbrainz_spark
 from listenbrainz_spark import path, stats, utils, config, schema
-from listenbrainz_spark.stats.user.utils import get_latest_listen_ts
+from listenbrainz_spark.stats.utils import get_latest_listen_ts
 from listenbrainz_spark.exceptions import (FileNotSavedException,
                                            FileNotFetchedException,
                                            SparkSessionNotInitializedException,
@@ -93,7 +92,7 @@ def save_dataframe(df, dest_path):
         utils.save_parquet(df, dest_path)
     except FileNotSavedException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
 
 
 def save_dataframe_metadata_to_hdfs(metadata):
@@ -106,14 +105,14 @@ def save_dataframe_metadata_to_hdfs(metadata):
         dataframe_metadata = utils.create_dataframe(metadata_row, schema.dataframe_metadata_schema)
     except DataFrameNotCreatedException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
 
     try:
         # Append the dataframe to existing dataframe if already exists or create a new one.
         utils.append(dataframe_metadata, path.DATAFRAME_METADATA)
     except DataFrameNotAppendedException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
 
 
 def get_dates_to_train_data(train_model_window):
@@ -150,10 +149,10 @@ def get_listens_for_training_model_window(to_date, from_date, metadata, dest_pat
         training_df = utils.get_listens(from_date, to_date, dest_path)
     except ValueError as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
     except FileNotFetchedException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
 
     partial_listens_df = utils.get_listens_without_artist_and_recording_mbids(training_df)
     return partial_listens_df
@@ -374,7 +373,7 @@ def main(train_model_window=None):
         listenbrainz_spark.init_spark_session('Create Dataframes')
     except SparkSessionNotInitializedException as err:
         current_app.logger.error(str(err), exc_info=True)
-        sys.exit(-1)
+        raise
 
     to_date, from_date = get_dates_to_train_data(train_model_window)
     partial_listens_df = get_listens_for_training_model_window(to_date, from_date, metadata, path.LISTENBRAINZ_DATA_DIRECTORY)
