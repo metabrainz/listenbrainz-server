@@ -222,7 +222,7 @@ def handle_missing_musicbrainz_data(data):
     user = db_user.get_by_mb_id(musicbrainz_id)
 
     if not user:
-        current_app.logger.critical("Calculted data missing from MusicBrainz for a user that doesn't exist"
+        current_app.logger.critical("Calculated data missing from MusicBrainz for a user that doesn't exist"
                                     " in the Postgres database: {}".format(musicbrainz_id))
         return
 

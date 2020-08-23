@@ -398,7 +398,7 @@ def main(train_model_window=None):
     generate_dataframe_id(metadata)
     save_dataframe_metadata_to_hdfs(metadata)
 
-    current_app.logger.info('Preparing missing releases data...')
+    current_app.logger.info('Preparing missing MusicBrainz data...')
     messages = get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df, from_date, to_date, ti)
 
     return messages
