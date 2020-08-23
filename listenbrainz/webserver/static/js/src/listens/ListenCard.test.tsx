@@ -10,6 +10,7 @@ jest.spyOn(global.Math, "random").mockImplementation(() => 0);
 
 const listen: Listen = {
   listened_at: 0,
+  playing_now: false,
   track_metadata: {
     artist_name: "Moondog",
     track_name: "Bird's Lament",
@@ -50,6 +51,15 @@ describe("ListenCard", () => {
   it("renders correctly for mode = 'recent '", () => {
     const wrapper = mount<ListenCard>(
       <ListenCard {...{ ...props, mode: "recent" }} />
+    );
+
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it("renders correctly for playing_now listen", () => {
+    const playingNowListen: Listen = { playing_now: true, ...listen };
+    const wrapper = mount<ListenCard>(
+      <ListenCard {...{ ...props, listen: playingNowListen }} />
     );
 
     expect(wrapper).toMatchSnapshot();
