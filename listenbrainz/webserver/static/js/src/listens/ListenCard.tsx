@@ -7,6 +7,7 @@ import {
   faMusic,
   faHeart,
   faHeartBroken,
+  faEllipsisV,
 } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -87,7 +88,32 @@ export default class ListenCard extends React.Component<
           updateFeedback(recordingMSID, score);
         }
       } catch (error) {
-        this.handleError(error.message);
+        this.handleError(`Error while submitting feedback - ${error.message}`);
+      }
+    }
+  };
+
+  deleteListen = async () => {
+    const { listen, currentUser, isCurrentUser, updateFeedback } = this.props;
+
+    if (isCurrentUser && currentUser?.auth_token) {
+      const listenedAt = _get(listen, "listened_at");
+      const recordingMSID = _get(
+        listen,
+        "track_metadata.additional_info.recording_msid"
+      );
+
+      try {
+        const status = await this.APIService.deleteListen(
+          currentUser.auth_token,
+          recordingMSID,
+          listenedAt
+        );
+        if (status === 200) {
+          return;
+        }
+      } catch (error) {
+        this.handleError(`Error while deleting listen - ${error.message}`);
       }
     }
   };
@@ -229,6 +255,21 @@ export default class ListenCard extends React.Component<
                     action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
                     className={`${feedback === -1 ? " hated" : ""}`}
                   />
+                  <FontAwesomeIcon
+                    icon={faEllipsisV as IconProp}
+                    title="Delete"
+                    className="dropdown-toggle"
+                    id="listenControlsDropdown"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="true"
+                  />
+                  <ul
+                    className="dropdown-menu dropdown-menu-right"
+                    aria-labelledby="listenControlsDropdown"
+                  >
+                    <ListenControl title="Delete" action={this.deleteListen} />
+                  </ul>
                 </>
               )}
             </div>

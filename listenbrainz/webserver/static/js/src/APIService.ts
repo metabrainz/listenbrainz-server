@@ -333,4 +333,25 @@ export default class APIService {
     const data = response.json();
     return data;
   };
+
+  deleteListen = async (
+    userToken: string,
+    recordingMSID: string,
+    listenedAt: number
+  ): Promise<number> => {
+    const url = `${this.APIBaseURI}/delete-listen`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${userToken}`,
+        "Content-Type": "application/json;charset=UTF-8",
+      },
+      body: JSON.stringify({
+        listened_at: listenedAt,
+        recording_msid: recordingMSID,
+      }),
+    });
+    this.checkStatus(response);
+    return response.status;
+  };
 }
