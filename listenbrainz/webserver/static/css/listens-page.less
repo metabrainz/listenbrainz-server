@@ -234,35 +234,69 @@
         word-break: break-word;
       }
 
-      .fa-heart, .fa-heart-broken {
-        color: transparent;
-        stroke: #8d8d8d;
-        stroke-width: 40px;
-        font-size: 18px;
-        margin: 0% 7%;
-      }
+      .listen-controls {
 
-      .fa-heart {
-
-        &:hover {
-          stroke: @love;
+        .fa-heart, .fa-heart-broken, .fa-ellipsis-v {
+          stroke-width: 40px;
+          font-size: 18px;
+          margin: 0% 7%;
         }
 
-        &.loved {
-          stroke: transparent;
-          color: @love;
-        }
-      }
-      
-      .fa-heart-broken {
-
-        &:hover {
-          stroke: @hate;
+        .fa-heart, .fa-heart-broken {
+          color: transparent;
+          stroke: #8d8d8d;
         }
 
-        &.hated {
-          stroke: transparent;
-          color: @hate;
+        .fa-ellipsis-v {
+          color: #8d8d8d;
+          stroke: #ffffff;
+        }
+
+        .fa-heart {
+
+          &:hover {
+            stroke: @love;
+          }
+
+          &.loved {
+            stroke: transparent;
+            color: @love;
+          }
+        }
+          
+        .fa-heart-broken {
+
+          &:hover {
+            stroke: @hate;
+          }
+
+          &.hated {
+            stroke: transparent;
+            color: @hate;
+          }
+        }
+
+        .dropdown-menu {
+          min-width: 140px;
+          border-radius: 4px;
+          padding: 10px 0px;
+
+          button {
+            width: 100%;
+            background: none;
+            color: inherit;
+            border: none;
+            padding: 5px 20px;
+            font: inherit;
+            cursor: pointer;
+            outline: inherit;
+            text-align: left;
+
+            &:hover {
+              color: #ffffff;
+              background-color: #eb743b;
+            }
+          }
         }
       }
     }
