@@ -29,6 +29,7 @@ const props: ListenCardProps = {
   isCurrentUser: true,
   currentUser: { auth_token: "baz", name: "test" },
   playListen: () => {},
+  updateListenList: () => {},
   updateFeedback: () => {},
   newAlert: () => {},
 };
@@ -78,7 +79,7 @@ describe("componentDidUpdate", () => {
 });
 
 describe("submitFeedback", () => {
-  it("updates feedback state and calls updateFeedback", async () => {
+  it("calls API, updates feedback state and calls updateFeedback correctly", async () => {
     const wrapper = shallow<ListenCard>(
       <ListenCard {...{ ...props, updateFeedback: jest.fn() }} />
     );
@@ -164,7 +165,9 @@ describe("submitFeedback", () => {
 
     instance.submitFeedback(-1);
     expect(instance.handleError).toHaveBeenCalledTimes(1);
-    expect(instance.handleError).toHaveBeenCalledWith("error");
+    expect(instance.handleError).toHaveBeenCalledWith(
+      "Error while submitting feedback - error"
+    );
   });
 });
 
@@ -182,6 +185,89 @@ describe("handleError", () => {
       "danger",
       "Error",
       "error"
+    );
+  });
+});
+
+describe("deleteListen", () => {
+  it("calls API and updateListenList correctly", async () => {
+    const wrapper = shallow<ListenCard>(
+      <ListenCard {...{ ...props, updateListenList: jest.fn() }} />
+    );
+    const instance = wrapper.instance();
+
+    const spy = jest.spyOn(instance.APIService, "deleteListen");
+    spy.mockImplementation(() => Promise.resolve(200));
+
+    instance.deleteListen();
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith("baz", "bar", 0);
+
+    expect(instance.props.updateListenList).toHaveBeenCalledTimes(1);
+    expect(instance.props.updateListenList).toHaveBeenCalledWith(
+      instance.props.listen
+    );
+  });
+
+  it("does nothing if isCurrentUser is false", async () => {
+    const wrapper = shallow<ListenCard>(
+      <ListenCard {...{ ...props, isCurrentUser: false }} />
+    );
+    const instance = wrapper.instance();
+
+    const spy = jest.spyOn(instance.APIService, "deleteListen");
+    spy.mockImplementation(() => Promise.resolve(200));
+
+    instance.deleteListen();
+    expect(spy).toHaveBeenCalledTimes(0);
+  });
+
+  it("does nothing if CurrentUser.authtoken is not set", async () => {
+    const wrapper = shallow<ListenCard>(
+      <ListenCard
+        {...{ ...props, currentUser: { auth_token: undefined, name: "test" } }}
+      />
+    );
+    const instance = wrapper.instance();
+
+    const spy = jest.spyOn(instance.APIService, "deleteListen");
+    spy.mockImplementation(() => Promise.resolve(200));
+
+    instance.deleteListen();
+    expect(spy).toHaveBeenCalledTimes(0);
+  });
+
+  it("doesn't call updateListenList if status code is not 200", async () => {
+    const wrapper = shallow<ListenCard>(<ListenCard {...props} />);
+    const instance = wrapper.instance();
+    props.updateListenList = jest.fn();
+
+    const spy = jest.spyOn(instance.APIService, "deleteListen");
+    spy.mockImplementation(() => Promise.resolve(201));
+
+    instance.deleteListen();
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith("baz", "bar", 0);
+
+    expect(props.updateListenList).toHaveBeenCalledTimes(0);
+  });
+
+  it("calls handleError if error is returned", async () => {
+    const wrapper = shallow<ListenCard>(<ListenCard {...props} />);
+    const instance = wrapper.instance();
+    instance.handleError = jest.fn();
+
+    const spy = jest.spyOn(instance.APIService, "deleteListen");
+    spy.mockImplementation(() => {
+      throw new Error("error");
+    });
+
+    instance.deleteListen();
+    expect(instance.handleError).toHaveBeenCalledTimes(1);
+    expect(instance.handleError).toHaveBeenCalledWith(
+      "Error while deleting listen - error"
     );
   });
 });
