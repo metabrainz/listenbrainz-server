@@ -7,6 +7,7 @@ import {
   faMusic,
   faHeart,
   faHeartBroken,
+  faEllipsisV,
 } from "@fortawesome/free-solid-svg-icons";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -27,6 +28,7 @@ export type ListenCardProps = {
   isCurrentUser: Boolean;
   currentUser?: ListenBrainzUser;
   playListen: (listen: Listen) => void;
+  removeListenFromListenList: (listen: Listen) => void;
   updateFeedback: (recordingMsid: string, score: ListenFeedBack) => void;
   newAlert: (
     alertType: AlertType,
@@ -36,6 +38,7 @@ export type ListenCardProps = {
 };
 
 type ListenCardState = {
+  isDeleted: Boolean;
   feedback: ListenFeedBack;
 };
 
@@ -50,6 +53,7 @@ export default class ListenCard extends React.Component<
     super(props);
 
     this.state = {
+      isDeleted: false,
       feedback: props.currentFeedback || 0,
     };
 
@@ -87,7 +91,42 @@ export default class ListenCard extends React.Component<
           updateFeedback(recordingMSID, score);
         }
       } catch (error) {
-        this.handleError(error.message);
+        this.handleError(`Error while submitting feedback - ${error.message}`);
+      }
+    }
+  };
+
+  deleteListen = async () => {
+    const {
+      listen,
+      currentUser,
+      isCurrentUser,
+      removeListenFromListenList,
+    } = this.props;
+
+    if (isCurrentUser && currentUser?.auth_token) {
+      const listenedAt = _get(listen, "listened_at");
+      const recordingMSID = _get(
+        listen,
+        "track_metadata.additional_info.recording_msid"
+      );
+
+      try {
+        const status = await this.APIService.deleteListen(
+          currentUser.auth_token,
+          recordingMSID,
+          listenedAt
+        );
+        if (status === 200) {
+          this.setState({ isDeleted: true });
+
+          // wait for the animation to finish
+          setTimeout(function () {
+            removeListenFromListenList(listen);
+          }, 1000);
+        }
+      } catch (error) {
+        this.handleError(`Error while deleting listen - ${error.message}`);
       }
     }
   };
@@ -106,12 +145,14 @@ export default class ListenCard extends React.Component<
 
   render() {
     const { listen, mode, className, isCurrentUser } = this.props;
-    const { feedback } = this.state;
+    const { feedback, isDeleted } = this.state;
 
     return (
       <Card
         onDoubleClick={this.playListen}
-        className={`listen-card row ${className}`}
+        className={`listen-card row ${className} ${
+          isDeleted ? " deleted" : ""
+        }`}
       >
         <div
           className={`${
@@ -229,6 +270,24 @@ export default class ListenCard extends React.Component<
                     action={() => this.submitFeedback(feedback === -1 ? 0 : -1)}
                     className={`${feedback === -1 ? " hated" : ""}`}
                   />
+                  <FontAwesomeIcon
+                    icon={faEllipsisV as IconProp}
+                    title="Delete"
+                    className="dropdown-toggle"
+                    id="listenControlsDropdown"
+                    data-toggle="dropdown"
+                    aria-haspopup="true"
+                    aria-expanded="true"
+                  />
+                  <ul
+                    className="dropdown-menu dropdown-menu-right"
+                    aria-labelledby="listenControlsDropdown"
+                  >
+                    <ListenControl
+                      title="Delete Listen"
+                      action={this.deleteListen}
+                    />
+                  </ul>
                 </>
               )}
             </div>

@@ -174,6 +174,7 @@
   > .listen-card {
     padding: 15px;
     margin-bottom: 7px;
+    max-height: 72px;
     
     &.playing-now {
       background-color: rgba(255, 252, 202, 0.3) !important ;
@@ -234,36 +235,95 @@
         word-break: break-word;
       }
 
-      .fa-heart, .fa-heart-broken {
-        color: transparent;
-        stroke: #8d8d8d;
-        stroke-width: 40px;
-        font-size: 18px;
-        margin: 0% 7%;
+      .listen-controls {
+
+        .fa-heart, .fa-heart-broken, .fa-ellipsis-v {
+          stroke-width: 40px;
+          font-size: 18px;
+          margin: 0% 7%;
+        }
+
+        .fa-heart, .fa-heart-broken {
+          color: transparent;
+          stroke: #8d8d8d;
+        }
+
+        .fa-ellipsis-v {
+          color: #8d8d8d;
+          stroke: #ffffff;
+        }
+
+        .fa-heart {
+
+          &:hover {
+            stroke: @love;
+          }
+
+          &.loved {
+            stroke: transparent;
+            color: @love;
+          }
+        }
+          
+        .fa-heart-broken {
+
+          &:hover {
+            stroke: @hate;
+          }
+
+          &.hated {
+            stroke: transparent;
+            color: @hate;
+          }
+        }
+
+        .dropdown-menu {
+          min-width: 140px;
+          border-radius: 4px;
+          padding: 10px 0px;
+
+          button {
+            width: 100%;
+            background: none;
+            color: inherit;
+            border: none;
+            padding: 5px 20px;
+            font: inherit;
+            cursor: pointer;
+            outline: inherit;
+            text-align: left;
+
+            &:hover {
+              color: #ffffff;
+              background-color: #eb743b;
+            }
+          }
+        }
       }
-
-      .fa-heart {
-
-        &:hover {
-          stroke: @love;
-        }
-
-        &.loved {
-          stroke: transparent;
-          color: @love;
-        }
+    }
+    &.deleted {
+      animation: deleted-animation 0.6s linear forwards;
+    }
+    
+    @keyframes deleted-animation {
+      0% {
+        opacity: 1;
+        padding: inherit;
+        height: inherit;
+        margin: inherit;
+        transform: scaleY(1);
       }
       
-      .fa-heart-broken {
+      50% {
+        opacity: 0; 
+      }
 
-        &:hover {
-          stroke: @hate;
-        }
-
-        &.hated {
-          stroke: transparent;
-          color: @hate;
-        }
+      100% {
+        opacity: 0;
+        height: 0px;
+        margin-top: -40px;
+        transform: scaleY(0);
+        display:none;
       }
     }
   }

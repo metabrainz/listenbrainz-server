@@ -8,12 +8,12 @@ import listenbrainz.db.user as db_user
 from listenbrainz.webserver.rate_limiter import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list,\
-    MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
-from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET,\
-    DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
+    is_valid_uuid, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT,\
+    LISTEN_TYPE_PLAYING_NOW
 from listenbrainz.listenstore.timescale_listenstore import SECONDS_IN_TIME_RANGE
 import time
 import psycopg2
+from listenbrainz.webserver.timescale_connection import _ts
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -352,6 +352,58 @@ def validate_token():
             'valid': True,
             'user_name': user['musicbrainz_id'],
         })
+
+
+@api_bp.route('/delete-listen', methods=['POST'])
+@crossdomain(headers="Authorization, Content-Type")
+@ratelimit()
+def delete_listen():
+    """
+    Delete a particular listen from a user's listen history.
+    This checks for the correct authorization token and deletes the listen.
+
+    The format of the JSON to be POSTed to this endpoint is:
+
+        {
+            "listened_at": 1,
+            "recording_msid": "d23f4719-9212-49f0-ad08-ddbfbfc50d6f"
+        }
+
+    :reqheader Authorization: Token <user token>
+    :statuscode 200: listen deleted.
+    :statuscode 400: invalid JSON sent, see error message for details.
+    :statuscode 401: invalid authorization. See error message for details.
+    :resheader Content-Type: *application/json*
+    """
+    user = _validate_auth_header()
+
+    data = request.json
+
+    if "listened_at" not in data:
+        log_raise_400("Listen timestamp missing.")
+    try:
+        listened_at = data["listened_at"]
+        listened_at = int(listened_at)
+    except ValueError:
+        log_raise_400("%s: Listen timestamp invalid." % listened_at)
+
+    if "recording_msid" not in data:
+        log_raise_400("Recording MSID missing.")
+
+    recording_msid = data["recording_msid"]
+    if not is_valid_uuid(recording_msid):
+        log_raise_400("%s: Recording MSID format invalid." % recording_msid)
+
+    try:
+        _ts.delete_listen(listened_at=listened_at, recording_msid=recording_msid, user_name=user["musicbrainz_id"])
+    except TimescaleListenStoreException as e:
+        current_app.logger.error("Cannot delete listen for user: %s" % str(e))
+        raise ServiceUnavailable("We couldn't delete the listen. Please try again later.")
+    except Exception as e:
+        current_app.logger.error("Cannot delete listen for user: %s" % str(e))
+        raise InternalServerError("We couldn't delete the listen. Please try again later.")
+
+    return jsonify({'status': 'ok'})
 
 
 def _parse_int_arg(name, default=None):
