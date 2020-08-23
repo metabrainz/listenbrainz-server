@@ -9,6 +9,9 @@ from listenbrainz.webserver.rate_limiter import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list,\
     MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET, DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
+from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, MAX_LISTEN_SIZE, MAX_ITEMS_PER_GET,\
+    DEFAULT_ITEMS_PER_GET, LISTEN_TYPE_SINGLE, LISTEN_TYPE_IMPORT, LISTEN_TYPE_PLAYING_NOW
+from listenbrainz.listenstore.timescale_listenstore import SECONDS_IN_TIME_RANGE
 import time
 import psycopg2
 
@@ -106,9 +109,12 @@ def get_listens(user_name):
     if time_range < 1 or time_range > MAX_TIME_RANGE:
         log_raise_400("time_range must be between 1 and %d." % MAX_TIME_RANGE)
 
-    # if no max given, use now()
     if max_ts and min_ts:
-        log_raise_400("You may only specify max_ts or min_ts, not both.")
+        if max_ts < min_ts:
+            log_raise_400("max_ts should be greater than min_ts")
+        
+        if (max_ts - min_ts) > MAX_TIME_RANGE * SECONDS_IN_TIME_RANGE:
+            log_raise_400("time_range specified by min_ts and max_ts should be less than %d days." % MAX_TIME_RANGE * 5)
 
     db_conn = webserver.create_timescale(current_app)
     (min_ts_per_user, max_ts_per_user) = db_conn.get_timestamps_for_user(user_name)

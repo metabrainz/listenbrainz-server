@@ -62,12 +62,10 @@ class ListenStore(object):
         """ Check from_ts, to_ts, and limit for fetching listens
             and set them to default values if not given.
         """
-        if from_ts and to_ts:
-            raise ValueError("You cannot specify from_ts and to_ts at the same time.")
-
+        if from_ts and to_ts and from_ts >= to_ts:
+            raise ValueError("from_ts should be less than to_ts")
         if from_ts is None and to_ts is None:
             raise ValueError("You must specify either from_ts or to_ts.")
-
         if from_ts:
             order = ORDER_ASC
         else:

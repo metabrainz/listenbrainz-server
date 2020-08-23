@@ -32,6 +32,7 @@ DUMP_CHUNK_SIZE = 100000
 NUMBER_OF_USERS_PER_DIRECTORY = 1000
 DUMP_FILE_SIZE_LIMIT = 1024 * 1024 * 1024  # 1 GB
 DATA_START_YEAR = 2005
+SECONDS_IN_TIME_RANGE = 432000
 
 
 class TimescaleListenStore(ListenStore):
@@ -234,18 +235,22 @@ class TimescaleListenStore(ListenStore):
         if time_range < 0:
             max_timestamp_window = -1
         else:
-            max_timestamp_window = 432000 * time_range
-            if from_ts is not None:
+            max_timestamp_window = SECONDS_IN_TIME_RANGE * time_range
+            if to_ts is None:
                 to_ts = from_ts + max_timestamp_window
-            else:
+            elif from_ts is None:
                 from_ts = to_ts - max_timestamp_window
-
+                
         query = """SELECT listened_at, track_name, created, data
                      FROM listen
                     WHERE user_name = :user_name """
+                  
 
         if max_timestamp_window < 0:
-            if from_ts is not None:
+            if from_ts and to_ts:
+                query += """AND listened_at > :from_ts
+                            AND listened_at < :to_ts """
+            elif from_ts is not None:
                 query += "AND listened_at > :from_ts "
             else:
                 query += "AND listened_at < :to_ts "

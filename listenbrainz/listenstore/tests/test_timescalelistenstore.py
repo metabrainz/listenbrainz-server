@@ -127,6 +127,18 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.assertEqual(listens[3].ts_since_epoch, 1400000050)
         self.assertEqual(listens[4].ts_since_epoch, 1400000000)
 
+    def test_fetch_listens_4(self):
+        self._create_test_data(self.testuser_name)
+        listens = self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000049, to_ts=1400000101)
+        self.assertEqual(len(listens), 2)
+        self.assertEqual(listens[0].ts_since_epoch, 1400000100)
+        self.assertEqual(listens[1].ts_since_epoch, 1400000050)
+
+    def test_fetch_listens_5(self):
+        self._create_test_data(self.testuser_name)
+        with self.assertRaises(ValueError):
+            self.logstore.fetch_listens(user_name=self.testuser_name, from_ts=1400000101, to_ts=1400000001)
+
     def test_fetch_listens_time_range(self):
         self._create_test_data(self.testuser_name,
                                test_data_file_name='timescale_listenstore_test_listens_over_greater_time_range.json')
