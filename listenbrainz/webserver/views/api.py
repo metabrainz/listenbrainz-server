@@ -354,7 +354,7 @@ def validate_token():
         })
 
 
-@api_bp.route('/delete-listen', methods=['POST'])
+@api_bp.route('/delete-listen', methods=['POST', 'OPTIONS'])
 @crossdomain(headers="Authorization, Content-Type")
 @ratelimit()
 def delete_listen():
