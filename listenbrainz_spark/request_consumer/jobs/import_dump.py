@@ -40,7 +40,7 @@ def import_full_dump_by_id_handler(id: int):
 def import_mapping_to_hdfs():
     temp_dir = tempfile.mkdtemp()
     src, mapping_name = ListenbrainzDataDownloader().download_msid_mbid_mapping(directory=temp_dir)
-    ListenbrainzDataUploader().upload_mapping(archive=src, force=True)
+    ListenbrainzDataUploader().upload_mapping(archive=src)
     shutil.rmtree(temp_dir)
 
     return [{
@@ -53,7 +53,7 @@ def import_mapping_to_hdfs():
 def import_artist_relation_to_hdfs():
     temp_dir = tempfile.mkdtemp()
     src, artist_relation_name = ListenbrainzDataDownloader().download_artist_relation(directory=temp_dir)
-    ListenbrainzDataUploader().upload_artist_relation(archive=src, force=True)
+    ListenbrainzDataUploader().upload_artist_relation(archive=src)
     shutil.rmtree(temp_dir)
 
     return [{

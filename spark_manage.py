@@ -78,8 +78,7 @@ def init_dir(rm, recursive, create_dir):
 
 
 @cli.command(name='upload_mapping')
-@click.option("--force", "-f", is_flag=True, help="Deletes existing mapping.")
-def upload_mapping(force):
+def upload_mapping():
     """ Invoke script to upload mapping to HDFS.
     """
     from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
@@ -88,7 +87,7 @@ def upload_mapping(force):
         downloader_obj = ListenbrainzDataDownloader()
         src, _ = downloader_obj.download_msid_mbid_mapping(path.FTP_FILES_PATH)
         uploader_obj = ListenbrainzDataUploader()
-        uploader_obj.upload_mapping(src, force=force)
+        uploader_obj.upload_mapping(src)
 
 
 @cli.command(name='upload_listens')
@@ -109,8 +108,7 @@ def upload_listens(force, incremental, id):
 
 
 @cli.command(name='upload_artist_relation')
-@click.option("--force", "-f", is_flag=True, help="Deletes existing artist relation.")
-def upload_artist_relation(force):
+def upload_artist_relation():
     """ Invoke script  to upload artist relation to HDFS.
     """
     from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
@@ -119,7 +117,7 @@ def upload_artist_relation(force):
         downloader_obj = ListenbrainzDataDownloader()
         src, _ = downloader_obj.download_artist_relation(path.FTP_FILES_PATH)
         uploader_obj = ListenbrainzDataUploader()
-        uploader_obj.upload_artist_relation(src, force=force)
+        uploader_obj.upload_artist_relation(src)
 
 
 @cli.command(name='dataframe')
