@@ -78,7 +78,6 @@ class ListenbrainzHDFSUploader:
                         utils.delete_dir('/temp', recursive=True)
                     if utils.path_exists(tmp_dump_dir):
                         utils.delete_dir(tmp_dump_dir, recursive=True)
-                    shutil.rmtree(tmp_dump_dir)
                     raise DumpInvalidException("{} while extracting {}, aborting import".format(type(err).__name__, member.name))
 
                 tmp_hdfs_path = os.path.join(tmp_dump_dir, member.name)
@@ -112,4 +111,3 @@ class ListenbrainzHDFSUploader:
 
         # Cleanup
         utils.delete_dir(tmp_dump_dir, recursive=True)
-        shutil.rmtree(tmp_dump_dir)
