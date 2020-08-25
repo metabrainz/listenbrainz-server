@@ -62,6 +62,17 @@ class ListenbrainzHDFSUploader:
         if callback is None:
             raise NotImplementedError('Callback to process JSON missing. Aborting...')
 
+        # Delete '/temp'if it exists
+        if utils.path_exists("/temp"):
+            utils.delete_dir("/temp", recursive=True)
+
+        # Copy data from dest_path to '/temp' to be merged with new data
+        if not force and utils.path_exists(dest_path):
+            t0 = time.monotonic()
+            current_app.logger.info("Copying old listens into '/temp'")
+            utils.copy(dest_path, '/temp', overwrite=True)
+            current_app.logger.info("Done! Time taken: {:.2f}".format(time.monotonic() - t0))
+
         current_app.logger.info("Uploading listens to temporary directory in HDFS...")
         total_files = 0
         total_time = 0.0
@@ -93,7 +104,8 @@ class ListenbrainzHDFSUploader:
             total_files, total_time / total_files
         ))
 
-        if force:
+        # Delete dest_path if present
+        if utils.path_exists(dest_path):
             current_app.logger.info('Removing {} from HDFS...'.format(dest_path))
             utils.delete_dir(dest_path, recursive=True)
             current_app.logger.info('Done!')

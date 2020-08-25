@@ -35,7 +35,7 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
             Args:
                 filename (str): File name of JSON file.
                 data_dir (str): Dir to save listens to in HDFS as parquet.
-                tmp_HDFS_path (str): HDFS path where listens JSON has been uploaded.
+                tmp_hdfs_path (str): HDFS path where listens JSON has been uploaded.
         """
         start_time = time.monotonic()
         df = utils.read_json(tmp_hdfs_path, schema=schema)
@@ -47,8 +47,12 @@ class ListenbrainzDataUploader(ListenbrainzHDFSUploader):
             month = filename.split('/')[-1][0:-5]
             dest_path = os.path.join(data_dir, year, '{}.parquet'.format(str(month)))
 
+        if utils.path_exists(dest_path):
+            df.write.mode('append').parquet(dest_path)
+        else:
+            utils.save_parquet(df, dest_path)
+
         current_app.logger.info("Uploading to {}...".format(dest_path))
-        utils.save_parquet(df, dest_path)
         current_app.logger.info("File processed in {:.2f} seconds!".format(time.monotonic() - start_time))
 
     def upload_mapping(self, archive):
