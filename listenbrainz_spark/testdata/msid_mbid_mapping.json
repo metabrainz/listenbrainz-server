@@ -1,0 +1,35 @@
+[
+    {
+        "msb_artist_msid":"d3e6f78f-b2d3-4f02-8a37-6081c87e7b0e",
+        "mb_artist_credit_id":1820,
+        "mb_artist_credit_mbids":["7e786a4c-c743-4713-9340-a6f12d8515d4"],
+        "msb_release_msid":"7ca522d8-57ac-4c10-8e16-2c4f78bb2d83",
+        "mb_release_mbid":"3e5c4b65-7610-481b-b3af-b7b676595da4",
+        "msb_recording_msid":"00000070-430e-438f-abbf-87a703d3048e",
+        "mb_recording_mbid":"af5a56f4-1f83-4681-b319-70a734d0d047",
+        "mb_recording_name":"Serenade (special remix)",
+        "mb_artist_credit_name":"Ultravox",
+        "mb_release_name":"Quartet",
+        "msb_recording_name_matchable":"serenadespecialremix",
+        "msb_artist_credit_name_matchable":"ultravox",
+        "msb_release_name_matchable":"quartet"
+    },
+
+    {
+        "msb_artist_msid":"44cecbb5-e957-4e79-8d9a-c59dd2c59e82",
+        "mb_artist_credit_id":685777,
+        "mb_artist_credit_mbids":["6a70b322-9aa9-41b3-9dce-824733633a1c"],
+        "msb_release_msid":"f19b33ce-6651-41b3-8fd8-204172ff3e90",
+        "mb_release_mbid":"74df6235-8362-4e1e-9d0c-950a5783d7eb",
+        "msb_recording_msid":"000003b1-95a1-4ca8-b91a-3898ef3d2193",
+        "mb_recording_mbid":"bf8bf71e-26ad-4a7a-b653-a753333ddd4b",
+        "mb_recording_name":"After the Night",
+        "mb_artist_credit_name":"Martin Kemp",
+        "mb_release_name":"Rinse:11",
+        "msb_recording_name_matchable":"afterthenight",
+        "msb_artist_credit_name_matchable":"martinkemp",
+        "msb_release_name_matchable":"adventuresindubstepandbeyonddisc1"
+    }
+
+
+]

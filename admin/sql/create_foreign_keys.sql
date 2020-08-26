@@ -60,4 +60,10 @@ ALTER TABLE recording_feedback
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
+ALTER TABLE missing_musicbrainz_data
+    ADD CONSTRAINT missing_mb_data_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
 COMMIT;
