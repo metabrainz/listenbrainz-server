@@ -137,9 +137,10 @@ def fetch_listens(musicbrainz_id, to_ts, time_range=None):
         yield from batch
         to_ts = batch[-1].ts_since_epoch  # new to_ts will be the the timestamp of the last listen fetched
 
+
 def fetch_feedback(user_id):
     """
-    Fetch feedback by making repeated queries to DB until we get all the data. 
+    Fetch feedback by making repeated queries to DB until we get all the data.
     Returns a generator that streams the results.
     """
     batch = []
