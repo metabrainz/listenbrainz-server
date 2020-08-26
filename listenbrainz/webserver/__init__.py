@@ -261,4 +261,4 @@ def _register_blueprints(app):
     app.register_blueprint(api_bp_compat)
     app.register_blueprint(recommendations_cf_recording_api_bp, url_prefix=API_PREFIX+'/cf/recommendation')
     app.register_blueprint(missing_musicbrainz_data_api_bp, url_prefix=API_PREFIX+'/missing/musicbrainz')
-    app.register_blueprint(recommendations_cf_recording_bp, url_prefix='/candidate_recordings')
+    app.register_blueprint(recommendations_cf_recording_bp, url_prefix='/recommended/tracks')
