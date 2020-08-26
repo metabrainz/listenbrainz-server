@@ -73,7 +73,6 @@ export default class ListenCard extends React.Component<
 
   submitFeedback = async (score: ListenFeedBack) => {
     const { listen, currentUser, isCurrentUser, updateFeedback } = this.props;
-
     if (isCurrentUser && currentUser?.auth_token) {
       const recordingMSID = _get(
         listen,
@@ -156,7 +155,7 @@ export default class ListenCard extends React.Component<
       >
         <div
           className={`${
-            isCurrentUser || mode === "recent" || mode === "follow"
+            (isCurrentUser && mode !== "cf_recs") || mode === "recent" || mode === "follow"
               ? " col-xs-9"
               : " col-xs-12"
           }`}
@@ -182,6 +181,12 @@ export default class ListenCard extends React.Component<
                 <span className="listen-time text-center text-muted">
                   <FontAwesomeIcon icon={faMusic as IconProp} /> Playing now
                 </span>
+              ) : ( mode === "cf_recs" ? (
+                <span
+                  className="score text-center text-muted"
+                  title={listen.score} >
+                  score: {listen.score}
+                </span>
               ) : (
                 <span
                   className="listen-time text-center text-muted"
@@ -194,7 +199,7 @@ export default class ListenCard extends React.Component<
                     ? timeago.ago(listen.listened_at_iso)
                     : timeago.ago(listen.listened_at * 1000)}
                 </span>
-              )}
+              ))}
             </div>
           </MediaQuery>
           <MediaQuery maxWidth={767}>
@@ -254,7 +259,7 @@ export default class ListenCard extends React.Component<
             >
               {listen.user_name}
             </a>
-          ) : (
+          ) : ( mode !== "cf_recs" && (
             <div className="listen-controls">
               {!listen?.playing_now && (
                 <>
@@ -291,7 +296,7 @@ export default class ListenCard extends React.Component<
                 </>
               )}
             </div>
-          )}
+          ))}
         </div>
       </Card>
     );
