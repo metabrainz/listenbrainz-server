@@ -123,7 +123,7 @@ def make_api_request(user, spotipy_call, **kwargs):
 
     Args:
         user (spotify.Spotify): the user whose plays are to be imported.
-        spotipy_call (function call): the Spotipy call which makes request to the required API endpoint
+        spotipy_call (function): the Spotipy function which makes request to the required API endpoint
 
     Returns:
         the response from the spotify API

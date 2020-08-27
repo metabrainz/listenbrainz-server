@@ -1,19 +1,34 @@
 import os
 import json
 import listenbrainz.webserver
-import time
+from datetime import datetime
+import pytz
 
 
 from listenbrainz.domain.spotify import Spotify, SpotifyAPIError, SpotifyListenBrainzError
 from listenbrainz.spotify_updater import spotify_read_listens
 from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_IMPORT
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 
 class ConvertListensTestCase(TestCase):
 
     DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
+
+    spotify_user = Spotify(
+                user_id=1,
+                musicbrainz_id='jude',
+                musicbrainz_row_id=312,
+                user_token='token',
+                token_expires=(datetime.max.replace(tzinfo=pytz.UTC)),
+                refresh_token='refresh',
+                last_updated=None,
+                record_listens=True,
+                error_message=None,
+                latest_listened_at=None,
+                permission='user-read-recently-played',
+            )
 
     def test_parse_play_to_listen_no_isrc(self):
         data = json.load(open(os.path.join(self.DATA_DIR, 'spotify_play_no_isrc.json')))
@@ -94,24 +109,20 @@ class ConvertListensTestCase(TestCase):
     @patch('listenbrainz.domain.spotify.get_active_users_to_process')
     def test_notification_on_api_error(self, mock_get_active_users, mock_process_one_user, mock_notify_error, mock_update):
         mock_process_one_user.side_effect = SpotifyAPIError('api borked')
-        mock_get_active_users.return_value = [
-            Spotify(
-                user_id=1,
-                musicbrainz_id='jude',
-                musicbrainz_row_id=312,
-                user_token='token',
-                token_expires=int(time.time()),
-                refresh_token='refresh',
-                last_updated=None,
-                record_listens=True,
-                error_message=None,
-                latest_listened_at=None,
-                permission='user-read-recently-played',
-            ),
-        ]
+        mock_get_active_users.return_value = [self.spotify_user]
         app = listenbrainz.webserver.create_app()
         app.config['TESTING'] = False
         with app.app_context():
             spotify_read_listens.process_all_spotify_users()
             mock_notify_error.assert_called_once_with(312, 'api borked')
             mock_update.assert_called_once()
+
+    @patch('listenbrainz.domain.spotify.get_active_users_to_process')
+    def test_spotipy_methods_are_called_with_correct_params(self, mock_get_active_users):
+        self.spotify_user.get_spotipy_client = MagicMock()
+        mock_get_active_users.return_value = [self.spotify_user]
+
+        with listenbrainz.webserver.create_app().app_context():
+            spotify_read_listens.process_all_spotify_users()
+            self.spotify_user.get_spotipy_client().current_user_playing_track.assert_called_once()
+            self.spotify_user.get_spotipy_client().current_user_recently_played.assert_called_once_with(limit=50, after=0)
