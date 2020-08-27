@@ -138,7 +138,8 @@ def make_api_request(user, spotipy_call, **kwargs):
 
     while retries > 0:
         try:
-            recently_played = spotipy_call()
+            recently_played = spotipy_call(**kwargs)
+            break
         except SpotifyException as e:
             retries -= 1
             if e.http_status == 429:
@@ -193,15 +194,18 @@ def make_api_request(user, spotipy_call, **kwargs):
 def get_user_recently_played(user):
     """ Get tracks from the current user’s recently played tracks.
     """
-    latest_listened_at_ts = int(user.latest_listened_at.timestamp() * 1000)  # latest listen UNIX ts in ms
-    return  user.get_spotipy_client().current_user_recently_played(limit=50, after=latest_listened_at_ts)
+    latest_listened_at_ts = 0
+    latest_listened_at = user.latest_listened_at
+    if latest_listened_at:
+        latest_listened_at_ts = int(latest_listened_at.timestamp() * 1000)  # latest listen UNIX ts in ms
+
+    return make_api_request(user, user.get_spotipy_client().current_user_recently_played, limit=50, after=latest_listened_at_ts)
 
 
 def get_user_currently_playing(user):
     """ Get the user's currently playing track.
     """
-    return user.get_spotipy_client().current_user_playing_track()
-
+    return make_api_request(user, user.get_spotipy_client().current_user_playing_track)
 
 
 def submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_IMPORT):
