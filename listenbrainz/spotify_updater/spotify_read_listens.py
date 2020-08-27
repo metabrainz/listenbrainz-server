@@ -3,6 +3,7 @@ import time
 import listenbrainz.webserver
 import json
 
+from datetime import datetime
 from listenbrainz.utils import safely_import_config
 safely_import_config()
 
@@ -17,7 +18,6 @@ from werkzeug.exceptions import BadRequest, InternalServerError, ServiceUnavaila
 from brainzutils.mail import send_mail
 from brainzutils import musicbrainz_db
 from brainzutils.musicbrainz_db import editor as mb_editor
-from datetime import datetime
 
 
 def notify_error(musicbrainz_row_id, error):
