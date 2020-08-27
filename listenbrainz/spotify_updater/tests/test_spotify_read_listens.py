@@ -4,31 +4,35 @@ import listenbrainz.webserver
 from datetime import datetime
 import pytz
 
-
+import listenbrainz.db.user as db_user
 from listenbrainz.domain.spotify import Spotify, SpotifyAPIError, SpotifyListenBrainzError
 from listenbrainz.spotify_updater import spotify_read_listens
 from listenbrainz.webserver.views.api_tools import LISTEN_TYPE_IMPORT
-from unittest import TestCase
 from unittest.mock import patch, MagicMock
+from listenbrainz.db.testing import DatabaseTestCase
 
 
-class ConvertListensTestCase(TestCase):
+class ConvertListensTestCase(DatabaseTestCase):
 
-    DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
+    def setUp(self):
+        super(ConvertListensTestCase, self).setUp()
+        self.user = db_user.get_or_create(1, 'testuserpleaseignore')
 
-    spotify_user = Spotify(
-                user_id=1,
-                musicbrainz_id='jude',
-                musicbrainz_row_id=312,
-                user_token='token',
-                token_expires=(datetime.max.replace(tzinfo=pytz.UTC)),
-                refresh_token='refresh',
-                last_updated=None,
-                record_listens=True,
-                error_message=None,
-                latest_listened_at=None,
-                permission='user-read-recently-played',
-            )
+        self.DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
+
+        self.spotify_user = Spotify(
+                    user_id=self.user["id"],
+                    musicbrainz_id='jude',
+                    musicbrainz_row_id=312,
+                    user_token='token',
+                    token_expires=(datetime.max.replace(tzinfo=pytz.UTC)),
+                    refresh_token='refresh',
+                    last_updated=None,
+                    record_listens=True,
+                    error_message=None,
+                    latest_listened_at=None,
+                    permission='user-read-recently-played',
+                )
 
     def test_parse_play_to_listen_no_isrc(self):
         data = json.load(open(os.path.join(self.DATA_DIR, 'spotify_play_no_isrc.json')))
