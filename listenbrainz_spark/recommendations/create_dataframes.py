@@ -276,17 +276,14 @@ def get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_
     return mapped_listens_df
 
 
-def get_playcounts_df(listens_df, recordings_df, users_df, metadata):
-    """ Prepare playcounts dataframe.
+def save_playcounts_df(listens_df, recordings_df, users_df, metadata):
+    """ Prepare and save playcounts dataframe.
 
         Args:
             listens_df : Dataframe containing recording_mbids corresponding to a user.
             recordings_df : Dataframe containing distinct recordings and corresponding
                                        mbids and names.
             users_df : Dataframe containing user names and user ids.
-
-        Returns:
-            playcounts_df: Dataframe containing play(listen) counts of users.
     """
     # listens_df is joined with users_df on user_name.
     # The output is then joined with recording_df on recording_mbid.
@@ -299,7 +296,6 @@ def get_playcounts_df(listens_df, recordings_df, users_df, metadata):
 
     metadata['playcounts_count'] = playcounts_df.count()
     save_dataframe(playcounts_df, path.PLAYCOUNTS_DATAFRAME_PATH)
-    return playcounts_df
 
 
 def get_listens_df(mapped_listens_df, metadata):
@@ -392,7 +388,7 @@ def main(train_model_window=None):
     current_app.logger.info('Preparing listen data dump and playcounts, saving playcounts to HDFS...')
     listens_df = get_listens_df(mapped_listens_df, metadata)
 
-    playcounts_df = get_playcounts_df(listens_df, recordings_df, users_df, metadata)
+    save_playcounts_df(listens_df, recordings_df, users_df, metadata)
 
     generate_dataframe_id(metadata)
     save_dataframe_metadata_to_hdfs(metadata)
