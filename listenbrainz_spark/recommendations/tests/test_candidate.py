@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from listenbrainz_spark.tests import SparkTestCase
+from listenbrainz_spark.stats.utils import offset_days 
 from listenbrainz_spark.recommendations import candidate_sets
 from listenbrainz_spark import schema, utils, config, path, stats
 from listenbrainz_spark.exceptions import (TopArtistNotFetchedException,
@@ -41,11 +42,11 @@ class CandidateSetsTestClass(SparkTestCase):
     def get_listens(cls):
         cls.date = datetime.utcnow()
         df1 = utils.create_dataframe(cls.get_listen_row(cls.date, 'vansika', 1), schema=None)
-        shifted_date = stats.offset_days(cls.date, cls.recommendation_generation_window + 1)
+        shifted_date = offset_days(cls.date, cls.recommendation_generation_window + 1)
         df2 = utils.create_dataframe(cls.get_listen_row(shifted_date, 'vansika', 1), schema=None)
-        shifted_date = stats.offset_days(cls.date, 1)
+        shifted_date = offset_days(cls.date, 1)
         df3 = utils.create_dataframe(cls.get_listen_row(shifted_date, 'rob', 2), schema=None)
-        shifted_date = stats.offset_days(cls.date, 2)
+        shifted_date = offset_days(cls.date, 2)
         df4 = utils.create_dataframe(cls.get_listen_row(shifted_date, 'rob', 2), schema=None)
         test_mapped_df = df1.union(df2).union(df3).union(df4)
         return test_mapped_df
@@ -55,7 +56,7 @@ class CandidateSetsTestClass(SparkTestCase):
         from_date, to_date = candidate_sets.get_dates_to_generate_candidate_sets(mapped_df,
                                                                                  self.recommendation_generation_window)
         self.assertEqual(to_date, self.date)
-        expected_date = stats.offset_days(self.date, self.recommendation_generation_window).replace(hour=0, minute=0, second=0)
+        expected_date = offset_days(self.date, self.recommendation_generation_window).replace(hour=0, minute=0, second=0)
         self.assertEqual(from_date, expected_date)
 
     def test_get_listens_to_fetch_top_artists(self):
