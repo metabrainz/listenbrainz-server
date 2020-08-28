@@ -105,10 +105,7 @@ def get_feedback_for_user(user_name):
     feedback = db_feedback.get_feedback_for_user(user_id=user["id"], limit=count, offset=offset, score=score)
     total_count = db_feedback.get_feedback_count_for_user(user["id"])
 
-    for i, fb in enumerate(feedback):
-        fb.user_id = fb.user_name
-        del fb.user_name
-        feedback[i] = fb.dict()
+    feedback = [_feedback_to_api(fb) for fb in feedback]
 
     return jsonify({
         "feedback": feedback,
@@ -155,10 +152,7 @@ def get_feedback_for_recording(recording_msid):
     feedback = db_feedback.get_feedback_for_recording(recording_msid=recording_msid, limit=count, offset=offset, score=score)
     total_count = db_feedback.get_feedback_count_for_recording(recording_msid)
 
-    for i, fb in enumerate(feedback):
-        fb.user_id = fb.user_name
-        del fb.user_name
-        feedback[i] = fb.dict()
+    feedback = [_feedback_to_api(fb) for fb in feedback]
 
     return jsonify({
         "feedback": feedback,
@@ -202,11 +196,15 @@ def get_feedback_for_recordings_for_user(user_name):
         log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "),
                       request.args)
 
-    for i, fb in enumerate(feedback):
-        fb.user_id = fb.user_name
-        del fb.user_name
-        feedback[i] = fb.dict()
+    feedback = [_feedback_to_api(fb) for fb in feedback]
 
     return jsonify({
         "feedback": feedback,
     })
+
+
+def _feedback_to_api(fb: Feedback) -> dict:
+    fb.user_id = fb.user_name
+    del fb.user_name
+
+    return fb.dict()

@@ -63,7 +63,10 @@ def get_feedback_for_user(user_id: int, limit: int, offset: int, score: int = No
     """
 
     args = {"user_id": user_id, "limit": limit, "offset": offset}
-    query = """ SELECT user_id, "user".musicbrainz_id AS user_name, recording_msid::text, score
+    query = """ SELECT user_id,
+                       "user".musicbrainz_id AS user_name,
+                       recording_msid::text, score,
+                       recording_feedback.created
                   FROM recording_feedback
                   JOIN "user"
                     ON "user".id = recording_feedback.user_id
@@ -118,7 +121,10 @@ def get_feedback_for_recording(recording_msid: str, limit: int, offset: int, sco
     """
 
     args = {"recording_msid": recording_msid, "limit": limit, "offset": offset}
-    query = """ SELECT user_id, "user".musicbrainz_id AS user_name, recording_msid::text, score
+    query = """ SELECT user_id,
+                       "user".musicbrainz_id AS user_name,
+                       recording_msid::text, score,
+                       recording_feedback.created
                   FROM recording_feedback
                   JOIN "user"
                     ON "user".id = recording_feedback.user_id

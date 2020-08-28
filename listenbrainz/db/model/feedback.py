@@ -1,6 +1,6 @@
 import uuid
 
-from typing import List
+from datetime import datetime
 from pydantic import BaseModel, ValidationError, validator
 
 
@@ -10,13 +10,15 @@ class Feedback(BaseModel):
             user_id: the row id of the user in the DB
             user_name: (Optional) the MusicBrainz ID of the user
             recording_msid: the MessyBrainz ID of the recording
-            score: The score associated with the recording (+1/-1 for love/hate respectively)
+            score: the score associated with the recording (+1/-1 for love/hate respectively)
+            created: (Optional)the timestamp when the feedback record was inserted into DB
     """
 
     user_id: int
     user_name: str = None
     recording_msid: str
     score: int
+    created: datetime = None
 
     @validator('score')
     def check_score_is_valid(cls, scr):
