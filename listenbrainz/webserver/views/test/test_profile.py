@@ -12,6 +12,7 @@ from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.listen import Listen
 from listenbrainz.webserver.testing import ServerTestCase
 from unittest.mock import patch
+from listenbrainz.db.model.feedback import Feedback
 
 
 class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
@@ -321,3 +322,61 @@ class ProfileViewsTestCase(ServerTestCase, DatabaseTestCase):
                 },
             },
         })
+
+    @patch('listenbrainz.db.feedback.get_feedback_for_user')
+    def test_export_feedback_streaming(self, mock_fetch_feedback):
+        self.temporary_login(self.user['login_id'])
+
+        # Three example feedback, with only basic data for the purpose of this test.
+        feedback = [
+            Feedback(
+                recording_msid='6c617681-281e-4dae-af59-8e00f93c4376',
+                score=1,
+                user_id=1,
+            ),
+            Feedback(
+                recording_msid='7ad53fd7-5b40-4e13-b680-52716fb86d5f',
+                score=1,
+                user_id=1,
+            ),
+            Feedback(
+                recording_msid='7816411a-2cc6-4e43-b7a1-60ad093c2c31',
+                score=-1,
+                user_id=1,
+            ),
+        ]
+
+        # We expect three calls to get_feedback_for_user, and we return two, one, and
+        # zero feedback in the batch. This tests that we fetch all batches.
+        mock_fetch_feedback.side_effect = [feedback[0:2], feedback[2:3], []]
+
+        r = self.client.post(url_for('profile.export_feedback'))
+        self.assert200(r)
+
+        # r.json returns None, so we decode the response manually.
+        results = ujson.loads(r.data.decode('utf-8'))
+
+        self.assertDictEqual(results[0], {
+            'recording_msid': '6c617681-281e-4dae-af59-8e00f93c4376',
+            'score': 1,
+            'user_id': None,
+            'created': None,
+        })
+        self.assertDictEqual(results[1], {
+            'recording_msid': '7ad53fd7-5b40-4e13-b680-52716fb86d5f',
+            'score': 1,
+            'user_id': None,
+            'created': None,
+        })
+        self.assertDictEqual(results[2], {
+            'recording_msid': '7816411a-2cc6-4e43-b7a1-60ad093c2c31',
+            'score': -1,
+            'user_id': None,
+            'created': None,
+        })
+
+    def test_export_feedback_streaming_not_logged_in(self):
+        export_feedback_url = url_for('profile.export_feedback')
+        response = self.client.post(export_feedback_url)
+        self.assertStatus(response, 302)
+        self.assertRedirects(response, url_for('login.index', next=export_feedback_url))
