@@ -28,10 +28,11 @@ from listenbrainz.spark.handlers import (
     handle_candidate_sets, handle_dataframes, handle_dump_imported,
     handle_model, handle_recommendations, handle_sitewide_entity,
     handle_user_daily_activity, handle_user_entity,
-    handle_user_listening_activity, is_new_cf_recording_recommendation_batch,
+    handle_user_listening_activity,
     is_new_user_stats_batch, notify_artist_relation_import,
     notify_mapping_import,
-    handle_missing_musicbrainz_data)
+    handle_missing_musicbrainz_data,
+    notify_cf_recording_recommendations_generation)
 
 from listenbrainz.webserver import create_app
 
@@ -250,12 +251,27 @@ class HandlersTestCase(unittest.TestCase):
         mock_db_insert.assert_called_with(1, data['top_artist'], data['similar_artist'])
         mock_send_mail.assert_called_once()
 
-    @mock.patch('listenbrainz.spark.handlers.db_recommendations_cf_recording.get_timestamp_for_last_recording_recommended')
-    def test_is_new_cf_recording_recommendation_batch(self, mock_db_get_timestamp):
-        mock_db_get_timestamp.return_value = datetime.now(timezone.utc)
-        self.assertFalse(is_new_cf_recording_recommendation_batch())
-        mock_db_get_timestamp.return_value = datetime.now(timezone.utc) - timedelta(days=8)
-        self.assertTrue(is_new_cf_recording_recommendation_batch())
+    @mock.patch('listenbrainz.spark.handlers.send_mail')
+    def test_notify_cf_recording_recommendations_generation(self, mock_send_mail):
+        with self.app.app_context():
+            user_count = 10
+            total_time = datetime.now()
+
+            # testing, should not send a mail
+            self.app.config['TESTING'] = True
+            notify_cf_recording_recommendations_generation({
+                'user_count': user_count,
+                'total_time': str(total_time)
+            })
+            mock_send_mail.assert_not_called()
+
+            # in prod now, should send it
+            self.app.config['TESTING'] = False
+            notify_cf_recording_recommendations_generation({
+                'user_count': user_count,
+                'total_time': str(total_time)
+            })
+            mock_send_mail.assert_called_once()
 
     @mock.patch('listenbrainz.spark.handlers.send_mail')
     def test_handle_dump_imported(self, mock_send_mail):

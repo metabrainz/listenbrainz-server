@@ -1,5 +1,5 @@
 import logging
-from time import time
+import time
 from datetime import datetime
 from collections import defaultdict
 from py4j.protocol import Py4JJavaError
@@ -34,6 +34,11 @@ class RecommendationParams:
         self.similar_artist_candidate_set_df = similar_artist_candidate_set_df
         self.recommendation_top_artist_limit = recommendation_top_artist_limit
         self.recommendation_similar_artist_limit = recommendation_similar_artist_limit
+        self.ratings_beyond_range = []
+        self.similar_artist_not_found = []
+        self.top_artist_not_found = []
+        self.top_artist_rec_not_generated = []
+        self.similar_artist_rec_not_generated = []
 
 
 recommendation_schema = StructType([
@@ -134,12 +139,12 @@ def get_recommendation_df(recording_ids_and_ratings):
     return df
 
 
-def scale_ratings(mbids_and_ratings, ratings_beyond_range):
+def scale_ratings(mbids_and_ratings, params):
     """ Scale the ratings so that they fall on a range from 0.0 -> 1.0.
 
         Args:
             mbids_and_ratings: list of recommended recording mbids and ratings.
-            ratings_beyond_range: list to update with ratings beyond expected range.
+            params: RecommendationParams class object.
     """
     for row in mbids_and_ratings:
         rating = row[1]
@@ -147,19 +152,18 @@ def scale_ratings(mbids_and_ratings, ratings_beyond_range):
         scaled_rating = (rating / 2.0) + 0.5
 
         if scaled_rating > 1.0 or scaled_rating < -1.0:
-            ratings_beyond_range.append(rating)
+            params.ratings_beyond_range.append(rating)
 
         row[1] = round(min(max(scaled_rating, -1.0), 1.0), 3)
 
 
-def get_recommended_mbids(candidate_set, params, limit, ratings_beyond_range):
+def get_recommended_mbids(candidate_set, params, limit):
     """ Generate recommendations from the candidate set.
 
         Args:
             candidate_set (rdd): RDD of user_id and recording_id.
             params: RecommendationParams class object.
             limit (int): Number of recommendations to be generated.
-            ratings_beyond_range: list to update with ratings beyond expected range.
 
         Returns:
             mbids_and_ratings: list of recommended recording mbids and ratings.
@@ -169,7 +173,7 @@ def get_recommended_mbids(candidate_set, params, limit, ratings_beyond_range):
     recording_ids_and_ratings = [[recommendations[i].product, recommendations[i].rating] for i in range(len(recommendations))]
 
     if len(recording_ids_and_ratings) == 0:
-        raise RecommendationsNotGeneratedException('')
+        raise RecommendationsNotGeneratedException('Recommendations not generated!')
 
     recommendation_df = get_recommendation_df(recording_ids_and_ratings)
 
@@ -177,7 +181,7 @@ def get_recommended_mbids(candidate_set, params, limit, ratings_beyond_range):
 
     mbids_and_ratings = [[row.mb_recording_mbid, round(row.rating, 3)] for row in recording_mbids_df.collect()]
 
-    scale_ratings(mbids_and_ratings, ratings_beyond_range)
+    scale_ratings(mbids_and_ratings, params)
 
     return mbids_and_ratings
 
@@ -204,7 +208,7 @@ def get_candidate_set_rdd_for_user(candidate_set_df, user_id):
     return candidate_set_rdd
 
 
-def get_recommendations_for_user(user_id, user_name, params, ratings_beyond_range):
+def get_recommendations_for_user(user_id, user_name, params):
     """ Get recommended recordings which belong to top artists and artists similar to top
         artists listened to by the user.
 
@@ -212,7 +216,6 @@ def get_recommendations_for_user(user_id, user_name, params, ratings_beyond_rang
             user_id (int): user id of the user.
             user_name (str): User name of the user.
             params: RecommendationParams class object.
-            ratings_beyond_range: list to update with ratings beyond expected range.
 
         Returns:
             user_recommendations_top_artist: list of recommended recordings of top artist.
@@ -222,23 +225,21 @@ def get_recommendations_for_user(user_id, user_name, params, ratings_beyond_rang
     try:
         top_artist_candidate_set_user = get_candidate_set_rdd_for_user(params.top_artist_candidate_set_df, user_id)
         user_recommendations_top_artist = get_recommended_mbids(top_artist_candidate_set_user, params,
-                                                                params.recommendation_top_artist_limit,
-                                                                ratings_beyond_range)
+                                                                params.recommendation_top_artist_limit,)
     except IndexError:
-        current_app.logger.error('Top artist candidate set not found for "{}"'.format(user_name))
+        params.top_artist_not_found.append(user_name)
     except RecommendationsNotGeneratedException:
-        current_app.logger.error('Top artist recommendations not generated for "{}"'.format(user_name))
+        params.top_artist_rec_not_generated.append(user_name)
 
     user_recommendations_similar_artist = list()
     try:
         similar_artist_candidate_set_user = get_candidate_set_rdd_for_user(params.similar_artist_candidate_set_df, user_id)
         user_recommendations_similar_artist = get_recommended_mbids(similar_artist_candidate_set_user, params,
-                                                                    params.recommendation_similar_artist_limit,
-                                                                    ratings_beyond_range)
+                                                                    params.recommendation_similar_artist_limit,)
     except IndexError:
-        current_app.logger.error('Similar artist candidate set not found for "{}"'.format(user_name))
+        params.similar_artist_not_found.append(user_name)
     except RecommendationsNotGeneratedException:
-        current_app.logger.error('Similar artist recommendations not generated for "{}"'.format(user_name))
+        params.similar_artist_rec_not_generated.append(user_name)
 
     return user_recommendations_top_artist, user_recommendations_similar_artist
 
@@ -290,7 +291,7 @@ def get_message_for_inactive_users(messages, active_users, users):
     return messages
 
 
-def get_recommendations_for_all(params, users):
+def get_recommendations_for_all(params, users, ti):
     """ Get recommendations for all active users.
 
         Args:
@@ -301,7 +302,6 @@ def get_recommendations_for_all(params, users):
             messages (list): user recommendations.
     """
     messages = []
-    ratings_beyond_range = []
     # users active in the last week/month.
     # users who are a part of top artist candidate set
     active_users = []
@@ -313,10 +313,10 @@ def get_recommendations_for_all(params, users):
         user_id = row.user_id
         active_users.append(user_name)
 
-        user_recommendations_top_artist, user_recommendations_similar_artist = get_recommendations_for_user(user_id,
-                                                                                                            user_name,
-                                                                                                            params,
-                                                                                                            ratings_beyond_range)
+        user_recommendations_top_artist, user_recommendations_similar_artist = get_recommendations_for_user(
+                                                                                    user_id,
+                                                                                    user_name,
+                                                                                    params)
 
         messages.append({
             'musicbrainz_id': user_name,
@@ -329,10 +329,34 @@ def get_recommendations_for_all(params, users):
     if users:
         messages = get_message_for_inactive_users(messages, active_users, users)
 
-    if ratings_beyond_range:
-        current_app.logger.error('The following ratings are beyond the expected range i.e rating > 1 or rating < -1: \n{}'
-                                 .format(ratings_beyond_range))
+    if params.ratings_beyond_range:
+        current_app.logger.error('{} ratings are beyond the expected range i.e rating > 1 or rating < -1'
+                                 '\nMax rating: {}\nMin rating: {}'.format(len(params.ratings_beyond_range),
+                                 max(params.ratings_beyond_range), min(params.ratings_beyond_range)))
 
+    if params.top_artist_not_found:
+        current_app.logger.error('Top artist candidate set not found for: \n"{}"\nYou might want to check the mapping.'
+                                 .format(params.top_artist_not_found))
+
+    if params.similar_artist_not_found:
+        current_app.logger.error('Similar artist candidate set not found for: \n"{}"'
+                                '\nYou might want to check the artist relation.'.format(params.similar_artist_not_found))
+
+    if params.top_artist_rec_not_generated:
+        current_app.logger.error('Top artist recommendations not generated for: \n"{}"\nYou might want to check the training set'
+                                 .format(params.top_artist_rec_not_generated))
+
+    if params.similar_artist_rec_not_generated:
+        current_app.logger.error('Similar artist recommendations not generated for: "{}"'
+                                 '\nYou might want to check the training set'.format(params.similar_artist_rec_not_generated))
+
+    messages.append(
+        {
+            'type': 'cf_recording_recommendations_mail',
+            'user_count': users_df.count(),
+            'total_time': '{:.2f}'.format((time.monotonic() - ti) / 3600)
+        }
+    )
     return messages
 
 
@@ -367,7 +391,8 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
                                   recommendation_top_artist_limit,
                                   recommendation_similar_artist_limit)
 
-    messages = get_recommendations_for_all(params, users)
+    ti = time.monotonic()
+    messages = get_recommendations_for_all(params, users, ti)
     # persisted data must be cleared from memory after usage to avoid OOM
     recordings_df.unpersist()
 
