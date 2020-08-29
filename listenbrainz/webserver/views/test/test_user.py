@@ -43,6 +43,34 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         ServerTestCase.tearDown(self)
         DatabaseTestCase.tearDown(self)
 
+    def test_user_redirects(self):
+        response = self.client.get('/user/iliekcomputers/')
+        self.assert200(response)
+        response = self.client.get('/user/iliekcomputers', follow_redirects=True)
+        self.assert200(response)
+
+        response = self.client.get('/user/iliekcomputers/charts/')
+        self.assert200(response)
+        response = self.client.get('/user/iliekcomputers/charts', follow_redirects=True)
+        self.assert200(response)
+
+        response = self.client.get('/user/iliekcomputers/reports/')
+        self.assert200(response)
+        response = self.client.get('/user/iliekcomputers/reports', follow_redirects=True)
+        self.assert200(response)
+
+        # these are permanent redirects to user/<username>/charts
+       
+        response = self.client.get('/user/iliekcomputers/history/')
+        self.assert301(response)
+        response = self.client.get('/user/iliekcomputers/history', follow_redirects=True)
+        self.assert301(response)
+
+        response = self.client.get('/user/iliekcomputers/artists/')
+        self.assert301(response)
+        response = self.client.get('/user/iliekcomputers/artists', follow_redirects=True)
+        self.assert301(response)
+
     def test_user_page(self):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
         self.assert200(response)
