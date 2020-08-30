@@ -83,7 +83,7 @@ def load_model():
         raise
 
 
-def get_recording_mbids(params, recommendation_df):
+def get_recording_mbids(params: RecommendationParams, recommendation_df):
     """ Get recording mbids corresponding to recommended recording ids sorted on rating.
 
         Args:
@@ -100,7 +100,7 @@ def get_recording_mbids(params, recommendation_df):
     return recording_mbids_df
 
 
-def generate_recommendations(candidate_set, params, limit):
+def generate_recommendations(candidate_set, params: RecommendationParams, limit):
     """
         Args:
             candidate_set (rdd): RDD of user_id and recording_id.
@@ -139,7 +139,7 @@ def get_recommendation_df(recording_ids_and_ratings):
     return df
 
 
-def scale_ratings(mbids_and_ratings, params):
+def scale_ratings(mbids_and_ratings, params: RecommendationParams):
     """ Scale the ratings so that they fall on a range from 0.0 -> 1.0.
 
         Args:
@@ -157,7 +157,7 @@ def scale_ratings(mbids_and_ratings, params):
         row[1] = round(min(max(scaled_rating, -1.0), 1.0), 3)
 
 
-def get_recommended_mbids(candidate_set, params, limit):
+def get_recommended_mbids(candidate_set, params: RecommendationParams, limit):
     """ Generate recommendations from the candidate set.
 
         Args:
@@ -208,7 +208,7 @@ def get_candidate_set_rdd_for_user(candidate_set_df, user_id):
     return candidate_set_rdd
 
 
-def get_recommendations_for_user(user_id, user_name, params):
+def get_recommendations_for_user(user_id, user_name, params: RecommendationParams):
     """ Get recommended recordings which belong to top artists and artists similar to top
         artists listened to by the user.
 
@@ -244,7 +244,7 @@ def get_recommendations_for_user(user_id, user_name, params):
     return user_recommendations_top_artist, user_recommendations_similar_artist
 
 
-def get_user_name_and_user_id(params, users):
+def get_user_name_and_user_id(params: RecommendationParams, users):
     """ Get users from top artist candidate set.
 
         Args:
@@ -291,7 +291,7 @@ def get_message_for_inactive_users(messages, active_users, users):
     return messages
 
 
-def get_recommendations_for_all(params, users, ti):
+def get_recommendations_for_all(params: RecommendationParams, users):
     """ Get recommendations for all active users.
 
         Args:
@@ -301,6 +301,7 @@ def get_recommendations_for_all(params, users, ti):
         Returns:
             messages (list): user recommendations.
     """
+    ti = time.monotonic()
     messages = []
     # users active in the last week/month.
     # users who are a part of top artist candidate set
@@ -391,8 +392,7 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
                                   recommendation_top_artist_limit,
                                   recommendation_similar_artist_limit)
 
-    ti = time.monotonic()
-    messages = get_recommendations_for_all(params, users, ti)
+    messages = get_recommendations_for_all(params, users)
     # persisted data must be cleared from memory after usage to avoid OOM
     recordings_df.unpersist()
 

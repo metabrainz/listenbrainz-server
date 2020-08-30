@@ -300,7 +300,6 @@ class RecommendTestClass(SparkTestCase):
             schema=None
         )
 
-        ti = time.monotonic()
         params.top_artist_candidate_set_df = df
         params.ratings_beyond_range = [2, 3, 1, 5]
         params.top_artist_rec_not_generated = ['vansika_1', 'vansika_2']
@@ -310,7 +309,7 @@ class RecommendTestClass(SparkTestCase):
 
         users = []
         mock_rec_user.return_value = 'recording_mbid_1', 'recording_mbid_2'
-        messages = recommend.get_recommendations_for_all(params, users, ti)
+        messages = recommend.get_recommendations_for_all(params, users)
         mock_rec_user.assert_called_once_with(1, 'vansika', params)
 
         calls = [
@@ -351,11 +350,10 @@ class RecommendTestClass(SparkTestCase):
             schema=None
         )
 
-        ti = time.monotonic()
         users = ['vansika_1', 'vansika']
         params.top_artist_candidate_set = df
         mock_rec_user.return_value = 'recording_mbid_3', 'recording_mbid_4'
-        messages = recommend.get_recommendations_for_all(params, users, ti)
+        messages = recommend.get_recommendations_for_all(params, users)
         mock_rec_user.assert_called_once_with(1, 'vansika', params)
 
         self.assertEqual(len(messages), 3)
