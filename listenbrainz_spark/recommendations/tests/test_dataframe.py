@@ -163,11 +163,60 @@ class CreateDataframeTestCase(SparkTestCase):
     def test_get_data_missing_from_musicbrainz(self):
         partial_listen_df = create_dataframes.get_listens_for_training_model_window(self.date, self.date, {}, self.listens_path)
         mapping_df = utils.read_files_from_HDFS(self.mapping_path)
+
+        itr = create_dataframes.get_data_missing_from_musicbrainz(partial_listen_df, mapping_df)
+
+        received_data = []
+        for row in itr:
+            received_data.append(
+                {
+                    'user_name': 'vansika',
+                    'artist_msid': row.artist_msid,
+                    'artist_name': row.artist_name,
+                    'listened_at': str(row.listened_at),
+                    'recording_msid': row.recording_msid,
+                    'release_msid': row.release_msid,
+                    'release_name': row.release_name,
+                    'track_name': row.track_name,
+                }
+            )
+
+        expected_data = [
+            {
+                'user_name': 'vansika',
+                'artist_msid': 'a36d6fc9-49d0-4789-a7dd-a2b72369ca45',
+                'artist_name': 'Less Than Jake',
+                'listened_at': '2019-01-21 00:00:00',
+                'recording_msid': 'cb6985cd-cc71-4d59-b4fb-2e72796af741',
+                'release_msid': '',
+                'release_name': 'lala',
+                'track_name': "Al's War"
+            },
+
+            {
+                'user_name': 'vansika',
+                'artist_msid': 'f3e64219-ac00-4b6b-ad15-6e4801cb30a0',
+                'artist_name': 'Townes Van Zandt',
+                'listened_at': '2019-01-20 00:00:00',
+                'recording_msid': '00000465-fcc1-41ab-a735-553f6ce677c4',
+                'release_msid': '',
+                'release_name': 'Sunshine Boy: The Unheard Studio Sessions & Demos 1971 - 1972',
+                'track_name': 'Dead Flowers'
+            }
+        ]
+
+        self.assertEqual(received_data, expected_data)
+
+    def test_prepare_messages(self):
+        partial_listen_df = create_dataframes.get_listens_for_training_model_window(self.date, self.date, {}, self.listens_path)
+        mapping_df = utils.read_files_from_HDFS(self.mapping_path)
         from_date = datetime(2019, 6, 21)
         to_date = datetime(2019, 8, 21)
         ti = time.monotonic()
 
-        messages = create_dataframes.get_data_missing_from_musicbrainz(partial_listen_df, mapping_df, from_date, to_date, ti)
+        itr = create_dataframes.get_data_missing_from_musicbrainz(partial_listen_df, mapping_df)
+
+        messages = create_dataframes.prepare_messages(itr, from_date, to_date, ti)
 
         received_first_mssg = messages.pop(0)
 
@@ -206,3 +255,5 @@ class CreateDataframeTestCase(SparkTestCase):
                 'source': 'cf'
             }
         ]
+
+        self.assertEqual(expected_missing_mb_data, messages)
