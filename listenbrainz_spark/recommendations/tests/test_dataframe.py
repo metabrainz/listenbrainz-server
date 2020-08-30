@@ -105,20 +105,19 @@ class CreateDataframeTestCase(SparkTestCase):
         self.assertListEqual(['mb_recording_mbid', 'user_name'], listens_df.columns)
         self.assertEqual(metadata['listens_count'], 8)
 
-    def test_get_playcounts_df(self):
+    def test_save_playcounts_df(self):
         metadata = {}
         mapped_listens = utils.read_files_from_HDFS(self.mapped_listens_path)
         users_df = create_dataframes.get_users_dataframe(mapped_listens, {})
         recordings_df = create_dataframes.get_recordings_df(mapped_listens, {})
         listens_df = create_dataframes.get_listens_df(mapped_listens, {})
 
-        playcounts_df = create_dataframes.get_playcounts_df(listens_df, recordings_df, users_df, metadata)
+        create_dataframes.save_playcounts_df(listens_df, recordings_df, users_df, metadata)
+        playcounts_df = utils.read_files_from_HDFS(path.PLAYCOUNTS_DATAFRAME_PATH)
         self.assertEqual(playcounts_df.count(), 5)
+        
         self.assertListEqual(['user_id', 'recording_id', 'count'], playcounts_df.columns)
         self.assertEqual(metadata['playcounts_count'], playcounts_df.count())
-
-        status = utils.path_exists(path.PLAYCOUNTS_DATAFRAME_PATH)
-        self.assertTrue(status)
 
     def test_generate_dataframe_id(self):
         metadata = {}

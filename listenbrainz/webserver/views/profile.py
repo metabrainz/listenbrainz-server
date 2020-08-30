@@ -1,3 +1,4 @@
+import listenbrainz.db.feedback as db_feedback
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
 import listenbrainz.webserver.rabbitmq_connection as rabbitmq_connection
@@ -24,6 +25,7 @@ from listenbrainz.webserver import flash
 from listenbrainz.webserver.login import api_login_required
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.utils import sizeof_readable
+from listenbrainz.webserver.views.feedback_api import _feedback_to_api
 from listenbrainz.webserver.views.user import delete_user, _get_user, delete_listens_history
 from listenbrainz.webserver.views.api_tools import insert_payload, validate_listen, \
     LISTEN_TYPE_IMPORT, publish_data_to_queue
@@ -136,6 +138,21 @@ def fetch_listens(musicbrainz_id, to_ts, time_range=None):
         to_ts = batch[-1].ts_since_epoch  # new to_ts will be the the timestamp of the last listen fetched
 
 
+def fetch_feedback(user_id):
+    """
+    Fetch feedback by making repeated queries to DB until we get all the data.
+    Returns a generator that streams the results.
+    """
+    batch = []
+    offset = 0
+    while True:
+        batch = db_feedback.get_feedback_for_user(user_id=current_user.id, limit=EXPORT_FETCH_COUNT, offset=offset)
+        if not batch:
+            break
+        yield from batch
+        offset += len(batch)
+
+
 def stream_json_array(elements):
     """ Return a generator of string fragments of the elements encoded as array. """
     for i, element in enumerate(elements):
@@ -166,6 +183,25 @@ def export_data():
         return response
     else:
         return render_template("user/export.html", user=current_user)
+
+
+@profile_bp.route("/export-feedback", methods=["POST"])
+@login_required
+def export_feedback():
+    """ Exporting the feedback data to json """
+    filename = current_user.musicbrainz_id + "_lb_feedback-" + datetime.today().strftime('%Y-%m-%d') + ".json"
+
+    # Build a generator that streams the json response. We never load all
+    # feedback into memory at once, and we can start serving the response
+    # immediately.
+    feedback = fetch_feedback(current_user.id)
+    output = stream_json_array(_feedback_to_api(fb=fb) for fb in feedback)
+
+    response = Response(stream_with_context(output))
+    response.headers["Content-Disposition"] = "attachment; filename=" + filename
+    response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    response.mimetype = "text/json"
+    return response
 
 
 @profile_bp.route('/delete', methods=['GET', 'POST'])

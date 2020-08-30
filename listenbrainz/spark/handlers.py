@@ -274,7 +274,7 @@ def handle_missing_musicbrainz_data(data):
         )
     except ValidationError:
         current_app.logger.error("""ValidationError while inserting missing MusicBrainz data from source "{source}" for user
-                                 with user_id: {user_id}. Data: {data}""".format(user_id=user['id'],
+                                 with musicbrainz_id: {musicbrainz_id}. Data: {data}""".format(musicbrainz_id=musicbrainz_id,
                                                                                  data=json.dumps(data, indent=3),
                                                                                  source=source), exc_info=True)
 

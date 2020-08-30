@@ -5,8 +5,8 @@
 @light: #C0CFB2;
 @dark: #053b47;
 @controlsHeight: 60px;
-@love: #353070;
-@hate: #705230;
+@love: #C62828;
+@hate: #353070;
 
 
 #music-player {
@@ -203,10 +203,9 @@
             margin-bottom: 0px;
           }
         }
-
-        .listen-time {
-          font-style: italic;
-        }
+      }
+      .listen-time {
+        font-style: italic;
       }
 
       > .col-xs-3 {
@@ -255,6 +254,10 @@
         .fa-ellipsis-v {
           color: #8d8d8d;
           stroke: #ffffff;
+
+          &:hover {
+            color: #46433a;
+          }
         }
 
         .fa-heart {
@@ -305,8 +308,9 @@
         }
       }
     }
+
     &.deleted {
-      animation: deleted-animation 0.6s linear forwards;
+      animation: deleted-animation 0.3s linear forwards;
     }
     
     @keyframes deleted-animation {
@@ -317,7 +321,7 @@
         margin: inherit;
         transform: scaleY(1);
       }
-      
+
       50% {
         opacity: 0; 
       }

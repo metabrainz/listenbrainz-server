@@ -16,6 +16,10 @@
     <button class="btn btn-warning btn-lg" type="submit" style="width: 250px">Export my listens.</button>
   </form>
 
+  <form action="{{url_for("profile.export_feedback")}}" method='POST'>
+    <button class="btn btn-warning btn-lg" type="submit" style="width: 250px">Export my feedback.</button>
+  </form>
+
   <form method="post">
     <input type="hidden" name="token" value="{{ user.auth_token }}">
     <button id="btn-delete-user" class="btn btn-danger btn-lg" style="width: 250px">Delete my account.</button>
