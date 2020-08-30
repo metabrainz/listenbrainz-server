@@ -333,7 +333,7 @@ def get_recommendations_for_all(params: RecommendationParams, users):
     if params.ratings_beyond_range:
         current_app.logger.error('{} ratings are beyond the expected range i.e rating > 1 or rating < -1'
                                  '\nMax rating: {}\nMin rating: {}'.format(len(params.ratings_beyond_range),
-                                 max(params.ratings_beyond_range), min(params.ratings_beyond_range)))
+                                  max(params.ratings_beyond_range), min(params.ratings_beyond_range)))
 
     if params.top_artist_not_found:
         current_app.logger.error('Top artist candidate set not found for: \n"{}"\nYou might want to check the mapping.'
@@ -341,7 +341,7 @@ def get_recommendations_for_all(params: RecommendationParams, users):
 
     if params.similar_artist_not_found:
         current_app.logger.error('Similar artist candidate set not found for: \n"{}"'
-                                '\nYou might want to check the artist relation.'.format(params.similar_artist_not_found))
+                                 '\nYou might want to check the artist relation.'.format(params.similar_artist_not_found))
 
     if params.top_artist_rec_not_generated:
         current_app.logger.error('Top artist recommendations not generated for: \n"{}"\nYou might want to check the training set'

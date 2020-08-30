@@ -172,13 +172,11 @@ class RecommendTestClass(SparkTestCase):
             call(mock_candidate_set.return_value, params, params.recommendation_similar_artist_limit)
         ])
 
-
         user_name = 'vansika_1'
         mock_candidate_set.side_effect = IndexError
         recommend.get_recommendations_for_user(user_id, user_name, params)
         self.assertEqual(params.top_artist_not_found, ['vansika_1'])
         self.assertEqual(params.similar_artist_not_found, ['vansika_1'])
-
 
         user_name = 'vansika_2'
         mock_candidate_set.side_effect = RecommendationsNotGeneratedException(message='Recommendations not generated')
