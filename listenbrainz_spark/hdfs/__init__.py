@@ -12,6 +12,8 @@ from listenbrainz_spark.exceptions import SparkSessionNotInitializedException, D
 
 from flask import current_app
 
+TEMP_DIR_PATH = "/temp"
+
 
 class ListenbrainzHDFSUploader:
 
@@ -48,7 +50,7 @@ class ListenbrainzHDFSUploader:
         pxz = subprocess.Popen(pxz_command, stdout=subprocess.PIPE)
         return pxz
 
-    def upload_archive(self, tmp_dump_dir, tar, dest_path, schema, callback=None, force=False):
+    def upload_archive(self, tmp_dump_dir, tar, dest_path, schema, callback=None, overwrite=False):
         """ Upload data dump to HDFS.
 
             Args:
@@ -57,20 +59,20 @@ class ListenbrainzHDFSUploader:
                 dest_path (str): HDFS path to upload data dump.
                 schema: Schema of parquet to be uploaded.
                 callback: Function to process JSON files.
-                force: If True deletes dir at dest_path
+                overwrite: If True deletes dir at dest_path
         """
         if callback is None:
             raise NotImplementedError('Callback to process JSON missing. Aborting...')
 
-        # Delete '/temp'if it exists
-        if utils.path_exists("/temp"):
-            utils.delete_dir("/temp", recursive=True)
+        # Delete TEMP_DIR_PATH if it exists
+        if utils.path_exists(TEMP_DIR_PATH):
+            utils.delete_dir(TEMP_DIR_PATH, recursive=True)
 
-        # Copy data from dest_path to '/temp' to be merged with new data
-        if not force and utils.path_exists(dest_path):
+        # Copy data from dest_path to TEMP_DIR_PATH to be merged with new data
+        if not overwrite and utils.path_exists(dest_path):
             t0 = time.monotonic()
-            current_app.logger.info("Copying old listens into '/temp'")
-            utils.copy(dest_path, '/temp', overwrite=True)
+            current_app.logger.info("Copying old listens into '{}'".format(TEMP_DIR_PATH))
+            utils.copy(dest_path, TEMP_DIR_PATH, overwrite=True)
             current_app.logger.info("Done! Time taken: {:.2f}".format(time.monotonic() - t0))
 
         current_app.logger.info("Uploading listens to temporary directory in HDFS...")
@@ -85,15 +87,15 @@ class ListenbrainzHDFSUploader:
                     tar.extract(member)
                 except TarError as err:
                     # Cleanup
-                    if utils.path_exists('/temp'):
-                        utils.delete_dir('/temp', recursive=True)
+                    if utils.path_exists(TEMP_DIR_PATH):
+                        utils.delete_dir(TEMP_DIR_PATH, recursive=True)
                     if utils.path_exists(tmp_dump_dir):
                         utils.delete_dir(tmp_dump_dir, recursive=True)
                     raise DumpInvalidException("{} while extracting {}, aborting import".format(type(err).__name__, member.name))
 
                 tmp_hdfs_path = os.path.join(tmp_dump_dir, member.name)
                 utils.upload_to_HDFS(tmp_hdfs_path, member.name)
-                callback(member.name, '/temp', tmp_hdfs_path, schema)
+                callback(member.name, TEMP_DIR_PATH, tmp_hdfs_path, not overwrite, schema)
                 utils.delete_dir(tmp_hdfs_path, recursive=True)
                 os.remove(member.name)
                 time_taken = time.monotonic() - t0
@@ -118,7 +120,7 @@ class ListenbrainzHDFSUploader:
         if not utils.path_exists(dest_path_parent):
             utils.create_dir(dest_path_parent)
 
-        utils.rename('/temp', dest_path)
+        utils.rename(TEMP_DIR_PATH, dest_path)
         utils.current_app.logger.info("Done! Time taken: {:.2f}".format(time.monotonic() - t0))
 
         # Cleanup
