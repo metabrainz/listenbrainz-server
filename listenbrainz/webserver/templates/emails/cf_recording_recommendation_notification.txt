@@ -3,6 +3,7 @@ Hey! 👋
 Recommendations were received by the spark consumer
 and are being written into the database.
 
-The first recommendation came in at {{ now }} UTC.
+It took {{ total_time }}h to generate the recommendations.
+Recommendations were generated for {{ user_count }} users.
 
 Your Friendly Neighbourhood Brainzbot 🤖
