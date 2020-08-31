@@ -39,31 +39,6 @@ def is_new_user_stats_batch():
     return datetime.now(timezone.utc) - last_update_ts > timedelta(minutes=TIME_TO_CONSIDER_STATS_AS_OLD)
 
 
-def is_new_cf_recording_recommendation_batch():
-    """ Returns True if this batch of recommendations is new, False otherwise
-    """
-    create_ts = db_recommendations_cf_recording.get_timestamp_for_last_recording_recommended()
-    if create_ts is None:
-        return True
-
-    return datetime.now(timezone.utc) - create_ts > timedelta(days=TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD)
-
-
-def notify_cf_recording_recommendations_update():
-    """ Send an email to notify recommendations are being written into db.
-    """
-    if current_app.config['TESTING']:
-        return
-
-    send_mail(
-        subject="Recommendations being written into the DB - ListenBrainz",
-        text=render_template('emails/cf_recording_recommendation_notification.txt', now=str(datetime.utcnow())),
-        recipients=['listenbrainz-observability@metabrainz.org'],
-        from_name='ListenBrainz',
-        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN']
-    )
-
-
 def notify_user_stats_update(stat_type):
     if not current_app.config['TESTING']:
         send_mail(
@@ -368,6 +343,25 @@ def notify_artist_relation_import(data):
         subject='Artist relation has been imported into the Spark cluster',
         text=render_template('emails/artist_relation_import_notification.txt',
                              artist_relation_name=artist_relation_name, time=import_completion_time),
+        recipients=['listenbrainz-observability@metabrainz.org'],
+        from_name='ListenBrainz',
+        from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
+    )
+
+
+def notify_cf_recording_recommendations_generation(data):
+    """
+    Send an email to notify recommendations have been generated and are being written into db.
+    """
+    if current_app.config['TESTING']:
+        return
+
+    user_count = data['user_count']
+    total_time = data['total_time']
+    send_mail(
+        subject='Recommendations have been generated and pushed to the queue.',
+        text=render_template('emails/cf_recording_recommendation_notification.txt',
+                             user_count=user_count, total_time=total_time),
         recipients=['listenbrainz-observability@metabrainz.org'],
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],

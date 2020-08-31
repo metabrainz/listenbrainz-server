@@ -1,6 +1,7 @@
 import os
+import time
 from datetime import datetime
-from unittest.mock import patch, call, MagicMock
+from unittest.mock import patch, call, MagicMock, Mock
 
 from listenbrainz_spark.tests import SparkTestCase
 from listenbrainz_spark.recommendations import recommend
@@ -46,6 +47,11 @@ class RecommendTestClass(SparkTestCase):
         self.assertEqual(sorted(params.similar_artist_candidate_set_df.columns), sorted(similar_artist_candidate_set_df.columns))
         self.assertEqual(params.recommendation_top_artist_limit, recommendation_top_artist_limit)
         self.assertEqual(params.recommendation_similar_artist_limit, recommendation_similar_artist_limit)
+        self.assertEqual(params.ratings_beyond_range, [])
+        self.assertEqual(params.similar_artist_not_found, [])
+        self.assertEqual(params.top_artist_not_found, [])
+        self.assertEqual(params.top_artist_rec_not_generated, [])
+        self.assertEqual(params.similar_artist_rec_not_generated, [])
 
     def get_recommendation_df(self):
         df = utils.create_dataframe(
@@ -147,14 +153,14 @@ class RecommendTestClass(SparkTestCase):
         with self.assertRaises(IndexError):
             candidate_set_rdd = recommend.get_candidate_set_rdd_for_user(candidate_set, user_id)
 
-    @patch('listenbrainz_spark.recommendations.recommend.get_recommended_mbids')
     @patch('listenbrainz_spark.recommendations.recommend.get_candidate_set_rdd_for_user')
-    def test_get_recommendations_for_user(self, mock_candidate_set, mock_mbids):
+    @patch('listenbrainz_spark.recommendations.recommend.get_recommended_mbids')
+    def test_get_recommendations_for_user(self, mock_mbids, mock_candidate_set):
         params = self.get_recommendation_params()
         user_id = 1
         user_name = 'vansika'
 
-        _, _ = recommend.get_recommendations_for_user(user_id, user_name, params, [])
+        _, _ = recommend.get_recommendations_for_user(user_id, user_name, params)
 
         mock_candidate_set.assert_has_calls([
             call(params.top_artist_candidate_set_df, user_id),
@@ -162,21 +168,33 @@ class RecommendTestClass(SparkTestCase):
         ])
 
         mock_mbids.assert_has_calls([
-            call(mock_candidate_set.return_value, params, params.recommendation_top_artist_limit, []),
-            call(mock_candidate_set.return_value, params, params.recommendation_similar_artist_limit, [])
+            call(mock_candidate_set.return_value, params, params.recommendation_top_artist_limit),
+            call(mock_candidate_set.return_value, params, params.recommendation_similar_artist_limit)
         ])
 
-    def test_scale_ratings(self):
-        mbids_and_ratings = [['xxxx', -0.32], ['yyyy', 0.932], ['zzzz', 2.967]]
+        user_name = 'vansika_1'
+        mock_candidate_set.side_effect = IndexError
+        recommend.get_recommendations_for_user(user_id, user_name, params)
+        self.assertEqual(params.top_artist_not_found, ['vansika_1'])
+        self.assertEqual(params.similar_artist_not_found, ['vansika_1'])
 
-        ratings_beyond_range = [2]
-        recommend.scale_ratings(mbids_and_ratings, ratings_beyond_range)
+        user_name = 'vansika_2'
+        mock_candidate_set.side_effect = RecommendationsNotGeneratedException(message='Recommendations not generated')
+        recommend.get_recommendations_for_user(user_id, user_name, params)
+        self.assertEqual(params.top_artist_rec_not_generated, ['vansika_2'])
+        self.assertEqual(params.similar_artist_rec_not_generated, ['vansika_2'])
+
+    def test_scale_ratings(self):
+        mbids_and_ratings = [['xxxx', -0.32], ['yyyy', 1.932], ['zzzz', 2.967]]
+
+        params = self.get_recommendation_params()
+        recommend.scale_ratings(mbids_and_ratings, params)
 
         self.assertEqual(mbids_and_ratings[0][1], 0.34)
-        self.assertEqual(mbids_and_ratings[1][1], 0.966)
+        self.assertEqual(mbids_and_ratings[1][1], 1.0)
         self.assertEqual(mbids_and_ratings[2][1], 1.0)
 
-        self.assertEqual(ratings_beyond_range, [2, 2.967])
+        self.assertEqual(params.ratings_beyond_range, [1.932, 2.967])
 
 
     @patch('listenbrainz_spark.recommendations.recommend.generate_recommendations')
@@ -191,9 +209,7 @@ class RecommendTestClass(SparkTestCase):
             Rating(user=2, product=2, rating=1.994590001)
         ]
 
-        ratings_beyond_range = []
-
-        recommended_mbids = recommend.get_recommended_mbids(rdd, params, limit, ratings_beyond_range)
+        recommended_mbids = recommend.get_recommended_mbids(rdd, params, limit)
 
         mock_gen_rec.assert_called_once_with(rdd, params, limit)
         self.assertEqual(recommended_mbids[0][0], '2acb406f-c716-45f8-a8bd-96ca3939c2e5')
@@ -201,11 +217,11 @@ class RecommendTestClass(SparkTestCase):
         self.assertEqual(recommended_mbids[1][0], '3acb406f-c716-45f8-a8bd-96ca3939c2e5')
         self.assertEqual(recommended_mbids[1][1], 0.432)
 
-        self.assertEqual(ratings_beyond_range, [1.995])
+        self.assertEqual(params.ratings_beyond_range, [1.995])
 
         mock_gen_rec.return_value = []
         with self.assertRaises(RecommendationsNotGeneratedException):
-            recommend.get_recommended_mbids(rdd, params, limit, ratings_beyond_range)
+            recommend.get_recommended_mbids(rdd, params, limit)
 
 
     def test_get_user_name_and_user_id(self):
@@ -269,8 +285,9 @@ class RecommendTestClass(SparkTestCase):
             'similar_artist': [],
         })
 
+    @patch('listenbrainz_spark.recommendations.recommend.current_app')
     @patch('listenbrainz_spark.recommendations.recommend.get_recommendations_for_user')
-    def test_get_recommendations_for_all_without_users(self, mock_rec_user):
+    def test_get_recommendations_for_all_without_users(self, mock_rec_user, mock_current_app):
         params = self.get_recommendation_params()
         df = utils.create_dataframe(
             Row(
@@ -280,18 +297,44 @@ class RecommendTestClass(SparkTestCase):
             ),
             schema=None
         )
+
         params.top_artist_candidate_set_df = df
+        params.ratings_beyond_range = [2, 3, 1, 5]
+        params.top_artist_rec_not_generated = ['vansika_1', 'vansika_2']
+        params.similar_artist_rec_not_generated = ['vansika_3', 'vansika_4']
+        params.top_artist_not_found = ['vansika_5', 'vansika_6']
+        params.similar_artist_not_found = ['vansika_7', 'vansika_8']
 
+        users = []
         mock_rec_user.return_value = 'recording_mbid_1', 'recording_mbid_2'
-        messages = recommend.get_recommendations_for_all(params, [])
-        mock_rec_user.assert_called_once_with(1, 'vansika', params, [])
+        messages = recommend.get_recommendations_for_all(params, users)
+        mock_rec_user.assert_called_once_with(1, 'vansika', params)
 
-        self.assertEqual(len(messages), 1)
+        calls = [
+            call('{} ratings are beyond the expected range i.e rating > 1 or rating < -1\nMax rating: {}\nMin rating: {}'
+                 .format(4, 5, 1)),
+            call('Top artist candidate set not found for: \n"{}"\nYou might want to check the mapping.'
+                 .format(['vansika_5', 'vansika_6'])),
+            call('Similar artist candidate set not found for: \n"{}"\nYou might want to check the artist relation.'
+                 .format(['vansika_7', 'vansika_8'])),
+            call('Top artist recommendations not generated for: \n"{}"\nYou might want to check the training set'
+                 .format(['vansika_1', 'vansika_2'])),
+            call('Similar artist recommendations not generated for: "{}"\nYou might want to check the training set'
+                 .format(['vansika_3', 'vansika_4']))
+        ]
+        mock_current_app.logger.error.assert_has_calls(calls, any_order=True)
+
+        self.assertEqual(len(messages), 2)
         message = messages[0]
         self.assertEqual(message['musicbrainz_id'], 'vansika')
         self.assertEqual(message['type'], 'cf_recording_recommendations')
         self.assertEqual(message['top_artist'], 'recording_mbid_1')
         self.assertEqual(message['similar_artist'], 'recording_mbid_2')
+
+        message = messages[1]
+        self.assertEqual(message['type'], 'cf_recording_recommendations_mail')
+        self.assertEqual(message['user_count'], 1)
+        assert isinstance(message['total_time'], str)
 
     @patch('listenbrainz_spark.recommendations.recommend.get_recommendations_for_user')
     def test_get_recommendations_for_all_with_users(self, mock_rec_user):
@@ -304,12 +347,14 @@ class RecommendTestClass(SparkTestCase):
             ),
             schema=None
         )
+
+        users = ['vansika_1', 'vansika']
         params.top_artist_candidate_set = df
         mock_rec_user.return_value = 'recording_mbid_3', 'recording_mbid_4'
-        messages = recommend.get_recommendations_for_all(params, ['vansika_1', 'vansika'])
-        mock_rec_user.assert_called_once_with(1, 'vansika', params, [])
+        messages = recommend.get_recommendations_for_all(params, users)
+        mock_rec_user.assert_called_once_with(1, 'vansika', params)
 
-        self.assertEqual(len(messages), 2)
+        self.assertEqual(len(messages), 3)
 
         message = messages[0]
         self.assertEqual(message['musicbrainz_id'], 'vansika')
@@ -322,6 +367,11 @@ class RecommendTestClass(SparkTestCase):
         self.assertEqual(message['type'], 'cf_recording_recommendations')
         self.assertEqual(message['top_artist'], [])
         self.assertEqual(message['similar_artist'], [])
+
+        message = messages[2]
+        self.assertEqual(message['type'], 'cf_recording_recommendations_mail')
+        self.assertEqual(message['user_count'], 1)
+        assert isinstance(message['total_time'], str)
 
     def get_recommendation_params(self):
         recordings_df = self.get_recordings_df()
