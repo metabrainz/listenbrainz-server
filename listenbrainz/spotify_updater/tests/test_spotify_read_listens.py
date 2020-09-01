@@ -130,11 +130,11 @@ class ConvertListensTestCase(DatabaseTestCase):
             spotify_read_listens.process_all_spotify_users()
             self.spotify_user.get_spotipy_client().current_user_playing_track.assert_called_once()
             self.spotify_user.get_spotipy_client().current_user_recently_played.assert_called_once_with(limit=50,
-
                                                                                                         after=1400000000000)
+
     @patch('listenbrainz.domain.spotify.get_active_users_to_process')
     def test_spotipy_methods_are_called_with_correct_params_with_no_latest_listened_at(self, mock_get_active_users):
-        slef.spotify_user["latest_listened_at"] = None
+        self.spotify_user.latest_listened_at = None
         self.spotify_user.get_spotipy_client = MagicMock()
         mock_get_active_users.return_value = [self.spotify_user]
 
