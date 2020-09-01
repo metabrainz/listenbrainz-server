@@ -1,3 +1,4 @@
+import sys
 import uuid
 import logging
 import time
@@ -15,6 +16,7 @@ from listenbrainz_spark.exceptions import (FileNotSavedException,
 
 from flask import current_app
 import pyspark.sql.functions as func
+from pyspark.sql import Row
 from pyspark.sql.window import Window
 from pyspark.sql.functions import rank, col, row_number
 

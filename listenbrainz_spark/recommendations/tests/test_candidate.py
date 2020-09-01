@@ -1,7 +1,8 @@
 from datetime import datetime
-
+import sys
 from listenbrainz_spark.tests import SparkTestCase
 from listenbrainz_spark.recommendations import candidate_sets
+from listenbrainz_spark.recommendations import create_dataframes
 from listenbrainz_spark import schema, utils, config, path, stats
 from listenbrainz_spark.exceptions import (TopArtistNotFetchedException,
                                            SimilarArtistNotFetchedException)
@@ -11,17 +12,33 @@ import pyspark.sql.functions as f
 
 class CandidateSetsTestClass(SparkTestCase):
 
-    date = None
     recommendation_generation_window = 7
+    listens_path = path.LISTENBRAINZ_DATA_DIRECTORY
+    mapping_path = path.MBID_MSID_MAPPING
+    mapped_listens_path = path.MAPPED_LISTENS
+    mapped_listens_subset_path = '/mapped/subset.parquet'
+    date = datetime(2018, 1, 21)
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.upload_test_listen_to_hdfs(cls.date, cls.listens_path)
+        cls.upload_test_mapping_to_hdfs(cls.mapping_path)
+        cls.upload_test_mapped_listens_to_hdfs(cls.date, cls.listens_path, cls.mapping_path, cls.mapped_listens_path)
+        cls.upload_test_mapping_listens_subset_to_hdfs()
 
     @classmethod
     def tearDownClass(cls):
         super().delete_dir()
         super().tearDownClass()
+
+    @classmethod
+    def upload_test_mapping_listens_subset_to_hdfs(cls):
+        mapped_df = utils.read_files_from_HDFS(cls.mapped_listens_path)
+        from_date = stats.offset_days(cls.date, 4)
+        to_date = cls.date
+        mapped_listens_subset = candidate_sets.get_listens_to_fetch_top_artists(mapped_df, from_date, to_date)
+        utils.save_parquet(mapped_listens_subset, cls.mapped_listens_subset_path)
 
     @classmethod
     def get_listen_row(cls, date, user_name, credit_id):
@@ -66,8 +83,8 @@ class CandidateSetsTestClass(SparkTestCase):
         self.assertEqual(mapped_listens_subset.count(), 3)
 
     def test_get_top_artists(self):
-        mapped_listens = self.get_mapped_listens()
-        top_artist_limit = 10
+        mapped_listens = utils.read_files_from_HDFS(self.mapped_listens_path)
+        top_artist_limit = 1
         test_top_artist = candidate_sets.get_top_artists(mapped_listens, top_artist_limit, [])
 
         cols = ['top_artist_credit_id', 'top_artist_name', 'user_name', 'total_count']
@@ -75,7 +92,7 @@ class CandidateSetsTestClass(SparkTestCase):
         self.assertEqual(test_top_artist.count(), 2)
 
         top_artist_id = sorted([row.top_artist_credit_id for row in test_top_artist.collect()])
-        self.assertEqual(top_artist_id[0], 1)
+        self.assertEqual(top_artist_id[0], 2)
         self.assertEqual(top_artist_id[1], 2)
 
         # empty df
@@ -158,30 +175,18 @@ class CandidateSetsTestClass(SparkTestCase):
             candidate_sets.get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
 
     def test_get_top_artist_candidate_set(self):
-        recordings_df = self.get_recordings_df()
-        users = self.get_users_df()
+        mapped_listens_df = utils.read_files_from_HDFS(self.mapped_listens_path)
+        recordings_df = create_dataframes.get_recordings_df(mapped_listens_df, {})
+        users = create_dataframes.get_users_dataframe(mapped_listens_df, {})
+        mapped_listens_subset = utils.read_files_from_HDFS(self.mapped_listens_subset_path)
 
-        df = utils.create_dataframe(
-            Row(
-                top_artist_credit_id=1,
-                top_artist_name="lessthanjake",
-                user_name='vansika'
-            ),
-            schema=None
-        )
-
-        top_artist_df = df.union(utils.create_dataframe(
-            Row(
-                top_artist_credit_id=2,
-                top_artist_name="kishorekumar",
-                user_name='rob'
-            ),
-            schema=None
-        ))
+        top_artist_limit = 1
+        top_artist_df = candidate_sets.get_top_artists(mapped_listens_subset, top_artist_limit, [])
 
         top_artist_candidate_set_df, top_artist_candidate_set_df_html = candidate_sets.get_top_artist_candidate_set(top_artist_df,
                                                                                                                     recordings_df,
-                                                                                                                    users)
+                                                                                                                    users,
+                                                                                                                    mapped_listens_subset)
         cols = ['recording_id', 'user_id', 'user_name']
         self.assertListEqual(sorted(cols), sorted(top_artist_candidate_set_df.columns))
         self.assertEqual(top_artist_candidate_set_df.count(), 2)
@@ -203,10 +208,15 @@ class CandidateSetsTestClass(SparkTestCase):
         self.assertEqual(top_artist_candidate_set_df_html.count(), 2)
 
     def test_get_similar_artist_candidate_set_df(self):
+        mapped_listens_df = utils.read_files_from_HDFS(self.mapped_listens_path)
+        recordings_df = create_dataframes.get_recordings_df(mapped_listens_df, {})
+        users = create_dataframes.get_users_dataframe(mapped_listens_df, {})
+        mapped_listens_subset = utils.read_files_from_HDFS(self.mapped_listens_subset_path)
+
         df = utils.create_dataframe(
             Row(
                 similar_artist_credit_id=2,
-                similar_artist_name='kishorekumar',
+                similar_artist_name='martinkemp',
                 user_name='rob'
             ),
             schema=None
@@ -214,23 +224,21 @@ class CandidateSetsTestClass(SparkTestCase):
 
         similar_artist_df = df.union(utils.create_dataframe(
             Row(
-                similar_artist_credit_id=3,
-                similar_artist_name="kattyperi",
-                user_name='vansika'
+                similar_artist_credit_id=2,
+                similar_artist_name='martinkemp',
+                user_name='vansika_1'
             ),
             schema=None
         ))
 
-        recordings_df = self.get_recordings_df()
-        users = self.get_users_df()
-
         similar_artist_candidate_set_df, similar_artist_candidate_set_df_html = candidate_sets.get_similar_artist_candidate_set(
-                                                                                        similar_artist_df, recordings_df, users
+                                                                                        similar_artist_df, recordings_df, users,
+                                                                                        mapped_listens_subset
                                                                                     )
 
         cols = ['recording_id', 'user_id', 'user_name']
         self.assertListEqual(sorted(cols), sorted(similar_artist_candidate_set_df.columns))
-        self.assertEqual(similar_artist_candidate_set_df.count(), 1)
+        self.assertEqual(similar_artist_candidate_set_df.count(), 2)
 
         cols = [
             'similar_artist_credit_id',
@@ -246,7 +254,29 @@ class CandidateSetsTestClass(SparkTestCase):
         ]
 
         self.assertListEqual(sorted(cols), sorted(similar_artist_candidate_set_df_html.columns))
-        self.assertEqual(similar_artist_candidate_set_df_html.count(), 1)
+        self.assertEqual(similar_artist_candidate_set_df_html.count(), 2)
+
+    def test_filter_last_x_days_recordings(self):
+        mapped_listens_df = utils.read_files_from_HDFS(self.mapped_listens_path)
+        mapped_listens_subset = utils.read_files_from_HDFS(self.mapped_listens_subset_path)
+        recordings_df = create_dataframes.get_recordings_df(mapped_listens_df, {})
+        users = create_dataframes.get_users_dataframe(mapped_listens_df, {})
+        mapped_listens_subset = utils.read_files_from_HDFS(self.mapped_listens_subset_path)
+
+        top_artist_limit = 1
+        top_artist_df = candidate_sets.get_top_artists(mapped_listens_subset, top_artist_limit, [])
+
+        _, candidate_set_df = candidate_sets.get_top_artist_candidate_set(top_artist_df,
+                                                                          recordings_df,
+                                                                          users,
+                                                                          mapped_listens_subset)
+
+        df = candidate_sets.filter_last_x_days_recordings(candidate_set_df, mapped_listens_subset)
+
+        user_name = [row.user_name for row in df.collect()]
+        self.assertEqual(sorted(user_name), ['rob', 'vansika_1'])
+        self.assertEqual(df.collect()[0].mb_recording_mbid, "sf5a56f4-1f83-4681-b319-70a734d0d047")
+        self.assertEqual(df.collect()[1].mb_recording_mbid, "sf5a56f4-1f83-4681-b319-70a734d0d047")
 
     def test_save_candidate_sets(self):
         top_artist_candidate_set_df_df = self.get_candidate_set()
