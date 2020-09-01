@@ -17,7 +17,7 @@ psycopg2-binary == 2.8.5
 python-dateutil == 2.8.1
 ujson == 1.35
 redis == 3.5.3
-yattag == 1.13.2
+yattag == 1.14.0
 xmltodict == 0.12.0
 oauth2client == 4.1.3
 pika == 0.13.0
