@@ -195,9 +195,8 @@ def get_user_recently_played(user):
     """ Get tracks from the current user’s recently played tracks.
     """
     latest_listened_at_ts = 0
-    latest_listened_at = user.latest_listened_at
-    if latest_listened_at:
-        latest_listened_at_ts = int(latest_listened_at.timestamp() * 1000)  # latest listen UNIX ts in ms
+    if user.latest_listened_at:
+        latest_listened_at_ts = int(user.latest_listened_at.timestamp() * 1000)  # latest listen UNIX ts in ms
 
     return make_api_request(user, user.get_spotipy_client().current_user_recently_played, limit=50, after=latest_listened_at_ts)
 

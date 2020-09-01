@@ -25,12 +25,12 @@ class ConvertListensTestCase(DatabaseTestCase):
                     musicbrainz_id='jude',
                     musicbrainz_row_id=312,
                     user_token='token',
-                    token_expires=(datetime.max.replace(tzinfo=pytz.UTC)),
+                    token_expires=datetime.max.replace(tzinfo=pytz.UTC),
                     refresh_token='refresh',
                     last_updated=None,
                     record_listens=True,
                     error_message=None,
-                    latest_listened_at=None,
+                    latest_listened_at=datetime(2014, 5, 13, 16, 53, 20),  # ts in ms = 140000000000000
                     permission='user-read-recently-played',
                 )
 
@@ -129,4 +129,5 @@ class ConvertListensTestCase(DatabaseTestCase):
         with listenbrainz.webserver.create_app().app_context():
             spotify_read_listens.process_all_spotify_users()
             self.spotify_user.get_spotipy_client().current_user_playing_track.assert_called_once()
-            self.spotify_user.get_spotipy_client().current_user_recently_played.assert_called_once_with(limit=50, after=0)
+            self.spotify_user.get_spotipy_client().current_user_recently_played.assert_called_once_with(limit=50,
+                                                                                                        after=1400000000000)
