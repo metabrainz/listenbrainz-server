@@ -3,6 +3,7 @@ import time
 import listenbrainz.webserver
 import json
 
+from datetime import datetime
 from listenbrainz.utils import safely_import_config
 safely_import_config()
 
@@ -117,12 +118,12 @@ def _convert_spotify_play_to_listen(play, listen_type):
     return listen
 
 
-def make_api_request(user, endpoint, **kwargs):
+def make_api_request(user, spotipy_call, **kwargs):
     """ Make an request to the Spotify API for particular user at specified endpoint with args.
 
     Args:
         user (spotify.Spotify): the user whose plays are to be imported.
-        endpoint (str): the Spotify API endpoint to which the request is to be made
+        spotipy_call (function): the Spotipy function which makes request to the required API endpoint
 
     Returns:
         the response from the spotify API
@@ -137,7 +138,7 @@ def make_api_request(user, endpoint, **kwargs):
 
     while retries > 0:
         try:
-            recently_played = user.get_spotipy_client()._get(endpoint, **kwargs)
+            recently_played = spotipy_call(**kwargs)
             break
         except SpotifyException as e:
             retries -= 1
@@ -193,14 +194,17 @@ def make_api_request(user, endpoint, **kwargs):
 def get_user_recently_played(user):
     """ Get tracks from the current user’s recently played tracks.
     """
-    return make_api_request(user, 'me/player/recently-played', limit=50)
+    latest_listened_at_ts = 0
+    if user.latest_listened_at:
+        latest_listened_at_ts = int(user.latest_listened_at.timestamp() * 1000)  # latest listen UNIX ts in ms
+
+    return make_api_request(user, user.get_spotipy_client().current_user_recently_played, limit=50, after=latest_listened_at_ts)
 
 
 def get_user_currently_playing(user):
     """ Get the user's currently playing track.
     """
-    return make_api_request(user, 'me/player/currently-playing')
-
+    return make_api_request(user, user.get_spotipy_client().current_user_playing_track)
 
 
 def submit_listens_to_listenbrainz(listenbrainz_user, listens, listen_type=LISTEN_TYPE_IMPORT):
