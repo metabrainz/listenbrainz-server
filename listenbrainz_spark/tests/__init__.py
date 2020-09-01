@@ -1,10 +1,12 @@
 import os
 import uuid
+import json
 import unittest
 from datetime import datetime
 
 import listenbrainz_spark
-from listenbrainz_spark import hdfs_connection, utils, config
+from listenbrainz_spark import hdfs_connection, utils, config, schema, stats
+from listenbrainz_spark.recommendations import create_dataframes
 from listenbrainz_spark.recommendations import train_models
 
 from pyspark.sql import Row
@@ -129,33 +131,6 @@ class SparkTestCase(unittest.TestCase):
         return candidate_set
 
     @classmethod
-    def get_mapped_listens(cls):
-        mapped_listens_row_1 = Row(
-            listened_at=datetime.utcnow(),
-            mb_artist_credit_id=1,
-            mb_artist_credit_mbids=["181c4177-f33a-441d-b15d-910acaf18b07"],
-            mb_recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
-            mb_release_mbid="xxxxxx",
-            msb_artist_credit_name_matchable="lessthanjake",
-            msb_recording_name_matchable="Al's War",
-            user_name='vansika',
-        )
-        df = utils.create_dataframe(mapped_listens_row_1, schema=None)
-
-        mapped_listens_row_2 = Row(
-            listened_at=datetime.utcnow(),
-            mb_artist_credit_id=2,
-            mb_artist_mbids=["281c4177-f33a-441d-b15d-910acaf18b07"],
-            mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
-            mb_release_mbid="xxxxxx",
-            msb_artist_credit_name_matchable="kishorekumar",
-            msb_recording_name_matchable="Mere Sapno ki Rani",
-            user_name='rob',
-        )
-        mapped_listens_df = df.union(utils.create_dataframe(mapped_listens_row_2, schema=None))
-        return mapped_listens_df
-
-    @classmethod
     def path_to_data_file(cls, file_name):
         """ Returns the path of the test data file relative to listenbrainz_spark/test/__init__.py.
 
@@ -193,3 +168,40 @@ class SparkTestCase(unittest.TestCase):
             'validation_rmse': 2.0,
         }
         return metadata
+
+    @classmethod
+    def upload_test_listen_to_hdfs(cls, date, listens_path):
+        ts = date
+
+        with open(cls.path_to_data_file('listens.json')) as f:
+            data = json.load(f)
+
+        listens_df = None
+        for row in data:
+            row['listened_at'] = datetime.timestamp(ts)
+            df = utils.create_dataframe(schema.convert_listen_to_row(row), schema=schema.listen_schema)
+            listens_df = listens_df.union(df) if listens_df else df
+
+            ts = stats.offset_days(ts, 1)
+
+        utils.save_parquet(listens_df, listens_path + '/{}/{}.parquet'.format(date.year, date.month))
+
+    @classmethod
+    def upload_test_mapping_to_hdfs(cls, mapping_path):
+        with open(cls.path_to_data_file('msid_mbid_mapping.json')) as f:
+            data = json.load(f)
+
+        mapping_df = None
+        for row in data:
+            df = utils.create_dataframe(schema.convert_mapping_to_row(row), schema=schema.msid_mbid_mapping_schema)
+            mapping_df = mapping_df.union(df) if mapping_df else df
+
+        utils.save_parquet(mapping_df, mapping_path)
+
+    @classmethod
+    def upload_test_mapped_listens_to_hdfs(cls, date, listens_path, mapping_path, mapped_listens_path):
+        partial_listen_df = create_dataframes.get_listens_for_training_model_window(date, date, {}, listens_path)
+        mapping_df = utils.read_files_from_HDFS(mapping_path)
+
+        mapped_listens = create_dataframes.get_mapped_artist_and_recording_mbids(partial_listen_df, mapping_df)
+        utils.save_parquet(mapped_listens, mapped_listens_path)
