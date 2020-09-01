@@ -1,5 +1,6 @@
 import ujson
 import requests
+from datetime import datetime
 
 from flask import Blueprint, render_template, current_app
 from flask_login import current_user, login_required
@@ -97,7 +98,8 @@ def _get_template(active_section, user):
         "recommendations_cf_recording/{}.html".format(active_section),
         active_section=active_section,
         props=ujson.dumps(props),
-        user=user
+        user=user,
+        last_updated=data['created'].strftime('%d %b %Y')
     )
 
 
