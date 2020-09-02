@@ -221,21 +221,31 @@ def get_recommendations_for_user(user_id, user_name, params: RecommendationParam
             user_recommendations_top_artist: list of recommended recordings of top artist.
             user_recommendations_similar_artist: list of recommended recordings of similar artist.
     """
+    ts = time.monotonic()
     user_recommendations_top_artist = list()
     try:
         top_artist_candidate_set_user = get_candidate_set_rdd_for_user(params.top_artist_candidate_set_df, user_id)
         user_recommendations_top_artist = get_recommended_mbids(top_artist_candidate_set_user, params,
                                                                 params.recommendation_top_artist_limit,)
+        current_app.logger.info('{} listens in top artist candidate set for {}'
+                                .format(top_artist_candidate_set_user.count(), user_name))
+        current_app.logger.info('Took {:.2f}sec to generate top artist recommendations for {}'
+                                .format(time.monotonic() - ts, user_name))
     except IndexError:
         params.top_artist_not_found.append(user_name)
     except RecommendationsNotGeneratedException:
         params.top_artist_rec_not_generated.append(user_name)
 
+    ts = time.monotonic()
     user_recommendations_similar_artist = list()
     try:
         similar_artist_candidate_set_user = get_candidate_set_rdd_for_user(params.similar_artist_candidate_set_df, user_id)
         user_recommendations_similar_artist = get_recommended_mbids(similar_artist_candidate_set_user, params,
                                                                     params.recommendation_similar_artist_limit,)
+        current_app.logger.info('{} listens in similar artist candidate set for {}'
+                                .format(similar_artist_candidate_set_user.count(), user_name))
+        current_app.logger.info('Took {:.2f}sec to generate similar artist recommendations for {}'
+                                .format(time.monotonic() - ts, user_name))
     except IndexError:
         params.similar_artist_not_found.append(user_name)
     except RecommendationsNotGeneratedException:
@@ -310,7 +320,9 @@ def get_recommendations_for_all(params: RecommendationParams, users):
     current_app.logger.info('Generating recommendations...')
     # users for whom recommendations will be generated.
     users_df = get_user_name_and_user_id(params, users)
+    users_df.count()
     users_df.persist()
+    current_app.logger.error('Took {:.2f}sec to generate users df'.format(time.monotonic() - ts))
     for row in users_df.collect():
         # to log time elapsed in generating recommendations for a user.
         ts_user = time.monotonic()
@@ -368,7 +380,7 @@ def get_recommendations_for_all(params: RecommendationParams, users):
         }
     )
 
-    current_app.logger.info('Total time: {:.2f}hrs'.format(total_time / 3600))
+    current_app.logger.info('Total time: {:.2f}sec'.format(total_time))
     current_app.logger.info('Average time: {:.2f}sec'.format(total_time / user_count))
     users_df.unpersist()
 
