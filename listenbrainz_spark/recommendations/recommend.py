@@ -301,7 +301,8 @@ def get_recommendations_for_all(params: RecommendationParams, users):
         Returns:
             messages (list): user recommendations.
     """
-    ti = time.monotonic()
+    # to log time elapsed in generating recommendations for all users.
+    ts = time.monotonic()
     messages = []
     # users active in the last week/month.
     # users who are a part of top artist candidate set
@@ -311,7 +312,8 @@ def get_recommendations_for_all(params: RecommendationParams, users):
     users_df = get_user_name_and_user_id(params, users)
     users_df.persist()
     for row in users_df.collect():
-        ts = time.monotonic()
+        # to log time elapsed in generating recommendations for a user.
+        ts_user = time.monotonic()
         user_name = row.user_name
         user_id = row.user_id
         active_users.append(user_name)
@@ -328,7 +330,8 @@ def get_recommendations_for_all(params: RecommendationParams, users):
             'similar_artist': user_recommendations_similar_artist,
         })
 
-        current_app.logger.info('Took {}sec to generate recommendations for {}'.format('{:.2f}'.format(time.monotonic() - ts), user_name))
+        current_app.logger.info('Took {}sec to generate recommendations for {}'
+                                .format('{:.2f}'.format(time.monotonic() - ts_user), user_name))
 
     current_app.logger.info('Recommendations Generated!')
     if users:
@@ -355,7 +358,7 @@ def get_recommendations_for_all(params: RecommendationParams, users):
         current_app.logger.error('Similar artist recommendations not generated for: "{}"'
                                  '\nYou might want to check the training set'.format(params.similar_artist_rec_not_generated))
 
-    total_time = time.monotonic() - ti
+    total_time = time.monotonic() - ts
     user_count = users_df.count()
     messages.append(
         {
