@@ -7,6 +7,7 @@ from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
 
 from pyspark.sql.types import StructField, StructType, StringType
 
+
 class HDFSDataUploaderTestCase(unittest.TestCase):
 
     @classmethod
@@ -35,37 +36,52 @@ class HDFSDataUploaderTestCase(unittest.TestCase):
         mock_read.assert_called_once_with('fakehdfspath', schema=fakeschema)
         mock_save.assert_called_once_with(mock_read.return_value, '/fakedir/2020/1.parquet')
 
-    @patch('listenbrainz_spark.hdfs.upload.tempfile')
+    @patch('listenbrainz_spark.hdfs.upload.tempfile.TemporaryDirectory')
     @patch('listenbrainz_spark.hdfs.upload.ListenbrainzDataUploader.process_json_listens')
     @patch('listenbrainz_spark.hdfs.ListenbrainzHDFSUploader.get_pxz_output')
     @patch('listenbrainz_spark.hdfs.ListenbrainzHDFSUploader.upload_archive')
     @patch('listenbrainz_spark.hdfs.upload.tarfile')
     def test_upload_listens(self, mock_tarfile, mock_archive, mock_pxz, mock_listens, mock_tmp):
         faketar = Mock(name='fakefile.tar')
+        fakedir = Mock(name="faketempdir")
+        mock_tmp.return_value.__enter__.return_value = fakedir
+
         ListenbrainzDataUploader().upload_listens(faketar)
+
         mock_pxz.assert_called_once_with(faketar)
         mock_tarfile.open.assert_called_once_with(fileobj=mock_pxz.return_value.stdout, mode='r|')
-        mock_archive.assert_called_once_with(mock_tmp.mkdtemp(), mock_tarfile.open().__enter__(),
-            path.LISTENBRAINZ_DATA_DIRECTORY, schema.listen_schema, mock_listens, force=False)
+        mock_archive.assert_called_once_with(fakedir, mock_tarfile.open().__enter__(),
+                                             path.LISTENBRAINZ_DATA_DIRECTORY, schema.listen_schema,
+                                             mock_listens, overwrite=False)
 
-    @patch('listenbrainz_spark.hdfs.upload.tempfile')
+    @patch('listenbrainz_spark.hdfs.upload.tempfile.TemporaryDirectory')
     @patch('listenbrainz_spark.hdfs.ListenbrainzHDFSUploader.upload_archive')
     @patch('listenbrainz_spark.hdfs.upload.ListenbrainzDataUploader.process_json')
     @patch('listenbrainz_spark.hdfs.upload.tarfile')
     def test_upload_mapping(self, mock_tarfile, mock_json, mock_archive, mock_tmp):
         faketar = Mock(name='fakefile.tar')
-        ListenbrainzDataUploader().upload_mapping(faketar)
-        mock_tarfile.open.assert_called_once_with(name=faketar, mode='r:bz2')
-        mock_archive.assert_called_once_with(mock_tmp.mkdtemp(), mock_tarfile.open().__enter__(),
-            path.MBID_MSID_MAPPING, schema.msid_mbid_mapping_schema, mock_json, force=False)
+        fakedir = Mock(name="faketempdir")
+        mock_tmp.return_value.__enter__.return_value = fakedir
 
-    @patch('listenbrainz_spark.hdfs.upload.tempfile')
+        ListenbrainzDataUploader().upload_mapping(faketar)
+
+        mock_tarfile.open.assert_called_once_with(name=faketar, mode='r:bz2')
+        mock_archive.assert_called_once_with(fakedir, mock_tarfile.open().__enter__(),
+                                             path.MBID_MSID_MAPPING, schema.msid_mbid_mapping_schema,
+                                             mock_json, overwrite=True)
+
+    @patch('listenbrainz_spark.hdfs.upload.tempfile.TemporaryDirectory')
     @patch('listenbrainz_spark.hdfs.ListenbrainzHDFSUploader.upload_archive')
     @patch('listenbrainz_spark.hdfs.upload.ListenbrainzDataUploader.process_json')
     @patch('listenbrainz_spark.hdfs.upload.tarfile')
     def test_upload_artist_relation(self, mock_tarfile, mock_json, mock_archive, mock_tmp):
         faketar = Mock(name='fakefile.tar')
+        fakedir = Mock(name="faketempdir")
+        mock_tmp.return_value.__enter__.return_value = fakedir
+
         ListenbrainzDataUploader().upload_artist_relation(faketar)
+
         mock_tarfile.open.assert_called_once_with(name=faketar, mode='r:bz2')
-        mock_archive.assert_called_once_with(mock_tmp.mkdtemp(), mock_tarfile.open().__enter__(),
-            path.SIMILAR_ARTIST_DATAFRAME_PATH, schema.artist_relation_schema, mock_json, force=False)
+        mock_archive.assert_called_once_with(fakedir, mock_tarfile.open().__enter__(),
+                                             path.SIMILAR_ARTIST_DATAFRAME_PATH, schema.artist_relation_schema,
+                                             mock_json, overwrite=True)
