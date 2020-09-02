@@ -1,6 +1,7 @@
 import os
 import time
 from datetime import datetime
+import unittest
 from unittest.mock import patch, call, MagicMock, Mock
 
 from listenbrainz_spark.tests import SparkTestCase
@@ -153,6 +154,7 @@ class RecommendTestClass(SparkTestCase):
         with self.assertRaises(IndexError):
             candidate_set_rdd = recommend.get_candidate_set_rdd_for_user(candidate_set, user_id)
 
+    @unittest.skip("Till we are testing for runtime of stuff...")
     @patch('listenbrainz_spark.recommendations.recommend.get_candidate_set_rdd_for_user')
     @patch('listenbrainz_spark.recommendations.recommend.get_recommended_mbids')
     def test_get_recommendations_for_user(self, mock_mbids, mock_candidate_set):
