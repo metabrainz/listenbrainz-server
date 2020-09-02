@@ -1,59 +1,59 @@
 # Request user weekly artists every day at 12:00
-00 12 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=week --entity=artists
+00 00 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=week --entity=artists
 
 # Request user monthly artists every day at 12:10
-10 12 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=month --entity=artists
+10 00 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=month --entity=artists
 
 # Request user yearly artists every day at 12:20
-20 12 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=year --entity=artists
+20 00 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=year --entity=artists
 
 # Request user all_time artists every day at 12:30
-30 12 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=all_time --entity=artists
+30 00 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=all_time --entity=artists
 
 # Request user weekly releases every day at 13:00
-00 13 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=week --entity=releases
+40 00 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=week --entity=releases
 
 # Request user monthly releases every day at 13:10
-10 13 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=month --entity=releases
+50 00 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=month --entity=releases
 
 # Request user yearly releases every day at 13:20
-20 13 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=year --entity=releases
+00 01 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=year --entity=releases
 
 # Request user all_time releases every day at 13:30
-30 13 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=all_time --entity=releases
+10 01 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=all_time --entity=releases
 
 # Request user weekly recordings every day at 14:00
-00 14 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=week --entity=recordings
+20 01 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=week --entity=recordings
 
 # Request user monthly recordings every day at 14:10
-10 14 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=month --entity=recordings
+30 01 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=month --entity=recordings
 
 # Request user yearly recordings every day at 14:20
-20 14 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=year --entity=recordings
+40 01 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=year --entity=recordings
 
 # Request user all_time recordings every day at 14:30
-30 14 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=all_time --entity=recordings
+50 01 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=entity --range=all_time --entity=recordings
 
 # Request user weekly listening_activity every day at 15:00
-00 15 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=listening_activity --range=week
+00 02 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=listening_activity --range=week
 
 # Request user monthly listening_activity every day at 15:10
-10 15 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=listening_activity --range=month
+10 02 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=listening_activity --range=month
 
 # Request user yearly listening_activity every day at 15:20
-20 15 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=listening_activity --range=year
+20 02 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=listening_activity --range=year
 
 # Request user all_time listening_activity every day at 15:30
-30 15 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=listening_activity --range=all_time
+30 02 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=listening_activity --range=all_time
 
 # user weekly daily_activity
-45 15 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=daily_activity --range=week
+40 02 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=daily_activity --range=week
 
 # user monthly daily_activity
-00 16 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=daily_activity --range=month
+50 02 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=daily_activity --range=month
 
 # user weekly daily_activity
-15 16 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=daily_activity --range=year
+00 03 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=daily_activity --range=year
 
 # user weekly daily_activity
-30 16 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=daily_activity --range=all_time
+10 03 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=daily_activity --range=all_time

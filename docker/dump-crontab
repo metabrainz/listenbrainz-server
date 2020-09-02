@@ -11,4 +11,4 @@
 10 02 * * 1,4 /code/listenbrainz/admin/create-dumps.sh full
 
 ## Around 24 hours later, trigger an import into the spark cluster
-00 02 * * 2,5 /usr/local/bin/python /code/listenbrainz/manage.py spark request_import_full
+00 20 * * 2,5 /usr/local/bin/python /code/listenbrainz/manage.py spark request_import_full
