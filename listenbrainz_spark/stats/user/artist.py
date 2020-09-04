@@ -1,4 +1,4 @@
-from listenbrainz_spark.stats.utils import run_query
+from listenbrainz_spark.stats import run_query
 from pyspark.sql.functions import collect_list, sort_array, struct
 
 

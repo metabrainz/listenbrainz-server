@@ -6,8 +6,7 @@ from datetime import datetime
 import listenbrainz_spark
 from listenbrainz_spark.tests import SparkTestCase
 from listenbrainz_spark.recommendations import create_dataframes
-from listenbrainz_spark import schema, utils, config, path, hdfs_connection
-from listenbrainz_spark.stats.utils import replace_days, offset_days
+from listenbrainz_spark import schema, utils, config, path, hdfs_connection, stats
 
 from pyspark.sql import Row
 import time
@@ -34,8 +33,8 @@ class CreateDataframeTestCase(SparkTestCase):
     def test_get_dates_to_train_data(self):
         train_model_window = 20
         to_date, from_date = create_dataframes.get_dates_to_train_data(train_model_window)
-        d = offset_days(to_date, train_model_window)
-        d = replace_days(d, 1)
+        d = stats.offset_days(to_date, train_model_window)
+        d = stats.replace_days(d, 1)
         self.assertEqual(from_date, d)
 
     def test_get_listens_for_training_model_window(self):

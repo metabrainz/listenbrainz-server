@@ -9,7 +9,6 @@ from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
 from listenbrainz_spark import stats, utils, path
-from listenbrainz_spark.stats.utils import offset_days
 from listenbrainz_spark.recommendations.utils import save_html
 from listenbrainz_spark.exceptions import (SparkSessionNotInitializedException,
                                            ViewNotRegisteredException,
@@ -94,7 +93,7 @@ def get_dates_to_generate_candidate_sets(mapped_listens_df, recommendation_gener
     """
     # get timestamp of latest listen in HDFS
     to_date = mapped_listens_df.select(func.max('listened_at').alias('listened_at')).collect()[0].listened_at
-    from_date = offset_days(to_date, recommendation_generation_window).replace(hour=0, minute=0, second=0)
+    from_date = stats.offset_days(to_date, recommendation_generation_window).replace(hour=0, minute=0, second=0)
     return from_date, to_date
 
 
