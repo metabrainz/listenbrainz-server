@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Modify these two as needed:
-COMPOSE_FILE_LOC="docker/docker-compose.jenkins.yml"
+COMPOSE_FILE_LOC="docker/jenkins/docker-compose.spark.yml"
 TEST_CONTAINER_NAME="test"
 
 COMPOSE_PROJECT_NAME_ORIGINAL="jenkinsbuild_${BUILD_TAG}"

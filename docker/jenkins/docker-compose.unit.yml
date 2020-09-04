@@ -1,0 +1,38 @@
+version: "3.4"
+
+# IMPORTANT NOTE: Volume paths mounted on containers are relative to the
+# directory that this file is in (`docker/`) and so probably need to start with
+# `../` to refer to a directory in the main code checkout
+
+services:
+  db:
+    image: postgres:12.3
+    command: postgres -F
+    environment:
+      POSTGRES_PASSWORD: "postgres"
+
+  redis:
+    image: redis:5.0.3
+
+  timescale:
+    image: timescale/timescaledb:latest-pg12
+    environment:
+      POSTGRES_PASSWORD: "postgres"
+
+  rabbitmq:
+    image: rabbitmq:3.6.5
+    ports:
+      - "5672:5672"
+
+  listenbrainz:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+      target: listenbrainz-dev
+    volumes:
+      - ..:/code/listenbrainz:z
+    depends_on:
+      - redis
+      - db
+      - timescale
+      - rabbitmq
