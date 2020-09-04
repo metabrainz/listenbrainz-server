@@ -351,6 +351,12 @@ def get_recommendations_for_all(params: RecommendationParams, users):
             similar_artist_rec_df = similar_artist_rec_df.union(similar_artist_rec_user_df) if similar_artist_rec_df \
                                                                                             else similar_artist_rec_user_df
 
+    if _is_empty_dataframe(top_artist_rec_df):
+        raise RecommendationsNotGeneratedException('Top artist recommendations not generated for any user.')
+
+    if _is_empty_dataframe(similar_artist_rec_df):
+        raise RecommendationsNotGeneratedException('Similar artist recommendations not generated for any user.')
+
     check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df)
 
     top_artist_rec_df = scale_rating(top_artist_rec_df)
