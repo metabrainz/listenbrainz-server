@@ -36,7 +36,6 @@ class RecommendationParams:
         self.similar_artist_candidate_set_df = similar_artist_candidate_set_df
         self.recommendation_top_artist_limit = recommendation_top_artist_limit
         self.recommendation_similar_artist_limit = recommendation_similar_artist_limit
-        self.ratings_beyond_range = []
         self.similar_artist_not_found = []
         self.top_artist_not_found = []
         self.top_artist_rec_not_generated = []
@@ -352,16 +351,25 @@ def get_recommendations_for_all(params: RecommendationParams, users):
             similar_artist_rec_df = similar_artist_rec_df.union(similar_artist_rec_user_df) if similar_artist_rec_df \
                                                                                             else similar_artist_rec_user_df
 
+    check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df)
+
     top_artist_rec_df = scale_rating(top_artist_rec_df)
     similar_artist_rec_df = scale_rating(similar_artist_rec_df)
-
-    check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df)
 
     top_artist_rec_mbid_df = get_recording_mbids(params, top_artist_rec_df, users_df)
     similar_artist_rec_mbid_df = get_recording_mbids(params, similar_artist_rec_df, users_df)
 
     users_df.unpersist()
 
+    return top_artist_rec_mbid_df, similar_artist_rec_mbid_df, user_count
+
+
+def log_errors_to_sentry(params: RecommendationParams):
+    """ Log errors to Sentry.
+
+        Args:
+            params: RecommendationParams class object.
+    """
     if params.top_artist_not_found:
         current_app.logger.error('Top artist candidate set not found for: \n"{}"\nYou might want to check the mapping.'
                                  .format(params.top_artist_not_found))
@@ -377,8 +385,6 @@ def get_recommendations_for_all(params: RecommendationParams, users):
     if params.similar_artist_rec_not_generated:
         current_app.logger.error('Similar artist recommendations not generated for: "{}"'
                                  '\nYou might want to check the training set'.format(params.similar_artist_rec_not_generated))
-
-    return top_artist_rec_mbid_df, similar_artist_rec_mbid_df, user_count
 
 
 def main(recommendation_top_artist_limit=None, recommendation_similar_artist_limit=None, users=None):
@@ -426,6 +432,8 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
         current_app.logger.info("No active user found")
     else:
         current_app.logger.info('Average time: {:.2f}sec'.format(total_time / user_count))
+
+    log_errors_to_sentry(params)
 
     result = create_messages(top_artist_rec_df, similar_artist_rec_df, user_count, total_time)
 
