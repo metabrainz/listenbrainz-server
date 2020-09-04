@@ -4,6 +4,7 @@ import logging
 import time
 from datetime import datetime
 from collections import defaultdict
+from pydantic import ValidationError
 
 import listenbrainz_spark
 from listenbrainz_spark import path, stats, utils, config, schema
@@ -13,6 +14,10 @@ from listenbrainz_spark.exceptions import (FileNotSavedException,
                                            SparkSessionNotInitializedException,
                                            DataFrameNotAppendedException,
                                            DataFrameNotCreatedException)
+
+from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataRecord
+from data.model.user_cf_recommendations_recording_message import (UserCreateDataframesMessage,
+                                                                  UserMissingMusicBrainzDataMessage)
 
 from flask import current_app
 import pyspark.sql.functions as func
@@ -160,19 +165,16 @@ def get_listens_for_training_model_window(to_date, from_date, metadata, dest_pat
     return partial_listens_df
 
 
-def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df, from_date, to_date, ti):
+def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df):
     """ Get data that has been submitted to ListenBrainz but is missing from MusicBrainz.
 
         Args:
             partial_listens_df (dataframe): listens without artist mbid and recording mbid.
             msid_mbid_mapping_df (dataframe): msid->mbid mapping. For columns refer to
                                               msid_mbid_mapping_schema in listenbrainz_spark/schema.py
-            from_date (datetime): Date from which start fetching listens.
-            to_date (datetime): Date upto which fetch listens.
-            ti (datetime): Timestamp when the first func (main) of the script was called.
 
         Returns:
-            missing_musicbrainz_data_itr (iterator): Release data missing from the MusicBrainz.
+            missing_musicbrainz_data_itr (iterator): Data missing from the MusicBrainz.
     """
     condition = [
         partial_listens_df.recording_msid == msid_mbid_mapping_df.msb_recording_msid,
@@ -209,41 +211,7 @@ def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df, 
                                      .where(col('rank') <= 200) \
                                      .toLocalIterator()
 
-    missing_musicbrainz_data = defaultdict(list)
-
-    current_ts = str(datetime.utcnow())
-
-    for row in missing_musicbrainz_data_itr:
-        missing_musicbrainz_data[row.user_name].append(
-            {
-                'artist_msid': row.artist_msid,
-                'artist_name': row.artist_name,
-                'listened_at': str(row.listened_at),
-                'recording_msid': row.recording_msid,
-                'release_msid': row.release_msid,
-                'release_name': row.release_name,
-                'track_name': row.track_name,
-            }
-        )
-
-    total_time = '{:.2f}'.format((time.monotonic() - ti) / 60)
-    messages = [{
-        'type': 'cf_recording_dataframes',
-        'dataframe_upload_time': current_ts,
-        'total_time': total_time,
-        'from_date': str(from_date.strftime('%b %Y')),
-        'to_date': str(to_date.strftime('%b %Y')),
-    }]
-
-    for user_name, data in missing_musicbrainz_data.items():
-        messages.append({
-            'type': 'missing_musicbrainz_data',
-            'musicbrainz_id': user_name,
-            'missing_musicbrainz_data': data,
-            'source': 'cf'
-        })
-
-    return messages
+    return missing_musicbrainz_data_itr
 
 
 def get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df):
@@ -360,6 +328,67 @@ def get_users_dataframe(mapped_listens_df, metadata):
     return users_df
 
 
+def prepare_messages(missing_musicbrainz_data_itr, from_date, to_date, ti):
+    """ Create messages to send the data to the webserver via RabbitMQ
+
+        Args:
+            missing_musicbrainz_data_itr (iterator): Data missing from the MusicBrainz.
+            from_date (datetime): Date from which start fetching listens.
+            to_date (datetime): Date upto which fetch listens.
+            ti (datetime): Timestamp when the first func (main) of the script was called.
+
+        Returns:
+            messages: A list of messages to be sent via RabbitMQ
+    """
+
+    missing_musicbrainz_data = defaultdict(list)
+
+    current_ts = str(datetime.utcnow())
+
+    for row in missing_musicbrainz_data_itr:
+        try:
+            missing_musicbrainz_data[row.user_name].append(UserMissingMusicBrainzDataRecord(**
+                {
+                    'artist_msid': row.artist_msid,
+                    'artist_name': row.artist_name,
+                    'listened_at': str(row.listened_at),
+                    'recording_msid': row.recording_msid,
+                    'release_msid': row.release_msid,
+                    'release_name': row.release_name,
+                    'track_name': row.track_name,
+                }
+            ).dict())
+        except ValidationError:
+            current_app.logger.warning("""Invalid entry present in missing musicbrainz data for user: {user_name}, skipping"""
+                                       .format(user_name=row.user_name), exc_info=True)
+
+    total_time = '{:.2f}'.format((time.monotonic() - ti) / 60)
+    try:
+        messages = [UserCreateDataframesMessage(**{
+            'type': 'cf_recording_dataframes',
+            'dataframe_upload_time': current_ts,
+            'total_time': total_time,
+            'from_date': str(from_date.strftime('%b %Y')),
+            'to_date': str(to_date.strftime('%b %Y')),
+        }).dict()]
+    except ValidationError:
+        current_app.logger.warning("Invalid entry present in dataframe creation message", exc_info=True)
+
+    for user_name, data in missing_musicbrainz_data.items():
+        try:
+            messages.append(UserMissingMusicBrainzDataMessage(**{
+                'type': 'missing_musicbrainz_data',
+                'musicbrainz_id': user_name,
+                'missing_musicbrainz_data': data,
+                'source': 'cf'
+            }).dict())
+        except ValidationError:
+            current_app.logger.warning("ValidationError while calculating missing_musicbrainz_data for {user_name}."
+                                       "\nData: {data}".format(user_name=user_name, data=data), exc_info=True)
+
+    return messages
+
+
 def main(train_model_window=None):
 
     ti = time.monotonic()
@@ -396,6 +425,8 @@ def main(train_model_window=None):
     save_dataframe_metadata_to_hdfs(metadata)
 
     current_app.logger.info('Preparing missing MusicBrainz data...')
-    messages = get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df, from_date, to_date, ti)
+    missing_musicbrainz_data_itr = get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df)
+
+    messages = prepare_messages(missing_musicbrainz_data_itr, from_date, to_date, ti)
 
     return messages
