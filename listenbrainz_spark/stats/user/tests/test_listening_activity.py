@@ -9,7 +9,7 @@ from listenbrainz_spark import utils
 from listenbrainz_spark.constants import LAST_FM_FOUNDING_YEAR
 from listenbrainz_spark.exceptions import HDFSException
 from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY
-from listenbrainz_spark.stats.utils import (offset_days, offset_months, get_day_end,
+from listenbrainz_spark.stats import (offset_days, offset_months, get_day_end,
                                       get_month_end, get_year_end, run_query)
 from listenbrainz_spark.tests import SparkTestCase
 from pyspark.sql import Row
