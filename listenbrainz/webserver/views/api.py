@@ -97,6 +97,9 @@ def get_listens(user_name):
     :param max_ts: If you specify a ``max_ts`` timestamp, listens with listened_at less than (but not including) this value will be returned.
     :param min_ts: If you specify a ``min_ts`` timestamp, listens with listened_at greater than (but not including) this value will be returned.
     :param count: Optional, number of listens to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
+    :param time_range: This parameter determines the time range for the listen search. Each increment of the time_range corresponds to a range of 5 days and the default
+                       time_range of 3 means that 15 days will be searched. 
+                       Default: :data:`~webserver.views.api.DEFAULT_TIME_RANGE` . Max: :data:`~webserver.views.api.MAX_TIME_RANGE`
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
     """
