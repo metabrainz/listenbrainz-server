@@ -1,40 +1,81 @@
+import os
 import unittest
 from unittest.mock import patch, Mock, call
 
 import listenbrainz_spark
 from listenbrainz_spark import config, utils, path, schema
 from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
+from listenbrainz_spark.tests import SparkTestCase
 
+from pyspark.sql import Row
 from pyspark.sql.types import StructField, StructType, StringType
 
 
-class HDFSDataUploaderTestCase(unittest.TestCase):
+class HDFSDataUploaderTestCase(SparkTestCase):
+    # use path_ as prefix for all paths in this class.
+    path_ = "/test"
 
-    @classmethod
-    def setUpClass(cls):
-        cls.app = utils.create_app()
-        cls.app_context = cls.app.app_context()
-        cls.app_context.push()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.app_context.pop()
+    def tearDown(self):
+        if utils.path_exists(self.path_):
+            utils.delete_dir(self.path_, recursive=True)
 
     @patch('listenbrainz_spark.utils.read_json')
     @patch('listenbrainz_spark.utils.save_parquet')
     def test_process_json(self, mock_save, mock_read):
         fakeschema = StructType([StructField('xxxxx', StringType(), nullable=True)])
-        ListenbrainzDataUploader().process_json('fakename', '/fakedestpath', '/fakehdfspath', fakeschema)
+        ListenbrainzDataUploader().process_json('_', '/fakedestpath', '/fakehdfspath', '__', fakeschema)
         mock_read.assert_called_once_with('/fakehdfspath', schema=fakeschema)
         mock_save.assert_called_once_with(mock_read.return_value, '/fakedestpath')
 
     @patch('listenbrainz_spark.utils.read_json')
-    @patch('listenbrainz_spark.utils.save_parquet')
-    def test_process_json_listens(self, mock_save, mock_read):
-        fakeschema = StructType([StructField('xxxxx', StringType(), nullable=True)])
-        ListenbrainzDataUploader().process_json_listens('/2020/1.json', '/fakedir', 'fakehdfspath', fakeschema)
-        mock_read.assert_called_once_with('fakehdfspath', schema=fakeschema)
-        mock_save.assert_called_once_with(mock_read.return_value, '/fakedir/2020/1.parquet')
+    def test_process_json_listens_overwrite(self, mock_read_json):
+        fakeschema = StructType([StructField('column_1', StringType()), StructField('column_2', StringType())])
+
+        # Save old dataframe in HDFS
+        old_df = utils.create_dataframe(Row(column_1='row_a', column_2='row_a'), fakeschema)
+        old_df.union(utils.create_dataframe(Row(column_1='row_b', column_2='row_b'), fakeschema))
+        utils.save_parquet(old_df, os.path.join(self.path_, '2020/1.parquet'))
+
+        # Mock read_json to return new dataframe
+        new_df = utils.create_dataframe(Row(column_1='row_c', column_2='row_c'), fakeschema)
+        mock_read_json.return_value = new_df
+
+        ListenbrainzDataUploader().process_json_listens(os.path.join(self.path_, '2020/1.json'),
+                                                        self.path_, self.path_, append=False, schema=fakeschema)
+
+        received = utils.read_files_from_HDFS(os.path.join(self.path_, '2020/1.parquet')) \
+            .rdd \
+            .map(list) \
+            .collect()
+
+        expected = new_df.rdd.map(list).collect()
+
+        self.assertListEqual(received, expected)
+
+    @patch('listenbrainz_spark.utils.read_json')
+    def test_process_json_listens_append(self, mock_read_json):
+        fakeschema = StructType([StructField('column_1', StringType()), StructField('column_2', StringType())])
+
+        # Save old dataframe in HDFS
+        old_df = utils.create_dataframe(Row(column_1='row_a', column_2='row_a'), fakeschema)
+        old_df.union(utils.create_dataframe(Row(column_1='row_b', column_2='row_b'), fakeschema))
+        utils.save_parquet(old_df, os.path.join(self.path_, '/2020/1.parquet'))
+
+        # Mock read_json to return new dataframe
+        new_df = utils.create_dataframe(Row(column_1='row_c', column_2='row_c'), fakeschema)
+        mock_read_json.return_value = new_df
+
+        ListenbrainzDataUploader().process_json_listens('/2020/1.json', self.path_, self.path_, append=True, schema=fakeschema)
+
+        received = utils.read_files_from_HDFS(os.path.join(self.path_, '/2020/1.parquet')) \
+            .rdd \
+            .map(list) \
+            .collect()
+
+        old_df.union(new_df)
+        expected = old_df.rdd.map(list).collect()
+
+        self.assertCountEqual(received, expected)
 
     @patch('listenbrainz_spark.hdfs.upload.tempfile.TemporaryDirectory')
     @patch('listenbrainz_spark.hdfs.upload.ListenbrainzDataUploader.process_json_listens')
