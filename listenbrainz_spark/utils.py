@@ -5,7 +5,8 @@ import pika
 from py4j.protocol import Py4JJavaError
 
 import listenbrainz_spark
-from listenbrainz_spark import stats, config, path
+from listenbrainz_spark import config, path
+from listenbrainz_spark.stats.utils import replace_days,offset_months
 from listenbrainz_spark import hdfs_connection
 from listenbrainz_spark.exceptions import (FileNotSavedException,
                                            ViewNotRegisteredException,
@@ -198,9 +199,9 @@ def get_listens(from_date, to_date, dest_path):
         except PathNotFoundException as err:
             current_app.logger.debug('{}\nFetching file for next date...'.format(err))
         # go to the next month of from_date
-        from_date = stats.offset_months(date=from_date, months=1, shift_backwards=False)
+        from_date = offset_months(date=from_date, months=1, shift_backwards=False)
         # shift to the first of the month
-        from_date = stats.replace_days(from_date, 1)
+        from_date = replace_days(from_date, 1)
     if not df:
         current_app.logger.error('Listening history missing form HDFS')
         raise HDFSException("Listening history missing from HDFS")

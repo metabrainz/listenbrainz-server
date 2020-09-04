@@ -7,7 +7,7 @@ from collections import defaultdict
 
 import listenbrainz_spark
 from listenbrainz_spark import path, stats, utils, config, schema
-from listenbrainz_spark.stats.utils import get_latest_listen_ts
+from listenbrainz_spark.stats.utils import get_latest_listen_ts, replace_days, offset_days
 from listenbrainz_spark.exceptions import (FileNotSavedException,
                                            FileNotFetchedException,
                                            SparkSessionNotInitializedException,
@@ -128,9 +128,9 @@ def get_dates_to_train_data(train_model_window):
             to_date (datetime): Date upto which fetch listens.
     """
     to_date = get_latest_listen_ts()
-    from_date = stats.offset_days(to_date, train_model_window)
+    from_date = offset_days(to_date, train_model_window)
     # shift to the first of the month
-    from_date = stats.replace_days(from_date, 1)
+    from_date = replace_days(from_date, 1)
     return to_date, from_date
 
 
