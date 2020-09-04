@@ -1,8 +1,8 @@
 version: "3.4"
 
 volumes:
-    datanode:
-    namenode:
+  datanode:
+  namenode:
 
 services:
   hadoop-master:
@@ -22,7 +22,7 @@ services:
 
   test:
     build:
-      context: ..
+      context: ../..
       dockerfile: Dockerfile.spark
       target: metabrainz-spark-dev
     command: dockerize -wait tcp://hadoop-master:9000 -timeout 60s bash -c "cp listenbrainz_spark/config.py.sample listenbrainz_spark/config.py; python -m pytest -c pytest.spark.ini --junitxml=/data/test_report.xml --cov-report xml:/data/coverage.xml"
