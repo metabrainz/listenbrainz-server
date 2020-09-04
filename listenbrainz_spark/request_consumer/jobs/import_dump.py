@@ -37,6 +37,24 @@ def import_full_dump_by_id_handler(id: int):
     }]
 
 
+def import_newest_incremental_dump_handler():
+    dump_name = import_dump_to_hdfs('incremental', overwrite=False)
+    return [{
+        'type': 'import_incremental_dump',
+        'imported_dump': dump_name,
+        'time': str(datetime.utcnow()),
+    }]
+
+
+def import_incremental_dump_by_id_handler(id: int):
+    dump_name = import_dump_to_hdfs('incremental', overwrite=False, dump_id=id)
+    return [{
+        'type': 'import_incremental_dump',
+        'imported_dump': dump_name,
+        'time': str(datetime.utcnow()),
+    }]
+
+
 def import_mapping_to_hdfs():
     temp_dir = tempfile.mkdtemp()
     src, mapping_name = ListenbrainzDataDownloader().download_msid_mbid_mapping(directory=temp_dir)

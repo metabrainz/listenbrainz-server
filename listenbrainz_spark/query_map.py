@@ -27,6 +27,8 @@ functions = {
     'stats.sitewide.entity.all_time': listenbrainz_spark.stats.sitewide.entity.get_entity_all_time,
     'import.dump.full_newest': listenbrainz_spark.request_consumer.jobs.import_dump.import_newest_full_dump_handler,
     'import.dump.full_id': listenbrainz_spark.request_consumer.jobs.import_dump.import_full_dump_by_id_handler,
+    'import.dump.incremental_newest': listenbrainz_spark.request_consumer.jobs.import_dump.import_newest_incremental_dump_handler,
+    'import.dump.incremental_id': listenbrainz_spark.request_consumer.jobs.import_dump.import_incremental_dump_by_id_handler,
     'cf_recording.recommendations.create_dataframes': listenbrainz_spark.recommendations.create_dataframes.main,
     'cf_recording.recommendations.train_model': listenbrainz_spark.recommendations.train_models.main,
     'cf_recording.recommendations.candidate_sets': listenbrainz_spark.recommendations.candidate_sets.main,

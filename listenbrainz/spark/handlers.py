@@ -20,7 +20,6 @@ from data.model.user_recording_stat import UserRecordingStatJson
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
 
 
-
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
 TIME_TO_CONSIDER_RECOMMENDATIONS_AS_OLD = 7  # days
 
@@ -187,7 +186,7 @@ def handle_sitewide_entity(data):
 
 
 def handle_dump_imported(data):
-    """ Process the response that the cluster sends after importing a new full dump
+    """ Process the response that the cluster sends after importing a new dump
 
     We don't really need to _do_ anything, just send an email over for observability.
     """
@@ -197,7 +196,7 @@ def handle_dump_imported(data):
     dump_name = data['imported_dump']
     import_completion_time = data['time']
     send_mail(
-        subject='A full data dump has been imported into the Spark cluster',
+        subject='A data dump has been imported into the Spark cluster',
         text=render_template('emails/dump_import_notification.txt', dump_name=dump_name, time=import_completion_time),
         recipients=['listenbrainz-observability@metabrainz.org'],
         from_name='ListenBrainz',
@@ -250,8 +249,8 @@ def handle_missing_musicbrainz_data(data):
     except ValidationError:
         current_app.logger.error("""ValidationError while inserting missing MusicBrainz data from source "{source}" for user
                                  with musicbrainz_id: {musicbrainz_id}. Data: {data}""".format(musicbrainz_id=musicbrainz_id,
-                                                                                 data=json.dumps(data, indent=3),
-                                                                                 source=source), exc_info=True)
+                                                                                               data=json.dumps(data, indent=3),
+                                                                                               source=source), exc_info=True)
 
     current_app.logger.debug("Missing musicbrainz data for {} inserted".format(musicbrainz_id))
 
