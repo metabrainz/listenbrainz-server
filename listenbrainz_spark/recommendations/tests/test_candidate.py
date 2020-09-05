@@ -17,14 +17,13 @@ class CandidateSetsTestClass(SparkTestCase):
     mapping_path = path.MBID_MSID_MAPPING
     mapped_listens_path = path.MAPPED_LISTENS
     mapped_listens_subset_path = '/mapped/subset.parquet'
-    date = datetime(2018, 1, 21)
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.upload_test_listen_to_hdfs(cls.date, cls.listens_path)
+        cls.upload_test_listen_to_hdfs(cls.listens_path)
         cls.upload_test_mapping_to_hdfs(cls.mapping_path)
-        cls.upload_test_mapped_listens_to_hdfs(cls.date, cls.listens_path, cls.mapping_path, cls.mapped_listens_path)
+        cls.upload_test_mapped_listens_to_hdfs(cls.listens_path, cls.mapping_path, cls.mapped_listens_path)
         cls.upload_test_mapping_listens_subset_to_hdfs()
 
     @classmethod

@@ -6,6 +6,7 @@ from datetime import datetime
 
 import listenbrainz_spark
 from listenbrainz_spark import hdfs_connection, utils, config, schema, stats
+from listenbrainz_spark.stats.utils import get_latest_listen_ts
 from listenbrainz_spark.recommendations import create_dataframes
 from listenbrainz_spark.recommendations import train_models
 
@@ -26,6 +27,7 @@ class SparkTestCase(unittest.TestCase):
         hdfs_connection.init_hdfs(config.HDFS_HTTP_URI)
         cls.app = utils.create_app()
         cls.app_context = cls.app.app_context()
+        cls.date = datetime(2019, 1, 21)
         cls.app_context.push()
 
     @classmethod
@@ -170,21 +172,18 @@ class SparkTestCase(unittest.TestCase):
         return metadata
 
     @classmethod
-    def upload_test_listen_to_hdfs(cls, date, listens_path):
-        ts = date
+    def upload_test_listen_to_hdfs(cls, listens_path):
 
         with open(cls.path_to_data_file('listens.json')) as f:
             data = json.load(f)
 
         listens_df = None
         for row in data:
-            row['listened_at'] = datetime.timestamp(ts)
-            df = utils.create_dataframe(schema.convert_listen_to_row(row), schema=schema.listen_schema)
+            row['listened_at'] = datetime.strptime(row['listened_at'], '%d-%m-%Y')
+            df = utils.create_dataframe(schema.convert_to_spark_json(row), schema=schema.listen_schema)
             listens_df = listens_df.union(df) if listens_df else df
 
-            ts = stats.offset_days(ts, 1)
-
-        utils.save_parquet(listens_df, listens_path + '/{}/{}.parquet'.format(date.year, date.month))
+        utils.save_parquet(listens_df, listens_path + '/{}/{}.parquet'.format(cls.date.year, cls.date.month))
 
     @classmethod
     def upload_test_mapping_to_hdfs(cls, mapping_path):
@@ -199,8 +198,8 @@ class SparkTestCase(unittest.TestCase):
         utils.save_parquet(mapping_df, mapping_path)
 
     @classmethod
-    def upload_test_mapped_listens_to_hdfs(cls, date, listens_path, mapping_path, mapped_listens_path):
-        partial_listen_df = create_dataframes.get_listens_for_training_model_window(date, date, {}, listens_path)
+    def upload_test_mapped_listens_to_hdfs(cls, listens_path, mapping_path, mapped_listens_path):
+        partial_listen_df = create_dataframes.get_listens_for_training_model_window(cls.date, cls.date, {}, listens_path)
         mapping_df = utils.read_files_from_HDFS(mapping_path)
 
         mapped_listens = create_dataframes.get_mapped_artist_and_recording_mbids(partial_listen_df, mapping_df)
