@@ -6,6 +6,7 @@ from datetime import datetime
 import listenbrainz_spark
 from listenbrainz_spark.tests import SparkTestCase
 from listenbrainz_spark.recommendations import create_dataframes
+from listenbrainz_spark.stats.utils import get_latest_listen_ts
 from listenbrainz_spark import schema, utils, config, path, hdfs_connection, stats
 
 from pyspark.sql import Row
@@ -20,10 +21,9 @@ class CreateDataframeTestCase(SparkTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.date = datetime(2019, 1, 21)
-        cls.upload_test_listen_to_hdfs(cls.date, cls.listens_path)
+        cls.upload_test_listen_to_hdfs(cls.listens_path)
         cls.upload_test_mapping_to_hdfs(cls.mapping_path)
-        cls.upload_test_mapped_listens_to_hdfs(cls.date, cls.listens_path, cls.mapping_path, cls.mapped_listens_path)
+        cls.upload_test_mapped_listens_to_hdfs(cls.listens_path, cls.mapping_path, cls.mapped_listens_path)
 
     @classmethod
     def tearDownClass(cls):
@@ -39,9 +39,11 @@ class CreateDataframeTestCase(SparkTestCase):
 
     def test_get_listens_for_training_model_window(self):
         metadata = {}
-        test_df = create_dataframes.get_listens_for_training_model_window(self.date, self.date, metadata, self.listens_path)
-        self.assertEqual(metadata['to_date'], self.date)
-        self.assertEqual(metadata['from_date'], self.date)
+        to_date = get_latest_listen_ts()
+        from_date = stats.offset_days(to_date, 2)
+        test_df = create_dataframes.get_listens_for_training_model_window(to_date, from_date, metadata, self.listens_path)
+        self.assertEqual(metadata['to_date'], to_date)
+        self.assertEqual(metadata['from_date'], from_date)
         self.assertNotIn('artist_mbids', test_df.columns)
         self.assertNotIn('recording_mbid', test_df.columns)
 
@@ -135,7 +137,6 @@ class CreateDataframeTestCase(SparkTestCase):
         df = utils.read_files_from_HDFS(path.DATAFRAME_METADATA)
         self.assertTrue(sorted(df.columns), sorted(schema.dataframe_metadata_schema.fieldNames()))
 
-    @unittest.skip("Skipping because it's failing on master") #TODO: fix it
     def test_get_data_missing_from_musicbrainz(self):
         partial_listen_df = create_dataframes.get_listens_for_training_model_window(self.date, self.date, {}, self.listens_path)
         mapping_df = utils.read_files_from_HDFS(self.mapping_path)
@@ -162,7 +163,7 @@ class CreateDataframeTestCase(SparkTestCase):
                 'user_name': 'vansika',
                 'artist_msid': 'a36d6fc9-49d0-4789-a7dd-a2b72369ca45',
                 'artist_name': 'Less Than Jake',
-                'listened_at': '2019-01-21 00:00:00',
+                'listened_at': '2019-01-13 00:00:00',
                 'recording_msid': 'cb6985cd-cc71-4d59-b4fb-2e72796af741',
                 'release_msid': '',
                 'release_name': 'lala',
@@ -173,7 +174,7 @@ class CreateDataframeTestCase(SparkTestCase):
                 'user_name': 'vansika',
                 'artist_msid': 'f3e64219-ac00-4b6b-ad15-6e4801cb30a0',
                 'artist_name': 'Townes Van Zandt',
-                'listened_at': '2019-01-20 00:00:00',
+                'listened_at': '2019-01-12 00:00:00',
                 'recording_msid': '00000465-fcc1-41ab-a735-553f6ce677c4',
                 'release_msid': '',
                 'release_name': 'Sunshine Boy: The Unheard Studio Sessions & Demos 1971 - 1972',
@@ -183,7 +184,6 @@ class CreateDataframeTestCase(SparkTestCase):
 
         self.assertEqual(received_data, expected_data)
 
-    @unittest.skip("Skipping because it's failing on master") #TODO: fix it
     def test_prepare_messages(self):
         partial_listen_df = create_dataframes.get_listens_for_training_model_window(self.date, self.date, {}, self.listens_path)
         mapping_df = utils.read_files_from_HDFS(self.mapping_path)
@@ -212,7 +212,7 @@ class CreateDataframeTestCase(SparkTestCase):
                         {
                             'artist_msid': 'a36d6fc9-49d0-4789-a7dd-a2b72369ca45',
                             'artist_name': 'Less Than Jake',
-                            'listened_at': '2019-01-21 00:00:00',
+                            'listened_at': '2019-01-13 00:00:00',
                             'recording_msid': 'cb6985cd-cc71-4d59-b4fb-2e72796af741',
                             'release_msid': '',
                             'release_name': 'lala',
@@ -222,7 +222,7 @@ class CreateDataframeTestCase(SparkTestCase):
                         {
                             'artist_msid': 'f3e64219-ac00-4b6b-ad15-6e4801cb30a0',
                             'artist_name': 'Townes Van Zandt',
-                            'listened_at': '2019-01-20 00:00:00',
+                            'listened_at': '2019-01-12 00:00:00',
                             'recording_msid': '00000465-fcc1-41ab-a735-553f6ce677c4',
                             'release_msid': '',
                             'release_name': 'Sunshine Boy: The Unheard Studio Sessions & Demos 1971 - 1972',
