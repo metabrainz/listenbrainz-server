@@ -1,5 +1,6 @@
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
+import listenbrainz.db.user_relationship as db_user_relationship
 import urllib
 import ujson
 import psycopg2
@@ -12,6 +13,7 @@ from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain import spotify
 from listenbrainz.webserver import flash
+from listenbrainz.webserver.errors import APIBadRequest
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver.redis_connection import _redis
@@ -189,6 +191,21 @@ def reports(user_name: str):
         props=ujson.dumps(props),
         user=user
     )
+
+
+@user_bp.route('/<user_name>/follow', methods=['OPTIONS', 'POST'])
+@login_required
+def follow_user(user_name: str):
+    user = _get_user(user_name)
+
+    if user.musicbrainz_id == current_user.musicbrainz_id:
+        raise APIBadRequest("Whoops, cannot follow yourself.")
+
+    if db_user_relationship.already_following_user(current_user.id, user.id):
+        raise APIBadRequest(f"{current_user.musicbrainz_id} is already following user {user.musicbrainz_id}")
+
+    db_user_relationship.insert(current_user.id, user.id, 'follow')
+    return jsonify({"status": 200, "message": "Success!"})
 
 
 def _get_user(user_name):
