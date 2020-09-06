@@ -116,3 +116,9 @@ class SimilarArtistNotFetchedException(SparkException):
     """
     def __init__(self, message):
         super(SimilarArtistNotFetchedException, self).__init__(message)
+
+class EmptyDataframeExcpetion(SparkException):
+    """ Dataframe is empty.
+    """
+    def __init__(self, message):
+        super(EmptyDataframeExcpetion, self).__init__(message)
