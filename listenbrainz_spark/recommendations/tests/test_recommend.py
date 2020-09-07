@@ -99,37 +99,27 @@ class RecommendTestClass(SparkTestCase):
         df = recommend.get_recording_mbids(params, recommendation_df, users_df)
         self.assertEqual(df.count(), 4)
         row = df.collect()
-
-        self.assertEqual(row[0],
+        received_data = [row[0], row[1], row[2], row[3]]
+        expected_data = [
             Row(mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rank=1,
                 rating=6.994590001,
                 user_id=1,
-                user_name='vansika')
-
-        )
-
-        self.assertEqual(row[1],
+                user_name='vansika'),
             Row(
                 mb_recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rank=2,
                 rating=0.313456,
                 user_id=1,
                 user_name='vansika'
-                )
-        )
-
-        self.assertEqual(row[2],
+                ),
             Row(
                 mb_recording_mbid="3acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rank=1,
                 rating=7.999,
                 user_id=2,
                 user_name='rob'
-                )
-        )
-
-        self.assertEqual(row[3],
+                ),
             Row(
                 mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
                 rank=2,
@@ -137,8 +127,8 @@ class RecommendTestClass(SparkTestCase):
                 user_id=2,
                 user_name='rob'
                 )
-        )
-
+        ]
+        self.assertEqual(received_data, expected_data)
 
     def test_filter_recommendations_on_rating(self):
         df = self.get_recommendation_df()
@@ -151,19 +141,19 @@ class RecommendTestClass(SparkTestCase):
         self.assertEqual(df.count(), 2)
         row = df.collect()
 
-        self.assertEqual(row[0],
+        received_data = [row[0], row[1]]
+        expected_data = [
             Row(
                 rating=6.994590001,
                 recording_id=2,
-                user_id=1)
-        )
-
-        self.assertEqual(row[1],
+                user_id=1),
             Row(
                 rating=7.999,
                 recording_id=1,
                 user_id=2)
-        )
+        ]
+
+        self.assertEqual(received_data, expected_data)
 
     @patch('listenbrainz_spark.recommendations.recommend.filter_recommendations_on_rating')
     @patch('listenbrainz_spark.recommendations.recommend.listenbrainz_spark')
@@ -322,35 +312,155 @@ class RecommendTestClass(SparkTestCase):
         self.assertEqual(expected_model_id, model_id_2)
 
     @patch('listenbrainz_spark.recommendations.recommend.get_candidate_set_rdd_for_user')
-    @patch('listenbrainz_spark.recommendations.recommend.get_recommended_mbids')
-    def test_get_recommendations_for_user(self, mock_mbids, mock_candidate_set):
+    @patch('listenbrainz_spark.recommendations.recommend.generate_recommendations')
+    def test_get_recommendations_for_all(self, mock_recs, mock_candidate_set):
         params = self.get_recommendation_params()
-        user_id = 1
-        user_name = 'vansika'
+        users = ['vansika']
 
-        _, _ = recommend.get_recommendations_for_user(user_id, user_name, params)
+        params.top_artist_candidate_set_df = self.get_top_artist_rec_df()
+        params.similar_artist_candidate_set_df = self.get_similar_artist_rec_df()
+
+        def side_effect(df, users):
+
+            if len(df.subtract(params.top_artist_candidate_set_df).collect()) == 0:
+                return 'top_artist_rdd'
+
+            if len(df.subtract(params.similar_artist_candidate_set_df).collect()) == 0:
+                return 'similar_artist_rdd'
+
+        mock_candidate_set.side_effect = side_effect
+
+        recommend.get_recommendations_for_all(params, users)
 
         mock_candidate_set.assert_has_calls([
-            call(params.top_artist_candidate_set_df, user_id),
-            call(params.similar_artist_candidate_set_df, user_id)
+            call(params.top_artist_candidate_set_df, users),
+            call(params.similar_artist_candidate_set_df, users)
         ])
 
-        mock_mbids.assert_has_calls([
-            call(mock_candidate_set.return_value, params, params.recommendation_top_artist_limit),
-            call(mock_candidate_set.return_value, params, params.recommendation_similar_artist_limit)
+        mock_recs.assert_has_calls([
+            call(mock_candidate_set(params.top_artist_candidate_set_df, users), params, params.recommendation_top_artist_limit),
+            call(mock_candidate_set(params.similar_artist_candidate_set_df, users), params, params.recommendation_similar_artist_limit)
         ])
 
-        user_name = 'vansika_1'
-        mock_candidate_set.side_effect = IndexError
-        recommend.get_recommendations_for_user(user_id, user_name, params)
-        self.assertEqual(params.top_artist_not_found, ['vansika_1'])
-        self.assertEqual(params.similar_artist_not_found, ['vansika_1'])
+    def get_top_artist_rec_df(self):
+        df = utils.create_dataframe(
+            Row(mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                rating=1.8,
+                recording_id=5,
+                user_id=6,
+                user_name='vansika'),
+            schema=None
+        )
 
-        user_name = 'vansika_2'
-        mock_candidate_set.side_effect = RecommendationsNotGeneratedException(message='Recommendations not generated')
-        recommend.get_recommendations_for_user(user_id, user_name, params)
-        self.assertEqual(params.top_artist_rec_not_generated, ['vansika_2'])
-        self.assertEqual(params.similar_artist_rec_not_generated, ['vansika_2'])
+        df = df.union(utils.create_dataframe(
+            Row(mb_recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                rating=-0.8,
+                recording_id=6,
+                user_id=6,
+                user_name='vansika'),
+            schema=None
+        ))
+
+        df = df.union(utils.create_dataframe(
+            Row(mb_recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                rating=0.99,
+                recording_id=6,
+                user_id=7,
+                user_name='rob'),
+            schema=None
+        ))
+        return df
+
+    def get_similar_artist_rec_df(self):
+        df = utils.create_dataframe(
+            Row(mb_recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                rating=0.8,
+                recording_id=5,
+                user_id=8,
+                user_name='vansika_1'),
+            schema=None
+        )
+
+        df = df.union(utils.create_dataframe(
+            Row(mb_recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                rating=-2.8,
+                recording_id=6,
+                user_id=8,
+                user_name='vansika_1'),
+            schema=None
+        ))
+
+        df = df.union(utils.create_dataframe(
+            Row(mb_recording_mbid="7acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                rating=0.19,
+                recording_id=11,
+                user_id=7,
+                user_name='rob'),
+            schema=None
+        ))
+        return df
+
+    @patch('listenbrainz_spark.recommendations.recommend.current_app')
+    def test_check_for_ratings_beyond_range(self, mock_current_app):
+        top_artist_rec_df = self.get_top_artist_rec_df()
+        similar_artist_rec_df = self.get_similar_artist_rec_df()
+
+        recommend.check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df)
+
+        mock_current_app.logger.error.assert_has_calls([
+            call('Some ratings are greater than 1 \nMax rating: 1.8'),
+            call('Some ratings are less than -1 \nMin rating: -2.8')
+        ])
+
+    def test_create_messages(self):
+        top_artist_rec_df = self.get_top_artist_rec_df()
+        similar_artist_rec_df = self.get_similar_artist_rec_df()
+        active_user_count = 10
+        top_artist_rec_user_count = 5
+        similar_artist_rec_user_count = 4
+        total_time = 3600
+
+        data = recommend.create_messages(top_artist_rec_df, similar_artist_rec_df, active_user_count, total_time,
+                               top_artist_rec_user_count, similar_artist_rec_user_count)
+
+        self.assertEqual(next(data), {
+            'musicbrainz_id': 'vansika',
+            'type': 'cf_recording_recommendations',
+            'top_artist': [["2acb406f-c716-45f8-a8bd-96ca3939c2e5", 1.8],
+                           ["8acb406f-c716-45f8-a8bd-96ca3939c2e5", -0.8]],
+            'similar_artist': []
+        })
+
+        self.assertEqual(next(data), {
+            'musicbrainz_id': 'rob',
+            'type': 'cf_recording_recommendations',
+            'top_artist': [["8acb406f-c716-45f8-a8bd-96ca3939c2e5", 0.99]],
+            'similar_artist': [["7acb406f-c716-45f8-a8bd-96ca3939c2e5", 0.19]]
+        })
+
+        self.assertEqual(next(data), {
+            'musicbrainz_id': 'vansika_1',
+            'type': 'cf_recording_recommendations',
+            'top_artist': [],
+            'similar_artist': [["2acb406f-c716-45f8-a8bd-96ca3939c2e5", 0.8],
+                               ["8acb406f-c716-45f8-a8bd-96ca3939c2e5", -2.8]]
+        })
+
+        self.assertEqual(next(data), {
+            'type': 'cf_recording_recommendations_mail',
+            'active_user_count': active_user_count,
+            'top_artist_user_count': top_artist_rec_user_count,
+            'similar_artist_user_count': similar_artist_rec_user_count,
+            'total_time': '1.00'
+        })
+
+    def test_get_user_count(self):
+        df = utils.create_dataframe(Row(user_id=3), schema=None)
+        df = df.union(utils.create_dataframe(Row(user_id=3), schema=None))
+        df = df.union(utils.create_dataframe(Row(user_id=2), schema=None))
+
+        user_count = recommend.get_user_count(df)
+        self.assertEqual(user_count, 2)
 
     def get_recommendation_params(self):
         recordings_df = self.get_recordings_df()

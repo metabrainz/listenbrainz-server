@@ -245,7 +245,7 @@ def check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df):
 
     min_rating = top_artist_rec_df.select(func.min('rating').alias('rating')).take(1)[0].rating
 
-    min_rating = max(similar_artist_rec_df.select(func.min('rating').alias('rating')).take(1)[0].rating, min_rating)
+    min_rating = min(similar_artist_rec_df.select(func.min('rating').alias('rating')).take(1)[0].rating, min_rating)
 
     if max_rating > 1.0:
         current_app.logger.error('Some ratings are greater than 1 \nMax rating: {}'.format(max_rating))
@@ -269,7 +269,6 @@ def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_u
         Returns:
             messages: A list of messages to be sent via RabbitMQ
     """
-
     top_artist_rec_itr = top_artist_rec_mbid_df.toLocalIterator()
 
     user_rec = {}
