@@ -196,7 +196,7 @@ def handle_dump_imported(data):
     dump_name = data['imported_dump']
     import_completion_time = data['time']
     send_mail(
-        subject='A data dump has been imported into the Spark cluster',
+        subject='A {} has been imported into the Spark cluster'.format(' '.join(data['type'].split('_')[1:])),
         text=render_template('emails/dump_import_notification.txt', dump_name=dump_name, time=import_completion_time),
         recipients=['listenbrainz-observability@metabrainz.org'],
         from_name='ListenBrainz',
