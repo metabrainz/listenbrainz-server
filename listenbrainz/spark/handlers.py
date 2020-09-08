@@ -356,12 +356,15 @@ def notify_cf_recording_recommendations_generation(data):
     if current_app.config['TESTING']:
         return
 
-    user_count = data['user_count']
+    active_user_count = data['active_user_count']
     total_time = data['total_time']
+    top_artist_user_count = data['top_artist_user_count']
+    similar_artist_user_count = data['similar_artist_user_count']
     send_mail(
         subject='Recommendations have been generated and pushed to the queue.',
         text=render_template('emails/cf_recording_recommendation_notification.txt',
-                             user_count=user_count, total_time=total_time),
+                             active_user_count=active_user_count, total_time=total_time,
+                             top_artist_user_count=top_artist_user_count, similar_artist_user_count=similar_artist_user_count),
         recipients=['listenbrainz-observability@metabrainz.org'],
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],

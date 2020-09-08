@@ -12,16 +12,19 @@ from listenbrainz_spark.exceptions import (PathNotFoundException,
                                            ViewNotRegisteredException,
                                            SparkSessionNotInitializedException,
                                            RecommendationsNotGeneratedException,
-                                           RatingOutOfRangeException)
+                                           RatingOutOfRangeException,
+                                           EmptyDataframeExcpetion)
 
 from listenbrainz_spark.recommendations.train_models import get_model_path
+from listenbrainz_spark.recommendations.candidate_sets import _is_empty_dataframe
 
 from pyspark.sql import Row
 from flask import current_app
 import pyspark.sql.functions as func
-from pyspark.sql.functions import col
+from pyspark.sql.window import Window
+from pyspark.sql.functions import col, udf, row_number
+from pyspark.sql.types import DoubleType
 from pyspark.mllib.recommendation import MatrixFactorizationModel
-from pyspark.sql.types import StructField, StructType, FloatType, IntegerType
 
 
 class RecommendationParams:
@@ -34,17 +37,6 @@ class RecommendationParams:
         self.similar_artist_candidate_set_df = similar_artist_candidate_set_df
         self.recommendation_top_artist_limit = recommendation_top_artist_limit
         self.recommendation_similar_artist_limit = recommendation_similar_artist_limit
-        self.ratings_beyond_range = []
-        self.similar_artist_not_found = []
-        self.top_artist_not_found = []
-        self.top_artist_rec_not_generated = []
-        self.similar_artist_rec_not_generated = []
-
-
-recommendation_schema = StructType([
-    StructField('recording_id', IntegerType(), nullable=False),
-    StructField('rating', FloatType(), nullable=False),
-])
 
 
 def get_most_recent_model_id():
@@ -83,175 +75,137 @@ def load_model():
         raise
 
 
-def get_recording_mbids(params: RecommendationParams, recommendation_df):
+def get_recording_mbids(params: RecommendationParams, recommendation_df, users_df):
     """ Get recording mbids corresponding to recommended recording ids sorted on rating.
 
         Args:
             params: RecommendationParams class object.
-            recommendation_df: Dataframe of recommended recording ids and corresponding ratings.
+            recommendation_df: Dataframe of user_id, recording id and rating.
+            users_df : user_name and user_id of active users.
 
         Returns:
-            dataframe of recording mbids.
+            dataframe of recommended recording mbids and related info.
     """
-    recording_mbids_df = params.recordings_df.join(recommendation_df, 'recording_id', 'inner') \
-                                             .orderBy(col('rating').desc()) \
-                                             .select('mb_recording_mbid', 'rating')
+    df = params.recordings_df.join(recommendation_df, 'recording_id', 'inner') \
+                             .select('rating',
+                                     'mb_recording_mbid',
+                                     'user_id')
 
-    return recording_mbids_df
+    recording_mbids_df = df.join(users_df, 'user_id', 'inner')
 
+    window = Window.partitionBy('user_name').orderBy(col('rating').desc())
 
-def generate_recommendations(candidate_set, params: RecommendationParams, limit):
-    """
-        Args:
-            candidate_set (rdd): RDD of user_id and recording_id.
-            params: RecommendationParams class object.
-            limit (int): Number of recommendations to be generated.
-
-        Returns:
-            list of recommendations.
-    """
-    recommendations = params.model.predictAll(candidate_set).takeOrdered(limit, lambda product: -product.rating)
-    return recommendations
-
-
-def get_recommendation_df(recording_ids_and_ratings):
-    """ Get dataframe from recommendation list.
-
-        Args:
-            recording_ids_and_ratings: List of recommended recording ids and ratings.
-
-        Returns:
-            df: dataframe of recommended recording ids and ratings.
-    """
-    df = None
-
-    for entry in recording_ids_and_ratings:
-        row = utils.create_dataframe(
-            Row(
-                recording_id=entry[0],
-                rating=entry[1]
-            ),
-            schema=recommendation_schema
-        )
-
-        df = df.union(row) if df else row
+    df = recording_mbids_df.withColumn('rank', row_number().over(window)) \
+                           .select('mb_recording_mbid',
+                                   'rank',
+                                   'rating',
+                                   'user_id',
+                                   'user_name')
 
     return df
 
 
-def scale_ratings(mbids_and_ratings, params: RecommendationParams):
-    """ Scale the ratings so that they fall on a range from 0.0 -> 1.0.
+def filter_recommendations_on_rating(df, limit):
+    """ Filter top X recommendations for each user on rating where X = limit.
 
         Args:
-            mbids_and_ratings: list of recommended recording mbids and ratings.
-            params: RecommendationParams class object.
+            df: Dataframe of user, product and rating.
+            limit (int): Number of recommendations to be filtered for each user.
+
+        Returns:
+            recommendation_df: Dataframe of user_id, recording_id and rating.
     """
-    for row in mbids_and_ratings:
-        rating = row[1]
+    window = Window.partitionBy('user').orderBy(col('rating').desc())
 
-        scaled_rating = (rating / 2.0) + 0.5
+    recommendation_df = df.withColumn('rank', row_number().over(window)) \
+                          .where(col('rank') <= limit) \
+                          .select(col('rating'),
+                                  col('product').alias('recording_id'),
+                                  col('user').alias('user_id'))
 
-        if scaled_rating > 1.0 or scaled_rating < -1.0:
-            params.ratings_beyond_range.append(rating)
-
-        row[1] = round(min(max(scaled_rating, -1.0), 1.0), 3)
+    return recommendation_df
 
 
-def get_recommended_mbids(candidate_set, params: RecommendationParams, limit):
+def generate_recommendations(candidate_set, params: RecommendationParams, limit):
     """ Generate recommendations from the candidate set.
 
         Args:
             candidate_set (rdd): RDD of user_id and recording_id.
             params: RecommendationParams class object.
-            limit (int): Number of recommendations to be generated.
+            limit (int): Number of recommendations to be filtered for each user.
 
         Returns:
-            mbids_and_ratings: list of recommended recording mbids and ratings.
+            recommendation_df: Dataframe of user_id, recording_id and rating.
     """
-    recommendations = generate_recommendations(candidate_set, params, limit)
+    recommendations = params.model.predictAll(candidate_set)
 
-    recording_ids_and_ratings = [[recommendations[i].product, recommendations[i].rating] for i in range(len(recommendations))]
-
-    if len(recording_ids_and_ratings) == 0:
+    if recommendations.isEmpty():
         raise RecommendationsNotGeneratedException('Recommendations not generated!')
 
-    recommendation_df = get_recommendation_df(recording_ids_and_ratings)
+    df = listenbrainz_spark.session.createDataFrame(recommendations, schema=None)
 
-    recording_mbids_df = get_recording_mbids(params, recommendation_df)
+    recommendation_df = filter_recommendations_on_rating(df, limit)
 
-    mbids_and_ratings = [[row.mb_recording_mbid, round(row.rating, 3)] for row in recording_mbids_df.collect()]
-
-    scale_ratings(mbids_and_ratings, params)
-
-    return mbids_and_ratings
+    return recommendation_df
 
 
-def get_candidate_set_rdd_for_user(candidate_set_df, user_id):
+def get_scale_rating_udf(rating):
+    """ Get user defined function (udf) to scale ratings so that they fall in the
+        range: 0.0 -> 1.0.
+
+        Args:
+            rating (float): score given to recordings by CF.
+
+        Returns:
+            rating udf.
+    """
+    scaled_rating = (rating / 2.0) + 0.5
+
+    return round(min(max(scaled_rating, -1.0), 1.0), 3)
+
+
+def scale_rating(df):
+    """ Scale the ratings column of dataframe so that they fall in the
+        range: 0.0 -> 1.0.
+
+        Args:
+            df: Dataframe to scale.
+
+        Returns:
+            df: Dataframe with scaled rating.
+    """
+    scaling_udf = udf(get_scale_rating_udf, DoubleType())
+
+    df = df.withColumn("scaled_rating", scaling_udf(df.rating)) \
+           .select(col('recording_id'),
+                   col('user_id'),
+                   col('scaled_rating').alias('rating'))
+
+    return df
+
+
+def get_candidate_set_rdd_for_user(candidate_set_df, users):
     """ Get candidate set RDD for a given user.
 
         Args:
             candidate_set_df: A dataframe of user_id and recording_id for all users.
-            user_id (int): user id of the user.
+            users: list of user names to generate recommendations for.
 
         Returns:
             candidate_set_rdd: An RDD of user_id and recording_id for a given user.
     """
-    candidate_set_user_df = candidate_set_df.select('user_id', 'recording_id') \
-                                            .where(col('user_id') == user_id)
-    try:
-        candidate_set_user_df.take(1)[0]
-    except IndexError:
-        raise IndexError()
+    if users:
+        candidate_set_user_df = candidate_set_df.select('user_id', 'recording_id') \
+                                                .where(col('user_name').isin(users))
+    else:
+        candidate_set_user_df = candidate_set_df.select('user_id', 'recording_id')
+
+    if _is_empty_dataframe(candidate_set_user_df):
+        raise EmptyDataframeExcpetion('Empty Candidate sets!')
 
     candidate_set_rdd = candidate_set_user_df.rdd.map(lambda r: (r['user_id'], r['recording_id']))
 
     return candidate_set_rdd
-
-
-def get_recommendations_for_user(user_id, user_name, params: RecommendationParams):
-    """ Get recommended recordings which belong to top artists and artists similar to top
-        artists listened to by the user.
-
-        Args:
-            user_id (int): user id of the user.
-            user_name (str): User name of the user.
-            params: RecommendationParams class object.
-
-        Returns:
-            user_recommendations_top_artist: list of recommended recordings of top artist.
-            user_recommendations_similar_artist: list of recommended recordings of similar artist.
-    """
-    ts = time.monotonic()
-    user_recommendations_top_artist = list()
-    try:
-        top_artist_candidate_set_user = get_candidate_set_rdd_for_user(params.top_artist_candidate_set_df, user_id)
-        user_recommendations_top_artist = get_recommended_mbids(top_artist_candidate_set_user, params,
-                                                                params.recommendation_top_artist_limit,)
-        current_app.logger.info('{} listens in top artist candidate set for {}'
-                                .format(top_artist_candidate_set_user.count(), user_name))
-        current_app.logger.info('Took {:.2f}sec to generate top artist recommendations for {}'
-                                .format(time.monotonic() - ts, user_name))
-    except IndexError:
-        params.top_artist_not_found.append(user_name)
-    except RecommendationsNotGeneratedException:
-        params.top_artist_rec_not_generated.append(user_name)
-
-    ts = time.monotonic()
-    user_recommendations_similar_artist = list()
-    try:
-        similar_artist_candidate_set_user = get_candidate_set_rdd_for_user(params.similar_artist_candidate_set_df, user_id)
-        user_recommendations_similar_artist = get_recommended_mbids(similar_artist_candidate_set_user, params,
-                                                                    params.recommendation_similar_artist_limit,)
-        current_app.logger.info('{} listens in similar artist candidate set for {}'
-                                .format(similar_artist_candidate_set_user.count(), user_name))
-        current_app.logger.info('Took {:.2f}sec to generate similar artist recommendations for {}'
-                                .format(time.monotonic() - ts, user_name))
-    except IndexError:
-        params.similar_artist_not_found.append(user_name)
-    except RecommendationsNotGeneratedException:
-        params.similar_artist_rec_not_generated.append(user_name)
-
-    return user_recommendations_top_artist, user_recommendations_similar_artist
 
 
 def get_user_name_and_user_id(params: RecommendationParams, users):
@@ -271,34 +225,91 @@ def get_user_name_and_user_id(params: RecommendationParams, users):
         users_df = params.top_artist_candidate_set_df.select('user_id', 'user_name') \
                                                      .where(params.top_artist_candidate_set_df.user_name.isin(users)) \
                                                      .distinct()
+
+    if _is_empty_dataframe(users_df):
+        raise EmptyDataframeExcpetion('No active users found!')
+
     return users_df
 
 
-def get_message_for_inactive_users(messages, active_users, users):
-    """ Get message to send over rabbitMQ for inactive users.
-
-        We'd want to update recommendations for requested users with empty list
-        who are not active in the past week/month
+def check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df):
+    """ Check if rating in top_artist_rec_df and similar_artist_rec_df does not belong to [-1, 1].
 
         Args:
-            messages: list of rabbitMQ messages for active users
-            active_users: list of active user names
-            users = list of users names for whom recommendations are requested.
+            top_artist_rec_df (dataframe): Top artist recommendations for all users.
+            similar_artist_rec_df (dataframe): Similar artist recommendations for all users.
+    """
+    max_rating = top_artist_rec_df.select(func.max('rating').alias('rating')).take(1)[0].rating
+
+    max_rating = max(similar_artist_rec_df.select(func.max('rating').alias('rating')).take(1)[0].rating, max_rating)
+
+    min_rating = top_artist_rec_df.select(func.min('rating').alias('rating')).take(1)[0].rating
+
+    min_rating = min(similar_artist_rec_df.select(func.min('rating').alias('rating')).take(1)[0].rating, min_rating)
+
+    if max_rating > 1.0:
+        current_app.logger.error('Some ratings are greater than 1 \nMax rating: {}'.format(max_rating))
+
+    if min_rating < -1.0:
+        current_app.logger.error('Some ratings are less than -1 \nMin rating: {}'.format(min_rating))
+
+
+def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_user_count, total_time,
+                    top_artist_rec_user_count, similar_artist_rec_user_count):
+    """ Create messages to send the data to the webserver via RabbitMQ.
+
+        Args:
+            top_artist_rec_mbid_df (dataframe): Top artist recommendations.
+            similar_artist_rec_mbid_df (dataframe): Similar artist recommendations.
+            active_user_count (int): Number of users active in the last week.
+            total_time (str): Time taken in exceuting the whole script.
+            top_artist_rec_user_count (int): Number of users for whom top artist recommendations were generated.
+            similar_artist_rec_user_count (int): Number of users for whom similar artist recommendations were generated.
 
         Returns:
-            updated messages list with messages for inactive users.
+            messages: A list of messages to be sent via RabbitMQ
     """
-    inactive_users = [user_name for user_name in users if user_name not in active_users]
+    top_artist_rec_itr = top_artist_rec_mbid_df.toLocalIterator()
 
-    for user_name in inactive_users:
-        messages.append({
+    user_rec = {}
+
+    for row in top_artist_rec_itr:
+
+        if user_rec.get(row.user_name) is None:
+            user_rec[row.user_name] = {}
+            user_rec[row.user_name]['top_artist'] = [[row.mb_recording_mbid, row.rating]]
+            user_rec[row.user_name]['similar_artist'] = []
+
+        else:
+            user_rec[row.user_name]['top_artist'].append([row.mb_recording_mbid, row.rating])
+
+    similar_artist_rec_itr = similar_artist_rec_mbid_df.toLocalIterator()
+
+    for row in similar_artist_rec_itr:
+
+        if user_rec.get(row.user_name) is None:
+            user_rec[row.user_name] = {}
+            user_rec[row.user_name]['similar_artist'] = [[row.mb_recording_mbid, row.rating]]
+
+        else:
+            user_rec[row.user_name]['similar_artist'].append([row.mb_recording_mbid, row.rating])
+
+    for user_name, data in user_rec.items():
+        messages = {
             'musicbrainz_id': user_name,
             'type': 'cf_recording_recommendations',
-            'top_artist': [],
-            'similar_artist': [],
-        })
+            'top_artist': data.get('top_artist', []),
+            'similar_artist': data.get('similar_artist', [])
+        }
+        yield messages
 
-    return messages
+    yield {
+            'type': 'cf_recording_recommendations_mail',
+            'active_user_count': active_user_count,
+            'top_artist_user_count': top_artist_rec_user_count,
+            'similar_artist_user_count': similar_artist_rec_user_count,
+            'total_time': '{:.2f}'.format(total_time / 3600)
+    }
 
 
 def get_recommendations_for_all(params: RecommendationParams, users):
@@ -309,82 +320,43 @@ def get_recommendations_for_all(params: RecommendationParams, users):
             users = list of users names to generate recommendations.
 
         Returns:
-            messages (list): user recommendations.
+            top_artist_rec_df: Top artist recommendations.
+            similar_artist_rec_df: Similar artist recommendations.
     """
-    # to log time elapsed in generating recommendations for all users.
-    ts = time.monotonic()
-    messages = []
-    # users active in the last week/month.
-    # users who are a part of top artist candidate set
-    active_users = []
-    current_app.logger.info('Generating recommendations...')
-    # users for whom recommendations will be generated.
-    users_df = get_user_name_and_user_id(params, users)
-    users_df.count()
-    users_df.persist()
-    current_app.logger.error('Took {:.2f}sec to generate users df'.format(time.monotonic() - ts))
-    for row in users_df.collect():
-        # to log time elapsed in generating recommendations for a user.
-        ts_user = time.monotonic()
-        user_name = row.user_name
-        user_id = row.user_id
-        active_users.append(user_name)
+    try:
+        top_artist_candidate_set_rdd = get_candidate_set_rdd_for_user(params.top_artist_candidate_set_df, users)
+    except EmptyDataframeExcpetion:
+        current_app.logger.error('Top artist candidate set not found for any user.', exc_info=True)
+        raise
 
-        user_recommendations_top_artist, user_recommendations_similar_artist = get_recommendations_for_user(
-                                                                                    user_id,
-                                                                                    user_name,
-                                                                                    params)
+    try:
+        similar_artist_candidate_set_rdd = get_candidate_set_rdd_for_user(params.similar_artist_candidate_set_df, users)
+    except EmptyDataframeExcpetion:
+        current_app.logger.error('Similar artist candidate set not found for any user.', exc_info=True)
+        raise
 
-        messages.append({
-            'musicbrainz_id': user_name,
-            'type': 'cf_recording_recommendations',
-            'top_artist': user_recommendations_top_artist,
-            'similar_artist': user_recommendations_similar_artist,
-        })
+    try:
+        top_artist_rec_df = generate_recommendations(top_artist_candidate_set_rdd, params,
+                                                     params.recommendation_top_artist_limit)
+    except RecommendationsNotGeneratedException:
+        current_app.logger.error('Top artist recommendations not generated for any user', exc_info=True)
+        raise
 
-        current_app.logger.info('Took {}sec to generate recommendations for {}'
-                                .format('{:.2f}'.format(time.monotonic() - ts_user), user_name))
+    try:
+        similar_artist_rec_df = generate_recommendations(similar_artist_candidate_set_rdd, params,
+                                                         params.recommendation_similar_artist_limit)
+    except RecommendationsNotGeneratedException:
+        current_app.logger.error('Similar artist recommendations not generated for any user', exc_info=True)
+        raise
 
-    current_app.logger.info('Recommendations Generated!')
-    if users:
-        messages = get_message_for_inactive_users(messages, active_users, users)
+    return top_artist_rec_df, similar_artist_rec_df
 
-    if params.ratings_beyond_range:
-        current_app.logger.error('{} ratings are beyond the expected range i.e rating > 1 or rating < -1'
-                                 '\nMax rating: {}\nMin rating: {}'.format(len(params.ratings_beyond_range),
-                                  max(params.ratings_beyond_range), min(params.ratings_beyond_range)))
 
-    if params.top_artist_not_found:
-        current_app.logger.error('Top artist candidate set not found for: \n"{}"\nYou might want to check the mapping.'
-                                 .format(params.top_artist_not_found))
-
-    if params.similar_artist_not_found:
-        current_app.logger.error('Similar artist candidate set not found for: \n"{}"'
-                                 '\nYou might want to check the artist relation.'.format(params.similar_artist_not_found))
-
-    if params.top_artist_rec_not_generated:
-        current_app.logger.error('Top artist recommendations not generated for: \n"{}"\nYou might want to check the training set'
-                                 .format(params.top_artist_rec_not_generated))
-
-    if params.similar_artist_rec_not_generated:
-        current_app.logger.error('Similar artist recommendations not generated for: "{}"'
-                                 '\nYou might want to check the training set'.format(params.similar_artist_rec_not_generated))
-
-    total_time = time.monotonic() - ts
-    user_count = users_df.count()
-    messages.append(
-        {
-            'type': 'cf_recording_recommendations_mail',
-            'user_count': user_count,
-            'total_time': '{:.2f}'.format(total_time / 3600)
-        }
-    )
-
-    current_app.logger.info('Total time: {:.2f}sec'.format(total_time))
-    current_app.logger.info('Average time: {:.2f}sec'.format(total_time / user_count))
-    users_df.unpersist()
-
-    return messages
+def get_user_count(df):
+    """ Get distinct user count from the given dataframe.
+    """
+    users_df = df.select('user_id').distinct()
+    return users_df.count()
 
 
 def main(recommendation_top_artist_limit=None, recommendation_similar_artist_limit=None, users=None):
@@ -418,8 +390,52 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
                                   recommendation_top_artist_limit,
                                   recommendation_similar_artist_limit)
 
-    messages = get_recommendations_for_all(params, users)
+    try:
+        # timestamp when the script was invoked
+        ts_initial = time.monotonic()
+        users_df = get_user_name_and_user_id(params, users)
+        # Some users are excluded from the top_artist_candidate_set because of the limited data
+        # in the mapping. Therefore, active_user_count may or may not be equal to number of users
+        # active in the last week. Ideally, top_artist_candidate_set should give the active user count.
+        active_user_count = users_df.count()
+        users_df.persist()
+        current_app.logger.info('Took {:.2f}sec to get active user count'.format(time.monotonic() - ts_initial))
+    except EmptyDataframeExcpetion as err:
+        current_app.logger.error(str(err), exc_info=True)
+        raise
+
+    current_app.logger.info('Generating recommendations...')
+    ts = time.monotonic()
+    top_artist_rec_df, similar_artist_rec_df = get_recommendations_for_all(params, users)
+    current_app.logger.info('Recommendations generated!')
+    current_app.logger.info('Took {:.2f}sec to generate recommendations for all active users'.format(time.monotonic() - ts))
+
+    ts = time.monotonic()
+    top_artist_rec_user_count = get_user_count(top_artist_rec_df)
+    similar_artist_rec_user_count = get_user_count(similar_artist_rec_df)
+    current_app.logger.info('Took {:.2f}sec to get top artist and similar artist user count'.format(time.monotonic() - ts))
+
+    ts = time.monotonic()
+    check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df)
+
+    top_artist_rec_scaled_df = scale_rating(top_artist_rec_df)
+    similar_artist_rec_scaled_df = scale_rating(similar_artist_rec_df)
+    current_app.logger.info('Took {:.2f}sec to scale the ratings'.format(time.monotonic() - ts))
+
+    ts = time.monotonic()
+    top_artist_rec_mbid_df = get_recording_mbids(params, top_artist_rec_scaled_df, users_df)
+    similar_artist_rec_mbid_df = get_recording_mbids(params, similar_artist_rec_scaled_df, users_df)
+    current_app.logger.info('Took {:.2f}sec to get mbids corresponding to recording ids'.format(time.monotonic() - ts))
+
     # persisted data must be cleared from memory after usage to avoid OOM
     recordings_df.unpersist()
 
-    return messages
+    total_time = time.monotonic() - ts_initial
+    current_app.logger.info('Total time: {:.2f}sec'.format(total_time))
+
+    result = create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_user_count, total_time,
+                             top_artist_rec_user_count, similar_artist_rec_user_count)
+
+    users_df.unpersist()
+
+    return result
