@@ -254,13 +254,17 @@ class HandlersTestCase(unittest.TestCase):
     @mock.patch('listenbrainz.spark.handlers.send_mail')
     def test_notify_cf_recording_recommendations_generation(self, mock_send_mail):
         with self.app.app_context():
-            user_count = 10
+            active_user_count = 10
+            top_artist_user_count = 5
+            similar_artist_user_count = 4
             total_time = datetime.now()
 
             # testing, should not send a mail
             self.app.config['TESTING'] = True
             notify_cf_recording_recommendations_generation({
-                'user_count': user_count,
+                'active_user_count': active_user_count,
+                'top_artist_user_count': top_artist_user_count,
+                'similar_artist_user_count': similar_artist_user_count,
                 'total_time': str(total_time)
             })
             mock_send_mail.assert_not_called()
@@ -268,7 +272,9 @@ class HandlersTestCase(unittest.TestCase):
             # in prod now, should send it
             self.app.config['TESTING'] = False
             notify_cf_recording_recommendations_generation({
-                'user_count': user_count,
+                'active_user_count': active_user_count,
+                'top_artist_user_count': top_artist_user_count,
+                'similar_artist_user_count': similar_artist_user_count,
                 'total_time': str(total_time)
             })
             mock_send_mail.assert_called_once()
