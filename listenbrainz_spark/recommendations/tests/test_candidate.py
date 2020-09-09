@@ -9,6 +9,7 @@ from listenbrainz_spark.exceptions import (TopArtistNotFetchedException,
 
 from pyspark.sql import Row
 import pyspark.sql.functions as f
+from pyspark.sql.types import StructField, StructType, StringType
 
 class CandidateSetsTestClass(SparkTestCase):
 
@@ -110,7 +111,7 @@ class CandidateSetsTestClass(SparkTestCase):
                 id_0=1,
                 name_0="Less Than Jake",
                 id_1=2,
-                name_1="Wolfgang Amadeus Mozart"
+                name_1="blahblah"
             ),
             schema=None
         )
@@ -119,7 +120,7 @@ class CandidateSetsTestClass(SparkTestCase):
             Row(
                 score=1.0,
                 id_0=2,
-                name_0="Wolfgang Amadeus Mozart",
+                name_0="blahblah",
                 id_1=3,
                 name_1="Katty Peri"
             ),
@@ -143,14 +144,14 @@ class CandidateSetsTestClass(SparkTestCase):
         similar_artist_df, similar_artist_df_html = candidate_sets.get_similar_artists(top_artist_df, artist_relation_df,
                                                                                        similar_artist_limit)
 
-        self.assertEqual(similar_artist_df.count(), 5)
+        self.assertEqual(similar_artist_df.count(), 3)
 
         cols = [
             'similar_artist_credit_id', 'similar_artist_name', 'user_name'
         ]
         self.assertListEqual(cols, similar_artist_df.columns)
 
-        self.assertEqual(similar_artist_df_html.count(), 6)
+        self.assertEqual(similar_artist_df_html.count(), 4)
         cols = [
             'top_artist_credit_id',
             'top_artist_name',
@@ -302,7 +303,7 @@ class CandidateSetsTestClass(SparkTestCase):
         df = df.union(utils.create_dataframe(
             Row(
                 top_artist_credit_id=2,
-                top_artist_name="Less Than Jake",
+                top_artist_name="blahblah",
                 total_count=2,
                 user_name='vansika'
             ),
@@ -336,10 +337,32 @@ class CandidateSetsTestClass(SparkTestCase):
         df = df.union(utils.create_dataframe(
             Row(
                 top_artist_credit_id=2,
-                top_artist_name="Less Than Jake",
+                top_artist_name="blahblah",
                 similar_artist_credit_id=1,
-                similar_artist_name='shan',
+                similar_artist_name='Less Than Jake',
+                user_name='vansika_1'
+            ),
+            schema=None
+        ))
+
+        df = df.union(utils.create_dataframe(
+            Row(
+                top_artist_credit_id=2,
+                top_artist_name="blahblah",
+                similar_artist_credit_id=1,
+                similar_artist_name="Less Than Jake",
                 user_name='vansika'
+            ),
+            schema=None
+        ))
+
+        df = df.union(utils.create_dataframe(
+            Row(
+                top_artist_credit_id=1,
+                top_artist_name="Less Than Jake",
+                similar_artist_credit_id=2,
+                similar_artist_name="blahblah",
+                user_name='vansika',
             ),
             schema=None
         ))
@@ -451,32 +474,33 @@ class CandidateSetsTestClass(SparkTestCase):
         expected_user_data = {
             'vansika': {
                 'top_artist': [
-                    ("Less Than Jake", 2, 2), ("Less Than Jake", 1, 4)
+                    ('blahblah', 2, 2), ('Less Than Jake', 1, 4)
                 ],
                 'similar_artist': [
-                    ("Less Than Jake", 2, 'shan', 1), ("Less Than Jake", 1, 'john', 90)
+                    ('blahblah', 2, 'Less Than Jake', 1), ('Less Than Jake', 1, 'blahblah', 2),
+                    ('Less Than Jake', 1, 'john', 90)
                 ],
                 'top_artist_candidate_set': [
-                    (2, "Less Than Jake", 1, ['xxx'], 'yyy', 'lessthanjake', 'lalal', 2),
-                    (1, "Less Than Jake", 1, ['xxx'], 'yyy', 'lessthanjake', 'lalal', 2)
+                    (2, 'Less Than Jake', 1, ['xxx'], 'yyy', 'lessthanjake', 'lalal', 2),
+                    (1, 'Less Than Jake', 1, ['xxx'], 'yyy', 'lessthanjake', 'lalal', 2)
                 ],
                 'similar_artist_candidate_set': [
-                    (1, "Less Than Jake", 1, ['xxx'], 'yyy', 'lessthanjake', 'lalal', 2)
+                    (1, 'Less Than Jake', 1, ['xxx'], 'yyy', 'lessthanjake', 'lalal', 2)
                 ]
             },
 
             'vansika_1': {
                 'top_artist': [
-                    ("blahblah", 2, 10)
+                    ('blahblah', 2, 10)
                 ],
                 'similar_artist': [
-                    ("blahblah", 2, 'Monali', 10)
+                    ('blahblah', 2, 'Monali', 10), ('blahblah', 2, 'Less Than Jake', 1)
                 ],
                 'top_artist_candidate_set': [
-                    (2, "blahblah", 1, ['xxx'], 'yyy', 'blahblah', 'looloo', 2)
+                    (2, 'blahblah', 1, ['xxx'], 'yyy', 'blahblah', 'looloo', 2)
                 ],
                 'similar_artist_candidate_set': [
-                    (2, "blahblah", 1, ['xxx'], 'yyy', 'blahblah', 'looloo', 2)
+                    (2, 'blahblah', 1, ['xxx'], 'yyy', 'blahblah', 'looloo', 2)
                 ]
             }
         }
@@ -494,3 +518,21 @@ class CandidateSetsTestClass(SparkTestCase):
                          expected_user_data['vansika_1']['top_artist_candidate_set'])
         self.assertEqual(received_user_data['vansika_1']['similar_artist_candidate_set'],
                          expected_user_data['vansika_1']['similar_artist_candidate_set'])
+
+    def test_filter_top_artists_from_similar_artists(self):
+        similar_artist_df = self.get_similar_artist_df_html()
+        top_artist_df = self.get_top_artist()
+
+        df = candidate_sets.filter_top_artists_from_similar_artists(similar_artist_df, top_artist_df)
+        self.assertEqual(df.count(), 3)
+
+    def test_is_empty_dataframe(self):
+        df = utils.create_dataframe(Row(col1='la'), schema=StructType([StructField('col1', StringType())]))
+
+        status = candidate_sets._is_empty_dataframe(df)
+        self.assertFalse(status)
+
+        # empty df
+        df = df.select('*').where(f.col('col1') == 'laa')
+        status = candidate_sets._is_empty_dataframe(df)
+        self.assertTrue(status)
