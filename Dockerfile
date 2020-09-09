@@ -68,7 +68,7 @@ RUN groupadd --gid 901 listenbrainz_stats_cron
 RUN useradd --create-home --shell /bin/bash --uid 901 --gid 901 listenbrainz_stats_cron
 
 RUN groupadd --gid 902 listenbrainz_recommendation_cron
-RUN useradd --create-home --shell /bin/bash --uid 902 --gid 901 listenbrainz_recommendation_cron
+RUN useradd --create-home --shell /bin/bash --uid 902 --gid 902 listenbrainz_recommendation_cron
 
 
 # Add cron jobs
