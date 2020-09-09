@@ -12,5 +12,5 @@ RECOMMENDATION_TYPE="$1"
 if [ $RECOMMENDATION_TYPE == 'cf' ]; then
     invoke_cf_recommendation_scripts
 else
-    echo 'Unknow recommendation type!'
+    echo 'Unknown recommendation type!'
 fi
