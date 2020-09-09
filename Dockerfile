@@ -67,9 +67,15 @@ RUN useradd --create-home --shell /bin/bash --uid 900 --gid 900 lbdumps
 RUN groupadd --gid 901 listenbrainz_stats_cron
 RUN useradd --create-home --shell /bin/bash --uid 901 --gid 901 listenbrainz_stats_cron
 
+RUN groupadd --gid 902 listenbrainz_recommendation_cron
+RUN useradd --create-home --shell /bin/bash --uid 902 --gid 901 listenbrainz_recommendation_cron
+
+
 # Add cron jobs
 ADD docker/stats-crontab /etc/cron.d/stats-crontab
 RUN chmod 0644 /etc/cron.d/stats-crontab && crontab -u listenbrainz_stats_cron /etc/cron.d/stats-crontab
+ADD docker/recommendation-crontab /etc/cron.d/recommendation-crontab
+RUN chmod 0644 /etc/cron.d/recommendation-crontab && crontab -u listenbrainz_recommendation_cron /etc/cron.d/recommendation-crontab
 ADD docker/dump-crontab /etc/cron.d/dump-crontab
 RUN chmod 0644 /etc/cron.d/dump-crontab && crontab -u lbdumps /etc/cron.d/dump-crontab
 

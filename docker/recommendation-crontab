@@ -1,0 +1,13 @@
+# Request recommendations every Tuesday after listens dump is imported into the spark cluster
+
+# Create dataframes
+00 23 * * 2 /usr/local/bin/python /code/listenbrainz/manage.py spark request_dataframes
+
+# Train Model
+20 23 * * 2 /usr/local/bin/python /code/listenbrainz/manage.py spark request_model
+
+# Create candidate sets
+30 23 * * 2 /usr/local/bin/python /code/listenbrainz/manage.py spark request_candidate_sets
+
+# Generate recommendations
+40 23 * * 2 /usr/local/bin/python /code/listenbrainz/manage.py spark request_recommendations
