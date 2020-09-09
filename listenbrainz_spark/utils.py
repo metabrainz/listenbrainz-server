@@ -188,7 +188,7 @@ def get_listens(from_date, to_date, dest_path):
             df: Dataframe of listens.
     """
     if to_date < from_date:
-        raise ValueError('{}: Data generation window is negative i.e. from_date (date from which start fetching listens)' \
+        raise ValueError('{}: Data generation window is negative i.e. from_date (date from which start fetching listens)'
                          ' is greater than to_date (date upto which fetch listens).'.format(type(ValueError).__name__))
     df = None
     while from_date <= to_date:
@@ -207,15 +207,16 @@ def get_listens(from_date, to_date, dest_path):
     return df
 
 
-def save_parquet(df, path):
+def save_parquet(df, path, mode='overwrite'):
     """ Save dataframe as parquet to given path in HDFS.
 
         Args:
             df (dataframe): Dataframe to save.
             path (str): Path in HDFS to save the dataframe.
+            mode (str): The mode with which to write the paquet.
     """
     try:
-        df.write.format('parquet').save(config.HDFS_CLUSTER_URI + path, mode='overwrite')
+        df.write.format('parquet').save(config.HDFS_CLUSTER_URI + path, mode=mode)
     except Py4JJavaError as err:
         raise FileNotSavedException(err.java_exception, path)
 
@@ -311,3 +312,22 @@ def rename(hdfs_src_path: str, hdfs_dst_path: str):
             hdfs_dst_path – Destination path. If the path already exists and is a directory, the source will be moved into it.
     """
     hdfs_connection.client.rename(hdfs_src_path, hdfs_dst_path)
+
+
+def copy(hdfs_src_path: str, hdfs_dst_path: str, overwrite: bool = False):
+    """ Copy a file or folder in HDFS
+
+        Args:
+            hdfs_src_path – Source path.
+            hdfs_dst_path – Destination path. If the path already exists and is a directory, the source will be copied into it.
+            overwrite - Wether to overwrite the path if it already exists.
+    """
+    walk = hdfs_walk(hdfs_src_path)
+
+    for (root, dirs, files) in walk:
+        for _file in files:
+            src_file_path = os.path.join(root, _file)
+            dst_file_path = os.path.join(hdfs_dst_path, os.path.relpath(src_file_path, hdfs_src_path))
+            with hdfs_connection.client.read(src_file_path) as reader:
+                with hdfs_connection.client.write(dst_file_path, overwrite=overwrite) as writer:
+                    writer.write(reader.read())

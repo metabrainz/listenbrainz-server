@@ -62,7 +62,6 @@ class DumpImporterJobTestCase(unittest.TestCase):
 
         mock_upload.assert_called_once()
         self.assertEqual(mock_upload.call_args[1]['archive'], 'download_dir')
-        self.assertEqual(mock_upload.call_args[1]['force'], True)
 
         self.assertEqual(len(message), 1)
         self.assertEqual(message[0]['imported_mapping'], 'msid-mbid-mapping-with-matchable-20200603-202731.tar.bz2')
@@ -84,7 +83,6 @@ class DumpImporterJobTestCase(unittest.TestCase):
 
         mock_upload.assert_called_once()
         self.assertEqual(mock_upload.call_args[1]['archive'], 'download_dir')
-        self.assertEqual(mock_upload.call_args[1]['force'], True)
 
         self.assertEqual(len(message), 1)
         self.assertEqual(message[0]['imported_artist_relation'],
