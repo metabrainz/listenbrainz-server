@@ -289,6 +289,7 @@ class HandlersTestCase(unittest.TestCase):
             self.app.config['TESTING'] = True
             handle_dump_imported({
                 'imported_dump': dump_name,
+                'type': 'import_full_dump',
                 'time': str(time),
             })
             mock_send_mail.assert_not_called()
@@ -297,6 +298,7 @@ class HandlersTestCase(unittest.TestCase):
             self.app.config['TESTING'] = False
             handle_dump_imported({
                 'imported_dump': dump_name,
+                'type': 'import_full_dump',
                 'time': str(time),
             })
             mock_send_mail.assert_called_once()

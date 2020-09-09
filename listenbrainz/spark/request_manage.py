@@ -138,6 +138,18 @@ def request_import_new_full_dump(id_: int):
         send_request_to_spark_cluster(_prepare_query_message('import.dump.full_newest'))
 
 
+@cli.command(name="request_import_incremental")
+@click.option("--id", "id_", type=int, required=False,
+              help="Optional. ID of the incremental dump to import, defaults to latest dump available on FTP server")
+def request_import_new_incremental_dump(id_: int):
+    """ Send the cluster a request to import a new incremental data dump
+    """
+    if id_:
+        send_request_to_spark_cluster(_prepare_query_message('import.dump.incremental_id', params={'id': id_}))
+    else:
+        send_request_to_spark_cluster(_prepare_query_message('import.dump.incremental_newest'))
+
+
 @cli.command(name="request_dataframes")
 @click.option("--days", type=int, default=180, help="Request model to be trained on data of given number of days")
 def request_dataframes(days):

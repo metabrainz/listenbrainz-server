@@ -32,6 +32,7 @@ response_handler_map = {
     'user_daily_activity': handle_user_daily_activity,
     'sitewide_entity': handle_sitewide_entity,
     'import_full_dump': handle_dump_imported,
+    'import_incremental_dump': handle_dump_imported,
     'cf_recording_dataframes': handle_dataframes,
     'cf_recording_model': handle_model,
     'cf_recording_candidate_sets': handle_candidate_sets,
