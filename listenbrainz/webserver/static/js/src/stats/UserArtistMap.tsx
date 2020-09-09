@@ -15,11 +15,12 @@ export type UserArtistMapProps = {
 };
 
 export type UserArtistMapState = {
-  loading: boolean;
-  hasError?: boolean;
-  errorMessage?: string;
   data: UserArtistMapData;
+  errorMessage?: string;
   graphContainerWidth?: number;
+  hasError?: boolean;
+  loading: boolean;
+  countOf: "artist" | "listen";
 };
 
 export default class UserArtistMap extends React.Component<
@@ -41,6 +42,7 @@ export default class UserArtistMap extends React.Component<
       loading: false,
       errorMessage: "",
       hasError: false,
+      countOf: "artist",
     };
 
     this.graphContainer = React.createRef();
@@ -106,10 +108,12 @@ export default class UserArtistMap extends React.Component<
   };
 
   processData = (data: UserArtistMapResponse): UserArtistMapData => {
+    const { countOf } = this.state;
     return data.payload.artist_map.map((country) => {
       return {
         id: country.country,
-        value: country.artist_count,
+        value:
+          countOf === "artist" ? country.artist_count : country.listen_count,
       };
     });
   };
@@ -122,11 +126,12 @@ export default class UserArtistMap extends React.Component<
 
   render() {
     const {
-      loading,
-      hasError,
-      errorMessage,
+      countOf,
       data,
+      errorMessage,
       graphContainerWidth,
+      hasError,
+      loading,
     } = this.state;
 
     return (
@@ -173,7 +178,11 @@ export default class UserArtistMap extends React.Component<
           {!hasError && (
             <div className="row">
               <div className="col-xs-12">
-                <Choropleth data={data} width={graphContainerWidth} />
+                <Choropleth
+                  data={data}
+                  width={graphContainerWidth}
+                  countOf={countOf}
+                />
               </div>
             </div>
           )}
