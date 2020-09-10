@@ -206,12 +206,11 @@ export default class UserListeningActivity extends React.Component<
     const startOfLastMonth = new Date(
       data.payload.listening_activity[0].from_ts * 1000
     );
-    const numOfDaysInLastMonth =
-      new Date(
-        startOfLastMonth.getUTCFullYear(),
-        startOfLastMonth.getUTCMonth(),
-        0
-      ).getDate() + 1;
+    const numOfDaysInLastMonth = new Date(
+      startOfLastMonth.getUTCFullYear(),
+      startOfLastMonth.getUTCMonth() + 1,
+      0
+    ).getDate();
 
     const lastMonth = data.payload.listening_activity.slice(
       0,
