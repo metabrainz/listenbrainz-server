@@ -70,11 +70,11 @@ def get_listening_activity_week() -> Iterator[Optional[UserListeningActivityStat
     current_app.logger.debug("Calculating listening_activity_week")
 
     date = get_latest_listen_ts()
-    to_date = get_last_monday(date)
+    to_date = date
     # Set time to 00:00
     to_date = datetime(to_date.year, to_date.month, to_date.day)
-    from_date = offset_days(to_date, 14)
-    day = offset_days(to_date, 14)
+    from_date = offset_days(get_last_monday(to_date), 7)
+    day = from_date
 
     # Genarate a dataframe containing days of last and current week along with start and end time
     time_range = []
