@@ -106,6 +106,22 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
             'permission': 'permission',
         })
 
+    @mock.patch('listenbrainz.webserver.views.user.db_user_relationship.is_following_user')
+    def test_logged_in_user_follows_user_props(self, mock_is_following_user):
+        response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
+        self.assert200(response)
+        self.assertTemplateUsed('user/profile.html')
+        props = ujson.loads(self.get_context_variable('props'))
+        self.assertIsNone(props['logged_in_user_follows_user'])
+
+        self.temporary_login(self.user.login_id)
+        mock_is_following_user.return_value = False
+        response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
+        self.assert200(response)
+        props = ujson.loads(self.get_context_variable('props'))
+        self.assertFalse(props['logged_in_user_follows_user'])
+
+
     def _create_test_data(self, user_name):
         min_ts = -1
         max_ts = -1
