@@ -178,6 +178,37 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
     return top_artist_df
 
 
+def filter_top_artists_from_similar_artists(similar_artist_df, top_artist_df):
+    """ Filter artists from similar artist dataframe for a user who have already made it to
+        top artist dataframe.
+
+        Args:
+            similar_artist_df: Similar artist dataframe.
+            top_artist_df: Top artist dataframe.
+
+        Returns:
+            res_df: Similar artist dataframe that does not contain top artists.
+    """
+
+    df = top_artist_df.select(col('top_artist_credit_id').alias('artist_credit_id'),
+                              col('user_name').alias('user'))
+
+    condition = [
+        similar_artist_df.similar_artist_credit_id == df.artist_credit_id,
+        similar_artist_df.user_name == df.user
+    ]
+
+    res_df = similar_artist_df.join(df, condition, 'left') \
+                              .select('top_artist_credit_id',
+                                      'top_artist_name',
+                                      'similar_artist_credit_id',
+                                      'similar_artist_name',
+                                      'user_name') \
+                              .where(col('artist_credit_id').isNull() & col('user').isNull())
+
+    return res_df
+
+
 def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit):
     """ Get artists similar to top artists.
 
@@ -223,6 +254,8 @@ def get_similar_artists(top_artist_df, artist_relation_df, similar_artist_limit)
                                        'similar_artist_credit_id',
                                        'similar_artist_name',
                                        'user_name')
+
+    similar_artist_df_html = filter_top_artists_from_similar_artists(similar_artist_df_html, top_artist_df)
 
     # Two or more artists can have same similar artist(s) leading to non-unique recordings
     # therefore we have filtered the distinct similar artists.
