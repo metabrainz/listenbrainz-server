@@ -50,6 +50,15 @@ def similar_artist(user_name: str):
 
 
 def _get_template(active_section, user):
+    """ Get template to render based on active section.
+
+        Args:
+            active_section (str): Type of recommendation playlist to render i.e top_artist, similar_artist
+            user: Database user object.
+
+        Returns:
+            Template to render.
+    """
 
     data = db_recommendations_cf_recording.get_user_recommendation(user.id)
 
@@ -58,7 +67,7 @@ def _get_template(active_section, user):
             "recommendations_cf_recording/{}.html".format(active_section),
             active_section=active_section,
             user=user,
-            error_msg="Candidate recordings for the user have not been calculated. Check back later."
+            error_msg="Recommended tracks for the user have not been calculated. Check back later."
         )
 
     result = data['recording_mbid'][active_section]
@@ -68,12 +77,12 @@ def _get_template(active_section, user):
             "recommendations_cf_recording/{}.html".format(active_section),
             active_section=active_section,
             user=user,
-            error_msg="Candidate recordings for the user have not been calculated. Check back later."
+            error_msg="Looks like you weren't active last week. Check back later."
         )
 
     listens = _get_listens_from_recording_mbid(result)
 
-    spotify_data = spotify.get_user_dict(user.id)
+    spotify_data = spotify.get_user_dict(current_user.id)
 
     current_user_data = {
             "id": current_user.id,
