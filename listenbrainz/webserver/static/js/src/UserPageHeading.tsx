@@ -21,13 +21,33 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-const FollowButton = (currentUser: any) => {
+const UserPageHeading = ({
+  user,
+  loggedInUser,
+}: {
+  user: any;
+  loggedInUser: any;
+}) => {
+  console.log(user, loggedInUser);
   // this renders the logged-in user's name right now, should render the name of the user whose
   // profile it is
   return (
     <>
-      <h2 className="page-title">{currentUser.name}</h2>
-      <span>Yo yo, pammu</span>
+      <h2 className="page-title">
+        {user.name}
+        {user.name !== loggedInUser.name && (
+          <>
+            <button
+              className="btn btn-sm btn-so"
+              style={{ marginLeft: "10px" }}
+            >
+              <i className="fas fa-plus"></i>
+              <span>Follow</span>
+            </button>
+            <br />
+          </>
+        )}
+      </h2>
     </>
   );
 };
@@ -37,6 +57,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const propsElement = document.getElementById("react-props");
   const reactProps = JSON.parse(propsElement!.innerHTML);
-  const { current_user } = reactProps;
-  ReactDOM.render(<FollowButton currentUser={current_user} />, domContainer);
+  const { user, current_user } = reactProps;
+  ReactDOM.render(
+    <UserPageHeading user={user} loggedInUser={current_user} />,
+    domContainer
+  );
 });
