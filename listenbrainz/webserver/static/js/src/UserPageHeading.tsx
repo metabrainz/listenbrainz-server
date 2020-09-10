@@ -20,6 +20,21 @@
 
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import FollowButton from "./FollowButton";
+
+// Using this function to limit access to the follow button
+// while it does nothing. Will eventually remove this function.
+// TODO (param, 2020-09-30): remove this function
+const followUsersFeatureEnabled = (currentUser: string): boolean => {
+  const usersAllowedIn = [
+    "rob",
+    "iliekcomputers",
+    "shivam-kapila",
+    "ishaanshah",
+    "Mr_Monkey",
+  ];
+  return usersAllowedIn.includes(currentUser);
+};
 
 const UserPageHeading = ({
   user,
@@ -28,25 +43,18 @@ const UserPageHeading = ({
   user: any;
   loggedInUser: any;
 }) => {
-  console.log(user, loggedInUser);
-  // this renders the logged-in user's name right now, should render the name of the user whose
-  // profile it is
   return (
     <>
       <h2 className="page-title">
         {user.name}
-        {user.name !== loggedInUser.name && (
-          <>
-            <button
-              className="btn btn-sm btn-so"
-              style={{ marginLeft: "10px" }}
-            >
-              <i className="fas fa-plus"></i>
-              <span>Follow</span>
-            </button>
-            <br />
-          </>
-        )}
+        {followUsersFeatureEnabled(loggedInUser.name) &&
+          user.name !== loggedInUser.name && (
+            <FollowButton
+              user={user}
+              loggedInUser={loggedInUser}
+              loggedInUserFollowsUser={false}
+            />
+          )}
       </h2>
     </>
   );
