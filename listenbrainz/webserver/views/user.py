@@ -97,6 +97,7 @@ def profile(user_name):
 
     spotify_data = {}
     current_user_data = {}
+    logged_in_user_follows_user = None
     if current_user.is_authenticated:
         spotify_data = spotify.get_user_dict(current_user.id)
         current_user_data = {
@@ -104,6 +105,7 @@ def profile(user_name):
             "name": current_user.musicbrainz_id,
             "auth_token": current_user.auth_token,
         }
+        logged_in_user_follows_user = db_user_relationship.is_following_user(current_user.id, user.id)
 
     props = {
         "user": {
@@ -121,7 +123,7 @@ def profile(user_name):
         "spotify": spotify_data,
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
         "api_url": current_app.config['API_URL'],
-        "logged_in_user_follows_user": db_user_relationship.is_following_user(current_user.id, user.id),
+        "logged_in_user_follows_user": logged_in_user_follows_user,
     }
 
     return render_template("user/profile.html",
