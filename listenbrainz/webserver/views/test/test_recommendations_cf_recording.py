@@ -1,19 +1,24 @@
 import json
+import ujson
+from unittest import mock
+from requests.models import Response
 import listenbrainz.db.user as db_user
+from datetime import datetime
 
 from flask import url_for
 from unittest.mock import patch
-from flask import render_template
+from flask import render_template, current_app
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.webserver.views.user import _get_user
-from flask_login import current_user
 from listenbrainz.webserver.testing import ServerTestCase
+from werkzeug.exceptions import BadRequest, InternalServerError
 from listenbrainz.webserver.views import recommendations_cf_recording
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
 
 
 class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
     def setUp(self):
+        self.server_url = "https://labs.api.listenbrainz.org/recording-mbid-lookup/json"
         ServerTestCase.setUp(self)
         DatabaseTestCase.setUp(self)
         self.user = db_user.get_or_create(1, 'vansika')
@@ -120,13 +125,23 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         error_msg="Looks like you weren't active last week. Check back later."
         self.assert_context('error_msg', error_msg)
 
-    @patch('listenbrainz.db.recommendations_cf_recording.get_user_recommendation')
+    @patch('listenbrainz.webserver.views.recommendations_cf_recording.spotify.get_user_dict')
+    @patch('listenbrainz.webserver.views.recommendations_cf_recording.current_user')
+    @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_listens_from_recording_mbid')
-    def test_get_template(self, mock_get_listens, mock_get_rec):
-        self.temporary_login(self.user['login_id'])
+    def test_get_template(self, mock_get_listens, mock_get_rec, mock_curr_user, mock_spotify_dict):
+        # active_section = 'top_artist'
         user = _get_user('vansika_1')
+        created = datetime.utcnow()
 
-        mock_get_listens.return_value = [{
+        mock_get_rec.return_value = {
+            'recording_mbid': {
+                'top_artist': 'xxxxx'
+            },
+            'created': created
+        }
+
+        listens = [{
             'listened_at' : 0,
             'track_metadata' : {
                 'artist_name' : "Ultravox",
@@ -139,7 +154,125 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
             },
             'score': 0.756
         }]
+        mock_get_listens.return_value = listens
+
+        spotify_dict = {'user': 10}
+        mock_spotify_dict.return_value = spotify_dict
+
+        mock_curr_user.id = 10
+        mock_curr_user.musicbrainz_id = 'vansika'
+        mock_curr_user.auth_token = 'yyyy'
+
         recommendations_cf_recording._get_template(active_section='top_artist', user=user)
         mock_get_rec.assert_called_with(user.id)
-        mock_get_listens.assert_called_with(mock_get_rec.return_value)
+        mock_get_listens.assert_called_once()
+        mock_spotify_dict.assert_called_with(10)
         self.assertTemplateUsed('recommendations_cf_recording/top_artist.html')
+        self.assert_context('active_section', 'top_artist')
+        self.assert_context('user', user)
+        self.assert_context('last_updated', created.strftime('%d %b %Y'))
+
+        expected_props = {
+            "user": {
+                "id": 2,
+                "name": 'vansika_1',
+            },
+            "current_user": {
+                "id": 10,
+                "name": 'vansika',
+                "auth_token": 'yyyy',
+            },
+            "spotify": spotify_dict,
+            "api_url": current_app.config["API_URL"],
+            "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
+            "listens": listens,
+            "mode": "cf_recs"
+        }
+        received_props = ujson.loads(self.get_context_variable('props'))
+        self.assertEqual(expected_props, received_props)
+
+        # only assert fields that should change with 'active_section'
+        # here active_section = 'similar_artist'
+        mock_get_rec.return_value = {
+            'recording_mbid': {
+                'similar_artist': 'xxxxx'
+            },
+            'created': created
+        }
+        recommendations_cf_recording._get_template(active_section='similar_artist', user=user)
+        self.assertTemplateUsed('recommendations_cf_recording/similar_artist.html')
+        self.assert_context('active_section', 'similar_artist')
+
+    @patch('listenbrainz.webserver.views.recommendations_cf_recording.requests')
+    def test_get_listens_from_recording_mbid(self, mock_requests):
+        mbids_and_ratings = [["03f1b16a-af43-4cd7-b22c-d2991bf011a3", 6.88],
+                            ["2c8412f0-9353-48a2-aedb-1ad8dac9498f", 9.0]]
+
+        data = [
+            {'recording_mbid':"03f1b16a-af43-4cd7-b22c-d2991bf011a3"},
+            {'recording_mbid':"2c8412f0-9353-48a2-aedb-1ad8dac9498f"}
+        ]
+
+        text = [
+            {
+                '[artist_credit_mbids]': ['63aa26c3-d59b-4da4-84ac-716b54f1ef4d'],
+                'artist_credit_id': 571280,
+                'artist_credit_name': 'Tame Impala',
+                'comment': '',
+                'length': 433000,
+                'recording_mbid': '03f1b16a-af43-4cd7-b22c-d2991bf011a3',
+                'recording_name': 'One More Hour'
+            },
+            {
+                '[artist_credit_mbids]': ['63aa26c3-d59b-4da4-84ac-716b54f1ef4d'],
+                'artist_credit_id': 571280,
+                'artist_credit_name': 'Tame Impala',
+                'comment': '', 'length': 320000,
+                'recording_mbid': '2c8412f0-9353-48a2-aedb-1ad8dac9498f',
+                'recording_name': 'Sun’s Coming Up'
+            }
+        ]
+
+        mock_requests.post().text = ujson.dumps(text)
+        mock_requests.post().status_code = 200
+
+        received_listens = recommendations_cf_recording._get_listens_from_recording_mbid(mbids_and_ratings)
+
+        mock_requests.post.assert_called_with(self.server_url, json=data)
+        expected_listens = [
+            {
+                'listened_at': 0,
+                'track_metadata': {
+                    'artist_name': 'Tame Impala',
+                    'track_name': 'Sun’s Coming Up',
+                    'release_name': '',
+                    'additional_info': {
+                            'recording_mbid': '2c8412f0-9353-48a2-aedb-1ad8dac9498f',
+                            'artist_mbids': ['63aa26c3-d59b-4da4-84ac-716b54f1ef4d']
+                    }
+                },
+                'score': 9.0
+            },
+            {
+                'listened_at': 0,
+                'track_metadata': {
+                    'artist_name': 'Tame Impala',
+                    'track_name': 'One More Hour',
+                    'release_name': '',
+                    'additional_info': {
+                        'recording_mbid': '03f1b16a-af43-4cd7-b22c-d2991bf011a3',
+                        'artist_mbids': ['63aa26c3-d59b-4da4-84ac-716b54f1ef4d']
+                    }
+                },
+                'score': 6.88
+            }
+        ]
+        self.assertEqual(expected_listens, received_listens)
+
+        mock_requests.post().status_code = 400
+        with self.assertRaises(BadRequest):
+            recommendations_cf_recording._get_listens_from_recording_mbid(mbids_and_ratings)
+
+        mock_requests.post().status_code = 304
+        with self.assertRaises(InternalServerError):
+            recommendations_cf_recording._get_listens_from_recording_mbid(mbids_and_ratings)

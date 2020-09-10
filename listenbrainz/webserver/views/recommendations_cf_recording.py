@@ -8,6 +8,7 @@ from listenbrainz.domain import spotify
 
 from listenbrainz.webserver.views.user import _get_user
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
+from werkzeug.exceptions import BadRequest, InternalServerError
 
 
 recommendations_cf_recording_bp = Blueprint('recommendations_cf_recording', __name__)
@@ -145,12 +146,15 @@ def _get_listens_from_recording_mbid(mbids_and_ratings_list):
 
     r = requests.post(SERVER_URL, json=data)
     if r.status_code != 200:
-        r.raise_for_status()
+        if r.status_code == 400:
+            raise BadRequest
+        else:
+            raise InternalServerError
 
     try:
         rows = ujson.loads(r.text)
     except Exception as err:
-        raise RuntimeError(str(err))
+        raise InternalServerError(str(err))
 
     listens = []
 
