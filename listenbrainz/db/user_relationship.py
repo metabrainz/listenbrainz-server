@@ -21,7 +21,14 @@ from listenbrainz.db.exceptions import DatabaseException
 
 import sqlalchemy
 
+VALID_RELATIONSHIP_TYPES = (
+    'follow',
+)
+
 def insert(user_0: int, user_1: int, relationship_type: str) -> None:
+    if relationship_type not in VALID_RELATIONSHIP_TYPES:
+        raise ValueError(f"Invalid relationship type: {relationship_type}")
+
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
             INSERT INTO user_relationship (user_0, user_1, relationship_type)
@@ -49,6 +56,9 @@ def is_following_user(follower: int, followed: int) -> bool:
 
 
 def delete(user_0: int, user_1: int, relationship_type: str) -> None:
+    if relationship_type not in VALID_RELATIONSHIP_TYPES:
+        raise ValueError(f"Invalid relationship type: {relationship_type}")
+
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
             DELETE
