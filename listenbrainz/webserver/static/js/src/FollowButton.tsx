@@ -67,7 +67,7 @@ class FollowButton extends React.Component<
   };
 
   followUser = () => {
-    const { loggedInUser, user } = this.props;
+    const { user } = this.props;
     this.APIService.followUser(user.name).then(({ status }) => {
       if (status === 200) {
         this.setState({ loggedInUserFollowsUser: true, justFollowed: true });
@@ -78,7 +78,7 @@ class FollowButton extends React.Component<
   };
 
   unfollowUser = () => {
-    const { loggedInUser, user } = this.props;
+    const { user } = this.props;
     this.APIService.unfollowUser(user.name).then(({ status }) => {
       if (status === 200) {
         this.setState({ loggedInUserFollowsUser: false, justFollowed: false });
@@ -113,10 +113,10 @@ class FollowButton extends React.Component<
   };
 
   render() {
-    const { loggedInUserFollowsUser, hover } = this.state;
     return (
       <>
         <div
+          id="follow-button"
           onClick={this.handleButtonClick}
           onKeyPress={this.handleButtonClick}
           onMouseEnter={this.toggleHover}
@@ -126,8 +126,7 @@ class FollowButton extends React.Component<
           role="button"
           tabIndex={0}
         >
-          <i className="fas fa-plus" />
-          <span>{this.getButtonDetails().buttonText}</span>
+          {this.getButtonDetails().buttonText}
         </div>
         <br />
       </>

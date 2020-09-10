@@ -39,10 +39,10 @@ const followUsersFeatureEnabled = (currentUser: string): boolean => {
 const UserPageHeading = ({
   user,
   loggedInUser,
-  loggedInUserFollowsUser,
+  loggedInUserFollowsUser = false,
 }: {
   user: ListenBrainzUser;
-  loggedInUser: ListenBrainzUser;
+  loggedInUser: ListenBrainzUser | null;
   loggedInUserFollowsUser: boolean;
 }) => {
   return (
@@ -62,6 +62,8 @@ const UserPageHeading = ({
     </>
   );
 };
+
+export default UserPageHeading;
 
 document.addEventListener("DOMContentLoaded", () => {
   const domContainer = document.querySelector("#follow-controls-container");
