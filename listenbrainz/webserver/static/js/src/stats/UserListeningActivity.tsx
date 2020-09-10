@@ -128,6 +128,14 @@ export default class UserListeningActivity extends React.Component<
     return {} as UserListeningActivityResponse;
   };
 
+  getNumberOfDaysInMonth = (month: Date): number => {
+    return new Date(
+      month.getUTCFullYear(),
+      month.getUTCMonth() + 1,
+      0
+    ).getDate();
+  };
+
   processData = (
     data: UserListeningActivityResponse
   ): UserListeningActivityData => {
@@ -206,11 +214,7 @@ export default class UserListeningActivity extends React.Component<
     const startOfLastMonth = new Date(
       data.payload.listening_activity[0].from_ts * 1000
     );
-    const numOfDaysInLastMonth = new Date(
-      startOfLastMonth.getUTCFullYear(),
-      startOfLastMonth.getUTCMonth() + 1,
-      0
-    ).getDate();
+    const numOfDaysInLastMonth = this.getNumberOfDaysInMonth(startOfLastMonth);
 
     const lastMonth = data.payload.listening_activity.slice(
       0,

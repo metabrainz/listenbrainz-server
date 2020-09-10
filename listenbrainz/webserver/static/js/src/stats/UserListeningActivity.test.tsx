@@ -189,6 +189,44 @@ describe("getData", () => {
   });
 });
 
+describe("getNumberOfDaysInMonth", () => {
+  it("calculates correctly for non leap February", () => {
+    const wrapper = shallow<UserListeningActivity>(
+      <UserListeningActivity {...props} />
+    );
+    const instance = wrapper.instance();
+
+    expect(instance.getNumberOfDaysInMonth(new Date(2019, 1, 1))).toEqual(28);
+  });
+
+  it("calculates correctly for leap February", () => {
+    const wrapper = shallow<UserListeningActivity>(
+      <UserListeningActivity {...props} />
+    );
+    const instance = wrapper.instance();
+
+    expect(instance.getNumberOfDaysInMonth(new Date(2020, 1, 1))).toEqual(29);
+  });
+
+  it("calculates correctly for December", () => {
+    const wrapper = shallow<UserListeningActivity>(
+      <UserListeningActivity {...props} />
+    );
+    const instance = wrapper.instance();
+
+    expect(instance.getNumberOfDaysInMonth(new Date(2020, 11, 1))).toEqual(31);
+  });
+
+  it("calculates correctly for November", () => {
+    const wrapper = shallow<UserListeningActivity>(
+      <UserListeningActivity {...props} />
+    );
+    const instance = wrapper.instance();
+
+    expect(instance.getNumberOfDaysInMonth(new Date(2020, 10, 1))).toEqual(30);
+  });
+});
+
 describe("processData", () => {
   it("processes data correctly for week", () => {
     const wrapper = shallow<UserListeningActivity>(
