@@ -49,7 +49,8 @@ const UserPageHeading = ({
     <>
       <h2 className="page-title">
         {user.name}
-        {followUsersFeatureEnabled(loggedInUser.name) &&
+        {loggedInUser &&
+          followUsersFeatureEnabled(loggedInUser.name) &&
           user.name !== loggedInUser.name && (
             <FollowButton
               user={user}
@@ -71,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(
     <UserPageHeading
       user={user}
-      loggedInUser={current_user}
+      loggedInUser={current_user || null}
       loggedInUserFollowsUser={logged_in_user_follows_user}
     />,
     domContainer
