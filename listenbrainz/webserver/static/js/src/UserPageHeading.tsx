@@ -39,9 +39,11 @@ const followUsersFeatureEnabled = (currentUser: string): boolean => {
 const UserPageHeading = ({
   user,
   loggedInUser,
+  loggedInUserFollowsUser,
 }: {
-  user: any;
-  loggedInUser: any;
+  user: ListenBrainzUser;
+  loggedInUser: ListenBrainzUser;
+  loggedInUserFollowsUser: boolean;
 }) => {
   return (
     <>
@@ -52,7 +54,7 @@ const UserPageHeading = ({
             <FollowButton
               user={user}
               loggedInUser={loggedInUser}
-              loggedInUserFollowsUser={false}
+              loggedInUserFollowsUser={loggedInUserFollowsUser}
             />
           )}
       </h2>
@@ -65,9 +67,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const propsElement = document.getElementById("react-props");
   const reactProps = JSON.parse(propsElement!.innerHTML);
-  const { user, current_user } = reactProps;
+  const { user, current_user, logged_in_user_follows_user } = reactProps;
   ReactDOM.render(
-    <UserPageHeading user={user} loggedInUser={current_user} />,
+    <UserPageHeading
+      user={user}
+      loggedInUser={current_user}
+      loggedInUserFollowsUser={logged_in_user_follows_user}
+    />,
     domContainer
   );
 });

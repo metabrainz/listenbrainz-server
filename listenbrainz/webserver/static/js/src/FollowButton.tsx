@@ -19,6 +19,7 @@
  */
 
 import * as React from "react";
+import APIService from "./APIService";
 
 type FollowButtonProps = {
   user: ListenBrainzUser;
@@ -30,19 +31,25 @@ type FollowButtonState = {
   loggedInUserFollowsUser: boolean;
   justFollowed: boolean;
   hover: boolean;
+  error: boolean;
 };
 
 class FollowButton extends React.Component<
   FollowButtonProps,
   FollowButtonState
 > {
+  APIService: APIService;
+
   constructor(props: FollowButtonProps) {
     super(props);
     this.state = {
       loggedInUserFollowsUser: props.loggedInUserFollowsUser,
       hover: false,
       justFollowed: false,
+      error: false,
     };
+
+    this.APIService = new APIService(`${window.location.origin}/1`);
   }
 
   toggleHover = () => {
@@ -61,16 +68,35 @@ class FollowButton extends React.Component<
 
   followUser = () => {
     const { loggedInUser, user } = this.props;
-    this.setState({ loggedInUserFollowsUser: true, justFollowed: true });
+    this.APIService.followUser(user.name).then(({ status }) => {
+      if (status === 200) {
+        this.setState({ loggedInUserFollowsUser: true, justFollowed: true });
+      } else {
+        this.setState({ error: true });
+      }
+    });
   };
 
   unfollowUser = () => {
     const { loggedInUser, user } = this.props;
-    this.setState({ loggedInUserFollowsUser: false, justFollowed: false });
+    this.APIService.unfollowUser(user.name).then(({ status }) => {
+      if (status === 200) {
+        this.setState({ loggedInUserFollowsUser: false, justFollowed: false });
+      } else {
+        this.setState({ error: true });
+      }
+    });
   };
 
   getButtonDetails = (): { buttonClass: string; buttonText: string } => {
-    const { justFollowed, loggedInUserFollowsUser, hover } = this.state;
+    const { error, justFollowed, loggedInUserFollowsUser, hover } = this.state;
+
+    if (error) {
+      return {
+        buttonClass: "btn btn-sm btn-danger",
+        buttonText: "Something went wrong!",
+      };
+    }
 
     if (justFollowed) {
       return { buttonClass: "btn btn-sm btn-info", buttonText: "Following" };

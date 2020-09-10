@@ -21,7 +21,7 @@ from listenbrainz.db.exceptions import DatabaseException
 
 import sqlalchemy
 
-def insert(user_0: int, user_1: int, relationship_type: str):
+def insert(user_0: int, user_1: int, relationship_type: str) -> None:
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""
             INSERT INTO user_relationship (user_0, user_1, relationship_type)
@@ -33,10 +33,10 @@ def insert(user_0: int, user_1: int, relationship_type: str):
         })
 
 
-def already_following_user(follower: int, followed: int) -> bool:
+def is_following_user(follower: int, followed: int) -> bool:
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT COUNT(*)
+            SELECT COUNT(*) as cnt
               FROM user_relationship
              WHERE user_0 = :follower
                AND user_1 = :followed
@@ -45,4 +45,19 @@ def already_following_user(follower: int, followed: int) -> bool:
             "follower": follower,
             "followed": followed,
         })
-        return result.fetchone() > 0
+        return result.fetchone()['cnt'] > 0
+
+
+def delete(user_0: int, user_1: int, relationship_type: str) -> None:
+    with db.engine.connect() as connection:
+        connection.execute(sqlalchemy.text("""
+            DELETE
+              FROM user_relationship
+            WHERE user_0 = :user_0
+              AND user_1 = :user_1
+              AND relationship_type = :relationship_type
+        """), {
+            "user_0": user_0,
+            "user_1": user_1,
+            "relationship_type": relationship_type,
+        })
