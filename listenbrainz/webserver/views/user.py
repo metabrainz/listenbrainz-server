@@ -13,7 +13,7 @@ from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain import spotify
 from listenbrainz.webserver import flash
-from listenbrainz.webserver.errors import APIBadRequest
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver.redis_connection import _redis
@@ -207,7 +207,12 @@ def follow_user(user_name: str):
     if db_user_relationship.is_following_user(current_user.id, user.id):
         raise APIBadRequest(f"{current_user.musicbrainz_id} is already following user {user.musicbrainz_id}")
 
-    db_user_relationship.insert(current_user.id, user.id, 'follow')
+    try:
+        db_user_relationship.insert(current_user.id, user.id, 'follow')
+    except Exception:
+        current_app.logger.critical("Error while trying to insert a relationship", exc_info=True)
+        raise APIInternalServerError("Something went wrong, please try again later")
+
     return jsonify({"status": 200, "message": "Success!"})
 
 
@@ -217,7 +222,12 @@ def unfollow_user(user_name: str):
     user = _get_user(user_name)
     if not db_user_relationship.is_following_user(current_user.id, user.id):
         raise APIBadRequest(f"{current_user.musicbrainz_id} is not following user {user.musicbrainz_id}")
-    db_user_relationship.delete(current_user.id, user.id, 'follow')
+    try:
+        db_user_relationship.delete(current_user.id, user.id, 'follow')
+    except Exception:
+        current_app.logger.critical("Error while trying to delete a relationship", exc_info=True)
+        raise APIInternalServerError("Something went wrong, please try again later")
+
     return jsonify({"status": 200, "message": "Success!"})
 
 

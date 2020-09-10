@@ -1,5 +1,6 @@
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
+import listenbrainz.db.user_relationship as db_user_relationship
 from time import sleep
 import json
 import ujson
@@ -121,6 +122,58 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         props = ujson.loads(self.get_context_variable('props'))
         self.assertFalse(props['logged_in_user_follows_user'])
 
+    def test_follow_user(self):
+        followed_user = db_user.get_or_create(3, 'followed_user')
+
+        self.temporary_login(self.user.login_id)
+        r = self.client.post('/user/followed_user/follow')
+        self.assert200(r)
+        self.assertTrue(db_user_relationship.is_following_user(self.user.id, followed_user['id']))
+
+    def test_follow_user_requires_login(self):
+        r = self.client.post('/user/followed_user/follow')
+        self.assertNotEqual(r.status_code, 200)
+
+    def test_following_a_nonexistent_user_errors_out(self):
+        self.temporary_login(self.user.login_id)
+        r = self.client.post('/user/user_doesnt_exist_lol/follow')
+        self.assertEqual(r.status_code, 404)
+
+    def test_following_yourself_errors_out(self):
+        self.temporary_login(self.user.login_id)
+        r = self.client.post(f'/user/{self.user.musicbrainz_id}/follow')
+        self.assert400(r)
+
+    def test_follow_user_twice_leads_to_error(self):
+        followed_user = db_user.get_or_create(3, 'followed_user')
+
+        self.temporary_login(self.user.login_id)
+        r = self.client.post('/user/followed_user/follow')
+        self.assert200(r)
+        self.assertTrue(db_user_relationship.is_following_user(self.user.id, followed_user['id']))
+
+        # now, try to follow again, this time expecting a 400
+        r = self.client.post('/user/followed_user/follow')
+        self.assert400(r)
+
+    def test_unfollow_user(self):
+        followed_user = db_user.get_or_create(3, 'followed_user')
+
+        self.temporary_login(self.user.login_id)
+
+        # first, follow the user
+        r = self.client.post('/user/followed_user/follow')
+        self.assert200(r)
+        self.assertTrue(db_user_relationship.is_following_user(self.user.id, followed_user['id']))
+
+        # now, unfollow and check the db
+        r = self.client.post('/user/followed_user/unfollow')
+        self.assert200(r)
+        self.assertFalse(db_user_relationship.is_following_user(self.user.id, followed_user['id']))
+
+    def test_unfollow_user_requires_login(self):
+        r = self.client.post('/user/followed_user/unfollow')
+        self.assertNotEqual(r.status_code, 200)
 
     def _create_test_data(self, user_name):
         min_ts = -1

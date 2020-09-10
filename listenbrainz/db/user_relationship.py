@@ -25,6 +25,7 @@ VALID_RELATIONSHIP_TYPES = (
     'follow',
 )
 
+
 def insert(user_0: int, user_1: int, relationship_type: str) -> None:
     if relationship_type not in VALID_RELATIONSHIP_TYPES:
         raise ValueError(f"Invalid relationship type: {relationship_type}")
