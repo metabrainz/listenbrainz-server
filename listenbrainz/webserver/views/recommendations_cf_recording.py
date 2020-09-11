@@ -140,7 +140,7 @@ def _get_listens_from_recording_mbid(mbids_and_ratings_list):
     mbids_and_ratings = {}
 
     for r in mbids_and_ratings_list:
-        data.append({ 'recording_mbid': r[0] })
+        data.append({'recording_mbid': r[0]})
         # get score corresponding to recording mbid.
         mbids_and_ratings[r[0]] = r[1]
 
@@ -160,14 +160,14 @@ def _get_listens_from_recording_mbid(mbids_and_ratings_list):
 
     for row in rows:
         listens.append({
-            'listened_at' : 0,
-            'track_metadata' : {
-                'artist_name' : row['artist_credit_name'],
-                'track_name' : row['recording_name'],
-                'release_name' : row.get('release_name', ""),
-                'additional_info' : {
-                    'recording_mbid' : row['recording_mbid'],
-                    'artist_mbids' : row['[artist_credit_mbids]']
+            'listened_at': 0,
+            'track_metadata': {
+                'artist_name': row['artist_credit_name'],
+                'track_name': row['recording_name'],
+                'release_name': row.get('release_name', ""),
+                'additional_info': {
+                    'recording_mbid': row['recording_mbid'],
+                    'artist_mbids': row['[artist_credit_mbids]']
                 }
             },
             'score': mbids_and_ratings[row['recording_mbid']]

@@ -96,7 +96,7 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertTemplateUsed('recommendations_cf_recording/top_artist.html')
         self.assert_context('active_section', 'top_artist')
         self.assert_context('user', user)
-        error_msg="Recommended tracks for the user have not been calculated. Check back later."
+        error_msg = "Recommended tracks for the user have not been calculated. Check back later."
         self.assert_context('error_msg', error_msg)
 
         user = _get_user('vansika')
@@ -104,7 +104,7 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertTemplateUsed('recommendations_cf_recording/similar_artist.html')
         self.assert_context('active_section', 'similar_artist')
         self.assert_context('user', user)
-        error_msg="Recommended tracks for the user have not been calculated. Check back later."
+        error_msg = "Recommended tracks for the user have not been calculated. Check back later."
         self.assert_context('error_msg', error_msg)
 
     def test_get_template_missing_rec_top_artist(self):
@@ -113,7 +113,7 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertTemplateUsed('recommendations_cf_recording/top_artist.html')
         self.assert_context('active_section', 'top_artist')
         self.assert_context('user', user)
-        error_msg="Looks like you weren't active last week. Check back later."
+        error_msg = "Looks like you weren't active last week. Check back later."
         self.assert_context('error_msg', error_msg)
 
     def test_get_template_missing_rec_top_artist(self):
@@ -122,7 +122,7 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertTemplateUsed('recommendations_cf_recording/similar_artist.html')
         self.assert_context('active_section', 'similar_artist')
         self.assert_context('user', user)
-        error_msg="Looks like you weren't active last week. Check back later."
+        error_msg = "Looks like you weren't active last week. Check back later."
         self.assert_context('error_msg', error_msg)
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.spotify.get_user_dict')
@@ -142,14 +142,14 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         }
 
         listens = [{
-            'listened_at' : 0,
-            'track_metadata' : {
-                'artist_name' : "Ultravox",
-                'track_name' : "Serenade (special remix)",
-                'release_name' : "Quartet",
-                'additional_info' : {
-                    'recording_mbid' : "af5a56f4-1f83-4681-b319-70a734d0d047",
-                    'artist_mbids' : ["6a70b322-9aa9-41b3-9dce-824733633a1c"]
+            'listened_at': 0,
+            'track_metadata': {
+                'artist_name': "Ultravox",
+                'track_name': "Serenade (special remix)",
+                'release_name': "Quartet",
+                'additional_info': {
+                    'recording_mbid': "af5a56f4-1f83-4681-b319-70a734d0d047",
+                    'artist_mbids': ["6a70b322-9aa9-41b3-9dce-824733633a1c"]
                 }
             },
             'score': 0.756
@@ -205,12 +205,14 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.requests')
     def test_get_listens_from_recording_mbid(self, mock_requests):
-        mbids_and_ratings = [["03f1b16a-af43-4cd7-b22c-d2991bf011a3", 6.88],
-                            ["2c8412f0-9353-48a2-aedb-1ad8dac9498f", 9.0]]
+        mbids_and_ratings = [
+            ["03f1b16a-af43-4cd7-b22c-d2991bf011a3", 6.88],
+            ["2c8412f0-9353-48a2-aedb-1ad8dac9498f", 9.0]
+        ]
 
         data = [
-            {'recording_mbid':"03f1b16a-af43-4cd7-b22c-d2991bf011a3"},
-            {'recording_mbid':"2c8412f0-9353-48a2-aedb-1ad8dac9498f"}
+            {'recording_mbid': "03f1b16a-af43-4cd7-b22c-d2991bf011a3"},
+            {'recording_mbid': "2c8412f0-9353-48a2-aedb-1ad8dac9498f"}
         ]
 
         text = [
