@@ -4,7 +4,7 @@
 
 {% block content %}
   <div id="user-profile">
-    <h2 class="page-title">{{ user.musicbrainz_id }}</h2>
+    <div id="user-page-heading-container"></div>
 
     <ul class="nav nav-tabs" role="tablist">
         <li {{ 'class=active' if active_section=='listens' }}><a href="{{ url_for('user.profile', user_name=user.musicbrainz_id) }}">Listens</a></li>
@@ -17,4 +17,9 @@
   </div>
 
   {{ super() }}
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ get_static_path('userPageHeading.js') }}" type="text/javascript"></script>
 {% endblock %}

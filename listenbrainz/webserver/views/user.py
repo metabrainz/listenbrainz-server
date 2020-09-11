@@ -1,5 +1,6 @@
 import listenbrainz.db.stats as db_stats
 import listenbrainz.db.user as db_user
+import listenbrainz.db.user_relationship as db_user_relationship
 import urllib
 import ujson
 import psycopg2
@@ -12,6 +13,7 @@ from listenbrainz import webserver
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.domain import spotify
 from listenbrainz.webserver import flash
+from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.login import User
 from listenbrainz.webserver.redis_connection import _redis
@@ -95,6 +97,7 @@ def profile(user_name):
 
     spotify_data = {}
     current_user_data = {}
+    logged_in_user_follows_user = None
     if current_user.is_authenticated:
         spotify_data = spotify.get_user_dict(current_user.id)
         current_user_data = {
@@ -102,6 +105,7 @@ def profile(user_name):
             "name": current_user.musicbrainz_id,
             "auth_token": current_user.auth_token,
         }
+        logged_in_user_follows_user = db_user_relationship.is_following_user(current_user.id, user.id)
 
     props = {
         "user": {
@@ -119,6 +123,7 @@ def profile(user_name):
         "spotify": spotify_data,
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
         "api_url": current_app.config['API_URL'],
+        "logged_in_user_follows_user": logged_in_user_follows_user,
     }
 
     return render_template("user/profile.html",
@@ -189,6 +194,41 @@ def reports(user_name: str):
         props=ujson.dumps(props),
         user=user
     )
+
+
+@user_bp.route('/<user_name>/follow', methods=['OPTIONS', 'POST'])
+@login_required
+def follow_user(user_name: str):
+    user = _get_user(user_name)
+
+    if user.musicbrainz_id == current_user.musicbrainz_id:
+        raise APIBadRequest("Whoops, cannot follow yourself.")
+
+    if db_user_relationship.is_following_user(current_user.id, user.id):
+        raise APIBadRequest(f"{current_user.musicbrainz_id} is already following user {user.musicbrainz_id}")
+
+    try:
+        db_user_relationship.insert(current_user.id, user.id, 'follow')
+    except Exception:
+        current_app.logger.critical("Error while trying to insert a relationship", exc_info=True)
+        raise APIInternalServerError("Something went wrong, please try again later")
+
+    return jsonify({"status": 200, "message": "Success!"})
+
+
+@user_bp.route('/<user_name>/unfollow', methods=['OPTIONS', 'POST'])
+@login_required
+def unfollow_user(user_name: str):
+    user = _get_user(user_name)
+    if not db_user_relationship.is_following_user(current_user.id, user.id):
+        raise APIBadRequest(f"{current_user.musicbrainz_id} is not following user {user.musicbrainz_id}")
+    try:
+        db_user_relationship.delete(current_user.id, user.id, 'follow')
+    except Exception:
+        current_app.logger.critical("Error while trying to delete a relationship", exc_info=True)
+        raise APIInternalServerError("Something went wrong, please try again later")
+
+    return jsonify({"status": 200, "message": "Success!"})
 
 
 def _get_user(user_name):
