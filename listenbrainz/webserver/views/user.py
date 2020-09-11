@@ -16,8 +16,7 @@ from listenbrainz.webserver import flash
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.login import User
-from listenbrainz.webserver.redis_connection import _redis
-from listenbrainz.webserver.timescale_connection import _ts
+from listenbrainz.webserver import timescale_connection
 from listenbrainz.webserver.views.api_tools import publish_data_to_queue, log_raise_400, is_valid_uuid
 from datetime import datetime
 from werkzeug.exceptions import NotFound, BadRequest, RequestEntityTooLarge, ServiceUnavailable, Unauthorized, InternalServerError
@@ -312,7 +311,7 @@ def delete_user(musicbrainz_id):
     """
 
     user = _get_user(musicbrainz_id)
-    _ts.delete(user.musicbrainz_id)
+    timescale_connection._ts.delete(user.musicbrainz_id)
     db_user.delete(user.id)
 
 
@@ -327,7 +326,7 @@ def delete_listens_history(musicbrainz_id):
     """
 
     user = _get_user(musicbrainz_id)
-    _ts.delete(user.musicbrainz_id)
-    _ts.reset_listen_count(user.musicbrainz_id)
+    timescale_connection._ts.delete(user.musicbrainz_id)
+    timescale_connection._ts.reset_listen_count(user.musicbrainz_id)
     db_user.reset_latest_import(user.musicbrainz_id)
     db_stats.delete_user_stats(user.id)
