@@ -66,4 +66,16 @@ ALTER TABLE missing_musicbrainz_data
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
+ALTER TABLE user_relationship
+    ADD CONSTRAINT user_relationship_user_0_foreign_key
+    FOREIGN KEY (user_0)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
+ALTER TABLE user_relationship
+    ADD CONSTRAINT user_relationship_user_1_foreign_key
+    FOREIGN KEY (user_1)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
 COMMIT;

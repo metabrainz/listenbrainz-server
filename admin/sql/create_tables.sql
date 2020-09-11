@@ -166,6 +166,15 @@ CREATE TABLE recording_feedback (
     created                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE user_relationship (
+    -- relationships go from 0 to 1
+    -- for example, if relationship type is "follow", then user_0 follows user_1
+    user_0              INTEGER NOT NULL, -- FK to "user".id
+    user_1              INTEGER NOT NULL, -- FK to "user".id
+    relationship_type   user_relationship_enum NOT NULL,
+    created             TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO listenbrainz;
 
 COMMIT;

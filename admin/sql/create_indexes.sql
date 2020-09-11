@@ -22,4 +22,7 @@ CREATE INDEX last_saved_ndx_follow_list ON follow_list (last_saved DESC);
 
 CREATE UNIQUE INDEX user_id_rec_msid_ndx_feedback ON recording_feedback (user_id, recording_msid);
 
+CREATE INDEX user_0_user_relationship_ndx ON user_relationship (user_0);
+CREATE INDEX user_1_user_relationship_ndx ON user_relationship (user_1);
+
 COMMIT;

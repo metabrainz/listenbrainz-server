@@ -105,6 +105,20 @@ export default class APIService {
     return result.user_token;
   };
 
+  followUser = async (username: string): Promise<{ status: number }> => {
+    const response = await fetch(`/user/${username}/follow`, {
+      method: "POST",
+    });
+    return { status: response.status };
+  };
+
+  unfollowUser = async (username: string): Promise<{ status: number }> => {
+    const response = await fetch(`/user/${username}/unfollow`, {
+      method: "POST",
+    });
+    return { status: response.status };
+  };
+
   /*
      Send a POST request to the ListenBrainz server to submit a listen
    */
