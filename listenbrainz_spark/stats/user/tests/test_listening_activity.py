@@ -75,7 +75,7 @@ class ListeningActivityTestCase(SparkTestCase):
 
         self.assertDictEqual(received, expected)
 
-    @patch('listenbrainz_spark.stats.user.listening_activity.get_latest_listen_ts', return_value=datetime(2020, 6, 19))
+    @patch('listenbrainz_spark.stats.user.listening_activity.get_latest_listen_ts', return_value=datetime(2020, 9, 10))
     @patch('listenbrainz_spark.stats.user.listening_activity.get_listens')
     @patch('listenbrainz_spark.stats.user.listening_activity.get_listening_activity', return_value='listening_activity_table')
     @patch('listenbrainz_spark.stats.user.listening_activity.create_messages')
@@ -85,8 +85,8 @@ class ListeningActivityTestCase(SparkTestCase):
         mock_get_listens.return_value = mock_df
 
         listening_activity_stats.get_listening_activity_week()
-        to_date = datetime(2020, 6, 15)
-        from_date = day = datetime(2020, 6, 1)
+        to_date = datetime(2020, 9, 10)
+        from_date = day = datetime(2020, 8, 31)
 
         time_range = []
         while day < to_date:
