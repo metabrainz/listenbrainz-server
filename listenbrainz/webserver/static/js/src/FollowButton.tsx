@@ -19,6 +19,14 @@
  */
 
 import * as React from "react";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faUserCheck,
+  faUserPlus,
+  faUserTimes,
+  faExclamationTriangle,
+} from "@fortawesome/free-solid-svg-icons";
 import APIService from "./APIService";
 
 type FollowButtonProps = {
@@ -88,6 +96,7 @@ class FollowButton extends React.Component<
   };
 
   getButtonDetails = (): {
+    buttonIcon: IconProp;
     buttonClass: string;
     buttonText: string;
   } => {
@@ -95,6 +104,7 @@ class FollowButton extends React.Component<
 
     if (error) {
       return {
+        buttonIcon: faExclamationTriangle as IconProp,
         buttonClass: "btn btn-sm btn-danger",
         buttonText: "Something went wrong!",
       };
@@ -102,6 +112,7 @@ class FollowButton extends React.Component<
 
     if (justFollowed) {
       return {
+        buttonIcon: faUserCheck as IconProp,
         buttonClass: "btn btn-sm btn-success",
         buttonText: "Following",
       };
@@ -110,24 +121,27 @@ class FollowButton extends React.Component<
     if (loggedInUserFollowsUser) {
       if (!hover) {
         return {
+          buttonIcon: faUserCheck as IconProp,
           buttonClass: "btn btn-sm btn-success",
           buttonText: "Following",
         };
       }
       return {
+        buttonIcon: faUserTimes as IconProp,
         buttonClass: "btn btn-sm btn-primary",
         buttonText: "Unfollow",
       };
     }
 
     return {
+      buttonIcon: faUserPlus as IconProp,
       buttonClass: "btn btn-sm btn-info",
       buttonText: "Follow",
     };
   };
 
   render() {
-    const { buttonClass, buttonText } = this.getButtonDetails();
+    const { buttonClass, buttonText, buttonIcon } = this.getButtonDetails();
     return (
       <div
         id="follow-button"
@@ -140,7 +154,7 @@ class FollowButton extends React.Component<
         role="button"
         tabIndex={0}
       >
-        {buttonText}
+        <FontAwesomeIcon icon={buttonIcon} /> {buttonText}
       </div>
     );
   }
