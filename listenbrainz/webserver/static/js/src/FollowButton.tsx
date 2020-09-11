@@ -52,9 +52,8 @@ class FollowButton extends React.Component<
     this.APIService = new APIService(`${window.location.origin}/1`);
   }
 
-  toggleHover = () => {
-    const { hover } = this.state;
-    this.setState({ hover: !hover, justFollowed: false });
+  setHover = (value: boolean) => {
+    this.setState({ hover: value, justFollowed: false });
   };
 
   handleButtonClick = () => {
@@ -88,7 +87,10 @@ class FollowButton extends React.Component<
     });
   };
 
-  getButtonDetails = (): { buttonClass: string; buttonText: string } => {
+  getButtonDetails = (): {
+    buttonClass: string;
+    buttonText: string;
+  } => {
     const { error, justFollowed, loggedInUserFollowsUser, hover } = this.state;
 
     if (error) {
@@ -99,37 +101,47 @@ class FollowButton extends React.Component<
     }
 
     if (justFollowed) {
-      return { buttonClass: "btn btn-sm btn-info", buttonText: "Following" };
+      return {
+        buttonClass: "btn btn-sm btn-success",
+        buttonText: "Following",
+      };
     }
 
     if (loggedInUserFollowsUser) {
       if (!hover) {
-        return { buttonClass: "btn btn-sm btn-info", buttonText: "Following" };
+        return {
+          buttonClass: "btn btn-sm btn-success",
+          buttonText: "Following",
+        };
       }
-      return { buttonClass: "btn btn-sm btn-danger", buttonText: "Unfollow" };
+      return {
+        buttonClass: "btn btn-sm btn-primary",
+        buttonText: "Unfollow",
+      };
     }
 
-    return { buttonClass: "btn btn-sm btn-warning", buttonText: "Follow" };
+    return {
+      buttonClass: "btn btn-sm btn-info",
+      buttonText: "Follow",
+    };
   };
 
   render() {
+    const { buttonClass, buttonText } = this.getButtonDetails();
     return (
-      <>
-        <div
-          id="follow-button"
-          onClick={this.handleButtonClick}
-          onKeyPress={this.handleButtonClick}
-          onMouseEnter={this.toggleHover}
-          onMouseLeave={this.toggleHover}
-          className={this.getButtonDetails().buttonClass}
-          style={{ marginLeft: "10px" }}
-          role="button"
-          tabIndex={0}
-        >
-          {this.getButtonDetails().buttonText}
-        </div>
-        <br />
-      </>
+      <div
+        id="follow-button"
+        onClick={this.handleButtonClick}
+        onKeyPress={this.handleButtonClick}
+        onMouseEnter={() => this.setHover(true)}
+        onMouseLeave={() => this.setHover(false)}
+        className={buttonClass}
+        style={{ marginLeft: "10px" }}
+        role="button"
+        tabIndex={0}
+      >
+        {buttonText}
+      </div>
     );
   }
 }

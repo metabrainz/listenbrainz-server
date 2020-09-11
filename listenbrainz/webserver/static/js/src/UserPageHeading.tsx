@@ -31,9 +31,9 @@ const followUsersFeatureEnabled = (currentUser: string): boolean => {
     "iliekcomputers",
     "shivam-kapila",
     "ishaanshah",
-    "Mr_Monkey",
-  ];
-  return usersAllowedIn.includes(currentUser);
+    "mr_monkey",
+  ].map((username: string) => username.toLowerCase());
+  return usersAllowedIn.includes(currentUser.toLowerCase());
 };
 
 const UserPageHeading = ({
@@ -46,27 +46,25 @@ const UserPageHeading = ({
   loggedInUserFollowsUser: boolean;
 }) => {
   return (
-    <>
-      <h2 className="page-title">
-        {user.name}
-        {loggedInUser &&
-          followUsersFeatureEnabled(loggedInUser.name) &&
-          user.name !== loggedInUser.name && (
-            <FollowButton
-              user={user}
-              loggedInUser={loggedInUser}
-              loggedInUserFollowsUser={loggedInUserFollowsUser}
-            />
-          )}
-      </h2>
-    </>
+    <h2 className="page-title">
+      {user.name}
+      {loggedInUser &&
+        followUsersFeatureEnabled(loggedInUser.name) &&
+        user.name !== loggedInUser.name && (
+          <FollowButton
+            user={user}
+            loggedInUser={loggedInUser}
+            loggedInUserFollowsUser={loggedInUserFollowsUser}
+          />
+        )}
+    </h2>
   );
 };
 
 export default UserPageHeading;
 
 document.addEventListener("DOMContentLoaded", () => {
-  const domContainer = document.querySelector("#follow-controls-container");
+  const domContainer = document.querySelector("#user-page-heading-container");
 
   const propsElement = document.getElementById("react-props");
   const reactProps = JSON.parse(propsElement!.innerHTML);
