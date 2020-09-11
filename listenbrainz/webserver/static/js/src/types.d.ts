@@ -43,6 +43,7 @@ declare type Listen = {
     track_name: string;
     additional_info?: AdditionalInfo;
   };
+  score?: number;
 };
 
 declare type ListenBrainzUser = {

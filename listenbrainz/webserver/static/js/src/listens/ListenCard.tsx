@@ -184,8 +184,8 @@ export default class ListenCard extends React.Component<
               ) : ( mode === "cf_recs" ? (
                 <span
                   className="score text-center text-muted"
-                  title={listen.score} >
-                  score: {listen.score}
+                  title={listen.score ? listen.score.toString() : 'Undefined'} >
+                  score: {listen.score ? listen.score.toString() : 'Undefined'}
                 </span>
               ) : (
                 <span
