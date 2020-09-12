@@ -153,7 +153,8 @@ class FollowButton extends React.Component<
         role="button"
         tabIndex={0}
       >
-        <FontAwesomeIcon icon={buttonIcon} /> <div className="text">{buttonText}</div>
+        <FontAwesomeIcon icon={buttonIcon} />{" "}
+        <div className="text">{buttonText}</div>
       </div>
     );
   }
