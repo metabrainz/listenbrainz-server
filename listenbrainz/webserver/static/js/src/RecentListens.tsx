@@ -51,6 +51,8 @@ export interface RecentListensState {
   previousListenTs?: number;
   saveUrl: string;
   recordingFeedbackMap: RecordingFeedbackMap;
+  offset?: number;
+  recommendationLength?: number;
 }
 
 export default class RecentListens extends React.Component<
@@ -66,11 +68,16 @@ export default class RecentListens extends React.Component<
 
   private expectedListensPerPage = 25;
 
+  private expectedRecommendationsPerPage = 25;
+
   constructor(props: RecentListensProps) {
     super(props);
     this.state = {
       alerts: [],
-      listens: props.listens || [],
+      listens:
+        props.mode === "cf_recs"
+          ? props.listens?.slice(0, this.expectedRecommendationsPerPage) || []
+          : props.listens || [],
       mode: props.mode,
       followList: props.followList || [],
       playingNowByUser: {},
@@ -83,6 +90,8 @@ export default class RecentListens extends React.Component<
       previousListenTs: props.listens?.[0]?.listened_at,
       direction: "down",
       recordingFeedbackMap: {},
+      offset: 0,
+      recommendationLength: props.listens?.length,
     };
 
     this.APIService = new APIService(
@@ -586,8 +595,203 @@ export default class RecentListens extends React.Component<
     }
   };
 
+  handleClickNewestRecommendations = () => {
+    const { listens } = this.props;
+    const { offset } = this.state;
+
+    if (
+      (offset || offset === 0) &&
+      offset >= this.expectedRecommendationsPerPage
+    ) {
+      this.setState({ loading: true });
+      this.setState(
+        {
+          listens: listens?.slice(0, this.expectedRecommendationsPerPage) || [],
+          offset: 0,
+        },
+        this.afterRecommendationsDisplay
+      );
+      window.history.pushState(null, "", "");
+    }
+  };
+
+  handleClickNewerRecommendations = () => {
+    const { listens } = this.props;
+    const { offset } = this.state;
+
+    if (
+      (offset || offset === 0) &&
+      offset >= this.expectedRecommendationsPerPage
+    ) {
+      const newOffset = offset - this.expectedRecommendationsPerPage;
+      this.setState({ loading: true });
+      this.setState(
+        {
+          offset: newOffset,
+          listens:
+            listens?.slice(
+              newOffset,
+              newOffset + this.expectedRecommendationsPerPage
+            ) || [],
+        },
+        this.afterRecommendationsDisplay
+      );
+      window.history.pushState(null, "", "");
+    }
+  };
+
+  handleClickOlderRecommendations = () => {
+    const { listens } = this.props;
+    const { offset, recommendationLength } = this.state;
+
+    const condition = recommendationLength
+      ? recommendationLength - this.expectedRecommendationsPerPage
+      : 0;
+    if ((offset || offset === 0) && condition && offset < condition) {
+      const newOffset = offset + this.expectedRecommendationsPerPage;
+      this.setState({ loading: true });
+      this.setState(
+        {
+          offset: newOffset,
+          listens:
+            listens?.slice(
+              newOffset,
+              newOffset + this.expectedRecommendationsPerPage
+            ) || [],
+        },
+        this.afterRecommendationsDisplay
+      );
+      window.history.pushState(null, "", "");
+    }
+  };
+
+  handleClickOldestRecommendations = () => {
+    const { listens } = this.props;
+    const { recommendationLength, offset } = this.state;
+
+    const condition = recommendationLength
+      ? recommendationLength - this.expectedRecommendationsPerPage
+      : 0;
+    if ((offset || offset === 0) && condition && offset < condition) {
+      this.setState({ loading: true });
+
+      const newOffset =
+        (Math.ceil(
+          recommendationLength
+            ? recommendationLength / this.expectedRecommendationsPerPage
+            : 0
+        ) -
+          1) *
+        this.expectedRecommendationsPerPage;
+
+      this.setState(
+        {
+          listens: listens?.slice(newOffset, recommendationLength) || [],
+          offset: newOffset,
+        },
+        this.afterRecommendationsDisplay
+      );
+      window.history.pushState(null, "", "");
+    }
+  };
+
+  handleRecommendationChange = () => {
+    const { offset, recommendationLength } = this.state;
+
+    return (
+      <ul className="pager" style={{ display: "flex" }}>
+        <li
+          className={`previous ${
+            (offset || offset === 0) &&
+            offset < this.expectedRecommendationsPerPage
+              ? "disabled"
+              : ""
+          }`}
+        >
+          <a
+            role="button"
+            onClick={this.handleClickNewestRecommendations}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") this.handleClickNewestRecommendations();
+            }}
+            tabIndex={0}
+          >
+            &#x21E4;
+          </a>
+        </li>
+        <li
+          className={`previous ${
+            (offset || offset === 0) &&
+            offset < this.expectedRecommendationsPerPage
+              ? "disabled"
+              : ""
+          }`}
+        >
+          <a
+            role="button"
+            onClick={this.handleClickNewerRecommendations}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") this.handleClickNewerRecommendations();
+            }}
+            tabIndex={0}
+          >
+            &larr; Newer
+          </a>
+        </li>
+        <li
+          className={`next ${
+            (offset || offset === 0) &&
+            recommendationLength &&
+            offset >= recommendationLength - this.expectedRecommendationsPerPage
+              ? "disabled"
+              : ""
+          }`}
+          style={{ marginLeft: "auto" }}
+        >
+          <a
+            role="button"
+            onClick={this.handleClickOlderRecommendations}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") this.handleClickOlderRecommendations();
+            }}
+            tabIndex={0}
+          >
+            Older &rarr;
+          </a>
+        </li>
+        <li
+          className={`next ${
+            (offset || offset === 0) &&
+            recommendationLength &&
+            offset >= recommendationLength - this.expectedRecommendationsPerPage
+              ? "disabled"
+              : ""
+          }`}
+        >
+          <a
+            role="button"
+            onClick={this.handleClickOldestRecommendations}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") this.handleClickOldestRecommendations();
+            }}
+            tabIndex={0}
+          >
+            &#x21E5;
+          </a>
+        </li>
+      </ul>
+    );
+  };
+
   afterListensFetch() {
     this.checkListensRange();
+    if (this.listensTable?.current) {
+      this.listensTable.current.scrollIntoView({ behavior: "smooth" });
+    }
+    this.setState({ loading: false });
+  }
+
+  afterRecommendationsDisplay() {
     if (this.listensTable?.current) {
       this.listensTable.current.scrollIntoView({ behavior: "smooth" });
     }
@@ -799,6 +1003,8 @@ export default class RecentListens extends React.Component<
                     </li>
                   </ul>
                 )}
+
+                {mode === "cf_recs" && this.handleRecommendationChange()}
               </div>
             )}
             <br />

@@ -259,7 +259,9 @@ export default class ListenCard extends React.Component<
         </div>
         <div
           className={`${
-            isCurrentUser || mode === "recent" || mode === "follow"
+            (isCurrentUser && mode !== "cf_recs") ||
+            mode === "recent" ||
+            mode === "follow"
               ? " col-xs-3 text-center"
               : "hidden"
           }`}
