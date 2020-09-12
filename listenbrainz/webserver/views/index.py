@@ -70,6 +70,16 @@ def contribute():
     return render_template("index/contribute.html")
 
 
+@index_bp.route("/add-data")
+def add_data_info():
+    return render_template("index/add-data.html")
+
+
+@index_bp.route("/import-data")
+def import_data_info():
+    return render_template("index/import-data.html")
+
+
 @index_bp.route("/goals")
 def goals():
     return render_template("index/goals.html")
@@ -78,11 +88,6 @@ def goals():
 @index_bp.route("/faq")
 def faq():
     return render_template("index/faq.html")
-
-
-@index_bp.route("/api-docs")
-def api_docs():
-    return render_template("index/api-docs.html")
 
 
 @index_bp.route("/lastfm-proxy")

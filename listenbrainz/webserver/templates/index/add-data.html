@@ -1,0 +1,40 @@
+{%- extends 'base.html' -%}
+{%- block title -%}Adding Data - ListenBrainz{%- endblock -%}
+{%- block content -%}
+  <h2 class="page-title">Adding your data to Listenbrainz</h2>
+  {# Listen submission information #}
+  <h3>Submitting Listens</h3>
+  <p>
+    These are programs that submit listens to ListenBrainz:
+  </p>
+  <ul>
+    <li><em><a href="https://www.musicpd.org/">mpd</a></em>, a flexible, powerful, server-side application for playing music: <a href="https://github.com/kori/libra"><code>libra</code></a></li>
+    <li><em><a href="https://wiki.gnome.org/Apps/Rhythmbox/">Rhythmbox</a></em>, a music playing application for GNOME: <a href="https://github.com/phw/rhythmbox-plugin-listenbrainz"><code>rhythmbox-plugin-listenbrainz</code></a></li>
+    <li><em><a href="https://wiki.gnome.org/Apps/Lollypop">Lollypop</a></em>, a modern music player for GNOME</li>
+    <li><em><a href="https://github.com/InputUsername/rescrobbled">Rescrobbled</a></em>, a universal Linux scrobbler for MPRIS enabled players</li>
+    <li><em><a href="https://add0n.com/lastfm-scrobbler.html">Last.fm Scrobbler</a></em>, an extension for Firefox and Chrome</li>
+    <li><em><a href="https://github.com/tgwizard/sls">Simple Last.fm Scrobbler</a></em>, for Android devices</li>
+    <li><em><a href="https://github.com/amCap1712/vlc-listenbrainz-plugin">VLC Listenbrainz plugin</a></em>, cross-platform plugin for VLC player</li>
+    <li><em><a href="https://web-scrobbler.com/">Web Scrobbler</a></em>, an extension for Firefox and Chromium-based browsers</li>
+    <li><em><a href="https://play.google.com/store/apps/details?id=com.arn.scrobble">Pano Scrobbler</a></em>, a scrobbling application for Android Devices</li>
+  </ul>
+
+  <h3>Submitting via Spotify</h3>
+  <p>
+    ListenBrainz can automatically record listens from Spotify.
+  </p>
+  <p>
+    Importing the same listens from two different sources such as Last.FM and Spotify may cause the creation
+    of duplicates in your listen history. If you opt into our automatic Spotify import, you may notice duplications in
+    the last 50 listens on Spotify.This is a temporary issue while we find better ways to deduplicate listens.
+  </p>
+  <p>
+    <a href={{ url_for('profile.connect_spotify') }}>Connect your Spotify account to ListenBrainz.</a>
+  </p>
+
+  <h3>For advanced users</h3>
+  <p>
+    Developers are able to submit their listens to Listenbrainz via the Listenbrainz API. Information on how to do this
+    can be found in the <a href="https://listenbrainz.readthedocs.io">API docs</a>
+  </p>
+{%- endblock -%}
