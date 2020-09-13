@@ -396,7 +396,7 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
     message = [{
         'type': 'cf_recording_model',
         'model_upload_time': str(datetime.utcnow()),
-        'total_time': '{:.2f}'.format((time.monotonic() - ti)),
+        'total_time': '{:.2f}'.format(time.monotonic() - ti),
     }]
 
     return message
