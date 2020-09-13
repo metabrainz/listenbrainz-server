@@ -185,11 +185,15 @@ def get_best_model(training_data, validation_data, num_validation, ranks, lambda
         model_id = generate_model_id()
 
         t0 = time.monotonic()
+        current_app.logger.info("Training model with model id: {}".format(model_id))
         model = train(training_data, rank, iteration, lmbda, alpha, model_id)
+        current_app.logger.info("Model trained!")
         mt = '{:.2f}'.format((time.monotonic() - t0) / 60)
 
         t0 = time.monotonic()
+        current_app.logger.info("Calculating validation RMSE for model with model id : {}".format(model_id))
         validation_rmse = compute_rmse(model, validation_data, num_validation, model_id)
+        current_app.logger.info("Validation RMSE calculated!")
         vt = '{:.2f}'.format((time.monotonic() - t0) / 60)
 
         model_metadata.append((model_id, mt, rank, '{:.1f}'.format(lmbda), iteration, round(validation_rmse, 2), vt))
@@ -341,22 +345,24 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
 
     # Rdds that are used in model training iterative process are cached to improve performance.
     # Caching large files may cause Out of Memory exception.
-    training_data.persist()
-    validation_data.persist()
+    # commenting out till we are sure that the cached data isn't causing RPC errors.
+    # training_data.persist()
+    # validation_data.persist()
 
     # An action must be called for persist to evaluate.
     num_training = training_data.count()
     num_validation = validation_data.count()
     num_test = test_data.count()
 
-    current_app.logger.info('Training models...')
     t0 = time.monotonic()
     best_model, model_metadata = get_best_model(training_data, validation_data, num_validation, ranks,
                                                 lambdas, iterations, alpha)
     models_training_time = '{:.2f}'.format((time.monotonic() - t0) / 3600)
 
     best_model_metadata = get_best_model_metadata(best_model)
+    current_app.logger.info("Calculating test RMSE for best model with model id: {}".format(best_model.model_id))
     best_model_metadata['test_rmse'] = compute_rmse(best_model.model, test_data, num_test, best_model.model_id)
+    current_app.logger.info("Test RMSE calculated!")
 
     best_model_metadata['training_data_count'] = num_training
     best_model_metadata['validation_data_count'] = num_validation
@@ -364,8 +370,9 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
     best_model_metadata['dataframe_id'] = get_latest_dataframe_id(dataframe_metadata_df)
 
     # Cached data must be cleared to avoid OOM.
-    training_data.unpersist()
-    validation_data.unpersist()
+    # commenting out till we are sure that the cached data isn't causing RPC errors.
+    # training_data.unpersist()
+    # validation_data.unpersist()
 
     hdfs_connection.init_hdfs(config.HDFS_HTTP_URI)
     t0 = time.monotonic()
@@ -389,7 +396,7 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
     message = [{
         'type': 'cf_recording_model',
         'model_upload_time': str(datetime.utcnow()),
-        'total_time': '{:.2f}'.format((time.monotonic() - ti) / 3600),
+        'total_time': '{:.2f}'.format((time.monotonic() - ti)),
     }]
 
     return message
