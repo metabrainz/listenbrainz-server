@@ -343,12 +343,6 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
     training_data, validation_data, test_data = preprocess_data(playcounts_df)
     time_['preprocessing'] = '{:.2f}'.format((time.monotonic() - t0) / 60)
 
-    # Rdds that are used in model training iterative process are cached to improve performance.
-    # Caching large files may cause Out of Memory exception.
-    # commenting out till we are sure that the cached data isn't causing RPC errors.
-    # training_data.persist()
-    # validation_data.persist()
-
     # An action must be called for persist to evaluate.
     num_training = training_data.count()
     num_validation = validation_data.count()
@@ -368,11 +362,6 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
     best_model_metadata['validation_data_count'] = num_validation
     best_model_metadata['test_data_count'] = num_test
     best_model_metadata['dataframe_id'] = get_latest_dataframe_id(dataframe_metadata_df)
-
-    # Cached data must be cleared to avoid OOM.
-    # commenting out till we are sure that the cached data isn't causing RPC errors.
-    # training_data.unpersist()
-    # validation_data.unpersist()
 
     hdfs_connection.init_hdfs(config.HDFS_HTTP_URI)
     t0 = time.monotonic()
