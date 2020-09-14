@@ -5,15 +5,18 @@
   "artist_map": [
     {
       "country": "USA",
-      "artist_count": 56
+      "artist_count": 56,
+      "listen_count": 100
     },
     {
       "country": "GBR",
-      "artist_count": 67
+      "artist_count": 67,
+      "listen_count": 150
     },
     {
       "country": "IND",
-      "artist_count": 32
+      "artist_count": 32,
+      "listen_count": 56
     }
   ]
 }

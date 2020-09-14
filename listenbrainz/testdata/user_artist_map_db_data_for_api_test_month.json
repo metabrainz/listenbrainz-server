@@ -1,59 +1,58 @@
 {
   "artist_map": [
     {
-      "artist_count": 20,
-      "country": "USA"
+      "artist_count": 6,
+      "country": "GBR",
+      "listen_count": 92
     },
     {
-      "artist_count": 1,
-      "country": "DNK"
-    },
-    {
-      "artist_count": 8,
-      "country": "GBR"
-    },
-    {
-      "artist_count": 3,
-      "country": "AUS"
+      "artist_count": 14,
+      "country": "USA",
+      "listen_count": 91
     },
     {
       "artist_count": 3,
-      "country": "DEU"
+      "country": "AUS",
+      "listen_count": 25
     },
     {
       "artist_count": 1,
-      "country": "PRT"
+      "country": "ISL",
+      "listen_count": 7
     },
     {
       "artist_count": 1,
-      "country": "IND"
+      "country": "ARG",
+      "listen_count": 6
     },
     {
       "artist_count": 1,
-      "country": "ISL"
+      "country": "DEU",
+      "listen_count": 3
     },
     {
       "artist_count": 1,
-      "country": "SWE"
+      "country": "CAN",
+      "listen_count": 3
     },
     {
       "artist_count": 1,
-      "country": "ARG"
+      "country": "NLD",
+      "listen_count": 2
     },
     {
       "artist_count": 1,
-      "country": "CAN"
+      "country": "DNK",
+      "listen_count": 1
     },
     {
       "artist_count": 1,
-      "country": "ESP"
-    },
-    {
-      "artist_count": 1,
-      "country": "NLD"
+      "country": "SWE",
+      "listen_count": 1
     }
   ],
   "from_ts": 1588373458,
-  "last_updated": 0,
-  "to_ts": 1589496658
+  "last_updated": 1599918137,
+  "to_ts": 1589496658,
+  "user_id": "ishaanshah"
 }

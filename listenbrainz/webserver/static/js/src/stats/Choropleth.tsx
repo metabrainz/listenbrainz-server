@@ -1,6 +1,7 @@
 import { Theme } from "@nivo/core";
 import { Choropleth } from "@nivo/geo";
 import { BoxLegendSvg, LegendProps } from "@nivo/legends";
+import { BasicTooltip } from "@nivo/tooltip";
 import { scaleThreshold } from "d3-scale";
 import { schemeOranges } from "d3-scale-chromatic";
 import { format } from "d3-format";
@@ -12,6 +13,7 @@ import * as features from "./world_countries.json";
 export type ChoroplethProps = {
   data: UserArtistMapData;
   width?: number;
+  countOf: "artist" | "listen";
 };
 
 export default function CustomChoropleth(props: ChoroplethProps) {
@@ -121,6 +123,25 @@ export default function CustomChoropleth(props: ChoroplethProps) {
     />
   );
 
+  const CustomTooltip = ({ feature }: { feature: any }) => {
+    if (feature.data === undefined) {
+      return null;
+    }
+
+    const { countOf } = props;
+
+    return (
+      <BasicTooltip
+        id={feature.label}
+        color={feature.color}
+        value={`${
+          feature.formattedValue
+        } ${countOf[0].toUpperCase()}${countOf.slice(1)}s`}
+        enableChip
+      />
+    );
+  };
+
   return (
     <Choropleth
       data={data}
@@ -132,6 +153,7 @@ export default function CustomChoropleth(props: ChoroplethProps) {
       domain={domain}
       theme={isMobile ? themes.mobile : themes.desktop}
       valueFormat=".2s"
+      tooltip={CustomTooltip}
       unknownColor="#efefef"
       label="properties.name"
       projectionScale={width / 5.5}

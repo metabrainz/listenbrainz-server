@@ -294,6 +294,7 @@ exports[`UserArtistMap renders correctly 1`] = `
         className="col-xs-12"
       >
         <CustomChoropleth
+          countOf="artist"
           data={
             Array [
               Object {
