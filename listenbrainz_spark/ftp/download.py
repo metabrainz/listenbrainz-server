@@ -13,6 +13,7 @@ ARTIST_RELATION_DUMP_ID_POS = 5
 FULL = 'full'
 INCREMENTAL = 'incremental'
 
+
 class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
 
     def get_dump_name_to_download(self, dump, dump_id, dump_id_pos):
@@ -148,7 +149,7 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         self.connection.cwd(ftp_cwd)
         listens_dump_list = sorted(self.list_dir(), key=lambda x: int(x.split('-')[2]))
         req_listens_dump = self.get_dump_name_to_download(listens_dump_list, listens_dump_id, 2)
-
+        dump_id = req_listens_dump.split('-')[2]
 
         self.connection.cwd(req_listens_dump)
         listens_file_name = self.get_listens_dump_file_name(req_listens_dump)
@@ -157,7 +158,7 @@ class ListenbrainzDataDownloader(ListenBrainzFTPDownloader):
         current_app.logger.info('Downloading {} from FTP...'.format(listens_file_name))
         dest_path = self.download_dump(listens_file_name, directory)
         current_app.logger.info('Done. Total time: {:.2f} sec'.format(time.monotonic() - t0))
-        return dest_path, listens_file_name
+        return dest_path, listens_file_name, dump_id
 
     def download_artist_relation(self, directory, artist_relation_dump_id=None):
         """ Download artist relation to dir passed as an argument.
