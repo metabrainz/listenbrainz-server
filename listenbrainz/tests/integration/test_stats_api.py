@@ -1115,7 +1115,8 @@ class StatsAPITestCase(IntegrationTestCase):
         expected = [
             {
                 "country": "GBR",
-                "artist_count": 4
+                "artist_count": 1,
+                "listen_count": 321,
             }
         ]
         self.assertListEqual(expected, received)

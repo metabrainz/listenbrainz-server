@@ -12,6 +12,7 @@ class UserArtistMapRecord(pydantic.BaseModel):
     """
     country: str
     artist_count: int
+    listen_count: Optional[int]  # Make field optional to maintain backward compatibility
 
 
 class UserArtistMapStatRange(pydantic.BaseModel):

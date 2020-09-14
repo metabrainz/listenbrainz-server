@@ -284,6 +284,7 @@ declare type UserArtistMapResponse = {
     artist_map: Array<{
       country: string;
       artist_count: number;
+      listen_count: number;
     }>;
   };
 };
