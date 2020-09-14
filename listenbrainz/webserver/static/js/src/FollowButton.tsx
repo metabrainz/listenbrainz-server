@@ -150,11 +150,11 @@ class FollowButton extends React.Component<
         onMouseEnter={() => this.setHover(true)}
         onMouseLeave={() => this.setHover(false)}
         className={buttonClass}
-        style={{ marginLeft: "10px" }}
         role="button"
         tabIndex={0}
       >
-        <FontAwesomeIcon icon={buttonIcon} /> {buttonText}
+        <FontAwesomeIcon icon={buttonIcon} />{" "}
+        <div className="text">{buttonText}</div>
       </div>
     );
   }
