@@ -116,13 +116,53 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         error_msg = "Looks like you weren't active last week. Check back later."
         self.assert_context('error_msg', error_msg)
 
-    def test_get_template_missing_rec_top_artist(self):
+    def test_get_template_missing_rec_similar_artist(self):
         user = _get_user('vansika_1')
         recommendations_cf_recording._get_template(active_section='similar_artist', user=user)
         self.assertTemplateUsed('recommendations_cf_recording/similar_artist.html')
         self.assert_context('active_section', 'similar_artist')
         self.assert_context('user', user)
         error_msg = "Looks like you weren't active last week. Check back later."
+        self.assert_context('error_msg', error_msg)
+
+    @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
+    @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_listens_from_recording_mbid')
+    def test_get_template_empty_repsonce_top_artist(self, mock_get_listens, mock_get_rec):
+        user = _get_user('vansika_1')
+
+        mock_get_rec.return_value = {
+            'recording_mbid': {
+                'top_artist': ["af5a56f4-1f83-4681-b319-70a734d0d047", 0.4]
+            },
+            'created': datetime.utcnow()
+        }
+        mock_get_listens.return_value = []
+
+        recommendations_cf_recording._get_template(active_section='top_artist', user=user)
+        self.assertTemplateUsed('recommendations_cf_recording/top_artist.html')
+        self.assert_context('active_section', 'top_artist')
+        self.assert_context('user', user)
+        error_msg = "An error occurred while processing your request. Check back later!"
+        self.assert_context('error_msg', error_msg)
+
+    @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
+    @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_listens_from_recording_mbid')
+    def test_get_template_empty_repsonce_similar_artist(self, mock_get_listens, mock_get_rec):
+        user = _get_user('vansika_1')
+
+        mock_get_rec.return_value = {
+            'recording_mbid': {
+                'similar_artist': ["af5a56f4-1f83-4681-b319-70a734d0d047", 0.4]
+            },
+            'created': datetime.utcnow()
+        }
+        mock_get_listens.return_value = []
+
+        recommendations_cf_recording._get_template(active_section='similar_artist', user=user)
+        self.assertTemplateUsed('recommendations_cf_recording/similar_artist.html')
+        self.assert_context('active_section', 'similar_artist')
+        self.assert_context('user', user)
+        error_msg = "An error occurred while processing your request. Check back later!"
         self.assert_context('error_msg', error_msg)
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.spotify.get_user_dict')
@@ -136,7 +176,7 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
 
         mock_get_rec.return_value = {
             'recording_mbid': {
-                'top_artist': 'xxxxx'
+                'top_artist': ["af5a56f4-1f83-4681-b319-70a734d0d047", 0.4]
             },
             'created': created
         }
@@ -195,13 +235,14 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         # here active_section = 'similar_artist'
         mock_get_rec.return_value = {
             'recording_mbid': {
-                'similar_artist': 'xxxxx'
+                'similar_artist': ["af5a56f4-1f83-4681-b319-70a734d0d047", 0.4]
             },
             'created': created
         }
         recommendations_cf_recording._get_template(active_section='similar_artist', user=user)
         self.assertTemplateUsed('recommendations_cf_recording/similar_artist.html')
         self.assert_context('active_section', 'similar_artist')
+
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.requests')
     def test_get_listens_from_recording_mbid(self, mock_requests):

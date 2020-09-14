@@ -82,6 +82,15 @@ def _get_template(active_section, user):
         )
 
     listens = _get_listens_from_recording_mbid(result)
+    if not listens:
+        current_app.logger.error('The API returned an empty response for {} recommendations.\nData: {}'
+                                 .format(active_section, result))
+        return render_template(
+            "recommendations_cf_recording/{}.html".format(active_section),
+            active_section=active_section,
+            user=user,
+            error_msg="An error occurred while processing your request. Check back later!"
+        )
 
     spotify_data = spotify.get_user_dict(current_user.id)
 
@@ -147,8 +156,10 @@ def _get_listens_from_recording_mbid(mbids_and_ratings_list):
     r = requests.post(SERVER_URL, json=data)
     if r.status_code != 200:
         if r.status_code == 400:
+            current_app.logger.error('Invalid data was sent to the labs API.\nData: {}'.format(data))
             raise BadRequest
         else:
+            current_app.logger.error("API didn't send a valid responce due to Internal Server Error.")
             raise InternalServerError
 
     try:
