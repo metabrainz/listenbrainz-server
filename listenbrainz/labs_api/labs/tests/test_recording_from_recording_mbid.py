@@ -23,12 +23,12 @@ json_request = [
 
 redirect_db_response = [
     {
-        "recording_mbid_old" : "a96bf3b6-651d-49f4-9a89-eee27cecc18e",
-        "recording_mbid_new" : "2f020e89-6e85-4be9-9f04-519ec8ec8cfa"
+        "recording_mbid_old": "a96bf3b6-651d-49f4-9a89-eee27cecc18e",
+        "recording_mbid_new": "2f020e89-6e85-4be9-9f04-519ec8ec8cfa"
     },
     {
-        "recording_mbid_old" : "ec5b8aa9-7483-4791-a185-1f599a0cdc35",
-        "recording_mbid_new" : "6efd976a-109e-4146-9277-fb2af7d44910"
+        "recording_mbid_old": "ec5b8aa9-7483-4791-a185-1f599a0cdc35",
+        "recording_mbid_new": "6efd976a-109e-4146-9277-fb2af7d44910"
     },
 ]
 
@@ -133,7 +133,12 @@ class MainTestCase(flask_testing.TestCase):
     @patch('psycopg2.connect')
     def test_fetch(self, mock_connect):
         mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [redirect_db_response[0], 
-            redirect_db_response[1], None, json_db_response[0], json_db_response[1], json_db_response[2], None]
+                                                                                redirect_db_response[1], 
+                                                                                None, 
+                                                                                json_db_response[0], 
+                                                                                json_db_response[1], 
+                                                                                json_db_response[2], 
+                                                                                None]
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request)
         self.assertDictEqual(resp[0], json_response[0])
@@ -143,7 +148,10 @@ class MainTestCase(flask_testing.TestCase):
     @patch('psycopg2.connect')
     def test_count(self, mock_connect):
         mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [redirect_db_response[0], 
-            redirect_db_response[1], None, json_db_response[0], None]
+                                                                                redirect_db_response[1], 
+                                                                                None, 
+                                                                                json_db_response[0], 
+                                                                                None]
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request, count=1)
         self.assertEqual(len(resp), 1)
@@ -152,7 +160,11 @@ class MainTestCase(flask_testing.TestCase):
     @patch('psycopg2.connect')
     def test_offset(self, mock_connect):
         mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [redirect_db_response[0], 
-            redirect_db_response[1], None, json_db_response[1], json_db_response[2], None]
+                                                                                redirect_db_response[1], 
+                                                                                None, 
+                                                                                json_db_response[1], 
+                                                                                json_db_response[2], 
+                                                                                None]
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request, offset=1)
         self.assertEqual(len(resp), 2)

@@ -9,6 +9,7 @@ from datasethoster.main import app, register_query
 
 psycopg2.extras.register_uuid()
 
+
 class RecordingFromRecordingMBIDQuery(Query):
     '''
         Look up a musicbrainz data for a list of recordings, based on MBID.
@@ -29,7 +30,7 @@ class RecordingFromRecordingMBIDQuery(Query):
 
     def fetch(self, params, offset=-1, count=-1):
 
-        mbids = [ p['[recording_mbid]'] for p in params ]
+        mbids = [p['[recording_mbid]'] for p in params]
         with psycopg2.connect(current_app.config['MB_DATABASE_URI']) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
 
@@ -41,7 +42,7 @@ class RecordingFromRecordingMBIDQuery(Query):
                                ON r.id = rgr.new_id
                             where rgr.gid in %s'''
 
-                args = [tuple([ psycopg2.extensions.adapt(p) for p in mbids ])]
+                args = [tuple([psycopg2.extensions.adapt(p) for p in mbids])]
                 curs.execute(query, tuple(args))
 
                 redirect_index = {}
@@ -72,7 +73,7 @@ class RecordingFromRecordingMBIDQuery(Query):
                          GROUP BY r.gid, r.id, r.name, r.length, r.comment, ac.id, ac.name
                          ORDER BY r.gid'''
 
-                args = [tuple([ psycopg2.extensions.adapt(p) for p in mbids ])]
+                args = [tuple([psycopg2.extensions.adapt(p) for p in mbids])]
                 if count > 0:
                     query += " LIMIT %s"
                     args.append(count)
@@ -90,7 +91,7 @@ class RecordingFromRecordingMBIDQuery(Query):
 
                     r = dict(row)
                     r['recording_mbid'] = str(r['recording_mbid'])
-                    r['[artist_credit_mbids]'] = [ str(r) for r in r['artist_credit_mbids'] ]
+                    r['[artist_credit_mbids]'] = [str(r) for r in r['artist_credit_mbids']]
                     del r['artist_credit_mbids']
                     output.append(r)
 
