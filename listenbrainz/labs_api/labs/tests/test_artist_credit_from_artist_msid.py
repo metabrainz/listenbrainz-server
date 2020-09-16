@@ -20,14 +20,14 @@ json_request = [
 
 json_data = [
     {
-        "artist_credit_mbid": "{51ed973d-95c7-4a12-a11c-8c8581a5872a}",
+        "artist_credit_mbid": [ "51ed973d-95c7-4a12-a11c-8c8581a5872a" ],
         "artist_msid": "ea7e58c9-949d-4843-a869-6a93b96ae786",
         "artist_credit_id": 129493,
         "artist_credit_name": "Frank Reyes",
         "artist_msid": "ea7e58c9-949d-4843-a869-6a93b96ae786"
     },
     {
-        "artist_credit_mbid": "{0383dadf-2a4e-4d10-a46a-e9e041da8eb3,5441c29d-3602-4898-b1a1-b77fa23b8e50}",
+        "artist_credit_mbid": [ "0383dadf-2a4e-4d10-a46a-e9e041da8eb3","5441c29d-3602-4898-b1a1-b77fa23b8e50"],
         "artist_msid": "9c1d9739-e40a-47b8-b3be-8076344e51ed",
         "artist_credit_id": 810828,
         "artist_credit_name": "Queen & David Bowie",
