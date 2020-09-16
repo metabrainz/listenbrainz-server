@@ -132,12 +132,12 @@ class MainTestCase(flask_testing.TestCase):
 
     @patch('psycopg2.connect')
     def test_fetch(self, mock_connect):
-        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [redirect_db_response[0], 
-                                                                                redirect_db_response[1], 
-                                                                                None, 
-                                                                                json_db_response[0], 
-                                                                                json_db_response[1], 
-                                                                                json_db_response[2], 
+        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [redirect_db_response[0],
+                                                                                redirect_db_response[1],
+                                                                                None,
+                                                                                json_db_response[0],
+                                                                                json_db_response[1],
+                                                                                json_db_response[2],
                                                                                 None]
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request)
@@ -147,10 +147,10 @@ class MainTestCase(flask_testing.TestCase):
 
     @patch('psycopg2.connect')
     def test_count(self, mock_connect):
-        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [redirect_db_response[0], 
-                                                                                redirect_db_response[1], 
-                                                                                None, 
-                                                                                json_db_response[0], 
+        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [redirect_db_response[0],
+                                                                                redirect_db_response[1],
+                                                                                None,
+                                                                                json_db_response[0],
                                                                                 None]
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request, count=1)
@@ -159,11 +159,11 @@ class MainTestCase(flask_testing.TestCase):
 
     @patch('psycopg2.connect')
     def test_offset(self, mock_connect):
-        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [redirect_db_response[0], 
-                                                                                redirect_db_response[1], 
-                                                                                None, 
-                                                                                json_db_response[1], 
-                                                                                json_db_response[2], 
+        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [redirect_db_response[0],
+                                                                                redirect_db_response[1],
+                                                                                None,
+                                                                                json_db_response[1],
+                                                                                json_db_response[2],
                                                                                 None]
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request, offset=1)
