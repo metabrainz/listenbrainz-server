@@ -1,3 +1,15 @@
+# This script is responsible to generate recommendations for the users. The general flow is as follows:
+#
+# The best_model saved in HDFS is loaded with the help of model_id which is fetched from model_metadata_df.
+# `user_id` and `recording_id` are fetched from top_artist_candidate_set_df and are given as input to the
+# recommender. An RDD of `user`, `product` and `rating` is returned from the recommender which is later converted to
+# a dataframe by filtering Top X recommendations for all users sorted on rating and fields renamed as
+# `user_id`, `recording_id` and `rating`. The ratings are scaled so that they lie between 0 and 1.
+# This dataframe is joined with recordings_df on recording_id to get the recording mbids which are then sent over the queue.
+#
+# The same process is done for similar artist candidate set.
+
+
 import logging
 import time
 from datetime import datetime

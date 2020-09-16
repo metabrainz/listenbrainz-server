@@ -1,3 +1,22 @@
+# This script is responsible to train models and save the best model to HDFS. The general
+# flow is as follows:
+#
+# **preprocess_data: playcounts_df is loaded from HDFS and is split into training_data, validation_data
+#                    and test_data. Th dataframe is converted to an RDD and each row is converted to a
+#                    Rating(row['user_id'], row['recording_id'], row['count']) object.
+#
+# **get_best_model: Eight models are trained using the training_data RDD. Each model uses a different value of
+#                   `rank`, `lambda` and `iteration`. Refer to https://spark.apache.org/docs/2.2.0/ml-collaborative-filtering.html
+#                   to know more about these params. The Model with the least validation_rmse is called the best_model.
+#                   validation_rmse is Root Mean Squared Error calculated using the validation_data.
+#
+# **save_model: The best_model which of the previous run of the script is deleted from HDFS and the new best_model is saved to HDFS.
+#
+# **save_model_metadata_to_hdfs: Since the model is always trained on recently created dataframes, the model_metadata (rank, lambda, training_data_count etc)
+#                                is saved corresponding to recently created dataframe_id. The model metadata also contains the unique identification string
+#                                for the best model.
+
+
 import os
 import uuid
 import logging

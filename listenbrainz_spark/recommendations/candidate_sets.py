@@ -1,3 +1,18 @@
+# This script is responsible to create candidate sets for all users. The generated candidate sets
+# will be given as input to the recommender to assign ratings to the recordings in candidate sets.
+# The general flow is as follows:
+#
+# Last 7 days listens are filtered from mapped_listens_df and is called the mapped_listens_subset_df.
+# Top X artists are fetched for each user from the mapped_listens_subset_df. The top_artist_df is joined
+# with recordings_df to get the dataframe of recordings belonging to the top artists. From this dataframe,
+# recordings listened to by the users in the last 7 days are filtered so that the recommendations don't contain
+# recordings that the user has listened to in the last week. The resultant dataframe is called the top_artists_candidate_set_df.
+#
+# Artists similar to top artists are fetched from the artist_relations_df and the similar_artist_candidate_set_df is generated
+# in a manner similar to the generation of the top artist candidate set.
+#
+# The top artist and similar artist candidate set dataframes are saved to HDFS.
+
 import os
 import sys
 import uuid

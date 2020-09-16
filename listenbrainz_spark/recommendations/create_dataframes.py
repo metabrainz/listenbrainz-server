@@ -1,3 +1,39 @@
+# This script is responsible to process user listening history and create and save dataframes to be used
+# in training the model. The general flow is as follows:
+#
+# **get_dates_to_train_data: Get timestamp (from_date, to_date) to fetch user listening history.
+#                            We fetch the timestamp (to_date) of latest listen in spark, go back X days and get
+#                            the updated timestamp (from_date) from where we should start fetching listens.
+#                            The timestamp of fetched listens belongs to [from_date.month, to_date.month]
+#
+# **get_listens_for_training_model_window: The listens are fetched from HDFS having all the fields that a typical
+#                                          listen has except the artist_mbid and recording_mbid. Refer to
+#                                          listenbrainz_spark/utils.py for the definition of a typical listen.
+#                                          The dataframe of these listens is called partial_listens_df
+#
+# **get_mapped_artist_and_recording_mbids: The partial_listens_df is joined with mapping_df (msid->mbid mapping) on
+#                                          artist_msid and recording_msid to get the mapped_listens_df. The dataframe created
+#                                          is saved to HDFS.
+#
+# **get_users_dataframe: Distinct users are filtered from mapped_listens_df and each user is assigned a unique
+#                        identification number called user_id. The dataframe created is called users_df and is saved to HDFS.
+#
+# **get_recordings_df: Distinct recordings are filtered from mapped_listens_df and each recording is assigned
+#                      a unique identification number called the recording_id. The dataframe created is called recordings_df and
+#                      is saved to HDFS.
+#
+# **get_listens_df: mb_recording_mbid and user_name is filtered from mapped_listened_df. The dataframe created is called
+#                   listens_df.
+#
+# **save_playcounts_df: users_df, listens_df and recordings_df are used to get the number of times a user has listened to
+#                       a recording for all users. This number is called count. The dataframe created is called playcounts_df
+#                       and is saved to HDFS.
+#
+# A UUID is generated for every run of the script to identify dataframe metadata (users_count, recording_count etc) used in training
+# the model. The dataframe_id (UUID) along with dataframe metadata are stored to HDFS.
+#
+# Note: All the dataframes except the dataframe_metadata overwrite the existing dataframes in HDFS.
+
 import sys
 import uuid
 import logging
