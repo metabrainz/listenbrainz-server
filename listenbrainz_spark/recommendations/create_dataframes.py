@@ -29,8 +29,8 @@
 #                       a recording for all users. This number is called count. The dataframe created is called playcounts_df
 #                       and is saved to HDFS.
 #
-# A UUID is generated for every run of the script to identify dataframe metadata (users_count, recording_count etc) used in training
-# the model. The dataframe_id (UUID) along with dataframe metadata are stored to HDFS.
+# A UUID is generated for every run of the script to identify dataframe metadata (users_count, recording_count etc).
+# The dataframe_id (UUID) along with dataframe metadata are stored to HDFS.
 #
 # Note: All the dataframes except the dataframe_metadata overwrite the existing dataframes in HDFS.
 

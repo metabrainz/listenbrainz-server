@@ -10,11 +10,12 @@
 #                   to know more about these params. The Model with the least validation_rmse is called the best_model.
 #                   validation_rmse is Root Mean Squared Error calculated using the validation_data.
 #
-# **save_model: The best_model which of the previous run of the script is deleted from HDFS and the new best_model is saved to HDFS.
+# **save_model: The best_model which of the previous run of the script is deleted from HDFS and the new best_model
+#               is saved to HDFS.
 #
-# **save_model_metadata_to_hdfs: Since the model is always trained on recently created dataframes, the model_metadata (rank, lambda, training_data_count etc)
-#                                is saved corresponding to recently created dataframe_id. The model metadata also contains the unique identification string
-#                                for the best model.
+# **save_model_metadata_to_hdfs: Since the model is always trained on recently created dataframes, the model_metadata
+#                                (rank, lambda, training_data_count etc) is saved corresponding to recently created dataframe_id.
+#                                The model metadata also contains the unique identification string for the best model.
 
 
 import os
