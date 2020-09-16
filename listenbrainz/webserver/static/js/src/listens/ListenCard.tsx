@@ -142,7 +142,7 @@ export default class ListenCard extends React.Component<
     );
   };
 
-  handleListenedAtForRecommendations = () => {
+  handleListenedAt = () => {
     const { mode, listen } = this.props;
     if (mode === "cf_recs") {
       return (
@@ -165,6 +165,38 @@ export default class ListenCard extends React.Component<
         {listen.listened_at_iso
           ? timeago.ago(listen.listened_at_iso)
           : timeago.ago(listen.listened_at * 1000)}
+      </span>
+    );
+  };
+
+  handleListenedAtMobileView = () => {
+    const { mode, listen } = this.props;
+    if (mode === "cf_recs") {
+      return (
+        <span
+          className="score text-center text-muted"
+          title={listen.score ? listen.score.toString() : "Undefined"}
+        >
+          score: {listen.score ? listen.score.toString() : "Undefined"}
+        </span>
+      );
+    }
+    return (
+      <span
+        className="listen-time text-muted"
+        title={
+          listen.listened_at_iso?.toString() ||
+          new Date(listen.listened_at * 1000).toISOString()
+        }
+      >
+        {`
+      ${
+        listen.listened_at_iso
+          ? timeago.ago(listen.listened_at_iso, true)
+          : timeago.ago(listen.listened_at * 1000, true)
+      }
+      `}
+        ago &#8212;
       </span>
     );
   };
@@ -211,7 +243,7 @@ export default class ListenCard extends React.Component<
                   <FontAwesomeIcon icon={faMusic as IconProp} /> Playing now
                 </span>
               ) : (
-                this.handleListenedAtForRecommendations()
+                this.handleListenedAt()
               )}
             </div>
           </MediaQuery>
@@ -232,24 +264,8 @@ export default class ListenCard extends React.Component<
                         now &#8212;
                       </span>
                     ) : (
-                      <span
-                        className="listen-time text-muted"
-                        title={
-                          listen.listened_at_iso?.toString() ||
-                          new Date(listen.listened_at * 1000).toISOString()
-                        }
-                      >
-                        {`
-                      ${
-                        listen.listened_at_iso
-                          ? timeago.ago(listen.listened_at_iso, true)
-                          : timeago.ago(listen.listened_at * 1000, true)
-                      }
-                      `}
-                        ago &#8212;
-                      </span>
+                      this.handleListenedAtMobileView()
                     )}
-
                     {` ${getArtistLink(listen)}`}
                   </small>
                 </p>
