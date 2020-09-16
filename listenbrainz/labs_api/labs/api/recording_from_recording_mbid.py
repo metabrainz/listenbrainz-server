@@ -18,7 +18,7 @@ class RecordingFromRecordingMBIDQuery(Query):
         return ("recording-mbid-lookup", "MusicBrainz Recording by MBID Lookup")
 
     def inputs(self):
-        return ['recording_mbid']
+        return ['[recording_mbid]']
 
     def introduction(self):
         return """Look up recording and artist information given a recording MBID"""
@@ -29,20 +29,19 @@ class RecordingFromRecordingMBIDQuery(Query):
 
     def fetch(self, params, offset=-1, count=-1):
 
-        mbids = tuple([ psycopg2.extensions.adapt(p['recording_mbid']) for p in params ])
-
+        mbids = [ p['[recording_mbid]'] for p in params ]
         with psycopg2.connect(current_app.config['MB_DATABASE_URI']) as conn:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
 
                 # First lookup and MBIDs that may have been redirected
-                query = '''SELECT rgr.gid AS recording_mbid_new, 
-                                  r.gid AS recording_mbid_old 
+                query = '''SELECT rgr.gid AS recording_mbid_old, 
+                                  r.gid AS recording_mbid_new 
                              FROM recording_gid_redirect rgr
                              JOIN recording r 
                                ON r.id = rgr.new_id 
                             where rgr.gid in %s'''
 
-                args = [mbids]
+                args = [tuple([ psycopg2.extensions.adapt(p) for p in mbids ])]
                 curs.execute(query, tuple(args))
 
                 redirect_index = {}
@@ -52,12 +51,11 @@ class RecordingFromRecordingMBIDQuery(Query):
                         break
 
                     r = dict(row)
-                    redirect_index[r['recording_mbid_old']] = r['recording_mbid_old']
+                    redirect_index[str(r['recording_mbid_old'])] = str(r['recording_mbid_new'])
 
                 for i, mbid in enumerate(mbids):
                     if mbid in redirect_index:
                         mbids[i] = redirect_index[mbid]
-                        print("%s -> %s" % (str(mbid), str(redirect_index[mbid]))
                         
 
                 query = '''SELECT r.gid AS recording_mbid, r.name AS recording_name, r.length, r.comment, 
@@ -75,7 +73,7 @@ class RecordingFromRecordingMBIDQuery(Query):
                          GROUP BY r.gid, r.id, r.name, r.length, r.comment, ac.id, ac.name
                          ORDER BY r.gid'''
 
-                args = [mbids]
+                args = [tuple([ psycopg2.extensions.adapt(p) for p in mbids ])]
                 if count > 0:
                     query += " LIMIT %s"
                     args.append(count)

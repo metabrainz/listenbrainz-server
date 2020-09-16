@@ -15,5 +15,12 @@ services:
       FLASK_APP: listenbrainz.labs_api.labs.main 
       FLASK_ENV: development
     command: flask run -h 0.0.0.0 -p 80
+    volumes:
+      - ..:/code/listenbrainz:z
     ports:
-      - "80:80"
+      - "3000:80"
+
+networks:
+  default:
+    external:
+      name: musicbrainzdocker_default
