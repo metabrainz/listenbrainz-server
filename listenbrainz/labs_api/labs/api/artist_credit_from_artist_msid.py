@@ -60,7 +60,7 @@ class ArtistCreditIdFromArtistMSIDQuery(Query):
 
                     r = dict(row)
                     r['artist_msid'] = str(r['artist_msid'])
-                    r['[artist_credit_mbid]'] = [str(u) for u in r['artist_credit_mbid'][1:-1].split(',')]
+                    r['[artist_credit_mbid]'] = [str(u) for u in r['artist_credit_mbid']]
                     del r['artist_credit_mbid']
                     results.append(r)
 
