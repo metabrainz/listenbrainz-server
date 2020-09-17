@@ -59,4 +59,4 @@
 10 03 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=daily_activity --range=all_time
 
 # Request recommendations every day at 23:00
-00 23 * * * /code/listenbrainz/docker/cf_recommendation.sh cf
+00 23 * * 1 /code/listenbrainz/docker/cf_recommendation.sh cf
