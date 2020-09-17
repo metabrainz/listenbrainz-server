@@ -829,7 +829,7 @@ def _get_country_codes(artist_msids: Dict[str, int], artist_mbids: Dict[str, int
     all_artist_mbids = defaultdict(lambda: 0)
     for artist_mbid, listen_count in _get_mbids_from_msids(artist_msids).items():
         all_artist_mbids[artist_mbid] += listen_count
-    for artist_mbid, listen_count in artist_mbids:
+    for artist_mbid, listen_count in artist_mbids.items():
         all_artist_mbids[artist_mbid] += listen_count
 
     # Get artist_origin_countries from artist_credit_ids
