@@ -60,18 +60,16 @@ class UserViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assert200(response)
 
         # these are permanent redirects to user/<username>/charts
-        
+
         response = self.client.get('/user/iliekcomputers/history/',follow_redirects=True)
-        assert(response.status_code == 200)
-    
+        self.assert200(response)
         response = self.client.get('/user/iliekcomputers/history', follow_redirects=True)
-        assert(response.status_code == 200)
+        self.assert200(response)
 
         response = self.client.get('/user/iliekcomputers/artists/', follow_redirects=True)
-        assert(response.status_code == 200)
-
+        self.assert200(response)
         response = self.client.get('/user/iliekcomputers/artists', follow_redirects=True)
-        assert(response.status_code == 200)
+        self.assert200(response)
 
     def test_user_page(self):
         response = self.client.get(url_for('user.profile', user_name=self.user.musicbrainz_id))
