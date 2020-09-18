@@ -4,6 +4,7 @@
 import shutil
 import tempfile
 import time
+from flask import current_app
 
 import listenbrainz_spark.request_consumer.jobs.utils as utils
 from datetime import datetime
@@ -56,6 +57,10 @@ def import_newest_incremental_dump_handler():
                 try:
                     imported_dumps.append(import_dump_to_hdfs('incremental', False, dump_id))
                 except DumpNotFoundException:
+                    break
+                except Exception as e:
+                    # Exit if any other error occurs during import
+                    current_app.logger.error(f"Error while importing incremental dump with ID {dump_id}: {e}", exc_info=True)
                     break
             dump_id += 1
     return [{
