@@ -45,7 +45,7 @@ def search_dump(dump_id: int, dump_type: str, imported_at: datetime) -> bool:
 
     result = import_meta_df \
         .filter(import_meta_df.imported_at >= imported_at) \
-        .filter(f"dump_id == {dump_id} AND dump_type == {dump_type}") \
+        .filter(f"dump_id == '{dump_id}' AND dump_type == '{dump_type}'") \
         .count()
 
     return result > 0
@@ -53,6 +53,7 @@ def search_dump(dump_id: int, dump_type: str, imported_at: datetime) -> bool:
 
 def insert_dump_data(dump_id: int, dump_type: str, imported_at: datetime):
     """ Insert information about dump imported """
+    import_meta_df = None
     try:
         import_meta_df = read_files_from_HDFS(IMPORT_METADATA)
     except PathNotFoundException:
@@ -61,7 +62,7 @@ def insert_dump_data(dump_id: int, dump_type: str, imported_at: datetime):
     data = create_dataframe(Row(dump_id, dump_type, imported_at), schema=import_metadata_schema)
     if import_meta_df:
         result = import_meta_df \
-            .filter(f"dump_id != {dump_id} AND dump_type != {dump_type}") \
+            .filter(f"dump_id != '{dump_id}' AND dump_type != '{dump_type}'") \
             .union(data)
     else:
         result = data
