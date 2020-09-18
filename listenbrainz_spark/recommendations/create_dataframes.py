@@ -282,11 +282,12 @@ def get_listens_df(mapped_listens_df, metadata):
     return listens_df
 
 
-def get_recordings_df(mapped_listens_df, metadata):
+def get_recordings_df(msid_mbid_mapping_df, metadata):
     """ Prepare recordings dataframe.
 
         Args:
-            mapped_listens_df (dataframe): listens mapped with msid_mbid_mapping.
+            msid_mbid_mapping_df (dataframe): msid->mbid mapping. For columns refer to
+                                              msid_mbid_mapping_schema in listenbrainz_spark/schema.py
 
         Returns:
             recordings_df: Dataframe containing distinct recordings and corresponding
@@ -294,14 +295,14 @@ def get_recordings_df(mapped_listens_df, metadata):
     """
     recording_window = Window.orderBy('mb_recording_mbid')
 
-    recordings_df = mapped_listens_df.select('mb_artist_credit_id',
-                                             'mb_artist_credit_mbids',
-                                             'mb_recording_mbid',
-                                             'mb_release_mbid',
-                                             'msb_artist_credit_name_matchable',
-                                             'msb_recording_name_matchable') \
-                                     .distinct() \
-                                     .withColumn('recording_id', rank().over(recording_window))
+    recordings_df = msid_mbid_mapping_df.select('mb_artist_credit_id',
+                                                'mb_artist_credit_mbids',
+                                                'mb_recording_mbid',
+                                                'mb_release_mbid',
+                                                'msb_artist_credit_name_matchable',
+                                                'msb_recording_name_matchable') \
+                                        .distinct() \
+                                        .withColumn('recording_id', rank().over(recording_window))
 
     metadata['recordings_count'] = recordings_df.count()
     save_dataframe(recordings_df, path.RECORDINGS_DATAFRAME_PATH)
@@ -414,7 +415,7 @@ def main(train_model_window=None):
     users_df = get_users_dataframe(mapped_listens_df, metadata)
 
     current_app.logger.info('Preparing recordings data and saving to HDFS...')
-    recordings_df = get_recordings_df(mapped_listens_df, metadata)
+    recordings_df = get_recordings_df(msid_mbid_mapping_df, metadata)
 
     current_app.logger.info('Preparing listen data dump and playcounts, saving playcounts to HDFS...')
     listens_df = get_listens_df(mapped_listens_df, metadata)
