@@ -72,3 +72,33 @@ def delete(user_0: int, user_1: int, relationship_type: str) -> None:
             "user_1": user_1,
             "relationship_type": relationship_type,
         })
+
+def get_followers_for_user(followed: int) -> list:
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT "user".musicbrainz_id AS user_name
+              FROM user_relationship
+              JOIN "user"
+                ON "user".id = user_0
+             WHERE user_1 = :followed
+               AND relationship_type = 'follow'
+
+        """), {
+            "followed": followed,
+        })
+        return [dict(row) for row in result.fetchall()]
+
+def get_following_for_user(follower: int) -> list:
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text("""
+            SELECT "user".musicbrainz_id AS user_name
+              FROM user_relationship
+              JOIN "user"
+                ON "user".id = user_1
+             WHERE user_0 = :follower
+               AND relationship_type = 'follow'
+
+        """), {
+            "follower": follower,
+        })
+        return [dict(row) for row in result.fetchall()]
