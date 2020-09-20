@@ -229,12 +229,6 @@ def unfollow_user(user_name: str):
 
     return jsonify({"status": 200, "message": "Success!"})
 
-@user_bp.route('/feed/events', methods=['OPTIONS', 'GET'])
-@login_required
-def user_feed():
-    user = _get_user(user_name)
-    return jsonify({"data": [])
-
 
 @user_bp.route('/<user_name>/get-followers')
 def get_followers(user_name: str):

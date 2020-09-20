@@ -127,6 +127,11 @@ def get_listens(user_name):
     }})
 
 
+@api_bp.route('/user/<user_name>/feed/events', methods=['OPTIONS', 'GET'])
+def user_feed():
+    return jsonify({"data": []})
+
+
 @api_bp.route("/user/<user_name>/listen-count")
 @crossdomain()
 @ratelimit()
