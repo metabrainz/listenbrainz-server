@@ -377,14 +377,16 @@ class HandlersTestCase(unittest.TestCase):
     @mock.patch('listenbrainz.spark.handlers.send_mail')
     def test_notify_mapping_import(self, mock_send_mail):
         with self.app.app_context():
-            time = datetime.now()
+            import_time = datetime.now()
+            time_taken_to_import = 11
             mapping_name = 'msid-mbid-mapping-with-matchable-20200603-202731.tar.bz2'
 
             # testing, should not send a mail
             self.app.config['TESTING'] = True
             notify_mapping_import({
                 'imported_mapping': mapping_name,
-                'time': str(time),
+                'import_time': str(import_time),
+                'time_taken_to_import': str(time_taken_to_import),
             })
             mock_send_mail.assert_not_called()
 
@@ -392,21 +394,24 @@ class HandlersTestCase(unittest.TestCase):
             self.app.config['TESTING'] = False
             notify_mapping_import({
                 'imported_mapping': mapping_name,
-                'time': str(time),
+                'import_time': str(import_time),
+                'time_taken_to_import': str(time_taken_to_import),
             })
             mock_send_mail.assert_called_once()
 
     @mock.patch('listenbrainz.spark.handlers.send_mail')
     def test_notify_artist_relation_import(self, mock_send_mail):
         with self.app.app_context():
-            time = datetime.now()
+            import_time = datetime.now()
+            time_taken_to_import = 11
             artist_relation_name = 'artist-credit-artist-credit-relations-01-20191230-134806.tar.bz2'
 
             # testing, should not send a mail
             self.app.config['TESTING'] = True
             notify_artist_relation_import({
                 'import_artist_relation': artist_relation_name,
-                'time': str(time),
+                'import_time': str(import_time),
+                'time_taken_to_import': str(time_taken_to_import),
             })
             mock_send_mail.assert_not_called()
 
@@ -414,7 +419,8 @@ class HandlersTestCase(unittest.TestCase):
             self.app.config['TESTING'] = False
             notify_artist_relation_import({
                 'import_artist_relation': artist_relation_name,
-                'time': str(time),
+                'import_time': str(import_time),
+                'time_taken_to_import': str(time_taken_to_import),
             })
             mock_send_mail.assert_called_once()
 

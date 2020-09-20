@@ -58,5 +58,8 @@
 # user weekly daily_activity
 10 03 * * * /usr/local/bin/python /code/listenbrainz/manage.py spark request_user_stats --type=daily_activity --range=all_time
 
-# Request recommendations every Monday at 23:00
-00 23 * * 1 /code/listenbrainz/docker/cf_recommendation.sh cf
+# Import mapping into the spark cluster every Monday before generating recommendations.
+00 4 * * 1 /usr/local/bin/python /code/listenbrainz/manage.py spark request_import_mapping
+
+# Request recommendations every Monday after dump and mapping has been imported into the spark cluster
+00 5 * * 1 /code/listenbrainz/docker/cf_recommendation.sh cf

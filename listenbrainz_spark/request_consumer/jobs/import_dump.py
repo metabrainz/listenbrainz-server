@@ -3,6 +3,7 @@
 
 import shutil
 import tempfile
+import time
 
 from datetime import datetime
 from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
@@ -56,6 +57,7 @@ def import_incremental_dump_by_id_handler(id: int):
 
 
 def import_mapping_to_hdfs():
+    ts = time.monotonic()
     temp_dir = tempfile.mkdtemp()
     src, mapping_name = ListenbrainzDataDownloader().download_msid_mbid_mapping(directory=temp_dir)
     ListenbrainzDataUploader().upload_mapping(archive=src)
@@ -64,11 +66,13 @@ def import_mapping_to_hdfs():
     return [{
         'type': 'import_mapping',
         'imported_mapping': mapping_name,
-        'time': str(datetime.utcnow())
+        'import_time': str(datetime.utcnow()),
+        'time_taken_to_import': '{:.2f}'.format(time.monotonic() - ts)
     }]
 
 
 def import_artist_relation_to_hdfs():
+    ts = time.monotonic()
     temp_dir = tempfile.mkdtemp()
     src, artist_relation_name = ListenbrainzDataDownloader().download_artist_relation(directory=temp_dir)
     ListenbrainzDataUploader().upload_artist_relation(archive=src)
@@ -77,5 +81,6 @@ def import_artist_relation_to_hdfs():
     return [{
         'type': 'import_artist_relation',
         'imported_artist_relation': artist_relation_name,
-        'time': str(datetime.utcnow())
+        'import_time': str(datetime.utcnow()),
+        'time_taken_to_import': '{:.2f}'.format(time.monotonic() - ts)
     }]

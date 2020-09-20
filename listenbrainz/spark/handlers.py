@@ -320,10 +320,13 @@ def notify_mapping_import(data):
         return
 
     mapping_name = data['imported_mapping']
-    import_completion_time = data['time']
+    import_time = data['import_time']
+    time_taken_to_import = data['time_taken_to_import']
+
     send_mail(
         subject='MSID MBID mapping has been imported into the Spark cluster',
-        text=render_template('emails/mapping_import_notification.txt', mapping_name=mapping_name, time=import_completion_time),
+        text=render_template('emails/mapping_import_notification.txt', mapping_name=mapping_name, import_time=import_time,
+                             time_taken_to_import=time_taken_to_import),
         recipients=['listenbrainz-observability@metabrainz.org'],
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
@@ -337,11 +340,14 @@ def notify_artist_relation_import(data):
         return
 
     artist_relation_name = data['import_artist_relation']
-    import_completion_time = data['time']
+    import_time = data['import_time']
+    time_taken_to_import = data['time_taken_to_import']
+
     send_mail(
         subject='Artist relation has been imported into the Spark cluster',
         text=render_template('emails/artist_relation_import_notification.txt',
-                             artist_relation_name=artist_relation_name, time=import_completion_time),
+                             artist_relation_name=artist_relation_name, import_time=import_time,
+                             time_taken_to_import=time_taken_to_import),
         recipients=['listenbrainz-observability@metabrainz.org'],
         from_name='ListenBrainz',
         from_addr='noreply@'+current_app.config['MAIL_FROM_DOMAIN'],
