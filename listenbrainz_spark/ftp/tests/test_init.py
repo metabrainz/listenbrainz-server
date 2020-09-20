@@ -91,6 +91,6 @@ class FTPTestCase(SparkTestCase):
     @patch('ftplib.FTP')
     def test_read_sha_file_(self, mock_ftp_cons):
         mock_ftp = mock_ftp_cons.return_value
-        with patch('listenbrainz_spark.ftp.open', mock_open(read_data='  test  filename  \n'), create=True) as mock_file:
+        with patch('listenbrainz_spark.ftp.open', mock_open(read_data='  test\n filename  \n'), create=True) as mock_file:
             result = listenbrainz_spark.ftp.ListenBrainzFTPDownloader()._read_sha_file("/sha_file.sha256")
             self.assertEqual('test', result)
