@@ -66,7 +66,8 @@ class DumpImporterJobTestCase(unittest.TestCase):
         self.assertEqual(len(message), 1)
         self.assertEqual(message[0]['imported_mapping'], 'msid-mbid-mapping-with-matchable-20200603-202731.tar.bz2')
         self.assertTrue(message[0]['type'], 'import_mapping')
-        self.assertTrue('time' in message[0])
+        self.assertTrue('import_time' in message[0])
+        self.assertTrue('time_taken_to_import' in message[0])
 
     @patch('ftplib.FTP')
     @patch('listenbrainz_spark.ftp.download.ListenbrainzDataDownloader.download_artist_relation')
@@ -88,4 +89,5 @@ class DumpImporterJobTestCase(unittest.TestCase):
         self.assertEqual(message[0]['imported_artist_relation'],
                          'artist-credit-artist-credit-relations-01-20191230-134806.tar.bz2')
         self.assertTrue(message[0]['type'], 'import_artist_relation')
-        self.assertTrue('time' in message[0])
+        self.assertTrue('import_time' in message[0])
+        self.assertTrue('time_taken_to_import' in message[0])
