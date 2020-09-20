@@ -1,5 +1,6 @@
 import ujson
 from flask import Blueprint, request, jsonify, current_app
+from listenbrainz.listenstore import TimescaleListenStore
 from listenbrainz.webserver.errors import APIBadRequest, APIInternalServerError, APIUnauthorized, APINotFound, APIServiceUnavailable
 from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import crossdomain
@@ -14,6 +15,7 @@ from listenbrainz.listenstore.timescale_listenstore import SECONDS_IN_TIME_RANGE
 import time
 import psycopg2
 from listenbrainz.webserver.timescale_connection import _ts
+from typing import Tuple
 
 api_bp = Blueprint('api_v1', __name__)
 
@@ -98,38 +100,13 @@ def get_listens(user_name):
     :param min_ts: If you specify a ``min_ts`` timestamp, listens with listened_at greater than (but not including) this value will be returned.
     :param count: Optional, number of listens to return. Default: :data:`~webserver.views.api.DEFAULT_ITEMS_PER_GET` . Max: :data:`~webserver.views.api.MAX_ITEMS_PER_GET`
     :param time_range: This parameter determines the time range for the listen search. Each increment of the time_range corresponds to a range of 5 days and the default
-                       time_range of 3 means that 15 days will be searched. 
+                       time_range of 3 means that 15 days will be searched.
                        Default: :data:`~webserver.views.api.DEFAULT_TIME_RANGE` . Max: :data:`~webserver.views.api.MAX_TIME_RANGE`
     :statuscode 200: Yay, you have data!
     :resheader Content-Type: *application/json*
     """
-
-    current_time = int(time.time())
-    max_ts = _parse_int_arg("max_ts")
-    min_ts = _parse_int_arg("min_ts")
-    time_range = _parse_int_arg("time_range", DEFAULT_TIME_RANGE)
-
-    if time_range < 1 or time_range > MAX_TIME_RANGE:
-        log_raise_400("time_range must be between 1 and %d." % MAX_TIME_RANGE)
-
-    if max_ts and min_ts:
-        if max_ts < min_ts:
-            log_raise_400("max_ts should be greater than min_ts")
-        
-        if (max_ts - min_ts) > MAX_TIME_RANGE * SECONDS_IN_TIME_RANGE:
-            log_raise_400("time_range specified by min_ts and max_ts should be less than %d days." % MAX_TIME_RANGE * 5)
-
     db_conn = webserver.create_timescale(current_app)
-    (min_ts_per_user, max_ts_per_user) = db_conn.get_timestamps_for_user(user_name)
-
-    # If none are given, start with now and go down
-    if max_ts == None and min_ts == None:
-        max_ts = max_ts_per_user + 1
-
-    # Validate requetsed listen count is positive
-    count = min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET)
-    if count < 0:
-        log_raise_400("Number of listens requested should be positive")
+    min_ts, max_ts, count, time_range, max_ts_per_user = _validate_get_endpoint_params(db_conn, user_name)
 
     listens = db_conn.fetch_listens(
         user_name,
@@ -442,3 +419,32 @@ def _get_listen_type(listen_type):
         'import': LISTEN_TYPE_IMPORT,
         'playing_now': LISTEN_TYPE_PLAYING_NOW
     }.get(listen_type)
+
+
+def _validate_get_endpoint_params(db_conn: TimescaleListenStore, user_name: str) -> Tuple[int, int, int, int, int]:
+    max_ts = _parse_int_arg("max_ts")
+    min_ts = _parse_int_arg("min_ts")
+    time_range = _parse_int_arg("time_range", DEFAULT_TIME_RANGE)
+
+    if time_range < 1 or time_range > MAX_TIME_RANGE:
+        log_raise_400("time_range must be between 1 and %d." % MAX_TIME_RANGE)
+
+    if max_ts and min_ts:
+        if max_ts < min_ts:
+            log_raise_400("max_ts should be greater than min_ts")
+
+        if (max_ts - min_ts) > MAX_TIME_RANGE * SECONDS_IN_TIME_RANGE:
+            log_raise_400("time_range specified by min_ts and max_ts should be less than %d days." % MAX_TIME_RANGE * 5)
+
+    _, max_ts_per_user = db_conn.get_timestamps_for_user(user_name)
+
+    # If none are given, start with now and go down
+    if max_ts == None and min_ts == None:
+        max_ts = max_ts_per_user + 1
+
+    # Validate requetsed listen count is positive
+    count = min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET)
+    if count < 0:
+        log_raise_400("Number of items requested should be positive")
+
+    return min_ts, max_ts, count, time_range, max_ts_per_user
