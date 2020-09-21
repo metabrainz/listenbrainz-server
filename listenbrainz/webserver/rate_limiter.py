@@ -7,7 +7,7 @@
 import time
 from functools import update_wrapper
 from flask import request, g
-from listenbrainz.webserver.redis_connection import _redis
+from listenbrainz.webserver import redis_connection
 import listenbrainz.db.user as db_user
 from listenbrainz.redis_keys import RATELIMIT_PER_TOKEN_KEY, RATELIMIT_PER_IP_KEY, RATELIMIT_WINDOW_KEY
 
@@ -46,7 +46,7 @@ class RateLimit(object):
         self.key = key_prefix + str(self.reset)
         self.limit = limit
         self.per = per
-        p = _redis.redis.pipeline()
+        p = redis_connection._redis.redis.pipeline()
         p.incr(self.key)
         p.expireat(self.key, self.reset + self.expiration_window)
         self.current = p.execute()[0]
@@ -62,30 +62,30 @@ def on_over_limit(limit):
            'information on your current rate limit.\n', 429
 
 def set_rate_limits(per_ip, per_token, window):
-    _redis.redis.put(RATELIMIT_PER_TOKEN_KEY, per_token)
-    _redis.redis.put(RATELIMIT_PER_IP_KEY, per_ip)
-    _redis.redis.put(RATELIMIT_WINDOW_KEY, window)
+    redis_connection._redis.redis.put(RATELIMIT_PER_TOKEN_KEY, per_token)
+    redis_connection._redis.redis.put(RATELIMIT_PER_IP_KEY, per_ip)
+    redis_connection._redis.redis.put(RATELIMIT_WINDOW_KEY, window)
 
 def check_limit_freshness():
     limits_timeout = getattr(g, '_' + RATELIMIT_TIMEOUT, 0)
     if time.time() <= limits_timeout:
         return
 
-    value = int(_redis.redis.get(RATELIMIT_PER_TOKEN_KEY) or '0')
+    value = int(redis_connection._redis.redis.get(RATELIMIT_PER_TOKEN_KEY) or '0')
     if not value:
-        _redis.redis.set(RATELIMIT_PER_TOKEN_KEY, RATELIMIT_PER_TOKEN_DEFAULT)
+        redis_connection._redis.redis.set(RATELIMIT_PER_TOKEN_KEY, RATELIMIT_PER_TOKEN_DEFAULT)
         value = RATELIMIT_PER_TOKEN_DEFAULT
     setattr(g, '_' + RATELIMIT_PER_TOKEN_KEY, value)
 
-    value = int(_redis.redis.get(RATELIMIT_PER_IP_KEY) or '0')
+    value = int(redis_connection._redis.redis.get(RATELIMIT_PER_IP_KEY) or '0')
     if not value:
-        _redis.redis.set(RATELIMIT_PER_IP_KEY, RATELIMIT_PER_IP_DEFAULT)
+        redis_connection._redis.redis.set(RATELIMIT_PER_IP_KEY, RATELIMIT_PER_IP_DEFAULT)
         value = RATELIMIT_PER_IP_DEFAULT
     setattr(g, '_' + RATELIMIT_PER_IP_KEY, value)
 
-    value = int(_redis.redis.get(RATELIMIT_WINDOW_KEY) or '0')
+    value = int(redis_connection._redis.redis.get(RATELIMIT_WINDOW_KEY) or '0')
     if not value:
-        _redis.redis.set(RATELIMIT_WINDOW_KEY, RATELIMIT_WINDOW_DEFAULT)
+        redis_connection._redis.redis.set(RATELIMIT_WINDOW_KEY, RATELIMIT_WINDOW_DEFAULT)
         value = RATELIMIT_WINDOW_DEFAULT
     setattr(g, '_' + RATELIMIT_WINDOW_KEY, value)
 
