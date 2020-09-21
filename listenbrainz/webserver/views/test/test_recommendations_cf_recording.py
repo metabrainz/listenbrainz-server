@@ -252,8 +252,8 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         ]
 
         data = [
-            {'recording_mbid': "03f1b16a-af43-4cd7-b22c-d2991bf011a3"},
-            {'recording_mbid': "2c8412f0-9353-48a2-aedb-1ad8dac9498f"}
+            {'[recording_mbid]': "03f1b16a-af43-4cd7-b22c-d2991bf011a3"},
+            {'[recording_mbid]': "2c8412f0-9353-48a2-aedb-1ad8dac9498f"}
         ]
 
         text = [
