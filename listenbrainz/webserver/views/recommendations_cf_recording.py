@@ -95,7 +95,7 @@ def _get_template(active_section, user):
     spotify_data = {}
     current_user_data = {}
 
-    if current_user:
+    if current_user.is_authenticated:
         spotify_data = spotify.get_user_dict(current_user.id)
 
         current_user_data = {
