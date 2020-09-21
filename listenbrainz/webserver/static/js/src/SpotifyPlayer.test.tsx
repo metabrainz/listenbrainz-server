@@ -17,6 +17,7 @@ const props = {
   onProgressChange: (progressMs: number) => {},
   onDurationChange: (durationMs: number) => {},
   onTrackInfoChange: (title: string, artist?: string) => {},
+
   onTrackEnd: () => {},
   onTrackNotFound: () => {},
   handleError: (error: string | Error, title?: string) => {},

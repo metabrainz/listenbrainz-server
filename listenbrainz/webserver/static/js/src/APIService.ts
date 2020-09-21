@@ -133,34 +133,29 @@ export default class APIService {
         listen_type: listenType,
         payload,
       } as SubmitListensPayload;
-
       const url = `${this.APIBaseURI}/submit-listens`;
+      while (true) {
+        try {
+          // eslint-disable-next-line no-await-in-loop
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              Authorization: `Token ${userToken}`,
+              "Content-Type": "application/json;charset=UTF-8",
+            },
+            body: JSON.stringify(struct),
+          });
 
-      try {
-        const response = await fetch(url, {
-          method: "POST",
-          headers: {
-            Authorization: `Token ${userToken}`,
-            "Content-Type": "application/json;charset=UTF-8",
-          },
-          body: JSON.stringify(struct),
-        });
-
-        // we skip listens if we get an error code that's not a rate limit
-        if (response.status === 429) {
-          // Rate limit error, this should never happen, but if it does, try again in 3 seconds.
-          setTimeout(
-            () => this.submitListens(userToken, listenType, payload),
-            3000
-          );
+          // we skip listens if we get an error code that's not a rate limit
+          if (response.status === 429) {
+            // Rate limit error, this should never happen, but if it does, try again in 3 seconds.
+            setTimeout(() => {}, 3000);
+          }
+          return response; // Return response so that caller can handle appropriately
+        } catch {
+          // Retry if there is an network error
+          setTimeout(() => {}, 3000);
         }
-        return response; // Return response so that caller can handle appropriately
-      } catch {
-        // Retry if there is an network error
-        setTimeout(
-          () => this.submitListens(userToken, listenType, payload),
-          3000
-        );
       }
     }
 
