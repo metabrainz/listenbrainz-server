@@ -1,0 +1,23 @@
+{% extends 'recommendations_cf_recording/base.html' %}
+
+{% block profile_content %}
+
+    {{ super() }}
+    {% if not error_msg%}
+    <div style="margin-top:20px">
+        <p>Your Similar Artist playlist was last updated on <b>{{ last_updated }}</b>.</p>
+    </div>
+    {% endif %}
+    {% if error_msg %}
+        <div>
+            <h2>Error</h2>
+            <p>{{ error_msg }}</p>
+      </div>
+    {% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script src="{{ get_static_path('main.js') }}" type="text/javascript"></script>
+{% endblock %}

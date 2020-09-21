@@ -21,6 +21,7 @@ const listen: Listen = {
       recording_msid: "bar",
     },
   },
+  score: 2.3,
 };
 
 const props: ListenCardProps = {
@@ -54,6 +55,14 @@ describe("ListenCard", () => {
   it("renders correctly for mode = 'recent '", () => {
     const wrapper = mount<ListenCard>(
       <ListenCard {...{ ...props, mode: "recent" }} />
+    );
+
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it("renders correctly for mode = 'cf_recs'", () => {
+    const wrapper = mount<ListenCard>(
+      <ListenCard {...{ ...props, mode: "cf_recs" }} />
     );
 
     expect(wrapper).toMatchSnapshot();

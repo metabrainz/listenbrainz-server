@@ -43,6 +43,7 @@ declare type Listen = {
     track_name: string;
     additional_info?: AdditionalInfo;
   };
+  score?: number;
 };
 
 declare type ListenBrainzUser = {
@@ -296,7 +297,7 @@ declare type UserArtistMapDatum = {
 
 declare type UserArtistMapData = Array<UserArtistMapDatum>;
 
-declare type ListensListMode = "listens" | "follow" | "recent";
+declare type ListensListMode = "listens" | "follow" | "recent" | "cf_recs";
 
 declare type ListenFeedBack = 1 | 0 | -1;
 
