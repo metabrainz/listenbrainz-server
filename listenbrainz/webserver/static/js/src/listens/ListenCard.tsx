@@ -178,6 +178,7 @@ export default class ListenCard extends React.Component<
           title={listen.score ? listen.score.toString() : "Undefined"}
         >
           score: {listen.score ? listen.score.toString() : "Undefined"}
+          &nbsp; &#8212; &nbsp;
         </span>
       );
     }
@@ -196,7 +197,7 @@ export default class ListenCard extends React.Component<
           : timeago.ago(listen.listened_at * 1000, true)
       }
       `}
-        ago &#8212;
+        ago &#8212; &nbsp;
       </span>
     );
   };
@@ -266,7 +267,7 @@ export default class ListenCard extends React.Component<
                     ) : (
                       this.handleListenedAtMobileView()
                     )}
-                    {` ${getArtistLink(listen)}`}
+                    {getArtistLink(listen)}
                   </small>
                 </p>
               </div>
