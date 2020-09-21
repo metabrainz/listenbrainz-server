@@ -45,9 +45,10 @@ def import_full_dump_by_id_handler(id: int):
 def import_newest_incremental_dump_handler():
     imported_dumps = []
     latest_full_dump = utils.get_latest_full_dump()
-    if not latest_full_dump:
+    if latest_full_dump is None:
         # If no prior full dump is present, just import the lates incremental dump
         imported_dumps.append(import_dump_to_hdfs('incremental', overwrite=False))
+        current_app.logger.warn("No previous full dump found, importing latest incremental dump", exc_info=True)
     else:
         # Import all missing dumps from last full dump import
         dump_id = latest_full_dump["dump_id"] + 1
