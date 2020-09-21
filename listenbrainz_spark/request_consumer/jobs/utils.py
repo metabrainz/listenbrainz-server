@@ -7,7 +7,7 @@ from listenbrainz_spark.exceptions import PathNotFoundException
 from listenbrainz_spark.path import IMPORT_METADATA
 from listenbrainz_spark.schema import import_metadata_schema
 from listenbrainz_spark.utils import (create_dataframe, read_files_from_HDFS,
-                                      save_parquet)
+                                      save_parquet, path_exists, delete_dir, rename)
 from pyspark.sql import Row
 from pyspark.sql.functions import col
 
@@ -67,4 +67,8 @@ def insert_dump_data(dump_id: int, dump_type: str, imported_at: datetime):
     else:
         result = data
 
-    save_parquet(result, IMPORT_METADATA)
+    # We have to save the dataframe as a different file and move it as the df itself is read from the file
+    save_parquet(result, "/temp.parquet")
+    if path_exists(IMPORT_METADATA):
+        delete_dir(IMPORT_METADATA, recursive=True)
+    rename("/temp.parquet", IMPORT_METADATA)
