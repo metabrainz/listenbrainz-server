@@ -9,7 +9,7 @@ The component uses collaborative filtering to recommend recordings to users base
 **Note**:  The listening history and supporting data used by ListenBrainz is heavy for the local environment. We are trying to release small test datasets soon to make the development experience smooth.
 
 
-## Production environemnt
+## Production environment
 
 These instructions help to request recommendations from Spark cluster in prod.
 
