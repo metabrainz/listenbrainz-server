@@ -13,6 +13,8 @@ Artists similar to top artists are fetched from the artist_relations_df and the 
 in a manner similar to the generation of the top artist candidate set.
 
 The top artist and similar artist candidate set dataframes are saved to HDFS. For HDFS path of dataframes refer to listenbrainz_spark/path.py
+
+Note: users and recordings that are in candidate set but not in the training set will be discarded by the recommender.
 """
 
 import os
