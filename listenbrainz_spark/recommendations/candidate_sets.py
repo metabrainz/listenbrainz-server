@@ -143,7 +143,7 @@ def explode_artist_collaborations(df):
         Explode the artist_mbids list and get the indivial artist mbid.
 
         For Example:
-        Before:
+            Before:
             -----------------------
             |  artist_credit_mbids|
             -----------------------
