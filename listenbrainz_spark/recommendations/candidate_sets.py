@@ -171,10 +171,12 @@ def explode_artist_collaborations(df):
            .where(func.size('mb_artist_credit_mbids') > 1) \
            .withColumn('mb_artist_credit_mbids', func.explode('mb_artist_credit_mbids')) \
            .select(col('mb_artist_credit_mbids').alias('mbids'),
-                   col('user_name'),
-                   col('total_count'))
+                   col('total_count'),
+                   col('user_name'))
 
-    res_df = convert_string_datatype_to_array(df)
+    res_df = convert_string_datatype_to_array(df).select(col('mb_artist_credit_mbids'),
+                                                         col('total_count'),
+                                                         col('user_name'))
 
     return res_df
 
@@ -208,19 +210,19 @@ def append_artists_from_collaborations(top_artist_df):
 
     # get artist credit id corresponding to artist mbid.
     res_df = msid_mbid_mapping_df.join(df, 'mb_artist_credit_mbids', 'inner') \
-                                 .select(col('mb_artist_credit_id').alias('top_artist_credit_id'),
+                                 .select(col('mb_artist_credit_mbids'),
+                                         col('mb_artist_credit_id').alias('top_artist_credit_id'),
                                          col('msb_artist_credit_name_matchable').alias('top_artist_name'),
-                                         col('user_name'),
-                                         col('mb_artist_credit_mbids'),
-                                         col('total_count')) \
+                                         col('total_count'),
+                                         col('user_name')) \
                                  .distinct()
 
     # append the exploded df to top artist df
     top_artist_df = top_artist_df.union(res_df) \
                                  .select('top_artist_credit_id',
                                          'top_artist_name',
-                                         'user_name',
-                                         'total_count') \
+                                         'total_count',
+                                         'user_name') \
                                  .distinct()
     # using distinct for extra care since pyspark union ~ SQL union all.
 
@@ -258,19 +260,19 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
 
     top_artist_df = df.withColumn('rank', row_number().over(window)) \
                       .where(col('rank') <= top_artist_limit) \
-                      .select(col('mb_artist_credit_id').alias('top_artist_credit_id'),
+                      .select(col('mb_artist_credit_mbids'),
+                              col('mb_artist_credit_id').alias('top_artist_credit_id'),
                               col('msb_artist_credit_name_matchable').alias('top_artist_name'),
-                              col('user_name'),
-                              col('mb_artist_credit_mbids'),
-                              col('total_count'))
+                              col('total_count'),
+                              col('user_name'))
 
     top_artist_df = append_artists_from_collaborations(top_artist_df)
 
     if users:
         top_artist_given_users_df = top_artist_df.select('top_artist_credit_id',
                                                          'top_artist_name',
-                                                         'user_name',
-                                                         'total_count') \
+                                                         'total_count',
+                                                         'user_name') \
                                                  .where(top_artist_df.user_name.isin(users))
 
         if _is_empty_dataframe(top_artist_given_users_df):
