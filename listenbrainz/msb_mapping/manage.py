@@ -9,7 +9,6 @@ import click
 from mapping.msid_mapping import create_mapping as action_create_mapping
 from mapping.recording_pairs import create_pairs as action_create_pairs
 from mapping.mapping_test.mapping_test import test_mapping as action_test_mapping
-from mapping.mapping_test.pair_test import test_pairs as action_test_pairs
 from mapping.write_mapping import write_all_mappings as action_write_all_mappings
 from mapping.utils import log, CRON_LOG_FILE
 
