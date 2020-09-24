@@ -230,10 +230,10 @@ class TimescaleListenStore(ListenStore):
                         which is slow and should be avoided if at all possible.
         """
 
-        return self.fetch_listen_for_multiple_users_from_storage([user_name], from_ts, to_ts, limit, order, time_range)
+        return self.fetch_listens_for_multiple_users_from_storage([user_name], from_ts, to_ts, limit, order, time_range)
 
 
-    def fetch_listen_for_multiple_users_from_storage(self, user_names: List[str], from_ts: float, to_ts: float, limit: int, order: int, time_range: int=3):
+    def fetch_listens_for_multiple_users_from_storage(self, user_names: List[str], from_ts: float, to_ts: float, limit: int, order: int, time_range: int=3):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving
             the value they are converted to the local server's timezone. So to compare
             datetime object we need to create a object in the same timezone as the server.

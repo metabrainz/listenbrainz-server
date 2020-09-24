@@ -6,6 +6,7 @@ from listenbrainz.db.exceptions import DatabaseException
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz import webserver
 import listenbrainz.db.user as db_user
+import listenbrainz.db.user_relationship as db_user_relationship
 from listenbrainz.webserver.rate_limiter import ratelimit
 import listenbrainz.webserver.redis_connection as redis_connection
 from listenbrainz.webserver.views.api_tools import insert_payload, log_raise_400, validate_listen, parse_param_list,\
@@ -127,9 +128,34 @@ def get_listens(user_name):
     }})
 
 
-@api_bp.route('/user/<user_name>/feed/events', methods=['OPTIONS', 'GET'])
-def user_feed():
-    return jsonify({"data": []})
+@api_bp.route('/user/<user_name>/feed/listens', methods=['OPTIONS', 'GET'])
+def user_feed(user_name: str):
+    db_conn = webserver.create_timescale(current_app)
+    min_ts, max_ts, count, time_range, max_ts_per_user = _validate_get_endpoint_params(db_conn, user_name)
+    user =  db_user.get_by_mb_id(user_name)
+    if not user:
+        raise APINotFound(f"User {user_name} not found")
+
+    users_following = db_user_relationship.get_following_for_user(user['id'])
+    listens = db_conn.fetch_listens_for_multiple_users_from_storage(
+        users_following,
+        limit=count,
+        from_ts=min_ts,
+        to_ts=max_ts,
+        time_range=time_range,
+        order=1, # descending
+    )
+
+    listen_data = []
+    for listen in listens:
+        listen_data.append(listen.to_api())
+
+    return jsonify({'payload': {
+        'user_id': user_name,
+        'count': len(listen_data),
+        'feed': listen_data,
+        'latest_listen_ts': max_ts_per_user,
+    }})
 
 
 @api_bp.route("/user/<user_name>/listen-count")
@@ -427,6 +453,10 @@ def _get_listen_type(listen_type):
 
 
 def _validate_get_endpoint_params(db_conn: TimescaleListenStore, user_name: str) -> Tuple[int, int, int, int, int]:
+    """ Validates parameters for listen GET endpoints like /username/listens and /username/feed/events
+
+    Returns a tuple of 5 integers: (min_ts, max_ts, count, time_range, max_ts_per_user)
+    """
     max_ts = _parse_int_arg("max_ts")
     min_ts = _parse_int_arg("min_ts")
     time_range = _parse_int_arg("time_range", DEFAULT_TIME_RANGE)
