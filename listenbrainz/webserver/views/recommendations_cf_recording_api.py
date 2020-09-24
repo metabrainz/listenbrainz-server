@@ -8,7 +8,7 @@ from listenbrainz.webserver.views.api_tools import (DEFAULT_ITEMS_PER_GET,
 
 from enum import Enum
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from listenbrainz.webserver.decorators import crossdomain
 from listenbrainz.webserver.rate_limiter import ratelimit
 
@@ -99,7 +99,7 @@ def get_recommendations(user_name):
             'entity': "recording",
             'type': artist_type,
             'user_name': user_name,
-            'last_updated': int(recommendations['created'].timestamp()),
+            'last_updated': int(getattr(recommendations, 'created').timestamp()),
             'count': len(mbid_list),
             'total_mbid_count': total_mbid_count,
             'offset': offset
@@ -127,10 +127,12 @@ def _process_recommendations(recommendations, count, artist_type, user_name, off
             APINoContent: if recommendations not found.
     """
     if artist_type == 'similar':
-        mbid_list = recommendations['recording_mbid']['similar_artist']
+        data = getattr(recommendations, 'recording_mbid').dict()
+        mbid_list = data['similar_artist']
 
     elif artist_type == 'top':
-        mbid_list = recommendations['recording_mbid']['top_artist']
+        data = getattr(recommendations, 'recording_mbid').dict()
+        mbid_list = data['top_artist']
 
     total_mbid_count = len(mbid_list)
 

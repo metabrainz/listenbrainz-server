@@ -71,7 +71,7 @@ def _get_template(active_section, user):
             error_msg="Recommended tracks for the user have not been calculated. Check back later."
         )
 
-    result = data['recording_mbid'][active_section]
+    result = getattr(data, 'recording_mbid').dict()[active_section]
 
     if not result:
         return render_template(
@@ -122,7 +122,7 @@ def _get_template(active_section, user):
         active_section=active_section,
         props=ujson.dumps(props),
         user=user,
-        last_updated=data['created'].strftime('%d %b %Y')
+        last_updated=getattr(data, 'created').strftime('%d %b %Y')
     )
 
 
@@ -153,9 +153,9 @@ def _get_listens_from_recording_mbid(mbids_and_ratings_list):
     mbids_and_ratings = {}
 
     for r in mbids_and_ratings_list:
-        data.append({'[recording_mbid]': r[0]})
+        data.append({'[recording_mbid]': r['recording_mbid']})
         # get score corresponding to recording mbid.
-        mbids_and_ratings[r[0]] = r[1]
+        mbids_and_ratings[r['recording_mbid']] = r['score']
 
     r = requests.post(SERVER_URL, json=data)
     if r.status_code != 200:
@@ -163,7 +163,7 @@ def _get_listens_from_recording_mbid(mbids_and_ratings_list):
             current_app.logger.error('Invalid data was sent to the labs API.\nData: {}'.format(data))
             raise BadRequest
         else:
-            current_app.logger.error("API didn't send a valid responce due to Internal Server Error.")
+            current_app.logger.error("API didn't send a valid response due to Internal Server Error.\nData: {}".format(data))
             raise InternalServerError
 
     try:

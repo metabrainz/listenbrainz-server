@@ -15,6 +15,9 @@ from listenbrainz_spark.exceptions import (PathNotFoundException,
                                            RatingOutOfRangeException,
                                            EmptyDataframeExcpetion)
 
+from data.model.user_cf_recommendations_recording_message import (UserRecommendationsRecord,
+                                                                  UserRecommendationsMessage)
+
 from listenbrainz_spark.recommendations.train_models import get_model_path
 from listenbrainz_spark.recommendations.candidate_sets import _is_empty_dataframe
 
@@ -277,11 +280,30 @@ def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_u
 
         if user_rec.get(row.user_name) is None:
             user_rec[row.user_name] = {}
-            user_rec[row.user_name]['top_artist'] = [[row.mb_recording_mbid, row.rating]]
+            try:
+                user_rec[row.user_name]['top_artist'] = [
+                    UserRecommendationsRecord(**{
+                        "recording_mbid": row.mb_recording_mbid,
+                        "score": row.rating
+                    }).dict()
+                ]
+            except ValidationError:
+                current_app.logger.warning("""Invalid entry present in top artist recommendations for user: {user_name},
+                                           skipping""".format(user_name=row.user_name), exc_info=True)
+
             user_rec[row.user_name]['similar_artist'] = []
 
         else:
-            user_rec[row.user_name]['top_artist'].append([row.mb_recording_mbid, row.rating])
+            try:
+                user_rec[row.user_name]['top_artist'].append(UserRecommendationsRecord(**
+                    {
+                        "recording_mbid": row.mb_recording_mbid,
+                        "score": row.rating
+                    }).dict()
+                )
+            except ValidationError:
+                current_app.logger.warning("""Invalid entry present in top artist recommendations for user: {user_name},
+                                           skipping""".format(user_name=row.user_name), exc_info=True)
 
     similar_artist_rec_itr = similar_artist_rec_mbid_df.toLocalIterator()
 
@@ -289,19 +311,43 @@ def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_u
 
         if user_rec.get(row.user_name) is None:
             user_rec[row.user_name] = {}
-            user_rec[row.user_name]['similar_artist'] = [[row.mb_recording_mbid, row.rating]]
+            try:
+                user_rec[row.user_name]['similar_artist'] = [
+                    UserRecommendationsRecord(**{
+                        "recording_mbid": row.mb_recording_mbid,
+                        "score": row.rating
+                    }).dict()
+                ]
+            except ValidationError:
+                current_app.logger.warning("""Invalid entry present in similar artist recommendations for user: {user_name},
+                                           skipping""".format(user_name=row.user_name), exc_info=True)
 
         else:
-            user_rec[row.user_name]['similar_artist'].append([row.mb_recording_mbid, row.rating])
+            try:
+                user_rec[row.user_name]['similar_artist'].append(UserRecommendationsRecord(**
+                    {
+                        "recording_mbid": row.mb_recording_mbid,
+                        "score": row.rating
+                    }).dict()
+                )
+            except ValidationError:
+                current_app.logger.warning("""Invalid entry present in similar artist recommendations for user: {user_name},
+                                           skipping""".format(user_name=row.user_name), exc_info=True)
 
     for user_name, data in user_rec.items():
-        messages = {
-            'musicbrainz_id': user_name,
-            'type': 'cf_recording_recommendations',
-            'top_artist': data.get('top_artist', []),
-            'similar_artist': data.get('similar_artist', [])
-        }
-        yield messages
+        try:
+            messages = UserRecommendationsMessage(**{
+                'musicbrainz_id': user_name,
+                'type': 'cf_recording_recommendations',
+                'recommendation':{
+                    'top_artist': data.get('top_artist', []),
+                    'similar_artist': data.get('similar_artist', [])
+                }
+            })
+            yield messages.dict()
+        except ValidationError:
+            current_app.logger.warning("ValidationError while calculating recommendations for {user_name}."
+                                       "\nData: {data}".format(user_name=user_name, data=data), exc_info=True)
 
     yield {
             'type': 'cf_recording_recommendations_mail',
