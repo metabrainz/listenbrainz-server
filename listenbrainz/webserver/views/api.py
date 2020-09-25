@@ -107,7 +107,12 @@ def get_listens(user_name):
     :resheader Content-Type: *application/json*
     """
     db_conn = webserver.create_timescale(current_app)
-    min_ts, max_ts, count, time_range, max_ts_per_user = _validate_get_endpoint_params(db_conn, user_name)
+    min_ts, max_ts, count, time_range = _validate_get_endpoint_params(db_conn, user_name)
+    _, max_ts_per_user = db_conn.get_timestamps_for_user(user_name)
+
+    # If none are given, start with now and go down
+    if max_ts == None and min_ts == None:
+        max_ts = max_ts_per_user + 1
 
     listens = db_conn.fetch_listens(
         user_name,
@@ -131,12 +136,16 @@ def get_listens(user_name):
 @api_bp.route('/user/<user_name>/feed/listens', methods=['OPTIONS', 'GET'])
 def user_feed(user_name: str):
     db_conn = webserver.create_timescale(current_app)
-    min_ts, max_ts, count, time_range, max_ts_per_user = _validate_get_endpoint_params(db_conn, user_name)
+    min_ts, max_ts, count, time_range = _validate_get_endpoint_params(db_conn, user_name)
+    if min_ts is None and max_ts is None:
+        max_ts = int(time.time())
+
     user =  db_user.get_by_mb_id(user_name)
     if not user:
         raise APINotFound(f"User {user_name} not found")
 
-    users_following = db_user_relationship.get_following_for_user(user['id'])
+    users_following = [user['musicbrainz_id'] for user in db_user_relationship.get_following_for_user(user['id'])]
+
     listens = db_conn.fetch_listens_for_multiple_users_from_storage(
         users_following,
         limit=count,
@@ -145,7 +154,6 @@ def user_feed(user_name: str):
         time_range=time_range,
         order=1, # descending
     )
-
     listen_data = []
     for listen in listens:
         listen_data.append(listen.to_api())
@@ -154,7 +162,6 @@ def user_feed(user_name: str):
         'user_id': user_name,
         'count': len(listen_data),
         'feed': listen_data,
-        'latest_listen_ts': max_ts_per_user,
     }})
 
 
@@ -452,10 +459,10 @@ def _get_listen_type(listen_type):
     }.get(listen_type)
 
 
-def _validate_get_endpoint_params(db_conn: TimescaleListenStore, user_name: str) -> Tuple[int, int, int, int, int]:
+def _validate_get_endpoint_params(db_conn: TimescaleListenStore, user_name: str) -> Tuple[int, int, int, int]:
     """ Validates parameters for listen GET endpoints like /username/listens and /username/feed/events
 
-    Returns a tuple of 5 integers: (min_ts, max_ts, count, time_range, max_ts_per_user)
+    Returns a tuple of integers: (min_ts, max_ts, count, time_range)
     """
     max_ts = _parse_int_arg("max_ts")
     min_ts = _parse_int_arg("min_ts")
@@ -471,15 +478,9 @@ def _validate_get_endpoint_params(db_conn: TimescaleListenStore, user_name: str)
         if (max_ts - min_ts) > MAX_TIME_RANGE * SECONDS_IN_TIME_RANGE:
             log_raise_400("time_range specified by min_ts and max_ts should be less than %d days." % MAX_TIME_RANGE * 5)
 
-    _, max_ts_per_user = db_conn.get_timestamps_for_user(user_name)
-
-    # If none are given, start with now and go down
-    if max_ts == None and min_ts == None:
-        max_ts = max_ts_per_user + 1
-
     # Validate requetsed listen count is positive
     count = min(_parse_int_arg("count", DEFAULT_ITEMS_PER_GET), MAX_ITEMS_PER_GET)
     if count < 0:
         log_raise_400("Number of items requested should be positive")
 
-    return min_ts, max_ts, count, time_range, max_ts_per_user
+    return min_ts, max_ts, count, time_range

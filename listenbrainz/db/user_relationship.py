@@ -76,7 +76,7 @@ def delete(user_0: int, user_1: int, relationship_type: str) -> None:
 def get_followers_for_user(followed: int) -> list:
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT "user".musicbrainz_id AS user_name
+            SELECT "user".musicbrainz_id AS musicbrainz_id
               FROM user_relationship
               JOIN "user"
                 ON "user".id = user_0
@@ -91,7 +91,7 @@ def get_followers_for_user(followed: int) -> list:
 def get_following_for_user(follower: int) -> list:
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
-            SELECT "user".musicbrainz_id AS user_name
+            SELECT "user".musicbrainz_id AS musicbrainz_id
               FROM user_relationship
               JOIN "user"
                 ON "user".id = user_1
