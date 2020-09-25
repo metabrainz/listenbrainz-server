@@ -28,7 +28,8 @@ from listenbrainz import db
 from flask import current_app
 from pydantic import ValidationError
 
-from data.model.user_cf_recommendations_recording_message import UserRecommendationsData
+from data.model.user_cf_recommendations_recording_message import (UserRecommendationsData,
+                                                                  UserRecommendationsJson)
 
 def get_timestamp_for_last_recording_recommended():
     """ Get the time when recommendation_cf_recording table was last updated
@@ -43,14 +44,12 @@ def get_timestamp_for_last_recording_recommended():
         return row['created_ts'] if row else None
 
 
-def insert_user_recommendation(user_id, recommendations):
+def insert_user_recommendation(user_id: int, recommendations: UserRecommendationsJson):
     """ Insert recommended recording for a user in the db.
 
         Args:
             user_id (int): row id of the user.
-            top_artist_recording_mbids (list): recommended recording mbids that belong to top artists listened to by the user.
-            similar_artist_recording_mbids (list): recommended recording mbids that belong to artists similar to top artists
-                                             listened to by the user.
+            recommendations (dict): User recommendations.
     """
     with db.engine.connect() as connection:
         connection.execute(sqlalchemy.text("""

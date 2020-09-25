@@ -3,6 +3,7 @@ import time
 from datetime import datetime
 from collections import defaultdict
 from py4j.protocol import Py4JJavaError
+from pydantic import ValidationError
 
 import listenbrainz_spark
 from listenbrainz_spark import config, utils, path
@@ -339,7 +340,7 @@ def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_u
             messages = UserRecommendationsMessage(**{
                 'musicbrainz_id': user_name,
                 'type': 'cf_recording_recommendations',
-                'recommendation':{
+                'recommendations':{
                     'top_artist': data.get('top_artist', []),
                     'similar_artist': data.get('similar_artist', [])
                 }

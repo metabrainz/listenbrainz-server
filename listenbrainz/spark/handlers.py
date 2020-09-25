@@ -317,8 +317,9 @@ def handle_recommendations(data):
             })
         )
     except ValidationError:
-        current_app.logger.error("""ValidationError while recommendations for user with musicbrainz_id: {musicbrainz_id}.
-                                 \nData: {data}""".format(musicbrainz_id=musicbrainz_id, data=json.dumps(data, indent=3)))
+        current_app.logger.error("""ValidationError while inserting recommendations for user with musicbrainz_id:
+                                 {musicbrainz_id}. \nData: {data}""".format(musicbrainz_id=musicbrainz_id,
+                                                                            data=json.dumps(data, indent=3)))
 
     current_app.logger.debug("recommendation for {} inserted".format(musicbrainz_id))
 

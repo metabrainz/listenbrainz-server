@@ -78,7 +78,7 @@ def _get_template(active_section, user):
             "recommendations_cf_recording/{}.html".format(active_section),
             active_section=active_section,
             user=user,
-            error_msg="Looks like you weren't active last week. Check back later."
+            error_msg="Recommended tracks for the user have not been calculated. Check back later."
         )
 
     listens = _get_listens_from_recording_mbid(result)

@@ -426,24 +426,56 @@ class RecommendTestClass(SparkTestCase):
         self.assertEqual(next(data), {
             'musicbrainz_id': 'vansika',
             'type': 'cf_recording_recommendations',
-            'top_artist': [["2acb406f-c716-45f8-a8bd-96ca3939c2e5", 1.8],
-                           ["8acb406f-c716-45f8-a8bd-96ca3939c2e5", -0.8]],
-            'similar_artist': []
+            'recommendations': {
+                'top_artist': [
+                    {
+                        'recording_mbid': "2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                        'score': 1.8
+                    },
+                    {
+                        'recording_mbid': "8acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                        'score': -0.8
+                    }
+                ],
+                'similar_artist': []
+            }
         })
 
         self.assertEqual(next(data), {
             'musicbrainz_id': 'rob',
             'type': 'cf_recording_recommendations',
-            'top_artist': [["8acb406f-c716-45f8-a8bd-96ca3939c2e5", 0.99]],
-            'similar_artist': [["7acb406f-c716-45f8-a8bd-96ca3939c2e5", 0.19]]
+            'recommendations': {
+                'top_artist': [
+                    {
+                        'recording_mbid': "8acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                        'score': 0.99
+                    }
+                ],
+                'similar_artist': [
+                    {
+                        'recording_mbid': "7acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                        'score': 0.19
+                    }
+                ]
+            }
         })
 
         self.assertEqual(next(data), {
             'musicbrainz_id': 'vansika_1',
             'type': 'cf_recording_recommendations',
-            'top_artist': [],
-            'similar_artist': [["2acb406f-c716-45f8-a8bd-96ca3939c2e5", 0.8],
-                               ["8acb406f-c716-45f8-a8bd-96ca3939c2e5", -2.8]]
+            'recommendations': {
+                'top_artist': [],
+                'similar_artist': [
+                    {
+                        'recording_mbid': "2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                        'score': 0.8
+                    },
+                    {
+                        'recording_mbid': "8acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                        'score': -2.8
+                    }
+                ]
+            }
         })
 
         self.assertEqual(next(data), {
