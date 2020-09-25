@@ -257,7 +257,8 @@ class HandlersTestCase(unittest.TestCase):
         with self.app.app_context():
             handle_recommendations(data)
 
-        mock_db_insert.assert_called_with(1,
+        mock_db_insert.assert_called_with(
+            1,
             UserRecommendationsJson(
                 top_artist=[
                     UserRecommendationsRecord(

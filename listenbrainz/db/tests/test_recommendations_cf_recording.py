@@ -20,7 +20,7 @@ class CFRecordingRecommendationDatabaseTestCase(DatabaseTestCase):
                 'score': 2.3
             },
             {
-                'recording_mbid':'b36d6fc9-49d0-4789-a7dd-a2b72369ca45',
+                'recording_mbid': 'b36d6fc9-49d0-4789-a7dd-a2b72369ca45',
                 'score': 3.0
             }
         ]
@@ -89,8 +89,14 @@ class CFRecordingRecommendationDatabaseTestCase(DatabaseTestCase):
         data_inserted = self.insert_test_data()
 
         data_received = db_recommendations_cf_recording.get_user_recommendation(self.user['id'])
-        self.assertEqual(getattr(data_received, 'recording_mbid').dict()['top_artist'], data_inserted['top_artist_recording_mbids'])
-        self.assertEqual(getattr(data_received, 'recording_mbid').dict()['similar_artist'], data_inserted['similar_artist_recording_mbids'])
+        self.assertEqual(
+            getattr(data_received, 'recording_mbid').dict()['top_artist'],
+            data_inserted['top_artist_recording_mbids']
+        )
+        self.assertEqual(
+            getattr(data_received, 'recording_mbid').dict()['similar_artist'],
+            data_inserted['similar_artist_recording_mbids']
+        )
 
     def test_get_timestamp_for_last_recording_recommended(self):
         ts = datetime.now(timezone.utc)

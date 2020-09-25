@@ -41,7 +41,7 @@ class UserRecommendationsData(pydantic.BaseModel):
     """
     user_id: int
     created: datetime
-    recording_mbid : UserRecommendationsJson
+    recording_mbid: UserRecommendationsJson
 
 
 class UserRecommendationsMessage(pydantic.BaseModel):

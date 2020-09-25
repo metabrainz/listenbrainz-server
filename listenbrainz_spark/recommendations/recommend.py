@@ -296,11 +296,13 @@ def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_u
 
         else:
             try:
-                user_rec[row.user_name]['top_artist'].append(UserRecommendationsRecord(**
-                    {
-                        "recording_mbid": row.mb_recording_mbid,
-                        "score": row.rating
-                    }).dict()
+                user_rec[row.user_name]['top_artist'].append(
+                    UserRecommendationsRecord(**
+                        {
+                            "recording_mbid": row.mb_recording_mbid,
+                            "score": row.rating
+                        }
+                    ).dict()
                 )
             except ValidationError:
                 current_app.logger.warning("""Invalid entry present in top artist recommendations for user: {user_name},
@@ -325,11 +327,13 @@ def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_u
 
         else:
             try:
-                user_rec[row.user_name]['similar_artist'].append(UserRecommendationsRecord(**
-                    {
-                        "recording_mbid": row.mb_recording_mbid,
-                        "score": row.rating
-                    }).dict()
+                user_rec[row.user_name]['similar_artist'].append(
+                    UserRecommendationsRecord(**
+                        {
+                            "recording_mbid": row.mb_recording_mbid,
+                            "score": row.rating
+                        }
+                    ).dict()
                 )
             except ValidationError:
                 current_app.logger.warning("""Invalid entry present in similar artist recommendations for user: {user_name},
@@ -340,7 +344,7 @@ def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_u
             messages = UserRecommendationsMessage(**{
                 'musicbrainz_id': user_name,
                 'type': 'cf_recording_recommendations',
-                'recommendations':{
+                'recommendations': {
                     'top_artist': data.get('top_artist', []),
                     'similar_artist': data.get('similar_artist', [])
                 }
