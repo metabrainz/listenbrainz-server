@@ -157,6 +157,11 @@ def recent_listens():
         mode='recent',
         active_section='listens')
 
+@index_bp.route('/feed', methods=['GET', 'OPTIONS'])
+@login_required
+def feed():
+    return render_template('index/feed.html')
+
 
 
 @index_bp.route('/agree-to-terms', methods=['GET', 'POST'])
