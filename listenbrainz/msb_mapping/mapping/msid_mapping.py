@@ -92,7 +92,7 @@ def swap_table_and_indexes(conn):
 
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
-            curs.execute("DROP TABLE mapping.msid_mbid_mapping")
+            curs.execute("DROP TABLE IF EXISTS mapping.msid_mbid_mapping")
             curs.execute("""ALTER TABLE mapping.tmp_msid_mbid_mapping
                               RENAME TO msid_mbid_mapping""")
             curs.execute("""ALTER INDEX mapping.tmp_msid_mbid_mapping_idx_msb_recording_name
