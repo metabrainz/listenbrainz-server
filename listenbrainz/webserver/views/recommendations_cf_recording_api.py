@@ -142,7 +142,7 @@ def _process_recommendations(recommendations, count, artist_type, user_name, off
 
     if total_mbid_count == 0:
         err_msg = 'No recommendations for user {}, please try again later.'.format(user_name)
-        raise APINoContent(err_msg, payload={'last_updated': int(recommendations['created'].timestamp())})
+        raise APINoContent(err_msg, payload={'last_updated': int(getattr(recommendations, 'created').timestamp())})
 
     count = min(count, MAX_ITEMS_PER_GET)
 
