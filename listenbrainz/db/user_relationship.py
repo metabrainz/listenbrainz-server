@@ -16,6 +16,8 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+from typing import List
+
 from listenbrainz import db
 from listenbrainz.db.exceptions import DatabaseException
 
@@ -73,7 +75,10 @@ def delete(user_0: int, user_1: int, relationship_type: str) -> None:
             "relationship_type": relationship_type,
         })
 
-def get_followers_for_user(followed: int) -> list:
+
+def get_followers_of_user(user: int) -> List[dict]:
+    """ Returns a list of users who follow the specified user.
+    """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT "user".musicbrainz_id AS musicbrainz_id
@@ -84,21 +89,24 @@ def get_followers_for_user(followed: int) -> list:
                AND relationship_type = 'follow'
 
         """), {
-            "followed": followed,
+            "followed": user,
         })
         return [dict(row) for row in result.fetchall()]
 
-def get_following_for_user(follower: int) -> list:
+
+def get_following_for_user(user: int) -> List[dict]:
+    """ Returns a list of users who the specified user follows.
+    """
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text("""
             SELECT "user".musicbrainz_id AS musicbrainz_id
               FROM user_relationship
               JOIN "user"
                 ON "user".id = user_1
-             WHERE user_0 = :follower
+             WHERE user_0 = :user
                AND relationship_type = 'follow'
 
         """), {
-            "follower": follower,
+            "user": user,
         })
         return [dict(row) for row in result.fetchall()]
