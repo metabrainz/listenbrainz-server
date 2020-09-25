@@ -14,6 +14,8 @@ from listenbrainz.webserver.testing import ServerTestCase
 from werkzeug.exceptions import BadRequest, InternalServerError
 from listenbrainz.webserver.views import recommendations_cf_recording
 import listenbrainz.db.recommendations_cf_recording as db_recommendations_cf_recording
+from data.model.user_cf_recommendations_recording_message import (UserRecommendationsJson,
+                                                                  UserRecommendationsData)
 
 
 class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
@@ -30,8 +32,22 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         with open(self.path_to_data_file('cf_recommendations_db_data_for_api_test_recording.json'), 'r') as f:
             self.payload = json.load(f)
 
-        db_recommendations_cf_recording.insert_user_recommendation(2, self.payload['recording_mbid'], [])
-        db_recommendations_cf_recording.insert_user_recommendation(3, [], self.payload['recording_mbid'])
+        db_recommendations_cf_recording.insert_user_recommendation(
+            2,
+            UserRecommendationsJson(**{
+                'top_artist': self.payload['recording_mbid'],
+                'similar_artist': []
+            })
+        )
+
+        db_recommendations_cf_recording.insert_user_recommendation(
+            3,
+            UserRecommendationsJson(**{
+                'top_artist': [],
+                'similar_artist': self.payload['recording_mbid']
+            })
+        )
+
 
     def tearDown(self):
         ServerTestCase.tearDown(self)
@@ -113,7 +129,7 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertTemplateUsed('recommendations_cf_recording/top_artist.html')
         self.assert_context('active_section', 'top_artist')
         self.assert_context('user', user)
-        error_msg = "Looks like you weren't active last week. Check back later."
+        error_msg = "Recommended tracks for the user have not been calculated. Check back later."
         self.assert_context('error_msg', error_msg)
 
     def test_get_template_missing_rec_similar_artist(self):
@@ -122,7 +138,7 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertTemplateUsed('recommendations_cf_recording/similar_artist.html')
         self.assert_context('active_section', 'similar_artist')
         self.assert_context('user', user)
-        error_msg = "Looks like you weren't active last week. Check back later."
+        error_msg = "Recommended tracks for the user have not been calculated. Check back later."
         self.assert_context('error_msg', error_msg)
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
@@ -130,12 +146,16 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
     def test_get_template_empty_repsonce_top_artist(self, mock_get_listens, mock_get_rec):
         user = _get_user('vansika_1')
 
-        mock_get_rec.return_value = {
+        mock_get_rec.return_value = UserRecommendationsData(**{
             'recording_mbid': {
-                'top_artist': ["af5a56f4-1f83-4681-b319-70a734d0d047", 0.4]
+                'top_artist': [{
+                    'recording_mbid': "af5a56f4-1f83-4681-b319-70a734d0d047",
+                    'score': 0.4
+                }]
             },
-            'created': datetime.utcnow()
-        }
+            'created': datetime.utcnow(),
+            'user_id': 1
+        })
         mock_get_listens.return_value = []
 
         recommendations_cf_recording._get_template(active_section='top_artist', user=user)
@@ -150,12 +170,16 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
     def test_get_template_empty_repsonce_similar_artist(self, mock_get_listens, mock_get_rec):
         user = _get_user('vansika_1')
 
-        mock_get_rec.return_value = {
+        mock_get_rec.return_value = UserRecommendationsData(**{
             'recording_mbid': {
-                'similar_artist': ["af5a56f4-1f83-4681-b319-70a734d0d047", 0.4]
+                'similar_artist': [{
+                    'recording_mbid': "9f5a56f4-1f83-4681-b319-70a734d0d047",
+                    'score': 0.9
+                }]
             },
-            'created': datetime.utcnow()
-        }
+            'created': datetime.utcnow(),
+            'user_id': 1
+        })
         mock_get_listens.return_value = []
 
         recommendations_cf_recording._get_template(active_section='similar_artist', user=user)
@@ -174,12 +198,16 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         user = _get_user('vansika_1')
         created = datetime.utcnow()
 
-        mock_get_rec.return_value = {
+        mock_get_rec.return_value = UserRecommendationsData(**{
             'recording_mbid': {
-                'top_artist': ["af5a56f4-1f83-4681-b319-70a734d0d047", 0.4]
+                'top_artist': [{
+                    'recording_mbid': "9f5a56f4-1f83-4681-b319-70a734d0d047",
+                    'score': 0.9
+                }]
             },
-            'created': created
-        }
+            'created': datetime.utcnow(),
+            'user_id': 1
+        })
 
         listens = [{
             'listened_at': 0,
@@ -233,22 +261,35 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
 
         # only assert fields that should change with 'active_section'
         # here active_section = 'similar_artist'
-        mock_get_rec.return_value = {
+        mock_get_rec.return_value = UserRecommendationsData(**{
             'recording_mbid': {
-                'similar_artist': ["af5a56f4-1f83-4681-b319-70a734d0d047", 0.4]
+                'similar_artist': [{
+                    'recording_mbid': "9f5a56f4-1f83-4681-b319-70a734d0d047",
+                    'score': 0.9
+                }]
             },
-            'created': created
-        }
+            'created': datetime.utcnow(),
+            'user_id': 1
+        })
+
         recommendations_cf_recording._get_template(active_section='similar_artist', user=user)
         self.assertTemplateUsed('recommendations_cf_recording/similar_artist.html')
         self.assert_context('active_section', 'similar_artist')
+        received_props = ujson.loads(self.get_context_variable('props'))
+        self.assertEqual(expected_props, received_props)
 
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.requests')
     def test_get_listens_from_recording_mbid(self, mock_requests):
         mbids_and_ratings = [
-            ["03f1b16a-af43-4cd7-b22c-d2991bf011a3", 6.88],
-            ["2c8412f0-9353-48a2-aedb-1ad8dac9498f", 9.0]
+            {
+                'recording_mbid': "03f1b16a-af43-4cd7-b22c-d2991bf011a3",
+                'score': 6.88
+            },
+            {
+                'recording_mbid': "2c8412f0-9353-48a2-aedb-1ad8dac9498f",
+                'score': 9.0
+            }
         ]
 
         data = [

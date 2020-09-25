@@ -1,111 +1,428 @@
 {
   "recording_mbid": [
-    ["004eedd5-8396-4eef-9de2-940e5ca9a7c0", 0.999],
-    ["02f5cf43-a902-4b1f-b2d8-92d8550937ac", 0.989],
-    ["03632781-7a52-450b-b56b-b147ea06411a", 0.987],
-    ["039326dc-e853-4de8-84c5-dd91c31d4256", 0.986],
-    ["139326dc-e853-4de8-84c5-dd91c31d4256", 0.985],
-    ["040cc48d-ad1a-469f-b1f4-1fcec9525d15", 0.984],
-    ["14d9d9ca-451a-45f8-b71e-62a7ea30f9f1", 0.983],
-    ["24d9d9ca-451a-45f8-b71e-62a7ea30f9f1", 0.982],
-    ["05613970-051b-43bb-9cac-91935c7eee59", 0.981],
-    ["0796111f-99d4-40c7-92c8-706a5f66a7cd", 0.980],
-    ["08d829c0-a4a2-403f-855b-955d8751b37c", 0.979],
-    ["18d829c0-a4a2-403f-855b-955d8751b37c", 0.976],
-    ["28d829c0-a4a2-403f-855b-955d8751b37c", 0.867],
-    ["0afc796a-77fa-4c15-a63f-dc0c0d171f47", 0.862],
-    ["1afc796a-77fa-4c15-a63f-dc0c0d171f47", 0.861],
-    ["10ed3fef-5b54-4b5a-93d2-4412cde518f1", 0.690],
-    ["11bc5236-54da-4009-a0ed-589e9cb83cb9", 0.655],
-    ["1818fc80-7c01-4dda-89e1-a24851ad1838", 0.654],
-    ["1178d513-3436-4495-a88d-08225ce9bd06", 0.650],
-    ["1278d513-3436-4495-a88d-08225ce9bd06", 0.648],
-    ["1378d513-3436-4495-a88d-08225ce9bd06", 0.645],
-    ["194b7699-71d0-4064-9ac7-bff3735a4b03", 0.641],
-    ["1c0377bb-c00b-4bbe-b4b2-615f13324adc", 0.632],
-    ["2cb2d6e8-22dc-44f1-b82a-bfe82f18cfde", 0.621],
-    ["1e73e7a6-7378-46e5-97a7-2c299c656a29", 0.620],
-    ["1f014e5a-3c7e-49e2-a744-5ea74824354d", 0.610],
-    ["23c3c36b-9449-4484-9040-6ef2125999aa", 0.606],
-    ["13c3c36b-9449-4484-9040-6ef2125999aa", 0.600],
-    ["33c3c36b-9449-4484-9040-6ef2125999aa", 0.599],
-    ["26258081-1723-4e98-a91c-8e911fb4d23d", 0.596],
-    ["2798fcef-9057-4458-9188-e95246f3dc9c", 0.593],
-    ["29a9d792-151b-4dd4-99ae-25bc853d8895", 0.590],
-    ["39a9d792-151b-4dd4-99ae-25bc853d8895", 0.490],
-    ["2e48f30b-7ad2-4fea-97f1-edef65565d7c", 0.450],
-    ["2f0d7a91-363d-4bde-9005-66c5a49de11a", 0.444],
-    ["1f0d7a91-363d-4bde-9005-66c5a49de11a", 0.432],
-    ["303107f3-8bf0-4850-a0db-6b906954475f", 0.430],
-    ["403107f3-8bf0-4850-a0db-6b906954475f", 0.422],
-    ["31600df4-e6dd-48ca-9f6b-8804027d8d6e", 0.420],
-    ["21600df4-e6dd-48ca-9f6b-8804027d8d6e", 0.413],
-    ["35494106-1612-40ba-9948-4a75d6dc8861", 0.400],
-    ["25494106-1612-40ba-9948-4a75d6dc8861", 0.399],
-    ["363326bd-07aa-4a4a-be9c-9bce33da1c31", 0.398],
-    ["398bf241-7d57-4993-860b-1f9ef496c97f", 0.397],
-    ["198bf241-7d57-4993-860b-1f9ef496c97f", 0.396],
-    ["29a05472-5b4c-4f1c-bf2a-1394578ced62", 0.394],
-    ["79a05472-5b4c-4f1c-bf2a-1394578ced62", 0.393],
-    ["3d4718dd-a912-4eb4-bb0e-0e2b7839124f", 0.392],
-    ["5dbd1679-8988-4859-9879-a570e87edc47", 0.391],
-    ["9dbd1679-8988-4859-9879-a570e87edc47", 0.380],
-    ["3dbd1679-8988-4859-9879-a570e87edc47", 0.370],
-    ["2dbd1679-8988-4859-9879-a570e87edc47", 0.369],
-    ["9dbd1679-8988-4859-9879-a570e87edc47", 0.368],
-    ["3e341bc1-16e2-43e3-adf5-d7a8c2059b0d", 0.367],
-    ["1e341bc1-16e2-43e3-adf5-d7a8c2059b0d", 0.366],
-    ["2e557de5-a2c7-47bd-8921-4cf6243f8e17", 0.365],
-    ["4f23dd2a-a70a-4d6e-a5b1-ae3f22589dd7", 0.364],
-    ["65457bec-c2f2-4d68-92f8-27e6857e2b19", 0.362],
-    ["4661f780-e35d-4d74-b817-d375ce0ca75e", 0.361],
-    ["966d5281-94c0-43e8-a27f-4e9496d90735", 0.360],
-    ["266d5281-94c0-43e8-a27f-4e9496d90735", 0.359],
-    ["7a7fea2e-545b-4c63-bc9a-9943cc3a29d7", 0.358],
-    ["51e3d9c7-2a8f-4943-9010-45b82c51fc35", 0.357],
-    ["55e0110c-78f0-4574-9633-5d3da7349654", 0.356],
-    ["5ae06fb2-05a7-447f-94cd-0e26693f87b0", 0.355],
-    ["9ae06fb2-05a7-447f-94cd-0e26693f87b0", 0.354],
-    ["3ae06fb2-05a7-447f-94cd-0e26693f87b0", 0.353],
-    ["8ae06fb2-05a7-447f-94cd-0e26693f87b0", 0.352],
-    ["5fb534a4-11a6-4a8d-bafc-431d0bb8de69", 0.351],
-    ["56b534a4-11a6-4a8d-bafc-431d0bb8de69", 0.350],
-    ["60bd9d53-01ff-4562-8058-eb44b3940317", 0.349],
-    ["69bd9d53-01ff-4562-8058-eb44b3940317", 0.348],
-    ["40bd9d53-01ff-4562-8058-eb44b3940317", 0.347],
-    ["20bd9d53-01ff-4562-8058-eb44b3940317", 0.345],
-    ["1105c611-6e14-4c52-bce1-3e6829020b8f", 0.343],
-    ["9202ef0a-9932-4fbd-bfcf-86600dea59ab", 0.342],
-    ["62ff96c2-e173-41eb-875b-061ccf7c339c", 0.341],
-    ["6511bc70-661a-48fb-a751-c23a0ee86331", 0.340],
-    ["1511bc70-661a-48fb-a751-c23a0ee86331", 0.200],
-    ["65fbafae-4589-4486-b43c-43b572cbc7ac", 0.199],
-    ["6f390fd7-6806-4d0c-aa34-7b748b7a099e", 0.198],
-    ["70595637-9310-45f2-a266-58f8de4874a7", 0.197],
-    ["72c6b4d3-71a8-4c70-bf50-da11c0149089", 0.196],
-    ["73784600-a665-4a6c-9687-187dbefc556d", 0.195],
-    ["138ed907-c7fa-4514-b6d9-17b0931efe5c", 0.194],
-    ["238ed907-c7fa-4514-b6d9-17b0931efe5c", 0.193],
-    ["738ed907-c7fa-4514-b6d9-17b0931efe5c", 0.192],
-    ["7428c59d-333a-4cee-86cb-21663b9671f6", 0.191],
-    ["1428c59d-333a-4cee-86cb-21663b9671f6", 0.190],
-    ["78f2e3a2-0fc3-45b9-9cc8-dbdc53e7c1c3", 0.188],
-    ["7b9154fd-7cca-4089-83a9-80fab753decc", 0.186],
-    ["3b9154fd-7cca-4089-83a9-80fab753decc", 0.183],
-    ["7dee4afc-5931-4295-955a-7ae44f403e70", 0.181],
-    ["9dee4afc-5931-4295-955a-7ae44f403e70", 0.160],
-    ["5dee4afc-5931-4295-955a-7ae44f403e70", 0.156],
-    ["7f45f9cc-30f5-4d94-810b-4ca2e2f2d966", 0.154],
-    ["3f45f9cc-30f5-4d94-810b-4ca2e2f2d966", 0.152],
-    ["81241097-a6f7-402b-b600-0603d6475633", 0.151],
-    ["818548d8-869f-49e4-97b5-aff0eac2aab0", 0.150],
-    ["718548d8-869f-49e4-97b5-aff0eac2aab0", 0.131],
-    ["83cf16bc-01db-4766-9e3e-f3c796639cf2", 0.111],
-    ["13cf16bc-01db-4766-9e3e-f3c796639cf2", 0.110],
-    ["86e8f2e4-b73f-4eb9-9f51-349cd7675235", 0.098],
-    ["8885a72a-14b5-4c70-9f7d-095fac771e67", 0.096],
-    ["8b035ce9-f46a-4507-b22d-b1350cd97bfc", 0.093],
-    ["9b035ce9-f46a-4507-b22d-b1350cd97bfc", 0.091],
-    ["0b035ce9-f46a-4507-b22d-b1350cd97bfc", 0.021]
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.999
+    },
+    {
+        "recording_mbid": "104eedd5-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.998
+    },
+    {
+        "recording_mbid": "204eedd5-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.997
+    },
+    {
+        "recording_mbid": "304eedd5-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.996
+    },
+    {
+        "recording_mbid": "404eedd5-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.995
+    },
+    {
+        "recording_mbid": "504eedd5-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.994
+    },
+    {
+        "recording_mbid": "604eedd5-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.993
+    },
+    {
+        "recording_mbid": "704eedd5-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.992
+    },
+    {
+        "recording_mbid": "804eedd5-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.991
+    },
+    {
+        "recording_mbid": "904eedd5-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.990
+    },
+    {
+        "recording_mbid": "014eedd5-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.989
+    },
+    {
+        "recording_mbid": "024eedd5-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.979
+    },
+    {
+        "recording_mbid": "034eedd5-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.979
+    },
+    {
+        "recording_mbid": "044eedd5-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.969
+    },
+    {
+        "recording_mbid": "054eedd5-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.959
+    },
+    {
+        "recording_mbid": "064eedd5-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.949
+    },
+    {
+        "recording_mbid": "074eedd5-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.939
+    },
+    {
+        "recording_mbid": "084eedd5-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.929
+    },
+    {
+        "recording_mbid": "094eedd5-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.929
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de2-940e5ca9a7c1",
+        "score": 0.919
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de2-940e5ca9a7c2",
+        "score": 0.910
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de2-940e5ca9a7c3",
+        "score": 0.909
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de2-940e5ca9a7c4",
+        "score": 0.908
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de2-940e5ca9a7c5",
+        "score": 0.908
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de2-940e5ca9a7c6",
+        "score": 0.908
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de2-940e5ca9a7c7",
+        "score": 0.908
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de2-940e5ca9a7c8",
+        "score": 0.908
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de2-940e5ca9a7c9",
+        "score": 0.907
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de2-941e5ca9a7c0",
+        "score": 0.907
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de2-942e5ca9a7c0",
+        "score": 0.907
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de2-943e5ca9a7c0",
+        "score": 0.907
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de2-944e5ca9a7c0",
+        "score": 0.907
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de2-945e5ca9a7c0",
+        "score": 0.906
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de2-946e5ca9a7c0",
+        "score": 0.906
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de2-947e5ca9a7c0",
+        "score": 0.906
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de2-948e5ca9a7c0",
+        "score": 0.906
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de2-949e5ca9a7c0",
+        "score": 0.905
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de3-940e5ca9a7c0",
+        "score": 0.905
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de4-940e5ca9a7c0",
+        "score": 0.905
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de5-940e5ca9a7c0",
+        "score": 0.905
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de6-940e5ca9a7c0",
+        "score": 0.904
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de7-940e5ca9a7c0",
+        "score": 0.904
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de8-940e5ca9a7c0",
+        "score": 0.904
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de9-940e5ca9a7c0",
+        "score": 0.904
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de0-940e5ca9a7c0",
+        "score": 0.904
+    },
+    {
+        "recording_mbid": "004eedd5-8396-4eef-9de1-940e5ca9a7c0",
+        "score": 0.903
+    },
+    {
+        "recording_mbid": "004eedd5-8396-5eef-9de2-940e5ca9a7c0",
+        "score": 0.903
+    },
+    {
+        "recording_mbid": "004eedd5-8396-6eef-9de2-940e5ca9a7c0",
+        "score": 0.903
+    },
+    {
+        "recording_mbid": "004eedd5-8396-7eef-9de2-940e5ca9a7c0",
+        "score": 0.903
+    },
+    {
+        "recording_mbid": "004eedd5-8396-8eef-9de2-940e5ca9a7c0",
+        "score": 0.903
+    },
+    {
+        "recording_mbid": "004eedd5-8396-9eef-9de2-940e5ca9a7c0",
+        "score": 0.902
+    },
+    {
+        "recording_mbid": "004eedd5-8396-0eef-9de2-940e5ca9a7c0",
+        "score": 0.902
+    },
+    {
+        "recording_mbid": "004eedd5-8396-1eef-9de2-940e5ca9a7c0",
+        "score": 0.902
+    },
+    {
+        "recording_mbid": "004eedd5-8396-2eef-9de2-940e5ca9a7c0",
+        "score": 0.902
+    },
+    {
+        "recording_mbid": "004eedd5-8396-3eef-9de2-940e5ca9a7c0",
+        "score": 0.901
+    },
+    {
+        "recording_mbid": "004eedd5-8397-4eef-9de2-940e5ca9a7c0",
+        "score": 0.901
+    },
+    {
+        "recording_mbid": "004eedd5-8398-4eef-9de2-940e5ca9a7c0",
+        "score": 0.901
+    },
+    {
+        "recording_mbid": "004eedd5-8399-4eef-9de2-940e5ca9a7c0",
+        "score": 0.901
+    },
+    {
+        "recording_mbid": "004eedd5-8390-4eef-9de2-940e5ca9a7c0",
+        "score": 0.901
+    },
+    {
+        "recording_mbid": "004eedd5-8391-4eef-9de2-940e5ca9a7c0",
+        "score": 0.901
+    },
+    {
+        "recording_mbid": "004eedd5-8392-4eef-9de2-940e5ca9a7c0",
+        "score": 0.901
+    },
+    {
+        "recording_mbid": "004eedd5-8393-4eef-9de2-940e5ca9a7c0",
+        "score": 0.901
+    },
+    {
+        "recording_mbid": "004eedd5-8394-4eef-9de2-940e5ca9a7c0",
+        "score": 0.900
+    },
+    {
+        "recording_mbid": "004eedd5-8395-4eef-9de2-940e5ca9a7c0",
+        "score": 0.900
+    },
+    {
+        "recording_mbid": "004eedd5-8306-4eef-9de2-940e5ca9a7c0",
+        "score": 0.900
+    },
+    {
+        "recording_mbid": "004eedd5-8316-4eef-9de2-940e5ca9a7c0",
+        "score": 0.900
+    },
+    {
+        "recording_mbid": "004eedd5-8326-4eef-9de2-940e5ca9a7c0",
+        "score": 0.900
+    },
+    {
+        "recording_mbid": "004eedd5-8336-4eef-9de2-940e5ca9a7c0",
+        "score": 0.800
+    },
+    {
+        "recording_mbid": "004eedd5-8346-4eef-9de2-940e5ca9a7c0",
+        "score": 0.800
+    },
+    {
+        "recording_mbid": "004eedd5-8356-4eef-9de2-940e5ca9a7c0",
+        "score": 0.800
+    },
+    {
+        "recording_mbid": "004eedd5-8366-4eef-9de2-940e5ca9a7c0",
+        "score": 0.800
+    },
+    {
+        "recording_mbid": "004eedd5-8376-4eef-9de2-940e5ca9a7c0",
+        "score": 0.800
+    },
+    {
+        "recording_mbid": "004eedd5-8386-4eef-9de2-940e5ca9a7c0",
+        "score": 0.700
+    },
+    {
+        "recording_mbid": "004eedd5-8496-4eef-9de2-940e5ca9a7c0",
+        "score": 0.700
+    },
+    {
+        "recording_mbid": "004eedd5-8596-4eef-9de2-940e5ca9a7c0",
+        "score": 0.700
+    },
+    {
+        "recording_mbid": "004eedd5-8696-4eef-9de2-940e5ca9a7c0",
+        "score": 0.700
+    },
+    {
+        "recording_mbid": "004eedd5-8796-4eef-9de2-940e5ca9a7c0",
+        "score": 0.700
+    },
+    {
+        "recording_mbid": "004eedd5-8896-4eef-9de2-940e5ca9a7c0",
+        "score": 0.700
+    },
+    {
+        "recording_mbid": "004eedd5-8996-4eef-9de2-940e5ca9a7c0",
+        "score": 0.400
+    },
+    {
+        "recording_mbid": "004eedd5-1396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.400
+    },
+    {
+        "recording_mbid": "004eedd5-2396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.400
+    },
+    {
+        "recording_mbid": "004eedd5-3396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.400
+    },
+    {
+        "recording_mbid": "004eedd5-4396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.300
+    },
+    {
+        "recording_mbid": "004eedd5-5396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.300
+    },
+    {
+        "recording_mbid": "004eedd5-6396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.300
+    },
+    {
+        "recording_mbid": "004eedd5-7396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.200
+    },
+    {
+        "recording_mbid": "004eedd6-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.200
+    },
+    {
+        "recording_mbid": "004eedd7-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.200
+    },
+    {
+        "recording_mbid": "004eedd8-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.100
+    },
+    {
+        "recording_mbid": "004eedd9-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.100
+    },
+    {
+        "recording_mbid": "004eedd5-8596-4eef-9de2-940e5ca9a7c0",
+        "score": 0.100
+    },
+    {
+        "recording_mbid": "004eedd5-8696-4eef-9de2-940e5ca9a7c0",
+        "score": 0.100
+    },
+    {
+        "recording_mbid": "004eedd5-8796-4eef-9de2-940e5ca9a7c0",
+        "score": 0.100
+    },
+    {
+        "recording_mbid": "004eedd5-8896-4eef-9de2-940e5ca9a7c0",
+        "score": 0.100
+    },
+    {
+        "recording_mbid": "004eedd5-8996-4eef-9de2-940e5ca9a7c0",
+        "score": 0.100
+    },
+    {
+        "recording_mbid": "004eedd5-1396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.100
+    },
+    {
+        "recording_mbid": "004eedd5-2396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.100
+    },
+    {
+        "recording_mbid": "004eedd5-3396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.100
+    },
+    {
+        "recording_mbid": "004eedd5-4396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.100
+    },
+    {
+        "recording_mbid": "004eedd5-5396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.100
+    },
+    {
+        "recording_mbid": "004eedd5-6396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.100
+    },
+    {
+        "recording_mbid": "004eedd5-7396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.100
+    },
+    {
+        "recording_mbid": "004eedd6-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.100
+    },
+    {
+        "recording_mbid": "004eedd7-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.100
+    },
+    {
+        "recording_mbid": "004eedd8-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.100
+    },
+    {
+        "recording_mbid": "004eedd9-8396-4eef-9de2-940e5ca9a7c0",
+        "score": 0.100
+    }
   ]
 }

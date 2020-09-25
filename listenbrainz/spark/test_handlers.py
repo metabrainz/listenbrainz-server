@@ -22,6 +22,10 @@ from data.model.user_missing_musicbrainz_data import (UserMissingMusicBrainzData
                                                       UserMissingMusicBrainzDataJson,
                                                       UserMissingMusicBrainzData)
 
+from data.model.user_cf_recommendations_recording_message import (UserRecommendationsJson,
+                                                                  UserRecommendationsRecord)
+
+
 from flask import current_app
 
 from listenbrainz.spark.handlers import (
@@ -230,26 +234,45 @@ class HandlersTestCase(unittest.TestCase):
 
     @mock.patch('listenbrainz.spark.handlers.db_recommendations_cf_recording.insert_user_recommendation')
     @mock.patch('listenbrainz.spark.handlers.db_user.get_by_mb_id')
-    @mock.patch('listenbrainz.spark.handlers.is_new_cf_recording_recommendation_batch')
-    @mock.patch('listenbrainz.spark.handlers.send_mail')
-    @unittest.skip("skip temporarily")
-    def test_handle_recommendations(self, mock_send_mail, mock_new_recommendation, mock_get_by_mb_id, mock_db_insert):
+    def test_handle_recommendations(self, mock_get_by_mb_id, mock_db_insert):
         data = {
             'musicbrainz_id': 'vansika',
             'type': 'cf_recording_recommendations',
-            'top_artist': ['a36d6fc9-49d0-4789-a7dd-a2b72369ca45'],
-            'similar_artist': ['b36d6fc9-49d0-4789-a7dd-a2b72369ca45'],
+            'recommendations': {
+                'top_artist': [
+                    {
+                        'recording_mbid': "2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                        'score': 1.8
+                    },
+                    {
+                        'recording_mbid': "8acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                        'score': -0.8
+                    }
+                ],
+                'similar_artist': []
+            }
         }
 
         mock_get_by_mb_id.return_value = {'id': 1, 'musicbrainz_id': 'vansika'}
-        mock_new_recommendation.return_value = True
-
         with self.app.app_context():
-            current_app.config['TESTING'] = False
             handle_recommendations(data)
 
-        mock_db_insert.assert_called_with(1, data['top_artist'], data['similar_artist'])
-        mock_send_mail.assert_called_once()
+        mock_db_insert.assert_called_with(
+            1,
+            UserRecommendationsJson(
+                top_artist=[
+                    UserRecommendationsRecord(
+                        recording_mbid="2acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                        score=1.8
+                    ),
+                    UserRecommendationsRecord(
+                        recording_mbid="8acb406f-c716-45f8-a8bd-96ca3939c2e5",
+                        score=-0.8
+                    ),
+                ],
+                similar_artist=[]
+            )
+        )
 
     @mock.patch('listenbrainz.spark.handlers.send_mail')
     def test_notify_cf_recording_recommendations_generation(self, mock_send_mail):

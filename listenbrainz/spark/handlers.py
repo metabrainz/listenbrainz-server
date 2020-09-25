@@ -18,6 +18,8 @@ from data.model.user_artist_stat import UserArtistStatJson
 from data.model.user_release_stat import UserReleaseStatJson
 from data.model.user_recording_stat import UserRecordingStatJson
 from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataJson
+from data.model.user_cf_recommendations_recording_message import UserRecommendationsJson
+
 
 
 TIME_TO_CONSIDER_STATS_AS_OLD = 20  # minutes
@@ -304,11 +306,20 @@ def handle_recommendations(data):
         return
 
     current_app.logger.debug("inserting recommendation for {}".format(musicbrainz_id))
-    top_artist_recording_mbids = data['top_artist']
-    similar_artist_recording_mbids = data['similar_artist']
+    recommendations = data['recommendations']
 
-    db_recommendations_cf_recording.insert_user_recommendation(user['id'], top_artist_recording_mbids,
-                                                               similar_artist_recording_mbids)
+    try:
+        db_recommendations_cf_recording.insert_user_recommendation(
+            user['id'],
+            UserRecommendationsJson(**{
+                'top_artist': recommendations['top_artist'],
+                'similar_artist': recommendations['similar_artist']
+            })
+        )
+    except ValidationError:
+        current_app.logger.error("""ValidationError while inserting recommendations for user with musicbrainz_id:
+                                 {musicbrainz_id}. \nData: {data}""".format(musicbrainz_id=musicbrainz_id,
+                                                                            data=json.dumps(data, indent=3)))
 
     current_app.logger.debug("recommendation for {} inserted".format(musicbrainz_id))
 

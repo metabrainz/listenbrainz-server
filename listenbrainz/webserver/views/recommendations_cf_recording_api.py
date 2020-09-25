@@ -36,10 +36,14 @@ def get_recommendations(user_name):
             "entity": "recording",
 
             "mbids": [
-                ["526bd613-fddd-4bd6-9137-ab709ac74cab", 9.345],
-                ["a6081bc1-2a76-4984-b21f-38bc3dcca3a5", 6.998],
-                ["a6ad0205-6e96-416d-a4e8-edd1773dac09", 4.556],
-                ["d8783d03-8a3b-4269-8261-00709d2cfee8", -2.333]
+                {
+                    'recording_mbid': "526bd613-fddd-4bd6-9137-ab709ac74cab",
+                    'score': 9.345
+                }
+                {
+                    'recording_mbid': "a6081bc1-2a76-4984-b21f-38bc3dcca3a5",
+                    'score': 6.998
+                }
             ],
 
             "user_name": "unclejohn69"
@@ -99,7 +103,7 @@ def get_recommendations(user_name):
             'entity': "recording",
             'type': artist_type,
             'user_name': user_name,
-            'last_updated': int(recommendations['created'].timestamp()),
+            'last_updated': int(getattr(recommendations, 'created').timestamp()),
             'count': len(mbid_list),
             'total_mbid_count': total_mbid_count,
             'offset': offset
@@ -127,16 +131,18 @@ def _process_recommendations(recommendations, count, artist_type, user_name, off
             APINoContent: if recommendations not found.
     """
     if artist_type == 'similar':
-        mbid_list = recommendations['recording_mbid']['similar_artist']
+        data = getattr(recommendations, 'recording_mbid').dict()
+        mbid_list = data['similar_artist']
 
     elif artist_type == 'top':
-        mbid_list = recommendations['recording_mbid']['top_artist']
+        data = getattr(recommendations, 'recording_mbid').dict()
+        mbid_list = data['top_artist']
 
     total_mbid_count = len(mbid_list)
 
     if total_mbid_count == 0:
         err_msg = 'No recommendations for user {}, please try again later.'.format(user_name)
-        raise APINoContent(err_msg, payload={'last_updated': int(recommendations['created'].timestamp())})
+        raise APINoContent(err_msg, payload={'last_updated': int(getattr(recommendations, 'created').timestamp())})
 
     count = min(count, MAX_ITEMS_PER_GET)
 
