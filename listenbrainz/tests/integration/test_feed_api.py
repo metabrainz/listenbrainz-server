@@ -24,6 +24,7 @@ import listenbrainz.db.user_relationship as db_user_relationship
 import time
 import json
 
+
 class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
     def create_and_follow_user(self, user: int, mb_row_id: int, name: str) -> dict:
@@ -73,7 +74,6 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
         self.assertEqual(ts, payload['feed'][1]['listened_at'])
         self.assertEqual('following_1', payload['feed'][1]['user_name'])
 
-
     def test_it_returns_not_found_for_non_existent_user(self):
         r = self.client.get('/1/user/doesntexistlol/feed/listens')
         self.assert404(r)
@@ -96,14 +96,13 @@ class FeedAPITestCase(ListenAPIIntegrationTestCase):
 
         time.sleep(5)
 
-
         # max_ts = 2, should have sent back 2 listens
-        r = self.client.get('/1/user/param/feed/listens', query_string={'max_ts': ts +  2})
+        r = self.client.get('/1/user/param/feed/listens', query_string={'max_ts': ts + 2})
         self.assert200(r)
         self.assertEqual(2, r.json['payload']['count'])
 
         # max_ts = 4, should have sent back 6 listens
-        r = self.client.get('/1/user/param/feed/listens', query_string={'max_ts': ts +  2})
+        r = self.client.get('/1/user/param/feed/listens', query_string={'max_ts': ts + 2})
         self.assert200(r)
         self.assertEqual(2, r.json['payload']['count'])
 

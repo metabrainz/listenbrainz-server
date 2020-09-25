@@ -232,7 +232,6 @@ class TimescaleListenStore(ListenStore):
 
         return self.fetch_listens_for_multiple_users_from_storage([user_name], from_ts, to_ts, limit, order, time_range)
 
-
     def fetch_listens_for_multiple_users_from_storage(self, user_names: List[str], from_ts: float, to_ts: float, limit: int, order: int, time_range: int=3):
         """ The timestamps are stored as UTC in the postgres datebase while on retrieving
             the value they are converted to the local server's timezone. So to compare

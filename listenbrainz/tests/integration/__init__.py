@@ -23,6 +23,7 @@ class IntegrationTestCase(ServerTestCase, DatabaseTestCase):
         ServerTestCase.tearDown(self)
         DatabaseTestCase.tearDown(self)
 
+
 class ListenAPIIntegrationTestCase(IntegrationTestCase):
     def setUp(self):
         super(ListenAPIIntegrationTestCase, self).setUp()

@@ -140,7 +140,7 @@ def user_feed(user_name: str):
     if min_ts is None and max_ts is None:
         max_ts = int(time.time())
 
-    user =  db_user.get_by_mb_id(user_name)
+    user = db_user.get_by_mb_id(user_name)
     if not user:
         raise APINotFound(f"User {user_name} not found")
 
@@ -152,7 +152,7 @@ def user_feed(user_name: str):
         from_ts=min_ts,
         to_ts=max_ts,
         time_range=time_range,
-        order=1, # descending
+        order=1,  # descending
     )
     listen_data = []
     for listen in listens:
