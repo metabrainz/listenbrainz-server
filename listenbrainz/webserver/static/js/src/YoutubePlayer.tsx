@@ -53,7 +53,10 @@ export default class YoutubePlayer
       onTrackEnd();
       return;
     }
-    if (state === YouTube.PlayerState.UNSTARTED) {
+    if (
+      state === YouTube.PlayerState.UNSTARTED ||
+      state === YouTube.PlayerState.BUFFERING
+    ) {
       const { onTrackInfoChange } = this.props;
       const title = _get(player, "playerInfo.videoData.title", "");
       onTrackInfoChange(title);
