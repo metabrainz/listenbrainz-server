@@ -129,8 +129,8 @@ def swap_table_and_indexes(conn):
 
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as curs:
-            curs.execute("DROP TABLE mapping.recording_pair_releases")
-            curs.execute("DROP TABLE mapping.recording_artist_credit_pairs")
+            curs.execute("DROP TABLE IF EXISTS mapping.recording_pair_releases")
+            curs.execute("DROP TABLE IF EXISTS mapping.recording_artist_credit_pairs")
             curs.execute("""ALTER TABLE mapping.tmp_recording_artist_credit_pairs
                               RENAME TO recording_artist_credit_pairs""")
             curs.execute("""ALTER TABLE mapping.tmp_recording_pair_releases
