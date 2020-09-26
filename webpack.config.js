@@ -13,6 +13,8 @@ module.exports = function (env) {
       userEntityChart: "/static/js/src/stats/UserEntityChart.tsx",
       userReports: "/static/js/src/stats/UserReports.tsx",
       userPageHeading: "/static/js/src/UserPageHeading.tsx",
+      patron: "/static/js/src/patron/PatronMain.tsx",
+      patronSuccess: "/static/js/src/patron/PatronSuccessfulPaymentPage.tsx",
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",

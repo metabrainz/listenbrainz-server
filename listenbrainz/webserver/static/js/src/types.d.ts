@@ -310,3 +310,5 @@ declare type FeedbackResponse = {
 declare type RecordingFeedbackMap = {
   [recordingMsid: string]: ListenFeedBack;
 };
+
+declare type PatronTimeRange = "all_time" | "month";

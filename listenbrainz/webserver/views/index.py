@@ -2,6 +2,7 @@ import locale
 import os
 import requests
 import subprocess
+import stripe
 
 from brainzutils import cache
 from datetime import datetime
@@ -21,6 +22,7 @@ from listenbrainz.webserver import flash
 from listenbrainz.webserver.timescale_connection import _ts
 from listenbrainz.webserver.redis_connection import _redis
 from listenbrainz.webserver.views.user import delete_user
+from listenbrainz.webserver.errors import APIBadRequest
 
 
 index_bp = Blueprint('index', __name__)
@@ -202,6 +204,67 @@ def mb_user_deleter(musicbrainz_row_id):
         raise NotFound('Could not find user with MusicBrainz Row ID: %d' % musicbrainz_row_id)
     delete_user(user['musicbrainz_id'])
     return jsonify({'status': 'ok'}), 200
+
+
+@index_bp.route('/patron')
+@login_required
+def patron():
+    # TODO (param): remove this when the patron logo next to the username is implemented
+    if current_user.musicbrainz_id not in current_app.config['ADMINS']:
+        raise NotFound
+
+    return render_template('index/patron.html')
+
+
+@index_bp.route('/patron/success')
+@login_required
+def patron_success():
+    # TODO (param): remove this when the patron logo next to the username is implemented
+    if current_user.musicbrainz_id not in current_app.config['ADMINS']:
+        raise NotFound
+
+    return render_template('index/patron_success.html')
+
+
+@index_bp.route('/create-checkout-session', methods=['POST', 'OPTIONS'])
+@login_required
+def create_checkout_session():
+    if current_user.musicbrainz_id not in current_app.config['ADMINS']:
+        raise NotFound
+
+    try:
+        amount = int(request.args.get('amount'))
+    except Exception:
+        raise APIBadRequest('Invalid amount')
+
+    time_range = request.args.get('time_range')
+
+    if time_range == 'all_time':
+        product_name = 'ListenBrainz patron for all time'
+    elif time_range == 'month':
+        product_name = 'ListenBrainz patron for a month'
+    else:
+        raise APIBadRequest('Invalid time range: %s' % time_range)
+
+    stripe.api_key = current_app.config['STRIPE_API_KEYS']['secret']
+    session = stripe.checkout.Session.create(
+        payment_method_types=['card'],
+        line_items=[{
+            'price_data': {
+                'currency': 'usd',
+                'product_data': {
+                    'name': product_name,
+                },
+                'unit_amount': amount * 100,
+            },
+            'quantity': 1,
+        }],
+        mode='payment',
+        success_url='http://0.0.0.0/patron/success',
+        cancel_url='http://0.0.0.0/patron',
+    )
+
+    return jsonify(id=session.id)
 
 
 def _authorize_mb_user_deleter(auth_token):

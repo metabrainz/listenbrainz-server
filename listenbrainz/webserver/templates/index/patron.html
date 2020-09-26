@@ -1,0 +1,7 @@
+{%- extends 'base-react.html' -%} {%- block title -%}Become a ListenBrainz
+Patron - ListenBrainz{%- endblock -%} {% block scripts %} {{ super() }}
+<script
+  src="{{ get_static_path('patron.js') }}"
+  type="text/javascript"
+></script>
+{% endblock %}
