@@ -6,17 +6,21 @@ Get timestamp (from_date, to_date) to fetch user listening history. We fetch the
 go back X days and get the updated timestamp (from_date) from where we should start fetching listens.
 The timestamp of fetched listens belongs to [from_date.month, to_date.month]
 
-The listens are fetched from HDFS having all the fields that a typical listen has except the artist_mbid and recording_mbid. Refer to
-listenbrainz_spark/utils.py for the definition of a typical listen. The dataframe of these listens is called partial_listens_df
+The listens are fetched from HDFS having all the fields that a typical listen has except the artist_mbid and recording_mbid.
+Refer to listenbrainz_spark/utils.py for the definition of a typical listen. The dataframe of these listens is called
+partial_listens_df.
 
-The partial_listens_df is joined with mapping_df (msid->mbid mapping) on artist_msid and recording_msid to get the mapped_listens_df.
-The dataframe created is saved to HDFS.
+The artist_name and track_name fields of partial_listens_df are converted to artist_name_matchable and track_name_matchable
+respectively by removing accents, removing punctuations and whitespaces, and converting to lowercase.
+
+The partial_listens_df is joined with mapping_df (msid->mbid mapping) on artist_name_matchable and track_name_matchable to
+get the mapped_listens_df. The dataframe created is saved to HDFS.
 
 Distinct users are filtered from mapped_listens_df and each user is assigned a unique identification number called user_id.
 The dataframe created is called users_df and is saved to HDFS.
 
-Distinct recordings are filtered from mapped_listens_df and each recording is assigned a unique identification number called the recording_id.
-The dataframe created is called recordings_df and is saved to HDFS.
+Distinct recordings are filtered from mapped_listens_df and each recording is assigned a unique identification number called the
+recording_id. The dataframe created is called recordings_df and is saved to HDFS.
 
 mb_recording_mbid and user_name is filtered from mapped_listened_df. The dataframe created is called listens_df.
 
