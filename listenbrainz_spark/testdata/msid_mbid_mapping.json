@@ -18,7 +18,7 @@
     {
         "msb_artist_msid":"44cecbb5-e957-4e79-8d9a-c59dd2c59e82",
         "mb_artist_credit_id":2,
-        "mb_artist_credit_mbids":["7e786a4c-c743-4713-9340-a6f12d8515d4"],
+        "mb_artist_credit_mbids":["7e786a4c-c743-4713-9340-a6f12d8515d4", "6a70b322-9aa9-41b3-9dce-824733633a1c"],
         "msb_release_msid":"f19b33ce-6651-41b3-8fd8-204172ff3e90",
         "mb_release_mbid":"74df6235-8362-4e1e-9d0c-950a5783d7eb",
         "msb_recording_msid":"000003b1-95a1-4ca8-b91a-3898ef3d2193",
@@ -34,7 +34,7 @@
     {
         "msb_artist_msid":"44cecbb5-e957-4e79-8d9a-c59dd2c59e82",
         "mb_artist_credit_id": 2,
-        "mb_artist_credit_mbids": ["7e786a4c-c743-4713-9340-a6f12d8515d4"],
+        "mb_artist_credit_mbids": ["7e786a4c-c743-4713-9340-a6f12d8515d4", "6a70b322-9aa9-41b3-9dce-824733633a1c"],
         "msb_release_msid": "a20b33ce-6651-41b3-8fd8-204172ff3e90",
         "mb_release_mbid": "e23b33ce-6651-41b3-8fd8-204172ff3e90",
         "msb_recording_msid": "222003b1-95a1-4ca8-b91a-3898ef3d2193",

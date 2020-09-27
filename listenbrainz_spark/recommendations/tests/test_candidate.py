@@ -8,6 +8,7 @@ from listenbrainz_spark.exceptions import (TopArtistNotFetchedException,
                                            SimilarArtistNotFetchedException)
 
 from pyspark.sql import Row
+from unittest.mock import patch
 import pyspark.sql.functions as f
 from pyspark.sql.types import StructField, StructType, StringType
 
@@ -88,12 +89,8 @@ class CandidateSetsTestClass(SparkTestCase):
         test_top_artist = candidate_sets.get_top_artists(mapped_listens, top_artist_limit, [])
 
         cols = ['top_artist_credit_id', 'top_artist_name', 'user_name', 'total_count']
-        self.assertListEqual(cols, test_top_artist.columns)
-        self.assertEqual(test_top_artist.count(), 2)
-
-        top_artist_id = sorted([row.top_artist_credit_id for row in test_top_artist.collect()])
-        self.assertEqual(top_artist_id[0], 2)
-        self.assertEqual(top_artist_id[1], 2)
+        self.assertListEqual(sorted(cols), sorted(test_top_artist.columns))
+        self.assertEqual(test_top_artist.count(), 4)
 
         # empty df
         mapped_listens = mapped_listens.select('*').where(f.col('user_name') == 'lala')
@@ -102,7 +99,6 @@ class CandidateSetsTestClass(SparkTestCase):
 
         with self.assertRaises(TopArtistNotFetchedException):
             candidate_sets.get_top_artists(mapped_listens, top_artist_limit, ['lala'])
-
 
     def test_get_similar_artists(self):
         df = utils.create_dataframe(
@@ -189,7 +185,7 @@ class CandidateSetsTestClass(SparkTestCase):
                                                                                                                     mapped_listens_subset)
         cols = ['recording_id', 'user_id', 'user_name']
         self.assertListEqual(sorted(cols), sorted(top_artist_candidate_set_df.columns))
-        self.assertEqual(top_artist_candidate_set_df.count(), 2)
+        self.assertEqual(top_artist_candidate_set_df.count(), 3)
 
         cols = [
             'top_artist_credit_id',
@@ -205,7 +201,7 @@ class CandidateSetsTestClass(SparkTestCase):
         ]
 
         self.assertListEqual(sorted(cols), sorted(top_artist_candidate_set_df_html.columns))
-        self.assertEqual(top_artist_candidate_set_df_html.count(), 2)
+        self.assertEqual(top_artist_candidate_set_df_html.count(), 3)
 
     def test_get_similar_artist_candidate_set_df(self):
         mapped_listens_df = utils.read_files_from_HDFS(self.mapped_listens_path)
@@ -274,9 +270,12 @@ class CandidateSetsTestClass(SparkTestCase):
         df = candidate_sets.filter_last_x_days_recordings(candidate_set_df, mapped_listens_subset)
 
         user_name = [row.user_name for row in df.collect()]
-        self.assertEqual(sorted(user_name), ['rob', 'vansika_1'])
-        self.assertEqual(df.collect()[0].mb_recording_mbid, "sf5a56f4-1f83-4681-b319-70a734d0d047")
-        self.assertEqual(df.collect()[1].mb_recording_mbid, "sf5a56f4-1f83-4681-b319-70a734d0d047")
+        self.assertEqual(sorted(user_name), ['rob', 'rob', 'vansika_1'])
+        received_recording_mbid = sorted([row.mb_recording_mbid for row in df.collect()])
+        expected_recording_mbid = sorted(
+            ["sf5a56f4-1f83-4681-b319-70a734d0d047", "af5a56f4-1f83-4681-b319-70a734d0d047", "sf5a56f4-1f83-4681-b319-70a734d0d047"]
+        )
+        self.assertEqual(expected_recording_mbid, received_recording_mbid)
 
     def test_save_candidate_sets(self):
         top_artist_candidate_set_df_df = self.get_candidate_set()
@@ -536,3 +535,73 @@ class CandidateSetsTestClass(SparkTestCase):
         df = df.select('*').where(f.col('col1') == 'laa')
         status = candidate_sets._is_empty_dataframe(df)
         self.assertTrue(status)
+
+    def test_convert_string_datatype_to_array(self):
+        df = utils.create_dataframe(Row(mbids="6a70b322-9aa9-41b3-9dce-824733633a1c"), schema=None)
+
+        res_df = candidate_sets.convert_string_datatype_to_array(df)
+        self.assertEqual(res_df.collect()[0].mb_artist_credit_mbids, ["6a70b322-9aa9-41b3-9dce-824733633a1c"])
+
+    def test_explode_artist_collaborations(self):
+        df = utils.create_dataframe(
+            Row(
+                mb_artist_credit_mbids=["5a70b322-9aa9-41b3-9dce-824733633a1c"],
+                user_name="vansika",
+                total_count=1
+            ),
+            schema=None
+        )
+
+        df = df.union(utils.create_dataframe(
+            Row(
+                mb_artist_credit_mbids=["6a70b322-9aa9-41b3-9dce-824733633a1c", "7a70b322-9aa9-41b3-9dce-824733633a1c"],
+                user_name="vansika",
+                total_count=4
+            ),
+            schema=None
+        ))
+
+        res_df = candidate_sets.explode_artist_collaborations(df)
+        self.assertEqual(sorted(res_df.columns), sorted(["mb_artist_credit_mbids", "user_name", "total_count"]))
+        self.assertEqual(res_df.collect()[0].mb_artist_credit_mbids, ["6a70b322-9aa9-41b3-9dce-824733633a1c"])
+        self.assertEqual(res_df.collect()[1].mb_artist_credit_mbids, ["7a70b322-9aa9-41b3-9dce-824733633a1c"])
+
+    @patch('listenbrainz_spark.recommendations.candidate_sets.utils.read_files_from_HDFS')
+    @patch('listenbrainz_spark.recommendations.candidate_sets.explode_artist_collaborations')
+    def test_append_artists_from_collaborations(self, mock_explode, mock_read_hdfs):
+        top_artist_df = utils.create_dataframe(
+            Row(
+                top_artist_credit_id=2,
+                top_artist_name='kishorekumar',
+                user_name='vansika',
+                mb_artist_credit_mbids=["6a70b322-9aa9-41b3-9dce-824733633a1c"],
+                total_count=4),
+            schema=None
+        )
+        mock_explode.return_value = utils.create_dataframe(
+            Row(
+                mb_artist_credit_mbids=["6a70b322-9aa9-41b3-9dce-824733633a1c"],
+                user_name='rob',
+                total_count=7
+            ),
+            schema=None
+        )
+
+        mapping_df = utils.create_dataframe(
+            Row(
+                mb_artist_credit_mbids=["6a70b322-9aa9-41b3-9dce-824733633a1c"],
+                msb_artist_credit_name_matchable='kishorekumar',
+                mb_artist_credit_id=2,
+            ),
+            schema=None
+        )
+
+        mock_read_hdfs.return_value = mapping_df
+        res_df = candidate_sets.append_artists_from_collaborations(top_artist_df)
+
+        mock_explode.assert_called_once_with(top_artist_df)
+        mock_read_hdfs.assert_called_once_with(path.MBID_MSID_MAPPING)
+
+        self.assertEqual(res_df.count(), 2)
+        self.assertEqual(res_df.collect()[0].user_name, 'vansika')
+        self.assertEqual(res_df.collect()[1].user_name, 'rob')
