@@ -275,7 +275,7 @@ def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df):
                                    'release_name',
                                    'track_name',
                                    'user_name') \
-                           .where(col('msb_recording_name_matchable').isNull() & \
+                           .where(col('msb_recording_name_matchable').isNull() &
                                   col('msb_artist_credit_name_matchable').isNull())
 
     window = Window.partitionBy('user_name').orderBy(col('listened_at').desc())
