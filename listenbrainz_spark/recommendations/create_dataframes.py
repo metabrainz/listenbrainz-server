@@ -50,11 +50,15 @@ from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataR
 from data.model.user_cf_recommendations_recording_message import (UserCreateDataframesMessage,
                                                                   UserMissingMusicBrainzDataMessage)
 
+import unidecode
 from flask import current_app
+from pyspark.sql.types import StringType
 import pyspark.sql.functions as func
 from pyspark.sql import Row
 from pyspark.sql.window import Window
-from pyspark.sql.functions import rank, col, row_number
+from pyspark.sql.functions import rank, col, row_number, udf
+
+
 
 # Some useful dataframe fields/columns.
 # partial_listens_df:
@@ -117,6 +121,56 @@ def generate_dataframe_id(metadata):
     """ Generate dataframe id.
     """
     metadata['dataframe_id'] = '{}-{}'.format(config.DATAFRAME_ID_PREFIX, uuid.uuid4())
+
+
+def unaccent_text(df):
+    """ Remove accents from a text field.
+
+        Args:
+            df: Dataframe to process.
+
+        Returns:
+            res_df: Dataframe with unaccented artist name and track name.
+    """
+
+    def get_unaccented_string(accented_string):
+        return unidecode.unidecode(accented_string)
+
+    unaccent_udf = udf(get_unaccented_string, StringType())
+
+    intermediate_df = df.withColumn("unaccented_artist_name", unaccent_udf(df.artist_name))
+
+    res_df = intermediate_df.withColumn("unaccented_track_name", unaccent_udf(intermediate_df.track_name))
+
+    return res_df
+
+
+def convert_text_fields_to_matchable(df):
+    """ Convert text fields (names i.e artist_name, track_name etc) to matchable field.
+        The following steps convert a text field to a matchable field:
+            1.  Unaccent the text.
+            2.  Remove punctuations and whitespaces.
+            3.  Convert to lowercase.
+
+        Args:
+            df: Dataframe to process
+
+        Returns:
+            res_df: Dataframe with artist_name and track_name converted to matchable fields.
+    """
+    unaccent_df = unaccent_text(df)
+
+    intermediate_df = unaccent_df.withColumn(
+        "artist_name_matchable",
+        func.lower(func.regexp_replace("unaccented_artist_name", '[^A-Za-z0-9]+', ""))
+    )
+
+    res_df = intermediate_df.withColumn(
+        "track_name_matchable",
+        func.lower(func.regexp_replace("unaccented_track_name", '[^A-Za-z0-9]+', ""))
+    )
+
+    return res_df
 
 
 def save_dataframe(df, dest_path):
@@ -193,7 +247,7 @@ def get_listens_for_training_model_window(to_date, from_date, metadata, dest_pat
         raise
 
     partial_listens_df = utils.get_listens_without_artist_and_recording_mbids(training_df)
-    return partial_listens_df
+    return convert_text_fields_to_matchable(partial_listens_df)
 
 
 def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df):
@@ -208,8 +262,8 @@ def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df):
             missing_musicbrainz_data_itr (iterator): Data missing from the MusicBrainz.
     """
     condition = [
-        partial_listens_df.recording_msid == msid_mbid_mapping_df.msb_recording_msid,
-        partial_listens_df.artist_msid == msid_mbid_mapping_df.msb_artist_msid
+        partial_listens_df.track_name_matchable == msid_mbid_mapping_df.msb_recording_name_matchable,
+        partial_listens_df.artist_name_matchable == msid_mbid_mapping_df.msb_artist_credit_name_matchable
     ]
 
     df = partial_listens_df.join(msid_mbid_mapping_df, condition, 'left') \
@@ -221,7 +275,8 @@ def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df):
                                    'release_name',
                                    'track_name',
                                    'user_name') \
-                           .where(col('msb_artist_msid').isNull() & col('msb_recording_msid').isNull())
+                           .where(col('msb_recording_name_matchable').isNull() & \
+                                  col('msb_artist_credit_name_matchable').isNull())
 
     window = Window.partitionBy('user_name').orderBy(col('listened_at').desc())
 
@@ -257,8 +312,8 @@ def get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_
             mapped_listens_df (dataframe): listens mapped with msid_mbid_mapping.
     """
     condition = [
-        partial_listens_df.recording_msid == msid_mbid_mapping_df.msb_recording_msid,
-        partial_listens_df.artist_msid == msid_mbid_mapping_df.msb_artist_msid
+        partial_listens_df.track_name_matchable == msid_mbid_mapping_df.msb_recording_name_matchable,
+        partial_listens_df.artist_name_matchable == msid_mbid_mapping_df.msb_artist_credit_name_matchable
     ]
 
     df = partial_listens_df.join(msid_mbid_mapping_df, condition, 'inner')
