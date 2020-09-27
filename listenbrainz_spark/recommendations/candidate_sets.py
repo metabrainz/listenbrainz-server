@@ -21,7 +21,7 @@ from flask import current_app
 import pyspark.sql.functions as func
 from pyspark.sql.window import Window
 from pyspark.sql.functions import col, row_number
-
+from pyspark.sql.types import StringType, ArrayType
 
 # Some useful dataframe fields/columns.
 # top_artist_df:
@@ -124,6 +124,111 @@ def _is_empty_dataframe(df):
     return False
 
 
+def convert_string_datatype_to_array(df):
+    """ Convert string datatype col to array<string> datatype.
+    """
+    def convert_to_list(x):
+        res = []
+        res.append(x)
+        return res
+
+    convert_to_list_udf = func.udf(convert_to_list, ArrayType(StringType()))
+    res_df = df.withColumn("mb_artist_credit_mbids", convert_to_list_udf(col("mbids")))
+
+    return res_df
+
+
+def explode_artist_collaborations(df):
+    """ artist_mbids is a list of artist mbid of artists to which a track belongs.
+        Explode the artist_mbids list and get the indivial artist mbid.
+
+        For Example:
+            Before:
+            -----------------------
+            |  artist_credit_mbids|
+            -----------------------
+            |               [a, b]|
+            -----------------------
+
+            After:
+            -----------------------
+            |  artist_credit_mbids|
+            -----------------------
+            |                    a|
+            -----------------------
+            |                    b|
+            -----------------------
+
+        Args:
+            df: A dataframe
+
+        Returns:
+            df with columns ['mb_artist_credit_mbids', 'user_name', 'total_count']
+    """
+    df = df.select(col('mb_artist_credit_mbids'),
+                   col('user_name'),
+                   col('total_count')) \
+           .where(func.size('mb_artist_credit_mbids') > 1) \
+           .withColumn('mb_artist_credit_mbids', func.explode('mb_artist_credit_mbids')) \
+           .select(col('mb_artist_credit_mbids').alias('mbids'),
+                   col('total_count'),
+                   col('user_name'))
+
+    res_df = convert_string_datatype_to_array(df).select(col('mb_artist_credit_mbids'),
+                                                         col('total_count'),
+                                                         col('user_name'))
+
+    return res_df
+
+
+def append_artists_from_collaborations(top_artist_df):
+    """ Append artist info rows (artist_mbid, artist_credit_id, etc) of artists that belong
+        to an artist collaboration to top artist dataframe.
+
+        Example:
+            Before:
+            ----------------------------------------
+            | artist_credit_id| artist_credit_mbids|
+            ----------------------------------------
+            |                1|              [a, b]|
+            ----------------------------------------
+
+            After:
+            ----------------------------------------
+            | artist_credit_id| artist_credit_mbids|
+            ----------------------------------------
+            |                1|              [a, b]|
+            ----------------------------------------
+            |                2|                 [a]|
+            ----------------------------------------
+            |                3|                 [b]|
+            ----------------------------------------
+    """
+    df = explode_artist_collaborations(top_artist_df)
+
+    msid_mbid_mapping_df = utils.read_files_from_HDFS(path.MBID_MSID_MAPPING)
+
+    # get artist credit id corresponding to artist mbid.
+    res_df = msid_mbid_mapping_df.join(df, 'mb_artist_credit_mbids', 'inner') \
+                                 .select(col('mb_artist_credit_mbids'),
+                                         col('mb_artist_credit_id').alias('top_artist_credit_id'),
+                                         col('msb_artist_credit_name_matchable').alias('top_artist_name'),
+                                         col('total_count'),
+                                         col('user_name')) \
+                                 .distinct()
+
+    # append the exploded df to top artist df
+    top_artist_df = top_artist_df.union(res_df) \
+                                 .select('top_artist_credit_id',
+                                         'top_artist_name',
+                                         'total_count',
+                                         'user_name') \
+                                 .distinct()
+    # using distinct for extra care since pyspark union ~ SQL union all.
+
+    return top_artist_df
+
+
 def get_top_artists(mapped_listens_subset, top_artist_limit, users):
     """ Get top artists listened to by users who have a listening history in
         the past X days where X = RECOMMENDATION_GENERATION_WINDOW.
@@ -143,9 +248,11 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
     """
     df = mapped_listens_subset.select('mb_artist_credit_id',
                                       'msb_artist_credit_name_matchable',
+                                      'mb_artist_credit_mbids',
                                       'user_name') \
                               .groupBy('mb_artist_credit_id',
                                        'msb_artist_credit_name_matchable',
+                                       'mb_artist_credit_mbids',
                                        'user_name') \
                               .agg(func.count('mb_artist_credit_id').alias('total_count'))
 
@@ -153,16 +260,19 @@ def get_top_artists(mapped_listens_subset, top_artist_limit, users):
 
     top_artist_df = df.withColumn('rank', row_number().over(window)) \
                       .where(col('rank') <= top_artist_limit) \
-                      .select(col('mb_artist_credit_id').alias('top_artist_credit_id'),
+                      .select(col('mb_artist_credit_mbids'),
+                              col('mb_artist_credit_id').alias('top_artist_credit_id'),
                               col('msb_artist_credit_name_matchable').alias('top_artist_name'),
-                              col('user_name'),
-                              col('total_count'))
+                              col('total_count'),
+                              col('user_name'))
+
+    top_artist_df = append_artists_from_collaborations(top_artist_df)
 
     if users:
         top_artist_given_users_df = top_artist_df.select('top_artist_credit_id',
                                                          'top_artist_name',
-                                                         'user_name',
-                                                         'total_count') \
+                                                         'total_count',
+                                                         'user_name') \
                                                  .where(top_artist_df.user_name.isin(users))
 
         if _is_empty_dataframe(top_artist_given_users_df):
