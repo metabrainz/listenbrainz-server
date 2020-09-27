@@ -1,3 +1,22 @@
+"""
+This script is responsible for creating candidate sets for all users. Candidate sets are dataframes containing
+(user_id, recording_id). The generated candidate sets will be given as input to the recommender that will assign ratings
+to the recordings in candidate sets. The general flow is as follows:
+
+The listens of the last 7 days are filtered from mapped_listens_df and this is called the mapped_listens_subset_df.
+Top X (an int supplied as an argument to the script) artists are fetched for each user from the mapped_listens_subset_df.
+The top_artist_df is joined with recordings_df to get the dataframe of recordings belonging to the top artists. From this dataframe,
+recordings listened to by the users in the last 7 days are filtered so that the recommendations don't contain
+recordings that the user has listened to in the last week. The resultant dataframe is called the top_artists_candidate_set_df.
+
+Artists similar to top artists are fetched from the artist_relations_df and the similar_artist_candidate_set_df is generated
+in a manner similar to the generation of the top artist candidate set.
+
+The top artist and similar artist candidate set dataframes are saved to HDFS. For HDFS path of dataframes refer to listenbrainz_spark/path.py
+
+Note: users and recordings that are in candidate set but not in the training set will be discarded by the recommender.
+"""
+
 import os
 import sys
 import uuid
