@@ -407,7 +407,7 @@ class RecommendTestClass(SparkTestCase):
 
         recommend.check_for_ratings_beyond_range(top_artist_rec_df, similar_artist_rec_df)
 
-        mock_current_app.logger.error.assert_has_calls([
+        mock_current_app.logger.info.assert_has_calls([
             call('Some ratings are greater than 1 \nMax rating: 1.8'),
             call('Some ratings are less than -1 \nMin rating: -2.8')
         ])
