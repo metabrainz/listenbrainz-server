@@ -127,8 +127,8 @@ def generate_dataframe_id(metadata):
     metadata['dataframe_id'] = '{}-{}'.format(config.DATAFRAME_ID_PREFIX, uuid.uuid4())
 
 
-def unaccent_text(df):
-    """ Remove accents from a text field.
+def unaccent_artist_and_track_name(df):
+    """ Remove accents from artist and track name.
 
         Args:
             df: Dataframe to process.
@@ -162,7 +162,7 @@ def convert_text_fields_to_matchable(df):
         Returns:
             res_df: Dataframe with artist_name and track_name converted to matchable fields.
     """
-    unaccent_df = unaccent_text(df)
+    unaccent_df = unaccent_artist_and_track_name(df)
 
     intermediate_df = unaccent_df.withColumn(
         "artist_name_matchable",

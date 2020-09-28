@@ -49,7 +49,7 @@ class CreateDataframeTestCase(SparkTestCase):
         self.assertNotIn('artist_mbids', test_df.columns)
         self.assertNotIn('recording_mbid', test_df.columns)
 
-    def test_unaccent_text(self):
+    def test_unaccent_artist_and_track_name(self):
         df = utils.create_dataframe(
             Row(
                 artist_name='égè,câ,î or ô)tñü or ï(ç)',
@@ -58,7 +58,7 @@ class CreateDataframeTestCase(SparkTestCase):
             schema=None
         )
 
-        res_df = create_dataframes.unaccent_text(df)
+        res_df = create_dataframes.unaccent_artist_and_track_name(df)
         self.assertEqual(res_df.collect()[0].unaccented_artist_name, 'ege,ca,i or o)tnu or i(c)')
         self.assertEqual(res_df.collect()[0].unaccented_track_name, 'ege,ca,i or o)tnu lalaor iii(c)')
 
