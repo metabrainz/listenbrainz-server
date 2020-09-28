@@ -11,3 +11,4 @@ pytest-cov == 2.10.1
 py4j == 0.10.9
 pyspark == 2.4.5
 pydantic == 1.6.1
+unidecode == 1.1.1

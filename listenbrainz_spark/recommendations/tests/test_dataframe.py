@@ -44,8 +44,37 @@ class CreateDataframeTestCase(SparkTestCase):
         test_df = create_dataframes.get_listens_for_training_model_window(to_date, from_date, metadata, self.listens_path)
         self.assertEqual(metadata['to_date'], to_date)
         self.assertEqual(metadata['from_date'], from_date)
+        self.assertIn('artist_name_matchable', test_df.columns)
+        self.assertIn('track_name_matchable', test_df.columns)
         self.assertNotIn('artist_mbids', test_df.columns)
         self.assertNotIn('recording_mbid', test_df.columns)
+
+    def test_unaccent_artist_and_track_name(self):
+        df = utils.create_dataframe(
+            Row(
+                artist_name='égè,câ,î or ô)tñü or ï(ç)',
+                track_name='égè,câ,î or ô)tñü lalaor ïïï(ç)'
+            ),
+            schema=None
+        )
+
+        res_df = create_dataframes.unaccent_artist_and_track_name(df)
+        self.assertEqual(res_df.collect()[0].unaccented_artist_name, 'ege,ca,i or o)tnu or i(c)')
+        self.assertEqual(res_df.collect()[0].unaccented_track_name, 'ege,ca,i or o)tnu lalaor iii(c)')
+
+    def test_convert_text_fields_to_matchable(self):
+        df = utils.create_dataframe(
+            Row(
+                artist_name='égè,câ,î or ô)tñü or ï(ç)  !"#$%&\'()*+, L   ABD don''t-./:;<=>?@[]^_`{|}~',
+                track_name='égè,câ,î or ô)tñü lalaor ïïï(ç)!"#$%&\'()*+, L       ABD don''t lie-./:;<=>?@[]^_`{|}~'
+            ),
+            schema=None
+        )
+
+        res_df = create_dataframes.convert_text_fields_to_matchable(df)
+        res_df.show()
+        self.assertEqual(res_df.collect()[0].artist_name_matchable, 'egecaiorotnuoriclabddont')
+        self.assertEqual(res_df.collect()[0].track_name_matchable, 'egecaiorotnulalaoriiiclabddontlie')
 
     def test_save_dataframe(self):
         path_ = '/test_df.parquet'
