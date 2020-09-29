@@ -310,9 +310,3 @@ declare type FeedbackResponse = {
 declare type RecordingFeedbackMap = {
   [recordingMsid: string]: ListenFeedBack;
 };
-
-declare type FollowerFollowingEntityMode = "followers" | "following";
-
-declare type FollowerFollowingEntityEntry = {
-  user_name: string;
-};
