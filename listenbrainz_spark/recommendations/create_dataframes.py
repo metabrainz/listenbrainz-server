@@ -492,13 +492,18 @@ def main(train_model_window=None):
         current_app.logger.error(str(err), exc_info=True)
         raise
 
+    current_app.logger.info('Fetching listens to create dataframes...')
     to_date, from_date = get_dates_to_train_data(train_model_window)
     partial_listens_df = get_listens_for_training_model_window(to_date, from_date, metadata, path.LISTENBRAINZ_DATA_DIRECTORY)
+    current_app.logger.info('Listen count from {from_date} to {to_date}: {listens_count}'
+                            .format(from_date=from_date, to_date=to_date, listens_count=partial_listens_df.count()))
 
     # Dataframe containing recording msid->mbid and artist msid->mbid mapping.
     msid_mbid_mapping_df = utils.read_files_from_HDFS(path.MBID_MSID_MAPPING)
 
+    current_app.logger.info('Mapping listens...')
     mapped_listens_df = get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df)
+    current_app.logger.info('Listen count after mapping: {}'.format(mapped_listens_df.count()))
 
     current_app.logger.info('Preparing users data and saving to HDFS...')
     users_df = get_users_dataframe(mapped_listens_df, metadata)
