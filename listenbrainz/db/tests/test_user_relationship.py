@@ -52,3 +52,39 @@ class UserRelationshipTestCase(DatabaseTestCase):
     def test_delete_raises_value_error_for_invalid_relationships(self):
         with self.assertRaises(ValueError):
             db_user_relationship.delete(self.main_user['id'], self.followed_user_1['id'], 'idkwhatrelationshipthisis')
+
+    def test_get_followers_of_user_returns_correct_data(self):
+        # no relationships yet, should return an empty list
+        followers = db_user_relationship.get_followers_of_user(self.followed_user_1['id'])
+        self.assertListEqual(followers, [])
+
+        # add two relationships
+        db_user_relationship.insert(self.main_user['id'], self.followed_user_1['id'], 'follow')
+        self.following_user_1 = db_user.get_or_create(3, 'following_user_1')
+        db_user_relationship.insert(self.following_user_1['id'], self.followed_user_1['id'], 'follow')
+
+        # At this point, the main_user and following_user_1 follow followed_user_1
+        # So, if we get the followers of followed_user_1, we'll get back two users
+        followers = db_user_relationship.get_followers_of_user(self.followed_user_1['id'])
+        self.assertEqual(2, len(followers))
+
+    def test_get_following_for_user_returns_correct_data(self):
+
+        # no relationships yet, should return an empty list
+        following = db_user_relationship.get_following_for_user(self.main_user['id'])
+        self.assertListEqual(following, [])
+
+        # make the main_user follow followed_user_1
+        db_user_relationship.insert(self.main_user['id'], self.followed_user_1['id'], 'follow')
+
+        # the list of users main_user is following should have 1 element now
+        following = db_user_relationship.get_following_for_user(self.main_user['id'])
+        self.assertEqual(1, len(following))
+
+        # make it so that the main user follows two users, followed_user_1 and followed_user_2
+        self.followed_user_2 = db_user.get_or_create(3, 'followed_user_2')
+        db_user_relationship.insert(self.main_user['id'], self.followed_user_2['id'], 'follow')
+
+        # the list of users main_user is following should have 2 elements now
+        following = db_user_relationship.get_following_for_user(self.main_user['id'])
+        self.assertEqual(2, len(following))

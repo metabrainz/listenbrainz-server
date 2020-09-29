@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def create(musicbrainz_row_id, musicbrainz_id):
+def create(musicbrainz_row_id: int, musicbrainz_id: str) -> int:
     """Create a new user.
 
     Args:
@@ -177,7 +177,7 @@ def get_user_count():
             raise
 
 
-def get_or_create(musicbrainz_row_id, musicbrainz_id):
+def get_or_create(musicbrainz_row_id: int, musicbrainz_id: str) -> dict:
     """Get user with a specified MusicBrainz ID, or create if there's no account.
 
     Args:
