@@ -119,24 +119,24 @@ export default class APIService {
     return { status: response.status };
   };
 
-  getFollowers = async (username: string) => {
+  getFollowersOfUser = async (username: string) => {
     if (!username) {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `/user/${username}/get-followers`;
+    const url = `/user/${username}/followers`;
     const response = await fetch(url);
     this.checkStatus(response);
     const data = response.json();
     return data;
   };
 
-  getFollowing = async (username: string) => {
+  getFollowingForUser = async (username: string) => {
     if (!username) {
       throw new SyntaxError("Username missing");
     }
 
-    const url = `/user/${username}/get-following`;
+    const url = `/user/${username}/following`;
     const response = await fetch(url);
     this.checkStatus(response);
     const data = response.json();

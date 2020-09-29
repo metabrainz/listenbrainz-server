@@ -231,6 +231,7 @@ def unfollow_user(user_name: str):
 
 
 @user_bp.route('/<user_name>/followers')
+@login_required
 def get_followers(user_name: str):
     user = _get_user(user_name)
     try:
@@ -243,6 +244,7 @@ def get_followers(user_name: str):
 
 
 @user_bp.route('/<user_name>/following')
+@login_required
 def get_following(user_name: str):
     user = _get_user(user_name)
     try:
