@@ -71,7 +71,6 @@ class FTPDownloaderTestCase(unittest.TestCase):
         mock_ftp_cons.return_value.cwd.assert_called_once_with(config.FTP_MSID_MBID_DIR)
         mock_available_dump.assert_called_once_with(mock_list_dir.return_value, 'msid-mbid-mapping-with-matchable')
 
-
         mock_latest_mapping.assert_called_once_with([
             'msid-mbid-mapping-with-matchable-20200603-203731.tar.bz2',
             'msid-mbid-mapping-with-matchable-20200603-202732.tar.bz2',
@@ -146,7 +145,8 @@ class FTPDownloaderTestCase(unittest.TestCase):
     def test_download_listens_full_dump_by_id(self, mock_ftp, mock_list_dir, mock_get_f_name, mock_download_dump):
         mock_list_dir.return_value = ['listenbrainz-dump-123-20190101-000000/', 'listenbrainz-dump-45-20190201-000000']
         mock_get_f_name.return_value = 'listenbrainz-listens-dump-45-20190201-000000-spark-full.tar.xz'
-        dest_path, filename, dump_id = ListenbrainzDataDownloader().download_listens('fakedir', listens_dump_id=45, dump_type='full')
+        dest_path, filename, dump_id = ListenbrainzDataDownloader().download_listens('fakedir',
+                                                                                     listens_dump_id=45, dump_type='full')
         mock_list_dir.assert_called_once()
         mock_ftp.return_value.cwd.assert_has_calls([
             call(config.FTP_LISTENS_DIR + 'fullexport/'),

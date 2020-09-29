@@ -52,7 +52,8 @@ class DumpImporterJobTestCase(SparkTestCase):
     @patch('listenbrainz_spark.request_consumer.jobs.import_dump.shutil.rmtree')
     @patch('listenbrainz_spark.request_consumer.jobs.import_dump.tempfile')
     @patch('listenbrainz_spark.request_consumer.jobs.import_dump.datetime')
-    def test_import_full_dump_handler(self, mock_datetime, mock_temp, mock_rmtree, mock_upload, mock_download, mock_ftp_constructor):
+    def test_import_full_dump_handler(self, mock_datetime, mock_temp, mock_rmtree,
+                                      mock_upload, mock_download, mock_ftp_constructor):
         mock_src = MagicMock()
         mock_temp.mkdtemp.return_value = 'best_dir_ever'
         mock_download.return_value = (mock_src, 'listenbrainz-listens-dump-202-20200915-180002-spark-full.tar.xz', 202)
@@ -80,7 +81,8 @@ class DumpImporterJobTestCase(SparkTestCase):
     @patch('listenbrainz_spark.request_consumer.jobs.import_dump.shutil.rmtree')
     @patch('listenbrainz_spark.request_consumer.jobs.import_dump.tempfile')
     @patch('listenbrainz_spark.request_consumer.jobs.import_dump.datetime')
-    def test_import_full_dump_by_id_handler(self, mock_datetime, mock_temp, mock_rmtree, mock_upload, mock_download, mock_ftp_constructor):
+    def test_import_full_dump_by_id_handler(self, mock_datetime, mock_temp, mock_rmtree,
+                                            mock_upload, mock_download, mock_ftp_constructor):
         mock_src = MagicMock()
         mock_temp.mkdtemp.return_value = 'best_dir_ever'
         mock_download.return_value = (mock_src, 'listenbrainz-listens-dump-202-20200915-180002-spark-full.tar.xz', 202)
@@ -165,7 +167,8 @@ class DumpImporterJobTestCase(SparkTestCase):
     @patch('listenbrainz_spark.request_consumer.jobs.import_dump.shutil.rmtree')
     @patch('listenbrainz_spark.request_consumer.jobs.import_dump.tempfile')
     @patch('listenbrainz_spark.request_consumer.jobs.import_dump.datetime')
-    def test_import_incremental_dump_by_id_handler(self, mock_datetime, mock_temp, mock_rmtree, mock_upload, mock_download, mock_ftp_constructor):
+    def test_import_incremental_dump_by_id_handler(self, mock_datetime, mock_temp,
+                                                   mock_rmtree, mock_upload, mock_download, mock_ftp_constructor):
         mock_src = MagicMock()
         mock_temp.mkdtemp.return_value = 'best_dir_ever'
         mock_download.return_value = (mock_src, 'listenbrainz-listens-dump-202-20200915-180002-spark-incremental.tar.xz', 202)
