@@ -127,6 +127,23 @@ def generate_dataframe_id(metadata):
     metadata['dataframe_id'] = '{}-{}'.format(config.DATAFRAME_ID_PREFIX, uuid.uuid4())
 
 
+def get_unique_rows_from_mapping(df):
+    """ Get unique rows from the mapping.
+    """
+    msid_mbid_mapping_df = df.select('mb_artist_credit_id',
+                                     'mb_artist_credit_mbids',
+                                     'mb_artist_credit_name',
+                                     'mb_recording_mbid',
+                                     'mb_recording_name',
+                                     'mb_release_mbid',
+                                     'mb_release_name',
+                                     'msb_artist_credit_name_matchable',
+                                     'msb_recording_name_matchable') \
+                             .distinct()
+
+    return msid_mbid_mapping_df
+
+
 def unaccent_artist_and_track_name(df):
     """ Remove accents from artist and track name.
 
@@ -282,6 +299,7 @@ def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df):
                            .where(col('msb_recording_name_matchable').isNull() &
                                   col('msb_artist_credit_name_matchable').isNull())
 
+    current_app.logger.info('Number of (artist, recording) pairs missing from mapping: {}'.format(df.count()))
     window = Window.partitionBy('user_name').orderBy(col('listened_at').desc())
 
     # limiting listens to 200 for each user so that messages don't drop
@@ -498,8 +516,10 @@ def main(train_model_window=None):
     current_app.logger.info('Listen count from {from_date} to {to_date}: {listens_count}'
                             .format(from_date=from_date, to_date=to_date, listens_count=partial_listens_df.count()))
 
-    # Dataframe containing recording msid->mbid and artist msid->mbid mapping.
-    msid_mbid_mapping_df = utils.read_files_from_HDFS(path.MBID_MSID_MAPPING)
+    current_app.logger.info('Loading mapping from HDFS...')
+    df = utils.read_files_from_HDFS(path.MBID_MSID_MAPPING)
+    msid_mbid_mapping_df = get_unique_rows_from_mapping(df)
+    current_app.logger.info('Number of distinct rows in the mapping: {}'.format(msid_mbid_mapping_df.count()))
 
     current_app.logger.info('Mapping listens...')
     mapped_listens_df = get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df)
