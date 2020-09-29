@@ -5,23 +5,23 @@ import Pill from "../components/Pill";
 import FollowButton from "../FollowButton";
 import APIService from "../APIService";
 
-export type FollowerFollowingEntityProps = {
+export type FollowerFollowingModalProps = {
   user: ListenBrainzUser;
 };
 
-type FollowerFollowingEntityState = {
+type FollowerFollowingModalState = {
   activeMode: "follower" | "following";
   followerList: Array<ListenBrainzUser>;
   followingList: Array<ListenBrainzUser>;
 };
 
-export default class FollowerFollowingEntity extends React.Component<
-  FollowerFollowingEntityProps,
-  FollowerFollowingEntityState
+export default class FollowerFollowingModal extends React.Component<
+  FollowerFollowingModalProps,
+  FollowerFollowingModalState
 > {
   APIService: APIService;
 
-  constructor(props: FollowerFollowingEntityProps) {
+  constructor(props: FollowerFollowingModalProps) {
     super(props);
     this.APIService = new APIService(`${window.location.origin}/1`);
     this.state = {
