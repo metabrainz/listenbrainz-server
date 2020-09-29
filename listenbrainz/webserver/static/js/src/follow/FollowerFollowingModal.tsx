@@ -36,11 +36,11 @@ export default class FollowerFollowingModal extends React.Component<
   getFollowers = () => {
     const { user } = this.props;
     this.APIService.getFollowersOfUser(user.name).then(
-      ({ followers }: { followers: Array<string> }) => {
+      ({ followers }: { followers: Array<{ musicbrainz_id: string }> }) => {
         this.setState({
-          followerList: followers.map((username) => {
+          followerList: followers.map(({ musicbrainz_id }) => {
             return {
-              name: username,
+              name: musicbrainz_id,
             };
           }),
         });
@@ -51,10 +51,10 @@ export default class FollowerFollowingModal extends React.Component<
   getFollowing = () => {
     const { user } = this.props;
     this.APIService.getFollowingForUser(user.name).then(
-      ({ following }: { following: Array<string> }) => {
+      ({ following }: { following: Array<{ musicbrainz_id: string }> }) => {
         this.setState({
-          followingList: following.map((username) => {
-            return { name: username };
+          followingList: following.map(({ musicbrainz_id }) => {
+            return { name: musicbrainz_id };
           }),
         });
       }

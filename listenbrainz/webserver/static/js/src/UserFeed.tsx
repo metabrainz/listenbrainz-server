@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import ListenCard from "./listens/ListenCard";
+import FollowerFollowingModal from "./follow/FollowerFollowingModal";
 
 type UserFeedPageProps = {
   currentUser: ListenBrainzUser;
@@ -14,7 +14,9 @@ const UserFeedPage = (props: UserFeedPageProps) => {
       <div role="main">
         <div className="row">
           <div className="col-md-8">first column</div>
-          <div className="col-md-4">second column</div>
+          <div className="col-md-4">
+            <FollowerFollowingModal user={currentUser} />
+          </div>
         </div>
       </div>
     </>
