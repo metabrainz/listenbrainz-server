@@ -42,15 +42,16 @@ class CreateDataframeTestCase(SparkTestCase):
         mapping_df = create_dataframes.get_unique_rows_from_mapping(df)
 
         self.assertEqual(mapping_df.count(), 3)
-        cols = ['mb_artist_credit_id',
-                'mb_artist_credit_mbids',
-                'mb_artist_credit_name',
-                'mb_recording_mbid',
-                'mb_recording_name',
-                'mb_release_mbid',
-                'mb_release_name',
-                'msb_artist_credit_name_matchable',
-                'msb_recording_name_matchable'
+        cols = [
+            'mb_artist_credit_id',
+            'mb_artist_credit_mbids',
+            'mb_artist_credit_name',
+            'mb_recording_mbid',
+            'mb_recording_name',
+            'mb_release_mbid',
+            'mb_release_name',
+            'msb_artist_credit_name_matchable',
+            'msb_recording_name_matchable'
         ]
         self.assertEqual(sorted(mapping_df.columns), sorted(cols))
 
