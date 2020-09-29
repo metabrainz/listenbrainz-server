@@ -37,6 +37,23 @@ class CreateDataframeTestCase(SparkTestCase):
         d = stats.replace_days(d, 1)
         self.assertEqual(from_date, d)
 
+    def test_get_unique_rows_from_mapping(self):
+        df = utils.read_files_from_HDFS(self.mapping_path)
+        mapping_df = create_dataframes.get_unique_rows_from_mapping(df)
+
+        self.assertEqual(mapping_df.count(), 3)
+        cols = ['mb_artist_credit_id',
+                'mb_artist_credit_mbids',
+                'mb_artist_credit_name',
+                'mb_recording_mbid',
+                'mb_recording_name',
+                'mb_release_mbid',
+                'mb_release_name',
+                'msb_artist_credit_name_matchable',
+                'msb_recording_name_matchable'
+        ]
+        self.assertEqual(sorted(mapping_df.columns), sorted(cols))
+
     def test_get_listens_for_training_model_window(self):
         metadata = {}
         to_date = get_latest_listen_ts()
@@ -86,7 +103,9 @@ class CreateDataframeTestCase(SparkTestCase):
 
     def test_get_mapped_artist_and_recording_mbids(self):
         partial_listen_df = create_dataframes.get_listens_for_training_model_window(self.date, self.date, {}, self.listens_path)
-        mapping_df = utils.read_files_from_HDFS(self.mapping_path)
+
+        df = utils.read_files_from_HDFS(self.mapping_path)
+        mapping_df = create_dataframes.get_unique_rows_from_mapping(df)
 
         mapped_listens = create_dataframes.get_mapped_artist_and_recording_mbids(partial_listen_df, mapping_df)
         self.assertEqual(mapped_listens.count(), 8)
