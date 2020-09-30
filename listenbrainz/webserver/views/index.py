@@ -160,7 +160,14 @@ def recent_listens():
 @index_bp.route('/feed', methods=['GET', 'OPTIONS'])
 @login_required
 def feed():
-    return render_template('index/feed.html')
+    props = {
+        'current_user': {
+            'id': current_user.id,
+            'name': current_user.musicbrainz_id,
+            'auth_token': current_user.auth_token,
+        }
+    }
+    return render_template('index/feed.html', props=ujson.dumps(props))
 
 
 
