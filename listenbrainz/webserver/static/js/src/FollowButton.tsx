@@ -31,7 +31,7 @@ import APIService from "./APIService";
 
 type FollowButtonProps = {
   user: ListenBrainzUser;
-  loggedInUser: ListenBrainzUser;
+  loggedInUser?: ListenBrainzUser;
   loggedInUserFollowsUser: boolean;
 };
 

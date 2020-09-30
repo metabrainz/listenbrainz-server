@@ -49,6 +49,7 @@ const UserPageHeading = ({
     <h2 className="page-title">
       {user.name}
       {loggedInUser &&
+        // TODO (param): Remove this when the feed feature is ready for release #feedfeatureflag
         followUsersFeatureEnabled(loggedInUser.name) &&
         user.name !== loggedInUser.name && (
           <FollowButton
