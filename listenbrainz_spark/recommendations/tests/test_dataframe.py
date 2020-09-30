@@ -12,6 +12,7 @@ from listenbrainz_spark import schema, utils, config, path, hdfs_connection, sta
 from pyspark.sql import Row
 import time
 
+
 class CreateDataframeTestCase(SparkTestCase):
     # path used in between test functions of this class
     listens_path = path.LISTENBRAINZ_DATA_DIRECTORY
@@ -37,24 +38,6 @@ class CreateDataframeTestCase(SparkTestCase):
         d = stats.replace_days(d, 1)
         self.assertEqual(from_date, d)
 
-    def test_get_unique_rows_from_mapping(self):
-        df = utils.read_files_from_HDFS(self.mapping_path)
-        mapping_df = create_dataframes.get_unique_rows_from_mapping(df)
-
-        self.assertEqual(mapping_df.count(), 3)
-        cols = [
-            'mb_artist_credit_id',
-            'mb_artist_credit_mbids',
-            'mb_artist_credit_name',
-            'mb_recording_mbid',
-            'mb_recording_name',
-            'mb_release_mbid',
-            'mb_release_name',
-            'msb_artist_credit_name_matchable',
-            'msb_recording_name_matchable'
-        ]
-        self.assertEqual(sorted(mapping_df.columns), sorted(cols))
-
     def test_get_listens_for_training_model_window(self):
         metadata = {}
         to_date = get_latest_listen_ts()
@@ -66,33 +49,6 @@ class CreateDataframeTestCase(SparkTestCase):
         self.assertIn('track_name_matchable', test_df.columns)
         self.assertNotIn('artist_mbids', test_df.columns)
         self.assertNotIn('recording_mbid', test_df.columns)
-
-    def test_unaccent_artist_and_track_name(self):
-        df = utils.create_dataframe(
-            Row(
-                artist_name='égè,câ,î or ô)tñü or ï(ç)',
-                track_name='égè,câ,î or ô)tñü lalaor ïïï(ç)'
-            ),
-            schema=None
-        )
-
-        res_df = create_dataframes.unaccent_artist_and_track_name(df)
-        self.assertEqual(res_df.collect()[0].unaccented_artist_name, 'ege,ca,i or o)tnu or i(c)')
-        self.assertEqual(res_df.collect()[0].unaccented_track_name, 'ege,ca,i or o)tnu lalaor iii(c)')
-
-    def test_convert_text_fields_to_matchable(self):
-        df = utils.create_dataframe(
-            Row(
-                artist_name='égè,câ,î or ô)tñü or ï(ç)  !"#$%&\'()*+, L   ABD don''t-./:;<=>?@[]^_`{|}~',
-                track_name='égè,câ,î or ô)tñü lalaor ïïï(ç)!"#$%&\'()*+, L       ABD don''t lie-./:;<=>?@[]^_`{|}~'
-            ),
-            schema=None
-        )
-
-        res_df = create_dataframes.convert_text_fields_to_matchable(df)
-        res_df.show()
-        self.assertEqual(res_df.collect()[0].artist_name_matchable, 'egecaiorotnuoriclabddont')
-        self.assertEqual(res_df.collect()[0].track_name_matchable, 'egecaiorotnulalaoriiiclabddontlie')
 
     def test_save_dataframe(self):
         path_ = '/test_df.parquet'
