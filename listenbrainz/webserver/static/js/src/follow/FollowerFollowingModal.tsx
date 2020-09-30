@@ -29,8 +29,14 @@ export default class FollowerFollowingModal extends React.Component<
       followerList: [],
       followingList: [],
     };
-    this.getFollowers();
+
+    // DO NOT CHANGE THIS ORDER
+    // Otherwise react messes up the follow button props;
+    // The way to fix this is to not pass the loggedInUserFollowsUser prop
+    // into the FollowButton compoent.
+    // TODO: fix this
     this.getFollowing();
+    this.getFollowers();
   }
 
   getFollowers = () => {
@@ -62,12 +68,19 @@ export default class FollowerFollowingModal extends React.Component<
   };
 
   updateMode = (mode: "follower" | "following") => {
-    this.setState({ activeMode: mode });
+    this.setState({ activeMode: mode }, () => {
+      const { activeMode } = this.state;
+      if (activeMode === "follower") this.getFollowers();
+      else this.getFollowing();
+    });
   };
 
   loggedInUserFollowsUser = (user: ListenBrainzUser): boolean => {
     const { followingList } = this.state;
-    return _includes(followingList, user);
+    return _includes(
+      followingList.map((listEntry: ListenBrainzUser) => listEntry.name),
+      user.name
+    );
   };
 
   render() {
@@ -77,26 +90,29 @@ export default class FollowerFollowingModal extends React.Component<
       activeMode === "follower" ? followerList : followingList;
     return (
       <>
-        <div className="btn-group btn-group-justified" role="group">
-          <Pill
-            active={activeMode === "follower"}
-            type="primary"
-            onClick={() => this.updateMode("follower")}
-          >
-            {followerList.length} Followers
-          </Pill>
-          <Pill
-            active={activeMode === "following"}
-            type="primary"
-            onClick={() => this.updateMode("following")}
-          >
-            {followingList.length} Following
-          </Pill>
+        <div className="text-center">
+          <div className="btn-group btn-group-justified" role="group">
+            <Pill
+              active={activeMode === "follower"}
+              type="secondary"
+              onClick={() => this.updateMode("follower")}
+            >
+              Followers ({followerList.length})
+            </Pill>
+            <Pill
+              active={activeMode === "following"}
+              type="secondary"
+              onClick={() => this.updateMode("following")}
+            >
+              Following ({followingList.length})
+            </Pill>
+          </div>
         </div>
+        <hr />
         <div className="follower-following-list">
           {activeModeList.map((listEntry: ListenBrainzUser) => {
             return (
-              <>
+              <div className="text-center" key={listEntry.name}>
                 <a
                   href={`/user/${listEntry.name}`}
                   target="_blank"
@@ -112,7 +128,7 @@ export default class FollowerFollowingModal extends React.Component<
                   )}
                 />
                 <hr />
-              </>
+              </div>
             );
           })}
         </div>
