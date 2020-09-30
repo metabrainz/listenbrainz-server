@@ -201,7 +201,7 @@ class SparkTestCase(unittest.TestCase):
     def upload_test_mapped_listens_to_hdfs(cls, listens_path, mapping_path, mapped_listens_path):
         partial_listen_df = create_dataframes.get_listens_for_training_model_window(cls.date, cls.date, {}, listens_path)
         df = utils.read_files_from_HDFS(mapping_path)
-        mapping_df = create_dataframes.get_unique_rows_from_mapping(df)
+        mapping_df = utils.get_unique_rows_from_mapping(df)
 
         mapped_listens = create_dataframes.get_mapped_artist_and_recording_mbids(partial_listen_df, mapping_df)
         utils.save_parquet(mapped_listens, mapped_listens_path)
