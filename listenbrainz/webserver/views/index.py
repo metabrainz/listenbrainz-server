@@ -160,6 +160,11 @@ def recent_listens():
 @index_bp.route('/feed', methods=['GET', 'OPTIONS'])
 @login_required
 def feed():
+
+    # TODO (param): remove this when feed feature is ready for release #feedfeatureflag
+    if current_user.musicbrainz_id not in ['rob', 'iliekcomputers', 'mr_monkey', 'shivam-kapila', 'ishaanshah']:
+        raise NotFound
+
     props = {
         'current_user': {
             'id': current_user.id,
