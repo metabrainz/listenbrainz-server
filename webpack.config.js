@@ -13,6 +13,7 @@ module.exports = function (env) {
       userEntityChart: "/static/js/src/stats/UserEntityChart.tsx",
       userReports: "/static/js/src/stats/UserReports.tsx",
       userPageHeading: "/static/js/src/UserPageHeading.tsx",
+      userFeed: "/static/js/src/UserFeed.tsx",
     },
     output: {
       filename: isProd ? "[name].[contenthash].js" : "[name].js",

@@ -119,6 +119,30 @@ export default class APIService {
     return { status: response.status };
   };
 
+  getFollowersOfUser = async (username: string) => {
+    if (!username) {
+      throw new SyntaxError("Username missing");
+    }
+
+    const url = `/user/${username}/followers`;
+    const response = await fetch(url);
+    this.checkStatus(response);
+    const data = response.json();
+    return data;
+  };
+
+  getFollowingForUser = async (username: string) => {
+    if (!username) {
+      throw new SyntaxError("Username missing");
+    }
+
+    const url = `/user/${username}/following`;
+    const response = await fetch(url);
+    this.checkStatus(response);
+    const data = response.json();
+    return data;
+  };
+
   /*
      Send a POST request to the ListenBrainz server to submit a listen
    */

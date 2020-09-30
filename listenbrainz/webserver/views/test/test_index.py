@@ -295,3 +295,17 @@ class IndexViewsTestCase(ServerTestCase, DatabaseTestCase):
         props = ujson.loads(self.get_context_variable('props'))
         self.assertEqual(props['mode'], 'recent')
         self.assertDictEqual(props['spotify'], {})
+
+    def test_feed_page_404s_for_non_devs(self):
+        user = db_user.get_or_create(1, 'iamnotadev')
+        db_user.agree_to_gdpr(user['musicbrainz_id'])
+        self.temporary_login(user['login_id'])
+        r = self.client.get('/feed')
+        self.assert404(r)
+
+    def test_feed_page_200s_for_devs(self):
+        user = db_user.get_or_create(1, 'iliekcomputers') # dev
+        db_user.agree_to_gdpr(user['musicbrainz_id'])
+        self.temporary_login(user['login_id'])
+        r = self.client.get('/feed')
+        self.assert200(r)
