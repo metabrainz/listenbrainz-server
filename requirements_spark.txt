@@ -4,7 +4,7 @@ hdfs == 2.5.8
 Jinja2 == 2.11.2
 pika==0.13.0
 python-dateutil==2.8.0
-numpy==1.19.1
+numpy==1.19.2
 git+https://github.com/metabrainz/brainzutils-python.git@v1.14.1
 pytest == 6.0.1
 pytest-cov == 2.10.1
