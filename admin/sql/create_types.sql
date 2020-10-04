@@ -4,4 +4,4 @@ CREATE TYPE mb_missing_data_source_enum AS ENUM('cf', 'artist_map');
 
 CREATE TYPE user_relationship_enum AS ENUM('follow');
 
-CREATE TYPE feedback_type_enum AS ENUM('like_rec', 'love_rec', 'dislike_rec', 'hate_rec', 'bad_rec');
+CREATE TYPE recommendation_feedback_type_enum AS ENUM('like', 'love', 'dislike', 'hate', 'bad_recommendation');

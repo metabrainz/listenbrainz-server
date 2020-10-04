@@ -5,7 +5,7 @@ CREATE TABLE recommendation_feedback (
     id                      SERIAL, -- PK
     user_id                 INTEGER NOT NULL, -- FK to "user".id
     recording_mbid          UUID NOT NULL,
-    rating                  feedback_type_enum NOT NULL,
+    rating                  recommendation_feedback_type_enum NOT NULL,
     created                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
@@ -21,5 +21,7 @@ ALTER TABLE recommendation_feedback
 
 -- Create unique index
 CREATE UNIQUE INDEX user_id_rec_mbid_ndx_feedback ON recommendation_feedback (user_id, recording_mbid);
+
+CREATE INDEX rating_recommendation_feedback ON recommendation_feedback (rating);
 
 COMMIT;

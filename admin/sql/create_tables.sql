@@ -162,7 +162,7 @@ CREATE TABLE recommendation_feedback (
     id                      SERIAL, -- PK
     user_id                 INTEGER NOT NULL, -- FK to "user".id
     recording_mbid          UUID NOT NULL,
-    rating                  feedback_type_enum NOT NULL,
+    rating                  recommendation_feedback_type_enum NOT NULL,
     created                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
