@@ -112,16 +112,12 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertTemplateUsed('recommendations_cf_recording/top_artist.html')
         self.assert_context('active_section', 'top_artist')
         self.assert_context('user', user)
-        error_msg = "Recommended tracks for the user have not been calculated. Check back later."
-        self.assert_context('error_msg', error_msg)
 
         user = _get_user('vansika')
         recommendations_cf_recording._get_template(active_section='similar_artist', user=user)
         self.assertTemplateUsed('recommendations_cf_recording/similar_artist.html')
         self.assert_context('active_section', 'similar_artist')
         self.assert_context('user', user)
-        error_msg = "Recommended tracks for the user have not been calculated. Check back later."
-        self.assert_context('error_msg', error_msg)
 
     def test_get_template_missing_rec_top_artist(self):
         user = _get_user('vansika_2')
@@ -129,8 +125,6 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertTemplateUsed('recommendations_cf_recording/top_artist.html')
         self.assert_context('active_section', 'top_artist')
         self.assert_context('user', user)
-        error_msg = "Recommended tracks for the user have not been calculated. Check back later."
-        self.assert_context('error_msg', error_msg)
 
     def test_get_template_missing_rec_similar_artist(self):
         user = _get_user('vansika_1')
@@ -138,8 +132,6 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.assertTemplateUsed('recommendations_cf_recording/similar_artist.html')
         self.assert_context('active_section', 'similar_artist')
         self.assert_context('user', user)
-        error_msg = "Recommended tracks for the user have not been calculated. Check back later."
-        self.assert_context('error_msg', error_msg)
 
     @patch('listenbrainz.webserver.views.recommendations_cf_recording.db_recommendations_cf_recording.get_user_recommendation')
     @patch('listenbrainz.webserver.views.recommendations_cf_recording._get_listens_from_recording_mbid')
