@@ -1,0 +1,52 @@
+[
+  {
+    "dump_id": 1,
+    "dump_type": "full",
+    "imported_at": 1
+  },
+  {
+    "dump_id": 4,
+    "dump_type": "full",
+    "imported_at": 4
+  },
+  {
+    "dump_id": 7,
+    "dump_type": "full",
+    "imported_at": 7
+  },
+  {
+    "dump_id": 2,
+    "dump_type": "incremental",
+    "imported_at": 2
+  },
+  {
+    "dump_id": 3,
+    "dump_type": "incremental",
+    "imported_at": 3
+  },
+  {
+    "dump_id": 4,
+    "dump_type": "incremental",
+    "imported_at": 4
+  },
+  {
+    "dump_id": 5,
+    "dump_type": "incremental",
+    "imported_at": 5
+  },
+  {
+    "dump_id": 6,
+    "dump_type": "incremental",
+    "imported_at": 6
+  },
+  {
+    "dump_id": 7,
+    "dump_type": "incremental",
+    "imported_at": 7
+  },
+  {
+    "dump_id": 8,
+    "dump_type": "incremental",
+    "imported_at": 8
+  }
+]

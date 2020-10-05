@@ -39,5 +39,8 @@ MAPPED_LISTENS = DATAFRAME_DIR + '/' + 'mapped_listens_df.parquet'
 # Absolute path to save dataframe metadata
 DATAFRAME_METADATA = DATAFRAME_DIR + '/' + 'dataframe_metadata.parquet'
 
+# Absolute path to save import metadata
+IMPORT_METADATA = "/import_metadata.parquet"
+
 # Path to files downloaded from FTP.
 FTP_FILES_PATH = '/rec/listenbrainz_spark'
