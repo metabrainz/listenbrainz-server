@@ -4,6 +4,7 @@ import unittest
 from datetime import datetime
 
 import listenbrainz_spark
+import listenbrainz_spark.utils.mapping as mapping_utils
 from listenbrainz_spark.tests import SparkTestCase
 from listenbrainz_spark.recommendations import create_dataframes
 from listenbrainz_spark.stats.utils import get_latest_listen_ts
@@ -62,7 +63,7 @@ class CreateDataframeTestCase(SparkTestCase):
         partial_listen_df = create_dataframes.get_listens_for_training_model_window(self.date, self.date, {}, self.listens_path)
 
         df = utils.read_files_from_HDFS(self.mapping_path)
-        mapping_df = utils.get_unique_rows_from_mapping(df)
+        mapping_df = mapping_utils.get_unique_rows_from_mapping(df)
 
         mapped_listens = create_dataframes.get_mapped_artist_and_recording_mbids(partial_listen_df, mapping_df)
         self.assertEqual(mapped_listens.count(), 8)

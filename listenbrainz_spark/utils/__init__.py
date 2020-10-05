@@ -4,6 +4,7 @@ import os
 from time import sleep
 
 import pika
+from listenbrainz_spark import config
 from brainzutils.flask import CustomFlask
 from flask import current_app
 from py4j.protocol import Py4JJavaError
@@ -60,7 +61,7 @@ def create_app(debug=None):
     # create flask application
     app = CustomFlask(import_name=__name__)
     # load config
-    config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.py')
+    config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'config.py')
 
     # config must exist to link the file with our flask app.
     if os.path.exists(config_file):
