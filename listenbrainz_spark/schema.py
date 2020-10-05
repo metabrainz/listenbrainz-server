@@ -23,10 +23,10 @@ listen_schema = [
 
 # schema to contain model parameters.
 model_param_schema = [
-    StructField('alpha', FloatType(), nullable=True), # Baseline level of confidence weighting applied.
-    StructField('lmbda', FloatType(), nullable=True), # Controls over fitting.
+    StructField('alpha', FloatType(), nullable=True),  # Baseline level of confidence weighting applied.
+    StructField('lmbda', FloatType(), nullable=True),  # Controls over fitting.
     StructField('iteration', IntegerType(), nullable=True),  # Number of iterations to run.
-    StructField('rank', IntegerType(), nullable=True), # Number of hidden features in our low-rank approximation matrices.
+    StructField('rank', IntegerType(), nullable=True),  # Number of hidden features in our low-rank approximation matrices.
 ]
 model_param_schema = StructType(sorted(model_param_schema, key=lambda field: field.name))
 
@@ -84,6 +84,12 @@ dataframe_metadata_schema = [
     StructField('users_count', IntegerType(), nullable=False),  # Number of users active in a given time frame.
 ]
 
+import_metadata_schema = [
+    StructField('dump_id', IntegerType(), nullable=False),   # Id of the dump imported
+    StructField('dump_type', StringType(), nullable=False),  # The type of dump imported
+    StructField('imported_at', TimestampType(), nullable=False)   # Timestamp when dump is imported
+]
+
 
 # The field names of the schema need to be sorted, otherwise we get weird
 # errors due to type mismatches when creating DataFrames using the schema
@@ -94,6 +100,7 @@ model_metadata_schema = StructType(sorted(model_metadata_schema, key=lambda fiel
 msid_mbid_mapping_schema = StructType(sorted(msid_mbid_mapping_schema, key=lambda field: field.name))
 artist_relation_schema = StructType(sorted(artist_relation_schema, key=lambda field: field.name))
 dataframe_metadata_schema = StructType(sorted(dataframe_metadata_schema, key=lambda field: field.name))
+import_metadata_schema = StructType(sorted(import_metadata_schema, key=lambda field: field.name))
 
 
 def convert_listen_to_row(listen):
