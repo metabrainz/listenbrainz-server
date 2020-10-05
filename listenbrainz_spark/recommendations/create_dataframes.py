@@ -42,6 +42,7 @@ from collections import defaultdict
 from pydantic import ValidationError
 
 import listenbrainz_spark
+import listenbrainz_spark.utils.mapping as mapping_utils
 from listenbrainz_spark import path, stats, utils, config, schema
 from listenbrainz_spark.stats.utils import get_latest_listen_ts
 from listenbrainz_spark.exceptions import (FileNotSavedException,
@@ -198,7 +199,7 @@ def get_listens_for_training_model_window(to_date, from_date, metadata, dest_pat
         raise
 
     partial_listens_df = utils.get_listens_without_artist_and_recording_mbids(training_df)
-    return utils.convert_text_fields_to_matchable(partial_listens_df)
+    return mapping_utils.convert_text_fields_to_matchable(partial_listens_df)
 
 
 def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df):
@@ -448,7 +449,7 @@ def main(train_model_window=None):
 
     current_app.logger.info('Loading mapping from HDFS...')
     df = utils.read_files_from_HDFS(path.MBID_MSID_MAPPING)
-    msid_mbid_mapping_df = utils.get_unique_rows_from_mapping(df)
+    msid_mbid_mapping_df = mapping_utils.get_unique_rows_from_mapping(df)
     current_app.logger.info('Number of distinct rows in the mapping: {}'.format(msid_mbid_mapping_df.count()))
 
     current_app.logger.info('Mapping listens...')
