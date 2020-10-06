@@ -3,8 +3,10 @@ from collections import defaultdict
 from datetime import datetime
 
 import listenbrainz_spark.utils as utils
+import listenbrainz_spark.utils.mapping as mapping_utils
 from listenbrainz_spark.exceptions import HDFSException
-from listenbrainz_spark.path import LISTENBRAINZ_DATA_DIRECTORY, MBID_MSID_MAPPING
+from listenbrainz_spark.path import (LISTENBRAINZ_DATA_DIRECTORY,
+                                     MBID_MSID_MAPPING)
 from listenbrainz_spark.stats import offset_days, offset_months, run_query
 
 
@@ -53,7 +55,8 @@ def create_mapped_dataframe(listens_df):
         listens_df: The DataFrame to perform mapping upon
 
     Returns:
-        result: DataFrame consisting of mapped list of listens
+        mapped_listens: DataFrame consisting mapped listens
+        unmapped_listens: DataFrame consisting unmapped listens
     """
     # Fetch mapping from HDFS
     msid_mbid_mapping_df = utils.get_unique_rows_from_mapping(utils.read_files_from_HDFS(MBID_MSID_MAPPING))
@@ -61,8 +64,12 @@ def create_mapped_dataframe(listens_df):
     # Create matchable fields from listens table
     matchable_df = utils.convert_text_fields_to_matchable(listens_df)
 
+    # Map listens
     join_condition = [
         listens_df.track_name_matchable == msid_mbid_mapping_df.msb_recording_name_matchable,
         listens_df.artist_name_matchable == msid_mbid_mapping_df.msb_artist_credit_name_matchable
     ]
-    intermediate_df = listens_df.join(msid_mbid_mapping_df, join_condition, 'left')
+    mapped_listens = listens_df.join(msid_mbid_mapping_df, join_condition, 'inner')
+    unmapped_listens = listens_df.join(msid_mbid_mapping_df, join_condition, 'left_anti')
+
+    return mapped_listens, unmapped_listens
