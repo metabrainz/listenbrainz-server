@@ -93,12 +93,14 @@ def send_request_to_spark_cluster(message):
               help="Time range of statistics to calculate", required=True)
 @click.option("--entity", type=click.Choice(['artists', 'releases', 'recordings']),
               help="Entity for which statistics should be calculated")
-def request_user_stats(type_, range_, entity):
+@click.option("--use-mapping", type=bool, help="Set to true if MSID-MBID mapping should be used while calculating statistics")
+def request_user_stats(type_, range_, entity, use_mapping):
     """ Send a user stats request to the spark cluster
     """
     params = {}
     if type_ == 'entity' and entity:
         params['entity'] = entity
+        params['use_mapping'] = use_mapping
     try:
         send_request_to_spark_cluster(_prepare_query_message(
             'stats.user.{type}.{range}'.format(range=range_, type=type_), params=params))

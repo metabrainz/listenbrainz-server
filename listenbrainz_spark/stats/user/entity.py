@@ -34,7 +34,7 @@ entity_model_map = {
 }
 
 
-def get_entity_week(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
+def get_entity_week(entity: str, use_mapping: bool) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the weekly top entity for all users """
     current_app.logger.debug("Calculating {}_week...".format(entity))
 
@@ -49,7 +49,7 @@ def get_entity_week(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     filtered_df.createOrReplaceTempView(table_name)
 
     handler = entity_handler_map[entity]
-    data = handler(table_name)
+    data = handler(table_name, use_mapping)
     messages = create_messages(data=data, entity=entity, stats_range='week',
                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
@@ -58,7 +58,7 @@ def get_entity_week(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     return messages
 
 
-def get_entity_month(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
+def get_entity_month(entity: str, use_mapping: bool) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the month top entity for all users """
     current_app.logger.debug("Calculating {}_month...".format(entity))
 
@@ -70,7 +70,7 @@ def get_entity_month(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     listens_df.createOrReplaceTempView(table_name)
 
     handler = entity_handler_map[entity]
-    data = handler(table_name)
+    data = handler(table_name, use_mapping)
 
     messages = create_messages(data=data, entity=entity, stats_range='month',
                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
@@ -80,7 +80,7 @@ def get_entity_month(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     return messages
 
 
-def get_entity_year(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
+def get_entity_year(entity: str, use_mapping: bool) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the year top entity for all users """
     current_app.logger.debug("Calculating {}_year...".format(entity))
 
@@ -92,7 +92,7 @@ def get_entity_year(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     listens_df.createOrReplaceTempView(table_name)
 
     handler = entity_handler_map[entity]
-    data = handler(table_name)
+    data = handler(table_name, use_mapping)
     messages = create_messages(data=data, entity=entity, stats_range='year',
                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 
@@ -101,7 +101,7 @@ def get_entity_year(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
     return messages
 
 
-def get_entity_all_time(entity: str) -> Iterator[Optional[UserEntityStatMessage]]:
+def get_entity_all_time(entity: str, use_mapping: bool) -> Iterator[Optional[UserEntityStatMessage]]:
     """ Get the all_time top entity for all users """
     current_app.logger.debug("Calculating {}_all_time...".format(entity))
 
@@ -113,7 +113,7 @@ def get_entity_all_time(entity: str) -> Iterator[Optional[UserEntityStatMessage]
     listens_df.createOrReplaceTempView(table_name)
 
     handler = entity_handler_map[entity]
-    data = handler(table_name)
+    data = handler(table_name, use_mapping)
     messages = create_messages(data=data, entity=entity, stats_range='all_time',
                                from_ts=from_date.timestamp(), to_ts=to_date.timestamp())
 

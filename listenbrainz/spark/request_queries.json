@@ -2,22 +2,22 @@
   "stats.user.entity.week": {
     "name": "stats.user.entity.week",
     "description": "Entity statistics for all users in the last week",
-    "params": ["entity"]
+    "params": ["entity", "use_mapping"]
   },
   "stats.user.entity.month": {
     "name": "stats.user.entity.month",
     "description": "Entity statistics for all users in the last month",
-    "params": ["entity"]
+    "params": ["entity", "use_mapping"]
   },
   "stats.user.entity.year": {
     "name": "stats.user.entity.year",
     "description": "Entity statistics for all users in the last year",
-    "params": ["entity"]
+    "params": ["entity", "use_mapping"]
   },
   "stats.user.entity.all_time": {
     "name": "stats.user.entity.all_time",
     "description": "All time entity statistics for all users",
-    "params": ["entity"]
+    "params": ["entity", "use_mapping"]
   },
   "stats.user.listening_activity.week": {
     "name": "stats.user.listening_activity.week",

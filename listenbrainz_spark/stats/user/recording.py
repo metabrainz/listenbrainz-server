@@ -2,7 +2,8 @@ from listenbrainz_spark.stats import run_query
 from pyspark.sql.functions import collect_list, sort_array, struct
 
 
-def get_recordings(table):
+# TODO: Use mapping for improving stats quality
+def get_recordings(table: str, use_mapping: bool):
     """
     Get recording information (recording_name, recording_mbid etc) for every user
     ordered by listen count (number of times a user has listened to the track/recording).
