@@ -25,6 +25,16 @@ For more information about this project and its goals, look at our
 [website](https://listenbrainz.org/), specifically the
 [goals page](https://listenbrainz.org/goals).
 
+Changes and other important announcements about the ListenBrainz services will be
+announced on [our blog](https://blog.metabrainz.org/). If you start using our
+services in any production system, we urge you to follow the blog!
+
+## Commercial use
+
+All of our data is available for commercial use. You can find out more about our
+[commercial use support tiers](https://metabrainz.org/supporters/account-type) on 
+the MetaBrainz site.
+
 ## Contributing
 
 If you are interested in helping out, consider
