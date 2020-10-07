@@ -15,21 +15,14 @@ json_request = [
     },
     {
         "[recording_mbid]": "ec5b8aa9-7483-4791-a185-1f599a0cdc35"
-    },
-    {
-        "[recording_mbid]": "1234a7ae-2af2-4291-aa84-bd0bafe291a1"
     }
 ]
 
 redirect_db_response = [
     {
         "recording_mbid_old": "a96bf3b6-651d-49f4-9a89-eee27cecc18e",
-        "recording_mbid_new": "2f020e89-6e85-4be9-9f04-519ec8ec8cfa"
-    },
-    {
-        "recording_mbid_old": "ec5b8aa9-7483-4791-a185-1f599a0cdc35",
-        "recording_mbid_new": "6efd976a-109e-4146-9277-fb2af7d44910"
-    },
+        "recording_mbid_new": "1234a7ae-2af2-4291-aa84-bd0bafe291a1"
+    }
 ]
 
 json_db_response = [
@@ -43,17 +36,6 @@ json_db_response = [
         "length": 253000,
         "recording_mbid": "1234a7ae-2af2-4291-aa84-bd0bafe291a1",
         "recording_name": "Sour Times"
-    },
-    {
-        "artist_credit_mbids": [
-            "31810c40-932a-4f2d-8cfd-17849844e2a6"
-        ],
-        "artist_credit_id": 11,
-        "artist_credit_name": "Squirrel Nut Zippers",
-        "comment": "",
-        "length": 228533,
-        "recording_mbid": "a96bf3b6-651d-49f4-9a89-eee27cecc18e",
-        "recording_name": "Bad Businessman"
     },
     {
         "artist_credit_mbids": [
@@ -79,18 +61,8 @@ json_response = [
         "comment": "",
         "length": 253000,
         "recording_mbid": "1234a7ae-2af2-4291-aa84-bd0bafe291a1",
-        "recording_name": "Sour Times"
-    },
-    {
-        "[artist_credit_mbids]": [
-            "31810c40-932a-4f2d-8cfd-17849844e2a6"
-        ],
-        "artist_credit_id": 11,
-        "artist_credit_name": "Squirrel Nut Zippers",
-        "comment": "",
-        "length": 228533,
-        "recording_mbid": "a96bf3b6-651d-49f4-9a89-eee27cecc18e",
-        "recording_name": "Bad Businessman"
+        "recording_name": "Sour Times",
+        "original_recording_mbid": "a96bf3b6-651d-49f4-9a89-eee27cecc18e"
     },
     {
         "[artist_credit_mbids]": [
@@ -101,7 +73,8 @@ json_response = [
         "comment": "",
         "length": 275333,
         "recording_mbid": "ec5b8aa9-7483-4791-a185-1f599a0cdc35",
-        "recording_name": "Blue Angel"
+        "recording_name": "Blue Angel",
+        "original_recording_mbid": "ec5b8aa9-7483-4791-a185-1f599a0cdc35"
     }
 
 ]
@@ -128,27 +101,24 @@ class MainTestCase(flask_testing.TestCase):
         self.assertNotEqual(q.introduction(), "")
         self.assertEqual(q.inputs(), ['[recording_mbid]'])
         self.assertEqual(q.outputs(), ['recording_mbid', 'recording_name', 'length', 'comment',
-            'artist_credit_id', 'artist_credit_name', '[artist_credit_mbids]'])
+            'artist_credit_id', 'artist_credit_name', '[artist_credit_mbids]', 'original_recording_mbid'])
 
     @patch('psycopg2.connect')
     def test_fetch(self, mock_connect):
         mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [redirect_db_response[0],
-                                                                                redirect_db_response[1],
                                                                                 None,
                                                                                 json_db_response[0],
                                                                                 json_db_response[1],
-                                                                                json_db_response[2],
                                                                                 None]
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request)
         self.assertDictEqual(resp[0], json_response[0])
         self.assertDictEqual(resp[1], json_response[1])
-        self.assertEqual(len(resp), 3)
+        self.assertEqual(len(resp), 2)
 
     @patch('psycopg2.connect')
     def test_count(self, mock_connect):
         mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [redirect_db_response[0],
-                                                                                redirect_db_response[1],
                                                                                 None,
                                                                                 json_db_response[0],
                                                                                 None]
@@ -160,13 +130,10 @@ class MainTestCase(flask_testing.TestCase):
     @patch('psycopg2.connect')
     def test_offset(self, mock_connect):
         mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [redirect_db_response[0],
-                                                                                redirect_db_response[1],
                                                                                 None,
                                                                                 json_db_response[1],
-                                                                                json_db_response[2],
                                                                                 None]
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request, offset=1)
-        self.assertEqual(len(resp), 2)
+        self.assertEqual(len(resp), 1)
         self.assertDictEqual(resp[0], json_response[1])
-        self.assertDictEqual(resp[1], json_response[2])

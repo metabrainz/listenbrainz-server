@@ -95,7 +95,10 @@ class RecordingFromRecordingMBIDQuery(Query):
                     r['recording_mbid'] = str(r['recording_mbid'])
                     r['[artist_credit_mbids]'] = [str(r) for r in r['artist_credit_mbids']]
                     del r['artist_credit_mbids']
-                    r['original_recording_mbid'] = inverse_redirect_index[str(r['recording_mbid'])]
+                    try:
+                        r['original_recording_mbid'] = inverse_redirect_index[str(r['recording_mbid'])]
+                    except KeyError:
+                        r['original_recording_mbid'] = str(r['recording_mbid'])
                     output.append(r)
 
         return output
