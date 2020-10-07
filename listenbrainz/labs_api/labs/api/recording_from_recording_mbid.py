@@ -25,8 +25,8 @@ class RecordingFromRecordingMBIDQuery(Query):
         return """Look up recording and artist information given a recording MBID"""
 
     def outputs(self):
-        return ['recording_mbid', 'recording_name', 'length', 'comment',
-                'artist_credit_id', 'artist_credit_name', '[artist_credit_mbids]']
+        return ['recording_mbid', 'recording_name', 'length', 'comment', 'artist_credit_id',
+                'artist_credit_name', '[artist_credit_mbids]', 'original_recording_mbid']
 
     def fetch(self, params, offset=-1, count=-1):
 
@@ -46,6 +46,7 @@ class RecordingFromRecordingMBIDQuery(Query):
                 curs.execute(query, tuple(args))
 
                 redirect_index = {}
+                inverse_redirect_index = {}
                 while True:
                     row = curs.fetchone()
                     if not row:
@@ -53,6 +54,7 @@ class RecordingFromRecordingMBIDQuery(Query):
 
                     r = dict(row)
                     redirect_index[str(r['recording_mbid_old'])] = str(r['recording_mbid_new'])
+                    inverse_redirect_index[str(r['recording_mbid_new'])] = str(r['recording_mbid_old'])
 
                 for i, mbid in enumerate(mbids):
                     if mbid in redirect_index:
@@ -93,6 +95,7 @@ class RecordingFromRecordingMBIDQuery(Query):
                     r['recording_mbid'] = str(r['recording_mbid'])
                     r['[artist_credit_mbids]'] = [str(r) for r in r['artist_credit_mbids']]
                     del r['artist_credit_mbids']
+                    r['original_recording_mbid'] = inverse_redirect_index[str(r['recording_mbid'])]
                     output.append(r)
 
         return output
