@@ -146,7 +146,7 @@ def _process_recommendations(recommendations, count, artist_type, user_name, off
 
     count = min(count, MAX_ITEMS_PER_GET)
 
-    return mbid_list[offset:count], total_mbid_count
+    return mbid_list[offset:offset+count], total_mbid_count
 
 
 def _is_valid_artist_type(artist_type):

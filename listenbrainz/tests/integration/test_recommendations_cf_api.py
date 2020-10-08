@@ -140,7 +140,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
     def test_recommendations_too_many(self):
         response = self.client.get(url_for('recommendations_cf_recording_v1.get_recommendations',
                                            user_name=self.user2['musicbrainz_id']),
-                                           query_string={'artist_type': 'similar', 'count': 108})
+                                           query_string={'artist_type': 'similar', 'count': 103, 'offset': 4})
         self.assert200(response)
         data = json.loads(response.data)['payload']
 
@@ -151,7 +151,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         self.assertEqual(received_count, 100)
 
         received_offset = data['offset']
-        self.assertEqual(received_offset, 0)
+        self.assertEqual(received_offset, 4)
 
         received_type = data['type']
         self.assertEqual(received_type, 'similar')
@@ -167,7 +167,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         self.assertEqual(received_ts, expected_ts)
 
         received_top_artist_recommendations = data['mbids']
-        expected_top_artist_recommendations = getattr(self.user2_recommendations, 'recording_mbid').dict()['similar_artist'][:100]
+        expected_top_artist_recommendations = getattr(self.user2_recommendations, 'recording_mbid').dict()['similar_artist'][4:104]
         self.assertEqual(expected_top_artist_recommendations, received_top_artist_recommendations)
 
     def test_recommendations_with_offset(self):
@@ -182,7 +182,7 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         self.assertEqual(received_user_name, self.user['musicbrainz_id'])
 
         received_count = data['count']
-        self.assertEqual(received_count, 15)
+        self.assertEqual(received_count, 25)
 
         received_offset = data['offset']
         self.assertEqual(received_offset, 10)
@@ -201,5 +201,5 @@ class CFRecommendationsViewsTestCase(IntegrationTestCase):
         self.assertEqual(received_ts, expected_ts)
 
         received_top_artist_recommendations = data['mbids']
-        expected_top_artist_recommendations = getattr(self.user_recommendations, 'recording_mbid').dict()['top_artist'][10:25]
+        expected_top_artist_recommendations = getattr(self.user_recommendations, 'recording_mbid').dict()['top_artist'][10:35]
         self.assertEqual(expected_top_artist_recommendations, received_top_artist_recommendations)
