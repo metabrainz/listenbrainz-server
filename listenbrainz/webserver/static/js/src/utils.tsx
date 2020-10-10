@@ -4,6 +4,7 @@ import * as _ from "lodash";
 import { faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import Recommendations, { RecommendationsState } from "./Recommendations";
 
 const searchForSpotifyTrack = async (
   spotifyToken?: string,
@@ -54,7 +55,7 @@ const searchForSpotifyTrack = async (
   return null;
 };
 
-const getArtistLink = (listen: Listen) => {
+const getArtistLink = (listen: Listen | Recommendation) => {
   const artistName = _.get(listen, "track_metadata.artist_name");
   const firstArtist = _.first(
     _.get(listen, "track_metadata.additional_info.artist_mbids")
@@ -73,7 +74,7 @@ const getArtistLink = (listen: Listen) => {
   return artistName;
 };
 
-const getTrackLink = (listen: Listen): JSX.Element | string => {
+const getTrackLink = (listen: Listen | Recommendation): JSX.Element | string => {
   const trackName = _.get(listen, "track_metadata.track_name");
   if (_.get(listen, "track_metadata.additional_info.recording_mbid")) {
     return (

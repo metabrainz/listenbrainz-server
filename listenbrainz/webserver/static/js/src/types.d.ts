@@ -46,6 +46,17 @@ declare type Listen = {
   score?: number;
 };
 
+declare type Recommendation = {
+  listened_at: number;
+  user_name?: string | null;
+  track_metadata: {
+    artist_name: string;
+    release_name?: string | null;
+    track_name: string;
+    additional_info?: AdditionalInfo;
+  };
+};
+
 declare type ListenBrainzUser = {
   id?: number;
   name: string;
