@@ -1,4 +1,5 @@
 import listenbrainz_spark.stats.utils as stat_utils
+from flask import current_app
 from listenbrainz_spark.stats import run_query
 from pyspark.sql.functions import collect_list, sort_array, struct
 
@@ -26,8 +27,11 @@ def get_artists(table: str, use_mapping: bool):
     listens_df = run_query(f"SELECT * FROM {table}")
     if use_mapping:
         mapped_listens, unmapped_listens = stat_utils.create_mapped_dataframe(listens_df)
+        current_app.logger.info(f"Number of mapped listens: {mapped_listens.count()}")
     else:
         unmapped_listens = listens_df
+
+    current_app.logger.info(f"Number of unmapped listens: {unmapped_listens.count()}")
 
     # Calculate stats for unmapped listens
     unmapped_listens.createOrReplaceTempView("unmapped_listens")
@@ -35,11 +39,11 @@ def get_artists(table: str, use_mapping: bool):
               WITH intermediate_table AS (
                 SELECT user_name
                      , artist_name
+                     , artist_mbids
                      , CASE
                          WHEN cardinality(artist_mbids) > 0 THEN NULL
                          ELSE nullif(artist_msid, '')
                        END as artist_msid
-                     , artist_mbids
                   FROM unmapped_listens
               )
             SELECT *
@@ -62,10 +66,10 @@ def get_artists(table: str, use_mapping: bool):
                              WHEN cardinality(artist_mbids) > 0 THEN artist_mbids
                              ELSE mb_artist_credit_mbids
                            END as artist_mbids
-                         , NULL AS artist_msid
                       FROM mapped_listens
                   )
                 SELECT *
+                     , NULL as artist_msid
                      , COUNT(*) AS listen_count
                   FROM intermediate_table
               GROUP BY user_name

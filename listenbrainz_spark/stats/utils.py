@@ -59,17 +59,17 @@ def create_mapped_dataframe(listens_df):
         unmapped_listens: DataFrame consisting unmapped listens
     """
     # Fetch mapping from HDFS
-    msid_mbid_mapping_df = utils.get_unique_rows_from_mapping(utils.read_files_from_HDFS(MBID_MSID_MAPPING))
+    msid_mbid_mapping_df = mapping_utils.get_unique_rows_from_mapping(utils.read_files_from_HDFS(MBID_MSID_MAPPING))
 
     # Create matchable fields from listens table
-    matchable_df = utils.convert_text_fields_to_matchable(listens_df)
+    matchable_df = mapping_utils.convert_text_fields_to_matchable(listens_df)
 
     # Map listens
     join_condition = [
-        listens_df.track_name_matchable == msid_mbid_mapping_df.msb_recording_name_matchable,
-        listens_df.artist_name_matchable == msid_mbid_mapping_df.msb_artist_credit_name_matchable
+        matchable_df.track_name_matchable == msid_mbid_mapping_df.msb_recording_name_matchable,
+        matchable_df.artist_name_matchable == msid_mbid_mapping_df.msb_artist_credit_name_matchable
     ]
-    mapped_listens = listens_df.join(msid_mbid_mapping_df, join_condition, 'inner')
-    unmapped_listens = listens_df.join(msid_mbid_mapping_df, join_condition, 'left_anti')
+    mapped_listens = matchable_df.join(msid_mbid_mapping_df, join_condition, 'inner')
+    unmapped_listens = matchable_df.join(msid_mbid_mapping_df, join_condition, 'left_anti')
 
     return mapped_listens, unmapped_listens
