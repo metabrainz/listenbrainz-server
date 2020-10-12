@@ -13,8 +13,6 @@ import { getArtistLink, getTrackLink } from "../utils";
 import Card from "../components/Card";
 import RecommendationControl from "./RecommendationControl";
 
-export const DEFAULT_COVER_ART_URL = "/static/img/default_cover_art.png";
-
 export type RecommendationCardProps = {
   recommendation: Recommendation;
   playRecommendation: (recommendation: Recommendation) => void;
@@ -50,10 +48,10 @@ export default class RecommendationCard extends React.Component<
         onDoubleClick={this.playRecommendation}
         className={`recommendation-card row ${className}`}
       >
-        <div className="rec-col-xs-9">
+        <div className="col-xs-9">
           <MediaQuery minWidth={768}>
-            <div className="rec-col-xs-9">
-              <div className="rec-details">
+            <div className="col-xs-9">
+              <div className="track-details">
                 <p title={recommendation.track_metadata.track_name}>
                   {getTrackLink(recommendation)}
                 </p>
@@ -69,8 +67,8 @@ export default class RecommendationCard extends React.Component<
             </div>
           </MediaQuery>
           <MediaQuery maxWidth={767}>
-            <div className="rec-col-xs-12">
-              <div className="rec-details">
+            <div className="col-xs-12">
+              <div className="track-details">
                 <p title={recommendation.track_metadata.track_name}>
                   {getTrackLink(recommendation)}
                 </p>
@@ -86,7 +84,7 @@ export default class RecommendationCard extends React.Component<
             </div>
           </MediaQuery>
         </div>
-        <div className="rec-col-xs-3 text-center">
+        <div className="col-xs-3 text-center">
           <div className="recommendation-controls">
             <>
               <RecommendationControl

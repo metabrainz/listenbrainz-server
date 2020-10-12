@@ -153,47 +153,6 @@ export default class Recommendations extends React.Component<
     }
   };
 
-  recommendationPaginationControl = () => {
-    const { currRecPage, totalRecPages } = this.state;
-    return (
-      <ul className="pager" style={{ display: "flex" }}>
-        <li
-          className={`previous ${
-            currRecPage && currRecPage <= 1 ? "hidden" : ""
-          }`}
-        >
-          <a
-            role="button"
-            onClick={this.handleClickPreviousRecommendations}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") this.handleClickPreviousRecommendations();
-            }}
-            tabIndex={0}
-          >
-            &larr; Previous
-          </a>
-        </li>
-        <li
-          className={`next ${
-            currRecPage && currRecPage >= totalRecPages ? "hidden" : ""
-          }`}
-          style={{ marginLeft: "auto" }}
-        >
-          <a
-            role="button"
-            onClick={this.handleClickNextRecommendations}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") this.handleClickNextRecommendations();
-            }}
-            tabIndex={0}
-          >
-            Next &rarr;
-          </a>
-        </li>
-      </ul>
-    );
-  };
-
   isCurrentRecommendation = (recommendation: Recommendation): boolean => {
     const { currentRecommendation } = this.state;
     return Boolean(
@@ -215,6 +174,8 @@ export default class Recommendations extends React.Component<
       recommendations,
       loading,
       direction,
+      currRecPage,
+      totalRecPages,
     } = this.state;
     const { spotify, user, currentUser } = this.props;
 
@@ -263,8 +224,43 @@ export default class Recommendations extends React.Component<
                   );
                 })}
               </div>
-
-              {this.recommendationPaginationControl()}
+              <ul className="pager" style={{ display: "flex" }}>
+                <li
+                  className={`previous ${
+                    currRecPage && currRecPage <= 1 ? "hidden" : ""
+                  }`}
+                >
+                  <a
+                    role="button"
+                    onClick={this.handleClickPreviousRecommendations}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter")
+                        this.handleClickPreviousRecommendations();
+                    }}
+                    tabIndex={0}
+                  >
+                    &larr; Previous
+                  </a>
+                </li>
+                <li
+                  className={`next ${
+                    currRecPage && currRecPage >= totalRecPages ? "hidden" : ""
+                  }`}
+                  style={{ marginLeft: "auto" }}
+                >
+                  <a
+                    role="button"
+                    onClick={this.handleClickNextRecommendations}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter")
+                        this.handleClickNextRecommendations();
+                    }}
+                    tabIndex={0}
+                  >
+                    Next &rarr;
+                  </a>
+                </li>
+              </ul>
             </div>
 
             <br />

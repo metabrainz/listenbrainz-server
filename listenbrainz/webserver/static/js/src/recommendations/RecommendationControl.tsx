@@ -13,17 +13,13 @@ export type RecommendationControlProps = {
 
 const RecommendationControl = (props: RecommendationControlProps) => {
   const { className, action, icon, title } = props;
-  return icon ? (
+  return (
     <FontAwesomeIcon
       icon={icon as IconProp}
       className={className}
       title={title}
       onClick={action}
     />
-  ) : (
-    <button className={className} title={title} onClick={action} type="button">
-      {title}
-    </button>
   );
 };
 
