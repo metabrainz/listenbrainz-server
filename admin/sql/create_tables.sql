@@ -158,6 +158,14 @@ CREATE TABLE statistics.sitewide (
 
 ALTER TABLE statistics.sitewide ADD CONSTRAINT stats_range_uniq UNIQUE (stats_range);
 
+CREATE TABLE recommendation_feedback (
+    id                      SERIAL, -- PK
+    user_id                 INTEGER NOT NULL, -- FK to "user".id
+    recording_mbid          UUID NOT NULL,
+    rating                  recommendation_feedback_type_enum NOT NULL,
+    created                 TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE recording_feedback (
     id                      SERIAL, -- PK
     user_id                 INTEGER NOT NULL, -- FK to "user".id

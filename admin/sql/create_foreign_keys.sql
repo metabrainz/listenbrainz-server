@@ -78,4 +78,10 @@ ALTER TABLE user_relationship
     REFERENCES "user" (id)
     ON DELETE CASCADE;
 
+ALTER TABLE recommendation_feedback
+    ADD CONSTRAINT recommendation_feedback_user_id_foreign_key
+    FOREIGN KEY (user_id)
+    REFERENCES "user" (id)
+    ON DELETE CASCADE;
+
 COMMIT;
