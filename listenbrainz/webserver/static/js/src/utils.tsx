@@ -73,9 +73,7 @@ const getArtistLink = (listen: Listen) => {
   return artistName;
 };
 
-const getTrackLink = (
-  listen: Listen
-): JSX.Element | string => {
+const getTrackLink = (listen: Listen): JSX.Element | string => {
   const trackName = _.get(listen, "track_metadata.track_name");
   if (_.get(listen, "track_metadata.additional_info.recording_mbid")) {
     return (
