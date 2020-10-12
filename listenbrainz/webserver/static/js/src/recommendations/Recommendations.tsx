@@ -1,24 +1,18 @@
 /* eslint-disable jsx-a11y/anchor-is-valid,camelcase */
 
-import { faListUl } from "@fortawesome/free-solid-svg-icons";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-
 import { AlertList } from "react-bs-notifier";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import * as _ from "lodash";
-import * as io from "socket.io-client";
-import BrainzPlayer from "./BrainzPlayer";
-import APIService from "./APIService";
-import Loader from "./components/Loader";
-import RecommendationCard from "./recommendations/RecommendationCard";
+import BrainzPlayer from "../BrainzPlayer";
+import APIService from "../APIService";
+import Loader from "../components/Loader";
+import RecommendationCard from "./RecommendationCard";
 
 export interface RecommendationsProps {
   apiUrl: string;
   recommendations?: Array<Recommendation>;
   profileUrl?: string;
-  saveUrl?: string;
   spotify: SpotifyUser;
   user: ListenBrainzUser;
   webSocketsServerUrl: string;
@@ -31,7 +25,6 @@ export interface RecommendationsState {
   direction: BrainzPlayDirection;
   recommendations: Array<Recommendation>;
   loading: boolean;
-  saveUrl: string;
   currRecPage?: number;
   totalRecPages: number;
 }
@@ -52,13 +45,16 @@ export default class Recommendations extends React.Component<
     super(props);
     this.state = {
       alerts: [],
-      recommendations: props.recommendations?.slice(0, this.expectedRecommendationsPerPage) || [],
-      saveUrl: props.saveUrl || "",
+      recommendations:
+        props.recommendations?.slice(0, this.expectedRecommendationsPerPage) ||
+        [],
       loading: false,
       direction: "down",
       currRecPage: 1,
       totalRecPages: props.recommendations
-        ? Math.ceil(props.recommendations.length / this.expectedRecommendationsPerPage)
+        ? Math.ceil(
+            props.recommendations.length / this.expectedRecommendationsPerPage
+          )
         : 0,
     };
 
@@ -74,7 +70,9 @@ export default class Recommendations extends React.Component<
     }
   };
 
-  handleCurrentRecommendationChange = (recommendation: Recommendation): void => {
+  handleCurrentRecommendationChange = (
+    recommendation: Recommendation
+  ): void => {
     this.setState({ currentRecommendation: recommendation });
   };
 
@@ -196,6 +194,13 @@ export default class Recommendations extends React.Component<
     );
   };
 
+  isCurrentRecommendation = (recommendation: Recommendation): boolean => {
+    const { currentRecommendation } = this.state;
+    return Boolean(
+      currentRecommendation && _.isEqual(recommendation, currentRecommendation)
+    );
+  };
+
   afterRecommendationsDisplay() {
     if (this.recommendationsTable?.current) {
       this.recommendationsTable.current.scrollIntoView({ behavior: "smooth" });
@@ -210,13 +215,8 @@ export default class Recommendations extends React.Component<
       recommendations,
       loading,
       direction,
-      saveUrl,
     } = this.state;
-    const {
-      spotify,
-      user,
-      currentUser,
-    } = this.props;
+    const { spotify, user, currentUser } = this.props;
 
     return (
       <div role="main">
@@ -229,38 +229,43 @@ export default class Recommendations extends React.Component<
         />
         <div className="row">
           <div className="col-md-8">
-              <div>
-                <div
-                  style={{
-                    height: 0,
-                    position: "sticky",
-                    top: "50%",
-                    zIndex: 1,
-                  }}
-                >
-                  <Loader isLoading={loading} />
-                </div>
-                <div
-                  id="recommendations"
-                  ref={this.recommendationsTable}
-                  style={{ opacity: loading ? "0.4" : "1" }}
-                >
-                  {recommendations.map((recommendation) => {
-                      return (
-                        <RecommendationCard
-                          key={`${recommendation.track_metadata?.track_name}-${recommendation.track_metadata?.additional_info?.recording_msid}-${recommendation.user_name}`}
-                          currentUser={currentUser}
-                          isCurrentUser={currentUser?.name === user?.name}
-                          recommendation={recommendation}
-                          playRecommendation={this.playRecommendation}
-                          newAlert={this.newAlert}
-                        />
-                      );
-                    })}
-                </div>
-
-                {this.recommendationPaginationControl()}
+            <div>
+              <div
+                style={{
+                  height: 0,
+                  position: "sticky",
+                  top: "50%",
+                  zIndex: 1,
+                }}
+              >
+                <Loader isLoading={loading} />
               </div>
+              <div
+                id="recommendations"
+                ref={this.recommendationsTable}
+                style={{ opacity: loading ? "0.4" : "1" }}
+              >
+                {recommendations.map((recommendation) => {
+                  return (
+                    <RecommendationCard
+                      key={`${recommendation.track_metadata?.track_name}-${recommendation.track_metadata?.additional_info?.recording_msid}-${recommendation.user_name}`}
+                      currentUser={currentUser}
+                      isCurrentUser={currentUser?.name === user?.name}
+                      recommendation={recommendation}
+                      playRecommendation={this.playRecommendation}
+                      newAlert={this.newAlert}
+                      className={`${
+                        this.isCurrentRecommendation(recommendation)
+                          ? " current-recommendation"
+                          : ""
+                      }`}
+                    />
+                  );
+                })}
+              </div>
+
+              {this.recommendationPaginationControl()}
+            </div>
 
             <br />
           </div>
@@ -299,7 +304,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const {
     api_url,
     recommendations,
-    save_url,
     spotify,
     user,
     web_sockets_server_url,
@@ -310,7 +314,6 @@ document.addEventListener("DOMContentLoaded", () => {
     <Recommendations
       apiUrl={api_url}
       recommendations={recommendations}
-      saveUrl={save_url}
       spotify={spotify}
       user={user}
       webSocketsServerUrl={web_sockets_server_url}

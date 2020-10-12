@@ -4,14 +4,14 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconDefinition } from "@fortawesome/fontawesome-common-types"; // eslint-disable-line import/no-unresolved
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
-export type ListenControlProps = {
+export type RecommendationControlProps = {
   className?: string;
   action?: () => void;
   icon?: IconDefinition;
   title: string;
 };
 
-const ListenControl = (props: ListenControlProps) => {
+const RecommendationControl = (props: RecommendationControlProps) => {
   const { className, action, icon, title } = props;
   return icon ? (
     <FontAwesomeIcon
@@ -27,4 +27,4 @@ const ListenControl = (props: ListenControlProps) => {
   );
 };
 
-export default ListenControl;
+export default RecommendationControl;

@@ -1,0 +1,87 @@
+
+
+#recommendations {
+    padding: 10px;
+
+    > .recommendation-card {
+      padding: 15px;
+      margin-bottom: 7px;
+      max-height: 72px;
+
+      &.current-recommendation {
+        background-color: rgba(217, 237, 247, 0.3) !important ;
+      }
+
+       div {
+         padding: 0px;
+       }
+
+      > .rec-col-xs-9, .rec-col-xs-12 {
+
+        > .rec-col-xs-9, .rec-col-xs-12 {
+          display: flex;
+
+          .rec-details {
+            width: 100%;
+
+            p {
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space:nowrap;
+              margin-bottom: 0px;
+            }
+          }
+        }
+
+      }
+
+
+      > .rec-col-xs-3 {
+        display: table;
+        height: 40px;
+
+        > * {
+          display: table-cell;
+          vertical-align: middle;
+        }
+
+        a {
+          word-break: break-word;
+        }
+
+        .recommendation-controls {
+
+          > svg:hover {
+            cursor: pointer;
+          }
+
+          .fa-angry, .fa-sad-cry, .fa-meh , .fa-smile-beam, .fa-laugh-beam {
+            stroke-width: 20px;
+            font-size: 18px;
+            margin: 0% 1%;
+          }
+
+          .fa-angry {
+            stroke: #128545;
+          }
+
+          .fa-sad-cry {
+            stroke: #128546;
+          }
+
+          .fa-meh {
+            stroke: #128528;
+          }
+
+          .fa-smile-beam {
+            stroke: #128522;
+          }
+
+          .fa-laugh-beam {
+            stroke: #128516;
+          }
+
+        }
+      }
+    }
+}
