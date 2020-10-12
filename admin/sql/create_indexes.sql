@@ -25,4 +25,8 @@ CREATE UNIQUE INDEX user_id_rec_msid_ndx_feedback ON recording_feedback (user_id
 CREATE INDEX user_0_user_relationship_ndx ON user_relationship (user_0);
 CREATE INDEX user_1_user_relationship_ndx ON user_relationship (user_1);
 
+CREATE UNIQUE INDEX user_id_rec_mbid_ndx_feedback ON recommendation_feedback (user_id, recording_mbid);
+
+CREATE INDEX rating_recommendation_feedback ON recommendation_feedback (rating);
+
 COMMIT;
