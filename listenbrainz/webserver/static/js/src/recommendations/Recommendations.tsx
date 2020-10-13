@@ -107,7 +107,7 @@ export default class Recommendations extends React.Component<
     }
   };
 
-  handleClickPreviousRecommendations = () => {
+  handleClickPrevious  = () => {
     const { recommendations } = this.props;
     const { currRecPage } = this.state;
 
@@ -230,10 +230,10 @@ export default class Recommendations extends React.Component<
                 >
                   <a
                     role="button"
-                    onClick={this.handleClickPreviousRecommendations}
+                    onClick={this.handleClickPrevious }
                     onKeyDown={(e) => {
                       if (e.key === "Enter")
-                        this.handleClickPreviousRecommendations();
+                        this.handleClickPrevious ();
                     }}
                     tabIndex={0}
                   >
