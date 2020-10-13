@@ -30,6 +30,7 @@ import {
 import APIService from "./APIService";
 
 type FollowButtonProps = {
+  type: "icon-only" | "block";
   user: ListenBrainzUser;
   loggedInUser?: ListenBrainzUser;
   loggedInUserFollowsUser: boolean;
@@ -141,6 +142,7 @@ class FollowButton extends React.Component<
   };
 
   render() {
+    const { type } = this.props;
     const { buttonClass, buttonText, buttonIcon } = this.getButtonDetails();
     return (
       <div
@@ -149,11 +151,11 @@ class FollowButton extends React.Component<
         onKeyPress={this.handleButtonClick}
         onMouseEnter={() => this.setHover(true)}
         onMouseLeave={() => this.setHover(false)}
-        className={buttonClass}
+        className={`${buttonClass} ${type}`}
         role="button"
         tabIndex={0}
       >
-        <FontAwesomeIcon icon={buttonIcon} />{" "}
+        <FontAwesomeIcon icon={buttonIcon} />
         <div className="text">{buttonText}</div>
       </div>
     );

@@ -1,0 +1,43 @@
+@purple: #353070;
+@white: #ffffff;
+
+#follow-button {
+  margin-left: 10px;
+  font-family: "Sintony";
+
+  &.icon-only {
+    > .text {
+      margin-left: 4px;
+      width: 0px;
+      display: inherit;
+      vertical-align: inherit;
+      transition: width 0.42s;
+      overflow-x: hidden;
+    }
+    &:hover > .text,
+    &:focus > .text {
+      width: 4.5em;
+    }
+  }
+
+  &.block {
+    color: @purple;
+    background: @white;
+    border: 2px solid @purple;
+    font-weight: bold;
+    border-radius: 6px;
+    padding: 5px;
+    text-align: center;
+    width: 85px;
+
+    &.btn-info {
+      color: @white;
+      background: @purple;
+    }
+
+    svg {
+      display: none;
+    }
+  }
+}
+  

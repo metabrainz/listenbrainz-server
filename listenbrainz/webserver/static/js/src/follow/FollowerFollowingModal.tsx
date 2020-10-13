@@ -121,6 +121,7 @@ export default class FollowerFollowingModal extends React.Component<
                   {listEntry.name}
                 </a>
                 <FollowButton
+                  type="block"
                   user={{ name: listEntry.name }}
                   loggedInUser={user}
                   loggedInUserFollowsUser={this.loggedInUserFollowsUser(
