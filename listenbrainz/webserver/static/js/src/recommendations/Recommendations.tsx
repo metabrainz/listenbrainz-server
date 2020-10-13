@@ -37,8 +37,6 @@ export default class Recommendations extends React.Component<
   private recommendationsTable = React.createRef<HTMLTableElement>();
   private APIService: APIService;
 
-  private socket!: SocketIOClient.Socket;
-
   private expectedRecommendationsPerPage = 25;
 
   constructor(props: RecommendationsProps) {
@@ -131,7 +129,7 @@ export default class Recommendations extends React.Component<
     }
   };
 
-  handleClickNextRecommendations = () => {
+  handleClickNext = () => {
     const { recommendations } = this.props;
     const { currRecPage, totalRecPages } = this.state;
 
@@ -250,10 +248,9 @@ export default class Recommendations extends React.Component<
                 >
                   <a
                     role="button"
-                    onClick={this.handleClickNextRecommendations}
+                    onClick={this.handleClickNext}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter")
-                        this.handleClickNextRecommendations();
+                      if (e.key === "Enter") this.handleClickNext();
                     }}
                     tabIndex={0}
                   >

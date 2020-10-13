@@ -1,17 +1,11 @@
 import * as React from "react";
 import { get as _get } from "lodash";
-import MediaQuery from "react-responsive";
-import {
-  faAngry,
-  faSadCry,
-  faMeh,
-  faSmileBeam,
-  faLaughBeam,
-} from "@fortawesome/free-solid-svg-icons";
+import { faEllipsisV } from "@fortawesome/free-solid-svg-icons";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import { getArtistLink, getTrackLink } from "../utils";
 import Card from "../components/Card";
-import RecommendationControl from "./RecommendationControl";
 
 export type RecommendationCardProps = {
   recommendation: Recommendation;
@@ -49,61 +43,56 @@ export default class RecommendationCard extends React.Component<
         className={`recommendation-card row ${className}`}
       >
         <div className="col-xs-9">
-          <MediaQuery minWidth={768}>
-            <div className="col-xs-9">
-              <div className="track-details">
-                <p title={recommendation.track_metadata.track_name}>
-                  {getTrackLink(recommendation)}
-                </p>
-                <p>
-                  <small
-                    className="text-muted"
-                    title={recommendation.track_metadata.artist_name}
-                  >
-                    {getArtistLink(recommendation)}
-                  </small>
-                </p>
-              </div>
+          <div className="col-xs-12">
+            <div className="track-details">
+              <p title={recommendation.track_metadata.track_name}>
+                {getTrackLink(recommendation)}
+              </p>
+              <p>
+                <small
+                  className="text-muted"
+                  title={recommendation.track_metadata.artist_name}
+                >
+                  {getArtistLink(recommendation)}
+                </small>
+              </p>
             </div>
-          </MediaQuery>
-          <MediaQuery maxWidth={767}>
-            <div className="col-xs-12">
-              <div className="track-details">
-                <p title={recommendation.track_metadata.track_name}>
-                  {getTrackLink(recommendation)}
-                </p>
-                <p>
-                  <small
-                    className="text-muted"
-                    title={recommendation.track_metadata.artist_name}
-                  >
-                    {getArtistLink(recommendation)}
-                  </small>
-                </p>
-              </div>
-            </div>
-          </MediaQuery>
+          </div>
         </div>
         <div className="col-xs-3 text-center">
           <div className="recommendation-controls">
             <>
-              <RecommendationControl
-                icon={faAngry}
-                title="I never want to hear this again!"
+              <FontAwesomeIcon
+                icon={faEllipsisV as IconProp}
+                className="dropdown-toggle"
+                id="recommendationControlsDropdown"
+                data-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="true"
               />
-              <RecommendationControl
-                icon={faSadCry}
-                title="I don't like this!"
-              />
-              <RecommendationControl
-                icon={faMeh}
-                title="This is a bad recommendation!"
-              />
-              <RecommendationControl icon={faSmileBeam} title="I like this!" />
-              <RecommendationControl
-                icon={faLaughBeam}
-                title="I really love this!"
-              />
+              <ul
+                className="dropdown-menu dropdown-menu-right"
+                aria-labelledby="recommendationControlsDropdown"
+              >
+                <span
+                  className="angry"
+                  title="I never want to hear this again!"
+                >
+                  &#128544;
+                </span>
+                <span className="disappoint" title="I don't like this!">
+                  &#128542;
+                </span>
+                <span className="meh" title="This is a bad recommendation!">
+                  &#128529;
+                </span>
+                <span className="smile" title="I like this!">
+                  &#128578;
+                </span>
+                <span className="laugh" title="I really love this!">
+                  &#128516;
+                </span>
+              </ul>
             </>
           </div>
         </div>
