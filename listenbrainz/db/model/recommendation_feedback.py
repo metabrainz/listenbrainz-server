@@ -23,11 +23,7 @@ class RecommendationFeedback(BaseModel):
     @validator('feedback')
     def check_feedback_is_valid(cls, feedback):
         expected_feedback = [
-            'I never want to hear this again',
-            'I don\'t like this',
-            'This is a bad recommendation',
-            'I like this',
-            'I really love this'
+            'like', 'love', 'dislike', 'hate', 'bad_recommendation'
         ]
         if feedback not in expected_feedback:
             raise ValueError('Feedback can only have a value in {}'.format(expected_feedback))
