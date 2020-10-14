@@ -3,7 +3,7 @@
 import { AlertList } from "react-bs-notifier";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import * as _ from "lodash";
+import { isEqual } from "lodash";
 import BrainzPlayer from "../BrainzPlayer";
 import APIService from "../APIService";
 import Loader from "../components/Loader";
@@ -107,7 +107,7 @@ export default class Recommendations extends React.Component<
     }
   };
 
-  handleClickPrevious  = () => {
+  handleClickPrevious = () => {
     const { recommendations } = this.props;
     const { currRecPage } = this.state;
 
@@ -154,7 +154,7 @@ export default class Recommendations extends React.Component<
   isCurrentRecommendation = (recommendation: Recommendation): boolean => {
     const { currentRecommendation } = this.state;
     return Boolean(
-      currentRecommendation && _.isEqual(recommendation, currentRecommendation)
+      currentRecommendation && isEqual(recommendation, currentRecommendation)
     );
   };
 
@@ -230,10 +230,9 @@ export default class Recommendations extends React.Component<
                 >
                   <a
                     role="button"
-                    onClick={this.handleClickPrevious }
+                    onClick={this.handleClickPrevious}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter")
-                        this.handleClickPrevious ();
+                      if (e.key === "Enter") this.handleClickPrevious();
                     }}
                     tabIndex={0}
                   >

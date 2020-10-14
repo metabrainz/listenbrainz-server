@@ -43,7 +43,7 @@ export default class RecommendationCard extends React.Component<
         className={`recommendation-card row ${className}`}
       >
         <div className="col-xs-9">
-          <div className="col-xs-12">
+          <div className="col-xs-11">
             <div className="track-details">
               <p title={recommendation.track_metadata.track_name}>
                 {getTrackLink(recommendation)}
@@ -59,7 +59,7 @@ export default class RecommendationCard extends React.Component<
             </div>
           </div>
         </div>
-        <div className="col-xs-3 text-center">
+        <div className="col-xs-1 text-center">
           <div className="recommendation-controls">
             <>
               <FontAwesomeIcon

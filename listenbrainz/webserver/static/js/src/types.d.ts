@@ -32,10 +32,8 @@ interface AdditionalInfo {
   work_mbids?: Array<string> | null;
 }
 
-declare type Listen = {
+declare type BaseListenFormat = {
   listened_at: number;
-  listened_at_iso?: string | null;
-  playing_now?: boolean | null;
   user_name?: string | null;
   track_metadata: {
     artist_name: string;
@@ -43,19 +41,15 @@ declare type Listen = {
     track_name: string;
     additional_info?: AdditionalInfo;
   };
+};
+
+declare type Listen = BaseListenFormat & {
+  listened_at_iso?: string | null;
+  playing_now?: boolean | null;
   score?: number;
 };
 
-declare type Recommendation = {
-  listened_at: number;
-  user_name?: string | null;
-  track_metadata: {
-    artist_name: string;
-    release_name?: string | null;
-    track_name: string;
-    additional_info?: AdditionalInfo;
-  };
-};
+declare type Recommendation = BaseListenFormat;
 
 declare type ListenBrainzUser = {
   id?: number;
