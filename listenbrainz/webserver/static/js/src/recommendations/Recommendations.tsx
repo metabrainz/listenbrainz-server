@@ -212,7 +212,6 @@ export default class Recommendations extends React.Component<
                       isCurrentUser={currentUser?.name === user?.name}
                       recommendation={recommendation}
                       playRecommendation={this.playRecommendation}
-                      newAlert={this.newAlert}
                       className={`${
                         this.isCurrentRecommendation(recommendation)
                           ? " current-recommendation"

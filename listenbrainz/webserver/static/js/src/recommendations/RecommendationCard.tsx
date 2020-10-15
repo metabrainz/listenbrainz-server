@@ -13,11 +13,6 @@ export type RecommendationCardProps = {
   className?: string;
   isCurrentUser: Boolean;
   currentUser?: ListenBrainzUser;
-  newAlert: (
-    alertType: AlertType,
-    title: string,
-    message: string | JSX.Element
-  ) => void;
 };
 
 export default class RecommendationCard extends React.Component<
