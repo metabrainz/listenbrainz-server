@@ -1,0 +1,181 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`RecommendationCard renders correctly for recommendations 1`] = `
+<RecommendationCard
+  currentUser={
+    Object {
+      "auth_token": "lalala",
+      "name": "test",
+    }
+  }
+  isCurrentUser={true}
+  playRecommendation={[Function]}
+  recommendation={
+    Object {
+      "listened_at": 0,
+      "track_metadata": Object {
+        "additional_info": Object {
+          "artist_mbids": Array [
+            "xxxx",
+          ],
+          "release_mbid": "yyyy",
+        },
+        "artist_name": "Kishore Kumar",
+        "track_name": "Ek chatur naar",
+      },
+    }
+  }
+>
+  <ForwardRef
+    className="recommendation-card row undefined"
+    onDoubleClick={[Function]}
+  >
+    <div
+      className="recommendation-card row undefined"
+      onDoubleClick={[Function]}
+      style={
+        Object {
+          "background": "#FFFFFF",
+          "border": "1px solid #EEEEEE",
+          "borderRadius": "8px",
+          "boxShadow": "0 1px 1px rgba(192,192,192,0.1), 0 2px 2px rgba(192,192,192,0.15), 0 4px 4px rgba(192,192,192,0.20)",
+          "boxSizing": "border-box",
+          "height": "100%",
+        }
+      }
+    >
+      <div
+        className="col-xs-9"
+      >
+        <div
+          className="col-xs-11"
+        >
+          <div
+            className="track-details"
+          >
+            <p
+              title="Ek chatur naar"
+            >
+              Ek chatur naar
+            </p>
+            <p>
+              <small
+                className="text-muted"
+                title="Kishore Kumar"
+              >
+                <a
+                  href="http://musicbrainz.org/artist/xxxx"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Kishore Kumar
+                </a>
+              </small>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div
+        className="col-xs-1 text-center"
+      >
+        <div
+          className="recommendation-controls"
+        >
+          <FontAwesomeIcon
+            aria-expanded="true"
+            aria-haspopup="true"
+            border={false}
+            className="dropdown-toggle"
+            data-toggle="dropdown"
+            fixedWidth={false}
+            flip={null}
+            icon={
+              Object {
+                "icon": Array [
+                  192,
+                  512,
+                  Array [],
+                  "f142",
+                  "M96 184c39.8 0 72 32.2 72 72s-32.2 72-72 72-72-32.2-72-72 32.2-72 72-72zM24 80c0 39.8 32.2 72 72 72s72-32.2 72-72S135.8 8 96 8 24 40.2 24 80zm0 352c0 39.8 32.2 72 72 72s72-32.2 72-72-32.2-72-72-72-72 32.2-72 72z",
+                ],
+                "iconName": "ellipsis-v",
+                "prefix": "fas",
+              }
+            }
+            id="recommendationControlsDropdown"
+            inverse={false}
+            listItem={false}
+            mask={null}
+            pull={null}
+            pulse={false}
+            rotation={null}
+            size={null}
+            spin={false}
+            swapOpacity={false}
+            symbol={false}
+            title=""
+            transform={null}
+          >
+            <svg
+              aria-expanded="true"
+              aria-haspopup="true"
+              aria-hidden="true"
+              className="svg-inline--fa fa-ellipsis-v fa-w-6 dropdown-toggle"
+              data-icon="ellipsis-v"
+              data-prefix="fas"
+              data-toggle="dropdown"
+              focusable="false"
+              id="recommendationControlsDropdown"
+              role="img"
+              style={Object {}}
+              viewBox="0 0 192 512"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M96 184c39.8 0 72 32.2 72 72s-32.2 72-72 72-72-32.2-72-72 32.2-72 72-72zM24 80c0 39.8 32.2 72 72 72s72-32.2 72-72S135.8 8 96 8 24 40.2 24 80zm0 352c0 39.8 32.2 72 72 72s72-32.2 72-72-32.2-72-72-72-72 32.2-72 72z"
+                fill="currentColor"
+                style={Object {}}
+              />
+            </svg>
+          </FontAwesomeIcon>
+          <ul
+            aria-labelledby="recommendationControlsDropdown"
+            className="dropdown-menu dropdown-menu-right"
+          >
+            <span
+              className="angry"
+              title="I never want to hear this again!"
+            >
+              😠
+            </span>
+            <span
+              className="disappoint"
+              title="I don't like this!"
+            >
+              😞
+            </span>
+            <span
+              className="meh"
+              title="This is a bad recommendation!"
+            >
+              😑
+            </span>
+            <span
+              className="smile"
+              title="I like this!"
+            >
+              🙂
+            </span>
+            <span
+              className="laugh"
+              title="I really love this!"
+            >
+              😄
+            </span>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </ForwardRef>
+</RecommendationCard>
+`;
