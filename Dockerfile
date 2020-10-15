@@ -31,7 +31,7 @@ WORKDIR /code
 
 RUN mkdir /code/listenbrainz
 WORKDIR /code/listenbrainz
-
+RUN pip3 install -U pip
 COPY requirements.txt /code/listenbrainz/
 RUN pip3 install --no-cache-dir -r requirements.txt
 RUN useradd --create-home --shell /bin/bash listenbrainz
