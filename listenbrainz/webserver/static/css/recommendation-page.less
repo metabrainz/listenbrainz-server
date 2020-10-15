@@ -1,0 +1,61 @@
+#recommendations {
+  &:extend(#listens);
+  padding: 10px;
+
+  > .recommendation-card {
+    padding: 15px;
+    margin-bottom: 7px;
+    max-height: 72px;
+
+    &.current-recommendation {
+      background-color: rgba(217, 237, 247, 0.3) !important ;
+    }
+
+    > .col-xs-9, .col-xs-11 {
+
+      > .col-xs-9, .col-xs-11 {
+        display: flex;
+
+        .track-details {
+          width: 100%;
+
+          p {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space:nowrap;
+            margin-bottom: 0px;
+          }
+        }
+      }
+
+    }
+
+    > .col-xs-1 {
+      display: table;
+      height: 40px;
+
+      > * {
+        display: table-cell;
+        vertical-align: middle;
+      }
+
+      a {
+        word-break: break-word;
+      }
+
+      .recommendation-controls {
+
+        &.open .dropdown-menu {
+          display: flex;
+        }
+
+        .smile, .laugh, .angry, .disappoint, .meh {
+          font-size: 18px;
+          flex: 1;
+          text-align: center;
+          margin: 0 0.4em;
+        }
+      }
+    }
+  }
+}
