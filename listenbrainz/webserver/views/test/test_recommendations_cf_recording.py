@@ -1,4 +1,5 @@
 import json
+import uuid
 import ujson
 from unittest import mock
 from requests.models import Response
@@ -28,14 +29,21 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
         self.user2 = db_user.get_or_create(2, 'vansika_1')
         self.user3 = db_user.get_or_create(3, 'vansika_2')
 
-        # insert recommendations
-        with open(self.path_to_data_file('cf_recommendations_db_data_for_api_test_recording.json'), 'r') as f:
-            self.payload = json.load(f)
+        # generate test data
+        data = {"recording_mbid": []}
+
+        for score in range(1500, 0, -1):
+            data["recording_mbid"].append(
+                {
+                    "recording_mbid": str(uuid.uuid4()),
+                    "score": score
+                }
+            )
 
         db_recommendations_cf_recording.insert_user_recommendation(
             2,
             UserRecommendationsJson(**{
-                'top_artist': self.payload['recording_mbid'],
+                'top_artist': data['recording_mbid'],
                 'similar_artist': []
             })
         )
@@ -44,7 +52,7 @@ class CFRecommendationsViewsTestCase(ServerTestCase, DatabaseTestCase):
             3,
             UserRecommendationsJson(**{
                 'top_artist': [],
-                'similar_artist': self.payload['recording_mbid']
+                'similar_artist': data['recording_mbid']
             })
         )
 
