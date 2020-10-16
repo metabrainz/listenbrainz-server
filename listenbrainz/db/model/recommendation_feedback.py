@@ -7,7 +7,7 @@ from pydantic import BaseModel, ValidationError, validator
 def get_allowed_ratings():
     """ Get rating values that can be submitted corresponding to a recommendation.
     """
-    return [ 'like', 'love', 'dislike', 'hate', 'bad_recommendation']
+    return ['like', 'love', 'dislike', 'hate', 'bad_recommendation']
 
 
 def check_recording_mbid_is_valid_uuid(rec_mbid):

@@ -55,7 +55,9 @@ def submit_recommendation_feedback():
         log_raise_400("JSON document must only contain recording_mbid and rating", data)
 
     try:
-        feedback_submit = RecommendationFeedbackSubmit(user_id=user["id"], recording_mbid=data["recording_mbid"], rating=data["rating"])
+        feedback_submit = RecommendationFeedbackSubmit(user_id=user["id"],
+                                                       recording_mbid=data["recording_mbid"],
+                                                       rating=data["rating"])
     except ValidationError as e:
         log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "), data)
 
