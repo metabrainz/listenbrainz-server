@@ -85,6 +85,11 @@ def api_docs():
     return render_template("index/api-docs.html")
 
 
+@index_bp.route("/listen-submitters")
+def listen_submitters():
+    return render_template("index/listen-submitters.html")
+
+
 @index_bp.route("/lastfm-proxy")
 def proxy():
     return render_template("index/lastfm-proxy.html")
