@@ -62,7 +62,7 @@ def insert_dump_data(dump_id: int, dump_type: str, imported_at: datetime):
     data = create_dataframe(Row(dump_id, dump_type, imported_at), schema=import_metadata_schema)
     if import_meta_df:
         result = import_meta_df \
-            .filter(f"dump_id != '{dump_id}' AND dump_type != '{dump_type}'") \
+            .filter(f"dump_id != '{dump_id}' OR dump_type != '{dump_type}'") \
             .union(data)
     else:
         result = data
