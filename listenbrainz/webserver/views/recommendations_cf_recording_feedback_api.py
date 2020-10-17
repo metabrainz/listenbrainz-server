@@ -167,7 +167,7 @@ def get_feedback_for_user(user_name):
     feedback = db_feedback.get_feedback_for_user(user_id=user["id"], limit=count, offset=offset, rating=rating)
     total_count = db_feedback.get_feedback_count_for_user(user["id"])
 
-    feedback = [_feedback_to_api(fb) for fb in feedback]
+    feedback = [_format_feedback(fb) for fb in feedback]
 
     return jsonify({
         "recommendation-feedback": feedback,
@@ -178,7 +178,14 @@ def get_feedback_for_user(user_name):
     })
 
 
-def _feedback_to_api(fb):
+def _format_feedback(fb):
+    """ Format feedback to return via API. Refer to "RecommendationFeedbackSubmit" in db/model/recommendation_feedback.py
+        to know the format of recommendation feedback inserted into the db.
+
+        Feedback returned via the API is formatted by:
+            -> Converting datetime to timestamp
+            -> Removing user id
+    """
     fb.created = int(fb.created.timestamp())
     del fb.user_id
 

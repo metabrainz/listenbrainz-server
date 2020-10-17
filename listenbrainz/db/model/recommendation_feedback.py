@@ -23,7 +23,9 @@ class RecommendationFeedbackSubmit(BaseModel):
         Args:
             user_id: the row id of the user in the DB
             recording_mbid: the MusicBrainz ID of the recording
-            rating: the feedback associated with the recommendation
+            rating: the feedback associated with the recommendation.
+                    Refer to "recommendation_feedback_type_enum" in admin/sql/create_types.py
+                    for allowed rating values.
             created: (Optional)the timestamp when the feedback record was inserted into DB
     """
 

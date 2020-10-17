@@ -50,7 +50,8 @@ def delete(feedback_delete: RecommendationFeedbackDelete):
 
 
 def get_feedback_for_user(user_id: int, limit: int, offset: int, rating: str = None) -> List[RecommendationFeedbackSubmit]:
-    """ Get a list of recommendation feedback given by the user in descending order of their creation
+    """ Get a list of recommendation feedback given by the user in descending order of their creation.
+        Feedback will be filtered based on limit, offset and rating, if passed.
 
         Args:
             user_id: the row ID of the user in the DB
