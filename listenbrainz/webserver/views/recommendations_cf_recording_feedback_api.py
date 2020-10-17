@@ -164,6 +164,8 @@ def get_feedback_for_user(user_name):
     offset = _get_non_negative_param('offset', default=0)
     count = _get_non_negative_param('count', default=DEFAULT_ITEMS_PER_GET)
 
+    count = min(count, MAX_ITEMS_PER_GET)
+
     feedback = db_feedback.get_feedback_for_user(user_id=user["id"], limit=count, offset=offset, rating=rating)
     total_count = db_feedback.get_feedback_count_for_user(user["id"])
 
