@@ -84,8 +84,8 @@ def _get_template(active_section, user):
                       "We are working on it. Check back later."
         )
 
-    listens = _get_listens_from_recording_mbid(result)
-    if not listens:
+    recommendations = _get_playable_recommendations_list(result)
+    if not recommendations:
         current_app.logger.error('The API returned an empty response for {} recommendations.\nData: {}'
                                  .format(active_section, result))
         return render_template(
@@ -116,8 +116,7 @@ def _get_template(active_section, user):
         "spotify": spotify_data,
         "api_url": current_app.config["API_URL"],
         "web_sockets_server_url": current_app.config['WEBSOCKETS_SERVER_URL'],
-        "listens": listens,
-        "mode": "cf_recs"
+        "recommendations": recommendations
     }
 
     return render_template(
@@ -129,14 +128,15 @@ def _get_template(active_section, user):
     )
 
 
-def _get_listens_from_recording_mbid(mbids_and_ratings_list):
-    """ Get listens from recording mbid using labs.listenbrainz.api.
+def _get_playable_recommendations_list(mbids_and_ratings_list):
+    """ Get artist, track etc info from recording mbid using labs.listenbrainz.api
+        so that they can be played using BrainzPlayer. Refer to webserver/static/js/src/BrainzPlayer.tsx
 
         Args:
             mbids_and_ratings_list: Contains recording mbid and corresponding score.
 
         Returns:
-            listens: list of listens of the format
+            recommendations: list of recommendations of the format
                 {
                     'listened_at' : 0,
                     'track_metadata' : {
@@ -147,18 +147,12 @@ def _get_listens_from_recording_mbid(mbids_and_ratings_list):
                             'recording_mbid' : "181c4177-f33a-441d-b15d-910acaf18b07",
                             'artist_mbids' : "181c4177-f33a-441d-b15d-910acaf18b07"
                         }
-                    },
-                    'score': 0.123
+                    }
                 }
-
     """
     data = []
-    mbids_and_ratings = {}
-
     for r in mbids_and_ratings_list:
         data.append({'[recording_mbid]': r['recording_mbid']})
-        # get score corresponding to recording mbid.
-        mbids_and_ratings[r['recording_mbid']] = r['score']
 
     r = requests.post(SERVER_URL, json=data)
     if r.status_code != 200:
@@ -174,24 +168,20 @@ def _get_listens_from_recording_mbid(mbids_and_ratings_list):
     except Exception as err:
         raise InternalServerError(str(err))
 
-    listens = []
+    recommendations = []
 
     for row in rows:
-        if mbids_and_ratings.get(row['recording_mbid']) is not None:
-            listens.append({
-                'listened_at': 0,
-                'track_metadata': {
-                    'artist_name': row['artist_credit_name'],
-                    'track_name': row['recording_name'],
-                    'release_name': row.get('release_name', ""),
-                    'additional_info': {
-                        'recording_mbid': row['recording_mbid'],
-                        'artist_mbids': row['[artist_credit_mbids]']
-                    }
-                },
-                'score': mbids_and_ratings[row['recording_mbid']]
-            })
+        recommendations.append({
+            'listened_at': 0,
+            'track_metadata': {
+                'artist_name': row['artist_credit_name'],
+                'track_name': row['recording_name'],
+                'release_name': row.get('release_name', ""),
+                'additional_info': {
+                    'recording_mbid': row['recording_mbid'],
+                    'artist_mbids': row['[artist_credit_mbids]']
+                }
+            }
+        })
 
-    listens = sorted(listens, key=lambda x: x['score'], reverse=True)
-
-    return listens
+    return recommendations

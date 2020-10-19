@@ -55,7 +55,6 @@ declare type BaseListenFormat = {
 declare type Listen = BaseListenFormat & {
   listened_at_iso?: string | null;
   playing_now?: boolean | null;
-  score?: number;
 };
 
 declare type Recommendation = BaseListenFormat;
@@ -364,7 +363,7 @@ declare type UserArtistMapDatum = {
 
 declare type UserArtistMapData = Array<UserArtistMapDatum>;
 
-declare type ListensListMode = "listens" | "follow" | "recent" | "cf_recs";
+declare type ListensListMode = "listens" | "follow" | "recent";
 
 declare type ListenFeedBack = 1 | 0 | -1;
 
