@@ -66,8 +66,6 @@ export default class RecentListens extends React.Component<
 
   private expectedListensPerPage = 25;
 
-  private expectedRecommendationsPerPage = 25;
-
   constructor(props: RecentListensProps) {
     super(props);
     this.state = {
