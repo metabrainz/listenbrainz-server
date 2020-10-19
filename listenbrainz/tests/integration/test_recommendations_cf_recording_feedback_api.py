@@ -415,13 +415,25 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
 
     def test_get_feedback_for_user_for_count_and_offset(self):
         """ Test to make sure valid response is received when count rating is passed """
+        feedback_love = []
         for i in range(110):
+            rec_mbid = str(uuid.uuid4())
             db_feedback.insert(
                 RecommendationFeedbackSubmit(
                     user_id=self.user2['id'],
-                    recording_mbid=str(uuid.uuid4()),
+                    recording_mbid=rec_mbid,
                     rating='love'
                 )
+            )
+
+            # prepended to the list since ``get_feedback_for_users`` returns data in descending
+            # order of creation.
+            feedback_love.insert(
+                0,
+                {
+                    'recording_mbid': rec_mbid,
+                    'rating': 'love'
+                }
             )
         # check for count
         response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user",
@@ -436,6 +448,9 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
 
         feedback = data["recommendation-feedback"]
         self.assertEqual(len(feedback), 10)
+        for i in range(10):
+            self.assertEqual(feedback[i]['recording_mbid'], feedback_love[i]['recording_mbid'])
+            self.assertEqual(feedback[i]['rating'], feedback_love[i]['rating'])
 
         # check for offset
         response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user",
@@ -450,7 +465,9 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
 
         feedback = data["recommendation-feedback"]  # sorted in descending order of their creation
         self.assertEqual(len(feedback), 20)
-
+        for i in range(10):
+            self.assertEqual(feedback[i]['recording_mbid'], feedback_love[i+90]['recording_mbid'])
+            self.assertEqual(feedback[i]['rating'], feedback_love[i+90]['rating'])
         # check for feedback, too many
         response = self.client.get(url_for("recommendation_feedback_api_v1.get_feedback_for_user",
                                    user_name=self.user2["musicbrainz_id"]), query_string={"count": 110})
@@ -464,6 +481,9 @@ class RecommendationFeedbackAPITestCase(IntegrationTestCase):
 
         feedback = data["recommendation-feedback"]  # sorted in descending order of their creation
         self.assertEqual(len(feedback), 100)
+        for i in range(100):
+            self.assertEqual(feedback[i]['recording_mbid'], feedback_love[i]['recording_mbid'])
+            self.assertEqual(feedback[i]['rating'], feedback_love[i]['rating'])
 
     def test_get_feedback_for_user_with_invalid_count_param(self):
         """ Test to make sure 400 response is received if count argument is not valid """

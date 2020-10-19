@@ -63,7 +63,6 @@ class RecommendationFeedbackDatabaseTestCase(DatabaseTestCase):
         self.insert_test_data()
         result = db_feedback.get_feedback_for_user(user_id=self.user["id"], limit=25, offset=0)
         self.assertEqual(len(result), 1)
-        print(result[0].dict())
         self.assertEqual(result[0].recording_mbid, update_fb['recording_mbid'])
         self.assertEqual(result[0].rating, 'love')
 
@@ -112,54 +111,99 @@ class RecommendationFeedbackDatabaseTestCase(DatabaseTestCase):
         self.assertEqual(result[0].recording_mbid, self.sample_feedback[0]["recording_mbid"])
         self.assertEqual(result[0].rating, self.sample_feedback[0]["rating"])
 
+        feedback_love = []
         for i in range(60):
+            rec_mbid = str(uuid.uuid4())
             db_feedback.insert(
                 RecommendationFeedbackSubmit(
                     user_id=self.user2['id'],
-                    recording_mbid=str(uuid.uuid4()),
+                    recording_mbid=rec_mbid,
+                    rating='love'
+                )
+            )
+            # prepended to the list since ``get_feedback_for_users`` returns data in descending
+            # order of creation.
+            feedback_love.insert(
+                0,
+                RecommendationFeedbackSubmit(
+                    user_id=self.user2['id'],
+                    recording_mbid=rec_mbid,
                     rating='love'
                 )
             )
 
+        feedback_hate = []
         for i in range(50):
+            rec_mbid = str(uuid.uuid4())
             db_feedback.insert(
                 RecommendationFeedbackSubmit(
                     user_id=self.user2['id'],
-                    recording_mbid=str(uuid.uuid4()),
+                    recording_mbid=rec_mbid,
                     rating='hate'
                 )
             )
-
+            # prepended to the list since ``get_feedback_for_users`` returns data in descending
+            # order of creation.
+            feedback_hate.insert(
+                0,
+                RecommendationFeedbackSubmit(
+                    user_id=self.user2['id'],
+                    recording_mbid=rec_mbid,
+                    rating='hate'
+                )
+            )
+        # ``get_feddback_for_user`` will return feedback_hate data followed by feedback_love
+        # data
         result = db_feedback.get_feedback_for_user(user_id=self.user2['id'], limit=120, offset=0)
         self.assertEqual(len(result), 110)
 
         # test the rating argument
         result = db_feedback.get_feedback_for_user(user_id=self.user2['id'], limit=70, offset=0, rating='love')
         self.assertEqual(len(result), 60)
-        for row in result:
-            self.assertEqual(row.rating, 'love')
+        for i in range(60):
+            self.assertEqual(result[i].user_id, feedback_love[i].user_id)
+            self.assertEqual(result[i].recording_mbid, feedback_love[i].recording_mbid)
+            self.assertEqual(result[i].rating, feedback_love[i].rating)
 
         result = db_feedback.get_feedback_for_user(user_id=self.user2['id'], limit=70, offset=0, rating='hate')
         self.assertEqual(len(result), 50)
-        for row in result:
-            self.assertEqual(row.rating, 'hate')
+        for i in range(50):
+            self.assertEqual(result[i].user_id, feedback_hate[i].user_id)
+            self.assertEqual(result[i].recording_mbid, feedback_hate[i].recording_mbid)
+            self.assertEqual(result[i].rating, feedback_hate[i].rating)
 
         # test the limit argument
         result = db_feedback.get_feedback_for_user(user_id=self.user2['id'], limit=20, offset=0, rating='love')
         self.assertEqual(len(result), 20)
+        for i in range(20):
+            self.assertEqual(result[i].user_id, feedback_love[i].user_id)
+            self.assertEqual(result[i].recording_mbid, feedback_love[i].recording_mbid)
+            self.assertEqual(result[i].rating, feedback_love[i].rating)
 
         # test the offset argument
         result = db_feedback.get_feedback_for_user(user_id=self.user2['id'], limit=25, offset=10)
         self.assertEqual(len(result), 25)
+        for i in range(25):
+            self.assertEqual(result[i].user_id, feedback_hate[i+10].user_id)
+            self.assertEqual(result[i].recording_mbid, feedback_hate[i+10].recording_mbid)
+            self.assertEqual(result[i].rating, feedback_hate[i+10].rating)
 
         result = db_feedback.get_feedback_for_user(user_id=self.user2['id'], limit=25, offset=100)
         self.assertEqual(len(result), 10)
+        for i in range(10):
+            self.assertEqual(result[i].user_id, feedback_love[i+50].user_id)
+            self.assertEqual(result[i].recording_mbid, feedback_love[i+50].recording_mbid)
+            self.assertEqual(result[i].rating, feedback_love[i+50].rating)
 
         result = db_feedback.get_feedback_for_user(user_id=self.user2['id'], limit=30, offset=110)
         self.assertEqual(len(result), 0)
 
         result = db_feedback.get_feedback_for_user(user_id=self.user2['id'], limit=30, offset=30, rating='hate')
         self.assertEqual(len(result), 20)
+        for i in range(20):
+            self.assertEqual(result[i].user_id, feedback_hate[i+30].user_id)
+            self.assertEqual(result[i].recording_mbid, feedback_hate[i+30].recording_mbid)
+            self.assertEqual(result[i].rating, feedback_hate[i+30].rating)
 
     def test_get_feedback_count_for_user(self):
         self.insert_test_data()
