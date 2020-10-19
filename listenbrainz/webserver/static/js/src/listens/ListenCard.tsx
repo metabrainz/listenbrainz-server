@@ -221,12 +221,12 @@ export default class ListenCard extends React.Component<
                         }
                       >
                         {`
-      ${
-        listen.listened_at_iso
-          ? timeago.ago(listen.listened_at_iso, true)
-          : timeago.ago(listen.listened_at * 1000, true)
-      }
-      `}
+                          ${
+                            listen.listened_at_iso
+                              ? timeago.ago(listen.listened_at_iso, true)
+                              : timeago.ago(listen.listened_at * 1000, true)
+                          }
+                          `}
                         ago &#8212; &nbsp;
                       </span>
                     )}
