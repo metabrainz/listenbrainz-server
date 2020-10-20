@@ -244,6 +244,7 @@ def _register_blueprints(app):
     from listenbrainz.webserver.views.status_api import status_api_bp
     from listenbrainz.webserver.views.player import player_bp
     from listenbrainz.webserver.views.feedback_api import feedback_api_bp
+    from listenbrainz.webserver.views.recommendations_cf_recording_feedback_api import recommendation_feedback_api_bp
     from listenbrainz.webserver.views.recommendations_cf_recording_api import recommendations_cf_recording_api_bp
     from listenbrainz.webserver.views.missing_musicbrainz_data_api import missing_musicbrainz_data_api_bp
     from listenbrainz.webserver.views.recommendations_cf_recording import recommendations_cf_recording_bp
@@ -258,6 +259,7 @@ def _register_blueprints(app):
     app.register_blueprint(stats_api_bp, url_prefix=API_PREFIX+'/stats')
     app.register_blueprint(status_api_bp, url_prefix=API_PREFIX+'/status')
     app.register_blueprint(feedback_api_bp, url_prefix=API_PREFIX+'/feedback')
+    app.register_blueprint(recommendation_feedback_api_bp, url_prefix=API_PREFIX+'/recommendation/feedback')
     app.register_blueprint(api_bp_compat)
     app.register_blueprint(recommendations_cf_recording_api_bp, url_prefix=API_PREFIX+'/cf/recommendation')
     app.register_blueprint(missing_musicbrainz_data_api_bp, url_prefix=API_PREFIX+'/missing/musicbrainz')
