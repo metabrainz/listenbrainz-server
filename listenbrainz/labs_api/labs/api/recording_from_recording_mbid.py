@@ -27,7 +27,7 @@ class RecordingFromRecordingMBIDQuery(Query):
 
     def outputs(self):
         return ['recording_mbid', 'recording_name', 'length', 'comment', 'artist_credit_id',
-                'artist_credit_name', '[artist_credit_mbids]', 'original_recording_mbid']
+                'artist_credit_name', '[artist_credit_mbids]', 'original_recording_mbid', 'year']
 
     def fetch(self, params, offset=-1, count=-1):
 
@@ -63,7 +63,8 @@ class RecordingFromRecordingMBIDQuery(Query):
 
                 query = '''SELECT r.gid AS recording_mbid, r.name AS recording_name, r.length, r.comment,
                                   ac.id AS artist_credit_id, ac.name AS artist_credit_name,
-                                  array_agg(a.gid) AS artist_credit_mbids
+                                  array_agg(a.gid) AS artist_credit_mbids,
+                                  first_release_date_year AS year
                              FROM recording r
                              JOIN artist_credit ac
                                ON r.artist_credit = ac.id
@@ -71,9 +72,19 @@ class RecordingFromRecordingMBIDQuery(Query):
                                ON ac.id = acn.artist_credit
                              JOIN artist a
                                ON acn.artist = a.id
+                             JOIN track t
+                               ON t.recording = r.id
+                             JOIN medium m
+                               ON t.medium = m.id
+                             JOIN release rl
+                               ON m.release = rl.id
+                             JOIN release_group rg
+                               ON rl.release_group = rg.id
+                             JOIN release_group_meta rgm
+                               ON rg.id = rgm.id
                             WHERE r.gid
                                IN %s
-                         GROUP BY r.gid, r.id, r.name, r.length, r.comment, ac.id, ac.name
+                         GROUP BY r.gid, r.id, r.name, r.length, r.comment, ac.id, ac.name, rgm.first_release_date_year
                          ORDER BY r.gid'''
 
                 args = [tuple([psycopg2.extensions.adapt(p) for p in mbids])]
@@ -111,7 +122,7 @@ class RecordingFromRecordingMBIDQuery(Query):
                             output.append(out)
                             continue
 
-                    r['[artist_credit_mbids]'] = [str(r) for r in r['artist_credit_mbids']]
+                    r['[artist_credit_mbids]'] = list(set([str(r) for r in r['artist_credit_mbids']]))
                     del r['artist_credit_mbids']
                     r['original_recording_mbid'] = mbid
                     output.append(r)

@@ -45,7 +45,8 @@ json_db_response = [
         "comment": "",
         "length": 253000,
         "recording_mbid": "1234a7ae-2af2-4291-aa84-bd0bafe291a1",
-        "recording_name": "Sour Times"
+        "recording_name": "Sour Times",
+        "year": None
     },
     {
         "artist_credit_mbids": [
@@ -56,7 +57,8 @@ json_db_response = [
         "comment": "",
         "length": 275333,
         "recording_mbid": "ec5b8aa9-7483-4791-a185-1f599a0cdc35",
-        "recording_name": "Blue Angel"
+        "recording_name": "Blue Angel",
+        "year": 2009
     },
     {
         "artist_credit_mbids": [
@@ -67,7 +69,8 @@ json_db_response = [
         "comment": "",
         "length": 111666,
         "recording_mbid": "1636e7a9-229d-446d-aa81-e33071b42d7a",
-        "recording_name": "Strange Ways"
+        "recording_name": "Strange Ways",
+        "year": 2004
     }
 ]
 
@@ -82,7 +85,8 @@ json_response = [
         "length": 253000,
         "recording_mbid": "1234a7ae-2af2-4291-aa84-bd0bafe291a1",
         "recording_name": "Sour Times",
-        "original_recording_mbid": "a96bf3b6-651d-49f4-9a89-eee27cecc18e"
+        "original_recording_mbid": "a96bf3b6-651d-49f4-9a89-eee27cecc18e",
+        "year": None
     },
     {
         "[artist_credit_mbids]": [
@@ -94,7 +98,8 @@ json_response = [
         "length": 275333,
         "recording_mbid": "ec5b8aa9-7483-4791-a185-1f599a0cdc35",
         "recording_name": "Blue Angel",
-        "original_recording_mbid": "ec5b8aa9-7483-4791-a185-1f599a0cdc35"
+        "original_recording_mbid": "ec5b8aa9-7483-4791-a185-1f599a0cdc35",
+        "year": 2009
     },
     {
         "[artist_credit_mbids]": [
@@ -106,7 +111,8 @@ json_response = [
         "length": 111666,
         "recording_mbid": "1636e7a9-229d-446d-aa81-e33071b42d7a",
         "recording_name": "Strange Ways",
-        "original_recording_mbid": "5948f779-0b96-4eba-b6a7-d1f0f6c7cf9f"
+        "original_recording_mbid": "5948f779-0b96-4eba-b6a7-d1f0f6c7cf9f",
+        "year": 2004
     },
     {
         "[artist_credit_mbids]": [
@@ -119,6 +125,7 @@ json_response = [
         "recording_mbid": "1636e7a9-229d-446d-aa81-e33071b42d7a",
         "recording_name": "Strange Ways",
         "original_recording_mbid": "1636e7a9-229d-446d-aa81-e33071b42d7a",
+        "year": 2004
     }
 ]
 
@@ -141,7 +148,7 @@ class MainTestCase(flask_testing.TestCase):
         self.assertNotEqual(q.introduction(), "")
         self.assertEqual(q.inputs(), ['[recording_mbid]'])
         self.assertEqual(q.outputs(), ['recording_mbid', 'recording_name', 'length', 'comment',
-            'artist_credit_id', 'artist_credit_name', '[artist_credit_mbids]', 'original_recording_mbid'])
+            'artist_credit_id', 'artist_credit_name', '[artist_credit_mbids]', 'original_recording_mbid', 'year'])
 
     @patch('psycopg2.connect')
     def test_fetch(self, mock_connect):
