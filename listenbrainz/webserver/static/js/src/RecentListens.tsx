@@ -541,7 +541,7 @@ export default class RecentListens extends React.Component<
    * and is increased exponentially each retry.
    */
   checkListensRange = async (timeRange: number = 6) => {
-    const { oldestListenTs, user } = this.props;
+    const { latestListenTs, oldestListenTs, user } = this.props;
     const {
       listens,
       lastFetchedDirection,
@@ -549,10 +549,11 @@ export default class RecentListens extends React.Component<
       previousListenTs,
     } = this.state;
     if (
-      // If we have enough listens of we're on the last page (could have run out of listens),
-      // Consider our job done and return.
-      listens.length === this.expectedListensPerPage ||
-      listens[listens.length - 1]?.listened_at <= oldestListenTs
+      // If we have enough listens or if we're on the first/last page,
+      // consider our job done and return.
+      listens.length >= this.expectedListensPerPage ||
+      listens[listens.length - 1]?.listened_at <= oldestListenTs ||
+      listens[0]?.listened_at >= latestListenTs
     ) {
       this.setState({ endOfTheLine: false });
       return;
