@@ -830,7 +830,7 @@ export default class RecentListens extends React.Component<
                   <div>
                     No more listens to show in a 12 months period. <br />
                     Navigate to the
-                    {lastFetchedDirection === "older" ? " next" : " previous"}
+                    {lastFetchedDirection === "older" ? " next " : " previous "}
                     page to see {lastFetchedDirection} listens.
                   </div>
                 )}
