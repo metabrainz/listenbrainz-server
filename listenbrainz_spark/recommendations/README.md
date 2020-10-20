@@ -7,7 +7,7 @@ ListenBrainz collaborative filtering component to generate recommendations.
 The component uses collaborative filtering to recommend recordings to users based on their listening history. ListenBrainz uses Apache Spark to process the listening history of users and generate recommendations.
 
 **Note**:  
-- The listening history and supporting data used by ListenBrainz is heavy for the local environment. We are trying to release small test datasets soon to make the development experience smooth.
+- The listening history and supporting data used by ListenBrainz is heavy for the local environment. Releasing small test datasets to make the development experience smoother is on our roadmap.
 - Spark sends the generated recommendations to ListenBrainz webserver containers as Rabbit MQ messages. Therefore before generating the recommendations, the `spark_reader` container should be running. For details, see the [Spark Architecture](https://listenbrainz.readthedocs.io/en/production/dev/spark-architecture/) document.
 
 
