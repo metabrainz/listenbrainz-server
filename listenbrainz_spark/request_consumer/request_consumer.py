@@ -33,6 +33,8 @@ from py4j.protocol import Py4JJavaError
 
 RABBITMQ_HEARTBEAT_TIME = 2 * 60 * 60  # 2 hours -- a full dump import takes 40 minutes right now
 
+rc = None
+
 
 class RequestConsumer:
 
@@ -157,10 +159,16 @@ class RequestConsumer:
                 current_app.logger.critical("Error in spark-request-consumer: %s", str(e), exc_info=True)
                 time.sleep(2)
 
+    def ping(self):
+        """ Sends a heartbeat to rabbitmq to avoid closing the connection during long processes """
+        self.rabbitmq.process_data_events(0)
+
 
 def main(app_name):
     listenbrainz_spark.init_spark_session(app_name)
-    RequestConsumer().run()
+    global rc
+    rc = RequestConsumer()
+    rc.run()
 
 
 if __name__ == '__main__':
