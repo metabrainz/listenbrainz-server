@@ -560,7 +560,13 @@ export default class RecentListens extends React.Component<
     if (timeRange > this.APIService.MAX_TIME_RANGE) {
       // We reached the maximum time_range allowed by the API.
       // Show a nice message requesting a user action to load listens from next/previous year.
-      this.setState({ endOfTheLine: true });
+      const newState = { endOfTheLine: true, nextListenTs, previousListenTs };
+      if (lastFetchedDirection === "older") {
+        newState.nextListenTs = undefined;
+      } else {
+        newState.previousListenTs = undefined;
+      }
+      this.setState(newState);
     } else {
       // Otherwise…
       let newListens;
@@ -591,7 +597,11 @@ export default class RecentListens extends React.Component<
         newIncrement = Math.min(timeRange * 2, this.APIService.MAX_TIME_RANGE);
       }
       this.setState(
-        { listens: newListens },
+        {
+          listens: newListens,
+          nextListenTs: newListens?.[newListens.length - 1]?.listened_at,
+          previousListenTs: newListens?.[0]?.listened_at,
+        },
         this.checkListensRange.bind(this, newIncrement)
       );
     }
