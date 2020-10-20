@@ -113,45 +113,29 @@ class RecommendationFeedbackDatabaseTestCase(DatabaseTestCase):
 
         feedback_love = []
         for i in range(60):
-            rec_mbid = str(uuid.uuid4())
-            db_feedback.insert(
-                RecommendationFeedbackSubmit(
-                    user_id=self.user2['id'],
-                    recording_mbid=rec_mbid,
-                    rating='love'
-                )
+            submit_obj = RecommendationFeedbackSubmit(
+                user_id=self.user2['id'],
+                recording_mbid=str(uuid.uuid4()),
+                rating='love'
             )
+
+            db_feedback.insert(submit_obj)
             # prepended to the list since ``get_feedback_for_users`` returns data in descending
             # order of creation.
-            feedback_love.insert(
-                0,
-                RecommendationFeedbackSubmit(
-                    user_id=self.user2['id'],
-                    recording_mbid=rec_mbid,
-                    rating='love'
-                )
-            )
+            feedback_love.insert(0, submit_obj)
 
         feedback_hate = []
         for i in range(50):
-            rec_mbid = str(uuid.uuid4())
-            db_feedback.insert(
-                RecommendationFeedbackSubmit(
-                    user_id=self.user2['id'],
-                    recording_mbid=rec_mbid,
-                    rating='hate'
-                )
+            submit_obj = RecommendationFeedbackSubmit(
+                user_id=self.user2['id'],
+                recording_mbid=str(uuid.uuid4()),
+                rating='hate'
             )
+
+            db_feedback.insert(submit_obj)
             # prepended to the list since ``get_feedback_for_users`` returns data in descending
             # order of creation.
-            feedback_hate.insert(
-                0,
-                RecommendationFeedbackSubmit(
-                    user_id=self.user2['id'],
-                    recording_mbid=rec_mbid,
-                    rating='hate'
-                )
-            )
+            feedback_hate.insert(0, submit_obj)
         # ``get_feddback_for_user`` will return feedback_hate data followed by feedback_love
         # data
         result = db_feedback.get_feedback_for_user(user_id=self.user2['id'], limit=120, offset=0)
