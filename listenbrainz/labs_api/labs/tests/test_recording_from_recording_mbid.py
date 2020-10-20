@@ -15,13 +15,23 @@ json_request = [
     },
     {
         "[recording_mbid]": "ec5b8aa9-7483-4791-a185-1f599a0cdc35"
+    },
+    {
+        "[recording_mbid]": "5948f779-0b96-4eba-b6a7-d1f0f6c7cf9f"
+    },
+    {
+        "[recording_mbid]": "1636e7a9-229d-446d-aa81-e33071b42d7a"
     }
 ]
 
 redirect_db_response = [
     {
         "recording_mbid_old": "a96bf3b6-651d-49f4-9a89-eee27cecc18e",
-        "recording_mbid_new": "1234a7ae-2af2-4291-aa84-bd0bafe291a1"
+        "recording_mbid_new": "1234a7ae-2af2-4291-aa84-bd0bafe291a1",
+    },
+    {
+        "recording_mbid_old": "5948f779-0b96-4eba-b6a7-d1f0f6c7cf9f",
+        "recording_mbid_new": "1636e7a9-229d-446d-aa81-e33071b42d7a"
     }
 ]
 
@@ -47,8 +57,18 @@ json_db_response = [
         "length": 275333,
         "recording_mbid": "ec5b8aa9-7483-4791-a185-1f599a0cdc35",
         "recording_name": "Blue Angel"
+    },
+    {
+        "artist_credit_mbids": [
+            "4e024037-14b7-4aea-99ad-c6ace63b9620"
+        ],
+        "artist_credit_id": 92381,
+        "artist_credit_name": "Madvillain",
+        "comment": "",
+        "length": 111666,
+        "recording_mbid": "1636e7a9-229d-446d-aa81-e33071b42d7a",
+        "recording_name": "Strange Ways"
     }
-
 ]
 
 json_response = [
@@ -75,12 +95,32 @@ json_response = [
         "recording_mbid": "ec5b8aa9-7483-4791-a185-1f599a0cdc35",
         "recording_name": "Blue Angel",
         "original_recording_mbid": "ec5b8aa9-7483-4791-a185-1f599a0cdc35"
+    },
+    {
+        "[artist_credit_mbids]": [
+            "4e024037-14b7-4aea-99ad-c6ace63b9620"
+        ],
+        "artist_credit_id": 92381,
+        "artist_credit_name": "Madvillain",
+        "comment": "",
+        "length": 111666,
+        "recording_mbid": "1636e7a9-229d-446d-aa81-e33071b42d7a",
+        "recording_name": "Strange Ways",
+        "original_recording_mbid": "5948f779-0b96-4eba-b6a7-d1f0f6c7cf9f"
+    },
+    {
+        "[artist_credit_mbids]": [
+            "4e024037-14b7-4aea-99ad-c6ace63b9620"
+        ],
+        "artist_credit_id": 92381,
+        "artist_credit_name": "Madvillain",
+        "comment": "",
+        "length": 111666,
+        "recording_mbid": "1636e7a9-229d-446d-aa81-e33071b42d7a",
+        "recording_name": "Strange Ways",
+        "original_recording_mbid": "1636e7a9-229d-446d-aa81-e33071b42d7a",
     }
-
 ]
-
-
-
 
 class MainTestCase(flask_testing.TestCase):
 
@@ -105,22 +145,29 @@ class MainTestCase(flask_testing.TestCase):
 
     @patch('psycopg2.connect')
     def test_fetch(self, mock_connect):
-        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [redirect_db_response[0],
+        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [redirect_db_response[0], 
+                                                                                redirect_db_response[1],
                                                                                 None,
                                                                                 json_db_response[0],
                                                                                 json_db_response[1],
+                                                                                json_db_response[2],
                                                                                 None]
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request)
         self.assertDictEqual(resp[0], json_response[0])
         self.assertDictEqual(resp[1], json_response[1])
-        self.assertEqual(len(resp), 2)
+        self.assertDictEqual(resp[2], json_response[2])
+        self.assertDictEqual(resp[3], json_response[3])
+        self.assertEqual(len(resp), 4)
 
     @patch('psycopg2.connect')
     def test_count(self, mock_connect):
         mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [redirect_db_response[0],
+                                                                                redirect_db_response[1],
                                                                                 None,
                                                                                 json_db_response[0],
+                                                                                json_db_response[1],
+                                                                                json_db_response[2],
                                                                                 None]
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request, count=1)
@@ -132,8 +179,25 @@ class MainTestCase(flask_testing.TestCase):
         mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [redirect_db_response[0],
                                                                                 None,
                                                                                 json_db_response[1],
+                                                                                json_db_response[1],
+                                                                                json_db_response[2],
                                                                                 None]
         q = RecordingFromRecordingMBIDQuery()
         resp = q.fetch(json_request, offset=1)
+        self.assertEqual(len(resp), 3)
+        self.assertDictEqual(resp[0], json_response[1])
+
+    @patch('psycopg2.connect')
+    def test_count_and_offset(self, mock_connect):
+        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [redirect_db_response[0],
+                                                                                redirect_db_response[1],
+                                                                                None,
+                                                                                json_db_response[0],
+                                                                                json_db_response[1],
+                                                                                json_db_response[2],
+                                                                                None]
+        q = RecordingFromRecordingMBIDQuery()
+        resp = q.fetch(json_request, count=1, offset=1)
         self.assertEqual(len(resp), 1)
         self.assertDictEqual(resp[0], json_response[1])
+

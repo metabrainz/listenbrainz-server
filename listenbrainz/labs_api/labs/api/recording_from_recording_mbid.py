@@ -1,3 +1,4 @@
+import copy
 import sys
 import uuid
 
@@ -47,7 +48,6 @@ class RecordingFromRecordingMBIDQuery(Query):
 
                 # Build an index with all redirected recordings
                 redirect_index = {}
-                inverse_redirect_index = {}
                 while True:
                     row = curs.fetchone()
                     if not row:
@@ -55,7 +55,6 @@ class RecordingFromRecordingMBIDQuery(Query):
 
                     r = dict(row)
                     redirect_index[str(r['recording_mbid_old'])] = str(r['recording_mbid_new'])
-                    inverse_redirect_index[str(r['recording_mbid_new'])] = str(r['recording_mbid_old'])
 
                 # Now start looking up actual recordings
                 for i, mbid in enumerate(mbids):
@@ -78,23 +77,19 @@ class RecordingFromRecordingMBIDQuery(Query):
                          ORDER BY r.gid'''
 
                 args = [tuple([psycopg2.extensions.adapt(p) for p in mbids])]
-                if count > 0:
-                    query += " LIMIT %s"
-                    args.append(count)
-                if offset >= 0:
-                    query += " OFFSET %s"
-                    args.append(offset)
-
                 curs.execute(query, tuple(args))
 
-                # Build an index of all the fetched recordings
+                # Build an index of all the fetched recordings and clean up UUID() -> str
                 recording_index = {}
                 while True:
                     row = curs.fetchone()
                     if not row:
                         break
 
-                    recording_index[str(r['recording_mbid'])] = dict(row)
+                    r = dict(row)
+                    mbid = str(r['recording_mbid'])
+                    r['recording_mbid'] = mbid
+                    recording_index[mbid] = dict(row)
 
                 # Finally collate all the results, ensuring that we have one entry with original_recording_mbid for each 
                 # input argument
@@ -102,24 +97,32 @@ class RecordingFromRecordingMBIDQuery(Query):
                 for p in params:
                     mbid = p['[recording_mbid]'] 
                     try:
-                        r = recording_index[mbid]
+                        r = copy.copy(recording_index[mbid])
                     except KeyError:
-                        output.append({'recording_mbid' : None, 
-                                       'recording_name', 'length': None,
-                                       'comment': None,
-                                       'artist_credit_id': None.
-                                       'artist_credit_name': None, 
-                                       '[artist_credit_mbids]': None, 
-                                       'original_recording_mbid': mbid })
-                        continue
+                        try:
+                            r = copy.copy(recording_index[redirect_index[mbid]])
+                        except KeyError:
+                            out = {} 
+                            for k in self.outputs():
+                                if k == 'original_recording_mbid':
+                                    out['original_recording_mbid'] = mbid
+                                else:
+                                    out['original_recording_mbid'] = None
+                            output.append(out)
+                            continue
 
-                    r['recording_mbid'] = mbid
                     r['[artist_credit_mbids]'] = [str(r) for r in r['artist_credit_mbids']]
                     del r['artist_credit_mbids']
-                    try:
-                        r['original_recording_mbid'] = inverse_redirect_index[str(r['recording_mbid'])]
-                    except KeyError:
-                        r['original_recording_mbid'] = str(r['recording_mbid'])
+                    r['original_recording_mbid'] = mbid
                     output.append(r)
 
-        return output
+                if offset > 0 and count > 0:
+                    return output[offset:offset+count]
+
+                if offset > 0 and count < 0:
+                    return output[offset:]
+
+                if offset < 0 and count > 0:
+                    return output[:count]
+
+                return output
