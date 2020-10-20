@@ -592,7 +592,7 @@ export default class RecentListens extends React.Component<
       let newIncrement;
       if (timeRange === this.APIService.MAX_TIME_RANGE) {
         // Set new increment above the limit, to be detected at next checkListensRange call
-        newIncrement = 100;
+        newIncrement = this.APIService.MAX_TIME_RANGE + 1;
       } else {
         newIncrement = Math.min(timeRange * 2, this.APIService.MAX_TIME_RANGE);
       }
