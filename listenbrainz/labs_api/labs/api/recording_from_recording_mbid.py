@@ -45,6 +45,7 @@ class RecordingFromRecordingMBIDQuery(Query):
                 args = [tuple([psycopg2.extensions.adapt(p) for p in mbids])]
                 curs.execute(query, tuple(args))
 
+                # Build an index with all redirected recordings
                 redirect_index = {}
                 inverse_redirect_index = {}
                 while True:
@@ -56,6 +57,7 @@ class RecordingFromRecordingMBIDQuery(Query):
                     redirect_index[str(r['recording_mbid_old'])] = str(r['recording_mbid_new'])
                     inverse_redirect_index[str(r['recording_mbid_new'])] = str(r['recording_mbid_old'])
 
+                # Now start looking up actual recordings
                 for i, mbid in enumerate(mbids):
                     if mbid in redirect_index:
                         mbids[i] = redirect_index[mbid]
@@ -85,14 +87,33 @@ class RecordingFromRecordingMBIDQuery(Query):
 
                 curs.execute(query, tuple(args))
 
-                output = []
+                # Build an index of all the fetched recordings
+                recording_index = {}
                 while True:
                     row = curs.fetchone()
                     if not row:
                         break
 
-                    r = dict(row)
-                    r['recording_mbid'] = str(r['recording_mbid'])
+                    recording_index[str(r['recording_mbid'])] = dict(row)
+
+                # Finally collate all the results, ensuring that we have one entry with original_recording_mbid for each 
+                # input argument
+                output = []
+                for p in params:
+                    mbid = p['[recording_mbid]'] 
+                    try:
+                        r = recording_index[mbid]
+                    except KeyError:
+                        output.append({'recording_mbid' : None, 
+                                       'recording_name', 'length': None,
+                                       'comment': None,
+                                       'artist_credit_id': None.
+                                       'artist_credit_name': None, 
+                                       '[artist_credit_mbids]': None, 
+                                       'original_recording_mbid': mbid })
+                        continue
+
+                    r['recording_mbid'] = mbid
                     r['[artist_credit_mbids]'] = [str(r) for r in r['artist_credit_mbids']]
                     del r['artist_credit_mbids']
                     try:
