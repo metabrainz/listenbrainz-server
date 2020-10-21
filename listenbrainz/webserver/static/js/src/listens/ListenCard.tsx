@@ -1,7 +1,7 @@
 import * as timeago from "time-ago";
 
 import * as React from "react";
-import { get as _get } from "lodash";
+import { get as _get, isString as _isString } from "lodash";
 import MediaQuery from "react-responsive";
 import {
   faMusic,
@@ -90,7 +90,7 @@ export default class ListenCard extends React.Component<
           updateFeedback(recordingMSID, score);
         }
       } catch (error) {
-        this.handleError(`Error while submitting feedback - ${error.message}`);
+        this.handleError(error, "Error while submitting feedback");
       }
     }
   };
@@ -125,12 +125,12 @@ export default class ListenCard extends React.Component<
           }, 1000);
         }
       } catch (error) {
-        this.handleError(`Error while deleting listen - ${error.message}`);
+        this.handleError(error, "Error while deleting listen");
       }
     }
   };
 
-  handleError = (error: string | Error, title?: string): void => {
+  handleError = (error: ErrorForAlert, title?: string): void => {
     const { newAlert } = this.props;
     if (!error) {
       return;
@@ -138,7 +138,9 @@ export default class ListenCard extends React.Component<
     newAlert(
       "danger",
       title || "Error",
-      typeof error === "object" ? error.message : error
+      _isString(error)
+        ? error
+        : `${error.status && `Error ${error.status}:`} ${error.message}`
     );
   };
 

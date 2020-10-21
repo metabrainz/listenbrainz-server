@@ -126,6 +126,11 @@ declare type Alert = {
   message: string | JSX.Element;
 };
 
+// Expect either a string or an Error or an html Response object
+declare type ErrorForAlert =
+  | string
+  | { message?: string; status?: number; statusText?: string };
+
 declare type FollowUsersPlayingNow = {
   [user: string]: Listen;
 };
