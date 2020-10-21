@@ -115,7 +115,7 @@ class RecordingFromRecordingMBIDQuery(Query):
                             output.append(out)
                             continue
 
-                    r['[artist_credit_mbids]'] = list(set([r for r in r['artist_credit_mbids']]))
+                    r['[artist_credit_mbids]'] = list(set(r['artist_credit_mbids']))
                     del r['artist_credit_mbids']
                     r['original_recording_mbid'] = mbid
                     output.append(r)
