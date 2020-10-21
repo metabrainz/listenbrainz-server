@@ -152,7 +152,7 @@ class MainTestCase(flask_testing.TestCase):
 
     @patch('psycopg2.connect')
     def test_fetch(self, mock_connect):
-        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [redirect_db_response[0], 
+        mock_connect().__enter__().cursor().__enter__().fetchone.side_effect = [redirect_db_response[0],
                                                                                 redirect_db_response[1],
                                                                                 None,
                                                                                 json_db_response[0],
@@ -207,4 +207,3 @@ class MainTestCase(flask_testing.TestCase):
         resp = q.fetch(json_request, count=1, offset=1)
         self.assertEqual(len(resp), 1)
         self.assertDictEqual(resp[0], json_response[1])
-
