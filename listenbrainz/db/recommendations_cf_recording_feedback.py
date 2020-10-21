@@ -105,3 +105,37 @@ def get_feedback_count_for_user(user_id: int) -> int:
         count = int(result.fetchone()["count"])
 
     return count
+
+
+def get_feedback_for_multiple_recordings_for_user(user_id: int, recording_list: List[str]):
+    """ Get a list of recording feedback given by the user for given recordings
+
+        Args:
+            user_id: the row ID of the user in the DB
+            recording_list: list of recording_mbid for which feedback records are to be obtained
+                            - if record is present then return it
+                            - if record is not present then return rating = None
+
+        Returns:
+            A list of Feedback objects
+    """
+
+    args = {"user_id": user_id, "recording_list": recording_list}
+    query = """ WITH rf AS (
+              SELECT user_id,
+                     recording_mbid::text,
+                     rating
+                FROM recommendation_feedback
+               WHERE recommendation_feedback.user_id=:user_id
+                )
+              SELECT COALESCE(rf.user_id, :user_id) AS user_id,
+                     rec_mbid AS recording_mbid,
+                     rf.rating AS rating
+                FROM UNNEST(:recording_list) rec_mbid
+     LEFT OUTER JOIN rf
+                  ON rf.recording_mbid::text = rec_mbid """
+
+    with db.engine.connect() as connection:
+        result = connection.execute(sqlalchemy.text(query), args)
+        rows = result.fetchall()
+        return [dict(row) if row else None for row in rows]

@@ -4,6 +4,7 @@ import { AlertList } from "react-bs-notifier";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { isEqual } from "lodash";
+import { get } from "lodash";
 import BrainzPlayer from "../BrainzPlayer";
 import APIService from "../APIService";
 import Loader from "../components/Loader";
@@ -27,6 +28,7 @@ export interface RecommendationsState {
   loading: boolean;
   currRecPage?: number;
   totalRecPages: number;
+  recommendationFeedbackMap: RecommendationFeedbackMap
 }
 
 export default class Recommendations extends React.Component<
@@ -54,6 +56,7 @@ export default class Recommendations extends React.Component<
             props.recommendations.length / this.expectedRecommendationsPerPage
           )
         : 0,
+      recommendationFeedbackMap: {},
     };
 
     this.recommendationsTable = React.createRef();
@@ -61,6 +64,66 @@ export default class Recommendations extends React.Component<
       props.apiUrl || `${window.location.origin}/1`
     );
   }
+
+  componentDidMount(): void {
+    const { user, currentUser } = this.props;
+      if (currentUser?.name === user?.name) {
+        this.loadFeedback();
+      }
+  }
+
+  getFeedback = async () => {
+    const { user, recommendations } = this.props;
+    let recordings = "";
+
+    if (recommendations) {
+      recommendations.forEach((recommendation) => {
+        const recordingMbid = get(
+          recommendation,
+          "track_metadata.additional_info.recording_mbid"
+        );
+        if (recordingMbid) {
+          recordings += `${recordingMbid},`;
+        }
+      });
+      try {
+        const data = await this.APIService.getFeedbackForUserForRecommendations(
+          user.name,
+          recordings
+        );
+        return data.feedback;
+      } catch (error) {
+        this.newAlert(
+          "danger",
+          "Playback error",
+          typeof error === "object" ? error.message : error
+        );
+      }
+    }
+    return {};
+  };
+
+  loadFeedback = async () => {
+    const feedback = await this.getFeedback();
+    const recommendationFeedbackMap: RecommendationFeedbackMap = {};
+    feedback.forEach((fb: RecommendationFeedbackResponse) => {
+      recommendationFeedbackMap[fb.recording_mbid] = fb.rating;
+    });
+    this.setState({ recommendationFeedbackMap });
+  };
+
+  updateFeedback = (recordingMbid: string, rating: RecommendationFeedBack) => {
+    const { recommendationFeedbackMap } = this.state;
+    recommendationFeedbackMap[recordingMbid] = rating;
+    this.setState({ recommendationFeedbackMap });
+  };
+
+  getFeedbackForRecordingMbid = (
+    recordingMbid?: string | null
+  ): RecommendationFeedBack => {
+    const { recommendationFeedbackMap } = this.state;
+    return recordingMbid ? get(recommendationFeedbackMap, recordingMbid, "feedback_not_given") : "feedback_not_given";
+  };
 
   playRecommendation = (recommendation: Recommendation): void => {
     if (this.brainzPlayer.current) {
@@ -175,7 +238,7 @@ export default class Recommendations extends React.Component<
       currRecPage,
       totalRecPages,
     } = this.state;
-    const { spotify, user, currentUser } = this.props;
+    const { spotify, user, currentUser, apiUrl } = this.props;
 
     return (
       <div role="main">
@@ -217,6 +280,13 @@ export default class Recommendations extends React.Component<
                           ? " current-recommendation"
                           : ""
                       }`}
+                      currentFeedback={this.getFeedbackForRecordingMbid(
+                        recommendation.track_metadata?.additional_info
+                          ?.recording_mbid
+                      )}
+                      updateFeedback={this.updateFeedback}
+                      apiUrl={apiUrl}
+                      newAlert={this.newAlert}
                     />
                   );
                 })}

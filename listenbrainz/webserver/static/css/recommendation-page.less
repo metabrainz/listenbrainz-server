@@ -45,16 +45,109 @@
 
       .recommendation-controls {
 
-        &.open .dropdown-menu {
-          display: flex;
+        > svg:hover {
+          cursor: pointer;
         }
 
-        .smile, .laugh, .angry, .disappoint, .meh {
-          font-size: 18px;
+        &.open .dropdown-menu {
+          display: flex;
+
+          > svg:hover {
+            cursor: pointer;
+          }
+        }
+
+        .fa-angry, .fa-frown, .fa-meh, .fa-smile-beam, .fa-grin-stars, .fa-ellipsis-v {
+          stroke-width: 40px;
+          font-size: 20px;
           flex: 1;
           text-align: center;
           margin: 0 0.4em;
         }
+
+        .fa-ellipsis-v {
+          color: #8d8d8d;
+          stroke: #ffffff;
+
+          &:hover {
+            color: #46433a;
+          }
+        }
+
+        .fa-angry {
+          color: transparent;
+          stroke: #C62828;
+
+          &:hover {
+            color: #C62828;
+          }
+
+          &.angry {
+            stroke: transparent;
+            color: #C62828;
+          }
+
+        }
+
+        .fa-frown {
+          color: transparent;
+          stroke: #960a96;
+
+          &:hover {
+            color: #960a96;
+          }
+
+          &.frown {
+            stroke: transparent;
+            color: #960a96;
+          }
+
+        }
+
+        .fa-meh {
+          color: transparent;
+          stroke: #c9c90f;
+
+          &:hover {
+            color: #c9c90f;
+          }
+
+          &.meh {
+            stroke: transparent;
+            color: #c9c90f;
+          }
+
+        }
+
+        .fa-smile-beam {
+          color: transparent;
+          stroke: #99e852;
+
+          &:hover {
+            color: #99e852;
+          }
+
+          &.smile {
+            stroke: transparent;
+            color: #99e852;
+          }
+
+        }
+
+        .fa-grin-stars {
+          color: transparent;
+          stroke: #3a7306;
+
+          &:hover {
+            color: #3a7306;
+          }
+
+          &.grin {
+            stroke: transparent;
+            color: #3a7306;
+          }
+        }
+
       }
     }
   }
