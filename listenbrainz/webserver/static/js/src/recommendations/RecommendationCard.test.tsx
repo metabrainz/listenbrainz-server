@@ -23,10 +23,14 @@ const recommendation: Recommendation = {
 };
 
 const props: RecommendationCardProps = {
+  apiUrl: "foobar",
   recommendation,
   isCurrentUser: true,
   currentUser: { auth_token: "lalala", name: "test" },
   playRecommendation: () => {},
+  currentFeedback: 'love',
+  updateFeedback: () => {},
+  newAlert: () => {},
 };
 
 describe("RecommendationCard", () => {
