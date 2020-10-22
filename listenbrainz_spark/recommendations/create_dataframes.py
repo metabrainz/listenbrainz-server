@@ -6,9 +6,8 @@ Get timestamp (from_date, to_date) to fetch user listening history. We fetch the
 go back X days and get the updated timestamp (from_date) from where we should start fetching listens.
 The timestamp of fetched listens belongs to [from_date.month, to_date.month]
 
-The listens are fetched from HDFS having all the fields that a typical listen has except the artist_mbid and recording_mbid.
-Refer to listenbrainz_spark/utils.py for the definition of a typical listen. The dataframe of these listens is called
-partial_listens_df.
+The listens are fetched from HDFS. We refer to dataframe of these listens as partial_listens_df since they have not been mapped to the
+mapping yet!
 
 The artist_name and track_name fields of partial_listens_df are converted to artist_name_matchable and track_name_matchable
 respectively by removing accents, removing punctuations and whitespaces, and converting to lowercase.
@@ -44,9 +43,7 @@ from pydantic import ValidationError
 import listenbrainz_spark
 import listenbrainz_spark.utils.mapping as mapping_utils
 from listenbrainz_spark import path, stats, utils, config, schema
-from listenbrainz_spark.stats.utils import get_latest_listen_ts
-from listenbrainz_spark.exceptions import (FileNotSavedException,
-                                           FileNotFetchedException,
+from listenbrainz_spark.exceptions import (FileNotFetchedException,
                                            SparkSessionNotInitializedException,
                                            DataFrameNotAppendedException,
                                            DataFrameNotCreatedException)
@@ -55,20 +52,26 @@ from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataR
 from data.model.user_cf_recommendations_recording_message import (UserCreateDataframesMessage,
                                                                   UserMissingMusicBrainzDataMessage)
 
+from listenbrainz_spark.recommendations.dataframe_utils import (get_dataframe_id,
+                                                                save_dataframe,
+                                                                get_dates_to_train_data,
+                                                                get_mapped_artist_and_recording_mbids,
+                                                                get_listens_for_training_model_window)
 from flask import current_app
 import pyspark.sql.functions as func
 from pyspark.sql import Row
 from pyspark.sql.window import Window
 from pyspark.sql.functions import rank, col, row_number
 
-
 # Some useful dataframe fields/columns.
 # partial_listens_df:
 #   [
 #       'artist_msid',
+#       'artist_mbids',
 #       'artist_name',
 #       'listened_at',
 #       'recording_msid',
+#       'recording_mbid'
 #       'release_mbid',
 #       'release_msid',
 #       'release_name',
@@ -119,26 +122,6 @@ from pyspark.sql.functions import rank, col, row_number
 #   ]
 
 
-def generate_dataframe_id(metadata):
-    """ Generate dataframe id.
-    """
-    metadata['dataframe_id'] = '{}-{}'.format(config.DATAFRAME_ID_PREFIX, uuid.uuid4())
-
-
-def save_dataframe(df, dest_path):
-    """ Save dataframe to HDFS.
-
-        Args:
-            df : Dataframe to save.
-            dest_path (str): HDFS path to save dataframe.
-    """
-    try:
-        utils.save_parquet(df, dest_path)
-    except FileNotSavedException as err:
-        current_app.logger.error(str(err), exc_info=True)
-        raise
-
-
 def save_dataframe_metadata_to_hdfs(metadata):
     """ Save dataframe metadata.
     """
@@ -159,54 +142,11 @@ def save_dataframe_metadata_to_hdfs(metadata):
         raise
 
 
-def get_dates_to_train_data(train_model_window):
-    """ Get window to fetch listens to train data.
-
-        Args:
-            train_model_window (int): model to be trained on data of given number of days.
-
-        Returns:
-            from_date (datetime): Date from which start fetching listens.
-            to_date (datetime): Date upto which fetch listens.
-    """
-    to_date = get_latest_listen_ts()
-    from_date = stats.offset_days(to_date, train_model_window)
-    # shift to the first of the month
-    from_date = stats.replace_days(from_date, 1)
-    return to_date, from_date
-
-
-def get_listens_for_training_model_window(to_date, from_date, metadata, dest_path):
-    """  Prepare dataframe of listens of X days to train.
-
-        Args:
-            from_date (datetime): Date from which start fetching listens.
-            to_date (datetime): Date upto which fetch listens.
-            dest_path (str): HDFS path.
-
-        Returns:
-            partial_listens_df (dataframe): listens without artist mbid and recording mbid.
-    """
-    metadata['to_date'] = to_date
-    metadata['from_date'] = from_date
-    try:
-        training_df = utils.get_listens(from_date, to_date, dest_path)
-    except ValueError as err:
-        current_app.logger.error(str(err), exc_info=True)
-        raise
-    except FileNotFetchedException as err:
-        current_app.logger.error(str(err), exc_info=True)
-        raise
-
-    partial_listens_df = utils.get_listens_without_artist_and_recording_mbids(training_df)
-    return mapping_utils.convert_text_fields_to_matchable(partial_listens_df)
-
-
 def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df):
     """ Get data that has been submitted to ListenBrainz but is missing from MusicBrainz.
 
         Args:
-            partial_listens_df (dataframe): listens without artist mbid and recording mbid.
+            partial_listens_df (dataframe): dataframe of listens.
             msid_mbid_mapping_df (dataframe): msid->mbid mapping. For columns refer to
                                               msid_mbid_mapping_schema in listenbrainz_spark/schema.py
 
@@ -251,38 +191,6 @@ def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df):
         .toLocalIterator()
 
     return missing_musicbrainz_data_itr
-
-
-def get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df):
-    """ Map recording msid->mbid and artist msid->mbids so that every listen has an mbid.
-
-        Args:
-            partial_listens_df (dataframe): listens without artist mbid and recording mbid.
-            msid_mbid_mapping_df (dataframe): msid->mbid mapping. For columns refer to
-                                              msid_mbid_mapping_schema in listenbrainz_spark/schema.py
-
-        Returns:
-            mapped_listens_df (dataframe): listens mapped with msid_mbid_mapping.
-    """
-    condition = [
-        partial_listens_df.track_name_matchable == msid_mbid_mapping_df.msb_recording_name_matchable,
-        partial_listens_df.artist_name_matchable == msid_mbid_mapping_df.msb_artist_credit_name_matchable
-    ]
-
-    df = partial_listens_df.join(msid_mbid_mapping_df, condition, 'inner')
-    # msb_release_name_matchable is skipped till the bug in mapping is resolved.
-    # bug : release_name in listens and mb_release_name in mapping is different.
-    mapped_listens_df = df.select('listened_at',
-                                  'mb_artist_credit_id',
-                                  'mb_artist_credit_mbids',
-                                  'mb_recording_mbid',
-                                  'mb_release_mbid',
-                                  'msb_artist_credit_name_matchable',
-                                  'msb_recording_name_matchable',
-                                  'user_name')
-
-    save_dataframe(mapped_listens_df, path.MAPPED_LISTENS)
-    return mapped_listens_df
 
 
 def save_playcounts_df(listens_df, recordings_df, users_df, metadata):
@@ -443,7 +351,11 @@ def main(train_model_window=None):
 
     current_app.logger.info('Fetching listens to create dataframes...')
     to_date, from_date = get_dates_to_train_data(train_model_window)
-    partial_listens_df = get_listens_for_training_model_window(to_date, from_date, metadata, path.LISTENBRAINZ_DATA_DIRECTORY)
+
+    metadata['to_date'] = to_date
+    metadata['from_date'] = from_date
+
+    partial_listens_df = get_listens_for_training_model_window(to_date, from_date, path.LISTENBRAINZ_DATA_DIRECTORY)
     current_app.logger.info('Listen count from {from_date} to {to_date}: {listens_count}'
                             .format(from_date=from_date, to_date=to_date, listens_count=partial_listens_df.count()))
 
@@ -467,7 +379,7 @@ def main(train_model_window=None):
 
     save_playcounts_df(listens_df, recordings_df, users_df, metadata)
 
-    generate_dataframe_id(metadata)
+    metadata['dataframe_id'] = get_dataframe_id(config.DATAFRAME_ID_PREFIX)
     save_dataframe_metadata_to_hdfs(metadata)
 
     current_app.logger.info('Preparing missing MusicBrainz data...')
