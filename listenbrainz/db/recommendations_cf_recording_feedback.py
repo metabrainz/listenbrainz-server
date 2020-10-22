@@ -4,6 +4,7 @@ from listenbrainz import db
 from listenbrainz.db.model.recommendation_feedback import (RecommendationFeedbackSubmit,
                                                            RecommendationFeedbackDelete)
 from typing import List
+from flask import current_app
 
 
 def insert(feedback_submit: RecommendationFeedbackSubmit):
@@ -120,22 +121,17 @@ def get_feedback_for_multiple_recordings_for_user(user_id: int, recording_list: 
             A list of Feedback objects
     """
 
-    args = {"user_id": user_id, "recording_list": recording_list}
-    query = """ WITH rf AS (
-              SELECT user_id,
-                     recording_mbid::text,
-                     rating
-                FROM recommendation_feedback
-               WHERE recommendation_feedback.user_id=:user_id
-                )
-              SELECT COALESCE(rf.user_id, :user_id) AS user_id,
-                     rec_mbid AS recording_mbid,
-                     rf.rating AS rating
-                FROM UNNEST(:recording_list) rec_mbid
-     LEFT OUTER JOIN rf
-                  ON rf.recording_mbid::text = rec_mbid """
+    args = {"user_id": user_id, "recording_list": tuple(recording_list)}
+    query = """ SELECT user_id,
+                       recording_mbid::text,
+                       rating,
+                       created
+                  FROM recommendation_feedback
+                 WHERE user_id = :user_id
+                   AND recording_mbid
+                    IN :recording_list """
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text(query), args)
-        rows = result.fetchall()
-        return [dict(row) if row else None for row in rows]
+        current_app.logger.error(result)
+        return [RecommendationFeedbackSubmit(**dict(row)) for row in result.fetchall()]

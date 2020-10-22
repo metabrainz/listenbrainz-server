@@ -218,13 +218,20 @@ def get_feedback_for_recordings_for_user(user_name):
         log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "),
                       request.args)
 
-    for fb in feedback:
-        if fb['rating'] is None:
-            fb['rating'] = "feedback_not_given"
-        del fb['user_id']
+    recommendation_feedback = [_format_feedback(fb) for fb in feedback]
+
+    mbids_found = [row['recording_mbid'] for row in recommendation_feedback]
+
+    mbids_not_found = [mbid for mbid in recording_list if mbid not in mbids_found]
+
+    for mbid in mbids_not_found:
+        recommendation_feedback.append({
+            'rating': 'feedback_not_given',
+            'recording_mbid': mbid
+        })
 
     return jsonify({
-        "feedback": feedback,
+        "recommendation-feedback": recommendation_feedback,
         "user_name": user_name
     })
 
