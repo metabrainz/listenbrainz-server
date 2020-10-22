@@ -3,7 +3,7 @@ import tempfile
 from datetime import datetime
 
 from listenbrainz_spark.tests import SparkTestCase
-from listenbrainz_spark import utils, hdfs_connection, config
+from listenbrainz_spark import utils, path, config
 
 from pyspark.sql import Row
 
