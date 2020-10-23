@@ -1,5 +1,3 @@
-import re
-import uuid
 import unittest
 from datetime import datetime
 
@@ -31,57 +29,6 @@ class CreateDataframeTestCase(SparkTestCase):
     def tearDownClass(cls):
         super().delete_dir()
         super().tearDownClass()
-
-    def test_get_dates_to_train_data(self):
-        train_model_window = 20
-        to_date, from_date = create_dataframes.get_dates_to_train_data(train_model_window)
-        d = stats.offset_days(to_date, train_model_window)
-        d = stats.replace_days(d, 1)
-        self.assertEqual(from_date, d)
-
-    def test_get_listens_for_training_model_window(self):
-        metadata = {}
-        to_date = get_latest_listen_ts()
-        from_date = stats.offset_days(to_date, 2)
-        test_df = create_dataframes.get_listens_for_training_model_window(to_date, from_date, metadata, self.listens_path)
-        self.assertEqual(metadata['to_date'], to_date)
-        self.assertEqual(metadata['from_date'], from_date)
-        self.assertIn('artist_name_matchable', test_df.columns)
-        self.assertIn('track_name_matchable', test_df.columns)
-        self.assertNotIn('artist_mbids', test_df.columns)
-        self.assertNotIn('recording_mbid', test_df.columns)
-
-    def test_save_dataframe(self):
-        path_ = '/test_df.parquet'
-        df = utils.create_dataframe(Row(column1=1, column2=2), schema=None)
-        create_dataframes.save_dataframe(df, path_)
-
-        status = utils.path_exists(path_)
-        self.assertTrue(status)
-
-    def test_get_mapped_artist_and_recording_mbids(self):
-        partial_listen_df = create_dataframes.get_listens_for_training_model_window(self.date, self.date, {}, self.listens_path)
-
-        df = utils.read_files_from_HDFS(self.mapping_path)
-        mapping_df = mapping_utils.get_unique_rows_from_mapping(df)
-
-        mapped_listens = create_dataframes.get_mapped_artist_and_recording_mbids(partial_listen_df, mapping_df)
-        self.assertEqual(mapped_listens.count(), 8)
-
-        cols = [
-            'listened_at',
-            'mb_artist_credit_id',
-            'mb_artist_credit_mbids',
-            'mb_recording_mbid',
-            'mb_release_mbid',
-            'msb_artist_credit_name_matchable',
-            'msb_recording_name_matchable',
-            'user_name'
-        ]
-
-        self.assertListEqual(sorted(cols), sorted(mapped_listens.columns))
-        status = utils.path_exists(path.MAPPED_LISTENS)
-        self.assertTrue(status)
 
     def test_get_users_dataframe(self):
         metadata = {}
@@ -127,11 +74,6 @@ class CreateDataframeTestCase(SparkTestCase):
         self.assertListEqual(['user_id', 'recording_id', 'count'], playcounts_df.columns)
         self.assertEqual(metadata['playcounts_count'], playcounts_df.count())
 
-    def test_generate_dataframe_id(self):
-        metadata = {}
-        create_dataframes.generate_dataframe_id(metadata)
-        assert re.match('{}-*'.format(config.DATAFRAME_ID_PREFIX), metadata['dataframe_id'])
-
     def test_save_dataframe_metadata_to_HDFS(self):
         df_id = "3acb406f-c716-45f8-a8bd-96ca3939c2e5"
         metadata = self.get_dataframe_metadata(df_id)
@@ -144,7 +86,7 @@ class CreateDataframeTestCase(SparkTestCase):
         self.assertTrue(sorted(df.columns), sorted(schema.dataframe_metadata_schema.fieldNames()))
 
     def test_get_data_missing_from_musicbrainz(self):
-        partial_listen_df = create_dataframes.get_listens_for_training_model_window(self.date, self.date, {}, self.listens_path)
+        partial_listen_df = create_dataframes.get_listens_for_training_model_window(self.date, self.date, self.listens_path)
         mapping_df = utils.read_files_from_HDFS(self.mapping_path)
 
         itr = create_dataframes.get_data_missing_from_musicbrainz(partial_listen_df, mapping_df)
@@ -191,7 +133,7 @@ class CreateDataframeTestCase(SparkTestCase):
         self.assertEqual(received_data, expected_data)
 
     def test_prepare_messages(self):
-        partial_listen_df = create_dataframes.get_listens_for_training_model_window(self.date, self.date, {}, self.listens_path)
+        partial_listen_df = create_dataframes.get_listens_for_training_model_window(self.date, self.date, self.listens_path)
         mapping_df = utils.read_files_from_HDFS(self.mapping_path)
         from_date = datetime(2019, 6, 21)
         to_date = datetime(2019, 8, 21)
