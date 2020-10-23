@@ -9,8 +9,8 @@ import listenbrainz_spark.utils.mapping as mapping_utils
 from listenbrainz_spark.recommendations import dataframe_utils
 from listenbrainz_spark import hdfs_connection, utils, config, schema
 from listenbrainz_spark.stats.utils import get_latest_listen_ts
-from listenbrainz_spark.recommendations import create_dataframes
-from listenbrainz_spark.recommendations import train_models
+from listenbrainz_spark.recommendations.recording import create_dataframes
+from listenbrainz_spark.recommendations.recording import train_models
 
 from pyspark.sql import Row
 import pyspark.sql.functions as f

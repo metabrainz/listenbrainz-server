@@ -400,7 +400,7 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
         current_app.logger.info('Done!')
 
     message = [{
-        'type': 'cf_recording_model',
+        'type': 'cf_recommendations_recording_model',
         'model_upload_time': str(datetime.utcnow()),
         'total_time': '{:.2f}'.format(time.monotonic() - ti),
     }]

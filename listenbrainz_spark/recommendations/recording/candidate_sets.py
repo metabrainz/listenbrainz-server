@@ -34,7 +34,8 @@ from listenbrainz_spark.exceptions import (SparkSessionNotInitializedException,
                                            PathNotFoundException,
                                            FileNotFetchedException,
                                            TopArtistNotFetchedException,
-                                           SimilarArtistNotFetchedException)
+                                           SimilarArtistNotFetchedException,
+                                           FileNotSavedException)
 
 from flask import current_app
 import pyspark.sql.functions as func
@@ -683,7 +684,7 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
         current_app.logger.info('Done!')
 
     message = [{
-        'type': 'cf_recording_candidate_sets',
+        'type': 'cf_recommendations_recording_candidate_sets',
         'candidate_sets_upload_time': str(datetime.utcnow()),
         'total_time': total_time,
         'from_date': str(from_date),

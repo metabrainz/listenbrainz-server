@@ -125,7 +125,7 @@ def upload_artist_relation():
 def dataframes(days):
     """ Invoke script responsible for pre-processing data.
     """
-    from listenbrainz_spark.recommendations import create_dataframes
+    from listenbrainz_spark.recommendations.recording import create_dataframes
     with app.app_context():
         _ = create_dataframes.main(train_model_window=days)
 
@@ -143,7 +143,7 @@ def model(rank, itr, lmbda, alpha):
     """ Invoke script responsible for training data.
         For more details refer to 'https://spark.apache.org/docs/2.1.0/mllib-collaborative-filtering.html'
     """
-    from listenbrainz_spark.recommendations import train_models
+    from listenbrainz_spark.recommendations.recording import train_models
     with app.app_context():
         _ = train_models.main(ranks=rank, lambdas=lmbda, iterations=itr, alpha=alpha)
 
@@ -158,7 +158,7 @@ def model(rank, itr, lmbda, alpha):
 def candidate(days, top, similar, users, html):
     """ Invoke script responsible for generating candidate sets.
     """
-    from listenbrainz_spark.recommendations import candidate_sets
+    from listenbrainz_spark.recommendations.recording import candidate_sets
     with app.app_context():
         _ = candidate_sets.main(recommendation_generation_window=days, top_artist_limit=top,
                                 similar_artist_limit=similar, users=users, html_flag=html)
@@ -172,7 +172,7 @@ def candidate(days, top, similar, users, html):
 def recommend(top, similar, users):
     """ Invoke script responsible for generating recommendations.
     """
-    from listenbrainz_spark.recommendations import recommend
+    from listenbrainz_spark.recommendations.recording import recommend
     with app.app_context():
         _ = recommend.main(recommendation_top_artist_limit=top, recommendation_similar_artist_limit=similar, users=users)
 
