@@ -150,33 +150,6 @@ def read_files_from_HDFS(path):
         raise FileNotFetchedException(err.java_exception, path)
 
 
-def get_listens_without_artist_and_recording_mbids(df):
-    """ Get dataframe with all fields that a typical listen has
-        except artist_mbids and recording_mbid.
-
-        Args:
-            df: Dataframe of listens.
-
-        Returns:
-            A dataframe with columns that a typical listen has
-            except artist_mbids and recording_mbid.
-
-    """
-    # Not all listens in ListenBrainz contain mbids but every listen has an msid.
-    # We fetch listens such that the mbid fields are not selected.
-    # We then map the msids with mbids so that every listen has an mbid too.
-    return df.select('artist_msid',
-                     'artist_name',
-                     'listened_at',
-                     'recording_msid',
-                     'release_mbid',
-                     'release_msid',
-                     'release_name',
-                     'tags',
-                     'track_name',
-                     'user_name')
-
-
 def get_listens(from_date, to_date, dest_path):
     """ Prepare dataframe of months falling between from_date and to_date (both inclusive).
 
