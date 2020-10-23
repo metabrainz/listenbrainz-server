@@ -1,6 +1,7 @@
 import * as React from "react";
 import {
   isEqual as _isEqual,
+  isNil as _isNil,
   isString as _isString,
   get as _get,
 } from "lodash";
@@ -164,7 +165,7 @@ export default class BrainzPlayer extends React.Component<
       title || "Playback error",
       _isString(error)
         ? error
-        : `${error.status && `Error ${error.status}:`} ${
+        : `${!_isNil(error.status) && `Error ${error.status}:`} ${
             error.message || error.statusText
           }`
     );

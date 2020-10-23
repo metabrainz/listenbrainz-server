@@ -1,7 +1,7 @@
 import * as timeago from "time-ago";
 
 import * as React from "react";
-import { get as _get, isString as _isString } from "lodash";
+import { get as _get, isNil as _isNil, isString as _isString } from "lodash";
 import MediaQuery from "react-responsive";
 import {
   faMusic,
@@ -140,7 +140,9 @@ export default class ListenCard extends React.Component<
       title || "Error",
       _isString(error)
         ? error
-        : `${error.status && `Error ${error.status}:`} ${error.message}`
+        : `${!_isNil(error.status) && `Error ${error.status}:`} ${
+            error.message || error.statusText
+          }`
     );
   };
 

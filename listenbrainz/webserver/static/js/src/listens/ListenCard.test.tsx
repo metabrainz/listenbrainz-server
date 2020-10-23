@@ -169,15 +169,17 @@ describe("submitFeedback", () => {
     const instance = wrapper.instance();
     instance.handleError = jest.fn();
 
+    const error = new Error("error");
     const spy = jest.spyOn(instance.APIService, "submitFeedback");
     spy.mockImplementation(() => {
-      throw new Error("error");
+      throw error;
     });
 
     instance.submitFeedback(-1);
     expect(instance.handleError).toHaveBeenCalledTimes(1);
     expect(instance.handleError).toHaveBeenCalledWith(
-      "Error while submitting feedback - error"
+      error,
+      "Error while submitting feedback"
     );
   });
 });
@@ -281,15 +283,17 @@ describe("deleteListen", () => {
     const instance = wrapper.instance();
     instance.handleError = jest.fn();
 
+    const error = new Error("error");
     const spy = jest.spyOn(instance.APIService, "deleteListen");
     spy.mockImplementation(() => {
-      throw new Error("error");
+      throw error;
     });
 
     instance.deleteListen();
     expect(instance.handleError).toHaveBeenCalledTimes(1);
     expect(instance.handleError).toHaveBeenCalledWith(
-      "Error while deleting listen - error"
+      error,
+      "Error while deleting listen"
     );
   });
 });
