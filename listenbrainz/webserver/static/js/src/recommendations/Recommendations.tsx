@@ -3,8 +3,8 @@
 import { AlertList } from "react-bs-notifier";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { isEqual } from "lodash";
-import { get } from "lodash";
+import { isEqual, get } from "lodash";
+
 import BrainzPlayer from "../BrainzPlayer";
 import APIService from "../APIService";
 import Loader from "../components/Loader";
@@ -28,7 +28,7 @@ export interface RecommendationsState {
   loading: boolean;
   currRecPage?: number;
   totalRecPages: number;
-  recommendationFeedbackMap: RecommendationFeedbackMap
+  recommendationFeedbackMap: RecommendationFeedbackMap;
 }
 
 export default class Recommendations extends React.Component<
@@ -67,9 +67,9 @@ export default class Recommendations extends React.Component<
 
   componentDidMount(): void {
     const { user, currentUser } = this.props;
-      if (currentUser?.name === user?.name) {
-        this.loadFeedback();
-      }
+    if (currentUser?.name === user?.name) {
+      this.loadFeedback();
+    }
   }
 
   getFeedback = async () => {
@@ -112,16 +112,25 @@ export default class Recommendations extends React.Component<
     this.setState({ recommendationFeedbackMap });
   };
 
-  updateFeedback = (recordingMbid: string, rating: RecommendationFeedBack | null) => {
-    let recommendationFeedbackMap = {...this.state.recommendationFeedbackMap, [recordingMbid]: rating};
-    this.setState({ recommendationFeedbackMap });
+  updateFeedback = (
+    recordingMbid: string,
+    rating: RecommendationFeedBack | null
+  ) => {
+    this.setState((state) => ({
+      recommendationFeedbackMap: {
+        ...state.recommendationFeedbackMap,
+        [recordingMbid]: rating,
+      },
+    }));
   };
 
   getFeedbackForRecordingMbid = (
     recordingMbid?: string | null
   ): RecommendationFeedBack | null => {
     const { recommendationFeedbackMap } = this.state;
-    return recordingMbid ? get(recommendationFeedbackMap, recordingMbid, null) : null;
+    return recordingMbid
+      ? get(recommendationFeedbackMap, recordingMbid, null)
+      : null;
   };
 
   playRecommendation = (recommendation: Recommendation): void => {

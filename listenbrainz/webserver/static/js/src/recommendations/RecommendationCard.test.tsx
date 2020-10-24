@@ -28,7 +28,7 @@ const props: RecommendationCardProps = {
   isCurrentUser: true,
   currentUser: { auth_token: "lalala", name: "test" },
   playRecommendation: () => {},
-  currentFeedback: 'love',
+  currentFeedback: "love",
   updateFeedback: () => {},
   newAlert: () => {},
 };

@@ -413,7 +413,7 @@ export default class APIService {
 
   deleteRecommendationFeedback = async (
     userToken: string,
-    recordingMBID: string,
+    recordingMBID: string
   ): Promise<number> => {
     const url = `${this.APIBaseURI}/recommendation/feedback/delete`;
     const response = await fetch(url, {
@@ -422,7 +422,7 @@ export default class APIService {
         Authorization: `Token ${userToken}`,
         "Content-Type": "application/json;charset=UTF-8",
       },
-      body: JSON.stringify({ recording_mbid: recordingMBID}),
+      body: JSON.stringify({ recording_mbid: recordingMBID }),
     });
     this.checkStatus(response);
     return response.status;
@@ -442,5 +442,4 @@ export default class APIService {
     const data = response.json();
     return data;
   };
-
 }

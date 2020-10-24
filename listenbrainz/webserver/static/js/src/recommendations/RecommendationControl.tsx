@@ -6,12 +6,12 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 export type RecommendationControlProps = {
   className?: string;
-  action?: () => void;
+  action?: (event: React.SyntheticEvent) => void;
   icon?: IconDefinition;
   title: string;
 };
 
-const RecommendationControl = (props:  RecommendationControlProps) => {
+const RecommendationControl = (props: RecommendationControlProps) => {
   const { className, action, icon, title } = props;
   return icon ? (
     <FontAwesomeIcon
@@ -27,4 +27,4 @@ const RecommendationControl = (props:  RecommendationControlProps) => {
   );
 };
 
-export default  RecommendationControl;
+export default RecommendationControl;

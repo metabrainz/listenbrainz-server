@@ -10,7 +10,7 @@ import {
 import { get as _get } from "lodash";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import RecommendationControl from "./RecommendationControl"
+import RecommendationControl from "./RecommendationControl";
 
 import { getArtistLink, getTrackLink } from "../utils";
 import Card from "../components/Card";
@@ -21,7 +21,10 @@ export type RecommendationCardProps = {
   recommendation: Recommendation;
   playRecommendation: (recommendation: Recommendation) => void;
   currentFeedback: RecommendationFeedBack | null;
-  updateFeedback: (recordingMbid: string, rating: RecommendationFeedBack | null) => void;
+  updateFeedback: (
+    recordingMbid: string,
+    rating: RecommendationFeedBack | null
+  ) => void;
   className?: string;
   isCurrentUser: Boolean;
   currentUser?: ListenBrainzUser;
@@ -67,8 +70,18 @@ export default class RecommendationCard extends React.Component<
     }
   }
 
-  submitFeedback = async (rating: RecommendationFeedBack) => {
-    const { recommendation, currentUser, isCurrentUser, updateFeedback } = this.props;
+  submitFeedback = async (
+    event: React.SyntheticEvent,
+    rating: RecommendationFeedBack
+  ) => {
+    const {
+      recommendation,
+      currentUser,
+      isCurrentUser,
+      updateFeedback,
+    } = this.props;
+    /* Stop click propagation so that the Bootstrap dropdown does not close on feedback click */
+    event.stopPropagation();
     if (isCurrentUser && currentUser?.auth_token) {
       const recordingMBID = _get(
         recommendation,
@@ -85,13 +98,22 @@ export default class RecommendationCard extends React.Component<
           updateFeedback(recordingMBID, rating);
         }
       } catch (error) {
-        this.handleError(`Error while submitting recommendation feedback - ${error.message}`);
+        this.handleError(
+          `Error while submitting recommendation feedback - ${error.message}`
+        );
       }
     }
   };
 
-  deleteFeedback = async () => {
-    const { recommendation, currentUser, isCurrentUser, updateFeedback } = this.props;
+  deleteFeedback = async (event: React.SyntheticEvent) => {
+    const {
+      recommendation,
+      currentUser,
+      isCurrentUser,
+      updateFeedback,
+    } = this.props;
+    /* Stop click propagation so that the Bootstrap dropdown does not close on feedback click */
+    event.stopPropagation();
     if (isCurrentUser && currentUser?.auth_token) {
       const recordingMBID = _get(
         recommendation,
@@ -100,14 +122,16 @@ export default class RecommendationCard extends React.Component<
       try {
         const status = await this.APIService.deleteRecommendationFeedback(
           currentUser.auth_token,
-          recordingMBID,
+          recordingMBID
         );
         if (status === 200) {
           this.setState({ feedback: null });
           updateFeedback(recordingMBID, null);
         }
       } catch (error) {
-        this.handleError(`Error while deleting recommendation feedback - ${error.message}`);
+        this.handleError(
+          `Error while deleting recommendation feedback - ${error.message}`
+        );
       }
     }
   };
@@ -123,10 +147,6 @@ export default class RecommendationCard extends React.Component<
       typeof error === "object" ? error.message : error
     );
   };
-
-  handleClick(e) {
-    e.stopPropagation();
-  }
 
   render() {
     const { recommendation, className } = this.props;
@@ -164,41 +184,62 @@ export default class RecommendationCard extends React.Component<
                 data-toggle="dropdown"
                 aria-haspopup="true"
                 aria-expanded="true"
-                onClick={(e) => this.handleClick(e)}
               />
               <ul
                 className="dropdown-menu dropdown-menu-right"
                 aria-labelledby="recommendationControlsDropdown"
               >
                 <RecommendationControl
-                    icon={faAngry}
-                    title="I never want to hear this again!"
-                    action={() => feedback === 'hate' ? this.deleteFeedback() : this.submitFeedback('hate')}
-                    className={`${feedback === 'hate' ? " angry" : ""}`}
+                  icon={faAngry}
+                  title="I never want to hear this again!"
+                  action={(event: React.SyntheticEvent) =>
+                    feedback === "hate"
+                      ? this.deleteFeedback(event)
+                      : this.submitFeedback(event, "hate")
+                  }
+                  className={`${feedback === "hate" ? " angry" : ""}`}
                 />
                 <RecommendationControl
                   icon={faFrown}
                   title="I don't like this!"
-                  action={() => feedback === 'dislike' ? this.deleteFeedback() : this.submitFeedback('dislike')}
-                    className={`${feedback === 'dislike' ? " frown" : ""}`}
+                  action={(event: React.SyntheticEvent) =>
+                    feedback === "dislike"
+                      ? this.deleteFeedback(event)
+                      : this.submitFeedback(event, "dislike")
+                  }
+                  className={`${feedback === "dislike" ? " frown" : ""}`}
                 />
                 <RecommendationControl
                   icon={faMeh}
                   title="This is a bad recommendation!"
-                  action={() => feedback === 'bad_recommendation' ? this.deleteFeedback() : this.submitFeedback('bad_recommendation')}
-                  className={`${feedback === 'bad_recommendation' ? " meh" : ""}`}
+                  action={(event: React.SyntheticEvent) =>
+                    feedback === "bad_recommendation"
+                      ? this.deleteFeedback(event)
+                      : this.submitFeedback(event, "bad_recommendation")
+                  }
+                  className={`${
+                    feedback === "bad_recommendation" ? " meh" : ""
+                  }`}
                 />
                 <RecommendationControl
                   icon={faSmileBeam}
                   title="I like this!"
-                  action={() => feedback === 'like' ? this.deleteFeedback() : this.submitFeedback('like')}
-                  className={`${feedback === 'like' ? " smile" : ""}`}
+                  action={(event: React.SyntheticEvent) =>
+                    feedback === "like"
+                      ? this.deleteFeedback(event)
+                      : this.submitFeedback(event, "like")
+                  }
+                  className={`${feedback === "like" ? " smile" : ""}`}
                 />
                 <RecommendationControl
                   icon={faGrinStars}
                   title="I really love this!"
-                  action={() => feedback === 'love' ? this.deleteFeedback() : this.submitFeedback('love')}
-                  className={`${feedback === 'love' ? " grin" : ""}`}
+                  action={(event: React.SyntheticEvent) =>
+                    feedback === "love"
+                      ? this.deleteFeedback(event)
+                      : this.submitFeedback(event, "love")
+                  }
+                  className={`${feedback === "love" ? " grin" : ""}`}
                 />
               </ul>
             </>
