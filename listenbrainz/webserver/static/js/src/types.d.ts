@@ -305,7 +305,7 @@ declare type ListensListMode = "listens" | "follow" | "recent";
 
 declare type ListenFeedBack = 1 | 0 | -1;
 
-declare type RecommendationFeedBack = "love" | "like" | "hate" | "dislike" | "bad_recommendation" | "feedback_not_given" | "remove_feedback";
+declare type RecommendationFeedBack = "love" | "like" | "hate" | "dislike" | "bad_recommendation";
 
 declare type FeedbackResponse = {
   recording_msid: string;
@@ -323,5 +323,5 @@ declare type RecordingFeedbackMap = {
 };
 
 declare type RecommendationFeedbackMap = {
-  [recordingMbid: string]: RecommendationFeedBack;
+  [recordingMbid: string]: RecommendationFeedBack | null;
 };

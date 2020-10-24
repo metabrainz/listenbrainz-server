@@ -20,8 +20,8 @@ export type RecommendationCardProps = {
   apiUrl: string;
   recommendation: Recommendation;
   playRecommendation: (recommendation: Recommendation) => void;
-  currentFeedback: RecommendationFeedBack;
-  updateFeedback: (recordingMbid: string, rating: RecommendationFeedBack) => void;
+  currentFeedback: RecommendationFeedBack | null;
+  updateFeedback: (recordingMbid: string, rating: RecommendationFeedBack | null) => void;
   className?: string;
   isCurrentUser: Boolean;
   currentUser?: ListenBrainzUser;
@@ -33,7 +33,7 @@ export type RecommendationCardProps = {
 };
 
 type RecommendationCardState = {
-  feedback: RecommendationFeedBack;
+  feedback: RecommendationFeedBack | null;
 };
 
 export default class RecommendationCard extends React.Component<
@@ -47,7 +47,7 @@ export default class RecommendationCard extends React.Component<
     super(props);
 
     this.state = {
-      feedback: props.currentFeedback || "feedback_not_given",
+      feedback: props.currentFeedback || null,
     };
 
     this.APIService = new APIService(
@@ -74,34 +74,41 @@ export default class RecommendationCard extends React.Component<
         recommendation,
         "track_metadata.additional_info.recording_mbid"
       );
-      if (rating === "remove_feedback") {
-        try {
-          const status = await this.APIService.deleteRecommendationFeedback(
-            currentUser.auth_token,
-            recordingMBID,
-          );
-          if (status === 200) {
-            this.setState({ feedback: "feedback_not_given" });
-            updateFeedback(recordingMBID, "feedback_not_given");
-          }
-        } catch (error) {
-          this.handleError(`Error while deleting recommendation feedback - ${error.message}`);
+      try {
+        const status = await this.APIService.submitRecommendationFeedback(
+          currentUser.auth_token,
+          recordingMBID,
+          rating
+        );
+        if (status === 200) {
+          this.setState({ feedback: rating });
+          updateFeedback(recordingMBID, rating);
         }
-      } else {
-        try {
-          const status = await this.APIService.submitRecommendationFeedback(
-            currentUser.auth_token,
-            recordingMBID,
-            rating
-          );
-          if (status === 200) {
-            this.setState({ feedback: rating });
-            updateFeedback(recordingMBID, rating);
-          }
-        } catch (error) {
-          this.handleError(`Error while submitting recommendation feedback - ${error.message}`);
+      } catch (error) {
+        this.handleError(`Error while submitting recommendation feedback - ${error.message}`);
+      }
+    }
+  };
+
+  deleteFeedback = async () => {
+    const { recommendation, currentUser, isCurrentUser, updateFeedback } = this.props;
+    if (isCurrentUser && currentUser?.auth_token) {
+      const recordingMBID = _get(
+        recommendation,
+        "track_metadata.additional_info.recording_mbid"
+      );
+      try {
+        const status = await this.APIService.deleteRecommendationFeedback(
+          currentUser.auth_token,
+          recordingMBID,
+        );
+        if (status === 200) {
+          this.setState({ feedback: null });
+          updateFeedback(recordingMBID, null);
         }
-      };
+      } catch (error) {
+        this.handleError(`Error while deleting recommendation feedback - ${error.message}`);
+      }
     }
   };
 
@@ -166,31 +173,31 @@ export default class RecommendationCard extends React.Component<
                 <RecommendationControl
                     icon={faAngry}
                     title="I never want to hear this again!"
-                    action={() => this.submitFeedback(feedback === 'hate' ? "remove_feedback" : 'hate')}
+                    action={() => feedback === 'hate' ? this.deleteFeedback() : this.submitFeedback('hate')}
                     className={`${feedback === 'hate' ? " angry" : ""}`}
                 />
                 <RecommendationControl
                   icon={faFrown}
                   title="I don't like this!"
-                  action={() => this.submitFeedback(feedback === 'dislike' ? "remove_feedback" : 'dislike')}
+                  action={() => feedback === 'dislike' ? this.deleteFeedback() : this.submitFeedback('dislike')}
                     className={`${feedback === 'dislike' ? " frown" : ""}`}
                 />
                 <RecommendationControl
                   icon={faMeh}
                   title="This is a bad recommendation!"
-                  action={() => this.submitFeedback(feedback === 'bad_recommendation' ? "remove_feedback" : 'bad_recommendation')}
+                  action={() => feedback === 'bad_recommendation' ? this.deleteFeedback() : this.submitFeedback('bad_recommendation')}
                   className={`${feedback === 'bad_recommendation' ? " meh" : ""}`}
                 />
                 <RecommendationControl
                   icon={faSmileBeam}
                   title="I like this!"
-                  action={() => this.submitFeedback(feedback === 'like' ? "remove_feedback" : 'like')}
+                  action={() => feedback === 'like' ? this.deleteFeedback() : this.submitFeedback('like')}
                   className={`${feedback === 'like' ? " smile" : ""}`}
                 />
                 <RecommendationControl
                   icon={faGrinStars}
                   title="I really love this!"
-                  action={() => this.submitFeedback(feedback === 'love' ? "remove_feedback" : 'love')}
+                  action={() => feedback === 'love' ? this.deleteFeedback() : this.submitFeedback('love')}
                   className={`${feedback === 'love' ? " grin" : ""}`}
                 />
               </ul>

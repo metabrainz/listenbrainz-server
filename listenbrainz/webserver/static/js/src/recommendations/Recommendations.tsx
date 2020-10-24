@@ -74,7 +74,7 @@ export default class Recommendations extends React.Component<
 
   getFeedback = async () => {
     const { user, recommendations } = this.props;
-    let recordings = "";
+    const recordings: string[] = [];
 
     if (recommendations) {
       recommendations.forEach((recommendation) => {
@@ -83,13 +83,13 @@ export default class Recommendations extends React.Component<
           "track_metadata.additional_info.recording_mbid"
         );
         if (recordingMbid) {
-          recordings += `${recordingMbid},`;
+          recordings.push(recordingMbid);
         }
       });
       try {
         const data = await this.APIService.getFeedbackForUserForRecommendations(
           user.name,
-          recordings
+          recordings.join(",")
         );
         return data.feedback;
       } catch (error) {
@@ -112,17 +112,16 @@ export default class Recommendations extends React.Component<
     this.setState({ recommendationFeedbackMap });
   };
 
-  updateFeedback = (recordingMbid: string, rating: RecommendationFeedBack) => {
-    const { recommendationFeedbackMap } = this.state;
-    recommendationFeedbackMap[recordingMbid] = rating;
+  updateFeedback = (recordingMbid: string, rating: RecommendationFeedBack | null) => {
+    let recommendationFeedbackMap = {...this.state.recommendationFeedbackMap, [recordingMbid]: rating};
     this.setState({ recommendationFeedbackMap });
   };
 
   getFeedbackForRecordingMbid = (
     recordingMbid?: string | null
-  ): RecommendationFeedBack => {
+  ): RecommendationFeedBack | null => {
     const { recommendationFeedbackMap } = this.state;
-    return recordingMbid ? get(recommendationFeedbackMap, recordingMbid, "feedback_not_given") : "feedback_not_given";
+    return recordingMbid ? get(recommendationFeedbackMap, recordingMbid, null) : null;
   };
 
   playRecommendation = (recommendation: Recommendation): void => {

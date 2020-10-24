@@ -213,25 +213,14 @@ def get_feedback_for_recordings_for_user(user_name):
 
     try:
         feedback = db_feedback.get_feedback_for_multiple_recordings_for_user(user_id=user["id"], recording_list=recording_list)
-        current_app.logger.error(feedback)
     except ValidationError as e:
         log_raise_400("Invalid JSON document submitted: %s" % str(e).replace("\n ", ":").replace("\n", " "),
                       request.args)
 
     recommendation_feedback = [_format_feedback(fb) for fb in feedback]
 
-    mbids_found = [row['recording_mbid'] for row in recommendation_feedback]
-
-    mbids_not_found = [mbid for mbid in recording_list if mbid not in mbids_found]
-
-    for mbid in mbids_not_found:
-        recommendation_feedback.append({
-            'rating': 'feedback_not_given',
-            'recording_mbid': mbid
-        })
-
     return jsonify({
-        "recommendation-feedback": recommendation_feedback,
+        "feedback": recommendation_feedback,
         "user_name": user_name
     })
 

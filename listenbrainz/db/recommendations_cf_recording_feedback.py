@@ -133,5 +133,4 @@ def get_feedback_for_multiple_recordings_for_user(user_id: int, recording_list: 
 
     with db.engine.connect() as connection:
         result = connection.execute(sqlalchemy.text(query), args)
-        current_app.logger.error(result)
         return [RecommendationFeedbackSubmit(**dict(row)) for row in result.fetchall()]
