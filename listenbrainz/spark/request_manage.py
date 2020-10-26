@@ -158,7 +158,7 @@ def request_dataframes(days):
     params = {
         'train_model_window': days,
     }
-    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.create_dataframes', params=params))
+    send_request_to_spark_cluster(_prepare_query_message('cf.recommendations.recording.create_dataframes', params=params))
 
 
 def parse_list(ctx, args):
@@ -181,7 +181,7 @@ def request_model(rank, itr, lmbda, alpha):
         'alpha': alpha,
     }
 
-    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.train_model', params=params))
+    send_request_to_spark_cluster(_prepare_query_message('cf.recommendations.recording.train_model', params=params))
 
 
 @cli.command(name='request_candidate_sets')
@@ -201,7 +201,7 @@ def request_candidate_sets(days, top, similar, users, html):
         "users": users,
         "html_flag": html
     }
-    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.candidate_sets', params=params))
+    send_request_to_spark_cluster(_prepare_query_message('cf.recommendations.recording.candidate_sets', params=params))
 
 
 @cli.command(name='request_recommendations')
@@ -217,7 +217,7 @@ def request_recommendations(top, similar, users):
         'recommendation_similar_artist_limit': similar,
         'users': users
     }
-    send_request_to_spark_cluster(_prepare_query_message('cf_recording.recommendations.recommend', params=params))
+    send_request_to_spark_cluster(_prepare_query_message('cf.recommendations.recording.recommendations', params=params))
 
 
 @cli.command(name='request_import_mapping')

@@ -29,8 +29,8 @@ from listenbrainz_spark.exceptions import (PathNotFoundException,
                                            RatingOutOfRangeException,
                                            EmptyDataframeExcpetion)
 
-from listenbrainz_spark.recommendations.train_models import get_model_path
-from listenbrainz_spark.recommendations.candidate_sets import _is_empty_dataframe
+from listenbrainz_spark.recommendations.recording.train_models import get_model_path
+from listenbrainz_spark.recommendations.recording.candidate_sets import _is_empty_dataframe
 
 from pyspark.sql import Row
 from flask import current_app
@@ -332,7 +332,7 @@ def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_u
     for user_name, data in user_rec.items():
         messages = {
             'musicbrainz_id': user_name,
-            'type': 'cf_recording_recommendations',
+            'type': 'cf_recommendations_recording_recommendations',
             'recommendations': {
                 'top_artist': data.get('top_artist', []),
                 'similar_artist': data.get('similar_artist', [])
@@ -341,7 +341,7 @@ def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_u
         yield messages
 
     yield {
-            'type': 'cf_recording_recommendations_mail',
+            'type': 'cf_recommendations_recording_mail',
             'active_user_count': active_user_count,
             'top_artist_user_count': top_artist_rec_user_count,
             'similar_artist_user_count': similar_artist_rec_user_count,

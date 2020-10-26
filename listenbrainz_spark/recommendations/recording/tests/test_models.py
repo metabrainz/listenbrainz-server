@@ -7,7 +7,7 @@ from unittest.mock import patch, Mock, MagicMock
 import listenbrainz_spark
 from listenbrainz_spark.tests import SparkTestCase, TEST_PLAYCOUNTS_PATH, PLAYCOUNTS_COUNT
 from listenbrainz_spark import utils, config, hdfs_connection, path, schema
-from listenbrainz_spark.recommendations import train_models
+from listenbrainz_spark.recommendations.recording import train_models
 
 from pyspark.sql import Row
 
@@ -32,9 +32,9 @@ class TrainModelsTestCase(SparkTestCase):
         self.assertEqual(rating_object.product, 2)
         self.assertEqual(rating_object.rating, 3)
 
-    @patch('listenbrainz_spark.recommendations.train_models.sqrt')
-    @patch('listenbrainz_spark.recommendations.train_models.RDD')
-    @patch('listenbrainz_spark.recommendations.train_models.add')
+    @patch('listenbrainz_spark.recommendations.recording.train_models.sqrt')
+    @patch('listenbrainz_spark.recommendations.recording.train_models.RDD')
+    @patch('listenbrainz_spark.recommendations.recording.train_models.add')
     def test_compute_rmse(self, mock_add,  mock_rdd, mock_sqrt):
         n = 1
         model_id = "281c4177-f33a-441d-b15d-910acaf18b07"
@@ -115,8 +115,8 @@ class TrainModelsTestCase(SparkTestCase):
         self.assertEqual(best_model.rmse_time, metadata['rmse_time'])
         self.assertEqual(best_model.alpha, metadata['alpha'])
 
-    @patch('listenbrainz_spark.recommendations.train_models.RDD')
-    @patch('listenbrainz_spark.recommendations.train_models.ALS')
+    @patch('listenbrainz_spark.recommendations.recording.train_models.RDD')
+    @patch('listenbrainz_spark.recommendations.recording.train_models.ALS')
     def test_train(self, mock_als, mock_rdd):
         rank = 2
         iteration = 2
@@ -127,9 +127,9 @@ class TrainModelsTestCase(SparkTestCase):
 
         mock_als.trainImplicit.assert_called_once_with(mock_rdd, rank, iterations=iteration, lambda_=lmbda, alpha=alpha)
 
-    @patch('listenbrainz_spark.recommendations.train_models.compute_rmse')
-    @patch('listenbrainz_spark.recommendations.train_models.train')
-    @patch('listenbrainz_spark.recommendations.train_models.generate_model_id')
+    @patch('listenbrainz_spark.recommendations.recording.train_models.compute_rmse')
+    @patch('listenbrainz_spark.recommendations.recording.train_models.train')
+    @patch('listenbrainz_spark.recommendations.recording.train_models.generate_model_id')
     def test_get_best_model(self, mock_id, mock_train, mock_rmse):
         mock_rdd_training = Mock()
         mock_rdd_validation = Mock()
@@ -166,9 +166,9 @@ class TrainModelsTestCase(SparkTestCase):
         df = utils.read_files_from_HDFS(path.MODEL_METADATA)
         self.assertTrue(sorted(df.columns), sorted(schema.model_metadata_schema.fieldNames()))
 
-    @patch('listenbrainz_spark.recommendations.train_models.listenbrainz_spark')
-    @patch('listenbrainz_spark.recommendations.train_models.get_model_path')
-    @patch('listenbrainz_spark.recommendations.train_models.delete_model')
+    @patch('listenbrainz_spark.recommendations.recording.train_models.listenbrainz_spark')
+    @patch('listenbrainz_spark.recommendations.recording.train_models.get_model_path')
+    @patch('listenbrainz_spark.recommendations.recording.train_models.delete_model')
     def test_save_model(self, mock_del, mock_path, mock_context):
         model_id = 'xxxxxx'
         mock_model = MagicMock()

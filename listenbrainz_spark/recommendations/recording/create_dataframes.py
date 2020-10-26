@@ -312,7 +312,7 @@ def prepare_messages(missing_musicbrainz_data_itr, from_date, to_date, ti):
     total_time = '{:.2f}'.format((time.monotonic() - ti) / 60)
     try:
         messages = [UserCreateDataframesMessage(**{
-            'type': 'cf_recording_dataframes',
+            'type': 'cf_recommendations_recording_dataframes',
             'dataframe_upload_time': current_ts,
             'total_time': total_time,
             'from_date': str(from_date.strftime('%b %Y')),

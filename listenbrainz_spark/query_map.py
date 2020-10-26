@@ -1,7 +1,7 @@
-import listenbrainz_spark.recommendations.candidate_sets
-import listenbrainz_spark.recommendations.create_dataframes
-import listenbrainz_spark.recommendations.recommend
-import listenbrainz_spark.recommendations.train_models
+import listenbrainz_spark.recommendations.recording.candidate_sets
+import listenbrainz_spark.recommendations.recording.create_dataframes
+import listenbrainz_spark.recommendations.recording.recommend
+import listenbrainz_spark.recommendations.recording.train_models
 import listenbrainz_spark.request_consumer.jobs.import_dump
 import listenbrainz_spark.stats.sitewide.entity
 import listenbrainz_spark.stats.user.daily_activity
@@ -29,10 +29,10 @@ functions = {
     'import.dump.full_id': listenbrainz_spark.request_consumer.jobs.import_dump.import_full_dump_by_id_handler,
     'import.dump.incremental_newest': listenbrainz_spark.request_consumer.jobs.import_dump.import_newest_incremental_dump_handler,
     'import.dump.incremental_id': listenbrainz_spark.request_consumer.jobs.import_dump.import_incremental_dump_by_id_handler,
-    'cf_recording.recommendations.create_dataframes': listenbrainz_spark.recommendations.create_dataframes.main,
-    'cf_recording.recommendations.train_model': listenbrainz_spark.recommendations.train_models.main,
-    'cf_recording.recommendations.candidate_sets': listenbrainz_spark.recommendations.candidate_sets.main,
-    'cf_recording.recommendations.recommend': listenbrainz_spark.recommendations.recommend.main,
+    'cf.recommendations.recording.create_dataframes': listenbrainz_spark.recommendations.recording.create_dataframes.main,
+    'cf.recommendations.recording.train_model': listenbrainz_spark.recommendations.recording.train_models.main,
+    'cf.recommendations.recording.candidate_sets': listenbrainz_spark.recommendations.recording.candidate_sets.main,
+    'cf.recommendations.recording.recommendations': listenbrainz_spark.recommendations.recording.recommend.main,
     'import.mapping': listenbrainz_spark.request_consumer.jobs.import_dump.import_mapping_to_hdfs,
     'import.artist_relation': listenbrainz_spark.request_consumer.jobs.import_dump.import_artist_relation_to_hdfs,
 }
