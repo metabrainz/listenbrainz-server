@@ -99,18 +99,18 @@
     "description": "Import incremental dump with the specified ID into the spark cluster",
     "params": ["id"]
   },
-  "cf_recording.recommendations.create_dataframes": {
-    "name": "cf_recording.recommendations.create_dataframes",
+  "cf.recommendations.recording.create_dataframes": {
+    "name": "cf.recommendations.recording.create_dataframes",
     "description": "Create dataframes to prepare trainable data.",
     "params": ["train_model_window"]
   },
-  "cf_recording.recommendations.train_model": {
-    "name": "cf_recording.recommendations.train_model",
+  "cf.recommendations.recording.train_model": {
+    "name": "cf.recommendations.recording.train_model",
     "description": "Train data to yield a model.",
     "params": ["ranks", "lambdas", "iterations", "alpha"]
   },
-  "cf_recording.recommendations.candidate_sets": {
-    "name": "cf_recording.recommendations.candidate_sets",
+  "cf.recommendations.recording.candidate_sets": {
+    "name": "cf.recommendations.recording.candidate_sets",
     "description": "Create candidate sets to generate recommendations",
     "params": [
       "recommendation_generation_window",
@@ -120,8 +120,8 @@
       "html_flag"
     ]
   },
-  "cf_recording.recommendations.recommend": {
-    "name": "cf_recording.recommendations.recommend",
+  "cf.recommendations.recording.recommendations": {
+    "name": "cf.recommendations.recording.recommendations",
     "description": "Generate recommendations for all active ListenBrainz users.",
     "params": [
       "recommendation_top_artist_limit",

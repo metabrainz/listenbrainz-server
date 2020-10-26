@@ -1,8 +1,8 @@
 from datetime import datetime
 import sys
 from listenbrainz_spark.tests import SparkTestCase
-from listenbrainz_spark.recommendations import candidate_sets
-from listenbrainz_spark.recommendations import create_dataframes
+from listenbrainz_spark.recommendations.recording import candidate_sets
+from listenbrainz_spark.recommendations.recording import create_dataframes
 from listenbrainz_spark import schema, utils, config, path, stats
 from listenbrainz_spark.exceptions import (TopArtistNotFetchedException,
                                            SimilarArtistNotFetchedException)
@@ -566,8 +566,8 @@ class CandidateSetsTestClass(SparkTestCase):
         self.assertEqual(res_df.collect()[0].mb_artist_credit_mbids, ["6a70b322-9aa9-41b3-9dce-824733633a1c"])
         self.assertEqual(res_df.collect()[1].mb_artist_credit_mbids, ["7a70b322-9aa9-41b3-9dce-824733633a1c"])
 
-    @patch('listenbrainz_spark.recommendations.candidate_sets.utils.read_files_from_HDFS')
-    @patch('listenbrainz_spark.recommendations.candidate_sets.explode_artist_collaborations')
+    @patch('listenbrainz_spark.recommendations.recording.candidate_sets.utils.read_files_from_HDFS')
+    @patch('listenbrainz_spark.recommendations.recording.candidate_sets.explode_artist_collaborations')
     def test_append_artists_from_collaborations(self, mock_explode, mock_read_hdfs):
         top_artist_df = utils.create_dataframe(
             Row(
