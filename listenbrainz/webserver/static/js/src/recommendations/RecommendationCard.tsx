@@ -5,8 +5,11 @@ import {
   faMeh,
   faSmileBeam,
   faGrinStars,
-  faEllipsisV,
+  faThumbsUp,
 } from "@fortawesome/free-solid-svg-icons";
+
+import { faThumbsUp as faThumbsUpRegular } from "@fortawesome/free-regular-svg-icons";
+
 import { get as _get } from "lodash";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -51,6 +54,8 @@ export default class RecommendationCard extends React.Component<
 
     this.state = {
       feedback: props.currentFeedback || null,
+      icon: faThumbsUpRegular,
+      text: "Like",
     };
 
     this.APIService = new APIService(
@@ -67,12 +72,44 @@ export default class RecommendationCard extends React.Component<
     const { currentFeedback } = this.props;
     if (currentFeedback !== prevProps.currentFeedback) {
       this.setState({ feedback: currentFeedback });
+      if (currentFeedback === "hate") {
+        this.setState({
+          icon: faAngry,
+          text: "Hate",
+        });
+      } else if (currentFeedback === "dislike") {
+        this.setState({
+          icon: faFrown,
+          text: "dislike",
+        });
+      } else if (currentFeedback === "bad_recommendation") {
+        this.setState({
+          icon: faMeh,
+          text: "bad",
+        });
+      } else if (currentFeedback === "like") {
+        this.setState({
+          icon: faSmileBeam,
+          text: "like",
+        });
+      } else if (currentFeedback === "love") {
+        this.setState({
+          icon: faGrinStars,
+          text: "love",
+        });
+      } else {
+        this.setState({
+          icon: faThumbsUpRegular,
+          text: "Like",
+        });
+      }
     }
   }
 
   submitFeedback = async (
-    event: React.SyntheticEvent,
-    rating: RecommendationFeedBack
+    rating: RecommendationFeedBack,
+    iconToSet,
+    textToSet
   ) => {
     const {
       recommendation,
@@ -80,8 +117,6 @@ export default class RecommendationCard extends React.Component<
       isCurrentUser,
       updateFeedback,
     } = this.props;
-    /* Stop click propagation so that the Bootstrap dropdown does not close on feedback click */
-    event.stopPropagation();
     if (isCurrentUser && currentUser?.auth_token) {
       const recordingMBID = _get(
         recommendation,
@@ -97,6 +132,11 @@ export default class RecommendationCard extends React.Component<
           this.setState({ feedback: rating });
           updateFeedback(recordingMBID, rating);
         }
+
+        this.setState({
+          icon: iconToSet,
+          text: textToSet,
+        });
       } catch (error) {
         this.handleError(
           `Error while submitting recommendation feedback - ${error.message}`
@@ -105,15 +145,13 @@ export default class RecommendationCard extends React.Component<
     }
   };
 
-  deleteFeedback = async (event: React.SyntheticEvent) => {
+  deleteFeedback = async (textToSet, iconToSet) => {
     const {
       recommendation,
       currentUser,
       isCurrentUser,
       updateFeedback,
     } = this.props;
-    /* Stop click propagation so that the Bootstrap dropdown does not close on feedback click */
-    event.stopPropagation();
     if (isCurrentUser && currentUser?.auth_token) {
       const recordingMBID = _get(
         recommendation,
@@ -128,6 +166,10 @@ export default class RecommendationCard extends React.Component<
           this.setState({ feedback: null });
           updateFeedback(recordingMBID, null);
         }
+        this.setState({
+          icon: iconToSet,
+          text: textToSet,
+        });
       } catch (error) {
         this.handleError(
           `Error while deleting recommendation feedback - ${error.message}`
@@ -150,7 +192,7 @@ export default class RecommendationCard extends React.Component<
 
   render() {
     const { recommendation, className } = this.props;
-    const { feedback } = this.state;
+    const { feedback, icon, text } = this.state;
 
     return (
       <Card
@@ -177,14 +219,16 @@ export default class RecommendationCard extends React.Component<
         <div className="col-xs-1 text-center">
           <div className="recommendation-controls">
             <>
-              <FontAwesomeIcon
-                icon={faEllipsisV as IconProp}
-                className="dropdown-toggle"
+              <button
+                className="btn"
                 id="recommendationControlsDropdown"
                 data-toggle="dropdown"
                 aria-haspopup="true"
                 aria-expanded="true"
-              />
+                type="button"
+              >
+                <FontAwesomeIcon icon={icon as IconProp} /> {text}
+              </button>
               <ul
                 className="dropdown-menu dropdown-menu-right"
                 aria-labelledby="recommendationControlsDropdown"
@@ -192,30 +236,30 @@ export default class RecommendationCard extends React.Component<
                 <RecommendationControl
                   icon={faAngry}
                   title="I never want to hear this again!"
-                  action={(event: React.SyntheticEvent) =>
+                  action={() =>
                     feedback === "hate"
-                      ? this.deleteFeedback(event)
-                      : this.submitFeedback(event, "hate")
+                      ? this.deleteFeedback("Like", faThumbsUpRegular)
+                      : this.submitFeedback("hate", faAngry, "hate")
                   }
                   className={`${feedback === "hate" ? " angry" : ""}`}
                 />
                 <RecommendationControl
                   icon={faFrown}
                   title="I don't like this!"
-                  action={(event: React.SyntheticEvent) =>
+                  action={() =>
                     feedback === "dislike"
-                      ? this.deleteFeedback(event)
-                      : this.submitFeedback(event, "dislike")
+                      ? this.deleteFeedback("Like", faThumbsUpRegular)
+                      : this.submitFeedback("dislike", faFrown, "dislike")
                   }
                   className={`${feedback === "dislike" ? " frown" : ""}`}
                 />
                 <RecommendationControl
                   icon={faMeh}
                   title="This is a bad recommendation!"
-                  action={(event: React.SyntheticEvent) =>
+                  action={() =>
                     feedback === "bad_recommendation"
-                      ? this.deleteFeedback(event)
-                      : this.submitFeedback(event, "bad_recommendation")
+                      ? this.deleteFeedback("Like", faThumbsUpRegular)
+                      : this.submitFeedback("bad_recommendation", faMeh, "bad")
                   }
                   className={`${
                     feedback === "bad_recommendation" ? " meh" : ""
@@ -224,20 +268,20 @@ export default class RecommendationCard extends React.Component<
                 <RecommendationControl
                   icon={faSmileBeam}
                   title="I like this!"
-                  action={(event: React.SyntheticEvent) =>
+                  action={() =>
                     feedback === "like"
-                      ? this.deleteFeedback(event)
-                      : this.submitFeedback(event, "like")
+                      ? this.deleteFeedback("Like", faThumbsUpRegular)
+                      : this.submitFeedback("like", faSmileBeam, "like")
                   }
                   className={`${feedback === "like" ? " smile" : ""}`}
                 />
                 <RecommendationControl
                   icon={faGrinStars}
                   title="I really love this!"
-                  action={(event: React.SyntheticEvent) =>
+                  action={() =>
                     feedback === "love"
-                      ? this.deleteFeedback(event)
-                      : this.submitFeedback(event, "love")
+                      ? this.deleteFeedback("Like", faThumbsUpRegular)
+                      : this.submitFeedback("love", faGrinStars, "love")
                   }
                   className={`${feedback === "love" ? " grin" : ""}`}
                 />
