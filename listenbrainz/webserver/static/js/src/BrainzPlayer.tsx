@@ -81,10 +81,8 @@ export default class BrainzPlayer extends React.Component<
   constructor(props: BrainzPlayerProps) {
     super(props);
 
-    const { access_token, permission } = props.spotifyUser;
-
     this.spotifyPlayer = React.createRef<SpotifyPlayer>();
-    if (access_token && permission) {
+    if (SpotifyPlayer.hasPermissions(props.spotifyUser)) {
       this.dataSources.push(this.spotifyPlayer);
     }
 

@@ -46,7 +46,6 @@ type SpotifyPlayerProps = DataSourceProps & {
 
 type SpotifyPlayerState = {
   accessToken: string;
-  permission: SpotifyPermission;
   currentSpotifyTrack?: SpotifyTrack;
   durationMs: number;
   trackWindow?: SpotifyPlayerTrackWindow;
@@ -55,15 +54,32 @@ type SpotifyPlayerState = {
 export default class SpotifyPlayer
   extends React.Component<SpotifyPlayerProps, SpotifyPlayerState>
   implements DataSourceType {
-  spotifyPlayer?: SpotifyPlayerType;
+  static hasPermissions = (spotifyUser: SpotifyUser) => {
+    const { access_token: accessToken, permission } = spotifyUser;
+    if (!accessToken || !permission) {
+      return false;
+    }
+    const scopes = permission.split(" ");
+    const requiredScopes = [
+      "streaming",
+      "user-read-email",
+      "user-read-private",
+    ];
+    for (let i = 0; i < requiredScopes.length; i += 1) {
+      if (!scopes.includes(requiredScopes[i])) {
+        return false;
+      }
+    }
+    return true;
+  };
 
+  spotifyPlayer?: SpotifyPlayerType;
   debouncedOnTrackEnd: () => void;
 
   constructor(props: SpotifyPlayerProps) {
     super(props);
     this.state = {
       accessToken: props.spotifyUser.access_token || "",
-      permission: props.spotifyUser.permission || ("" as SpotifyPermission),
       durationMs: 0,
     };
 
@@ -72,15 +88,17 @@ export default class SpotifyPlayer
       trailing: false,
     });
 
-    const { accessToken, permission } = this.state;
-
     // Do an initial check of the spotify token permissions (scopes) before loading the SDK library
-    this.checkSpotifyToken(accessToken, permission).then((success) => {
-      if (success) {
-        window.onSpotifyWebPlaybackSDKReady = this.connectSpotifyPlayer;
-        const spotifyPlayerSDKLib = require("../lib/spotify-player-sdk-1.7.1"); // eslint-disable-line global-require
-      }
-    });
+    if (SpotifyPlayer.hasPermissions(props.spotifyUser)) {
+      window.onSpotifyWebPlaybackSDKReady = this.connectSpotifyPlayer;
+      const spotifyPlayerSDKLib = require("../lib/spotify-player-sdk-1.7.1"); // eslint-disable-line global-require
+    } else {
+      this.handleAccountError();
+      props.onInvalidateDataSource(
+        this,
+        "Permission to play songs not granted"
+      );
+    }
   }
 
   componentDidUpdate(prevProps: DataSourceProps) {
@@ -199,35 +217,6 @@ export default class SpotifyPlayer
       });
   };
 
-  checkSpotifyToken = async (
-    accessToken?: string,
-    permission?: string
-  ): Promise<boolean> => {
-    const { onInvalidateDataSource, handleError } = this.props;
-    if (!accessToken || !permission) {
-      this.handleAccountError();
-      return false;
-    }
-    try {
-      const scopes = permission.split(" ");
-      const requiredScopes = [
-        "streaming",
-        "user-read-email",
-        "user-read-private",
-      ];
-      for (let i = 0; i < requiredScopes.length; i += 1) {
-        if (!scopes.includes(requiredScopes[i])) {
-          onInvalidateDataSource(this, "Permission to play songs not granted");
-          return false;
-        }
-      }
-      return true;
-    } catch (error) {
-      handleError(error);
-      return false;
-    }
-  };
-
   playListen = (listen: Listen): void => {
     if (_get(listen, "track_metadata.additional_info.spotify_id")) {
       this.playSpotifyURI(getSpotifyUriFromListen(listen));
@@ -278,8 +267,8 @@ export default class SpotifyPlayer
   handleAccountError = (): void => {
     const errorMessage = (
       <p>
-        In order to play music, it is required that you link your Spotify
-        Premium account.
+        In order to play music with Spotify, you will need a Spotify Premium
+        account linked to your ListenBrainz account.
         <br />
         Please try to{" "}
         <a href="/profile/connect-spotify" target="_blank">
