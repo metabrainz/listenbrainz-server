@@ -199,7 +199,7 @@ def create_pairs():
                                      JOIN release rl ON rl.id = m.release
                                      JOIN mapping.tmp_recording_pair_releases rpr ON rl.id = rpr.release
                                RIGHT JOIN release_country rc ON rc.release = rl.id
-                                    GROUP BY rpr.id, ac.id, rl.id, artist_credit_name, r.id, r.name, release_name
+                                    GROUP BY rpr.id, ac.id, rl.id, artist_credit_name, r.id, r.name, release_name, year
                                     ORDER BY ac.id, rpr.id""")
                 log("Create pairs: Insert rows into DB.")
                 while True:
