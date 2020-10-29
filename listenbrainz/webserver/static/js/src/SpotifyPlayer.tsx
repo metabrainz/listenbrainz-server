@@ -94,10 +94,6 @@ export default class SpotifyPlayer
       const spotifyPlayerSDKLib = require("../lib/spotify-player-sdk-1.7.1"); // eslint-disable-line global-require
     } else {
       this.handleAccountError();
-      props.onInvalidateDataSource(
-        this,
-        "Permission to play songs not granted"
-      );
     }
   }
 
