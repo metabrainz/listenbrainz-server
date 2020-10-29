@@ -350,7 +350,7 @@ class TimescaleListenStore(ListenStore):
 
         query = """SELECT listened_at, track_name, user_name, created, data
                      FROM listen
-                    WHERE created > :start_ts
+                    WHERE created >= :start_ts
                       AND created <= :end_ts
                  ORDER BY created ASC"""
 
@@ -458,8 +458,7 @@ class TimescaleListenStore(ListenStore):
                 query, args = self.get_listens_query_for_dump(int(start_time.strftime('%s')),
                                                               int(end_time.strftime('%s')))
             else:
-                query, args = self.get_incremental_listens_query(int(start_time.strftime('%s')),
-                                                                 int(end_time.strftime('%s')))
+                query, args = self.get_incremental_listens_query(start_time, end_time)
 
             rows_added = 0
             with timescale.engine.connect() as connection:
