@@ -29,6 +29,18 @@ const props = {
 };
 
 describe("SpotifyPlayer", () => {
+  const permissionsErrorMessage = (
+    <p>
+      In order to play music with Spotify, you will need a Spotify Premium
+      account linked to your ListenBrainz account.
+      <br />
+      Please try to{" "}
+      <a href="/profile/connect-spotify" target="_blank">
+        link for &quot;playing music&quot; feature
+      </a>{" "}
+      and refresh this page
+    </p>
+  );
   it("renders", () => {
     window.fetch = jest.fn();
     const wrapper = mount(<SpotifyPlayer {...props} />);
@@ -73,21 +85,9 @@ describe("SpotifyPlayer", () => {
       );
       const wrapper = shallow<SpotifyPlayer>(<SpotifyPlayer {...mockProps} />);
       const instance = wrapper.instance();
-      const errorMsg = (
-        <p>
-          In order to play music with Spotify, you will need a Spotify Premium
-          account linked to your ListenBrainz account.
-          <br />
-          Please try to{" "}
-          <a href="/profile/connect-spotify" target="_blank">
-            link for &quot;playing music&quot; feature
-          </a>{" "}
-          and refresh this page
-        </p>
-      );
       expect(instance.props.onInvalidateDataSource).toHaveBeenCalledWith(
         instance,
-        errorMsg
+        permissionsErrorMessage
       );
     });
 
@@ -105,7 +105,7 @@ describe("SpotifyPlayer", () => {
       expect(instance.props.onInvalidateDataSource).toHaveBeenCalledTimes(1);
       expect(instance.props.onInvalidateDataSource).toHaveBeenCalledWith(
         instance,
-        "Permission to play songs not granted"
+        permissionsErrorMessage
       );
     });
     it("should not call onInvalidateDataSource if permissions are accurate", async () => {
@@ -147,21 +147,9 @@ describe("SpotifyPlayer", () => {
 
       instance.handleAccountError();
       expect(instance.props.onInvalidateDataSource).toHaveBeenCalledTimes(1);
-      const errorMsg = (
-        <p>
-          In order to play music with Spotify, you will need a Spotify Premium
-          account linked to your ListenBrainz account.
-          <br />
-          Please try to{" "}
-          <a href="/profile/connect-spotify" target="_blank">
-            link for &quot;playing music&quot; feature
-          </a>{" "}
-          and refresh this page
-        </p>
-      );
       expect(instance.props.onInvalidateDataSource).toHaveBeenCalledWith(
         instance,
-        errorMsg
+        permissionsErrorMessage
       );
     });
   });
