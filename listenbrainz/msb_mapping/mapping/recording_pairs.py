@@ -39,7 +39,8 @@ def create_tables(mb_conn):
                                          artist_credit_name        TEXT NOT NULL,
                                          artist_credit_id          INTEGER NOT NULL,
                                          release_name              TEXT NOT NULL,
-                                         release_id                INTEGER NOT NULL)""")
+                                         release_id                INTEGER NOT NULL,
+                                         year                      INTEGER)""")
             curs.execute("DROP TABLE IF EXISTS mapping.tmp_recording_pair_releases")
             curs.execute("""CREATE TABLE mapping.tmp_recording_pair_releases (
                                             id      SERIAL,
@@ -188,7 +189,8 @@ def create_pairs():
                                           ac.id AS artist_credit_id,
                                           lower(musicbrainz.musicbrainz_unaccent(rl.name)) AS release_name,
                                           rl.id as release_id,
-                                          rpr.id
+                                          rpr.id,
+                                          date_year AS year
                                      FROM recording r
                                      JOIN artist_credit ac ON r.artist_credit = ac.id
                                      JOIN artist_credit_name acn ON ac.id = acn.artist_credit
@@ -196,6 +198,7 @@ def create_pairs():
                                      JOIN medium m ON m.id = t.medium
                                      JOIN release rl ON rl.id = m.release
                                      JOIN mapping.tmp_recording_pair_releases rpr ON rl.id = rpr.release
+                               RIGHT JOIN release_country rc ON rc.release = rl.id
                                     GROUP BY rpr.id, ac.id, rl.id, artist_credit_name, r.id, r.name, release_name
                                     ORDER BY ac.id, rpr.id""")
                 log("Create pairs: Insert rows into DB.")
