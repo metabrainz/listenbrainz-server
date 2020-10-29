@@ -5,10 +5,16 @@ import {
   faMeh,
   faSmileBeam,
   faGrinStars,
-  faThumbsUp,
 } from "@fortawesome/free-solid-svg-icons";
 
-import { faThumbsUp as faThumbsUpRegular } from "@fortawesome/free-regular-svg-icons";
+import {
+  faThumbsUp as faThumbsUpRegular,
+  faAngry as faAngryRegular,
+  faFrown as faFrownRegular,
+  faMeh as faMehRegular,
+  faSmileBeam as faSmileBeamRegular,
+  faGrinStars as faGrinStarsRegular,
+} from "@fortawesome/free-regular-svg-icons";
 
 import { get as _get } from "lodash";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
@@ -75,7 +81,7 @@ export default class RecommendationCard extends React.Component<
       if (currentFeedback === "hate") {
         this.setState({
           icon: faAngry,
-          text: "Hate",
+          text: "hate",
         });
       } else if (currentFeedback === "dislike") {
         this.setState({
@@ -234,56 +240,64 @@ export default class RecommendationCard extends React.Component<
                 aria-labelledby="recommendationControlsDropdown"
               >
                 <RecommendationControl
-                  icon={faAngry}
+                  iconHover={faAngry}
+                  iconNonHover={faAngryRegular}
                   title="I never want to hear this again!"
                   action={() =>
                     feedback === "hate"
                       ? this.deleteFeedback("Like", faThumbsUpRegular)
                       : this.submitFeedback("hate", faAngry, "hate")
                   }
-                  className={`${feedback === "hate" ? " angry" : ""}`}
+                  classNameHover="on"
+                  classNameNonHover="off"
                 />
                 <RecommendationControl
-                  icon={faFrown}
+                  iconHover={faFrown}
+                  iconNonHover={faFrownRegular}
                   title="I don't like this!"
                   action={() =>
                     feedback === "dislike"
                       ? this.deleteFeedback("Like", faThumbsUpRegular)
                       : this.submitFeedback("dislike", faFrown, "dislike")
                   }
-                  className={`${feedback === "dislike" ? " frown" : ""}`}
+                  classNameHover="on"
+                  classNameNonHover="off"
                 />
                 <RecommendationControl
-                  icon={faMeh}
+                  iconHover={faMeh}
+                  iconNonHover={faMehRegular}
                   title="This is a bad recommendation!"
                   action={() =>
                     feedback === "bad_recommendation"
                       ? this.deleteFeedback("Like", faThumbsUpRegular)
                       : this.submitFeedback("bad_recommendation", faMeh, "bad")
                   }
-                  className={`${
-                    feedback === "bad_recommendation" ? " meh" : ""
-                  }`}
+                  classNameHover="on"
+                  classNameNonHover="off"
                 />
                 <RecommendationControl
-                  icon={faSmileBeam}
+                  iconHover={faSmileBeam}
+                  iconNonHover={faSmileBeamRegular}
                   title="I like this!"
                   action={() =>
                     feedback === "like"
                       ? this.deleteFeedback("Like", faThumbsUpRegular)
                       : this.submitFeedback("like", faSmileBeam, "like")
                   }
-                  className={`${feedback === "like" ? " smile" : ""}`}
+                  classNameHover="on"
+                  classNameNonHover="off"
                 />
                 <RecommendationControl
-                  icon={faGrinStars}
+                  iconHover={faGrinStars}
+                  iconNonHover={faGrinStarsRegular}
                   title="I really love this!"
                   action={() =>
                     feedback === "love"
                       ? this.deleteFeedback("Like", faThumbsUpRegular)
                       : this.submitFeedback("love", faGrinStars, "love")
                   }
-                  className={`${feedback === "love" ? " grin" : ""}`}
+                  classNameHover="on"
+                  classNameNonHover="off"
                 />
               </ul>
             </>

@@ -59,10 +59,12 @@
 
         .btn {
           font-size: 18px;
+          color: black;
           background-color: white;
 
           &:hover {
             background-color: grey;
+            color: white;
           }
         }
 
@@ -72,80 +74,40 @@
           flex: 1;
           text-align: center;
           margin: 0 0.4em;
+
+        }
+
+        .recommendation-icon:hover .off,
+        .recommendation-icon .on {
+          display: none;
+        }
+        .recommendation-icon:hover .on {
+          display: inline;
         }
 
         .fa-angry {
-          color: transparent;
-          stroke: #C62828;
-
-          &:hover {
-            color: #C62828;
-          }
-
-          &.angry {
-            stroke: transparent;
-            color: #C62828;
-          }
+          color: #C62828;
 
         }
 
         .fa-frown {
-          color: transparent;
-          stroke: #960a96;
-
-          &:hover {
-            color: #960a96;
-          }
-
-          &.frown {
-            stroke: transparent;
-            color: #960a96;
-          }
+          color: #960a96;
 
         }
 
         .fa-meh {
-          color: transparent;
-          stroke: #c9c90f;
-
-          &:hover {
-            color: #c9c90f;
-          }
-
-          &.meh {
-            stroke: transparent;
-            color: #c9c90f;
-          }
+          color:#c9c90f;
 
         }
 
         .fa-smile-beam {
-          color: transparent;
-          stroke: #99e852;
-
-          &:hover {
-            color: #99e852;
-          }
-
-          &.smile {
-            stroke: transparent;
-            color: #99e852;
-          }
+          color: #99e852;
 
         }
 
         .fa-grin-stars {
-          color: transparent;
-          stroke: #3a7306;
+          color: #3a7306;
 
-          &:hover {
-            color: #3a7306;
-          }
-
-          &.grin {
-            stroke: transparent;
-            color: #3a7306;
-          }
         }
 
       }
