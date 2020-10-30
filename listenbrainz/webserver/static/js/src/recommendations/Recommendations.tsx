@@ -67,13 +67,16 @@ export default class Recommendations extends React.Component<
 
   componentDidMount(): void {
     const { user, currentUser } = this.props;
+    const { currRecPage } = this.state;
     if (currentUser?.name === user?.name) {
       this.loadFeedback();
     }
+    window.history.replaceState(null, "", `?page=${currRecPage}`);
   }
 
   getFeedback = async () => {
-    const { user, recommendations } = this.props;
+    const { recommendations } = this.state;
+    const { user } = this.props;
     const recordings: string[] = [];
 
     if (recommendations) {
@@ -185,6 +188,7 @@ export default class Recommendations extends React.Component<
     if (currRecPage && currRecPage > 1) {
       this.setState({ loading: true });
       const offset = (currRecPage - 1) * this.expectedRecommendationsPerPage;
+      const updatedRecPage = currRecPage - 1;
       this.setState(
         {
           recommendations:
@@ -192,11 +196,11 @@ export default class Recommendations extends React.Component<
               offset - this.expectedRecommendationsPerPage,
               offset
             ) || [],
-          currRecPage: currRecPage - 1,
+          currRecPage: updatedRecPage,
         },
         this.afterRecommendationsDisplay
       );
-      window.history.pushState(null, "", `?page=${currRecPage}`);
+      window.history.pushState(null, "", `?page=${updatedRecPage}`);
     }
   };
 
@@ -207,6 +211,7 @@ export default class Recommendations extends React.Component<
     if (currRecPage && currRecPage < totalRecPages) {
       this.setState({ loading: true });
       const offset = currRecPage * this.expectedRecommendationsPerPage;
+      const updatedRecPage = currRecPage + 1;
       this.setState(
         {
           recommendations:
@@ -214,11 +219,11 @@ export default class Recommendations extends React.Component<
               offset,
               offset + this.expectedRecommendationsPerPage
             ) || [],
-          currRecPage: currRecPage + 1,
+          currRecPage: updatedRecPage,
         },
         this.afterRecommendationsDisplay
       );
-      window.history.pushState(null, "", `?page=${currRecPage}`);
+      window.history.pushState(null, "", `?page=${updatedRecPage}`);
     }
   };
 
@@ -230,6 +235,7 @@ export default class Recommendations extends React.Component<
   };
 
   afterRecommendationsDisplay() {
+    this.loadFeedback();
     if (this.recommendationsTable?.current) {
       this.recommendationsTable.current.scrollIntoView({ behavior: "smooth" });
     }

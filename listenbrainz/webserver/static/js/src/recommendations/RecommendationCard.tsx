@@ -18,6 +18,7 @@ import {
 
 import { get as _get } from "lodash";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { IconDefinition } from "@fortawesome/fontawesome-common-types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import RecommendationControl from "./RecommendationControl";
 
@@ -46,6 +47,8 @@ export type RecommendationCardProps = {
 
 type RecommendationCardState = {
   feedback: RecommendationFeedBack | null;
+  icon: IconDefinition;
+  text: string;
 };
 
 export default class RecommendationCard extends React.Component<
@@ -74,10 +77,7 @@ export default class RecommendationCard extends React.Component<
     );
   }
 
-  componentDidUpdate(
-    prevProps: RecommendationCardProps,
-    prevState: RecommendationCardState
-  ) {
+  componentDidUpdate(prevProps: RecommendationCardProps) {
     const { currentFeedback } = this.props;
     if (currentFeedback !== prevProps.currentFeedback) {
       this.setState({ feedback: currentFeedback });
@@ -117,8 +117,8 @@ export default class RecommendationCard extends React.Component<
 
   submitFeedback = async (
     rating: RecommendationFeedBack,
-    iconToSet,
-    textToSet
+    iconToSet: IconDefinition,
+    textToSet: string
   ) => {
     const {
       recommendation,
