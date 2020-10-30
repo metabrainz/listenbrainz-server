@@ -74,8 +74,15 @@ export default class RecommendationCard extends React.Component<
     );
   }
 
-  componentDidUpdate(prevProps: RecommendationCardProps) {
+  componentDidUpdate(
+    prevProps: RecommendationCardProps,
+    prevState: RecommendationCardState
+  ) {
     const { currentFeedback } = this.props;
+    console.log("currentFeedback");
+    console.log(currentFeedback);
+    console.log("prevProps.currentFeedback");
+    console.log(prevProps.currentFeedback);
     if (currentFeedback !== prevProps.currentFeedback) {
       this.setState({ feedback: currentFeedback });
       if (currentFeedback === "hate") {
@@ -151,7 +158,7 @@ export default class RecommendationCard extends React.Component<
     }
   };
 
-  deleteFeedback = async (textToSet, iconToSet) => {
+  deleteFeedback = async () => {
     const {
       recommendation,
       currentUser,
@@ -173,8 +180,8 @@ export default class RecommendationCard extends React.Component<
           updateFeedback(recordingMBID, null);
         }
         this.setState({
-          icon: iconToSet,
-          text: textToSet,
+          icon: faThumbsUpRegular,
+          text: "Like",
         });
       } catch (error) {
         this.handleError(
@@ -226,7 +233,19 @@ export default class RecommendationCard extends React.Component<
           <div className="recommendation-controls">
             <>
               <button
-                className="btn"
+                className={`btn ${
+                  icon === faAngry
+                    ? "hate"
+                    : icon === faFrown
+                    ? "dislike"
+                    : icon === faMeh
+                    ? "bad"
+                    : icon === faSmileBeam
+                    ? "like"
+                    : icon === faGrinStars
+                    ? "love"
+                    : ""
+                }`}
                 id="recommendationControlsDropdown"
                 data-toggle="dropdown"
                 aria-haspopup="true"
@@ -241,63 +260,58 @@ export default class RecommendationCard extends React.Component<
               >
                 <RecommendationControl
                   iconHover={faAngry}
-                  iconNonHover={faAngryRegular}
+                  icon={faAngryRegular}
                   title="I never want to hear this again!"
                   action={() =>
                     feedback === "hate"
-                      ? this.deleteFeedback("Like", faThumbsUpRegular)
+                      ? this.deleteFeedback()
                       : this.submitFeedback("hate", faAngry, "hate")
                   }
-                  classNameHover="on"
-                  classNameNonHover="off"
+                  selected={feedback === "hate"}
                 />
                 <RecommendationControl
                   iconHover={faFrown}
-                  iconNonHover={faFrownRegular}
+                  icon={faFrownRegular}
                   title="I don't like this!"
                   action={() =>
                     feedback === "dislike"
-                      ? this.deleteFeedback("Like", faThumbsUpRegular)
+                      ? this.deleteFeedback()
                       : this.submitFeedback("dislike", faFrown, "dislike")
                   }
-                  classNameHover="on"
-                  classNameNonHover="off"
+                  selected={feedback === "dislike"}
                 />
                 <RecommendationControl
                   iconHover={faMeh}
-                  iconNonHover={faMehRegular}
+                  icon={faMehRegular}
                   title="This is a bad recommendation!"
                   action={() =>
                     feedback === "bad_recommendation"
-                      ? this.deleteFeedback("Like", faThumbsUpRegular)
+                      ? this.deleteFeedback()
                       : this.submitFeedback("bad_recommendation", faMeh, "bad")
                   }
-                  classNameHover="on"
-                  classNameNonHover="off"
+                  selected={feedback === "bad_recommendation"}
                 />
                 <RecommendationControl
                   iconHover={faSmileBeam}
-                  iconNonHover={faSmileBeamRegular}
+                  icon={faSmileBeamRegular}
                   title="I like this!"
                   action={() =>
                     feedback === "like"
-                      ? this.deleteFeedback("Like", faThumbsUpRegular)
+                      ? this.deleteFeedback()
                       : this.submitFeedback("like", faSmileBeam, "like")
                   }
-                  classNameHover="on"
-                  classNameNonHover="off"
+                  selected={feedback === "like"}
                 />
                 <RecommendationControl
                   iconHover={faGrinStars}
-                  iconNonHover={faGrinStarsRegular}
+                  icon={faGrinStarsRegular}
                   title="I really love this!"
                   action={() =>
                     feedback === "love"
-                      ? this.deleteFeedback("Like", faThumbsUpRegular)
+                      ? this.deleteFeedback()
                       : this.submitFeedback("love", faGrinStars, "love")
                   }
-                  classNameHover="on"
-                  classNameNonHover="off"
+                  selected={feedback === "love"}
                 />
               </ul>
             </>

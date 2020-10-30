@@ -5,36 +5,28 @@ import { IconDefinition } from "@fortawesome/fontawesome-common-types"; // eslin
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 
 export type RecommendationControlProps = {
-  classNameHover?: string;
-  classNameNonHover?: string;
+  selected?: Boolean;
   action?: (event: React.SyntheticEvent) => void;
   iconHover?: IconDefinition;
-  iconNonHover?: IconDefinition;
+  icon?: IconDefinition;
   title: string;
 };
 
 const RecommendationControl = (props: RecommendationControlProps) => {
-  const {
-    classNameHover,
-    iconHover,
-    classNameNonHover,
-    iconNonHover,
-    action,
-    title,
-  } = props;
+  const { iconHover, icon, action, title, selected } = props;
   return (
-    <div className="recommendation-icon" title={title} onClick={action}>
-      <span>
-        <FontAwesomeIcon
-          icon={iconHover as IconProp}
-          className={classNameHover}
-        />
+    <div
+      className={`recommendation-icon ${selected ? "selected" : ""}`}
+      title={title}
+      onClick={action}
+      onKeyPress={action}
+      role="button"
+    >
+      <span className="on">
+        <FontAwesomeIcon icon={iconHover as IconProp} />
       </span>
-      <span>
-        <FontAwesomeIcon
-          icon={iconNonHover as IconProp}
-          className={classNameNonHover}
-        />
+      <span className="off">
+        <FontAwesomeIcon icon={icon as IconProp} />
       </span>
     </div>
   );

@@ -1,3 +1,5 @@
+@import "theme/theme.less";
+
 #recommendations {
   &:extend(#listens);
   padding: 10px;
@@ -59,16 +61,36 @@
 
         .btn {
           font-size: 18px;
-          color: black;
+          color: @blue;
           background-color: white;
 
+          &.hate {
+            color: #C62828;
+          }
+
+          &.dislike {
+            color: #f5873d;
+          }
+
+          &.bad {
+            color: #ebbf0b;
+          }
+
+          &.like {
+            color: #b0e111;
+          }
+
+          &.love {
+            color: #32cd32;
+          }
+
           &:hover {
-            background-color: grey;
+            background-color: @blue;
             color: white;
           }
         }
 
-        .fa-angry, .fa-frown, .fa-meh, .fa-smile-beam, .fa-grin-stars {
+        .fa-angry, .fa-frown, .fa-meh, .fa-smile-beam, .fa-grin-stars, .fa-thumbs-up {
           stroke-width: 40px;
           font-size: 18px;
           flex: 1;
@@ -78,10 +100,12 @@
         }
 
         .recommendation-icon:hover .off,
+        .recommendation-icon.selected .off,
         .recommendation-icon .on {
           display: none;
         }
-        .recommendation-icon:hover .on {
+        .recommendation-icon:hover .on,
+        .recommendation-icon.selected .on {
           display: inline;
         }
 
@@ -91,22 +115,22 @@
         }
 
         .fa-frown {
-          color: #960a96;
+          color: #f5873d;
 
         }
 
         .fa-meh {
-          color:#c9c90f;
+          color: #ebbf0b;
 
         }
 
         .fa-smile-beam {
-          color: #99e852;
+          color: #b0e111;
 
         }
 
         .fa-grin-stars {
-          color: #3a7306;
+          color: #32cd32;
 
         }
 
