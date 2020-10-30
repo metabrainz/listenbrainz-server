@@ -79,10 +79,6 @@ export default class RecommendationCard extends React.Component<
     prevState: RecommendationCardState
   ) {
     const { currentFeedback } = this.props;
-    console.log("currentFeedback");
-    console.log(currentFeedback);
-    console.log("prevProps.currentFeedback");
-    console.log(prevProps.currentFeedback);
     if (currentFeedback !== prevProps.currentFeedback) {
       this.setState({ feedback: currentFeedback });
       if (currentFeedback === "hate") {
