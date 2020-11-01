@@ -1,7 +1,7 @@
 import * as timeago from "time-ago";
 
 import * as React from "react";
-import { get as _get, isNil as _isNil, isString as _isString } from "lodash";
+import { get as _get } from "lodash";
 import MediaQuery from "react-responsive";
 import {
   faMusic,
@@ -130,7 +130,7 @@ export default class ListenCard extends React.Component<
     }
   };
 
-  handleError = (error: ErrorForAlert, title?: string): void => {
+  handleError = (error: string | Error, title?: string): void => {
     const { newAlert } = this.props;
     if (!error) {
       return;
@@ -138,11 +138,7 @@ export default class ListenCard extends React.Component<
     newAlert(
       "danger",
       title || "Error",
-      _isString(error)
-        ? error
-        : `${!_isNil(error.status) && `Error ${error.status}:`} ${
-            error.message || error.statusText
-          }`
+      typeof error === "object" ? error.message : error
     );
   };
 
