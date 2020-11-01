@@ -136,7 +136,7 @@ def save_dataframe_metadata_to_hdfs(metadata):
 
     try:
         # Append the dataframe to existing dataframe if already exists or create a new one.
-        utils.append(dataframe_metadata, path.DATAFRAME_METADATA)
+        utils.append(dataframe_metadata, path.RECOMMENDATION_RECORDING_DATAFRAME_METADATA)
     except DataFrameNotAppendedException as err:
         current_app.logger.error(str(err), exc_info=True)
         raise
@@ -212,7 +212,7 @@ def save_playcounts_df(listens_df, recordings_df, users_df, metadata):
                               .agg(func.count('recording_id').alias('count'))
 
     metadata['playcounts_count'] = playcounts_df.count()
-    save_dataframe(playcounts_df, path.PLAYCOUNTS_DATAFRAME_PATH)
+    save_dataframe(playcounts_df, path.RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME)
 
 
 def get_listens_df(mapped_listens_df, metadata):
@@ -251,7 +251,7 @@ def get_recordings_df(mapped_listens_df, metadata):
                                      .withColumn('recording_id', rank().over(recording_window))
 
     metadata['recordings_count'] = recordings_df.count()
-    save_dataframe(recordings_df, path.RECORDINGS_DATAFRAME_PATH)
+    save_dataframe(recordings_df, path.RECOMMENDATION_RECORDINGS_DATAFRAME)
     return recordings_df
 
 
@@ -271,7 +271,7 @@ def get_users_dataframe(mapped_listens_df, metadata):
                                 .withColumn('user_id', rank().over(user_window))
 
     metadata['users_count'] = users_df.count()
-    save_dataframe(users_df, path.USERS_DATAFRAME_PATH)
+    save_dataframe(users_df, path.RECOMMENDATION_RECORDING_USERS_DATAFRAME)
     return users_df
 
 
@@ -365,7 +365,7 @@ def main(train_model_window=None):
     current_app.logger.info('Number of distinct rows in the mapping: {}'.format(msid_mbid_mapping_df.count()))
 
     current_app.logger.info('Mapping listens...')
-    mapped_listens_df = get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df)
+    mapped_listens_df = get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df, path.RECOMMENDATION_RECORDING_MAPPED_LISTENS)
     current_app.logger.info('Listen count after mapping: {}'.format(mapped_listens_df.count()))
 
     current_app.logger.info('Preparing users data and saving to HDFS...')

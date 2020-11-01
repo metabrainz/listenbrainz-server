@@ -16,7 +16,7 @@ class CreateDataframeTestCase(SparkTestCase):
     # path used in between test functions of this class
     listens_path = path.LISTENBRAINZ_DATA_DIRECTORY
     mapping_path = path.MBID_MSID_MAPPING
-    mapped_listens_path = path.MAPPED_LISTENS
+    mapped_listens_path = path.RECOMMENDATION_RECORDING_MAPPED_LISTENS
 
     @classmethod
     def setUpClass(cls):
@@ -38,7 +38,7 @@ class CreateDataframeTestCase(SparkTestCase):
         self.assertListEqual(sorted(self.get_users_df().columns), sorted(users_df.columns))
         self.assertEqual(metadata['users_count'], users_df.count())
 
-        status = utils.path_exists(path.USERS_DATAFRAME_PATH)
+        status = utils.path_exists(path.RECOMMENDATION_RECORDING_USERS_DATAFRAME)
         self.assertTrue(status)
 
     def test_get_recordings_dataframe(self):
@@ -49,7 +49,7 @@ class CreateDataframeTestCase(SparkTestCase):
         self.assertListEqual(sorted(self.get_recordings_df().columns), sorted(recordings_df.columns))
         self.assertEqual(metadata['recordings_count'], 3)
 
-        status = utils.path_exists(path.RECORDINGS_DATAFRAME_PATH)
+        status = utils.path_exists(path.RECOMMENDATION_RECORDINGS_DATAFRAME)
         self.assertTrue(status)
 
     def test_get_listens_df(self):
@@ -68,7 +68,7 @@ class CreateDataframeTestCase(SparkTestCase):
         listens_df = create_dataframes.get_listens_df(mapped_listens, {})
 
         create_dataframes.save_playcounts_df(listens_df, recordings_df, users_df, metadata)
-        playcounts_df = utils.read_files_from_HDFS(path.PLAYCOUNTS_DATAFRAME_PATH)
+        playcounts_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME)
         self.assertEqual(playcounts_df.count(), 5)
 
         self.assertListEqual(['user_id', 'recording_id', 'count'], playcounts_df.columns)
@@ -79,10 +79,10 @@ class CreateDataframeTestCase(SparkTestCase):
         metadata = self.get_dataframe_metadata(df_id)
         create_dataframes.save_dataframe_metadata_to_hdfs(metadata)
 
-        status = utils.path_exists(path.DATAFRAME_METADATA)
+        status = utils.path_exists(path.RECOMMENDATION_RECORDING_DATAFRAME_METADATA)
         self.assertTrue(status)
 
-        df = utils.read_files_from_HDFS(path.DATAFRAME_METADATA)
+        df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_DATAFRAME_METADATA)
         self.assertTrue(sorted(df.columns), sorted(schema.dataframe_metadata_schema.fieldNames()))
 
     def test_get_data_missing_from_musicbrainz(self):

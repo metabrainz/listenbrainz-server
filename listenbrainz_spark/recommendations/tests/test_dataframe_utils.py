@@ -55,8 +55,9 @@ class DataframeUtilsTestCase(SparkTestCase):
 
         df = utils.read_files_from_HDFS(self.mapping_path)
         mapping_df = mapping_utils.get_unique_rows_from_mapping(df)
+        mapped_listens_path = '/mapped_listens.parquet'
 
-        mapped_listens = dataframe_utils.get_mapped_artist_and_recording_mbids(partial_listen_df, mapping_df)
+        mapped_listens = dataframe_utils.get_mapped_artist_and_recording_mbids(partial_listen_df, mapping_df, mapped_listens_path)
         self.assertEqual(mapped_listens.count(), 8)
 
         cols = [
@@ -71,7 +72,7 @@ class DataframeUtilsTestCase(SparkTestCase):
         ]
 
         self.assertListEqual(sorted(cols), sorted(mapped_listens.columns))
-        status = utils.path_exists(path.MAPPED_LISTENS)
+        status = utils.path_exists(mapped_listens_path)
         self.assertTrue(status)
 
     def test_save_dataframe(self):

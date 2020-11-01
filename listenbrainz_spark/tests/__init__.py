@@ -205,5 +205,4 @@ class SparkTestCase(unittest.TestCase):
         df = utils.read_files_from_HDFS(mapping_path)
         mapping_df = mapping_utils.get_unique_rows_from_mapping(df)
 
-        mapped_listens = dataframe_utils.get_mapped_artist_and_recording_mbids(partial_listen_df, mapping_df)
-        utils.save_parquet(mapped_listens, mapped_listens_path)
+        _ = dataframe_utils.get_mapped_artist_and_recording_mbids(partial_listen_df, mapping_df, mapped_listens_path)
