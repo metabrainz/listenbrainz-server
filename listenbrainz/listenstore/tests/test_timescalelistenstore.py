@@ -74,9 +74,7 @@ class TestTimescaleListenStore(DatabaseTestCase):
         return len(test_data)
 
     def _insert_with_created(self, listens):
-        """
-            Insert a batch of listens. Returns a list of (listened_at, track_name, user_name) that indicates
-            which rows were inserted into the DB. If the row is not listed in the return values, it was a duplicate.
+        """ Insert a batch of listens with 'created' field.
         """
         submit = []
         for listen in listens:
@@ -288,12 +286,11 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.reset_timescale_db()
         self.logstore.import_listens_dump(dump_location)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=base + 11)
-        self.assertEqual(len(listens), 5)
+        self.assertEqual(len(listens), 4)
         self.assertEqual(listens[0].ts_since_epoch, base + 5)
         self.assertEqual(listens[1].ts_since_epoch, base + 4)
         self.assertEqual(listens[2].ts_since_epoch, base + 3)
         self.assertEqual(listens[3].ts_since_epoch, base + 2)
-        self.assertEqual(listens[4].ts_since_epoch, base + 1)
 
         shutil.rmtree(temp_dir)
 

@@ -350,7 +350,7 @@ class TimescaleListenStore(ListenStore):
 
         query = """SELECT listened_at, track_name, user_name, created, data
                      FROM listen
-                    WHERE created >= :start_ts
+                    WHERE created > :start_ts
                       AND created <= :end_ts
                  ORDER BY created ASC"""
 
