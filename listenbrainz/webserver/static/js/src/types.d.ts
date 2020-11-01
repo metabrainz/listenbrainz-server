@@ -127,7 +127,7 @@ declare type Alert = {
 };
 
 // Expect either a string or an Error or an html Response object
-declare type ErrorForAlert =
+declare type BrainzPlayerError =
   | string
   | { message?: string; status?: number; statusText?: string };
 

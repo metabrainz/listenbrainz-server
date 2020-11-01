@@ -19,7 +19,7 @@ const props = {
   onTrackInfoChange: (title: string, artist?: string) => {},
   onTrackEnd: () => {},
   onTrackNotFound: () => {},
-  handleError: (error: ErrorForAlert, title?: string) => {},
+  handleError: (error: BrainzPlayerError, title?: string) => {},
   handleWarning: (message: string | JSX.Element, title?: string) => {},
   handleSuccess: (message: string | JSX.Element, title?: string) => {},
   onInvalidateDataSource: (

@@ -29,7 +29,7 @@ export type DataSourceProps = {
   onTrackInfoChange: (title: string, artist?: string) => void;
   onTrackEnd: () => void;
   onTrackNotFound: () => void;
-  handleError: (error: ErrorForAlert, title?: string) => void;
+  handleError: (error: BrainzPlayerError, title?: string) => void;
   handleWarning: (message: string | JSX.Element, title?: string) => void;
   handleSuccess: (message: string | JSX.Element, title?: string) => void;
   onInvalidateDataSource: (
@@ -155,7 +155,7 @@ export default class BrainzPlayer extends React.Component<
     this.playListen(nextListen);
   };
 
-  handleError = (error: ErrorForAlert, title?: string): void => {
+  handleError = (error: BrainzPlayerError, title?: string): void => {
     const { newAlert } = this.props;
     if (!error) {
       return;
