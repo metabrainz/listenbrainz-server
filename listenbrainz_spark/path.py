@@ -33,8 +33,12 @@ RECOMMENDATION_RECORDINGS_DATAFRAME = RECOMMENDATION_RECORDING_DATAFRAME_DIR + '
 # Absolute path to processed data/listens ready to be trained for `recording` recommendations.
 RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME = RECOMMENDATION_RECORDING_DATAFRAME_DIR + '/' + 'playcounts_df.parquet'
 # Absolute path to candidate sets used in `recording` recommendations.
-RECOMMENDATION_RECORDING_TOP_ARTIST_CANDIDATE_SET = os.path.join(RECOMMENDATION_RECORDING_CANDIDATE_SET_DIR, 'top_artist', 'top_artist.parquet')
-RECOMMENDATION_RECORDING_SIMILAR_ARTIST_CANDIDATE_SET = os.path.join(RECOMMENDATION_RECORDING_CANDIDATE_SET_DIR, 'similar_artist', 'similar_artist.parquet')
+RECOMMENDATION_RECORDING_TOP_ARTIST_CANDIDATE_SET = os.path.join(RECOMMENDATION_RECORDING_CANDIDATE_SET_DIR,
+                                                                'top_artist',
+                                                                'top_artist.parquet')
+RECOMMENDATION_RECORDING_SIMILAR_ARTIST_CANDIDATE_SET = os.path.join(RECOMMENDATION_RECORDING_CANDIDATE_SET_DIR,
+                                                                     'similar_artist',
+                                                                     'similar_artist.parquet')
 # Absolute path to model metadata.
 RECOMMENDATION_RECORDING_MODEL_METADATA = RECOMMENDATION_RECORDING_MODEL_DIR + '/' + 'model_metadata.parquet'
 # Absolute path to mapped listens.

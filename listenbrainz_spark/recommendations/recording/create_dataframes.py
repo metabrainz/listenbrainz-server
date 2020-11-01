@@ -365,7 +365,8 @@ def main(train_model_window=None):
     current_app.logger.info('Number of distinct rows in the mapping: {}'.format(msid_mbid_mapping_df.count()))
 
     current_app.logger.info('Mapping listens...')
-    mapped_listens_df = get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df, path.RECOMMENDATION_RECORDING_MAPPED_LISTENS)
+    mapped_listens_df = get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df,
+                                                              path.RECOMMENDATION_RECORDING_MAPPED_LISTENS)
     current_app.logger.info('Listen count after mapping: {}'.format(mapped_listens_df.count()))
 
     current_app.logger.info('Preparing users data and saving to HDFS...')

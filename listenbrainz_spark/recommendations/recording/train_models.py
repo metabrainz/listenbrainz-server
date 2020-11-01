@@ -112,7 +112,7 @@ def get_model_path(model_id):
             path to save or load model.
     """
 
-    return config.HDFS_CLUSTER_URI + path.RECOMMENDATION_RECORDING_DATA_DIR+ '/' + model_id
+    return config.HDFS_CLUSTER_URI + path.RECOMMENDATION_RECORDING_DATA_DIR + '/' + model_id
 
 
 def get_latest_dataframe_id(dataframe_metadata_df):
