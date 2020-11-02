@@ -75,8 +75,7 @@ export default class Recommendations extends React.Component<
   }
 
   getFeedback = async () => {
-    const { recommendations } = this.state;
-    const { user } = this.props;
+    const { user, recommendations } = this.props;
     const recordings: string[] = [];
 
     if (recommendations) {
@@ -235,7 +234,6 @@ export default class Recommendations extends React.Component<
   };
 
   afterRecommendationsDisplay() {
-    this.loadFeedback();
     if (this.recommendationsTable?.current) {
       this.recommendationsTable.current.scrollIntoView({ behavior: "smooth" });
     }

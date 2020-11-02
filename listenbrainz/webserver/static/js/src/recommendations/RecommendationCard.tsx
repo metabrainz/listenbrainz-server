@@ -45,27 +45,14 @@ export type RecommendationCardProps = {
   ) => void;
 };
 
-type RecommendationCardState = {
-  feedback: RecommendationFeedBack | null;
-  icon: IconDefinition;
-  text: string;
-};
-
 export default class RecommendationCard extends React.Component<
-  RecommendationCardProps,
-  RecommendationCardState
+  RecommendationCardProps
 > {
   APIService: APIService;
   playRecommendation: (recommendation: Recommendation) => void;
 
   constructor(props: RecommendationCardProps) {
     super(props);
-
-    this.state = {
-      feedback: props.currentFeedback || null,
-      icon: faThumbsUpRegular,
-      text: "Like",
-    };
 
     this.APIService = new APIService(
       props.apiUrl || `${window.location.origin}/1`
@@ -75,44 +62,6 @@ export default class RecommendationCard extends React.Component<
       this,
       props.recommendation
     );
-  }
-
-  componentDidUpdate(prevProps: RecommendationCardProps) {
-    const { currentFeedback } = this.props;
-    if (currentFeedback !== prevProps.currentFeedback) {
-      this.setState({ feedback: currentFeedback });
-      if (currentFeedback === "hate") {
-        this.setState({
-          icon: faAngry,
-          text: "hate",
-        });
-      } else if (currentFeedback === "dislike") {
-        this.setState({
-          icon: faFrown,
-          text: "dislike",
-        });
-      } else if (currentFeedback === "bad_recommendation") {
-        this.setState({
-          icon: faMeh,
-          text: "bad",
-        });
-      } else if (currentFeedback === "like") {
-        this.setState({
-          icon: faSmileBeam,
-          text: "like",
-        });
-      } else if (currentFeedback === "love") {
-        this.setState({
-          icon: faGrinStars,
-          text: "love",
-        });
-      } else {
-        this.setState({
-          icon: faThumbsUpRegular,
-          text: "Like",
-        });
-      }
-    }
   }
 
   submitFeedback = async (
@@ -200,8 +149,35 @@ export default class RecommendationCard extends React.Component<
   };
 
   render() {
-    const { recommendation, className } = this.props;
-    const { feedback, icon, text } = this.state;
+    const { currentFeedback, recommendation, className } = this.props;
+    let icon: IconDefinition;
+    let text: string;
+    switch (currentFeedback) {
+      case "hate":
+        icon = faAngry;
+        text = "hate";
+        break;
+      case "dislike":
+        icon = faFrown;
+        text = "dislike";
+        break;
+      case "bad_recommendation":
+        icon = faMeh;
+        text = "bad";
+        break;
+      case "like":
+        icon = faSmileBeam;
+        text = "like";
+        break;
+      case "love":
+        icon = faGrinStars;
+        text = "love";
+        break;
+      default:
+        icon = faThumbsUpRegular;
+        text = "Like";
+        break;
+    }
 
     return (
       <Card
@@ -229,19 +205,7 @@ export default class RecommendationCard extends React.Component<
           <div className="recommendation-controls">
             <>
               <button
-                className={`btn ${
-                  icon === faAngry
-                    ? "hate"
-                    : icon === faFrown
-                    ? "dislike"
-                    : icon === faMeh
-                    ? "bad"
-                    : icon === faSmileBeam
-                    ? "like"
-                    : icon === faGrinStars
-                    ? "love"
-                    : ""
-                }`}
+                className={`btn ${currentFeedback}`}
                 id="recommendationControlsDropdown"
                 data-toggle="dropdown"
                 aria-haspopup="true"
@@ -259,55 +223,55 @@ export default class RecommendationCard extends React.Component<
                   icon={faAngryRegular}
                   title="I never want to hear this again!"
                   action={() =>
-                    feedback === "hate"
+                    currentFeedback === "hate"
                       ? this.deleteFeedback()
                       : this.submitFeedback("hate", faAngry, "hate")
                   }
-                  selected={feedback === "hate"}
+                  selected={currentFeedback === "hate"}
                 />
                 <RecommendationControl
                   iconHover={faFrown}
                   icon={faFrownRegular}
                   title="I don't like this!"
                   action={() =>
-                    feedback === "dislike"
+                    currentFeedback === "dislike"
                       ? this.deleteFeedback()
                       : this.submitFeedback("dislike", faFrown, "dislike")
                   }
-                  selected={feedback === "dislike"}
+                  selected={currentFeedback === "dislike"}
                 />
                 <RecommendationControl
                   iconHover={faMeh}
                   icon={faMehRegular}
                   title="This is a bad recommendation!"
                   action={() =>
-                    feedback === "bad_recommendation"
+                    currentFeedback === "bad_recommendation"
                       ? this.deleteFeedback()
                       : this.submitFeedback("bad_recommendation", faMeh, "bad")
                   }
-                  selected={feedback === "bad_recommendation"}
+                  selected={currentFeedback === "bad_recommendation"}
                 />
                 <RecommendationControl
                   iconHover={faSmileBeam}
                   icon={faSmileBeamRegular}
                   title="I like this!"
                   action={() =>
-                    feedback === "like"
+                    currentFeedback === "like"
                       ? this.deleteFeedback()
                       : this.submitFeedback("like", faSmileBeam, "like")
                   }
-                  selected={feedback === "like"}
+                  selected={currentFeedback === "like"}
                 />
                 <RecommendationControl
                   iconHover={faGrinStars}
                   icon={faGrinStarsRegular}
                   title="I really love this!"
                   action={() =>
-                    feedback === "love"
+                    currentFeedback === "love"
                       ? this.deleteFeedback()
                       : this.submitFeedback("love", faGrinStars, "love")
                   }
-                  selected={feedback === "love"}
+                  selected={currentFeedback === "love"}
                 />
               </ul>
             </>
