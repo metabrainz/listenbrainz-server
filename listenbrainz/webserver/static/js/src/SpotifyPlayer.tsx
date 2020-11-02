@@ -149,7 +149,7 @@ export default class SpotifyPlayer
           this.handleAccountError();
           return;
         }
-        handleError(errorObject.message);
+        handleError(errorObject);
       });
   };
 
@@ -191,11 +191,11 @@ export default class SpotifyPlayer
           return;
         }
         if (!response.ok) {
-          handleError(response.statusText);
+          handleError(response);
         }
       })
       .catch((error) => {
-        handleError(error.message);
+        handleError(error);
       });
   };
 
@@ -238,8 +238,8 @@ export default class SpotifyPlayer
 
   togglePlay = (): void => {
     const { handleError } = this.props;
-    this.spotifyPlayer.togglePlay().catch((error: Error) => {
-      handleError(error.message);
+    this.spotifyPlayer.togglePlay().catch((error: Response) => {
+      handleError(error);
     });
   };
 
@@ -312,6 +312,21 @@ export default class SpotifyPlayer
     this.spotifyPlayer = null;
   };
 
+  handleSpotifyPlayerError = (error: {
+    status: number;
+    message: string;
+    reason: string;
+  }): void => {
+    const { handleError } = this.props;
+    handleError(
+      {
+        status: error.status,
+        message: `${error.reason} - ${error.message}`,
+      },
+      "Spotify player error"
+    );
+  };
+
   connectSpotifyPlayer = (callbackFunction?: () => void): void => {
     this.disconnectSpotifyPlayer();
 
@@ -332,10 +347,13 @@ export default class SpotifyPlayer
 
     const { handleError } = this.props;
     // Error handling
-    this.spotifyPlayer.on("initialization_error", handleError);
+    this.spotifyPlayer.on(
+      "initialization_error",
+      this.handleSpotifyPlayerError
+    );
     this.spotifyPlayer.on("authentication_error", this.handleTokenError);
     this.spotifyPlayer.on("account_error", this.handleAccountError);
-    this.spotifyPlayer.on("playback_error", handleError);
+    this.spotifyPlayer.on("playback_error", this.handleSpotifyPlayerError);
 
     this.spotifyPlayer.addListener("ready", () => {
       if (callbackFunction) {
@@ -372,18 +390,18 @@ export default class SpotifyPlayer
       )
       .then((response: Response) => {
         if (response.status === 202 || response.status === 204) {
-          // Failure, no response body.
+          // The request has succeeded but returns no message body
           return null;
         }
         return response.json().then((innerResponse) => {
           if (innerResponse.error) {
-            return handleError(innerResponse.error.message);
+            return handleError(innerResponse.error);
           }
           return this.handleSpotifyAPICurrentlyPlaying(innerResponse);
         });
       })
       .catch((error: Error) => {
-        handleError(error.message);
+        handleError(error);
       });
   };
 

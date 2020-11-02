@@ -90,7 +90,7 @@ export default class ListenCard extends React.Component<
           updateFeedback(recordingMSID, score);
         }
       } catch (error) {
-        this.handleError(`Error while submitting feedback - ${error.message}`);
+        this.handleError(error, "Error while submitting feedback");
       }
     }
   };
@@ -125,7 +125,7 @@ export default class ListenCard extends React.Component<
           }, 1000);
         }
       } catch (error) {
-        this.handleError(`Error while deleting listen - ${error.message}`);
+        this.handleError(error, "Error while deleting listen");
       }
     }
   };
