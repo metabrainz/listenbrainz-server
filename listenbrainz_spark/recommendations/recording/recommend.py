@@ -60,7 +60,7 @@ def get_most_recent_model_id():
             model_id (str): Model identification string.
     """
     try:
-        model_metadata = utils.read_files_from_HDFS(path.MODEL_METADATA)
+        model_metadata = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_MODEL_METADATA)
     except PathNotFoundException as err:
         current_app.logger.error(str(err), exc_info=True)
         raise
@@ -405,9 +405,9 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
         raise
 
     try:
-        recordings_df = utils.read_files_from_HDFS(path.RECORDINGS_DATAFRAME_PATH)
-        top_artist_candidate_set_df = utils.read_files_from_HDFS(path.TOP_ARTIST_CANDIDATE_SET)
-        similar_artist_candidate_set_df = utils.read_files_from_HDFS(path.SIMILAR_ARTIST_CANDIDATE_SET)
+        recordings_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDINGS_DATAFRAME)
+        top_artist_candidate_set_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_TOP_ARTIST_CANDIDATE_SET)
+        similar_artist_candidate_set_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_SIMILAR_ARTIST_CANDIDATE_SET)
     except PathNotFoundException as err:
         current_app.logger.error(str(err), exc_info=True)
         raise

@@ -72,7 +72,7 @@ class TrainModelsTestCase(SparkTestCase):
     def test_get_model_path(self):
         model_id = "a36d6fc9-49d0-4789-a7dd-a2b72369ca45"
         actual_path = train_models.get_model_path(model_id)
-        expected_path = config.HDFS_CLUSTER_URI + path.DATA_DIR + '/' + model_id
+        expected_path = config.HDFS_CLUSTER_URI + path.RECOMMENDATION_RECORDING_DATA_DIR + '/' + model_id
         self.assertEqual(actual_path, expected_path)
 
     def test_get_latest_dataframe_id(self):
@@ -148,10 +148,10 @@ class TrainModelsTestCase(SparkTestCase):
 
     def test_delete_model(self):
         df = utils.create_dataframe(Row(col1=1, col2=1), None)
-        utils.save_parquet(df, path.DATA_DIR)
+        utils.save_parquet(df, path.RECOMMENDATION_RECORDING_DATA_DIR)
         train_models.delete_model()
 
-        dir_exists = utils.path_exists(path.DATA_DIR)
+        dir_exists = utils.path_exists(path.RECOMMENDATION_RECORDING_DATA_DIR)
         self.assertFalse(dir_exists)
 
     def test_save_model_metadata_to_hdfs(self):
@@ -160,10 +160,10 @@ class TrainModelsTestCase(SparkTestCase):
 
         train_models.save_model_metadata_to_hdfs(metadata)
 
-        status = utils.path_exists(path.MODEL_METADATA)
+        status = utils.path_exists(path.RECOMMENDATION_RECORDING_MODEL_METADATA)
         self.assertTrue(status)
 
-        df = utils.read_files_from_HDFS(path.MODEL_METADATA)
+        df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_MODEL_METADATA)
         self.assertTrue(sorted(df.columns), sorted(schema.model_metadata_schema.fieldNames()))
 
     @patch('listenbrainz_spark.recommendations.recording.train_models.listenbrainz_spark')
