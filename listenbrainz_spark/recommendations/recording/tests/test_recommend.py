@@ -306,7 +306,7 @@ class RecommendTestClass(SparkTestCase):
                                       schema.model_metadata_schema)
 
         model_metadata = df_1.union(df_2)
-        utils.save_parquet(model_metadata, path.MODEL_METADATA)
+        utils.save_parquet(model_metadata, path.RECOMMENDATION_RECORDING_MODEL_METADATA)
 
         expected_model_id = recommend.get_most_recent_model_id()
         self.assertEqual(expected_model_id, model_id_2)

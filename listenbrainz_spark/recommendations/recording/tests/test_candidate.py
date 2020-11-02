@@ -17,7 +17,7 @@ class CandidateSetsTestClass(SparkTestCase):
     recommendation_generation_window = 7
     listens_path = path.LISTENBRAINZ_DATA_DIRECTORY
     mapping_path = path.MBID_MSID_MAPPING
-    mapped_listens_path = path.MAPPED_LISTENS
+    mapped_listens_path = path.RECOMMENDATION_RECORDING_MAPPED_LISTENS
     mapped_listens_subset_path = '/mapped/subset.parquet'
 
     @classmethod
@@ -282,10 +282,10 @@ class CandidateSetsTestClass(SparkTestCase):
         similar_artist_candidate_set_dfs_df = self.get_candidate_set()
 
         candidate_sets.save_candidate_sets(top_artist_candidate_set_df_df, similar_artist_candidate_set_dfs_df)
-        top_artist_exist = utils.path_exists(path.TOP_ARTIST_CANDIDATE_SET)
+        top_artist_exist = utils.path_exists(path.RECOMMENDATION_RECORDING_TOP_ARTIST_CANDIDATE_SET)
         self.assertTrue(top_artist_exist)
 
-        similar_artist_exist = utils.path_exists(path.SIMILAR_ARTIST_CANDIDATE_SET)
+        similar_artist_exist = utils.path_exists(path.RECOMMENDATION_RECORDING_SIMILAR_ARTIST_CANDIDATE_SET)
         self.assertTrue(top_artist_exist)
 
     def get_top_artist(self):
