@@ -600,8 +600,9 @@ export default class RecentListens extends React.Component<
       this.setState(
         {
           listens: newListens,
-          nextListenTs: newListens?.[newListens.length - 1]?.listened_at,
-          previousListenTs: newListens?.[0]?.listened_at,
+          nextListenTs:
+            newListens?.[newListens.length - 1]?.listened_at ?? nextListenTs,
+          previousListenTs: newListens?.[0]?.listened_at ?? previousListenTs,
         },
         this.checkListensRange.bind(this, newIncrement)
       );

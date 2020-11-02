@@ -978,6 +978,7 @@ describe("Pagination", () => {
       wrapper.setState({
         lastFetchedDirection: "older",
         nextListenTs: 1234567891,
+        // We're not expecting to see this ts as it will be updated by checkListensRange
         previousListenTs: 1234567881,
         listens: [],
       });
@@ -1006,7 +1007,7 @@ describe("Pagination", () => {
       expect(getListensForUserSpy).toHaveBeenNthCalledWith(
         2,
         user.name,
-        1234567881,
+        1586513524,
         undefined,
         25,
         6
