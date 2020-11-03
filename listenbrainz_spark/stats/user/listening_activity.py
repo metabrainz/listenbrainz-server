@@ -69,11 +69,10 @@ def get_listening_activity_week() -> Iterator[Optional[UserListeningActivityStat
     """ Calculate number of listens for an user on each day of the past and current week. """
     current_app.logger.debug("Calculating listening_activity_week")
 
-    date = get_latest_listen_ts()
-    to_date = date
-    # Set time to 00:00
-    to_date = datetime(to_date.year, to_date.month, to_date.day)
+    to_date = get_latest_listen_ts()
     from_date = offset_days(get_last_monday(to_date), 7)
+    # Set time to 00:00
+    from_date = datetime(from_date.year, from_date.month, from_date.day)
     day = from_date
 
     # Genarate a dataframe containing days of last and current week along with start and end time
@@ -100,10 +99,10 @@ def get_listening_activity_month() -> Iterator[Optional[UserListeningActivitySta
     current_app.logger.debug("Calculating listening_activity_month")
 
     to_date = get_latest_listen_ts()
-    # Set time to 00:00
-    to_date = datetime(to_date.year, to_date.month, to_date.day)
     from_date = offset_months(replace_days(to_date, 1), 1)
-    day = offset_months(replace_days(to_date, 1), 1)
+    # Set time to 00:00
+    from_date = datetime(from_date.year, from_date.month, from_date.day)
+    day = from_date
 
     # Genarate a dataframe containing days of last and current month along with start and end time
     time_range = []
