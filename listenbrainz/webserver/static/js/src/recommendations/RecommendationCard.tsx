@@ -144,23 +144,23 @@ export default class RecommendationCard extends React.Component<
     switch (currentFeedback) {
       case "hate":
         icon = faAngry;
-        text = "hate";
+        text = "Hate";
         break;
       case "dislike":
         icon = faFrown;
-        text = "dislike";
+        text = "Dislike";
         break;
       case "bad_recommendation":
         icon = faMeh;
-        text = "bad";
+        text = "Bad";
         break;
       case "like":
         icon = faSmileBeam;
-        text = "like";
+        text = "Like";
         break;
       case "love":
         icon = faGrinStars;
-        text = "love";
+        text = "Love";
         break;
       default:
         icon = faThumbsUpRegular;
