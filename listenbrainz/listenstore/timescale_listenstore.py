@@ -342,7 +342,7 @@ class TimescaleListenStore(ListenStore):
 
         return (query, args)
 
-    def get_incremental_listens_query_batch(self, start_time, end_time, offset):
+    def get_incremental_listens_query(self, start_time, end_time):
         """
             Get a query for a batch of listens for an incremental listen dump.
             This uses the `created` column to fetch listens.
@@ -352,18 +352,13 @@ class TimescaleListenStore(ListenStore):
                      FROM listen
                     WHERE created > :start_ts
                       AND created <= :end_ts
-                 ORDER BY created ASC
-                    LIMIT :limit
-                   OFFSET :offset"""
+                 ORDER BY created ASC"""
 
         args = {
             'start_ts': start_time,
             'end_ts': end_time,
-            'offset': offset,
-            'limit': DUMP_CHUNK_SIZE
         }
         return (query, args)
-
 
     def write_dump_metadata(self, archive_name, start_time, end_time, temp_dir, tar, full_dump=True):
         """ Write metadata files (schema version, timestamps, license) into the dump archive.
@@ -413,78 +408,13 @@ class TimescaleListenStore(ListenStore):
             self.log.error('Exception while adding dump metadata: %s', str(e), exc_info=True)
             raise
 
-
-    def write_incremental_listens_to_disk(self, listens, temp_dir):
-        """ Write all spark listens in year/month dir format to disk.
-
-        Args:
-            listens : the listens to be written into the disk
-            temp_dir: the dir into which listens should be written
-        """
-        for year in listens:
-            for month in listens[year]:
-                if year < 2002:
-                    directory = temp_dir
-                    filename = os.path.join(directory, 'invalid.json')
-                else:
-                    directory = os.path.join(temp_dir, str(year))
-                    filename = os.path.join(directory, '{}.json'.format(str(month)))
-                create_path(directory)
-                with open(filename, 'a') as f:
-                    f.write('\n'.join([ujson.dumps(listen) for listen in listens[year][month]]))
-                    f.write('\n')
-
-    def write_incremental_listens(self, start_time, end_time, temp_dir):
-        """ Dump listens in the format for the ListenBrainz dump.
-
-        Args:
-            start_time and end_time (datetime): the range of time for the listens dump.
-            temp_dir (str): the dir to use to write files before adding to archive
-        """
-        t0 = time.monotonic()
-        offset = 0
-        listen_count = 0
-
-        unwritten_listens = {}
-
-        while True:
-            query, args = self.get_incremental_listens_query_batch(start_time, end_time, offset)
-            rows_added = 0
-            with timescale.engine.connect() as connection:
-                curs = connection.execute(sqlalchemy.text(query), args)
-                while True:
-                    result = curs.fetchone()
-                    if not result:
-                        break
-
-                    listen = Listen.from_timescale(result[0], result[1], result[2], result[3], result[4]).to_json()
-                    timestamp = listen['timestamp']
-
-                    if timestamp.year not in unwritten_listens:
-                        unwritten_listens[timestamp.year] = {}
-                    if timestamp.month not in unwritten_listens[timestamp.year]:
-                        unwritten_listens[timestamp.year][timestamp.month] = []
-
-                    unwritten_listens[timestamp.year][timestamp.month].append(listen)
-                    rows_added += 1
-
-            if rows_added == 0:
-                break
-
-            listen_count += rows_added
-            offset += DUMP_CHUNK_SIZE
-
-        self.write_incremental_listens_to_disk(unwritten_listens, temp_dir)
-        self.log.info("%d listens dumped at %.2f listens / sec", listen_count,
-                      listen_count / (time.monotonic() - t0))
-
-
-    def write_listens(self, temp_dir, tar_file, archive_name, start_time_range = None, end_time_range = None):
+    def write_listens(self, temp_dir, tar_file, archive_name, start_time_range=None, end_time_range=None, full_dump=True):
         """ Dump listens in the format for the ListenBrainz dump.
 
         Args:
             end_time_range (datetime): the range of time for the listens dump.
             temp_dir (str): the dir to use to write files before adding to archive
+            full_dump (bool): the type of dump
         """
         t0 = time.monotonic()
         listen_count = 0
@@ -523,8 +453,12 @@ class TimescaleListenStore(ListenStore):
             except FileExistsError:
                 pass
 
-            query, args = self.get_listens_query_for_dump(int(start_time.strftime('%s')),
-                                                          int(end_time.strftime('%s')))
+            query, args = None, None
+            if full_dump:
+                query, args = self.get_listens_query_for_dump(int(start_time.strftime('%s')),
+                                                              int(end_time.strftime('%s')))
+            else:
+                query, args = self.get_incremental_listens_query(start_time, end_time)
 
             rows_added = 0
             with timescale.engine.connect() as connection:
@@ -548,7 +482,6 @@ class TimescaleListenStore(ListenStore):
             month = next_month
             year = next_year
             rows_added = 0
-
 
     def dump_listens(self, location, dump_id, start_time=datetime.utcfromtimestamp(0), end_time=None,
                      threads=DUMP_DEFAULT_THREAD_COUNT):
@@ -596,7 +529,7 @@ class TimescaleListenStore(ListenStore):
                 self.write_dump_metadata(archive_name, start_time, end_time, temp_dir, tar, full_dump)
 
                 listens_path = os.path.join(temp_dir, 'listens')
-                self.write_listens(listens_path, tar, archive_name, start_time, end_time)
+                self.write_listens(listens_path, tar, archive_name, start_time, end_time, full_dump)
 
                 # remove the temporary directory
                 shutil.rmtree(temp_dir)
@@ -650,7 +583,7 @@ class TimescaleListenStore(ListenStore):
                             line = tarf.readline()
                             if not line:
                                 break
-                                
+
                             listen = Listen.from_json(ujson.loads(line))
                             listens.append(listen)
 
