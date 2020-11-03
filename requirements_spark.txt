@@ -6,7 +6,7 @@ pika==0.13.0
 python-dateutil==2.8.0
 numpy==1.19.1
 git+https://github.com/metabrainz/brainzutils-python.git@v1.14.1
-pytest == 6.0.1
+pytest == 6.1.2
 pytest-cov == 2.10.1
 py4j == 0.10.9
 pyspark == 2.4.5
