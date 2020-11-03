@@ -112,7 +112,7 @@ def get_model_path(model_id):
             path to save or load model.
     """
 
-    return config.HDFS_CLUSTER_URI + path.DATA_DIR + '/' + model_id
+    return config.HDFS_CLUSTER_URI + path.RECOMMENDATION_RECORDING_DATA_DIR + '/' + model_id
 
 
 def get_latest_dataframe_id(dataframe_metadata_df):
@@ -235,9 +235,9 @@ def delete_model():
     """ Delete model.
         Note: At any point in time, only one model is in HDFS
     """
-    dir_exists = utils.path_exists(path.DATA_DIR)
+    dir_exists = utils.path_exists(path.RECOMMENDATION_RECORDING_DATA_DIR)
     if dir_exists:
-        utils.delete_dir(path.DATA_DIR, recursive=True)
+        utils.delete_dir(path.RECOMMENDATION_RECORDING_DATA_DIR, recursive=True)
 
 
 def save_model(model_id, model):
@@ -278,7 +278,7 @@ def save_model_metadata_to_hdfs(metadata):
     try:
         current_app.logger.info('Saving model metadata...')
         # Append the dataframe to existing dataframe if already exist or create a new one.
-        utils.append(model_metadata_df, path.MODEL_METADATA)
+        utils.append(model_metadata_df, path.RECOMMENDATION_RECORDING_MODEL_METADATA)
         current_app.logger.info('Model metadata saved...')
     except DataFrameNotAppendedException as err:
         current_app.logger.error(str(err), exc_info=True)
@@ -345,8 +345,8 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
     listenbrainz_spark.context.setCheckpointDir(config.HDFS_CLUSTER_URI + path.CHECKPOINT_DIR)
 
     try:
-        playcounts_df = utils.read_files_from_HDFS(path.PLAYCOUNTS_DATAFRAME_PATH)
-        dataframe_metadata_df = utils.read_files_from_HDFS(path.DATAFRAME_METADATA)
+        playcounts_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME)
+        dataframe_metadata_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_DATAFRAME_METADATA)
     except PathNotFoundException as err:
         current_app.logger.error('{}\nConsider running create_dataframes.py'.format(str(err)), exc_info=True)
         raise
@@ -400,7 +400,7 @@ def main(ranks=None, lambdas=None, iterations=None, alpha=None):
         current_app.logger.info('Done!')
 
     message = [{
-        'type': 'cf_recording_model',
+        'type': 'cf_recommendations_recording_model',
         'model_upload_time': str(datetime.utcnow()),
         'total_time': '{:.2f}'.format(time.monotonic() - ti),
     }]

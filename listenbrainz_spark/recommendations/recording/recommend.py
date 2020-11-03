@@ -29,8 +29,8 @@ from listenbrainz_spark.exceptions import (PathNotFoundException,
                                            RatingOutOfRangeException,
                                            EmptyDataframeExcpetion)
 
-from listenbrainz_spark.recommendations.train_models import get_model_path
-from listenbrainz_spark.recommendations.candidate_sets import _is_empty_dataframe
+from listenbrainz_spark.recommendations.recording.train_models import get_model_path
+from listenbrainz_spark.recommendations.recording.candidate_sets import _is_empty_dataframe
 
 from pyspark.sql import Row
 from flask import current_app
@@ -60,7 +60,7 @@ def get_most_recent_model_id():
             model_id (str): Model identification string.
     """
     try:
-        model_metadata = utils.read_files_from_HDFS(path.MODEL_METADATA)
+        model_metadata = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_MODEL_METADATA)
     except PathNotFoundException as err:
         current_app.logger.error(str(err), exc_info=True)
         raise
@@ -332,7 +332,7 @@ def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_u
     for user_name, data in user_rec.items():
         messages = {
             'musicbrainz_id': user_name,
-            'type': 'cf_recording_recommendations',
+            'type': 'cf_recommendations_recording_recommendations',
             'recommendations': {
                 'top_artist': data.get('top_artist', []),
                 'similar_artist': data.get('similar_artist', [])
@@ -341,7 +341,7 @@ def create_messages(top_artist_rec_mbid_df, similar_artist_rec_mbid_df, active_u
         yield messages
 
     yield {
-            'type': 'cf_recording_recommendations_mail',
+            'type': 'cf_recommendations_recording_mail',
             'active_user_count': active_user_count,
             'top_artist_user_count': top_artist_rec_user_count,
             'similar_artist_user_count': similar_artist_rec_user_count,
@@ -405,9 +405,9 @@ def main(recommendation_top_artist_limit=None, recommendation_similar_artist_lim
         raise
 
     try:
-        recordings_df = utils.read_files_from_HDFS(path.RECORDINGS_DATAFRAME_PATH)
-        top_artist_candidate_set_df = utils.read_files_from_HDFS(path.TOP_ARTIST_CANDIDATE_SET)
-        similar_artist_candidate_set_df = utils.read_files_from_HDFS(path.SIMILAR_ARTIST_CANDIDATE_SET)
+        recordings_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDINGS_DATAFRAME)
+        top_artist_candidate_set_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_TOP_ARTIST_CANDIDATE_SET)
+        similar_artist_candidate_set_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_SIMILAR_ARTIST_CANDIDATE_SET)
     except PathNotFoundException as err:
         current_app.logger.error(str(err), exc_info=True)
         raise

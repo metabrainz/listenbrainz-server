@@ -5,8 +5,8 @@ import unittest
 from unittest.mock import patch, call, MagicMock, Mock
 
 from listenbrainz_spark.tests import SparkTestCase
-from listenbrainz_spark.recommendations import recommend
-from listenbrainz_spark.recommendations import train_models
+from listenbrainz_spark.recommendations.recording import recommend
+from listenbrainz_spark.recommendations.recording import train_models
 from listenbrainz_spark import schema, utils, config, path, stats
 from listenbrainz_spark.exceptions import (RecommendationsNotGeneratedException,
                                            EmptyDataframeExcpetion,
@@ -155,8 +155,8 @@ class RecommendTestClass(SparkTestCase):
 
         self.assertEqual(received_data, expected_data)
 
-    @patch('listenbrainz_spark.recommendations.recommend.filter_recommendations_on_rating')
-    @patch('listenbrainz_spark.recommendations.recommend.listenbrainz_spark')
+    @patch('listenbrainz_spark.recommendations.recording.recommend.filter_recommendations_on_rating')
+    @patch('listenbrainz_spark.recommendations.recording.recommend.listenbrainz_spark')
     def test_generate_recommendations(self, mock_lb, mock_filter):
         params = self.get_recommendation_params()
         limit = 1
@@ -284,10 +284,10 @@ class RecommendTestClass(SparkTestCase):
             users = ['invalid']
             recommend.get_user_name_and_user_id(params, users)
 
-    @patch('listenbrainz_spark.recommendations.recommend.MatrixFactorizationModel')
-    @patch('listenbrainz_spark.recommendations.recommend.listenbrainz_spark')
-    @patch('listenbrainz_spark.recommendations.recommend.get_model_path')
-    @patch('listenbrainz_spark.recommendations.recommend.get_most_recent_model_id')
+    @patch('listenbrainz_spark.recommendations.recording.recommend.MatrixFactorizationModel')
+    @patch('listenbrainz_spark.recommendations.recording.recommend.listenbrainz_spark')
+    @patch('listenbrainz_spark.recommendations.recording.recommend.get_model_path')
+    @patch('listenbrainz_spark.recommendations.recording.recommend.get_most_recent_model_id')
     def test_load_model(self, mock_id, mock_model_path, mock_lb, mock_matrix_model):
         model = recommend.load_model()
         mock_id.assert_called_once()
@@ -306,13 +306,13 @@ class RecommendTestClass(SparkTestCase):
                                       schema.model_metadata_schema)
 
         model_metadata = df_1.union(df_2)
-        utils.save_parquet(model_metadata, path.MODEL_METADATA)
+        utils.save_parquet(model_metadata, path.RECOMMENDATION_RECORDING_MODEL_METADATA)
 
         expected_model_id = recommend.get_most_recent_model_id()
         self.assertEqual(expected_model_id, model_id_2)
 
-    @patch('listenbrainz_spark.recommendations.recommend.get_candidate_set_rdd_for_user')
-    @patch('listenbrainz_spark.recommendations.recommend.generate_recommendations')
+    @patch('listenbrainz_spark.recommendations.recording.recommend.get_candidate_set_rdd_for_user')
+    @patch('listenbrainz_spark.recommendations.recording.recommend.generate_recommendations')
     def test_get_recommendations_for_all(self, mock_recs, mock_candidate_set):
         params = self.get_recommendation_params()
         users = ['vansika']
@@ -400,7 +400,7 @@ class RecommendTestClass(SparkTestCase):
         ))
         return df
 
-    @patch('listenbrainz_spark.recommendations.recommend.current_app')
+    @patch('listenbrainz_spark.recommendations.recording.recommend.current_app')
     def test_check_for_ratings_beyond_range(self, mock_current_app):
         top_artist_rec_df = self.get_top_artist_rec_df()
         similar_artist_rec_df = self.get_similar_artist_rec_df()
@@ -425,7 +425,7 @@ class RecommendTestClass(SparkTestCase):
 
         self.assertEqual(next(data), {
             'musicbrainz_id': 'vansika',
-            'type': 'cf_recording_recommendations',
+            'type': 'cf_recommendations_recording_recommendations',
             'recommendations': {
                 'top_artist': [
                     {
@@ -443,7 +443,7 @@ class RecommendTestClass(SparkTestCase):
 
         self.assertEqual(next(data), {
             'musicbrainz_id': 'rob',
-            'type': 'cf_recording_recommendations',
+            'type': 'cf_recommendations_recording_recommendations',
             'recommendations': {
                 'top_artist': [
                     {
@@ -462,7 +462,7 @@ class RecommendTestClass(SparkTestCase):
 
         self.assertEqual(next(data), {
             'musicbrainz_id': 'vansika_1',
-            'type': 'cf_recording_recommendations',
+            'type': 'cf_recommendations_recording_recommendations',
             'recommendations': {
                 'top_artist': [],
                 'similar_artist': [
@@ -479,7 +479,7 @@ class RecommendTestClass(SparkTestCase):
         })
 
         self.assertEqual(next(data), {
-            'type': 'cf_recording_recommendations_mail',
+            'type': 'cf_recommendations_recording_mail',
             'active_user_count': active_user_count,
             'top_artist_user_count': top_artist_rec_user_count,
             'similar_artist_user_count': similar_artist_rec_user_count,

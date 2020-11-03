@@ -6,9 +6,8 @@ Get timestamp (from_date, to_date) to fetch user listening history. We fetch the
 go back X days and get the updated timestamp (from_date) from where we should start fetching listens.
 The timestamp of fetched listens belongs to [from_date.month, to_date.month]
 
-The listens are fetched from HDFS having all the fields that a typical listen has except the artist_mbid and recording_mbid.
-Refer to listenbrainz_spark/utils.py for the definition of a typical listen. The dataframe of these listens is called
-partial_listens_df.
+The listens are fetched from HDFS. We refer to dataframe of these listens as partial_listens_df since they have not been mapped to the
+mapping yet!
 
 The artist_name and track_name fields of partial_listens_df are converted to artist_name_matchable and track_name_matchable
 respectively by removing accents, removing punctuations and whitespaces, and converting to lowercase.
@@ -42,10 +41,9 @@ from collections import defaultdict
 from pydantic import ValidationError
 
 import listenbrainz_spark
+import listenbrainz_spark.utils.mapping as mapping_utils
 from listenbrainz_spark import path, stats, utils, config, schema
-from listenbrainz_spark.stats.utils import get_latest_listen_ts
-from listenbrainz_spark.exceptions import (FileNotSavedException,
-                                           FileNotFetchedException,
+from listenbrainz_spark.exceptions import (FileNotFetchedException,
                                            SparkSessionNotInitializedException,
                                            DataFrameNotAppendedException,
                                            DataFrameNotCreatedException)
@@ -54,23 +52,26 @@ from data.model.user_missing_musicbrainz_data import UserMissingMusicBrainzDataR
 from data.model.user_cf_recommendations_recording_message import (UserCreateDataframesMessage,
                                                                   UserMissingMusicBrainzDataMessage)
 
-import unidecode
+from listenbrainz_spark.recommendations.dataframe_utils import (get_dataframe_id,
+                                                                save_dataframe,
+                                                                get_dates_to_train_data,
+                                                                get_mapped_artist_and_recording_mbids,
+                                                                get_listens_for_training_model_window)
 from flask import current_app
-from pyspark.sql.types import StringType
 import pyspark.sql.functions as func
 from pyspark.sql import Row
 from pyspark.sql.window import Window
-from pyspark.sql.functions import rank, col, row_number, udf
-
-
+from pyspark.sql.functions import rank, col, row_number
 
 # Some useful dataframe fields/columns.
 # partial_listens_df:
 #   [
 #       'artist_msid',
+#       'artist_mbids',
 #       'artist_name',
 #       'listened_at',
 #       'recording_msid',
+#       'recording_mbid'
 #       'release_mbid',
 #       'release_msid',
 #       'release_name',
@@ -121,93 +122,6 @@ from pyspark.sql.functions import rank, col, row_number, udf
 #   ]
 
 
-def generate_dataframe_id(metadata):
-    """ Generate dataframe id.
-    """
-    metadata['dataframe_id'] = '{}-{}'.format(config.DATAFRAME_ID_PREFIX, uuid.uuid4())
-
-
-def get_unique_rows_from_mapping(df):
-    """ Get unique rows from the mapping.
-    """
-    msid_mbid_mapping_df = df.select('mb_artist_credit_id',
-                                     'mb_artist_credit_mbids',
-                                     'mb_artist_credit_name',
-                                     'mb_recording_mbid',
-                                     'mb_recording_name',
-                                     'mb_release_mbid',
-                                     'mb_release_name',
-                                     'msb_artist_credit_name_matchable',
-                                     'msb_recording_name_matchable') \
-                             .distinct()
-
-    return msid_mbid_mapping_df
-
-
-def unaccent_artist_and_track_name(df):
-    """ Remove accents from artist and track name.
-
-        Args:
-            df: Dataframe to process.
-
-        Returns:
-            res_df: Dataframe with unaccented artist name and track name.
-    """
-
-    def get_unaccented_string(accented_string):
-        return unidecode.unidecode(accented_string)
-
-    unaccent_udf = udf(get_unaccented_string, StringType())
-
-    intermediate_df = df.withColumn("unaccented_artist_name", unaccent_udf(df.artist_name))
-
-    res_df = intermediate_df.withColumn("unaccented_track_name", unaccent_udf(intermediate_df.track_name))
-
-    return res_df
-
-
-def convert_text_fields_to_matchable(df):
-    """ Convert text fields (names i.e artist_name, track_name etc) to matchable field.
-        The following steps convert a text field to a matchable field:
-            1.  Unaccent the text.
-            2.  Remove punctuations and whitespaces.
-            3.  Convert to lowercase.
-
-        Args:
-            df: Dataframe to process
-
-        Returns:
-            res_df: Dataframe with artist_name and track_name converted to matchable fields.
-    """
-    unaccent_df = unaccent_artist_and_track_name(df)
-
-    intermediate_df = unaccent_df.withColumn(
-        "artist_name_matchable",
-        func.lower(func.regexp_replace("unaccented_artist_name", '[^A-Za-z0-9]+', ""))
-    )
-
-    res_df = intermediate_df.withColumn(
-        "track_name_matchable",
-        func.lower(func.regexp_replace("unaccented_track_name", '[^A-Za-z0-9]+', ""))
-    )
-
-    return res_df
-
-
-def save_dataframe(df, dest_path):
-    """ Save dataframe to HDFS.
-
-        Args:
-            df : Dataframe to save.
-            dest_path (str): HDFS path to save dataframe.
-    """
-    try:
-        utils.save_parquet(df, dest_path)
-    except FileNotSavedException as err:
-        current_app.logger.error(str(err), exc_info=True)
-        raise
-
-
 def save_dataframe_metadata_to_hdfs(metadata):
     """ Save dataframe metadata.
     """
@@ -222,60 +136,17 @@ def save_dataframe_metadata_to_hdfs(metadata):
 
     try:
         # Append the dataframe to existing dataframe if already exists or create a new one.
-        utils.append(dataframe_metadata, path.DATAFRAME_METADATA)
+        utils.append(dataframe_metadata, path.RECOMMENDATION_RECORDING_DATAFRAME_METADATA)
     except DataFrameNotAppendedException as err:
         current_app.logger.error(str(err), exc_info=True)
         raise
-
-
-def get_dates_to_train_data(train_model_window):
-    """ Get window to fetch listens to train data.
-
-        Args:
-            train_model_window (int): model to be trained on data of given number of days.
-
-        Returns:
-            from_date (datetime): Date from which start fetching listens.
-            to_date (datetime): Date upto which fetch listens.
-    """
-    to_date = get_latest_listen_ts()
-    from_date = stats.offset_days(to_date, train_model_window)
-    # shift to the first of the month
-    from_date = stats.replace_days(from_date, 1)
-    return to_date, from_date
-
-
-def get_listens_for_training_model_window(to_date, from_date, metadata, dest_path):
-    """  Prepare dataframe of listens of X days to train.
-
-        Args:
-            from_date (datetime): Date from which start fetching listens.
-            to_date (datetime): Date upto which fetch listens.
-            dest_path (str): HDFS path.
-
-        Returns:
-            partial_listens_df (dataframe): listens without artist mbid and recording mbid.
-    """
-    metadata['to_date'] = to_date
-    metadata['from_date'] = from_date
-    try:
-        training_df = utils.get_listens(from_date, to_date, dest_path)
-    except ValueError as err:
-        current_app.logger.error(str(err), exc_info=True)
-        raise
-    except FileNotFetchedException as err:
-        current_app.logger.error(str(err), exc_info=True)
-        raise
-
-    partial_listens_df = utils.get_listens_without_artist_and_recording_mbids(training_df)
-    return convert_text_fields_to_matchable(partial_listens_df)
 
 
 def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df):
     """ Get data that has been submitted to ListenBrainz but is missing from MusicBrainz.
 
         Args:
-            partial_listens_df (dataframe): listens without artist mbid and recording mbid.
+            partial_listens_df (dataframe): dataframe of listens.
             msid_mbid_mapping_df (dataframe): msid->mbid mapping. For columns refer to
                                               msid_mbid_mapping_schema in listenbrainz_spark/schema.py
 
@@ -314,44 +185,12 @@ def get_data_missing_from_musicbrainz(partial_listens_df, msid_mbid_mapping_df):
                                               'release_name',
                                               'track_name',
                                               'user_name') \
-                                     .agg(func.max('listened_at').alias('listened_at')) \
-                                     .withColumn('rank', row_number().over(window)) \
-                                     .where(col('rank') <= 200) \
-                                     .toLocalIterator()
+        .agg(func.max('listened_at').alias('listened_at')) \
+        .withColumn('rank', row_number().over(window)) \
+        .where(col('rank') <= 200) \
+        .toLocalIterator()
 
     return missing_musicbrainz_data_itr
-
-
-def get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df):
-    """ Map recording msid->mbid and artist msid->mbids so that every listen has an mbid.
-
-        Args:
-            partial_listens_df (dataframe): listens without artist mbid and recording mbid.
-            msid_mbid_mapping_df (dataframe): msid->mbid mapping. For columns refer to
-                                              msid_mbid_mapping_schema in listenbrainz_spark/schema.py
-
-        Returns:
-            mapped_listens_df (dataframe): listens mapped with msid_mbid_mapping.
-    """
-    condition = [
-        partial_listens_df.track_name_matchable == msid_mbid_mapping_df.msb_recording_name_matchable,
-        partial_listens_df.artist_name_matchable == msid_mbid_mapping_df.msb_artist_credit_name_matchable
-    ]
-
-    df = partial_listens_df.join(msid_mbid_mapping_df, condition, 'inner')
-    # msb_release_name_matchable is skipped till the bug in mapping is resolved.
-    # bug : release_name in listens and mb_release_name in mapping is different.
-    mapped_listens_df = df.select('listened_at',
-                                  'mb_artist_credit_id',
-                                  'mb_artist_credit_mbids',
-                                  'mb_recording_mbid',
-                                  'mb_release_mbid',
-                                  'msb_artist_credit_name_matchable',
-                                  'msb_recording_name_matchable',
-                                  'user_name')
-
-    save_dataframe(mapped_listens_df, path.MAPPED_LISTENS)
-    return mapped_listens_df
 
 
 def save_playcounts_df(listens_df, recordings_df, users_df, metadata):
@@ -373,7 +212,7 @@ def save_playcounts_df(listens_df, recordings_df, users_df, metadata):
                               .agg(func.count('recording_id').alias('count'))
 
     metadata['playcounts_count'] = playcounts_df.count()
-    save_dataframe(playcounts_df, path.PLAYCOUNTS_DATAFRAME_PATH)
+    save_dataframe(playcounts_df, path.RECOMMENDATION_RECORDING_PLAYCOUNTS_DATAFRAME)
 
 
 def get_listens_df(mapped_listens_df, metadata):
@@ -412,7 +251,7 @@ def get_recordings_df(mapped_listens_df, metadata):
                                      .withColumn('recording_id', rank().over(recording_window))
 
     metadata['recordings_count'] = recordings_df.count()
-    save_dataframe(recordings_df, path.RECORDINGS_DATAFRAME_PATH)
+    save_dataframe(recordings_df, path.RECOMMENDATION_RECORDINGS_DATAFRAME)
     return recordings_df
 
 
@@ -432,7 +271,7 @@ def get_users_dataframe(mapped_listens_df, metadata):
                                 .withColumn('user_id', rank().over(user_window))
 
     metadata['users_count'] = users_df.count()
-    save_dataframe(users_df, path.USERS_DATAFRAME_PATH)
+    save_dataframe(users_df, path.RECOMMENDATION_RECORDING_USERS_DATAFRAME)
     return users_df
 
 
@@ -473,7 +312,7 @@ def prepare_messages(missing_musicbrainz_data_itr, from_date, to_date, ti):
     total_time = '{:.2f}'.format((time.monotonic() - ti) / 60)
     try:
         messages = [UserCreateDataframesMessage(**{
-            'type': 'cf_recording_dataframes',
+            'type': 'cf_recommendations_recording_dataframes',
             'dataframe_upload_time': current_ts,
             'total_time': total_time,
             'from_date': str(from_date.strftime('%b %Y')),
@@ -512,17 +351,22 @@ def main(train_model_window=None):
 
     current_app.logger.info('Fetching listens to create dataframes...')
     to_date, from_date = get_dates_to_train_data(train_model_window)
-    partial_listens_df = get_listens_for_training_model_window(to_date, from_date, metadata, path.LISTENBRAINZ_DATA_DIRECTORY)
+
+    metadata['to_date'] = to_date
+    metadata['from_date'] = from_date
+
+    partial_listens_df = get_listens_for_training_model_window(to_date, from_date, path.LISTENBRAINZ_DATA_DIRECTORY)
     current_app.logger.info('Listen count from {from_date} to {to_date}: {listens_count}'
                             .format(from_date=from_date, to_date=to_date, listens_count=partial_listens_df.count()))
 
     current_app.logger.info('Loading mapping from HDFS...')
     df = utils.read_files_from_HDFS(path.MBID_MSID_MAPPING)
-    msid_mbid_mapping_df = get_unique_rows_from_mapping(df)
+    msid_mbid_mapping_df = mapping_utils.get_unique_rows_from_mapping(df)
     current_app.logger.info('Number of distinct rows in the mapping: {}'.format(msid_mbid_mapping_df.count()))
 
     current_app.logger.info('Mapping listens...')
-    mapped_listens_df = get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df)
+    mapped_listens_df = get_mapped_artist_and_recording_mbids(partial_listens_df, msid_mbid_mapping_df,
+                                                              path.RECOMMENDATION_RECORDING_MAPPED_LISTENS)
     current_app.logger.info('Listen count after mapping: {}'.format(mapped_listens_df.count()))
 
     current_app.logger.info('Preparing users data and saving to HDFS...')
@@ -536,7 +380,7 @@ def main(train_model_window=None):
 
     save_playcounts_df(listens_df, recordings_df, users_df, metadata)
 
-    generate_dataframe_id(metadata)
+    metadata['dataframe_id'] = get_dataframe_id(config.DATAFRAME_ID_PREFIX)
     save_dataframe_metadata_to_hdfs(metadata)
 
     current_app.logger.info('Preparing missing MusicBrainz data...')

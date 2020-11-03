@@ -4,13 +4,14 @@
 import shutil
 import tempfile
 import time
-from flask import current_app
+from datetime import datetime
 
 import listenbrainz_spark.request_consumer.jobs.utils as utils
-from datetime import datetime
+from flask import current_app
+from listenbrainz_spark.exceptions import DumpNotFoundException
 from listenbrainz_spark.ftp.download import ListenbrainzDataDownloader
 from listenbrainz_spark.hdfs.upload import ListenbrainzDataUploader
-from listenbrainz_spark.exceptions import DumpNotFoundException
+from listenbrainz_spark.request_consumer import request_consumer
 
 
 def import_dump_to_hdfs(dump_type, overwrite, dump_id=None):
@@ -64,6 +65,7 @@ def import_newest_incremental_dump_handler():
                     current_app.logger.error(f"Error while importing incremental dump with ID {dump_id}: {e}", exc_info=True)
                     break
             dump_id += 1
+            request_consumer.rc.ping()
     return [{
         'type': 'import_incremental_dump',
         'imported_dump': imported_dumps,

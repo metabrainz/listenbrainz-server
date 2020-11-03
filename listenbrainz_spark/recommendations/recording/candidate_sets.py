@@ -34,7 +34,8 @@ from listenbrainz_spark.exceptions import (SparkSessionNotInitializedException,
                                            PathNotFoundException,
                                            FileNotFetchedException,
                                            TopArtistNotFetchedException,
-                                           SimilarArtistNotFetchedException)
+                                           SimilarArtistNotFetchedException,
+                                           FileNotSavedException)
 
 from flask import current_app
 import pyspark.sql.functions as func
@@ -517,13 +518,13 @@ def save_candidate_sets(top_artist_candidate_set_df, similar_artist_candidate_se
                                                          corresponding to user ids.
     """
     try:
-        utils.save_parquet(top_artist_candidate_set_df, path.TOP_ARTIST_CANDIDATE_SET)
+        utils.save_parquet(top_artist_candidate_set_df, path.RECOMMENDATION_RECORDING_TOP_ARTIST_CANDIDATE_SET)
     except FileNotSavedException as err:
         current_app.logger.error(str(err), exc_info=True)
         raise
 
     try:
-        utils.save_parquet(similar_artist_candidate_set_df, path.SIMILAR_ARTIST_CANDIDATE_SET)
+        utils.save_parquet(similar_artist_candidate_set_df, path.RECOMMENDATION_RECORDING_SIMILAR_ARTIST_CANDIDATE_SET)
     except FileNotSavedException as err:
         current_app.logger.error(str(err), exc_info=True)
         raise
@@ -635,9 +636,9 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
         raise
 
     try:
-        mapped_listens_df = utils.read_files_from_HDFS(path.MAPPED_LISTENS)
-        recordings_df = utils.read_files_from_HDFS(path.RECORDINGS_DATAFRAME_PATH)
-        users_df = utils.read_files_from_HDFS(path.USERS_DATAFRAME_PATH)
+        mapped_listens_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_MAPPED_LISTENS)
+        recordings_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDINGS_DATAFRAME)
+        users_df = utils.read_files_from_HDFS(path.RECOMMENDATION_RECORDING_USERS_DATAFRAME)
         artist_relation_df = utils.read_files_from_HDFS(path.SIMILAR_ARTIST_DATAFRAME_PATH)
     except PathNotFoundException as err:
         current_app.logger.error(str(err), exc_info=True)
@@ -683,7 +684,7 @@ def main(recommendation_generation_window=None, top_artist_limit=None, similar_a
         current_app.logger.info('Done!')
 
     message = [{
-        'type': 'cf_recording_candidate_sets',
+        'type': 'cf_recommendations_recording_candidate_sets',
         'candidate_sets_upload_time': str(datetime.utcnow()),
         'total_time': total_time,
         'from_date': str(from_date),

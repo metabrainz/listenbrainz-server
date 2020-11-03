@@ -14,6 +14,7 @@ import ujson
 import psycopg2
 import sqlalchemy
 import listenbrainz.db.user as db_user
+from psycopg2.extras import execute_values
 from listenbrainz.db.testing import DatabaseTestCase
 from listenbrainz.db import timescale as ts
 from listenbrainz import config
@@ -71,6 +72,25 @@ class TestTimescaleListenStore(DatabaseTestCase):
         test_data = create_test_data_for_timescalelistenstore(user_name, test_data_file_name)
         self.logstore.insert(test_data)
         return len(test_data)
+
+    def _insert_with_created(self, listens):
+        """ Insert a batch of listens with 'created' field.
+        """
+        submit = []
+        for listen in listens:
+            submit.append((*listen.to_timescale(), listen.inserted_timestamp))
+
+        query = """INSERT INTO listen (listened_at, track_name, user_name, data, created)
+                        VALUES %s
+                   ON CONFLICT (listened_at, track_name, user_name)
+                    DO NOTHING
+                """
+
+        conn = ts.engine.raw_connection()
+        with conn.cursor() as curs:
+            execute_values(curs, query, submit, template=None)
+
+        conn.commit()
 
     def test_check_listen_count_view_exists(self):
         try:
@@ -251,10 +271,10 @@ class TestTimescaleListenStore(DatabaseTestCase):
 
     def test_incremental_dump(self):
         base = 1500000000
-        listens = generate_data(1, self.testuser_name, base + 1, 5)  # generate 5 listens with ts 1-5
-        self.logstore.insert(listens)
-        listens = generate_data(1, self.testuser_name, base + 6, 5)  # generate 5 listens with ts 6-10
-        self.logstore.insert(listens)
+        listens = generate_data(1, self.testuser_name, base-4, 5, base+1)  # generate 5 listens with inserted_ts 1-5
+        self._insert_with_created(listens)
+        listens = generate_data(1, self.testuser_name, base+1, 5, base+6)  # generate 5 listens with inserted_ts 6-10
+        self._insert_with_created(listens)
         temp_dir = tempfile.mkdtemp()
         dump_location = self.logstore.dump_listens(
             location=temp_dir,
@@ -266,12 +286,11 @@ class TestTimescaleListenStore(DatabaseTestCase):
         self.reset_timescale_db()
         self.logstore.import_listens_dump(dump_location)
         listens = self.logstore.fetch_listens(user_name=self.testuser_name, to_ts=base + 11)
-        self.assertEqual(len(listens), 5)
-        self.assertEqual(listens[0].ts_since_epoch, base + 10)
-        self.assertEqual(listens[1].ts_since_epoch, base + 9)
-        self.assertEqual(listens[2].ts_since_epoch, base + 8)
-        self.assertEqual(listens[3].ts_since_epoch, base + 7)
-        self.assertEqual(listens[4].ts_since_epoch, base + 6)
+        self.assertEqual(len(listens), 4)
+        self.assertEqual(listens[0].ts_since_epoch, base + 5)
+        self.assertEqual(listens[1].ts_since_epoch, base + 4)
+        self.assertEqual(listens[2].ts_since_epoch, base + 3)
+        self.assertEqual(listens[3].ts_since_epoch, base + 2)
 
         shutil.rmtree(temp_dir)
 

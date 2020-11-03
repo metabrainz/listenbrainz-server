@@ -97,6 +97,7 @@ class ImporterUtilsTestCase(SparkTestCase):
         self.assertFalse(import_utils.search_dump(7, "incremental", datetime.fromtimestamp(9)))
         import_utils.insert_dump_data(7, "incremental", datetime.fromtimestamp(9))
         self.assertTrue(import_utils.search_dump(7, "incremental", datetime.fromtimestamp(9)))
+        self.assertTrue(import_utils.search_dump(2, "incremental", datetime.fromtimestamp(2)))
 
     def test_insert_dump_data_file_missing(self):
         """ Test to ensure a file is created if it is missing. """

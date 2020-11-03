@@ -1,25 +1,26 @@
-import os
 import errno
 import logging
+import os
+from time import sleep
+
 import pika
+from listenbrainz_spark import config
+from brainzutils.flask import CustomFlask
+from flask import current_app
 from py4j.protocol import Py4JJavaError
+from pyspark.sql.utils import AnalysisException
 
 import listenbrainz_spark
-from listenbrainz_spark import stats, config, path
-from listenbrainz_spark import hdfs_connection
-from listenbrainz_spark.exceptions import (FileNotSavedException,
-                                           ViewNotRegisteredException,
-                                           PathNotFoundException,
-                                           FileNotFetchedException,
-                                           DataFrameNotCreatedException,
-                                           DataFrameNotAppendedException,
-                                           HDFSDirectoryNotDeletedException,
-                                           HDFSException)
-from flask import current_app
 from hdfs.util import HdfsError
-from brainzutils.flask import CustomFlask
-from pyspark.sql.utils import AnalysisException
-from time import sleep
+from listenbrainz_spark import config, hdfs_connection, path, stats
+from listenbrainz_spark.exceptions import (DataFrameNotAppendedException,
+                                           DataFrameNotCreatedException,
+                                           FileNotFetchedException,
+                                           FileNotSavedException,
+                                           HDFSDirectoryNotDeletedException,
+                                           HDFSException,
+                                           PathNotFoundException,
+                                           ViewNotRegisteredException)
 
 # A typical listen is of the form:
 # {
@@ -60,7 +61,7 @@ def create_app(debug=None):
     # create flask application
     app = CustomFlask(import_name=__name__)
     # load config
-    config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'config.py')
+    config_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'config.py')
 
     # config must exist to link the file with our flask app.
     if os.path.exists(config_file):
@@ -147,33 +148,6 @@ def read_files_from_HDFS(path):
         raise PathNotFoundException(str(err), path)
     except Py4JJavaError as err:
         raise FileNotFetchedException(err.java_exception, path)
-
-
-def get_listens_without_artist_and_recording_mbids(df):
-    """ Get dataframe with all fields that a typical listen has
-        except artist_mbids and recording_mbid.
-
-        Args:
-            df: Dataframe of listens.
-
-        Returns:
-            A dataframe with columns that a typical listen has
-            except artist_mbids and recording_mbid.
-
-    """
-    # Not all listens in ListenBrainz contain mbids but every listen has an msid.
-    # We fetch listens such that the mbid fields are not selected.
-    # We then map the msids with mbids so that every listen has an mbid too.
-    return df.select('artist_msid',
-                     'artist_name',
-                     'listened_at',
-                     'recording_msid',
-                     'release_mbid',
-                     'release_msid',
-                     'release_name',
-                     'tags',
-                     'track_name',
-                     'user_name')
 
 
 def get_listens(from_date, to_date, dest_path):

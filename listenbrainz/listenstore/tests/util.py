@@ -11,11 +11,15 @@ from listenbrainz.listen import Listen
 TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..', 'testdata')
 
 
-def generate_data(test_user_id, user_name, from_ts, num_records):
+def generate_data(test_user_id, user_name, from_ts, num_records, inserted_ts=None):
     test_data = []
     artist_msid = str(uuid.uuid4())
 
     for i in range(num_records):
+        if not inserted_ts:
+            inserted_timestamp = datetime.utcnow()
+        else:
+            inserted_timestamp = datetime.utcfromtimestamp(inserted_ts)
         timestamp = datetime.utcfromtimestamp(from_ts)
         item = Listen(
             user_name=user_name,
@@ -23,6 +27,7 @@ def generate_data(test_user_id, user_name, from_ts, num_records):
             timestamp=timestamp,
             artist_msid=artist_msid,
             recording_msid=str(uuid.uuid4()),
+            inserted_timestamp=inserted_timestamp,
             data={
                 'artist_name': 'Frank Ocean',
                 'track_name': 'Crack Rock',
@@ -31,6 +36,8 @@ def generate_data(test_user_id, user_name, from_ts, num_records):
         )
         test_data.append(item)
         from_ts += 1   # Add one second
+        if inserted_ts:
+            inserted_ts += 1   # Add one second
 
     return test_data
 
