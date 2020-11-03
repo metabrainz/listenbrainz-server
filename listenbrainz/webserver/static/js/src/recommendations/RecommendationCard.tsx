@@ -64,11 +64,7 @@ export default class RecommendationCard extends React.Component<
     );
   }
 
-  submitFeedback = async (
-    rating: RecommendationFeedBack,
-    iconToSet: IconDefinition,
-    textToSet: string
-  ) => {
+  submitFeedback = async (rating: RecommendationFeedBack) => {
     const {
       recommendation,
       currentUser,
@@ -138,7 +134,13 @@ export default class RecommendationCard extends React.Component<
   };
 
   render() {
-    const { currentFeedback, recommendation, className } = this.props;
+    const {
+      currentFeedback,
+      recommendation,
+      className,
+      isCurrentUser,
+      currentUser,
+    } = this.props;
     let icon: IconDefinition;
     let text: string;
     switch (currentFeedback) {
@@ -184,82 +186,90 @@ export default class RecommendationCard extends React.Component<
             {getArtistLink(recommendation)}
           </small>
         </div>
-        <div className="recommendation-controls">
-          <button
-            className={`btn ${currentFeedback}`}
-            id="recommendationControlsDropdown"
-            data-toggle="dropdown"
-            aria-haspopup="true"
-            aria-expanded="true"
-            type="button"
-          >
-            <FontAwesomeIcon icon={icon as IconProp} /> {text}
-          </button>
-          <ul
-            className="dropdown-menu dropdown-menu-right"
-            aria-labelledby="recommendationControlsDropdown"
-          >
-            <RecommendationControl
-              iconHover={faAngry}
-              icon={faAngryRegular}
-              title="I never want to hear this again!"
-              action={() =>
-                currentFeedback === "hate"
-                  ? this.deleteFeedback()
-                  : this.submitFeedback("hate", faAngry, "hate")
-              }
-              cssClass={`hate ${currentFeedback === "hate" ? "selected" : ""}`}
-            />
-            <RecommendationControl
-              iconHover={faFrown}
-              icon={faFrownRegular}
-              title="I don't like this!"
-              action={() =>
-                currentFeedback === "dislike"
-                  ? this.deleteFeedback()
-                  : this.submitFeedback("dislike", faFrown, "dislike")
-              }
-              cssClass={`dislike ${
-                currentFeedback === "dislike" ? "selected" : ""
-              }`}
-            />
-            <RecommendationControl
-              iconHover={faMeh}
-              icon={faMehRegular}
-              title="This is a bad recommendation!"
-              action={() =>
-                currentFeedback === "bad_recommendation"
-                  ? this.deleteFeedback()
-                  : this.submitFeedback("bad_recommendation", faMeh, "bad")
-              }
-              cssClass={`bad_recommendation ${
-                currentFeedback === "bad_recommendation" ? "selected" : ""
-              }`}
-            />
-            <RecommendationControl
-              iconHover={faSmileBeam}
-              icon={faSmileBeamRegular}
-              title="I like this!"
-              action={() =>
-                currentFeedback === "like"
-                  ? this.deleteFeedback()
-                  : this.submitFeedback("like", faSmileBeam, "like")
-              }
-              cssClass={`like ${currentFeedback === "like" ? "selected" : ""}`}
-            />
-            <RecommendationControl
-              iconHover={faGrinStars}
-              icon={faGrinStarsRegular}
-              title="I really love this!"
-              action={() =>
-                currentFeedback === "love"
-                  ? this.deleteFeedback()
-                  : this.submitFeedback("love", faGrinStars, "love")
-              }
-              cssClass={`love ${currentFeedback === "love" ? "selected" : ""}`}
-            />
-          </ul>
-        </div>
+        {isCurrentUser && currentUser?.auth_token && (
+          <div className="recommendation-controls">
+            <button
+              className={`btn ${currentFeedback}`}
+              id="recommendationControlsDropdown"
+              data-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="true"
+              type="button"
+            >
+              <FontAwesomeIcon icon={icon as IconProp} /> {text}
+            </button>
+            <ul
+              className="dropdown-menu dropdown-menu-right"
+              aria-labelledby="recommendationControlsDropdown"
+            >
+              <RecommendationControl
+                iconHover={faAngry}
+                icon={faAngryRegular}
+                title="I never want to hear this again!"
+                action={() =>
+                  currentFeedback === "hate"
+                    ? this.deleteFeedback()
+                    : this.submitFeedback("hate")
+                }
+                cssClass={`hate ${
+                  currentFeedback === "hate" ? "selected" : ""
+                }`}
+              />
+              <RecommendationControl
+                iconHover={faFrown}
+                icon={faFrownRegular}
+                title="I don't like this!"
+                action={() =>
+                  currentFeedback === "dislike"
+                    ? this.deleteFeedback()
+                    : this.submitFeedback("dislike")
+                }
+                cssClass={`dislike ${
+                  currentFeedback === "dislike" ? "selected" : ""
+                }`}
+              />
+              <RecommendationControl
+                iconHover={faMeh}
+                icon={faMehRegular}
+                title="This is a bad recommendation!"
+                action={() =>
+                  currentFeedback === "bad_recommendation"
+                    ? this.deleteFeedback()
+                    : this.submitFeedback("bad_recommendation")
+                }
+                cssClass={`bad_recommendation ${
+                  currentFeedback === "bad_recommendation" ? "selected" : ""
+                }`}
+              />
+              <RecommendationControl
+                iconHover={faSmileBeam}
+                icon={faSmileBeamRegular}
+                title="I like this!"
+                action={() =>
+                  currentFeedback === "like"
+                    ? this.deleteFeedback()
+                    : this.submitFeedback("like")
+                }
+                cssClass={`like ${
+                  currentFeedback === "like" ? "selected" : ""
+                }`}
+              />
+              <RecommendationControl
+                iconHover={faGrinStars}
+                icon={faGrinStarsRegular}
+                title="I really love this!"
+                action={() =>
+                  currentFeedback === "love"
+                    ? this.deleteFeedback()
+                    : this.submitFeedback("love")
+                }
+                cssClass={`love ${
+                  currentFeedback === "love" ? "selected" : ""
+                }`}
+              />
+            </ul>
+          </div>
+        )}
       </Card>
     );
   }
