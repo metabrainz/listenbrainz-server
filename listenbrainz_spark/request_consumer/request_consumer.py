@@ -92,6 +92,7 @@ class RequestConsumer:
         try:
             avg_size_of_message //= num_of_messages
         except ZeroDivisionError:
+            avg_size_of_message = 0
             current_app.logger.warn("No messages calculated", exc_info=True)
 
         current_app.logger.info("Done!")
