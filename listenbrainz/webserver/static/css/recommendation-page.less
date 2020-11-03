@@ -1,12 +1,5 @@
 @import "theme/theme.less";
 
-@media (max-width: 991px) {
-#recommendations >
-.recommendation-card {
-  padding-left: 15px;
-  }
-}
-
 #recommendations {
   &:extend(#listens);
   padding: 10px;
@@ -17,6 +10,12 @@
     margin-bottom: 7px;
     max-height: 72px;
     display: flex;
+
+    @media (max-width: @screen-sm-min) {
+      & {
+        padding-left: 30px;
+      }
+    }
 
     &.current-recommendation {
       background-color: rgba(217, 237, 247, 0.3) !important ;
